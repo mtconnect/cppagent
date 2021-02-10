@@ -408,10 +408,10 @@ TEST_F(AgentTest, Composition)
   auto agent = m_agentTestHelper->m_agent.get();
   addAdapter();
 
-  DataItem *motor = agent->getDataItemByName("LinuxCNC", "zt1");
+  DataItem *motor = agent->getDataItemForDevice("LinuxCNC", "zt1");
   ASSERT_TRUE(motor);
 
-  DataItem *amp = agent->getDataItemByName("LinuxCNC", "zt2");
+  DataItem *amp = agent->getDataItemForDevice("LinuxCNC", "zt2");
   ASSERT_TRUE(amp);
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|zt1|100|zt2|200");
@@ -718,7 +718,7 @@ TEST_F(AgentTest, AddToBuffer)
 
   key = "power";
 
-  auto di2 = agent->getDataItemByName(device, key);
+  auto di2 = agent->getDataItemForDevice(device, key);
   seqNum = m_agentTestHelper->addToBuffer(di2, {{"VALUE", value}}, chrono::system_clock::now());
   auto event2 = agent->getFromBuffer(seqNum);
   ASSERT_EQ(3, event2.use_count());
@@ -1016,14 +1016,14 @@ TEST_F(AgentTest, DynamicCalibration)
   
   // Add a 10.111000 seconds
   m_agentTestHelper->m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
-  auto di = agent->getDataItemByName("LinuxCNC", "Yact");
+  auto di = agent->getDataItemForDevice("LinuxCNC", "Yact");
   ASSERT_TRUE(di);
 
   ASSERT_TRUE(di->hasFactor());
   ASSERT_EQ(0.01, di->getConversionFactor());
   ASSERT_EQ(200.0, di->getConversionOffset());
 
-  di = agent->getDataItemByName("LinuxCNC", "Zact");
+  di = agent->getDataItemForDevice("LinuxCNC", "Zact");
   ASSERT_TRUE(di);
 
   ASSERT_TRUE(di->hasFactor());
@@ -1259,7 +1259,7 @@ TEST_F(AgentTest, References)
   auto agent = m_agentTestHelper->getAgent();
 
   string id = "mf";
-  auto item = agent->getDataItemByName((string) "LinuxCNC", id);
+  auto item = agent->getDataItemForDevice((string) "LinuxCNC", id);
   auto comp = item->getComponent();
 
   const auto refs = comp->getReferences();
@@ -1304,7 +1304,7 @@ TEST_F(AgentTest, Discrete)
   addAdapter({{"FilterDuplicates", true}});
   auto agent = m_agentTestHelper->getAgent();
 
-  auto msg = agent->getDataItemByName("LinuxCNC", "message");
+  auto msg = agent->getDataItemForDevice("LinuxCNC", "message");
   ASSERT_TRUE(msg);
   ASSERT_EQ(true, msg->isDiscreteRep());
 
@@ -1366,7 +1366,7 @@ TEST_F(AgentTest, ConditionSequence)
 {
   addAdapter({{"FilterDuplicates", true}});
   auto agent = m_agentTestHelper->getAgent();
-  auto logic = agent->getDataItemByName("LinuxCNC", "lp");
+  auto logic = agent->getDataItemForDevice("LinuxCNC", "lp");
   ASSERT_TRUE(logic);
 
   // Validate we are dup checking.
@@ -1543,10 +1543,10 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
   addAdapter({{"FilterDuplicates", true}});
   auto agent = m_agentTestHelper->getAgent();
 
-  auto program = agent->getDataItemByName("LinuxCNC", "program");
+  auto program = agent->getDataItemForDevice("LinuxCNC", "program");
   ASSERT_TRUE(program);
 
-  auto tool_id = agent->getDataItemByName("LinuxCNC", "block");
+  auto tool_id = agent->getDataItemForDevice("LinuxCNC", "block");
   ASSERT_TRUE(tool_id);
 
   {
@@ -1603,7 +1603,7 @@ TEST_F(AgentTest, ConstantValue)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  auto di = agent->getDataItemByName("LinuxCNC", "block");
+  auto di = agent->getDataItemForDevice("LinuxCNC", "block");
   ASSERT_TRUE(di);
   di->addConstrainedValue("UNAVAILABLE");
 

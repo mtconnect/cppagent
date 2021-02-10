@@ -96,7 +96,7 @@ namespace mtconnect
 
     {
       auto di = new DataItem({{"type", "MTCONNECT_VERSION"},
-                              {"id", id + "_mtconnect_software_version"},
+                              {"id", id + "_mtconnect_version"},
                               {"category", "EVENT"}});
       di->setComponent(*comp);
       comp->addDataItem(di);

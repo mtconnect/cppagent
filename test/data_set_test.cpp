@@ -641,7 +641,7 @@ TEST_F(DataSetTest, Discrete)
 {
   m_agentTestHelper->addAdapter();
 
-  auto di = m_agentTestHelper->m_agent->getDataItemByName("LinuxCNC", "vars2");
+  auto di = m_agentTestHelper->m_agent->getDataItemForDevice("LinuxCNC", "vars2");
   ASSERT_EQ(true, di->isDiscrete());
 
   m_agentTestHelper->m_adapter->processData("TIME|vars2|a=1 b=2 c=3");

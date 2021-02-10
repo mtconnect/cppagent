@@ -690,15 +690,15 @@ namespace mtconnect
     auto value = entity->getValue<string>();
     if (value == "CONNECTING")
     {
-      m_agent->connecting(entity->get<string>("id"));
+      m_agent->connecting(entity->get<string>("source"));
     }
     else if (value == "CONNECTED")
     {
-      m_agent->connected(entity->get<string>("id"), devices, autoAvailable);
+      m_agent->connected(entity->get<string>("source"), devices, autoAvailable);
     }
     else if (value == "DISCONNECTED")
     {
-      m_agent->disconnected(entity->get<string>("id"), devices, autoAvailable);
+      m_agent->disconnected(entity->get<string>("source"), devices, autoAvailable);
     }
     else
     {
@@ -717,15 +717,17 @@ namespace mtconnect
       auto device = entity->maybeGet<string>("device");
       auto command = match[1].str();
       auto param = match[2].str();
+      auto source = entity->maybeGet<string>("source");
 
-      if (!device)
+
+      if (!device || !source)
       {
-        g_logger << LERROR << "Invalid command: " << command << ", device not specified";
+        g_logger << LERROR << "Invalid command: " << command << ", device or source not specified";
       }
       else
       {
         g_logger << LDEBUG << "Processing command: " << command << ": " << value;
-        m_agent->receiveCommand(*device, command, param);
+        m_agent->receiveCommand(*device, command, param, *source);
       }
     }
     else
@@ -1597,7 +1599,7 @@ namespace mtconnect
   }
 
   void Agent::receiveCommand(const std::string &deviceName, const std::string &command,
-                             const std::string &value)
+                             const std::string &value, const std::string &source)
   {
     Device *device{nullptr};
     device = findDeviceByUUIDorName(deviceName);
@@ -1608,61 +1610,70 @@ namespace mtconnect
       oldName = device->getName();
       oldUuid = device->getUuid();
     }
-
-    if (device)
-    {
-      if (command == "uuid" && !device->m_preserveUuid)
-      {
-        device->setUuid(value);
-      }
-      else if (command == "manufacturer")
-      {
-        device->setManufacturer(value);
-      }
-      else if (command == "station")
-      {
-        device->setStation(value);
-      }
-      else if (command == "serialNumber")
-      {
-        device->setSerialNumber(value);
-      }
-      else if (command == "description")
-      {
-        device->setDescription(value);
-      }
-      else if (command == "nativeName")
-      {
-        device->setNativeName(value);
-      }
-      else if (command == "calibration")
-      {
-        istringstream line(value);
-
-        // Look for name|factor|offset triples
-        string name, factor, offset;
-        while (getline(line, name, '|') && getline(line, factor, '|') && getline(line, offset, '|'))
+    
+    static std::unordered_map<string,function<void(Device *, const string& value)>> deviceCommands {
+      { "uuid", [](Device *device, const string &uuid) {
+        if (!device->m_preserveUuid)
+          device->setUuid(uuid);
+      } },
+      { "manufacturer", mem_fn(&Device::setManufacturer) },
+      { "station", mem_fn(&Device::setStation) },
+      { "serialNumber", mem_fn(&Device::setSerialNumber) },
+      { "description", mem_fn(&Device::setDescription) },
+      { "nativeName", mem_fn(&Device::setNativeName) },
+      { "calibration", [](Device *device, const string &value)
         {
-          // Convert to a floating point number
-          auto di = device->getDeviceDataItem(name);
-          if (!di)
-            g_logger << LWARN << "Cannot find data item to calibrate for " << name;
-          else
+          istringstream line(value);
+
+          // Look for name|factor|offset triples
+          string name, factor, offset;
+          while (getline(line, name, '|') && getline(line, factor, '|') && getline(line, offset, '|'))
           {
-            double fact_value = strtod(factor.c_str(), nullptr);
-            double off_value = strtod(offset.c_str(), nullptr);
-            di->setConversionFactor(fact_value, off_value);
+            // Convert to a floating point number
+            auto di = device->getDeviceDataItem(name);
+            if (!di)
+              g_logger << LWARN << "Cannot find data item to calibrate for " << name;
+            else
+            {
+              double fact_value = strtod(factor.c_str(), nullptr);
+              double off_value = strtod(offset.c_str(), nullptr);
+              di->setConversionFactor(fact_value, off_value);
+            }
           }
         }
+      },
+    };
+    
+    static std::unordered_map<string,string> adapterDataItems {
+      { "adapterVersion", "_adapter_software_version" },
+      { "mtconnnectVersion", "_mtconnect_version" },
+    };
+
+    auto action = deviceCommands.find(command);
+    if (action == deviceCommands.end())
+    {
+      auto agentDi = adapterDataItems.find(command);
+      if (agentDi == adapterDataItems.end())
+      {
+        g_logger << LWARN << "Unknown command '" << command << "' for device '" << deviceName;
       }
       else
       {
-        g_logger << LWARN << "Unknown command '" << command << "' for device '" << deviceName;
-        return;
+        auto id = source + agentDi->second;
+        auto di = getDataItemForDevice("Agent", id);
+        if (di)
+          addToBuffer(di, value);
+        else
+        {
+          g_logger << LWARN << "Cannot find data item for the Agent device when processing command " << command << " with value " << value << " for adapter " << source;
+        }
       }
     }
-
-    deviceChanged(device, oldUuid, oldName);
+    else
+    {
+      action->second(device, value);
+      deviceChanged(device, oldUuid, oldName);
+    }
   }
 
   // -------------------------------------------

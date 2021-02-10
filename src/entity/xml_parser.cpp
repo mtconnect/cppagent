@@ -92,7 +92,7 @@ namespace mtconnect
       return content;
     }
 
-    static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors)
+    EntityPtr XmlParser::parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors)
     {
       auto qname = nodeQName(node);
       auto ef = factory->factoryFor(qname);

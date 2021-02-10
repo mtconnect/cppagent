@@ -47,17 +47,17 @@ namespace mtconnect
       // Build the pipeline for an adapter
       handler->m_connecting = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "CONNECTING"s}, {"id", id}});
+                                          Properties{{"VALUE", "CONNECTING"s}, {"source", id}});
         run(entity);
       };
       handler->m_connected = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "CONNECTED"s}, {"id", id}});
+                                          Properties{{"VALUE", "CONNECTED"s}, {"source", id}});
         run(entity);
       };
       handler->m_disconnected = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "DISCONNECTED"s}, {"id", id}});
+                                          Properties{{"VALUE", "DISCONNECTED"s}, {"source", id}});
         run(entity);
       };
       handler->m_processData = [this](const std::string &data, const std::string &source) {
