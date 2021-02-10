@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <cmath>
 #include <list>
@@ -31,7 +31,7 @@ namespace mtconnect
 {
   class Specification
   {
-   public:
+  public:
     Specification(const Specification &s)
       : m_id(s.m_id),
         m_type(s.m_type),
@@ -53,7 +53,7 @@ namespace mtconnect
     }
     virtual ~Specification() = default;
 
-   public:
+  public:
     typedef std::map<std::string, double> Group;
 
     // Attributes
@@ -105,7 +105,7 @@ namespace mtconnect
     bool hasGroups() const { return m_hasGroups; }
     const std::string &getClass() const { return m_class; }
 
-   protected:
+  protected:
     std::map<std::string, Group> m_groups;
     bool m_hasGroups;
     std::string m_class;
@@ -113,7 +113,7 @@ namespace mtconnect
 
   class Specifications : public ComponentConfiguration
   {
-   public:
+  public:
     Specifications() = default;
     virtual ~Specifications() = default;
 
@@ -127,7 +127,7 @@ namespace mtconnect
       m_specifications.emplace_back(std::move(s));
     }
 
-   protected:
+  protected:
     std::list<std::unique_ptr<Specification>> m_specifications;
   };
 }  // namespace mtconnect

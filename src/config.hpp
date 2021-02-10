@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,11 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "adapter/adapter.hpp"
+#include "adapter/adapter_pipeline.hpp"
 #include "http_server/file_cache.hpp"
 #include "service.hpp"
+#include "utilities.hpp"
 
 #include <dlib/logger.h>
 
@@ -45,7 +47,7 @@ namespace mtconnect
 
   class AgentConfiguration : public MTConnectService
   {
-   public:
+  public:
     AgentConfiguration();
     virtual ~AgentConfiguration();
 
@@ -64,12 +66,9 @@ namespace mtconnect
 
     void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
-   protected:
+  protected:
     Device *defaultDevice();
-    void loadAdapters(ConfigReader &reader, bool defaultPreserve,
-                      std::chrono::seconds legacyTimeout,
-                      std::chrono::milliseconds reconnectInterval, bool ignoreTimestamps,
-                      bool conversionRequired, bool upcaseValue, bool filterDuplicates);
+    void loadAdapters(ConfigReader &reader, const ConfigOptions &options);
     void loadAllowPut(ConfigReader &reader, http_server::Server *server);
     void loadNamespace(ConfigReader &reader, const char *namespaceType,
                        http_server::FileCache *cache, XmlPrinter *printer,
@@ -86,8 +85,10 @@ namespace mtconnect
 
     void monitorThread();
 
-   protected:
+  protected:
     std::unique_ptr<Agent> m_agent;
+    pipeline::PipelineContextPtr m_pipelineContext;
+    std::unique_ptr<adapter::Handler> m_adapterHandler;
     std::unique_ptr<RollingFileLogger> m_loggerFile;
     std::string m_version;
     bool m_monitorFiles = false;

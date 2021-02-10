@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
@@ -18,13 +18,13 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
 
 class CoordinateSystemTest : public testing::Test
 {
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
-    m_checkpoint = nullptr;
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/configuration.xml",
                                    8, 4, "1.6", 25);
@@ -34,11 +34,9 @@ class CoordinateSystemTest : public testing::Test
 
   void TearDown() override
   {
-    m_checkpoint.reset();
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<Checkpoint> m_checkpoint;
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
   Device *m_device{nullptr};
@@ -126,11 +124,6 @@ TEST_F(CoordinateSystemTest, XmlPrinting)
 
 TEST_F(CoordinateSystemTest, JsonPrinting)
 {
-  auto agent = m_agentTestHelper->getAgent();
-  m_adapter = new Adapter("LinuxCNC", "server", 7878);
-  agent->addAdapter(m_adapter);
-  ASSERT_TRUE(m_adapter);
-  
   {
     m_agentTestHelper->m_request.m_accepts = "Application/json";
     PARSE_JSON_RESPONSE("/probe");

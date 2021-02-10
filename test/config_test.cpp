@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +37,7 @@
 static dlib::logger g_logger("config_test");
 
 using namespace std;
+using namespace mtconnect;
 namespace fs = std::filesystem;
 
 namespace
@@ -69,7 +70,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_EQ(size_t(1), agent->getDevices().size());
+    ASSERT_EQ(size_t(2), agent->getDevices().size());
   }
 
   TEST_F(ConfigTest, BufferSize)
@@ -91,13 +92,17 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices().front();
-    const auto adapter = device->m_adapters.front();
+    const auto adapter = agent->getAdapters().front();
 
-    ASSERT_EQ(std::string("LinuxCNC"), device->getName());
-    ASSERT_FALSE(adapter->isDupChecking());
-    ASSERT_FALSE(adapter->isAutoAvailable());
-    ASSERT_FALSE(adapter->isIgnoringTimestamps());
+    auto deviceName = GetOption<string>(adapter->getOptions(), "Device");
+    ASSERT_TRUE(deviceName);
+    ASSERT_EQ("LinuxCNC", *deviceName);
+
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "FilterDuplicates"));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "AutoAvailable"));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
+    
+    auto device = agent->findDeviceByUUIDorName(*deviceName);
     ASSERT_TRUE(device->m_preserveUuid);
   }
 
@@ -120,16 +125,18 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices().front();
-    const auto adapter = device->m_adapters.front();
+    const auto adapter = agent->getAdapters().front();
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
-    ASSERT_TRUE(adapter->isDupChecking());
-    ASSERT_TRUE(adapter->isAutoAvailable());
-    ASSERT_TRUE(adapter->isIgnoringTimestamps());
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "FilterDuplicates"));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "AutoAvailable"));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
+    
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
-    ASSERT_TRUE(device->m_preserveUuid);
+    
+    // TODO: Need to link to device to the adapter.
+    //ASSERT_TRUE(device->m_preserveUuid);
   }
 
   TEST_F(ConfigTest, DefaultPreserveUUID)
@@ -158,7 +165,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices().front();
+    const auto device = agent->findDeviceByUUIDorName("LinuxCNC");
 
     ASSERT_FALSE(device->m_preserveUuid);
   }
@@ -288,8 +295,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices().front();
-    const auto adapter = device->m_adapters.front();
+    const auto adapter = agent->getAdapters().front();
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }
@@ -303,10 +309,9 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices().front();
-    const auto adapter = device->m_adapters.front();
+    const auto adapter = agent->getAdapters().front();
 
-    ASSERT_TRUE(adapter->isIgnoringTimestamps());
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
   }
 
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
@@ -321,10 +326,9 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices().front();
-    const auto adapter = device->m_adapters.front();
+    const auto adapter = agent->getAdapters().front();
 
-    ASSERT_FALSE(adapter->isIgnoringTimestamps());
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
   }
 
   TEST_F(ConfigTest, SpecifyMTCNamespace)

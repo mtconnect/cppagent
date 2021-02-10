@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,6 @@
 #include "device.hpp"
 
 #include <dlib/logger.h>
-#include <dlib/misc_api.h>
 
 using namespace std;
 
@@ -50,6 +49,12 @@ namespace mtconnect
   }
 
   Device::~Device() = default;
+
+  void Device::setOptions(const ConfigOptions &options)
+  {
+    if (auto opt = GetOption<bool>(options, "PreserveUUID"))
+      m_preserveUuid = *opt;
+  }
 
   // TODO: Clean up these initialization methods for data items
   void Device::addDeviceDataItem(DataItem *dataItem)

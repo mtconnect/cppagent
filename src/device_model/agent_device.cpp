@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,9 @@
 
 #include "agent_device.hpp"
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 
 #include <dlib/logger.h>
-#include <dlib/misc_api.h>
 
 using namespace std;
 
@@ -36,12 +35,12 @@ namespace mtconnect
     addChild(m_adapters);
   }
 
-  DataItem *AgentDevice::getConnectionStatus(const Adapter *adapter)
+  DataItem *AgentDevice::getConnectionStatus(const std::string &adapter)
   {
-    return getDeviceDataItem(adapter->getIdentity() + "_connection_status");
+    return getDeviceDataItem(adapter + "_connection_status");
   }
 
-  void AgentDevice::addAdapter(const Adapter *adapter)
+  void AgentDevice::addAdapter(const adapter::Adapter *adapter)
   {
     auto id = adapter->getIdentity();
 

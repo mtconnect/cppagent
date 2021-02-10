@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ namespace mtconnect
   {
     class JsonPrinter
     {
-     public:
+    public:
       JsonPrinter() = default;
 
       json print(const EntityPtr entity) const
@@ -37,7 +37,7 @@ namespace mtconnect
         return json::object({{entity->getName(), printEntity(entity)}});
       }
 
-     protected:
+    protected:
       json printEntity(const EntityPtr entity) const;
     };
   }  // namespace entity

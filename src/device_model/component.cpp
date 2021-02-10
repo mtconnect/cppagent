@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,7 +88,7 @@ namespace mtconnect
       attributes["name"] = m_name;
 
     if (m_sampleInterval != 0.0f)
-      attributes["sampleInterval"] = floatToString(m_sampleInterval);
+      attributes["sampleInterval"] = format(m_sampleInterval);
 
     if (!m_uuid.empty())
       attributes["uuid"] = m_uuid;

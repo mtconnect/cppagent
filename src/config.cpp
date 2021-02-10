@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -53,7 +53,8 @@
 #include <mach-o/dyld.h>
 #endif
 
-#define strfy(line) #line
+#define _strfy(line) #line
+#define strfy(line) _strfy(line)
 
 using namespace std;
 using namespace dlib;
@@ -81,22 +82,20 @@ namespace mtconnect
       return defaultValue;
   }
 
-  static inline std::chrono::milliseconds get_with_default(const config_reader::kernel_1a &reader,
-                                                           const char *key,
-                                                           std::chrono::milliseconds defaultValue)
+  static inline Milliseconds get_with_default(const config_reader::kernel_1a &reader,
+                                              const char *key, Milliseconds defaultValue)
   {
     if (reader.is_key_defined(key))
-      return std::chrono::milliseconds{atoi(reader[key].c_str())};
+      return Milliseconds{atoi(reader[key].c_str())};
     else
       return defaultValue;
   }
 
-  static inline std::chrono::seconds get_with_default(const config_reader::kernel_1a &reader,
-                                                      const char *key,
-                                                      std::chrono::seconds defaultValue)
+  static inline Seconds get_with_default(const config_reader::kernel_1a &reader, const char *key,
+                                         Seconds defaultValue)
   {
     if (reader.is_key_defined(key))
-      return std::chrono::seconds{atoi(reader[key].c_str())};
+      return Seconds{atoi(reader[key].c_str())};
     else
       return defaultValue;
   }
@@ -117,6 +116,28 @@ namespace mtconnect
       return reader[key] == "true" || reader[key] == "yes";
     else
       return defaultValue;
+  }
+
+  static inline void assign_value(const char *key, const config_reader::kernel_1a &reader,
+                                  ConfigOptions &options)
+  {
+    if (reader.is_key_defined(key))
+      options[key] = reader[key];
+  }
+
+  static inline void assign_bool_value(const char *key, const config_reader::kernel_1a &reader,
+                                       ConfigOptions &options)
+  {
+    if (reader.is_key_defined(key))
+      options[key] = reader[key] == "true" || reader[key] == "yes";
+  }
+
+  template <typename T>
+  static inline void assign_duration_value(const char *key, const config_reader::kernel_1a &reader,
+                                           ConfigOptions &options)
+  {
+    if (reader.is_key_defined(key))
+      options[key] = T(atoi(reader[key].c_str()));
   }
 
   AgentConfiguration::AgentConfiguration()
@@ -308,6 +329,7 @@ namespace mtconnect
       }
     } while (!changed);  // && m_agent->is_running());
 
+    // TODO: Put monitor thread back in place
 #if 0
     // Restart agent if changed...
     // stop agent and signal to warm start
@@ -360,23 +382,11 @@ namespace mtconnect
 
   void AgentConfiguration::stop() { m_agent->stop(); }
 
-  Device *AgentConfiguration::defaultDevice()
-  {
-    const auto &devices = m_agent->getDevices();
-    if (devices.size() > 0)
-    {
-      for (auto device : devices)
-        if (device->getClass() != "Agent")
-          return device;
-    }
-
-    return nullptr;
-  }
+  Device *AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
 
   static std::string timestamp()
   {
-    return date::format("%Y-%m-%dT%H:%M:%SZ",
-                        date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
+    return format(date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
   }
 
   void AgentConfiguration::LoggerHook(const std::string &loggerName, const dlib::log_level &l,
@@ -600,26 +610,42 @@ namespace mtconnect
     m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
 
     // Check for schema version
-
-    m_version = get_with_default(reader, "SchemaVersion",
-                                 strfy(AGENT_VERSION_MAJOR) "." strfy(AGENT_VERSION_MINOR));
+    m_version =
+        get_with_default(reader, "SchemaVersion",
+                         to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
     auto server = make_unique<http_server::Server>(port, serverIp);
     loadAllowPut(reader, server.get());
 
     auto cp = make_unique<http_server::FileCache>();
+
+    // Make the Agent
     m_agent = make_unique<Agent>(server, cp, m_devicesFile, bufferSize, maxAssets, m_version,
                                  checkpointFrequency, m_pretty);
     XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
     m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
     auto cache = m_agent->getFileCache();
 
+    // Make the PipelineContext
+    m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
+    m_pipelineContext->m_contract = m_agent->makePipelineContract();
+
+    ConfigOptions options;
+    options["PreserveUUID"] = defaultPreserve;
+    options["LegacyTimeout"] = legacyTimeout;
+    options["ReconnectInterval"] = reconnectInterval;
+    options["IgnoreTimestamps"] = ignoreTimestamps;
+    options["ConversionRequired"] = conversionRequired;
+    options["UpcaseDataItemValue"] = upcaseValue;
+    options["FilterDuplicates"] = filterDuplicates;
+
+    m_agent->initialize(m_pipelineContext, options);
+
     for (auto device : m_agent->getDevices())
       device->m_preserveUuid = defaultPreserve;
 
-    loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,
-                 conversionRequired, upcaseValue, filterDuplicates);
+    loadAdapters(reader, options);
 
     // Files served by the Agent... allows schema files to be served by
     // agent.
@@ -639,12 +665,11 @@ namespace mtconnect
     loadTypes(reader, cache);
   }
 
-  void AgentConfiguration::loadAdapters(ConfigReader &reader, bool defaultPreserve,
-                                        std::chrono::seconds legacyTimeout,
-                                        std::chrono::milliseconds reconnectInterval,
-                                        bool ignoreTimestamps, bool conversionRequired,
-                                        bool upcaseValue, bool filterDuplicates)
+  void AgentConfiguration::loadAdapters(ConfigReader &reader, const ConfigOptions &options)
   {
+    using namespace adapter;
+    using namespace pipeline;
+
     Device *device;
     if (reader.is_block_defined("Adapters"))
     {
@@ -654,6 +679,8 @@ namespace mtconnect
 
       for (const auto &block : blocks)
       {
+        ConfigOptions adapterOptions = options;
+
         const auto &adapter = adapters.block(block);
         string deviceName;
         if (adapter.is_key_defined("Device"))
@@ -670,48 +697,41 @@ namespace mtconnect
           if (device)
           {
             deviceName = device->getName();
+            adapterOptions["Device"] = deviceName;
             g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
           }
+        }
+        else
+        {
+          adapterOptions["Device"] = device->getName();
         }
         if (!device)
         {
           g_logger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
         }
 
+        assign_value("UUID", adapter, adapterOptions);
+        assign_value("Manufacturer", adapter, adapterOptions);
+        assign_value("Station", adapter, adapterOptions);
+        assign_value("SerialNumber", adapter, adapterOptions);
+        assign_bool_value("FilterDuplicates", adapter, adapterOptions);
+        assign_bool_value("AutoAvailable", adapter, adapterOptions);
+        assign_bool_value("IgnoreTimestamps", adapter, adapterOptions);
+        assign_bool_value("ConversionRequired", adapter, adapterOptions);
+        assign_bool_value("RealTime", adapter, adapterOptions);
+        assign_bool_value("RelativeTime", adapter, adapterOptions);
+        assign_bool_value("UpcaseDataItemValue", adapter, adapterOptions);
+        assign_duration_value<Seconds>("ReconnectInterval", adapter, adapterOptions);
+        assign_duration_value<Seconds>("LegacyTimeout", adapter, adapterOptions);
+        assign_bool_value("PreserveUUID", adapter, adapterOptions);
+        device->m_preserveUuid = get<bool>(adapterOptions["PreserveUUID"]);
+
         const string host = get_with_default(adapter, "Host", (string) "localhost");
         auto port = get_with_default(adapter, "Port", 7878);
 
-        g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
-        auto adp = new Adapter(deviceName, host, port,
-                               get_with_default(adapter, "LegacyTimeout", legacyTimeout));
-
-        device->m_preserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
-
-        // Add additional device information
-        if (adapter.is_key_defined("UUID"))
-          device->setUuid(adapter["UUID"]);
-        if (adapter.is_key_defined("Manufacturer"))
-          device->setManufacturer(adapter["Manufacturer"]);
-        if (adapter.is_key_defined("Station"))
-          device->setStation(adapter["Station"]);
-        if (adapter.is_key_defined("SerialNumber"))
-          device->setSerialNumber(adapter["SerialNumber"]);
-
-        adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", filterDuplicates));
-        adp->setAutoAvailable(
-            get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
-        adp->setIgnoreTimestamps(get_bool_with_default(
-            adapter, "IgnoreTimestamps", ignoreTimestamps || adp->isIgnoringTimestamps()));
-        adp->setConversionRequired(
-            get_bool_with_default(adapter, "ConversionRequired", conversionRequired));
-        adp->setRealTime(get_bool_with_default(adapter, "RealTime", false));
-        adp->setRelativeTime(get_bool_with_default(adapter, "RelativeTime", false));
-        adp->setReconnectInterval(
-            get_with_default(adapter, "ReconnectInterval", reconnectInterval));
-        adp->setUpcaseValue(get_bool_with_default(adapter, "UpcaseDataItemValue", upcaseValue));
-
         if (adapter.is_key_defined("AdditionalDevices"))
         {
+          StringList deviceList;
           istringstream devices(adapter["AdditionalDevices"]);
           string name;
           while (getline(devices, name, ','))
@@ -723,23 +743,30 @@ namespace mtconnect
             if (index != string::npos)
               name.erase(index + 1);
 
-            adp->addDevice(name);
+            deviceList.push_back(name);
           }
+
+          adapterOptions["AdditionalDevices"] = deviceList;
         }
 
+        g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
+
+        auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
+        auto adp = new Adapter(host, port, adapterOptions, pipeline);
         m_agent->addAdapter(adp, false);
       }
     }
     else if ((device = defaultDevice()))
     {
+      ConfigOptions adapterOptions{options};
+
+      auto deviceName = device->getName();
+      adapterOptions["Device"] = deviceName;
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
-      auto adp = new Adapter(device->getName(), "localhost", 7878, legacyTimeout);
 
-      adp->setIgnoreTimestamps(ignoreTimestamps || adp->isIgnoringTimestamps());
-      adp->setReconnectInterval(reconnectInterval);
-      device->m_preserveUuid = defaultPreserve;
-
+      auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
+      auto adp = new Adapter("localhost", 7878, adapterOptions, pipeline);
       m_agent->addAdapter(adp, false);
     }
     else

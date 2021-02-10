@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ namespace mtconnect
 
     class RequestError : public std::logic_error
     {
-     public:
+    public:
       RequestError(const char *w) : std::logic_error::logic_error(w) {}
       RequestError(const char *w, const std::string &body, const std::string &type,
                    ResponseCode code)
@@ -51,7 +51,7 @@ namespace mtconnect
 
     class Server : public dlib::server_http
     {
-     public:
+    public:
       Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0")
       {
         set_listening_port(port);
@@ -104,13 +104,13 @@ namespace mtconnect
 
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
 
-     protected:
+    protected:
       // HTTP Protocol
       void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
                       const std::string &local_ip, unsigned short foreign_port,
                       unsigned short local_port, dlib::uint64) override;
 
-     protected:
+    protected:
       // Put handling controls
       bool m_putEnabled;
       std::set<std::string> m_putAllowedHosts;

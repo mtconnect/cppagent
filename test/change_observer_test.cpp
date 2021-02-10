@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,13 +19,16 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "change_observer.hpp"
+#include "observation/change_observer.hpp"
 
 #include <chrono>
 #include <thread>
 
-namespace
+
+
+namespace mtconnect
 {
+  using namespace observation;
   class ChangeObserverTest : public testing::Test
   {
    protected:

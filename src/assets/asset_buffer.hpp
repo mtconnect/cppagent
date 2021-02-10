@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,8 @@
 
 #include "asset.hpp"
 #include "entity.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
+#include <unordered_map>
 
 #include <list>
 #include <map>
@@ -30,12 +31,12 @@ namespace mtconnect
 {
   class AssetBuffer
   {
-   public:
+  public:
     using Index = std::map<std::string, AssetPtr>;
-    using SecondaryIndex = std::map<std::string, Index>;
+    using SecondaryIndex = std::unordered_map<std::string, Index>;
     using TypeCount = std::map<std::string, int>;
     using Buffer = AssetList;
-    using RemoveCount = std::map<std::string, size_t>;
+    using RemoveCount = std::unordered_map<std::string, size_t>;
 
     AssetBuffer(size_t max) : m_maxAssets(max) {}
     ~AssetBuffer() = default;
@@ -50,11 +51,12 @@ namespace mtconnect
     }
 
     AssetPtr addAsset(AssetPtr asset);
-    AssetPtr removeAsset(AssetPtr asset, const std::string time = "")
+    AssetPtr removeAsset(AssetPtr asset, const std::optional<Timestamp> &time = std::nullopt)
     {
       return removeAsset(asset->getAssetId(), time);
     }
-    AssetPtr removeAsset(const std::string &id, const std::string time = "");
+    AssetPtr removeAsset(const std::string &id,
+                         const std::optional<Timestamp> &time = std::nullopt);
 
     AssetPtr getAsset(const std::string &id)
     {
@@ -171,11 +173,11 @@ namespace mtconnect
     auto unlock() { return m_bufferLock.unlock(); }
     auto try_lock() { return m_bufferLock.try_lock(); }
 
-   protected:
+  protected:
     AssetPtr updateAsset(const std::string &id, Index::iterator &it, AssetPtr asset);
     void adjustCount(AssetPtr asset, int delta);
 
-   protected:
+  protected:
     // Access control to the buffer
     mutable std::recursive_mutex m_bufferLock;
 

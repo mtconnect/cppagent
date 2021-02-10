@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <map>
@@ -30,7 +30,7 @@ namespace mtconnect
 {
   class Description
   {
-   public:
+  public:
     Description() = default;
     Description(const Description &another) = default;
     Description(std::string body) : m_body(std::move(body)) {}
@@ -47,6 +47,6 @@ namespace mtconnect
     std::string m_body;
     std::map<std::string, std::string> m_attributes;
 
-   protected:
+  protected:
   };
 }  // namespace mtconnect

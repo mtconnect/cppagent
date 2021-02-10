@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@ namespace date
 };
 using namespace date;
 
-#include "connector.hpp"
+#include "adapter/connector.hpp"
 
 #include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
 
@@ -36,6 +36,7 @@ using namespace date;
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
 
 class TestConnector : public Connector
 {

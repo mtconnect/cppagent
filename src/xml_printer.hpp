@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,8 +18,8 @@
 #pragma once
 
 #include "assets/asset.hpp"
-#include "globals.hpp"
 #include "printer.hpp"
+#include "utilities.hpp"
 
 extern "C"
 {
@@ -35,7 +35,7 @@ namespace mtconnect
 
   class XmlPrinter : public Printer
   {
-   public:
+  public:
     XmlPrinter(const std::string version = "", bool pretty = false);
     ~XmlPrinter() override = default;
 
@@ -49,7 +49,7 @@ namespace mtconnect
 
     std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
-                            ObservationPtrArray &results) const override;
+                            observation::ObservationList &results) const override;
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                             const unsigned int assetCount, const AssetList &assets) const override;
     std::string mimeType() const override { return "text/xml"; }
@@ -87,7 +87,7 @@ namespace mtconnect
     std::string getStreamsLocation(const std::string &prefix);
     std::string getAssetsLocation(const std::string &prefix);
 
-   protected:
+  protected:
     enum EDocumentType
     {
       eERROR,
@@ -119,9 +119,9 @@ namespace mtconnect
     void printCellDefinitions(xmlTextWriterPtr writer,
                               const std::set<CellDefinition> &definitions) const;
 
-    void addObservation(xmlTextWriterPtr writer, Observation *result) const;
+    void addObservation(xmlTextWriterPtr writer, observation::ObservationPtr result) const;
 
-   protected:
+  protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;
     std::map<std::string, SchemaNamespace> m_streamsNamespaces;
     std::map<std::string, SchemaNamespace> m_errorNamespaces;

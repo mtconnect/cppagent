@@ -17,8 +17,9 @@ if(NOT TARGET date)
   )
   FetchContent_GetProperties(dateprovider)
   FetchContent_Populate(dateprovider)
-
-  message(STATUS "  * Create targets for date library")
+  
   add_library(date INTERFACE)
   target_include_directories(date INTERFACE "${dateprovider_SOURCE_DIR}/include")
+#  set_target_properties(date PROPERTIES INTERFACE_SOURCES "${dateprovider_SOURCE_DIR}/src/tz.cpp" )
+#  set_target_properties(date PROPERTIES INTERFACE_COMPILE_DEFINITIONS "HAS_REMOTE_API=0")
 endif()

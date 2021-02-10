@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ namespace mtconnect
     using XmlNamespaceList = std::list<XmlNamespace>;
     class FileCache
     {
-     public:
+    public:
       FileCache();
 
       XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
@@ -54,7 +54,7 @@ namespace mtconnect
         m_mimeTypes[s] = type;
       }
 
-     protected:
+    protected:
       std::map<std::string, std::filesystem::path> m_fileMap;
       std::map<std::string, CachedFilePtr> m_fileCache;
       std::map<std::string, std::string> m_mimeTypes;

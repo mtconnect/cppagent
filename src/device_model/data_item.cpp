@@ -1,6 +1,6 @@
 //
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 
 #include "data_item.hpp"
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "device_model/device.hpp"
 
 #include <array>
@@ -40,6 +40,7 @@ namespace mtconnect
   DataItem::DataItem(std::map<string, string> const &attributes)
     : m_representation(VALUE),
       m_hasNativeScale(false),
+      m_threeD(false),
       m_isDiscrete(false),
       m_initialized(false),
       m_hasSignificantDigits(false),
@@ -48,15 +49,11 @@ namespace mtconnect
       m_filterPeriod(0.0),
       m_hasMinimumDelta(false),
       m_hasMinimumPeriod(false),
-      m_lastSampleValue(NAN),
-      m_lastTimeOffset(NAN),
-      m_dataSource(nullptr),
       m_conversionFactor(1.0),
       m_conversionOffset(0.0),
       m_conversionDetermined(false),
       m_conversionRequired(false),
       m_hasFactor(false)
-
   {
     const auto idPos = attributes.find("id");
     if (idPos != attributes.end())
@@ -111,8 +108,6 @@ namespace mtconnect
     else
       m_prefixedCamelType = m_camelType;
 
-    m_threeD = false;
-
     const auto subTypePos = attributes.find("subType");
     if (subTypePos != attributes.end())
       m_subType = subTypePos->second;
@@ -142,6 +137,7 @@ namespace mtconnect
       m_units = unitsPos->second;
       if (m_nativeUnits.empty())
         m_nativeUnits = m_units;
+      m_threeD = ends_with(m_units, "3D"s);
     }
 
     const auto statisticPos = attributes.find("statistic");
@@ -179,18 +175,6 @@ namespace mtconnect
   }
 
   DataItem::~DataItem() = default;
-
-  void DataItem::setDataSource(Adapter *source)
-  {
-    if (m_dataSource != source)
-      m_dataSource = source;
-
-    if (!m_dataSource->conversionRequired())
-    {
-      m_conversionRequired = false;
-      m_conversionDetermined = true;
-    }
-  }
 
   std::map<string, string> DataItem::buildAttributes() const
   {
@@ -245,7 +229,7 @@ namespace mtconnect
       attributes["units"] = m_units;
 
     if (m_hasNativeScale)
-      attributes["nativeScale"] = floatToString(m_nativeScale);
+      attributes["nativeScale"] = format(m_nativeScale);
 
     if (m_hasSignificantDigits)
       attributes["significantDigits"] = to_string(m_significantDigits);
@@ -270,9 +254,9 @@ namespace mtconnect
   static void capitalize(string::iterator start, string::iterator end)
   {
     // Exceptions to the rule
-    const static std::map<string, string> exceptions = {{"AC", "AC"},   {"DC", "DC"},
-                                                        {"PH", "PH"},   {"IP", "IP"},
-                                                        {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+    const static std::unordered_map<string, string> exceptions = {
+        {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
+        {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
 
     const auto &w = exceptions.find(string(start, end));
     if (w != exceptions.end())
@@ -322,77 +306,50 @@ namespace mtconnect
     return camel;
   }
 
-  bool DataItem::conversionRequired()
+  double DataItem::convertValue(double value) const
   {
-    if (!m_conversionDetermined)
-    {
-      m_conversionDetermined = true;
-      m_conversionRequired = !m_nativeUnits.empty();
-    }
-
-    return m_conversionRequired;
-  }
-
-  float DataItem::convertValue(float value)
-  {
-    if (!m_conversionDetermined)
-      conversionRequired();
-
-    if (!m_conversionRequired)
-    {
+    if (!conversionRequired())
       return value;
-    }
-    else if (m_hasFactor)
+
+    if (m_hasFactor)
     {
-      return static_cast<float>((value + m_conversionOffset) * m_conversionFactor);
+      return static_cast<double>((value + m_conversionOffset) * m_conversionFactor);
     }
     else
     {
-      computeConversionFactors();
+      const_cast<DataItem *>(this)->computeConversionFactors();
       return convertValue(value);
     }
   }
 
-  string DataItem::convertValue(const string &value)
+  entity::Value &DataItem::convertValue(entity::Value &value) const
   {
     // Check if the type is an alarm or if it doesn't have units
-
-    if (!m_conversionRequired)
-    {
+    if (!conversionRequired())
       return value;
-    }
-    else if (m_hasFactor)
+
+    if (m_hasFactor)
     {
-      if (m_threeD)
+      if (std::holds_alternative<entity::Vector>(value))
       {
-        ostringstream result;
-        string::size_type start = 0ul;
-
-        for (int i = 0; i < 3; i++)
+        auto &vector = std::get<entity::Vector>(value);
+        for (auto &v : vector)
         {
-          auto pos = value.find(' ', start);
-          result << floatToString((atof(value.substr(start, pos).c_str()) + m_conversionOffset) *
-                                  m_conversionFactor);
-
-          if (pos != string::npos)
-          {
-            start = value.find_first_not_of(' ', pos);
-            result << " ";
-          }
+          v = convertValue(v);
         }
-
-        return result.str();
       }
-      else
+      else if (std::holds_alternative<double>(value))
       {
-        return floatToString((atof(value.c_str()) + m_conversionOffset) * m_conversionFactor);
+        value = convertValue(std::get<double>(value));
       }
     }
     else
     {
-      computeConversionFactors();
-      return convertValue(value);
+      const_cast<DataItem *>(this)->computeConversionFactors();
+      convertValue(value);
     }
+
+    return value;
   }
 
   void DataItem::computeConversionFactors()

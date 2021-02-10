@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,18 @@
 
 #pragma once
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
+#include "agent_loopback_pipeline.hpp"
 #include "assets/asset_buffer.hpp"
-#include "checkpoint.hpp"
-#include "circular_buffer.hpp"
 #include "http_server/server.hpp"
+#include "observation/checkpoint.hpp"
+#include "observation/circular_buffer.hpp"
+#include "pipeline/pipeline.hpp"
+#include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
+#include <unordered_map>
 
 #include <chrono>
 #include <list>
@@ -37,8 +41,10 @@
 
 namespace mtconnect
 {
-  class Adapter;
-  class Observation;
+  namespace adapter
+  {
+    class Adapter;
+  }
   class DataItem;
   class Device;
   class AgentDevice;
@@ -47,7 +53,7 @@ namespace mtconnect
 
   class Agent
   {
-   public:
+  public:
     struct RequestResult
     {
       RequestResult(){};
@@ -72,42 +78,68 @@ namespace mtconnect
     // Virtual destructor
     ~Agent();
 
+    // Make loopback pipeline
+    void initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options);
+
     // Start and stop
     void start();
     void stop();
 
     // HTTP Server
     auto getServer() const { return m_server.get(); }
+    std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
 
     // Add an adapter to the agent
-    void addAdapter(Adapter *adapter, bool start = false);
+    void addAdapter(adapter::Adapter *adapter, bool start = false);
+    const auto &getAdapters() const { return m_adapters; }
 
     // Get device from device map
     Device *getDeviceByName(const std::string &name);
     Device *getDeviceByName(const std::string &name) const;
     Device *findDeviceByUUIDorName(const std::string &idOrName) const;
     const auto &getDevices() const { return m_devices; }
+    Device *defaultDevice() const
+    {
+      if (m_devices.size() > 0)
+      {
+        for (auto device : m_devices)
+          if (device->getClass() != "Agent")
+            return device;
+      }
+
+      return nullptr;
+    }
 
     // Add the a device from a configuration file
     void addDevice(Device *device);
     void deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName);
 
     // Add component events to the sliding buffer
-    unsigned int addToBuffer(DataItem *dataItem, const std::string &value, const std::string &time);
+    observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation);
+    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, entity::Properties props,
+                                              std::optional<Timestamp> timestamp = std::nullopt);
+    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, const std::string &value,
+                                              std::optional<Timestamp> timestamp = std::nullopt);
 
     // Asset management
+    void addAsset(AssetPtr asset);
     AssetPtr addAsset(Device *device, const std::string &asset,
                       const std::optional<std::string> &id, const std::optional<std::string> &type,
                       const std::optional<std::string> &time, entity::ErrorList &errors);
-    bool removeAsset(Device *device, const std::string &id, const std::optional<std::string> time);
+    bool removeAsset(Device *device, const std::string &id,
+                     const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,
-                         const std::optional<std::string> type,
-                         const std::optional<std::string> time, AssetList &list);
+                         const std::optional<std::string> type, const std::optional<Timestamp> time,
+                         AssetList &list);
 
     // Message when adapter has connected and disconnected
-    void connecting(Adapter *adapter);
-    void disconnected(Adapter *adapter, std::vector<Device *> devices);
-    void connected(Adapter *adapter, std::vector<Device *> devices);
+    void connecting(const std::string &adapter);
+    void disconnected(const std::string &adapter, const StringList &devices, bool autoAvailable);
+    void connected(const std::string &adapter, const StringList &devices, bool autoAvailable);
+
+    // Message protocol command
+    void receiveCommand(const std::string &device, const std::string &command,
+                        const std::string &value);
 
     DataItem *getDataItemByName(const std::string &deviceName,
                                 const std::string &dataItemName) const
@@ -116,8 +148,11 @@ namespace mtconnect
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
 
-    Observation *getFromBuffer(uint64_t seq) const { return m_circularBuffer.getFromBuffer(seq); }
-    SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
+    observation::ObservationPtr getFromBuffer(uint64_t seq) const
+    {
+      return m_circularBuffer.getFromBuffer(seq);
+    }
+    observation::SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
     unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
     auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
     auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
@@ -129,7 +164,10 @@ namespace mtconnect
       return m_assetBuffer.getCountForType(type, active);
     }
 
-    SequenceNumber_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
+    observation::SequenceNumber_t getFirstSequence() const
+    {
+      return m_circularBuffer.getFirstSequence();
+    }
 
     // For testing...
     void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
@@ -138,21 +176,22 @@ namespace mtconnect
     // MTConnect Requests
     RequestResult probeRequest(const std::string &format,
                                const std::optional<std::string> &device = std::nullopt);
-    RequestResult currentRequest(const std::string &format,
-                                 const std::optional<std::string> &device = std::nullopt,
-                                 const std::optional<SequenceNumber_t> &at = std::nullopt,
-                                 const std::optional<std::string> &path = std::nullopt);
-    RequestResult sampleRequest(const std::string &format, const int count = 100,
-                                const std::optional<std::string> &device = std::nullopt,
-                                const std::optional<SequenceNumber_t> &from = std::nullopt,
-                                const std::optional<SequenceNumber_t> &to = std::nullopt,
-                                const std::optional<std::string> &path = std::nullopt);
-    RequestResult streamSampleRequest(http_server::Response &response, const std::string &format,
-                                      const int interval, const int heartbeat,
-                                      const int count = 100,
-                                      const std::optional<std::string> &device = std::nullopt,
-                                      const std::optional<SequenceNumber_t> &from = std::nullopt,
-                                      const std::optional<std::string> &path = std::nullopt);
+    RequestResult currentRequest(
+        const std::string &format, const std::optional<std::string> &device = std::nullopt,
+        const std::optional<observation::SequenceNumber_t> &at = std::nullopt,
+        const std::optional<std::string> &path = std::nullopt);
+    RequestResult sampleRequest(
+        const std::string &format, const int count = 100,
+        const std::optional<std::string> &device = std::nullopt,
+        const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
+        const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
+        const std::optional<std::string> &path = std::nullopt);
+    RequestResult streamSampleRequest(
+        http_server::Response &response, const std::string &format, const int interval,
+        const int heartbeat, const int count = 100,
+        const std::optional<std::string> &device = std::nullopt,
+        const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
+        const std::optional<std::string> &path = std::nullopt);
     RequestResult streamCurrentRequest(http_server::Response &response, const std::string &format,
                                        const int interval,
                                        const std::optional<std::string> &device = std::nullopt,
@@ -191,7 +230,9 @@ namespace mtconnect
       return getPrinter(acceptFormat(accepts));
     }
 
-   protected:
+  protected:
+    friend class AgentPipelineContract;
+
     // Initialization methods
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
@@ -208,14 +249,15 @@ namespace mtconnect
     void createAssetRoutings();
 
     // Current Data Collection
-    std::string fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
-                                 const std::optional<SequenceNumber_t> &at);
+    std::string fetchCurrentData(const Printer *printer, const observation::FilterSetOpt &filterSet,
+                                 const std::optional<observation::SequenceNumber_t> &at);
 
     // Sample data collection
-    std::string fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
-                                const std::optional<SequenceNumber_t> &from,
-                                const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                bool &endOfBuffer, ChangeObserver *observer = nullptr);
+    std::string fetchSampleData(const Printer *printer, const observation::FilterSetOpt &filterSet,
+                                int count, const std::optional<observation::SequenceNumber_t> &from,
+                                const std::optional<observation::SequenceNumber_t> &to,
+                                observation::SequenceNumber_t &end, bool &endOfBuffer,
+                                observation::ChangeObserver *observer = nullptr);
 
     // Asset methods
     void getAssets(const Printer *printer, const std::list<std::string> &ids, AssetList &list);
@@ -244,10 +286,10 @@ namespace mtconnect
     void checkRange(const Printer *printer, const T value, const T min, const T max,
                     const std::string &param, bool notZero = false) const;
     void checkPath(const Printer *printer, const std::optional<std::string> &path,
-                   const Device *device, FilterSet &filter) const;
+                   const Device *device, observation::FilterSet &filter) const;
     Device *checkDevice(const Printer *printer, const std::string &uuid) const;
 
-   protected:
+  protected:
     // Unique id based on the time of creation
     uint64_t m_instanceId;
     bool m_initialized{false};
@@ -261,7 +303,7 @@ namespace mtconnect
     std::map<std::string, std::unique_ptr<Printer>> m_printers;
 
     // Circular Buffer
-    CircularBuffer m_circularBuffer;
+    observation::CircularBuffer m_circularBuffer;
 
     // Agent Device
     AgentDevice *m_agentDevice{nullptr};
@@ -270,14 +312,64 @@ namespace mtconnect
     AssetBuffer m_assetBuffer;
 
     // Data containers
-    std::list<Adapter *> m_adapters;
+    std::list<adapter::Adapter *> m_adapters;
     std::list<Device *> m_devices;
-    std::map<std::string, Device *> m_deviceNameMap;
-    std::map<std::string, Device *> m_deviceUuidMap;
-    std::map<std::string, DataItem *> m_dataItemMap;
+    std::unordered_map<std::string, Device *> m_deviceNameMap;
+    std::unordered_map<std::string, Device *> m_deviceUuidMap;
+    std::unordered_map<std::string, DataItem *> m_dataItemMap;
+
+    // Loopback
+    std::unique_ptr<AgentLoopbackPipeline> m_loopback;
+
+    // Xml Config
+    std::string m_version;
+    std::string m_configXmlPath;
 
     // For debugging
     bool m_logStreamData;
     bool m_pretty;
   };
+
+  class AgentPipelineContract : public pipeline::PipelineContract
+  {
+  public:
+    AgentPipelineContract(Agent *agent) : m_agent(agent) {}
+    ~AgentPipelineContract() = default;
+
+    Device *findDevice(const std::string &device) override
+    {
+      return m_agent->findDeviceByUUIDorName(device);
+    }
+    DataItem *findDataItem(const std::string &device, const std::string &name) override
+    {
+      Device *dev = m_agent->findDeviceByUUIDorName(device);
+      if (dev != nullptr)
+      {
+        return dev->getDeviceDataItem(name);
+      }
+      return nullptr;
+    }
+    void eachDataItem(EachDataItem fun) override
+    {
+      for (auto &di : m_agent->m_dataItemMap)
+      {
+        fun(di.second);
+      }
+    }
+    void deliverObservation(observation::ObservationPtr obs) override { m_agent->addToBuffer(obs); }
+    void deliverAsset(AssetPtr asset) override { m_agent->addAsset(asset); }
+    void deliverAssetCommand(entity::EntityPtr command) override;
+    void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
+                              bool autoAvailable) override;
+    void deliverCommand(entity::EntityPtr) override;
+
+  protected:
+    Agent *m_agent;
+  };
+
+  inline std::unique_ptr<pipeline::PipelineContract> Agent::makePipelineContract()
+  {
+    return std::make_unique<AgentPipelineContract>(this);
+  }
+
 }  // namespace mtconnect

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,14 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "device_model/agent_device.hpp"
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
 
 class AgentDeviceTest : public testing::Test
 {
@@ -38,7 +39,6 @@ class AgentDeviceTest : public testing::Test
     m_agentTestHelper->createAgent("/samples/test_config.xml",
                                    8, 4, "1.7", 25);
     m_agentId = to_string(getCurrentTimeInSec());
-    m_adapter = nullptr;
     m_agentDevice = m_agentTestHelper->m_agent->getAgentDevice();
   }
 
@@ -46,22 +46,18 @@ class AgentDeviceTest : public testing::Test
   {
     if (m_server)
     {
-      m_adapter->stop();
+      m_agentTestHelper->m_adapter->stop();
       m_server.reset();
       m_serverSocket.reset();
     }
 
-    m_adapter = nullptr;
     m_agentTestHelper.reset();
   }
 
   void addAdapter()
   {
-    ASSERT_FALSE(m_adapter);
-    m_adapter = new Adapter("LinuxCNC", "127.0.0.1", m_port);
-    m_adapter->setReconnectInterval(1s);
-    ASSERT_TRUE(m_adapter);
-    m_agentTestHelper->m_agent->addAdapter(m_adapter);
+    m_agentTestHelper->addAdapter({}, "127.0.0.1", m_port, "LinuxCNC");
+    m_agentTestHelper->m_adapter->setReconnectInterval(1s);
   }
   
   void createListener()
@@ -72,7 +68,6 @@ class AgentDeviceTest : public testing::Test
   
  public:
   AgentDevice *m_agentDevice{nullptr};
-  Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   uint16_t m_port{21788};
@@ -118,7 +113,7 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
   {
     auto event = agent->getFromBuffer(seq);
     if (event->getDataItem()->getType() == "DEVICE_ADDED" &&
-        uuid == event->getValue())
+        uuid == event->getValue<string>())
     {
       found = true;
     }
@@ -147,7 +142,7 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
                           "ADAPTER_URI");
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
                           "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']/m:Constraints/m:Value",
-                          m_adapter->getUrl().c_str());
+                          m_agentTestHelper->m_adapter->getUrl().c_str());
   }
 }
 
@@ -171,7 +166,7 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_ADAPTER_STREAM "/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
-                          m_adapter->getUrl().c_str());
+                          m_agentTestHelper->m_adapter->getUrl().c_str());
   }
 }
 
@@ -184,12 +179,12 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
     PARSE_XML_RESPONSE("/Agent/current");
           
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
-                          m_adapter->getUrl().c_str());
+                          m_agentTestHelper->m_adapter->getUrl().c_str());
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
                           "UNAVAILABLE");
 
   }
-  m_adapter->start();
+  m_agentTestHelper->m_adapter->start();
   this_thread::sleep_for(100ms);
 
   {

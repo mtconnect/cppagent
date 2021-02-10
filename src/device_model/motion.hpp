@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 
 #include "component_configuration.hpp"
 #include "geometry.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <map>
 #include <utility>
@@ -29,7 +29,7 @@ namespace mtconnect
 {
   class Motion : public GeometricConfiguration
   {
-   public:
+  public:
     Motion(const Motion &s) = default;
     Motion() = default;
     ~Motion() override = default;

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -92,7 +92,7 @@ TEST_F(ComponentTest, GetAttributes)
   ASSERT_EQ((string) "3", attributes2.at("id"));
   ASSERT_EQ((string) "ComponentTest2", attributes2.at("name"));
   ASSERT_EQ((string) "UnivUniqId2", attributes2.at("uuid"));
-  ASSERT_EQ((string) "123.4", attributes2.at("sampleInterval"));
+  ASSERT_EQ((string) "123.400001525879", attributes2.at("sampleInterval"));
 }
 
 TEST_F(ComponentTest, Description)

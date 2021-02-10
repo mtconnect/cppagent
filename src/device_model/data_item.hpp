@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,10 +16,11 @@
 //
 
 #pragma once
-#include "change_observer.hpp"
 #include "definitions.hpp"
 #include "device_model/component.hpp"
-#include "globals.hpp"
+#include "entity/requirement.hpp"
+#include "observation/change_observer.hpp"
+#include "utilities.hpp"
 
 #include <dlib/threads.h>
 
@@ -31,11 +32,14 @@
 
 namespace mtconnect
 {
-  class Adapter;
-
-  class DataItem : public ChangeSignaler
+  namespace adapter
   {
-   public:
+    class Adapter;
+  }
+
+  class DataItem : public observation::ChangeSignaler
+  {
+  public:
     // Enumeration for data item category
     enum ECategory
     {
@@ -68,7 +72,7 @@ namespace mtconnect
       std::string m_idRef;
     };
 
-   public:
+  public:
     // Construct a data item with appropriate attributes mapping
     DataItem(std::map<std::string, std::string> const &attributes);
 
@@ -95,7 +99,7 @@ namespace mtconnect
     const std::string &getStatistic() const { return m_statistic; }
     const std::string &getSampleRate() const { return m_sampleRate; }
     const std::string &getCompositionId() const { return m_compositionId; }
-    float getNativeScale() const { return m_nativeScale; }
+    double getNativeScale() const { return m_nativeScale; }
     double getConversionFactor() const { return m_conversionFactor; }
     double getConversionOffset() const { return m_conversionOffset; }
     bool hasFactor() const { return m_hasFactor; }
@@ -166,53 +170,7 @@ namespace mtconnect
     // Transform a name to camel casing
     static std::string getCamelType(const std::string &type, std::string &prefix);
 
-    // Duplicate Checking
-    bool isDuplicate(const std::string &value)
-    {
-      // Do not dup check for time series.
-      if (m_representation != VALUE || m_isDiscrete)
-        return false;
-      else if (value == m_lastValue)
-        return true;
-
-      m_lastValue = value;
-      return false;
-    }
-
-    // Filter checking
-    bool isFiltered(const double value, const double timeOffset)
-    {
-      if (m_hasMinimumDelta && m_category == SAMPLE)
-      {
-        if (!ISNAN(m_lastSampleValue))
-        {
-          if (value > (m_lastSampleValue - m_filterValue) &&
-              value < (m_lastSampleValue + m_filterValue))
-          {
-            // Filter value
-            return true;
-          }
-        }
-
-        m_lastSampleValue = value;
-      }
-
-      if (m_hasMinimumPeriod)
-      {
-        if (!ISNAN(m_lastTimeOffset) && !ISNAN(timeOffset))
-        {
-          if (timeOffset < (m_lastTimeOffset + m_filterPeriod))
-          {
-            // Filter value
-            return true;
-          }
-        }
-
-        m_lastTimeOffset = timeOffset;
-      }
-
-      return false;
-    }
+    bool hasFilter() { return isSample() && (m_hasMinimumDelta || m_hasMinimumPeriod); }
 
     // Constraints
     bool hasConstraints() const { return m_hasConstraints; }
@@ -253,15 +211,32 @@ namespace mtconnect
       m_hasMinimumPeriod = true;
     }
 
-    bool conversionRequired();
-    std::string convertValue(const std::string &value);
-    float convertValue(float value);
+    bool conversionRequired() const
+    {
+      if (!m_conversionDetermined)
+      {
+        const_cast<DataItem *>(this)->m_conversionDetermined = true;
+        const_cast<DataItem *>(this)->m_conversionRequired = !m_nativeUnits.empty();
+      }
 
-    Adapter *getDataSource() const { return m_dataSource; }
-    void setDataSource(Adapter *source);
+      return m_conversionRequired;
+    }
+    entity::Value &convertValue(entity::Value &value) const;
+    double convertValue(double value) const;
+
+    const std::optional<std::string> &getDataSource() const { return m_dataSource; }
+    void setDataSource(const std::string &source) { m_dataSource = source; }
+    void setConversionRequired(bool required)
+    {
+      if (!required)
+      {
+        m_conversionRequired = false;
+        m_conversionDetermined = true;
+      }
+    }
+
     bool operator<(const DataItem &another) const;
-
-    bool operator==(DataItem &another) const { return m_id == another.m_id; }
+    bool operator==(const DataItem &another) const { return m_id == another.m_id; }
 
     const char *getCategoryText() const
     {
@@ -283,12 +258,12 @@ namespace mtconnect
 
     std::list<Relationship> &getRelationships() { return m_relationships; }
 
-   protected:
+  protected:
     double simpleFactor(const std::string &units);
     std::map<std::string, std::string> buildAttributes() const;
     void computeConversionFactors();
 
-   protected:
+  protected:
     // Unique ID for each component
     std::string m_id;
 
@@ -323,7 +298,7 @@ namespace mtconnect
     std::string m_compositionId;
 
     // Native scale of data item
-    float m_nativeScale;
+    double m_nativeScale;
     bool m_hasNativeScale;
     bool m_threeD;
     bool m_isMessage;
@@ -358,7 +333,9 @@ namespace mtconnect
     std::vector<std::string> m_values;
     bool m_hasConstraints;
 
+    // Filters
     double m_filterValue;
+
     // Period filter, in seconds
     double m_filterPeriod;
     bool m_hasMinimumDelta;
@@ -367,16 +344,11 @@ namespace mtconnect
     // Component that data item is associated with
     Component *m_component;
 
-    // Duplicate and filter checking
-    std::string m_lastValue;
-    double m_lastSampleValue;
-    double m_lastTimeOffset;
-
     // Attrubutes
     std::map<std::string, std::string> m_attributes;
 
     // The data source for this data item
-    Adapter *m_dataSource;
+    std::optional<std::string> m_dataSource;
 
     // Conversion factor
     double m_conversionFactor;

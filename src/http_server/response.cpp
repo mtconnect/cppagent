@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@ namespace mtconnect
 {
   namespace http_server
   {
-    const std::map<uint16_t, std::string> Response::m_status = {
+    const std::unordered_map<uint16_t, std::string> Response::m_status = {
         {100, "Continue"},
         {101, "Switching Protocols"},
         {200, "OK"},
@@ -69,14 +69,14 @@ namespace mtconnect
         {505, "HTTP Version Not Supported"}};
 
     template <typename F, typename S>
-    static std::map<S, F> flip_map(const std::map<F, S> &src)
+    static std::unordered_map<S, F> flip_map(const std::unordered_map<F, S> &src)
     {
-      std::map<S, F> dst;
+      std::unordered_map<S, F> dst;
       transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
                 [](const auto &p) { return make_pair(p.second, p.first); });
       return dst;
     }
 
-    const std::map<std::string, uint16_t> Response::m_codes = flip_map(m_status);
+    const std::unordered_map<std::string, uint16_t> Response::m_codes = flip_map(m_status);
   }  // namespace http_server
 }  // namespace mtconnect

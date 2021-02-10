@@ -11,7 +11,7 @@ Build Dependencies
 -----
 
     $ sudo apt-get update
-    $ sudo apt-get -y install git build-essential cmake libxml2-dev libcppunit-dev ruby curl
+    $ sudo apt-get -y install git build-essential cmake libxml2-dev ruby curl
 
 
 Clone from github

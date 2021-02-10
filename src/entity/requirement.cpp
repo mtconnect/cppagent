@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,16 +19,22 @@
 
 #include "entity.hpp"
 #include "factory.hpp"
+#include <string_view>
+
+#include <date/date.h>
 
 #include <dlib/logger.h>
 
 #include <cctype>
+#include <chrono>
 #include <cstdlib>
+#include <ctime>
 
 using namespace std;
 
 namespace mtconnect
 {
+  using namespace observation;
   namespace entity
   {
     static dlib::logger g_logger("EntityRequirement");
@@ -104,21 +110,45 @@ namespace mtconnect
       }
       else
       {
-        if (value.index() != m_type)
+        if (value.index() != (m_type & 0xF))
         {
           throw PropertyError("Incorrect type for property " + m_name);
         }
         if (std::holds_alternative<std::string>(value))
         {
           auto &v = std::get<std::string>(value);
-          if (v.empty())
-          {
-            throw PropertyError("Value of " + m_name + " is empty", m_name);
-          }
           if (m_pattern && !std::regex_match(v, *m_pattern))
           {
             throw PropertyError("Invalid value for '" + m_name + "': '" + v + "' is not allowed",
                                 m_name);
+          }
+        }
+        else if (std::holds_alternative<entity::Vector>(value))
+        {
+          auto &v = std::get<entity::Vector>(value);
+          if (m_size)
+          {
+            if (v.size() != *m_size)
+            {
+              throw PropertyError(
+                  "Vector size " + to_string(v.size()) + " is not equal to " + to_string(*m_size),
+                  m_name);
+            }
+          }
+          else
+          {
+            if (v.size() > m_upperMultiplicity)
+            {
+              throw PropertyError("Vector size " + to_string(v.size()) + " is greater than " +
+                                      to_string(m_upperMultiplicity),
+                                  m_name);
+            }
+            if (m_lowerMultiplicity != 0 && v.size() < m_lowerMultiplicity)
+            {
+              throw PropertyError("Vector size " + to_string(v.size()) + " is less than " +
+                                      to_string(m_lowerMultiplicity),
+                                  m_name);
+            }
           }
         }
       }
@@ -126,228 +156,213 @@ namespace mtconnect
       return true;
     }
 
-    struct StringConverter
+    struct ValueConverter
     {
-      StringConverter(const string &s) : m_string(s) {}
+      ValueConverter(ValueType type, bool table) : m_type(type), m_table(table) {}
 
-      operator double() const
+      // ------------ Strings ----------------
+      void operator()(const string &arg, DataSet &t) { t.parse(arg, m_table); }
+      void operator()(const string &arg, int64_t &r)
       {
         char *ep = nullptr;
-        const char *sp = m_string.c_str();
-        double r = strtod(sp, &ep);
+        const char *sp = arg.c_str();
+        r = strtoll(sp, &ep, 10);
         if (ep == sp)
-          throw PropertyError("cannot convert string '" + m_string + "' to double");
-
-        return r;
+          throw PropertyError("cannot convert string '" + arg + "' to integer");
       }
-
-      operator int64_t() const
+      void operator()(const string &arg, double &r)
       {
         char *ep = nullptr;
-        const char *sp = m_string.c_str();
-        int64_t r = strtoll(sp, &ep, 10);
+        const char *sp = arg.c_str();
+        r = strtod(sp, &ep);
         if (ep == sp)
-          throw PropertyError("cannot convert string '" + m_string + "' to integer");
-
-        return r;
+          throw PropertyError("cannot convert string '" + arg + "' to double");
       }
-
-      operator bool() const { return m_string == "true"; }
-
-      operator Vector() const
+      void operator()(const string &arg, Timestamp &ts)
       {
+        istringstream in(arg);
+        in >> std::setw(6) >> date::parse("%FT%T", ts);
+      }
+      void operator()(const string &arg, Vector &r)
+      {
+        if (arg.empty())
+          return;
+
         char *np(nullptr);
-        const char *cp = m_string.c_str();
-        Vector r;
+        const char *cp = arg.c_str();
 
         while (cp && *cp != '\0')
         {
           if (isspace(*cp))
           {
             cp++;
-            continue;
-          }
-
-          double v = strtod(cp, &np);
-          if (cp != np)
-          {
-            r.emplace_back(v);
           }
           else
           {
-            throw PropertyError("cannot convert string '" + m_string + "' to vector");
+            double v = strtod(cp, &np);
+            if (cp == np)
+            {
+              throw PropertyError("cannot convert string '" + arg + "' to vector");
+            }
+            r.emplace_back(v);
+            cp = np;
           }
-          cp = np;
         }
 
         if (r.size() == 0)
-          throw PropertyError("cannot convert string '" + m_string + "' to vector");
-
-        return r;
+          throw PropertyError("cannot convert string '" + arg + "' to vector");
+      }
+      void operator()(const string &arg, bool &r) { r = arg == "true"; }
+      void operator()(const string &arg, string &r)
+      {
+        r = arg;
+        if (m_type == USTRING)
+          toUpperCase(r);
       }
 
-      const string &m_string;
+      // ----------------- double
+      void operator()(const double arg, string &v) { v = format(arg); }
+      void operator()(const double arg, int64_t &v) { v = arg; }
+      void operator()(const double arg, bool &v) { v = arg != 0.0; }
+      void operator()(const double arg, Vector &v) { v.emplace_back(arg); }
+      void operator()(const double arg, Timestamp &v)
+      {
+        v = std::chrono::system_clock::from_time_t(arg);
+      }
+      template <typename T>
+      void operator()(const double arg, T &v)
+      {
+        throw PropertyError("Cannot convert a double to a non-scalar");
+      }
+
+      // ------------ int 64
+      void operator()(const int64_t arg, string &v) { v = to_string(arg); }
+      void operator()(const int64_t arg, bool &v) { v = arg != 0; }
+      void operator()(const int64_t arg, double &v) { v = double(arg); }
+      void operator()(const int64_t arg, Vector &v) { v.emplace_back(arg); }
+      void operator()(const int64_t arg, Timestamp &v)
+      {
+        v = std::chrono::system_clock::from_time_t(arg);
+      }
+      template <typename T>
+      void operator()(const int64_t arg, T &v)
+      {
+        throw PropertyError("Cannot convert a int64 to a non-scalar");
+      }
+
+      // ----------- Vector
+      void operator()(const Vector &arg, string &v)
+      {
+        if (arg.size() > 0)
+        {
+          stringstream s;
+          for (auto &v : arg)
+            s << formatted(v) << ' ';
+          v = string_view(s.str().c_str(), s.str().size() - 1);
+        }
+      }
+      template <typename T>
+      void operator()(const Vector &arg, T &v)
+      {
+        throw PropertyError("Cannot convert a Vector to anything other than a string");
+      }
+
+      // ------------ Bool
+      void operator()(const bool arg, string &v) { v = arg ? "true" : "false"; }
+      void operator()(const bool arg, Vector &v) { v.emplace_back(arg); }
+      void operator()(const bool arg, int64_t &v) { v = arg; }
+      void operator()(const bool arg, double &v) { v = arg; }
+      template <typename T>
+      void operator()(const bool arg, T &v)
+      {
+        throw PropertyError("Cannot convert a bool to a non-scalar");
+      }
+
+      // ------------ Timestamp
+      void operator()(const Timestamp &arg, string &v) { v = format(arg); }
+      void operator()(const Timestamp &arg, int64_t &v)
+      {
+        v = chrono::system_clock::to_time_t(arg);
+      }
+      void operator()(const Timestamp &arg, double &v) { v = arg.time_since_epoch().count(); }
+      void operator()(const Timestamp &arg, Vector &v)
+      {
+        v.emplace_back(arg.time_since_epoch().count());
+      }
+      template <typename T>
+      void operator()(const Timestamp &arg, T &)
+      {
+        throw PropertyError("Cannot convert a Timestamp to a non-scalar");
+      }
+
+      // -- Catch all
+      template <typename U, typename T>
+      void operator()(const U &arg, T &t)
+      {
+        stringstream s;
+        s << "Cannot convert from " << typeid(U).name() << " to " << typeid(T).name();
+        throw PropertyError(s.str());
+      }
+      // Default
+
+      ValueType m_type;
+      bool m_table;
     };
 
-    bool ConvertValueToType(Value &value, ValueType type)
+    bool ConvertValueToType(Value &value, ValueType type, bool table)
     {
-      bool converted = false;
-      if (value.index() != type)
+      if (value.index() == type)
+        return false;
+
+      Value out;
+      switch (type)
       {
-        visit(overloaded{[&](const string &arg) {
-                           StringConverter s(arg);
-                           switch (type)
-                           {
-                             case INTEGER:
-                               value = int64_t(s);
-                               converted = true;
-                               break;
+        case USTRING:
+        case STRING:
+          out.emplace<STRING>();
+          break;
 
-                             case DOUBLE:
-                               value = double(s);
-                               converted = true;
-                               break;
+        case INTEGER:
+          out.emplace<INTEGER>(0);
+          break;
 
-                             case BOOL:
-                               value = bool(s);
-                               converted = true;
-                               break;
+        case DOUBLE:
+          out.emplace<DOUBLE>(0.0);
+          break;
 
-                             case VECTOR:
-                               value = Vector(s);
-                               converted = true;
-                               break;
+        case BOOL:
+          out.emplace<BOOL>(false);
+          break;
 
-                             default:
-                               throw PropertyError("Cannot convert a string to a non-scalar");
-                               break;
-                           }
-                         },
-                         [&](double arg) {
-                           switch (type)
-                           {
-                             case STRING:
-                             {
-                               stringstream s;
-                               s << arg;
-                               value = s.str();
-                               converted = true;
-                               break;
-                             }
-                             case INTEGER:
-                               value = int64_t(arg);
-                               converted = true;
-                               break;
+        case VECTOR:
+          out.emplace<VECTOR>();
+          break;
 
-                             case BOOL:
-                               value = arg != 0.0;
-                               converted = true;
-                               break;
+        case DATA_SET:
+          out.emplace<DATA_SET>();
+          break;
 
-                             case VECTOR:
-                             {
-                               Vector v{arg};
-                               value = v;
-                               converted = true;
-                               break;
-                             }
+        case TABLE:
+          if (value.index() == DATA_SET)
+            return false;
 
-                             default:
-                               throw PropertyError("Cannot convert a double to a non-scalar");
-                               break;
-                           }
-                         },
-                         [&](int64_t arg) {
-                           switch (type)
-                           {
-                             case STRING:
-                               value = to_string(arg);
-                               converted = true;
-                               break;
+          table = true;
+          out.emplace<DATA_SET>();
+          break;
 
-                             case DOUBLE:
-                               value = double(arg);
-                               converted = true;
-                               break;
+        case TIMESTAMP:
+          out.emplace<TIMESTAMP>();
+          break;
 
-                             case BOOL:
-                               value = arg != 0;
-                               converted = true;
-                               break;
-
-                             case VECTOR:
-                             {
-                               Vector v{double(arg)};
-                               value = v;
-                               converted = true;
-                               break;
-                             }
-
-                             default:
-                               throw PropertyError("Cannot convert a integer to a non-scalar");
-                               break;
-                           }
-                         },
-                         [&](const Vector &arg) {
-                           switch (type)
-                           {
-                             case STRING:
-                             {
-                               if (arg.size() > 0)
-                               {
-                                 stringstream s;
-                                 for (auto &v : arg)
-                                   s << v << ' ';
-                                 auto str = s.str();
-                                 str.erase(str.length() - 1);
-                                 value = str;
-                                 converted = true;
-                                 break;
-                               }
-                               else
-                               {
-                                 throw PropertyError("Cannot convert a empty Vector to a string");
-                               }
-                             }
-
-                             default:
-                               throw PropertyError(
-                                   "Cannot convert a Vector to anything other than a string");
-                               break;
-                           }
-                         },
-                         [&](const bool b) {
-                           switch (type)
-                           {
-                             case INTEGER:
-                               value = int64_t(b);
-                               converted = true;
-                               break;
-
-                             case DOUBLE:
-                               value = double(b);
-                               converted = true;
-                               break;
-
-                             case STRING:
-                               value = b ? string("true") : string("false");
-                               converted = true;
-                               break;
-
-                             case VECTOR:
-                               value = Vector(double(b));
-                               converted = true;
-                               break;
-
-                             default:
-                               throw PropertyError("Cannot convert a string to a non-scalar");
-                               break;
-                           }
-                         },
-                         [&](const auto &arg) { converted = false; }},
-              value);
+        default:
+          throw PropertyError("Cannot convert non-scaler types");
       }
-      return converted;
+
+      ValueConverter vc(type, table);
+      visit(vc, value, out);
+      value = out;
+
+      return true;
     }
   }  // namespace entity
 }  // namespace mtconnect

@@ -58,7 +58,7 @@ def heartbeat(socket)
         if (r = socket.read_nonblock(256)) =~ /\* PING/
           puts "Received #{r.strip}, responding with pong" if $verbose
           $mutex.synchronize {
-            socket.puts "* PONG 10000"
+            socket.puts "* PONG 60000"
             socket.flush
           }
         else
@@ -107,7 +107,7 @@ begin
         f, r = l.chomp.split('|', 2)
       
         if fast
-          sleep 0.0001
+        sleep 0.001
         elsif scenario
           if f == nil
             f = 1

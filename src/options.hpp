@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +16,7 @@
 //
 
 #pragma once
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <string>
@@ -26,7 +26,7 @@ namespace mtconnect
   //-- Forward class declarations.
   class Option
   {
-   public:
+  public:
     enum EType
     {
       eBoolean,
@@ -88,10 +88,10 @@ namespace mtconnect
 
     bool setValue(const char *aCp);
 
-   protected:
+  protected:
     void expandFiles(const char *fileName);
 
-   protected:
+  protected:
     const char *name_;
     const char **charPtrPtr_;
     bool *boolPtr_;
@@ -113,7 +113,7 @@ namespace mtconnect
 
   class OptionsList : public std::list<Option>
   {
-   public:
+  public:
     //---- Constructors
     OptionsList();
     OptionsList(Option *optionList[]);
@@ -128,12 +128,12 @@ namespace mtconnect
     void setOwnsOptions(bool flag = true) { ownsOptions_ = flag; }
     void append(Option *option) { emplace_back(*option); }
 
-   protected:
+  protected:
     void getArg(const char **&argv, int &argc, Option *option, const char *aAt);
     bool find(const char *optName, Option *&option);
     bool find(int order, Option *&option);
 
-   protected:
+  protected:
     const char *program_;
     int unswitched_;
     bool ownsOptions_;

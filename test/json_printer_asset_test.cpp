@@ -8,7 +8,7 @@
 #include <cstdio>
 
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,15 +28,15 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "checkpoint.hpp"
+#include "observation/checkpoint.hpp"
 #include "assets/cutting_tool.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 #include "json_helper.hpp"
 #include "json_printer.hpp"
-#include "observation.hpp"
-#include "test_globals.hpp"
+#include "observation/observation.hpp"
+#include "test_utilities.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "entity/xml_parser.hpp"
@@ -125,7 +125,7 @@ TEST_F(JsonPrinterAssetTest, CuttingTool)
             cuttingTool.at("/CuttingTool/toolId"_json_pointer).get<string>());
   ASSERT_EQ(string("KSSP300R4SD43L240.1"),
             cuttingTool.at("/CuttingTool/assetId"_json_pointer).get<string>());
-  ASSERT_EQ(string("2011-05-11T13:55:22"),
+  ASSERT_EQ(string("2011-05-11T13:55:22Z"),
             cuttingTool.at("/CuttingTool/timestamp"_json_pointer).get<string>());
   ASSERT_EQ(string("KMT,Parlec"),
             cuttingTool.at("/CuttingTool/manufacturers"_json_pointer).get<string>());

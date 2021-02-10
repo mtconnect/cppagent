@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <dlib/dir_nav.h>
 #include <dlib/threads.h>
@@ -30,7 +30,7 @@ namespace mtconnect
 {
   class RollingFileLogger
   {
-   public:
+  public:
     enum RollingSchedule
     {
       DAILY,
@@ -49,11 +49,11 @@ namespace mtconnect
 
     uint64_t getMaxSize() const { return m_maxSize; }
 
-   protected:
+  protected:
     void rollover(uint64_t size);
     std::time_t getFileAge();
 
-   private:
+  private:
     std::mutex m_fileLock;
 
     std::string m_name;

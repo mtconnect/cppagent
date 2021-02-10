@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,17 +20,25 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "assets/asset.hpp"
-#include "checkpoint.hpp"
+#include "observation/checkpoint.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
-#include "globals.hpp"
-#include "observation.hpp"
-#include "test_globals.hpp"
+#include "utilities.hpp"
+#include "observation/observation.hpp"
+#include "observation/checkpoint.hpp"
+#include "test_utilities.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::observation;
+using namespace mtconnect::entity;
+
+Properties operator "" _value(const char *value, size_t s)
+{
+  return Properties{{ "VALUE", string(value) }};
+}
 
 class XmlPrinterTest : public testing::Test
 {
@@ -38,7 +46,7 @@ class XmlPrinterTest : public testing::Test
   void SetUp() override
   {
     m_config = new XmlParser();
-    m_printer = new XmlPrinter();
+    m_printer = new XmlPrinter("1.7", true);
     m_printer->setSchemaVersion("");
     m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", m_printer);
   }
@@ -56,11 +64,35 @@ class XmlPrinterTest : public testing::Test
   std::list<mtconnect::Device *> m_devices;
 
   // Construct a component event and set it as the data item's latest event
-  mtconnect::Observation *addEventToCheckpoint(mtconnect::Checkpoint &checkpoint, const char *name,
-                                               uint64_t sequence, std::string value);
+  ObservationPtr addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
+                                      uint64_t sequence, const Properties &props);
 
-  mtconnect::Observation *newEvent(const char *name, uint64_t sequence, std::string value);
+  ObservationPtr newEvent(const char *name, uint64_t sequence, const Properties &props);
 };
+
+ObservationPtr XmlPrinterTest::newEvent(const char *name, uint64_t sequence,
+                                        const Properties &props)
+{
+  // Make sure the data item is there
+  const auto device = m_devices.front();
+  EXPECT_TRUE(device);
+
+  const auto d = device->getDeviceDataItem(name);
+  EXPECT_TRUE(d) << "Could not find data item " << name;
+  entity::ErrorList errors;
+  auto now = chrono::system_clock::now();
+  auto o = Observation::make(d, props, now, errors);
+  o->setSequence(sequence);
+  return o;
+}
+
+ObservationPtr XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
+                                                  uint64_t sequence, const Properties &props)
+{
+  auto event = newEvent(name, sequence, props);
+  checkpoint.addObservation(event);
+  return event;
+}
 
 TEST_F(XmlPrinterTest, PrintError)
 {
@@ -153,22 +185,22 @@ TEST_F(XmlPrinterTest, PrintDataItemElements)
 TEST_F(XmlPrinterTest, PrintCurrent)
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
-  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
-  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
-  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100");
-  addEventToCheckpoint(checkpoint, "Yact", 10254797, "0.00199");
-  addEventToCheckpoint(checkpoint, "Ycom", 10254800, "0.00189");
-  addEventToCheckpoint(checkpoint, "Zact", 10254798, "0.0002");
-  addEventToCheckpoint(checkpoint, "Zcom", 10254801, "0.0003");
-  addEventToCheckpoint(checkpoint, "block", 10254789, "x-0.132010 y-0.158143");
-  addEventToCheckpoint(checkpoint, "mode", 13, "AUTOMATIC");
-  addEventToCheckpoint(checkpoint, "line", 10254796, "0");
-  addEventToCheckpoint(checkpoint, "program", 12, "/home/mtconnect/simulator/spiral.ngc");
-  addEventToCheckpoint(checkpoint, "execution", 10254795, "READY");
-  addEventToCheckpoint(checkpoint, "power", 1, "ON");
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0"_value);
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100"_value);
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0"_value);
+  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100"_value);
+  addEventToCheckpoint(checkpoint, "Yact", 10254797, "0.00199"_value);
+  addEventToCheckpoint(checkpoint, "Ycom", 10254800, "0.00189"_value);
+  addEventToCheckpoint(checkpoint, "Zact", 10254798, "0.0002"_value);
+  addEventToCheckpoint(checkpoint, "Zcom", 10254801, "0.0003"_value);
+  addEventToCheckpoint(checkpoint, "block", 10254789, "x-0.132010 y-0.158143"_value);
+  addEventToCheckpoint(checkpoint, "mode", 13, "AUTOMATIC"_value);
+  addEventToCheckpoint(checkpoint, "line", 10254796, "0"_value);
+  addEventToCheckpoint(checkpoint, "program", 12, "/home/mtconnect/simulator/spiral.ngc"_value);
+  addEventToCheckpoint(checkpoint, "execution", 10254795, "READY"_value);
+  addEventToCheckpoint(checkpoint, "power", 1, "ON"_value);
 
-  ObservationPtrArray list;
+  ObservationList list;
   checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
 
@@ -246,13 +278,13 @@ TEST_F(XmlPrinterTest, ChangeStreamsNamespace)
   m_printer->clearStreamsNamespaces();
 
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
-  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
-  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0"_value);
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100"_value);
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0"_value);
 
   // Streams
   {
-    ObservationPtrArray list;
+    ObservationList list;
     checkpoint.getObservations(list);
 
     PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
@@ -269,7 +301,7 @@ TEST_F(XmlPrinterTest, ChangeStreamsNamespace)
     m_printer->addStreamsNamespace("urn:machine.com:MachineStreams:1.3",
                                    "http://www.machine.com/schemas/MachineStreams_1.3.xsd", "e");
 
-    ObservationPtrArray list;
+    ObservationList list;
     checkpoint.getObservations(list);
     PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
 
@@ -288,9 +320,9 @@ TEST_F(XmlPrinterTest, ChangeStreamsNamespace)
                                    "x");
 
     Checkpoint checkpoint2;
-    addEventToCheckpoint(checkpoint2, "flow", 10254804, "100");
+    addEventToCheckpoint(checkpoint2, "flow", 10254804, "100"_value);
 
-    ObservationPtrArray list;
+    ObservationList list;
     checkpoint2.getObservations(list);
 
     PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
@@ -308,9 +340,9 @@ TEST_F(XmlPrinterTest, ChangeStreamsNamespace)
                                    "x");
 
     Checkpoint checkpoint2;
-    addEventToCheckpoint(checkpoint2, "flow", 10254804, "100");
+    addEventToCheckpoint(checkpoint2, "flow", 10254804, "100"_value);
 
-    ObservationPtrArray list;
+    ObservationList list;
     checkpoint2.getObservations(list);
 
     PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
@@ -348,32 +380,32 @@ TEST_F(XmlPrinterTest, ChangeErrorNamespace)
 
 TEST_F(XmlPrinterTest, PrintSample)
 {
-  ObservationPtrArray events;
+  ObservationList events;
 
   ObservationPtr ptr;
-  ptr = newEvent("Xact", 10843512, "0.553472");
+  ptr = newEvent("Xact", 10843512, "0.553472"_value);
   events.push_back(ptr);
-  ptr = newEvent("Xcom", 10843514, "0.551123");
+  ptr = newEvent("Xcom", 10843514, "0.551123"_value);
   events.push_back(ptr);
-  ptr = newEvent("Xact", 10843516, "0.556826");
+  ptr = newEvent("Xact", 10843516, "0.556826"_value);
   events.push_back(ptr);
-  ptr = newEvent("Xcom", 10843518, "0.55582");
+  ptr = newEvent("Xcom", 10843518, "0.55582"_value);
   events.push_back(ptr);
-  ptr = newEvent("Xact", 10843520, "0.560181");
+  ptr = newEvent("Xact", 10843520, "0.560181"_value);
   events.push_back(ptr);
-  ptr = newEvent("Yact", 10843513, "-0.900624");
+  ptr = newEvent("Yact", 10843513, "-0.900624"_value);
   events.push_back(ptr);
-  ptr = newEvent("Ycom", 10843515, "-0.89692");
+  ptr = newEvent("Ycom", 10843515, "-0.89692"_value);
   events.push_back(ptr);
-  ptr = newEvent("Yact", 10843517, "-0.897574");
+  ptr = newEvent("Yact", 10843517, "-0.897574"_value);
   events.push_back(ptr);
-  ptr = newEvent("Ycom", 10843519, "-0.894742");
+  ptr = newEvent("Ycom", 10843519, "-0.894742"_value);
   events.push_back(ptr);
-  ptr = newEvent("Xact", 10843521, "-0.895613");
+  ptr = newEvent("Xact", 10843521, "-0.895613"_value);
   events.push_back(ptr);
-  ptr = newEvent("line", 11351720, "229");
+  ptr = newEvent("line", 11351720, "229"_value);
   events.push_back(ptr);
-  ptr = newEvent("block", 11351726, "x-1.149250 y1.048981");
+  ptr = newEvent("block", 11351726, "x-1.149250 y1.048981"_value);
   events.push_back(ptr);
 
   PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
@@ -409,28 +441,42 @@ TEST_F(XmlPrinterTest, PrintSample)
 TEST_F(XmlPrinterTest, Condition)
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
-  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
-  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
-  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100");
-  addEventToCheckpoint(checkpoint, "Yact", 10254797, "0.00199");
-  addEventToCheckpoint(checkpoint, "Ycom", 10254800, "0.00189");
-  addEventToCheckpoint(checkpoint, "Zact", 10254798, "0.0002");
-  addEventToCheckpoint(checkpoint, "Zcom", 10254801, "0.0003");
-  addEventToCheckpoint(checkpoint, "block", 10254789, "x-0.132010 y-0.158143");
-  addEventToCheckpoint(checkpoint, "mode", 13, "AUTOMATIC");
-  addEventToCheckpoint(checkpoint, "line", 10254796, "0");
-  addEventToCheckpoint(checkpoint, "program", 12, "/home/mtconnect/simulator/spiral.ngc");
-  addEventToCheckpoint(checkpoint, "execution", 10254795, "READY");
-  addEventToCheckpoint(checkpoint, "power", 1, "ON");
-  addEventToCheckpoint(checkpoint, "ctmp", 18, "WARNING|OTEMP|1|HIGH|Spindle Overtemp");
-  addEventToCheckpoint(checkpoint, "cmp", 18, "NORMAL||||");
-  addEventToCheckpoint(checkpoint, "lp", 18, "FAULT|LOGIC|2||PLC Error");
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0"_value);
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100"_value);
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0"_value);
+  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100"_value);
+  addEventToCheckpoint(checkpoint, "Yact", 10254797, "0.00199"_value);
+  addEventToCheckpoint(checkpoint, "Ycom", 10254800, "0.00189"_value);
+  addEventToCheckpoint(checkpoint, "Zact", 10254798, "0.0002"_value);
+  addEventToCheckpoint(checkpoint, "Zcom", 10254801, "0.0003"_value);
+  addEventToCheckpoint(checkpoint, "block", 10254789, "x-0.132010 y-0.158143"_value);
+  addEventToCheckpoint(checkpoint, "mode", 13, "AUTOMATIC"_value);
+  addEventToCheckpoint(checkpoint, "line", 10254796, "0"_value);
+  addEventToCheckpoint(checkpoint, "program", 12, "/home/mtconnect/simulator/spiral.ngc"_value);
+  addEventToCheckpoint(checkpoint, "execution", 10254795, "READY"_value);
+  addEventToCheckpoint(checkpoint, "power", 1, "ON"_value);
+  
+  addEventToCheckpoint(checkpoint, "ctmp", 18, Properties{{
+    {"level", "WARNING"s },
+    {"nativeCode", "OTEMP"s},
+    {"nativeSeverity", "1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Spindle Overtemp"s}
+  }});
+  addEventToCheckpoint(checkpoint, "cmp", 18, Properties{{
+    {"level", "NORMAL"s },
+  }});
+  addEventToCheckpoint(checkpoint, "lp", 18, Properties{{
+    {"level", "FAULT"s },
+    {"nativeCode", "LOGIC"s},
+    {"nativeSeverity", "2"s},
+    {"VALUE", "PLC Error"s}
+  }});
 
-  ObservationPtrArray list;
+  ObservationList list;
   checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
-
+  
   ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning",
                         "Spindle Overtemp");
   ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@type",
@@ -460,10 +506,10 @@ TEST_F(XmlPrinterTest, Condition)
 TEST_F(XmlPrinterTest, VeryLargeSequence)
 {
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xact", (((uint64_t)1) << 48) + 1, "0");
-  addEventToCheckpoint(checkpoint, "Xcom", (((uint64_t)1) << 48) + 3, "123");
+  addEventToCheckpoint(checkpoint, "Xact", (((uint64_t)1) << 48) + 1, "0"_value);
+  addEventToCheckpoint(checkpoint, "Xcom", (((uint64_t)1) << 48) + 3, "123"_value);
 
-  ObservationPtrArray list;
+  ObservationList list;
   checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, (((uint64_t)1) << 48) + 3,
                                    (((uint64_t)1) << 48) + 1, (((uint64_t)1) << 48) + 1024, list));
@@ -520,8 +566,10 @@ TEST_F(XmlPrinterTest, TimeSeries)
 {
   ObservationPtr ptr;
   {
-    ObservationPtrArray events;
-    ptr = newEvent("Xts", 10843512, "6|||1.1 2.2 3.3 4.4 5.5 6.6 ");
+    ObservationList events;
+    ptr = newEvent("Xts", 10843512, Properties{
+      {"sampleCount", int64_t(6)},
+      {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"s}});
     events.push_back(ptr);
 
     PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
@@ -534,8 +582,12 @@ TEST_F(XmlPrinterTest, TimeSeries)
         "1.1 2.2 3.3 4.4 5.5 6.6");
   }
   {
-    ObservationPtrArray events;
-    ptr = newEvent("Xts", 10843512, "6|46200|1.1 2.2 3.3 4.4 5.5 6.6 ");
+    ObservationList events;
+    ptr = newEvent("Xts", 10843512, Properties{
+      {"sampleCount", int64_t(6)},
+      {"sampleRate", 46200.0},
+      {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"s}});
+
     events.push_back(ptr);
 
     PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
@@ -550,8 +602,13 @@ TEST_F(XmlPrinterTest, TimeSeries)
 
 TEST_F(XmlPrinterTest, NonPrintableCharacters)
 {
-  ObservationPtrArray events;
-  ObservationPtr ptr = newEvent("zlc", 10843512, "zlc|fault|500|||OVER TRAVEL : +Z? ");
+  ObservationList events;
+  ObservationPtr ptr = newEvent("zlc", 10843512, Properties{{
+    {"level", "fault"s },
+    {"nativeCode", "500"s},
+    {"VALUE", "OVER TRAVEL : +Z? "s}
+  }});
+
   events.push_back(ptr);
   PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
   ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]",
@@ -560,8 +617,13 @@ TEST_F(XmlPrinterTest, NonPrintableCharacters)
 
 TEST_F(XmlPrinterTest, EscapedXMLCharacters)
 {
-  ObservationPtrArray events;
-  ObservationPtr ptr = newEvent("zlc", 10843512, "fault|500|||A duck > a foul & < cat '");
+  ObservationList events;
+  ObservationPtr ptr = newEvent("zlc", 10843512, Properties{{
+    {"level", "fault"s },
+    {"nativeCode", "500"s},
+    {"VALUE", "A duck > a foul & < cat '"s}
+  }});
+
   events.push_back(ptr);
   PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
   ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ComponentStream[@name='Z']/m:Condition//*[1]",
@@ -717,12 +779,12 @@ TEST_F(XmlPrinterTest, StreamsStyle)
 {
   m_printer->setStreamStyle("/styles/Streams.xsl");
   Checkpoint checkpoint;
-  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0");
-  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100");
-  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0");
-  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100");
+  addEventToCheckpoint(checkpoint, "Xact", 10254804, "0"_value);
+  addEventToCheckpoint(checkpoint, "SspeedOvr", 15, "100"_value);
+  addEventToCheckpoint(checkpoint, "Xcom", 10254803, "0"_value);
+  addEventToCheckpoint(checkpoint, "spindle_speed", 16, "100"_value);
 
-  ObservationPtrArray list;
+  ObservationList list;
   checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
 
@@ -760,27 +822,6 @@ TEST_F(XmlPrinterTest, ErrorStyle)
             string((const char *)pi->content));
 
   m_printer->setErrorStyle("");
-}
-
-Observation *XmlPrinterTest::newEvent(const char *name, uint64_t sequence, string value)
-{
-  string time("TIME");
-
-  // Make sure the data item is there
-  const auto device = m_devices.front();
-  EXPECT_TRUE(device);
-
-  const auto d = device->getDeviceDataItem(name);
-  EXPECT_TRUE(d) << "Could not find data item " << name;
-  return new Observation(*d, time, value, sequence);
-}
-
-Observation *XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
-                                                  uint64_t sequence, string value)
-{
-  Observation *event = newEvent(name, sequence, value);
-  checkpoint.addObservation(event);
-  return event;
 }
 
 TEST_F(XmlPrinterTest, PrintDeviceMTConnectVersion)

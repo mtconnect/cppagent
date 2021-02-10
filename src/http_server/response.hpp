@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "utilities.hpp"
+#include <unordered_map>
 
 #include <dlib/logger.h>
 #include <dlib/md5.h>
@@ -80,7 +81,7 @@ namespace mtconnect
 
     class Response
     {
-     public:
+    public:
       Response(std::ostream &out) : m_out(out) {}
 
       virtual ~Response() = default;
@@ -145,7 +146,7 @@ namespace mtconnect
               << "\r\n"
                  "Content-length: "
               << body.length() << "\r\n\r\n"
-              << body;
+              << body << "\r\n\r\n";
 
           writeChunk(str.str());
         }
@@ -203,11 +204,11 @@ namespace mtconnect
         }
       }
 
-     protected:
+    protected:
       std::ostream &m_out;
       std::string m_boundary;
-      static const std::map<uint16_t, std::string> m_status;
-      static const std::map<std::string, uint16_t> m_codes;
+      static const std::unordered_map<uint16_t, std::string> m_status;
+      static const std::unordered_map<std::string, uint16_t> m_codes;
     };
   }  // namespace http_server
 }  // namespace mtconnect

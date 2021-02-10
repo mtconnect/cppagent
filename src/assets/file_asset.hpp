@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 
 #include "asset.hpp"
 #include "entity.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <map>
 #include <utility>
@@ -29,14 +29,14 @@ namespace mtconnect
 {
   class FileArchetypeAsset : public entity::Entity
   {
-   public:
+  public:
     static entity::FactoryPtr getFactory();
     static void registerAsset();
   };
 
   class FileAsset : public FileArchetypeAsset
   {
-   public:
+  public:
     static entity::FactoryPtr getFactory();
     static void registerAsset();
   };

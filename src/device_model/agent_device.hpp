@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,29 +19,31 @@
 #include "component.hpp"
 #include "data_item.hpp"
 #include "device_model/device.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <map>
 
 namespace mtconnect
 {
-  class Adapter;
-
+  namespace adapter
+  {
+    class Adapter;
+  }
   class AgentDevice : public Device
   {
-   public:
+  public:
     // Constructor that sets variables from an attribute map
     AgentDevice(const Attributes &attributes);
     ~AgentDevice() override = default;
 
-    void addAdapter(const Adapter *adapter);
+    void addAdapter(const adapter::Adapter *adapter);
 
-    DataItem *getConnectionStatus(const Adapter *adapter);
+    DataItem *getConnectionStatus(const std::string &adapter);
 
-   protected:
+  protected:
     void addRequiredDataItems();
 
-   protected:
+  protected:
     Component *m_adapters{nullptr};
   };
 }  // namespace mtconnect

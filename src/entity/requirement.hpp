@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "observation/data_set.hpp"
+#include "utilities.hpp"
 
 #include <atomic>
 #include <cmath>
@@ -42,34 +43,40 @@ namespace mtconnect
   namespace entity
   {
     class Entity;
-    class Factory;
     using EntityPtr = std::shared_ptr<Entity>;
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
+
     using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
-                               bool, Vector, std::nullptr_t>;
+                               bool, Vector, observation::DataSet, Timestamp, std::nullptr_t>;
+
+    class Factory;
     using FactoryPtr = std::shared_ptr<Factory>;
     using ControlledVocab = std::list<std::string>;
     using Pattern = std::optional<std::regex>;
 
-    enum ValueType
+    enum ValueType : int16_t
     {
-      EMPTY = 0,
-      ENTITY = 1,
-      ENTITY_LIST = 2,
-      STRING = 3,
-      INTEGER = 4,
-      DOUBLE = 5,
-      BOOL = 6,
-      VECTOR = 7,
-      NULL_VALUE = 8
+      EMPTY = 0x0,
+      ENTITY = 0x1,
+      ENTITY_LIST = 0x2,
+      STRING = 0x3,
+      INTEGER = 0x4,
+      DOUBLE = 0x5,
+      BOOL = 0x6,
+      VECTOR = 0x7,
+      DATA_SET = 0x8,
+      TIMESTAMP = 0x9,
+      NULL_VALUE = 0xA,
+      USTRING = 0x10 | STRING,
+      TABLE = 0x10 | DATA_SET
     };
 
-    bool ConvertValueToType(Value &value, ValueType type);
+    bool ConvertValueToType(Value &value, ValueType type, bool table = false);
 
     class EntityError : public std::logic_error
     {
-     public:
+    public:
       explicit EntityError(const std::string &s, const std::string &e = "")
         : std::logic_error(s), m_entity(e)
       {
@@ -100,13 +107,13 @@ namespace mtconnect
       virtual EntityError *dup() const noexcept { return new EntityError(*this); }
       const std::string &getEntity() const { return m_entity; }
 
-     protected:
+    protected:
       std::string m_text;
       std::string m_entity;
     };
     class PropertyError : public EntityError
     {
-     public:
+    public:
       explicit PropertyError(const std::string &s, const std::string &p = "",
                              const std::string &e = "")
         : EntityError(s, e), m_property(p)
@@ -138,7 +145,7 @@ namespace mtconnect
       EntityError *dup() const noexcept override { return new PropertyError(*this); }
       const std::string &getProperty() const { return m_property; }
 
-     protected:
+    protected:
       std::string m_property;
     };
 
@@ -154,10 +161,10 @@ namespace mtconnect
 
     class Requirement
     {
-     public:
+    public:
       const static auto Infinite{std::numeric_limits<int>::max()};
 
-     public:
+    public:
       Requirement(const std::string &name, ValueType type, bool required = true)
         : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
       {
@@ -168,6 +175,14 @@ namespace mtconnect
       }
       Requirement(const std::string &name, ValueType type, int lower, int upper)
         : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
+      {
+      }
+      Requirement(const std::string &name, ValueType type, int size, bool required = true)
+        : m_name(name),
+          m_upperMultiplicity(1),
+          m_lowerMultiplicity(required ? 1 : 0),
+          m_size(size),
+          m_type(type)
       {
       }
       Requirement(const std::string &name, ValueType type, FactoryPtr &o, bool required = true);
@@ -204,6 +219,7 @@ namespace mtconnect
         m_upperMultiplicity = o.m_upperMultiplicity;
         m_factory = o.m_factory;
         m_matcher = o.m_matcher;
+        m_size = o.m_size;
         return *this;
       }
 
@@ -211,6 +227,7 @@ namespace mtconnect
       bool isOptional() const { return !isRequired(); }
       int getUpperMultiplicity() const { return m_upperMultiplicity; }
       int getLowerMultiplicity() const { return m_lowerMultiplicity; }
+      std::optional<int> getSize() const { return m_size; }
       const auto &getMatcher() const { return m_matcher; }
       void setMatcher(MatcherPtr m) { m_matcher = m; }
       const std::string &getName() const { return m_name; }
@@ -224,11 +241,11 @@ namespace mtconnect
       }
       void makeRequired() { m_lowerMultiplicity = 1; }
 
-      bool convertType(Value &v) const
+      bool convertType(Value &v, bool table = false) const
       {
         try
         {
-          return ConvertValueToType(v, m_type);
+          return ConvertValueToType(v, m_type, table);
         }
         catch (PropertyError &e)
         {
@@ -251,10 +268,11 @@ namespace mtconnect
         }
       }
 
-     protected:
+    protected:
       std::string m_name;
       int m_upperMultiplicity;
       int m_lowerMultiplicity;
+      std::optional<int> m_size;
       ValueType m_type;
       MatcherPtr m_matcher;
       FactoryPtr m_factory;

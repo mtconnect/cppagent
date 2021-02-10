@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,7 @@ namespace mtconnect
 
     class Routing
     {
-     public:
+    public:
       enum ParameterType
       {
         NONE = 0,
@@ -182,7 +182,7 @@ namespace mtconnect
         return false;
       }
 
-     protected:
+    protected:
       void pathParameters(std::string s)
       {
         std::regex reg("\\{([^}]+)\\}");
@@ -300,7 +300,7 @@ namespace mtconnect
         return ParameterValue();
       }
 
-     protected:
+    protected:
       std::string m_verb;
       std::regex m_pattern;
       std::string m_patternText;

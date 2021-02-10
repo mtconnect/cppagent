@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,26 +18,32 @@
 #pragma once
 #include "component.hpp"
 #include "data_item.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
+#include <unordered_map>
 
 #include <map>
 
 namespace mtconnect
 {
   class Component;
-  class Adapter;
+  namespace adapter
+  {
+    class Adapter;
+  }
 
   class Device : public Component
   {
-   public:
+  public:
     // Constructor that sets variables from an attribute map
     Device(const Attributes &attributes, const std::string block = "Device");
     ~Device() override;
 
+    void setOptions(const ConfigOptions &options);
+
     // Add/get items to/from the device name to data item mapping
     void addDeviceDataItem(DataItem *dataItem);
     DataItem *getDeviceDataItem(const std::string &name) const;
-    void addAdapter(Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
+    void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
     Component *getComponentById(const std::string &aId) const
     {
       auto comp = m_componentsById.find(aId);
@@ -52,14 +58,14 @@ namespace mtconnect
     }
 
     // Return the mapping of Device to data items
-    const std::map<std::string, DataItem *> &getDeviceDataItems() const
+    const std::unordered_map<std::string, DataItem *> &getDeviceDataItems() const
     {
       return m_deviceDataItemsById;
     }
 
     void addDataItem(DataItem *dataItem) override;
 
-    std::vector<Adapter *> m_adapters;
+    std::vector<adapter::Adapter *> m_adapters;
     bool m_preserveUuid;
     bool m_availabilityAdded;
 
@@ -70,7 +76,7 @@ namespace mtconnect
     DataItem *getAssetChanged() const { return m_assetChanged; }
     DataItem *getAssetRemoved() const { return m_assetRemoved; }
 
-   protected:
+  protected:
     // The iso841Class of the device
     unsigned int m_iso841Class;
     std::string m_mtconnectVersion;
@@ -80,9 +86,9 @@ namespace mtconnect
     DataItem *m_assetRemoved;
 
     // Mapping of device names to data items
-    std::map<std::string, DataItem *> m_deviceDataItemsByName;
-    std::map<std::string, DataItem *> m_deviceDataItemsById;
-    std::map<std::string, DataItem *> m_deviceDataItemsBySource;
-    std::map<std::string, Component *> m_componentsById;
+    std::unordered_map<std::string, DataItem *> m_deviceDataItemsByName;
+    std::unordered_map<std::string, DataItem *> m_deviceDataItemsById;
+    std::unordered_map<std::string, DataItem *> m_deviceDataItemsBySource;
+    std::unordered_map<std::string, Component *> m_componentsById;
   };
 }  // namespace mtconnect

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,9 @@
 #pragma once
 
 #include "entity.hpp"
+#include <unordered_map>
 
+#include <map>
 #include <set>
 
 namespace mtconnect
@@ -29,14 +31,15 @@ namespace mtconnect
 
     class Factory : public Matcher, public std::enable_shared_from_this<Factory>
     {
-     public:
+    public:
       using Function =
           std::function<std::shared_ptr<Entity>(const std::string &name, Properties &)>;
-      using RegexPair = std::pair<std::regex, FactoryPtr>;
-      using StringFactory = std::map<std::string, FactoryPtr>;
-      using RegexFactory = std::list<RegexPair>;
+      using Matcher = std::function<bool(const std::string &)>;
+      using MatchPair = std::pair<Matcher, FactoryPtr>;
+      using StringFactory = std::unordered_map<std::string, FactoryPtr>;
+      using MatchFactory = std::list<MatchPair>;
 
-     public:
+    public:
       // Factory Methods
       static auto createEntity(const std::string &name, Properties &p)
       {
@@ -58,6 +61,7 @@ namespace mtconnect
 
       FactoryPtr getptr() { return shared_from_this(); }
 
+      void setFunction(Function f) { m_function = f; }
       void setOrder(OrderList list)
       {
         m_order = std::make_shared<OrderMap>();
@@ -106,9 +110,6 @@ namespace mtconnect
         }
         registerEntityRequirements();
       }
-
-      void setFunction(Function f) { m_function = f; }
-
       void performConversions(Properties &p, ErrorList &errors) const;
       virtual bool isSufficient(Properties &properties, ErrorList &errors) const;
 
@@ -151,7 +152,14 @@ namespace mtconnect
 
       bool registerFactory(const std::regex &exp, FactoryPtr factory)
       {
-        m_regexFactory.emplace_back(make_pair(exp, factory));
+        auto matcher = [exp](const std::string &name) { return std::regex_match(name, exp); };
+        m_matchFactory.emplace_back(make_pair(matcher, factory));
+        return true;
+      }
+
+      bool registerFactory(const Matcher &matcher, FactoryPtr factory)
+      {
+        m_matchFactory.emplace_back(make_pair(matcher, factory));
         return true;
       }
 
@@ -162,9 +170,9 @@ namespace mtconnect
           return it->second;
         else
         {
-          for (const auto &r : m_regexFactory)
+          for (const auto &r : m_matchFactory)
           {
-            if (std::regex_match(name, r.first))
+            if (r.first(name))
               return r.second;
           }
         }
@@ -247,22 +255,22 @@ namespace mtconnect
       void clear()
       {
         m_stringFactory.clear();
-        m_regexFactory.clear();
+        m_matchFactory.clear();
       }
 
-     protected:
+    protected:
       using FactoryMap = std::map<FactoryPtr, FactoryPtr>;
       static void LogError(const std::string &what);
       void _deepCopy(FactoryMap &factories);
       static void _dupFactory(FactoryPtr &factory, FactoryMap &factories);
 
-     protected:
+    protected:
       Requirements m_requirements;
       Function m_function;
       OrderMapPtr m_order;
 
       StringFactory m_stringFactory;
-      RegexFactory m_regexFactory;
+      MatchFactory m_matchFactory;
       bool m_isList{false};
       bool m_hasRaw{false};
       std::set<std::string> m_propertySets;

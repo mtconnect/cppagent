@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,11 +19,11 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "assets/asset_buffer.hpp"
 #include "agent_test_helper.hpp"
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 #include "xml_printer.hpp"
 #include "entity.hpp"
 #include <dlib/server.h>
@@ -46,10 +46,6 @@ using namespace mtconnect::entity;
 
 class AssetBufferTest : public testing::Test
 {
- public:
-  typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
-  using queue_type = dlib::queue<std::string>::kernel_1a_c;
-
  protected:
   void SetUp() override
   {

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,13 +19,15 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "device_model/data_item.hpp"
 
 #include <dlib/misc_api.h>
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
+using namespace mtconnect::entity;
 
 class DataItemTest : public testing::Test
 {
@@ -183,9 +185,15 @@ TEST_F(DataItemTest, Conversion)
   DataItem item1(attributes1);
   item1.conversionRequired();
 
-  ASSERT_EQ((string) "25.4 50.8 76.2", item1.convertValue("1 2 3"));
-  ASSERT_EQ((string) "25.4 50.8 76.2", item1.convertValue("1  2  3"));
-
+  {
+    Value value{Vector{1.0, 2.0, 3.0}};
+    item1.convertValue(value);
+    auto vec = get<Vector>(value);
+    EXPECT_NEAR(25.4, vec[0], 0.0001);
+    EXPECT_NEAR(50.8, vec[1], 0.0001);
+    EXPECT_NEAR(76.2, vec[2], 0.0001);
+  }
+  
   std::map<string, string> attributes2;
   attributes2["id"] = "p";
   attributes2["name"] = "position";
@@ -197,8 +205,15 @@ TEST_F(DataItemTest, Conversion)
   DataItem item2(attributes2);
   item2.conversionRequired();
 
-  ASSERT_EQ((string) "57.29578 114.5916 171.8873", item2.convertValue("1 2 3"));
-
+  {
+    Value value{Vector{1.0, 2.0, 3.0}};
+    item2.convertValue(value);
+    auto vec = get<Vector>(value);
+    EXPECT_NEAR(57.29578, vec[0], 0.0001);
+    EXPECT_NEAR(114.5916, vec[1], 0.0001);
+    EXPECT_NEAR(171.8873, vec[2], 0.0001);
+  }
+  
   std::map<string, string> attributes3;
   attributes3["id"] = "p";
   attributes3["name"] = "position";
@@ -211,7 +226,7 @@ TEST_F(DataItemTest, Conversion)
   DataItem item3(attributes3);
   item3.conversionRequired();
 
-  ASSERT_EQ((string) "1.3", item3.convertValue("13"));
+  EXPECT_NEAR(1.3, item3.convertValue(13.0), 0.0001);
 
   std::map<string, string> attributes4;
   attributes4["id"] = "p";
@@ -224,17 +239,14 @@ TEST_F(DataItemTest, Conversion)
   DataItem item4(attributes4);
   item4.conversionRequired();
 
-  ASSERT_EQ((string) "130", item4.convertValue("0.13"));
+  EXPECT_NEAR(130.0, item4.convertValue(0.13), 0.0001);
 
   DataItem item5(attributes4);
 
-  Adapter adapter("", "", 0);
-  adapter.setConversionRequired(false);
-
-  item5.setDataSource(&adapter);
+  item5.setConversionRequired(false);
   ASSERT_TRUE(!item5.conversionRequired());
 
-  ASSERT_EQ((string) "0.13", item5.convertValue("0.13"));
+  EXPECT_DOUBLE_EQ(0.13, item5.convertValue(0.13));
 }
 
 TEST_F(DataItemTest, Condition)
@@ -306,32 +318,4 @@ TEST_F(DataItemTest, SampleRate)
 
   ASSERT_EQ(string("42000"), d->getSampleRate());
   d.reset();
-}
-
-TEST_F(DataItemTest, Duplicates)
-{
-  ASSERT_TRUE(!m_dataItemA->isDuplicate("FOO"));
-  ASSERT_TRUE(m_dataItemA->isDuplicate("FOO"));
-  ASSERT_TRUE(!m_dataItemA->isDuplicate("FOO2"));
-}
-
-TEST_F(DataItemTest, Filter)
-{
-  m_dataItemA->setMinmumDelta(5.0);
-
-  ASSERT_TRUE(!m_dataItemA->isFiltered(5.0, 0.0));
-  ASSERT_TRUE(m_dataItemA->isFiltered(6.0, 0.0));
-  ASSERT_TRUE(!m_dataItemA->isFiltered(10.1, 0.0));
-  ASSERT_TRUE(m_dataItemA->isFiltered(6.0, 0.0));
-  ASSERT_TRUE(!m_dataItemA->isFiltered(5.0, 0.0));
-
-  // Test period
-  m_dataItemA->setMinmumDelta(1.0);
-  m_dataItemA->setMinmumPeriod(1.0);
-
-  ASSERT_TRUE(!m_dataItemA->isFiltered(1.0, 0.0));
-  ASSERT_TRUE(m_dataItemA->isFiltered(3.0, 0.1));
-  ASSERT_TRUE(!m_dataItemA->isFiltered(5, 1.1));
-  ASSERT_TRUE(m_dataItemA->isFiltered(7.0, 2.0));
-  ASSERT_TRUE(!m_dataItemA->isFiltered(9.0, 2.2));
 }

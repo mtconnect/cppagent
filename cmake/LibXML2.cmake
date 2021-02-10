@@ -44,12 +44,7 @@ else()
       message(STATUS "  * Download LibXML2")
       FetchContent_Populate(libxmlprovider)
 
-      if(UNIX)
-        set(build_options "-j4")
-      else()
-        set(build_options "-m:4")
-      endif()
-
+      set(build_options "-j4")
 
       message(STATUS "  * Configure LibXML2")
       execute_process(
@@ -76,7 +71,7 @@ else()
 
       message(STATUS "  * Build LibXML2")
       execute_process(
-        COMMAND ${CMAKE_COMMAND} --build . --target install --config Release -- ${build_options}
+        COMMAND ${CMAKE_COMMAND} --build . --target install --config Release ${build_options}
         WORKING_DIRECTORY ${libxmlprovider_BINARY_DIR}
         OUTPUT_FILE       ${libxmlprovider_BINARY_DIR}/build_output.log
         ERROR_FILE        ${libxmlprovider_BINARY_DIR}/build_output.log

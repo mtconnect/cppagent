@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +17,15 @@
 
 #pragma once
 
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 #include "http_server/server.hpp"
 #include "http_server/response.hpp"
 #include "http_server/routing.hpp"
-
+#include "adapter/adapter.hpp"
+#include "pipeline/pipeline.hpp"
 #include <dlib/server.h>
+#include "config.hpp"
+#include "agent.hpp"
 
 #include <chrono>
 #include <iosfwd>
@@ -81,6 +84,8 @@ namespace mtconnect
 }
 
 namespace http = mtconnect::http_server;
+namespace adpt = mtconnect::adapter;
+namespace observe = mtconnect::observation;
 
 class AgentTestHelper
 {
@@ -88,6 +93,8 @@ class AgentTestHelper
   AgentTestHelper()
   : m_out(), m_response(m_out), m_incomingIp("127.0.0.1")
   {
+    dlib::set_all_logging_output_streams(std::cout);
+    dlib::set_all_logging_levels(dlib::LDEBUG);
   }
     
   // Helper method to test expected string, given optional query, & run tests
@@ -116,14 +123,55 @@ class AgentTestHelper
                    const std::string &version = "1.7", int checkpoint = 25,
                    bool put = false)
   {
+    using namespace mtconnect;
+    using namespace mtconnect::pipeline;
+
     auto server = std::make_unique<http::Server>();
     server->enablePut(put);
+    m_server = server.get();
     auto cache = std::make_unique<http::FileCache>();
     m_agent = std::make_unique<mtconnect::Agent>(server, cache,
                                                  PROJECT_ROOT_DIR + file,
                                                  bufferSize, maxAssets, version,
                                                  checkpoint, true);
+    
+    m_context = std::make_shared<pipeline::PipelineContext>();
+    m_context->m_contract = m_agent->makePipelineContract();
+    m_agent->initialize(m_context, {});
     return m_agent.get();
+  }
+  
+  auto addAdapter(mtconnect::ConfigOptions options = {},
+                  const std::string &host = "localhost", uint16_t port = 7878,
+                  const std::string &device = "")
+  {
+    using namespace mtconnect;
+    using namespace mtconnect::adapter;
+    
+    if (!IsOptionSet(options, "Device"))
+    {
+      options["Device"] = m_agent->defaultDevice()->getName();
+    }
+    auto pipeline = std::make_unique<AdapterPipeline>(m_context);
+    m_adapter = new adpt::Adapter(host, port, options, pipeline);
+    m_agent->addAdapter(m_adapter);
+
+    return m_adapter;
+  }
+  
+  uint64_t addToBuffer(mtconnect::DataItem *di, const mtconnect::entity::Properties &shdr,
+                       const mtconnect::Timestamp &time)
+  {
+    using namespace mtconnect;
+    using namespace mtconnect::observation;
+    using namespace mtconnect::entity;
+    ErrorList errors;
+    auto obs = Observation::make(di, shdr, time, errors);
+    if (errors.size() == 0 && obs)
+    {
+      return m_agent->addToBuffer(obs);
+    }
+    return 0;
   }
   
   void printResponse()
@@ -142,7 +190,9 @@ class AgentTestHelper
               << std::endl;
   }
 
-  
+  http::Server *m_server{nullptr};
+  std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
+  adpt::Adapter *m_adapter{nullptr};
   bool m_dispatched { false };
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::stringstream m_out;

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <utility>
 #include <vector>
@@ -59,7 +59,7 @@ namespace mtconnect
 
   class Relationships : public ComponentConfiguration
   {
-   public:
+  public:
     Relationships() = default;
     ~Relationships() override = default;
 
@@ -74,7 +74,7 @@ namespace mtconnect
       return m_relationships;
     }
 
-   protected:
+  protected:
     std::list<std::unique_ptr<Relationship>> m_relationships;
   };
 }  // namespace mtconnect

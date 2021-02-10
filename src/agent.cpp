@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,7 @@
 #include "entity/xml_parser.hpp"
 #include "http_server/file_cache.hpp"
 #include "json_printer.hpp"
+#include "observation/observation.hpp"
 #include "xml_printer.hpp"
 #include <sys/stat.h>
 
@@ -43,12 +44,11 @@
 #include <thread>
 
 using namespace std;
+using namespace mtconnect::observation;
 
 namespace mtconnect
 {
   static const string g_unavailable("UNAVAILABLE");
-  static const string g_conditionUnavailable("UNAVAILABLE|||");
-
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
 
@@ -62,6 +62,8 @@ namespace mtconnect
       m_xmlParser(make_unique<XmlParser>()),
       m_circularBuffer(bufferSize, checkpointFreq),
       m_assetBuffer(maxAssets),
+      m_version(version),
+      m_configXmlPath(configXmlPath),
       m_logStreamData(false),
       m_pretty(pretty)
   {
@@ -76,17 +78,22 @@ namespace mtconnect
 
     // Unique id number for agent instance
     m_instanceId = getCurrentTimeInSec();
+  }
 
-    // TODO: Check Schema version before creating Agent Device. Only >= 1.7'
+  void Agent::initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options)
+  {
+    m_loopback = std::make_unique<AgentLoopbackPipeline>(context);
+    m_loopback->build(options);
+
     int major, minor;
     char c;
-    stringstream vstr(version);
+    stringstream vstr(m_version);
     vstr >> major >> c >> minor;
     if (major > 1 || (major == 1 && minor >= 7))
     {
       createAgentDevice();
     }
-    loadXMLDeviceFile(configXmlPath);
+    loadXMLDeviceFile(m_configXmlPath);
     loadCachedProbe();
 
     createProbeRoutings();
@@ -109,6 +116,8 @@ namespace mtconnect
 
   Agent::~Agent()
   {
+    for (auto adp : m_adapters)
+      delete adp;
     m_xmlParser.reset();
     m_agentDevice = nullptr;
     for (auto &i : m_devices)
@@ -264,11 +273,11 @@ namespace mtconnect
         // Check for single valued constrained data items.
         const string *value = &g_unavailable;
         if (d->isCondition())
-          value = &g_conditionUnavailable;
+          value = &g_unavailable;
         else if (d->hasConstantValue())
           value = &(d->getConstrainedValues()[0]);
 
-        addToBuffer(d, *value, time);
+        addToBuffer(d, *value);
         if (!m_dataItemMap.count(d->getId()))
           m_dataItemMap[d->getId()] = d;
         else
@@ -314,7 +323,7 @@ namespace mtconnect
         if (m_agentDevice && device != m_agentDevice)
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
-          addToBuffer(d, device->getUuid(), getCurrentTime(GMT_UV_SEC));
+          addToBuffer(d, device->getUuid());
         }
       }
       else
@@ -330,7 +339,7 @@ namespace mtconnect
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_removed");
-        addToBuffer(d, oldUuid, getCurrentTime(GMT_UV_SEC));
+        addToBuffer(d, oldUuid);
       }
       m_deviceUuidMap.erase(oldUuid);
       m_deviceUuidMap[device->getUuid()] = device;
@@ -349,12 +358,12 @@ namespace mtconnect
       if (device->getUuid() != oldUuid)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_added");
-        addToBuffer(d, device->getUuid(), getCurrentTime(GMT_UV_SEC));
+        addToBuffer(d, device->getUuid());
       }
       else
       {
         auto d = m_agentDevice->getDeviceDataItem("device_changed");
-        addToBuffer(d, device->getUuid(), getCurrentTime(GMT_UV_SEC));
+        addToBuffer(d, device->getUuid());
       }
     }
   }
@@ -595,6 +604,9 @@ namespace mtconnect
 
   Device *Agent::getDeviceByName(const std::string &name) const
   {
+    if (name.empty())
+      return defaultDevice();
+
     auto devPos = m_deviceNameMap.find(name);
     if (devPos != m_deviceNameMap.end())
       return devPos->second;
@@ -604,6 +616,9 @@ namespace mtconnect
 
   Device *Agent::getDeviceByName(const std::string &name)
   {
+    if (name.empty())
+      return defaultDevice();
+
     auto devPos = m_deviceNameMap.find(name);
     if (devPos != m_deviceNameMap.end())
       return devPos->second;
@@ -613,6 +628,9 @@ namespace mtconnect
 
   Device *Agent::findDeviceByUUIDorName(const std::string &idOrName) const
   {
+    if (idOrName.empty())
+      return defaultDevice();
+
     auto di = m_deviceUuidMap.find(idOrName);
     if (di == m_deviceUuidMap.end())
     {
@@ -647,14 +665,9 @@ namespace mtconnect
   // Adapter Methods
   // ----------------------------------------------------
 
-  void Agent::addAdapter(Adapter *adapter, bool start)
+  void Agent::addAdapter(adapter::Adapter *adapter, bool start)
   {
-    adapter->setAgent(*this);
     m_adapters.emplace_back(adapter);
-
-    const auto dev = getDeviceByName(adapter->getDeviceName());
-    if (dev && dev->m_availabilityAdded)
-      adapter->setAutoAvailable(true);
 
     if (start)
       adapter->start();
@@ -671,35 +684,93 @@ namespace mtconnect
     }
   }
 
-  void Agent::connecting(Adapter *adapter)
+  void AgentPipelineContract::deliverConnectStatus(entity::EntityPtr entity,
+                                                   const StringList &devices, bool autoAvailable)
+  {
+    auto value = entity->getValue<string>();
+    if (value == "CONNECTING")
+    {
+      m_agent->connecting(entity->get<string>("id"));
+    }
+    else if (value == "CONNECTED")
+    {
+      m_agent->connected(entity->get<string>("id"), devices, autoAvailable);
+    }
+    else if (value == "DISCONNECTED")
+    {
+      m_agent->disconnected(entity->get<string>("id"), devices, autoAvailable);
+    }
+    else
+    {
+      g_logger << LERROR << "Unexpected connection status received: " << value;
+    }
+  }
+
+  void AgentPipelineContract::deliverCommand(entity::EntityPtr entity)
+  {
+    static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
+    auto value = entity->getValue<string>();
+    smatch match;
+
+    if (std::regex_match(value, match, pattern))
+    {
+      auto device = entity->maybeGet<string>("device");
+      auto command = match[1].str();
+      auto param = match[2].str();
+
+      if (!device)
+      {
+        g_logger << LERROR << "Invalid command: " << command << ", device not specified";
+      }
+      else
+      {
+        g_logger << LDEBUG << "Processing command: " << command << ": " << value;
+        m_agent->receiveCommand(*device, command, param);
+      }
+    }
+    else
+    {
+      g_logger << LWARN << "Cannot parse command: " << value;
+    }
+  }
+
+  void Agent::connecting(const std::string &adapter)
   {
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      addToBuffer(di, "LISTENING", getCurrentTime(GMT_UV_SEC));
+      addToBuffer(di, "LISTENING");
     }
   }
 
   // Add values for related data items UNAVAILABLE
-  void Agent::disconnected(Adapter *adapter, std::vector<Device *> devices)
+  void Agent::disconnected(const std::string &adapter, const StringList &devices,
+                           bool autoAvailable)
   {
-    auto time = getCurrentTime(GMT_UV_SEC);
     g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      addToBuffer(di, "CLOSED", time);
+      addToBuffer(di, "CLOSED");
     }
 
-    for (const auto device : devices)
+    for (auto &name : devices)
     {
+      Device *device = findDeviceByUUIDorName(name);
+      if (device == nullptr)
+      {
+        g_logger << LWARN << "Cannot find device " << name << " when adapter " << adapter
+                 << "disconnected";
+        continue;
+      }
+
       const auto &dataItems = device->getDeviceDataItems();
       for (const auto &dataItemAssoc : dataItems)
       {
         auto dataItem = dataItemAssoc.second;
-        if (dataItem && (dataItem->getDataSource() == adapter ||
-                         (adapter->isAutoAvailable() && !dataItem->getDataSource() &&
+        if (dataItem && ((dataItem->getDataSource() && *dataItem->getDataSource() == adapter) ||
+                         (autoAvailable && !dataItem->getDataSource() &&
                           dataItem->getType() == "AVAILABILITY")))
         {
           auto ptr = m_circularBuffer.getLatest().getEventPtr(dataItem->getId());
@@ -707,22 +778,17 @@ namespace mtconnect
           if (ptr)
           {
             const string *value = nullptr;
-            if (dataItem->isCondition())
-            {
-              if ((*ptr)->getLevel() != Observation::UNAVAILABLE)
-                value = &g_conditionUnavailable;
-            }
-            else if (dataItem->hasConstraints())
+            if (dataItem->hasConstraints())
             {
               const auto &values = dataItem->getConstrainedValues();
-              if (values.size() > 1 && (*ptr)->getValue() != g_unavailable)
+              if (values.size() > 1 && !ptr->isUnavailable())
                 value = &g_unavailable;
             }
-            else if ((*ptr)->getValue() != g_unavailable)
+            else if (!ptr->isUnavailable())
               value = &g_unavailable;
 
-            if (value && !adapter->isDuplicate(dataItem, *value, NAN))
-              addToBuffer(dataItem, *value, time);
+            if (value)
+              addToBuffer(dataItem, *value);
           }
         }
         else if (!dataItem)
@@ -731,27 +797,33 @@ namespace mtconnect
     }
   }
 
-  void Agent::connected(Adapter *adapter, std::vector<Device *> devices)
+  void Agent::connected(const std::string &adapter, const StringList &devices, bool autoAvailable)
   {
-    auto time = getCurrentTime(GMT_UV_SEC);
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      addToBuffer(di, "ESTABLISHED", time);
+      addToBuffer(di, "ESTABLISHED");
     }
 
-    if (!adapter->isAutoAvailable())
+    if (!autoAvailable)
       return;
 
-    for (const auto device : devices)
+    for (auto &name : devices)
     {
+      Device *device = findDeviceByUUIDorName(name);
+      if (device == nullptr)
+      {
+        g_logger << LWARN << "Cannot find device " << name << " when adapter " << adapter
+                 << "connected";
+        continue;
+      }
       g_logger << LDEBUG
                << "Connected to adapter, setting all Availability data items to AVAILABLE";
 
-      if (device->getAvailability())
+      if (auto avail = device->getAvailability())
       {
         g_logger << LDEBUG << "Adding availabilty event for " << device->getAvailability()->getId();
-        addToBuffer(device->getAvailability(), g_available, time);
+        addToBuffer(avail, g_available);
       }
       else
         g_logger << LDEBUG << "Cannot find availability for " << device->getName();
@@ -762,32 +834,101 @@ namespace mtconnect
   // Observation Add Method
   // ----------------------------------------------------
 
-  unsigned int Agent::addToBuffer(DataItem *dataItem, const string &value, const string &time)
+  SequenceNumber_t Agent::addToBuffer(ObservationPtr &observation)
   {
-    if (!dataItem)
-      return 0;
-
-    if (time.empty())
-      return 0;
-
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
-    RefCountedPtr<Observation> event(new Observation(*dataItem, time, value), true);
-    if (!dataItem->allowDups() && dataItem->isDataSet() &&
-        !m_circularBuffer.getLatest().dataSetDifference(event))
+    auto dataItem = observation->getDataItem();
+    if (!dataItem->allowDups())
     {
-      return 0;
+      if (!observation->isUnavailable() && dataItem->isDataSet() &&
+          !m_circularBuffer.getLatest().dataSetDifference(observation))
+      {
+        return 0;
+      }
     }
 
-    auto seqNum = m_circularBuffer.addToBuffer(event);
+    auto seqNum = m_circularBuffer.addToBuffer(observation);
     dataItem->signalObservers(seqNum);
-
     return seqNum;
+  }
+
+  SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, entity::Properties props,
+                                      std::optional<Timestamp> timestamp)
+  {
+    entity::ErrorList errors;
+
+    Timestamp ts = timestamp ? *timestamp : chrono::system_clock::now();
+    auto observation = observation::Observation::make(dataItem, props, ts, errors);
+    if (observation && errors.empty())
+    {
+      auto res = m_loopback->run(observation);
+      if (auto obs = dynamic_pointer_cast<Observation>(res))
+      {
+        return obs->getSequence();
+      }
+    }
+    else
+    {
+      g_logger << LERROR << "Cannot add observation: ";
+      for (auto &e : errors)
+      {
+        g_logger << LERROR << "Cannot add observation: " << e->what();
+      }
+    }
+
+    return 0;
+  }
+
+  SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, const std::string &value,
+                                      std::optional<Timestamp> timestamp)
+  {
+    if (dataItem->isCondition())
+      return addToBuffer(dataItem, {{"level", value}}, timestamp);
+    else
+      return addToBuffer(dataItem, {{"VALUE", value}}, timestamp);
   }
 
   // ----------------------------------------------------
   // Asset CRUD Methods
   // ----------------------------------------------------
+  void Agent::addAsset(AssetPtr asset)
+  {
+    Device *device = nullptr;
+    auto uuid = asset->getDeviceUuid();
+    if (uuid)
+      device = findDeviceByUUIDorName(*uuid);
+    else
+      device = defaultDevice();
+
+    if (asset->getDeviceUuid() && *asset->getDeviceUuid() != device->getUuid())
+    {
+      asset->setProperty("deviceUuid", device->getUuid());
+    }
+
+    string aid = asset->getAssetId();
+    if (aid[0] == '@')
+    {
+      if (aid.empty())
+        aid = asset->getAssetId();
+      aid.erase(0, 1);
+      aid.insert(0, device->getUuid());
+    }
+    if (aid != asset->getAssetId())
+    {
+      asset->setAssetId(aid);
+    }
+
+    auto old = m_assetBuffer.addAsset(asset);
+
+    DataItem *cdi = asset->isRemoved() ? device->getAssetRemoved() : device->getAssetChanged();
+    if (cdi)
+      addToBuffer(cdi, {{"assetType", asset->getType()}, {"VALUE", asset->getAssetId()}},
+                  asset->getTimestamp());
+    else
+      g_logger << LERROR << "Cannot find data item for asset removed or changed. Schema Version: "
+               << m_version;
+  }
 
   AssetPtr Agent::addAsset(Device *device, const std::string &document,
                            const std::optional<std::string> &id,
@@ -808,6 +949,7 @@ namespace mtconnect
     }
 
     auto asset = dynamic_pointer_cast<Asset>(entity);
+
     if (type && asset->getType() != *type)
     {
       stringstream msg;
@@ -819,49 +961,25 @@ namespace mtconnect
       return asset;
     }
 
-    string aid = id ? *id : asset->getAssetId();
-    if (aid[0] == '@')
-    {
-      if (aid.empty())
-        aid = asset->getAssetId();
-      aid.erase(0, 1);
-      aid.insert(0, device->getUuid());
-    }
-    if (aid != asset->getAssetId())
-    {
-      asset->setAssetId(aid);
-    }
+    if (id)
+      asset->setAssetId(*id);
 
     if (time)
-    {
       asset->setProperty("timestamp", *time);
-    }
 
     auto ad = asset->getDeviceUuid();
     if (!ad)
-    {
       asset->setProperty("deviceUuid", device->getUuid());
-    }
 
-    auto old = m_assetBuffer.addAsset(asset);
-
-    auto at = asset->getTimestamp();
-    stringstream msg(asset->getType());
-    msg << asset->getType() << "|" << asset->getAssetId();
-    if (asset->isRemoved())
-      addToBuffer(device->getAssetRemoved(), msg.str(), *at);
-    else
-      addToBuffer(device->getAssetChanged(), msg.str(), *at);
+    addAsset(asset);
 
     return asset;
   }
 
-  bool Agent::removeAsset(Device *device, const std::string &id, const optional<string> inputTime)
+  bool Agent::removeAsset(Device *device, const std::string &id,
+                          const optional<Timestamp> inputTime)
   {
-    // TODO: Error handling for parse errors.
-    string time = inputTime ? *inputTime : getCurrentTime(GMT_UV_SEC);
-
-    auto asset = m_assetBuffer.removeAsset(id, time);
+    auto asset = m_assetBuffer.removeAsset(id, inputTime);
     if (asset)
     {
       if (device == nullptr && asset->getDeviceUuid())
@@ -871,16 +989,17 @@ namespace mtconnect
           device = dp->second;
       }
       if (device == nullptr)
-        device = m_devices.front();
+        device = defaultDevice();
 
-      auto time = asset->getTimestamp();
-      addToBuffer(device->getAssetRemoved(), asset->getType() + "|" + id, *time);
+      addToBuffer(device->getAssetRemoved(), {{"assetType", asset->getType()}, {"VALUE", id}},
+                  asset->getTimestamp());
 
       // Check if the asset changed id is the same as this asset.
       auto ptr = m_circularBuffer.getLatest().getEventPtr(device->getAssetChanged()->getId());
-      if (ptr && (*ptr)->getValue() == id)
+      if (ptr && ptr->getValue<string>() == id)
       {
-        addToBuffer(device->getAssetChanged(), asset->getType() + "|UNAVAILABLE", *time);
+        addToBuffer(device->getAssetChanged(),
+                    {{"assetType", asset->getType()}, {"VALUE", "UNAVAILABLE"s}});
       }
     }
 
@@ -888,15 +1007,16 @@ namespace mtconnect
   }
 
   bool Agent::removeAllAssets(const std::optional<std::string> device, const optional<string> type,
-                              const optional<string> inputTime, AssetList &list)
+                              const optional<Timestamp> inputTime, AssetList &list)
   {
-    string time = inputTime ? *inputTime : getCurrentTime(GMT_UV_SEC);
-
     std::lock_guard<AssetBuffer> lock(m_assetBuffer);
     getAssets(nullptr, numeric_limits<int32_t>().max() - 1, false, type, device, list);
+    Device *dev{nullptr};
+    if (device)
+      dev = findDeviceByUUIDorName(*device);
     for (auto a : list)
     {
-      removeAsset(nullptr, a->getAssetId(), time);
+      removeAsset(dev, a->getAssetId(), inputTime);
     }
 
     return true;
@@ -1081,7 +1201,7 @@ namespace mtconnect
     SequenceNumber_t end;
     bool endOfBuffer;
 
-    return {fetchSampleData(printer, filter, count, from, nullopt, end, endOfBuffer), OK,
+    return {fetchSampleData(printer, filter, count, from, to, end, endOfBuffer), OK,
             printer->mimeType()};
   }
 
@@ -1376,10 +1496,9 @@ namespace mtconnect
     AssetList list;
     getAssets(printer, ids, list);
 
-    auto time = getCurrentTime(GMT_UV_SEC);
     for (auto asset : list)
     {
-      removeAsset(nullptr, asset->getAssetId(), time);
+      removeAsset(nullptr, asset->getAssetId());
     }
 
     return {printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
@@ -1394,9 +1513,8 @@ namespace mtconnect
     using namespace http_server;
     auto printer = getPrinter(format);
 
-    auto time = getCurrentTime(GMT_UV_SEC);
     AssetList list;
-    removeAllAssets(device, type, time, list);
+    removeAllAssets(device, type, nullopt, list);
 
     return {printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
                                  m_assetBuffer.getCount(), list),
@@ -1408,7 +1526,22 @@ namespace mtconnect
       const http_server::Routing::QueryMap observations, const std::optional<std::string> &time)
   {
     using namespace http_server;
-    string ts = time ? *time : getCurrentTime(GMT_UV_SEC);
+
+    Timestamp ts;
+    if (time)
+    {
+      istringstream in(*time);
+      in >> std::setw(6) >> date::parse("%FT%T", ts);
+      if (!in.good())
+      {
+        ts = chrono::system_clock::now();
+      }
+    }
+    else
+    {
+      ts = chrono::system_clock::now();
+    }
+
     auto printer = getPrinter(format);
     auto dev = checkDevice(printer, device);
 
@@ -1438,6 +1571,100 @@ namespace mtconnect
     }
   }
 
+  void AgentPipelineContract::deliverAssetCommand(entity::EntityPtr command)
+  {
+    const std::string &cmd = command->getValue<string>();
+    if (cmd == "RemoveAsset")
+    {
+      string id = command->get<string>("assetId");
+      auto device = command->maybeGet<string>("device");
+      Device *dev{nullptr};
+      if (device)
+        dev = m_agent->findDeviceByUUIDorName(*device);
+      m_agent->removeAsset(dev, id);
+    }
+    else if (cmd == "RemoveAll")
+    {
+      string type = command->get<string>("type");
+      auto device = command->maybeGet<string>("device");
+      AssetList list;
+      m_agent->removeAllAssets(device, type, nullopt, list);
+    }
+    else
+    {
+      g_logger << LERROR << "Invalid assent command: " << cmd;
+    }
+  }
+
+  void Agent::receiveCommand(const std::string &deviceName, const std::string &command,
+                             const std::string &value)
+  {
+    Device *device{nullptr};
+    device = findDeviceByUUIDorName(deviceName);
+
+    std::string oldName, oldUuid;
+    if (device)
+    {
+      oldName = device->getName();
+      oldUuid = device->getUuid();
+    }
+
+    if (device)
+    {
+      if (command == "uuid" && !device->m_preserveUuid)
+      {
+        device->setUuid(value);
+      }
+      else if (command == "manufacturer")
+      {
+        device->setManufacturer(value);
+      }
+      else if (command == "station")
+      {
+        device->setStation(value);
+      }
+      else if (command == "serialNumber")
+      {
+        device->setSerialNumber(value);
+      }
+      else if (command == "description")
+      {
+        device->setDescription(value);
+      }
+      else if (command == "nativeName")
+      {
+        device->setNativeName(value);
+      }
+      else if (command == "calibration")
+      {
+        istringstream line(value);
+
+        // Look for name|factor|offset triples
+        string name, factor, offset;
+        while (getline(line, name, '|') && getline(line, factor, '|') && getline(line, offset, '|'))
+        {
+          // Convert to a floating point number
+          auto di = device->getDeviceDataItem(name);
+          if (!di)
+            g_logger << LWARN << "Cannot find data item to calibrate for " << name;
+          else
+          {
+            double fact_value = strtod(factor.c_str(), nullptr);
+            double off_value = strtod(offset.c_str(), nullptr);
+            di->setConversionFactor(fact_value, off_value);
+          }
+        }
+      }
+      else
+      {
+        g_logger << LWARN << "Unknown command '" << command << "' for device '" << deviceName;
+        return;
+      }
+    }
+
+    deviceChanged(device, oldUuid, oldName);
+  }
+
   // -------------------------------------------
   // Error formatting
   // -------------------------------------------
@@ -1460,25 +1687,29 @@ namespace mtconnect
   string Agent::fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
                                  const optional<SequenceNumber_t> &at)
   {
-    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+    ObservationList observations;
+    SequenceNumber_t firstSeq, seq;
 
-    ObservationPtrArray events;
-    auto firstSeq = getFirstSequence();
-    auto seq = m_circularBuffer.getSequence();
-    if (at)
     {
-      checkRange(printer, *at, firstSeq - 1, seq, "at");
+      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
-      auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
-      check->getObservations(events);
-    }
-    else
-    {
-      m_circularBuffer.getLatest().getObservations(events, filterSet);
+      firstSeq = getFirstSequence();
+      seq = m_circularBuffer.getSequence();
+      if (at)
+      {
+        checkRange(printer, *at, firstSeq - 1, seq, "at");
+
+        auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
+        check->getObservations(observations);
+      }
+      else
+      {
+        m_circularBuffer.getLatest().getObservations(observations, filterSet);
+      }
     }
 
     return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq,
-                                m_circularBuffer.getSequence() - 1, events);
+                                seq - 1, observations);
   }
 
   string Agent::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
@@ -1486,28 +1717,38 @@ namespace mtconnect
                                 const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
                                 bool &endOfBuffer, ChangeObserver *observer)
   {
-    std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-    auto firstSeq = getFirstSequence();
-    auto seq = m_circularBuffer.getSequence();
-    if (from)
-    {
-      checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
-    }
-    if (to)
-    {
-      checkRange(printer, *to, firstSeq - 1, seq + 1, "to");
-    }
-    int countLimit = m_circularBuffer.getBufferSize() + 1;
-    checkRange(printer, count, -countLimit, countLimit, "count", true);
+    std::unique_ptr<ObservationList> observations;
+    SequenceNumber_t firstSeq, lastSeq;
 
-    auto events =
-        m_circularBuffer.getObservations(count, filterSet, from, end, firstSeq, endOfBuffer);
+    {
+      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+      firstSeq = getFirstSequence();
+      auto seq = m_circularBuffer.getSequence();
+      lastSeq = seq - 1;
+      int upperCountLimit = m_circularBuffer.getBufferSize() + 1;
+      int lowerCountLimit = -upperCountLimit;
 
-    if (observer)
-      observer->reset();
+      if (from)
+      {
+        checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
+      }
+      if (to)
+      {
+        auto lower = from ? *from : firstSeq;
+        checkRange(printer, *to, lower, seq + 1, "to");
+        lowerCountLimit = 0;
+      }
+      checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
+
+      observations =
+          m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
+
+      if (observer)
+        observer->reset();
+    }
 
     return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), end, firstSeq,
-                                m_circularBuffer.getSequence() - 1, *events);
+                                lastSeq, *observations);
   }
 
   // -------- Asset Helpers -------

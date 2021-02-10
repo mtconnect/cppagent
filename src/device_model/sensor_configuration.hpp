@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <utility>
 #include <vector>
@@ -27,7 +27,7 @@ namespace mtconnect
 {
   class SensorConfiguration : public ComponentConfiguration
   {
-   public:
+  public:
     struct Calibration
     {
       Calibration(std::string date, std::string nextDate, std::string initials)
@@ -47,7 +47,7 @@ namespace mtconnect
 
     class Channel
     {
-     public:
+    public:
       Channel(std::string calibrationDate, std::string nextCalibrationDate, std::string initials,
               std::map<std::string, std::string> attrs)
         : m_attributes(std::move(attrs)),
@@ -65,14 +65,14 @@ namespace mtconnect
       const std::map<std::string, std::string> &getAttributes() const { return m_attributes; }
       const Calibration &getCalibration() const { return m_calibration; }
 
-     protected:
+    protected:
       std::map<std::string, std::string> m_attributes;
       std::string m_description;
       Calibration m_calibration;
     };
 
     // Sensor Configuration begins here
-   public:
+  public:
     SensorConfiguration(std::string firmwareVer, std::string calibrationDate,
                         std::string nextCalibrationDate, std::string initials, std::string rest)
       : m_firmwareVersion(std::move(firmwareVer)),
@@ -90,7 +90,7 @@ namespace mtconnect
     const std::string &getRest() const { return m_rest; }
     const std::string &getFirmwareVersion() const { return m_firmwareVersion; }
 
-   protected:
+  protected:
     std::string m_firmwareVersion;
     Calibration m_calibration;
     std::string m_rest;

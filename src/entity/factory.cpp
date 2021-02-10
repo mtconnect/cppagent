@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,8 @@
 //
 
 #include "factory.hpp"
+
+#include <unordered_set>
 
 #include <dlib/logger.h>
 
@@ -55,7 +57,7 @@ namespace mtconnect
         }
       }
 
-      for (auto &f : m_regexFactory)
+      for (auto &f : m_matchFactory)
       {
         _dupFactory(f.second, factories);
       }
@@ -106,9 +108,9 @@ namespace mtconnect
 
     bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
     {
-      std::set<std::string> keys;
-      std::transform(properties.begin(), properties.end(), std::inserter(keys, keys.end()),
-                     [](const auto &v) { return v.first; });
+      for (auto &p : properties)
+        p.first.clearMark();
+
       bool success{true};
       for (const auto &r : m_requirements)
       {
@@ -129,6 +131,7 @@ namespace mtconnect
         }
         else
         {
+          p->first.setMark();
           try
           {
             if (!r.isMetBy(p->second, m_isList))
@@ -151,16 +154,20 @@ namespace mtconnect
             e.setProperty(r.getName());
             errors.emplace_back(e.dup());
           }
-          keys.erase(r.getName());
         }
       }
 
+      std::list<string_view> extra;
+      for (auto &p : properties)
+        if (!p.first.m_mark)
+          extra.emplace_back(p.first);
+
       // Check for additional properties
-      if (!m_isList && !keys.empty())
+      if (!m_isList && !extra.empty())
       {
         std::stringstream os;
         os << "The following keys were present and not expected: ";
-        for (auto &k : keys)
+        for (auto &k : extra)
           os << k << ",";
         errors.emplace_back(new PropertyError(os.str()));
         success = false;

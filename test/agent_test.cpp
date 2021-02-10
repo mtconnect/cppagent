@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +19,10 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "test_globals.hpp"
+#include "test_utilities.hpp"
 #include "xml_printer.hpp"
 #include "assets/file_asset.hpp"
 
@@ -43,6 +43,8 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::http_server;
+using namespace mtconnect::adapter;
+using namespace mtconnect::observation;
 
 class AgentTest : public testing::Test
 {
@@ -55,27 +57,21 @@ class AgentTest : public testing::Test
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                   8, 4, "1.3", 25);
+                                   8, 4, "1.3", 25, true);
     m_agentId = to_string(getCurrentTimeInSec());
-    m_adapter = nullptr;
   }
 
   void TearDown() override
   {
-    m_adapter = nullptr;
     m_agentTestHelper.reset();
   }
 
-  void addAdapter()
+  void addAdapter(ConfigOptions options = ConfigOptions{})
   {
-    ASSERT_FALSE(m_adapter);
-    m_adapter = new Adapter("LinuxCNC", "server", 7878);
-    m_agentTestHelper->m_agent->addAdapter(m_adapter);
-    ASSERT_TRUE(m_adapter);
+    m_agentTestHelper->addAdapter(options, "localhost", 7878, m_agentTestHelper->m_agent->defaultDevice()->getName());
   }
-
+  
  public:
-  Adapter *m_adapter{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
@@ -86,10 +82,20 @@ TEST_F(AgentTest, Constructor)
 {
   auto server1 = make_unique<http_server::Server>();
   auto cache1 = make_unique<http_server::FileCache>();
-  ASSERT_THROW(Agent(server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7"), std::runtime_error);
+  unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7");
+  auto context = std::make_shared<pipeline::PipelineContext>();
+  context->m_contract = agent->makePipelineContract();
+
+  ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
+  agent.reset();
+  
   auto server2 = make_unique<http_server::Server>();
   auto cache2 = make_unique<http_server::FileCache>();
-  ASSERT_NO_THROW(Agent(server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7"));
+  agent = make_unique<Agent>(server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7");
+  
+  context = std::make_shared<pipeline::PipelineContext>();
+  context->m_contract = agent->makePipelineContract();
+  ASSERT_NO_THROW(agent->initialize(context, {}));
 }
 
 TEST_F(AgentTest, Probe)
@@ -119,9 +125,11 @@ TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
   auto server1 = make_unique<http_server::Server>();
   auto cache1 = make_unique<http_server::FileCache>();
-  ASSERT_THROW(Agent(server1, cache1,
-                     PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 8, 4, "1.5", 25),
-               std::runtime_error);
+  unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 17, 8, "1.5");
+  auto context = std::make_shared<pipeline::PipelineContext>();
+  context->m_contract = agent->makePipelineContract();
+
+  ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
 }
 
 TEST_F(AgentTest, BadDevices)
@@ -235,8 +243,8 @@ TEST_F(AgentTest, CurrentAt)
   // Add many events
   for (int i = 1; i <= 100; i++)
   {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d", i);
+    m_agentTestHelper->m_adapter->processData(line);
   }
 
   // Check each current at all the positions.
@@ -252,8 +260,8 @@ TEST_F(AgentTest, CurrentAt)
   // Add a large many events
   for (int i = 101; i <= 301; i++)
   {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d", i);
+    m_agentTestHelper->m_adapter->processData(line);
   }
 
   // Check each current at all the positions.
@@ -304,8 +312,8 @@ TEST_F(AgentTest, CurrentAt64)
   // Add many events
   for (int i = 1; i <= 500; i++)
   {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d", i);
+    m_agentTestHelper->m_adapter->processData(line);
   }
 
   // Check each current at all the positions.
@@ -331,8 +339,8 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
   // Add many events
   for (int i = 1; i <= 200; i++)
   {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d", i);
+    m_agentTestHelper->m_adapter->processData(line);
   }
 
   int seq = agent->getSequence();
@@ -399,7 +407,6 @@ TEST_F(AgentTest, Composition)
 {
   auto agent = m_agentTestHelper->m_agent.get();
   addAdapter();
-  m_adapter->setDupCheck(true);
 
   DataItem *motor = agent->getDataItemByName("LinuxCNC", "zt1");
   ASSERT_TRUE(motor);
@@ -407,7 +414,7 @@ TEST_F(AgentTest, Composition)
   DataItem *amp = agent->getDataItemByName("LinuxCNC", "zt2");
   ASSERT_TRUE(amp);
 
-  m_adapter->processData("TIME|zt1|100|zt2|200");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|zt1|100|zt2|200");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -487,7 +494,7 @@ TEST_F(AgentTest, Adapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -496,7 +503,7 @@ TEST_F(AgentTest, Adapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|alarm|code|nativeCode|severity|state|description");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|alarm|code|nativeCode|severity|state|description");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -519,8 +526,8 @@ TEST_F(AgentTest, SampleAtNextSeq)
   // Add many events
   for (int i = 1; i <= 300; i++)
   {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d", i);
+    m_agentTestHelper->m_adapter->processData(line);
   }
 
   int seq = agent->getSequence();
@@ -545,8 +552,8 @@ TEST_F(AgentTest, SampleCount)
   // Add many events
   for (int i = 0; i < 128; i++)
   {
-    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
-    m_adapter->processData(line);
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d|Xact|%d", i, i);
+    m_agentTestHelper->m_adapter->processData(line);
   }
 
   {
@@ -581,8 +588,8 @@ TEST_F(AgentTest, SampleLastCount)
   // Add many events
   for (int i = 0; i < 128; i++)
   {
-    sprintf(line, "TIME|line|%d|Xact|%d", i, i);
-    m_adapter->processData(line);
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d|Xact|%d", i, i);
+    m_agentTestHelper->m_adapter->processData(line);
   }
   
   auto seq = agent->getSequence() - 20;
@@ -605,6 +612,71 @@ TEST_F(AgentTest, SampleLastCount)
   }
 }
 
+TEST_F(AgentTest, SampleToParameter)
+{
+  Routing::QueryMap query;
+  addAdapter();
+  auto agent = m_agentTestHelper->m_agent.get();
+
+
+  // Get the current position
+  char line[80] = {0};
+
+  // Add many events
+  for (int i = 0; i < 128; i++)
+  {
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d|Xact|%d", i, i);
+    m_agentTestHelper->m_adapter->processData(line);
+  }
+  
+  auto seq = agent->getSequence() - 20;
+
+  {
+    query["path"] = "//DataItem[@name='Xact']";
+    query["count"] = "10";
+    query["to"] = to_string(seq);
+
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + 1).c_str());
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
+
+    // Make sure we got 10 lines
+    int start = seq - 20;
+    for (int j = 0; j < 10; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      ASSERT_XML_PATH_EQUAL(doc, line, to_string(start + j * 2 + 1).c_str());
+    }
+  }
+
+
+  {
+    query["path"] = "//DataItem[@name='Xact']";
+    query["count"] = "10";
+    query["to"] = to_string(seq);
+    query["from"] = to_string(seq - 10);
+
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + 1).c_str());
+
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 5);
+
+    // Make sure we got 10 lines
+    int start = seq - 10;
+    for (int j = 0; j < 5; j++)
+    {
+      sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
+      ASSERT_XML_PATH_EQUAL(doc, line, to_string(start + j * 2 + 1).c_str());
+    }
+  }
+  
+  // TODO: Test negative conditions
+  // count < 0
+  // to > nextSequence
+  // to > from
+}
+
 
 TEST_F(AgentTest, EmptyStream)
 {
@@ -618,7 +690,6 @@ TEST_F(AgentTest, EmptyStream)
         doc, "//m:ComponentStream[@componentId='path']/m:Condition/m:Unavailable@qualifier",
         nullptr);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:RotaryMode", "SPINDLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ToolGroup", "UNAVAILABLE");
   }
 
   {
@@ -635,11 +706,7 @@ TEST_F(AgentTest, AddToBuffer)
   Routing::QueryMap query;
 
   string device("LinuxCNC"), key("badKey"), value("ON");
-  auto di1 = agent->getDataItemByName(device, key);
-  ASSERT_FALSE(di1);
-  auto seqNum = agent->addToBuffer(di1, value, "NOW");
-  ASSERT_EQ(0, seqNum);
-
+  auto seqNum = 0;
   auto event1 = agent->getFromBuffer(seqNum);
   ASSERT_FALSE(event1);
 
@@ -652,9 +719,9 @@ TEST_F(AgentTest, AddToBuffer)
   key = "power";
 
   auto di2 = agent->getDataItemByName(device, key);
-  seqNum = agent->addToBuffer(di2, value, "NOW");
+  seqNum = m_agentTestHelper->addToBuffer(di2, {{"VALUE", value}}, chrono::system_clock::now());
   auto event2 = agent->getFromBuffer(seqNum);
-  ASSERT_EQ(2, (int)event2->refCount());
+  ASSERT_EQ(3, event2.use_count());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -687,8 +754,8 @@ TEST_F(AgentTest, SequenceNumberRollover)
   // Add many events
   for (int i = 0; i < 128; i++)
   {
-    sprintf(line, "TIME|line|%d", i);
-    m_adapter->processData(line);
+    sprintf(line, "2021-02-01T12:00:00Z|line|%d", i);
+    m_agentTestHelper->m_adapter->processData(line);
 
     {
       PARSE_XML_RESPONSE("/current");
@@ -738,7 +805,7 @@ TEST_F(AgentTest, DuplicateCheck)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -746,7 +813,7 @@ TEST_F(AgentTest, DuplicateCheck)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]", "204");
   }
 
-  m_adapter->processData("TIME|line|205");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|205");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -758,12 +825,11 @@ TEST_F(AgentTest, DuplicateCheck)
 
 TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
 {
-  addAdapter();
-  m_adapter->setDupCheck(true);
+  addAdapter({{"FilterDuplicates", true}});
 
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|205");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|205");
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -772,7 +838,7 @@ TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]", "205");
   }
 
-  m_adapter->disconnected();
+  m_agentTestHelper->m_adapter->disconnected();
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -782,9 +848,9 @@ TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[4]", "UNAVAILABLE");
   }
 
-  m_adapter->connected();
+  m_agentTestHelper->m_adapter->connected();
 
-  m_adapter->processData("TIME|line|205");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|205");
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -798,19 +864,20 @@ TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
 
 TEST_F(AgentTest, AutoAvailable)
 {
-  addAdapter();
+  addAdapter({{"AutoAvailable", true}});
   auto agent = m_agentTestHelper->m_agent.get();
-  m_adapter->setAutoAvailable(true);
+  auto adapter = m_agentTestHelper->m_adapter;
+  auto id = adapter->getIdentity();
   auto d = agent->getDevices().front();
-  std::vector<Device *> devices;
-  devices.emplace_back(d);
+  StringList devices;
+  devices.emplace_back(d->getName());
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[1]", "UNAVAILABLE");
   }
 
-  agent->connected(m_adapter, devices);
+  agent->connected(id, devices, true);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -818,7 +885,7 @@ TEST_F(AgentTest, AutoAvailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[2]", "AVAILABLE");
   }
 
-  agent->disconnected(m_adapter, devices);
+  agent->disconnected(id, devices, true);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -827,7 +894,7 @@ TEST_F(AgentTest, AutoAvailable)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Availability[3]", "UNAVAILABLE");
   }
 
-  agent->connected(m_adapter, devices);
+  agent->connected(id, devices, true);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -842,10 +909,12 @@ TEST_F(AgentTest, MultipleDisconnect)
 {
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
+  auto adapter = m_agentTestHelper->m_adapter;
+  auto id = adapter->getIdentity();
 
   auto d = agent->getDevices().front();
-  std::vector<Device *> devices;
-  devices.emplace_back(d);
+  StringList devices;
+  devices.emplace_back(d->getName());
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -853,9 +922,10 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Unavailable[@dataItemId='cmp']", 1);
   }
 
-  agent->connected(m_adapter, devices);
-  m_adapter->processData("TIME|block|GTH");
-  m_adapter->processData("TIME|cmp|normal||||");
+  agent->connected(id, devices, false);
+
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|GTH");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|cmp|normal||||");
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -867,7 +937,7 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Normal[@dataItemId='cmp']", 1);
   }
 
-  agent->disconnected(m_adapter, devices);
+  agent->disconnected(id, devices, false);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -879,7 +949,7 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
   }
 
-  agent->disconnected(m_adapter, devices);
+  agent->disconnected(id, devices, false);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -890,11 +960,11 @@ TEST_F(AgentTest, MultipleDisconnect)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//*[@dataItemId='p1']", 3);
   }
 
-  agent->connected(m_adapter, devices);
-  m_adapter->processData("TIME|block|GTH");
-  m_adapter->processData("TIME|cmp|normal||||");
+  agent->connected(id, devices, false);
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|GTH");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|cmp|normal||||");
 
-  agent->disconnected(m_adapter, devices);
+  agent->disconnected(id, devices, false);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -909,22 +979,22 @@ TEST_F(AgentTest, IgnoreTimestamps)
 {
   addAdapter();
 
-  m_adapter->processData("TIME|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
 
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00Z");
   }
 
-  m_adapter->setIgnoreTimestamps(true);
-  m_adapter->processData("TIME|line|205");
+  m_agentTestHelper->m_adapter->setOptions({{"IgnoreTimestamps", true}});
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|205");
 
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "TIME");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00Z");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[3]@timestamp", "!2021-02-01T12:00:00Z");
   }
 }
 
@@ -945,7 +1015,7 @@ TEST_F(AgentTest, DynamicCalibration)
   auto agent = m_agentTestHelper->getAgent();
   
   // Add a 10.111000 seconds
-  m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
+  m_agentTestHelper->m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
   auto di = agent->getDataItemByName("LinuxCNC", "Yact");
   ASSERT_TRUE(di);
 
@@ -960,9 +1030,9 @@ TEST_F(AgentTest, DynamicCalibration)
   ASSERT_EQ(0.02, di->getConversionFactor());
   ASSERT_EQ(300.0, di->getConversionOffset());
 
-  m_adapter->processData("TIME|Yact|200|Zact|600");
-  m_adapter->processData(
-      "TIME|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 "
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|Yact|200|Zact|600");
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 "
       "5118 5117 5117 5119 5119 5118 5118 5118 5118 5118");
 
   {
@@ -986,7 +1056,7 @@ TEST_F(AgentTest, FilterValues13)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|load|100");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|load|100");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -994,8 +1064,8 @@ TEST_F(AgentTest, FilterValues13)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[2]", "100");
   }
 
-  m_adapter->processData("TIME|load|103");
-  m_adapter->processData("TIME|load|106");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|load|103");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|load|106");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1004,7 +1074,7 @@ TEST_F(AgentTest, FilterValues13)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
   }
 
-  m_adapter->processData("TIME|load|106|load|108|load|112");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|load|106|load|108|load|112");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1014,6 +1084,7 @@ TEST_F(AgentTest, FilterValues13)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
   }
 
+#if 0
   auto item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "pos");
   ASSERT_TRUE(item);
   ASSERT_TRUE(item->hasMinimumDelta());
@@ -1021,6 +1092,7 @@ TEST_F(AgentTest, FilterValues13)
   ASSERT_FALSE(item->isFiltered(0.0, NAN));
   ASSERT_TRUE(item->isFiltered(5.0, NAN));
   ASSERT_FALSE(item->isFiltered(20.0, NAN));
+#endif
 }
 
 TEST_F(AgentTest, FilterValues)
@@ -1034,7 +1106,7 @@ TEST_F(AgentTest, FilterValues)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
+  m_agentTestHelper->m_adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1044,8 +1116,8 @@ TEST_F(AgentTest, FilterValues)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
   }
 
-  m_adapter->processData("2018-04-27T05:00:32.000666|load|103|pos|25");
-  m_adapter->processData("2018-04-27T05:00:36.888666|load|106|pos|30");
+  m_agentTestHelper->m_adapter->processData("2018-04-27T05:00:32.000666|load|103|pos|25");
+  m_agentTestHelper->m_adapter->processData("2018-04-27T05:00:36.888666|load|106|pos|30");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1057,7 +1129,7 @@ TEST_F(AgentTest, FilterValues)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
   }
 
-  m_adapter->processData("2018-04-27T05:00:40.25|load|106|load|108|load|112|pos|35|pos|40");
+  m_agentTestHelper->m_adapter->processData("2018-04-27T05:00:40.25|load|106|load|108|load|112|pos|35|pos|40");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1070,7 +1142,7 @@ TEST_F(AgentTest, FilterValues)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
   }
 
-  m_adapter->processData("2018-04-27T05:00:47.50|pos|45|pos|50");
+  m_agentTestHelper->m_adapter->processData("2018-04-27T05:00:47.50|pos|45|pos|50");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1090,15 +1162,14 @@ TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
 {
   // Test period filter with ignore timestamps
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
-  addAdapter();
-  m_adapter->setIgnoreTimestamps(true);
+  addAdapter({{"IgnoreTimestamps", true}});
 
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
+  m_agentTestHelper->m_adapter->processData("2018-04-27T05:00:26.555666|load|100|pos|20");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1106,9 +1177,9 @@ TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
   }
 
-  m_adapter->processData("2018-04-27T05:01:32.000666|load|103|pos|25");
+  m_agentTestHelper->m_adapter->processData("2018-04-27T05:01:32.000666|load|103|pos|25");
   dlib::sleep(11 * 1000);
-  m_adapter->processData("2018-04-27T05:01:40.888666|load|106|pos|30");
+  m_agentTestHelper->m_adapter->processData("2018-04-27T05:01:40.888666|load|106|pos|30");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1122,15 +1193,14 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
 {
   // Test period filter with relative time
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
-  addAdapter();
-  m_adapter->setRelativeTime(true);
+  addAdapter({{"RelativeTime", true}});
 
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("0|load|100|pos|20");
+  m_agentTestHelper->m_adapter->processData("0|load|100|pos|20");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1138,8 +1208,8 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
   }
 
-  m_adapter->processData("5000|load|103|pos|25");
-  m_adapter->processData("11000|load|106|pos|30");
+  m_agentTestHelper->m_adapter->processData("5000|load|103|pos|25");
+  m_agentTestHelper->m_adapter->processData("11000|load|106|pos|30");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1148,6 +1218,7 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
   }
 
+#if 0
   DataItem *item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "load");
   ASSERT_TRUE(item);
   ASSERT_TRUE(item->hasMinimumDelta());
@@ -1155,17 +1226,18 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
   ASSERT_FALSE(item->isFiltered(0.0, NAN));
   ASSERT_TRUE(item->isFiltered(4.0, NAN));
   ASSERT_FALSE(item->isFiltered(20.0, NAN));
+#endif
 }
 
 TEST_F(AgentTest, ResetTriggered)
 {
   addAdapter();
 
-  m_adapter->processData("TIME1|pcount|0");
-  m_adapter->processData("TIME2|pcount|1");
-  m_adapter->processData("TIME3|pcount|2");
-  m_adapter->processData("TIME4|pcount|0:DAY");
-  m_adapter->processData("TIME3|pcount|5");
+  m_agentTestHelper->m_adapter->processData("TIME1|pcount|0");
+  m_agentTestHelper->m_adapter->processData("TIME2|pcount|1");
+  m_agentTestHelper->m_adapter->processData("TIME3|pcount|2");
+  m_agentTestHelper->m_adapter->processData("TIME4|pcount|0:DAY");
+  m_agentTestHelper->m_adapter->processData("TIME3|pcount|5");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1229,8 +1301,7 @@ TEST_F(AgentTest, References)
 TEST_F(AgentTest, Discrete)
 {
   m_agentTestHelper->createAgent("/samples/discrete_example.xml");
-  addAdapter();
-  m_adapter->setDupCheck(true);
+  addAdapter({{"FilterDuplicates", true}});
   auto agent = m_agentTestHelper->getAgent();
 
   auto msg = agent->getDataItemByName("LinuxCNC", "message");
@@ -1243,9 +1314,9 @@ TEST_F(AgentTest, Discrete)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|204");
-  m_adapter->processData("TIME|line|205");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|205");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1256,9 +1327,9 @@ TEST_F(AgentTest, Discrete)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:MessageDiscrete[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|message|Hi|Hello");
-  m_adapter->processData("TIME|message|Hi|Hello");
-  m_adapter->processData("TIME|message|Hi|Hello");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|message|Hi|Hello");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|message|Hi|Hello");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|message|Hi|Hello");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1273,19 +1344,17 @@ TEST_F(AgentTest, Discrete)
 
 TEST_F(AgentTest, UpcaseValues)
 {
-  addAdapter();
-  m_adapter->setDupCheck(true);
-  ASSERT_TRUE(m_adapter->upcaseValue());
+  addAdapter({{"FilterDuplicates", true}, {"UpcaseDataItemValue", true}});
 
-  m_adapter->processData("TIME|mode|Hello");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|mode|Hello");
 
   {
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "HELLO");
   }
 
-  m_adapter->setUpcaseValue(false);
-  m_adapter->processData("TIME|mode|Hello");
+  m_agentTestHelper->m_adapter->setOptions({{"UpcaseDataItemValue", false}});
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|mode|Hello");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1295,8 +1364,7 @@ TEST_F(AgentTest, UpcaseValues)
 
 TEST_F(AgentTest, ConditionSequence)
 {
-  addAdapter();
-  m_adapter->setDupCheck(true);
+  addAdapter({{"FilterDuplicates", true}});
   auto agent = m_agentTestHelper->getAgent();
   auto logic = agent->getDataItemByName("LinuxCNC", "lp");
   ASSERT_TRUE(logic);
@@ -1311,7 +1379,7 @@ TEST_F(AgentTest, ConditionSequence)
                           1);
   }
 
-  m_adapter->processData("TIME|lp|NORMAL||||XXX");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|lp|NORMAL||||XXX");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1322,8 +1390,8 @@ TEST_F(AgentTest, ConditionSequence)
         doc, "//m:DeviceStream//m:ComponentStream[@component='Controller']/m:Condition/*", 1);
   }
 
-  m_adapter->processData(
-      "TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1349,7 +1417,7 @@ TEST_F(AgentTest, ConditionSequence)
                           "HIGH");
   }
 
-  m_adapter->processData("TIME|lp|NORMAL||||");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|lp|NORMAL||||");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1360,8 +1428,8 @@ TEST_F(AgentTest, ConditionSequence)
         1);
   }
 
-  m_adapter->processData(
-      "TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1382,8 +1450,8 @@ TEST_F(AgentTest, ConditionSequence)
                           "ALARM_D");
   }
 
-  m_adapter->processData(
-      "TIME|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1412,8 +1480,8 @@ TEST_F(AgentTest, ConditionSequence)
                           "HIGH");
   }
 
-  m_adapter->processData(
-      "TIME|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1442,7 +1510,7 @@ TEST_F(AgentTest, ConditionSequence)
         "4200 ALARM_D Power on effective parameter set");
   }
 
-  m_adapter->processData("TIME|lp|NORMAL|2218|||");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|lp|NORMAL|2218|||");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1458,7 +1526,7 @@ TEST_F(AgentTest, ConditionSequence)
         "4200 ALARM_D Power on effective parameter set");
   }
 
-  m_adapter->processData("TIME|lp|NORMAL||||");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|lp|NORMAL||||");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1472,8 +1540,7 @@ TEST_F(AgentTest, ConditionSequence)
 
 TEST_F(AgentTest, EmptyLastItemFromAdapter)
 {
-  addAdapter();
-  m_adapter->setDupCheck(true);
+  addAdapter({{"FilterDuplicates", true}});
   auto agent = m_agentTestHelper->getAgent();
 
   auto program = agent->getDataItemByName("LinuxCNC", "program");
@@ -1488,7 +1555,7 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|program|A|block|B");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|program|A|block|B");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1496,7 +1563,7 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "B");
   }
 
-  m_adapter->processData("TIME|program||block|B");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|program||block|B");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1504,7 +1571,7 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "B");
   }
 
-  m_adapter->processData("TIME|program||block|");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|program||block|");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1512,8 +1579,8 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
   }
 
-  m_adapter->processData("TIME|program|A|block|B");
-  m_adapter->processData("TIME|program|A|block|");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|program|A|block|B");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|program|A|block|");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1521,8 +1588,8 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
   }
 
-  m_adapter->processData("TIME|program|A|block|B|line|C");
-  m_adapter->processData("TIME|program|D|block||line|E");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|program|A|block|B|line|C");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|program|D|block||line|E");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1540,14 +1607,12 @@ TEST_F(AgentTest, ConstantValue)
   ASSERT_TRUE(di);
   di->addConstrainedValue("UNAVAILABLE");
 
-  ASSERT_TRUE(m_adapter);
-
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|block|G01X00|Smode|INDEX|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|G01X00|Smode|INDEX|line|204");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1568,7 +1633,7 @@ TEST_F(AgentTest, BadDataItem)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
   }
 
-  m_adapter->processData("TIME|bad|ignore|dummy|1244|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|bad|ignore|dummy|1244|line|204");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1589,10 +1654,10 @@ TEST_F(AgentTest, AdapterCommands)
   ASSERT_TRUE(device);
   ASSERT_FALSE(device->m_preserveUuid);
 
-  m_adapter->parseBuffer("* uuid: MK-1234\n");
-  m_adapter->parseBuffer("* manufacturer: Big Tool\n");
-  m_adapter->parseBuffer("* serialNumber: XXXX-1234\n");
-  m_adapter->parseBuffer("* station: YYYY\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* manufacturer: Big Tool\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* serialNumber: XXXX-1234\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* station: YYYY\n");
 
   {
     PARSE_XML_RESPONSE("/probe");
@@ -1603,7 +1668,7 @@ TEST_F(AgentTest, AdapterCommands)
   }
 
   device->m_preserveUuid = true;
-  m_adapter->parseBuffer("* uuid: XXXXXXX\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: XXXXXXX\n");
 
   {
     PARSE_XML_RESPONSE("/probe");
@@ -1621,22 +1686,22 @@ TEST_F(AgentTest, AdapterDeviceCommand)
   auto device2 = agent->getDeviceByName("Device2");
   ASSERT_TRUE(device2);
   
-  m_adapter = new Adapter("*", "server", 7878);
-  ASSERT_TRUE(m_adapter);
-  agent->addAdapter(m_adapter);
-  ASSERT_TRUE(nullptr == m_adapter->getDevice());
+  addAdapter();
+#if 0
+  ASSERT_TRUE(nullptr == adapter->getDevice());
 
-  m_adapter->parseBuffer("* device: device-2\n");
-  ASSERT_TRUE(device2 == m_adapter->getDevice());
+  adapter->parseBuffer("* device: device-2\n");
+  ASSERT_TRUE(device2 == adapter->getDevice());
 
-  m_adapter->parseBuffer("* device: device-1\n");
-  ASSERT_TRUE(device1 == m_adapter->getDevice());
+  adapter->parseBuffer("* device: device-1\n");
+  ASSERT_TRUE(device1 == adapter->getDevice());
 
-  m_adapter->parseBuffer("* device: Device2\n");
-  ASSERT_TRUE(device2 == m_adapter->getDevice());
+  adapter->parseBuffer("* device: Device2\n");
+  ASSERT_TRUE(device2 == adapter->getDevice());
 
-  m_adapter->parseBuffer("* device: Device1\n");
-  ASSERT_TRUE(device1 == m_adapter->getDevice());
+  adapter->parseBuffer("* device: Device1\n");
+  ASSERT_TRUE(device1 == adapter->getDevice());
+#endif
 }
 
 TEST_F(AgentTest, UUIDChange)
@@ -1648,10 +1713,10 @@ TEST_F(AgentTest, UUIDChange)
 
   addAdapter();
   
-  m_adapter->parseBuffer("* uuid: MK-1234\n");
-  m_adapter->parseBuffer("* manufacturer: Big Tool\n");
-  m_adapter->parseBuffer("* serialNumber: XXXX-1234\n");
-  m_adapter->parseBuffer("* station: YYYY\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* manufacturer: Big Tool\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* serialNumber: XXXX-1234\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* station: YYYY\n");
 
   {
     PARSE_XML_RESPONSE("/probe");
@@ -1895,7 +1960,7 @@ TEST_F(AgentTest, AdapterAddAsset)
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
 
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
   ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
   ASSERT_EQ((unsigned int)1, agent->getAssetCount());
 
@@ -1911,13 +1976,13 @@ TEST_F(AgentTest, MultiLineAsset)
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
   
-  m_adapter->parseBuffer("TIME|@ASSET@|P1|Part|--multiline--AAAA\n");
-  m_adapter->parseBuffer(
+  m_agentTestHelper->m_adapter->parseBuffer("2021-02-01T12:00:00Z|@ASSET@|P1|Part|--multiline--AAAA\n");
+  m_agentTestHelper->m_adapter->parseBuffer(
       "<Part assetId='P1'>\n"
       "  <PartXXX>TEST 1</PartXXX>\n"
       "  Some Text\n"
       "  <Extra>XXX</Extra>\n");
-  m_adapter->parseBuffer(
+  m_agentTestHelper->m_adapter->parseBuffer(
       "</Part>\n"
       "--multiline--AAAA\n");
   ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
@@ -1930,11 +1995,11 @@ TEST_F(AgentTest, MultiLineAsset)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part/m:Extra", "XXX");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@assetId", "P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@deviceUuid", "000");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "2021-02-01T12:00:00Z");
   }
 
   // Make sure we can still add a line and we are out of multiline mode...
-  m_adapter->processData("TIME|line|204");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1947,29 +2012,27 @@ TEST_F(AgentTest, BadAsset)
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
 
-  m_adapter->parseBuffer("TIME|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
-  m_adapter->parseBuffer((getFile("asset4.xml") + "\n").c_str());
-  m_adapter->parseBuffer("--multiline--AAAA\n");
+  m_agentTestHelper->m_adapter->parseBuffer("2021-02-01T12:00:00Z|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
+  m_agentTestHelper->m_adapter->parseBuffer((getFile("asset4.xml") + "\n").c_str());
+  m_agentTestHelper->m_adapter->parseBuffer("--multiline--AAAA\n");
   ASSERT_EQ((unsigned int)0, agent->getAssetCount());
 }
 
 TEST_F(AgentTest, AssetRemoval)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                              8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
   Routing::QueryMap query;
 
   query["device"] = "LinuxCNC";
   query["type"] = "Part";
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, m_agentTestHelper->m_agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, m_agentTestHelper->m_agent->getAssetCount());
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
-    ASSERT_EQ(1, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
+    ASSERT_EQ(1, m_agentTestHelper->m_agent->getAssetCount("Part"));
   }
 
   {
@@ -1981,16 +2044,16 @@ TEST_F(AgentTest, AssetRemoval)
   // Make sure replace works properly
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
-    ASSERT_EQ(1, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
+    ASSERT_EQ(1, m_agentTestHelper->m_agent->getAssetCount("Part"));
   }
 
   body = "<Part assetId='P2'>TEST 2</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
-    ASSERT_EQ(2, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)2, m_agentTestHelper->m_agent->getAssetCount());
+    ASSERT_EQ(2, m_agentTestHelper->m_agent->getAssetCount("Part"));
   }
 
   {
@@ -2003,8 +2066,8 @@ TEST_F(AgentTest, AssetRemoval)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)3, agent->getAssetCount());
-    ASSERT_EQ(3, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)3, m_agentTestHelper->m_agent->getAssetCount());
+    ASSERT_EQ(3, m_agentTestHelper->m_agent->getAssetCount("Part"));
   }
 
   {
@@ -2017,8 +2080,8 @@ TEST_F(AgentTest, AssetRemoval)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
-    ASSERT_EQ(3, agent->getAssetCount("Part", false));
+    ASSERT_EQ((unsigned int)3, m_agentTestHelper->m_agent->getAssetCount(false));
+    ASSERT_EQ(3, m_agentTestHelper->m_agent->getAssetCount("Part", false));
   }
 
   {
@@ -2055,13 +2118,13 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   
   ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
 
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
   ASSERT_EQ((unsigned int)1, agent->getAssetCount());
 
-  m_adapter->processData("TIME|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
   ASSERT_EQ((unsigned int)2, agent->getAssetCount());
 
-  m_adapter->processData("TIME|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
   ASSERT_EQ((unsigned int)3, agent->getAssetCount());
 
   {
@@ -2070,7 +2133,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
   }
 
-  m_adapter->processData("TIME|@REMOVE_ASSET@|P2\r");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P2\r");
   ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
 
   {
@@ -2140,7 +2203,7 @@ TEST_F(AgentTest, AssetPrependId)
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
 
-  m_adapter->processData("TIME|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");
   ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
   ASSERT_EQ((unsigned int)1, agent->getAssetCount());
 
@@ -2159,7 +2222,7 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
 
   ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
 
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
   ASSERT_EQ((unsigned int)1, agent->getAssetCount());
 
   {
@@ -2168,7 +2231,7 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
   }
 
-  m_adapter->processData("TIME|@REMOVE_ASSET@|P1");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P1");
   ASSERT_EQ((unsigned int)1, agent->getAssetCount(false));
 
   {
@@ -2188,7 +2251,7 @@ TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
 
   ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
 
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
   ASSERT_EQ((unsigned int)1, agent->getAssetCount(false));
 
   {
@@ -2217,8 +2280,6 @@ TEST_F(AgentTest, AssetChangedWhenUnavailable)
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "");
   }
 }
 
@@ -2229,13 +2290,13 @@ TEST_F(AgentTest, RemoveAllAssets)
 
   ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
 
-  m_adapter->processData("TIME|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
   ASSERT_EQ((unsigned int)1, agent->getAssetCount());
 
-  m_adapter->processData("TIME|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
   ASSERT_EQ((unsigned int)2, agent->getAssetCount());
 
-  m_adapter->processData("TIME|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
   ASSERT_EQ((unsigned int)3, agent->getAssetCount());
 
   {
@@ -2244,7 +2305,7 @@ TEST_F(AgentTest, RemoveAllAssets)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
   }
 
-  m_adapter->processData("TIME|@REMOVE_ALL_ASSETS@|Part");
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ALL_ASSETS@|Part");
   ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
 
   {
@@ -2427,7 +2488,8 @@ TEST_F(AgentTest, StreamData)
       ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
 
       auto delta = system_clock::now() - startTime;
-      ASSERT_TRUE(delta < (heartbeatFreq + 25ms));
+      //cout << "Delta: " << delta.count() << endl;
+      ASSERT_TRUE(delta < (heartbeatFreq + 35ms));
       ASSERT_TRUE(delta > heartbeatFreq);
       killThread.join();
     }
@@ -2449,7 +2511,7 @@ TEST_F(AgentTest, StreamData)
 
     auto AddThreadLambda = [](AgentTest *test) {
       this_thread::sleep_for(test->m_delay);
-      test->m_adapter->processData("TIME|line|204");
+      test->m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
       test->m_agentTestHelper->m_out.setstate(ios::eofbit);
     };
 
@@ -2460,6 +2522,7 @@ TEST_F(AgentTest, StreamData)
       PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
 
       auto delta = system_clock::now() - startTime;
+      //cout << "Delta: " << delta.count() << endl;
       ASSERT_LT(delta, (minExpectedResponse + 50ms));
       ASSERT_GT(delta, minExpectedResponse);
       addThread.join();
@@ -2491,7 +2554,7 @@ TEST_F(AgentTest, StreamDataObserver)
       auto agent = test->m_agentTestHelper->getAgent();
       this_thread::sleep_for(test->m_delay);
       agent->setSequence(agent->getSequence() + 20ull);
-      test->m_adapter->processData("TIME|line|204");
+      test->m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
       this_thread::sleep_for(120ms);
       test->m_agentTestHelper->m_out.setstate(ios::eofbit);
     };
@@ -2524,7 +2587,7 @@ TEST_F(AgentTest, Put)
   Routing::QueryMap queries;
   string body;
 
-  queries["time"] = "TIME";
+  queries["time"] = "2021-02-01T12:00:00Z";
   queries["line"] = "205";
   queries["power"] = "ON";
 
@@ -2534,9 +2597,50 @@ TEST_F(AgentTest, Put)
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "TIME");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@timestamp", "2021-02-01T12:00:00Z");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
     ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
   }
   
 }
+
+#if 0
+// Test diabling of HTTP PUT or POST. This is handled before the request. Tested
+// in the server
+TEST_F(AgentTest, PutBlockingFrom)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml",
+                                 8, 4, "1.3", 4, true);
+  
+  Routing::QueryMap queries;
+  string body;
+
+  m_agentTestHelper->m_server->allowPutFrom("192.168.0.1");
+
+  queries["time"] = "TIME";
+  queries["line"] = "205";
+  
+
+  {
+    PARSE_XML_RESPONSE_PUT("/LinuxCNC", body, queries);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT, POST, and DELETE are not allowed from 127.0.0.1");
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "UNAVAILABLE");
+  }
+
+  // Retry request after adding ip address
+  m_agentTestHelper->m_server->allowPutFrom("127.0.0.1");
+
+  {
+    PARSE_XML_RESPONSE_PUT("/LinuxCNC", body, queries);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
+  }
+}
+#endif

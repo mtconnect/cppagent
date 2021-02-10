@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 
 #include "component_configuration.hpp"
 #include "description.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <map>
@@ -33,7 +33,7 @@ namespace mtconnect
 {
   class Composition
   {
-   public:
+  public:
     Composition() = default;
     Composition(const Composition &) = default;
     ~Composition() = default;
@@ -59,7 +59,7 @@ namespace mtconnect
 
     std::map<std::string, std::string> m_attributes;
 
-   protected:
+  protected:
     std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
     std::optional<Description> m_description;
   };

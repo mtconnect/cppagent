@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 
 #include "component_configuration.hpp"
 #include "composition.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <map>
@@ -36,7 +36,7 @@ namespace mtconnect
 
   class Component
   {
-   public:
+  public:
     struct Reference
     {
       enum ReferenceType
@@ -61,7 +61,7 @@ namespace mtconnect
       Component *m_component;
     };
 
-   public:
+  public:
     // Take in a class name & mapping of attributes
     Component(const std::string &className, const std::map<std::string, std::string> &attributes,
               const std::string &prefix = "");
@@ -153,13 +153,13 @@ namespace mtconnect
 
     void resolveReferences();
 
-   protected:
+  protected:
     // Return a map of attributes of all the component specs
     std::map<std::string, std::string> buildAttributes() const;
     void reBuildAttributes() { m_attributes = buildAttributes(); }
     void setParent(Component *parent);
 
-   protected:
+  protected:
     // Unique ID for each component
     std::string m_id;
 
@@ -176,7 +176,7 @@ namespace mtconnect
     std::string m_uuid;
 
     // If receiving data, a sample rate is needed
-    float m_sampleInterval;
+    double m_sampleInterval;
 
     // Description of itself
     std::map<std::string, std::string> m_description;

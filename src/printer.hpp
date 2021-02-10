@@ -2,8 +2,8 @@
 #pragma once
 
 #include "assets/asset.hpp"
-#include "globals.hpp"
-#include "observation.hpp"
+#include "observation/observation.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <map>
@@ -20,7 +20,7 @@ namespace mtconnect
 
   class Printer
   {
-   public:
+  public:
     Printer(bool pretty = false) : m_pretty(pretty) {}
     virtual ~Printer() = default;
 
@@ -41,13 +41,14 @@ namespace mtconnect
 
     virtual std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                     const uint64_t nextSeq, const uint64_t firstSeq,
-                                    const uint64_t lastSeq, ObservationPtrArray &results) const = 0;
+                                    const uint64_t lastSeq,
+                                    observation::ObservationList &results) const = 0;
     virtual std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                                     const unsigned int assetCount,
                                     AssetList const &assets) const = 0;
     virtual std::string mimeType() const = 0;
 
-   protected:
+  protected:
     bool m_pretty;
   };
 }  // namespace mtconnect

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <utility>
 #include <vector>
@@ -49,7 +49,7 @@ namespace mtconnect
 
   class CoordinateSystems : public ComponentConfiguration
   {
-   public:
+  public:
     CoordinateSystems() = default;
     virtual ~CoordinateSystems() = default;
 
@@ -66,7 +66,7 @@ namespace mtconnect
       m_coordinateSystems.emplace_back(std::move(s));
     }
 
-   protected:
+  protected:
     std::list<std::unique_ptr<CoordinateSystem>> m_coordinateSystems;
   };
 }  // namespace mtconnect
