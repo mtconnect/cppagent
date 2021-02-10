@@ -1687,22 +1687,50 @@ TEST_F(AgentTest, AdapterDeviceCommand)
   ASSERT_TRUE(device2);
   
   addAdapter();
-#if 0
-  ASSERT_TRUE(nullptr == adapter->getDevice());
 
-  adapter->parseBuffer("* device: device-2\n");
-  ASSERT_TRUE(device2 == adapter->getDevice());
+  auto device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), "Device");
+  ASSERT_EQ(device1->getName(), device);
+  
+  m_agentTestHelper->m_adapter->parseBuffer("* device: device-2\n");
+  device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), "Device");
+  ASSERT_EQ(device2->getUuid(), device);
+  
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: new-uuid\n");
+  ASSERT_EQ("new-uuid", device2->getUuid());
 
-  adapter->parseBuffer("* device: device-1\n");
-  ASSERT_TRUE(device1 == adapter->getDevice());
-
-  adapter->parseBuffer("* device: Device2\n");
-  ASSERT_TRUE(device2 == adapter->getDevice());
-
-  adapter->parseBuffer("* device: Device1\n");
-  ASSERT_TRUE(device1 == adapter->getDevice());
-#endif
+  m_agentTestHelper->m_adapter->parseBuffer("* device: device-1\n");
+  device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), "Device");
+  ASSERT_EQ(device1->getUuid(), device);
+  
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: another-uuid\n");
+  ASSERT_EQ("another-uuid", device1->getUuid());
 }
+
+TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
+{
+  m_agentTestHelper->createAgent("/samples/kinematics.xml",
+                                 8, 4, "1.7", 25);
+  auto agent = m_agentTestHelper->getAgent();
+  
+  addAdapter();
+  
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "UNAVAILABLE");
+  }
+  
+  m_agentTestHelper->m_adapter->parseBuffer("* adapterVersion: 2.10\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* mtconnectVersion: 1.7\n");
+
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "2.10");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "1.7");
+  }
+
+}
+
 
 TEST_F(AgentTest, UUIDChange)
 {

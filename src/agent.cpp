@@ -938,9 +938,7 @@ namespace mtconnect
                            const std::optional<std::string> &time, entity::ErrorList &errors)
   {
     // Parse the asset
-    entity::XmlParser parser;
-
-    auto entity = parser.parse(Asset::getRoot(), document, "1.7", errors);
+    auto entity = entity::XmlParser::parse(Asset::getRoot(), document, "1.7", errors);
     if (!entity)
     {
       g_logger << LWARN << "Asset could not be parsed";
@@ -1646,7 +1644,7 @@ namespace mtconnect
     
     static std::unordered_map<string,string> adapterDataItems {
       { "adapterVersion", "_adapter_software_version" },
-      { "mtconnnectVersion", "_mtconnect_version" },
+      { "mtconnectVersion", "_mtconnect_version" },
     };
 
     auto action = deviceCommands.find(command);

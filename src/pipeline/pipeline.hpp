@@ -45,15 +45,20 @@ namespace mtconnect
       }
       virtual ~Pipeline() { m_start->stop(); }
       virtual void build(const ConfigOptions &options) = 0;
+      bool started() const { return m_started; }
       void clear()
       {
         m_start->stop();
+        m_started = false;
         m_start = std::make_shared<Start>();
       }
       virtual void start()
       {
         if (m_start)
+        {
           m_start->start();
+          m_started = true;
+        }
       }
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
@@ -83,6 +88,7 @@ namespace mtconnect
         }
       };
 
+      bool m_started { false };
       TransformPtr m_start;
       PipelineContextPtr m_context;
     };
