@@ -157,7 +157,7 @@ namespace mtconnect
         }
       }
 
-      std::list<string_view> extra;
+      std::list<string> extra;
       for (auto &p : properties)
         if (!p.first.m_mark)
           extra.emplace_back(p.first);
