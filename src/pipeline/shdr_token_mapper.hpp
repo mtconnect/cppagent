@@ -50,10 +50,11 @@ namespace mtconnect
     public:
       ShdrTokenMapper(const ShdrTokenMapper &) = default;
       ShdrTokenMapper(PipelineContextPtr context,
-                      const std::optional<std::string> &device = std::nullopt)
+                      const std::optional<std::string> &device = std::nullopt,
+                      bool complexOnSingleLine = false)
         : Transform("ShdrTokenMapper"),
           m_contract(context->m_contract.get()),
-          m_defaultDevice(device)
+          m_defaultDevice(device), m_complexOnSingleLine(complexOnSingleLine)
       {
         m_guard = TypeGuard<Timestamped>(RUN);
       }
@@ -74,6 +75,7 @@ namespace mtconnect
       std::set<std::string> m_logOnce;
       PipelineContract *m_contract;
       std::optional<std::string> m_defaultDevice;
+      bool m_complexOnSingleLine { false };
     };
 
     inline static std::string &upcase(std::string &s)

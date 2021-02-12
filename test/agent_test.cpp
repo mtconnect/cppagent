@@ -1709,9 +1709,7 @@ TEST_F(AgentTest, AdapterDeviceCommand)
 TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
 {
   m_agentTestHelper->createAgent("/samples/kinematics.xml",
-                                 8, 4, "1.7", 25);
-  auto agent = m_agentTestHelper->getAgent();
-  
+                                 8, 4, "1.7", 25);  
   addAdapter();
   
   {

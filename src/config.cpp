@@ -571,6 +571,7 @@ namespace mtconnect
     auto upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
     auto filterDuplicates = get_bool_with_default(reader, "FilterDuplicates", false);
 
+
     m_monitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
     m_minimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
     m_pretty = get_bool_with_default(reader, "Pretty", false);
@@ -639,6 +640,7 @@ namespace mtconnect
     options["ConversionRequired"] = conversionRequired;
     options["UpcaseDataItemValue"] = upcaseValue;
     options["FilterDuplicates"] = filterDuplicates;
+    assign_bool_value("SingleLineComplexObservations", reader, options);
 
     m_agent->initialize(m_pipelineContext, options);
 
@@ -721,6 +723,7 @@ namespace mtconnect
         assign_bool_value("RealTime", adapter, adapterOptions);
         assign_bool_value("RelativeTime", adapter, adapterOptions);
         assign_bool_value("UpcaseDataItemValue", adapter, adapterOptions);
+        assign_bool_value("SingleLineComplexObservations", adapter, adapterOptions);
         assign_duration_value<Seconds>("ReconnectInterval", adapter, adapterOptions);
         assign_duration_value<Seconds>("LegacyTimeout", adapter, adapterOptions);
         assign_bool_value("PreserveUUID", adapter, adapterOptions);
