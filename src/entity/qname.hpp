@@ -71,11 +71,12 @@ namespace mtconnect
         }
       }
 
+#if 0
       void setNs(const std::string &ns)
       {
         setQName(ns + ':' + std::string(m_name));
       }
-      
+#endif
       void clear()
       {
         std::string::clear();
