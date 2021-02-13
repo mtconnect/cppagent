@@ -26,9 +26,9 @@ namespace mtconnect
     public:
       QName() = default;
       QName(const std::string &name, const std::string &ns)
-      : m_name(name), m_ns(ns)
       {
         assign(ns + ":" + name);
+        m_nsLen = ns.length();
       }
 
       QName(const std::string &qname)
@@ -41,13 +41,11 @@ namespace mtconnect
         assign(qname);
         if (auto pos = find(':'); pos != npos)
         {
-          m_ns = substr(0, pos);
-          m_name = substr(pos + 1);
+          m_nsLen = pos;
         }
         else
         {
-          m_name = qname;
-          m_ns = std::string_view();
+          m_nsLen = 0;
         }
       }
       
@@ -62,38 +60,55 @@ namespace mtconnect
       
       void setName(const std::string &name)
       {
-        if (m_ns.empty())
+        if (m_nsLen == 0)
         {
           assign(name);
-          m_name = *this;
         }
         else
         {
-          m_name = name;
-          assign(m_ns + ':' + name);
+          std::string ns(getNs());
+          assign(ns + ':' + name);
         }
       }
 
       void setNs(const std::string &ns)
       {
-        m_ns = ns;
-        assign(m_ns + ':' + m_name);
+        std::string name(getName());
+        m_nsLen = ns.length();
+        if (m_nsLen > 0)
+        {
+          assign(ns + ':' + name);
+        }
+        else
+        {
+          assign(name);
+        }
       }
 
       void clear()
       {
         std::string::clear();
-        m_ns.clear();
-        m_name.clear();
+        m_nsLen = 0;
       }
       
       const auto &getQName() const { return *this; }
-      const auto &getName() const { return m_name; }
-      const auto &getNs() const { return m_ns; }
+      const std::string_view getName() const
+      {
+        if (m_nsLen == 0)
+          return std::string_view(*this);
+        else
+          return std::string_view(c_str() + m_nsLen + 1);
+      }
+      const std::string_view getNs() const
+      {
+        if (m_nsLen == 0)
+          return std::string_view();
+        else
+          return std::string_view(c_str(), m_nsLen);
+      }
       
     protected:
-      std::string m_name;
-      std::string m_ns;
+      size_t m_nsLen;
     };
   }
 }
