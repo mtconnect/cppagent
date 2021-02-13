@@ -63,7 +63,7 @@ class JsonPrinterTest : public testing::Test
         Requirement("testIndicator", false),
         Requirement("instanceId", INTEGER, true),
         Requirement("sender", true),
-        Requirement(configuration::BufferSize, INTEGER, true),
+        Requirement("bufferSize", INTEGER, true),
         Requirement("assetBufferSize", INTEGER, true),
         Requirement("assetCount", INTEGER, true),
         Requirement("deviceModelChangeTime", true)
@@ -124,7 +124,7 @@ class JsonPrinterTest : public testing::Test
 
     auto mtconnectDevices = make_shared<Factory>(Requirements{
         Requirement("Header", ENTITY, header, true),
-        Requirement(configuration::Devices, ENTITY_LIST, devices, true),
+        Requirement("Devices", ENTITY_LIST, devices, true),
     });
     
     auto root = make_shared<Factory>(Requirements{Requirement("MTConnectDevices", ENTITY, mtconnectDevices)});
