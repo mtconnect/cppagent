@@ -67,14 +67,12 @@ TEST(QNameTest, should_set_name_and_keep_namespace)
 
 TEST(QNameTest, should_set_namespace_and_keep_name)
 {
-#if 0
   QName qname("SomeName");
   ASSERT_TRUE(qname.getNs().empty());
   
   qname.setNs("x");
   ASSERT_EQ("x:SomeName", qname);
   ASSERT_EQ("SomeName", qname.getName());
-#endif
 }
 
 TEST(QNameTest, should_clear)

@@ -26,22 +26,23 @@ namespace mtconnect
     public:
       QName() = default;
       QName(const std::string &name, const std::string &ns)
+      : m_name(name), m_ns(ns)
       {
-        setQName(ns + ":" + name);
+        assign(ns + ":" + name);
       }
 
-      QName(const std::string &name)
+      QName(const std::string &qname)
       {
-        setQName(name);
+        setQName(qname);
       }
       
       void setQName(const std::string &qname)
       {
-        this->assign(qname);
+        assign(qname);
         if (auto pos = find(':'); pos != npos)
         {
-          m_ns = std::string_view(c_str(), pos);
-          m_name = std::string_view(c_str() + pos + 1);
+          m_ns = substr(0, pos);
+          m_name = substr(pos + 1);
         }
         else
         {
@@ -53,8 +54,9 @@ namespace mtconnect
       QName(const QName &other) = default;
       ~QName() = default;
       
-      QName &operator=(const std::string &name) {
-        setName(name);
+      QName &operator=(const std::string &name)
+      {
+        setQName(name);
         return *this;
       }
       
@@ -62,26 +64,27 @@ namespace mtconnect
       {
         if (m_ns.empty())
         {
-          this->assign(name);
+          assign(name);
           m_name = *this;
         }
         else
         {
-          setQName(std::string(m_ns) + ':' + name);
+          m_name = name;
+          assign(m_ns + ':' + name);
         }
       }
 
-#if 0
       void setNs(const std::string &ns)
       {
-        setQName(ns + ':' + std::string(m_name));
+        m_ns = ns;
+        assign(m_ns + ':' + m_name);
       }
-#endif
+
       void clear()
       {
         std::string::clear();
-        m_ns = std::string_view();
-        m_name = std::string_view();
+        m_ns.clear();
+        m_name.clear();
       }
       
       const auto &getQName() const { return *this; }
@@ -89,8 +92,8 @@ namespace mtconnect
       const auto &getNs() const { return m_ns; }
       
     protected:
-      std::string_view m_name;
-      std::string_view m_ns;
+      std::string m_name;
+      std::string m_ns;
     };
   }
 }
