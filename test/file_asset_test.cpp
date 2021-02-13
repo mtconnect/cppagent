@@ -87,7 +87,7 @@ R"DOC(<FileArchetype applicationCategory="PROCESS" applicationType="INSTRUCTIONS
 
   // Round trip test
   entity::XmlPrinter printer;
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
 
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
@@ -161,7 +161,7 @@ R"DOC(<File applicationCategory="PROCESS" applicationType="INSTRUCTIONS" assetId
 
   // Round trip test
   entity::XmlPrinter printer;
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
 
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);

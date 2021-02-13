@@ -211,6 +211,15 @@ namespace mtconnect
         else
           return nullptr;
       }
+      std::shared_ptr<Entity> create(const std::string &name, Properties &&a, ErrorList &errors)
+      {
+        auto factory = factoryFor(name);
+        if (factory)
+          return factory->make(name, a, errors);
+        else
+          return nullptr;
+      }
+
       std::shared_ptr<Entity> create(const std::string &name, Properties &a)
       {
         ErrorList list;

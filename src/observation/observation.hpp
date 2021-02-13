@@ -94,7 +94,7 @@ namespace mtconnect
         setProperty("VALUE", "UNAVAILABLE"s);
       }
       bool isUnavailable() const { return m_unavailable; }
-      virtual void setEntityName() { Entity::setName(m_dataItem->getPrefixedElementName()); }
+      virtual void setEntityName() { Entity::setQName(m_dataItem->getPrefixedElementName()); }
 
       bool operator<(const Observation &another) const
       {
@@ -217,19 +217,19 @@ namespace mtconnect
         switch (m_level)
         {
           case NORMAL:
-            setName("Normal");
+            setQName("Normal");
             break;
 
           case WARNING:
-            setName("Warning");
+            setQName("Warning");
             break;
 
           case FAULT:
-            setName("Fault");
+            setQName("Fault");
             break;
 
           case UNAVAILABLE:
-            setName("Unavailable");
+            setQName("Unavailable");
             break;
         }
       }

@@ -19,6 +19,8 @@
 
 #include "observation/data_set.hpp"
 #include "requirement.hpp"
+#include "qname.hpp"
+
 #include <unordered_map>
 
 namespace mtconnect
@@ -53,7 +55,7 @@ namespace mtconnect
       else
         return std::nullopt;
     }
-
+    
     class Entity : public std::enable_shared_from_this<Entity>
     {
     public:
@@ -72,7 +74,7 @@ namespace mtconnect
       {
         return (m_properties.count("LIST") > 0 && m_properties.size() > 1);
       }
-      const std::string &getName() const { return m_name; }
+      const auto &getName() const { return m_name; }
       const Properties &getProperties() const { return m_properties; }
       const Value &getProperty(const std::string &n) const
       {
@@ -94,6 +96,7 @@ namespace mtconnect
       }
       bool hasValue() const { return hasProperty("VALUE"); }
       void setName(const std::string &name) { m_name = name; }
+      void setQName(const std::string &name) { m_name.setQName(name); }
       void applyTo(const std::string &name, std::function<void(Value &v)> f)
       {
         auto p = m_properties.find(name);
@@ -159,7 +162,7 @@ namespace mtconnect
 
       // Entity Factory
     protected:
-      std::string m_name;
+      QName m_name;
       Properties m_properties;
       OrderMapPtr m_order;
     };
