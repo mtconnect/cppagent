@@ -181,7 +181,7 @@ namespace mtconnect
           m_logOnce.insert(dataItemKey.first);
         }
         
-        if (m_complexOnSingleLine && token != end)
+        if (!m_complexOnSingleLine && token != end)
           token++;
 
         return nullptr;
@@ -335,7 +335,7 @@ namespace mtconnect
             
             // For legacy token handling, stop if we have
             // consumed more than two tokens.
-            if (m_complexOnSingleLine)
+            if (!m_complexOnSingleLine)
             {
               auto distance = std::distance(start, token);
               if (distance > 2)

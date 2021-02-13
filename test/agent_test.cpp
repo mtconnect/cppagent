@@ -825,7 +825,7 @@ TEST_F(AgentTest, DuplicateCheck)
 
 TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
 {
-  addAdapter({{"FilterDuplicates", true}});
+  addAdapter({{configuration::FilterDuplicates, true}});
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
@@ -864,7 +864,7 @@ TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
 
 TEST_F(AgentTest, AutoAvailable)
 {
-  addAdapter({{"AutoAvailable", true}});
+  addAdapter({{configuration::AutoAvailable, true}});
   auto agent = m_agentTestHelper->m_agent.get();
   auto adapter = m_agentTestHelper->m_adapter;
   auto id = adapter->getIdentity();
@@ -987,7 +987,7 @@ TEST_F(AgentTest, IgnoreTimestamps)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[2]@timestamp", "2021-02-01T12:00:00Z");
   }
 
-  m_agentTestHelper->m_adapter->setOptions({{"IgnoreTimestamps", true}});
+  m_agentTestHelper->m_adapter->setOptions({{configuration::IgnoreTimestamps, true}});
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|205");
 
   {
@@ -1162,7 +1162,7 @@ TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
 {
   // Test period filter with ignore timestamps
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
-  addAdapter({{"IgnoreTimestamps", true}});
+  addAdapter({{configuration::IgnoreTimestamps, true}});
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1193,7 +1193,7 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
 {
   // Test period filter with relative time
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
-  addAdapter({{"RelativeTime", true}});
+  addAdapter({{configuration::RelativeTime, true}});
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1301,7 +1301,7 @@ TEST_F(AgentTest, References)
 TEST_F(AgentTest, Discrete)
 {
   m_agentTestHelper->createAgent("/samples/discrete_example.xml");
-  addAdapter({{"FilterDuplicates", true}});
+  addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
 
   auto msg = agent->getDataItemForDevice("LinuxCNC", "message");
@@ -1344,7 +1344,7 @@ TEST_F(AgentTest, Discrete)
 
 TEST_F(AgentTest, UpcaseValues)
 {
-  addAdapter({{"FilterDuplicates", true}, {"UpcaseDataItemValue", true}});
+  addAdapter({{configuration::FilterDuplicates, true}, {configuration::UpcaseDataItemValue, true}});
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|mode|Hello");
 
@@ -1353,7 +1353,7 @@ TEST_F(AgentTest, UpcaseValues)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:ControllerMode", "HELLO");
   }
 
-  m_agentTestHelper->m_adapter->setOptions({{"UpcaseDataItemValue", false}});
+  m_agentTestHelper->m_adapter->setOptions({{configuration::UpcaseDataItemValue, false}});
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|mode|Hello");
 
   {
@@ -1364,7 +1364,7 @@ TEST_F(AgentTest, UpcaseValues)
 
 TEST_F(AgentTest, ConditionSequence)
 {
-  addAdapter({{"FilterDuplicates", true}});
+  addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
   auto logic = agent->getDataItemForDevice("LinuxCNC", "lp");
   ASSERT_TRUE(logic);
@@ -1540,7 +1540,7 @@ TEST_F(AgentTest, ConditionSequence)
 
 TEST_F(AgentTest, EmptyLastItemFromAdapter)
 {
-  addAdapter({{"FilterDuplicates", true}});
+  addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
 
   auto program = agent->getDataItemForDevice("LinuxCNC", "program");
@@ -1688,18 +1688,18 @@ TEST_F(AgentTest, AdapterDeviceCommand)
   
   addAdapter();
 
-  auto device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), "Device");
+  auto device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
   ASSERT_EQ(device1->getName(), device);
   
   m_agentTestHelper->m_adapter->parseBuffer("* device: device-2\n");
-  device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), "Device");
+  device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
   ASSERT_EQ(device2->getUuid(), device);
   
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: new-uuid\n");
   ASSERT_EQ("new-uuid", device2->getUuid());
 
   m_agentTestHelper->m_adapter->parseBuffer("* device: device-1\n");
-  device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), "Device");
+  device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
   ASSERT_EQ(device1->getUuid(), device);
   
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: another-uuid\n");

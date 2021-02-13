@@ -614,7 +614,7 @@ Configuration Parameters
 
     *Default*: false
 
-* `SingleLineComplexObservations` - Specifies legacy default behavior for SHDR parsing. Complex observations like Conditions, Messages, and Timeseries must be on a separate line
+* `SingleLineComplexObservations` - When false or not specified, uses legacy default behavior for SHDR parsing. Complex observations like Conditions, Messages, and Timeseries must be on a separate line.
 
     *Default*: false   
 
@@ -717,7 +717,7 @@ Configuration Parameters
 
         *Default*: Top Level Setting
 
-    * `SingleLineComplexObservations` - Specifies legacy default behavior for SHDR parsing. Complex observations like Conditions, Messages, and Timeseries must be on a separate line
+    * `SingleLineComplexObservations` - When false or not specified, uses legacy default behavior for SHDR parsing. Complex observations like Conditions, Messages, and Timeseries must be on a separate line.
 	
         *Default*: Top Level Setting
 

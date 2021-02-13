@@ -16,7 +16,7 @@
 //
 
 #include "device.hpp"
-
+#include "config_options.hpp"
 #include <dlib/logger.h>
 
 using namespace std;
@@ -52,7 +52,7 @@ namespace mtconnect
 
   void Device::setOptions(const ConfigOptions &options)
   {
-    if (auto opt = GetOption<bool>(options, "PreserveUUID"))
+    if (auto opt = GetOption<bool>(options, configuration::PreserveUUID))
       m_preserveUuid = *opt;
   }
 

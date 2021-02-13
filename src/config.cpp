@@ -16,6 +16,7 @@
 //
 
 #include "config.hpp"
+#include "config_options.hpp"
 
 #include "agent.hpp"
 #include "device_model/device.hpp"
@@ -126,10 +127,12 @@ namespace mtconnect
   }
 
   static inline void assign_bool_value(const char *key, const config_reader::kernel_1a &reader,
-                                       ConfigOptions &options)
+                                       ConfigOptions &options, std::optional<bool> deflt = nullopt)
   {
     if (reader.is_key_defined(key))
       options[key] = reader[key] == "true" || reader[key] == "yes";
+    else if (deflt)
+      options[key] = *deflt;
   }
 
   template <typename T>
@@ -558,29 +561,29 @@ namespace mtconnect
     if (!m_loggerFile)
       configureLogger(reader);
 
-    auto defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
-    auto port = get_with_default(reader, "Port", 5000);
-    string serverIp = get_with_default(reader, "ServerIp", "");
-    auto bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
-    auto maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
-    auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000);
-    auto legacyTimeout = get_with_default(reader, "LegacyTimeout", 600s);
-    auto reconnectInterval = get_with_default(reader, "ReconnectInterval", 10000ms);
-    auto ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
-    auto conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
-    auto upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
-    auto filterDuplicates = get_bool_with_default(reader, "FilterDuplicates", false);
+    auto defaultPreserve = get_bool_with_default(reader, configuration::PreserveUUID, true);
+    auto port = get_with_default(reader, configuration::Port, 5000);
+    string serverIp = get_with_default(reader, configuration::ServerIp, "");
+    auto bufferSize = get_with_default(reader, configuration::BufferSize, DEFAULT_SLIDING_BUFFER_EXP);
+    auto maxAssets = get_with_default(reader, configuration::MaxAssets, DEFAULT_MAX_ASSETS);
+    auto checkpointFrequency = get_with_default(reader, configuration::CheckpointFrequency, 1000);
+    auto legacyTimeout = get_with_default(reader, configuration::LegacyTimeout, 600s);
+    auto reconnectInterval = get_with_default(reader, configuration::ReconnectInterval, 10000ms);
+    auto ignoreTimestamps = get_bool_with_default(reader, configuration::IgnoreTimestamps, false);
+    auto conversionRequired = get_bool_with_default(reader, configuration::ConversionRequired, true);
+    auto upcaseValue = get_bool_with_default(reader, configuration::UpcaseDataItemValue, true);
+    auto filterDuplicates = get_bool_with_default(reader, configuration::FilterDuplicates, false);
 
 
-    m_monitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
-    m_minimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
-    m_pretty = get_bool_with_default(reader, "Pretty", false);
+    m_monitorFiles = get_bool_with_default(reader, configuration::MonitorConfigFiles, false);
+    m_minimumConfigReloadAge = get_with_default(reader, configuration::MinimumConfigReloadAge, 15);
+    m_pretty = get_bool_with_default(reader, configuration::Pretty, false);
 
-    m_pidFile = get_with_default(reader, "PidFile", "agent.pid");
+    m_pidFile = get_with_default(reader, configuration::PidFile, "agent.pid");
 
-    if (reader.is_key_defined("Devices"))
+    if (reader.is_key_defined(configuration::Devices))
     {
-      auto name = reader["Devices"];
+      auto name = reader[configuration::Devices];
       auto path = checkPath(name);
       if (path)
         m_devicesFile = (*path).string();
@@ -608,11 +611,11 @@ namespace mtconnect
                               .c_str());
     }
 
-    m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
+    m_name = get_with_default(reader, configuration::ServiceName, "MTConnect Agent");
 
     // Check for schema version
     m_version =
-        get_with_default(reader, "SchemaVersion",
+        get_with_default(reader, configuration::SchemaVersion,
                          to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
@@ -633,14 +636,14 @@ namespace mtconnect
     m_pipelineContext->m_contract = m_agent->makePipelineContract();
 
     ConfigOptions options;
-    options["PreserveUUID"] = defaultPreserve;
-    options["LegacyTimeout"] = legacyTimeout;
-    options["ReconnectInterval"] = reconnectInterval;
-    options["IgnoreTimestamps"] = ignoreTimestamps;
-    options["ConversionRequired"] = conversionRequired;
-    options["UpcaseDataItemValue"] = upcaseValue;
-    options["FilterDuplicates"] = filterDuplicates;
-    assign_bool_value("SingleLineComplexObservations", reader, options);
+    options[configuration::PreserveUUID] = defaultPreserve;
+    options[configuration::LegacyTimeout] = legacyTimeout;
+    options[configuration::ReconnectInterval] = reconnectInterval;
+    options[configuration::IgnoreTimestamps] = ignoreTimestamps;
+    options[configuration::ConversionRequired] = conversionRequired;
+    options[configuration::UpcaseDataItemValue] = upcaseValue;
+    options[configuration::FilterDuplicates] = filterDuplicates;
+    assign_bool_value(configuration::SingleLineComplexObservations, reader, options, false);
 
     m_agent->initialize(m_pipelineContext, options);
 
@@ -685,8 +688,8 @@ namespace mtconnect
 
         const auto &adapter = adapters.block(block);
         string deviceName;
-        if (adapter.is_key_defined("Device"))
-          deviceName = adapter["Device"];
+        if (adapter.is_key_defined(configuration::Device))
+          deviceName = adapter[configuration::Device];
         else
           deviceName = block;
 
@@ -699,43 +702,43 @@ namespace mtconnect
           if (device)
           {
             deviceName = device->getName();
-            adapterOptions["Device"] = deviceName;
+            adapterOptions[configuration::Device] = deviceName;
             g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
           }
         }
         else
         {
-          adapterOptions["Device"] = device->getName();
+          adapterOptions[configuration::Device] = device->getName();
         }
         if (!device)
         {
           g_logger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
         }
 
-        assign_value("UUID", adapter, adapterOptions);
-        assign_value("Manufacturer", adapter, adapterOptions);
-        assign_value("Station", adapter, adapterOptions);
-        assign_value("SerialNumber", adapter, adapterOptions);
-        assign_bool_value("FilterDuplicates", adapter, adapterOptions);
-        assign_bool_value("AutoAvailable", adapter, adapterOptions);
-        assign_bool_value("IgnoreTimestamps", adapter, adapterOptions);
-        assign_bool_value("ConversionRequired", adapter, adapterOptions);
-        assign_bool_value("RealTime", adapter, adapterOptions);
-        assign_bool_value("RelativeTime", adapter, adapterOptions);
-        assign_bool_value("UpcaseDataItemValue", adapter, adapterOptions);
-        assign_bool_value("SingleLineComplexObservations", adapter, adapterOptions);
-        assign_duration_value<Seconds>("ReconnectInterval", adapter, adapterOptions);
-        assign_duration_value<Seconds>("LegacyTimeout", adapter, adapterOptions);
-        assign_bool_value("PreserveUUID", adapter, adapterOptions);
-        device->m_preserveUuid = get<bool>(adapterOptions["PreserveUUID"]);
+        assign_value(configuration::UUID, adapter, adapterOptions);
+        assign_value(configuration::Manufacturer, adapter, adapterOptions);
+        assign_value(configuration::Station, adapter, adapterOptions);
+        assign_value(configuration::SerialNumber, adapter, adapterOptions);
+        assign_bool_value(configuration::FilterDuplicates, adapter, adapterOptions);
+        assign_bool_value(configuration::AutoAvailable, adapter, adapterOptions);
+        assign_bool_value(configuration::IgnoreTimestamps, adapter, adapterOptions);
+        assign_bool_value(configuration::ConversionRequired, adapter, adapterOptions);
+        assign_bool_value(configuration::RealTime, adapter, adapterOptions);
+        assign_bool_value(configuration::RelativeTime, adapter, adapterOptions);
+        assign_bool_value(configuration::UpcaseDataItemValue, adapter, adapterOptions);
+        assign_bool_value(configuration::SingleLineComplexObservations, adapter, adapterOptions, false);
+        assign_duration_value<Seconds>(configuration::ReconnectInterval, adapter, adapterOptions);
+        assign_duration_value<Seconds>(configuration::LegacyTimeout, adapter, adapterOptions);
+        assign_bool_value(configuration::PreserveUUID, adapter, adapterOptions);
+        device->m_preserveUuid = get<bool>(adapterOptions[configuration::PreserveUUID]);
 
-        const string host = get_with_default(adapter, "Host", (string) "localhost");
-        auto port = get_with_default(adapter, "Port", 7878);
+        const string host = get_with_default(adapter, configuration::Host, (string) "localhost");
+        auto port = get_with_default(adapter, configuration::Port, 7878);
 
-        if (adapter.is_key_defined("AdditionalDevices"))
+        if (adapter.is_key_defined(configuration::AdditionalDevices))
         {
           StringList deviceList;
-          istringstream devices(adapter["AdditionalDevices"]);
+          istringstream devices(adapter[configuration::AdditionalDevices]);
           string name;
           while (getline(devices, name, ','))
           {
@@ -749,7 +752,7 @@ namespace mtconnect
             deviceList.push_back(name);
           }
 
-          adapterOptions["AdditionalDevices"] = deviceList;
+          adapterOptions[configuration::AdditionalDevices] = deviceList;
         }
 
         g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
@@ -764,7 +767,7 @@ namespace mtconnect
       ConfigOptions adapterOptions{options};
 
       auto deviceName = device->getName();
-      adapterOptions["Device"] = deviceName;
+      adapterOptions[configuration::Device] = deviceName;
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
 
@@ -780,10 +783,10 @@ namespace mtconnect
 
   void AgentConfiguration::loadAllowPut(ConfigReader &reader, http_server::Server *server)
   {
-    auto putEnabled = get_bool_with_default(reader, "AllowPut", false);
+    auto putEnabled = get_bool_with_default(reader, configuration::AllowPut, false);
     server->enablePut(putEnabled);
 
-    string putHosts = get_with_default(reader, "AllowPutFrom", "");
+    string putHosts = get_with_default(reader, configuration::AllowPutFrom, "");
     if (!putHosts.empty())
     {
       istringstream toParse(putHosts);
@@ -872,7 +875,7 @@ namespace mtconnect
           auto namespaces = cache->registerFiles(file["Location"], file["Path"], m_version);
           for (auto &ns : namespaces)
           {
-            if (ns.first.find("Devices") != string::npos)
+            if (ns.first.find(configuration::Devices) != string::npos)
             {
               xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
             }

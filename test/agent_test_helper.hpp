@@ -148,9 +148,9 @@ class AgentTestHelper
     using namespace mtconnect;
     using namespace mtconnect::adapter;
     
-    if (!IsOptionSet(options, "Device"))
+    if (!IsOptionSet(options, configuration::Device))
     {
-      options["Device"] = m_agent->defaultDevice()->getName();
+      options[configuration::Device] = m_agent->defaultDevice()->getName();
     }
     auto pipeline = std::make_unique<AdapterPipeline>(m_context);
     m_adapter = new adpt::Adapter(host, port, options, pipeline);
