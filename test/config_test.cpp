@@ -21,6 +21,7 @@
 
 #include "agent.hpp"
 #include "config.hpp"
+#include "config_options.hpp"
 #include "rolling_file_logger.hpp"
 #include "xml_printer.hpp"
 
