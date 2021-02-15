@@ -62,7 +62,7 @@ protected:
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
-    m_mapper = make_shared<ShdrTokenMapper>(m_context, "", true);
+    m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
     m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
 
@@ -428,7 +428,7 @@ TEST_F(DataItemMappingTest, TableResetTriggered)
 
 TEST_F(DataItemMappingTest, new_token_mapping_behavior)
 {
-  m_mapper = make_shared<ShdrTokenMapper>(m_context, "", true);
+  m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
   m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   
   makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"} });
@@ -462,7 +462,7 @@ TEST_F(DataItemMappingTest, new_token_mapping_behavior)
 
 TEST_F(DataItemMappingTest, legacy_token_mapping_behavior)
 {
-  m_mapper = make_shared<ShdrTokenMapper>(m_context, "", false);
+  m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 1);
   m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   
   makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"} });

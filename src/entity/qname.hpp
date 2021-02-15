@@ -70,6 +70,8 @@ namespace mtconnect
           assign(ns + ':' + name);
         }
       }
+      
+      bool hasNs() const { return m_nsLen > 0; }
 
       void setNs(const std::string &ns)
       {

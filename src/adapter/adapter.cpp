@@ -117,6 +117,9 @@ namespace mtconnect
           options[configuration::RealTime] = is_true(value);
         else if (command == "device")
           options[configuration::Device] = value;
+        else if (command == "shdrVersion")
+          options[configuration::ShdrVersion] = value;
+
 
         if (options.size() > 0)
           setOptions(options);

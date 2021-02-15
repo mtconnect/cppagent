@@ -36,7 +36,7 @@ namespace mtconnect
     inline string stripUndeclaredNamespace(const QName &qname, const unordered_set<string> &namespaces)
     {
       string name;
-      if (!qname.getNs().empty() && namespaces.count(string(qname.getNs())) == 0)
+      if (qname.hasNs() && namespaces.count(string(qname.getNs())) == 0)
         name = qname.getName();
       else
         name = qname;

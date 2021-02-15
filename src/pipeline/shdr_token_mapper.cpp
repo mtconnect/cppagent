@@ -181,7 +181,8 @@ namespace mtconnect
           m_logOnce.insert(dataItemKey.first);
         }
         
-        if (!m_complexOnSingleLine && token != end)
+        // Skip following tolken if we are in legacy mode
+        if (m_shdrVersion < 2 && token != end)
           token++;
 
         return nullptr;
@@ -335,7 +336,7 @@ namespace mtconnect
             
             // For legacy token handling, stop if we have
             // consumed more than two tokens.
-            if (!m_complexOnSingleLine)
+            if (m_shdrVersion < 2)
             {
               auto distance = std::distance(start, token);
               if (distance > 2)

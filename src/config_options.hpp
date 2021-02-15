@@ -55,7 +55,7 @@ namespace mtconnect
     DECLARE_CONFIGURATION(UpcaseDataItemValue);
     DECLARE_CONFIGURATION(RealTime);
     DECLARE_CONFIGURATION(RelativeTime);
-    DECLARE_CONFIGURATION(SingleLineComplexObservations);
+    DECLARE_CONFIGURATION(ShdrVersion);
     DECLARE_CONFIGURATION(ReconnectInterval);
     DECLARE_CONFIGURATION(LegacyTimeout);
     DECLARE_CONFIGURATION(AdditionalDevices);

@@ -134,13 +134,29 @@ namespace mtconnect
     else if (deflt)
       options[key] = *deflt;
   }
+  
+  istream &operator >>(istream &str, Seconds &value)
+  {
+    int64_t v{0};
+    str >> v;
+    value = Seconds(v);
+    return str;
+  }
 
   template <typename T>
-  static inline void assign_duration_value(const char *key, const config_reader::kernel_1a &reader,
-                                           ConfigOptions &options)
+  static inline void assign_value(const char *key, const config_reader::kernel_1a &reader,
+                                           ConfigOptions &options,
+                                           std::optional<T> deflt = nullopt)
   {
     if (reader.is_key_defined(key))
-      options[key] = T(atoi(reader[key].c_str()));
+    {
+      stringstream ss(reader[key]);
+      T value;
+      ss >> value;
+      options[key] = value;
+    }
+    else if (deflt)
+      options[key] = *deflt;
   }
 
   AgentConfiguration::AgentConfiguration()
@@ -643,7 +659,7 @@ namespace mtconnect
     options[configuration::ConversionRequired] = conversionRequired;
     options[configuration::UpcaseDataItemValue] = upcaseValue;
     options[configuration::FilterDuplicates] = filterDuplicates;
-    assign_bool_value(configuration::SingleLineComplexObservations, reader, options, false);
+    assign_value<int>(configuration::ShdrVersion, reader, options, 1);
 
     m_agent->initialize(m_pipelineContext, options);
 
@@ -726,9 +742,9 @@ namespace mtconnect
         assign_bool_value(configuration::RealTime, adapter, adapterOptions);
         assign_bool_value(configuration::RelativeTime, adapter, adapterOptions);
         assign_bool_value(configuration::UpcaseDataItemValue, adapter, adapterOptions);
-        assign_bool_value(configuration::SingleLineComplexObservations, adapter, adapterOptions, false);
-        assign_duration_value<Seconds>(configuration::ReconnectInterval, adapter, adapterOptions);
-        assign_duration_value<Seconds>(configuration::LegacyTimeout, adapter, adapterOptions);
+        assign_value<int>(configuration::ShdrVersion, adapter, adapterOptions);
+        assign_value<Seconds>(configuration::ReconnectInterval, adapter, adapterOptions);
+        assign_value<Seconds>(configuration::LegacyTimeout, adapter, adapterOptions);
         assign_bool_value(configuration::PreserveUUID, adapter, adapterOptions);
         device->m_preserveUuid = get<bool>(adapterOptions[configuration::PreserveUUID]);
 
