@@ -78,6 +78,13 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/specifications.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/sensor_configuration.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/relationships.hpp"
+
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/source.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/constraints.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/filter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/relationships.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/definition.hpp"
+  
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/entity.hpp"  
