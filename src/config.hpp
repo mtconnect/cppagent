@@ -38,7 +38,7 @@ namespace mtconnect
   class Device;
   class RollingFileLogger;
   class XmlPrinter;
-
+  
   using ConfigReader = dlib::config_reader::kernel_1a;
 
   using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,

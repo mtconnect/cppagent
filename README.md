@@ -614,6 +614,10 @@ Configuration Parameters
 
     *Default*: false
 
+* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. This is the default for all adapters.
+
+    *Default*: 1
+
 
 ### Adapter configuration items ###
 
@@ -713,6 +717,10 @@ Configuration Parameters
 
         *Default*: Top Level Setting
 
+	* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. Applies to only this adapter.
+
+	    *Default*: 1
+
 
 logger_config configuration items
 -----
@@ -753,13 +761,13 @@ A simple set of events and samples will look something like this:
 
 	2009-06-15T00:00:00.000000|power|ON|execution|ACTIVE|line|412|Xact|-1.1761875153|Yact|1766618937
 
-For simple events and samples, the data is pipe delimited key value pairs with multiple pairs on one line. Each line must have at least one key/value on it or else it has no meaning. The agent will discard any lines where the data is malformed. The end must end with a LF (ASCII 10) or CR-LF (ASCII 15 followed by ASCII 10) (UNIX or Windows conventions respectively). The key will map to the data item using the following items: the `id` attribute, the `name` attribute, and the `CDATA` of the `Source` element. If the key does not match it will be rejected and the agent will log the first time it fails.  
+A line is a sequence of fields separated by `|`. The simplest requires one key/value pair. The agent will discard any lines where the data is malformed. The end must end with a LF (ASCII 10) or CR-LF (ASCII 15 followed by ASCII 10) (UNIX or Windows conventions respectively). The key will map to the data item using the following items: the `id` attribute, the `name` attribute, and the `CDATA` of the `Source` element. If the key does not match it will be rejected and the agent will log the first time it fails. Different data items categories and types require a different number of tokens. The following rules specify the requirements for the adapter tokens:
 
 If the value itself contains a pipe character `|` the pipe must be escaped using a leading backslash `\`. In addition the entire value has to be wrapped in quotes:
 
         2009-06-15T00:00:00.000000|description|"Text with \| (pipe) character."
 
-Conditions are a little more complex since there are multiple fields and must appear on one line. The fields are as follows:
+Conditions require six (6) fields as follows:
 
 	<timestamp>|<data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 	
@@ -871,25 +879,9 @@ Commands
 
 There are a number of commands that can be sent as part of the adapter stream. These change some dynamic elements of the device information, the interpretation of the data, or the associated default device. Commands are given on a single line starting with an asterisk `* ` as the first character of the line and followed by a <key>: <value>. They are as follows:
 
-* Set the manufacturer in the device header of the associated device:
- 
-	`* manufacturer: XXX`
+* Specify the Adapter Software Version the adapter supports:
 
-* Set the station in the device header of the associated device:
- 
-	`* station: XXX`
-
-* Set the serialNumber in the device header of the associated device:
- 
-	`* serialNumber: XXX`
-
-* Set the description in the device header of the associated device:
- 
-	`* description: XXX`
-
-* Set the nativeName in the device component of the associated device:
- 
-	`* nativeName: XXX`
+	`* adapterVersion: <version>`
 
 * Set the calibration in the device component of the associated device:
  
@@ -899,17 +891,45 @@ There are a number of commands that can be sent as part of the adapter stream. T
  
 	`* conversionRequired: <yes|no>`
 
-* Tell the agent that the data coming from this adapter is specified in relative time:
+* Specify the default device for this adapter. The device can be specified as either the device name or UUID:
+
+	`* device: <uuid|name>`
+
+* Set the description in the device header of the associated device:
  
-	`* relativeTime: <yes|no>`
+	`* description: XXX`
+
+* Set the manufacturer in the device header of the associated device:
+ 
+	`* manufacturer: XXX`
+
+* Specify the MTConnect Version the adapter supports:
+
+	`* mtconnectVersion: <version>`
+
+* Set the nativeName in the device component of the associated device:
+ 
+	`* nativeName: XXX`
 
 * Tell the agent that the data coming from this adapter would like real-time priority:
  
 	`* realTime: <yes|no>`
 
-* Specify the default device for this adapter. The device can be specified as either the device name or UUID:
+* Tell the agent that the data coming from this adapter is specified in relative time:
+ 
+	`* relativeTime: <yes|no>`
 
-	`* device: <uuid|name>`
+* Set the serialNumber in the device header of the associated device:
+ 
+	`* serialNumber: XXX`
+
+* Specify the version of the SHDR protocol delivered by the adapter. See `ShdrVersion` above:
+
+	`* shdrVersion: <version>`
+
+* Set the station in the device header of the associated device:
+ 
+	`* station: XXX`
 
 Any other command will be logged as a warning.
 

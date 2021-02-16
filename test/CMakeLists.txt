@@ -67,6 +67,7 @@ add_agent_test(entity_parser TRUE entity)
 add_agent_test(entity_printer TRUE entity)
 add_agent_test(json_parser TRUE entity)
 add_agent_test(json_printer TRUE entity)
+add_agent_test(qname FALSE entity)
 
 add_agent_test(file_cache FALSE http_server)
 add_agent_test(http_server FALSE http_server)

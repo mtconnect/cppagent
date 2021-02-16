@@ -20,6 +20,7 @@
 #include "assets/asset.hpp"
 #include "printer.hpp"
 #include "utilities.hpp"
+#include <unordered_set>
 
 extern "C"
 {
@@ -126,6 +127,12 @@ namespace mtconnect
     std::map<std::string, SchemaNamespace> m_streamsNamespaces;
     std::map<std::string, SchemaNamespace> m_errorNamespaces;
     std::map<std::string, SchemaNamespace> m_assetsNamespaces;
+    
+    std::unordered_set<std::string> m_deviceNsSet;
+    std::unordered_set<std::string> m_streamsNsSet;
+    std::unordered_set<std::string> m_errorNsSet;
+    std::unordered_set<std::string> m_assetsNsSet;
+
     std::string m_schemaVersion;
     std::string m_streamsStyle;
     std::string m_devicesStyle;

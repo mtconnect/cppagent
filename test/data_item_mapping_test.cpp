@@ -57,9 +57,12 @@ class DataItemMappingTest : public testing::Test
 protected:
   void SetUp() override
   {
+    dlib::set_all_logging_output_streams(std::cout);
+    dlib::set_all_logging_levels(dlib::LDEBUG);
+
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
-    m_mapper = make_shared<ShdrTokenMapper>(m_context, "");
+    m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
     m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
 
@@ -421,4 +424,76 @@ TEST_F(DataItemMappingTest, TableResetTriggered)
   ASSERT_EQ("DAY", set->get<string>("resetTriggered"));
   auto &ds = set->getValue<DataSet>();
   ASSERT_EQ(3, ds.size());
+}
+
+TEST_F(DataItemMappingTest, new_token_mapping_behavior)
+{
+  m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
+  m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
+  
+  makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"} });
+  makeDataItem({{"id", "b"}, {"type", "SOMETHING"}, {"category", "CONDITION"} });
+  makeDataItem({{"id", "c"}, {"type", "MESSAGE"}, {"category", "EVENT"} });
+
+  auto ts = makeTimestamped(
+    {"b", "normal", "", "", "", "",
+     "a", "value1", "c", "code", "message"
+    });
+
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(3, oblist.size());
+  auto it = oblist.begin();
+  
+  auto cond = dynamic_pointer_cast<Condition>(*it++);
+  ASSERT_TRUE(cond);
+  ASSERT_EQ(Condition::NORMAL, cond->getLevel());
+
+  auto event = dynamic_pointer_cast<Event>(*it++);
+  ASSERT_TRUE(event);
+  ASSERT_EQ("value1", event->getValue<string>());
+
+  auto message = dynamic_pointer_cast<Message>(*it);
+  ASSERT_TRUE(message);
+  ASSERT_EQ("message", message->getValue<string>());
+  ASSERT_EQ("code", message->get<string>("nativeCode"));
+}
+
+
+TEST_F(DataItemMappingTest, legacy_token_mapping_behavior)
+{
+  m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 1);
+  m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
+  
+  makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"} });
+  makeDataItem({{"id", "b"}, {"type", "SOMETHING"}, {"category", "CONDITION"} });
+  makeDataItem({{"id", "c"}, {"type", "MESSAGE"}, {"category", "EVENT"} });
+
+  auto ts = makeTimestamped(
+    {"b", "normal", "", "", "", "",
+     "a", "value1", "c", "code", "message"
+    });
+
+  auto observations = (*m_mapper)(ts);
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+  auto it = oblist.begin();
+  
+  auto cond = dynamic_pointer_cast<Condition>(*it++);
+  ASSERT_TRUE(cond);
+  ASSERT_EQ(Condition::NORMAL, cond->getLevel());
+  
+  ts = makeTimestamped(
+    {"d", "normal", "f", "bad", "g", "also_bad",
+     "a", "value1"
+    });
+
+  observations = (*m_mapper)(ts);
+  oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+  it = oblist.begin();
+  
+  auto event = dynamic_pointer_cast<Event>(*it++);
+  ASSERT_TRUE(event);
+  ASSERT_EQ("value1", event->getValue<string>());
 }

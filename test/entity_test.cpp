@@ -524,3 +524,60 @@ TEST_F(EntityTest, TestControlledVocabulary)
   ASSERT_EQ(1, errors.size());
   ASSERT_EQ("simple(type): Invalid value for 'type': 'BAD' is not allowed", string(errors.front()->what()));
 }
+
+TEST_F(EntityTest, entity_list_requirements_need_with_at_least_one_requiremenet)
+{
+  auto ref1 = make_shared<Factory>(Requirements{
+    {"id", true}, {"name", false},{"type", true}
+  });
+  auto ref2 = make_shared<Factory>(Requirements{
+    {"id", true}, {"name", false},{"type", true},
+    {"size", INTEGER, true}
+  });
+  
+  auto refs = make_shared<Factory>(Requirements{
+    {"Reference1", ENTITY, ref1, 0, 1},
+    {"Reference2", ENTITY, ref2, 0, Requirement::Infinite}
+  });
+  refs->setMinListSize(1);
+  
+  auto agg = make_shared<Factory>(Requirements{
+    {"References", ENTITY_LIST, refs, true}
+  });
+  
+  ErrorList errors;
+  auto r1 = refs->create("Reference1", {
+    {"id", "a"s}, {"type", "REF1"s}
+  }, errors);
+  ASSERT_EQ(0, errors.size());
+  auto r2 = refs->create("Reference2", {
+    {"id", "b"s}, {"type", "REF2"s}, {"size", int64_t(10)}
+  }, errors);
+  ASSERT_EQ(0, errors.size());
+  auto r3 = refs->create("Reference2", {
+    {"id", "c"s}, {"type", "REF2"s}, {"size", int64_t(10)}
+  }, errors);
+  ASSERT_EQ(0, errors.size());
+
+  EntityList list{r1, r2, r3};
+  auto top = agg->create("References", list, errors);
+  ASSERT_EQ(0, errors.size());
+  
+  ASSERT_EQ(3, top->get<EntityList>("LIST").size());
+
+  EntityList empty;
+  auto bad = agg->create("References", empty, errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_FALSE(bad);
+
+  errors.clear();
+  auto r4 = refs->create("Reference1", {
+    {"id", "d"s}, {"type", "REF1"s}
+  }, errors);
+  ASSERT_EQ(0, errors.size());
+
+  EntityList list2{r1, r2, r3, r4};
+  auto bad2 = agg->create("References", list2, errors);
+  ASSERT_EQ(1, errors.size());
+  ASSERT_TRUE(bad2);
+}

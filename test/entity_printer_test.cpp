@@ -21,6 +21,7 @@
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
+using namespace std::literals;
 
 class EntityPrinterTest : public testing::Test
 {
@@ -100,7 +101,7 @@ TEST_F(EntityPrinterTest, TestParseSimpleDocument)
 
   entity::XmlPrinter printer;
   
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
@@ -126,7 +127,7 @@ TEST_F(EntityPrinterTest, TestFileArchetypeWithDescription)
   
   entity::XmlPrinter printer;
   
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
@@ -179,7 +180,7 @@ TEST_F(EntityPrinterTest, TestRecursiveEntityLists)
 
   entity::XmlPrinter printer;
   
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
@@ -231,7 +232,7 @@ TEST_F(EntityPrinterTest, TestEntityOrder)
   ASSERT_EQ(0, errors.size());
   
   entity::XmlPrinter printer;
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
   
   auto expected = string {
     "<Device name=\"foo\">\n"
@@ -277,7 +278,7 @@ TEST_F(EntityPrinterTest, TestRawContent)
   ASSERT_EQ(0, errors.size());
   
   entity::XmlPrinter printer;
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
 
   auto expected = R"DOC(<Definition format="XML"><SomeContent with="stuff">
     And some text
@@ -286,5 +287,102 @@ TEST_F(EntityPrinterTest, TestRawContent)
 </Definition>
 )DOC";
   
+  ASSERT_EQ(expected, m_writer->getContent());
+}
+
+class EntityPrinterNamespaceTest : public EntityPrinterTest
+{
+protected:
+  EntityPtr createDevice()
+  {
+    auto component = make_shared<Factory>(Requirements{
+      Requirement("id", true ),
+      Requirement("name", false ),
+      Requirement("uuid", false ),
+    });
+    
+    auto components = make_shared<Factory>(Requirements({
+      Requirement("Component", ENTITY, component,
+                  1, Requirement::Infinite) }));
+    components->registerMatchers();
+    components->registerFactory(regex(".+"), component);
+    
+    component->addRequirements({
+      Requirement("Components", ENTITY_LIST, components, false)
+    });
+    
+    auto device = make_shared<Factory>(*component);
+    device->addRequirements(Requirements{
+      Requirement("name", true ),
+      Requirement("uuid", true ),
+    });
+    
+    auto root = make_shared<Factory>(Requirements{
+      Requirement("Device", ENTITY, device)
+    });
+
+    ErrorList errors;
+    auto s1 = components->create("System", Properties {{"id", "s1"s}}, errors);
+    EXPECT_EQ(0, errors.size());
+    EXPECT_TRUE(s1);
+    auto s2 = components->create("x:FlizGuard", Properties {{"id", "s2"s}}, errors);
+    EXPECT_EQ(0, errors.size());
+    EXPECT_TRUE(s2);
+
+    EntityList list{s1, s2};
+    auto c1 = device->create("Components", list, errors);
+    EXPECT_TRUE(c1);
+    EXPECT_EQ(0, errors.size());
+
+    auto entity = root->create("Device", Properties {
+      {"id", "d1"s},
+      {"uuid", "xxx"s},
+      {"name", "foo"s},
+      {"Components", c1}
+    }, errors);
+    EXPECT_EQ(0, errors.size());
+    EXPECT_TRUE(entity);
+
+    return entity;
+  }
+};
+
+TEST_F(EntityPrinterNamespaceTest, test_namespace_removal_when_no_namespaces)
+{
+  auto entity = createDevice();
+  
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity, {});
+  
+  auto expected = string {
+R"DOC(<Device id="d1" name="foo" uuid="xxx">
+  <Components>
+    <System id="s1"/>
+    <FlizGuard id="s2"/>
+  </Components>
+</Device>
+)DOC"
+  };
+
+  ASSERT_EQ(expected, m_writer->getContent());
+}
+
+TEST_F(EntityPrinterNamespaceTest, test_namespace_removal_with_namespaces)
+{
+  auto entity = createDevice();
+
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity, {"x"});
+  
+  auto expected = string {
+R"DOC(<Device id="d1" name="foo" uuid="xxx">
+  <Components>
+    <System id="s1"/>
+    <x:FlizGuard id="s2"/>
+  </Components>
+</Device>
+)DOC"
+  };
+
   ASSERT_EQ(expected, m_writer->getContent());
 }

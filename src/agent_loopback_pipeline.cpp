@@ -16,7 +16,7 @@
 //
 
 #include "agent_loopback_pipeline.hpp"
-
+#include "config_options.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"
 #include "pipeline/delta_filter.hpp"
@@ -36,7 +36,7 @@ namespace mtconnect
     clear();
     TransformPtr next = m_start;
 
-    if (IsOptionSet(m_options, "UpcaseDataItemValue"))
+    if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
       next = next->bind(make_shared<UpcaseValue>());
 
     // Filter dups, by delta, and by period
@@ -45,7 +45,7 @@ namespace mtconnect
     next = next->bind(make_shared<PeriodFilter>(m_context));
 
     // Convert values
-    if (IsOptionSet(m_options, "ConversionRequired"))
+    if (IsOptionSet(m_options, configuration::ConversionRequired))
       next = next->bind(make_shared<ConvertSample>());
 
     // Deliver
