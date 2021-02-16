@@ -931,6 +931,31 @@ namespace mtconnect
     return move(relationships);
   }
 
+    unique_ptr<ComponentConfiguration> handleSolidModel(xmlNodePtr node)
+  {
+    entity::ErrorList errors;
+    auto new_entity = entity::XmlParser::parseXmlNode(SolidModel::getFactory(), node, errors);
+
+    unique_ptr<SolidModel> solid_model = make_unique<SolidModel>();
+
+    solid_model->setEntity(new_entity);
+
+    return move(solid_model);
+  }
+
+     unique_ptr<ComponentConfiguration> handleMotion(xmlNodePtr node)
+  {
+    entity::ErrorList errors;
+    auto new_entity = entity::XmlParser::parseXmlNode(Motion::getFactory(), node, errors);
+
+    unique_ptr<Motion> motion = make_unique<Motion>();
+
+    motion->setEntity(new_entity);
+
+    return move(motion);
+  }
+
+
   template <class T>
   unique_ptr<T> handleGeometricConfiguration(xmlNodePtr node)
   {
@@ -1047,13 +1072,13 @@ namespace mtconnect
            }},
           {"SolidModel",
            [&parent](xmlNodePtr n) {
-             unique_ptr<ComponentConfiguration> g(handleGeometricConfiguration<SolidModel>(n));
-             parent->addConfiguration(g);
+             auto r = handleSolidModel(n);
+             parent->addConfiguration(r);
            }},
           {"Motion",
            [&parent](xmlNodePtr n) {
-             unique_ptr<ComponentConfiguration> g(handleGeometricConfiguration<Motion>(n));
-             parent->addConfiguration(g);
+             auto r = handleMotion(n);
+             parent->addConfiguration(r);
            }},
           {"OTHERWISE", [&parent](xmlNodePtr n) {
              unique_ptr<ComponentConfiguration> ext(

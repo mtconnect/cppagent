@@ -18,6 +18,7 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
 
 class SolidModelTest : public testing::Test
 {
@@ -36,44 +37,42 @@ class SolidModelTest : public testing::Test
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
+  Adapter *m_adapter{nullptr};
   std::string m_agentId;
   Device *m_device{nullptr};
+  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
 TEST_F(SolidModelTest, ParseDeviceSolidModel)
 {
   ASSERT_NE(nullptr, m_device);
-  
+
   ASSERT_EQ(2, m_device->getConfiguration().size());
-    
+
   auto ci = m_device->getConfiguration().begin();
-  ci++;
-    
-  auto model = dynamic_cast<const SolidModel*>(ci->get());
-  ASSERT_NE(nullptr, model);
+
+  std::advance(ci, 1);
+  const auto conf2 = ci->get();
+  ASSERT_EQ(typeid(SolidModel), typeid(*conf2));
+
+  const auto sm = dynamic_cast<const SolidModel *>(conf2);
   
-  ASSERT_EQ("dm", model->m_attributes.find("id")->second);
-  ASSERT_EQ("/models/foo.stl", model->m_attributes.find("href")->second);
-  ASSERT_EQ("STL", model->m_attributes.find("mediaType")->second);
-  ASSERT_EQ("machine", model->m_attributes.find("coordinateSystemIdRef")->second);
-  ASSERT_EQ(model->m_attributes.end(), model->m_attributes.find("dummy"));
+  const auto sm_entity = sm->getEntity();
+
+  ASSERT_EQ("SolidModel", sm_entity->getName());
   
-  ASSERT_TRUE(model->m_geometry);
-  ASSERT_NE(0, model->m_geometry->m_location.index());
-  ASSERT_TRUE(holds_alternative<Origin>(model->m_geometry->m_location));
+  ASSERT_EQ("dm", get<string>(sm_entity->getProperty("id")));
+  ASSERT_EQ("STL", get<string>(sm_entity->getProperty("mediaType")));
   
-  const Origin &o = get<Origin>(model->m_geometry->m_location);
-  ASSERT_EQ(10.0, o.m_x);
-  ASSERT_EQ(20.0, o.m_y);
-  ASSERT_EQ(30.0, o.m_z);
   
-  ASSERT_TRUE(model->m_geometry->m_scale);
-  ASSERT_EQ(2.0, model->m_geometry->m_scale->m_scaleX);
-  ASSERT_EQ(3.0, model->m_geometry->m_scale->m_scaleY);
-  ASSERT_EQ(4.0, model->m_geometry->m_scale->m_scaleZ);
+  const auto scale = sm_entity->get<entity::EntityPtr>("Scale");
+
+  ASSERT_EQ(2.0, get<std::vector<double>>(scale->getProperty("VALUE")).at(0));
+  
 }
 
+
+/*
 TEST_F(SolidModelTest, ParseRotarySolidModel)
 {
   ASSERT_NE(nullptr, m_device);
@@ -222,3 +221,4 @@ TEST_F(SolidModelTest, RotaryJsonPrinting)
     ASSERT_EQ(180.0, rot[2].get<double>());
   }
 }
+*/

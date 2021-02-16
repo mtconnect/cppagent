@@ -25,6 +25,7 @@
 #include "device_model/relationships.hpp"
 #include "device_model/sensor_configuration.hpp"
 #include "device_model/solid_model.hpp"
+#include "device_model/motion.hpp"
 #include "device_model/specifications.hpp"
 #include "entity/xml_printer.hpp"
 #include "version.h"
@@ -483,7 +484,7 @@ namespace mtconnect
     AutoElement sensorEle(writer, "SensorConfiguration");
     entity::XmlPrinter printer;
 
-    printer.print(writer, sensor->getEntity());
+    printer.print(writer, sensor->getEntity(), {});
   }
 
   void printRelationships(xmlTextWriterPtr writer, const Relationships *rels)
@@ -491,7 +492,23 @@ namespace mtconnect
     AutoElement sensorEle(writer, "Relationships");
     entity::XmlPrinter printer;
 
-    printer.print(writer, rels->getEntity());
+    printer.print(writer, rels->getEntity(), {});
+  }
+
+  void printSolidModel(xmlTextWriterPtr writer, const SolidModel *rels)
+  {
+    AutoElement sensorEle(writer, "SolidModel");
+    entity::XmlPrinter printer;
+
+    printer.print(writer, rels->getEntity(), {});
+  }
+
+  void printMotion(xmlTextWriterPtr writer, const Motion *rels)
+  {
+    AutoElement sensorEle(writer, "Motion");
+    entity::XmlPrinter printer;
+
+    printer.print(writer, rels->getEntity(), {});
   }
 
   void printSpecifications(xmlTextWriterPtr writer, const Specifications *specs)
@@ -578,6 +595,14 @@ namespace mtconnect
       else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
       {
         printCoordinateSystems(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const SolidModel *>(c))
+      {
+        printSolidModel(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const Motion *>(c))
+      {
+        printMotion(writer, conf);
       }
       else if (auto conf = dynamic_cast<const GeometricConfiguration *>(c))
       {

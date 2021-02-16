@@ -18,39 +18,27 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "geometry.hpp"
+#include "entity.hpp"
 #include "utilities.hpp"
 
-#include <map>
 #include <utility>
 #include <vector>
 
 namespace mtconnect
 {
-  class Motion : public GeometricConfiguration
+  class Motion : public ComponentConfiguration
   {
   public:
-    Motion(const Motion &s) = default;
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
+
     Motion() = default;
     ~Motion() override = default;
 
-    bool hasDescription() const override { return true; }
-    const std::string &klass() const override
-    {
-      const static std::string &klass("Motion");
-      return klass;
-    }
-    bool hasAxis() const override { return true; }
-    const std::map<std::string, bool> &properties() const override
-    {
-      const static std::map<std::string, bool> properties = {{"id", true},
-                                                             {"parentIdRef", false},
-                                                             {"type", true},
-                                                             {"coordinateSystemIdRef", true},
-                                                             {"actuation", true}};
-      ;
-      return properties;
-    }
-  };
+    const entity::EntityPtr &getEntity() const { return m_entity; }
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; }
 
+  protected:
+    entity::EntityPtr m_entity;
+  };
 }  // namespace mtconnect

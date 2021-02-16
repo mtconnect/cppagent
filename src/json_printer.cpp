@@ -23,6 +23,7 @@
 #include "device_model/relationships.hpp"
 #include "device_model/sensor_configuration.hpp"
 #include "device_model/solid_model.hpp"
+#include "device_model/motion.hpp"
 #include "device_model/specifications.hpp"
 #include "entity/json_printer.hpp"
 #include "version.h"
@@ -450,6 +451,16 @@ namespace mtconnect
     {
       entity::JsonPrinter printer;
       parent["Relationships"] = printer.print(obj->getEntity());
+    }
+    else if (auto obj = dynamic_cast<const SolidModel *>(config))
+    {
+      entity::JsonPrinter printer;
+      parent["SolidModel"] = printer.print(obj->getEntity());
+    }
+    else if (auto obj = dynamic_cast<const Motion*>(config))
+    {
+      entity::JsonPrinter printer;
+      parent["Motion"] = printer.print(obj->getEntity());
     }
     else if (auto obj = dynamic_cast<const Specifications *>(config))
     {

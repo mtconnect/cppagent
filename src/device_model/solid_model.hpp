@@ -18,35 +18,27 @@
 #pragma once
 
 #include "component_configuration.hpp"
-#include "geometry.hpp"
+#include "entity.hpp"
 #include "utilities.hpp"
 
-#include <map>
 #include <utility>
 #include <vector>
 
 namespace mtconnect
 {
-  class SolidModel : public GeometricConfiguration
+  class SolidModel : public ComponentConfiguration
   {
   public:
-    SolidModel(const SolidModel &s) = default;
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
+
     SolidModel() = default;
     ~SolidModel() override = default;
 
-    const std::string &klass() const override
-    {
-      const static std::string &klass("SolidModel");
-      return klass;
-    }
-    bool hasScale() const override { return true; }
-    const std::map<std::string, bool> &properties() const override
-    {
-      const static std::map<std::string, bool> properties = {
-          {"id", true},        {"solidModelIdRef", false},       {"itemRef", false},
-          {"mediaType", true}, {"coordinateSystemIdRef", false}, {"href", false}};
-      ;
-      return properties;
-    }
+    const entity::EntityPtr &getEntity() const { return m_entity; }
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; }
+
+  protected:
+    entity::EntityPtr m_entity;
   };
 }  // namespace mtconnect

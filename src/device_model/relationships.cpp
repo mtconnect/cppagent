@@ -49,16 +49,13 @@ namespace mtconnect
     componentRelationship->addRequirements(
         Requirements{Requirement("idRef", true)});
 
-    //relationship->registerFactory("DeviceRelationship", deviceRelationship);
-
-    //relationship->registerFactory("ComponentRelationship", componentRelationship);
-
     auto relationships = make_shared<Factory>(Requirements{
-        //Requirement("Relationship", ENTITY, relationship, 1, Requirement::Infinite),
         Requirement("ComponentRelationship", ENTITY, componentRelationship, 0 , Requirement::Infinite),
         Requirement("DeviceRelationship", ENTITY, deviceRelationship, 0, Requirement::Infinite)});
 
     relationships->registerMatchers();
+
+    relationships->setMinListSize(1);
 
     auto root = Relationships::getRoot();
 
