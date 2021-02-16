@@ -27,52 +27,6 @@ namespace mtconnect
   {
     namespace data_item
     {
-      class CellDefinition : public entity::Entity
-      {
-      public:
-        static entity::FactoryPtr getFactory()
-        {
-          using namespace mtconnect::entity;
-          using namespace std;
-          static auto def = make_shared<Factory>(Requirements{{"Description", true},
-                                                              {"key", false},
-                                                              {"keyType", false},
-                                                              {"type", false},
-                                                              {"subType", false},
-                                                              {"units", false}});
-
-          static auto defs = make_shared<Factory>(
-              Requirements{{"CellDefinition", ENTITY, def, 1, Requirement::Infinite}});
-
-          return defs;
-        }
-      };
-
-      class EntityDefinition : public entity::Entity
-      {
-      public:
-        static entity::FactoryPtr getFactory()
-        {
-          using namespace mtconnect::entity;
-          using namespace std;
-          static auto cells = CellDefinition::getFactory();
-          static auto def =
-              make_shared<Factory>(Requirements{{"Description", true},
-                                                {"key", false},
-                                                {"keyType", false},
-                                                {"type", false},
-                                                {"subType", false},
-                                                {"units", false},
-                                                {"CellDefinitions", ENTITY_LIST, cells, false}});
-          def->setOrder({"Description", "CellDefinitions"});
-
-          static auto defs = make_shared<Factory>(
-              Requirements{{"EntryDefinition", ENTITY, def, 1, Requirement::Infinite}});
-
-          return defs;
-        }
-      };
-
       class Definition : public entity::Entity
       {
       public:
@@ -80,14 +34,39 @@ namespace mtconnect
         {
           using namespace mtconnect::entity;
           using namespace std;
-          static auto cells = CellDefinition::getFactory();
-          static auto entries = EntityDefinition::getFactory();
-          static auto def =
-              make_shared<Factory>(Requirements{{"Description", true},
-                                                {"EntryDefinitions", ENTITY_LIST, entries, false},
-                                                {"CellDefinitions", ENTITY_LIST, cells, false}});
-          def->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
-          return def;
+          static FactoryPtr definition;
+          if (!definition)
+          {
+            auto cell = make_shared<Factory>(Requirements{{"Description", true},
+                                                          {"key", false},
+                                                          {"keyType", false},
+                                                          {"type", false},
+                                                          {"subType", false},
+                                                          {"units", false}});
+
+            auto cells = make_shared<Factory>(
+                Requirements{{"CellDefinition", ENTITY, cell, 1, Requirement::Infinite}});
+
+            auto entry =
+                make_shared<Factory>(Requirements{{"Description", true},
+                                                  {"key", false},
+                                                  {"keyType", false},
+                                                  {"type", false},
+                                                  {"subType", false},
+                                                  {"units", false},
+                                                  {"CellDefinitions", ENTITY_LIST, cells, false}});
+            entry->setOrder({"Description", "CellDefinitions"});
+
+            auto entries = make_shared<Factory>(
+                Requirements{{"EntryDefinition", ENTITY, entry, 1, Requirement::Infinite}});
+            definition =
+                make_shared<Factory>(Requirements{{"Description", true},
+                                                  {"EntryDefinitions", ENTITY_LIST, entries, false},
+                                                  {"CellDefinitions", ENTITY_LIST, cells, false}});
+            definition->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
+          }
+
+          return definition;
         }
       };
     }  // namespace data_item
