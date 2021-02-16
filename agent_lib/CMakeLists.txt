@@ -5,6 +5,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent_loopback_pipeline.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/config_options.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"
@@ -80,6 +81,7 @@ set(AGENT_SOURCES
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/entity.hpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/qname.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/requirement.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/requirement.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/factory.hpp"  

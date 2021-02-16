@@ -17,6 +17,7 @@
 
 #define __STDC_LIMIT_MACROS 1
 #include "adapter/adapter.hpp"
+#include "config_options.hpp"
 
 #include "device_model/device.hpp"
 
@@ -46,7 +47,7 @@ namespace mtconnect
         m_reconnectInterval{10000ms},
         m_options(options)
     {
-      auto timeout = options.find("LegacyTimeout");
+      auto timeout = options.find(configuration::LegacyTimeout);
       if (timeout != options.end())
         m_legacyTimeout = get<Seconds>(timeout->second);
 
@@ -57,7 +58,7 @@ namespace mtconnect
       stringstream identity;
       identity << '_' << server << '_' << port;
       m_identity = identity.str();
-      m_options["AdapterIdentity"] = m_identity;
+      m_options[configuration::AdapterIdentity] = m_identity;
       m_handler = m_pipeline->makeHandler();
       if (m_pipeline->hasContract())
         m_pipeline->build(m_options);
@@ -109,13 +110,16 @@ namespace mtconnect
         ConfigOptions options;
 
         if (command == "conversionRequired")
-          options["ConversionRequired"] = is_true(value);
+          options[configuration::ConversionRequired] = is_true(value);
         else if (command == "relativeTime")
-          options["RelativeTime"] = is_true(value);
+          options[configuration::RelativeTime] = is_true(value);
         else if (command == "realTime")
-          options["RealTime"] = is_true(value);
+          options[configuration::RealTime] = is_true(value);
         else if (command == "device")
-          options["Device"] = value;
+          options[configuration::Device] = value;
+        else if (command == "shdrVersion")
+          options[configuration::ShdrVersion] = value;
+
 
         if (options.size() > 0)
           setOptions(options);

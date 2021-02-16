@@ -59,7 +59,7 @@ namespace mtconnect
     }
     void setProperty(const entity::Property &property) { Entity::setProperty(property); }
 
-    const std::string &getType() const { return getName(); }
+    const auto &getType() const { return getName(); }
     const std::string &getAssetId() const
     {
       if (m_assetId.empty())

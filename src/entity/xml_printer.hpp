@@ -18,6 +18,7 @@
 #pragma once
 
 #include "entity.hpp"
+#include <unordered_set>
 
 extern "C"
 {
@@ -34,7 +35,8 @@ namespace mtconnect
     public:
       XmlPrinter() = default;
 
-      void print(xmlTextWriterPtr writer, const EntityPtr entity);
+      void print(xmlTextWriterPtr writer, const EntityPtr entity,
+                 const std::unordered_set<std::string> &namespaces);
     };
   }  // namespace entity
 }  // namespace mtconnect

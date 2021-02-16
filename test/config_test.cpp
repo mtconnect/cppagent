@@ -21,6 +21,7 @@
 
 #include "agent.hpp"
 #include "config.hpp"
+#include "config_options.hpp"
 #include "rolling_file_logger.hpp"
 #include "xml_printer.hpp"
 
@@ -94,13 +95,13 @@ namespace
     ASSERT_TRUE(agent);
     const auto adapter = agent->getAdapters().front();
 
-    auto deviceName = GetOption<string>(adapter->getOptions(), "Device");
+    auto deviceName = GetOption<string>(adapter->getOptions(), configuration::Device);
     ASSERT_TRUE(deviceName);
     ASSERT_EQ("LinuxCNC", *deviceName);
 
-    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "FilterDuplicates"));
-    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "AutoAvailable"));
-    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
     
     auto device = agent->findDeviceByUUIDorName(*deviceName);
     ASSERT_TRUE(device->m_preserveUuid);
@@ -129,9 +130,9 @@ namespace
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
-    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "FilterDuplicates"));
-    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "AutoAvailable"));
-    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
     
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
     
@@ -311,7 +312,7 @@ namespace
     ASSERT_TRUE(agent);
     const auto adapter = agent->getAdapters().front();
 
-    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
@@ -328,7 +329,7 @@ namespace
     ASSERT_TRUE(agent);
     const auto adapter = agent->getAdapters().front();
 
-    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), "IgnoreTimestamps"));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
   TEST_F(ConfigTest, SpecifyMTCNamespace)

@@ -114,7 +114,7 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
   
   // Round trip test
   entity::XmlPrinter printer;
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
 
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
@@ -173,7 +173,7 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
   
   // Round trip test
   entity::XmlPrinter printer;
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
 
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
@@ -306,7 +306,7 @@ R"DOC(<CuttingToolArchetype assetId="M8010N9172N:1.0" toolId="CAT">
   
   // Round trip test
   entity::XmlPrinter printer;
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
 
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
@@ -365,7 +365,7 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   
   // Round trip test
   entity::XmlPrinter printer;
-  printer.print(*m_writer, entity);
+  printer.print(*m_writer, entity, {});
 
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);

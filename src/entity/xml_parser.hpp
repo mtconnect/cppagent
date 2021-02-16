@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+struct _xmlNode;
 namespace mtconnect
 {
   namespace entity
@@ -35,8 +36,10 @@ namespace mtconnect
     public:
       XmlParser() = default;
       ~XmlParser() = default;
+      using xmlNodePtr = _xmlNode*;
 
-      EntityPtr parse(FactoryPtr factory, const std::string &document, const std::string &version,
+      static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors);
+      static EntityPtr parse(FactoryPtr factory, const std::string &document, const std::string &version,
                       ErrorList &errors);
     };
   }  // namespace entity

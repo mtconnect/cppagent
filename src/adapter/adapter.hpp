@@ -130,7 +130,8 @@ namespace mtconnect
         for (auto &o : options)
           m_options.insert_or_assign(o.first, o.second);
         m_pipeline->build(m_options);
-        m_pipeline->start();
+        if (m_pipeline->started())
+          m_pipeline->start();
       }
 
     protected:

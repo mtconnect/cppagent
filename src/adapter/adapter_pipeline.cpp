@@ -19,6 +19,7 @@
 
 #include "agent.hpp"
 #include "config.hpp"
+#include "config_options.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"
 #include "pipeline/delta_filter.hpp"
@@ -47,17 +48,17 @@ namespace mtconnect
       // Build the pipeline for an adapter
       handler->m_connecting = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "CONNECTING"s}, {"id", id}});
+                                          Properties{{"VALUE", "CONNECTING"s}, {"source", id}});
         run(entity);
       };
       handler->m_connected = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "CONNECTED"s}, {"id", id}});
+                                          Properties{{"VALUE", "CONNECTED"s}, {"source", id}});
         run(entity);
       };
       handler->m_disconnected = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "DISCONNECTED"s}, {"id", id}});
+                                          Properties{{"VALUE", "DISCONNECTED"s}, {"source", id}});
         run(entity);
       };
       handler->m_processData = [this](const std::string &data, const std::string &source) {
@@ -79,13 +80,13 @@ namespace mtconnect
       m_options = options;
 
       TransformPtr next = bind(make_shared<ShdrTokenizer>());
-      auto identity = GetOption<string>(options, "AdapterIdentity");
+      auto identity = GetOption<string>(options, configuration::AdapterIdentity);
 
       StringList devices;
-      auto list = GetOption<StringList>(options, "AdditionalDevices");
+      auto list = GetOption<StringList>(options, configuration::AdditionalDevices);
       if (list)
         devices = *list;
-      auto device = GetOption<string>(options, "Device");
+      auto device = GetOption<string>(options, configuration::Device);
       if (device)
       {
         devices.emplace_front(*device);
@@ -97,21 +98,22 @@ namespace mtconnect
       }
 
       bind(make_shared<DeliverConnectionStatus>(m_context, devices,
-                                                IsOptionSet(options, "AutoAvailable")));
+                                                IsOptionSet(options, configuration::AutoAvailable)));
       bind(make_shared<DeliverCommand>(m_context, device));
 
       // Optional type based transforms
-      if (IsOptionSet(m_options, "IgnoreTimestamps"))
+      if (IsOptionSet(m_options, configuration::IgnoreTimestamps))
         next = next->bind(make_shared<IgnoreTimestamp>());
       else
       {
-        auto extract = make_shared<ExtractTimestamp>(IsOptionSet(m_options, "RelativeTime"));
+        auto extract = make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
         next = next->bind(extract);
       }
 
       // Token mapping to data items and assets
       auto mapper = make_shared<ShdrTokenMapper>(
-          m_context, GetOption<string>(m_options, "Device").value_or(""));
+          m_context, GetOption<string>(m_options, configuration::Device).value_or(""),
+                     GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
       next = next->bind(mapper);
 
       // Handle the observations and send to nowhere
@@ -126,7 +128,7 @@ namespace mtconnect
       mapper->bind(make_shared<DeliverAssetCommand>(m_context));
 
       // Uppercase Events
-      if (IsOptionSet(m_options, "UpcaseDataItemValue"))
+      if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
         next = next->bind(make_shared<UpcaseValue>());
 
       // Filter dups, by delta, and by period
@@ -135,7 +137,7 @@ namespace mtconnect
       next = next->bind(make_shared<PeriodFilter>(m_context));
 
       // Convert values
-      if (IsOptionSet(m_options, "ConversionRequired"))
+      if (IsOptionSet(m_options, configuration::ConversionRequired))
         next = next->bind(make_shared<ConvertSample>());
 
       // Deliver

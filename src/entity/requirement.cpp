@@ -82,25 +82,23 @@ namespace mtconnect
         else if (holds_alternative<EntityList>(value))
         {
           const auto l = std::get<EntityList>(value);
-          if (int(l.size()) > m_upperMultiplicity || int(l.size()) < m_lowerMultiplicity)
+          int count = 0;
+          for (const auto &e : l)
+          {
+            if (matches(e->getName()))
+              count++;
+          }
+          if (count > m_upperMultiplicity || count < m_lowerMultiplicity)
           {
             string upper;
             if (m_upperMultiplicity != Infinite)
               upper = " and no more than " + to_string(m_upperMultiplicity);
             throw PropertyError("Entity list requirement " + m_name + " must have at least " +
-                                    to_string(m_lowerMultiplicity) + upper + " entries, " +
-                                    to_string(l.size()) + " found",
+                                to_string(m_lowerMultiplicity) + upper + " entries, " +
+                                to_string(l.size()) + " found",
                                 m_name);
           }
-          for (const auto &e : l)
-          {
-            if (!matches(e->getName()))
-            {
-              throw PropertyError("Entity list requirement " + m_name +
-                                      " does not match requirement with name " + e->getName(),
-                                  m_name);
-            }
-          }
+
         }
         else
         {

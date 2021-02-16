@@ -74,7 +74,7 @@ TEST_F(PipelineDeliverTest, test_simple_flow)
 
 TEST_F(PipelineDeliverTest, filter_duplicates)
 {
-  ConfigOptions options{{"FilterDuplicates", true}};
+  ConfigOptions options{{configuration::FilterDuplicates, true}};
   m_agentTestHelper->addAdapter(options);
   auto seq = m_agentTestHelper->m_agent->getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
@@ -97,7 +97,7 @@ TEST_F(PipelineDeliverTest, filter_duplicates)
 //a01c7f30
 TEST_F(PipelineDeliverTest, filter_upcase)
 {
-  ConfigOptions options{{"UpcaseDataItemValue", true}};
+  ConfigOptions options{{configuration::UpcaseDataItemValue, true}};
   m_agentTestHelper->addAdapter(options);
   auto seq = m_agentTestHelper->m_agent->getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|a01c7f30|active");

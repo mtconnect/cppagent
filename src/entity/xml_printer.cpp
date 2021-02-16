@@ -32,13 +32,16 @@ namespace mtconnect
   namespace entity
   {
     static dlib::logger g_logger("entity.xml.printer");
-
-    static inline void addAttribute(xmlTextWriterPtr writer, const char *key,
-                                    const std::string &value)
+    
+    inline string stripUndeclaredNamespace(const QName &qname, const unordered_set<string> &namespaces)
     {
-      if (!value.empty())
-        THROW_IF_XML2_ERROR(
-            xmlTextWriterWriteAttribute(writer, BAD_CAST key, BAD_CAST value.c_str()));
+      string name;
+      if (qname.hasNs() && namespaces.count(string(qname.getNs())) == 0)
+        name = qname.getName();
+      else
+        name = qname;
+
+      return name;
     }
 
     static inline void addAttributes(xmlTextWriterPtr writer,
@@ -145,8 +148,10 @@ namespace mtconnect
       return s->c_str();
     }
 
-    void printProperty(xmlTextWriterPtr writer, const Property &p)
+    void printProperty(xmlTextWriterPtr writer, const Property &p,
+                       const unordered_set<string> &namespaces)
     {
+
       string t;
       const char *s = toCharPtr(p.second, t);
       if (p.first == "VALUE")
@@ -160,14 +165,18 @@ namespace mtconnect
       }
       else
       {
-        AutoElement element(writer, p.first);
+        QName name(p.first);
+        string qname = stripUndeclaredNamespace(name, namespaces);
+        AutoElement element(writer, qname);
         THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
       }
     }
 
-    void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity)
+    void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity,
+                           const std::unordered_set<std::string> &namespaces)
     {
-      AutoElement element(writer, entity->getName());
+      string qname = stripUndeclaredNamespace(entity->getName(), namespaces);
+      AutoElement element(writer, qname);
 
       list<Property> attributes;
       list<Property> elements;
@@ -209,13 +218,13 @@ namespace mtconnect
 
       for (auto &e : elements)
       {
-        visit(overloaded{[&writer, this](const EntityPtr &v) { print(writer, v); },
-                         [&writer, this](const EntityList &list) {
+        visit(overloaded{[&writer, &namespaces, this](const EntityPtr &v) { print(writer, v, namespaces); },
+                         [&writer, &namespaces, this](const EntityList &list) {
                            for (auto &en : list)
-                             print(writer, en);
+                             print(writer, en, namespaces);
                          },
                          [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
-                         [&writer, &e](const auto &v) { printProperty(writer, e); }},
+                         [&writer, &e, &namespaces](const auto &v) { printProperty(writer, e, namespaces); }},
               e.second);
       }
     }

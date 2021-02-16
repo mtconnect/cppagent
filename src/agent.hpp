@@ -139,12 +139,12 @@ namespace mtconnect
 
     // Message protocol command
     void receiveCommand(const std::string &device, const std::string &command,
-                        const std::string &value);
+                        const std::string &value, const std::string &source);
 
-    DataItem *getDataItemByName(const std::string &deviceName,
+    DataItem *getDataItemForDevice(const std::string &deviceName,
                                 const std::string &dataItemName) const
     {
-      auto dev = getDeviceByName(deviceName);
+      auto dev = findDeviceByUUIDorName(deviceName);
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
 
