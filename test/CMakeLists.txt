@@ -58,6 +58,7 @@ add_agent_test(device FALSE device_model)
 add_agent_test(data_item FALSE device_model)
 add_agent_test(kinematics TRUE device_model)
 add_agent_test(relationship TRUE device_model)
+add_agent_test(sensor_configuration TRUE device_model)
 add_agent_test(solid_model TRUE device_model)
 add_agent_test(specification TRUE device_model)
 

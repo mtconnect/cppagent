@@ -24,6 +24,7 @@
 #include "device_model/sensor_configuration.hpp"
 #include "device_model/solid_model.hpp"
 #include "device_model/specifications.hpp"
+#include "entity/xml_parser.hpp"
 #include "xml_printer.hpp"
 
 #include <dlib/logger.h>
@@ -908,98 +909,24 @@ namespace mtconnect
 
   unique_ptr<ComponentConfiguration> handleSensorConfiguration(xmlNodePtr node)
   {
-    // Decode sensor configuration
-    string firmware, date, nextDate, initials;
-    vector<xmlNodePtr> rest;
-    xmlNodePtr channels = nullptr;
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      string name((const char *)child->name);
-      if (name == "FirmwareVersion")
-        firmware = getCDATA(child);
-      else if (name == "CalibrationDate")
-        date = getCDATA(child);
-      else if (name == "CalibrationInitials")
-        initials = getCDATA(child);
-      else if (name == "Channels")
-        channels = child;
-      else
-        rest.emplace_back(child);
-    }
+    entity::ErrorList errors;
+    auto new_entity = entity::XmlParser::parseXmlNode(SensorConfiguration::getFactory(), node, errors);
 
-    string restText;
-    for (auto &text : rest)
-      restText.append(getRawContent(text));
+    unique_ptr<SensorConfiguration> sensor = make_unique<SensorConfiguration>();
 
-    unique_ptr<SensorConfiguration> sensor(
-        new SensorConfiguration(firmware, date, nextDate, initials, restText));
-
-    if (channels)
-    {
-      for (xmlNodePtr channel = channels->children; channel; channel = channel->next)
-      {
-        string name((const char *)channel->name);
-        auto attributes = getAttributes(channel);
-        string description, date, nextDate, initials;
-
-        for (xmlNodePtr child = channel->children; child; child = child->next)
-        {
-          string name((const char *)child->name);
-          if (name == "Description")
-            description = getCDATA(child);
-          else if (name == "CalibrationDate")
-            date = getCDATA(child);
-          else if (name == "CalibrationInitials")
-            initials = getCDATA(child);
-        }
-        SensorConfiguration::Channel chl(date, nextDate, initials, attributes);
-        chl.setDescription(description);
-        sensor->addChannel(chl);
-      }
-    }
+    sensor->setEntity(new_entity);
 
     return move(sensor);
   }
 
   unique_ptr<ComponentConfiguration> handleRelationships(xmlNodePtr node)
   {
+    entity::ErrorList errors;
+    auto new_entity = entity::XmlParser::parseXmlNode(Relationships::getFactory(), node, errors);
+
     unique_ptr<Relationships> relationships = make_unique<Relationships>();
 
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      unique_ptr<Relationship> relationship;
-      if (xmlStrcmp(child->name, BAD_CAST "ComponentRelationship") == 0)
-      {
-        unique_ptr<ComponentRelationship> crel{new ComponentRelationship()};
-        crel->m_idRef = getAttribute(child, "idRef");
-        relationship = std::move(crel);
-      }
-      else if (xmlStrcmp(child->name, BAD_CAST "DeviceRelationship") == 0)
-      {
-        unique_ptr<DeviceRelationship> drel{new DeviceRelationship()};
-        drel->m_href = getAttribute(child, "href");
-        drel->m_role = getAttribute(child, "role");
-        drel->m_deviceUuidRef = getAttribute(child, "deviceUuidRef");
-
-        relationship = std::move(drel);
-      }
-      else
-      {
-        g_logger << dlib::LWARN << "Bad Relationship: " << (const char *)child->name
-                 << ", skipping";
-      }
-
-      if (relationship)
-      {
-        auto attrs = getAttributes(child);
-        relationship->m_id = attrs["id"];
-        relationship->m_name = attrs["name"];
-        relationship->m_type = attrs["type"];
-        relationship->m_criticality = attrs["criticality"];
-
-        relationships->addRelationship(relationship);
-      }
-    }
+    relationships->setEntity(new_entity);
 
     return move(relationships);
   }

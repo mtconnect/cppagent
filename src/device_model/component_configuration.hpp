@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "entity.hpp"
 #include "geometry.hpp"
 #include "utilities.hpp"
 

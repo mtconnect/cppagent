@@ -400,38 +400,6 @@ namespace mtconnect
     return obj;
   }
 
-  inline void toJson(json &parent, const SensorConfiguration::Calibration &cal)
-  {
-    addAttributes(parent, {{"CalibrationDate", cal.m_date},
-                           {"NextCalibrationDate", cal.m_nextDate},
-                           {"CalibrationInitials", cal.m_initials}});
-  }
-
-  inline json toJson(const Relationship *rel)
-  {
-    json obj = json::object();
-    json fields = json::object();
-    addAttributes(fields, {{"id", rel->m_id},
-                           {"name", rel->m_name},
-                           {"type", rel->m_type},
-                           {"criticality", rel->m_criticality}});
-
-    if (auto r = dynamic_cast<const ComponentRelationship *>(rel))
-    {
-      fields["idRef"] = r->m_idRef;
-      obj["ComponentRelationship"] = fields;
-    }
-    if (auto r = dynamic_cast<const DeviceRelationship *>(rel))
-    {
-      fields["href"] = r->m_href;
-      fields["role"] = r->m_role;
-      fields["deviceUuidRef"] = r->m_deviceUuidRef;
-      obj["DeviceRelationship"] = fields;
-    }
-
-    return obj;
-  }
-
   inline json toJson(const Specification *spec)
   {
     json fields = json::object();
@@ -474,47 +442,14 @@ namespace mtconnect
   {
     if (auto obj = dynamic_cast<const SensorConfiguration *>(config))
     {
-      json sensor = json::object();
-      if (!obj->getFirmwareVersion().empty())
-        sensor["FirmwareVersion"] = obj->getFirmwareVersion();
-      auto &cal = obj->getCalibration();
-      toJson(sensor, cal);
-
-      if (!obj->getChannels().empty())
-      {
-        json channels = json::array();
-
-        for (auto &channel : obj->getChannels())
-        {
-          json chan = json::object();
-          addAttributes(chan, channel.getAttributes());
-
-          if (!channel.getDescription().empty())
-            chan["Description"] = channel.getDescription();
-
-          auto &cal = channel.getCalibration();
-          toJson(chan, cal);
-
-          json chanObj = json::object({{"Channel", chan}});
-          channels.emplace_back(chanObj);
-        }
-
-        sensor["Channels"] = channels;
-      }
-      parent["SensorConfiguration"] = sensor;
+      entity::JsonPrinter printer;
+      parent["SensorConfiguration"] = printer.print(obj->getEntity());
       ;
     }
     else if (auto obj = dynamic_cast<const Relationships *>(config))
     {
-      json relationships = json::array();
-
-      for (const auto &rel : obj->getRelationships())
-      {
-        json jrel = toJson(rel.get());
-        relationships.emplace_back(jrel);
-      }
-
-      parent["Relationships"] = relationships;
+      entity::JsonPrinter printer;
+      parent["Relationships"] = printer.print(obj->getEntity());
     }
     else if (auto obj = dynamic_cast<const Specifications *>(config))
     {

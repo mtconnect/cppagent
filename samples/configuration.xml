@@ -16,6 +16,17 @@
             </Transformation>
           </CoordinateSystem>
         </CoordinateSystems>
+		<SensorConfiguration>
+		  <FirmwareVersion>2.02</FirmwareVersion>
+		  <CalibrationDate>2010-05-16</CalibrationDate>
+		  <NextCalibrationDate>2010-05-16</NextCalibrationDate>
+		  <CalibrationInitials>WS</CalibrationInitials>
+		  <Channels>
+			<Channel number="1" name="A/D:1">
+			  <Description>A/D With Thermister</Description>
+			</Channel>
+		  </Channels>
+		</SensorConfiguration>
       </Configuration>
       <DataItems>
         <DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>

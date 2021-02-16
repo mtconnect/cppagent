@@ -7,6 +7,7 @@
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 #include "device_model/relationships.hpp"
+#include "entity/json_printer.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -55,7 +56,23 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
   const auto conf = m_component->getConfiguration().front().get();
   ASSERT_EQ(typeid(Relationships), typeid(*conf));
   
-  const Relationships *rels = dynamic_cast<const Relationships*>(conf);
+  const auto rels = dynamic_cast<const Relationships*>(conf);
+
+  auto rels_entity = rels->getEntity();
+
+  EXPECT_EQ("Relationships", rels_entity->getName());
+ 
+  auto &relationships = rels_entity->get<entity::EntityList>("LIST");
+  
+  ASSERT_EQ(2, relationships.size());
+
+  auto it = relationships.begin();
+
+  EXPECT_EQ("ref1",(*it)->get<string>("id"));
+
+  //EXPECT_EQ("ref1", get<string>(componentRelationship->getProperty("id")));
+
+  /*
   ASSERT_NE(nullptr, rels);
   ASSERT_EQ(2, rels->getRelationships().size());
   
@@ -83,8 +100,9 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("AUXILIARY", drel->m_role);
   EXPECT_EQ("http://127.0.0.1:2000/coffee", drel->m_href);
   EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", drel->m_deviceUuidRef);
+  */
 }
-
+/*
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define RELATIONSHIPS_PATH CONFIGURATION_PATH "/m:Relationships"
 
@@ -147,3 +165,4 @@ TEST_F(RelationshipTest, JsonPrinting)
 
   }
 }
+*/

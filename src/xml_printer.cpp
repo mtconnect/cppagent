@@ -473,62 +473,17 @@ namespace mtconnect
   void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration *sensor)
   {
     AutoElement sensorEle(writer, "SensorConfiguration");
+    entity::XmlPrinter printer;
 
-    addSimpleElement(writer, "FirmwareVersion", sensor->getFirmwareVersion());
-
-    auto &cal = sensor->getCalibration();
-    addSimpleElement(writer, "FirmwareVersion", sensor->getFirmwareVersion());
-    addSimpleElement(writer, "CalibrationDate", cal.m_date);
-    addSimpleElement(writer, "NextCalibrationDate", cal.m_nextDate);
-    addSimpleElement(writer, "CalibrationInitials", cal.m_initials);
-
-    THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST sensor->getRest().c_str()));
-
-    if (!sensor->getChannels().empty())
-    {
-      AutoElement channelsEle(writer, "Channels");
-      for (const auto &channel : sensor->getChannels())
-      {
-        AutoElement channelEle(writer, "Channel");
-        addAttributes(writer, channel.getAttributes());
-        auto &cal = channel.getCalibration();
-        addSimpleElement(writer, "Description", channel.getDescription());
-        addSimpleElement(writer, "CalibrationDate", cal.m_date);
-        addSimpleElement(writer, "NextCalibrationDate", cal.m_nextDate);
-        addSimpleElement(writer, "CalibrationInitials", cal.m_initials);
-      }
-    }
+    printer.print(writer, sensor->getEntity());
   }
 
   void printRelationships(xmlTextWriterPtr writer, const Relationships *rels)
   {
-    if (rels->getRelationships().size() > 0)
-    {
-      AutoElement ele(writer, "Relationships");
-      for (const auto &rel : rels->getRelationships())
-      {
-        map<string, string> attrs{{"id", rel->m_id},
-                                  {"type", rel->m_type},
-                                  {"name", rel->m_name},
-                                  {"criticality", rel->m_criticality}};
+    AutoElement sensorEle(writer, "Relationships");
+    entity::XmlPrinter printer;
 
-        string name;
-        if (auto crel = dynamic_cast<ComponentRelationship *>(rel.get()))
-        {
-          name = "ComponentRelationship";
-          attrs["idRef"] = crel->m_idRef;
-        }
-        else if (auto drel = dynamic_cast<DeviceRelationship *>(rel.get()))
-        {
-          name = "DeviceRelationship";
-          attrs["href"] = drel->m_href;
-          attrs["role"] = drel->m_role;
-          attrs["deviceUuidRef"] = drel->m_deviceUuidRef;
-        }
-
-        addSimpleElement(writer, name, "", attrs);
-      }
-    }
+    printer.print(writer, rels->getEntity());
   }
 
   void printSpecifications(xmlTextWriterPtr writer, const Specifications *specs)

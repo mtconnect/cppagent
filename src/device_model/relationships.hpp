@@ -18,6 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
+#include "entity.hpp"
 #include "utilities.hpp"
 
 #include <utility>
@@ -25,56 +26,20 @@
 
 namespace mtconnect
 {
-  struct Relationship
-  {
-    Relationship() = default;
-    Relationship(const Relationship &r) = default;
-    virtual ~Relationship() = default;
-
-    std::string m_id;
-    std::string m_type;
-    std::string m_name;
-    std::string m_criticality;
-  };
-
-  struct ComponentRelationship : public Relationship
-  {
-    ComponentRelationship() = default;
-    ComponentRelationship(const ComponentRelationship &r) = default;
-    virtual ~ComponentRelationship() = default;
-
-    std::string m_idRef;
-  };
-
-  struct DeviceRelationship : public Relationship
-  {
-    DeviceRelationship() = default;
-    DeviceRelationship(const DeviceRelationship &r) = default;
-    virtual ~DeviceRelationship() = default;
-
-    std::string m_deviceUuidRef;
-    std::string m_role;
-    std::string m_href;
-  };
-
   class Relationships : public ComponentConfiguration
   {
   public:
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
+    //static void registerRelationship(entity::FactoryPtr parent, const std::string &t, entity::FactoryPtr factory);
+
     Relationships() = default;
     ~Relationships() override = default;
 
-    void addRelationship(Relationship *r) { m_relationships.emplace_back(std::move(r)); }
-    void addRelationship(std::unique_ptr<Relationship> &r)
-    {
-      m_relationships.emplace_back(std::move(r));
-    }
-
-    const std::list<std::unique_ptr<Relationship>> &getRelationships() const
-    {
-      return m_relationships;
-    }
+    const entity::EntityPtr &getEntity() const { return m_entity; }
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; }
 
   protected:
-    std::list<std::unique_ptr<Relationship>> m_relationships;
+    entity::EntityPtr m_entity;
   };
 }  // namespace mtconnect

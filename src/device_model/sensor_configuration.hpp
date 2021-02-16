@@ -18,6 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
+#include "entity.hpp"
 #include "utilities.hpp"
 
 #include <utility>
@@ -28,72 +29,16 @@ namespace mtconnect
   class SensorConfiguration : public ComponentConfiguration
   {
   public:
-    struct Calibration
-    {
-      Calibration(std::string date, std::string nextDate, std::string initials)
-        : m_date(std::move(date)), m_nextDate(std::move(nextDate)), m_initials(std::move(initials))
-      {
-      }
-      Calibration(const Calibration &other)
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
 
-          = default;
-      Calibration() = default;
-      ~Calibration() = default;
-
-      std::string m_date;
-      std::string m_nextDate;
-      std::string m_initials;
-    };
-
-    class Channel
-    {
-    public:
-      Channel(std::string calibrationDate, std::string nextCalibrationDate, std::string initials,
-              std::map<std::string, std::string> attrs)
-        : m_attributes(std::move(attrs)),
-          m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
-                        std::move(initials))
-      {
-      }
-      Channel(const Channel &other)
-
-          = default;
-      ~Channel() = default;
-
-      void setDescription(const std::string &desc) { m_description = desc; }
-      const std::string &getDescription() const { return m_description; }
-      const std::map<std::string, std::string> &getAttributes() const { return m_attributes; }
-      const Calibration &getCalibration() const { return m_calibration; }
-
-    protected:
-      std::map<std::string, std::string> m_attributes;
-      std::string m_description;
-      Calibration m_calibration;
-    };
-
-    // Sensor Configuration begins here
-  public:
-    SensorConfiguration(std::string firmwareVer, std::string calibrationDate,
-                        std::string nextCalibrationDate, std::string initials, std::string rest)
-      : m_firmwareVersion(std::move(firmwareVer)),
-        m_calibration(std::move(calibrationDate), std::move(nextCalibrationDate),
-                      std::move(initials)),
-        m_rest(std::move(rest))
-    {
-    }
+    SensorConfiguration() = default;
     ~SensorConfiguration() override = default;
 
-    void addChannel(const Channel &channel) { m_channels.emplace_back(channel); }
-
-    const std::vector<Channel> &getChannels() const { return m_channels; }
-    const Calibration &getCalibration() const { return m_calibration; }
-    const std::string &getRest() const { return m_rest; }
-    const std::string &getFirmwareVersion() const { return m_firmwareVersion; }
+    const entity::EntityPtr &getEntity() const { return m_entity; }
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; }
 
   protected:
-    std::string m_firmwareVersion;
-    Calibration m_calibration;
-    std::string m_rest;
-    std::vector<Channel> m_channels;
+    entity::EntityPtr m_entity;
   };
 }  // namespace mtconnect
