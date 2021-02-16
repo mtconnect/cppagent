@@ -112,16 +112,13 @@ namespace mtconnect
       for (auto &p : properties)
         p.first.clearMark();
 
-      if (m_isList)
+      if (m_isList && m_minListSize > 0)
       {
         const auto p = properties.find("LIST");
         if (p == properties.end())
         {
-          if (m_minListSize > 0)
-          {
-            errors.emplace_back(new PropertyError("A list is required for this entity"));
-            success = false;
-          }
+          errors.emplace_back(new PropertyError("A list is required for this entity"));
+          success = false;
         }
         else
         {
