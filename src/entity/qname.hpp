@@ -31,11 +31,8 @@ namespace mtconnect
         m_nsLen = ns.length();
       }
 
-      QName(const std::string &qname)
-      {
-        setQName(qname);
-      }
-      
+      QName(const std::string &qname) { setQName(qname); }
+
       void setQName(const std::string &qname)
       {
         assign(qname);
@@ -48,16 +45,16 @@ namespace mtconnect
           m_nsLen = 0;
         }
       }
-      
+
       QName(const QName &other) = default;
       ~QName() = default;
-      
+
       QName &operator=(const std::string &name)
       {
         setQName(name);
         return *this;
       }
-      
+
       void setName(const std::string &name)
       {
         if (m_nsLen == 0)
@@ -70,7 +67,7 @@ namespace mtconnect
           assign(ns + ':' + name);
         }
       }
-      
+
       bool hasNs() const { return m_nsLen > 0; }
 
       void setNs(const std::string &ns)
@@ -92,7 +89,7 @@ namespace mtconnect
         std::string::clear();
         m_nsLen = 0;
       }
-      
+
       const auto &getQName() const { return *this; }
       const std::string_view getName() const
       {
@@ -108,9 +105,9 @@ namespace mtconnect
         else
           return std::string_view(c_str(), m_nsLen);
       }
-      
+
     protected:
       size_t m_nsLen;
     };
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

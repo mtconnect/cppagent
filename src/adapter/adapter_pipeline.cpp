@@ -97,8 +97,8 @@ namespace mtconnect
         }
       }
 
-      bind(make_shared<DeliverConnectionStatus>(m_context, devices,
-                                                IsOptionSet(options, configuration::AutoAvailable)));
+      bind(make_shared<DeliverConnectionStatus>(
+          m_context, devices, IsOptionSet(options, configuration::AutoAvailable)));
       bind(make_shared<DeliverCommand>(m_context, device));
 
       // Optional type based transforms
@@ -106,14 +106,15 @@ namespace mtconnect
         next = next->bind(make_shared<IgnoreTimestamp>());
       else
       {
-        auto extract = make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
+        auto extract =
+            make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
         next = next->bind(extract);
       }
 
       // Token mapping to data items and assets
       auto mapper = make_shared<ShdrTokenMapper>(
           m_context, GetOption<string>(m_options, configuration::Device).value_or(""),
-                     GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
+          GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
       next = next->bind(mapper);
 
       // Handle the observations and send to nowhere

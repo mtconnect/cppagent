@@ -32,8 +32,9 @@ namespace mtconnect
   namespace entity
   {
     static dlib::logger g_logger("entity.xml.printer");
-    
-    inline string stripUndeclaredNamespace(const QName &qname, const unordered_set<string> &namespaces)
+
+    inline string stripUndeclaredNamespace(const QName &qname,
+                                           const unordered_set<string> &namespaces)
     {
       string name;
       if (qname.hasNs() && namespaces.count(string(qname.getNs())) == 0)
@@ -151,7 +152,6 @@ namespace mtconnect
     void printProperty(xmlTextWriterPtr writer, const Property &p,
                        const unordered_set<string> &namespaces)
     {
-
       string t;
       const char *s = toCharPtr(p.second, t);
       if (p.first == "VALUE")
@@ -218,13 +218,17 @@ namespace mtconnect
 
       for (auto &e : elements)
       {
-        visit(overloaded{[&writer, &namespaces, this](const EntityPtr &v) { print(writer, v, namespaces); },
+        visit(overloaded{[&writer, &namespaces, this](const EntityPtr &v) {
+                           print(writer, v, namespaces);
+                         },
                          [&writer, &namespaces, this](const EntityList &list) {
                            for (auto &en : list)
                              print(writer, en, namespaces);
                          },
                          [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
-                         [&writer, &e, &namespaces](const auto &v) { printProperty(writer, e, namespaces); }},
+                         [&writer, &e, &namespaces](const auto &v) {
+                           printProperty(writer, e, namespaces);
+                         }},
               e.second);
       }
     }

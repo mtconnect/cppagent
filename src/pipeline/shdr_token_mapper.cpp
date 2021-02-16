@@ -180,7 +180,7 @@ namespace mtconnect
           g_logger << dlib::LINFO << "Could not find data item: " << dataItemKey.first;
           m_logOnce.insert(dataItemKey.first);
         }
-        
+
         // Skip following tolken if we are in legacy mode
         if (m_shdrVersion < 2 && token != end)
           token++;
@@ -333,7 +333,7 @@ namespace mtconnect
               if (fwd)
                 entities.emplace_back(fwd);
             }
-            
+
             // For legacy token handling, stop if we have
             // consumed more than two tokens.
             if (m_shdrVersion < 2)

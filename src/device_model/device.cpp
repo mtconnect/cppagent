@@ -16,7 +16,9 @@
 //
 
 #include "device.hpp"
+
 #include "config_options.hpp"
+
 #include <dlib/logger.h>
 
 using namespace std;

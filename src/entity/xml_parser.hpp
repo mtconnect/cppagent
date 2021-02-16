@@ -36,11 +36,11 @@ namespace mtconnect
     public:
       XmlParser() = default;
       ~XmlParser() = default;
-      using xmlNodePtr = _xmlNode*;
+      using xmlNodePtr = _xmlNode *;
 
       static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors);
-      static EntityPtr parse(FactoryPtr factory, const std::string &document, const std::string &version,
-                      ErrorList &errors);
+      static EntityPtr parse(FactoryPtr factory, const std::string &document,
+                             const std::string &version, ErrorList &errors);
     };
   }  // namespace entity
 }  // namespace mtconnect

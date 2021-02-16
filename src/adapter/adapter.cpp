@@ -17,8 +17,8 @@
 
 #define __STDC_LIMIT_MACROS 1
 #include "adapter/adapter.hpp"
-#include "config_options.hpp"
 
+#include "config_options.hpp"
 #include "device_model/device.hpp"
 
 #include <dlib/logger.h>
@@ -119,7 +119,6 @@ namespace mtconnect
           options[configuration::Device] = value;
         else if (command == "shdrVersion")
           options[configuration::ShdrVersion] = value;
-
 
         if (options.size() > 0)
           setOptions(options);

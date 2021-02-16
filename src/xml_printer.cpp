@@ -118,7 +118,7 @@ namespace mtconnect
     item.second.mUrn = urn;
     item.second.mSchemaLocation = location;
     item.first = prefix;
-    
+
     m_deviceNsSet.insert(prefix);
 
     m_devicesNamespaces.insert(item);
@@ -151,7 +151,7 @@ namespace mtconnect
     item.second.mUrn = urn;
     item.second.mSchemaLocation = location;
     item.first = prefix;
-    
+
     m_errorNsSet.insert(prefix);
 
     m_errorNamespaces.insert(item);
@@ -184,7 +184,7 @@ namespace mtconnect
     item.second.mUrn = urn;
     item.second.mSchemaLocation = location;
     item.first = prefix;
-    
+
     m_streamsNsSet.insert(prefix);
 
     m_streamsNamespaces.insert(item);
@@ -221,7 +221,7 @@ namespace mtconnect
     item.second.mUrn = urn;
     item.second.mSchemaLocation = location;
     item.first = prefix;
-    
+
     m_assetsNsSet.insert(prefix);
 
     m_assetsNamespaces.insert(item);

@@ -16,9 +16,9 @@
 //
 
 #include "config.hpp"
-#include "config_options.hpp"
 
 #include "agent.hpp"
+#include "config_options.hpp"
 #include "device_model/device.hpp"
 #include "options.hpp"
 #include "rolling_file_logger.hpp"
@@ -134,8 +134,8 @@ namespace mtconnect
     else if (deflt)
       options[key] = *deflt;
   }
-  
-  istream &operator >>(istream &str, Seconds &value)
+
+  istream &operator>>(istream &str, Seconds &value)
   {
     int64_t v{0};
     str >> v;
@@ -145,8 +145,7 @@ namespace mtconnect
 
   template <typename T>
   static inline void assign_value(const char *key, const config_reader::kernel_1a &reader,
-                                           ConfigOptions &options,
-                                           std::optional<T> deflt = nullopt)
+                                  ConfigOptions &options, std::optional<T> deflt = nullopt)
   {
     if (reader.is_key_defined(key))
     {
@@ -580,16 +579,17 @@ namespace mtconnect
     auto defaultPreserve = get_bool_with_default(reader, configuration::PreserveUUID, true);
     auto port = get_with_default(reader, configuration::Port, 5000);
     string serverIp = get_with_default(reader, configuration::ServerIp, "");
-    auto bufferSize = get_with_default(reader, configuration::BufferSize, DEFAULT_SLIDING_BUFFER_EXP);
+    auto bufferSize =
+        get_with_default(reader, configuration::BufferSize, DEFAULT_SLIDING_BUFFER_EXP);
     auto maxAssets = get_with_default(reader, configuration::MaxAssets, DEFAULT_MAX_ASSETS);
     auto checkpointFrequency = get_with_default(reader, configuration::CheckpointFrequency, 1000);
     auto legacyTimeout = get_with_default(reader, configuration::LegacyTimeout, 600s);
     auto reconnectInterval = get_with_default(reader, configuration::ReconnectInterval, 10000ms);
     auto ignoreTimestamps = get_bool_with_default(reader, configuration::IgnoreTimestamps, false);
-    auto conversionRequired = get_bool_with_default(reader, configuration::ConversionRequired, true);
+    auto conversionRequired =
+        get_bool_with_default(reader, configuration::ConversionRequired, true);
     auto upcaseValue = get_bool_with_default(reader, configuration::UpcaseDataItemValue, true);
     auto filterDuplicates = get_bool_with_default(reader, configuration::FilterDuplicates, false);
-
 
     m_monitorFiles = get_bool_with_default(reader, configuration::MonitorConfigFiles, false);
     m_minimumConfigReloadAge = get_with_default(reader, configuration::MinimumConfigReloadAge, 15);

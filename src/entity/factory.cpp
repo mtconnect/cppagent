@@ -127,14 +127,12 @@ namespace mtconnect
           if (list.size() < m_minListSize)
           {
             errors.emplace_back(new PropertyError("The list must have at least " +
-                                                  to_string(m_minListSize) +
-                                                  " entries"));
+                                                  to_string(m_minListSize) + " entries"));
             success = false;
-
           }
         }
       }
-      
+
       for (const auto &r : m_requirements)
       {
         Properties::const_iterator p;
@@ -147,7 +145,7 @@ namespace mtconnect
           if (r.isRequired())
           {
             errors.emplace_back(new PropertyError(
-                                                  "Property " + r.getName() + " is required and not provided", r.getName()));
+                "Property " + r.getName() + " is required and not provided", r.getName()));
             success = false;
           }
         }
@@ -178,7 +176,7 @@ namespace mtconnect
           }
         }
       }
-      
+
       std::list<string> extra;
       for (auto &p : properties)
         if (!p.first.m_mark)

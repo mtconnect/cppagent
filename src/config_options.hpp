@@ -22,7 +22,7 @@ namespace mtconnect
   namespace configuration
   {
 #define DECLARE_CONFIGURATION(name) inline const char *name = #name;
-    
+
     // Agent Configuration
     DECLARE_CONFIGURATION(Port);
     DECLARE_CONFIGURATION(ServerIp);
@@ -39,7 +39,6 @@ namespace mtconnect
     DECLARE_CONFIGURATION(AllowPut);
     DECLARE_CONFIGURATION(AllowPutFrom);
 
-    
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);
     DECLARE_CONFIGURATION(Host);
@@ -60,5 +59,5 @@ namespace mtconnect
     DECLARE_CONFIGURATION(LegacyTimeout);
     DECLARE_CONFIGURATION(AdditionalDevices);
     DECLARE_CONFIGURATION(AdapterIdentity);
-  }
-}
+  }  // namespace configuration
+}  // namespace mtconnect

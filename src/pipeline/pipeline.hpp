@@ -88,7 +88,7 @@ namespace mtconnect
         }
       };
 
-      bool m_started { false };
+      bool m_started{false};
       TransformPtr m_start;
       PipelineContextPtr m_context;
     };

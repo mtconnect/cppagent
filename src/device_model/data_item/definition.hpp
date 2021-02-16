@@ -34,18 +34,15 @@ namespace mtconnect
         {
           using namespace mtconnect::entity;
           using namespace std;
-          static auto def = make_shared<Factory>(Requirements{
-            {"Description", true},
-            {"key", false},
-            {"keyType", false},
-            {"type", false},
-            {"subType", false},
-            {"units", false}
-          });
-          
-          static auto defs = make_shared<Factory>(Requirements{
-            {"CellDefinition", ENTITY, def, 1, Requirement::Infinite}
-          });
+          static auto def = make_shared<Factory>(Requirements{{"Description", true},
+                                                              {"key", false},
+                                                              {"keyType", false},
+                                                              {"type", false},
+                                                              {"subType", false},
+                                                              {"units", false}});
+
+          static auto defs = make_shared<Factory>(
+              Requirements{{"CellDefinition", ENTITY, def, 1, Requirement::Infinite}});
 
           return defs;
         }
@@ -59,20 +56,18 @@ namespace mtconnect
           using namespace mtconnect::entity;
           using namespace std;
           static auto cells = CellDefinition::getFactory();
-          static auto def = make_shared<Factory>(Requirements{
-            {"Description", true},
-            {"key", false},
-            {"keyType", false},
-            {"type", false},
-            {"subType", false},
-            {"units", false},
-            {"CellDefinitions", ENTITY_LIST, cells, false}
-          });
+          static auto def =
+              make_shared<Factory>(Requirements{{"Description", true},
+                                                {"key", false},
+                                                {"keyType", false},
+                                                {"type", false},
+                                                {"subType", false},
+                                                {"units", false},
+                                                {"CellDefinitions", ENTITY_LIST, cells, false}});
           def->setOrder({"Description", "CellDefinitions"});
 
-          static auto defs = make_shared<Factory>(Requirements{
-            {"EntryDefinition", ENTITY, def, 1, Requirement::Infinite}
-          });
+          static auto defs = make_shared<Factory>(
+              Requirements{{"EntryDefinition", ENTITY, def, 1, Requirement::Infinite}});
 
           return defs;
         }
@@ -87,17 +82,14 @@ namespace mtconnect
           using namespace std;
           static auto cells = CellDefinition::getFactory();
           static auto entries = EntityDefinition::getFactory();
-          static auto def = make_shared<Factory>(
-                                                    Requirements{
-            {"Description", true},
-            {"EntryDefinitions", ENTITY_LIST, entries, false},
-            {"CellDefinitions", ENTITY_LIST, cells, false}
-          });
+          static auto def =
+              make_shared<Factory>(Requirements{{"Description", true},
+                                                {"EntryDefinitions", ENTITY_LIST, entries, false},
+                                                {"CellDefinitions", ENTITY_LIST, cells, false}});
           def->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
           return def;
         }
-      };      
-    }
-  }
-}
-
+      };
+    }  // namespace data_item
+  }    // namespace device_model
+}  // namespace mtconnect

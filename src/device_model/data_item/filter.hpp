@@ -32,15 +32,11 @@ namespace mtconnect
         {
           using namespace mtconnect::entity;
           using namespace std;
-          static auto source = make_shared<Factory>(
-                                                    Requirements{
-            {"type", ControlledVocab{"PERIOD", "MINIMUM_DELTA"}},
-            {"VALUE", DOUBLE, true}
-          });
+          static auto source = make_shared<Factory>(Requirements{
+              {"type", ControlledVocab{"PERIOD", "MINIMUM_DELTA"}}, {"VALUE", DOUBLE, true}});
           return source;
         }
       };
-    }
-  }
-}
-
+    }  // namespace data_item
+  }    // namespace device_model
+}  // namespace mtconnect

@@ -76,7 +76,11 @@ namespace mtconnect
       bool isList() const { return m_isList; }
       void setHasRaw(bool raw) { m_hasRaw = raw; }
       bool hasRaw() const { return m_hasRaw; }
-      void setMinListSize(size_t size) { m_minListSize = size; m_isList = true; }
+      void setMinListSize(size_t size)
+      {
+        m_minListSize = size;
+        m_isList = true;
+      }
 
       bool isPropertySet(const std::string &name) const { return m_propertySets.count(name) > 0; }
       bool isSimpleProperty(const std::string &name) const

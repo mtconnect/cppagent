@@ -94,11 +94,10 @@ namespace mtconnect
             if (m_upperMultiplicity != Infinite)
               upper = " and no more than " + to_string(m_upperMultiplicity);
             throw PropertyError("Entity list requirement " + m_name + " must have at least " +
-                                to_string(m_lowerMultiplicity) + upper + " entries, " +
-                                to_string(l.size()) + " found",
+                                    to_string(m_lowerMultiplicity) + upper + " entries, " +
+                                    to_string(l.size()) + " found",
                                 m_name);
           }
-
         }
         else
         {

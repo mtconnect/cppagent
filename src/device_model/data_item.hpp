@@ -16,17 +16,16 @@
 //
 
 #pragma once
+#include "data_item/constraints.hpp"
+#include "data_item/definition.hpp"
+#include "data_item/filter.hpp"
+#include "data_item/relationships.hpp"
+#include "data_item/source.hpp"
 #include "definitions.hpp"
 #include "device_model/component.hpp"
 #include "entity.hpp"
 #include "observation/change_observer.hpp"
 #include "utilities.hpp"
-
-#include "data_item/source.hpp"
-#include "data_item/constraints.hpp"
-#include "data_item/filter.hpp"
-#include "data_item/relationships.hpp"
-#include "data_item/definition.hpp"
 
 #include <dlib/threads.h>
 
@@ -42,7 +41,7 @@ namespace mtconnect
   {
     class Adapter;
   }
-  
+
   class DataItem : public observation::ChangeSignaler
   {
   public:

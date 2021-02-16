@@ -21,6 +21,7 @@
 #include "adapter/adapter.hpp"
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
+
 #include <array>
 #include <map>
 #include <string>
@@ -30,9 +31,9 @@ using namespace std;
 namespace mtconnect
 {
   using namespace entity;
-  
+
   // -----------------------------
-  
+
   // Observation public static constants
   std::map<string, double> sUnitsConversion{
       {"INCH", 25.4},        {"FOOT", 304.8},      {"CENTIMETER", 10.0},

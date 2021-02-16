@@ -16,6 +16,7 @@
 //
 
 #include "agent_loopback_pipeline.hpp"
+
 #include "config_options.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"

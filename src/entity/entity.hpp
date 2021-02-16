@@ -18,9 +18,8 @@
 #pragma once
 
 #include "observation/data_set.hpp"
-#include "requirement.hpp"
 #include "qname.hpp"
-
+#include "requirement.hpp"
 #include <unordered_map>
 
 namespace mtconnect
@@ -55,7 +54,7 @@ namespace mtconnect
       else
         return std::nullopt;
     }
-    
+
     class Entity : public std::enable_shared_from_this<Entity>
     {
     public:

@@ -38,26 +38,22 @@ namespace mtconnect
           if (!relationships)
           {
             auto di = make_shared<Factory>(Requirements{
-              {"type", ControlledVocab{"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"}, true},
-              {"name", true}, {"idRef", true}
-            });
-            auto spec =  make_shared<Factory>(Requirements{
-              {"type", ControlledVocab{"LIMIT"}, true},
-              {"name", false}, {"idRef", true}
-            });
-            auto rels = make_shared<Factory>(Requirements{
-              {"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
-              {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}
-            });
+                {"type", ControlledVocab{"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"},
+                 true},
+                {"name", true},
+                {"idRef", true}});
+            auto spec = make_shared<Factory>(Requirements{
+                {"type", ControlledVocab{"LIMIT"}, true}, {"name", false}, {"idRef", true}});
+            auto rels = make_shared<Factory>(
+                Requirements{{"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
+                             {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}});
             rels->setMinListSize(1);
-            relationships = make_shared<Factory>(Requirements{
-              {"Relationships", ENTITY_LIST, rels, false}
-            });
+            relationships =
+                make_shared<Factory>(Requirements{{"Relationships", ENTITY_LIST, rels, false}});
           }
           return relationships;
         }
-      };            
-    }
-  }
-}
-
+      };
+    }  // namespace data_item
+  }    // namespace device_model
+}  // namespace mtconnect
