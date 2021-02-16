@@ -108,24 +108,49 @@ namespace mtconnect
 
     bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
     {
+      bool success{true};
       for (auto &p : properties)
         p.first.clearMark();
 
-      bool success{true};
+      if (m_isList)
+      {
+        const auto p = properties.find("LIST");
+        if (p == properties.end())
+        {
+          if (m_minListSize > 0)
+          {
+            errors.emplace_back(new PropertyError("A list is required for this entity"));
+            success = false;
+          }
+        }
+        else
+        {
+          p->first.setMark();
+          auto &list = get<EntityList>(p->second);
+          if (list.size() < m_minListSize)
+          {
+            errors.emplace_back(new PropertyError("The list must have at least " +
+                                                  to_string(m_minListSize) +
+                                                  " entries"));
+            success = false;
+
+          }
+        }
+      }
+      
       for (const auto &r : m_requirements)
       {
-        std::string key;
+        Properties::const_iterator p;
         if (m_isList && r.getType() == ENTITY)
-          key = "LIST";
+          p = properties.find("LIST");
         else
-          key = r.getName();
-        const auto p = properties.find(key);
+          p = properties.find(r.getName());
         if (p == properties.end())
         {
           if (r.isRequired())
           {
             errors.emplace_back(new PropertyError(
-                "Property " + r.getName() + " is required and not provided", r.getName()));
+                                                  "Property " + r.getName() + " is required and not provided", r.getName()));
             success = false;
           }
         }
@@ -156,7 +181,7 @@ namespace mtconnect
           }
         }
       }
-
+      
       std::list<string> extra;
       for (auto &p : properties)
         if (!p.first.m_mark)
