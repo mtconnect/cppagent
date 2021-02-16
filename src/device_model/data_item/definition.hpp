@@ -90,14 +90,13 @@ namespace mtconnect
           static auto def = make_shared<Factory>(
                                                     Requirements{
             {"Description", true},
-            {"EntryDefinitions", ENTITY_LIST, entries},
-            {"CellDefinitions", ENTITY_LIST, cells}
+            {"EntryDefinitions", ENTITY_LIST, entries, false},
+            {"CellDefinitions", ENTITY_LIST, cells, false}
           });
           def->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
           return def;
         }
-      };
-      
+      };      
     }
   }
 }

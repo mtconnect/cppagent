@@ -27,34 +27,6 @@ namespace mtconnect
   {
     namespace data_item
     {
-      class Relationship : public entity::Entity
-      {
-      public:
-        static entity::FactoryPtr getDataItemFactory()
-        {
-          using namespace mtconnect::entity;
-          using namespace std;
-          static auto source = make_shared<Factory>(
-                                                    Requirements{
-            {"type", ControlledVocab{"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"}, true},
-            {"name", true}, {"idRef", true}
-          });
-          return source;
-        }
-
-        static entity::FactoryPtr getSpecificationactory()
-        {
-          using namespace mtconnect::entity;
-          using namespace std;
-          static auto source = make_shared<Factory>(
-                                                    Requirements{
-            {"type", ControlledVocab{"LIMIT"}, true},
-            {"name", false}, {"idRef", true}
-          });
-          return source;
-        }
-      };
-      
       class Relationships : public entity::Entity
       {
       public:
@@ -62,13 +34,27 @@ namespace mtconnect
         {
           using namespace mtconnect::entity;
           using namespace std;
-          static FactoryPtr di = Relationship::getDataItemFactory();
-          static FactoryPtr spec = Relationship::getSpecificationactory();
-          static auto source = make_shared<Factory>(Requirements{
-            {"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
-            {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}
-          });
-          return source;
+          static FactoryPtr relationships;
+          if (!relationships)
+          {
+            auto di = make_shared<Factory>(Requirements{
+              {"type", ControlledVocab{"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"}, true},
+              {"name", true}, {"idRef", true}
+            });
+            auto spec =  make_shared<Factory>(Requirements{
+              {"type", ControlledVocab{"LIMIT"}, true},
+              {"name", false}, {"idRef", true}
+            });
+            auto rels = make_shared<Factory>(Requirements{
+              {"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
+              {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}
+            });
+            rels->setMinListSize(1);
+            relationships = make_shared<Factory>(Requirements{
+              {"Relationships", ENTITY_LIST, rels, false}
+            });
+          }
+          return relationships;
         }
       };            
     }
