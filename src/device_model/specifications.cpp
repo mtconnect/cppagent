@@ -98,18 +98,7 @@ namespace mtconnect
 
     specifications->setMinListSize(1);
 
-    auto root = Specifications::getRoot();
-
-    root->addRequirements(Requirements{Requirement("Specifications", ENTITY_LIST, specifications, false)});
-
-    return root;
-  }
-
-  FactoryPtr Specifications::getRoot()
-  {
-    static auto root = make_shared<Factory>();
-
-    return root;
+    return specifications;
   }
 
 }  // namespace mtconnect

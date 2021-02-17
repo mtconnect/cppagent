@@ -45,18 +45,24 @@ class SpecificationTest : public testing::Test
 TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
-  
-  ASSERT_EQ(2, m_component->getConfiguration().size());
-    
-  auto ci = m_component->getConfiguration().begin();
-  // Get the second configuration.
-  ci++;
-  const auto conf = ci->get();
-  ASSERT_EQ(typeid(Specifications), typeid(*conf));
-  
-  const auto specs_entity = dynamic_cast<const Specifications*>(conf)->getEntity();
 
-  auto &specs = specs_entity->get<entity::EntityList>("LIST");
+  auto &configurations_list = m_component->getConfiguration();
+
+  ASSERT_TRUE(!configurations_list.empty());
+
+  auto configurations_entity = configurations_list.front()->getEntity();
+
+  auto &configuration = configurations_entity->get<entity::EntityList>("LIST");
+
+  ASSERT_EQ(2, configuration.size());
+
+  auto config = configuration.begin();
+
+  config++;
+
+  EXPECT_EQ("Specifications", (*config)->getName());
+
+  auto &specs = (*config)->get<entity::EntityList>("LIST");
 
   ASSERT_EQ(3, specs.size());
   

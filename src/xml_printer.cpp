@@ -479,91 +479,13 @@ namespace mtconnect
     return ret;
   }
 
-  void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration *sensor)
-  {
-    AutoElement sensorEle(writer, "SensorConfiguration");
-    entity::XmlPrinter printer;
-
-    printer.print(writer, sensor->getEntity(), {});
-  }
-
-  void printRelationships(xmlTextWriterPtr writer, const Relationships *rels)
-  {
-    AutoElement sensorEle(writer, "Relationships");
-    entity::XmlPrinter printer;
-
-    printer.print(writer, rels->getEntity(), {});
-  }
-
-  void printSolidModel(xmlTextWriterPtr writer, const SolidModel *rels)
-  {
-    AutoElement sensorEle(writer, "SolidModel");
-    entity::XmlPrinter printer;
-
-    printer.print(writer, rels->getEntity(), {});
-  }
-
-  void printMotion(xmlTextWriterPtr writer, const Motion *rels)
-  {
-    AutoElement sensorEle(writer, "Motion");
-    entity::XmlPrinter printer;
-
-    printer.print(writer, rels->getEntity(), {});
-  }
-
-  void printSpecifications(xmlTextWriterPtr writer, const Specifications *specs)
-  {
-    AutoElement ele(writer, "Specifications");
-    entity::XmlPrinter printer;
-
-    printer.print(writer, specs->getEntity(), {});
-  }
-
-
-  void printCoordinateSystems(xmlTextWriterPtr writer, const CoordinateSystems *systems)
-  {
-    AutoElement ele(writer, "CoordinateSystems");
-    entity::XmlPrinter printer;
-
-    printer.print(writer, systems->getEntity(), {});
-  }
-
   void printConfiguration(xmlTextWriterPtr writer,
-                          const std::list<unique_ptr<ComponentConfiguration>> &configurations)
+                          const unique_ptr<ComponentConfiguration> &configuration)
   {
     AutoElement configEle(writer, "Configuration");
-    for (const auto &configuration : configurations)
-    {
-      auto c = configuration.get();
-      if (auto conf = dynamic_cast<const SensorConfiguration *>(c))
-      {
-        printSensorConfiguration(writer, conf);
-      }
-      else if (auto conf = dynamic_cast<const ExtendedComponentConfiguration *>(c))
-      {
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST conf->getContent().c_str()));
-      }
-      else if (auto conf = dynamic_cast<const Relationships *>(c))
-      {
-        printRelationships(writer, conf);
-      }
-      else if (auto conf = dynamic_cast<const Specifications *>(c))
-      {
-        printSpecifications(writer, conf);
-      }
-      else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
-      {
-        printCoordinateSystems(writer, conf);
-      }
-      else if (auto conf = dynamic_cast<const SolidModel *>(c))
-      {
-        printSolidModel(writer, conf);
-      }
-      else if (auto conf = dynamic_cast<const Motion *>(c))
-      {
-        printMotion(writer, conf);
-      }
-    }
+    entity::XmlPrinter printer;
+
+    printer.print(writer, configuration->getEntity(), {});
   }
 
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
@@ -578,9 +500,11 @@ namespace mtconnect
     if (!desc.empty() || !body.empty())
       addSimpleElement(writer, "Description", body, desc);
 
-    if (!component->getConfiguration().empty())
+    const auto &configurations = component->getConfiguration();
+
+    if (!configurations.empty())
     {
-      printConfiguration(writer, component->getConfiguration());
+      printConfiguration(writer, configurations.front());
     }
 
     auto datum = component->getDataItems();
@@ -628,9 +552,12 @@ namespace mtconnect
         const auto &desc = comp->getDescription();
         if (desc)
           addSimpleElement(writer, "Description", desc->m_body, desc->m_attributes);
-        if (!comp->getConfiguration().empty())
+        
+        const auto &config = comp->getConfiguration();
+                
+        if (!config.empty())
         {
-          printConfiguration(writer, comp->getConfiguration());
+          printConfiguration(writer, config.front());
         }
       }
     }

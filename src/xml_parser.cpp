@@ -907,117 +907,16 @@ namespace mtconnect
     }
   }
 
-  unique_ptr<ComponentConfiguration> handleSensorConfiguration(xmlNodePtr node)
-  {
-    entity::ErrorList errors;
-    auto new_entity = entity::XmlParser::parseXmlNode(SensorConfiguration::getFactory(), node, errors);
-
-    unique_ptr<SensorConfiguration> sensor = make_unique<SensorConfiguration>();
-
-    sensor->setEntity(new_entity);
-
-    return move(sensor);
-  }
-
-  unique_ptr<ComponentConfiguration> handleRelationships(xmlNodePtr node)
-  {
-    entity::ErrorList errors;
-    auto new_entity = entity::XmlParser::parseXmlNode(Relationships::getFactory(), node, errors);
-
-    unique_ptr<Relationships> relationships = make_unique<Relationships>();
-
-    relationships->setEntity(new_entity);
-
-    return move(relationships);
-  }
-
-    unique_ptr<ComponentConfiguration> handleSolidModel(xmlNodePtr node)
-  {
-    entity::ErrorList errors;
-    auto new_entity = entity::XmlParser::parseXmlNode(SolidModel::getFactory(), node, errors);
-
-    unique_ptr<SolidModel> solid_model = make_unique<SolidModel>();
-
-    solid_model->setEntity(new_entity);
-
-    return move(solid_model);
-  }
-
-     unique_ptr<ComponentConfiguration> handleMotion(xmlNodePtr node)
-  {
-    entity::ErrorList errors;
-    auto new_entity = entity::XmlParser::parseXmlNode(Motion::getFactory(), node, errors);
-
-    unique_ptr<Motion> motion = make_unique<Motion>();
-
-    motion->setEntity(new_entity);
-
-    return move(motion);
-  }
-
-  unique_ptr<ComponentConfiguration> handleCoordinateSystems(xmlNodePtr node)
-  {
-    entity::ErrorList errors;
-    auto new_entity = entity::XmlParser::parseXmlNode(CoordinateSystems::getFactory(), node, errors);
-
-    unique_ptr<CoordinateSystems> systems = make_unique<CoordinateSystems>();
-    
-    systems->setEntity(new_entity);
-    
-    return move(systems);
-  }
-
-  unique_ptr<ComponentConfiguration> handleSpecifications(xmlNodePtr node)
-  {
-    entity::ErrorList errors;
-    auto new_entity = entity::XmlParser::parseXmlNode(Specifications::getFactory(), node, errors);
-
-    unique_ptr<Specifications> specifications = make_unique<Specifications>();
-
-    specifications->setEntity(new_entity);
-
-    return move(specifications);
-  }
-
   template <class T>
   void handleConfiguration(xmlNodePtr node, T *parent)
   {
-    forEachElement(
-        node,
-        {{{"SensorConfiguration",
-           [&parent](xmlNodePtr n) {
-             auto s = handleSensorConfiguration(n);
-             parent->addConfiguration(s);
-           }},
-          {"Relationships",
-           [&parent](xmlNodePtr n) {
-             auto r = handleRelationships(n);
-             parent->addConfiguration(r);
-           }},
-          {"CoordinateSystems",
-           [&parent](xmlNodePtr n) {
-             auto c = handleCoordinateSystems(n);
-             parent->addConfiguration(c);
-           }},
-          {"Specifications",
-           [&parent](xmlNodePtr n) {
-             auto s = handleSpecifications(n);
-             parent->addConfiguration(s);
-           }},
-          {"SolidModel",
-           [&parent](xmlNodePtr n) {
-             auto r = handleSolidModel(n);
-             parent->addConfiguration(r);
-           }},
-          {"Motion",
-           [&parent](xmlNodePtr n) {
-             auto r = handleMotion(n);
-             parent->addConfiguration(r);
-           }},
-          {"OTHERWISE", [&parent](xmlNodePtr n) {
-             unique_ptr<ComponentConfiguration> ext(
-                 new ExtendedComponentConfiguration(getRawContent(n)));
-             parent->addConfiguration(ext);
-           }}}});
+    entity::ErrorList errors;
+    
+    auto configuration_entity = entity::XmlParser::parseXmlNode(ComponentConfiguration::getRoot(), node, errors);
+    
+    unique_ptr<ComponentConfiguration> configuration = make_unique<ComponentConfiguration>();
+    configuration->setEntity(configuration_entity);
+    
+    parent->addConfiguration(configuration);
   }
 }  // namespace mtconnect

@@ -72,17 +72,7 @@ namespace mtconnect
         Requirement("Transformation", ENTITY, transformation, false)
         });
 
-    auto root = Motion::getRoot();
-
-    root->addRequirements(Requirements{Requirement("Motion", ENTITY, motion)});
-
-    return root;
-  }
-
-  FactoryPtr Motion::getRoot()
-  {
-    static auto root = make_shared<Factory>();
-    return root;
+    return motion;
   }
 
 }  // namespace mtconnect

@@ -59,19 +59,7 @@ namespace mtconnect
     auto coordinateSystems = make_shared<Factory>(Requirements{
         Requirement("CoordinateSystem", ENTITY, coordinateSystem, 1, Requirement::Infinite)});
 
-    auto root = CoordinateSystems::getRoot();
-
-    root->addRequirements(
-        Requirements{Requirement("CoordinateSystems", ENTITY_LIST, coordinateSystems, false)});
-
-    return root;
-  }
-
-  FactoryPtr CoordinateSystems::getRoot()
-  {
-    static auto root = make_shared<Factory>();
-
-    return root;
+    return coordinateSystems;
   }
 
 }  // namespace mtconnect

@@ -44,30 +44,36 @@ class KinematicsTest : public testing::Test
 TEST_F(KinematicsTest, ParseZAxisKinematics)
 {
   ASSERT_NE(nullptr, m_device);
-  
+
   auto linear = m_device->getComponentById("z");
-  
-  ASSERT_EQ(1, linear->getConfiguration().size());
-  auto ci = linear->getConfiguration().begin();
 
-  const auto conf = ci->get();
-  ASSERT_EQ(typeid(Motion), typeid(*conf));
+  auto &configurations_list = linear->getConfiguration();
 
-  const auto motion = dynamic_cast<const Motion *>(conf)->getEntity();
+  ASSERT_TRUE(!configurations_list.empty());
+
+  auto configurations_entity = configurations_list.front()->getEntity();
+
+  auto &configuration = configurations_entity->get<entity::EntityList>("LIST");
   
-  ASSERT_EQ("zax", get<string>(motion->getProperty("id")));
-  ASSERT_EQ("PRISMATIC", get<string>(motion->getProperty("type")));
-  ASSERT_EQ("DIRECT", get<string>(motion->getProperty("actuation")));
-  ASSERT_EQ("machine", get<string>(motion->getProperty("coordinateSystemIdRef")));
-  ASSERT_EQ("The linears Z kinematics", get<string>(motion->get<entity::EntityPtr>("Description")->getValue()));
+  ASSERT_EQ(1, configuration.size());
+
+  auto config = configuration.begin();
+  
+  EXPECT_EQ("Motion", (*config)->getName());
+  
+  ASSERT_EQ("zax", get<string>((*config)->getProperty("id")));
+  ASSERT_EQ("PRISMATIC", get<string>((*config)->getProperty("type")));
+  ASSERT_EQ("DIRECT", get<string>((*config)->getProperty("actuation")));
+  ASSERT_EQ("machine", get<string>((*config)->getProperty("coordinateSystemIdRef")));
+  ASSERT_EQ("The linears Z kinematics", get<string>((*config)->get<entity::EntityPtr>("Description")->getValue()));
    
-  const auto origin = motion->get<entity::EntityPtr>("Origin")->getValue();
+  const auto origin = (*config)->get<entity::EntityPtr>("Origin")->getValue();
 
   ASSERT_EQ(100.0, get<std::vector<double>>(origin).at(0));
   ASSERT_EQ(101.0, get<std::vector<double>>(origin).at(1));
   ASSERT_EQ(102.0, get<std::vector<double>>(origin).at(2));
 
-  const auto axis = motion->get<entity::EntityPtr>("Axis")->getValue();
+  const auto axis = (*config)->get<entity::EntityPtr>("Axis")->getValue();
 
   ASSERT_EQ(0.0, get<std::vector<double>>(axis).at(0));
   ASSERT_EQ(0.1, get<std::vector<double>>(axis).at(1));

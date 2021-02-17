@@ -47,27 +47,31 @@ TEST_F(SolidModelTest, ParseDeviceSolidModel)
 {
   ASSERT_NE(nullptr, m_device);
 
-  ASSERT_EQ(2, m_device->getConfiguration().size());
+  auto &configurations_list = m_device->getConfiguration();
 
-  auto ci = m_device->getConfiguration().begin();
+  ASSERT_TRUE(!configurations_list.empty());
 
-  std::advance(ci, 1);
-  const auto conf2 = ci->get();
-  ASSERT_EQ(typeid(SolidModel), typeid(*conf2));
+  auto configurations_entity = configurations_list.front()->getEntity();
 
-  const auto sm = dynamic_cast<const SolidModel *>(conf2);
-  
-  const auto sm_entity = sm->getEntity();
+  auto &configuration = configurations_entity->get<entity::EntityList>("LIST");
 
-  ASSERT_EQ("SolidModel", sm_entity->getName());
+  ASSERT_EQ(2, configuration.size());
+
+  auto config = configuration.begin();
+  config++;
+
+  EXPECT_EQ("SolidModel", (*config)->getName());
   
-  ASSERT_EQ("dm", get<string>(sm_entity->getProperty("id")));
-  ASSERT_EQ("STL", get<string>(sm_entity->getProperty("mediaType")));
+  ASSERT_EQ("dm", get<string>((*config)->getProperty("id")));
+  ASSERT_EQ("STL", get<string>((*config)->getProperty("mediaType")));
+  ASSERT_EQ("/models/foo.stl", get<string>((*config)->getProperty("href")));
+  ASSERT_EQ("machine", get<string>((*config)->getProperty("coordinateSystemIdRef")));
   
-  
-  const auto scale = sm_entity->get<entity::EntityPtr>("Scale");
+  const auto scale = (*config)->get<entity::EntityPtr>("Scale");
 
   ASSERT_EQ(2.0, get<std::vector<double>>(scale->getProperty("VALUE")).at(0));
+  ASSERT_EQ(3.0, get<std::vector<double>>(scale->getProperty("VALUE")).at(1));
+  ASSERT_EQ(4.0, get<std::vector<double>>(scale->getProperty("VALUE")).at(2));
   
 }
 

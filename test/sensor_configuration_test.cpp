@@ -43,22 +43,24 @@ TEST_F(SensorConfigurationTest, ParseSensorConfiguration)
 {
   ASSERT_NE(nullptr, m_device);
 
-  ASSERT_EQ(2, m_device->getConfiguration().size());
+  auto &configurations_list = m_device->getConfiguration();
 
-  auto ci = m_device->getConfiguration().begin();
+  ASSERT_TRUE(!configurations_list.empty());
+
+  auto configurations_entity = configurations_list.front()->getEntity();
+
+  auto &configuration = configurations_entity->get<entity::EntityList>("LIST");
+
+  ASSERT_EQ(2, configuration.size());
   
-  std::advance(ci, 1);
-  const auto conf2 = ci->get();
-  ASSERT_EQ(typeid(SensorConfiguration), typeid(*conf2));
+  auto config = configuration.begin();
+  config++;
+  
+  EXPECT_EQ("SensorConfiguration", (*config)->getName());
 
-  const auto sc = dynamic_cast<const SensorConfiguration *>(conf2);
-
-  auto sc_entity = sc->getEntity();
-  EXPECT_EQ("SensorConfiguration", sc_entity->getName());
-
-  auto channels = sc_entity->getList("Channels");
+  auto channels = (*config)->getList("Channels");
   auto channel = channels->front();
 
-  EXPECT_EQ("A/D:1", get<string>(channel->getProperty("name")));
+  EXPECT_EQ("A/D:1", get<string>(channel->getProperty("name")));  
 }
 

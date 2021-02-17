@@ -46,16 +46,22 @@ class CoordinateSystemTest : public testing::Test
 TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_device);
-  
-  ASSERT_EQ(2, m_device->getConfiguration().size());
-    
-  auto ci = m_device->getConfiguration().begin();
-  const auto conf = ci->get();
-  ASSERT_EQ(typeid(CoordinateSystems), typeid(*conf));
-  
-  const auto cds_entity = dynamic_cast<const CoordinateSystems*>(conf)->getEntity();;
 
-  auto &cds = cds_entity->get<entity::EntityList>("LIST");
+  auto &configurations_list = m_device->getConfiguration();
+
+  ASSERT_TRUE(!configurations_list.empty());
+
+  auto configurations_entity = configurations_list.front()->getEntity();
+
+  auto &configuration = configurations_entity->get<entity::EntityList>("LIST");
+
+  ASSERT_EQ(2, configuration.size());
+
+  auto config = configuration.begin();
+
+  EXPECT_EQ("CoordinateSystems", (*config)->getName());
+
+  auto &cds = (*config)->get<entity::EntityList>("LIST");
 
   ASSERT_EQ(2, cds.size());
 
@@ -70,6 +76,28 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
   ASSERT_EQ(101, get<std::vector<double>>(origin).at(0));
   ASSERT_EQ(102, get<std::vector<double>>(origin).at(1));
   ASSERT_EQ(103, get<std::vector<double>>(origin).at(2));
+
+  it++;
+
+  EXPECT_EQ("machine", (*it)->get<string>("id"));
+  EXPECT_EQ("MACHINE", (*it)->get<string>("type"));
+  EXPECT_EQ("machiney", (*it)->get<string>("name"));
+  EXPECT_EQ("xxx", (*it)->get<string>("nativeName"));
+  EXPECT_EQ("world", (*it)->get<string>("parentIdRef"));
+
+  const auto transformation = (*it)->get<entity::EntityPtr>("Transformation");
+
+  auto translation = transformation->get<entity::EntityPtr>("Translation")->getValue();
+  auto rotation = transformation->get<entity::EntityPtr>("Rotation")->getValue();
+
+  ASSERT_EQ(10, get<std::vector<double>>(translation).at(0));
+  ASSERT_EQ(10, get<std::vector<double>>(translation).at(1));
+  ASSERT_EQ(10, get<std::vector<double>>(translation).at(2));
+
+  ASSERT_EQ(90, get<std::vector<double>>(rotation).at(0));
+  ASSERT_EQ(0, get<std::vector<double>>(rotation).at(1));
+  ASSERT_EQ(90, get<std::vector<double>>(rotation).at(2));
+
 }
 
 /*

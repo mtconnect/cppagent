@@ -32,8 +32,14 @@ namespace mtconnect
   public:
     ComponentConfiguration() = default;
     virtual ~ComponentConfiguration() = default;
+    
+    static entity::FactoryPtr getRoot();
 
+    const entity::EntityPtr &getEntity() const { return m_entity; };
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; };
 
+  protected:
+    entity::EntityPtr m_entity;
   };
 
   class ExtendedComponentConfiguration : public ComponentConfiguration

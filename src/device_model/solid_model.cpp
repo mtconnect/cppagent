@@ -60,18 +60,6 @@ namespace mtconnect
 
     solidModel->registerMatchers();
 
-    auto root = SolidModel::getRoot();
-
-    root->addRequirements(
-        Requirements{Requirement("SolidModel", ENTITY, solidModel)});
-
-    return root;
+    return solidModel;
   }
-
-  FactoryPtr SolidModel::getRoot()
-  {
-    static auto root = make_shared<Factory>();
-    return root;
-  }
-
 }  // namespace mtconnect

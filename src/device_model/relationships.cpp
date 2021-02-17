@@ -57,19 +57,8 @@ namespace mtconnect
 
     relationships->setMinListSize(1);
 
-    auto root = Relationships::getRoot();
-
-    root->addRequirements(
-        Requirements{Requirement("Relationships", ENTITY_LIST, relationships)});
-
-    return root;
+    return relationships;
   }
 
-  FactoryPtr Relationships::getRoot()
-  {
-    static auto root = make_shared<Factory>();
-
-    return root;
-  }
 
 }  // namespace mtconnect

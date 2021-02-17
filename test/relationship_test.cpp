@@ -50,57 +50,43 @@ class RelationshipTest : public testing::Test
 TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
-  
-  ASSERT_EQ(2, m_component->getConfiguration().size());
-  
-  const auto conf = m_component->getConfiguration().front().get();
-  ASSERT_EQ(typeid(Relationships), typeid(*conf));
-  
-  const auto rels = dynamic_cast<const Relationships*>(conf);
 
-  auto rels_entity = rels->getEntity();
+  auto &configurations_list = m_component->getConfiguration();
 
-  EXPECT_EQ("Relationships", rels_entity->getName());
+  ASSERT_TRUE(!configurations_list.empty());
+
+  auto configurations_entity = configurations_list.front()->getEntity();
+
+  auto &configuration = configurations_entity->get<entity::EntityList>("LIST");
+
+  ASSERT_EQ(2, configuration.size());
+
+  auto config = configuration.begin();
+
+  EXPECT_EQ("Relationships", (*config)->getName());
  
-  auto &relationships = rels_entity->get<entity::EntityList>("LIST");
+  auto &relationships = (*config)->get<entity::EntityList>("LIST");
   
   ASSERT_EQ(2, relationships.size());
 
   auto it = relationships.begin();
 
-  EXPECT_EQ("ref1",(*it)->get<string>("id"));
+  EXPECT_EQ("ref1", (*it)->get<string>("id")); 
+  EXPECT_EQ("Power", (*it)->get<string>("name"));
+  EXPECT_EQ("PEER", (*it)->get<string>("type"));
+  EXPECT_EQ("CRITICAL", (*it)->get<string>("criticality"));
+  EXPECT_EQ("power", (*it)->get<string>("idRef"));
+  
+  it++;
+  
+  EXPECT_EQ("ref2", (*it)->get<string>("id"));
+  EXPECT_EQ("coffee", (*it)->get<string>("name"));
+  EXPECT_EQ("PARENT", (*it)->get<string>("type"));
+  EXPECT_EQ("NON_CRITICAL", (*it)->get<string>("criticality"));
+  EXPECT_EQ("AUXILIARY", (*it)->get<string>("role"));
+  EXPECT_EQ("http://127.0.0.1:2000/coffee", (*it)->get<string>("href"));
+  EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", (*it)->get<string>("deviceUuidRef"));
 
-  //EXPECT_EQ("ref1", get<string>(componentRelationship->getProperty("id")));
-
-  /*
-  ASSERT_NE(nullptr, rels);
-  ASSERT_EQ(2, rels->getRelationships().size());
-  
-  auto reli = rels->getRelationships().begin();
-  const auto rel1 = reli->get();
-  
-  ASSERT_EQ(typeid(ComponentRelationship), typeid(*rel1));
-  const auto crel = dynamic_cast<ComponentRelationship*>(rel1);
-  EXPECT_EQ("ref1", crel->m_id);
-  EXPECT_EQ("Power", crel->m_name);
-  EXPECT_EQ("PEER", crel->m_type);
-  EXPECT_EQ("CRITICAL", crel->m_criticality);
-  EXPECT_EQ("power", crel->m_idRef);
-  
-  reli++;
-  
-  const auto rel2 = reli->get();
-  
-  ASSERT_EQ(typeid(DeviceRelationship), typeid(*rel2));
-  const auto drel = dynamic_cast<DeviceRelationship*>(rel2);
-  EXPECT_EQ("ref2", drel->m_id);
-  EXPECT_EQ("coffee", drel->m_name);
-  EXPECT_EQ("PARENT", drel->m_type);
-  EXPECT_EQ("NON_CRITICAL", drel->m_criticality);
-  EXPECT_EQ("AUXILIARY", drel->m_role);
-  EXPECT_EQ("http://127.0.0.1:2000/coffee", drel->m_href);
-  EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", drel->m_deviceUuidRef);
-  */
 }
 /*
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"

@@ -26,7 +26,7 @@ namespace mtconnect
 {
   using namespace entity;
 
-  FactoryPtr SensorConfiguration::getFactory() 
+  FactoryPtr SensorConfiguration::getFactory()
   {
     auto firmwareVersion = make_shared<Factory>(Requirements{
         Requirement("VALUE", true),
@@ -68,20 +68,8 @@ namespace mtconnect
         Requirement("CalibrationInitials", ENTITY, calibrationInitials, false),
         Requirement("Channels", ENTITY_LIST, channels, false)
      });
-
-    auto root = SensorConfiguration::getRoot();
     
-    root->addRequirements(Requirements{
-        Requirement("SensorConfiguration", ENTITY, sensorConfiguration, false)
-    });
-    
-    return root;
+    return sensorConfiguration;
   }
-
-  FactoryPtr SensorConfiguration::getRoot() 
-  { 
-    static auto root = make_shared<Factory>();
-    return root;
-  }
-
+  
 }  // namespace mtconnect

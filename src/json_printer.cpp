@@ -353,43 +353,10 @@ namespace mtconnect
   }
 
 
-  inline void toJson(json &parent, const ComponentConfiguration *config)
+  inline void toJson(json &parent, const unique_ptr<ComponentConfiguration> &configuration)
   {
-    if (auto obj = dynamic_cast<const SensorConfiguration *>(config))
-    {
-      entity::JsonPrinter printer;
-      parent["SensorConfiguration"] = printer.print(obj->getEntity());
-      ;
-    }
-    else if (auto obj = dynamic_cast<const Relationships *>(config))
-    {
-      entity::JsonPrinter printer;
-      parent["Relationships"] = printer.print(obj->getEntity());
-    }
-    else if (auto obj = dynamic_cast<const SolidModel *>(config))
-    {
-      entity::JsonPrinter printer;
-      parent["SolidModel"] = printer.print(obj->getEntity());
-    }
-    else if (auto obj = dynamic_cast<const Motion*>(config))
-    {
-      entity::JsonPrinter printer;
-      parent["Motion"] = printer.print(obj->getEntity());
-    }
-    else if (auto obj = dynamic_cast<const Specifications *>(config))
-    {
-      entity::JsonPrinter printer;
-      parent["Specifications"] = printer.print(obj->getEntity());
-    }
-    else if (auto obj = dynamic_cast<const CoordinateSystems *>(config))
-    {
-      entity::JsonPrinter printer;
-      parent["CoordinateSystems"] = printer.print(obj->getEntity());
-    }
-    else if (auto obj = dynamic_cast<const ExtendedComponentConfiguration *>(config))
-    {
-      parent["ExtendedConfiguration"] = obj->getContent();
-    }
+    entity::JsonPrinter printer;
+    parent["Configuration"] = printer.print(configuration->getEntity());
   }
 
   static inline json toJson(const unique_ptr<Composition> &composition)
@@ -404,15 +371,14 @@ namespace mtconnect
       addText(desc, composition->getDescription()->m_body);
       obj["Description"] = desc;
     }
-    if (!composition->getConfiguration().empty())
+    
+    const auto &configurations = composition->getConfiguration();
+
+    if (!configurations.empty())
     {
       json cfg = json::object();
-
-      for (const auto &conf : composition->getConfiguration())
-      {
-        toJson(cfg, conf.get());
-      }
-      obj["Configuration"] = cfg;
+      toJson(cfg, configurations.front());      
+      obj["Configuration"] = cfg["Configuration"];
     }
 
     json comp = json::object({{"Composition", obj}});
@@ -432,15 +398,13 @@ namespace mtconnect
     if (desc.begin() != desc.end())
       comp["Description"] = desc;
 
-    if (!component->getConfiguration().empty())
+    const auto &configurations = component->getConfiguration();
+
+    if (!configurations.empty())
     {
       json obj = json::object();
-
-      for (const auto &conf : component->getConfiguration())
-      {
-        toJson(obj, conf.get());
-      }
-      comp["Configuration"] = obj;
+      toJson(obj, configurations.front());
+      comp["Configuration"] = obj["Configuration"];
     }
     toJson(comp, "DataItems", component->getDataItems());
     toJson(comp, "Components", component->getChildren());

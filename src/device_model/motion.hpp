@@ -30,15 +30,8 @@ namespace mtconnect
   {
   public:
     static entity::FactoryPtr getFactory();
-    static entity::FactoryPtr getRoot();
 
     Motion() = default;
     ~Motion() override = default;
-
-    const entity::EntityPtr &getEntity() const { return m_entity; }
-    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; }
-
-  protected:
-    entity::EntityPtr m_entity;
   };
 }  // namespace mtconnect
