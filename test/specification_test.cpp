@@ -54,27 +54,30 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
   const auto conf = ci->get();
   ASSERT_EQ(typeid(Specifications), typeid(*conf));
   
-  const auto specs = dynamic_cast<const Specifications*>(conf);
-  ASSERT_NE(nullptr, specs);
-  ASSERT_EQ(3, specs->getSpecifications().size());
+  const auto specs_entity = dynamic_cast<const Specifications*>(conf)->getEntity();
 
-  const auto &spec = specs->getSpecifications().front();
-  EXPECT_EQ("ROTARY_VELOCITY", spec->m_type);
-  EXPECT_EQ("ACTUAL", spec->m_subType);
-  EXPECT_EQ("REVOLUTION/MINUTE", spec->m_units);
-  EXPECT_EQ("speed_limit", spec->m_name);
-  EXPECT_EQ("cmotor", spec->m_compositionIdRef);
-  EXPECT_EQ("machine", spec->m_coordinateSystemIdRef);
-  EXPECT_EQ("c1", spec->m_dataItemIdRef);
-  EXPECT_EQ("Specification", spec->getClass());
-  EXPECT_FALSE(spec->hasGroups());
+  auto &specs = specs_entity->get<entity::EntityList>("LIST");
 
-  EXPECT_EQ(10000.0, spec->getLimit("Maximum"));
-  EXPECT_EQ(100.0, spec->getLimit("Minimum"));
-  EXPECT_EQ(1000.0, spec->getLimit("Nominal"));
+  ASSERT_EQ(3, specs.size());
+  
+  auto it = specs.begin();
+
+  EXPECT_EQ("spec", (*it)->get<string>("id"));
+  EXPECT_EQ("ROTARY_VELOCITY", (*it)->get<string>("type"));
+  EXPECT_EQ("ACTUAL", (*it)->get<string>("subType"));
+  EXPECT_EQ("REVOLUTION/MINUTE", (*it)->get<string>("units"));
+  EXPECT_EQ("speed_limit", (*it)->get<string>("name"));
+  EXPECT_EQ("cmotor", (*it)->get<string>("compositionIdRef"));
+  EXPECT_EQ("machine", (*it)->get<string>("coordinateSystemIdRef"));
+  EXPECT_EQ("c1", (*it)->get<string>("dataItemIdRef"));
+  EXPECT_EQ("Specification", (*it)->getName());
+
+  EXPECT_EQ(10000.0, get<double>((*it)->get<entity::EntityPtr>("Maximum")->getProperty("VALUE")));
+  EXPECT_EQ(100.0, get<double>((*it)->get<entity::EntityPtr>("Minimum")->getProperty("VALUE")));
+  EXPECT_EQ(1000.0, get<double>((*it)->get<entity::EntityPtr>("Nominal")->getProperty("VALUE")));
 }
 
-
+/*
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
 
@@ -363,3 +366,4 @@ TEST_F(SpecificationTest, JsonPrintingForProcessSpecification)
     EXPECT_EQ(-200.0, alarm["LowerWarning"]);
   }
 }
+*/

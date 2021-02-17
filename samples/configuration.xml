@@ -41,7 +41,7 @@
                   <DeviceRelationship id="ref2" name="coffee" type="PARENT" criticality="NON_CRITICAL" role="AUXILIARY" href="http://127.0.0.1:2000/coffee" deviceUuidRef="bfccbfb0-5111-0138-6cd5-0c85909298d9"/>
                 </Relationships>
                 <Specifications>
-                  <Specification type="ROTARY_VELOCITY" subType="ACTUAL" dataItemIdRef="c1" units="REVOLUTION/MINUTE" compositionIdRef="cmotor" name="speed_limit" coordinateSystemIdRef="machine">
+                  <Specification id="spec" type="ROTARY_VELOCITY" subType="ACTUAL" dataItemIdRef="c1" units="REVOLUTION/MINUTE" compositionIdRef="cmotor" name="speed_limit" coordinateSystemIdRef="machine">
                     <Maximum>10000</Maximum>
                     <Minimum>100</Minimum>
                     <Nominal>1000</Nominal>
@@ -111,7 +111,7 @@
 							</Description>
 							<Configuration>
 								<Specifications>
-									<Specification type="VOLTAGE_AC" units="VOLT" name="voltage">
+									<Specification id="spec2" type="VOLTAGE_AC" units="VOLT" name="voltage">
 										<Maximum>10000</Maximum>
 										<Minimum>100</Minimum>
 										<Nominal>1000</Nominal>

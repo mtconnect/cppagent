@@ -47,54 +47,32 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_device);
   
-  ASSERT_EQ(1, m_device->getConfiguration().size());
+  ASSERT_EQ(2, m_device->getConfiguration().size());
     
   auto ci = m_device->getConfiguration().begin();
   const auto conf = ci->get();
   ASSERT_EQ(typeid(CoordinateSystems), typeid(*conf));
   
-  const auto cds = dynamic_cast<const CoordinateSystems*>(conf);
-  ASSERT_NE(nullptr, cds);
-  ASSERT_EQ(2, cds->getCoordinateSystems().size());
+  const auto cds_entity = dynamic_cast<const CoordinateSystems*>(conf)->getEntity();;
 
-  auto systems = cds->getCoordinateSystems().begin();
+  auto &cds = cds_entity->get<entity::EntityList>("LIST");
+
+  ASSERT_EQ(2, cds.size());
+
+  auto it = cds.begin();
   
-  const auto &world = *systems;
-  EXPECT_EQ("world", world->m_attributes["id"]);
-  EXPECT_EQ("WORLD", world->m_attributes["type"]);
-  EXPECT_EQ("worldy", world->m_attributes["name"]);
-  EXPECT_EQ(world->m_attributes.end(), world->m_attributes.find("nativeName"));
-  EXPECT_EQ(world->m_attributes.end(), world->m_attributes.find("parentIdRef"));
+  EXPECT_EQ("world", (*it)->get<string>("id"));
+  EXPECT_EQ("WORLD", (*it)->get<string>("type"));
+  EXPECT_EQ("worldy", (*it)->get<string>("name"));
 
-  EXPECT_TRUE(world->m_geometry);
-  ASSERT_TRUE(holds_alternative<Origin>(world->m_geometry->m_location));
-  const Origin &wt = get<Origin>(world->m_geometry->m_location);
-  EXPECT_EQ(101.0, wt.m_x);
-  EXPECT_EQ(102.0, wt.m_y);
-  EXPECT_EQ(103.0, wt.m_z);
+  const auto origin = (*it)->get<entity::EntityPtr>("Origin")->getValue();
 
-  systems++;
-  const auto &machine = *systems;
-  EXPECT_EQ("machine", machine->m_attributes["id"]);
-  EXPECT_EQ("MACHINE", machine->m_attributes["type"]);
-  EXPECT_EQ("machiney", machine->m_attributes["name"]);
-  EXPECT_EQ("xxx", machine->m_attributes["nativeName"]);
-  EXPECT_EQ("world", machine->m_attributes["parentIdRef"]);
-  
-  EXPECT_TRUE(machine->m_geometry);
-  ASSERT_TRUE(holds_alternative<Transformation>(machine->m_geometry->m_location));
-  const Transformation &mt = get<Transformation>(machine->m_geometry->m_location);
-  EXPECT_TRUE(mt.m_translation);
-  EXPECT_EQ(10.0, mt.m_translation->m_x);
-  EXPECT_EQ(10.0, mt.m_translation->m_y);
-  EXPECT_EQ(10.0, mt.m_translation->m_z);
-
-  EXPECT_TRUE(mt.m_rotation);
-  EXPECT_EQ(90.0, mt.m_rotation->m_roll);
-  EXPECT_EQ(0, mt.m_rotation->m_pitch);
-  EXPECT_EQ(90.0, mt.m_rotation->m_yaw);
+  ASSERT_EQ(101, get<std::vector<double>>(origin).at(0));
+  ASSERT_EQ(102, get<std::vector<double>>(origin).at(1));
+  ASSERT_EQ(103, get<std::vector<double>>(origin).at(2));
 }
 
+/*
 #define CONFIGURATION_PATH "//m:Device/m:Configuration"
 #define COORDINATE_SYSTEMS_PATH CONFIGURATION_PATH "/m:CoordinateSystems"
 
@@ -170,3 +148,4 @@ TEST_F(CoordinateSystemTest, JsonPrinting)
     EXPECT_EQ(90.0, rot[2]);
   }
 }
+*/

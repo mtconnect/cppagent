@@ -18,6 +18,7 @@
 #pragma once
 
 #include "component_configuration.hpp"
+#include "entity.hpp"
 #include "utilities.hpp"
 
 #include <utility>
@@ -25,48 +26,21 @@
 
 namespace mtconnect
 {
-  struct CoordinateSystem : public GeometricConfiguration
-  {
-    CoordinateSystem(const CoordinateSystem &s) = default;
-    CoordinateSystem() = default;
-    ~CoordinateSystem() = default;
-
-    const std::string &klass() const override
-    {
-      const static std::string &klass("CoordinateSystem");
-      return klass;
-    }
-    const std::map<std::string, bool> &properties() const override
-    {
-      const static std::map<std::string, bool> properties = {
-          {"id", true},          {"type", true},         {"name", false},
-          {"nativeName", false}, {"parentIdRef", false},
-      };
-      ;
-      return properties;
-    }
-  };
-
   class CoordinateSystems : public ComponentConfiguration
   {
   public:
-    CoordinateSystems() = default;
-    virtual ~CoordinateSystems() = default;
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
+    // static void registerRelationship(entity::FactoryPtr parent, const std::string &t,
+    // entity::FactoryPtr factory);
 
-    const std::list<std::unique_ptr<CoordinateSystem>> &getCoordinateSystems() const
-    {
-      return m_coordinateSystems;
-    }
-    void addCoordinateSystem(CoordinateSystem *s)
-    {
-      m_coordinateSystems.emplace_back(std::move(s));
-    }
-    void addCoordinateSystem(std::unique_ptr<CoordinateSystem> &s)
-    {
-      m_coordinateSystems.emplace_back(std::move(s));
-    }
+    CoordinateSystems() = default;
+    ~CoordinateSystems() override = default;
+
+    const entity::EntityPtr &getEntity() const { return m_entity; }
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; }
 
   protected:
-    std::list<std::unique_ptr<CoordinateSystem>> m_coordinateSystems;
+    entity::EntityPtr m_entity;
   };
 }  // namespace mtconnect

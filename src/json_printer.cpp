@@ -352,92 +352,6 @@ namespace mtconnect
     }
   }
 
-  inline void toJson(json &parent, const Geometry &geometry)
-  {
-    if (geometry.m_location.index() != 0)
-    {
-      visit(overloaded{[&parent](const Origin &o) {
-                         parent["Origin"] = json::array({o.m_x, o.m_y, o.m_z});
-                       },
-                       [&parent](const Transformation &t) {
-                         json trans = json::object();
-                         if (t.m_translation)
-                         {
-                           trans["Translation"] = json::array(
-                               {t.m_translation->m_x, t.m_translation->m_y, t.m_translation->m_z});
-                           ;
-                         }
-                         if (t.m_rotation)
-                         {
-                           trans["Rotation"] = json::array(
-                               {t.m_rotation->m_roll, t.m_rotation->m_pitch, t.m_rotation->m_yaw});
-                         }
-                         parent["Transformation"] = trans;
-                       },
-                       [](const std::monostate &a) {}},
-            geometry.m_location);
-    }
-
-    if (geometry.m_scale)
-    {
-      parent["Scale"] = json::array(
-          {geometry.m_scale->m_scaleX, geometry.m_scale->m_scaleY, geometry.m_scale->m_scaleZ});
-    }
-    if (geometry.m_axis)
-    {
-      parent["Axis"] =
-          json::array({geometry.m_axis->m_x, geometry.m_axis->m_y, geometry.m_axis->m_z});
-    }
-  }
-
-  inline json toJson(const GeometricConfiguration &model)
-  {
-    json obj = json::object();
-    addAttributes(obj, model.m_attributes);
-    if (model.m_geometry)
-      toJson(obj, *model.m_geometry);
-    if (!model.m_description.empty())
-      obj["Description"] = model.m_description;
-    return obj;
-  }
-
-  inline json toJson(const Specification *spec)
-  {
-    json fields = json::object();
-    addAttributes(fields, {{"type", spec->m_type},
-                           {"subType", spec->m_subType},
-                           {"units", spec->m_units},
-                           {"name", spec->m_name},
-                           {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
-                           {"dataItemIdRef", spec->m_dataItemIdRef},
-                           {"compositionIdRef", spec->m_compositionIdRef},
-                           {"originator", spec->m_originator},
-                           {"id", spec->m_id}});
-
-    if (spec->hasGroups())
-    {
-      const auto &groups = spec->getGroups();
-      for (const auto &group : groups)
-      {
-        json limits = json::object();
-        for (const auto &limit : group.second)
-          limits[limit.first] = limit.second;
-        fields[group.first] = limits;
-      }
-    }
-    else
-    {
-      const auto group = spec->getLimits();
-      if (group)
-      {
-        for (const auto &limit : *group)
-          fields[limit.first] = limit.second;
-      }
-    }
-
-    json obj = json::object({{spec->getClass(), fields}});
-    return obj;
-  }
 
   inline void toJson(json &parent, const ComponentConfiguration *config)
   {
@@ -464,35 +378,17 @@ namespace mtconnect
     }
     else if (auto obj = dynamic_cast<const Specifications *>(config))
     {
-      json specifications = json::array();
-
-      for (const auto &spec : obj->getSpecifications())
-      {
-        json jspec = toJson(spec.get());
-        specifications.emplace_back(jspec);
-      }
-
-      parent["Specifications"] = specifications;
+      entity::JsonPrinter printer;
+      parent["Specifications"] = printer.print(obj->getEntity());
     }
     else if (auto obj = dynamic_cast<const CoordinateSystems *>(config))
     {
-      json systems = json::array();
-
-      for (const auto &system : obj->getCoordinateSystems())
-      {
-        json jsystem = json::object({{"CoordinateSystem", toJson(*system.get())}});
-        systems.emplace_back(jsystem);
-      }
-
-      parent["CoordinateSystems"] = systems;
+      entity::JsonPrinter printer;
+      parent["CoordinateSystems"] = printer.print(obj->getEntity());
     }
     else if (auto obj = dynamic_cast<const ExtendedComponentConfiguration *>(config))
     {
       parent["ExtendedConfiguration"] = obj->getContent();
-    }
-    else if (auto obj = dynamic_cast<const GeometricConfiguration *>(config))
-    {
-      parent[obj->klass()] = toJson(*obj);
     }
   }
 

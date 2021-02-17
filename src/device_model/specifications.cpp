@@ -15,54 +15,101 @@
 //    limitations under the License.
 //
 
+#include "entity.hpp"
 #include "specifications.hpp"
 
-#include <dlib/logger.h>
-
-#include <utility>
+#include <sstream>
 
 using namespace std;
 
 namespace mtconnect
 {
-  static dlib::logger g_logger("configuration.specification");
-  static map<string, set<string>> g_groups(
-      {{"Limits",
-        {"Maximum", "Minimum", "UpperLimit", "LowerLimit", "UpperWarning", "LowerWarning",
-         "Nominal"}},
-       {"SpecificationLimits", {"UpperLimit", "LowerLimit", "Nominal"}},
-       {"ControlLimits", {"UpperLimit", "LowerLimit", "UpperWarning", "LowerWarning", "Nominal"}},
-       {"AlarmLimits", {"UpperLimit", "LowerLimit", "UpperWarning", "LowerWarning"}}});
+  using namespace entity;
 
-  static map<string, set<string>> g_specifications(
-      {{"Specification", {"Limits"}},
-       {"ProcessSpecification", {"SpecificationLimits", "ControlLimits", "AlarmLimits"}}});
-
-  bool Specification::addLimitForGroup(const std::string &group, const std::string &limit,
-                                       double value)
+  FactoryPtr Specifications::getFactory()
   {
-    if (g_specifications.count(m_class) < 1)
-    {
-      g_logger << dlib::LWARN << "Invalid specification class: " << m_class;
-      return false;
-    }
+    auto maximum = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
+    auto minimum = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
+    auto nominal = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
+    auto upperLimit = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
+    auto upperWarning = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
+    auto lowerWarning = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
+    auto lowerLimit = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
+    
+    auto abstractSpecification = make_shared<Factory>(Requirements{
+        Requirement("id", true),
+        Requirement("type", true),
+        Requirement("originator", ControlledVocab{"MANUFACTURER", "USER"}, false),
+        Requirement("subType", false),
+        Requirement("name", false),
+        Requirement("dataItemIdRef", false),
+        Requirement("compositionIdRef", false),
+        Requirement("coordinateSystemIdRef", false),
+        Requirement("units", false),
+    });
 
-    const auto &spec = g_specifications[m_class];
-    if (spec.count(group) < 1)
-    {
-      g_logger << dlib::LWARN << "Invalid group " << group
-               << " for specification class: " << m_class;
-      return false;
-    }
+    auto controlLimits = make_shared<Factory>(Requirements{
+        Requirement("UpperLimit", ENTITY, upperLimit, false),
+        Requirement("UpperWarning", ENTITY, upperWarning, false),
+        Requirement("Nominal", ENTITY, nominal, false),
+        Requirement("LowerWarning", ENTITY, lowerWarning, false),
+        Requirement("LowerLimit", ENTITY, lowerLimit, false)
+    });
 
-    if (g_groups[group].count(limit) < 1)
-    {
-      g_logger << dlib::LWARN << "Invalid limit " << limit << " for group " << group
-               << " for specification class: " << m_class;
-      return false;
-    }
+    auto alarmLimits = make_shared<Factory>(Requirements{
+        Requirement("UpperLimit", ENTITY, upperLimit, false),
+        Requirement("UpperWarning", ENTITY, upperWarning, false),
+        Requirement("LowerWarning", ENTITY, lowerWarning, false),
+        Requirement("LowerLimit", ENTITY, lowerLimit, false)
+    });
 
-    m_groups[group][limit] = value;
-    return true;
+    auto specificationLimits = make_shared<Factory>(Requirements{
+        Requirement("UpperLimit", ENTITY, upperLimit, false),
+        Requirement("Nominal", ENTITY, nominal, false),
+        Requirement("LowerLimit", ENTITY, lowerLimit, false)
+    });
+
+        
+    auto specification = make_shared<Factory>(*abstractSpecification);
+
+    specification->addRequirements({
+        Requirement("Maximum", ENTITY, maximum, false),
+        Requirement("Minimum", ENTITY, minimum, false),
+        Requirement("Nominal", ENTITY, nominal, false),
+        Requirement("UpperLimit", ENTITY, upperLimit, false),
+        Requirement("UpperWarning", ENTITY, upperWarning, false),
+        Requirement("LowerWarning", ENTITY, lowerWarning, false),
+        Requirement("LowerLimit", ENTITY, lowerLimit, false)});
+
+    auto processSpecification = make_shared<Factory>(*abstractSpecification);
+    
+    processSpecification->addRequirements({
+        Requirement("ControlLimits", ENTITY, controlLimits, false),
+        Requirement("AlarmLimits", ENTITY, alarmLimits, false),
+        Requirement("SpecificationLimits", ENTITY, specificationLimits, false)
+        });
+
+    auto specifications = make_shared<Factory>(Requirements{
+        Requirement("ProcessSpecification", ENTITY, processSpecification, 0,
+                    Requirement::Infinite),
+        Requirement("Specification", ENTITY, specification, 0, Requirement::Infinite)});
+
+    specifications->registerMatchers();
+
+    specifications->setMinListSize(1);
+
+    auto root = Specifications::getRoot();
+
+    root->addRequirements(Requirements{Requirement("Specifications", ENTITY_LIST, specifications, false)});
+
+    return root;
   }
+
+  FactoryPtr Specifications::getRoot()
+  {
+    static auto root = make_shared<Factory>();
+
+    return root;
+  }
+
 }  // namespace mtconnect

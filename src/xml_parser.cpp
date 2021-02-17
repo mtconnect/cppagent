@@ -955,92 +955,26 @@ namespace mtconnect
     return move(motion);
   }
 
-
-  template <class T>
-  unique_ptr<T> handleGeometricConfiguration(xmlNodePtr node)
-  {
-    unique_ptr<T> model = make_unique<T>();
-    model->m_attributes = getValidatedAttributes(node, model->properties());
-    if (!model->m_attributes.empty())
-    {
-      model->m_geometry = getGeometry(node, model->hasScale(), model->hasAxis());
-    }
-    else
-    {
-      g_logger << dlib::LWARN << "Skipping Geometric Definition";
-    }
-
-    if (model->hasDescription())
-    {
-      forEachElement(
-          node, {{"Description", [&model](xmlNodePtr n) { model->m_description = getCDATA(n); }}});
-    }
-
-    return model;
-  }
-
   unique_ptr<ComponentConfiguration> handleCoordinateSystems(xmlNodePtr node)
   {
+    entity::ErrorList errors;
+    auto new_entity = entity::XmlParser::parseXmlNode(CoordinateSystems::getFactory(), node, errors);
+
     unique_ptr<CoordinateSystems> systems = make_unique<CoordinateSystems>();
-
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      systems->addCoordinateSystem(handleGeometricConfiguration<CoordinateSystem>(child).release());
-    }
-
+    
+    systems->setEntity(new_entity);
+    
     return move(systems);
   }
 
   unique_ptr<ComponentConfiguration> handleSpecifications(xmlNodePtr node)
   {
+    entity::ErrorList errors;
+    auto new_entity = entity::XmlParser::parseXmlNode(Specifications::getFactory(), node, errors);
+
     unique_ptr<Specifications> specifications = make_unique<Specifications>();
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      auto attrs = getAttributes(child);
 
-      std::string klass((const char *)child->name);
-      if (klass == "Specification" || klass == "ProcessSpecification")
-      {
-        unique_ptr<Specification> spec{new Specification(klass)};
-
-        spec->m_id = attrs["id"];
-        spec->m_name = attrs["name"];
-        spec->m_type = attrs["type"];
-        spec->m_subType = attrs["subType"];
-        spec->m_units = attrs["units"];
-        spec->m_dataItemIdRef = attrs["dataItemIdRef"];
-        spec->m_compositionIdRef = attrs["compositionIdRef"];
-        spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
-        spec->m_originator = attrs["originator"];
-
-        for (xmlNodePtr limit = child->children; limit; limit = limit->next)
-        {
-          if (spec->hasGroups())
-          {
-            std::string group((const char *)limit->name);
-
-            for (xmlNodePtr val = limit->children; val; val = val->next)
-            {
-              std::string name((const char *)val->name);
-              std::string value(getCDATA(val));
-              spec->addLimitForGroup(group, name, stod(value));
-            }
-          }
-          else
-          {
-            std::string name((const char *)limit->name);
-            std::string value(getCDATA(limit));
-            spec->addLimit(name, stod(value));
-          }
-        }
-
-        specifications->addSpecification(spec);
-      }
-      else
-      {
-        g_logger << dlib::LWARN << "Bad Specifictation type " << klass << ", skipping";
-      }
-    }
+    specifications->setEntity(new_entity);
 
     return move(specifications);
   }

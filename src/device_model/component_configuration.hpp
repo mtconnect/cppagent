@@ -32,6 +32,8 @@ namespace mtconnect
   public:
     ComponentConfiguration() = default;
     virtual ~ComponentConfiguration() = default;
+
+
   };
 
   class ExtendedComponentConfiguration : public ComponentConfiguration
@@ -44,22 +46,5 @@ namespace mtconnect
 
   protected:
     std::string m_content;
-  };
-
-  class GeometricConfiguration : public ComponentConfiguration
-  {
-  public:
-    GeometricConfiguration() = default;
-    virtual ~GeometricConfiguration() = default;
-
-    virtual const std::map<std::string, bool> &properties() const = 0;
-    virtual const std::string &klass() const = 0;
-    virtual bool hasScale() const { return false; }
-    virtual bool hasAxis() const { return false; }
-    virtual bool hasDescription() const { return false; }
-
-    std::map<std::string, std::string> m_attributes;
-    std::optional<Geometry> m_geometry;
-    std::string m_description;
   };
 }  // namespace mtconnect

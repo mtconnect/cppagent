@@ -514,59 +514,18 @@ namespace mtconnect
   void printSpecifications(xmlTextWriterPtr writer, const Specifications *specs)
   {
     AutoElement ele(writer, "Specifications");
-    for (const auto &spec : specs->getSpecifications())
-    {
-      AutoElement ele(writer, spec->getClass());
-      addAttributes(writer,
-                    map<string, string>({{"type", spec->m_type},
-                                         {"subType", spec->m_subType},
-                                         {"units", spec->m_units},
-                                         {"name", spec->m_name},
-                                         {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
-                                         {"compositionIdRef", spec->m_compositionIdRef},
-                                         {"dataItemIdRef", spec->m_dataItemIdRef},
-                                         {"id", spec->m_id},
-                                         {"originator", spec->m_originator}}));
+    entity::XmlPrinter printer;
 
-      if (spec->hasGroups())
-      {
-        const auto &groups = spec->getGroups();
-        for (const auto &group : groups)
-        {
-          AutoElement ele(writer, group.first);
-          for (const auto &limit : group.second)
-            addSimpleElement(writer, limit.first, format(limit.second));
-        }
-      }
-      else
-      {
-        const auto group = spec->getLimits();
-        if (group)
-        {
-          for (const auto &limit : *group)
-            addSimpleElement(writer, limit.first, format(limit.second));
-        }
-      }
-    }
+    printer.print(writer, specs->getEntity(), {});
   }
 
-  void printGeometricConfiguration(xmlTextWriterPtr writer, const GeometricConfiguration &model)
-  {
-    AutoElement ele(writer, model.klass());
-    addAttributes(writer, model.m_attributes);
-    if (!model.m_description.empty())
-      addSimpleElement(writer, "Description", model.m_description);
-    if (model.m_geometry)
-      printGeometry(writer, *model.m_geometry);
-  }
 
   void printCoordinateSystems(xmlTextWriterPtr writer, const CoordinateSystems *systems)
   {
     AutoElement ele(writer, "CoordinateSystems");
-    for (const auto &system : systems->getCoordinateSystems())
-    {
-      printGeometricConfiguration(writer, *system);
-    }
+    entity::XmlPrinter printer;
+
+    printer.print(writer, systems->getEntity(), {});
   }
 
   void printConfiguration(xmlTextWriterPtr writer,
@@ -603,10 +562,6 @@ namespace mtconnect
       else if (auto conf = dynamic_cast<const Motion *>(c))
       {
         printMotion(writer, conf);
-      }
-      else if (auto conf = dynamic_cast<const GeometricConfiguration *>(c))
-      {
-        printGeometricConfiguration(writer, *conf);
       }
     }
   }
