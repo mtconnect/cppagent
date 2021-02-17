@@ -67,11 +67,11 @@ TEST_F(SolidModelTest, ParseDeviceSolidModel)
   ASSERT_EQ("/models/foo.stl", get<string>((*config)->getProperty("href")));
   ASSERT_EQ("machine", get<string>((*config)->getProperty("coordinateSystemIdRef")));
   
-  const auto scale = (*config)->get<entity::EntityPtr>("Scale");
+  auto scale = (*config)->getProperty("Scale");
 
-  ASSERT_EQ(2.0, get<std::vector<double>>(scale->getProperty("VALUE")).at(0));
-  ASSERT_EQ(3.0, get<std::vector<double>>(scale->getProperty("VALUE")).at(1));
-  ASSERT_EQ(4.0, get<std::vector<double>>(scale->getProperty("VALUE")).at(2));
+  ASSERT_EQ(2.0, get<std::vector<double>>(scale).at(0));
+  ASSERT_EQ(3.0, get<std::vector<double>>(scale).at(1));
+  ASSERT_EQ(4.0, get<std::vector<double>>(scale).at(2));
   
 }
 

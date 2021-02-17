@@ -28,21 +28,9 @@ namespace mtconnect
 
   FactoryPtr CoordinateSystems::getFactory()
   {
-    auto origin = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
-
-    auto translation = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
-
-    auto rotation = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
-
     auto transformation = make_shared<Factory>(Requirements{
-        Requirement("Translation", ENTITY, translation, false),
-        Requirement("Rotation", ENTITY, rotation, false)});
+        Requirement("Translation", VECTOR, 3, false),
+        Requirement("Rotation", VECTOR, 3, false)});
 
     auto coordinateSystem = make_shared<Factory>(Requirements{
         Requirement("id", true),
@@ -53,7 +41,7 @@ namespace mtconnect
             "type",
             ControlledVocab {"WORLD", "BASE", "OBJECT", "TASK", "MECHANICAL_INTERFACE", "TOOL", "MOBILE_PLATFORM", "MACHINE", "CAMERA"},
             true),
-        Requirement("Origin", ENTITY, origin, false),
+        Requirement("Origin", VECTOR, 3, false),
         Requirement("Transformation", ENTITY, transformation, false)});
 
     auto coordinateSystems = make_shared<Factory>(Requirements{

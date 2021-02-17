@@ -65,15 +65,15 @@ TEST_F(KinematicsTest, ParseZAxisKinematics)
   ASSERT_EQ("PRISMATIC", get<string>((*config)->getProperty("type")));
   ASSERT_EQ("DIRECT", get<string>((*config)->getProperty("actuation")));
   ASSERT_EQ("machine", get<string>((*config)->getProperty("coordinateSystemIdRef")));
-  ASSERT_EQ("The linears Z kinematics", get<string>((*config)->get<entity::EntityPtr>("Description")->getValue()));
+  ASSERT_EQ("The linears Z kinematics", get<string>((*config)->getProperty("Description")));
    
-  const auto origin = (*config)->get<entity::EntityPtr>("Origin")->getValue();
+  const auto origin = (*config)->getProperty("Origin");
 
   ASSERT_EQ(100.0, get<std::vector<double>>(origin).at(0));
   ASSERT_EQ(101.0, get<std::vector<double>>(origin).at(1));
   ASSERT_EQ(102.0, get<std::vector<double>>(origin).at(2));
 
-  const auto axis = (*config)->get<entity::EntityPtr>("Axis")->getValue();
+  const auto axis = (*config)->getProperty("Axis");
 
   ASSERT_EQ(0.0, get<std::vector<double>>(axis).at(0));
   ASSERT_EQ(0.1, get<std::vector<double>>(axis).at(1));

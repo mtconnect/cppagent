@@ -27,15 +27,7 @@ namespace mtconnect
   using namespace entity;
 
   FactoryPtr Specifications::getFactory()
-  {
-    auto maximum = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
-    auto minimum = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
-    auto nominal = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
-    auto upperLimit = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
-    auto upperWarning = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
-    auto lowerWarning = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
-    auto lowerLimit = make_shared<Factory>(Requirements{Requirement("VALUE", DOUBLE, true)});
-    
+  {    
     auto abstractSpecification = make_shared<Factory>(Requirements{
         Requirement("id", true),
         Requirement("type", true),
@@ -49,37 +41,39 @@ namespace mtconnect
     });
 
     auto controlLimits = make_shared<Factory>(Requirements{
-        Requirement("UpperLimit", ENTITY, upperLimit, false),
-        Requirement("UpperWarning", ENTITY, upperWarning, false),
-        Requirement("Nominal", ENTITY, nominal, false),
-        Requirement("LowerWarning", ENTITY, lowerWarning, false),
-        Requirement("LowerLimit", ENTITY, lowerLimit, false)
+        Requirement("UpperLimit", DOUBLE, false),
+        Requirement("UpperWarning", DOUBLE, false),
+        Requirement("Nominal", DOUBLE, false),
+        Requirement("LowerWarning", DOUBLE, false),
+        Requirement("LowerLimit", DOUBLE, false)
     });
 
     auto alarmLimits = make_shared<Factory>(Requirements{
-        Requirement("UpperLimit", ENTITY, upperLimit, false),
-        Requirement("UpperWarning", ENTITY, upperWarning, false),
-        Requirement("LowerWarning", ENTITY, lowerWarning, false),
-        Requirement("LowerLimit", ENTITY, lowerLimit, false)
+        Requirement("UpperLimit", DOUBLE, false),
+        Requirement("UpperWarning", DOUBLE, false),
+        Requirement("LowerWarning", DOUBLE, false),
+        Requirement("LowerLimit", DOUBLE, false)
     });
 
     auto specificationLimits = make_shared<Factory>(Requirements{
-        Requirement("UpperLimit", ENTITY, upperLimit, false),
-        Requirement("Nominal", ENTITY, nominal, false),
-        Requirement("LowerLimit", ENTITY, lowerLimit, false)
+        Requirement("UpperLimit", DOUBLE, false),
+        Requirement("Nominal", DOUBLE, false),
+        Requirement("LowerLimit", DOUBLE, false)
     });
 
         
     auto specification = make_shared<Factory>(*abstractSpecification);
 
     specification->addRequirements({
-        Requirement("Maximum", ENTITY, maximum, false),
-        Requirement("Minimum", ENTITY, minimum, false),
-        Requirement("Nominal", ENTITY, nominal, false),
-        Requirement("UpperLimit", ENTITY, upperLimit, false),
-        Requirement("UpperWarning", ENTITY, upperWarning, false),
-        Requirement("LowerWarning", ENTITY, lowerWarning, false),
-        Requirement("LowerLimit", ENTITY, lowerLimit, false)});
+        Requirement("Maximum", DOUBLE, false),
+        Requirement("Minimum", DOUBLE, false),
+        Requirement("Nominal", DOUBLE, false),
+        Requirement("UpperLimit", DOUBLE, false),
+        Requirement("UpperWarning", DOUBLE, false),
+        Requirement("Nominal", DOUBLE, false),
+        Requirement("LowerWarning", DOUBLE, false),
+        Requirement("LowerLimit", DOUBLE, false)
+    });
 
     auto processSpecification = make_shared<Factory>(*abstractSpecification);
     

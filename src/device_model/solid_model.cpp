@@ -28,23 +28,9 @@ namespace mtconnect
 
   FactoryPtr SolidModel::getFactory()
   {
-    auto translation = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
-
-    auto rotation = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
-
     auto transformation = make_shared<Factory>(Requirements{
-        Requirement("Translation", ENTITY, translation, false),
-        Requirement("Rotation", ENTITY, rotation, false)
-    });
- 
-    transformation->registerMatchers();
-
-    auto scale = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
+        Requirement("Translation", VECTOR, 3, false),
+        Requirement("Rotation", VECTOR, 3, false)
     });
 
     auto solidModel = make_shared<Factory>(Requirements{
@@ -55,7 +41,7 @@ namespace mtconnect
         Requirement("mediaType", ControlledVocab {"STEP", "STL", "GDML", "OBJ", "COLLADA", "IGES", "3DS", "ACIS", "X_T"}, true),
         Requirement("coordinateSystemIdRef", false),
         Requirement("Transformation", ENTITY, transformation, false),
-        Requirement("Scale", ENTITY, scale, false)
+        Requirement("Scale", VECTOR, 3, false)
     });
 
     solidModel->registerMatchers();

@@ -71,7 +71,7 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("WORLD", (*it)->get<string>("type"));
   EXPECT_EQ("worldy", (*it)->get<string>("name"));
 
-  const auto origin = (*it)->get<entity::EntityPtr>("Origin")->getValue();
+  const auto origin = (*it)->getProperty("Origin");
 
   ASSERT_EQ(101, get<std::vector<double>>(origin).at(0));
   ASSERT_EQ(102, get<std::vector<double>>(origin).at(1));
@@ -87,8 +87,8 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 
   const auto transformation = (*it)->get<entity::EntityPtr>("Transformation");
 
-  auto translation = transformation->get<entity::EntityPtr>("Translation")->getValue();
-  auto rotation = transformation->get<entity::EntityPtr>("Rotation")->getValue();
+  auto translation = transformation->getProperty("Translation");
+  auto rotation = transformation->getProperty("Rotation");
 
   ASSERT_EQ(10, get<std::vector<double>>(translation).at(0));
   ASSERT_EQ(10, get<std::vector<double>>(translation).at(1));

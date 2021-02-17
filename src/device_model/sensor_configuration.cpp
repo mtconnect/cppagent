@@ -28,33 +28,13 @@ namespace mtconnect
 
   FactoryPtr SensorConfiguration::getFactory()
   {
-    auto firmwareVersion = make_shared<Factory>(Requirements{
-        Requirement("VALUE", true),
-    });
-
-    auto calibrationDate = make_shared<Factory>(Requirements{
-        Requirement("VALUE", true),
-    });
-
-    auto nextCalibrationDate = make_shared<Factory>(Requirements{
-        Requirement("VALUE", true),
-    });
-
-    auto calibrationInitials = make_shared<Factory>(Requirements{
-        Requirement("VALUE", true),
-    });
-
-    auto description = make_shared<Factory>(Requirements{
-        Requirement("VALUE", true),
-    });
-
     auto channel = make_shared<Factory>(Requirements{
         Requirement("number", true),
         Requirement("name", false),
-        Requirement("Description", ENTITY, description, false),
-        Requirement("CalibrationDate", ENTITY, calibrationDate, false),
-        Requirement("NextCalibrationDate", ENTITY, nextCalibrationDate, false),
-        Requirement("CalibrationInitials", ENTITY, calibrationInitials, false),
+        Requirement("Description", false),
+        Requirement("CalibrationDate", false),
+        Requirement("NextCalibrationDate", false),
+        Requirement("CalibrationInitials", false),
     });
 
     auto channels = make_shared<Factory>(Requirements{
@@ -62,10 +42,10 @@ namespace mtconnect
     });
     
     auto sensorConfiguration = make_shared<Factory>(Requirements{
-        Requirement("FirmwareVersion", ENTITY, firmwareVersion, true),
-        Requirement("CalibrationDate", ENTITY, calibrationDate, false),
-        Requirement("NextCalibrationDate", ENTITY, nextCalibrationDate, false),
-        Requirement("CalibrationInitials", ENTITY, calibrationInitials, false),
+        Requirement("FirmwareVersion", true),
+        Requirement("CalibrationDate", false),
+        Requirement("NextCalibrationDate", false),
+        Requirement("CalibrationInitials", false),
         Requirement("Channels", ENTITY_LIST, channels, false)
      });
     

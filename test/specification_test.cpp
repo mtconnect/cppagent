@@ -78,9 +78,9 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("c1", (*it)->get<string>("dataItemIdRef"));
   EXPECT_EQ("Specification", (*it)->getName());
 
-  EXPECT_EQ(10000.0, get<double>((*it)->get<entity::EntityPtr>("Maximum")->getProperty("VALUE")));
-  EXPECT_EQ(100.0, get<double>((*it)->get<entity::EntityPtr>("Minimum")->getProperty("VALUE")));
-  EXPECT_EQ(1000.0, get<double>((*it)->get<entity::EntityPtr>("Nominal")->getProperty("VALUE")));
+  EXPECT_EQ(10000.0, get<double>((*it)->getProperty("Maximum")));
+  EXPECT_EQ(100.0, get<double>((*it)->getProperty("Minimum")));
+  EXPECT_EQ(1000.0, get<double>((*it)->getProperty("Nominal")));
 }
 
 /*

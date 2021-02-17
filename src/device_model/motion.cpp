@@ -28,31 +28,9 @@ namespace mtconnect
 
   FactoryPtr Motion::getFactory()
   {
-    auto translation = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
-
-    auto rotation = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
-
     auto transformation =
-        make_shared<Factory>(Requirements{Requirement("Translation", ENTITY, translation, false),
-                                          Requirement("Rotation", ENTITY, rotation, false)});
-
-    transformation->registerMatchers();
-
-    auto description = make_shared<Factory>(Requirements{
-        Requirement("VALUE", true),
-    });
-
-    auto axis = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
-
-    auto origin = make_shared<Factory>(Requirements{
-        Requirement("VALUE", VECTOR, 3, true),
-    });
+        make_shared<Factory>(Requirements{Requirement("Translation", VECTOR, 3, false),
+                                          Requirement("Rotation", VECTOR, 3, false)});
 
     auto motion = make_shared<Factory>(Requirements{
         Requirement("id", true),
@@ -66,9 +44,9 @@ namespace mtconnect
             "actuation",
             ControlledVocab{"DIRECT", "VIRTUAL", "NONE"},
             true),
-        Requirement("Description", ENTITY, description, false),
-        Requirement("Axis", ENTITY, axis, true),
-        Requirement("Origin", ENTITY, origin, false),
+        Requirement("Description", false),
+        Requirement("Axis", VECTOR, 3, true),
+        Requirement("Origin", VECTOR, 3, false),
         Requirement("Transformation", ENTITY, transformation, false)
         });
 
