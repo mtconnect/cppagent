@@ -17,7 +17,7 @@
 
 #pragma once
 #include "component.hpp"
-#include "data_item.hpp"
+#include "data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "utilities.hpp"
 
@@ -38,7 +38,7 @@ namespace mtconnect
 
     void addAdapter(const adapter::Adapter *adapter);
 
-    DataItem *getConnectionStatus(const std::string &adapter);
+    DataItemPtr getConnectionStatus(const std::string &adapter);
 
   protected:
     void addRequiredDataItems();

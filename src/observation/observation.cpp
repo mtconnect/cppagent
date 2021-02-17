@@ -17,7 +17,7 @@
 
 #include "observation.hpp"
 
-#include "device_model/data_item.hpp"
+#include "device_model/data_item/data_item.hpp"
 #include "entity/factory.hpp"
 
 #include <dlib/logger.h>
@@ -88,21 +88,11 @@ namespace mtconnect
       return factory;
     }
 
-    ObservationPtr Observation::make(const DataItem *dataItem, const Properties &incompingProps,
+    ObservationPtr Observation::make(const DataItemPtr dataItem, const Properties &incompingProps,
                                      const Timestamp &timestamp, entity::ErrorList &errors)
     {
       auto props = entity::Properties(incompingProps);
-      props.insert_or_assign("dataItemId", dataItem->getId());
-      if (!dataItem->getName().empty())
-        props.insert_or_assign("name", dataItem->getName());
-      if (!dataItem->getCompositionId().empty())
-        props.insert_or_assign("compositionId", dataItem->getCompositionId());
-      if (!dataItem->getSubType().empty())
-        props.insert_or_assign("subType", dataItem->getSubType());
-      if (!dataItem->getStatistic().empty())
-        props.insert_or_assign("statistic", dataItem->getStatistic());
-      if (dataItem->isCondition())
-        props.insert_or_assign("type", dataItem->getType());
+      setProperties(dataItem, props);
       props.insert_or_assign("timestamp", timestamp);
 
       bool unavailable{false};
@@ -139,15 +129,15 @@ namespace mtconnect
           unavailable = true;
         }
       }
-      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedElementName();
-      if (dataItem->is3D())
+      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedObservationType();
+      if (dataItem->isThreeSpace())
         key += ":3D";
 
       auto ent = getFactory()->create(key, props, errors);
       if (!ent)
       {
         g_logger << dlib::LWARN
-                 << "Could not parse properties for data item: " << dataItem->getName();
+                 << "Could not parse properties for data item: " << dataItem->getId();
         for (auto &e : errors)
         {
           g_logger << dlib::LWARN << "   Error: " << e->what();
@@ -161,18 +151,12 @@ namespace mtconnect
 
       if (unavailable)
         obs->makeUnavailable();
-      else if (dataItem->isSample())
-      {
-        if (dataItem->conversionRequired())
-        {
-          auto &value = obs->m_properties["VALUE"];
-          dataItem->convertValue(value);
-        }
-      }
+      
       if (!dataItem->isCondition())
         obs->setEntityName();
       else if (!unavailable)
         dynamic_pointer_cast<Condition>(obs)->setLevel(level);
+      
       return obs;
     }
 

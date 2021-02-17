@@ -17,7 +17,7 @@
 
 #pragma once
 #include "component.hpp"
-#include "data_item.hpp"
+#include "data_item/data_item.hpp"
 #include "utilities.hpp"
 #include <unordered_map>
 
@@ -41,8 +41,8 @@ namespace mtconnect
     void setOptions(const ConfigOptions &options);
 
     // Add/get items to/from the device name to data item mapping
-    void addDeviceDataItem(DataItem *dataItem);
-    DataItem *getDeviceDataItem(const std::string &name) const;
+    void addDeviceDataItem(DataItemPtr dataItem);
+    DataItemPtr getDeviceDataItem(const std::string &name) const;
     void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
     Component *getComponentById(const std::string &aId) const
     {
@@ -58,12 +58,12 @@ namespace mtconnect
     }
 
     // Return the mapping of Device to data items
-    const std::unordered_map<std::string, DataItem *> &getDeviceDataItems() const
+    const auto &getDeviceDataItems() const
     {
       return m_deviceDataItemsById;
     }
 
-    void addDataItem(DataItem *dataItem) override;
+    void addDataItem(DataItemPtr dataItem) override;
 
     std::vector<adapter::Adapter *> m_adapters;
     bool m_preserveUuid;
@@ -72,23 +72,23 @@ namespace mtconnect
     const std::string &getMTConnectVersion() const { return m_mtconnectVersion; }
 
     // Cached data items
-    DataItem *getAvailability() const { return m_availability; }
-    DataItem *getAssetChanged() const { return m_assetChanged; }
-    DataItem *getAssetRemoved() const { return m_assetRemoved; }
+    DataItemPtr getAvailability() const { return m_availability; }
+    DataItemPtr getAssetChanged() const { return m_assetChanged; }
+    DataItemPtr getAssetRemoved() const { return m_assetRemoved; }
 
   protected:
     // The iso841Class of the device
     unsigned int m_iso841Class;
     std::string m_mtconnectVersion;
 
-    DataItem *m_availability;
-    DataItem *m_assetChanged;
-    DataItem *m_assetRemoved;
+    DataItemPtr m_availability;
+    DataItemPtr m_assetChanged;
+    DataItemPtr m_assetRemoved;
 
     // Mapping of device names to data items
-    std::unordered_map<std::string, DataItem *> m_deviceDataItemsByName;
-    std::unordered_map<std::string, DataItem *> m_deviceDataItemsById;
-    std::unordered_map<std::string, DataItem *> m_deviceDataItemsBySource;
+    std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsByName;
+    std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsById;
+    std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsBySource;
     std::unordered_map<std::string, Component *> m_componentsById;
   };
 }  // namespace mtconnect

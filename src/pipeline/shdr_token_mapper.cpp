@@ -89,12 +89,12 @@ namespace mtconnect
     static entity::Requirements s_event{{"VALUE", false}};
     static entity::Requirements s_dataSet{{"VALUE", entity::DATA_SET, false}};
 
-    static inline std::string extractResetTrigger(const DataItem *dataItem, const string &token,
+    static inline std::string extractResetTrigger(const DataItemPtr dataItem, const string &token,
                                                   Properties &properties)
     {
       size_t pos;
       // Check for reset triggered
-      if ((dataItem->hasResetTrigger() || dataItem->isTable() || dataItem->isDataSet()) &&
+      if ((dataItem->hasProperty("ResetTrigger") || dataItem->isTable() || dataItem->isDataSet()) &&
           (pos = token.find(':')) != string::npos)
       {
         string trig, value;
@@ -119,7 +119,7 @@ namespace mtconnect
       }
     }
 
-    inline ObservationPtr zipProperties(const DataItem *dataItem, const Timestamp &timestamp,
+    inline ObservationPtr zipProperties(const DataItemPtr dataItem, const Timestamp &timestamp,
                                         const entity::Requirements &reqs,
                                         TokenList::const_iterator &token,
                                         const TokenList::const_iterator &end, ErrorList &errors)
@@ -195,7 +195,7 @@ namespace mtconnect
       {
         if (dataItem->isTimeSeries())
           reqs = &s_timeseries;
-        else if (dataItem->is3D())
+        else if (dataItem->isThreeSpace())
           reqs = &s_threeSpaceSample;
         else
           reqs = &s_sample;
@@ -221,7 +221,7 @@ namespace mtconnect
       if (reqs != nullptr)
       {
         auto obs = zipProperties(dataItem, timestamp, *reqs, token, end, errors);
-        if (dataItem->hasConstantValue())
+        if (dataItem->getConstantValue())
           return nullptr;
         if (obs && source)
           dataItem->setDataSource(*source);

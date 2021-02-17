@@ -19,10 +19,12 @@
 
 namespace mtconnect
 {
-  class DataItem;
+  namespace device_model { namespace data_item { class DataItem; }}
   class Device;
   class Asset;
   using AssetPtr = std::shared_ptr<Asset>;
+  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+  
   namespace observation
   {
     class Observation;
@@ -42,10 +44,10 @@ namespace mtconnect
       PipelineContract() = default;
       virtual ~PipelineContract() = default;
 
-      using EachDataItem = std::function<void(const DataItem *di)>;
+      using EachDataItem = std::function<void(const DataItemPtr di)>;
 
       virtual Device *findDevice(const std::string &device) = 0;
-      virtual DataItem *findDataItem(const std::string &device, const std::string &name) = 0;
+      virtual DataItemPtr findDataItem(const std::string &device, const std::string &name) = 0;
       virtual void eachDataItem(EachDataItem fun) = 0;
       virtual void deliverObservation(observation::ObservationPtr) = 0;
       virtual void deliverAsset(AssetPtr) = 0;

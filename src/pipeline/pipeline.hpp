@@ -26,7 +26,6 @@ namespace mtconnect
 {
   class Agent;
   class Device;
-  class DataItem;
   class Asset;
   using AssetPtr = std::shared_ptr<Asset>;
 

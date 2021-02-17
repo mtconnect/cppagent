@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "observation/observation.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/transform.hpp"
 
@@ -25,7 +24,6 @@ namespace mtconnect
 {
   class Agent;
   class Device;
-  class DataItem;
   class Asset;
   using AssetPtr = std::shared_ptr<Asset>;
 

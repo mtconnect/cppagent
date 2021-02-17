@@ -31,12 +31,17 @@ namespace mtconnect
         static entity::FactoryPtr getFactory()
         {
           using namespace mtconnect::entity;
-
-          static auto source = std::make_shared<Factory>(Requirements{{"Minimum", DOUBLE, false},
-                                                                      {"Maximum", DOUBLE, false},
-                                                                      {"Nominal", DOUBLE, false},
-                                                                      {"Value", false}});
-          return source;
+          static FactoryPtr factory;
+          if (!factory)
+          {
+            auto value = std::make_shared<Factory>(Requirements{{"VALUE", true}});
+            value->setList(true);
+            factory = std::make_shared<Factory>(Requirements{{"Minimum", DOUBLE, false},
+              {"Maximum", DOUBLE, false},
+              {"Nominal", DOUBLE, false}});
+            factory->registerFactory("Value", value);
+          }
+          return factory;
         }
       };
     }  // namespace data_item

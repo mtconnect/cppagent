@@ -41,6 +41,7 @@ namespace mtconnect
         if (sample)
         {
           auto di = sample->getDataItem();
+#if 0
           if (di->conversionRequired())
           {
             auto ns = sample->copy();
@@ -49,6 +50,7 @@ namespace mtconnect
 
             return next(ns);
           }
+#endif
         }
         return next(entity);
       }

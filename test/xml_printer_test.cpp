@@ -21,7 +21,7 @@
 
 #include "assets/asset.hpp"
 #include "observation/checkpoint.hpp"
-#include "device_model/data_item.hpp"
+#include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "utilities.hpp"
 #include "observation/observation.hpp"

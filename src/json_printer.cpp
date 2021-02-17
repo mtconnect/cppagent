@@ -157,28 +157,6 @@ namespace mtconnect
     return doc;
   }
 
-  static inline json toJson(const set<CellDefinition> &definitions)
-  {
-    json entries = json::object();
-
-    for (const auto &entry : definitions)
-    {
-      json e = json::object();
-      addAttributes(e, {{"Description", entry.m_description},
-                        {"units", entry.m_units},
-                        {"type", entry.m_type},
-                        {"keyType", entry.m_keyType},
-                        {"subType", entry.m_subType}});
-
-      if (!entry.m_key.empty())
-        entries[entry.m_key] = e;
-      else
-        entries["."] = e;
-    }
-
-    return entries;
-  }
-
   std::string JsonPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const ProtoErrorList &list) const
   {
@@ -199,124 +177,10 @@ namespace mtconnect
     return print(doc, m_pretty);
   }
 
-  static inline json toJson(const DataItemDefinition &definition)
+  static inline json toJson(DataItemPtr item)
   {
-    json obj = json::object();
-    if (!definition.m_description.empty())
-      obj["Description"] = definition.m_description;
-
-    if (!definition.m_entries.empty())
-    {
-      json entries = json::object();
-      for (const auto &entry : definition.m_entries)
-      {
-        json e = json::object();
-        addAttributes(e, {{"Description", entry.m_description},
-                          {"units", entry.m_units},
-                          {"type", entry.m_type},
-                          {"keyType", entry.m_keyType},
-                          {"subType", entry.m_subType}});
-
-        if (!entry.m_cells.empty())
-        {
-          e["CellDefinitions"] = toJson(entry.m_cells);
-        }
-
-        if (!entry.m_key.empty())
-          entries[entry.m_key] = e;
-        else
-          entries["."] = e;
-      }
-
-      obj["EntryDefinitions"] = entries;
-    }
-
-    if (!definition.m_cells.empty())
-    {
-      obj["CellDefinitions"] = toJson(definition.m_cells);
-    }
-
+    json obj;
     return obj;
-  }
-
-  static inline json toJson(const list<DataItem::Relationship> &relations)
-  {
-    json array = json::array();
-    for (const auto &rel : relations)
-    {
-      json obj = json::object();
-      add(obj, "name", rel.m_name);
-      obj["type"] = rel.m_type;
-      obj["idRef"] = rel.m_idRef;
-
-      array.emplace_back(json::object({{rel.m_relation, obj}}));
-    }
-
-    return array;
-  }
-
-  static inline json toJson(DataItem *item)
-  {
-    json obj = json::object();
-    addAttributes(obj, item->getAttributes());
-
-    // Data Item Source
-    json source = json::object();
-    addText(source, item->getSource());
-    add(source, "dataItemId", item->getSourceDataItemId());
-    add(source, "componentId", item->getSourceComponentId());
-    add(source, "compositionId", item->getSourceCompositionId());
-
-    if (source.begin() != source.end())
-      obj["Source"] = source;
-
-    // Data Item Constraints
-    if (item->hasConstraints())
-    {
-      json constraints = json::object();
-      addDouble(constraints, "Maximum", item->getMaximum());
-      addDouble(constraints, "Minimum", item->getMinimum());
-
-      if (!item->getConstrainedValues().empty())
-      {
-        json values(item->getConstrainedValues());
-        constraints["value"] = values;
-      }
-
-      obj["Constraints"] = constraints;
-    }
-
-    if (item->hasMinimumDelta() or item->hasMinimumPeriod())
-    {
-      json filters = json::array();
-      if (item->hasMinimumDelta())
-        filters.emplace_back(json::object(
-            {{"Filter", {{"value", item->getFilterValue()}, {"type", "MINIMUM_DELTA"}}}}));
-      if (item->hasMinimumPeriod())
-        filters.emplace_back(
-            json::object({{"Filter", {{"value", item->getFilterPeriod()}, {"type", "PERIOD"}}}}));
-      obj["Filters"] = filters;
-    }
-
-    if (item->hasInitialValue())
-    {
-      char *ep;
-      obj["InitialValue"] = strtod(item->getInitialValue().c_str(), &ep);
-    }
-
-    if (item->hasDefinition())
-    {
-      obj["Definition"] = toJson(item->getDefinition());
-    }
-
-    if (item->getRelationships().size() > 0)
-    {
-      obj["Relationships"] = toJson(item->getRelationships());
-    }
-
-    json dataItem = json::object({{"DataItem", obj}});
-
-    return dataItem;
   }
 
   static inline json jsonReference(const Component::Reference &reference)
@@ -680,7 +544,7 @@ namespace mtconnect
     bool isComponent(const Component *component) { return m_component == component; }
 
     bool addObservation(const ObservationPtr &observation, const Component *component,
-                        const DataItem *dataItem)
+                        const DataItemPtr dataItem)
     {
       if (m_component == component)
       {
@@ -737,7 +601,7 @@ namespace mtconnect
     bool isDevice(const Device *device) { return device == m_device; }
 
     bool addObservation(const ObservationPtr &observation, const Device *device,
-                        const Component *component, const DataItem *dataItem)
+                        const Component *component, const DataItemPtr dataItem)
     {
       if (m_device == device)
       {

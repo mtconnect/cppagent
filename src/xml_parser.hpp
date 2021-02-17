@@ -19,7 +19,7 @@
 
 #include "assets/cutting_tool.hpp"
 #include "device_model/component.hpp"
-#include "device_model/data_item.hpp"
+#include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "device_model/relationships.hpp"
 #include "observation/checkpoint.hpp"
@@ -63,12 +63,6 @@ namespace mtconnect
     void loadDataItem(xmlNodePtr dataItems, Component *component, Device *device);
 
     // Load the data items
-    void loadDataItemDefinition(xmlNodePtr dataItems, DataItem *dataItem, Device *device);
-
-    void loadDefinition(xmlNodePtr definition, AbstractDefinition *def);
-    void loadDefinitions(xmlNodePtr definitions, std::set<EntryDefinition> &result);
-    void loadDefinitions(xmlNodePtr definitions, std::set<CellDefinition> &result);
-    void loadDataItemRelationships(xmlNodePtr relationships, DataItem *dataItem, Device *device);
     // Perform loading on children and set up relationships
     void handleChildren(xmlNodePtr components, Component *parent = nullptr,
                         Device *device = nullptr);

@@ -19,7 +19,7 @@
 
 #include "adapter_pipeline.hpp"
 #include "connector.hpp"
-#include "device_model/data_item.hpp"
+#include "device_model/data_item/data_item.hpp"
 #include "utilities.hpp"
 
 #include <date/tz.h>

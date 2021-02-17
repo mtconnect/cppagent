@@ -28,7 +28,6 @@
 namespace mtconnect
 {
   class Device;
-  class DataItem;
 
   namespace pipeline
   {

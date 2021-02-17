@@ -45,10 +45,11 @@ namespace mtconnect
   {
     class Adapter;
   }
-  class DataItem;
   class Device;
   class AgentDevice;
-
+  namespace device_model { namespace data_item { class DataItem; }};
+  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+  
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
   class Agent
@@ -116,9 +117,9 @@ namespace mtconnect
 
     // Add component events to the sliding buffer
     observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation);
-    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, entity::Properties props,
+    observation::SequenceNumber_t addToBuffer(DataItemPtr dataItem, entity::Properties props,
                                               std::optional<Timestamp> timestamp = std::nullopt);
-    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, const std::string &value,
+    observation::SequenceNumber_t addToBuffer(DataItemPtr dataItem, const std::string &value,
                                               std::optional<Timestamp> timestamp = std::nullopt);
 
     // Asset management
@@ -141,7 +142,7 @@ namespace mtconnect
     void receiveCommand(const std::string &device, const std::string &command,
                         const std::string &value, const std::string &source);
 
-    DataItem *getDataItemForDevice(const std::string &deviceName,
+    DataItemPtr getDataItemForDevice(const std::string &deviceName,
                                    const std::string &dataItemName) const
     {
       auto dev = findDeviceByUUIDorName(deviceName);
@@ -273,7 +274,7 @@ namespace mtconnect
     std::string devicesAndPath(const std::optional<std::string> &path, const Device *device) const;
 
     // Find data items by name/id
-    DataItem *getDataItemById(const std::string &id) const
+    DataItemPtr getDataItemById(const std::string &id) const
     {
       auto diPos = m_dataItemMap.find(id);
       if (diPos != m_dataItemMap.end())
@@ -316,7 +317,7 @@ namespace mtconnect
     std::list<Device *> m_devices;
     std::unordered_map<std::string, Device *> m_deviceNameMap;
     std::unordered_map<std::string, Device *> m_deviceUuidMap;
-    std::unordered_map<std::string, DataItem *> m_dataItemMap;
+    std::unordered_map<std::string, DataItemPtr> m_dataItemMap;
 
     // Loopback
     std::unique_ptr<AgentLoopbackPipeline> m_loopback;
@@ -340,7 +341,7 @@ namespace mtconnect
     {
       return m_agent->findDeviceByUUIDorName(device);
     }
-    DataItem *findDataItem(const std::string &device, const std::string &name) override
+    DataItemPtr findDataItem(const std::string &device, const std::string &name) override
     {
       Device *dev = m_agent->findDeviceByUUIDorName(device);
       if (dev != nullptr)

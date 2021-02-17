@@ -71,6 +71,7 @@ include(cmake/LibXML2.cmake)
 include(cmake/DLib.cmake)
 include(cmake/Date.cmake)
 include(cmake/json.cmake)
+include(cmake/Boost.cmake)
 
 # Add our projects
 add_subdirectory(agent_lib)

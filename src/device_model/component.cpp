@@ -19,7 +19,7 @@
 
 #include "agent.hpp"
 #include "composition.hpp"
-#include "data_item.hpp"
+#include "data_item/data_item.hpp"
 #include "device_model/device.hpp"
 
 #include <cstdlib>
@@ -74,8 +74,6 @@ namespace mtconnect
     for (auto &i : m_children)
       delete i;
     m_children.clear();
-    for (auto &i : m_dataItems)
-      delete i;
     m_dataItems.clear();
   }
 
@@ -119,7 +117,7 @@ namespace mtconnect
     return m_device;
   }
 
-  void Component::addDataItem(DataItem *dataItem)
+  void Component::addDataItem(DataItemPtr dataItem)
   {
     m_dataItems.emplace_back(dataItem);
     if (getDevice())

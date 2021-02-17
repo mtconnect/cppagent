@@ -37,7 +37,7 @@ namespace mtconnect
       {
         using namespace observation;
         static constexpr auto lambda = [](const Observation &o) {
-          return !o.getDataItem()->allowDups();
+          return !o.getDataItem()->isDiscrete();
         };
         m_guard =
             LambdaGuard<Observation, ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>>(

@@ -40,6 +40,7 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <unordered_map>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -365,6 +366,66 @@ namespace mtconnect
     time.append("Z");
     return time;
   }
+  
+  inline void capitalize(std::string::iterator start, std::string::iterator end)
+  {
+    using namespace std;
+
+    // Exceptions to the rule
+    const static std::unordered_map<std::string, std::string> exceptions = {
+        {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
+        {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+
+    const auto &w = exceptions.find(std::string(start, end));
+    if (w != exceptions.end())
+    {
+      copy(w->second.begin(), w->second.end(), start);
+    }
+    else
+    {
+      *start = ::toupper(*start);
+      start++;
+      transform(start, end, start, ::tolower);
+    }
+  }
+
+  inline std::string pascalize(const std::string &type,
+                               std::optional<std::string> &prefix)
+  {
+    using namespace std;
+    if (type.empty())
+      return "";
+
+    string camel;
+    auto colon = type.find(':');
+
+    if (colon != string::npos)
+    {
+      prefix = type.substr(0ul, colon);
+      camel = type.substr(colon + 1ul);
+    }
+    else
+      camel = type;
+
+    auto start = camel.begin();
+    decltype(start) end;
+
+    bool done;
+    do
+    {
+      end = find(start, camel.end(), '_');
+      capitalize(start, end);
+      done = end == camel.end();
+      if (!done)
+      {
+        camel.erase(end);
+        start = end;
+      }
+    } while (!done);
+
+    return camel;
+  }
+
 
 #ifdef _WINDOWS
 #include <io.h>

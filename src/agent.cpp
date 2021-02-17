@@ -48,6 +48,9 @@ using namespace mtconnect::observation;
 
 namespace mtconnect
 {
+  using namespace device_model;
+  using namespace data_item;
+  
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
@@ -221,8 +224,9 @@ namespace mtconnect
     if (!device->getAvailability())
     {
       // Create availability data item and add it to the device.
-      auto di = new DataItem(
-          {{"type", "AVAILABILITY"}, {"id", device->getId() + "_avail"}, {"category", "EVENT"}});
+      entity::ErrorList errors;
+      auto di = DataItem::make(
+          {{"type", "AVAILABILITY"s}, {"id", device->getId() + "_avail"}, {"category", "EVENT"s}}, errors);
       di->setComponent(*device);
       device->addDataItem(di);
       device->m_availabilityAdded = true;
@@ -234,10 +238,11 @@ namespace mtconnect
     ss >> major >> c >> minor;
     if (!device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
     {
+      entity::ErrorList errors;
       // Create asset change data item and add it to the device.
-      auto di = new DataItem({{"type", "ASSET_CHANGED"},
+      auto di = DataItem::make({{"type", "ASSET_CHANGED"s},
                               {"id", device->getId() + "_asset_chg"},
-                              {"category", "EVENT"}});
+                              {"category", "EVENT"s}}, errors);
       di->setComponent(*device);
       device->addDataItem(di);
     }
@@ -251,9 +256,10 @@ namespace mtconnect
     if (!device->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
     {
       // Create asset removed data item and add it to the device.
-      auto di = new DataItem({{"type", "ASSET_REMOVED"},
+      entity::ErrorList errors;
+      auto di = DataItem::make({{"type", "ASSET_REMOVED"},
                               {"id", device->getId() + "_asset_rem"},
-                              {"category", "EVENT"}});
+                              {"category", "EVENT"}}, errors);
       di->setComponent(*device);
       device->addDataItem(di);
     }
@@ -268,27 +274,27 @@ namespace mtconnect
     for (auto item : device->getDeviceDataItems())
     {
       auto d = item.second;
-      if (!d->isInitialized())
+      if (m_dataItemMap.count(d->getId()) > 0)
+      {
+        if (m_dataItemMap[d->getId()] != d)
+        {
+          g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
+                   << " for device: " << device->getName()
+                   << " and data item name: " << d->getId();
+          std::exit(1);
+        }
+      }
+      else
       {
         // Check for single valued constrained data items.
         const string *value = &g_unavailable;
         if (d->isCondition())
           value = &g_unavailable;
-        else if (d->hasConstantValue())
-          value = &(d->getConstrainedValues()[0]);
+        else if (d->getConstantValue())
+          value = &d->getConstantValue().value();
 
         addToBuffer(d, *value);
-        if (!m_dataItemMap.count(d->getId()))
-          m_dataItemMap[d->getId()] = d;
-        else
-        {
-          g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
-                   << " for device: " << device->getName()
-                   << " and data item name: " << d->getName();
-          std::exit(1);
-        }
-
-        d->setInitialized();
+        m_dataItemMap[d->getId()] = d;
       }
     }
   }
@@ -594,7 +600,7 @@ namespace mtconnect
         }
       };
 
-      m_server->addRouting({"PUT", "/{device}?time={string}", handler});
+      m_server->addRouting({"PUT", "/{device}", handler});
     }
   }
 
@@ -779,12 +785,8 @@ namespace mtconnect
           if (ptr)
           {
             const string *value = nullptr;
-            if (dataItem->hasConstraints())
-            {
-              const auto &values = dataItem->getConstrainedValues();
-              if (values.size() > 1 && !ptr->isUnavailable())
-                value = &g_unavailable;
-            }
+            if (dataItem->getConstantValue())
+              value = &dataItem->getConstantValue().value();
             else if (!ptr->isUnavailable())
               value = &g_unavailable;
 
@@ -840,7 +842,7 @@ namespace mtconnect
     std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
     auto dataItem = observation->getDataItem();
-    if (!dataItem->allowDups())
+    if (!dataItem->isDiscrete())
     {
       if (!observation->isUnavailable() && dataItem->isDataSet() &&
           !m_circularBuffer.getLatest().dataSetDifference(observation))
@@ -854,7 +856,7 @@ namespace mtconnect
     return seqNum;
   }
 
-  SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, entity::Properties props,
+  SequenceNumber_t Agent::addToBuffer(DataItemPtr dataItem, entity::Properties props,
                                       std::optional<Timestamp> timestamp)
   {
     entity::ErrorList errors;
@@ -881,7 +883,7 @@ namespace mtconnect
     return 0;
   }
 
-  SequenceNumber_t Agent::addToBuffer(DataItem *dataItem, const std::string &value,
+  SequenceNumber_t Agent::addToBuffer(DataItemPtr dataItem, const std::string &value,
                                       std::optional<Timestamp> timestamp)
   {
     if (dataItem->isCondition())
@@ -921,8 +923,7 @@ namespace mtconnect
     }
 
     auto old = m_assetBuffer.addAsset(asset);
-
-    DataItem *cdi = asset->isRemoved() ? device->getAssetRemoved() : device->getAssetChanged();
+    auto cdi = asset->isRemoved() ? device->getAssetRemoved() : device->getAssetChanged();
     if (cdi)
       addToBuffer(cdi, {{"assetType", asset->getType()}, {"VALUE", asset->getAssetId()}},
                   asset->getTimestamp());

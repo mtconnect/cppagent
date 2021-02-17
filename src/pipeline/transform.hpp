@@ -23,8 +23,8 @@
 
 namespace mtconnect
 {
-  class DataItem;
-
+  namespace device_model { namespace data_item { class DataItem; } }
+  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   namespace pipeline
   {
     // A transform takes an entity and transforms it to another
@@ -39,9 +39,9 @@ namespace mtconnect
     using TransformPtr = std::shared_ptr<Transform>;
     using TransformList = std::list<TransformPtr>;
 
-    using ApplyDataItem = std::function<void(const DataItem *di)>;
+    using ApplyDataItem = std::function<void(const DataItemPtr di)>;
     using EachDataItem = std::function<void(ApplyDataItem)>;
-    using FindDataItem = std::function<DataItem *(const std::string &, const std::string &)>;
+    using FindDataItem = std::function<DataItemPtr (const std::string &, const std::string &)>;
 
     class Transform : public std::enable_shared_from_this<Transform>
     {

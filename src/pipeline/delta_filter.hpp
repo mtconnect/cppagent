@@ -40,7 +40,7 @@ namespace mtconnect
       {
         using namespace observation;
         constexpr static auto lambda = [](const Sample &s) {
-          return s.getDataItem()->hasMinimumDelta();
+          return bool(s.getDataItem()->getMinimumDelta());
         };
         m_guard = LambdaGuard<Sample, ExactTypeGuard<Sample>>(lambda, RUN) ||
                   TypeGuard<Observation>(SKIP);
@@ -66,7 +66,7 @@ namespace mtconnect
           return next(entity);
         }
 
-        auto filter = di->getFilterValue();
+        auto filter = *di->getMinimumDelta();
         double value = o->getValue<double>();
         if (filterMinimumDelta(id, value, filter))
           return EntityPtr();

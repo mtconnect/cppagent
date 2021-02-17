@@ -40,7 +40,7 @@ namespace mtconnect
       {
         using namespace observation;
         constexpr static auto lambda = [](const Observation &s) {
-          return s.getDataItem()->hasMinimumPeriod();
+          return bool(s.getDataItem()->getMinimumPeriod());
         };
         m_guard = LambdaGuard<Observation, TypeGuard<Event, Sample>>(lambda, RUN) ||
                   TypeGuard<Observation>(SKIP);
@@ -65,7 +65,7 @@ namespace mtconnect
           return next(entity);
         }
 
-        auto minDuration = chrono::duration<double>(di->getFilterPeriod());
+        auto minDuration = chrono::duration<double>(*di->getMinimumPeriod());
         auto ts = o->getTimestamp();
         if (filterPeriod(id, ts, minDuration))
           return EntityPtr();

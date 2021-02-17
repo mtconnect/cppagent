@@ -654,7 +654,7 @@ namespace mtconnect
     {
       AutoElement ele(writer, "DataItems");
 
-      for (const auto data : datum)
+      for (const auto &data : datum)
         printDataItem(writer, data);
     }
 
@@ -728,133 +728,10 @@ namespace mtconnect
     }
   }
 
-  void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItem *dataItem) const
+  void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItemPtr dataItem) const
   {
-    AutoElement ele(writer, "DataItem");
-
-    addAttributes(writer, dataItem->getAttributes());
-
-    if (!dataItem->getSource().empty() || !dataItem->getSourceDataItemId().empty() ||
-        !dataItem->getSourceComponentId().empty() || !dataItem->getSourceCompositionId().empty())
-    {
-      addSimpleElement(writer, "Source", dataItem->getSource(),
-                       {{"dataItemId", dataItem->getSourceDataItemId()},
-                        {"componentId", dataItem->getSourceComponentId()},
-                        {"compositionId", dataItem->getSourceCompositionId()}});
-    }
-
-    if (dataItem->hasConstraints())
-    {
-      AutoElement ele(writer, "Constraints");
-
-      auto s = dataItem->getMaximum();
-
-      if (!s.empty())
-        addSimpleElement(writer, "Maximum", s);
-
-      s = dataItem->getMinimum();
-
-      if (!s.empty())
-        addSimpleElement(writer, "Minimum", s);
-
-      const auto &values = dataItem->getConstrainedValues();
-      for (const auto &value : values)
-        addSimpleElement(writer, "Value", value);
-    }
-
-    if (dataItem->hasMinimumDelta() || dataItem->hasMinimumPeriod())
-    {
-      AutoElement ele(writer, "Filters");
-      if (dataItem->hasMinimumDelta())
-      {
-        map<string, string> attributes;
-        auto value = format(dataItem->getFilterValue());
-        addSimpleElement(writer, "Filter", value, {{"type", "MINIMUM_DELTA"}});
-      }
-
-      if (dataItem->hasMinimumPeriod())
-      {
-        map<string, string> attributes;
-        auto value = format(dataItem->getFilterPeriod());
-        attributes["type"] = "PERIOD";
-        addSimpleElement(writer, "Filter", value, {{"type", "PERIOD"}});
-      }
-    }
-
-    if (dataItem->hasInitialValue())
-      addSimpleElement(writer, "InitialValue", dataItem->getInitialValue());
-
-    if (dataItem->hasResetTrigger())
-      addSimpleElement(writer, "ResetTrigger", dataItem->getResetTrigger());
-
-    if (dataItem->hasDefinition())
-      printDataItemDefinition(writer, dataItem->getDefinition());
-
-    printDataItemRelationships(writer, dataItem->getRelationships());
-  }
-
-  void XmlPrinter::printDataItemDefinition(xmlTextWriterPtr writer,
-                                           const DataItemDefinition &definition) const
-  {
-    AutoElement ele(writer, "Definition");
-
-    if (!definition.m_description.empty())
-      addSimpleElement(writer, "Description", definition.m_description);
-
-    if (!definition.m_entries.empty())
-    {
-      AutoElement ele(writer, "EntryDefinitions");
-      for (const auto &entry : definition.m_entries)
-      {
-        AutoElement ele(writer, "EntryDefinition");
-        addAttributes(writer, {{string("key"), entry.m_key},
-                               {string("keyType"), entry.m_keyType},
-                               {string("units"), entry.m_units},
-                               {string("type"), entry.m_type},
-                               {string("subType"), entry.m_subType}});
-        if (!entry.m_description.empty())
-          addSimpleElement(writer, "Description", entry.m_description);
-        printCellDefinitions(writer, entry.m_cells);
-      }
-    }
-
-    printCellDefinitions(writer, definition.m_cells);
-  }
-
-  void XmlPrinter::printCellDefinitions(xmlTextWriterPtr writer,
-                                        const std::set<CellDefinition> &definitions) const
-  {
-    if (!definitions.empty())
-    {
-      AutoElement ele(writer, "CellDefinitions");
-      for (const auto &entry : definitions)
-      {
-        AutoElement ele(writer, "CellDefinition");
-        addAttributes(writer, {{string("key"), entry.m_key},
-                               {string("keyType"), entry.m_keyType},
-                               {string("units"), entry.m_units},
-                               {string("type"), entry.m_type},
-                               {string("subType"), entry.m_subType}});
-        if (!entry.m_description.empty())
-          addSimpleElement(writer, "Description", entry.m_description);
-      }
-    }
-  }
-
-  void XmlPrinter::printDataItemRelationships(
-      xmlTextWriterPtr writer, const std::list<DataItem::Relationship> &relations) const
-  {
-    if (relations.size() > 0)
-    {
-      AutoElement ele(writer, "Relationships");
-      for (const auto &rel : relations)
-      {
-        addSimpleElement(writer, rel.m_relation, "",
-                         {{string("name"), rel.m_name},
-                          {string("type"), rel.m_type},
-                          {string("idRef"), rel.m_idRef}});
-      }
-    }
+    entity::XmlPrinter printer;
+    printer.print(writer, dataItem, m_deviceNsSet);
   }
 
   string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,

@@ -59,13 +59,13 @@ namespace mtconnect
   }
 
   // TODO: Clean up these initialization methods for data items
-  void Device::addDeviceDataItem(DataItem *dataItem)
+  void Device::addDeviceDataItem(DataItemPtr dataItem)
   {
-    if (!dataItem->getSource().empty())
-      m_deviceDataItemsBySource[dataItem->getSource()] = dataItem;
+    if (dataItem->getSource())
+      m_deviceDataItemsBySource[*dataItem->getSource()] = dataItem;
 
-    if (!dataItem->getName().empty())
-      m_deviceDataItemsByName[dataItem->getName()] = dataItem;
+    if (dataItem->getName())
+      m_deviceDataItemsByName[*dataItem->getName()] = dataItem;
 
     if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
     {
@@ -76,7 +76,7 @@ namespace mtconnect
       m_deviceDataItemsById[dataItem->getId()] = dataItem;
   }
 
-  void Device::addDataItem(DataItem *dataItem)
+  void Device::addDataItem(DataItemPtr dataItem)
   {
     Component::addDataItem(dataItem);
 
@@ -88,7 +88,7 @@ namespace mtconnect
       m_assetRemoved = dataItem;
   }
 
-  DataItem *Device::getDeviceDataItem(const std::string &name) const
+  DataItemPtr Device::getDeviceDataItem(const std::string &name) const
   {
     const auto sourcePos = m_deviceDataItemsBySource.find(name);
     if (sourcePos != m_deviceDataItemsBySource.end())

@@ -66,8 +66,6 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/composition.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/coordinate_systems.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/description.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/definitions.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/device.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/device.hpp"
@@ -79,6 +77,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/sensor_configuration.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/relationships.hpp"
 
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/data_item.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/data_item.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/source.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/constraints.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/filter.hpp"

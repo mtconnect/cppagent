@@ -30,10 +30,11 @@
 
 namespace mtconnect
 {
-  class DataItem;
+  namespace device_model { namespace data_item { class DataItem; } }
   class Device;
   class Agent;
-
+  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+  
   class Component
   {
   public:
@@ -57,7 +58,7 @@ namespace mtconnect
       ReferenceType m_type;
       std::string m_id;
       std::string m_name;
-      DataItem *m_dataItem;
+      DataItemPtr m_dataItem;
       Component *m_component;
     };
 
@@ -141,8 +142,8 @@ namespace mtconnect
     }
 
     // Add to/get the component's std::list of data items
-    virtual void addDataItem(DataItem *dataItem);
-    const std::list<DataItem *> &getDataItems() const { return m_dataItems; }
+    virtual void addDataItem(DataItemPtr dataItem);
+    const std::list<DataItemPtr> &getDataItems() const { return m_dataItems; }
 
     bool operator<(const Component &comp) const { return m_id < comp.getId(); }
     bool operator==(const Component &comp) const { return m_id == comp.getId(); }
@@ -192,7 +193,7 @@ namespace mtconnect
     std::list<Component *> m_children;
 
     // Keep Track of all the data items associated with this component
-    std::list<DataItem *> m_dataItems;
+    std::list<DataItemPtr> m_dataItems;
 
     // List of all the compositions
     std::list<std::unique_ptr<Composition>> m_compositions;
