@@ -34,12 +34,13 @@ namespace mtconnect
           static FactoryPtr factory;
           if (!factory)
           {
+            auto limit = std::make_shared<Factory>(Requirements{{"VALUE", DOUBLE, true}});
             auto value = std::make_shared<Factory>(Requirements{{"VALUE", true}});
-            value->setList(true);
-            factory = std::make_shared<Factory>(Requirements{{"Minimum", DOUBLE, false},
-              {"Maximum", DOUBLE, false},
-              {"Nominal", DOUBLE, false}});
-            factory->registerFactory("Value", value);
+            factory = std::make_shared<Factory>(Requirements{
+              {"Minimum", ENTITY, limit, 0, 1},
+              {"Maximum", ENTITY, limit, 0, 1},
+              {"Nominal", ENTITY, limit, 0, 1},
+              {"Value", ENTITY, value, 0, Requirement::Infinite}});
           }
           return factory;
         }

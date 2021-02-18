@@ -160,7 +160,7 @@ class AgentTestHelper
     return m_adapter;
   }
   
-  uint64_t addToBuffer(mtconnect::DataItem *di, const mtconnect::entity::Properties &shdr,
+  uint64_t addToBuffer(mtconnect::DataItemPtr di, const mtconnect::entity::Properties &shdr,
                        const mtconnect::Timestamp &time)
   {
     using namespace mtconnect;

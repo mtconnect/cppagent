@@ -91,6 +91,7 @@ namespace mtconnect
         const auto &getId() const { return m_id; }
         const auto &getName() const { return m_name; }
         const auto &getSource() const { return m_source; }
+        const auto &getPreferredName() const { return m_preferredName; }
         const auto &getPrefixedObservationType() const { return m_prefixedObservationType; }
         const auto &getObservationType() const { return m_observationType; }
         const auto &getObservationProperties() const { return m_observatonProperties; }

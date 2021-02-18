@@ -61,8 +61,8 @@ namespace mtconnect
             {"discrete", BOOL, false},
             {"representation", ControlledVocab{"VALUE", "TIME_SERIES", "DATA_SET", "TABLE", "DISCRETE"}, false},
             {"units", false}, {"nativeUnits", false},
-            {"sampleRate", false}, {"statistic", false},
-            {"nativeScale", false},
+            {"sampleRate", DOUBLE, false}, {"statistic", false},
+            {"nativeScale", DOUBLE, false},
             {"coordinateSystem", ControlledVocab{"MACHINE", "WORK"}, false},
             {"compositionId", false}, {"coordinateSystemId", false},
             {"significantDigits", INTEGER, false},
@@ -70,7 +70,7 @@ namespace mtconnect
             {"Source", ENTITY, source, false},
             {"Filters", ENTITY, filter, false},
             {"Definition", ENTITY, definition, false},
-            {"Constraints", ENTITY, constraints, false},
+            {"Constraints", ENTITY_LIST, constraints, false},
             {"Relationships", ENTITY, relationships, false},
             {"InitialValue", DOUBLE, false},
             {"ResetTrigger", false}
@@ -101,6 +101,9 @@ namespace mtconnect
         m_name = maybeGet<string>("name");
         auto type = get<string>("type");
         m_observationType = pascalize(type, m_prefix);
+        optional<string> pre;
+        if (auto rep = maybeGet<string>("representation"); rep && *rep != "VALUE")
+          m_observationType += pascalize(*rep, pre);
         if (m_prefix)
           m_prefixedObservationType = *m_prefix + ':' + m_observationType;
         
@@ -165,9 +168,11 @@ namespace mtconnect
         if (isCondition())
           m_observatonProperties.insert_or_assign("type", get<std::string>("type"));
         
-        if (hasProperty("Constraints"))
+        if (hasProperty("Constraints") && get<EntityList>("Constraints").size() == 1)
         {
-          m_constantValue = get<EntityPtr>("Constraints")->maybeGet<string>("Value");
+          auto &con = get<EntityList>("Constraints").front();
+          if (con->getName() == "Value")
+            m_constantValue = con->getValue<string>();
         }
         
         if (hasProperty("Filters"))
