@@ -488,6 +488,15 @@ namespace mtconnect
     printer.print(writer, configuration->getEntity(), {});
   }
 
+  void printComposition(xmlTextWriterPtr writer,
+                          const unique_ptr<Composition> &compositions)
+  {
+    AutoElement configEle(writer, "Compositions");
+    entity::XmlPrinter printer;
+
+    printer.print(writer, compositions->getEntity(), {});
+  }
+
   void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
                                     const char *name) const
   {
@@ -542,24 +551,9 @@ namespace mtconnect
 
     if (!component->getCompositions().empty())
     {
-      AutoElement ele(writer, "Compositions");
+      const auto &compositions = component->getCompositions();
+      printComposition(writer, compositions.front());
 
-      for (const auto &comp : component->getCompositions())
-      {
-        AutoElement ele2(writer, "Composition");
-
-        addAttributes(writer, comp->m_attributes);
-        const auto &desc = comp->getDescription();
-        if (desc)
-          addSimpleElement(writer, "Description", desc->m_body, desc->m_attributes);
-        
-        const auto &config = comp->getConfiguration();
-                
-        if (!config.empty())
-        {
-          printConfiguration(writer, config.front());
-        }
-      }
     }
 
     if (!component->getReferences().empty())

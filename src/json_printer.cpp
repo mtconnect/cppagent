@@ -359,31 +359,10 @@ namespace mtconnect
     parent["Configuration"] = printer.print(configuration->getEntity());
   }
 
-  static inline json toJson(const unique_ptr<Composition> &composition)
+  inline void toJson(json &parent, const unique_ptr<Composition> &composition)
   {
-    json obj = json::object();
-
-    addAttributes(obj, composition->m_attributes);
-    if (composition->getDescription())
-    {
-      json desc = json::object();
-      addAttributes(desc, composition->getDescription()->m_attributes);
-      addText(desc, composition->getDescription()->m_body);
-      obj["Description"] = desc;
-    }
-    
-    const auto &configurations = composition->getConfiguration();
-
-    if (!configurations.empty())
-    {
-      json cfg = json::object();
-      toJson(cfg, configurations.front());      
-      obj["Configuration"] = cfg["Configuration"];
-    }
-
-    json comp = json::object({{"Composition", obj}});
-
-    return comp;
+    entity::JsonPrinter printer;
+    parent["Compositions"] = printer.print(composition->getEntity());
   }
 
   static json toJson(Component *component)
@@ -406,9 +385,18 @@ namespace mtconnect
       toJson(obj, configurations.front());
       comp["Configuration"] = obj["Configuration"];
     }
+
+    const auto &compositions = component->getCompositions();
+
+    if (!compositions.empty())
+    {
+      json obj = json::object();
+      toJson(obj, compositions.front());
+      comp["Compositions"] = obj["Compositions"];
+    }
+
     toJson(comp, "DataItems", component->getDataItems());
     toJson(comp, "Components", component->getChildren());
-    toJson(comp, "Compositions", component->getCompositions());
     toJson(comp, "References", component->getReferences());
 
     json doc = json::object({{component->getClass(), comp}});

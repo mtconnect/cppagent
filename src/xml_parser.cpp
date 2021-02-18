@@ -63,6 +63,9 @@ namespace mtconnect
   template <class T>
   void handleConfiguration(xmlNodePtr node, T *parent);
 
+  template <class T>
+  void handleComposition(xmlNodePtr node, T *parent);
+
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
     va_list args;
@@ -292,21 +295,15 @@ namespace mtconnect
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
            {"References",
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-           {"Compositions",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
            {"DataItem", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItem(n, p, d); }},
            {"Reference", [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
            {"DataItemRef",
             [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
            {"ComponentRef",
             [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
-           {"Composition",
-            [this](xmlNodePtr n, Component *p, Device *d) {
-              auto c = handleComposition(n);
-              p->addComposition(c);
-            }},
            {"Description", [](xmlNodePtr n, Component *p,
                               Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
+           {"Compositions", [](xmlNodePtr n, Component *p, Device *d) { handleComposition(n, p); }},
            {"Configuration",
             [](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
   {
@@ -846,29 +843,20 @@ namespace mtconnect
                      [&dataItem](xmlNodePtr node) { addDataItemRelationship(node, dataItem); }}});
   }
 
-  unique_ptr<Composition> XmlParser::handleComposition(xmlNodePtr composition)
+ template <class T>
+  void handleComposition(xmlNodePtr node, T *parent)
   {
-    auto comp = make_unique<Composition>();
-    comp->m_attributes = getValidatedAttributes(composition, comp->properties());
-    if (!comp->m_attributes.empty())
-    {
-      forEachElement(composition, {{"Description",
-                                    [&comp](xmlNodePtr n) {
-                                      Description desc;
-                                      desc.m_attributes =
-                                          getValidatedAttributes(n, desc.properties());
-                                      desc.m_body = getCDATA(n);
-                                      comp->setDescription(desc);
-                                    }},
-                                   {"Configuration", [&comp](xmlNodePtr n) {
-                                      handleConfiguration(n, (Composition *)comp.get());
-                                    }}});
-    }
-    else
-    {
-      g_logger << dlib::LWARN << "Skipping Composition";
-    }
-    return comp;
+    entity::ErrorList errors;
+
+    auto compositions_factory = std::make_shared<entity::Factory>(entity::Requirements{
+        entity::Requirement("Compositions", entity::ENTITY_LIST, Composition::getFactory(), false)});
+
+    auto compositions_entity = entity::XmlParser::parseXmlNode(compositions_factory, node, errors);
+
+    unique_ptr<Composition> compositions = make_unique<Composition>();
+    compositions->setEntity(compositions_entity);
+
+    parent->addComposition(compositions);
   }
 
   void XmlParser::handleChildren(xmlNodePtr components, Component *parent, Device *device)
@@ -912,7 +900,10 @@ namespace mtconnect
   {
     entity::ErrorList errors;
     
-    auto configuration_entity = entity::XmlParser::parseXmlNode(ComponentConfiguration::getRoot(), node, errors);
+    auto configuration_factory = std::make_shared<entity::Factory>(entity::Requirements{
+        entity::Requirement("Configuration", entity::ENTITY_LIST, ComponentConfiguration::getRoot(), false)});
+
+    auto configuration_entity = entity::XmlParser::parseXmlNode(configuration_factory, node, errors);
     
     unique_ptr<ComponentConfiguration> configuration = make_unique<ComponentConfiguration>();
     configuration->setEntity(configuration_entity);

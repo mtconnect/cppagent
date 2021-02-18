@@ -17,32 +17,33 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
-#include "description.hpp"
 #include "utilities.hpp"
+#include "entity.hpp"
+#include "description.hpp"
 
 #include <list>
 #include <map>
-#include <memory>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <utility>
 
+using namespace std;
+
 namespace mtconnect
 {
-  class Composition
+  using namespace entity;
+  
+  FactoryPtr Description::getFactory() 
   {
-  public:
-    Composition() = default;
-    virtual ~Composition() = default;
-
-    static entity::FactoryPtr getFactory();
-
-    const entity::EntityPtr &getEntity() const { return m_entity; };
-    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; };
-
-  protected:
-    entity::EntityPtr m_entity;
-  };
+    auto description = make_shared<Factory>(Requirements{
+        Requirement("manufacturer", false),
+        Requirement("model", false),
+        Requirement("serialNumber", false),
+        Requirement("station", false),
+        Requirement("VALUE", false)
+        });
+    
+    return description;
+  }
+  
 }  // namespace mtconnect

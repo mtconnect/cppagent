@@ -107,7 +107,7 @@
           <Compositions>
             <Composition id="zmotor" type="MOTOR" uuid="12345" name="motor_name">
 							<Description manufacturer="open" model="vroom" serialNumber="12356" station="A">
-								Hello There
+							Hello There!
 							</Description>
 							<Configuration>
 								<Specifications>

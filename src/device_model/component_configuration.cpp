@@ -47,10 +47,7 @@ namespace mtconnect
     
     configuration->setMinListSize(1);
       
-    auto root = make_shared<Factory>(Requirements{
-        Requirement("Configuration", ENTITY_LIST, configuration, false)});
-
-    return root;
+    return configuration;
   }
 
 }  // namespace mtconnect
