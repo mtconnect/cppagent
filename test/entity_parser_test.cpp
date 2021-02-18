@@ -319,8 +319,6 @@ TEST_F(EntityParserTest, check_proper_line_truncation)
   entity::XmlParser parser;
   
   auto entity = parser.parse(root, doc, "1.7", errors);
-  
-  auto expected = R"DOC(<Definition>And some text</Definition>)DOC";
-  
-  ASSERT_EQ(expected, get<string>(entity->getProperty("Definition")));
+  ASSERT_EQ("Description", entity->getName());  
+  ASSERT_EQ("And some text", entity->getValue<string>());
 }
