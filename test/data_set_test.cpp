@@ -59,7 +59,7 @@ class DataSetTest : public testing::Test
 
   std::unique_ptr<Checkpoint> m_checkpoint;
   std::string m_agentId;
-  DataItem *m_dataItem1{nullptr};
+  DataItemPtr m_dataItem;
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };

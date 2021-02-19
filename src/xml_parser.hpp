@@ -60,7 +60,7 @@ namespace mtconnect
     Component *loadComponent(xmlNodePtr node, const std::string &name);
 
     // Load the data items
-    void loadDataItem(xmlNodePtr dataItems, Component *component, Device *device);
+    void loadDataItems(xmlNodePtr dataItems, Component *component);
 
     // Load the data items
     // Perform loading on children and set up relationships

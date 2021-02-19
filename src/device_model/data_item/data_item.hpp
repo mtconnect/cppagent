@@ -76,6 +76,7 @@ namespace mtconnect
         // Construct a data item with appropriate attributes mapping
         DataItem(const std::string &name, const entity::Properties &props);
         static entity::FactoryPtr getFactory();
+        static entity::FactoryPtr getRoot();
         static std::shared_ptr<DataItem> make(const entity::Properties &props,
                                               entity::ErrorList &errors)
         {
@@ -90,6 +91,7 @@ namespace mtconnect
         // Getter methods for data item specs
         const auto &getId() const { return m_id; }
         const auto &getName() const { return m_name; }
+        const auto &getPrefix() const { return m_prefix; }
         const auto &getSource() const { return m_source; }
         const auto &getPreferredName() const { return m_preferredName; }
         const auto &getPrefixedObservationType() const { return m_prefixedObservationType; }

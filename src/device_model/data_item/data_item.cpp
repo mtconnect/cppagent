@@ -45,7 +45,6 @@ namespace mtconnect
         static FactoryPtr factory;
         if (!factory)
         {
-          using namespace device_model::data_item;
           auto source = Source::getFactory();
           auto filter = Filter::getFactory();
           auto relationships = Relationships::getFactory();
@@ -68,7 +67,7 @@ namespace mtconnect
             {"significantDigits", INTEGER, false},
             // Elements
             {"Source", ENTITY, source, false},
-            {"Filters", ENTITY, filter, false},
+            {"Filters", ENTITY_LIST, filter, false},
             {"Definition", ENTITY, definition, false},
             {"Constraints", ENTITY_LIST, constraints, false},
             {"Relationships", ENTITY, relationships, false},
@@ -87,6 +86,22 @@ namespace mtconnect
         }
         
         return factory;
+      }
+      
+      FactoryPtr DataItem::getRoot()
+      {
+        static FactoryPtr root;
+        if (!root)
+        {
+          auto factory = DataItem::getFactory();
+          auto dataItem = make_shared<Factory>(Requirements{
+            {"DataItem", ENTITY, factory, 1, Requirement::Infinite}
+          });
+          root = make_shared<Factory>(Requirements{
+            {"DataItems", ENTITY_LIST, dataItem, false}
+          });
+        }
+        return root;
       }
       
       // DataItem public methods
@@ -168,16 +183,16 @@ namespace mtconnect
         if (isCondition())
           m_observatonProperties.insert_or_assign("type", get<std::string>("type"));
         
-        if (hasProperty("Constraints") && get<EntityList>("Constraints").size() == 1)
+        if (const auto &cons = getList("Constraints"); cons && cons->size() == 1)
         {
-          auto &con = get<EntityList>("Constraints").front();
+          auto &con = cons->front();
           if (con->getName() == "Value")
             m_constantValue = con->getValue<string>();
         }
         
-        if (hasProperty("Filters"))
+        if (const auto &filters = getList("Filters"))
         {
-          for (auto &filter : get<EntityList>("Filters"))
+          for (auto &filter : *filters)
           {
             const auto &type = filter->get<string>("type");
             if (type == "MINIMUM_DELTA")

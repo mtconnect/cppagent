@@ -24,6 +24,7 @@
 #include "device_model/sensor_configuration.hpp"
 #include "device_model/solid_model.hpp"
 #include "device_model/specifications.hpp"
+#include "entity/xml_parser.hpp"
 #include "xml_printer.hpp"
 
 #include <dlib/logger.h>
@@ -287,13 +288,11 @@ namespace mtconnect
     : m_handlers(
           {{"Components",
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-           {"DataItems",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
            {"References",
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
            {"Compositions",
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-           {"DataItem", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItem(n, p, d); }},
+           {"DataItems", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItems(n, p); }},
            {"Reference", [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
            {"DataItemRef",
             [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
@@ -662,10 +661,22 @@ namespace mtconnect
     }
   }
 
-  void XmlParser::loadDataItem(xmlNodePtr dataItem, Component *parent, Device *device)
+  void XmlParser::loadDataItems(xmlNodePtr dataItems, Component *parent)
   {
+    using namespace entity;
+    using namespace device_model::data_item;
+    ErrorList errors;
     
-    //parent->addDataItem(d);
+    auto items = entity::XmlParser::parseXmlNode(DataItem::getRoot(), dataItems, errors);
+    auto list = items->get<EntityList>("LIST");
+    for (auto &e : list)
+    {
+      auto di = dynamic_pointer_cast<DataItem>(e);
+      if (di)
+      {
+        parent->addDataItem(di);
+      }
+    }
   }
   
   unique_ptr<Composition> XmlParser::handleComposition(xmlNodePtr composition)

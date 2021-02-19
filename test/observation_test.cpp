@@ -74,8 +74,8 @@ class ObservationTest : public testing::Test
 
   ObservationPtr m_compEventA;
   ObservationPtr m_compEventB;
-  std::unique_ptr<DataItem> m_dataItem1;
-  std::unique_ptr<DataItem> m_dataItem2;
+  DataItemPtr m_dataItem1;
+  DataItemPtr m_dataItem2;
   Timestamp m_time;
 
   // Helper to test values
