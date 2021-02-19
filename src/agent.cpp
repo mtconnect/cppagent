@@ -594,6 +594,7 @@ namespace mtconnect
         }
       };
 
+      m_server->addRouting({"POST", "/{device}?time={string}", handler});
       m_server->addRouting({"PUT", "/{device}?time={string}", handler});
     }
   }

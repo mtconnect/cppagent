@@ -68,7 +68,7 @@ namespace mtconnect
       {
         auto end = s.find_last_not_of(" \t\n");
         if (end < s.size() - 1)
-          s.erase(end);
+          s.erase(end + 1);
       }
     }
 

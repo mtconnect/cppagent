@@ -293,3 +293,32 @@ TEST_F(EntityParserTest, TestRawContent)
   ASSERT_EQ("XML", get<string>(entity->getProperty("format")));
   ASSERT_EQ(expected, get<string>(entity->getProperty("RAW")));
 }
+
+TEST_F(EntityParserTest, check_proper_line_truncation)
+{
+  auto description = make_shared<Factory>(Requirements{
+      Requirement("manufacturer", false),
+      Requirement("model", false),
+      Requirement("serialNumber", false),
+      Requirement("station", false),
+      Requirement("VALUE", false)
+      });
+  
+  auto root = make_shared<Factory>(Requirements{{
+    {"Description", ENTITY, description, false}
+  }});
+
+  
+  auto doc = R"DOC(
+  <Description>
+      And some text
+  </Description>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ("Description", entity->getName());  
+  ASSERT_EQ("And some text", entity->getValue<string>());
+}

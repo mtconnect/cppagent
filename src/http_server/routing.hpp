@@ -196,6 +196,7 @@ namespace mtconnect
           s = match.suffix().str();
         }
         pat << s;
+        pat << "/?";
 
         m_patternText = pat.str();
         m_pattern = std::regex(m_patternText);
