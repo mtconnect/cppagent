@@ -19,6 +19,7 @@
 
 #include "observation/data_set.hpp"
 #include "utilities.hpp"
+#include <unordered_set>
 
 #include <atomic>
 #include <cmath>
@@ -30,7 +31,6 @@
 #include <optional>
 #include <regex>
 #include <set>
-#include <unordered_set>
 #include <stdexcept>
 #include <string>
 #include <tuple>

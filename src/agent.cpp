@@ -50,7 +50,7 @@ namespace mtconnect
 {
   using namespace device_model;
   using namespace data_item;
-  
+
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
   static dlib::logger g_logger("agent");
@@ -226,7 +226,8 @@ namespace mtconnect
       // Create availability data item and add it to the device.
       entity::ErrorList errors;
       auto di = DataItem::make(
-          {{"type", "AVAILABILITY"s}, {"id", device->getId() + "_avail"}, {"category", "EVENT"s}}, errors);
+          {{"type", "AVAILABILITY"s}, {"id", device->getId() + "_avail"}, {"category", "EVENT"s}},
+          errors);
       di->setComponent(*device);
       device->addDataItem(di);
       device->m_availabilityAdded = true;
@@ -241,8 +242,9 @@ namespace mtconnect
       entity::ErrorList errors;
       // Create asset change data item and add it to the device.
       auto di = DataItem::make({{"type", "ASSET_CHANGED"s},
-                              {"id", device->getId() + "_asset_chg"},
-                              {"category", "EVENT"s}}, errors);
+                                {"id", device->getId() + "_asset_chg"},
+                                {"category", "EVENT"s}},
+                               errors);
       di->setComponent(*device);
       device->addDataItem(di);
     }
@@ -258,8 +260,9 @@ namespace mtconnect
       // Create asset removed data item and add it to the device.
       entity::ErrorList errors;
       auto di = DataItem::make({{"type", "ASSET_REMOVED"},
-                              {"id", device->getId() + "_asset_rem"},
-                              {"category", "EVENT"}}, errors);
+                                {"id", device->getId() + "_asset_rem"},
+                                {"category", "EVENT"}},
+                               errors);
       di->setComponent(*device);
       device->addDataItem(di);
     }
@@ -279,8 +282,7 @@ namespace mtconnect
         if (m_dataItemMap[d->getId()] != d)
         {
           g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
-                   << " for device: " << device->getName()
-                   << " and data item name: " << d->getId();
+                   << " for device: " << device->getName() << " and data item name: " << d->getId();
           std::exit(1);
         }
       }
@@ -1637,7 +1639,7 @@ namespace mtconnect
              {
                double fact_value = strtod(factor.c_str(), nullptr);
                double off_value = strtod(offset.c_str(), nullptr);
-               //di->setConversionFactor(fact_value, off_value);
+               // di->setConversionFactor(fact_value, off_value);
              }
            }
          }},

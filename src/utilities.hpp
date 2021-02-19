@@ -31,6 +31,8 @@
 #define NOMINMAX 1
 #endif
 
+#include <unordered_map>
+
 #include <date/date.h>
 
 #include <chrono>
@@ -40,7 +42,6 @@
 #include <limits>
 #include <list>
 #include <map>
-#include <unordered_map>
 #include <optional>
 #include <sstream>
 #include <string>
@@ -366,7 +367,7 @@ namespace mtconnect
     time.append("Z");
     return time;
   }
-  
+
   inline void capitalize(std::string::iterator start, std::string::iterator end)
   {
     using namespace std;
@@ -389,8 +390,7 @@ namespace mtconnect
     }
   }
 
-  inline std::string pascalize(const std::string &type,
-                               std::optional<std::string> &prefix)
+  inline std::string pascalize(const std::string &type, std::optional<std::string> &prefix)
   {
     using namespace std;
     if (type.empty())
@@ -425,7 +425,6 @@ namespace mtconnect
 
     return camel;
   }
-
 
 #ifdef _WINDOWS
 #include <io.h>

@@ -16,9 +16,10 @@
 //
 
 #include "agent_device.hpp"
-#include "data_item/data_item.hpp"
-#include "data_item/constraints.hpp"
+
 #include "adapter/adapter.hpp"
+#include "data_item/constraints.hpp"
+#include "data_item/data_item.hpp"
 
 #include <dlib/logger.h>
 
@@ -56,8 +57,9 @@ namespace mtconnect
     {
       ErrorList errors;
       auto di = DataItem::make({{"type", "CONNECTION_STATUS"s},
-                              {"id", id + "_connection_status"s},
-                              {"category", "EVENT"s}}, errors);
+                                {"id", id + "_connection_status"s},
+                                {"category", "EVENT"s}},
+                               errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
     }
@@ -67,10 +69,11 @@ namespace mtconnect
       ErrorList errors;
       Properties url{{"Value", adapter->getUrl()}};
       auto con = Constraints::getFactory()->make("Constraints", url, errors);
-      auto di = DataItem::make(
-          {{"type", "ADAPTER_URI"s}, {"id", id + "_adapter_uri"}, {"category", "EVENT"s},
-        {"Constraints", con}
-      }, errors);
+      auto di = DataItem::make({{"type", "ADAPTER_URI"s},
+                                {"id", id + "_adapter_uri"},
+                                {"category", "EVENT"s},
+                                {"Constraints", con}},
+                               errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
     }
@@ -78,10 +81,11 @@ namespace mtconnect
     {
       ErrorList errors;
       auto di = DataItem::make({{"type", "OBSERVATION_UPDATE_RATE"},
-                              {"id", id + "_observation_update_rate"},
-                              {"units", "COUNT/SECOND"},
-                              {"statistic", "AVERAGE"},
-                              {"category", "SAMPLE"}}, errors);
+                                {"id", id + "_observation_update_rate"},
+                                {"units", "COUNT/SECOND"},
+                                {"statistic", "AVERAGE"},
+                                {"category", "SAMPLE"}},
+                               errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
     }
@@ -89,10 +93,11 @@ namespace mtconnect
     {
       ErrorList errors;
       auto di = DataItem::make({{"type", "ASSET_UPDATE_RATE"},
-                              {"id", id + "_asset_update_rate"},
-                              {"units", "COUNT/SECOND"},
-                              {"statistic", "AVERAGE"},
-                              {"category", "SAMPLE"}}, errors);
+                                {"id", id + "_asset_update_rate"},
+                                {"units", "COUNT/SECOND"},
+                                {"statistic", "AVERAGE"},
+                                {"category", "SAMPLE"}},
+                               errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
     }
@@ -100,17 +105,18 @@ namespace mtconnect
     {
       ErrorList errors;
       auto di = DataItem::make({{"type", "ADAPTER_SOFTWARE_VERSION"},
-                              {"id", id + "_adapter_software_version"},
-                              {"category", "EVENT"}}, errors);
+                                {"id", id + "_adapter_software_version"},
+                                {"category", "EVENT"}},
+                               errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
     }
 
     {
       ErrorList errors;
-      auto di = DataItem::make({{"type", "MTCONNECT_VERSION"},
-                              {"id", id + "_mtconnect_version"},
-                              {"category", "EVENT"}}, errors);
+      auto di = DataItem::make(
+          {{"type", "MTCONNECT_VERSION"}, {"id", id + "_mtconnect_version"}, {"category", "EVENT"}},
+          errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
     }
@@ -123,24 +129,24 @@ namespace mtconnect
     ErrorList errors;
 
     // Add the required data items
-    auto di =
-    DataItem::make({{"type", "AVAILABILITY"}, {"id", "agent_avail"}, {"category", "EVENT"}}, errors);
+    auto di = DataItem::make(
+        {{"type", "AVAILABILITY"}, {"id", "agent_avail"}, {"category", "EVENT"}}, errors);
     di->setComponent(*this);
     addDataItem(di);
 
     // Add the required data items
-    auto add =
-    DataItem::make({{"type", "DEVICE_ADDED"}, {"id", "device_added"}, {"category", "EVENT"}}, errors);
+    auto add = DataItem::make(
+        {{"type", "DEVICE_ADDED"}, {"id", "device_added"}, {"category", "EVENT"}}, errors);
     add->setComponent(*this);
     addDataItem(add);
 
-    auto removed =
-    DataItem::make({{"type", "DEVICE_REMOVED"}, {"id", "device_removed"}, {"category", "EVENT"}}, errors);
+    auto removed = DataItem::make(
+        {{"type", "DEVICE_REMOVED"}, {"id", "device_removed"}, {"category", "EVENT"}}, errors);
     removed->setComponent(*this);
     addDataItem(removed);
 
-    auto changed =
-    DataItem::make({{"type", "DEVICE_CHANGED"}, {"id", "device_changed"}, {"category", "EVENT"}}, errors);
+    auto changed = DataItem::make(
+        {{"type", "DEVICE_CHANGED"}, {"id", "device_changed"}, {"category", "EVENT"}}, errors);
     changed->setComponent(*this);
     addDataItem(changed);
   }

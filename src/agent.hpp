@@ -47,9 +47,15 @@ namespace mtconnect
   }
   class Device;
   class AgentDevice;
-  namespace device_model { namespace data_item { class DataItem; }};
+  namespace device_model
+  {
+    namespace data_item
+    {
+      class DataItem;
+    }
+  };  // namespace device_model
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
-  
+
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
   class Agent
@@ -143,7 +149,7 @@ namespace mtconnect
                         const std::string &value, const std::string &source);
 
     DataItemPtr getDataItemForDevice(const std::string &deviceName,
-                                   const std::string &dataItemName) const
+                                     const std::string &dataItemName) const
     {
       auto dev = findDeviceByUUIDorName(deviceName);
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;

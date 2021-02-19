@@ -34,9 +34,8 @@ namespace mtconnect
           using namespace std;
           static auto filter = make_shared<Factory>(Requirements{
               {"type", ControlledVocab{"PERIOD", "MINIMUM_DELTA"}}, {"VALUE", DOUBLE, true}});
-          static auto filters = make_shared<Factory>(Requirements{
-            {"Filter", ENTITY, filter, 1, Requirement::Infinite}
-          });
+          static auto filters = make_shared<Factory>(
+              Requirements{{"Filter", ENTITY, filter, 1, Requirement::Infinite}});
           return filters;
         }
       };

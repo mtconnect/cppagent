@@ -129,7 +129,8 @@ namespace mtconnect
           unavailable = true;
         }
       }
-      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedObservationType();
+      string key =
+          string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedObservationType();
       if (dataItem->isThreeSpace())
         key += ":3D";
 
@@ -151,12 +152,12 @@ namespace mtconnect
 
       if (unavailable)
         obs->makeUnavailable();
-      
+
       if (!dataItem->isCondition())
         obs->setEntityName();
       else if (!unavailable)
         dynamic_pointer_cast<Condition>(obs)->setLevel(level);
-      
+
       return obs;
     }
 

@@ -30,11 +30,17 @@
 
 namespace mtconnect
 {
-  namespace device_model { namespace data_item { class DataItem; } }
+  namespace device_model
+  {
+    namespace data_item
+    {
+      class DataItem;
+    }
+  }  // namespace device_model
   class Device;
   class Agent;
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
-  
+
   class Component
   {
   public:

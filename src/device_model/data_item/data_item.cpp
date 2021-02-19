@@ -21,7 +21,6 @@
 #include "adapter/adapter.hpp"
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
-
 #include <boost/units/pow.hpp>
 
 #include <array>
@@ -37,9 +36,8 @@ namespace mtconnect
   {
     namespace data_item
     {
-      
       // -----------------------------
-      
+
       FactoryPtr DataItem::getFactory()
       {
         static FactoryPtr factory;
@@ -51,67 +49,64 @@ namespace mtconnect
           auto definition = device_model::data_item::Definition::getFactory();
           auto constraints = Constraints::getFactory();
           factory = make_shared<Factory>(Requirements{
-            // Attributes
-            {"id", true},
-            {"name", false},
-            {"type", true},
-            {"subType", false},
-            {"category", ControlledVocab{"EVENT", "SAMPLE", "CONDITION"}, true},
-            {"discrete", BOOL, false},
-            {"representation", ControlledVocab{"VALUE", "TIME_SERIES", "DATA_SET", "TABLE", "DISCRETE"}, false},
-            {"units", false}, {"nativeUnits", false},
-            {"sampleRate", DOUBLE, false}, {"statistic", false},
-            {"nativeScale", DOUBLE, false},
-            {"coordinateSystem", ControlledVocab{"MACHINE", "WORK"}, false},
-            {"compositionId", false}, {"coordinateSystemId", false},
-            {"significantDigits", INTEGER, false},
-            // Elements
-            {"Source", ENTITY, source, false},
-            {"Filters", ENTITY_LIST, filter, false},
-            {"Definition", ENTITY, definition, false},
-            {"Constraints", ENTITY_LIST, constraints, false},
-            {"Relationships", ENTITY_LIST, relationships, false},
-            {"InitialValue", DOUBLE, false},
-            {"ResetTrigger", false}
-          });
+              // Attributes
+              {"id", true},
+              {"name", false},
+              {"type", true},
+              {"subType", false},
+              {"category", ControlledVocab{"EVENT", "SAMPLE", "CONDITION"}, true},
+              {"discrete", BOOL, false},
+              {"representation",
+               ControlledVocab{"VALUE", "TIME_SERIES", "DATA_SET", "TABLE", "DISCRETE"}, false},
+              {"units", false},
+              {"nativeUnits", false},
+              {"sampleRate", DOUBLE, false},
+              {"statistic", false},
+              {"nativeScale", DOUBLE, false},
+              {"coordinateSystem", ControlledVocab{"MACHINE", "WORK"}, false},
+              {"compositionId", false},
+              {"coordinateSystemId", false},
+              {"significantDigits", INTEGER, false},
+              // Elements
+              {"Source", ENTITY, source, false},
+              {"Filters", ENTITY_LIST, filter, false},
+              {"Definition", ENTITY, definition, false},
+              {"Constraints", ENTITY_LIST, constraints, false},
+              {"Relationships", ENTITY_LIST, relationships, false},
+              {"InitialValue", DOUBLE, false},
+              {"ResetTrigger", false}});
           factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
             auto ptr = make_shared<DataItem>(name, props);
             return dynamic_pointer_cast<Entity>(ptr);
           });
-          
-          factory->setOrder({"Source", "Constraints",
-            "Filters", "InitialValue", "ResetTriger", "Definition",
-            "Relationships"
-          });
+
+          factory->setOrder({"Source", "Constraints", "Filters", "InitialValue", "ResetTriger",
+                             "Definition", "Relationships"});
         }
-        
+
         return factory;
       }
-      
+
       FactoryPtr DataItem::getRoot()
       {
         static FactoryPtr root;
         if (!root)
         {
           auto factory = DataItem::getFactory();
-          auto dataItem = make_shared<Factory>(Requirements{
-            {"DataItem", ENTITY, factory, 1, Requirement::Infinite}
-          });
-          root = make_shared<Factory>(Requirements{
-            {"DataItems", ENTITY_LIST, dataItem, false}
-          });
+          auto dataItem = make_shared<Factory>(
+              Requirements{{"DataItem", ENTITY, factory, 1, Requirement::Infinite}});
+          root = make_shared<Factory>(Requirements{{"DataItems", ENTITY_LIST, dataItem, false}});
         }
         return root;
       }
-      
+
       // DataItem public methods
-      DataItem::DataItem(const string &name, const Properties &props)
-      : Entity(name, props)
+      DataItem::DataItem(const string &name, const Properties &props) : Entity(name, props)
       {
         static const char *samples = "Samples";
         static const char *events = "Events";
         static const char *condition = "Condition";
-        
+
         m_id = get<string>("id");
         m_name = maybeGet<string>("name");
         auto type = get<string>("type");
@@ -123,22 +118,22 @@ namespace mtconnect
           m_prefixedObservationType = *m_prefix + ':' + m_observationType;
         else
           m_prefixedObservationType = m_observationType;
-        
-        const static unordered_map<string, ERepresentation> reps =
-        {{"VALUE", VALUE}, {"TIME_SERIES", TIME_SERIES},
-          {"DISCRETE", DISCRETE}, {"DATA_SET", DATA_SET},
-          {"TABLE", TABLE}
-        };
+
+        const static unordered_map<string, ERepresentation> reps = {{"VALUE", VALUE},
+                                                                    {"TIME_SERIES", TIME_SERIES},
+                                                                    {"DISCRETE", DISCRETE},
+                                                                    {"DATA_SET", DATA_SET},
+                                                                    {"TABLE", TABLE}};
         auto rep = maybeGet<string>("representation");
         if (rep)
           m_representation = reps.find(*rep)->second;
-        
+
         auto &category = get<string>("category");
         if (category == "SAMPLE")
         {
           m_category = SAMPLE;
           m_categoryText = samples;
-          
+
           auto units = maybeGet<string>("units");
           if (units && ends_with(*units, "3D"))
             m_specialClass = THREE_SPACE_CLS;
@@ -162,7 +157,7 @@ namespace mtconnect
           m_categoryText = condition;
           m_specialClass = CONDITION_CLS;
         }
-        
+
         std::optional<std::string> pref;
         auto source = maybeGet<entity::EntityPtr>("Source");
         if (source && (*source)->hasValue())
@@ -170,28 +165,30 @@ namespace mtconnect
         else
           pref = m_name.value_or(m_id);
         m_preferredName = *pref;
-        
-        m_discrete = m_representation == DISCRETE || (hasProperty("discrete") && get<bool>("discrete"));
-        
+
+        m_discrete =
+            m_representation == DISCRETE || (hasProperty("discrete") && get<bool>("discrete"));
+
         m_observatonProperties.insert_or_assign("dataItemId", m_id);
         if (m_name)
           m_observatonProperties.insert_or_assign("name", *m_name);
         if (hasProperty("compositionId"))
-          m_observatonProperties.insert_or_assign("compositionId", get<std::string>("compositionId"));
+          m_observatonProperties.insert_or_assign("compositionId",
+                                                  get<std::string>("compositionId"));
         if (hasProperty("subType"))
           m_observatonProperties.insert_or_assign("subType", get<std::string>("subType"));
         if (hasProperty("statistic"))
           m_observatonProperties.insert_or_assign("statistic", get<std::string>("statistic"));
         if (isCondition())
           m_observatonProperties.insert_or_assign("type", get<std::string>("type"));
-        
+
         if (const auto &cons = getList("Constraints"); cons && cons->size() == 1)
         {
           auto &con = cons->front();
           if (con->getName() == "Value")
             m_constantValue = con->getValue<string>();
         }
-        
+
         if (const auto &filters = getList("Filters"))
         {
           for (auto &filter : *filters)
@@ -204,18 +201,17 @@ namespace mtconnect
           }
         }
       }
-      
+
       bool DataItem::hasName(const string &name) const
       {
-        return m_id == name || (m_name && *m_name == name) ||
-        (m_source && *m_source == name);
+        return m_id == name || (m_name && *m_name == name) || (m_source && *m_source == name);
       }
-      
+
       // Sort by: Device, Component, Category, DataItem
       bool DataItem::operator<(const DataItem &another) const
       {
         auto dev = m_component->getDevice();
-        
+
         if (dev->getId() < another.getComponent()->getDevice()->getId())
           return true;
         else if (dev->getId() > another.getComponent()->getDevice()->getId())
@@ -231,6 +227,6 @@ namespace mtconnect
         else
           return false;
       }
-    }
-  }
+    }  // namespace data_item
+  }    // namespace device_model
 }  // namespace mtconnect

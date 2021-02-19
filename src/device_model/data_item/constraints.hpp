@@ -36,11 +36,11 @@ namespace mtconnect
           {
             auto limit = std::make_shared<Factory>(Requirements{{"VALUE", DOUBLE, true}});
             auto value = std::make_shared<Factory>(Requirements{{"VALUE", true}});
-            factory = std::make_shared<Factory>(Requirements{
-              {"Minimum", ENTITY, limit, 0, 1},
-              {"Maximum", ENTITY, limit, 0, 1},
-              {"Nominal", ENTITY, limit, 0, 1},
-              {"Value", ENTITY, value, 0, Requirement::Infinite}});
+            factory = std::make_shared<Factory>(
+                Requirements{{"Minimum", ENTITY, limit, 0, 1},
+                             {"Maximum", ENTITY, limit, 0, 1},
+                             {"Nominal", ENTITY, limit, 0, 1},
+                             {"Value", ENTITY, value, 0, Requirement::Infinite}});
           }
           return factory;
         }

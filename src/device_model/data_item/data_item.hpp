@@ -18,13 +18,12 @@
 #pragma once
 #include "constraints.hpp"
 #include "definition.hpp"
-#include "filter.hpp"
-#include "relationships.hpp"
-#include "source.hpp"
-#include "definition.hpp"
 #include "device_model/component.hpp"
 #include "entity.hpp"
+#include "filter.hpp"
 #include "observation/change_observer.hpp"
+#include "relationships.hpp"
+#include "source.hpp"
 #include "utilities.hpp"
 
 #include <dlib/threads.h>
@@ -55,7 +54,7 @@ namespace mtconnect
           EVENT,
           CONDITION
         };
-        
+
         enum ERepresentation
         {
           VALUE,
@@ -64,14 +63,18 @@ namespace mtconnect
           DATA_SET,
           TABLE
         };
-        
+
         enum SpecialClass
         {
-          CONDITION_CLS, MESSAGE_CLS,
-          ALARM_CLS, THREE_SPACE_CLS, NONE_CLS,
-          ASSET_REMOVED_CLS, ASSET_CHANGED_CLS
+          CONDITION_CLS,
+          MESSAGE_CLS,
+          ALARM_CLS,
+          THREE_SPACE_CLS,
+          NONE_CLS,
+          ASSET_REMOVED_CLS,
+          ASSET_CHANGED_CLS
         };
-        
+
       public:
         // Construct a data item with appropriate attributes mapping
         DataItem(const std::string &name, const entity::Properties &props);
@@ -84,10 +87,10 @@ namespace mtconnect
           auto ptr = getFactory()->make("DataItem", ps, errors);
           return std::dynamic_pointer_cast<DataItem>(ptr);
         }
-        
+
         // Destructor
         ~DataItem() override = default;
-        
+
         // Getter methods for data item specs
         const auto &getId() const { return m_id; }
         const auto &getName() const { return m_name; }
@@ -100,15 +103,15 @@ namespace mtconnect
         const auto &getMinimumDelta() const { return m_minimumDelta; }
         const auto &getMinimumPeriod() const { return m_minimumPeriod; }
         bool hasName(const std::string &name) const;
-        
+
         const auto &getType() { return get<std::string>("type"); }
-        
+
         ECategory getCategory() const { return m_category; }
         ERepresentation getRepresentation() const { return m_representation; }
         SpecialClass getSpecialClass() const { return m_specialClass; }
-        
+
         const auto &getConstantValue() const { return m_constantValue; }
-        
+
         // Returns true if data item is a sample
         bool isSample() const { return m_category == SAMPLE; }
         bool isEvent() const { return m_category == EVENT; }
@@ -123,43 +126,37 @@ namespace mtconnect
         bool isDataSet() const { return m_representation == DATA_SET || isTable(); }
         bool isDiscrete() const { return m_discrete; }
         bool isThreeSpace() const { return m_specialClass == THREE_SPACE_CLS; }
-        
+
         void makeDiscrete()
         {
           setProperty("discrete", true);
           m_discrete = true;
         }
-        
+
         // Set/get component that data item is associated with
         void setComponent(Component &component) { m_component = &component; }
         Component *getComponent() const { return m_component; }
-        
+
         // Get the name for the adapter feed
-        const std::string &getSourceOrName() const
-        {
-          return m_preferredName;
-        }
-        
+        const std::string &getSourceOrName() const { return m_preferredName; }
+
         const std::optional<std::string> &getDataSource() const { return m_dataSource; }
         void setDataSource(const std::string &source) { m_dataSource = source; }
-        
+
         bool operator<(const DataItem &another) const;
         bool operator==(const DataItem &another) const { return m_id == another.m_id; }
-        
-        const char *getCategoryText() const
-        {
-          return m_categoryText;
-        }
-        
+
+        const char *getCategoryText() const { return m_categoryText; }
+
       protected:
         double simpleFactor(const std::string &units);
         std::map<std::string, std::string> buildAttributes() const;
         void computeConversionFactors();
-        
+
       protected:
         // Unique ID for each component
         std::string m_id;
-        
+
         // Name for itself
         std::optional<std::string> m_name;
         std::optional<std::string> m_source;
@@ -168,38 +165,37 @@ namespace mtconnect
         std::optional<double> m_minimumDelta;
         std::optional<double> m_minimumPeriod;
 
-        
         // Category of data item
         ECategory m_category;
         const char *m_categoryText;
-        
+
         // Type for observation
         std::string m_observationType;
         std::string m_prefixedObservationType;
         std::optional<std::string> m_prefix;
         entity::Properties m_observatonProperties;
-        
+
         // Representation of data item
-        ERepresentation m_representation {VALUE};
-        SpecialClass m_specialClass {NONE_CLS};
+        ERepresentation m_representation{VALUE};
+        SpecialClass m_specialClass{NONE_CLS};
         bool m_discrete;
-        
+
         // The reset trigger;
         std::string m_resetTrigger;
-        
+
         // Initial value
         std::string m_initialValue;
-        
+
         // Component that data item is associated with
         Component *m_component;
-        
+
         // The data source for this data item
         std::optional<std::string> m_dataSource;
       };
-      
+
       using DataItemPtr = std::shared_ptr<DataItem>;
-    }
-  }
+    }  // namespace data_item
+  }    // namespace device_model
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
 
 }  // namespace mtconnect

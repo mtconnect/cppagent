@@ -33,7 +33,7 @@ namespace mtconnect
       public:
         using entity::Entity::Entity;
         ~Relationship() override = default;
-        
+
         static entity::FactoryPtr getDataItemFactory()
         {
           using namespace mtconnect::entity;
@@ -43,17 +43,17 @@ namespace mtconnect
           if (!factory)
           {
             factory = make_shared<Factory>(Requirements{
-              {"type", ControlledVocab{"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"},
-                true},
-              {"name", false},
-              {"idRef", true}});
+                {"type", ControlledVocab{"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"},
+                 true},
+                {"name", false},
+                {"idRef", true}});
             factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationship>(name, props);
             });
           }
           return factory;
         }
-        
+
         static entity::FactoryPtr getSpecificationFactory()
         {
           using namespace mtconnect::entity;
@@ -63,17 +63,17 @@ namespace mtconnect
           if (!factory)
           {
             factory = make_shared<Factory>(Requirements{
-              {"type", ControlledVocab{"LIMIT"}, true}, {"name", false}, {"idRef", true}});
+                {"type", ControlledVocab{"LIMIT"}, true}, {"name", false}, {"idRef", true}});
             factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationship>(name, props);
             });
           }
           return factory;
         }
-        
+
         std::weak_ptr<DataItem> m_target;
       };
-      
+
       class Relationships : public entity::Entity
       {
       public:
@@ -96,7 +96,6 @@ namespace mtconnect
             relationships->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationships>(name, props);
             });
-
           }
           return relationships;
         }

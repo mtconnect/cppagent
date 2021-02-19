@@ -58,10 +58,7 @@ namespace mtconnect
     }
 
     // Return the mapping of Device to data items
-    const auto &getDeviceDataItems() const
-    {
-      return m_deviceDataItemsById;
-    }
+    const auto &getDeviceDataItems() const { return m_deviceDataItemsById; }
 
     void addDataItem(DataItemPtr dataItem) override;
 

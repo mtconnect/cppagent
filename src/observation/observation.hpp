@@ -49,7 +49,7 @@ namespace mtconnect
     public:
       using super = entity::Entity;
       using entity::Entity::Entity;
-      
+
       static entity::FactoryPtr getFactory();
       ~Observation() override = default;
       virtual ObservationPtr copy() const { return std::make_shared<Observation>(); }
