@@ -67,7 +67,7 @@ class TableTest : public testing::Test
 
   std::unique_ptr<Checkpoint> m_checkpoint;
   std::string m_agentId;
-  DataItem *m_dataItem1{nullptr};
+  DataItemPtr m_dataItem1;
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -81,10 +81,9 @@ TEST_F(TableTest, DataItem)
 {
   ASSERT_TRUE(m_dataItem1->isTable());
   ASSERT_TRUE(m_dataItem1->isDataSet());
-  auto &attrs = m_dataItem1->getAttributes();
 
-  ASSERT_EQ((string) "TABLE", attrs.at("representation"));
-  ASSERT_EQ((string) "WorkpieceOffsetTable", m_dataItem1->getElementName());
+  ASSERT_EQ((string) "TABLE", m_dataItem1->get<string>("representation"));
+  ASSERT_EQ((string) "WorkpieceOffsetTable", m_dataItem1->getObservationType());
 }
 
 TEST_F(TableTest, InitialSet)
@@ -360,50 +359,65 @@ TEST_F(TableTest, JsonDefinitionTest)
     ASSERT_EQ(string("DataItem"), offset.begin().key());
     auto wo = offset.at("/DataItem"_json_pointer);
     
-    ASSERT_EQ(string("wpo"), wo.at("/name"_json_pointer).get<string>());
+    ASSERT_EQ("wpo", wo.at("/name"_json_pointer).get<string>());
     
-    //cout << "\n" << offset << endl;
-    //cout << "\n" << wo << endl;
-
     auto d1 = wo.at("/Definition/Description"_json_pointer);
-    ASSERT_EQ(string("A Complex Workpiece Offset Table"), d1.get<string>());
+    ASSERT_EQ("A Complex Workpiece Offset Table", d1.get<string>());
 
     auto cells = wo.at("/Definition/CellDefinitions"_json_pointer);
-    ASSERT_TRUE(cells.is_object());
+    ASSERT_TRUE(cells.is_array());
 
-    ASSERT_EQ(string("MILLIMETER"), cells.at("/X/units"_json_pointer).get<string>());
-    ASSERT_EQ(string("POSITION"), cells.at("/X/type"_json_pointer).get<string>());
+    ASSERT_EQ("MILLIMETER", cells[0].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("POSITION", cells[0].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("X", cells[0].at("/CellDefinition/key"_json_pointer).get<string>());
 
-    ASSERT_EQ(string("MILLIMETER"), cells.at("/Y/units"_json_pointer).get<string>());
-    ASSERT_EQ(string("POSITION"), cells.at("/Y/type"_json_pointer).get<string>());
+    ASSERT_EQ("MILLIMETER", cells[1].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("POSITION", cells[1].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("Y", cells[1].at("/CellDefinition/key"_json_pointer).get<string>());
 
-    ASSERT_EQ(string("MILLIMETER"), cells.at("/Z/units"_json_pointer).get<string>());
-    ASSERT_EQ(string("POSITION"), cells.at("/Z/type"_json_pointer).get<string>());
+    ASSERT_EQ("MILLIMETER", cells[2].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("POSITION", cells[2].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("Z", cells[2].at("/CellDefinition/key"_json_pointer).get<string>());
 
-    ASSERT_EQ(string("DEGREE"), cells.at("/A/units"_json_pointer).get<string>());
-    ASSERT_EQ(string("ANGLE"), cells.at("/A/type"_json_pointer).get<string>());
+    ASSERT_EQ("DEGREE", cells[3].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("ANGLE", cells[3].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("A", cells[3].at("/CellDefinition/key"_json_pointer).get<string>());
+    
+    ASSERT_EQ("DEGREE", cells[3].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("ANGLE", cells[3].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("A", cells[3].at("/CellDefinition/key"_json_pointer).get<string>());
 
-    ASSERT_EQ(string("DEGREE"), cells.at("/B/units"_json_pointer).get<string>());
-    ASSERT_EQ(string("ANGLE"), cells.at("/B/type"_json_pointer).get<string>());
+    ASSERT_EQ("DEGREE", cells[4].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("ANGLE", cells[4].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("B", cells[4].at("/CellDefinition/key"_json_pointer).get<string>());
 
-    ASSERT_EQ(string("DEGREE"), cells.at("/C/units"_json_pointer).get<string>());
-    ASSERT_EQ(string("ANGLE"), cells.at("/C/type"_json_pointer).get<string>());
-    ASSERT_EQ(string("Spindle Angle"), cells.at("/C/Description"_json_pointer).get<string>());
+    ASSERT_EQ("DEGREE", cells[4].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("ANGLE", cells[4].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("B", cells[4].at("/CellDefinition/key"_json_pointer).get<string>());
 
-    ASSERT_EQ(string("FEATURE_ID"), cells.at("/./keyType"_json_pointer).get<string>());
-    ASSERT_EQ(string("UUID"), cells.at("/./type"_json_pointer).get<string>());
+    ASSERT_EQ("DEGREE", cells[5].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("ANGLE", cells[5].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("C", cells[5].at("/CellDefinition/key"_json_pointer).get<string>());
+    ASSERT_EQ("Spindle Angle", cells[5].at("/CellDefinition/Description"_json_pointer).get<string>());
+    
+    ASSERT_EQ("FEATURE_ID", cells[6].at("/CellDefinition/keyType"_json_pointer).get<string>());
+    ASSERT_EQ("UUID", cells[6].at("/CellDefinition/type"_json_pointer).get<string>());
 
     
     auto entries = wo.at("/Definition/EntryDefinitions"_json_pointer);
-    ASSERT_TRUE(entries.is_object());
+    ASSERT_TRUE(entries.is_array());
 
-    ASSERT_EQ(string("Some Pressure thing"), entries.at("/G54/Description"_json_pointer).get<string>());
+    auto entry = entries[0].at("/EntryDefinition"_json_pointer);
+    ASSERT_EQ("Some Pressure thing", entry.at("/Description"_json_pointer).get<string>());
+    ASSERT_EQ("G54", entry.at("/key"_json_pointer).get<string>());
 
-    ASSERT_EQ(string("PASCAL"), entries.at("/G54/CellDefinitions/P/units"_json_pointer).get<string>());
-    ASSERT_EQ(string("PRESSURE"), entries.at("/G54/CellDefinitions/P/type"_json_pointer).get<string>());
-    ASSERT_EQ(string("Pressure of the P"), entries.at("/G54/CellDefinitions/P/Description"_json_pointer).get<string>());
-    ASSERT_EQ(string("FEATURE_ID"), entries.at("/./keyType"_json_pointer).get<string>());
-    ASSERT_EQ(string("UUID"), entries.at("/./type"_json_pointer).get<string>());
-
+    auto ecells = entry.at("/CellDefinitions"_json_pointer);
+    ASSERT_EQ("PASCAL", ecells[0].at("/CellDefinition/units"_json_pointer).get<string>());
+    ASSERT_EQ("PRESSURE", ecells[0].at("/CellDefinition/type"_json_pointer).get<string>());
+    ASSERT_EQ("P", ecells[0].at("/CellDefinition/key"_json_pointer).get<string>());
+    ASSERT_EQ("Pressure of the P", ecells[0].at("/CellDefinition/Description"_json_pointer).get<string>());
+    
+    ASSERT_EQ("FEATURE_ID", entries[2].at("/EntryDefinition/keyType"_json_pointer).get<string>());
+    ASSERT_EQ("UUID", entries[2].at("/EntryDefinition/type"_json_pointer).get<string>());
   }
 }

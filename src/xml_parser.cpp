@@ -668,6 +668,13 @@ namespace mtconnect
     ErrorList errors;
     
     auto items = entity::XmlParser::parseXmlNode(DataItem::getRoot(), dataItems, errors);
+    
+    if (!errors.empty())
+    {
+      for (auto &e : errors)
+        g_logger << dlib::LWARN << e->what();
+    }
+    
     auto list = items->get<EntityList>("LIST");
     for (auto &e : list)
     {

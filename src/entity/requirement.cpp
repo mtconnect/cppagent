@@ -119,6 +119,12 @@ namespace mtconnect
             throw PropertyError("Invalid value for '" + m_name + "': '" + v + "' is not allowed",
                                 m_name);
           }
+          else if (m_vocabulary && m_vocabulary->count(v) == 0)
+          {            
+            throw PropertyError("Invalid value for '" + m_name + "': '" + v + "' is not allowed",
+                                m_name);
+
+          }
         }
         else if (std::holds_alternative<entity::Vector>(value))
         {

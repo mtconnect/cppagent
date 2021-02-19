@@ -150,7 +150,7 @@ namespace mtconnect
 
     // References
     void addReference(Reference &reference) { m_references.emplace_back(reference); }
-    const std::vector<Reference> &getReferences() const { return m_references; }
+    const auto &getReferences() const { return m_references; }
 
     void resolveReferences();
 
@@ -202,7 +202,7 @@ namespace mtconnect
     std::map<std::string, std::string> m_attributes;
 
     // References
-    std::vector<Reference> m_references;
+    std::list<Reference> m_references;
   };
 
   struct ComponentComp

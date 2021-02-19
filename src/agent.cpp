@@ -1637,7 +1637,7 @@ namespace mtconnect
              {
                double fact_value = strtod(factor.c_str(), nullptr);
                double off_value = strtod(offset.c_str(), nullptr);
-               di->setConversionFactor(fact_value, off_value);
+               //di->setConversionFactor(fact_value, off_value);
              }
            }
          }},

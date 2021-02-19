@@ -119,6 +119,7 @@ namespace mtconnect
 
   void Component::addDataItem(DataItemPtr dataItem)
   {
+    dataItem->setComponent(*this);
     m_dataItems.emplace_back(dataItem);
     if (getDevice())
       getDevice()->addDeviceDataItem(dataItem);

@@ -28,6 +28,9 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::observation;
 using namespace mtconnect::adapter;
+using namespace device_model;
+using namespace entity;
+using namespace data_item;
 using namespace std::literals;
 using namespace date::literals;
 
@@ -43,21 +46,12 @@ class CheckpointTest : public testing::Test
   {
     m_checkpoint = make_unique<Checkpoint>();
 
-    std::map<string, string> attributes1, attributes2;
-
-    attributes1["id"] = "1";
-    attributes1["name"] = "DataItemTest1";
-    attributes1["type"] = "LOAD";
-    attributes1["category"] = "CONDITION";
-    m_dataItem1 = make_unique<DataItem>(attributes1);
-
-    attributes2["id"] = "3";
-    attributes2["name"] = "DataItemTest2";
-    attributes2["type"] = "POSITION";
-    attributes2["nativeUnits"] = "MILLIMETER";
-    attributes2["subType"] = "ACTUAL";
-    attributes2["category"] = "SAMPLE";
-    m_dataItem2 = make_unique<DataItem>(attributes2);
+    ErrorList errors;
+    m_dataItem1 = DataItem::make({{"id", "1"s}, {"type", "LOAD"s}, {"category", "CONDITION"s}, {"name", "DataItemTest1"s}}, errors);
+    m_dataItem2 = DataItem::make({{"id", "3"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"name", "DataItemTest2"s},
+      {"subType", "ACTUAL"s}, {"units", "MILLIMETER"s},
+      {"nativeUnits", "MILLIMETER"s}
+    }, errors);
   }
 
   void TearDown() override
@@ -68,8 +62,8 @@ class CheckpointTest : public testing::Test
   }
 
   std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<DataItem> m_dataItem1;
-  std::unique_ptr<DataItem> m_dataItem2;
+  DataItemPtr m_dataItem1;
+  DataItemPtr m_dataItem2;
 };
 
 TEST_F(CheckpointTest, AddObservations)
@@ -96,13 +90,13 @@ TEST_F(CheckpointTest, AddObservations)
   };
   auto value = entity::Properties{{"VALUE", "123"s}};
 
-  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  auto p1 = observation::Observation::make(m_dataItem1, warning1, time, errors);
   ASSERT_TRUE(p1);
   EXPECT_EQ(1, p1.use_count());
   m_checkpoint->addObservation(p1);
   EXPECT_EQ(2, p1.use_count());
 
-  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  auto p2 = observation::Observation::make(m_dataItem1, warning2, time, errors);
   ASSERT_TRUE(p2);
   m_checkpoint->addObservation(p2);
   
@@ -112,7 +106,7 @@ TEST_F(CheckpointTest, AddObservations)
     EXPECT_EQ(p1, prev);
   }
   
-  auto p3 = observation::Observation::make(m_dataItem1.get(), normal, time, errors);
+  auto p3 = observation::Observation::make(m_dataItem1, normal, time, errors);
   ASSERT_TRUE(p3);
   m_checkpoint->addObservation(p3);
 
@@ -124,7 +118,7 @@ TEST_F(CheckpointTest, AddObservations)
   EXPECT_EQ(2, p1.use_count());
   EXPECT_EQ(1, p2.use_count());
   
-  auto p4 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  auto p4 = observation::Observation::make(m_dataItem1, warning1, time, errors);
   m_checkpoint->addObservation(p4);
 
   {
@@ -133,11 +127,11 @@ TEST_F(CheckpointTest, AddObservations)
   }
   EXPECT_EQ(1, p3.use_count());
   
-  auto p5 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  auto p5 = observation::Observation::make(m_dataItem2, value, time, errors);
   m_checkpoint->addObservation(p5);
   EXPECT_EQ(2, p5.use_count());
 
-  auto p6 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  auto p6 = observation::Observation::make(m_dataItem2, value, time, errors);
   m_checkpoint->addObservation(p6);
   EXPECT_EQ(2, p6.use_count());
   EXPECT_EQ(1, p5.use_count());
@@ -161,11 +155,11 @@ TEST_F(CheckpointTest, Copy)
   };
   auto value = entity::Properties{{"VALUE", "123"s}};
   
-  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  auto p1 = observation::Observation::make(m_dataItem1, warning1, time, errors);
   m_checkpoint->addObservation(p1);
   ASSERT_EQ(2, p1.use_count());
 
-  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  auto p2 = observation::Observation::make(m_dataItem1, warning2, time, errors);
   m_checkpoint->addObservation(p2);
   ASSERT_EQ(2, p2.use_count());
 
@@ -197,25 +191,21 @@ TEST_F(CheckpointTest, GetObservations)
   filter.insert(m_dataItem1->getId());
   filter.insert(m_dataItem2->getId());
 
-  auto p = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  auto p = observation::Observation::make(m_dataItem1, warning1, time, errors);
   m_checkpoint->addObservation(p);
-  p = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  p = observation::Observation::make(m_dataItem1, warning2, time, errors);
   m_checkpoint->addObservation(p);
-  p = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  p = observation::Observation::make(m_dataItem2, value, time, errors);
   m_checkpoint->addObservation(p);
 
-  std::map<string, string> attributes;
-  attributes["id"] = "4";
-  attributes["name"] = "DataItemTest2";
-  attributes["type"] = "POSITION";
-  attributes["nativeUnits"] = "MILLIMETER";
-  attributes["subType"] = "ACTUAL";
-  attributes["category"] = "SAMPLE";
+  auto d1 = DataItem::make({{"id", "4"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"name", "DataItemTest2"s},
+    {"subType", "ACTUAL"s}, {"units", "MILLIMETER"s},
+    {"nativeUnits", "MILLIMETER"s}
+  }, errors);
   
-  auto d1 = make_unique<DataItem>(attributes);
   filter.insert(d1->getId());
 
-  p = observation::Observation::make(d1.get(), value, time, errors);
+  p = observation::Observation::make(d1, value, time, errors);
   m_checkpoint->addObservation(p);
 
   ObservationList list;
@@ -252,22 +242,18 @@ TEST_F(CheckpointTest, Filter)
   FilterSet filter;
   filter.insert(m_dataItem1->getId());
 
-  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  auto p1 = observation::Observation::make(m_dataItem1, warning1, time, errors);
   m_checkpoint->addObservation(p1);
-  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  auto p2 = observation::Observation::make(m_dataItem1, warning2, time, errors);
   m_checkpoint->addObservation(p2);
-  auto p3 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  auto p3 = observation::Observation::make(m_dataItem2, value, time, errors);
   m_checkpoint->addObservation(p3);
 
-  std::map<string, string> attributes;
-  attributes["id"] = "4";
-  attributes["name"] = "DataItemTest2";
-  attributes["type"] = "POSITION";
-  attributes["nativeUnits"] = "MILLIMETER";
-  attributes["subType"] = "ACTUAL";
-  attributes["category"] = "SAMPLE";
-  auto d1 = make_unique<DataItem>(attributes);
-  auto p4 = observation::Observation::make(d1.get(), value, time, errors);
+  auto d1 = DataItem::make({{"id", "4"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"name", "DataItemTest2"s},
+    {"subType", "ACTUAL"s}, {"units", "MILLIMETER"s},
+    {"nativeUnits", "MILLIMETER"s}
+  }, errors);
+  auto p4 = observation::Observation::make(d1, value, time, errors);
   m_checkpoint->addObservation(p4);
 
   ObservationList list;
@@ -309,23 +295,19 @@ TEST_F(CheckpointTest, CopyAndFilter)
   FilterSet filter;
   filter.insert(m_dataItem1->getId());
   
-  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  auto p1 = observation::Observation::make(m_dataItem1, warning1, time, errors);
   m_checkpoint->addObservation(p1);
-  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  auto p2 = observation::Observation::make(m_dataItem1, warning2, time, errors);
   m_checkpoint->addObservation(p2);
-  auto p3 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  auto p3 = observation::Observation::make(m_dataItem2, value, time, errors);
   m_checkpoint->addObservation(p3);
 
-  std::map<string, string> attributes;
-  attributes["id"] = "4";
-  attributes["name"] = "DataItemTest2";
-  attributes["type"] = "POSITION";
-  attributes["nativeUnits"] = "MILLIMETER";
-  attributes["subType"] = "ACTUAL";
-  attributes["category"] = "SAMPLE";
-  auto d1 = make_unique<DataItem>(attributes);
+  auto d1 = DataItem::make({{"id", "4"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"name", "DataItemTest2"s},
+    {"subType", "ACTUAL"s}, {"units", "MILLIMETER"s},
+    {"nativeUnits", "MILLIMETER"s}
+  }, errors);
 
-  auto p4 = observation::Observation::make(d1.get(), value, time, errors);
+  auto p4 = observation::Observation::make(d1, value, time, errors);
   m_checkpoint->addObservation(p4);
 
   ObservationList list;
@@ -337,14 +319,14 @@ TEST_F(CheckpointTest, CopyAndFilter)
   check.getObservations(list);
   ASSERT_EQ(2, list.size());
 
-  auto p5 = observation::Observation::make(m_dataItem1.get(), warning3, time, errors);
+  auto p5 = observation::Observation::make(m_dataItem1, warning3, time, errors);
   check.addObservation(p5);
 
   list.clear();
   check.getObservations(list);
   ASSERT_EQ(3, list.size());
 
-  auto p6 = observation::Observation::make(d1.get(), value, time, errors);
+  auto p6 = observation::Observation::make(d1, value, time, errors);
   m_checkpoint->addObservation(p6);
   
   list.clear();
@@ -400,7 +382,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   filter.insert(m_dataItem1->getId());
   ObservationList list;
   
-  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  auto p1 = observation::Observation::make(m_dataItem1, warning1, time, errors);
   m_checkpoint->addObservation(p1);
   ASSERT_EQ(2, p1.use_count());
 
@@ -408,7 +390,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   ASSERT_EQ(1, list.size());
   list.clear();
 
-  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  auto p2 = observation::Observation::make(m_dataItem1, warning2, time, errors);
   m_checkpoint->addObservation(p2);
   ASSERT_EQ(2, p2.use_count());
   ASSERT_EQ(2, p1.use_count());
@@ -419,7 +401,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   ASSERT_EQ(p1, dynamic_pointer_cast<Condition>(p2)->getPrev());
   list.clear();
 
-  auto p3 = observation::Observation::make(m_dataItem1.get(), warning3, time, errors);
+  auto p3 = observation::Observation::make(m_dataItem1, warning3, time, errors);
   m_checkpoint->addObservation(p3);
   ASSERT_EQ(2, p3.use_count());
   ASSERT_EQ(2, p2.use_count());
@@ -435,7 +417,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   list.clear();
 
   // Replace Warning on CODE 2 with a fault
-  auto p4 = observation::Observation::make(m_dataItem1.get(), fault2, time, errors);
+  auto p4 = observation::Observation::make(m_dataItem1, fault2, time, errors);
   m_checkpoint->addObservation(p4);
   ASSERT_EQ(2, p4.use_count());
   ASSERT_EQ(1, p3.use_count());
@@ -457,7 +439,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   ASSERT_EQ(3, list.size());
   list.clear();
 
-  auto p5 = observation::Observation::make(m_dataItem1.get(), normal2, time, errors);
+  auto p5 = observation::Observation::make(m_dataItem1, normal2, time, errors);
   m_checkpoint->addObservation(p5);
   ASSERT_FALSE(Cond(p5)->getPrev());
   
@@ -477,7 +459,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   list.clear();
 
   // Clear all
-  auto p6 = observation::Observation::make(m_dataItem1.get(), normal, time, errors);
+  auto p6 = observation::Observation::make(m_dataItem1, normal, time, errors);
   m_checkpoint->addObservation(p6);
   ASSERT_FALSE(Cond(p6)->getPrev());
 
@@ -505,7 +487,7 @@ TEST_F(CheckpointTest, LastConditionNormal)
   filter.insert(m_dataItem1->getId());
   ObservationList list;
 
-  auto p1 = observation::Observation::make(m_dataItem1.get(), fault1, time, errors);
+  auto p1 = observation::Observation::make(m_dataItem1, fault1, time, errors);
   m_checkpoint->addObservation(p1);
 
   list.clear();
@@ -513,7 +495,7 @@ TEST_F(CheckpointTest, LastConditionNormal)
   ASSERT_EQ(1, (int)list.size());
   list.clear();
 
-  auto p2 = observation::Observation::make(m_dataItem1.get(), normal1, time, errors);
+  auto p2 = observation::Observation::make(m_dataItem1, normal1, time, errors);
   m_checkpoint->addObservation(p2);
 
   list.clear();

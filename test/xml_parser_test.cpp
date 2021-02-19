@@ -30,6 +30,7 @@
 using namespace std;
 using namespace std::literals;
 using namespace mtconnect;
+using namespace entity;
 using namespace device_model;
 using namespace data_item;
 
@@ -268,7 +269,6 @@ TEST_F(XmlParserTest, Configuration)
   ASSERT_FALSE(power->getConfiguration().empty());
 }
 
-#if 0
 TEST_F(XmlParserTest, NoNamespace)
 {
   if (m_xmlParser)
@@ -301,10 +301,10 @@ TEST_F(XmlParserTest, FilteredDataItem13)
   }
 
   Device *dev = m_devices.front();
-  DataItem *di = dev->getDeviceDataItem("c1");
+  DataItemPtr di = dev->getDeviceDataItem("c1");
 
-  ASSERT_EQ(di->getFilterValue(), 5.0);
-  ASSERT_TRUE(di->hasMinimumDelta());
+  ASSERT_TRUE(di->getMinimumDelta());
+  ASSERT_EQ(5.0, *di->getMinimumDelta());
 }
 
 TEST_F(XmlParserTest, FilteredDataItem)
@@ -329,12 +329,12 @@ TEST_F(XmlParserTest, FilteredDataItem)
 
   auto di = m_devices.front()->getDeviceDataItem("c1");
 
-  ASSERT_EQ(di->getFilterValue(), 5.0);
-  ASSERT_TRUE(di->hasMinimumDelta());
+  ASSERT_TRUE(di->getMinimumDelta());
+  ASSERT_EQ(5.0, *di->getMinimumDelta());
   di = m_devices.front()->getDeviceDataItem("c2");
 
-  ASSERT_EQ(di->getFilterPeriod(), 10.0);
-  ASSERT_TRUE(di->hasMinimumPeriod());
+  ASSERT_TRUE(di->getMinimumPeriod());
+  ASSERT_EQ(10.0, di->getMinimumPeriod());
 }
 
 TEST_F(XmlParserTest, References)
@@ -364,24 +364,24 @@ TEST_F(XmlParserTest, References)
   comp->resolveReferences();
 
   const auto refs = comp->getReferences();
-  const auto &ref = refs[0];
+  auto ref = refs.begin();
 
-  ASSERT_EQ((string) "c4", ref.m_id);
-  ASSERT_EQ((string) "chuck", ref.m_name);
+  ASSERT_EQ((string) "c4", ref->m_id);
+  ASSERT_EQ((string) "chuck", ref->m_name);
 
-  ASSERT_TRUE(ref.m_dataItem) << "DataItem was not resolved.";
+  ASSERT_TRUE(ref->m_dataItem) << "DataItem was not resolved.";
+  
+  ref++;
+  ASSERT_EQ((string) "d2", ref->m_id);
+  ASSERT_EQ((string) "door", ref->m_name);
 
-  const auto &ref2 = refs[1];
-  ASSERT_EQ((string) "d2", ref2.m_id);
-  ASSERT_EQ((string) "door", ref2.m_name);
+  ASSERT_TRUE(ref->m_dataItem) << "DataItem was not resolved.";
+  
+  ref++;
+  ASSERT_EQ((string) "ele", ref->m_id);
+  ASSERT_EQ((string) "electric", ref->m_name);
 
-  ASSERT_TRUE(ref2.m_dataItem) << "DataItem was not resolved.";
-
-  const auto &ref3 = refs[2];
-  ASSERT_EQ((string) "ele", ref3.m_id);
-  ASSERT_EQ((string) "electric", ref3.m_name);
-
-  ASSERT_TRUE(ref3.m_component) << "DataItem was not resolved.";
+  ASSERT_TRUE(ref->m_component) << "DataItem was not resolved.";
 
   std::set<string> filter;
   m_xmlParser->getDataItems(filter, "//BarFeederInterface");
@@ -417,10 +417,12 @@ TEST_F(XmlParserTest, SourceReferences)
   const auto item = m_devices.front()->getDeviceDataItem("bfc");
   ASSERT_TRUE(item != nullptr);
 
-  ASSERT_EQ(string(""), item->getSource());
-  ASSERT_EQ(string("mf"), item->getSourceDataItemId());
-  ASSERT_EQ(string("ele"), item->getSourceComponentId());
-  ASSERT_EQ(string("xxx"), item->getSourceCompositionId());
+  auto source = item->maybeGet<EntityPtr>("Source");
+  ASSERT_TRUE(source);
+  ASSERT_FALSE((*source)->maybeGetValue<string>());
+  ASSERT_EQ("mf", (*source)->get<string>("dataItemId"));
+  ASSERT_EQ("ele", (*source)->get<string>("componentId"));
+  ASSERT_EQ("xxx", (*source)->get<string>("compositionId"));
 }
 
 TEST_F(XmlParserTest, DataItemRelationships)
@@ -440,43 +442,43 @@ TEST_F(XmlParserTest, DataItemRelationships)
   
   const auto item1 = dataItemsMap.at("xlc");
   ASSERT_TRUE(item1 != nullptr);
+    
+  const auto &relations = item1->getList("Relationships");
+  ASSERT_TRUE(relations);
   
-  const auto &relations = item1->getRelationships();
-  
-  ASSERT_EQ((size_t) 2, relations.size());
+  ASSERT_EQ((size_t) 2, relations->size());
 
-  auto rel = relations.begin();
+  auto rel = relations->begin();
   ASSERT_EQ(string("DataItemRelationship"),
-	    rel->m_relation);
+	    (*rel)->getName());
   ASSERT_EQ(string("LIMIT"),
-	    rel->m_type);
+            (*rel)->get<string>("type"));
   ASSERT_EQ(string("archie"),
-	    rel->m_name);
+            (*rel)->get<string>("name"));
   ASSERT_EQ(string("xlcpl"),
-	    rel->m_idRef);
+            (*rel)->get<string>("idRef"));
   
   rel++;
   ASSERT_EQ(string("SpecificationRelationship"),
-	    rel->m_relation);
+            (*rel)->getName());
   ASSERT_EQ(string("LIMIT"),
-	    rel->m_type);
-  ASSERT_TRUE(rel->m_name.empty());
+            (*rel)->get<string>("type"));
+  ASSERT_FALSE((*rel)->maybeGet<string>("name"));
   ASSERT_EQ(string("spec1"),
-	    rel->m_idRef);
+            (*rel)->get<string>("idRef"));
   
   const auto item2 = dataItemsMap.at("xlcpl");
   ASSERT_TRUE(item2 != nullptr);
   
-  const auto &relations2 = item2->getRelationships();
+  const auto &relations2 = item2->getList("Relationships");
+
+  ASSERT_EQ((size_t) 1, relations2->size());
   
-  ASSERT_EQ((size_t) 1, relations2.size());
-  
-  auto rel2 = relations2.begin();
-  ASSERT_EQ(string("DataItemRelationship"), rel2->m_relation);
-  ASSERT_EQ(string("OBSERVATION"), rel2->m_type);
-  ASSERT_EQ(string("bob"), rel2->m_name);
-  ASSERT_EQ(string("xlc"), rel2->m_idRef);
- 
+  auto rel2 = relations2->begin();
+  ASSERT_EQ(string("DataItemRelationship"), (*rel2)->getName());
+  ASSERT_EQ(string("OBSERVATION"), (*rel2)->get<string>("type"));
+  ASSERT_EQ(string("bob"), (*rel2)->get<string>("name"));
+  ASSERT_EQ(string("xlc"), (*rel2)->get<string>("idRef"));
 }
 
 TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
@@ -486,4 +488,3 @@ TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
 
   ASSERT_EQ(string("1.7"), dev->getMTConnectVersion());
 }
-#endif

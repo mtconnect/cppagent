@@ -30,6 +30,9 @@
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
+using namespace device_model;
+using namespace data_item;
+using namespace entity;
 using namespace std;
 using namespace std::literals;
 using namespace std::chrono_literals;
@@ -37,14 +40,14 @@ using namespace std::chrono_literals;
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string,unique_ptr<DataItem>> &items)
+  MockPipelineContract(std::map<string,DataItemPtr> &items)
   : m_dataItems(items)
   {
   }
   Device *findDevice(const std::string &device ) override { return nullptr; }
-  DataItem *findDataItem(const std::string &device, const std::string &name) override
+  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
-    return m_dataItems[name].get();
+    return m_dataItems[name];
   }
   void eachDataItem(EachDataItem fun) override {}
   void deliverObservation(observation::ObservationPtr obs) override {}
@@ -53,7 +56,7 @@ public:
   void deliverCommand(entity::EntityPtr )override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList&, bool )override {}
   
-  std::map<string,unique_ptr<DataItem>> &m_dataItems;
+  std::map<string,DataItemPtr> &m_dataItems;
 };
 
 class DuplicateFilterTest : public testing::Test
@@ -73,13 +76,13 @@ protected:
     m_dataItems.clear();
   }
   
-  DataItem *makeDataItem(std::map<string,string> attributes)
+  DataItemPtr makeDataItem(Properties attributes)
   {
-    auto di = make_unique<DataItem>(attributes);
-    DataItem *r = di.get();
-    m_dataItems.emplace(attributes["id"], move(di));
+    ErrorList errors;
+    auto di = DataItem::make(attributes, errors);
+    m_dataItems.emplace(di->getId(), di);
     
-    return r;
+    return di;
   }
   
   
@@ -94,7 +97,7 @@ protected:
   }
  
   shared_ptr<ShdrTokenMapper> m_mapper;
-  std::map<string,unique_ptr<DataItem>> m_dataItems;
+  std::map<string,DataItemPtr> m_dataItems;
   shared_ptr<PipelineContext> m_context;
 };
 
@@ -142,10 +145,12 @@ TEST_F(DuplicateFilterTest, test_simple_sample)
 
 TEST_F(DuplicateFilterTest, test_minimum_delta)
 {
-  auto a = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}
+  ErrorList errors;
+  auto f = Filter::getFactory()->create("Filter", {{"type", "MINIMUM_DELTA"s}, {"VALUE", 1.0}}, errors);
+  
+  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
+    {"units", "MILLIMETER"}, {"Filters", f}
   });
-  a->setMinmumDelta(1.0);
   
   auto filter = make_shared<DuplicateFilter>(m_context);
   m_mapper->bind(filter);
@@ -187,10 +192,12 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
 
 TEST_F(DuplicateFilterTest, test_period_filter)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}
+  ErrorList errors;
+  auto f = Filter::getFactory()->create("Filter", {{"type", "PERIOD"s}, {"VALUE", 10.0}}, errors);
+  
+  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
+    {"units", "MILLIMETER"}, {"Filters", f}
   });
-  di->setMinmumPeriod(10.0);
   
   Timestamp now = chrono::system_clock::now();
 

@@ -22,6 +22,9 @@
 #include "device_model/device.hpp"
 using namespace std;
 using namespace mtconnect;
+using namespace entity;
+using namespace device_model;
+using namespace data_item;
 
 class DeviceTest : public testing::Test
 {
@@ -155,9 +158,11 @@ TEST_F(DeviceTest, DataItems)
 {
   ASSERT_TRUE(m_devA->getDataItems().empty());
 
-  map<string, string> dummy;
-
-  auto *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
+  ErrorList errors;
+  auto data1 = DataItem::make({{"id", "a"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  ASSERT_TRUE(errors.empty());
+  auto data2 = DataItem::make({{"id", "b"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  ASSERT_TRUE(errors.empty());
   m_devA->addDataItem(data1);
   m_devA->addDataItem(data2);
 
@@ -172,14 +177,14 @@ TEST_F(DeviceTest, DeviceDataItem)
   ASSERT_TRUE(!m_devA->getDeviceDataItem("DataItemTest1"));
   ASSERT_TRUE(!m_devA->getDeviceDataItem("DataItemTest2"));
 
-  map<string, string> attributes;
-  attributes["id"] = "DataItemTest1";
+  
+  ErrorList errors;
+  auto data1 = DataItem::make({{"id", "DataItemTest1"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  ASSERT_TRUE(errors.empty());
+  auto data2 = DataItem::make({{"id", "DataItemTest2"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  ASSERT_TRUE(errors.empty());
 
-  DataItem *data1 = new DataItem(attributes);
   m_devA->addDataItem(data1);
-
-  attributes["id"] = "DataItemTest2";
-  DataItem *data2 = new DataItem(attributes);
   m_devA->addDataItem(data2);
 
   ASSERT_EQ((size_t)2, m_devA->getDeviceDataItems().size());
@@ -189,31 +194,30 @@ TEST_F(DeviceTest, DeviceDataItem)
 
 TEST_F(DeviceTest, GetDataItem)
 {
-  map<string, string> attributes;
-  attributes["id"] = "by_id";
-  DataItem *data1 = new DataItem(attributes);
+  ErrorList errors;
+  auto data1 = DataItem::make({{"id", "by_id"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  ASSERT_TRUE(errors.empty());
   m_devA->addDataItem(data1);
 
-  map<string, string> attributes2;
-  attributes2["id"] = "by_id2";
-  attributes2["name"] = "by_name2";
-  DataItem *data2 = new DataItem(attributes2);
+  auto data2 = DataItem::make({{"id", "by_id2"s}, {"type", "A"s}, {"name", "by_name2"s}, {"category", "EVENT"s}}, errors);
+  ASSERT_TRUE(errors.empty());
   m_devA->addDataItem(data2);
 
-  map<string, string> attributes3;
-  attributes3["id"] = "by_id3";
-  attributes3["name"] = "by_name3";
-  DataItem *data3 = new DataItem(attributes3);
-  data3->addSource("by_source3", "", "", "");
+  Properties sp{{"VALUE", "by_source3"}};
+  auto source = Source::getFactory()->create("Source", sp, errors);
+  Properties p3({{"id", "by_id3"s}, {"type", "A"s}, {"name", "by_name2"s}, {"category", "EVENT"s}, {"Source", source}});
+  auto data3 = DataItem::make(p3, errors);
+  ASSERT_TRUE(errors.empty());
+
   m_devA->addDataItem(data3);
 
   ASSERT_TRUE(data1 == m_devA->getDeviceDataItem("by_id"));
-  ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_name"));
-  ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source"));
+  ASSERT_TRUE(m_devA->getDeviceDataItem("by_name"));
+  ASSERT_TRUE(m_devA->getDeviceDataItem("by_source"));
 
   ASSERT_TRUE(data2 == m_devA->getDeviceDataItem("by_id2"));
   ASSERT_TRUE(data2 == m_devA->getDeviceDataItem("by_name2"));
-  ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source2"));
+  ASSERT_TRUE(m_devA->getDeviceDataItem("by_source2"));
 
   ASSERT_TRUE(data3 == m_devA->getDeviceDataItem("by_id3"));
   ASSERT_TRUE(data3 == m_devA->getDeviceDataItem("by_name3"));

@@ -30,6 +30,8 @@ using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace mtconnect::entity;
 using namespace mtconnect::observation;
+using namespace device_model;
+using namespace data_item;
 using namespace std::literals;
 using namespace date::literals;
 
@@ -40,27 +42,21 @@ class ObservationTest : public testing::Test
   {
     std::map<string, string> attributes1, attributes2;
 
-    attributes1["id"] = "1";
-    attributes1["name"] = "DataItemTest1";
-    attributes1["type"] = "PROGRAM";
-    attributes1["category"] = "EVENT";
-    m_dataItem1 = make_unique<DataItem>(attributes1);
-
-    attributes2["id"] = "3";
-    attributes2["name"] = "DataItemTest2";
-    attributes2["type"] = "POSITION";
-    attributes2["nativeUnits"] = "MILLIMETER";
-    attributes2["subType"] = "ACTUAL";
-    attributes2["category"] = "SAMPLE";
-    m_dataItem2 = make_unique<DataItem>(attributes2);
+    ErrorList errors;
+    m_dataItem1 = DataItem::make({{"id", "1"s}, {"name", "DataItemTest1"s},
+      {"type", "PROGRAM"s}, {"category", "EVENT"s}
+    }, errors);
+    m_dataItem2 = DataItem::make({{"id", "3"s}, {"name", "DataItemTest2"s},
+      {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"subType", "ACTUAL"s},
+      {"units", "MILLIMETER"s}, {"nativeUnits", "MILLIMETER"s}
+    }, errors);
 
     m_time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
     
-    ErrorList errors;
-    m_compEventA = Observation::make(m_dataItem1.get(), {{ "VALUE", "Test"s }}, m_time, errors);
+    m_compEventA = Observation::make(m_dataItem1, {{ "VALUE", "Test"s }}, m_time, errors);
     m_compEventA->setSequence(2);
     
-    m_compEventB = Observation::make(m_dataItem2.get(), {{ "VALUE", 1.1231 }}, m_time + 10min, errors);
+    m_compEventB = Observation::make(m_dataItem2, {{ "VALUE", 1.1231 }}, m_time + 10min, errors);
     m_compEventB->setSequence(4);
   }
 
@@ -83,11 +79,14 @@ class ObservationTest : public testing::Test
                        const std::string &nativeUnits, float expected, const double value,
                        const char *file, int line)
   {
-    attributes["nativeUnits"] = nativeUnits;
-    DataItem dataItem(attributes);
-
     ErrorList errors;
-    ObservationPtr sample = Observation::make(&dataItem, {{"VALUE", value}}, m_time, errors);
+    Properties ps;
+    for (auto &p : attributes)
+      ps.emplace(p.first, p.second);
+    ps["nativeUnits"] = nativeUnits;
+    
+    auto dataItem = DataItem::make(ps, errors);
+    ObservationPtr sample = Observation::make(dataItem, {{"VALUE", value}}, m_time, errors);
 
     stringstream message;
     double diff = abs(expected - sample->getValue<double>());
@@ -126,8 +125,8 @@ TEST_F(ObservationTest, GetAttributes)
 
 TEST_F(ObservationTest, Getters)
 {
-  ASSERT_TRUE(m_dataItem1.get() == m_compEventA->getDataItem());
-  ASSERT_TRUE(m_dataItem2.get() == m_compEventB->getDataItem());
+  ASSERT_TRUE(m_dataItem1 == m_compEventA->getDataItem());
+  ASSERT_TRUE(m_dataItem2 == m_compEventB->getDataItem());
 
   ASSERT_EQ("Test", m_compEventA->getValue<string>());
   ASSERT_EQ(1.1231, m_compEventB->getValue<double>());
@@ -175,14 +174,14 @@ TEST_F(ObservationTest, ConvertSimpleUnits)
 
 TEST_F(ObservationTest, ConditionEventChaining)
 {
-  DataItem dataItem({{"id", "c1"}, {"category", "CONDITION"},
-    {"type","TEMPERATURE"}
-  });
-  
   ErrorList errors;
-  ConditionPtr event1 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
-  ConditionPtr event2 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
-  ConditionPtr event3 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
+  auto dataItem = DataItem::make({{"id", "c1"}, {"category", "CONDITION"},
+    {"type","TEMPERATURE"}
+  }, errors);
+  
+  ConditionPtr event1 = Cond(Observation::make(dataItem, {{"level", "FAULT"s}}, m_time, errors));
+  ConditionPtr event2 = Cond(Observation::make(dataItem, {{"level", "FAULT"s}}, m_time, errors));
+  ConditionPtr event3 = Cond(Observation::make(dataItem, {{"level", "FAULT"s}}, m_time, errors));
 
   ASSERT_TRUE(event1 == event1->getFirst());
 

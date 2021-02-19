@@ -408,10 +408,10 @@ TEST_F(AgentTest, Composition)
   auto agent = m_agentTestHelper->m_agent.get();
   addAdapter();
 
-  DataItem *motor = agent->getDataItemForDevice("LinuxCNC", "zt1");
+  DataItemPtr motor = agent->getDataItemForDevice("LinuxCNC", "zt1");
   ASSERT_TRUE(motor);
 
-  DataItem *amp = agent->getDataItemForDevice("LinuxCNC", "zt2");
+  DataItemPtr amp = agent->getDataItemForDevice("LinuxCNC", "zt2");
   ASSERT_TRUE(amp);
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|zt1|100|zt2|200");
@@ -1019,17 +1019,20 @@ TEST_F(AgentTest, DynamicCalibration)
   auto di = agent->getDataItemForDevice("LinuxCNC", "Yact");
   ASSERT_TRUE(di);
 
-  ASSERT_TRUE(di->hasFactor());
-  ASSERT_EQ(0.01, di->getConversionFactor());
-  ASSERT_EQ(200.0, di->getConversionOffset());
+  // TODO: Fix conversions
+//  ASSERT_TRUE(di->hasFactor());
+//  ASSERT_EQ(0.01, di->getConversionFactor());
+//  ASSERT_EQ(200.0, di->getConversionOffset());
 
   di = agent->getDataItemForDevice("LinuxCNC", "Zact");
   ASSERT_TRUE(di);
 
-  ASSERT_TRUE(di->hasFactor());
-  ASSERT_EQ(0.02, di->getConversionFactor());
-  ASSERT_EQ(300.0, di->getConversionOffset());
-
+//  ASSERT_TRUE(di->hasFactor());
+//  ASSERT_EQ(0.02, di->getConversionFactor());
+//  ASSERT_EQ(300.0, di->getConversionOffset());
+  
+  ASSERT_TRUE(false);
+  
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|Yact|200|Zact|600");
   m_agentTestHelper->m_adapter->processData(
       "2021-02-01T12:00:00Z|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 "
@@ -1219,7 +1222,7 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
   }
 
 #if 0
-  DataItem *item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "load");
+  DataItemPtr item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "load");
   ASSERT_TRUE(item);
   ASSERT_TRUE(item->hasMinimumDelta());
 
@@ -1263,25 +1266,25 @@ TEST_F(AgentTest, References)
   auto comp = item->getComponent();
 
   const auto refs = comp->getReferences();
-  const auto ref = refs[0];
+  auto ref = refs.begin();
 
-  ASSERT_EQ((string) "c4", ref.m_id);
-  ASSERT_EQ((string) "chuck", ref.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref.m_type);
+  ASSERT_EQ((string) "c4", ref->m_id);
+  ASSERT_EQ((string) "chuck", ref->m_name);
+  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref->m_type);
 
-  ASSERT_TRUE(ref.m_dataItem) << "DataItem was not resolved";
+  ASSERT_TRUE(ref->m_dataItem) << "DataItem was not resolved";
+  ref++;
+  
+  ASSERT_EQ((string) "d2", ref->m_id);
+  ASSERT_EQ((string) "door", ref->m_name);
+  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref->m_type);
 
-  const mtconnect::Component::Reference &ref2 = refs[1];
-  ASSERT_EQ((string) "d2", ref2.m_id);
-  ASSERT_EQ((string) "door", ref2.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref2.m_type);
+  ref++;
+  ASSERT_EQ((string) "ele", ref->m_id);
+  ASSERT_EQ((string) "electric", ref->m_name);
+  ASSERT_EQ(mtconnect::Component::Reference::COMPONENT, ref->m_type);
 
-  const mtconnect::Component::Reference &ref3 = refs[2];
-  ASSERT_EQ((string) "ele", ref3.m_id);
-  ASSERT_EQ((string) "electric", ref3.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::COMPONENT, ref3.m_type);
-
-  ASSERT_TRUE(ref3.m_component) << "DataItem was not resolved";
+  ASSERT_TRUE(ref->m_component) << "DataItem was not resolved";
 
 
   // Additional data items should be included
@@ -1605,7 +1608,9 @@ TEST_F(AgentTest, ConstantValue)
   auto agent = m_agentTestHelper->getAgent();
   auto di = agent->getDataItemForDevice("LinuxCNC", "block");
   ASSERT_TRUE(di);
-  di->addConstrainedValue("UNAVAILABLE");
+  
+  // TODO: Create a new DI with constrained value
+  //di->addConstrainedValue("UNAVAILABLE");
 
   {
     PARSE_XML_RESPONSE("/sample");

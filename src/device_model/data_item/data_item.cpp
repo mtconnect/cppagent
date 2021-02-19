@@ -70,7 +70,7 @@ namespace mtconnect
             {"Filters", ENTITY_LIST, filter, false},
             {"Definition", ENTITY, definition, false},
             {"Constraints", ENTITY_LIST, constraints, false},
-            {"Relationships", ENTITY, relationships, false},
+            {"Relationships", ENTITY_LIST, relationships, false},
             {"InitialValue", DOUBLE, false},
             {"ResetTrigger", false}
           });
@@ -121,10 +121,12 @@ namespace mtconnect
           m_observationType += pascalize(*rep, pre);
         if (m_prefix)
           m_prefixedObservationType = *m_prefix + ':' + m_observationType;
+        else
+          m_prefixedObservationType = m_observationType;
         
         const static unordered_map<string, ERepresentation> reps =
         {{"VALUE", VALUE}, {"TIME_SERIES", TIME_SERIES},
-          {"DISCRETE", DISCRETE}, {"DATE_SET", DATA_SET},
+          {"DISCRETE", DISCRETE}, {"DATA_SET", DATA_SET},
           {"TABLE", TABLE}
         };
         auto rep = maybeGet<string>("representation");

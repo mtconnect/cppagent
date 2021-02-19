@@ -179,8 +179,8 @@ namespace mtconnect
 
   static inline json toJson(DataItemPtr item)
   {
-    json obj;
-    return obj;
+    entity::JsonPrinter printer;
+    return printer.print(item);
   }
 
   static inline json jsonReference(const Component::Reference &reference)

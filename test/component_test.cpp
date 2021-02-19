@@ -24,6 +24,9 @@
 
 using namespace std;
 using namespace mtconnect;
+using namespace device_model;
+using namespace data_item;
+using namespace entity;
 
 class ComponentTest : public testing::Test
 {
@@ -161,9 +164,11 @@ TEST_F(ComponentTest, DataItems)
 {
   ASSERT_TRUE(m_compA->getDataItems().empty());
 
-  map<string, string> dummy;
-
-  auto *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
+  ErrorList errors;
+  auto data1 = DataItem::make({{"id", "a"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  ASSERT_TRUE(errors.empty());
+  auto data2 = DataItem::make({{"id", "b"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  ASSERT_TRUE(errors.empty());
   m_compA->addDataItem(data1);
   m_compA->addDataItem(data2);
 

@@ -66,7 +66,7 @@ class JsonPrinterStreamTest : public testing::Test
     m_printer.reset();
   }
 
-  DataItem *getDataItem(const char *name)
+  DataItemPtr getDataItem(const char *name)
   {
     for (auto &device : m_devices)
     {

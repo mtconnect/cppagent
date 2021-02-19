@@ -108,7 +108,6 @@ namespace mtconnect
         SpecialClass getSpecialClass() const { return m_specialClass; }
         
         const auto &getConstantValue() const { return m_constantValue; }
-        void setConversionFactor(double factor, double offset);
         
         // Returns true if data item is a sample
         bool isSample() const { return m_category == SAMPLE; }

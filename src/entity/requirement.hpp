@@ -30,6 +30,7 @@
 #include <optional>
 #include <regex>
 #include <set>
+#include <unordered_set>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -54,6 +55,7 @@ namespace mtconnect
     using FactoryPtr = std::shared_ptr<Factory>;
     using ControlledVocab = std::list<std::string>;
     using Pattern = std::optional<std::regex>;
+    using VocabSet = std::optional<std::unordered_set<std::string>>;
 
     enum ValueType : int16_t
     {
@@ -193,11 +195,9 @@ namespace mtconnect
           m_lowerMultiplicity(required ? 1 : 0),
           m_type(STRING)
       {
-        std::stringstream str;
+        m_vocabulary.emplace();
         for (auto &s : vocab)
-          str << s << "|";
-        str.seekp(-1, std::ios_base::end);
-        m_pattern = std::make_optional<std::regex>(str.str());
+          m_vocabulary->emplace(s);
       }
       Requirement(const std::string &name, const std::regex &pattern, bool required = true)
         : m_name(name),
@@ -277,6 +277,7 @@ namespace mtconnect
       MatcherPtr m_matcher;
       FactoryPtr m_factory;
       Pattern m_pattern;
+      VocabSet m_vocabulary;
     };
 
     // Inlines

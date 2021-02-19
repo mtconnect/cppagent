@@ -59,7 +59,7 @@ class DataSetTest : public testing::Test
 
   std::unique_ptr<Checkpoint> m_checkpoint;
   std::string m_agentId;
-  DataItemPtr m_dataItem;
+  DataItemPtr m_dataItem1;
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -77,10 +77,9 @@ inline DataSetEntry operator"" _E(const char *c, std::size_t)
 TEST_F(DataSetTest, DataItem)
 {
   ASSERT_TRUE(m_dataItem1->isDataSet());
-  auto &attrs = m_dataItem1->getAttributes();
 
-  ASSERT_EQ((string) "DATA_SET", attrs.at("representation"));
-  ASSERT_EQ((string) "VariableDataSet", m_dataItem1->getElementName());
+  ASSERT_EQ("DATA_SET", m_dataItem1->get<string>("representation"));
+  ASSERT_EQ("VariableDataSet", m_dataItem1->getObservationType());
 }
 
 TEST_F(DataSetTest, InitialSet)

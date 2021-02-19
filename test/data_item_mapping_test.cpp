@@ -28,19 +28,21 @@
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
+using namespace device_model;
+using namespace data_item;
 using namespace std;
 
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string,unique_ptr<DataItem>> &items)
+  MockPipelineContract(std::map<string,DataItemPtr> &items)
   : m_dataItems(items)
   {
   }
   Device *findDevice(const std::string &) override { return nullptr; }
-  DataItem *findDataItem(const std::string &device, const std::string &name) override
+  DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
-    return m_dataItems[name].get();
+    return m_dataItems[name];
   }
   void eachDataItem(EachDataItem fun) override {}
   void deliverObservation(observation::ObservationPtr obs) override {}
@@ -49,7 +51,7 @@ public:
   void deliverCommand(entity::EntityPtr )override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool )override {}
   
-  std::map<string,unique_ptr<DataItem>> &m_dataItems;
+  std::map<string,DataItemPtr> &m_dataItems;
 };
 
 class DataItemMappingTest : public testing::Test
@@ -71,13 +73,14 @@ protected:
     m_dataItems.clear();
   }
   
-  DataItem *makeDataItem(std::map<string,string> attributes)
+  DataItemPtr makeDataItem(const Properties &props)
   {
-    auto di = make_unique<DataItem>(attributes);
-    DataItem *r = di.get();
-    m_dataItems.emplace(attributes["id"], move(di));
+    Properties ps(props);
+    ErrorList errors;
+    auto di = DataItem::make(ps, errors);
+    m_dataItems.emplace(di->getId(), di);
     
-    return r;
+    return di;
   }
   
   TimestampedPtr makeTimestamped(TokenList tokens)
@@ -91,7 +94,7 @@ protected:
 
   shared_ptr<PipelineContext> m_context;
   shared_ptr<ShdrTokenMapper> m_mapper;
-  std::map<string,unique_ptr<DataItem>> m_dataItems;
+  std::map<string,DataItemPtr> m_dataItems;
 };
 
 inline DataSetEntry operator"" _E(const char *c, std::size_t)
@@ -101,7 +104,8 @@ inline DataSetEntry operator"" _E(const char *c, std::size_t)
 
 TEST_F(DataItemMappingTest, SimpleEvent)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
+  Properties props{{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
+  auto di = makeDataItem(props);
   auto ts = makeTimestamped({"a", "READY"});
   
   auto observations = (*m_mapper)(ts);
@@ -121,7 +125,8 @@ TEST_F(DataItemMappingTest, SimpleEvent)
 
 TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
 {
-  auto di = makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  Properties props{{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
+  auto di = makeDataItem(props);
   auto ts = makeTimestamped({"a", "unavailable"s});
   
   auto observations = (*m_mapper)(ts);
@@ -140,7 +145,8 @@ TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
 
 TEST_F(DataItemMappingTest, TwoSimpleEvents)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
+  Properties props{{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
+  auto di = makeDataItem(props);
   auto ts = makeTimestamped({"a", "READY", "a", "ACTIVE"});
   
   auto observations = (*m_mapper)(ts);
@@ -169,7 +175,8 @@ TEST_F(DataItemMappingTest, TwoSimpleEvents)
 
 TEST_F(DataItemMappingTest, Message)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "MESSAGE"}, {"category", "EVENT"}});
+  Properties props{{"id", "a"s}, {"type", "MESSAGE"s}, {"category", "EVENT"s}};
+  auto di = makeDataItem(props);
   auto ts = makeTimestamped({"a", "A123", "some text"});
 
   auto observations = (*m_mapper)(ts);
@@ -191,7 +198,7 @@ TEST_F(DataItemMappingTest, Message)
 
 TEST_F(DataItemMappingTest, SampleTest)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
+  auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
     {"units", "MILLIMETER"}
   });
   auto ts = makeTimestamped({"a", "1.23456"});
@@ -211,8 +218,8 @@ TEST_F(DataItemMappingTest, SampleTest)
 
 TEST_F(DataItemMappingTest, SampleTestFormatIssue)
 {
-  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}
+  makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
+    {"units", "MILLIMETER"s}
   });
   auto ts = makeTimestamped({"a", "ABC"});
   auto observations = (*m_mapper)(ts);
@@ -225,8 +232,8 @@ TEST_F(DataItemMappingTest, SampleTestFormatIssue)
 
 TEST_F(DataItemMappingTest, SampleTimeseries)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}, {"representation", "TIME_SERIES"}
+  auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
+    {"units", "MILLIMETER"s}, {"representation", "TIME_SERIES"s}
   });
   auto ts = makeTimestamped({"a", "5", "100", "1.1 1.2 1.3 1.4 1.5"});
   auto observations = (*m_mapper)(ts);
@@ -244,10 +251,9 @@ TEST_F(DataItemMappingTest, SampleTimeseries)
 
 TEST_F(DataItemMappingTest, SampleResetTrigger)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}
+  auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
+    {"units", "MILLIMETER"s}, {"ResetTrigger", "MANUAL"s}
   });
-  di->setResetTrigger("MANUAL");
   auto ts = makeTimestamped({"a", "1.23456:MANUAL"});
   auto observations = (*m_mapper)(ts);
   auto oblist = observations->getValue<EntityList>();
@@ -264,7 +270,7 @@ TEST_F(DataItemMappingTest, SampleResetTrigger)
 
 TEST_F(DataItemMappingTest, Condition)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "CONDITION"}
+  auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}
   });
 //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
@@ -286,7 +292,7 @@ TEST_F(DataItemMappingTest, Condition)
 
 TEST_F(DataItemMappingTest, ConditionNormal)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "CONDITION"}
+  auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}
   });
 //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
@@ -309,7 +315,7 @@ TEST_F(DataItemMappingTest, ConditionNormal)
 
 TEST_F(DataItemMappingTest, ConditionNormalPartial)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "CONDITION"}});
+  auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
 //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
   auto ts = makeTimestamped({"a", "normal"});
@@ -330,8 +336,8 @@ TEST_F(DataItemMappingTest, ConditionNormalPartial)
 
 TEST_F(DataItemMappingTest, DataSet)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"},
-    { "representation", "DATA_SET" }
+  auto di = makeDataItem({{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "EVENT"s},
+    { "representation", "DATA_SET"s }
   });
 
   auto ts = makeTimestamped({"a", "a=1 b=2 c={abc}"});
@@ -354,8 +360,8 @@ TEST_F(DataItemMappingTest, DataSet)
 
 TEST_F(DataItemMappingTest, Table)
 {
-  auto di = makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"},
-    { "representation", "TABLE" }
+  auto di = makeDataItem({{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "EVENT"s},
+    { "representation", "TABLE"s }
   });
 
   auto ts = makeTimestamped({"a", "a={c=1 n=3.0} b={d=2 e=3} c={x=abc y=def}"});
@@ -389,8 +395,8 @@ TEST_F(DataItemMappingTest, Table)
 
 TEST_F(DataItemMappingTest, DataSetResetTriggered)
 {
-  makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"},
-    { "representation", "DATA_SET" }
+  makeDataItem({{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "EVENT"s},
+    { "representation", "DATA_SET"s }
   });
 
   auto ts = makeTimestamped({"a", ":MANUAL a=1 b=2 c={abc}"});
@@ -409,8 +415,8 @@ TEST_F(DataItemMappingTest, DataSetResetTriggered)
 
 TEST_F(DataItemMappingTest, TableResetTriggered)
 {
-  makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"},
-    { "representation", "TABLE" }
+  makeDataItem({{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "EVENT"s},
+    { "representation", "TABLE"s }
   });
 
   auto ts = makeTimestamped({"a", ":DAY a={c=1 n=3.0} b={d=2 e=3} c={x=abc y=def}"});
@@ -431,9 +437,9 @@ TEST_F(DataItemMappingTest, new_token_mapping_behavior)
   m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
   m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   
-  makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"} });
-  makeDataItem({{"id", "b"}, {"type", "SOMETHING"}, {"category", "CONDITION"} });
-  makeDataItem({{"id", "c"}, {"type", "MESSAGE"}, {"category", "EVENT"} });
+  makeDataItem({{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "EVENT"s} });
+  makeDataItem({{"id", "b"s}, {"type", "SOMETHING"s}, {"category", "CONDITION"s} });
+  makeDataItem({{"id", "c"s}, {"type", "MESSAGE"s}, {"category", "EVENT"s} });
 
   auto ts = makeTimestamped(
     {"b", "normal", "", "", "", "",
@@ -465,9 +471,9 @@ TEST_F(DataItemMappingTest, legacy_token_mapping_behavior)
   m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 1);
   m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   
-  makeDataItem({{"id", "a"}, {"type", "SOMETHING"}, {"category", "EVENT"} });
-  makeDataItem({{"id", "b"}, {"type", "SOMETHING"}, {"category", "CONDITION"} });
-  makeDataItem({{"id", "c"}, {"type", "MESSAGE"}, {"category", "EVENT"} });
+  makeDataItem({{"id", "a"s}, {"type", "SOMETHING"s}, {"category", "EVENT"s} });
+  makeDataItem({{"id", "b"s}, {"type", "SOMETHING"s}, {"category", "CONDITION"s} });
+  makeDataItem({{"id", "c"s}, {"type", "MESSAGE"s}, {"category", "EVENT"s} });
 
   auto ts = makeTimestamped(
     {"b", "normal", "", "", "", "",

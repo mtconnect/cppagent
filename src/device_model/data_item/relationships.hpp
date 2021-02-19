@@ -42,10 +42,10 @@ namespace mtconnect
           static FactoryPtr factory;
           if (!factory)
           {
-            auto factory = make_shared<Factory>(Requirements{
+            factory = make_shared<Factory>(Requirements{
               {"type", ControlledVocab{"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"},
                 true},
-              {"name", true},
+              {"name", false},
               {"idRef", true}});
             factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationship>(name, props);
@@ -62,7 +62,7 @@ namespace mtconnect
           static FactoryPtr factory;
           if (!factory)
           {
-            auto factory = make_shared<Factory>(Requirements{
+            factory = make_shared<Factory>(Requirements{
               {"type", ControlledVocab{"LIMIT"}, true}, {"name", false}, {"idRef", true}});
             factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationship>(name, props);
@@ -87,14 +87,12 @@ namespace mtconnect
           static FactoryPtr relationships;
           if (!relationships)
           {
-            auto spec = Relationship::getDataItemFactory();
-            auto di = Relationship::getSpecificationFactory();
-            auto rels = make_shared<Factory>(
+            auto di = Relationship::getDataItemFactory();
+            auto spec = Relationship::getSpecificationFactory();
+            relationships = make_shared<Factory>(
                 Requirements{{"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
                              {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}});
-            rels->setMinListSize(1);
-            relationships =
-                make_shared<Factory>(Requirements{{"Relationships", ENTITY_LIST, rels, false}});
+            relationships->setMinListSize(1);
             relationships->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationships>(name, props);
             });
