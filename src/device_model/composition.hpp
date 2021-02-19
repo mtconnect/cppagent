@@ -17,17 +17,7 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
-#include "description.hpp"
-#include "utilities.hpp"
-
-#include <list>
-#include <map>
-#include <memory>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <utility>
+#include "entity.hpp"
 
 namespace mtconnect
 {
@@ -38,6 +28,7 @@ namespace mtconnect
     virtual ~Composition() = default;
 
     static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
 
     const entity::EntityPtr &getEntity() const { return m_entity; };
     void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; };

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
+#include "configuration/configuration.hpp"
 #include "composition.hpp"
 #include "utilities.hpp"
 
@@ -33,7 +33,9 @@ namespace mtconnect
   class DataItem;
   class Device;
   class Agent;
-
+  
+  using namespace device_model::configuration;
+  
   class Component
   {
   public:
@@ -111,7 +113,7 @@ namespace mtconnect
     void addDescription(std::string body, const std::map<std::string, std::string> &attributes);
     const std::map<std::string, std::string> &getDescription() const { return m_description; }
 
-    void addConfiguration(std::unique_ptr<ComponentConfiguration> &configuration)
+    void addConfiguration(std::unique_ptr<Configuration> &configuration)
     {
       m_configuration.emplace_back(std::move(configuration));
     }
@@ -181,7 +183,7 @@ namespace mtconnect
     // Description of itself
     std::map<std::string, std::string> m_description;
     std::string m_descriptionBody;
-    std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
+    std::list<std::unique_ptr<Configuration>> m_configuration;
 
     // Component relationships
     // Pointer to the parent component

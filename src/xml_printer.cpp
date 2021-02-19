@@ -20,13 +20,8 @@
 #include "assets/asset.hpp"
 #include "assets/cutting_tool.hpp"
 #include "device_model/composition.hpp"
-#include "device_model/coordinate_systems.hpp"
 #include "device_model/device.hpp"
-#include "device_model/relationships.hpp"
-#include "device_model/sensor_configuration.hpp"
-#include "device_model/solid_model.hpp"
-#include "device_model/motion.hpp"
-#include "device_model/specifications.hpp"
+#include "device_model/configuration/configuration.hpp"
 #include "entity/xml_printer.hpp"
 #include "version.h"
 
@@ -58,6 +53,7 @@ namespace mtconnect
 {
   static dlib::logger g_logger("xml.printer");
   using namespace observation;
+  using namespace device_model::configuration;
 
   class XmlWriter
   {
@@ -364,51 +360,6 @@ namespace mtconnect
     }
   }
 
-  inline void printGeometry(xmlTextWriterPtr writer, const Geometry &geometry)
-  {
-    if (geometry.m_location.index() != 0)
-    {
-      visit(overloaded{[&writer](const Origin &o) {
-                         stringstream s;
-                         s << o.m_x << ' ' << o.m_y << ' ' << o.m_z;
-                         addSimpleElement(writer, "Origin", s.str());
-                       },
-                       [&writer](const Transformation &t) {
-                         AutoElement ele(writer, "Transformation");
-                         if (t.m_translation)
-                         {
-                           stringstream s;
-                           s << t.m_translation->m_x << ' ' << t.m_translation->m_y << ' '
-                             << t.m_translation->m_z;
-                           addSimpleElement(writer, "Translation", s.str());
-                         }
-                         if (t.m_rotation)
-                         {
-                           stringstream s;
-                           s << t.m_rotation->m_roll << ' ' << t.m_rotation->m_pitch << ' '
-                             << t.m_rotation->m_yaw;
-                           addSimpleElement(writer, "Rotation", s.str());
-                         }
-                       },
-                       [](const std::monostate &a) {}},
-            geometry.m_location);
-    }
-
-    if (geometry.m_scale)
-    {
-      stringstream s;
-      s << geometry.m_scale->m_scaleX << ' ' << geometry.m_scale->m_scaleY << ' '
-        << geometry.m_scale->m_scaleZ;
-      addSimpleElement(writer, "Scale", s.str());
-    }
-    if (geometry.m_axis)
-    {
-      stringstream s;
-      s << geometry.m_axis->m_x << ' ' << geometry.m_axis->m_y << ' ' << geometry.m_axis->m_z;
-      addSimpleElement(writer, "Axis", s.str());
-    }
-  }
-
   std::string XmlPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const ProtoErrorList &list) const
   {
@@ -480,7 +431,7 @@ namespace mtconnect
   }
 
   void printConfiguration(xmlTextWriterPtr writer,
-                          const unique_ptr<ComponentConfiguration> &configuration)
+                          const unique_ptr<Configuration> &configuration)
   {
     AutoElement configEle(writer, "Configuration");
     entity::XmlPrinter printer;

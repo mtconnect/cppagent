@@ -6,7 +6,6 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "device_model/specifications.hpp"
 #include "device_model/composition.hpp"
 
 #include <cstdio>
@@ -74,7 +73,7 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("vroom", get<string>(description->getProperty("model")));
   EXPECT_EQ("12356", get<string>(description->getProperty("serialNumber")));
   EXPECT_EQ("A", get<string>(description-> getProperty("station")));
-  //EXPECT_EQ("Hello There", get<string>(description->getValue()));
+  EXPECT_EQ("Hello There", get<string>(description->getValue()));
 
  
   auto &configuration = (*composition)->getList("Configuration");

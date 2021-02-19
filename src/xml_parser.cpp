@@ -19,11 +19,6 @@
 
 #include "assets/cutting_tool.hpp"
 #include "device_model/composition.hpp"
-#include "device_model/coordinate_systems.hpp"
-#include "device_model/motion.hpp"
-#include "device_model/sensor_configuration.hpp"
-#include "device_model/solid_model.hpp"
-#include "device_model/specifications.hpp"
 #include "entity/xml_parser.hpp"
 #include "xml_printer.hpp"
 
@@ -57,6 +52,7 @@ using namespace std;
 namespace mtconnect
 {
   using namespace observation;
+  using namespace device_model;
 
   static dlib::logger g_logger("xml.parser");
 
@@ -213,78 +209,6 @@ namespace mtconnect
     {
       return make_optional(v);
     }
-  }
-
-  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node, bool hasScale,
-                                                    bool hasAxis)
-  {
-    Geometry geometry;
-    forEachElement(node, {{"Transformation",
-                           [&geometry](const xmlNodePtr n) {
-                             if (geometry.m_location.index() != 0)
-                             {
-                               g_logger << dlib::LWARN << "Translation or Origin already given";
-                               return;
-                             }
-
-                             Transformation t;
-                             forEachElement(n, {{"Translation",
-                                                 [&t](const xmlNodePtr c) {
-                                                   auto s = getThreeSpace(getCDATA(c));
-                                                   if (s)
-                                                     t.m_translation.emplace(s->m_1, s->m_2,
-                                                                             s->m_3);
-                                                 }},
-                                                {"Rotation", [&t](const xmlNodePtr c) {
-                                                   auto s = getThreeSpace(getCDATA(c));
-                                                   if (s)
-                                                     t.m_rotation.emplace(s->m_1, s->m_2, s->m_3);
-                                                 }}});
-                             if (t.m_rotation || t.m_translation)
-                               geometry.m_location.emplace<Transformation>(t);
-                             else
-                               g_logger << dlib::LWARN << "Cannot parse Translation";
-                           }},
-                          {"Origin",
-                           [&geometry](const xmlNodePtr n) {
-                             if (geometry.m_location.index() != 0)
-                             {
-                               g_logger << dlib::LWARN << "Translation or Origin already given";
-                               return;
-                             }
-
-                             auto s = getThreeSpace(getCDATA(n));
-                             if (s)
-                               geometry.m_location.emplace<Origin>(s->m_1, s->m_2, s->m_3);
-                             else
-                               g_logger << dlib::LWARN << "Cannot parse Origin";
-                           }},
-                          {"Scale",
-                           [&geometry, hasScale](const xmlNodePtr n) {
-                             if (hasScale)
-                             {
-                               auto s = getThreeSpace(getCDATA(n));
-                               if (s)
-                                 geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
-                               else
-                                 g_logger << dlib::LWARN << "Cannot parse Scale";
-                             }
-                           }},
-                          {"Axis", [&geometry, hasAxis](const xmlNodePtr n) {
-                             if (hasAxis)
-                             {
-                               auto s = getThreeSpace(getCDATA(n));
-                               if (s)
-                                 geometry.m_axis.emplace(s->m_1, s->m_2, s->m_3);
-                               else
-                                 g_logger << dlib::LWARN << "Cannot parse Scale";
-                             }
-                           }}});
-
-    if (geometry.m_location.index() != 0 || geometry.m_scale)
-      return make_optional(geometry);
-    else
-      return nullopt;
   }
 
   XmlParser::XmlParser()
@@ -485,7 +409,8 @@ namespace mtconnect
     }
   }
 
-  void XmlParser::getDataItems(FilterSet &filterSet, const string &inputPath, xmlNodePtr node)
+  void XmlParser::getDataItems(FilterSet &filterSet, const string &inputPath,
+                                          xmlNodePtr node)
   {
     xmlNodePtr root = xmlDocGetRootElement(m_doc);
 
@@ -771,7 +696,8 @@ namespace mtconnect
         {{"Description", [&def](xmlNodePtr node) { def->m_description = getCDATA(node); }}});
   }
 
-  void XmlParser::loadDefinitions(xmlNodePtr definitions, std::set<EntryDefinition> &result)
+  void XmlParser::loadDefinitions(xmlNodePtr definitions,
+                                             std::set<EntryDefinition> &result)
   {
     forEachElement(definitions, {{"EntryDefinition", [this, &result](xmlNodePtr node) {
                                     EntryDefinition def;
@@ -784,7 +710,8 @@ namespace mtconnect
                                   }}});
   }
 
-  void XmlParser::loadDefinitions(xmlNodePtr definitions, std::set<CellDefinition> &result)
+  void XmlParser::loadDefinitions(xmlNodePtr definitions,
+                                             std::set<CellDefinition> &result)
   {
     forEachElement(definitions, {
                                     {"CellDefinition",
@@ -797,7 +724,8 @@ namespace mtconnect
   }
 
   // Load the data items
-  void XmlParser::loadDataItemDefinition(xmlNodePtr definition, DataItem *dataItem, Device *device)
+  void XmlParser::loadDataItemDefinition(xmlNodePtr definition, DataItem *dataItem,
+                                                    Device *device)
   {
     unique_ptr<DataItemDefinition> def(new DataItemDefinition());
 
@@ -848,10 +776,7 @@ namespace mtconnect
   {
     entity::ErrorList errors;
 
-    auto compositions_factory = std::make_shared<entity::Factory>(entity::Requirements{
-        entity::Requirement("Compositions", entity::ENTITY_LIST, Composition::getFactory(), false)});
-
-    auto compositions_entity = entity::XmlParser::parseXmlNode(compositions_factory, node, errors);
+    auto compositions_entity = entity::XmlParser::parseXmlNode(Composition::getRoot(), node, errors);
 
     unique_ptr<Composition> compositions = make_unique<Composition>();
     compositions->setEntity(compositions_entity);
@@ -859,7 +784,8 @@ namespace mtconnect
     parent->addComposition(compositions);
   }
 
-  void XmlParser::handleChildren(xmlNodePtr components, Component *parent, Device *device)
+  void XmlParser::handleChildren(xmlNodePtr components, Component *parent,
+                                            Device *device)
   {
     for (xmlNodePtr child = components->children; child; child = child->next)
     {
@@ -899,13 +825,10 @@ namespace mtconnect
   void handleConfiguration(xmlNodePtr node, T *parent)
   {
     entity::ErrorList errors;
-    
-    auto configuration_factory = std::make_shared<entity::Factory>(entity::Requirements{
-        entity::Requirement("Configuration", entity::ENTITY_LIST, ComponentConfiguration::getRoot(), false)});
 
-    auto configuration_entity = entity::XmlParser::parseXmlNode(configuration_factory, node, errors);
+    auto configuration_entity = entity::XmlParser::parseXmlNode(Configuration::getRoot(), node, errors);
     
-    unique_ptr<ComponentConfiguration> configuration = make_unique<ComponentConfiguration>();
+    unique_ptr<Configuration> configuration = make_unique<Configuration>();
     configuration->setEntity(configuration_entity);
     
     parent->addConfiguration(configuration);

@@ -6,7 +6,6 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "device_model/relationships.hpp"
 #include "entity/json_printer.hpp"
 
 #include <cstdio>

@@ -46,4 +46,11 @@ namespace mtconnect
     return description;
   }
   
+  FactoryPtr Description::getRoot()
+  {
+    auto root = make_shared<Factory>(
+        Requirements{Requirement("Description", ENTITY, Description::getFactory(), false)});
+
+    return root;
+  }
 }  // namespace mtconnect

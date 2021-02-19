@@ -17,21 +17,23 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
-#include "entity.hpp"
-#include "utilities.hpp"
-
-#include <utility>
-#include <vector>
+#include "configuration.hpp"
 
 namespace mtconnect
 {
-  class Specifications : public ComponentConfiguration
+  using namespace entity;
+  namespace device_model
   {
-  public:
-    static entity::FactoryPtr getFactory();
+    namespace configuration
+    {
+      class Specifications : public Configuration
+      {
+      public:
+        static FactoryPtr getFactory();
 
-    Specifications() = default;
-    ~Specifications() override = default;
-  };
+        Specifications() = default;
+        ~Specifications() override = default;
+      };
+    }  // namespace configuration
+  }
 }  // namespace mtconnect

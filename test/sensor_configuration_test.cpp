@@ -5,7 +5,6 @@
 #include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "device_model/sensor_configuration.hpp"
 #include "json_helper.hpp"
 
 #include <cstdio>

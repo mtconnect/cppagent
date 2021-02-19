@@ -18,13 +18,8 @@
 #include "json_printer.hpp"
 
 #include "device_model/composition.hpp"
-#include "device_model/coordinate_systems.hpp"
 #include "device_model/device.hpp"
-#include "device_model/relationships.hpp"
-#include "device_model/sensor_configuration.hpp"
-#include "device_model/solid_model.hpp"
-#include "device_model/motion.hpp"
-#include "device_model/specifications.hpp"
+#include "device_model/configuration/configuration.hpp"
 #include "entity/json_printer.hpp"
 #include "version.h"
 
@@ -353,7 +348,7 @@ namespace mtconnect
   }
 
 
-  inline void toJson(json &parent, const unique_ptr<ComponentConfiguration> &configuration)
+  inline void toJson(json &parent, const unique_ptr<Configuration> &configuration)
   {
     entity::JsonPrinter printer;
     parent["Configuration"] = printer.print(configuration->getEntity());

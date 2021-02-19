@@ -17,21 +17,23 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
-#include "entity.hpp"
-#include "utilities.hpp"
-
-#include <utility>
-#include <vector>
+#include "configuration.hpp"
 
 namespace mtconnect
 {
-  class CoordinateSystems : public ComponentConfiguration
+  using namespace entity;
+  namespace device_model
   {
-  public:
-    static entity::FactoryPtr getFactory();
+    namespace configuration
+    {
+      class SolidModel : public Configuration
+      {
+      public:
+        static FactoryPtr getFactory();
 
-    CoordinateSystems() = default;
-    ~CoordinateSystems() override = default;
-  };
+        SolidModel() = default;
+        ~SolidModel() override = default;
+      };
+    }
+  }  
 }  // namespace mtconnect

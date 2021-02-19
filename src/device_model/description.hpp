@@ -35,6 +35,7 @@ namespace mtconnect
     ~Description() = default;
 
     static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
 
     const entity::EntityPtr &getEntity() const { return m_entity; };
     void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; };

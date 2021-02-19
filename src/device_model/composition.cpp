@@ -17,7 +17,7 @@
 
 #include "composition.hpp"
 #include "description.hpp"
-#include "component_configuration.hpp"
+#include "configuration/configuration.hpp"
 
 #include "entity.hpp"
 
@@ -28,6 +28,7 @@ using namespace std;
 namespace mtconnect
 {
   using namespace entity;
+  using namespace device_model::configuration;
 
   FactoryPtr Composition::getFactory()
   {
@@ -40,12 +41,20 @@ namespace mtconnect
         Requirement("name", false),
         Requirement("type", true),
         Requirement("Description", ENTITY, Description::getFactory(), false),
-        Requirement("Configuration", ENTITY_LIST, ComponentConfiguration::getRoot(), false)});
+        Requirement("Configuration", ENTITY_LIST, Configuration::getFactory(), false)});
 
     auto compositions = make_shared<Factory>(Requirements{
         Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
 
     return compositions;
+  }
+
+  FactoryPtr Composition::getRoot()
+  {
+    auto root = make_shared<Factory>(Requirements{
+        Requirement("Compositions", ENTITY_LIST, Composition::getFactory(), false)});
+
+    return root;
   }
 
 }  // namespace mtconnect

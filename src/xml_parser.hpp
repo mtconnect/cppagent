@@ -21,7 +21,6 @@
 #include "device_model/component.hpp"
 #include "device_model/data_item.hpp"
 #include "device_model/device.hpp"
-#include "device_model/relationships.hpp"
 #include "observation/checkpoint.hpp"
 #include "utilities.hpp"
 

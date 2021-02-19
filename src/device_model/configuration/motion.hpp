@@ -17,25 +17,24 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
-#include "entity.hpp"
-#include "utilities.hpp"
-
-#include <utility>
-#include <vector>
+#include "configuration.hpp"
 
 namespace mtconnect
 {
-  class SensorConfiguration : public ComponentConfiguration
+  using namespace entity;
+  namespace device_model
   {
-  public:
-    static entity::FactoryPtr getFactory();
+    namespace configuration
+    {
+      class Motion : public Configuration
+      {
+      public:
+        static FactoryPtr getFactory();
 
-    SensorConfiguration() = default;
-    ~SensorConfiguration() override = default;
+        Motion() = default;
+        ~Motion() override = default;
+      };
+    }
+  }
 
-
-  protected:
-    entity::EntityPtr m_entity;
-  };
 }  // namespace mtconnect
