@@ -110,20 +110,13 @@ namespace mtconnect
       const std::string &getIdentity() const { return m_identity; }
 
       // Start and Stop
+      void stop();
       void start()
       {
         m_thread = std::thread([this]() { thread(); });
         m_pipeline->start();
       }
-      void stop()
-      {
-        // Will stop threaded object gracefully Adapter::thread()
-        m_running = false;
-        close();
-        if (m_thread.joinable())
-          m_thread.join();
-      }
-
+      
       const ConfigOptions &getOptions() const { return m_options; }
       void setOptions(const ConfigOptions &options)
       {

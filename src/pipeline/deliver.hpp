@@ -35,12 +35,14 @@ namespace mtconnect
 
       void operator()();
 
-      void stop() { m_running = false; }
+      void stop();
 
       bool m_running{true};
       std::shared_ptr<size_t> m_count;
       PipelineContract *m_contract{nullptr};
       std::optional<std::string> m_dataItem;
+      std::mutex m_mutex;
+      std::condition_variable m_condition;
     };
 
     class MeteredTransform : public Transform

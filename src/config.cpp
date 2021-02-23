@@ -399,7 +399,13 @@ namespace mtconnect
     } while (m_restart);
   }
 
-  void AgentConfiguration::stop() { m_agent->stop(); }
+  void AgentConfiguration::stop()
+  {
+    g_logger << dlib::LINFO << "Agent stopping";
+    m_restart = false;
+    m_agent->stop();
+    g_logger << dlib::LINFO << "Agent Configuration stopped";
+  }
 
   Device *AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
 

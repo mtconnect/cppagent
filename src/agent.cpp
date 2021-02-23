@@ -153,12 +153,13 @@ namespace mtconnect
 
     g_logger << LINFO << "Shutting down server";
     m_server->stop();
-    g_logger << LINFO << "Shutting completed";
 
+    g_logger << LINFO << "Shutting down adapters";
     for (const auto adapter : m_adapters)
       delete adapter;
 
     m_adapters.clear();
+    g_logger << LINFO << "Shutting down completed";
   }
 
   // ---------------------------------------
