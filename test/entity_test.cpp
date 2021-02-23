@@ -551,11 +551,11 @@ TEST_F(EntityTest, entity_list_requirements_need_with_at_least_one_requiremenet)
   }, errors);
   ASSERT_EQ(0, errors.size());
   auto r2 = refs->create("Reference2", {
-    {"id", "b"s}, {"type", "REF2"s}, {"size", 10}
+    {"id", "b"s}, {"type", "REF2"s}, {"size", int64_t(10)}
   }, errors);
   ASSERT_EQ(0, errors.size());
   auto r3 = refs->create("Reference2", {
-    {"id", "c"s}, {"type", "REF2"s}, {"size", 10}
+    {"id", "c"s}, {"type", "REF2"s}, {"size", int64_t(10)}
   }, errors);
   ASSERT_EQ(0, errors.size());
 

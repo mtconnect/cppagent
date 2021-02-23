@@ -193,3 +193,17 @@ TEST_F(RoutingTest, RegexPatterns)
   Routing no("GET", regex("/.+"), [](const Routing::Request &, Response &response) { return false; });
   ASSERT_FALSE(no.matches(request, *(m_response.get())));
 }
+
+TEST_F(RoutingTest, simple_put_with_trailing_slash)
+{
+  Routing r("PUT", "/{device}", m_func);
+  Routing::Request request;
+  request.m_verb = "PUT";
+  request.m_path = "/ADevice";
+  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_EQ("ADevice", get<string>(request.m_parameters["device"]));
+
+  request.m_path = "/ADevice/";
+  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_EQ("ADevice", get<string>(request.m_parameters["device"]));
+}

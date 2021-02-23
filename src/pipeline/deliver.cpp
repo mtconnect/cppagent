@@ -45,6 +45,17 @@ namespace mtconnect
 
       return entity;
     }
+    
+    void ComputeMetrics::stop()
+    {
+      g_logger << dlib::LDEBUG << "Stopping compute thread";
+      {
+        std::unique_lock<std::mutex> lk(m_mutex);
+        m_running = false;
+        m_condition.notify_all();
+      }
+      g_logger << dlib::LDEBUG << "Compute thread stopped";
+    }
 
     void ComputeMetrics::operator()()
 
@@ -86,8 +97,13 @@ namespace mtconnect
           m_contract->deliverObservation(obs);
           lastAvg = avg;
         }
-        this_thread::sleep_for(10s);
+        {
+          unique_lock<std::mutex> lk(m_mutex);
+          m_condition.wait_for(lk, 10s, [this]{ return !m_running; });
+        }
       }
+      
+      g_logger << dlib::LDEBUG << "Metrics thread exited";
     }
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)

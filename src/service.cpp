@@ -558,8 +558,9 @@ namespace mtconnect
         ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0ul);
         if (g_service)
           g_service->stop();
-        ReportSvcStatus(g_svcStatus.dwCurrentState, NO_ERROR, 0ul);
+        g_logger << dlib::LINFO << "Service stop completed";
 
+        ReportSvcStatus(g_svcStatus.dwCurrentState, NO_ERROR, 0ul);
         return;
 
       case SERVICE_CONTROL_INTERROGATE:

@@ -94,6 +94,19 @@ namespace mtconnect
       if (m_handler && m_handler->m_processData)
         m_handler->m_processData(data, getIdentity());
     }
+    
+    void Adapter::stop()
+    {
+      // Will stop threaded object gracefully Adapter::thread()
+      g_logger << dlib::LDEBUG << "Waiting for adatpter to stop: " << m_url;
+      m_running = false;
+      close();
+      if (m_thread.joinable())
+        m_thread.join();
+      g_logger << dlib::LDEBUG << "Adapter eexited: " << m_url;
+    }
+
+
 
     inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }
 
