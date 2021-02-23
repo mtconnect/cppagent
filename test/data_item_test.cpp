@@ -96,7 +96,7 @@ TEST_F(DataItemTest, Getters)
   ASSERT_EQ("1", m_dataItemA->getId());
   ASSERT_EQ("DataItemTest1", m_dataItemA->getName());
   ASSERT_EQ("ACCELERATION", m_dataItemA->getType());
-  ASSERT_EQ("Acceleration", m_dataItemA->getObservationType());
+  ASSERT_EQ("Acceleration", m_dataItemA->getObservationName());
   ASSERT_EQ("PERCENT", m_dataItemA->get<string>("nativeUnits"));
   ASSERT_FALSE(m_dataItemA->maybeGet<string>("subType"));
   ASSERT_FALSE(m_dataItemA->maybeGet<string>("nativeScale"));
@@ -104,7 +104,7 @@ TEST_F(DataItemTest, Getters)
   ASSERT_EQ("3", m_dataItemB->getId());
   ASSERT_EQ("DataItemTest2", m_dataItemB->getName());
   ASSERT_EQ("ACCELERATION", m_dataItemB->getType());
-  ASSERT_EQ("Acceleration", m_dataItemB->getObservationType());
+  ASSERT_EQ("Acceleration", m_dataItemB->getObservationName());
   ASSERT_EQ("ACTUAL", m_dataItemB->get<string>("subType"));
   ASSERT_FALSE(m_dataItemB->maybeGet<string>("nativeUnits"));
   ASSERT_EQ(1.0, m_dataItemB->get<double>("nativeScale"));
@@ -115,8 +115,8 @@ TEST_F(DataItemTest, HasNameAndSource)
   ASSERT_TRUE(m_dataItemA->hasName("DataItemTest1"));
   ASSERT_TRUE(m_dataItemB->hasName("DataItemTest2"));
 
-  ASSERT_FALSE(m_dataItemA->getSource());
-  ASSERT_FALSE(m_dataItemB->getSource());
+  ASSERT_FALSE(m_dataItemA->hasProperty("Source"));
+  ASSERT_FALSE(m_dataItemB->hasProperty("Source"));
 
   ASSERT_FALSE(m_dataItemB->hasName("DataItemTest2Source"));
   ASSERT_EQ("DataItemTest2", m_dataItemB->getSourceOrName());
@@ -138,7 +138,7 @@ TEST_F(DataItemTest, HasNameAndSource)
   ASSERT_TRUE(errors.empty());
 
   ASSERT_TRUE(dataItem->hasName("DataItemTest2Source"));
-  ASSERT_EQ("DataItemTest2Source", *dataItem->getSource());
+  ASSERT_EQ("DataItemTest2Source", dataItem->getSource()->getValue<string>());
   ASSERT_EQ("DataItemTest2Source", dataItem->getPreferredName());
 }
 
@@ -271,7 +271,7 @@ TEST_F(DataItemTest, TimeSeries)
     auto d = DataItem::make(props, errors);
     EXPECT_EQ(0, errors.size());
     
-    ASSERT_EQ(string("PositionTimeSeries"), d->getObservationType());
+    ASSERT_EQ(string("PositionTimeSeries"), d->getObservationName());
   }
 
   {
@@ -288,7 +288,7 @@ TEST_F(DataItemTest, TimeSeries)
     auto d = DataItem::make(props, errors);
     EXPECT_EQ(0, errors.size());
     
-    ASSERT_EQ(string("Position"), d->getObservationType());
+    ASSERT_EQ(string("Position"), d->getObservationName());
   }
 }
 

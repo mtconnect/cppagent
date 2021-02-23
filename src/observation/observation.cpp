@@ -130,7 +130,7 @@ namespace mtconnect
         }
       }
       string key =
-          string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedObservationType();
+          string(dataItem->getCategoryText()) + ":" + dataItem->getObservationName();
       if (dataItem->isThreeSpace())
         key += ":3D";
 

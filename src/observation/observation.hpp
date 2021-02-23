@@ -92,7 +92,7 @@ namespace mtconnect
         setProperty("VALUE", "UNAVAILABLE"s);
       }
       bool isUnavailable() const { return m_unavailable; }
-      virtual void setEntityName() { Entity::setQName(m_dataItem->getPrefixedObservationType()); }
+      virtual void setEntityName() { Entity::setQName(m_dataItem->getObservationName()); }
 
       bool operator<(const Observation &another) const
       {

@@ -33,16 +33,25 @@ namespace mtconnect
 
       QName(const std::string &qname) { setQName(qname); }
 
-      void setQName(const std::string &qname)
+      void setQName(const std::string &qname, const std::optional<std::string> &ns = std::nullopt)
       {
-        assign(qname);
-        if (auto pos = find(':'); pos != npos)
+        std::string name;
+        if (ns)
         {
-          m_nsLen = pos;
+          assign(*ns + ":" + name);
+          m_nsLen = ns->length();
         }
         else
         {
-          m_nsLen = 0;
+          assign(qname);
+          if (auto pos = find(':'); pos != npos)
+          {
+            m_nsLen = pos;
+          }
+          else
+          {
+            m_nsLen = 0;
+          }
         }
       }
 
@@ -54,7 +63,7 @@ namespace mtconnect
         setQName(name);
         return *this;
       }
-
+      
       void setName(const std::string &name)
       {
         if (m_nsLen == 0)

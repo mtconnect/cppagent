@@ -61,8 +61,8 @@ namespace mtconnect
   // TODO: Clean up these initialization methods for data items
   void Device::addDeviceDataItem(DataItemPtr dataItem)
   {
-    if (dataItem->getSource())
-      m_deviceDataItemsBySource[*dataItem->getSource()] = dataItem;
+    if (dataItem->hasProperty("Source") && dataItem->getSource()->hasValue())
+      m_deviceDataItemsBySource[dataItem->getSource()->getValue<string>()] = dataItem;
 
     if (dataItem->getName())
       m_deviceDataItemsByName[*dataItem->getName()] = dataItem;

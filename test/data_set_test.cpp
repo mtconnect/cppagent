@@ -79,7 +79,7 @@ TEST_F(DataSetTest, DataItem)
   ASSERT_TRUE(m_dataItem1->isDataSet());
 
   ASSERT_EQ("DATA_SET", m_dataItem1->get<string>("representation"));
-  ASSERT_EQ("VariableDataSet", m_dataItem1->getObservationType());
+  ASSERT_EQ("VariableDataSet", m_dataItem1->getObservationName());
 }
 
 TEST_F(DataSetTest, InitialSet)

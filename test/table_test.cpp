@@ -83,7 +83,7 @@ TEST_F(TableTest, DataItem)
   ASSERT_TRUE(m_dataItem1->isDataSet());
 
   ASSERT_EQ((string) "TABLE", m_dataItem1->get<string>("representation"));
-  ASSERT_EQ((string) "WorkpieceOffsetTable", m_dataItem1->getObservationType());
+  ASSERT_EQ((string) "WorkpieceOffsetTable", m_dataItem1->getObservationName());
 }
 
 TEST_F(TableTest, InitialSet)

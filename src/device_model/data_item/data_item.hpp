@@ -94,11 +94,9 @@ namespace mtconnect
         // Getter methods for data item specs
         const auto &getId() const { return m_id; }
         const auto &getName() const { return m_name; }
-        const auto &getPrefix() const { return m_prefix; }
-        const auto &getSource() const { return m_source; }
+        const auto &getSource() const { return get<entity::EntityPtr>("Source"); }
         const auto &getPreferredName() const { return m_preferredName; }
-        const auto &getPrefixedObservationType() const { return m_prefixedObservationType; }
-        const auto &getObservationType() const { return m_observationType; }
+        const auto &getObservationName() const { return m_observationName; }
         const auto &getObservationProperties() const { return m_observatonProperties; }
         const auto &getMinimumDelta() const { return m_minimumDelta; }
         const auto &getMinimumPeriod() const { return m_minimumPeriod; }
@@ -170,9 +168,7 @@ namespace mtconnect
         const char *m_categoryText;
 
         // Type for observation
-        std::string m_observationType;
-        std::string m_prefixedObservationType;
-        std::optional<std::string> m_prefix;
+        entity::QName m_observationName;        
         entity::Properties m_observatonProperties;
 
         // Representation of data item

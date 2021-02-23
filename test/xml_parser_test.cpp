@@ -230,8 +230,8 @@ TEST_F(XmlParserTest, ExtendedSchema)
 
   auto item = pump->getDataItems().front();
   ASSERT_EQ((string) "x:FLOW", item->getType());
-  ASSERT_EQ((string) "Flow", item->getObservationType());
-  ASSERT_EQ((string) "x", *item->getPrefix());
+  ASSERT_EQ((string) "Flow", item->getObservationName().getName());
+  ASSERT_EQ((string) "x", item->getObservationName().getNs());
 }
 
 TEST_F(XmlParserTest, TimeSeries)

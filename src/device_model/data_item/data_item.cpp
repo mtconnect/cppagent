@@ -110,14 +110,13 @@ namespace mtconnect
         m_id = get<string>("id");
         m_name = maybeGet<string>("name");
         auto type = get<string>("type");
-        m_observationType = pascalize(type, m_prefix);
         optional<string> pre;
+        string obs = pascalize(type, pre);
+        optional<string> repPre;
         if (auto rep = maybeGet<string>("representation"); rep && *rep != "VALUE")
-          m_observationType += pascalize(*rep, pre);
-        if (m_prefix)
-          m_prefixedObservationType = *m_prefix + ':' + m_observationType;
-        else
-          m_prefixedObservationType = m_observationType;
+          obs += pascalize(*rep, repPre);
+        
+        m_observationName.setQName(obs, pre);
 
         const static unordered_map<string, ERepresentation> reps = {{"VALUE", VALUE},
                                                                     {"TIME_SERIES", TIME_SERIES},
