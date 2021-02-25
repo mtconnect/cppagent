@@ -76,7 +76,8 @@ namespace mtconnect
           m_factor *= scale;
         }
 
-        static std::unique_ptr<UnitConversion> make(const std::string &units);
+        static std::unique_ptr<UnitConversion> make(const std::string &from,
+                                                    const std::string &to);
 
         double factor() const { return m_factor; }
         double offset() const { return m_offset; }

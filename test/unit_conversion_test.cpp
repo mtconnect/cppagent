@@ -27,7 +27,7 @@ using namespace mtconnect::entity;
 
 TEST(UnitConversionTest, check_inch_3d)
 {
-  auto conv = UnitConversion::make("INCH_3D");
+  auto conv = UnitConversion::make("INCH_3D", "MILLIMETER_3D");
   Value value{Vector{1.0, 2.0, 3.0}};
   conv->convertValue(value);
   auto vec = get<Vector>(value);
@@ -38,7 +38,7 @@ TEST(UnitConversionTest, check_inch_3d)
 
 TEST(UnitConversionTest, check_radian_3d)
 {
-    auto conv = UnitConversion::make("RADIAN_3D");
+    auto conv = UnitConversion::make("RADIAN_3D", "DEGREE_3D");
     Value value{Vector{1.0, 2.0, 3.0}};
     conv->convertValue(value);
     auto vec = get<Vector>(value);
@@ -49,40 +49,45 @@ TEST(UnitConversionTest, check_radian_3d)
 
 TEST(UnitConversionTest, check_kilo_prefix)
 {
-  auto conv = UnitConversion::make("KILOAMPERE");
+  auto conv = UnitConversion::make("KILOAMPERE", "AMPERE");
   EXPECT_NEAR(130.0, conv->convert(0.13), 0.0001);
 }
   
   // Test cubic inch to millimeter
 TEST(UnitConversionTest, check_cubic_conversion)
 {
-  auto conv = UnitConversion::make("CUBIC_INCH");
+  auto conv = UnitConversion::make("CUBIC_INCH", "CUBIC_MILLIMETER");
   EXPECT_NEAR(114709.44799, conv->convert(7.0), 0.0001);
 }
 
   // Test temperature
 TEST(UnitConversionTest, check_temperature_conversions_with_offset)
 {
-  auto conv = UnitConversion::make("FAHRENHEIT");
+  auto conv = UnitConversion::make("FAHRENHEIT", "CELSIUS");
   EXPECT_NEAR(-12.22222, conv->convert(10.0), 0.0001);
 }
 
 // Check ratios
 TEST(UnitConversionTest, check_simple_ratio_conversion)
 {
-  auto conv = UnitConversion::make("FOOT/MINUTE");
+  auto conv = UnitConversion::make("FOOT/MINUTE", "MILLIMETER/SECOND");
   EXPECT_NEAR(35.56, conv->convert(7.0), 0.0001);
 }
 
 TEST(UnitConversionTest, check_acceleration)
 {
-  auto conv = UnitConversion::make("FOOT/MINUTE^2");
+  auto conv = UnitConversion::make("FOOT/MINUTE^2", "MILLIMETER/SECOND^2");
   EXPECT_NEAR(0.592666667, conv->convert(7.0), 0.0001);
 }
 
 TEST(UnitConversionTest, check_special_pound_inch_squared)
 {
-  auto conv = UnitConversion::make("POUND/INCH^2");
+  auto conv = UnitConversion::make("POUND/INCH^2", "PASCAL");
   EXPECT_NEAR(48263.32, conv->convert(7.0), 0.0001);
 }
 
+TEST(UnitConversionTest, check_revolution_per_second)
+{
+  auto conv = UnitConversion::make("REVOLUTION/SECOND", "REVOLUTION/MINUTE");
+  EXPECT_NEAR(420.0, conv->convert(7.0), 0.0001);
+}

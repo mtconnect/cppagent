@@ -67,12 +67,13 @@ namespace mtconnect
     {
       using namespace device_model::data_item;
       ErrorList errors;
-      Properties url{{"Value", adapter->getUrl()}};
-      auto con = Constraints::getFactory()->make("Constraints", url, errors);
-      auto di = DataItem::make({{"type", "ADAPTER_URI"s},
+      Properties url{{"VALUE", adapter->getUrl()}};
+      EntityList values{Constraints::getFactory()->create("Value", url, errors)};
+      auto list = DataItem::getFactory()->create("Constraints", values, errors);
+      auto di = DataItem::make(Properties{{"type", "ADAPTER_URI"s},
                                 {"id", id + "_adapter_uri"},
                                 {"category", "EVENT"s},
-                                {"Constraints", con}},
+                                {"Constraints", list}},
                                errors);
       di->setComponent(*comp);
       comp->addDataItem(di);

@@ -22,6 +22,7 @@
 #include "device_model/data_item/data_item.hpp"
 #include "observation/observation.hpp"
 #include "test_utilities.hpp"
+#include "pipeline/convert_sample.hpp"
 
 #include <list>
 
@@ -73,9 +74,10 @@ class ObservationTest : public testing::Test
   DataItemPtr m_dataItem1;
   DataItemPtr m_dataItem2;
   Timestamp m_time;
+  pipeline::ConvertSample m_converter;
 
   // Helper to test values
-  void testValueHelper(std::map<std::string, std::string> &attributes,
+  void testValueHelper(std::map<std::string, std::string> &attributes, const std::string &units,
                        const std::string &nativeUnits, float expected, const double value,
                        const char *file, int line)
   {
@@ -84,12 +86,14 @@ class ObservationTest : public testing::Test
     for (auto &p : attributes)
       ps.emplace(p.first, p.second);
     ps["nativeUnits"] = nativeUnits;
-    
+    ps["units"] = units;
+
     auto dataItem = DataItem::make(ps, errors);
     ObservationPtr sample = Observation::make(dataItem, {{"VALUE", value}}, m_time, errors);
-
+    auto converted = m_converter(sample);
+    
     stringstream message;
-    double diff = abs(expected - sample->getValue<double>());
+    double diff = abs(expected - converted->getValue<double>());
     message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected
             << " and actual " << sample->getValue<double>() << " differ (" << diff << ") by more than 0.001";
 
@@ -103,8 +107,8 @@ inline ConditionPtr Cond(ObservationPtr ptr)
   return dynamic_pointer_cast<Condition>(ptr);
 }
 
-#define TEST_VALUE(attributes, nativeUnits, expected, value) \
-  testValueHelper(attributes, nativeUnits, expected, value, __FILE__, __LINE__)
+#define TEST_VALUE(attributes, units, nativeUnits, expected, value) \
+  testValueHelper(attributes, units, nativeUnits, expected, value, __FILE__, __LINE__)
 
 TEST_F(ObservationTest, GetAttributes)
 {
@@ -140,13 +144,13 @@ TEST_F(ObservationTest, ConvertValue)
   attributes["type"] = "ACCELERATION";
   attributes["category"] = "SAMPLE";
 
-  TEST_VALUE(attributes, "REVOLUTION/MINUTE", 2.0f, 2.0);
-  TEST_VALUE(attributes, "REVOLUTION/SECOND", 2.0f * 60.0f, 2.0);
-  TEST_VALUE(attributes, "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, 2.0);
-  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f), 2.0);
+  TEST_VALUE(attributes, "REVOLUTION/MINUTE", "REVOLUTION/MINUTE", 2.0f, 2.0);
+  TEST_VALUE(attributes, "REVOLUTION/MINUTE", "REVOLUTION/SECOND", 2.0f * 60.0f, 2.0);
+  TEST_VALUE(attributes, "KILOGRAM/MILLIMETER", "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER/SECOND^3", "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f), 2.0);
 
   attributes["nativeScale"] = "0.5";
-  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), 2.0);
+  TEST_VALUE(attributes, "MILLIMETER/SECOND^3", "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), 2.0);
 }
 
 TEST_F(ObservationTest, ConvertSimpleUnits)
@@ -157,19 +161,19 @@ TEST_F(ObservationTest, ConvertSimpleUnits)
   attributes["type"] = "ACCELERATION";
   attributes["category"] = "SAMPLE";
 
-  TEST_VALUE(attributes, "INCH", 2.0f * 25.4f, 2.0);
-  TEST_VALUE(attributes, "FOOT", 2.0f * 304.8f, 2.0);
-  TEST_VALUE(attributes, "CENTIMETER", 2.0f * 10.0f, 2.0);
-  TEST_VALUE(attributes, "DECIMETER", 2.0f * 100.0f, 2.0);
-  TEST_VALUE(attributes, "METER", 2.0f * 1000.0f, 2.0);
-  TEST_VALUE(attributes, "FAHRENHEIT", (2.0f - 32.0f) * (5.0f / 9.0f), 2.0);
-  TEST_VALUE(attributes, "POUND", 2.0f * 0.45359237f, 2.0);
-  TEST_VALUE(attributes, "GRAM", 2.0f / 1000.0f, 2.0);
-  TEST_VALUE(attributes, "RADIAN", 2.0f * 57.2957795f, 2.0);
-  TEST_VALUE(attributes, "MINUTE", 2.0f * 60.0f, 2.0);
-  TEST_VALUE(attributes, "HOUR", 2.0f * 3600.0f, 2.0);
-  TEST_VALUE(attributes, "MILLIMETER", 2.0f, 2.0);
-  TEST_VALUE(attributes, "PERCENT", 2.0f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER", "INCH", 2.0f * 25.4f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER", "FOOT", 2.0f * 304.8f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER", "CENTIMETER", 2.0f * 10.0f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER", "DECIMETER", 2.0f * 100.0f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER", "METER", 2.0f * 1000.0f, 2.0);
+  TEST_VALUE(attributes, "CELSIUS", "FAHRENHEIT", (2.0f - 32.0f) * (5.0f / 9.0f), 2.0);
+  TEST_VALUE(attributes, "KILOGRAM", "POUND", 2.0f * 0.45359237f, 2.0);
+  TEST_VALUE(attributes, "KILOGRAM", "GRAM", 2.0f / 1000.0f, 2.0);
+  TEST_VALUE(attributes, "DEGREE", "RADIAN", 2.0f * 57.2957795f, 2.0);
+  TEST_VALUE(attributes, "SECOND", "MINUTE", 2.0f * 60.0f, 2.0);
+  TEST_VALUE(attributes, "SECOND", "HOUR", 2.0f * 3600.0f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER", "MILLIMETER", 2.0f, 2.0);
+  TEST_VALUE(attributes, "PERCENT", "PERCENT", 2.0f, 2.0);
 }
 
 TEST_F(ObservationTest, ConditionEventChaining)

@@ -201,7 +201,10 @@ namespace mtconnect
         
         if (hasProperty("nativeUnits"))
         {
-          m_converter = UnitConversion::make(get<string>("nativeUnits"));
+          if (!hasProperty("units"))
+            throw PropertyError("nativeUnits given, but no units");
+          m_converter = UnitConversion::make(get<string>("nativeUnits"),
+                                             get<string>("units"));
         }
         if (hasProperty("nativeScale"))
         {

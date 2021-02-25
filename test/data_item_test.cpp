@@ -41,6 +41,7 @@ class DataItemTest : public testing::Test
         {"name", "DataItemTest1"s},
         {"type", "ACCELERATION"s},
         {"category", "SAMPLE"s},
+        {"units", "PERCENT"s},
         {"nativeUnits", "PERCENT"s}
       };
       ErrorList errors;
@@ -131,6 +132,7 @@ TEST_F(DataItemTest, HasNameAndSource)
     {"name", "DataItemTest1"s},
     {"type", "ACCELERATION"s},
     {"category", "SAMPLE"s},
+    {"units", "PERCENT"s},
     {"nativeUnits", "PERCENT"s},
     {"Source", source}
   };

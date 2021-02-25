@@ -26,20 +26,19 @@ namespace mtconnect
     namespace data_item
     {
       std::unordered_map<string, UnitConversion> UnitConversion::m_conversions(
-          {{"INCH", 25.4},
-           {"FOOT", 304.8},
-           {"MILLIMETER", 1.0},
-           {"CENTIMETER", 10.0},
-           {"DECIMETER", 100.0},
-           {"METER", 1000.0},
-           {"FAHRENHEIT", {(5.0 / 9.0), -32.0}},
-           {"POUND", 0.45359237},
-           {"GRAM", 1 / 1000.0},
-           {"RADIAN", 57.2957795},
-           {"SECOND", 1.0},
-           {"MINUTE", 60.0},
-           {"POUND/INCH^2", 6894.76},
-           {"HOUR", 3600.0}});
+          {{"INCH-MILLIMETER", 25.4},
+           {"FOOT-MILLIMETER", 304.8},
+           {"CENTIMETER-MILLIMETER", 10.0},
+           {"DECIMETER-MILLIMETER", 100.0},
+           {"METER-MILLIMETER", 1000.0},
+           {"FAHRENHEIT-CELSIUS", {(5.0 / 9.0), -32.0}},
+           {"POUND-GRAM", 453.59237},
+           {"GRAM-KILOGRAM", 1 / 1000.0},
+           {"RADIAN-DEGREE", 57.2957795},
+           {"SECOND-MINUTE", 1.0 / 60.0},
+           {"MINUTE-SECOND", 60.0},
+           {"POUND/INCH^2-PASCAL", 6894.76},
+           {"HOUR-SECOND", 3600.0}});
 
       std::unordered_set<std::string> UnitConversion::m_mtconnectUnits(
           {"AMPERE",
@@ -88,48 +87,75 @@ namespace mtconnect
            "COUNT/SECOND",
            "PASCAL/SECOND",
            "UNIT_VECTOR_3D"});
-
-      std::unique_ptr<UnitConversion> UnitConversion::make(const std::string &units)
+      
+      
+      static pair<double, double> scaleAndPower(string_view &unit)
       {
-        double factor{1.0}, offset{0.0};
-        std::string_view target(units);
-
-        if (m_mtconnectUnits.count(units) > 0)
-          return nullptr;
-
-        // Always convert back to MTConnect Units.
-        auto threeD = target.rfind("_3D");
-        if (threeD != string_view::npos)
+        double power = 1.0, scale = 1.0;
+        
+        if (unit.compare(0, 4, "KILO") == 0)
         {
-          target.remove_suffix(3);
+          scale = 1000;
+          unit.remove_prefix(4);
+        }
+        else if (unit.compare(0, 6, "CUBIC_") == 0)
+        {
+          unit.remove_prefix(6);
+          power = 3.0;
+        }
+        else if (auto p = unit.find('^'); p != string_view::npos)
+        {
+          power = stod(string(unit.substr(p + 1)));
+          unit.remove_suffix(unit.length() - p);
         }
 
-        const auto &special = m_conversions.find(string(target));
-        if (special != m_conversions.end())
-          return make_unique<UnitConversion>(special->second);
+        return {scale, power};
+      }
 
-        auto slash = target.find('/');
-        if (slash == string_view::npos)
+      std::unique_ptr<UnitConversion> UnitConversion::make(const std::string &from,
+                                                           const std::string &to)
+      {
+        if (from == to)
+          return nullptr;
+        
+        string key(from);
+        key = key.append("-").append(to);
+        
+        const auto &conversion = m_conversions.find(string(key));
+        if (conversion != m_conversions.end())
+          return make_unique<UnitConversion>(conversion->second);
+        
+        double factor{1.0}, offset{0.0};
+        std::string_view source(from);
+        std::string_view target(to);
+
+        // Always convert back to MTConnect Units.
+        auto t3D = target.rfind("_3D");
+        auto s3D = source.rfind("_3D");
+        if (t3D != string_view::npos && s3D != string_view::npos)
         {
-          double power{1.0};
+          source.remove_suffix(3);
+          target.remove_suffix(3);
+        }
+        else if (t3D != string_view::npos || s3D != string_view::npos)
+          return nullptr;
 
-          if (target.compare(0, 4, "KILO") == 0)
-          {
-            factor *= 1000;
-            target.remove_prefix(4);
-          }
-          else if (target.compare(0, 6, "CUBIC_") == 0)
-          {
-            target.remove_prefix(6);
-            power = 3.0;
-          }
-          else if (auto p = target.find('^'); p != string_view::npos)
-          {
-            power = stod(string(target.substr(p + 1)));
-            target.remove_suffix(target.length() - p);
-          }
+        auto sslash = source.find('/');
+        auto tslash = target.find('/');
+        if (sslash == string_view::npos && tslash == string_view::npos)
+        {
+          auto [sscale, spower] = scaleAndPower(source);
+          auto [tscale, tpower] = scaleAndPower(target);
+          
+          if (spower != tpower)
+            return nullptr;
+          
+          factor = sscale / tscale;
 
-          const auto &conversion = m_conversions.find(string(target));
+          key = source;
+          key = key.append("-").append(target);
+          
+          const auto &conversion = m_conversions.find(string(key));
           // Check for no support units and not power or factor scaling.
           if (conversion == m_conversions.end() && factor == 1.0)
             return nullptr;
@@ -139,23 +165,26 @@ namespace mtconnect
             offset = conversion->second.offset();
           }
 
-          if (power != 1.0)
-            factor = pow(factor, power);
+          if (tpower != 1.0)
+            factor = pow(factor, tpower);
+        }
+        else if  (sslash == string_view::npos || tslash == string_view::npos)
+        {
+          return nullptr;
         }
         else
         {
-          string_view numerator(target.substr(0, slash));
-          string_view denominator(target.substr(slash + 1));
+          string_view snumerator(source.substr(0, sslash));
+          string_view tnumerator(target.substr(0, tslash));
+          string_view sdenominator(source.substr(sslash + 1));
+          string_view tdenominator(target.substr(tslash + 1));
 
-          auto num = make(string(numerator));
-          auto den = make(string(denominator));
-          auto n = num->factor();
+          auto num = make(string(snumerator), string(tnumerator));
+          auto den = make(string(sdenominator), string(tdenominator));
+          auto n = num ? num->factor() : 1.0;
+          auto d = den ? den->factor() : 1.0;
 
-          // Revolutions are in minutes not seconds
-          if (numerator == "REVOLUTION")
-            n *= 60.0;
-
-          factor = n / den->factor();
+          factor = n / d;
         }
 
         return make_unique<UnitConversion>(factor, offset);
