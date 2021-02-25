@@ -101,7 +101,7 @@ namespace mtconnect
 
   protected:
     xmlTextWriterPtr m_writer;
-    xmlBufferPtr m_buf;
+    xmlBufferPtr     m_buf;
   };
 
   XmlPrinter::XmlPrinter(const string version, bool pretty)
@@ -338,8 +338,8 @@ namespace mtconnect
 
   protected:
     xmlTextWriterPtr m_writer;
-    string m_name;
-    string m_key;
+    string           m_name;
+    string           m_key;
   };
 
   void addSimpleElement(xmlTextWriterPtr writer, const string &element, const string &body,
@@ -367,29 +367,29 @@ namespace mtconnect
   {
     if (geometry.m_location.index() != 0)
     {
-      visit(overloaded{[&writer](const Origin &o) {
-                         stringstream s;
-                         s << o.m_x << ' ' << o.m_y << ' ' << o.m_z;
-                         addSimpleElement(writer, "Origin", s.str());
-                       },
-                       [&writer](const Transformation &t) {
-                         AutoElement ele(writer, "Transformation");
-                         if (t.m_translation)
-                         {
-                           stringstream s;
-                           s << t.m_translation->m_x << ' ' << t.m_translation->m_y << ' '
-                             << t.m_translation->m_z;
-                           addSimpleElement(writer, "Translation", s.str());
-                         }
-                         if (t.m_rotation)
-                         {
-                           stringstream s;
-                           s << t.m_rotation->m_roll << ' ' << t.m_rotation->m_pitch << ' '
-                             << t.m_rotation->m_yaw;
-                           addSimpleElement(writer, "Rotation", s.str());
-                         }
-                       },
-                       [](const std::monostate &a) {}},
+      visit(overloaded {[&writer](const Origin &o) {
+                          stringstream s;
+                          s << o.m_x << ' ' << o.m_y << ' ' << o.m_z;
+                          addSimpleElement(writer, "Origin", s.str());
+                        },
+                        [&writer](const Transformation &t) {
+                          AutoElement ele(writer, "Transformation");
+                          if (t.m_translation)
+                          {
+                            stringstream s;
+                            s << t.m_translation->m_x << ' ' << t.m_translation->m_y << ' '
+                              << t.m_translation->m_z;
+                            addSimpleElement(writer, "Translation", s.str());
+                          }
+                          if (t.m_rotation)
+                          {
+                            stringstream s;
+                            s << t.m_rotation->m_roll << ' ' << t.m_rotation->m_pitch << ' '
+                              << t.m_rotation->m_yaw;
+                            addSimpleElement(writer, "Rotation", s.str());
+                          }
+                        },
+                        [](const std::monostate &a) {}},
             geometry.m_location);
     }
 
@@ -515,10 +515,10 @@ namespace mtconnect
       AutoElement ele(writer, "Relationships");
       for (const auto &rel : rels->getRelationships())
       {
-        map<string, string> attrs{{"id", rel->m_id},
-                                  {"type", rel->m_type},
-                                  {"name", rel->m_name},
-                                  {"criticality", rel->m_criticality}};
+        map<string, string> attrs {{"id", rel->m_id},
+                                   {"type", rel->m_type},
+                                   {"name", rel->m_name},
+                                   {"criticality", rel->m_criticality}};
 
         string name;
         if (auto crel = dynamic_cast<ComponentRelationship *>(rel.get()))
@@ -597,7 +597,7 @@ namespace mtconnect
     }
   }
 
-  void printConfiguration(xmlTextWriterPtr writer,
+  void printConfiguration(xmlTextWriterPtr                                     writer,
                           const std::list<unique_ptr<ComponentConfiguration>> &configurations)
   {
     AutoElement configEle(writer, "Configuration");
@@ -820,7 +820,7 @@ namespace mtconnect
       initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull);
 
       {
-        AutoElement ele(writer, "Assets");
+        AutoElement        ele(writer, "Assets");
         entity::XmlPrinter printer;
 
         for (const auto &asset : assets)
@@ -859,7 +859,7 @@ namespace mtconnect
 
     // TODO: Cache the locations and header attributes.
     // Write the root element
-    string xmlType, style;
+    string                              xmlType, style;
     const map<string, SchemaNamespace> *namespaces;
 
     switch (aType)

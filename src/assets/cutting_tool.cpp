@@ -40,7 +40,7 @@ namespace mtconnect
 
       static auto toolLife = make_shared<Factory>(Requirements(
           {Requirement("type", {"MINUTES", "PART_COUNT", "WEAR"}),
-           Requirement("countDirection", ControlledVocab{"UP", "DOWN"}),
+           Requirement("countDirection", ControlledVocab {"UP", "DOWN"}),
            Requirement("warning", DOUBLE, false), Requirement("limit", DOUBLE, false),
            Requirement("initial", DOUBLE, false), Requirement("VALUE", DOUBLE, false)}));
 
@@ -62,20 +62,20 @@ namespace mtconnect
       static auto ext = make_shared<Factory>();
 
       static auto item =
-          make_shared<Factory>(Requirements{{"indices", true},
-                                            {"itemId", false},
-                                            {"grade", false},
-                                            {"manufacturers", false},
-                                            {"Description", false},
-                                            {"Locus", false},
-                                            {"ItemLife", ENTITY, toolLife, 0, 3},
-                                            {"ProgramToolGroup", false},
-                                            {"Measurements", ENTITY_LIST, measurements, false}});
+          make_shared<Factory>(Requirements {{"indices", true},
+                                             {"itemId", false},
+                                             {"grade", false},
+                                             {"manufacturers", false},
+                                             {"Description", false},
+                                             {"Locus", false},
+                                             {"ItemLife", ENTITY, toolLife, 0, 3},
+                                             {"ProgramToolGroup", false},
+                                             {"Measurements", ENTITY_LIST, measurements, false}});
       item->registerFactory(regex(".+"), ext);
       measurements->registerMatchers();
       item->setOrder({"Description", "Locus", "ItemLife", "ProgramToolGroup", "Measurements"});
 
-      static auto items = make_shared<Factory>(Requirements{
+      static auto items = make_shared<Factory>(Requirements {
           {"count", INTEGER, true}, {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
 
       static auto lifeCycle = make_shared<Factory>(Requirements(
@@ -94,19 +94,19 @@ namespace mtconnect
                            "Measurements", "CuttingItems"});
 
       tool = make_shared<Factory>(*Asset::getFactory());
-      tool->addRequirements(Requirements{{"toolId", true},
-                                         {"serialNumber", false},
-                                         {"manufacturers", false},
-                                         {"Description", false},
-                                         {"CuttingToolDefinition", ENTITY, definition, false},
-                                         {"CuttingToolLifeCycle", ENTITY, lifeCycle, false}});
+      tool->addRequirements(Requirements {{"toolId", true},
+                                          {"serialNumber", false},
+                                          {"manufacturers", false},
+                                          {"Description", false},
+                                          {"CuttingToolDefinition", ENTITY, definition, false},
+                                          {"CuttingToolLifeCycle", ENTITY, lifeCycle, false}});
     }
     return tool;
   }
 
   void CuttingToolArchetype::registerAsset()
   {
-    static bool once{true};
+    static bool once {true};
     if (once)
     {
       Asset::registerAssetType("CuttingToolArchetype", getFactory());
@@ -120,34 +120,34 @@ namespace mtconnect
     if (!tool)
     {
       static auto state = make_shared<Factory>(
-          Requirements{{"VALUE",
-                        {"NEW", "AVAILABLE", "UNAVAILABLE", "ALLOCATED", "ALLOCATED", "MEASURED",
-                         "NOT_REGISTERED", "RECONDITIONED", "USED", "EXPIRED", "TAGGED_OUT",
-                         "BROKEN", "UNKNOWN"}}});
+          Requirements {{"VALUE",
+                         {"NEW", "AVAILABLE", "UNAVAILABLE", "ALLOCATED", "ALLOCATED", "MEASURED",
+                          "NOT_REGISTERED", "RECONDITIONED", "USED", "EXPIRED", "TAGGED_OUT",
+                          "BROKEN", "UNKNOWN"}}});
 
       static auto status =
-          make_shared<Factory>(Requirements{{"Status", ENTITY, state, 1, Requirement::Infinite}});
+          make_shared<Factory>(Requirements {{"Status", ENTITY, state, 1, Requirement::Infinite}});
 
       static auto location = make_shared<Factory>(
-          Requirements{{"type",
-                        {"POT", "STATION", "CRIB", "SPINDLE", "TRANSFER_POT", "RETURN_POT",
-                         "STAGING_POT", "REMOVAL_POT", "EXPIRED_POT", "END_EFFECTOR"}},
-                       {"negativeOverlap", INTEGER, false},
-                       {"positiveOverlap", INTEGER, false},
-                       {"turret", false},
-                       {"toolMagazine", false},
-                       {"toolRack", false},
-                       {"toolBar", false},
-                       {"automaticToolChanger", false},
-                       {"VALUE", true}});
+          Requirements {{"type",
+                         {"POT", "STATION", "CRIB", "SPINDLE", "TRANSFER_POT", "RETURN_POT",
+                          "STAGING_POT", "REMOVAL_POT", "EXPIRED_POT", "END_EFFECTOR"}},
+                        {"negativeOverlap", INTEGER, false},
+                        {"positiveOverlap", INTEGER, false},
+                        {"turret", false},
+                        {"toolMagazine", false},
+                        {"toolRack", false},
+                        {"toolBar", false},
+                        {"automaticToolChanger", false},
+                        {"VALUE", true}});
 
       tool = CuttingToolArchetype::getFactory()->deepCopy();
       tool->getRequirement("serialNumber")->makeRequired();
       tool->getRequirement("toolId")->makeRequired();
 
       auto lifeCycle = tool->factoryFor("CuttingToolLifeCycle");
-      lifeCycle->addRequirements(Requirements{{"CutterStatus", ENTITY_LIST, status, true},
-                                              {"Location", ENTITY, location, false}});
+      lifeCycle->addRequirements(Requirements {{"CutterStatus", ENTITY_LIST, status, true},
+                                               {"Location", ENTITY, location, false}});
       lifeCycle->setOrder({"CutterStatus", "ReconditionCount", "ToolLife", "ProgramToolGroup",
                            "ProgramToolNumber", "Location", "ProcessSpindleSpeed",
                            "ProcessFeedRate", "ConnectionCodeMachineSide", "Measurements",
@@ -160,7 +160,7 @@ namespace mtconnect
       auto items = lifeCycle->factoryFor("CuttingItems");
       auto item = items->factoryFor("CuttingItem");
 
-      item->addRequirements(Requirements{{"CutterStatus", ENTITY_LIST, status, false}});
+      item->addRequirements(Requirements {{"CutterStatus", ENTITY_LIST, status, false}});
 
       auto life = lifeCycle->factoryFor("ToolLife");
       life->getRequirement("VALUE")->makeRequired();
@@ -170,7 +170,7 @@ namespace mtconnect
 
   void CuttingTool::registerAsset()
   {
-    static bool once{true};
+    static bool once {true};
     if (once)
     {
       Asset::registerAssetType("CuttingTool", getFactory());

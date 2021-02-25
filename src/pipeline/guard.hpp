@@ -52,7 +52,7 @@ namespace mtconnect
       }
 
     protected:
-      Guard m_alternative;
+      Guard       m_alternative;
       GuardAction m_match;
     };
 

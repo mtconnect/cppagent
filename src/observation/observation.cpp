@@ -95,7 +95,7 @@ namespace mtconnect
       setProperties(dataItem, props);
       props.insert_or_assign("timestamp", timestamp);
 
-      bool unavailable{false};
+      bool   unavailable {false};
       string level;
       if (dataItem->isCondition())
       {
@@ -170,7 +170,7 @@ namespace mtconnect
           return make_shared<Event>(name, props);
         });
         factory->addRequirements(
-            Requirements{{"VALUE", false}, {"resetTriggered", USTRING, false}});
+            Requirements {{"VALUE", false}, {"resetTriggered", USTRING, false}});
       }
 
       return factory;
@@ -192,9 +192,9 @@ namespace mtconnect
           }
           return ent;
         });
-        factory->addRequirements(Requirements{{"count", INTEGER, false},
-                                              {"VALUE", DATA_SET, false},
-                                              {"resetTriggered", USTRING, false}});
+        factory->addRequirements(Requirements {{"count", INTEGER, false},
+                                               {"VALUE", DATA_SET, false},
+                                               {"resetTriggered", USTRING, false}});
       }
 
       return factory;
@@ -217,7 +217,7 @@ namespace mtconnect
           return ent;
         });
 
-        factory->addRequirements(Requirements{{"VALUE", TABLE, false}});
+        factory->addRequirements(Requirements {{"VALUE", TABLE, false}});
       }
 
       return factory;
@@ -294,12 +294,12 @@ namespace mtconnect
           }
           return cond;
         });
-        factory->addRequirements(Requirements{{"type", USTRING, true},
-                                              {"nativeCode", false},
-                                              {"nativeSeverity", false},
-                                              {"qualifier", USTRING, false},
-                                              {"statistic", USTRING, false},
-                                              {"VALUE", false}});
+        factory->addRequirements(Requirements {{"type", USTRING, true},
+                                               {"nativeCode", false},
+                                               {"nativeSeverity", false},
+                                               {"qualifier", USTRING, false},
+                                               {"statistic", USTRING, false},
+                                               {"VALUE", false}});
       }
 
       return factory;

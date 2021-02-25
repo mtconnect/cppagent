@@ -93,7 +93,7 @@ namespace mtconnect
 
   AssetPtr AssetBuffer::addAsset(AssetPtr asset)
   {
-    AssetPtr old{};
+    AssetPtr                              old {};
     std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
 
     if (!asset->getTimestamp())
@@ -153,7 +153,7 @@ namespace mtconnect
 
   AssetPtr AssetBuffer::removeAsset(const std::string &id, const std::optional<Timestamp> &time)
   {
-    AssetPtr asset;
+    AssetPtr                              asset;
     std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
 
     auto it = m_primaryIndex.find(id);

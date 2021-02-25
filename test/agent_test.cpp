@@ -1011,7 +1011,7 @@ TEST_F(AgentTest, InitialTimeSeriesValues)
 
 TEST_F(AgentTest, DynamicCalibration)
 {
-  addAdapter();
+  addAdapter({{configuration::ConversionRequired, true}});
   auto agent = m_agentTestHelper->getAgent();
   
   // Add a 10.111000 seconds
@@ -1020,19 +1020,19 @@ TEST_F(AgentTest, DynamicCalibration)
   ASSERT_TRUE(di);
 
   // TODO: Fix conversions
-//  ASSERT_TRUE(di->hasFactor());
-//  ASSERT_EQ(0.01, di->getConversionFactor());
-//  ASSERT_EQ(200.0, di->getConversionOffset());
+  auto &conv1 = di->getConverter();
+  ASSERT_TRUE(conv1);
+  ASSERT_EQ(0.01, conv1->factor());
+  ASSERT_EQ(200.0, conv1->offset());
 
   di = agent->getDataItemForDevice("LinuxCNC", "Zact");
   ASSERT_TRUE(di);
 
-//  ASSERT_TRUE(di->hasFactor());
-//  ASSERT_EQ(0.02, di->getConversionFactor());
-//  ASSERT_EQ(300.0, di->getConversionOffset());
-  
-  ASSERT_TRUE(false);
-  
+  auto &conv2 = di->getConverter();
+  ASSERT_TRUE(conv2);
+  ASSERT_EQ(0.02, conv2->factor());
+  ASSERT_EQ(300.0, conv2->offset());
+
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|Yact|200|Zact|600");
   m_agentTestHelper->m_adapter->processData(
       "2021-02-01T12:00:00Z|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 "
@@ -1589,8 +1589,7 @@ TEST_F(AgentTest, ConstantValue)
   auto di = agent->getDataItemForDevice("LinuxCNC", "block");
   ASSERT_TRUE(di);
   
-  // TODO: Create a new DI with constrained value
-  //di->addConstrainedValue("UNAVAILABLE");
+  di->setConstantValue("UNAVAILABLE");
 
   {
     PARSE_XML_RESPONSE("/sample");

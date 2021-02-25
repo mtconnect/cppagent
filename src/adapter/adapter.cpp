@@ -44,7 +44,7 @@ namespace mtconnect
       : Connector(server, port, 60s),
         m_pipeline(std::move(pipeline)),
         m_running(true),
-        m_reconnectInterval{10000ms},
+        m_reconnectInterval {10000ms},
         m_options(options)
     {
       auto timeout = options.find(configuration::LegacyTimeout);
@@ -111,7 +111,7 @@ namespace mtconnect
     void Adapter::protocolCommand(const std::string &data)
     {
       static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
-      smatch match;
+      smatch      match;
 
       if (std::regex_match(data, match, pattern))
       {

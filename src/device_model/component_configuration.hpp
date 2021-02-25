@@ -52,13 +52,13 @@ namespace mtconnect
     virtual ~GeometricConfiguration() = default;
 
     virtual const std::map<std::string, bool> &properties() const = 0;
-    virtual const std::string &klass() const = 0;
-    virtual bool hasScale() const { return false; }
-    virtual bool hasAxis() const { return false; }
-    virtual bool hasDescription() const { return false; }
+    virtual const std::string &                klass() const = 0;
+    virtual bool                               hasScale() const { return false; }
+    virtual bool                               hasAxis() const { return false; }
+    virtual bool                               hasDescription() const { return false; }
 
     std::map<std::string, std::string> m_attributes;
-    std::optional<Geometry> m_geometry;
-    std::string m_description;
+    std::optional<Geometry>            m_geometry;
+    std::string                        m_description;
   };
 }  // namespace mtconnect

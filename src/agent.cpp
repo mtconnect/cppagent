@@ -56,7 +56,7 @@ namespace mtconnect
   static dlib::logger g_logger("agent");
 
   // Agent public methods
-  Agent::Agent(std::unique_ptr<http_server::Server> &server,
+  Agent::Agent(std::unique_ptr<http_server::Server> &   server,
                std::unique_ptr<http_server::FileCache> &cache, const string &configXmlPath,
                int bufferSize, int maxAssets, const std::string &version, int checkpointFreq,
                bool pretty)
@@ -88,8 +88,8 @@ namespace mtconnect
     m_loopback = std::make_unique<AgentLoopbackPipeline>(context);
     m_loopback->build(options);
 
-    int major, minor;
-    char c;
+    int          major, minor;
+    char         c;
     stringstream vstr(m_version);
     vstr >> major >> c >> minor;
     if (major > 1 || (major == 1 && minor >= 7))
@@ -107,7 +107,7 @@ namespace mtconnect
     createFileRoutings();
 
     m_server->setErrorFunction([this](const std::string &accepts, http_server::Response &response,
-                                      const std::string &msg,
+                                      const std::string &             msg,
                                       const http_server::ResponseCode code) {
       auto printer = printerForAccepts(accepts);
       auto doc = printError(printer, "INVALID_REQUEST", msg);
@@ -214,7 +214,7 @@ namespace mtconnect
 
   void Agent::verifyDevice(Device *device)
   {
-    auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
+    auto        xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
     const auto &schemaVersion = xmlPrinter->getSchemaVersion();
 
     // Add the devices to the device map and create availability and
@@ -226,7 +226,7 @@ namespace mtconnect
     {
       // Create availability data item and add it to the device.
       entity::ErrorList errors;
-      auto di = DataItem::make(
+      auto              di = DataItem::make(
           {{"type", "AVAILABILITY"s}, {"id", device->getId() + "_avail"}, {"category", "EVENT"s}},
           errors);
       di->setComponent(*device);
@@ -234,8 +234,8 @@ namespace mtconnect
       device->m_availabilityAdded = true;
     }
 
-    int major, minor;
-    char c;
+    int          major, minor;
+    char         c;
     stringstream ss(schemaVersion);
     ss >> major >> c >> minor;
     if (!device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 2)))
@@ -260,7 +260,7 @@ namespace mtconnect
     {
       // Create asset removed data item and add it to the device.
       entity::ErrorList errors;
-      auto di = DataItem::make({{"type", "ASSET_REMOVED"},
+      auto              di = DataItem::make({{"type", "ASSET_REMOVED"},
                                 {"id", device->getId() + "_asset_rem"},
                                 {"category", "EVENT"}},
                                errors);
@@ -449,7 +449,7 @@ namespace mtconnect
       {
         list<string> ids;
         stringstream str(*assets);
-        string id;
+        string       id;
         while (getline(str, id, ';'))
           ids.emplace_back(id);
         respond(response, assetIdsRequest(acceptFormat(request.m_accepts), ids));
@@ -488,7 +488,7 @@ namespace mtconnect
         {
           list<string> ids;
           stringstream str(*assets);
-          string id;
+          string       id;
           while (getline(str, id, ';'))
             ids.emplace_back(id);
           respond(response, deleteAssetRequest(acceptFormat(request.m_accepts), ids));
@@ -502,7 +502,7 @@ namespace mtconnect
         return true;
       };
 
-      for (const auto &t : list<string>{"PUT", "POST"})
+      for (const auto &t : list<string> {"PUT", "POST"})
       {
         m_server->addRouting({t, "/asset/{uuid}?device={string}&type={string}", putHandler});
         m_server->addRouting({t, "/asset?device={string}&type={string}", putHandler});
@@ -659,7 +659,7 @@ namespace mtconnect
   const string Agent::acceptFormat(const std::string &accepts) const
   {
     std::stringstream list(accepts);
-    std::string accept;
+    std::string       accept;
     while (std::getline(list, accept, ','))
     {
       for (const auto &p : m_printers)
@@ -719,8 +719,8 @@ namespace mtconnect
   void AgentPipelineContract::deliverCommand(entity::EntityPtr entity)
   {
     static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
-    auto value = entity->getValue<string>();
-    smatch match;
+    auto        value = entity->getValue<string>();
+    smatch      match;
 
     if (std::regex_match(value, match, pattern))
     {
@@ -866,7 +866,7 @@ namespace mtconnect
     entity::ErrorList errors;
 
     Timestamp ts = timestamp ? *timestamp : chrono::system_clock::now();
-    auto observation = observation::Observation::make(dataItem, props, ts, errors);
+    auto      observation = observation::Observation::make(dataItem, props, ts, errors);
     if (observation && errors.empty())
     {
       auto res = m_loopback->run(observation);
@@ -902,7 +902,7 @@ namespace mtconnect
   void Agent::addAsset(AssetPtr asset)
   {
     Device *device = nullptr;
-    auto uuid = asset->getDeviceUuid();
+    auto    uuid = asset->getDeviceUuid();
     if (uuid)
       device = findDeviceByUUIDorName(*uuid);
     else
@@ -1015,7 +1015,7 @@ namespace mtconnect
   {
     std::lock_guard<AssetBuffer> lock(m_assetBuffer);
     getAssets(nullptr, numeric_limits<int32_t>().max() - 1, false, type, device, list);
-    Device *dev{nullptr};
+    Device *dev {nullptr};
     if (device)
       dev = findDeviceByUUIDorName(*device);
     for (auto a : list)
@@ -1110,7 +1110,7 @@ namespace mtconnect
       if (path)
       {
         stringstream parse(*path);
-        string token;
+        string       token;
 
         // Prefix path (i.e. "path1|path2" => "{prefix}path1|{prefix}path2")
         while (getline(parse, token, '|'))
@@ -1135,11 +1135,11 @@ namespace mtconnect
   // ReST API Requests
   // -------------------------------------------
 
-  Agent::RequestResult Agent::probeRequest(const std::string &format,
+  Agent::RequestResult Agent::probeRequest(const std::string &               format,
                                            const std::optional<std::string> &device)
   {
     list<Device *> deviceList;
-    auto printer = getPrinter(format);
+    auto           printer = getPrinter(format);
 
     if (device)
     {
@@ -1158,14 +1158,14 @@ namespace mtconnect
             http_server::OK, printer->mimeType()};
   }
 
-  Agent::RequestResult Agent::currentRequest(const std::string &format,
-                                             const std::optional<std::string> &device,
+  Agent::RequestResult Agent::currentRequest(const std::string &                    format,
+                                             const std::optional<std::string> &     device,
                                              const std::optional<SequenceNumber_t> &at,
-                                             const std::optional<std::string> &path)
+                                             const std::optional<std::string> &     path)
   {
     using namespace http_server;
-    auto printer = getPrinter(format);
-    Device *dev{nullptr};
+    auto    printer = getPrinter(format);
+    Device *dev {nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1182,14 +1182,14 @@ namespace mtconnect
   }
 
   Agent::RequestResult Agent::sampleRequest(const std::string &format, const int count,
-                                            const std::optional<std::string> &device,
+                                            const std::optional<std::string> &     device,
                                             const std::optional<SequenceNumber_t> &from,
                                             const std::optional<SequenceNumber_t> &to,
-                                            const std::optional<std::string> &path)
+                                            const std::optional<std::string> &     path)
   {
     using namespace http_server;
-    auto printer = getPrinter(format);
-    Device *dev{nullptr};
+    auto    printer = getPrinter(format);
+    Device *dev {nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1203,7 +1203,7 @@ namespace mtconnect
 
     // Check if there is a frequency to stream data or not
     SequenceNumber_t end;
-    bool endOfBuffer;
+    bool             endOfBuffer;
 
     return {fetchSampleData(printer, filter, count, from, to, end, endOfBuffer), OK,
             printer->mimeType()};
@@ -1212,16 +1212,16 @@ namespace mtconnect
   Agent::RequestResult Agent::streamSampleRequest(http_server::Response &response,
                                                   const std::string &format, const int interval,
                                                   const int heartbeatIn, const int count,
-                                                  const std::optional<std::string> &device,
+                                                  const std::optional<std::string> &     device,
                                                   const std::optional<SequenceNumber_t> &from,
-                                                  const std::optional<std::string> &path)
+                                                  const std::optional<std::string> &     path)
   {
     using namespace http_server;
 
     auto printer = getPrinter(format);
     checkRange(printer, interval, -1, numeric_limits<int>().max(), "interval");
     checkRange(printer, heartbeatIn, 1, numeric_limits<int>().max(), "heartbeat");
-    Device *dev{nullptr};
+    Device *dev {nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1248,9 +1248,9 @@ namespace mtconnect
     for (const auto &item : filter)
       m_dataItemMap[item]->addObserver(&observer);
 
-    chrono::milliseconds interMilli{interval};
-    SequenceNumber_t start{0};
-    SequenceNumber_t firstSeq = getFirstSequence();
+    chrono::milliseconds interMilli {interval};
+    SequenceNumber_t     start {0};
+    SequenceNumber_t     firstSeq = getFirstSequence();
     if (!from || *from < firstSeq)
       start = firstSeq;
     else
@@ -1268,9 +1268,9 @@ namespace mtconnect
         // Fetch sample data now resets the observer while holding the sequence
         // mutex to make sure that a new event will be recorded in the observer
         // when it returns.
-        string content;
+        string   content;
         uint64_t end(0ull);
-        bool endOfBuffer = true;
+        bool     endOfBuffer = true;
         // Check if we're falling too far behind. If we are, generate an
         // MTConnectError and return.
         if (start < getFirstSequence())
@@ -1400,7 +1400,7 @@ namespace mtconnect
   {
     auto printer = getPrinter(format);
     checkRange(printer, interval, 0, numeric_limits<int>().max(), "interval");
-    Device *dev{nullptr};
+    Device *dev {nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);
@@ -1413,7 +1413,7 @@ namespace mtconnect
     }
 
     response.beginMultipartStream();
-    chrono::milliseconds interMilli{interval};
+    chrono::milliseconds interMilli {interval};
 
     while (response.good())
     {
@@ -1428,12 +1428,12 @@ namespace mtconnect
   }
 
   Agent::RequestResult Agent::assetRequest(const std::string &format, const int32_t count,
-                                           const bool removed,
+                                           const bool                        removed,
                                            const std::optional<std::string> &type,
                                            const std::optional<std::string> &device)
   {
     using namespace http_server;
-    auto printer = getPrinter(format);
+    auto      printer = getPrinter(format);
     AssetList list;
     getAssets(printer, count, removed, type, device, list);
 
@@ -1442,7 +1442,7 @@ namespace mtconnect
             OK, printer->mimeType()};
   }
 
-  Agent::RequestResult Agent::assetIdsRequest(const std::string &format,
+  Agent::RequestResult Agent::assetIdsRequest(const std::string &           format,
                                               const std::list<std::string> &ids)
   {
     using namespace http_server;
@@ -1465,8 +1465,8 @@ namespace mtconnect
     auto printer = getPrinter(format);
 
     entity::ErrorList errors;
-    auto dev = checkDevice(printer, *device);
-    auto ap = addAsset(dev, asset, uuid, type, nullopt, errors);
+    auto              dev = checkDevice(printer, *device);
+    auto              ap = addAsset(dev, asset, uuid, type, nullopt, errors);
     if (!ap || errors.size() > 0)
     {
       ProtoErrorList errorResp;
@@ -1483,13 +1483,13 @@ namespace mtconnect
               http_server::BAD_REQUEST, printer->mimeType()};
     }
 
-    AssetList list{ap};
+    AssetList list {ap};
     return {printer->printAssets(m_instanceId, m_circularBuffer.getBufferSize(),
                                  m_assetBuffer.getCount(), list),
             OK, printer->mimeType()};
   }
 
-  Agent::RequestResult Agent::deleteAssetRequest(const std::string &format,
+  Agent::RequestResult Agent::deleteAssetRequest(const std::string &           format,
                                                  const std::list<std::string> &ids)
   {
     using namespace http_server;
@@ -1510,7 +1510,7 @@ namespace mtconnect
             OK, printer->mimeType()};
   }
 
-  Agent::RequestResult Agent::deleteAllAssetsRequest(const std::string &format,
+  Agent::RequestResult Agent::deleteAllAssetsRequest(const std::string &               format,
                                                      const std::optional<std::string> &device,
                                                      const std::optional<std::string> &type)
   {
@@ -1580,17 +1580,17 @@ namespace mtconnect
     const std::string &cmd = command->getValue<string>();
     if (cmd == "RemoveAsset")
     {
-      string id = command->get<string>("assetId");
-      auto device = command->maybeGet<string>("device");
-      Device *dev{nullptr};
+      string  id = command->get<string>("assetId");
+      auto    device = command->maybeGet<string>("device");
+      Device *dev {nullptr};
       if (device)
         dev = m_agent->findDeviceByUUIDorName(*device);
       m_agent->removeAsset(dev, id);
     }
     else if (cmd == "RemoveAll")
     {
-      string type = command->get<string>("type");
-      auto device = command->maybeGet<string>("device");
+      string    type = command->get<string>("type");
+      auto      device = command->maybeGet<string>("device");
       AssetList list;
       m_agent->removeAllAssets(device, type, nullopt, list);
     }
@@ -1603,7 +1603,7 @@ namespace mtconnect
   void Agent::receiveCommand(const std::string &deviceName, const std::string &command,
                              const std::string &value, const std::string &source)
   {
-    Device *device{nullptr};
+    Device *device {nullptr};
     device = findDeviceByUUIDorName(deviceName);
 
     std::string oldName, oldUuid;
@@ -1613,43 +1613,44 @@ namespace mtconnect
       oldUuid = device->getUuid();
     }
 
-    static std::unordered_map<string, function<void(Device *, const string &value)>> deviceCommands{
-        {"uuid",
-         [](Device *device, const string &uuid) {
-           if (!device->m_preserveUuid)
-             device->setUuid(uuid);
-         }},
-        {"manufacturer", mem_fn(&Device::setManufacturer)},
-        {"station", mem_fn(&Device::setStation)},
-        {"serialNumber", mem_fn(&Device::setSerialNumber)},
-        {"description", mem_fn(&Device::setDescription)},
-        {"nativeName", mem_fn(&Device::setNativeName)},
-        {"calibration",
-         [](Device *device, const string &value) {
-           istringstream line(value);
+    static std::unordered_map<string, function<void(Device *, const string &value)>>
+        deviceCommands {
+            {"uuid",
+             [](Device *device, const string &uuid) {
+               if (!device->m_preserveUuid)
+                 device->setUuid(uuid);
+             }},
+            {"manufacturer", mem_fn(&Device::setManufacturer)},
+            {"station", mem_fn(&Device::setStation)},
+            {"serialNumber", mem_fn(&Device::setSerialNumber)},
+            {"description", mem_fn(&Device::setDescription)},
+            {"nativeName", mem_fn(&Device::setNativeName)},
+            {"calibration",
+             [](Device *device, const string &value) {
+               istringstream line(value);
 
-           // Look for name|factor|offset triples
-           string name, factor, offset;
-           while (getline(line, name, '|') && getline(line, factor, '|') &&
-                  getline(line, offset, '|'))
-           {
-             // Convert to a floating point number
-             auto di = device->getDeviceDataItem(name);
-             if (!di)
-               g_logger << LWARN << "Cannot find data item to calibrate for " << name;
-             else
-             {
-               double fact_value = stod(factor);
-               double off_value = stod(offset);
-               
-               device_model::data_item::UnitConversion conv(fact_value, off_value);
-               di->setConverter(conv);
-             }
-           }
-         }},
-    };
+               // Look for name|factor|offset triples
+               string name, factor, offset;
+               while (getline(line, name, '|') && getline(line, factor, '|') &&
+                      getline(line, offset, '|'))
+               {
+                 // Convert to a floating point number
+                 auto di = device->getDeviceDataItem(name);
+                 if (!di)
+                   g_logger << LWARN << "Cannot find data item to calibrate for " << name;
+                 else
+                 {
+                   double fact_value = stod(factor);
+                   double off_value = stod(offset);
 
-    static std::unordered_map<string, string> adapterDataItems{
+                   device_model::data_item::UnitConversion conv(fact_value, off_value);
+                   di->setConverter(conv);
+                 }
+               }
+             }},
+        };
+
+    static std::unordered_map<string, string> adapterDataItems {
         {"adapterVersion", "_adapter_software_version"},
         {"mtconnectVersion", "_mtconnect_version"},
     };
@@ -1704,7 +1705,7 @@ namespace mtconnect
   string Agent::fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
                                  const optional<SequenceNumber_t> &at)
   {
-    ObservationList observations;
+    ObservationList  observations;
     SequenceNumber_t firstSeq, seq;
 
     {
@@ -1735,7 +1736,7 @@ namespace mtconnect
                                 bool &endOfBuffer, ChangeObserver *observer)
   {
     std::unique_ptr<ObservationList> observations;
-    SequenceNumber_t firstSeq, lastSeq;
+    SequenceNumber_t                 firstSeq, lastSeq;
 
     {
       std::lock_guard<CircularBuffer> lock(m_circularBuffer);
@@ -1797,7 +1798,7 @@ namespace mtconnect
 
     std::lock_guard<AssetBuffer> lock(m_assetBuffer);
 
-    Device *dev{nullptr};
+    Device *dev {nullptr};
     if (device)
     {
       dev = checkDevice(printer, *device);

@@ -60,15 +60,15 @@ namespace mtconnect
           = default;
       ~Channel() = default;
 
-      void setDescription(const std::string &desc) { m_description = desc; }
+      void               setDescription(const std::string &desc) { m_description = desc; }
       const std::string &getDescription() const { return m_description; }
       const std::map<std::string, std::string> &getAttributes() const { return m_attributes; }
-      const Calibration &getCalibration() const { return m_calibration; }
+      const Calibration &                       getCalibration() const { return m_calibration; }
 
     protected:
       std::map<std::string, std::string> m_attributes;
-      std::string m_description;
-      Calibration m_calibration;
+      std::string                        m_description;
+      Calibration                        m_calibration;
     };
 
     // Sensor Configuration begins here
@@ -86,14 +86,14 @@ namespace mtconnect
     void addChannel(const Channel &channel) { m_channels.emplace_back(channel); }
 
     const std::vector<Channel> &getChannels() const { return m_channels; }
-    const Calibration &getCalibration() const { return m_calibration; }
-    const std::string &getRest() const { return m_rest; }
-    const std::string &getFirmwareVersion() const { return m_firmwareVersion; }
+    const Calibration &         getCalibration() const { return m_calibration; }
+    const std::string &         getRest() const { return m_rest; }
+    const std::string &         getFirmwareVersion() const { return m_firmwareVersion; }
 
   protected:
-    std::string m_firmwareVersion;
-    Calibration m_calibration;
-    std::string m_rest;
+    std::string          m_firmwareVersion;
+    Calibration          m_calibration;
+    std::string          m_rest;
     std::vector<Channel> m_channels;
   };
 }  // namespace mtconnect

@@ -83,9 +83,9 @@ namespace mtconnect
       DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
       DataSetEntry(const DataSetEntry &other) = default;
 
-      std::string m_key;
+      std::string  m_key;
       DataSetValue m_value;
-      bool m_removed;
+      bool         m_removed;
 
       bool operator==(const DataSetEntry &other) const { return m_key == other.m_key; }
       bool operator<(const DataSetEntry &other) const { return m_key < other.m_key; }
@@ -155,7 +155,7 @@ namespace mtconnect
     inline void DataSet::parse(const std::string &s, bool table)
     {
       using namespace std;
-      static dlib::logger logger("DataSet");
+      static dlib::logger   logger("DataSet");
       constexpr const char *reg =
           "[ \t]*"                      // Whitespace
           "([^ \t=]+)"                  // Key
@@ -179,7 +179,7 @@ namespace mtconnect
         while (regex_search(rest, m, tokenizer))
         {
           string key, value;
-          bool removed = false;
+          bool   removed = false;
           if (!m[3].matched)
           {
             key = m[1];

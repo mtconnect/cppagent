@@ -59,7 +59,7 @@ namespace mtconnect
     }
     void setProperty(const entity::Property &property) { Entity::setProperty(property); }
 
-    const auto &getType() const { return getName(); }
+    const auto &       getType() const { return getName(); }
     const std::string &getAssetId() const
     {
       if (m_assetId.empty())
@@ -106,7 +106,7 @@ namespace mtconnect
 
   protected:
     std::string m_assetId;
-    bool m_removed;
+    bool        m_removed;
   };
 
   class ExtendedAsset : public Asset

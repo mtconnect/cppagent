@@ -62,10 +62,10 @@ namespace mtconnect
       }
 
       ReferenceType m_type;
-      std::string m_id;
-      std::string m_name;
-      DataItemPtr m_dataItem;
-      Component *m_component;
+      std::string   m_id;
+      std::string   m_name;
+      DataItemPtr   m_dataItem;
+      Component *   m_component;
     };
 
   public:
@@ -90,7 +90,7 @@ namespace mtconnect
     const std::string &getUuid() const { return m_uuid; }
     const std::string &getDescriptionBody() const { return m_descriptionBody; }
     const std::string &getPrefix() const { return m_prefix; }
-    const auto &getConfiguration() const { return m_configuration; }
+    const auto &       getConfiguration() const { return m_configuration; }
 
     // Setter methods
     void setUuid(const std::string &uuid)
@@ -148,14 +148,14 @@ namespace mtconnect
     }
 
     // Add to/get the component's std::list of data items
-    virtual void addDataItem(DataItemPtr dataItem);
+    virtual void                  addDataItem(DataItemPtr dataItem);
     const std::list<DataItemPtr> &getDataItems() const { return m_dataItems; }
 
     bool operator<(const Component &comp) const { return m_id < comp.getId(); }
     bool operator==(const Component &comp) const { return m_id == comp.getId(); }
 
     // References
-    void addReference(Reference &reference) { m_references.emplace_back(reference); }
+    void        addReference(Reference &reference) { m_references.emplace_back(reference); }
     const auto &getReferences() const { return m_references; }
 
     void resolveReferences();
@@ -163,8 +163,8 @@ namespace mtconnect
   protected:
     // Return a map of attributes of all the component specs
     std::map<std::string, std::string> buildAttributes() const;
-    void reBuildAttributes() { m_attributes = buildAttributes(); }
-    void setParent(Component *parent);
+    void                               reBuildAttributes() { m_attributes = buildAttributes(); }
+    void                               setParent(Component *parent);
 
   protected:
     // Unique ID for each component
@@ -186,14 +186,14 @@ namespace mtconnect
     double m_sampleInterval;
 
     // Description of itself
-    std::map<std::string, std::string> m_description;
-    std::string m_descriptionBody;
+    std::map<std::string, std::string>                 m_description;
+    std::string                                        m_descriptionBody;
     std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
 
     // Component relationships
     // Pointer to the parent component
     Component *m_parent;
-    Device *m_device;
+    Device *   m_device;
 
     // Each component keeps track of it's children in a std::list
     std::list<Component *> m_children;

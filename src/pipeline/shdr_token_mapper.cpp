@@ -69,25 +69,25 @@ namespace mtconnect
 
     // --------------------------------------
     // Mapping to data items
-    static entity::Requirements s_condition{{"level", true},
-                                            {"nativeCode", false},
-                                            {"nativeSeverity", false},
-                                            {"qualifier", false},
-                                            {"VALUE", false}};
-    static entity::Requirements s_alarm{{"code", true},
-                                        {"nativeCode", false},
-                                        {"severity", false},
-                                        {"state", true},
-                                        {"VALUE", false}};
-    static entity::Requirements s_timeseries{{"sampleCount", entity::INTEGER, true},
-                                             {"sampleRate", entity::DOUBLE, true},
-                                             {"VALUE", entity::VECTOR, true}};
-    static entity::Requirements s_message{{"nativeCode", false}, {"VALUE", false}};
-    static entity::Requirements s_threeSpaceSample{{"VALUE", entity::VECTOR, false}};
-    static entity::Requirements s_sample{{"VALUE", entity::DOUBLE, false}};
-    static entity::Requirements s_assetEvent{{"assetType", false}, {"VALUE", false}};
-    static entity::Requirements s_event{{"VALUE", false}};
-    static entity::Requirements s_dataSet{{"VALUE", entity::DATA_SET, false}};
+    static entity::Requirements s_condition {{"level", true},
+                                             {"nativeCode", false},
+                                             {"nativeSeverity", false},
+                                             {"qualifier", false},
+                                             {"VALUE", false}};
+    static entity::Requirements s_alarm {{"code", true},
+                                         {"nativeCode", false},
+                                         {"severity", false},
+                                         {"state", true},
+                                         {"VALUE", false}};
+    static entity::Requirements s_timeseries {{"sampleCount", entity::INTEGER, true},
+                                              {"sampleRate", entity::DOUBLE, true},
+                                              {"VALUE", entity::VECTOR, true}};
+    static entity::Requirements s_message {{"nativeCode", false}, {"VALUE", false}};
+    static entity::Requirements s_threeSpaceSample {{"VALUE", entity::VECTOR, false}};
+    static entity::Requirements s_sample {{"VALUE", entity::DOUBLE, false}};
+    static entity::Requirements s_assetEvent {{"assetType", false}, {"VALUE", false}};
+    static entity::Requirements s_event {{"VALUE", false}};
+    static entity::Requirements s_dataSet {{"VALUE", entity::DATA_SET, false}};
 
     static inline std::string extractResetTrigger(const DataItemPtr dataItem, const string &token,
                                                   Properties &properties)
@@ -120,11 +120,11 @@ namespace mtconnect
     }
 
     inline ObservationPtr zipProperties(const DataItemPtr dataItem, const Timestamp &timestamp,
-                                        const entity::Requirements &reqs,
-                                        TokenList::const_iterator &token,
+                                        const entity::Requirements &     reqs,
+                                        TokenList::const_iterator &      token,
                                         const TokenList::const_iterator &end, ErrorList &errors)
     {
-      bool unavail{false};
+      bool       unavail {false};
       Properties props;
       for (auto req = reqs.begin(); token != end && req != reqs.end(); token++, req++)
       {
@@ -143,7 +143,7 @@ namespace mtconnect
           continue;
         }
 
-        entity::Value value{extractResetTrigger(dataItem, tok, props)};
+        entity::Value value {extractResetTrigger(dataItem, tok, props)};
 
         try
         {
@@ -160,15 +160,15 @@ namespace mtconnect
       return Observation::make(dataItem, props, timestamp, errors);
     }
 
-    EntityPtr ShdrTokenMapper::mapTokensToDataItem(const Timestamp &timestamp,
+    EntityPtr ShdrTokenMapper::mapTokensToDataItem(const Timestamp &                 timestamp,
                                                    const std::optional<std::string> &source,
-                                                   TokenList::const_iterator &token,
-                                                   const TokenList::const_iterator &end,
-                                                   ErrorList &errors)
+                                                   TokenList::const_iterator &       token,
+                                                   const TokenList::const_iterator & end,
+                                                   ErrorList &                       errors)
     {
-      auto dataItemKey = splitKey(*token++);
+      auto   dataItemKey = splitKey(*token++);
       string device = dataItemKey.second.value_or(m_defaultDevice.value_or(""));
-      auto dataItem = m_contract->findDataItem(device, dataItemKey.first);
+      auto   dataItem = m_contract->findDataItem(device, dataItemKey.first);
 
       if (dataItem == nullptr)
       {
@@ -188,7 +188,7 @@ namespace mtconnect
         return nullptr;
       }
 
-      entity::Requirements *reqs{nullptr};
+      entity::Requirements *reqs {nullptr};
 
       // Extract the remaining tokens
       if (dataItem->isSample())
@@ -236,14 +236,14 @@ namespace mtconnect
       return nullptr;
     }
 
-    EntityPtr ShdrTokenMapper::mapTokensToAsset(const Timestamp &timestamp,
+    EntityPtr ShdrTokenMapper::mapTokensToAsset(const Timestamp &                 timestamp,
                                                 const std::optional<std::string> &source,
-                                                TokenList::const_iterator &token,
-                                                const TokenList::const_iterator &end,
-                                                ErrorList &errors)
+                                                TokenList::const_iterator &       token,
+                                                const TokenList::const_iterator & end,
+                                                ErrorList &                       errors)
     {
       EntityPtr res;
-      auto command = *token++;
+      auto      command = *token++;
       if (command == "@ASSET@")
       {
         auto assetId = *token++;
@@ -268,7 +268,7 @@ namespace mtconnect
       }
       else
       {
-        auto ac = make_shared<AssetCommand>("AssetCommand", Properties{});
+        auto ac = make_shared<AssetCommand>("AssetCommand", Properties {});
         ac->m_timestamp = timestamp;
         if (command == "@REMOVE_ALL_ASSETS@")
         {
@@ -300,21 +300,21 @@ namespace mtconnect
       if (auto timestamped = std::dynamic_pointer_cast<Timestamped>(entity))
       {
         // Don't copy the tokens.
-        auto res = std::make_shared<Observations>(*timestamped, TokenList{});
+        auto       res = std::make_shared<Observations>(*timestamped, TokenList {});
         EntityList entities;
 
         auto &tokens = timestamped->m_tokens;
-        auto token = tokens.cbegin();
-        auto end = tokens.end();
+        auto  token = tokens.cbegin();
+        auto  end = tokens.end();
 
         while (token != end)
         {
-          auto start = token;
+          auto      start = token;
           EntityPtr out;
           ErrorList errors;
           try
           {
-            auto source = entity->maybeGet<string>("source");
+            auto              source = entity->maybeGet<string>("source");
             entity::ErrorList errors;
             if ((*token)[0] == '@')
             {

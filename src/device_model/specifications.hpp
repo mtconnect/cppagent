@@ -81,7 +81,7 @@ namespace mtconnect
       else
         return {};
     }
-    auto getLimits() const { return getGroup("Limits"); }
+    auto                  getLimits() const { return getGroup("Limits"); }
     std::set<std::string> getGroupKeys() const
     {
       std::set<std::string> keys;
@@ -93,7 +93,7 @@ namespace mtconnect
     const std::map<std::string, Group> &getGroups() const { return m_groups; }
     double getLimitForGroup(const std::string &group, const std::string &limit) const
     {
-      auto it = m_groups.find(group);
+      auto                             it = m_groups.find(group);
       decltype(it->second.find(limit)) gi;
       if (it != m_groups.end() && (gi = it->second.find(limit)) != it->second.end())
         return gi->second;
@@ -102,13 +102,13 @@ namespace mtconnect
     }
     double getLimit(const std::string &limit) const { return getLimitForGroup("Limits", limit); }
 
-    bool hasGroups() const { return m_hasGroups; }
+    bool               hasGroups() const { return m_hasGroups; }
     const std::string &getClass() const { return m_class; }
 
   protected:
     std::map<std::string, Group> m_groups;
-    bool m_hasGroups;
-    std::string m_class;
+    bool                         m_hasGroups;
+    std::string                  m_class;
   };
 
   class Specifications : public ComponentConfiguration

@@ -33,7 +33,7 @@ namespace mtconnect
   {
     static dlib::logger g_logger("entity.xml.printer");
 
-    inline string stripUndeclaredNamespace(const QName &qname,
+    inline string stripUndeclaredNamespace(const QName &                qname,
                                            const unordered_set<string> &namespaces)
     {
       string name;
@@ -45,7 +45,7 @@ namespace mtconnect
       return name;
     }
 
-    static inline void addAttributes(xmlTextWriterPtr writer,
+    static inline void addAttributes(xmlTextWriterPtr                writer,
                                      const std::map<string, string> &attributes)
     {
       for (const auto &attr : attributes)
@@ -94,39 +94,39 @@ namespace mtconnect
         {
           attrs["removed"] = "true";
         }
-        visit(overloaded{[&writer, &attrs](const string &st) {
-                           addSimpleElement(writer, "Entry", st, attrs);
-                         },
-                         [&writer, &attrs](const int64_t &i) {
-                           addSimpleElement(writer, "Entry", to_string(i), attrs);
-                         },
-                         [&writer, &attrs](const double &d) {
-                           addSimpleElement(writer, "Entry", format(d), attrs);
-                         },
-                         [&writer, &attrs](const DataSet &row) {
-                           // Table
-                           AutoElement ele(writer, "Entry");
-                           addAttributes(writer, attrs);
-                           for (auto &c : row)
-                           {
-                             map<string, string> attrs = {{"key", c.m_key}};
-                             visit(overloaded{[&writer, &attrs](const string &s) {
-                                                addSimpleElement(writer, "Cell", s, attrs);
-                                              },
-                                              [&writer, &attrs](const int64_t &i) {
-                                                addSimpleElement(writer, "Cell", to_string(i),
-                                                                 attrs);
-                                              },
-                                              [&writer, &attrs](const double &d) {
-                                                addSimpleElement(writer, "Cell", format(d), attrs);
-                                              },
-                                              [](auto &a) {
-                                                g_logger << dlib::LERROR
-                                                         << "Invalid type for DataSetVariant cell";
-                                              }},
-                                   c.m_value);
-                           }
-                         }},
+        visit(overloaded {[&writer, &attrs](const string &st) {
+                            addSimpleElement(writer, "Entry", st, attrs);
+                          },
+                          [&writer, &attrs](const int64_t &i) {
+                            addSimpleElement(writer, "Entry", to_string(i), attrs);
+                          },
+                          [&writer, &attrs](const double &d) {
+                            addSimpleElement(writer, "Entry", format(d), attrs);
+                          },
+                          [&writer, &attrs](const DataSet &row) {
+                            // Table
+                            AutoElement ele(writer, "Entry");
+                            addAttributes(writer, attrs);
+                            for (auto &c : row)
+                            {
+                              map<string, string> attrs = {{"key", c.m_key}};
+                              visit(overloaded {
+                                        [&writer, &attrs](const string &s) {
+                                          addSimpleElement(writer, "Cell", s, attrs);
+                                        },
+                                        [&writer, &attrs](const int64_t &i) {
+                                          addSimpleElement(writer, "Cell", to_string(i), attrs);
+                                        },
+                                        [&writer, &attrs](const double &d) {
+                                          addSimpleElement(writer, "Cell", format(d), attrs);
+                                        },
+                                        [](auto &a) {
+                                          g_logger << dlib::LERROR
+                                                   << "Invalid type for DataSetVariant cell";
+                                        }},
+                                    c.m_value);
+                            }
+                          }},
               e.m_value);
       }
     }
@@ -152,7 +152,7 @@ namespace mtconnect
     void printProperty(xmlTextWriterPtr writer, const Property &p,
                        const unordered_set<string> &namespaces)
     {
-      string t;
+      string      t;
       const char *s = toCharPtr(p.second, t);
       if (p.first == "VALUE")
       {
@@ -165,8 +165,8 @@ namespace mtconnect
       }
       else
       {
-        QName name(p.first);
-        string qname = stripUndeclaredNamespace(name, namespaces);
+        QName       name(p.first);
+        string      qname = stripUndeclaredNamespace(name, namespaces);
         AutoElement element(writer, qname);
         THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
       }
@@ -175,13 +175,13 @@ namespace mtconnect
     void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity,
                            const std::unordered_set<std::string> &namespaces)
     {
-      string qname = stripUndeclaredNamespace(entity->getName(), namespaces);
+      string      qname = stripUndeclaredNamespace(entity->getName(), namespaces);
       AutoElement element(writer, qname);
 
       list<Property> attributes;
       list<Property> elements;
-      auto &properties = entity->getProperties();
-      const auto order = entity->getOrder();
+      auto &         properties = entity->getProperties();
+      const auto     order = entity->getOrder();
 
       // Partition the properties
       for (const auto &prop : properties)
@@ -218,17 +218,17 @@ namespace mtconnect
 
       for (auto &e : elements)
       {
-        visit(overloaded{[&writer, &namespaces, this](const EntityPtr &v) {
-                           print(writer, v, namespaces);
-                         },
-                         [&writer, &namespaces, this](const EntityList &list) {
-                           for (auto &en : list)
-                             print(writer, en, namespaces);
-                         },
-                         [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
-                         [&writer, &e, &namespaces](const auto &v) {
-                           printProperty(writer, e, namespaces);
-                         }},
+        visit(overloaded {[&writer, &namespaces, this](const EntityPtr &v) {
+                            print(writer, v, namespaces);
+                          },
+                          [&writer, &namespaces, this](const EntityList &list) {
+                            for (auto &en : list)
+                              print(writer, en, namespaces);
+                          },
+                          [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
+                          [&writer, &e, &namespaces](const auto &v) {
+                            printProperty(writer, e, namespaces);
+                          }},
               e.second);
       }
     }

@@ -39,7 +39,7 @@ namespace mtconnect
       const static std::string &klass("SolidModel");
       return klass;
     }
-    bool hasScale() const override { return true; }
+    bool                               hasScale() const override { return true; }
     const std::map<std::string, bool> &properties() const override
     {
       const static std::map<std::string, bool> properties = {

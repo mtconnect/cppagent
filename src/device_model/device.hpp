@@ -41,10 +41,10 @@ namespace mtconnect
     void setOptions(const ConfigOptions &options);
 
     // Add/get items to/from the device name to data item mapping
-    void addDeviceDataItem(DataItemPtr dataItem);
+    void        addDeviceDataItem(DataItemPtr dataItem);
     DataItemPtr getDeviceDataItem(const std::string &name) const;
-    void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
-    Component *getComponentById(const std::string &aId) const
+    void        addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
+    Component * getComponentById(const std::string &aId) const
     {
       auto comp = m_componentsById.find(aId);
       if (comp != m_componentsById.end())
@@ -63,8 +63,8 @@ namespace mtconnect
     void addDataItem(DataItemPtr dataItem) override;
 
     std::vector<adapter::Adapter *> m_adapters;
-    bool m_preserveUuid;
-    bool m_availabilityAdded;
+    bool                            m_preserveUuid;
+    bool                            m_availabilityAdded;
 
     const std::string &getMTConnectVersion() const { return m_mtconnectVersion; }
 
@@ -76,7 +76,7 @@ namespace mtconnect
   protected:
     // The iso841Class of the device
     unsigned int m_iso841Class;
-    std::string m_mtconnectVersion;
+    std::string  m_mtconnectVersion;
 
     DataItemPtr m_availability;
     DataItemPtr m_assetChanged;

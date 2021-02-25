@@ -42,9 +42,9 @@ namespace mtconnect
           static FactoryPtr factory;
           if (!factory)
           {
-            factory = make_shared<Factory>(Requirements{
-                {"type", ControlledVocab{"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"},
-                 true},
+            factory = make_shared<Factory>(Requirements {
+                {"type",
+                 ControlledVocab {"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"}, true},
                 {"name", false},
                 {"idRef", true}});
             factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
@@ -62,8 +62,8 @@ namespace mtconnect
           static FactoryPtr factory;
           if (!factory)
           {
-            factory = make_shared<Factory>(Requirements{
-                {"type", ControlledVocab{"LIMIT"}, true}, {"name", false}, {"idRef", true}});
+            factory = make_shared<Factory>(Requirements {
+                {"type", ControlledVocab {"LIMIT"}, true}, {"name", false}, {"idRef", true}});
             factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationship>(name, props);
             });
@@ -90,8 +90,8 @@ namespace mtconnect
             auto di = Relationship::getDataItemFactory();
             auto spec = Relationship::getSpecificationFactory();
             relationships = make_shared<Factory>(
-                Requirements{{"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
-                             {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}});
+                Requirements {{"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
+                              {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}});
             relationships->setMinListSize(1);
             relationships->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationships>(name, props);

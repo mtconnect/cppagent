@@ -48,7 +48,7 @@ namespace mtconnect
                             const std::string &local_ip, unsigned short foreign_port,
                             unsigned short local_port, uint64)
     {
-      Response response(out);
+      Response    response(out);
       std::string accepts;
       try
       {
@@ -117,7 +117,7 @@ namespace mtconnect
 
     bool Server::handleRequest(Routing::Request &request, Response &response)
     {
-      bool res{true};
+      bool res {true};
       try
       {
         if (!dispatch(request, response))

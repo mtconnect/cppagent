@@ -35,10 +35,9 @@ namespace mtconnect
 
       void setQName(const std::string &qname, const std::optional<std::string> &ns = std::nullopt)
       {
-        std::string name;
         if (ns)
         {
-          assign(*ns + ":" + name);
+          assign(*ns + ":" + qname);
           m_nsLen = ns->length();
         }
         else
@@ -99,7 +98,7 @@ namespace mtconnect
         m_nsLen = 0;
       }
 
-      const auto &getQName() const { return *this; }
+      const auto &           getQName() const { return *this; }
       const std::string_view getName() const
       {
         if (m_nsLen == 0)

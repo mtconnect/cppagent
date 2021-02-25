@@ -69,7 +69,7 @@ namespace mtconnect
     ~Transformation() = default;
 
     std::optional<Translation> m_translation;
-    std::optional<Rotation> m_rotation;
+    std::optional<Rotation>    m_rotation;
   };
 
   struct Scale
@@ -88,7 +88,7 @@ namespace mtconnect
     ~Geometry() = default;
 
     std::variant<std::monostate, Origin, Transformation> m_location;
-    std::optional<Scale> m_scale;
-    std::optional<Axis> m_axis;
+    std::optional<Scale>                                 m_scale;
+    std::optional<Axis>                                  m_axis;
   };
 }  // namespace mtconnect

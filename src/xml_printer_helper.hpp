@@ -66,7 +66,7 @@ namespace mtconnect
 
   protected:
     xmlTextWriterPtr m_writer;
-    xmlBufferPtr m_buf;
+    xmlBufferPtr     m_buf;
   };
 
   static inline void openElement(xmlTextWriterPtr writer, const char *name)
@@ -121,7 +121,7 @@ namespace mtconnect
 
   protected:
     xmlTextWriterPtr m_writer;
-    std::string m_name;
-    std::string m_key;
+    std::string      m_name;
+    std::string      m_key;
   };
 }  // namespace mtconnect

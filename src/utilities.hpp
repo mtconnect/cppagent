@@ -138,7 +138,7 @@ namespace mtconnect
   inline std::string format(double value)
   {
     std::stringstream s;
-    constexpr int precision = std::numeric_limits<double>::digits10;
+    constexpr int     precision = std::numeric_limits<double>::digits10;
     s << std::setprecision(precision) << value;
     return s.str();
   }
@@ -203,7 +203,7 @@ namespace mtconnect
 
   // Get a specified time formatted
   inline std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint,
-                                    TimeFormat format)
+                                    TimeFormat                                         format)
   {
     using namespace std;
     using namespace std::chrono;
@@ -218,7 +218,7 @@ namespace mtconnect
       case GMT_UV_SEC:
         return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
       case LOCAL:
-        auto time = system_clock::to_time_t(timePoint);
+        auto      time = system_clock::to_time_t(timePoint);
         struct tm timeinfo = {0};
         mt_localtime(&time, &timeinfo);
         char timestamp[64] = {0};
@@ -357,7 +357,7 @@ namespace mtconnect
   {
     using namespace std;
     string time = date::format("%FT%T", date::floor<Microseconds>(ts));
-    auto pos = time.find_last_not_of("0");
+    auto   pos = time.find_last_not_of("0");
     if (pos != string::npos)
     {
       if (time[pos] != '.')
@@ -397,7 +397,7 @@ namespace mtconnect
       return "";
 
     string camel;
-    auto colon = type.find(':');
+    auto   colon = type.find(':');
 
     if (colon != string::npos)
     {
@@ -407,7 +407,7 @@ namespace mtconnect
     else
       camel = type;
 
-    auto start = camel.begin();
+    auto            start = camel.begin();
     decltype(start) end;
 
     bool done;

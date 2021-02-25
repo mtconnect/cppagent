@@ -42,7 +42,7 @@ namespace mtconnect
 
     void Checkpoint::addObservation(ConditionPtr event, ObservationPtr &&old)
     {
-      bool assign = true;
+      bool       assign = true;
       Condition *cond = dynamic_cast<Condition *>(old.get());
       if (cond->getLevel() != Condition::NORMAL && event->getLevel() != Condition::NORMAL &&
           cond->getLevel() != Condition::UNAVAILABLE && event->getLevel() != Condition::UNAVAILABLE)
@@ -129,9 +129,9 @@ namespace mtconnect
         return;
       }
 
-      auto item = event->getDataItem();
+      auto        item = event->getDataItem();
       const auto &id = item->getId();
-      auto old = m_observations.find(id);
+      auto        old = m_observations.find(id);
 
       if (old != m_observations.end())
       {
@@ -231,15 +231,15 @@ namespace mtconnect
           !event->hasProperty("resetTriggered"))
       {
         const auto &id = item->getId();
-        const auto ptr = m_observations.find(id);
+        const auto  ptr = m_observations.find(id);
 
         if (ptr != m_observations.end() && !ptr->second->isUnavailable())
         {
           const auto old = dynamic_pointer_cast<DataSetEvent>(ptr->second);
-          auto &set = old->getDataSet();
+          auto &     set = old->getDataSet();
 
           DataSet eventSet = setEvent->getDataSet();
-          bool changed = false;
+          bool    changed = false;
 
           for (auto it = eventSet.begin(); it != eventSet.end();)
           {

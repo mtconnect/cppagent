@@ -56,8 +56,8 @@ namespace mtconnect
 
         std::lock_guard<TransformState> guard(*m_state);
 
-        auto o = std::dynamic_pointer_cast<Observation>(entity);
-        auto di = o->getDataItem();
+        auto  o = std::dynamic_pointer_cast<Observation>(entity);
+        auto  di = o->getDataItem();
         auto &id = di->getId();
 
         if (o->isUnavailable())
@@ -66,7 +66,7 @@ namespace mtconnect
           return next(entity);
         }
 
-        auto filter = *di->getMinimumDelta();
+        auto   filter = *di->getMinimumDelta();
         double value = o->getValue<double>();
         if (filterMinimumDelta(id, value, filter))
           return EntityPtr();
@@ -97,7 +97,7 @@ namespace mtconnect
 
     protected:
       std::shared_ptr<State> m_state;
-      PipelineContract *m_contract;
+      PipelineContract *     m_contract;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

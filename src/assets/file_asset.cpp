@@ -39,14 +39,14 @@ namespace mtconnect
         Requirements({Requirement("FileComment", ENTITY, fileComment, 1, Requirement::Infinite)}));
 
     static auto fileArchetype = make_shared<Factory>(*Asset::getFactory());
-    fileArchetype->addRequirements(
-        Requirements{Requirement("name", true), Requirement("mediaType", true),
-                     Requirement("applicationCategory", true), Requirement("applicationType", true),
-                     Requirement("FileComments", ENTITY_LIST, fileComments, false),
-                     Requirement("FileProperties", ENTITY_LIST, fileProperties, false)});
+    fileArchetype->addRequirements(Requirements {
+        Requirement("name", true), Requirement("mediaType", true),
+        Requirement("applicationCategory", true), Requirement("applicationType", true),
+        Requirement("FileComments", ENTITY_LIST, fileComments, false),
+        Requirement("FileProperties", ENTITY_LIST, fileProperties, false)});
     fileArchetype->setOrder({"FileProperties", "FileComments"});
 
-    static bool first{true};
+    static bool first {true};
     if (first)
     {
       auto root = Asset::getRoot();
@@ -59,7 +59,7 @@ namespace mtconnect
 
   void FileArchetypeAsset::registerAsset()
   {
-    static bool once{true};
+    static bool once {true};
     if (once)
     {
       Asset::registerAssetType("FileArchetype", getFactory());
@@ -88,7 +88,7 @@ namespace mtconnect
     file->setOrder({"FileProperties", "FileComments", "FileLocation", "Signature", "PublicKey",
                     "Destinations", "CreationTime", "ModificationTime"});
 
-    static bool first{true};
+    static bool first {true};
     if (first)
     {
       auto root = Asset::getRoot();
@@ -101,7 +101,7 @@ namespace mtconnect
 
   void FileAsset::registerAsset()
   {
-    static bool once{true};
+    static bool once {true};
     if (once)
     {
       Asset::registerAssetType("File", getFactory());

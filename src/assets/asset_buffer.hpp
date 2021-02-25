@@ -55,13 +55,13 @@ namespace mtconnect
     {
       return removeAsset(asset->getAssetId(), time);
     }
-    AssetPtr removeAsset(const std::string &id,
+    AssetPtr removeAsset(const std::string &             id,
                          const std::optional<Timestamp> &time = std::nullopt);
 
     AssetPtr getAsset(const std::string &id)
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      auto idx = m_primaryIndex.find(id);
+      auto                                  idx = m_primaryIndex.find(id);
       if (idx != m_primaryIndex.end())
         return idx->second;
       else
@@ -70,7 +70,7 @@ namespace mtconnect
     const std::optional<const Index *> getAssetsForDevice(const std::string &id) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      auto idx = m_deviceIndex.find(id);
+      auto                                  idx = m_deviceIndex.find(id);
       if (idx != m_deviceIndex.end())
         return std::make_optional(&idx->second);
       else
@@ -79,7 +79,7 @@ namespace mtconnect
     const std::optional<const Index *> getAssetsForType(const std::string &type) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      auto idx = m_typeIndex.find(type);
+      auto                                  idx = m_typeIndex.find(type);
       if (idx != m_typeIndex.end())
         return std::make_optional(&idx->second);
       else
@@ -88,7 +88,7 @@ namespace mtconnect
     TypeCount getCountsByType(bool active = true) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      TypeCount res;
+      TypeCount                             res;
       for (const auto &t : m_typeIndex)
       {
         int delta = 0;
@@ -134,7 +134,7 @@ namespace mtconnect
         return 0;
     }
     const auto &getAssets() const { return m_buffer; }
-    int getIndex(const std::string &id) const
+    int         getIndex(const std::string &id) const
     {
       int i = 0;
       for (auto &a : m_buffer)
@@ -149,8 +149,8 @@ namespace mtconnect
     size_t removeAllByType(const std::string &type)
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      auto &index = m_typeIndex[type];
-      auto count = index.size();
+      auto &                                index = m_typeIndex[type];
+      auto                                  count = index.size();
       for (auto &asset : index)
         removeAsset(asset.first);
 
@@ -160,8 +160,8 @@ namespace mtconnect
     size_t removeAllByDevice(const std::string &uuid)
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      auto &index = m_deviceIndex[uuid];
-      auto count = index.size();
+      auto &                                index = m_deviceIndex[uuid];
+      auto                                  count = index.size();
       for (auto &asset : index)
         removeAsset(asset.first);
 
@@ -175,19 +175,19 @@ namespace mtconnect
 
   protected:
     AssetPtr updateAsset(const std::string &id, Index::iterator &it, AssetPtr asset);
-    void adjustCount(AssetPtr asset, int delta);
+    void     adjustCount(AssetPtr asset, int delta);
 
   protected:
     // Access control to the buffer
     mutable std::recursive_mutex m_bufferLock;
 
-    size_t m_removedAssets{0};
-    size_t m_maxAssets;
-    Buffer m_buffer;
-    Index m_primaryIndex;
+    size_t         m_removedAssets {0};
+    size_t         m_maxAssets;
+    Buffer         m_buffer;
+    Index          m_primaryIndex;
     SecondaryIndex m_deviceIndex;
     SecondaryIndex m_typeIndex;
-    RemoveCount m_deviceRemoveCount;
-    RemoveCount m_typeRemoveCount;
+    RemoveCount    m_deviceRemoveCount;
+    RemoveCount    m_typeRemoveCount;
   };
 }  // namespace mtconnect

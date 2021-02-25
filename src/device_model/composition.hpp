@@ -61,6 +61,6 @@ namespace mtconnect
 
   protected:
     std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
-    std::optional<Description> m_description;
+    std::optional<Description>                         m_description;
   };
 }  // namespace mtconnect

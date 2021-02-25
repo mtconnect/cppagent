@@ -79,7 +79,7 @@ namespace mtconnect
   }
 
   const int DAY = 24 * 60 * 60;
-  void RollingFileLogger::write(const char *message)
+  void      RollingFileLogger::write(const char *message)
   {
     size_t len = strlen(message);
 
@@ -92,7 +92,7 @@ namespace mtconnect
     }
     else
     {
-      file f(m_file.full_name());
+      file   f(m_file.full_name());
       size_t size = f.size();
 
       if (size + len >= m_maxSize)

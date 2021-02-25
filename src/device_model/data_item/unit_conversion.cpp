@@ -87,12 +87,11 @@ namespace mtconnect
            "COUNT/SECOND",
            "PASCAL/SECOND",
            "UNIT_VECTOR_3D"});
-      
-      
+
       static pair<double, double> scaleAndPower(string_view &unit)
       {
         double power = 1.0, scale = 1.0;
-        
+
         if (unit.compare(0, 4, "KILO") == 0)
         {
           scale = 1000;
@@ -117,15 +116,15 @@ namespace mtconnect
       {
         if (from == to)
           return nullptr;
-        
+
         string key(from);
         key = key.append("-").append(to);
-        
+
         const auto &conversion = m_conversions.find(string(key));
         if (conversion != m_conversions.end())
           return make_unique<UnitConversion>(conversion->second);
-        
-        double factor{1.0}, offset{0.0};
+
+        double           factor {1.0}, offset {0.0};
         std::string_view source(from);
         std::string_view target(to);
 
@@ -146,15 +145,15 @@ namespace mtconnect
         {
           auto [sscale, spower] = scaleAndPower(source);
           auto [tscale, tpower] = scaleAndPower(target);
-          
+
           if (spower != tpower)
             return nullptr;
-          
+
           factor = sscale / tscale;
 
           key = source;
           key = key.append("-").append(target);
-          
+
           const auto &conversion = m_conversions.find(string(key));
           // Check for no support units and not power or factor scaling.
           if (conversion == m_conversions.end() && factor == 1.0)
@@ -168,7 +167,7 @@ namespace mtconnect
           if (tpower != 1.0)
             factor = pow(factor, tpower);
         }
-        else if  (sslash == string_view::npos || tslash == string_view::npos)
+        else if (sslash == string_view::npos || tslash == string_view::npos)
         {
           return nullptr;
         }

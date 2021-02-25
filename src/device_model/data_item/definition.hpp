@@ -37,32 +37,32 @@ namespace mtconnect
           static FactoryPtr definition;
           if (!definition)
           {
-            auto cell = make_shared<Factory>(Requirements{{"Description", false},
-                                                          {"key", false},
-                                                          {"keyType", false},
-                                                          {"type", false},
-                                                          {"subType", false},
-                                                          {"units", false}});
+            auto cell = make_shared<Factory>(Requirements {{"Description", false},
+                                                           {"key", false},
+                                                           {"keyType", false},
+                                                           {"type", false},
+                                                           {"subType", false},
+                                                           {"units", false}});
 
             auto cells = make_shared<Factory>(
-                Requirements{{"CellDefinition", ENTITY, cell, 1, Requirement::Infinite}});
+                Requirements {{"CellDefinition", ENTITY, cell, 1, Requirement::Infinite}});
 
             auto entry =
-                make_shared<Factory>(Requirements{{"Description", false},
-                                                  {"key", false},
-                                                  {"keyType", false},
-                                                  {"type", false},
-                                                  {"subType", false},
-                                                  {"units", false},
-                                                  {"CellDefinitions", ENTITY_LIST, cells, false}});
+                make_shared<Factory>(Requirements {{"Description", false},
+                                                   {"key", false},
+                                                   {"keyType", false},
+                                                   {"type", false},
+                                                   {"subType", false},
+                                                   {"units", false},
+                                                   {"CellDefinitions", ENTITY_LIST, cells, false}});
             entry->setOrder({"Description", "CellDefinitions"});
 
             auto entries = make_shared<Factory>(
-                Requirements{{"EntryDefinition", ENTITY, entry, 1, Requirement::Infinite}});
-            definition =
-                make_shared<Factory>(Requirements{{"Description", false},
-                                                  {"EntryDefinitions", ENTITY_LIST, entries, false},
-                                                  {"CellDefinitions", ENTITY_LIST, cells, false}});
+                Requirements {{"EntryDefinition", ENTITY, entry, 1, Requirement::Infinite}});
+            definition = make_shared<Factory>(
+                Requirements {{"Description", false},
+                              {"EntryDefinitions", ENTITY_LIST, entries, false},
+                              {"CellDefinitions", ENTITY_LIST, cells, false}});
             definition->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
           }
 

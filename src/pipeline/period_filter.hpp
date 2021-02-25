@@ -55,8 +55,8 @@ namespace mtconnect
 
         std::lock_guard<TransformState> guard(*m_state);
 
-        auto o = std::dynamic_pointer_cast<Observation>(entity);
-        auto di = o->getDataItem();
+        auto  o = std::dynamic_pointer_cast<Observation>(entity);
+        auto  di = o->getDataItem();
         auto &id = di->getId();
 
         if (o->isUnavailable())
@@ -99,7 +99,7 @@ namespace mtconnect
 
     protected:
       std::shared_ptr<State> m_state;
-      PipelineContract *m_contract;
+      PipelineContract *     m_contract;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

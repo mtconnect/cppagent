@@ -239,7 +239,7 @@ namespace mtconnect
     {
 #ifdef NOT_DEF
       WIN32_FIND_DATA fileData;
-      HANDLE search = FindFirstFile(fileName, &fileData);
+      HANDLE          search = FindFirstFile(fileName, &fileData);
 
       if (search != INVALID_HANDLE_VALUE)
       {
@@ -323,9 +323,9 @@ namespace mtconnect
 
     program_ = "agent";
 
-    Option *opt;
+    Option *     opt;
     const char **argp = argv;
-    const char *cp;
+    const char * cp;
 
     while (argc > 0)
     {
@@ -437,7 +437,7 @@ namespace mtconnect
   void OptionsList::usage()
   {
     size_t len;
-    char buffer[1024] = {0}, *cp = nullptr;
+    char   buffer[1024] = {0}, *cp = nullptr;
 
     cp = buffer;
     len = sprintf(buffer, "Usage: %s ", program_);

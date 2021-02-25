@@ -69,22 +69,22 @@ namespace mtconnect
     //---- Destructor
     ~Option();
 
-    EType getType() const { return type_; }
+    EType       getType() const { return type_; }
     const char *getName() const { return name_; }
     const char *getUsage() const { return usage_; }
     const char *getArgDesc() const { return argDesc_; }
-    int getOrder() const { return order_; }
-    bool ignoreCase() const { return ignoreCase_; }
-    bool hasArgument() const { return argument_; }
-    bool hasSwitch() const { return switch_; }
-    bool isRequired() const { return required_; }
-    bool isSet() const { return isSet_; }
+    int         getOrder() const { return order_; }
+    bool        ignoreCase() const { return ignoreCase_; }
+    bool        hasArgument() const { return argument_; }
+    bool        hasSwitch() const { return switch_; }
+    bool        isRequired() const { return required_; }
+    bool        isSet() const { return isSet_; }
 
     const char *getCharPtr() const { return charPtrPtr_ ? *charPtrPtr_ : nullptr; }
-    bool getBool() const { return boolPtr_ ? *boolPtr_ : false; }
-    int getInt() const { return intPtr_ ? *intPtr_ : -1; }
+    bool        getBool() const { return boolPtr_ ? *boolPtr_ : false; }
+    int         getInt() const { return intPtr_ ? *intPtr_ : -1; }
     const std::list<std::string> &getList() const { return *list_; }
-    bool operator<(const Option &another) const;
+    bool                          operator<(const Option &another) const;
 
     bool setValue(const char *aCp);
 
@@ -92,21 +92,21 @@ namespace mtconnect
     void expandFiles(const char *fileName);
 
   protected:
-    const char *name_;
-    const char **charPtrPtr_;
-    bool *boolPtr_;
-    int *intPtr_;
+    const char *            name_;
+    const char **           charPtrPtr_;
+    bool *                  boolPtr_;
+    int *                   intPtr_;
     std::list<std::string> *list_;
-    EType type_;
-    int order_;
-    bool required_;
-    bool argument_;
-    bool ignoreCase_;
-    bool switch_;
-    const char *usage_;
-    bool isSet_;
-    bool expand_;
-    const char *argDesc_;
+    EType                   type_;
+    int                     order_;
+    bool                    required_;
+    bool                    argument_;
+    bool                    ignoreCase_;
+    bool                    switch_;
+    const char *            usage_;
+    bool                    isSet_;
+    bool                    expand_;
+    const char *            argDesc_;
 
     friend class OptionsList;
   };
@@ -123,7 +123,7 @@ namespace mtconnect
 
     void addOption(Option &option);
 
-    int parse(int &argc, const char **argv);
+    int  parse(int &argc, const char **argv);
     void usage();
     void setOwnsOptions(bool flag = true) { ownsOptions_ = flag; }
     void append(Option *option) { emplace_back(*option); }
@@ -135,8 +135,8 @@ namespace mtconnect
 
   protected:
     const char *program_;
-    int unswitched_;
-    bool ownsOptions_;
+    int         unswitched_;
+    bool        ownsOptions_;
   };
 
   // ------------------------ Inline Methods ------------------------------

@@ -37,12 +37,12 @@ namespace mtconnect
 
       void stop();
 
-      bool m_running{true};
-      std::shared_ptr<size_t> m_count;
-      PipelineContract *m_contract{nullptr};
+      bool                       m_running {true};
+      std::shared_ptr<size_t>    m_count;
+      PipelineContract *         m_contract {nullptr};
       std::optional<std::string> m_dataItem;
-      std::mutex m_mutex;
-      std::condition_variable m_condition;
+      std::mutex                 m_mutex;
+      std::condition_variable    m_condition;
     };
 
     class MeteredTransform : public Transform
@@ -94,18 +94,18 @@ namespace mtconnect
         }
       }
 
-      PipelineContract *m_contract;
-      std::shared_ptr<size_t> m_count;
-      std::thread m_metricsThread;
+      PipelineContract *              m_contract;
+      std::shared_ptr<size_t>         m_count;
+      std::thread                     m_metricsThread;
       std::shared_ptr<ComputeMetrics> m_metrics;
-      std::optional<std::string> m_dataItem;
+      std::optional<std::string>      m_dataItem;
     };
 
     class DeliverObservation : public MeteredTransform
     {
     public:
       using Deliver = std::function<void(observation::ObservationPtr)>;
-      DeliverObservation(PipelineContextPtr context,
+      DeliverObservation(PipelineContextPtr                context,
                          const std::optional<std::string> &metricDataItem = std::nullopt)
         : MeteredTransform("DeliverObservation", context, metricDataItem)
       {
@@ -118,7 +118,7 @@ namespace mtconnect
     {
     public:
       using Deliver = std::function<void(AssetPtr)>;
-      DeliverAsset(PipelineContextPtr context,
+      DeliverAsset(PipelineContextPtr                context,
                    const std::optional<std::string> &metricsDataItem = std::nullopt)
         : MeteredTransform("DeliverAsset", context, metricsDataItem)
       {
@@ -143,9 +143,9 @@ namespace mtconnect
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
 
     protected:
-      PipelineContract *m_contract;
+      PipelineContract *     m_contract;
       std::list<std::string> m_devices;
-      bool m_autoAvailable;
+      bool                   m_autoAvailable;
     };
 
     class DeliverAssetCommand : public Transform
@@ -177,7 +177,7 @@ namespace mtconnect
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
 
     protected:
-      PipelineContract *m_contract;
+      PipelineContract *         m_contract;
       std::optional<std::string> m_defaultDevice;
     };
   }  // namespace pipeline

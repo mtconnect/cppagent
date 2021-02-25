@@ -86,7 +86,7 @@ namespace mtconnect
         }
         xmlBufferFree(buf);
       }
-      Value content{nullptr};
+      Value content {nullptr};
       if (str.tellp() > 0)
         content = str.str();
       return content;
@@ -98,8 +98,8 @@ namespace mtconnect
       auto ef = factory->factoryFor(qname);
       if (ef)
       {
-        Properties properties;
-        EntityList *l{nullptr};
+        Properties  properties;
+        EntityList *l {nullptr};
         if (ef->isList())
         {
           l = &properties["LIST"].emplace<EntityList>();
@@ -148,7 +148,7 @@ namespace mtconnect
                   }
                   else if (ef->isPropertySet(ent->getName()))
                   {
-                    auto res = properties.try_emplace(ent->getName(), EntityList{});
+                    auto res = properties.try_emplace(ent->getName(), EntityList {});
                     get<EntityList>(res.first->second).emplace_back(ent);
                   }
                   else

@@ -33,21 +33,21 @@ namespace mtconnect
       class UnitConversion
       {
       public:
-        UnitConversion(double factor = 1.0, double offset = 0.0) : m_factor(factor), m_offset(offset) {}
+        UnitConversion(double factor = 1.0, double offset = 0.0)
+          : m_factor(factor), m_offset(offset)
+        {
+        }
         UnitConversion(const UnitConversion &) = default;
         ~UnitConversion() = default;
 
-        double convert(double value) const
-        {
-          return (value + m_offset) * m_factor;
-        }
+        double convert(double value) const { return (value + m_offset) * m_factor; }
 
         entity::Vector convert(const entity::Vector &value) const
         {
           entity::Vector res(value.size());
           for (size_t i = 0; i < value.size(); i++)
             res[i] = convert(value[i]);
-          
+
           return res;
         }
         void convert(entity::Vector &value) const
@@ -71,13 +71,9 @@ namespace mtconnect
           else if (const auto &a = std::get_if<entity::Vector>(&value))
             convert(*a);
         }
-        void scale(double scale)
-        {
-          m_factor *= scale;
-        }
+        void scale(double scale) { m_factor *= scale; }
 
-        static std::unique_ptr<UnitConversion> make(const std::string &from,
-                                                    const std::string &to);
+        static std::unique_ptr<UnitConversion> make(const std::string &from, const std::string &to);
 
         double factor() const { return m_factor; }
         double offset() const { return m_offset; }
@@ -87,7 +83,7 @@ namespace mtconnect
         double m_offset;
 
         static std::unordered_map<std::string, UnitConversion> m_conversions;
-        static std::unordered_set<std::string> m_mtconnectUnits;
+        static std::unordered_set<std::string>                 m_mtconnectUnits;
       };
     }  // namespace data_item
   }    // namespace device_model

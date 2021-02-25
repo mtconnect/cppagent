@@ -69,7 +69,7 @@ namespace mtconnect
         for (auto &e : list)
           m_order->emplace(e, i++);
       }
-      void setOrder(OrderMapPtr &list) { m_order = list; }
+      void               setOrder(OrderMapPtr &list) { m_order = list; }
       const OrderMapPtr &getOrder() const { return m_order; }
 
       void setList(bool list) { m_isList = list; }
@@ -115,7 +115,7 @@ namespace mtconnect
         }
         registerEntityRequirements();
       }
-      void performConversions(Properties &p, ErrorList &errors) const;
+      void         performConversions(Properties &p, ErrorList &errors) const;
       virtual bool isSufficient(Properties &properties, ErrorList &errors) const;
 
       EntityPtr make(const std::string &name, Properties &p, ErrorList &errors) const
@@ -201,7 +201,7 @@ namespace mtconnect
         auto factory = factoryFor(name);
         if (factory)
         {
-          Properties p{{"LIST", a}};
+          Properties p {{"LIST", a}};
           return factory->make(name, p, errors);
         }
         else
@@ -275,19 +275,19 @@ namespace mtconnect
     protected:
       using FactoryMap = std::map<FactoryPtr, FactoryPtr>;
       static void LogError(const std::string &what);
-      void _deepCopy(FactoryMap &factories);
+      void        _deepCopy(FactoryMap &factories);
       static void _dupFactory(FactoryPtr &factory, FactoryMap &factories);
 
     protected:
       Requirements m_requirements;
-      Function m_function;
-      OrderMapPtr m_order;
+      Function     m_function;
+      OrderMapPtr  m_order;
 
-      StringFactory m_stringFactory;
-      MatchFactory m_matchFactory;
-      bool m_isList{false};
-      size_t m_minListSize{0};
-      bool m_hasRaw{false};
+      StringFactory         m_stringFactory;
+      MatchFactory          m_matchFactory;
+      bool                  m_isList {false};
+      size_t                m_minListSize {0};
+      bool                  m_hasRaw {false};
       std::set<std::string> m_propertySets;
       std::set<std::string> m_simpleProperties;
     };

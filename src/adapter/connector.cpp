@@ -38,7 +38,7 @@ namespace mtconnect
         m_localPort(0),
         m_connected(false),
         m_realTime(false),
-        m_heartbeatFrequency{HEARTBEAT_FREQ},
+        m_heartbeatFrequency {HEARTBEAT_FREQ},
         m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
         m_connectionActive(false)
     {
@@ -113,7 +113,7 @@ namespace mtconnect
         // Read from the socket, read is a blocking call
         while (m_connected)
         {
-          auto now = system_clock::now();
+          auto         now = system_clock::now();
           milliseconds timeout(0);
           if (m_heartbeats)
           {
@@ -128,8 +128,8 @@ namespace mtconnect
                      << "Legacy Timeout: " << timeout.count();
           }
 
-          if (timeout < milliseconds{0})
-            timeout = milliseconds{1};
+          if (timeout < milliseconds {0})
+            timeout = milliseconds {1};
           sockBuf[0] = 0;
 
           if (m_connected)
@@ -249,7 +249,7 @@ namespace mtconnect
         // TODO: Use string Views and skip getline. Use
         // find_first_of and then clip to subview of line.
         // Search the buffer for new complete lines
-        string line;
+        string       line;
         stringstream stream(m_buffer, stringstream::in);
 
         while (!stream.eof())
@@ -303,7 +303,7 @@ namespace mtconnect
       if (m_connected)
       {
         string completeCommand = "* " + command + "\n";
-        long status = m_connection->write(completeCommand.c_str(), completeCommand.length());
+        long   status = m_connection->write(completeCommand.c_str(), completeCommand.length());
         if (status <= 0)
         {
           g_logger << LWARN << "(Port:" << m_localPort << ")"
@@ -319,8 +319,8 @@ namespace mtconnect
       if (arg.length() > 7 && arg[6] == ' ' &&
           (pos = arg.find_first_of("0123456789", 7)) != string::npos)
       {
-        auto freq = milliseconds{atoi(arg.substr(pos).c_str())};
-        constexpr minutes maxTimeOut = minutes{30};  // Make the maximum timeout 30 minutes.
+        auto              freq = milliseconds {atoi(arg.substr(pos).c_str())};
+        constexpr minutes maxTimeOut = minutes {30};  // Make the maximum timeout 30 minutes.
 
         if (freq > 0ms && freq < maxTimeOut)
         {

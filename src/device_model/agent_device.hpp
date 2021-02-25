@@ -44,6 +44,6 @@ namespace mtconnect
     void addRequiredDataItems();
 
   protected:
-    Component *m_adapters{nullptr};
+    Component *m_adapters {nullptr};
   };
 }  // namespace mtconnect

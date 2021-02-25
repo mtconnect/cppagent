@@ -70,9 +70,9 @@ namespace mtconnect
 
 namespace mtconnect
 {
-  SERVICE_STATUS g_svcStatus;
+  SERVICE_STATUS        g_svcStatus;
   SERVICE_STATUS_HANDLE g_svcStatusHandle;
-  HANDLE g_hSvcStopEvent = nullptr;
+  HANDLE                g_hSvcStopEvent = nullptr;
 
   VOID WINAPI SvcCtrlHandler(DWORD);
   VOID WINAPI SvcMain(DWORD, LPTSTR *);
@@ -190,7 +190,7 @@ namespace mtconnect
       return false;
     }
 
-    DWORD size = 0ul;
+    DWORD           size = 0ul;
     TOKEN_ELEVATION tokenInformation;
     if (!GetTokenInformation(token, TokenElevation, &tokenInformation, sizeof(TOKEN_ELEVATION),
                              &size))
@@ -425,7 +425,7 @@ namespace mtconnect
     }
 
     std::string wd = path;
-    auto found = wd.rfind('\\');
+    auto        found = wd.rfind('\\');
     if (found != std::string::npos)
     {
       wd.erase(found);
@@ -479,7 +479,7 @@ namespace mtconnect
       return;
     }
 
-    BYTE configFile[2048] = {};
+    BYTE  configFile[2048] = {};
     DWORD len = sizeof(configFile) - 1ul, type(0ul);
     res = RegQueryValueExA(agent, "ConfigurationFile", 0ul, &type, (BYTE *)configFile, &len);
     RegCloseKey(agent);
@@ -591,7 +591,7 @@ namespace mtconnect
     if (hEventSource)
     {
       LPCSTR lpszStrings[2] = {nullptr, nullptr};
-      char Buffer[80] = {0};
+      char   Buffer[80] = {0};
       sprintf_s(Buffer, 80u, "%s failed with %d", szFunction, GetLastError());
       g_logger << dlib::LERROR << Buffer;
 
@@ -658,7 +658,7 @@ namespace mtconnect
   }
 
   static std::string s_pidFile;
-  static void cleanup_pid() { unlink(s_pidFile.c_str()); }
+  static void        cleanup_pid() { unlink(s_pidFile.c_str()); }
 
   void MTConnectService::daemonize()
   {

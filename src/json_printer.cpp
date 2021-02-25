@@ -219,25 +219,25 @@ namespace mtconnect
   {
     if (geometry.m_location.index() != 0)
     {
-      visit(overloaded{[&parent](const Origin &o) {
-                         parent["Origin"] = json::array({o.m_x, o.m_y, o.m_z});
-                       },
-                       [&parent](const Transformation &t) {
-                         json trans = json::object();
-                         if (t.m_translation)
-                         {
-                           trans["Translation"] = json::array(
-                               {t.m_translation->m_x, t.m_translation->m_y, t.m_translation->m_z});
-                           ;
-                         }
-                         if (t.m_rotation)
-                         {
-                           trans["Rotation"] = json::array(
-                               {t.m_rotation->m_roll, t.m_rotation->m_pitch, t.m_rotation->m_yaw});
-                         }
-                         parent["Transformation"] = trans;
-                       },
-                       [](const std::monostate &a) {}},
+      visit(overloaded {[&parent](const Origin &o) {
+                          parent["Origin"] = json::array({o.m_x, o.m_y, o.m_z});
+                        },
+                        [&parent](const Transformation &t) {
+                          json trans = json::object();
+                          if (t.m_translation)
+                          {
+                            trans["Translation"] = json::array(
+                                {t.m_translation->m_x, t.m_translation->m_y, t.m_translation->m_z});
+                            ;
+                          }
+                          if (t.m_rotation)
+                          {
+                            trans["Rotation"] = json::array(
+                                {t.m_rotation->m_roll, t.m_rotation->m_pitch, t.m_rotation->m_yaw});
+                          }
+                          parent["Transformation"] = trans;
+                        },
+                        [](const std::monostate &a) {}},
             geometry.m_location);
     }
 
@@ -476,8 +476,8 @@ namespace mtconnect
 
   std::string JsonPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const unsigned int assetBufferSize,
-                                      const unsigned int assetCount,
-                                      const std::list<Device *> &devices,
+                                      const unsigned int                assetCount,
+                                      const std::list<Device *> &       devices,
                                       const std::map<std::string, int> *count) const
   {
     json devicesDoc = json::array();
@@ -528,7 +528,7 @@ namespace mtconnect
     }
 
   protected:
-    string m_category;
+    string                 m_category;
     vector<ObservationPtr> m_events;
   };
 
@@ -585,9 +585,9 @@ namespace mtconnect
     }
 
   protected:
-    const Component *m_component;
+    const Component *   m_component;
     vector<CategoryRef> m_categories;
-    CategoryRef *m_categoryRef;
+    CategoryRef *       m_categoryRef;
   };
 
   class DeviceRef
@@ -633,9 +633,9 @@ namespace mtconnect
     }
 
   protected:
-    const Device *m_device;
+    const Device *       m_device;
     vector<ComponentRef> m_components;
-    ComponentRef *m_componentRef;
+    ComponentRef *       m_componentRef;
   };
 
   std::string JsonPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
@@ -649,7 +649,7 @@ namespace mtconnect
       observations.sort(ObservationCompare);
 
       vector<DeviceRef> devices;
-      DeviceRef *deviceRef = nullptr;
+      DeviceRef *       deviceRef = nullptr;
 
       for (auto &observation : observations)
       {

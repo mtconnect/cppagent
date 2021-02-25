@@ -56,7 +56,7 @@ namespace mtconnect
 
     {
       ErrorList errors;
-      auto di = DataItem::make({{"type", "CONNECTION_STATUS"s},
+      auto      di = DataItem::make({{"type", "CONNECTION_STATUS"s},
                                 {"id", id + "_connection_status"s},
                                 {"category", "EVENT"s}},
                                errors);
@@ -67,21 +67,18 @@ namespace mtconnect
     {
       using namespace device_model::data_item;
       ErrorList errors;
-      Properties url{{"VALUE", adapter->getUrl()}};
-      EntityList values{Constraints::getFactory()->create("Value", url, errors)};
-      auto list = DataItem::getFactory()->create("Constraints", values, errors);
-      auto di = DataItem::make(Properties{{"type", "ADAPTER_URI"s},
-                                {"id", id + "_adapter_uri"},
-                                {"category", "EVENT"s},
-                                {"Constraints", list}},
-                               errors);
+      auto      di = DataItem::make(
+          Properties {
+              {"type", "ADAPTER_URI"s}, {"id", id + "_adapter_uri"}, {"category", "EVENT"s}},
+          errors);
+      di->setConstantValue(adapter->getUrl());
       di->setComponent(*comp);
       comp->addDataItem(di);
     }
 
     {
       ErrorList errors;
-      auto di = DataItem::make({{"type", "OBSERVATION_UPDATE_RATE"},
+      auto      di = DataItem::make({{"type", "OBSERVATION_UPDATE_RATE"},
                                 {"id", id + "_observation_update_rate"},
                                 {"units", "COUNT/SECOND"},
                                 {"statistic", "AVERAGE"},
@@ -93,7 +90,7 @@ namespace mtconnect
 
     {
       ErrorList errors;
-      auto di = DataItem::make({{"type", "ASSET_UPDATE_RATE"},
+      auto      di = DataItem::make({{"type", "ASSET_UPDATE_RATE"},
                                 {"id", id + "_asset_update_rate"},
                                 {"units", "COUNT/SECOND"},
                                 {"statistic", "AVERAGE"},
@@ -105,7 +102,7 @@ namespace mtconnect
 
     {
       ErrorList errors;
-      auto di = DataItem::make({{"type", "ADAPTER_SOFTWARE_VERSION"},
+      auto      di = DataItem::make({{"type", "ADAPTER_SOFTWARE_VERSION"},
                                 {"id", id + "_adapter_software_version"},
                                 {"category", "EVENT"}},
                                errors);
@@ -115,7 +112,7 @@ namespace mtconnect
 
     {
       ErrorList errors;
-      auto di = DataItem::make(
+      auto      di = DataItem::make(
           {{"type", "MTCONNECT_VERSION"}, {"id", id + "_mtconnect_version"}, {"category", "EVENT"}},
           errors);
       di->setComponent(*comp);

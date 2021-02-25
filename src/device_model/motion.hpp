@@ -34,13 +34,13 @@ namespace mtconnect
     Motion() = default;
     ~Motion() override = default;
 
-    bool hasDescription() const override { return true; }
+    bool               hasDescription() const override { return true; }
     const std::string &klass() const override
     {
       const static std::string &klass("Motion");
       return klass;
     }
-    bool hasAxis() const override { return true; }
+    bool                               hasAxis() const override { return true; }
     const std::map<std::string, bool> &properties() const override
     {
       const static std::map<std::string, bool> properties = {{"id", true},

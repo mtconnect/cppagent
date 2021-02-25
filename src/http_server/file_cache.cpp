@@ -76,7 +76,7 @@ namespace mtconnect
 
           for (auto &file : fs::directory_iterator(path))
           {
-            string name = (file.path().filename()).string();
+            string   name = (file.path().filename()).string();
             fs::path uri = baseUri / name;
 
             auto ns = registerFile(uri.generic_string(), (file.path()).string(), version);
@@ -167,9 +167,9 @@ namespace mtconnect
           auto path = m_fileMap.find(name);
           if (path != m_fileMap.end())
           {
-            auto ext = path->second.extension().string();
+            auto   ext = path->second.extension().string();
             string mime;
-            auto mt = m_mimeTypes.find(ext);
+            auto   mt = m_mimeTypes.find(ext);
             if (mt != m_mimeTypes.end())
               mime = mt->second;
             else

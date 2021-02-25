@@ -709,8 +709,9 @@ TEST_F(XmlPrinterTest, ProbeWithFilter13)
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter", "5");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Filters/m:Filter@type", "MINIMUM_DELTA");
+  // TODO: Should we auto-upgrade?
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter", "5");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter@type", "MINIMUM_DELTA");
 }
 
 TEST_F(XmlPrinterTest, ProbeWithFilter)

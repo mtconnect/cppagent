@@ -147,9 +147,11 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
 {
   ErrorList errors;
   auto f = Filter::getFactory()->create("Filter", {{"type", "MINIMUM_DELTA"s}, {"VALUE", 1.0}}, errors);
+  EntityList list{f};
+  auto filters = DataItem::getFactory()->create("Filters", list, errors);
   
   makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}, {"Filters", f}
+    {"units", "MILLIMETER"}, {"Filters", filters}
   });
   
   auto filter = make_shared<DuplicateFilter>(m_context);
@@ -194,9 +196,11 @@ TEST_F(DuplicateFilterTest, test_period_filter)
 {
   ErrorList errors;
   auto f = Filter::getFactory()->create("Filter", {{"type", "PERIOD"s}, {"VALUE", 10.0}}, errors);
-  
+  EntityList list{f};
+  auto filters = DataItem::getFactory()->create("Filters", list, errors);
+
   makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}, {"Filters", f}
+    {"units", "MILLIMETER"}, {"Filters", filters}
   });
   
   Timestamp now = chrono::system_clock::now();

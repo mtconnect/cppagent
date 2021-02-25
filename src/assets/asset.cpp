@@ -56,7 +56,7 @@ namespace mtconnect
   entity::FactoryPtr Asset::getRoot()
   {
     static auto root = make_shared<Factory>();
-    static bool first{true};
+    static bool first {true};
 
     if (first)
     {

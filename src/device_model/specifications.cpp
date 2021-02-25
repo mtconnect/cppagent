@@ -25,7 +25,7 @@ using namespace std;
 
 namespace mtconnect
 {
-  static dlib::logger g_logger("configuration.specification");
+  static dlib::logger             g_logger("configuration.specification");
   static map<string, set<string>> g_groups(
       {{"Limits",
         {"Maximum", "Minimum", "UpperLimit", "LowerLimit", "UpperWarning", "LowerWarning",

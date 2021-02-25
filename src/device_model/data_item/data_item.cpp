@@ -22,11 +22,15 @@
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
 
+#include <dlib/logger.h>
+
 #include <array>
 #include <map>
 #include <string>
 
 using namespace std;
+
+static dlib::logger g_logger("data_item");
 
 namespace mtconnect
 {
@@ -47,22 +51,22 @@ namespace mtconnect
           auto relationships = Relationships::getFactory();
           auto definition = device_model::data_item::Definition::getFactory();
           auto constraints = Constraints::getFactory();
-          factory = make_shared<Factory>(Requirements{
+          factory = make_shared<Factory>(Requirements {
               // Attributes
               {"id", true},
               {"name", false},
               {"type", true},
               {"subType", false},
-              {"category", ControlledVocab{"EVENT", "SAMPLE", "CONDITION"}, true},
+              {"category", ControlledVocab {"EVENT", "SAMPLE", "CONDITION"}, true},
               {"discrete", BOOL, false},
               {"representation",
-               ControlledVocab{"VALUE", "TIME_SERIES", "DATA_SET", "TABLE", "DISCRETE"}, false},
+               ControlledVocab {"VALUE", "TIME_SERIES", "DATA_SET", "TABLE", "DISCRETE"}, false},
               {"units", false},
               {"nativeUnits", false},
               {"sampleRate", DOUBLE, false},
               {"statistic", false},
               {"nativeScale", DOUBLE, false},
-              {"coordinateSystem", ControlledVocab{"MACHINE", "WORK"}, false},
+              {"coordinateSystem", ControlledVocab {"MACHINE", "WORK"}, false},
               {"compositionId", false},
               {"coordinateSystemId", false},
               {"significantDigits", INTEGER, false},
@@ -93,8 +97,8 @@ namespace mtconnect
         {
           auto factory = DataItem::getFactory();
           auto dataItem = make_shared<Factory>(
-              Requirements{{"DataItem", ENTITY, factory, 1, Requirement::Infinite}});
-          root = make_shared<Factory>(Requirements{{"DataItems", ENTITY_LIST, dataItem, false}});
+              Requirements {{"DataItem", ENTITY, factory, 1, Requirement::Infinite}});
+          root = make_shared<Factory>(Requirements {{"DataItems", ENTITY_LIST, dataItem, false}});
         }
         return root;
       }
@@ -108,9 +112,9 @@ namespace mtconnect
 
         m_id = get<string>("id");
         m_name = maybeGet<string>("name");
-        auto type = get<string>("type");
+        auto             type = get<string>("type");
         optional<string> pre;
-        string obs = pascalize(type, pre);
+        string           obs = pascalize(type, pre);
         optional<string> repPre;
         if (auto rep = maybeGet<string>("representation"); rep && *rep != "VALUE")
           obs += pascalize(*rep, repPre);
@@ -157,7 +161,7 @@ namespace mtconnect
         }
 
         std::optional<std::string> pref;
-        auto source = maybeGet<entity::EntityPtr>("Source");
+        auto                       source = maybeGet<entity::EntityPtr>("Source");
         if (source && (*source)->hasValue())
           pref = m_source = (*source)->getValue<string>();
         else
@@ -185,6 +189,19 @@ namespace mtconnect
           auto &con = cons->front();
           if (con->getName() == "Value")
             m_constantValue = con->getValue<string>();
+
+          // Check for legacy filters
+          for (auto &c : *cons)
+          {
+            if (c->getName() == "Filter")
+            {
+              if (!c->hasProperty("type"))
+                c->setProperty("type", "MINIMUM_DELTA");
+
+              // Legacy filter only supported minimum delta.
+              m_minimumDelta = c->getValue<double>();
+            }
+          }
         }
 
         if (const auto &filters = getList("Filters"))
@@ -198,13 +215,12 @@ namespace mtconnect
               m_minimumPeriod = filter->getValue<double>();
           }
         }
-        
+
         if (hasProperty("nativeUnits"))
         {
           if (!hasProperty("units"))
             throw PropertyError("nativeUnits given, but no units");
-          m_converter = UnitConversion::make(get<string>("nativeUnits"),
-                                             get<string>("units"));
+          m_converter = UnitConversion::make(get<string>("nativeUnits"), get<string>("units"));
         }
         if (hasProperty("nativeScale"))
         {
@@ -238,6 +254,26 @@ namespace mtconnect
           return m_id < another.m_id;
         else
           return false;
+      }
+
+      void DataItem::setConstantValue(const std::string &value)
+      {
+        ErrorList  errors;
+        Properties url {{"VALUE", value}};
+        EntityList values {Constraints::getFactory()->create("Value", url, errors)};
+        auto       list = getFactory()->create("Constraints", values, errors);
+        if (!errors.empty())
+        {
+          g_logger << dlib::LERROR << "Cannot set constant value for data item " << m_id << " to "
+                   << value;
+          for (auto &e : errors)
+            g_logger << dlib::LERROR << e->what();
+        }
+        else
+        {
+          setProperty("Constraints", list);
+          m_constantValue = value;
+        }
       }
     }  // namespace data_item
   }    // namespace device_model

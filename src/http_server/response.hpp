@@ -88,9 +88,9 @@ namespace mtconnect
 
       virtual std::string getHeaderDate() { return getCurrentTime(HUM_READ); }
 
-      bool good() const { return m_out.good(); }
-      void setBad() { m_out.setstate(std::ios::badbit); }
-      void flush() { m_out.flush(); }
+      bool               good() const { return m_out.good(); }
+      void               setBad() { m_out.setstate(std::ios::badbit); }
+      void               flush() { m_out.flush(); }
       static std::string getStatus(uint16_t code)
       {
         auto cm = m_status.find(code);
@@ -153,21 +153,21 @@ namespace mtconnect
       }
 
       void writeResponse(const std::string &body, const std::string &mimeType = "text/plain",
-                         const ResponseCode code = OK,
+                         const ResponseCode         code = OK,
                          const std::chrono::seconds expires = std::chrono::seconds(0))
       {
         writeResponse(body.c_str(), body.size(), code, mimeType, expires);
       }
 
       void writeResponse(const std::string &body, const ResponseCode code,
-                         const std::string &mimeType = "text/plain",
+                         const std::string &        mimeType = "text/plain",
                          const std::chrono::seconds expires = std::chrono::seconds(0))
       {
         writeResponse(body.c_str(), body.size(), code, mimeType, expires);
       }
 
       virtual void writeResponse(const char *body, const size_t size, const ResponseCode code,
-                                 const std::string &mimeType = "text/plain",
+                                 const std::string &        mimeType = "text/plain",
                                  const std::chrono::seconds expires = std::chrono::seconds(0))
       {
         if (good())
@@ -205,8 +205,8 @@ namespace mtconnect
       }
 
     protected:
-      std::ostream &m_out;
-      std::string m_boundary;
+      std::ostream &                                         m_out;
+      std::string                                            m_boundary;
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;
     };

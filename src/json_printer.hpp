@@ -46,8 +46,8 @@ namespace mtconnect
 
   protected:
     const std::string &hostname() const;
-    std::string m_schemaVersion;
-    std::string m_version;
-    std::string m_hostname;
+    std::string        m_schemaVersion;
+    std::string        m_version;
+    std::string        m_hostname;
   };
 }  // namespace mtconnect

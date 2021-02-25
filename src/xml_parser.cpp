@@ -78,7 +78,7 @@ namespace mtconnect
 
   static inline std::string getCDATA(xmlNodePtr node)
   {
-    auto text = xmlNodeGetContent(node);
+    auto   text = xmlNodeGetContent(node);
     string res;
     if (text)
     {
@@ -90,7 +90,7 @@ namespace mtconnect
 
   static inline std::string getAttribute(xmlNodePtr node, const char *name)
   {
-    auto value = xmlGetProp(node, BAD_CAST name);
+    auto   value = xmlGetProp(node, BAD_CAST name);
     string res;
     if (value)
     {
@@ -102,7 +102,7 @@ namespace mtconnect
 
   static inline std::string getRawContent(xmlNodePtr node)
   {
-    string res;
+    string       res;
     xmlBufferPtr buf;
     THROW_IF_XML2_NULL(buf = xmlBufferCreate());
     auto count = xmlNodeDump(buf, node->doc, node, 0, 0);
@@ -133,14 +133,14 @@ namespace mtconnect
       const xmlNodePtr node, const std::map<string, bool> &parameters)
   {
     std::map<string, string> toReturn;
-    std::map<string, bool> matched = parameters;
+    std::map<string, bool>   matched = parameters;
 
     for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
     {
       if (attr->type == XML_ATTRIBUTE_NODE)
       {
         string key = (const char *)(attr->name);
-        auto it = matched.find(key);
+        auto   it = matched.find(key);
         if (it != matched.end())
         {
           matched.erase(it);
@@ -167,7 +167,7 @@ namespace mtconnect
     return toReturn;
   }
 
-  static inline void forEachElement(const xmlNodePtr node,
+  static inline void forEachElement(const xmlNodePtr                              node,
                                     map<string, function<void(const xmlNodePtr)>> funs)
   {
     for (xmlNodePtr child = node->children; child; child = child->next)
@@ -178,7 +178,7 @@ namespace mtconnect
       auto other = funs.find("OTHERWISE");
 
       string name((const char *)child->name);
-      auto lambda = funs.find(name);
+      auto   lambda = funs.find(name);
       if (lambda != funs.end())
       {
         lambda->second(child);
@@ -323,8 +323,8 @@ namespace mtconnect
       m_doc = nullptr;
     }
 
-    xmlXPathContextPtr xpathCtx = nullptr;
-    xmlXPathObjectPtr devices = nullptr;
+    xmlXPathContextPtr  xpathCtx = nullptr;
+    xmlXPathObjectPtr   devices = nullptr;
     std::list<Device *> deviceList;
 
     try
@@ -366,7 +366,7 @@ namespace mtconnect
       // Add additional namespaces to the printer if they are referenced
       // here.
       string locationUrn;
-      auto location = getAttribute(root, "schemaLocation");
+      auto   location = getAttribute(root, "schemaLocation");
 
       if (location.substr(0, 34) != "urn:mtconnect.org:MTConnectDevices")
       {
@@ -378,7 +378,7 @@ namespace mtconnect
           auto uri = location.substr(pos + 1);
 
           // Try to find the prefix for this urn...
-          auto ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
+          auto   ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
           string prefix;
 
           if (ns && ns->prefix)
@@ -494,7 +494,7 @@ namespace mtconnect
       node = root;
 
     xmlXPathContextPtr xpathCtx = nullptr;
-    xmlXPathObjectPtr objs = nullptr;
+    xmlXPathObjectPtr  objs = nullptr;
 
     try
     {
@@ -601,7 +601,7 @@ namespace mtconnect
   Component *XmlParser::handleNode(xmlNodePtr node, Component *parent, Device *device)
   {
     string name((const char *)node->name);
-    auto lambda = m_handlers.find(name);
+    auto   lambda = m_handlers.find(name);
     if (lambda != m_handlers.end())
     {
       // Parts of components
@@ -724,7 +724,7 @@ namespace mtconnect
 
   void XmlParser::handleReference(xmlNodePtr reference, Component *parent)
   {
-    auto attrs = getAttributes(reference);
+    auto   attrs = getAttributes(reference);
     string name;
 
     if (attrs.count("name") > 0)
@@ -750,9 +750,9 @@ namespace mtconnect
   unique_ptr<ComponentConfiguration> handleSensorConfiguration(xmlNodePtr node)
   {
     // Decode sensor configuration
-    string firmware, date, nextDate, initials;
+    string             firmware, date, nextDate, initials;
     vector<xmlNodePtr> rest;
-    xmlNodePtr channels = nullptr;
+    xmlNodePtr         channels = nullptr;
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
       string name((const char *)child->name);
@@ -780,7 +780,7 @@ namespace mtconnect
       for (xmlNodePtr channel = channels->children; channel; channel = channel->next)
       {
         string name((const char *)channel->name);
-        auto attributes = getAttributes(channel);
+        auto   attributes = getAttributes(channel);
         string description, date, nextDate, initials;
 
         for (xmlNodePtr child = channel->children; child; child = child->next)
@@ -811,13 +811,13 @@ namespace mtconnect
       unique_ptr<Relationship> relationship;
       if (xmlStrcmp(child->name, BAD_CAST "ComponentRelationship") == 0)
       {
-        unique_ptr<ComponentRelationship> crel{new ComponentRelationship()};
+        unique_ptr<ComponentRelationship> crel {new ComponentRelationship()};
         crel->m_idRef = getAttribute(child, "idRef");
         relationship = std::move(crel);
       }
       else if (xmlStrcmp(child->name, BAD_CAST "DeviceRelationship") == 0)
       {
-        unique_ptr<DeviceRelationship> drel{new DeviceRelationship()};
+        unique_ptr<DeviceRelationship> drel {new DeviceRelationship()};
         drel->m_href = getAttribute(child, "href");
         drel->m_role = getAttribute(child, "role");
         drel->m_deviceUuidRef = getAttribute(child, "deviceUuidRef");
@@ -890,7 +890,7 @@ namespace mtconnect
       std::string klass((const char *)child->name);
       if (klass == "Specification" || klass == "ProcessSpecification")
       {
-        unique_ptr<Specification> spec{new Specification(klass)};
+        unique_ptr<Specification> spec {new Specification(klass)};
 
         spec->m_id = attrs["id"];
         spec->m_name = attrs["name"];

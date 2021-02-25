@@ -18,6 +18,7 @@
 #pragma once
 
 #include "entity.hpp"
+#include "filter.hpp"
 
 namespace mtconnect
 {
@@ -34,13 +35,16 @@ namespace mtconnect
           static FactoryPtr factory;
           if (!factory)
           {
-            auto limit = std::make_shared<Factory>(Requirements{{"VALUE", DOUBLE, true}});
-            auto value = std::make_shared<Factory>(Requirements{{"VALUE", true}});
+            auto limit = std::make_shared<Factory>(Requirements {{"VALUE", DOUBLE, true}});
+            auto value = std::make_shared<Factory>(Requirements {{"VALUE", true}});
+            auto filter = Filter::getFactory()->factoryFor("Filter")->deepCopy();
+            filter->getRequirement("type")->setMultiplicity(0, 1);
             factory = std::make_shared<Factory>(
-                Requirements{{"Minimum", ENTITY, limit, 0, 1},
-                             {"Maximum", ENTITY, limit, 0, 1},
-                             {"Nominal", ENTITY, limit, 0, 1},
-                             {"Value", ENTITY, value, 0, Requirement::Infinite}});
+                Requirements {{"Minimum", ENTITY, limit, 0, 1},
+                              {"Maximum", ENTITY, limit, 0, 1},
+                              {"Nominal", ENTITY, limit, 0, 1},
+                              {"Value", ENTITY, value, 0, Requirement::Infinite},
+                              {"Filter", ENTITY, filter, 0, Requirement::Infinite}});
           }
           return factory;
         }

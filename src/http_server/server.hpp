@@ -41,8 +41,8 @@ namespace mtconnect
       RequestError(const RequestError &) = default;
       ~RequestError() override = default;
 
-      std::string m_contentType;
-      std::string m_body;
+      std::string  m_contentType;
+      std::string  m_body;
       ResponseCode m_code;
     };
 
@@ -66,7 +66,7 @@ namespace mtconnect
       // Overridden method that is called per web request – not used
       // using httpRequest which is called from our own on_connect method.
       const std::string on_request(const dlib::incoming_things &incoming,
-                                   dlib::outgoing_things &outgoing) override
+                                   dlib::outgoing_things &      outgoing) override
       {
         throw std::logic_error("Not Implemented");
         return "";
@@ -112,11 +112,11 @@ namespace mtconnect
 
     protected:
       // Put handling controls
-      bool m_putEnabled;
-      std::set<std::string> m_putAllowedHosts;
-      std::list<Routing> m_routings;
+      bool                       m_putEnabled;
+      std::set<std::string>      m_putAllowedHosts;
+      std::list<Routing>         m_routings;
       std::unique_ptr<FileCache> m_fileCache;
-      ErrorFunction m_errorFunction;
+      ErrorFunction              m_errorFunction;
     };
   }  // namespace http_server
 }  // namespace mtconnect

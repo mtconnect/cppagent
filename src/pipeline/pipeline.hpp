@@ -44,8 +44,8 @@ namespace mtconnect
       }
       virtual ~Pipeline() { m_start->stop(); }
       virtual void build(const ConfigOptions &options) = 0;
-      bool started() const { return m_started; }
-      void clear()
+      bool         started() const { return m_started; }
+      void         clear()
       {
         m_start->stop();
         m_started = false;
@@ -87,8 +87,8 @@ namespace mtconnect
         }
       };
 
-      bool m_started{false};
-      TransformPtr m_start;
+      bool               m_started {false};
+      TransformPtr       m_start;
       PipelineContextPtr m_context;
     };
   }  // namespace pipeline

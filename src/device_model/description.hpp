@@ -44,7 +44,7 @@ namespace mtconnect
       return properties;
     }
 
-    std::string m_body;
+    std::string                        m_body;
     std::map<std::string, std::string> m_attributes;
 
   protected:

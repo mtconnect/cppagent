@@ -113,7 +113,6 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
 TEST_F(JsonPrinterProbeTest, TopLevelDataItems)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
-  // cout << "\n" << doc << endl;
   auto jdoc = json::parse(doc);
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
   auto device = devices.at(0).at("/Device"_json_pointer);
@@ -134,7 +133,7 @@ TEST_F(JsonPrinterProbeTest, TopLevelDataItems)
   auto change = dataItems.at(1);
 
   ASSERT_EQ(string("ASSET_CHANGED"), change.at("/DataItem/type"_json_pointer).get<string>());
-  ASSERT_EQ(string("true"), change.at("/DataItem/discrete"_json_pointer).get<string>());
+  ASSERT_EQ(true, change.at("/DataItem/discrete"_json_pointer).get<bool>());
   ASSERT_EQ(string("EVENT"), change.at("/DataItem/category"_json_pointer).get<string>());
   ASSERT_EQ(string("e4a300e0"), change.at("/DataItem/id"_json_pointer).get<string>());
 
@@ -197,18 +196,18 @@ TEST_F(JsonPrinterProbeTest, DataItemConstraints)
   ASSERT_TRUE(di.is_object());
   ASSERT_EQ(string("ROTARY_MODE"), di.at("/type"_json_pointer).get<string>());
 
-  auto constraint = di.at("/Constraints/value"_json_pointer);
+  auto constraint = di.at("/Constraints"_json_pointer);
   ASSERT_TRUE(constraint.is_array());
-  ASSERT_EQ(string("SPINDLE"), constraint.at(0).get<string>());
+  ASSERT_EQ(string("SPINDLE"), constraint.at("/0/Value/value"_json_pointer).get<string>());
 
   auto rv = rotary.at("/DataItems/2/DataItem"_json_pointer);
   ASSERT_TRUE(rv.is_object());
   ASSERT_EQ(string("ROTARY_VELOCITY"), rv.at("/type"_json_pointer).get<string>());
   ASSERT_EQ(string("ACTUAL"), rv.at("/subType"_json_pointer).get<string>());
-  auto min = rv.at("/Constraints/Minimum"_json_pointer);
+  auto min = rv.at("/Constraints/0/Minimum/value"_json_pointer);
   ASSERT_TRUE(min.is_number());
   ASSERT_EQ(0.0, min.get<double>());
-  auto max = rv.at("/Constraints/Maximum"_json_pointer);
+  auto max = rv.at("/Constraints/1/Maximum/value"_json_pointer);
   ASSERT_TRUE(max.is_number());
   ASSERT_EQ(7000.0, max.get<double>());
 }

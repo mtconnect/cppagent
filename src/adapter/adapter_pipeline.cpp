@@ -48,26 +48,26 @@ namespace mtconnect
       // Build the pipeline for an adapter
       handler->m_connecting = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "CONNECTING"s}, {"source", id}});
+                                          Properties {{"VALUE", "CONNECTING"s}, {"source", id}});
         run(entity);
       };
       handler->m_connected = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "CONNECTED"s}, {"source", id}});
+                                          Properties {{"VALUE", "CONNECTED"s}, {"source", id}});
         run(entity);
       };
       handler->m_disconnected = [this](const std::string &id) {
         auto entity = make_shared<Entity>("ConnectionStatus",
-                                          Properties{{"VALUE", "DISCONNECTED"s}, {"source", id}});
+                                          Properties {{"VALUE", "DISCONNECTED"s}, {"source", id}});
         run(entity);
       };
       handler->m_processData = [this](const std::string &data, const std::string &source) {
-        auto entity = make_shared<Entity>("Data", Properties{{"VALUE", data}, {"source", source}});
+        auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", source}});
         run(entity);
       };
       handler->m_command = [this](const std::string &data, const std::string &source) {
         auto entity =
-            make_shared<Entity>("Command", Properties{{"VALUE", data}, {"source", source}});
+            make_shared<Entity>("Command", Properties {{"VALUE", data}, {"source", source}});
         run(entity);
       };
 
@@ -80,10 +80,10 @@ namespace mtconnect
       m_options = options;
 
       TransformPtr next = bind(make_shared<ShdrTokenizer>());
-      auto identity = GetOption<string>(options, configuration::AdapterIdentity);
+      auto         identity = GetOption<string>(options, configuration::AdapterIdentity);
 
       StringList devices;
-      auto list = GetOption<StringList>(options, configuration::AdditionalDevices);
+      auto       list = GetOption<StringList>(options, configuration::AdditionalDevices);
       if (list)
         devices = *list;
       auto device = GetOption<string>(options, configuration::Device);
