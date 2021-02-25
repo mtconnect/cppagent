@@ -1639,9 +1639,11 @@ namespace mtconnect
                g_logger << LWARN << "Cannot find data item to calibrate for " << name;
              else
              {
-               double fact_value = strtod(factor.c_str(), nullptr);
-               double off_value = strtod(offset.c_str(), nullptr);
-               // di->setConversionFactor(fact_value, off_value);
+               double fact_value = stod(factor);
+               double off_value = stod(offset);
+               
+               device_model::data_item::UnitConversion conv(fact_value, off_value);
+               di->setConverter(conv);
              }
            }
          }},

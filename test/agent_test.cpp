@@ -1086,16 +1086,6 @@ TEST_F(AgentTest, FilterValues13)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
   }
-
-#if 0
-  auto item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "pos");
-  ASSERT_TRUE(item);
-  ASSERT_TRUE(item->hasMinimumDelta());
-
-  ASSERT_FALSE(item->isFiltered(0.0, NAN));
-  ASSERT_TRUE(item->isFiltered(5.0, NAN));
-  ASSERT_FALSE(item->isFiltered(20.0, NAN));
-#endif
 }
 
 TEST_F(AgentTest, FilterValues)
@@ -1220,16 +1210,6 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
   }
-
-#if 0
-  DataItemPtr item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "load");
-  ASSERT_TRUE(item);
-  ASSERT_TRUE(item->hasMinimumDelta());
-
-  ASSERT_FALSE(item->isFiltered(0.0, NAN));
-  ASSERT_TRUE(item->isFiltered(4.0, NAN));
-  ASSERT_FALSE(item->isFiltered(20.0, NAN));
-#endif
 }
 
 TEST_F(AgentTest, ResetTriggered)

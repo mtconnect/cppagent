@@ -84,7 +84,9 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/filter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/relationships.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/definition.hpp"
-  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/unit_conversion.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/unit_conversion.cpp"
+
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/entity.hpp"  

@@ -45,7 +45,7 @@ namespace mtconnect
 
       return entity;
     }
-    
+
     void ComputeMetrics::stop()
     {
       g_logger << dlib::LDEBUG << "Stopping compute thread";
@@ -99,10 +99,10 @@ namespace mtconnect
         }
         {
           unique_lock<std::mutex> lk(m_mutex);
-          m_condition.wait_for(lk, 10s, [this]{ return !m_running; });
+          m_condition.wait_for(lk, 10s, [this] { return !m_running; });
         }
       }
-      
+
       g_logger << dlib::LDEBUG << "Metrics thread exited";
     }
 

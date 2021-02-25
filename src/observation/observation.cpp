@@ -129,8 +129,7 @@ namespace mtconnect
           unavailable = true;
         }
       }
-      string key =
-          string(dataItem->getCategoryText()) + ":" + dataItem->getObservationName();
+      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getObservationName();
       if (dataItem->isThreeSpace())
         key += ":3D";
 

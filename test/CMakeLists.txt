@@ -60,6 +60,7 @@ add_agent_test(kinematics TRUE device_model)
 add_agent_test(relationship TRUE device_model)
 add_agent_test(solid_model TRUE device_model)
 add_agent_test(specification TRUE device_model)
+add_agent_test(unit_conversion FALSE device_model)
 
 add_agent_test(entity FALSE entity)
 add_agent_test(entity_parser TRUE entity)

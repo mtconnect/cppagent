@@ -116,7 +116,7 @@ namespace mtconnect
         m_thread = std::thread([this]() { thread(); });
         m_pipeline->start();
       }
-      
+
       const ConfigOptions &getOptions() const { return m_options; }
       void setOptions(const ConfigOptions &options)
       {

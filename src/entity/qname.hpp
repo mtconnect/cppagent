@@ -63,7 +63,7 @@ namespace mtconnect
         setQName(name);
         return *this;
       }
-      
+
       void setName(const std::string &name)
       {
         if (m_nsLen == 0)

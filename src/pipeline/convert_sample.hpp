@@ -38,19 +38,15 @@ namespace mtconnect
         using namespace observation;
         using namespace entity;
         auto sample = std::dynamic_pointer_cast<Sample>(entity);
-        if (sample)
+        if (sample && !sample->isUnavailable())
         {
-          auto di = sample->getDataItem();
-#if 0
-          if (di->conversionRequired())
+          auto &converter = sample->getDataItem()->getConverter();
+          if (converter)
           {
             auto ns = sample->copy();
-            Value &value = ns->getValue();
-            di->convertValue(value);
-
+            converter->convertValue(ns->getValue());
             return next(ns);
           }
-#endif
         }
         return next(entity);
       }

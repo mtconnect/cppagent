@@ -21,7 +21,6 @@
 #include "adapter/adapter.hpp"
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
-#include <boost/units/pow.hpp>
 
 #include <array>
 #include <map>
@@ -115,7 +114,7 @@ namespace mtconnect
         optional<string> repPre;
         if (auto rep = maybeGet<string>("representation"); rep && *rep != "VALUE")
           obs += pascalize(*rep, repPre);
-        
+
         m_observationName.setQName(obs, pre);
 
         const static unordered_map<string, ERepresentation> reps = {{"VALUE", VALUE},
@@ -198,6 +197,17 @@ namespace mtconnect
             else if (type == "PERIOD")
               m_minimumPeriod = filter->getValue<double>();
           }
+        }
+        
+        if (hasProperty("nativeUnits"))
+        {
+          m_converter = UnitConversion::make(get<string>("nativeUnits"));
+        }
+        if (hasProperty("nativeScale"))
+        {
+          if (!m_converter)
+            m_converter = make_unique<UnitConversion>();
+          m_converter->scale(get<double>("nativeScale"));
         }
       }
 

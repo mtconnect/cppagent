@@ -25,6 +25,7 @@
 #include "relationships.hpp"
 #include "source.hpp"
 #include "utilities.hpp"
+#include "unit_conversion.hpp"
 
 #include <dlib/threads.h>
 
@@ -130,6 +131,13 @@ namespace mtconnect
           setProperty("discrete", true);
           m_discrete = true;
         }
+        
+        // Value converter
+        const auto &getConverter() const { return m_converter; }
+        void setConverter(const UnitConversion &conv)
+        {
+          m_converter = std::make_unique<UnitConversion>(conv);
+        }
 
         // Set/get component that data item is associated with
         void setComponent(Component &component) { m_component = &component; }
@@ -168,7 +176,7 @@ namespace mtconnect
         const char *m_categoryText;
 
         // Type for observation
-        entity::QName m_observationName;        
+        entity::QName m_observationName;
         entity::Properties m_observatonProperties;
 
         // Representation of data item
@@ -187,6 +195,9 @@ namespace mtconnect
 
         // The data source for this data item
         std::optional<std::string> m_dataSource;
+        
+        // Conversions
+        std::unique_ptr<UnitConversion> m_converter;
       };
 
       using DataItemPtr = std::shared_ptr<DataItem>;
