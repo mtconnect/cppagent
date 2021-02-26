@@ -68,7 +68,7 @@ namespace mtconnect
 
     protected:
       std::unordered_map<std::string, ObservationPtr> m_observations;
-      FilterSetOpt                                    m_filter;
+      FilterSetOpt m_filter;
     };
   }  // namespace observation
 }  // namespace mtconnect

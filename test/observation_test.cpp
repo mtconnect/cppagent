@@ -212,6 +212,9 @@ TEST_F(ObservationTest, ConditionEventChaining)
   ASSERT_TRUE(list2.back() == event2);
 }
 
+// TODO: Make sure these tests are covered someplace else. Refactoring
+//       Moved this functionality outside the observation.
+
 #if 0
 TEST_F(ObservationTest, Condition)
 {

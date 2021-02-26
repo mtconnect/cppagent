@@ -56,10 +56,10 @@ namespace mtconnect
       }
 
       ObservationPtr getFromBuffer(uint64_t seq) const { return (*m_slidingBuffer)[seq]; }
-      auto           getIndexAt(uint64_t at) { return m_slidingBuffer->get_element_id(at); }
+      auto getIndexAt(uint64_t at) { return m_slidingBuffer->get_element_id(at); }
 
       SequenceNumber_t getSequence() const { return m_sequence; }
-      unsigned int     getBufferSize() const { return m_slidingBufferSize; }
+      unsigned int getBufferSize() const { return m_slidingBufferSize; }
 
       SequenceNumber_t getFirstSequence() const
       {
@@ -109,19 +109,19 @@ namespace mtconnect
       // Checkpoint
       Checkpoint &getLatest() { return m_latest; }
       Checkpoint &getFirst() { return m_first; }
-      auto        getCheckoointFreq() { return m_checkpointFreq; }
-      auto        getCheckpointCount() { return m_checkpointCount; }
+      auto getCheckoointFreq() { return m_checkpointFreq; }
+      auto getCheckpointCount() { return m_checkpointCount; }
 
-      std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t    at,
+      std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at,
                                                   const FilterSetOpt &filterSet)
       {
         std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
-        auto          firstSeq = getFirstSequence();
-        auto          pos = m_slidingBuffer->get_element_id(at);
-        auto          first = m_slidingBuffer->get_element_id(firstSeq);
-        auto          checkIndex = pos / m_checkpointFreq;
-        auto          closestCp = checkIndex * m_checkpointFreq;
+        auto firstSeq = getFirstSequence();
+        auto pos = m_slidingBuffer->get_element_id(at);
+        auto first = m_slidingBuffer->get_element_id(firstSeq);
+        auto checkIndex = pos / m_checkpointFreq;
+        auto closestCp = checkIndex * m_checkpointFreq;
         unsigned long index;
 
         Checkpoint *ref(nullptr);
@@ -157,9 +157,9 @@ namespace mtconnect
       std::unique_ptr<ObservationList> getObservations(int count, const FilterSetOpt &filterSet,
                                                        const std::optional<SequenceNumber_t> start,
                                                        const std::optional<SequenceNumber_t> to,
-                                                       SequenceNumber_t &                    end,
+                                                       SequenceNumber_t &end,
                                                        SequenceNumber_t &firstSeq,
-                                                       bool &            endOfBuffer)
+                                                       bool &endOfBuffer)
       {
         auto results = std::make_unique<ObservationList>();
 
@@ -232,14 +232,14 @@ namespace mtconnect
 
       // The sliding/circular buffer to hold all of the events/sample data
       std::unique_ptr<dlib::sliding_buffer_kernel_1<ObservationPtr>> m_slidingBuffer;
-      unsigned int                                                   m_slidingBufferSize;
+      unsigned int m_slidingBufferSize;
 
       // Checkpoints
-      Checkpoint              m_latest;
-      Checkpoint              m_first;
+      Checkpoint m_latest;
+      Checkpoint m_first;
       std::vector<Checkpoint> m_checkpoints;
 
-      int       m_checkpointFreq;
+      int m_checkpointFreq;
       long long m_checkpointCount;
     };
   }  // namespace observation

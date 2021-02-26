@@ -111,7 +111,7 @@ namespace mtconnect
     void Adapter::protocolCommand(const std::string &data)
     {
       static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
-      smatch      match;
+      smatch match;
 
       if (std::regex_match(data, match, pattern))
       {

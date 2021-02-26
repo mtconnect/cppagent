@@ -6,7 +6,6 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "device_model/specifications.hpp"
 #include "device_model/composition.hpp"
 
 #include <cstdio>
@@ -32,7 +31,6 @@ class CompositionTest : public testing::Test
 
     auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("power");
-    m_composition = m_component->getCompositions().front().get();
   }
 
   void TearDown() override
@@ -41,36 +39,58 @@ class CompositionTest : public testing::Test
   }
 
   Component *m_component{nullptr};
-  Composition *m_composition{nullptr};
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
 TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
 {
-  ASSERT_NE(nullptr, m_composition);
+  using namespace mtconnect::entity;
+  ASSERT_NE(nullptr, m_component);
   
-  ASSERT_EQ(1, m_composition->getConfiguration().size());
-  auto ci = m_composition->getConfiguration().begin();
-  
-  // Get the second configuration.
-  const auto conf = ci->get();
-  ASSERT_EQ(typeid(Specifications), typeid(*conf));
-  
-  const auto specs = dynamic_cast<const Specifications*>(conf);
-  ASSERT_NE(nullptr, specs);
-  ASSERT_EQ(1, specs->getSpecifications().size());
+  auto &compositions_list = m_component->getCompositions();  
+  ASSERT_TRUE(compositions_list);
 
-  const auto &spec = specs->getSpecifications().front();
-  EXPECT_EQ("VOLTAGE_AC", spec->m_type);
-  EXPECT_EQ("VOLT", spec->m_units);
-  EXPECT_EQ("voltage", spec->m_name);
-  EXPECT_EQ("Specification", spec->getClass());
-  EXPECT_FALSE(spec->hasGroups());
+  auto compositions_entity = compositions_list->getEntity();
+  auto &compositions = compositions_entity->maybeGet<EntityList>("LIST");
+  ASSERT_TRUE(compositions);
+  ASSERT_EQ(1, compositions->size());
+  auto composition = compositions->begin();
 
-  EXPECT_EQ(10000.0, spec->getLimit("Maximum"));
-  EXPECT_EQ(100.0, spec->getLimit("Minimum"));
-  EXPECT_EQ(1000.0, spec->getLimit("Nominal"));
+  EXPECT_EQ("Composition", (*composition)->getName());
+
+  EXPECT_EQ("zmotor", get<string>((*composition)->getProperty("id")));  
+  EXPECT_EQ("MOTOR", get<string>((*composition)->getProperty("type")));
+  EXPECT_EQ("12345", get<string>((*composition)->getProperty("uuid")));
+  EXPECT_EQ("motor_name", get<string>((*composition)->getProperty("name")));
+  
+  auto description = (*composition)->get<entity::EntityPtr>("Description");
+
+  EXPECT_EQ("open", get<string>(description->getProperty("manufacturer")));
+  EXPECT_EQ("vroom", get<string>(description->getProperty("model")));
+  EXPECT_EQ("12356", get<string>(description->getProperty("serialNumber")));
+  EXPECT_EQ("A", get<string>(description-> getProperty("station")));
+  EXPECT_EQ("Hello There", get<string>(description->getValue()));
+
+ 
+  const auto &configuration = (*composition)->get<EntityPtr>("Configuration");
+
+  auto specs = configuration->getList("Specifications");
+  ASSERT_TRUE(specs);
+  ASSERT_EQ(1, specs->size());
+
+  auto it = specs->begin();
+
+  EXPECT_EQ("Specification", (*it)->getName());
+  EXPECT_EQ("spec2", get<string>((*it)->getProperty("id")));
+  EXPECT_EQ("VOLTAGE_AC", get<string>((*it)->getProperty("type")));
+  EXPECT_EQ("VOLT", get<string>((*it)->getProperty("units")));
+  EXPECT_EQ("voltage", get<string>((*it)->getProperty("name")));
+
+  EXPECT_EQ(10000.0, get<double>((*it)->getProperty("Maximum")));
+  EXPECT_EQ(100.0, get<double>((*it)->getProperty("Minimum")));
+  EXPECT_EQ(1000.0, get<double>((*it)->getProperty("Nominal")));
+ 
 }
 
 #define COMPOSITION_PATH  "//m:Power[@id='power']/m:Compositions/m:Composition[@id='zmotor']"
@@ -81,7 +101,7 @@ TEST_F(CompositionTest, XmlPrinting)
 {
   {
     PARSE_XML_RESPONSE("/probe");
-
+    
     ASSERT_XML_PATH_COUNT(doc, COMPOSITION_PATH , 1);
 
     ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH , 1);
@@ -123,4 +143,3 @@ TEST_F(CompositionTest, JsonPrinting)
     EXPECT_EQ(1000.0, cfields["Nominal"]);
   }
 }
-

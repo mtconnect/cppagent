@@ -118,7 +118,7 @@ namespace mtconnect
       }
 
       const ConfigOptions &getOptions() const { return m_options; }
-      void                 setOptions(const ConfigOptions &options)
+      void setOptions(const ConfigOptions &options)
       {
         for (auto &o : options)
           m_options.insert_or_assign(o.first, o.second);
@@ -131,7 +131,7 @@ namespace mtconnect
       void thread();
 
     protected:
-      std::unique_ptr<Handler>         m_handler;
+      std::unique_ptr<Handler> m_handler;
       std::unique_ptr<AdapterPipeline> m_pipeline;
 
       // Name of device associated with adapter
@@ -139,11 +139,11 @@ namespace mtconnect
       std::string m_identity;
 
       // If the connector has been running
-      bool        m_running;
+      bool m_running;
       std::thread m_thread;
 
       std::optional<std::string> m_terminator;
-      std::stringstream          m_body;
+      std::stringstream m_body;
 
       // Timeout for reconnection attempts, given in milliseconds
       std::chrono::milliseconds m_reconnectInterval;

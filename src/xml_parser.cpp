@@ -19,11 +19,6 @@
 
 #include "assets/cutting_tool.hpp"
 #include "device_model/composition.hpp"
-#include "device_model/coordinate_systems.hpp"
-#include "device_model/motion.hpp"
-#include "device_model/sensor_configuration.hpp"
-#include "device_model/solid_model.hpp"
-#include "device_model/specifications.hpp"
 #include "entity/xml_parser.hpp"
 #include "xml_printer.hpp"
 
@@ -57,11 +52,34 @@ using namespace std;
 namespace mtconnect
 {
   using namespace observation;
+  using namespace device_model;
 
   static dlib::logger g_logger("xml.parser");
 
-  template <class T>
-  void handleConfiguration(xmlNodePtr node, T *parent);
+  static inline auto handleConfiguration(xmlNodePtr node)
+  {
+    using namespace configuration;
+    entity::ErrorList errors;
+
+    auto configuration_entity =
+        entity::XmlParser::parseXmlNode(Configuration::getRoot(), node, errors);
+
+    unique_ptr<Configuration> configuration = make_unique<Configuration>();
+    configuration->setEntity(configuration_entity);
+    return configuration;
+  }
+
+  static inline auto handleComposition(xmlNodePtr node)
+  {
+    entity::ErrorList errors;
+
+    auto compositions_entity =
+        entity::XmlParser::parseXmlNode(Composition::getRoot(), node, errors);
+
+    unique_ptr<Composition> compositions = make_unique<Composition>();
+    compositions->setEntity(compositions_entity);
+    return compositions;
+  }
 
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
@@ -78,7 +96,7 @@ namespace mtconnect
 
   static inline std::string getCDATA(xmlNodePtr node)
   {
-    auto   text = xmlNodeGetContent(node);
+    auto text = xmlNodeGetContent(node);
     string res;
     if (text)
     {
@@ -90,27 +108,13 @@ namespace mtconnect
 
   static inline std::string getAttribute(xmlNodePtr node, const char *name)
   {
-    auto   value = xmlGetProp(node, BAD_CAST name);
+    auto value = xmlGetProp(node, BAD_CAST name);
     string res;
     if (value)
     {
       res = (const char *)value;
       xmlFree(value);
     }
-    return res;
-  }
-
-  static inline std::string getRawContent(xmlNodePtr node)
-  {
-    string       res;
-    xmlBufferPtr buf;
-    THROW_IF_XML2_NULL(buf = xmlBufferCreate());
-    auto count = xmlNodeDump(buf, node->doc, node, 0, 0);
-    if (count > 0)
-    {
-      res = ((const char *)buf->content);
-    }
-    xmlBufferFree(buf);
     return res;
   }
 
@@ -128,185 +132,28 @@ namespace mtconnect
     return toReturn;
   }
 
-  // Put all of the attributes of an element into a map
-  static inline std::map<string, string> getValidatedAttributes(
-      const xmlNodePtr node, const std::map<string, bool> &parameters)
-  {
-    std::map<string, string> toReturn;
-    std::map<string, bool>   matched = parameters;
-
-    for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
-    {
-      if (attr->type == XML_ATTRIBUTE_NODE)
-      {
-        string key = (const char *)(attr->name);
-        auto   it = matched.find(key);
-        if (it != matched.end())
-        {
-          matched.erase(it);
-          toReturn[key] = (const char *)attr->children->content;
-        }
-        else
-        {
-          g_logger << dlib::LWARN << "Unknown attribute for " << (const char *)node->name << ": "
-                   << key << ", skipping";
-        }
-      }
-    }
-
-    for (auto &p : matched)
-    {
-      if (p.second)
-      {
-        g_logger << dlib::LWARN << (const char *)node->name
-                 << " missing required attribute: " << p.first;
-        toReturn.clear();
-      }
-    }
-
-    return toReturn;
-  }
-
-  static inline void forEachElement(const xmlNodePtr                              node,
-                                    map<string, function<void(const xmlNodePtr)>> funs)
-  {
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      if (child->type != XML_ELEMENT_NODE)
-        continue;
-
-      auto other = funs.find("OTHERWISE");
-
-      string name((const char *)child->name);
-      auto   lambda = funs.find(name);
-      if (lambda != funs.end())
-      {
-        lambda->second(child);
-      }
-      else if (other != funs.end())
-      {
-        other->second(child);
-      }
-    }
-  }
-
-  struct ThreeSpace
-  {
-    double m_1, m_2, m_3;
-  };
-
-  static inline std::optional<ThreeSpace> getThreeSpace(const string &cdata)
-  {
-    ThreeSpace v;
-
-    stringstream s(cdata);
-    s >> v.m_1 >> v.m_2 >> v.m_3;
-    if (s.rdstate() & std::istream::failbit)
-    {
-      g_logger << dlib::LWARN << "Cannot parse three space value: " << cdata;
-      return nullopt;
-    }
-    else
-    {
-      return make_optional(v);
-    }
-  }
-
-  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node, bool hasScale,
-                                                    bool hasAxis)
-  {
-    Geometry geometry;
-    forEachElement(node, {{"Transformation",
-                           [&geometry](const xmlNodePtr n) {
-                             if (geometry.m_location.index() != 0)
-                             {
-                               g_logger << dlib::LWARN << "Translation or Origin already given";
-                               return;
-                             }
-
-                             Transformation t;
-                             forEachElement(n, {{"Translation",
-                                                 [&t](const xmlNodePtr c) {
-                                                   auto s = getThreeSpace(getCDATA(c));
-                                                   if (s)
-                                                     t.m_translation.emplace(s->m_1, s->m_2,
-                                                                             s->m_3);
-                                                 }},
-                                                {"Rotation", [&t](const xmlNodePtr c) {
-                                                   auto s = getThreeSpace(getCDATA(c));
-                                                   if (s)
-                                                     t.m_rotation.emplace(s->m_1, s->m_2, s->m_3);
-                                                 }}});
-                             if (t.m_rotation || t.m_translation)
-                               geometry.m_location.emplace<Transformation>(t);
-                             else
-                               g_logger << dlib::LWARN << "Cannot parse Translation";
-                           }},
-                          {"Origin",
-                           [&geometry](const xmlNodePtr n) {
-                             if (geometry.m_location.index() != 0)
-                             {
-                               g_logger << dlib::LWARN << "Translation or Origin already given";
-                               return;
-                             }
-
-                             auto s = getThreeSpace(getCDATA(n));
-                             if (s)
-                               geometry.m_location.emplace<Origin>(s->m_1, s->m_2, s->m_3);
-                             else
-                               g_logger << dlib::LWARN << "Cannot parse Origin";
-                           }},
-                          {"Scale",
-                           [&geometry, hasScale](const xmlNodePtr n) {
-                             if (hasScale)
-                             {
-                               auto s = getThreeSpace(getCDATA(n));
-                               if (s)
-                                 geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
-                               else
-                                 g_logger << dlib::LWARN << "Cannot parse Scale";
-                             }
-                           }},
-                          {"Axis", [&geometry, hasAxis](const xmlNodePtr n) {
-                             if (hasAxis)
-                             {
-                               auto s = getThreeSpace(getCDATA(n));
-                               if (s)
-                                 geometry.m_axis.emplace(s->m_1, s->m_2, s->m_3);
-                               else
-                                 g_logger << dlib::LWARN << "Cannot parse Scale";
-                             }
-                           }}});
-
-    if (geometry.m_location.index() != 0 || geometry.m_scale)
-      return make_optional(geometry);
-    else
-      return nullopt;
-  }
-
   XmlParser::XmlParser()
     : m_handlers(
           {{"Components",
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
            {"References",
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-           {"Compositions",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-           {"DataItems", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItems(n, p); }},
            {"Reference", [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+          {"DataItems", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItems(n, p); }},
            {"DataItemRef",
             [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
            {"ComponentRef",
             [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
-           {"Composition",
-            [this](xmlNodePtr n, Component *p, Device *d) {
-              auto c = handleComposition(n);
-              p->addComposition(c);
-            }},
            {"Description", [](xmlNodePtr n, Component *p,
                               Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
+           {"Compositions", [](xmlNodePtr n, Component *p, Device *d) {
+             auto c = handleComposition(n);
+             p->setCompositions(c); }},
            {"Configuration",
-            [](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
+            [](xmlNodePtr n, Component *p, Device *d) {
+              auto c = handleConfiguration(n);
+              p->setConfiguration(c);              
+            }}})
   {
   }
 
@@ -323,8 +170,8 @@ namespace mtconnect
       m_doc = nullptr;
     }
 
-    xmlXPathContextPtr  xpathCtx = nullptr;
-    xmlXPathObjectPtr   devices = nullptr;
+    xmlXPathContextPtr xpathCtx = nullptr;
+    xmlXPathObjectPtr devices = nullptr;
     std::list<Device *> deviceList;
 
     try
@@ -366,7 +213,7 @@ namespace mtconnect
       // Add additional namespaces to the printer if they are referenced
       // here.
       string locationUrn;
-      auto   location = getAttribute(root, "schemaLocation");
+      auto location = getAttribute(root, "schemaLocation");
 
       if (location.substr(0, 34) != "urn:mtconnect.org:MTConnectDevices")
       {
@@ -378,7 +225,7 @@ namespace mtconnect
           auto uri = location.substr(pos + 1);
 
           // Try to find the prefix for this urn...
-          auto   ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
+          auto ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
           string prefix;
 
           if (ns && ns->prefix)
@@ -494,7 +341,7 @@ namespace mtconnect
       node = root;
 
     xmlXPathContextPtr xpathCtx = nullptr;
-    xmlXPathObjectPtr  objs = nullptr;
+    xmlXPathObjectPtr objs = nullptr;
 
     try
     {
@@ -601,7 +448,7 @@ namespace mtconnect
   Component *XmlParser::handleNode(xmlNodePtr node, Component *parent, Device *device)
   {
     string name((const char *)node->name);
-    auto   lambda = m_handlers.find(name);
+    auto lambda = m_handlers.find(name);
     if (lambda != m_handlers.end())
     {
       // Parts of components
@@ -686,31 +533,6 @@ namespace mtconnect
     }
   }
 
-  unique_ptr<Composition> XmlParser::handleComposition(xmlNodePtr composition)
-  {
-    auto comp = make_unique<Composition>();
-    comp->m_attributes = getValidatedAttributes(composition, comp->properties());
-    if (!comp->m_attributes.empty())
-    {
-      forEachElement(composition, {{"Description",
-                                    [&comp](xmlNodePtr n) {
-                                      Description desc;
-                                      desc.m_attributes =
-                                          getValidatedAttributes(n, desc.properties());
-                                      desc.m_body = getCDATA(n);
-                                      comp->setDescription(desc);
-                                    }},
-                                   {"Configuration", [&comp](xmlNodePtr n) {
-                                      handleConfiguration(n, (Composition *)comp.get());
-                                    }}});
-    }
-    else
-    {
-      g_logger << dlib::LWARN << "Skipping Composition";
-    }
-    return comp;
-  }
-
   void XmlParser::handleChildren(xmlNodePtr components, Component *parent, Device *device)
   {
     for (xmlNodePtr child = components->children; child; child = child->next)
@@ -724,7 +546,7 @@ namespace mtconnect
 
   void XmlParser::handleReference(xmlNodePtr reference, Component *parent)
   {
-    auto   attrs = getAttributes(reference);
+    auto attrs = getAttributes(reference);
     string name;
 
     if (attrs.count("name") > 0)
@@ -747,232 +569,4 @@ namespace mtconnect
     }
   }
 
-  unique_ptr<ComponentConfiguration> handleSensorConfiguration(xmlNodePtr node)
-  {
-    // Decode sensor configuration
-    string             firmware, date, nextDate, initials;
-    vector<xmlNodePtr> rest;
-    xmlNodePtr         channels = nullptr;
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      string name((const char *)child->name);
-      if (name == "FirmwareVersion")
-        firmware = getCDATA(child);
-      else if (name == "CalibrationDate")
-        date = getCDATA(child);
-      else if (name == "CalibrationInitials")
-        initials = getCDATA(child);
-      else if (name == "Channels")
-        channels = child;
-      else
-        rest.emplace_back(child);
-    }
-
-    string restText;
-    for (auto &text : rest)
-      restText.append(getRawContent(text));
-
-    unique_ptr<SensorConfiguration> sensor(
-        new SensorConfiguration(firmware, date, nextDate, initials, restText));
-
-    if (channels)
-    {
-      for (xmlNodePtr channel = channels->children; channel; channel = channel->next)
-      {
-        string name((const char *)channel->name);
-        auto   attributes = getAttributes(channel);
-        string description, date, nextDate, initials;
-
-        for (xmlNodePtr child = channel->children; child; child = child->next)
-        {
-          string name((const char *)child->name);
-          if (name == "Description")
-            description = getCDATA(child);
-          else if (name == "CalibrationDate")
-            date = getCDATA(child);
-          else if (name == "CalibrationInitials")
-            initials = getCDATA(child);
-        }
-        SensorConfiguration::Channel chl(date, nextDate, initials, attributes);
-        chl.setDescription(description);
-        sensor->addChannel(chl);
-      }
-    }
-
-    return move(sensor);
-  }
-
-  unique_ptr<ComponentConfiguration> handleRelationships(xmlNodePtr node)
-  {
-    unique_ptr<Relationships> relationships = make_unique<Relationships>();
-
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      unique_ptr<Relationship> relationship;
-      if (xmlStrcmp(child->name, BAD_CAST "ComponentRelationship") == 0)
-      {
-        unique_ptr<ComponentRelationship> crel {new ComponentRelationship()};
-        crel->m_idRef = getAttribute(child, "idRef");
-        relationship = std::move(crel);
-      }
-      else if (xmlStrcmp(child->name, BAD_CAST "DeviceRelationship") == 0)
-      {
-        unique_ptr<DeviceRelationship> drel {new DeviceRelationship()};
-        drel->m_href = getAttribute(child, "href");
-        drel->m_role = getAttribute(child, "role");
-        drel->m_deviceUuidRef = getAttribute(child, "deviceUuidRef");
-
-        relationship = std::move(drel);
-      }
-      else
-      {
-        g_logger << dlib::LWARN << "Bad Relationship: " << (const char *)child->name
-                 << ", skipping";
-      }
-
-      if (relationship)
-      {
-        auto attrs = getAttributes(child);
-        relationship->m_id = attrs["id"];
-        relationship->m_name = attrs["name"];
-        relationship->m_type = attrs["type"];
-        relationship->m_criticality = attrs["criticality"];
-
-        relationships->addRelationship(relationship);
-      }
-    }
-
-    return move(relationships);
-  }
-
-  template <class T>
-  unique_ptr<T> handleGeometricConfiguration(xmlNodePtr node)
-  {
-    unique_ptr<T> model = make_unique<T>();
-    model->m_attributes = getValidatedAttributes(node, model->properties());
-    if (!model->m_attributes.empty())
-    {
-      model->m_geometry = getGeometry(node, model->hasScale(), model->hasAxis());
-    }
-    else
-    {
-      g_logger << dlib::LWARN << "Skipping Geometric Definition";
-    }
-
-    if (model->hasDescription())
-    {
-      forEachElement(
-          node, {{"Description", [&model](xmlNodePtr n) { model->m_description = getCDATA(n); }}});
-    }
-
-    return model;
-  }
-
-  unique_ptr<ComponentConfiguration> handleCoordinateSystems(xmlNodePtr node)
-  {
-    unique_ptr<CoordinateSystems> systems = make_unique<CoordinateSystems>();
-
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      systems->addCoordinateSystem(handleGeometricConfiguration<CoordinateSystem>(child).release());
-    }
-
-    return move(systems);
-  }
-
-  unique_ptr<ComponentConfiguration> handleSpecifications(xmlNodePtr node)
-  {
-    unique_ptr<Specifications> specifications = make_unique<Specifications>();
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      auto attrs = getAttributes(child);
-
-      std::string klass((const char *)child->name);
-      if (klass == "Specification" || klass == "ProcessSpecification")
-      {
-        unique_ptr<Specification> spec {new Specification(klass)};
-
-        spec->m_id = attrs["id"];
-        spec->m_name = attrs["name"];
-        spec->m_type = attrs["type"];
-        spec->m_subType = attrs["subType"];
-        spec->m_units = attrs["units"];
-        spec->m_dataItemIdRef = attrs["dataItemIdRef"];
-        spec->m_compositionIdRef = attrs["compositionIdRef"];
-        spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
-        spec->m_originator = attrs["originator"];
-
-        for (xmlNodePtr limit = child->children; limit; limit = limit->next)
-        {
-          if (spec->hasGroups())
-          {
-            std::string group((const char *)limit->name);
-
-            for (xmlNodePtr val = limit->children; val; val = val->next)
-            {
-              std::string name((const char *)val->name);
-              std::string value(getCDATA(val));
-              spec->addLimitForGroup(group, name, stod(value));
-            }
-          }
-          else
-          {
-            std::string name((const char *)limit->name);
-            std::string value(getCDATA(limit));
-            spec->addLimit(name, stod(value));
-          }
-        }
-
-        specifications->addSpecification(spec);
-      }
-      else
-      {
-        g_logger << dlib::LWARN << "Bad Specifictation type " << klass << ", skipping";
-      }
-    }
-
-    return move(specifications);
-  }
-
-  template <class T>
-  void handleConfiguration(xmlNodePtr node, T *parent)
-  {
-    forEachElement(
-        node,
-        {{{"SensorConfiguration",
-           [&parent](xmlNodePtr n) {
-             auto s = handleSensorConfiguration(n);
-             parent->addConfiguration(s);
-           }},
-          {"Relationships",
-           [&parent](xmlNodePtr n) {
-             auto r = handleRelationships(n);
-             parent->addConfiguration(r);
-           }},
-          {"CoordinateSystems",
-           [&parent](xmlNodePtr n) {
-             auto c = handleCoordinateSystems(n);
-             parent->addConfiguration(c);
-           }},
-          {"Specifications",
-           [&parent](xmlNodePtr n) {
-             auto s = handleSpecifications(n);
-             parent->addConfiguration(s);
-           }},
-          {"SolidModel",
-           [&parent](xmlNodePtr n) {
-             unique_ptr<ComponentConfiguration> g(handleGeometricConfiguration<SolidModel>(n));
-             parent->addConfiguration(g);
-           }},
-          {"Motion",
-           [&parent](xmlNodePtr n) {
-             unique_ptr<ComponentConfiguration> g(handleGeometricConfiguration<Motion>(n));
-             parent->addConfiguration(g);
-           }},
-          {"OTHERWISE", [&parent](xmlNodePtr n) {
-             unique_ptr<ComponentConfiguration> ext(
-                 new ExtendedComponentConfiguration(getRawContent(n)));
-             parent->addConfiguration(ext);
-           }}}});
-  }
 }  // namespace mtconnect

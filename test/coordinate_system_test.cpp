@@ -6,7 +6,6 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "device_model/coordinate_systems.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -46,53 +45,48 @@ class CoordinateSystemTest : public testing::Test
 TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_device);
-  
-  ASSERT_EQ(1, m_device->getConfiguration().size());
-    
-  auto ci = m_device->getConfiguration().begin();
-  const auto conf = ci->get();
-  ASSERT_EQ(typeid(CoordinateSystems), typeid(*conf));
-  
-  const auto cds = dynamic_cast<const CoordinateSystems*>(conf);
-  ASSERT_NE(nullptr, cds);
-  ASSERT_EQ(2, cds->getCoordinateSystems().size());
 
-  auto systems = cds->getCoordinateSystems().begin();
+  auto &configurations_list = m_device->getConfiguration();
+  ASSERT_TRUE(configurations_list);
+
+  auto ent = configurations_list->getEntity();
+  const auto &cds = ent->getList("CoordinateSystems");
+  ASSERT_TRUE(cds);
+  ASSERT_EQ(2, cds->size());
+
+  auto it = cds->begin();
   
-  const auto &world = *systems;
-  EXPECT_EQ("world", world->m_attributes["id"]);
-  EXPECT_EQ("WORLD", world->m_attributes["type"]);
-  EXPECT_EQ("worldy", world->m_attributes["name"]);
-  EXPECT_EQ(world->m_attributes.end(), world->m_attributes.find("nativeName"));
-  EXPECT_EQ(world->m_attributes.end(), world->m_attributes.find("parentIdRef"));
+  EXPECT_EQ("world", (*it)->get<string>("id"));
+  EXPECT_EQ("WORLD", (*it)->get<string>("type"));
+  EXPECT_EQ("worldy", (*it)->get<string>("name"));
 
-  EXPECT_TRUE(world->m_geometry);
-  ASSERT_TRUE(holds_alternative<Origin>(world->m_geometry->m_location));
-  const Origin &wt = get<Origin>(world->m_geometry->m_location);
-  EXPECT_EQ(101.0, wt.m_x);
-  EXPECT_EQ(102.0, wt.m_y);
-  EXPECT_EQ(103.0, wt.m_z);
+  const auto origin = (*it)->getProperty("Origin");
 
-  systems++;
-  const auto &machine = *systems;
-  EXPECT_EQ("machine", machine->m_attributes["id"]);
-  EXPECT_EQ("MACHINE", machine->m_attributes["type"]);
-  EXPECT_EQ("machiney", machine->m_attributes["name"]);
-  EXPECT_EQ("xxx", machine->m_attributes["nativeName"]);
-  EXPECT_EQ("world", machine->m_attributes["parentIdRef"]);
-  
-  EXPECT_TRUE(machine->m_geometry);
-  ASSERT_TRUE(holds_alternative<Transformation>(machine->m_geometry->m_location));
-  const Transformation &mt = get<Transformation>(machine->m_geometry->m_location);
-  EXPECT_TRUE(mt.m_translation);
-  EXPECT_EQ(10.0, mt.m_translation->m_x);
-  EXPECT_EQ(10.0, mt.m_translation->m_y);
-  EXPECT_EQ(10.0, mt.m_translation->m_z);
+  ASSERT_EQ(101, get<std::vector<double>>(origin).at(0));
+  ASSERT_EQ(102, get<std::vector<double>>(origin).at(1));
+  ASSERT_EQ(103, get<std::vector<double>>(origin).at(2));
 
-  EXPECT_TRUE(mt.m_rotation);
-  EXPECT_EQ(90.0, mt.m_rotation->m_roll);
-  EXPECT_EQ(0, mt.m_rotation->m_pitch);
-  EXPECT_EQ(90.0, mt.m_rotation->m_yaw);
+  it++;
+
+  EXPECT_EQ("machine", (*it)->get<string>("id"));
+  EXPECT_EQ("MACHINE", (*it)->get<string>("type"));
+  EXPECT_EQ("machiney", (*it)->get<string>("name"));
+  EXPECT_EQ("xxx", (*it)->get<string>("nativeName"));
+  EXPECT_EQ("world", (*it)->get<string>("parentIdRef"));
+
+  const auto transformation = (*it)->get<entity::EntityPtr>("Transformation");
+
+  auto translation = transformation->getProperty("Translation");
+  auto rotation = transformation->getProperty("Rotation");
+
+  ASSERT_EQ(10, get<std::vector<double>>(translation).at(0));
+  ASSERT_EQ(10, get<std::vector<double>>(translation).at(1));
+  ASSERT_EQ(10, get<std::vector<double>>(translation).at(2));
+
+  ASSERT_EQ(90, get<std::vector<double>>(rotation).at(0));
+  ASSERT_EQ(0, get<std::vector<double>>(rotation).at(1));
+  ASSERT_EQ(90, get<std::vector<double>>(rotation).at(2));
+
 }
 
 #define CONFIGURATION_PATH "//m:Device/m:Configuration"

@@ -31,13 +31,13 @@ namespace mtconnect
   {
   public:
     static entity::FactoryPtr getFactory();
-    static void               registerAsset();
+    static void registerAsset();
   };
 
   class FileAsset : public FileArchetypeAsset
   {
   public:
     static entity::FactoryPtr getFactory();
-    static void               registerAsset();
+    static void registerAsset();
   };
 }  // namespace mtconnect

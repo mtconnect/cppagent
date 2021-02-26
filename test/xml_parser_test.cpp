@@ -266,7 +266,7 @@ TEST_F(XmlParserTest, Configuration)
   }
 
   ASSERT_TRUE(power);
-  ASSERT_FALSE(power->getConfiguration().empty());
+  ASSERT_TRUE(power->getConfiguration());
 }
 
 TEST_F(XmlParserTest, NoNamespace)

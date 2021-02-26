@@ -279,7 +279,7 @@ TEST_F(JsonPrinterProbeTest, Composition)
 
   auto coolant = devices.at(0).at("/Device/Components/2/Systems/Components/1/Coolant"_json_pointer);
   ASSERT_TRUE(coolant.is_object());
-
+  
   auto comp1 = coolant.at("/Compositions/0/Composition"_json_pointer);
   ASSERT_EQ(string("main"), comp1.at("/name"_json_pointer).get<string>());
   ASSERT_EQ(string("TANK"), comp1.at("/type"_json_pointer).get<string>());

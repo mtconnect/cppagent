@@ -79,13 +79,13 @@ namespace mtconnect
       public:
         // Construct a data item with appropriate attributes mapping
         DataItem(const std::string &name, const entity::Properties &props);
-        static entity::FactoryPtr        getFactory();
-        static entity::FactoryPtr        getRoot();
+        static entity::FactoryPtr getFactory();
+        static entity::FactoryPtr getRoot();
         static std::shared_ptr<DataItem> make(const entity::Properties &props,
-                                              entity::ErrorList &       errors)
+                                              entity::ErrorList &errors)
         {
           entity::Properties ps(props);
-          auto               ptr = getFactory()->make("DataItem", ps, errors);
+          auto ptr = getFactory()->make("DataItem", ps, errors);
           return std::dynamic_pointer_cast<DataItem>(ptr);
         }
 
@@ -101,16 +101,16 @@ namespace mtconnect
         const auto &getObservationProperties() const { return m_observatonProperties; }
         const auto &getMinimumDelta() const { return m_minimumDelta; }
         const auto &getMinimumPeriod() const { return m_minimumPeriod; }
-        bool        hasName(const std::string &name) const;
+        bool hasName(const std::string &name) const;
 
         const auto &getType() { return get<std::string>("type"); }
 
-        ECategory       getCategory() const { return m_category; }
+        ECategory getCategory() const { return m_category; }
         ERepresentation getRepresentation() const { return m_representation; }
-        SpecialClass    getSpecialClass() const { return m_specialClass; }
+        SpecialClass getSpecialClass() const { return m_specialClass; }
 
         const auto &getConstantValue() const { return m_constantValue; }
-        void        setConstantValue(const std::string &value);
+        void setConstantValue(const std::string &value);
 
         // Returns true if data item is a sample
         bool isSample() const { return m_category == SAMPLE; }
@@ -135,13 +135,13 @@ namespace mtconnect
 
         // Value converter
         const auto &getConverter() const { return m_converter; }
-        void        setConverter(const UnitConversion &conv)
+        void setConverter(const UnitConversion &conv)
         {
           m_converter = std::make_unique<UnitConversion>(conv);
         }
 
         // Set/get component that data item is associated with
-        void       setComponent(Component &component) { m_component = &component; }
+        void setComponent(Component &component) { m_component = &component; }
         Component *getComponent() const { return m_component; }
 
         // Get the name for the adapter feed
@@ -156,7 +156,7 @@ namespace mtconnect
         const char *getCategoryText() const { return m_categoryText; }
 
       protected:
-        double                             simpleFactor(const std::string &units);
+        double simpleFactor(const std::string &units);
         std::map<std::string, std::string> buildAttributes() const;
 
       protected:
@@ -166,23 +166,23 @@ namespace mtconnect
         // Name for itself
         std::optional<std::string> m_name;
         std::optional<std::string> m_source;
-        std::string                m_preferredName;
+        std::string m_preferredName;
         std::optional<std::string> m_constantValue;
-        std::optional<double>      m_minimumDelta;
-        std::optional<double>      m_minimumPeriod;
+        std::optional<double> m_minimumDelta;
+        std::optional<double> m_minimumPeriod;
 
         // Category of data item
-        ECategory   m_category;
+        ECategory m_category;
         const char *m_categoryText;
 
         // Type for observation
-        entity::QName      m_observationName;
+        entity::QName m_observationName;
         entity::Properties m_observatonProperties;
 
         // Representation of data item
         ERepresentation m_representation {VALUE};
-        SpecialClass    m_specialClass {NONE_CLS};
-        bool            m_discrete;
+        SpecialClass m_specialClass {NONE_CLS};
+        bool m_discrete;
 
         // The reset trigger;
         std::string m_resetTrigger;

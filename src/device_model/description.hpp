@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
+#include "entity.hpp"
 #include "utilities.hpp"
 
 #include <list>
@@ -32,21 +32,15 @@ namespace mtconnect
   {
   public:
     Description() = default;
-    Description(const Description &another) = default;
-    Description(std::string body) : m_body(std::move(body)) {}
     ~Description() = default;
 
-    const std::map<std::string, bool> &properties() const
-    {
-      const static std::map<std::string, bool> properties = {
-          {"manufacturer", false}, {"model", false}, {"serialNumber", false}, {"station", false}};
-      ;
-      return properties;
-    }
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
 
-    std::string                        m_body;
-    std::map<std::string, std::string> m_attributes;
+    const entity::EntityPtr &getEntity() const { return m_entity; };
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; };
 
   protected:
+    entity::EntityPtr m_entity;
   };
 }  // namespace mtconnect

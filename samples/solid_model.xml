@@ -16,8 +16,7 @@
 						</Transformation>
 					</CoordinateSystem>
 				</CoordinateSystems>
-				<SolidModel id="dm" mediaType="STL" href="/models/foo.stl" coordinateSystemIdRef="machine" dummy="junk">
-					<Origin>10.0 20.0 30.0</Origin>
+				<SolidModel id="dm" mediaType="STL" href="/models/foo.stl" coordinateSystemIdRef="machine" >
 					<Scale>2.0 3.0 4.0</Scale>
 				</SolidModel>
 			</Configuration>

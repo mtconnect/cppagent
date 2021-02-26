@@ -68,7 +68,7 @@ namespace mtconnect
       }
 
       Timestamp ts;
-      bool      has_t {timestamp.find('T') != string::npos};
+      bool has_t {timestamp.find('T') != string::npos};
       if (has_t)
       {
         istringstream in(timestamp);
@@ -87,7 +87,7 @@ namespace mtconnect
 
       // Handle double offset
       Timestamp n = now();
-      double    offset;
+      double offset;
       if (!has_t)
       {
         offset = stod(timestamp);

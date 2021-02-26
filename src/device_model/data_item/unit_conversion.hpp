@@ -83,7 +83,7 @@ namespace mtconnect
         double m_offset;
 
         static std::unordered_map<std::string, UnitConversion> m_conversions;
-        static std::unordered_set<std::string>                 m_mtconnectUnits;
+        static std::unordered_set<std::string> m_mtconnectUnits;
       };
     }  // namespace data_item
   }    // namespace device_model

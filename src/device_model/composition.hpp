@@ -17,17 +17,7 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
-#include "description.hpp"
-#include "utilities.hpp"
-
-#include <list>
-#include <map>
-#include <memory>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <utility>
+#include "entity.hpp"
 
 namespace mtconnect
 {
@@ -35,32 +25,15 @@ namespace mtconnect
   {
   public:
     Composition() = default;
-    Composition(const Composition &) = default;
-    ~Composition() = default;
+    virtual ~Composition() = default;
 
-    const std::map<std::string, bool> &properties() const
-    {
-      const static std::map<std::string, bool> properties = {
-          {"id", true}, {"uuid", false}, {"name", false}, {"type", true}};
-      ;
-      return properties;
-    }
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
 
-    const std::optional<Description> &getDescription() const { return m_description; }
-
-    void setDescription(Description &d) { m_description = d; }
-
-    const auto &getConfiguration() const { return m_configuration; }
-
-    void addConfiguration(std::unique_ptr<ComponentConfiguration> &config)
-    {
-      m_configuration.emplace_back(std::move(config));
-    }
-
-    std::map<std::string, std::string> m_attributes;
+    const entity::EntityPtr &getEntity() const { return m_entity; };
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; };
 
   protected:
-    std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
-    std::optional<Description>                         m_description;
+    entity::EntityPtr m_entity;
   };
 }  // namespace mtconnect

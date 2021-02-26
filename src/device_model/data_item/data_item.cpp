@@ -112,9 +112,9 @@ namespace mtconnect
 
         m_id = get<string>("id");
         m_name = maybeGet<string>("name");
-        auto             type = get<string>("type");
+        auto type = get<string>("type");
         optional<string> pre;
-        string           obs = pascalize(type, pre);
+        string obs = pascalize(type, pre);
         optional<string> repPre;
         if (auto rep = maybeGet<string>("representation"); rep && *rep != "VALUE")
           obs += pascalize(*rep, repPre);
@@ -161,7 +161,7 @@ namespace mtconnect
         }
 
         std::optional<std::string> pref;
-        auto                       source = maybeGet<entity::EntityPtr>("Source");
+        auto source = maybeGet<entity::EntityPtr>("Source");
         if (source && (*source)->hasValue())
           pref = m_source = (*source)->getValue<string>();
         else
@@ -258,10 +258,10 @@ namespace mtconnect
 
       void DataItem::setConstantValue(const std::string &value)
       {
-        ErrorList  errors;
+        ErrorList errors;
         Properties url {{"VALUE", value}};
         EntityList values {Constraints::getFactory()->create("Value", url, errors)};
-        auto       list = getFactory()->create("Constraints", values, errors);
+        auto list = getFactory()->create("Constraints", values, errors);
         if (!errors.empty())
         {
           g_logger << dlib::LERROR << "Cannot set constant value for data item " << m_id << " to "

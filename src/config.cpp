@@ -150,7 +150,7 @@ namespace mtconnect
     if (reader.is_key_defined(key))
     {
       stringstream ss(reader[key]);
-      T            value;
+      T value;
       ss >> value;
       options[key] = value;
     }
@@ -173,7 +173,7 @@ namespace mtconnect
     success = readlink("/proc/self/exe", path, PATH_MAX) >= 0;
 #else
 #ifdef MACOSX
-    char     path[PATH_MAX];
+    char path[PATH_MAX];
     uint32_t size = PATH_MAX;
     success = !_NSGetExecutablePath(path, &size);
 #else
@@ -250,7 +250,7 @@ namespace mtconnect
   static time_t GetFileModificationTime(const string &file)
   {
     FILETIME createTime, accessTime, writeTime = {0, 0};
-    auto     handle =
+    auto handle =
         CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (handle == INVALID_HANDLE_VALUE)
     {
@@ -315,7 +315,7 @@ namespace mtconnect
       dlib::sleep(10000);
 
       time_t devices = 0, cfg = 0;
-      bool   check = true;
+      bool check = true;
 
       if ((cfg = GetFileModificationTime(m_configFile)) == 0)
       {
@@ -479,9 +479,9 @@ namespace mtconnect
     else
     {
       string name("agent.log");
-      auto   sched = RollingFileLogger::NEVER;
+      auto sched = RollingFileLogger::NEVER;
       uint64 maxSize = 10ull * 1024ull * 1024ull;  // 10MB
-      int    maxIndex = 9;
+      int maxIndex = 9;
 
       if (reader.is_block_defined("logger_config"))
       {
@@ -502,7 +502,7 @@ namespace mtconnect
           else
           {
             istringstream sin(output);
-            string        one, two, three;
+            string one, two, three;
             sin >> one;
             sin >> two;
             sin >> three;
@@ -513,9 +513,9 @@ namespace mtconnect
           }
         }
 
-        string       maxSizeStr = get_with_default(cr, "max_size", "10M");
+        string maxSizeStr = get_with_default(cr, "max_size", "10M");
         stringstream ss(maxSizeStr);
-        char         mag = '\0';
+        char mag = '\0';
         ss >> maxSize >> mag;
 
         switch (mag)
@@ -585,10 +585,10 @@ namespace mtconnect
     if (!m_loggerFile)
       configureLogger(reader);
 
-    auto   defaultPreserve = get_bool_with_default(reader, configuration::PreserveUUID, true);
-    auto   port = get_with_default(reader, configuration::Port, 5000);
+    auto defaultPreserve = get_bool_with_default(reader, configuration::PreserveUUID, true);
+    auto port = get_with_default(reader, configuration::Port, 5000);
     string serverIp = get_with_default(reader, configuration::ServerIp, "");
-    auto   bufferSize =
+    auto bufferSize =
         get_with_default(reader, configuration::BufferSize, DEFAULT_SLIDING_BUFFER_EXP);
     auto maxAssets = get_with_default(reader, configuration::MaxAssets, DEFAULT_MAX_ASSETS);
     auto checkpointFrequency = get_with_default(reader, configuration::CheckpointFrequency, 1000);
@@ -703,7 +703,7 @@ namespace mtconnect
     Device *device;
     if (reader.is_block_defined("Adapters"))
     {
-      const auto &        adapters = reader.block("Adapters");
+      const auto &adapters = reader.block("Adapters");
       std::vector<string> blocks;
       adapters.get_blocks(blocks);
 
@@ -712,7 +712,7 @@ namespace mtconnect
         ConfigOptions adapterOptions = options;
 
         const auto &adapter = adapters.block(block);
-        string      deviceName;
+        string deviceName;
         if (adapter.is_key_defined(configuration::Device))
           deviceName = adapter[configuration::Device];
         else
@@ -758,13 +758,13 @@ namespace mtconnect
         device->m_preserveUuid = get<bool>(adapterOptions[configuration::PreserveUUID]);
 
         const string host = get_with_default(adapter, configuration::Host, (string) "localhost");
-        auto         port = get_with_default(adapter, configuration::Port, 7878);
+        auto port = get_with_default(adapter, configuration::Port, 7878);
 
         if (adapter.is_key_defined(configuration::AdditionalDevices))
         {
-          StringList    deviceList;
+          StringList deviceList;
           istringstream devices(adapter[configuration::AdditionalDevices]);
-          string        name;
+          string name;
           while (getline(devices, name, ','))
           {
             auto index = name.find_first_not_of(" \r\t");
@@ -815,7 +815,7 @@ namespace mtconnect
     if (!putHosts.empty())
     {
       istringstream toParse(putHosts);
-      string        putHost;
+      string putHost;
       do
       {
         getline(toParse, putHost, ',');
@@ -844,7 +844,7 @@ namespace mtconnect
     // Load namespaces, allow for local file system serving as well.
     if (reader.is_block_defined(namespaceType))
     {
-      const auto &        namespaces = reader.block(namespaceType);
+      const auto &namespaces = reader.block(namespaceType);
       std::vector<string> blocks;
       namespaces.get_blocks(blocks);
 
@@ -883,7 +883,7 @@ namespace mtconnect
   {
     if (reader.is_block_defined("Files"))
     {
-      const auto &        files = reader.block("Files");
+      const auto &files = reader.block("Files");
       std::vector<string> blocks;
       files.get_blocks(blocks);
 
@@ -949,7 +949,7 @@ namespace mtconnect
   {
     if (reader.is_block_defined("MimeTypes"))
     {
-      const auto &        types = reader.block("MimeTypes");
+      const auto &types = reader.block("MimeTypes");
       std::vector<string> keys;
       types.get_keys(keys);
 

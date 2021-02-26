@@ -64,10 +64,10 @@ namespace mtconnect
         }
         Parameter(const Parameter &o) = default;
 
-        std::string    m_name;
-        ParameterType  m_type {STRING};
+        std::string m_name;
+        ParameterType m_type {STRING};
         ParameterValue m_default;
-        UrlPart        m_part {PATH};
+        UrlPart m_part {PATH};
 
         bool operator<(const Parameter &o) const { return m_name < o.m_name; }
       };
@@ -79,14 +79,14 @@ namespace mtconnect
 
       struct Request
       {
-        std::string  m_body;
-        std::string  m_accepts;
-        std::string  m_contentType;
-        std::string  m_verb;
-        std::string  m_path;
-        std::string  m_foreignIp;
-        uint16_t     m_foreignPort;
-        QueryMap     m_query;
+        std::string m_body;
+        std::string m_accepts;
+        std::string m_contentType;
+        std::string m_verb;
+        std::string m_path;
+        std::string m_foreignIp;
+        uint16_t m_foreignPort;
+        QueryMap m_query;
         ParameterMap m_parameters;
 
         template <typename T>
@@ -125,7 +125,7 @@ namespace mtconnect
       }
 
       const ParameterList &getPathParameters() const { return m_pathParameters; }
-      const QuerySet &     getQueryParameters() const { return m_queryParameters; }
+      const QuerySet &getQueryParameters() const { return m_queryParameters; }
 
       bool matches(Request &request, Response &response) const
       {
@@ -185,8 +185,8 @@ namespace mtconnect
     protected:
       void pathParameters(std::string s)
       {
-        std::regex        reg("\\{([^}]+)\\}");
-        std::smatch       match;
+        std::regex reg("\\{([^}]+)\\}");
+        std::smatch match;
         std::stringstream pat;
 
         while (regex_search(s, match, reg))
@@ -204,7 +204,7 @@ namespace mtconnect
 
       void queryParameters(std::string s)
       {
-        std::regex  reg("([^=]+)=\\{([^}]+)\\}&?");
+        std::regex reg("([^=]+)=\\{([^}]+)\\}&?");
         std::smatch match;
 
         while (regex_search(s, match, reg))
@@ -222,7 +222,7 @@ namespace mtconnect
       void getTypeAndDefault(const std::string &type, Parameter &par)
       {
         std::string t(type);
-        auto        dp = t.find_first_of(':');
+        auto dp = t.find_first_of(':');
         std::string def;
         if (dp != std::string::npos)
         {
@@ -265,9 +265,9 @@ namespace mtconnect
 
           case DOUBLE:
           {
-            char *      ep = nullptr;
+            char *ep = nullptr;
             const char *sp = s.c_str();
-            double      r = strtod(sp, &ep);
+            double r = strtod(sp, &ep);
             if (ep == sp)
               throw ParameterError("cannot convert string '" + s + "' to double");
             return r;
@@ -275,9 +275,9 @@ namespace mtconnect
 
           case INTEGER:
           {
-            char *      ep = nullptr;
+            char *ep = nullptr;
             const char *sp = s.c_str();
-            int32_t     r = strtoll(sp, &ep, 10);
+            int32_t r = strtoll(sp, &ep, 10);
             if (ep == sp)
               throw ParameterError("cannot convert string '" + s + "' to integer");
 
@@ -286,9 +286,9 @@ namespace mtconnect
 
           case UNSIGNED_INTEGER:
           {
-            char *      ep = nullptr;
+            char *ep = nullptr;
             const char *sp = s.c_str();
-            uint64_t    r = strtoull(sp, &ep, 10);
+            uint64_t r = strtoull(sp, &ep, 10);
             if (ep == sp)
               throw ParameterError("cannot convert string '" + s + "' to unsigned integer");
 
@@ -302,12 +302,12 @@ namespace mtconnect
       }
 
     protected:
-      std::string         m_verb;
-      std::regex          m_pattern;
-      std::string         m_patternText;
-      ParameterList       m_pathParameters;
-      QuerySet            m_queryParameters;
-      Function            m_function;
+      std::string m_verb;
+      std::regex m_pattern;
+      std::string m_patternText;
+      ParameterList m_pathParameters;
+      QuerySet m_queryParameters;
+      Function m_function;
       static dlib::logger m_logger;
     };
   }  // namespace http_server

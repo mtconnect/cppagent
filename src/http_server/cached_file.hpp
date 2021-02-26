@@ -84,8 +84,8 @@ namespace mtconnect
       }
 
       std::unique_ptr<char[]> m_buffer;
-      size_t                  m_size = 0;
-      std::string             m_mimeType;
+      size_t m_size = 0;
+      std::string m_mimeType;
     };
   }  // namespace http_server
 }  // namespace mtconnect

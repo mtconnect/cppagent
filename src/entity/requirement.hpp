@@ -107,7 +107,7 @@ namespace mtconnect
         m_entity = s;
       }
       virtual EntityError *dup() const noexcept { return new EntityError(*this); }
-      const std::string &  getEntity() const { return m_entity; }
+      const std::string &getEntity() const { return m_entity; }
 
     protected:
       std::string m_text;
@@ -144,7 +144,7 @@ namespace mtconnect
         m_text.clear();
         m_property = p;
       }
-      EntityError *      dup() const noexcept override { return new PropertyError(*this); }
+      EntityError *dup() const noexcept override { return new PropertyError(*this); }
       const std::string &getProperty() const { return m_property; }
 
     protected:
@@ -187,8 +187,8 @@ namespace mtconnect
           m_type(type)
       {
       }
-      Requirement(const std::string &name, ValueType type, FactoryPtr &o, bool required = true);
-      Requirement(const std::string &name, ValueType type, FactoryPtr &o, int lower, int upper);
+      Requirement(const std::string &name, ValueType type, FactoryPtr o, bool required = true);
+      Requirement(const std::string &name, ValueType type, FactoryPtr o, int lower, int upper);
       Requirement(const std::string &name, const ControlledVocab &vocab, bool required = true)
         : m_name(name),
           m_upperMultiplicity(1),
@@ -223,18 +223,18 @@ namespace mtconnect
         return *this;
       }
 
-      bool               isRequired() const { return m_lowerMultiplicity > 0; }
-      bool               isOptional() const { return !isRequired(); }
-      int                getUpperMultiplicity() const { return m_upperMultiplicity; }
-      int                getLowerMultiplicity() const { return m_lowerMultiplicity; }
+      bool isRequired() const { return m_lowerMultiplicity > 0; }
+      bool isOptional() const { return !isRequired(); }
+      int getUpperMultiplicity() const { return m_upperMultiplicity; }
+      int getLowerMultiplicity() const { return m_lowerMultiplicity; }
       std::optional<int> getSize() const { return m_size; }
-      const auto &       getMatcher() const { return m_matcher; }
-      void               setMatcher(MatcherPtr m) { m_matcher = m; }
+      const auto &getMatcher() const { return m_matcher; }
+      void setMatcher(MatcherPtr m) { m_matcher = m; }
       const std::string &getName() const { return m_name; }
-      ValueType          getType() const { return m_type; }
-      auto &             getFactory() const { return m_factory; }
-      void               setFactory(FactoryPtr &f) { m_factory = f; }
-      void               setMultiplicity(int lower, int upper)
+      ValueType getType() const { return m_type; }
+      auto &getFactory() const { return m_factory; }
+      void setFactory(FactoryPtr &f) { m_factory = f; }
+      void setMultiplicity(int lower, int upper)
       {
         m_upperMultiplicity = upper;
         m_lowerMultiplicity = lower;
@@ -269,15 +269,15 @@ namespace mtconnect
       }
 
     protected:
-      std::string        m_name;
-      int                m_upperMultiplicity;
-      int                m_lowerMultiplicity;
+      std::string m_name;
+      int m_upperMultiplicity;
+      int m_lowerMultiplicity;
       std::optional<int> m_size;
-      ValueType          m_type;
-      MatcherPtr         m_matcher;
-      FactoryPtr         m_factory;
-      Pattern            m_pattern;
-      VocabSet           m_vocabulary;
+      ValueType m_type;
+      MatcherPtr m_matcher;
+      FactoryPtr m_factory;
+      Pattern m_pattern;
+      VocabSet m_vocabulary;
     };
 
     // Inlines

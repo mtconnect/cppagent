@@ -59,7 +59,7 @@ namespace mtconnect
     void configureLogger(ConfigReader &reader);
     void loadConfig(std::istream &file);
 
-    void         setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
+    void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
     const Agent *getAgent() const { return m_agent.get(); }
 
     const RollingFileLogger *getLogger() const { return m_loggerFile.get(); }
@@ -68,15 +68,15 @@ namespace mtconnect
 
   protected:
     Device *defaultDevice();
-    void    loadAdapters(ConfigReader &reader, const ConfigOptions &options);
-    void    loadAllowPut(ConfigReader &reader, http_server::Server *server);
-    void    loadNamespace(ConfigReader &reader, const char *namespaceType,
-                          http_server::FileCache *cache, XmlPrinter *printer,
-                          NamespaceFunction callback);
-    void    loadFiles(XmlPrinter *xmlPrinter, ConfigReader &reader, http_server::FileCache *cache);
-    void    loadStyle(ConfigReader &reader, const char *styleName, http_server::FileCache *cache,
-                      XmlPrinter *printer, StyleFunction styleFunction);
-    void    loadTypes(ConfigReader &reader, http_server::FileCache *cache);
+    void loadAdapters(ConfigReader &reader, const ConfigOptions &options);
+    void loadAllowPut(ConfigReader &reader, http_server::Server *server);
+    void loadNamespace(ConfigReader &reader, const char *namespaceType,
+                       http_server::FileCache *cache, XmlPrinter *printer,
+                       NamespaceFunction callback);
+    void loadFiles(XmlPrinter *xmlPrinter, ConfigReader &reader, http_server::FileCache *cache);
+    void loadStyle(ConfigReader &reader, const char *styleName, http_server::FileCache *cache,
+                   XmlPrinter *printer, StyleFunction styleFunction);
+    void loadTypes(ConfigReader &reader, http_server::FileCache *cache);
 
     void LoggerHook(const std::string &loggerName, const dlib::log_level &l,
                     const dlib::uint64 threadId, const char *message);
@@ -86,17 +86,17 @@ namespace mtconnect
     void monitorThread();
 
   protected:
-    std::unique_ptr<Agent>             m_agent;
-    pipeline::PipelineContextPtr       m_pipelineContext;
-    std::unique_ptr<adapter::Handler>  m_adapterHandler;
+    std::unique_ptr<Agent> m_agent;
+    pipeline::PipelineContextPtr m_pipelineContext;
+    std::unique_ptr<adapter::Handler> m_adapterHandler;
     std::unique_ptr<RollingFileLogger> m_loggerFile;
-    std::string                        m_version;
-    bool                               m_monitorFiles = false;
-    int                                m_minimumConfigReloadAge = 15;
-    std::string                        m_devicesFile;
-    bool                               m_restart = false;
-    std::filesystem::path              m_exePath;
-    std::filesystem::path              m_working;
-    bool                               m_pretty = false;
+    std::string m_version;
+    bool m_monitorFiles = false;
+    int m_minimumConfigReloadAge = 15;
+    std::string m_devicesFile;
+    bool m_restart = false;
+    std::filesystem::path m_exePath;
+    std::filesystem::path m_working;
+    bool m_pretty = false;
   };
 }  // namespace mtconnect

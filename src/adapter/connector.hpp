@@ -63,7 +63,7 @@ namespace mtconnect
       virtual void connected() = 0;
 
       // heartbeats
-      bool                      heartbeats() const { return m_heartbeats; }
+      bool heartbeats() const { return m_heartbeats; }
       std::chrono::milliseconds heartbeatFrequency() const { return m_heartbeatFrequency; }
 
       // Collect data and until it is \n terminated
@@ -72,7 +72,7 @@ namespace mtconnect
       // Send a command to the adapter
       void sendCommand(const std::string &command);
 
-      unsigned int       getPort() const { return m_port; }
+      unsigned int getPort() const { return m_port; }
       const std::string &getServer() const { return m_server; }
 
       std::chrono::seconds getLegacyTimeout() const
@@ -107,14 +107,14 @@ namespace mtconnect
       bool m_realTime;
 
       // Heartbeats
-      bool                      m_heartbeats = false;
+      bool m_heartbeats = false;
       std::chrono::milliseconds m_heartbeatFrequency = std::chrono::milliseconds {HEARTBEAT_FREQ};
       std::chrono::milliseconds m_legacyTimeout = std::chrono::milliseconds {600000};
       std::chrono::time_point<std::chrono::system_clock> m_lastHeartbeat;
       std::chrono::time_point<std::chrono::system_clock> m_lastSent;
 
       std::mutex m_commandLock;
-      bool       m_connectionActive;
+      bool m_connectionActive;
       std::mutex m_connectionMutex;
       ;
       std::condition_variable m_connectionCondition;

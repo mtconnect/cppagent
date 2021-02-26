@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
 #include "composition.hpp"
+#include "configuration/configuration.hpp"
 #include "utilities.hpp"
 
 #include <list>
@@ -40,7 +40,7 @@ namespace mtconnect
   class Device;
   class Agent;
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
-
+  using namespace device_model::configuration;
   class Component
   {
   public:
@@ -62,10 +62,10 @@ namespace mtconnect
       }
 
       ReferenceType m_type;
-      std::string   m_id;
-      std::string   m_name;
-      DataItemPtr   m_dataItem;
-      Component *   m_component;
+      std::string m_id;
+      std::string m_name;
+      DataItemPtr m_dataItem;
+      Component *m_component;
     };
 
   public:
@@ -90,7 +90,9 @@ namespace mtconnect
     const std::string &getUuid() const { return m_uuid; }
     const std::string &getDescriptionBody() const { return m_descriptionBody; }
     const std::string &getPrefix() const { return m_prefix; }
-    const auto &       getConfiguration() const { return m_configuration; }
+    
+    const auto &getConfiguration() const { return m_configuration; }
+    void setConfiguration(std::unique_ptr<Configuration> &conf) { m_configuration = std::move(conf); }
 
     // Setter methods
     void setUuid(const std::string &uuid)
@@ -118,11 +120,6 @@ namespace mtconnect
     void addDescription(std::string body, const std::map<std::string, std::string> &attributes);
     const std::map<std::string, std::string> &getDescription() const { return m_description; }
 
-    void addConfiguration(std::unique_ptr<ComponentConfiguration> &configuration)
-    {
-      m_configuration.emplace_back(std::move(configuration));
-    }
-
     // Get the device that any component is associated with
     Device *getDevice();
 
@@ -136,26 +133,19 @@ namespace mtconnect
       m_children.emplace_back(child);
     }
     std::list<Component *> &getChildren() { return m_children; }
-
-    // Add and get composition...
-    void addComposition(std::unique_ptr<Composition> &composition)
-    {
-      m_compositions.emplace_back(std::move(composition));
-    }
-    const std::list<std::unique_ptr<Composition>> &getCompositions() const
-    {
-      return m_compositions;
-    }
+    
+    const auto &getCompositions() const { return m_compositions; }
+    void setCompositions(std::unique_ptr<Composition> &comp) { m_compositions = std::move(comp); }
 
     // Add to/get the component's std::list of data items
-    virtual void                  addDataItem(DataItemPtr dataItem);
+    virtual void addDataItem(DataItemPtr dataItem);
     const std::list<DataItemPtr> &getDataItems() const { return m_dataItems; }
 
     bool operator<(const Component &comp) const { return m_id < comp.getId(); }
     bool operator==(const Component &comp) const { return m_id == comp.getId(); }
 
     // References
-    void        addReference(Reference &reference) { m_references.emplace_back(reference); }
+    void addReference(Reference &reference) { m_references.emplace_back(reference); }
     const auto &getReferences() const { return m_references; }
 
     void resolveReferences();
@@ -163,8 +153,8 @@ namespace mtconnect
   protected:
     // Return a map of attributes of all the component specs
     std::map<std::string, std::string> buildAttributes() const;
-    void                               reBuildAttributes() { m_attributes = buildAttributes(); }
-    void                               setParent(Component *parent);
+    void reBuildAttributes() { m_attributes = buildAttributes(); }
+    void setParent(Component *parent);
 
   protected:
     // Unique ID for each component
@@ -186,14 +176,14 @@ namespace mtconnect
     double m_sampleInterval;
 
     // Description of itself
-    std::map<std::string, std::string>                 m_description;
-    std::string                                        m_descriptionBody;
-    std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
+    std::map<std::string, std::string> m_description;
+    std::string m_descriptionBody;
+    std::unique_ptr<Configuration> m_configuration;
 
     // Component relationships
     // Pointer to the parent component
     Component *m_parent;
-    Device *   m_device;
+    Device *m_device;
 
     // Each component keeps track of it's children in a std::list
     std::list<Component *> m_children;
@@ -202,7 +192,7 @@ namespace mtconnect
     std::list<DataItemPtr> m_dataItems;
 
     // List of all the compositions
-    std::list<std::unique_ptr<Composition>> m_compositions;
+    std::unique_ptr<Composition> m_compositions;
 
     // The set of attribtues
     std::map<std::string, std::string> m_attributes;

@@ -70,7 +70,7 @@ namespace mtconnect
 
     FactoryPtr Factory::deepCopy() const
     {
-      auto                        copy = make_shared<Factory>(*this);
+      auto copy = make_shared<Factory>(*this);
       map<FactoryPtr, FactoryPtr> factories;
       copy->_deepCopy(factories);
 

@@ -40,7 +40,7 @@ namespace mtconnect
       {
       }
       ~Timestamped() = default;
-      Timestamp             m_timestamp;
+      Timestamp m_timestamp;
       std::optional<double> m_duration;
     };
     using TimestampedPtr = std::shared_ptr<Timestamped>;
@@ -59,7 +59,7 @@ namespace mtconnect
       using Now = std::function<Timestamp()>;
       const EntityPtr operator()(const EntityPtr ptr) override
       {
-        TimestampedPtr             res;
+        TimestampedPtr res;
         std::optional<std::string> token;
         if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr);
             tokens && tokens->m_tokens.size() > 0)
@@ -84,15 +84,15 @@ namespace mtconnect
         return next(res);
       }
 
-      void             extractTimestamp(const std::string &token, TimestampedPtr &ts);
+      void extractTimestamp(const std::string &token, TimestampedPtr &ts);
       inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
 
       Now m_now;
 
     protected:
-      bool                     m_relativeTime {false};
+      bool m_relativeTime {false};
       std::optional<Timestamp> m_base;
-      Microseconds             m_offset;
+      Microseconds m_offset;
     };
 
     class IgnoreTimestamp : public ExtractTimestamp
@@ -104,7 +104,7 @@ namespace mtconnect
 
       const EntityPtr operator()(const EntityPtr ptr) override
       {
-        TimestampedPtr             res;
+        TimestampedPtr res;
         std::optional<std::string> token;
         if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr);
             tokens && tokens->m_tokens.size() > 0)

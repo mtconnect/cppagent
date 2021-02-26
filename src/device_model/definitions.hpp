@@ -80,6 +80,6 @@ namespace mtconnect
     virtual ~DataItemDefinition() = default;
 
     std::set<EntryDefinition> m_entries;
-    std::set<CellDefinition>  m_cells;
+    std::set<CellDefinition> m_cells;
   };
 }  // namespace mtconnect

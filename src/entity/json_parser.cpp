@@ -37,7 +37,7 @@ namespace mtconnect
 
       if (ef)
       {
-        Properties  properties;
+        Properties properties;
         EntityList* l {nullptr};
 
         if (ef->isList() && jNode.size() > 0)
@@ -136,8 +136,8 @@ namespace mtconnect
                                 ErrorList& errors)
     {
       EntityPtr entity;
-      auto      jsonObj = json::parse(document.c_str());
-      auto      entity_name = jsonObj.begin().key();
+      auto jsonObj = json::parse(document.c_str());
+      auto entity_name = jsonObj.begin().key();
 
       if (jsonObj.size() == 1)
       {

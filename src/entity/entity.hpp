@@ -73,12 +73,12 @@ namespace mtconnect
       {
         return (m_properties.count("LIST") > 0 && m_properties.size() > 1);
       }
-      const auto &      getName() const { return m_name; }
+      const auto &getName() const { return m_name; }
       const Properties &getProperties() const { return m_properties; }
-      const Value &     getProperty(const std::string &n) const
+      const Value &getProperty(const std::string &n) const
       {
         static Value noValue {std::monostate()};
-        auto         it = m_properties.find(n);
+        auto it = m_properties.find(n);
         if (it == m_properties.end())
           return noValue;
         else
@@ -107,13 +107,13 @@ namespace mtconnect
       Value &getValue()
       {
         static Value null;
-        auto         p = m_properties.find("VALUE");
+        auto p = m_properties.find("VALUE");
         if (p != m_properties.end())
           return p->second;
         else
           return null;
       }
-      const Value &             getValue() const { return getProperty("VALUE"); }
+      const Value &getValue() const { return getProperty("VALUE"); }
       std::optional<EntityList> getList(const std::string &name) const
       {
         auto &v = getProperty(name);
@@ -154,15 +154,15 @@ namespace mtconnect
         return OptionallyGet<T>("VALUE", m_properties);
       }
 
-      void              setOrder(const OrderMapPtr order) { m_order = order; }
+      void setOrder(const OrderMapPtr order) { m_order = order; }
       const OrderMapPtr getOrder() const { return m_order; }
-      auto              find(const std::string &name) { return m_properties.find(name); }
-      auto              erase(Properties::iterator &it) { return m_properties.erase(it); }
+      auto find(const std::string &name) { return m_properties.find(name); }
+      auto erase(Properties::iterator &it) { return m_properties.erase(it); }
 
       // Entity Factory
     protected:
-      QName       m_name;
-      Properties  m_properties;
+      QName m_name;
+      Properties m_properties;
       OrderMapPtr m_order;
     };
   }  // namespace entity

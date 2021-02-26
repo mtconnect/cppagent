@@ -6,7 +6,6 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "device_model/motion.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -18,6 +17,7 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::entity;
 
 class KinematicsTest : public testing::Test
 {
@@ -43,35 +43,36 @@ class KinematicsTest : public testing::Test
 
 TEST_F(KinematicsTest, ParseZAxisKinematics)
 {
+  using namespace mtconnect::entity;
   ASSERT_NE(nullptr, m_device);
-  
+
   auto linear = m_device->getComponentById("z");
   
-  ASSERT_EQ(1, linear->getConfiguration().size());
-  auto ci = linear->getConfiguration().begin();
+  auto &configurations_list = linear->getConfiguration();
+  ASSERT_TRUE(configurations_list);
+
+  auto ent = configurations_list->getEntity();
+  auto motion = ent->get<EntityPtr>("Motion");
   
-  auto model = dynamic_cast<const Motion*>(ci->get());
-  ASSERT_NE(nullptr, model);
+  EXPECT_EQ("Motion", motion->getName());
   
-  ASSERT_EQ("zax", model->m_attributes.find("id")->second);
-  ASSERT_EQ("PRISMATIC", model->m_attributes.find("type")->second);
-  ASSERT_EQ("DIRECT", model->m_attributes.find("actuation")->second);
-  ASSERT_EQ("machine", model->m_attributes.find("coordinateSystemIdRef")->second);
-  ASSERT_EQ("The linears Z kinematics", model->m_description);
-  
-  ASSERT_TRUE(model->m_geometry);
-  ASSERT_NE(0, model->m_geometry->m_location.index());
-  ASSERT_TRUE(holds_alternative<Origin>(model->m_geometry->m_location));
-  
-  const Origin &o = get<Origin>(model->m_geometry->m_location);
-  ASSERT_EQ(100.0, o.m_x);
-  ASSERT_EQ(101.0, o.m_y);
-  ASSERT_EQ(102.0, o.m_z);
-  
-  ASSERT_TRUE(model->m_geometry->m_axis);
-  ASSERT_EQ(0.0, model->m_geometry->m_axis->m_x);
-  ASSERT_EQ(0.1, model->m_geometry->m_axis->m_y);
-  ASSERT_EQ(1.0, model->m_geometry->m_axis->m_z);
+  ASSERT_EQ("zax", motion->get<string>("id"));
+  ASSERT_EQ("PRISMATIC", motion->get<string>("type"));
+  ASSERT_EQ("DIRECT", motion->get<string>("actuation"));
+  ASSERT_EQ("machine", motion->get<string>("coordinateSystemIdRef"));
+  ASSERT_EQ("The linears Z kinematics", motion->get<string>("Description"));
+   
+  auto origin = motion->get<Vector>("Origin");
+
+  ASSERT_EQ(100.0, origin[0]);
+  ASSERT_EQ(101.0, origin[1]);
+  ASSERT_EQ(102.0, origin[2]);
+
+  auto axis = motion->get<Vector>("Axis");
+
+  ASSERT_EQ(0.0, axis[0]);
+  ASSERT_EQ(0.1, axis[1]);
+  ASSERT_EQ(1.0, axis[2]);
 }
 
 TEST_F(KinematicsTest, ParseCAxisKinematics)
@@ -79,39 +80,36 @@ TEST_F(KinematicsTest, ParseCAxisKinematics)
   ASSERT_NE(nullptr, m_device);
   
   auto rot = m_device->getComponentById("c");
-  
-  ASSERT_EQ(1, rot->getConfiguration().size());
-  auto ci = rot->getConfiguration().begin();
-  
-  auto model = dynamic_cast<const Motion*>(ci->get());
-  ASSERT_NE(nullptr, model);
-  
-  ASSERT_EQ("spin", model->m_attributes.find("id")->second);
-  ASSERT_EQ("CONTINUOUS", model->m_attributes.find("type")->second);
-  ASSERT_EQ("DIRECT", model->m_attributes.find("actuation")->second);
-  ASSERT_EQ("machine", model->m_attributes.find("coordinateSystemIdRef")->second);
-  ASSERT_EQ("zax", model->m_attributes.find("parentIdRef")->second);
-  ASSERT_EQ("The spindle kinematics", model->m_description);
+  auto &cl = rot->getConfiguration();
+  ASSERT_TRUE(cl);
 
-  ASSERT_TRUE(model->m_geometry);
-  ASSERT_NE(0, model->m_geometry->m_location.index());
-  ASSERT_TRUE(holds_alternative<Transformation>(model->m_geometry->m_location));
+  auto ent = cl->getEntity();
+  auto motion = ent->get<EntityPtr>("Motion");
+    
+  ASSERT_EQ("spin", motion->get<string>("id"));
+  ASSERT_EQ("CONTINUOUS", motion->get<string>("type"));
+  ASSERT_EQ("DIRECT", motion->get<string>("actuation"));
+  ASSERT_EQ("machine", motion->get<string>("coordinateSystemIdRef"));
+  ASSERT_EQ("zax", motion->get<string>("parentIdRef"));
+  ASSERT_EQ("The spindle kinematics", motion->get<string>("Description"));
   
-  const Transformation &o = get<Transformation>(model->m_geometry->m_location);
-  ASSERT_TRUE(o.m_translation);
-  ASSERT_EQ(10.0, o.m_translation->m_x);
-  ASSERT_EQ(20.0, o.m_translation->m_y);
-  ASSERT_EQ(30.0, o.m_translation->m_z);
+  auto tf = motion->maybeGet<EntityPtr>("Transformation");
+  ASSERT_TRUE(tf);
+
+  auto tv = (*tf)->get<Vector>("Translation");
+  ASSERT_EQ(10.0, tv[0]);
+  ASSERT_EQ(20.0, tv[1]);
+  ASSERT_EQ(30.0, tv[2]);
   
-  ASSERT_TRUE(o.m_rotation);
-  ASSERT_EQ(90.0, o.m_rotation->m_roll);
-  ASSERT_EQ(0.0, o.m_rotation->m_pitch);
-  ASSERT_EQ(180.0, o.m_rotation->m_yaw);
-  
-  ASSERT_TRUE(model->m_geometry->m_axis);
-  ASSERT_EQ(0.0, model->m_geometry->m_axis->m_x);
-  ASSERT_EQ(0.5, model->m_geometry->m_axis->m_y);
-  ASSERT_EQ(1.0, model->m_geometry->m_axis->m_z);
+  auto rv = (*tf)->get<Vector>("Rotation");
+  ASSERT_EQ(90.0, rv[0]);
+  ASSERT_EQ(0.0, rv[1]);
+  ASSERT_EQ(180.0, rv[2]);
+
+  auto ax = motion->get<Vector>("Axis");
+  ASSERT_EQ(0.0, ax[0]);
+  ASSERT_EQ(0.5, ax[1]);
+  ASSERT_EQ(1.0, ax[2]);
 }
 
 #define ZAXIS_CONFIGURATION_PATH "//m:Linear[@id='z']/m:Configuration"
@@ -135,7 +133,6 @@ TEST_F(KinematicsTest, ZAxisXmlPrinting)
   }
 }
 
-
 #define ROTARY_CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define ROTARY_MOTION_PATH ROTARY_CONFIGURATION_PATH "/m:Motion"
 
@@ -158,7 +155,6 @@ TEST_F(KinematicsTest, RotaryXmlPrinting)
     ASSERT_XML_PATH_EQUAL(doc, ROTARY_MOTION_PATH "/m:Description" , "The spindle kinematics");
   }
 }
-
 
 TEST_F(KinematicsTest, ZAxisJsonPrinting)
 {
@@ -242,4 +238,3 @@ TEST_F(KinematicsTest, RotaryJsonPrinting)
 
   }
 }
-

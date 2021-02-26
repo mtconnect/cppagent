@@ -51,12 +51,12 @@ namespace mtconnect
         using namespace observation;
         std::lock_guard<TransformState> guard(*m_state);
 
-        auto  o = std::dynamic_pointer_cast<Observation>(entity);
-        auto  di = o->getDataItem();
+        auto o = std::dynamic_pointer_cast<Observation>(entity);
+        auto di = o->getDataItem();
         auto &id = di->getId();
 
         auto &values = m_state->m_values;
-        auto  old = values.find(id);
+        auto old = values.find(id);
         if (old != values.end() && old->second == o->getValue())
           return entity::EntityPtr();
 

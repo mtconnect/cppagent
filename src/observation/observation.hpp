@@ -70,7 +70,7 @@ namespace mtconnect
       }
 
       const auto getDataItem() const { return m_dataItem; }
-      auto       getSequence() const { return m_sequence; }
+      auto getSequence() const { return m_sequence; }
 
       void setTimestamp(const Timestamp &ts)
       {
@@ -91,7 +91,7 @@ namespace mtconnect
         m_unavailable = true;
         setProperty("VALUE", "UNAVAILABLE"s);
       }
-      bool         isUnavailable() const { return m_unavailable; }
+      bool isUnavailable() const { return m_unavailable; }
       virtual void setEntityName() { Entity::setQName(m_dataItem->getObservationName()); }
 
       bool operator<(const Observation &another) const
@@ -107,10 +107,10 @@ namespace mtconnect
       void clearResetTriggered() { m_properties.erase("resetTriggered"); }
 
     protected:
-      Timestamp   m_timestamp;
-      bool        m_unavailable {false};
+      Timestamp m_timestamp;
+      bool m_unavailable {false};
       DataItemPtr m_dataItem {nullptr};
-      uint64_t    m_sequence {0};
+      uint64_t m_sequence {0};
     };
 
     class Sample : public Observation
@@ -259,18 +259,18 @@ namespace mtconnect
         return nullptr;
       }
 
-      bool         replace(ConditionPtr &old, ConditionPtr &_new);
+      bool replace(ConditionPtr &old, ConditionPtr &_new);
       ConditionPtr deepCopy();
       ConditionPtr deepCopyAndRemove(ConditionPtr &old);
 
       const std::string &getCode() const { return m_code; }
-      Level              getLevel() const { return m_level; }
-      ConditionPtr       getPrev() const { return m_prev; }
-      void               appendTo(ConditionPtr cond) { m_prev = cond; }
+      Level getLevel() const { return m_level; }
+      ConditionPtr getPrev() const { return m_prev; }
+      void appendTo(ConditionPtr cond) { m_prev = cond; }
 
     protected:
-      std::string  m_code;
-      Level        m_level {NORMAL};
+      std::string m_code;
+      Level m_level {NORMAL};
       ConditionPtr m_prev;
     };
 

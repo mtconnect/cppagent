@@ -63,7 +63,7 @@ namespace mtconnect
     void addAssetsNamespace(const std::string &urn, const std::string &location,
                             const std::string &prefix);
 
-    void               setSchemaVersion(const std::string &version);
+    void setSchemaVersion(const std::string &version);
     const std::string &getSchemaVersion();
 
     void setDevicesStyle(const std::string &style);

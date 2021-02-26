@@ -264,6 +264,7 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
   ASSERT_EQ(string("Some Express..."), def.at("/value"_json_pointer).get<string>());
 }
 
+// TODO: Test extended asset suppot
 #if 0
 TEST_F(JsonPrinterAssetTest, UnknownAssetType)
 {

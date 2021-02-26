@@ -98,7 +98,7 @@ namespace mtconnect
       auto ef = factory->factoryFor(qname);
       if (ef)
       {
-        Properties  properties;
+        Properties properties;
         EntityList *l {nullptr};
         if (ef->isList())
         {

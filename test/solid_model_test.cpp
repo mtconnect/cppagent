@@ -6,7 +6,6 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "device_model/solid_model.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -18,6 +17,8 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::adapter;
+using namespace entity;
 
 class SolidModelTest : public testing::Test
 {
@@ -36,78 +37,65 @@ class SolidModelTest : public testing::Test
     m_agentTestHelper.reset();
   }
 
-  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
+  Adapter *m_adapter{nullptr};
   std::string m_agentId;
   Device *m_device{nullptr};
+  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
 TEST_F(SolidModelTest, ParseDeviceSolidModel)
 {
   ASSERT_NE(nullptr, m_device);
+
+  auto &cl = m_device->getConfiguration();
+  auto clc = cl->getEntity();
+  auto model = clc->get<EntityPtr>("SolidModel");
+
+  EXPECT_EQ("SolidModel", model->getName());
   
-  ASSERT_EQ(2, m_device->getConfiguration().size());
-    
-  auto ci = m_device->getConfiguration().begin();
-  ci++;
-    
-  auto model = dynamic_cast<const SolidModel*>(ci->get());
-  ASSERT_NE(nullptr, model);
+  ASSERT_EQ("dm", model->get<string>("id"));
+  ASSERT_EQ("STL", model->get<string>("mediaType"));
+  ASSERT_EQ("/models/foo.stl", model->get<string>("href"));
+  ASSERT_EQ("machine", model->get<string>("coordinateSystemIdRef"));
   
-  ASSERT_EQ("dm", model->m_attributes.find("id")->second);
-  ASSERT_EQ("/models/foo.stl", model->m_attributes.find("href")->second);
-  ASSERT_EQ("STL", model->m_attributes.find("mediaType")->second);
-  ASSERT_EQ("machine", model->m_attributes.find("coordinateSystemIdRef")->second);
-  ASSERT_EQ(model->m_attributes.end(), model->m_attributes.find("dummy"));
-  
-  ASSERT_TRUE(model->m_geometry);
-  ASSERT_NE(0, model->m_geometry->m_location.index());
-  ASSERT_TRUE(holds_alternative<Origin>(model->m_geometry->m_location));
-  
-  const Origin &o = get<Origin>(model->m_geometry->m_location);
-  ASSERT_EQ(10.0, o.m_x);
-  ASSERT_EQ(20.0, o.m_y);
-  ASSERT_EQ(30.0, o.m_z);
-  
-  ASSERT_TRUE(model->m_geometry->m_scale);
-  ASSERT_EQ(2.0, model->m_geometry->m_scale->m_scaleX);
-  ASSERT_EQ(3.0, model->m_geometry->m_scale->m_scaleY);
-  ASSERT_EQ(4.0, model->m_geometry->m_scale->m_scaleZ);
+  auto scale = model->get<Vector>("Scale");
+
+  ASSERT_EQ(2.0, scale[0]);
+  ASSERT_EQ(3.0, scale[1]);
+  ASSERT_EQ(4.0, scale[2]);
 }
 
 TEST_F(SolidModelTest, ParseRotarySolidModel)
 {
   ASSERT_NE(nullptr, m_device);
-  auto rotary = m_device->getComponentById("c");
   
-  ASSERT_EQ(1, rotary->getConfiguration().size());
+  auto rot = m_device->getComponentById("c");
+  auto &cl = rot->getConfiguration();
+  ASSERT_TRUE(cl);
+
+  auto clc = cl->getEntity();
+  auto model = clc->get<EntityPtr>("SolidModel");
+    
+  ASSERT_EQ("cm", model->get<string>("id"));
+  ASSERT_EQ("dm", model->get<string>("solidModelIdRef"));
+  ASSERT_EQ("spindle", model->get<string>("itemRef"));
+  ASSERT_EQ("STL", model->get<string>("mediaType"));
+  ASSERT_EQ("machine", model->get<string>("coordinateSystemIdRef"));
   
-  auto ci = rotary->getConfiguration().begin();
+  auto tf = model->maybeGet<EntityPtr>("Transformation");
+  ASSERT_TRUE(tf);
+
+  auto tv = (*tf)->get<Vector>("Translation");
+  ASSERT_EQ(10.0, tv[0]);
+  ASSERT_EQ(20.0, tv[1]);
+  ASSERT_EQ(30.0, tv[2]);
   
-  auto model = dynamic_cast<const SolidModel*>(ci->get());
-  ASSERT_NE(nullptr, model);
-  
-  ASSERT_EQ("cm", model->m_attributes.find("id")->second);
-  ASSERT_EQ("dm", model->m_attributes.find("solidModelIdRef")->second);
-  ASSERT_EQ("spindle", model->m_attributes.find("itemRef")->second);
-  ASSERT_EQ("STL", model->m_attributes.find("mediaType")->second);
-  ASSERT_EQ("machine", model->m_attributes.find("coordinateSystemIdRef")->second);
-  
-  ASSERT_TRUE(model->m_geometry);
-  ASSERT_NE(0, model->m_geometry->m_location.index());
-  ASSERT_TRUE(holds_alternative<Transformation>(model->m_geometry->m_location));
-  
-  const Transformation &t = get<Transformation>(model->m_geometry->m_location);
-  ASSERT_TRUE(t.m_translation);
-  ASSERT_EQ(10.0, t.m_translation->m_x);
-  ASSERT_EQ(20.0, t.m_translation->m_y);
-  ASSERT_EQ(30.0, t.m_translation->m_z);
-  
-  ASSERT_TRUE(t.m_rotation);
-  ASSERT_EQ(90.0, t.m_rotation->m_roll);
-  ASSERT_EQ(-90.0, t.m_rotation->m_pitch);
-  ASSERT_EQ(180.0, t.m_rotation->m_yaw);
-  
-  ASSERT_FALSE(model->m_geometry->m_scale);
+  auto rv = (*tf)->get<Vector>("Rotation");
+  ASSERT_EQ(90.0, rv[0]);
+  ASSERT_EQ(-90.0, rv[1]);
+  ASSERT_EQ(180.0, rv[2]);
+
+  ASSERT_FALSE(model->hasProperty("Scale"));
 }
 
 
@@ -125,9 +113,7 @@ TEST_F(SolidModelTest, DeviceXmlPrinting)
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@href" , "/models/foo.stl");
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@coordinateSystemIdRef" , "machine");
 
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "/m:Origin" , "10 20 30");
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "/m:Scale" , "2 3 4");
-
   }
 }
 
@@ -165,18 +151,11 @@ TEST_F(SolidModelTest, DeviceJsonPrinting)
     auto model = device.at("/Configuration/SolidModel"_json_pointer);
     ASSERT_TRUE(model.is_object());
     
-    ASSERT_EQ(6, model.size());
+    ASSERT_EQ(5, model.size());
     EXPECT_EQ("dm", model["id"]);
     EXPECT_EQ("STL", model["mediaType"]);
     EXPECT_EQ("/models/foo.stl", model["href"]);
     EXPECT_EQ("machine", model["coordinateSystemIdRef"]);
-
-    auto origin = model["Origin"];
-    ASSERT_TRUE(origin.is_array());
-    ASSERT_EQ(3, origin.size());
-    ASSERT_EQ(10.0, origin[0].get<double>());
-    ASSERT_EQ(20.0, origin[1].get<double>());
-    ASSERT_EQ(30.0, origin[2].get<double>());
     
     auto scale = model["Scale"];
     ASSERT_TRUE(scale.is_array());

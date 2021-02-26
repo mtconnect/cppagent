@@ -80,10 +80,10 @@ namespace mtconnect
       m_options = options;
 
       TransformPtr next = bind(make_shared<ShdrTokenizer>());
-      auto         identity = GetOption<string>(options, configuration::AdapterIdentity);
+      auto identity = GetOption<string>(options, configuration::AdapterIdentity);
 
       StringList devices;
-      auto       list = GetOption<StringList>(options, configuration::AdditionalDevices);
+      auto list = GetOption<StringList>(options, configuration::AdditionalDevices);
       if (list)
         devices = *list;
       auto device = GetOption<string>(options, configuration::Device);

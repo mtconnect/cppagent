@@ -33,7 +33,7 @@ namespace mtconnect
   {
     static dlib::logger g_logger("entity.xml.printer");
 
-    inline string stripUndeclaredNamespace(const QName &                qname,
+    inline string stripUndeclaredNamespace(const QName &qname,
                                            const unordered_set<string> &namespaces)
     {
       string name;
@@ -45,7 +45,7 @@ namespace mtconnect
       return name;
     }
 
-    static inline void addAttributes(xmlTextWriterPtr                writer,
+    static inline void addAttributes(xmlTextWriterPtr writer,
                                      const std::map<string, string> &attributes)
     {
       for (const auto &attr : attributes)
@@ -152,7 +152,7 @@ namespace mtconnect
     void printProperty(xmlTextWriterPtr writer, const Property &p,
                        const unordered_set<string> &namespaces)
     {
-      string      t;
+      string t;
       const char *s = toCharPtr(p.second, t);
       if (p.first == "VALUE")
       {
@@ -165,8 +165,8 @@ namespace mtconnect
       }
       else
       {
-        QName       name(p.first);
-        string      qname = stripUndeclaredNamespace(name, namespaces);
+        QName name(p.first);
+        string qname = stripUndeclaredNamespace(name, namespaces);
         AutoElement element(writer, qname);
         THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
       }
@@ -175,13 +175,13 @@ namespace mtconnect
     void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity,
                            const std::unordered_set<std::string> &namespaces)
     {
-      string      qname = stripUndeclaredNamespace(entity->getName(), namespaces);
+      string qname = stripUndeclaredNamespace(entity->getName(), namespaces);
       AutoElement element(writer, qname);
 
       list<Property> attributes;
       list<Property> elements;
-      auto &         properties = entity->getProperties();
-      const auto     order = entity->getOrder();
+      auto &properties = entity->getProperties();
+      const auto order = entity->getOrder();
 
       // Partition the properties
       for (const auto &prop : properties)

@@ -6,7 +6,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "device_model/relationships.hpp"
+#include "entity/json_printer.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -19,6 +19,7 @@ using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
+using namespace entity;
 
 class RelationshipTest : public testing::Test
 {
@@ -49,40 +50,40 @@ class RelationshipTest : public testing::Test
 TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
+
+  auto &configurations_list = m_component->getConfiguration();
+
+  ASSERT_TRUE(configurations_list);
+
+  auto configurations_entity = configurations_list->getEntity();
+  ASSERT_EQ(2, configurations_entity->getProperties().size());
   
-  ASSERT_EQ(2, m_component->getConfiguration().size());
+  auto relationships = configurations_entity->get<EntityPtr>("Relationships");
+  EXPECT_EQ("Relationships", relationships->getName());
+ 
+  const auto &rels = configurations_entity->getList("Relationships");
+  ASSERT_TRUE(rels);
   
-  const auto conf = m_component->getConfiguration().front().get();
-  ASSERT_EQ(typeid(Relationships), typeid(*conf));
+  ASSERT_EQ(2, rels->size());
+
+  auto it = rels->begin();
+
+  EXPECT_EQ("ref1", (*it)->get<string>("id")); 
+  EXPECT_EQ("Power", (*it)->get<string>("name"));
+  EXPECT_EQ("PEER", (*it)->get<string>("type"));
+  EXPECT_EQ("CRITICAL", (*it)->get<string>("criticality"));
+  EXPECT_EQ("power", (*it)->get<string>("idRef"));
   
-  const Relationships *rels = dynamic_cast<const Relationships*>(conf);
-  ASSERT_NE(nullptr, rels);
-  ASSERT_EQ(2, rels->getRelationships().size());
+  it++;
   
-  auto reli = rels->getRelationships().begin();
-  const auto rel1 = reli->get();
-  
-  ASSERT_EQ(typeid(ComponentRelationship), typeid(*rel1));
-  const auto crel = dynamic_cast<ComponentRelationship*>(rel1);
-  EXPECT_EQ("ref1", crel->m_id);
-  EXPECT_EQ("Power", crel->m_name);
-  EXPECT_EQ("PEER", crel->m_type);
-  EXPECT_EQ("CRITICAL", crel->m_criticality);
-  EXPECT_EQ("power", crel->m_idRef);
-  
-  reli++;
-  
-  const auto rel2 = reli->get();
-  
-  ASSERT_EQ(typeid(DeviceRelationship), typeid(*rel2));
-  const auto drel = dynamic_cast<DeviceRelationship*>(rel2);
-  EXPECT_EQ("ref2", drel->m_id);
-  EXPECT_EQ("coffee", drel->m_name);
-  EXPECT_EQ("PARENT", drel->m_type);
-  EXPECT_EQ("NON_CRITICAL", drel->m_criticality);
-  EXPECT_EQ("AUXILIARY", drel->m_role);
-  EXPECT_EQ("http://127.0.0.1:2000/coffee", drel->m_href);
-  EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", drel->m_deviceUuidRef);
+  EXPECT_EQ("ref2", (*it)->get<string>("id"));
+  EXPECT_EQ("coffee", (*it)->get<string>("name"));
+  EXPECT_EQ("PARENT", (*it)->get<string>("type"));
+  EXPECT_EQ("NON_CRITICAL", (*it)->get<string>("criticality"));
+  EXPECT_EQ("AUXILIARY", (*it)->get<string>("role"));
+  EXPECT_EQ("http://127.0.0.1:2000/coffee", (*it)->get<string>("href"));
+  EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", (*it)->get<string>("deviceUuidRef"));
+
 }
 
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
@@ -123,6 +124,7 @@ TEST_F(RelationshipTest, JsonPrinting)
     auto device = devices.at(1).at("/Device"_json_pointer);
 
     auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
+    
     auto relationships = rotary.at("/Configuration/Relationships"_json_pointer);
     ASSERT_TRUE(relationships.is_array());
     ASSERT_EQ(2_S, relationships.size());

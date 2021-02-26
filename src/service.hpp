@@ -29,24 +29,24 @@ namespace mtconnect
     MTConnectService();
     virtual ~MTConnectService() = default;
 
-    virtual int  main(int argc, char const *argv[]);
+    virtual int main(int argc, char const *argv[]);
     virtual void initialize(int argc, char const *argv[]) = 0;
     virtual void stop() = 0;
     virtual void start() = 0;
 
-    void               setName(std::string const &name) { m_name = name; }
+    void setName(std::string const &name) { m_name = name; }
     std::string const &name() const { return m_name; }
-    void               setDebug(bool debug) { m_isDebug = debug; }
+    void setDebug(bool debug) { m_isDebug = debug; }
 
   protected:
     std::string m_name;
     std::string m_configFile;
     std::string m_pidFile;
-    bool        m_isService = false;
-    bool        m_isDebug = false;
+    bool m_isService = false;
+    bool m_isDebug = false;
 
-    void        install();
-    void        remove();
+    void install();
+    void remove();
     static bool isElevated();
 
 #ifndef _WINDOWS

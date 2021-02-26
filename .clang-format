@@ -12,7 +12,6 @@ AllowShortIfStatementsOnASingleLine: false
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 4
 SpaceBeforeCpp11BracedList: true
-AlignConsecutiveDeclarations: true
 AlignEscapedNewlines: true
 BreakStringLiterals: true
 BinPackParameters: true

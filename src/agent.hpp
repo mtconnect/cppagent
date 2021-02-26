@@ -71,13 +71,13 @@ namespace mtconnect
       }
       RequestResult(const RequestResult &) = default;
 
-      std::string               m_body;
+      std::string m_body;
       http_server::ResponseCode m_status;
-      std::string               m_format;
+      std::string m_format;
     };
 
     // Load agent with the xml configuration
-    Agent(std::unique_ptr<http_server::Server> &   server,
+    Agent(std::unique_ptr<http_server::Server> &server,
           std::unique_ptr<http_server::FileCache> &cache, const std::string &configXmlPath,
           int bufferSize, int maxAssets, const std::string &version, int checkpointFreq = 1000,
           bool pretty = false);
@@ -93,19 +93,19 @@ namespace mtconnect
     void stop();
 
     // HTTP Server
-    auto                                        getServer() const { return m_server.get(); }
+    auto getServer() const { return m_server.get(); }
     std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
 
     // Add an adapter to the agent
-    void        addAdapter(adapter::Adapter *adapter, bool start = false);
+    void addAdapter(adapter::Adapter *adapter, bool start = false);
     const auto &getAdapters() const { return m_adapters; }
 
     // Get device from device map
-    Device *    getDeviceByName(const std::string &name);
-    Device *    getDeviceByName(const std::string &name) const;
-    Device *    findDeviceByUUIDorName(const std::string &idOrName) const;
+    Device *getDeviceByName(const std::string &name);
+    Device *getDeviceByName(const std::string &name) const;
+    Device *findDeviceByUUIDorName(const std::string &idOrName) const;
     const auto &getDevices() const { return m_devices; }
-    Device *    defaultDevice() const
+    Device *defaultDevice() const
     {
       if (m_devices.size() > 0)
       {
@@ -129,15 +129,15 @@ namespace mtconnect
                                               std::optional<Timestamp> timestamp = std::nullopt);
 
     // Asset management
-    void     addAsset(AssetPtr asset);
+    void addAsset(AssetPtr asset);
     AssetPtr addAsset(Device *device, const std::string &asset,
                       const std::optional<std::string> &id, const std::optional<std::string> &type,
                       const std::optional<std::string> &time, entity::ErrorList &errors);
-    bool     removeAsset(Device *device, const std::string &id,
-                         const std::optional<Timestamp> time = std::nullopt);
-    bool     removeAllAssets(const std::optional<std::string> device,
-                             const std::optional<std::string> type, const std::optional<Timestamp> time,
-                             AssetList &list);
+    bool removeAsset(Device *device, const std::string &id,
+                     const std::optional<Timestamp> time = std::nullopt);
+    bool removeAllAssets(const std::optional<std::string> device,
+                         const std::optional<std::string> type, const std::optional<Timestamp> time,
+                         AssetList &list);
 
     // Message when adapter has connected and disconnected
     void connecting(const std::string &adapter);
@@ -160,11 +160,11 @@ namespace mtconnect
       return m_circularBuffer.getFromBuffer(seq);
     }
     observation::SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
-    unsigned int                  getBufferSize() const { return m_circularBuffer.getBufferSize(); }
-    auto                          getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
-    auto        getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
+    unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
+    auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
+    auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
     const auto &getAssets() const { return m_assetBuffer.getAssets(); }
-    auto        getFileCache() { return m_fileCache.get(); }
+    auto getFileCache() { return m_fileCache.get(); }
 
     auto getAssetCount(const std::string &type, bool active = true) const
     {
@@ -181,26 +181,26 @@ namespace mtconnect
     auto getAgentDevice() { return m_agentDevice; }
 
     // MTConnect Requests
-    RequestResult probeRequest(const std::string &               format,
+    RequestResult probeRequest(const std::string &format,
                                const std::optional<std::string> &device = std::nullopt);
     RequestResult currentRequest(
         const std::string &format, const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &at = std::nullopt,
-        const std::optional<std::string> &                  path = std::nullopt);
+        const std::optional<std::string> &path = std::nullopt);
     RequestResult sampleRequest(
         const std::string &format, const int count = 100,
-        const std::optional<std::string> &                  device = std::nullopt,
+        const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
-        const std::optional<std::string> &                  path = std::nullopt);
+        const std::optional<std::string> &path = std::nullopt);
     RequestResult streamSampleRequest(
         http_server::Response &response, const std::string &format, const int interval,
         const int heartbeat, const int count = 100,
-        const std::optional<std::string> &                  device = std::nullopt,
+        const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
-        const std::optional<std::string> &                  path = std::nullopt);
+        const std::optional<std::string> &path = std::nullopt);
     RequestResult streamCurrentRequest(http_server::Response &response, const std::string &format,
-                                       const int                         interval,
+                                       const int interval,
                                        const std::optional<std::string> &device = std::nullopt,
                                        const std::optional<std::string> &path = std::nullopt);
     RequestResult assetRequest(const std::string &format, const int32_t count, const bool removed,
@@ -212,19 +212,19 @@ namespace mtconnect
                                   const std::optional<std::string> &device = std::nullopt,
                                   const std::optional<std::string> &uuid = std::nullopt);
     RequestResult deleteAssetRequest(const std::string &format, const std::list<std::string> &ids);
-    RequestResult deleteAllAssetsRequest(const std::string &               format,
+    RequestResult deleteAllAssetsRequest(const std::string &format,
                                          const std::optional<std::string> &device = std::nullopt,
                                          const std::optional<std::string> &type = std::nullopt);
     RequestResult putObservationRequest(const std::string &format, const std::string &device,
                                         const http_server::Routing::QueryMap observations,
-                                        const std::optional<std::string> &   time = std::nullopt);
+                                        const std::optional<std::string> &time = std::nullopt);
 
     // For debugging
     void setLogStreamData(bool log) { m_logStreamData = log; }
 
     // Get the printer for a type
     const std::string acceptFormat(const std::string &accepts) const;
-    Printer *         getPrinter(const std::string &aType) const
+    Printer *getPrinter(const std::string &aType) const
     {
       auto printer = m_printers.find(aType);
       if (printer != m_printers.end())
@@ -290,23 +290,23 @@ namespace mtconnect
 
     // Verification methods
     template <typename T>
-    void    checkRange(const Printer *printer, const T value, const T min, const T max,
-                       const std::string &param, bool notZero = false) const;
-    void    checkPath(const Printer *printer, const std::optional<std::string> &path,
-                      const Device *device, observation::FilterSet &filter) const;
+    void checkRange(const Printer *printer, const T value, const T min, const T max,
+                    const std::string &param, bool notZero = false) const;
+    void checkPath(const Printer *printer, const std::optional<std::string> &path,
+                   const Device *device, observation::FilterSet &filter) const;
     Device *checkDevice(const Printer *printer, const std::string &uuid) const;
 
   protected:
     // Unique id based on the time of creation
     uint64_t m_instanceId;
-    bool     m_initialized {false};
+    bool m_initialized {false};
 
     // HTTP Server
-    std::unique_ptr<http_server::Server>    m_server;
+    std::unique_ptr<http_server::Server> m_server;
     std::unique_ptr<http_server::FileCache> m_fileCache;
 
     // Pointer to the configuration file for node access
-    std::unique_ptr<XmlParser>                      m_xmlParser;
+    std::unique_ptr<XmlParser> m_xmlParser;
     std::map<std::string, std::unique_ptr<Printer>> m_printers;
 
     // Circular Buffer
@@ -319,10 +319,10 @@ namespace mtconnect
     AssetBuffer m_assetBuffer;
 
     // Data containers
-    std::list<adapter::Adapter *>                m_adapters;
-    std::list<Device *>                          m_devices;
-    std::unordered_map<std::string, Device *>    m_deviceNameMap;
-    std::unordered_map<std::string, Device *>    m_deviceUuidMap;
+    std::list<adapter::Adapter *> m_adapters;
+    std::list<Device *> m_devices;
+    std::unordered_map<std::string, Device *> m_deviceNameMap;
+    std::unordered_map<std::string, Device *> m_deviceUuidMap;
     std::unordered_map<std::string, DataItemPtr> m_dataItemMap;
 
     // Loopback

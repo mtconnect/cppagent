@@ -67,11 +67,11 @@ namespace mtconnect
       }
 
     private:
-      mutable std::recursive_mutex        m_mutex;
+      mutable std::recursive_mutex m_mutex;
       mutable std::condition_variable_any m_cv;
 
       std::list<ChangeSignaler *> m_signalers;
-      volatile uint64_t           m_sequence = UINT64_MAX;
+      volatile uint64_t m_sequence = UINT64_MAX;
 
     protected:
       friend class ChangeSignaler;
@@ -93,7 +93,7 @@ namespace mtconnect
     protected:
       // Observer Lists
       mutable std::recursive_mutex m_observerMutex;
-      std::list<ChangeObserver *>  m_observers;
+      std::list<ChangeObserver *> m_observers;
     };
   }  // namespace observation
 }  // namespace mtconnect

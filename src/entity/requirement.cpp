@@ -39,7 +39,7 @@ namespace mtconnect
   {
     static dlib::logger g_logger("EntityRequirement");
 
-    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f, bool required)
+    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, bool required)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
       if (type == ENTITY_LIST)
@@ -49,7 +49,7 @@ namespace mtconnect
       m_factory = f;
     }
 
-    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f, int lower,
+    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, int lower,
                              int upper)
       : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
     {
@@ -82,7 +82,7 @@ namespace mtconnect
         else if (holds_alternative<EntityList>(value))
         {
           const auto l = std::get<EntityList>(value);
-          int        count = 0;
+          int count = 0;
           for (const auto &e : l)
           {
             if (matches(e->getName()))
@@ -166,7 +166,7 @@ namespace mtconnect
       void operator()(const string &arg, DataSet &t) { t.parse(arg, m_table); }
       void operator()(const string &arg, int64_t &r)
       {
-        char *      ep = nullptr;
+        char *ep = nullptr;
         const char *sp = arg.c_str();
         r = strtoll(sp, &ep, 10);
         if (ep == sp)
@@ -174,7 +174,7 @@ namespace mtconnect
       }
       void operator()(const string &arg, double &r)
       {
-        char *      ep = nullptr;
+        char *ep = nullptr;
         const char *sp = arg.c_str();
         r = strtod(sp, &ep);
         if (ep == sp)
@@ -190,7 +190,7 @@ namespace mtconnect
         if (arg.empty())
           return;
 
-        char *      np(nullptr);
+        char *np(nullptr);
         const char *cp = arg.c_str();
 
         while (cp && *cp != '\0')
@@ -308,7 +308,7 @@ namespace mtconnect
       // Default
 
       ValueType m_type;
-      bool      m_table;
+      bool m_table;
     };
 
     bool ConvertValueToType(Value &value, ValueType type, bool table)

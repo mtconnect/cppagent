@@ -21,7 +21,6 @@
 #include "device_model/component.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
-#include "device_model/relationships.hpp"
 #include "observation/checkpoint.hpp"
 #include "utilities.hpp"
 
@@ -67,14 +66,12 @@ namespace mtconnect
     void handleChildren(xmlNodePtr components, Component *parent = nullptr,
                         Device *device = nullptr);
 
-    std::unique_ptr<Composition> handleComposition(xmlNodePtr composition);
-
     // Perform loading of references and set up relationships
     void handleReference(xmlNodePtr reference, Component *parent = nullptr);
 
   protected:
     // LibXML XML Doc
-    xmlDocPtr                                                                     m_doc = nullptr;
+    xmlDocPtr m_doc = nullptr;
     std::map<std::string, std::function<void(xmlNodePtr, Component *, Device *)>> m_handlers;
   };
 }  // namespace mtconnect

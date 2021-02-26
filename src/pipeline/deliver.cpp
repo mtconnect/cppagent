@@ -91,7 +91,7 @@ namespace mtconnect
         if (avg != lastAvg)
         {
           ErrorList errors;
-          auto      obs = Observation::make(
+          auto obs = Observation::make(
               di, Properties {{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
               system_clock::now(), errors);
           m_contract->deliverObservation(obs);

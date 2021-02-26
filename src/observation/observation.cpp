@@ -95,7 +95,7 @@ namespace mtconnect
       setProperties(dataItem, props);
       props.insert_or_assign("timestamp", timestamp);
 
-      bool   unavailable {false};
+      bool unavailable {false};
       string level;
       if (dataItem->isCondition())
       {

@@ -52,15 +52,15 @@ namespace mtconnect
 
       using EachDataItem = std::function<void(const DataItemPtr di)>;
 
-      virtual Device *    findDevice(const std::string &device) = 0;
+      virtual Device *findDevice(const std::string &device) = 0;
       virtual DataItemPtr findDataItem(const std::string &device, const std::string &name) = 0;
-      virtual void        eachDataItem(EachDataItem fun) = 0;
-      virtual void        deliverObservation(observation::ObservationPtr) = 0;
-      virtual void        deliverAsset(AssetPtr) = 0;
-      virtual void        deliverAssetCommand(entity::EntityPtr) = 0;
-      virtual void        deliverCommand(entity::EntityPtr) = 0;
-      virtual void        deliverConnectStatus(entity::EntityPtr, const StringList &devices,
-                                               bool autoAvailable) = 0;
+      virtual void eachDataItem(EachDataItem fun) = 0;
+      virtual void deliverObservation(observation::ObservationPtr) = 0;
+      virtual void deliverAsset(AssetPtr) = 0;
+      virtual void deliverAssetCommand(entity::EntityPtr) = 0;
+      virtual void deliverCommand(entity::EntityPtr) = 0;
+      virtual void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
+                                        bool autoAvailable) = 0;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

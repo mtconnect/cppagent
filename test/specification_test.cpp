@@ -6,7 +6,6 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "device_model/specifications.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -19,6 +18,7 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace entity;
 
 class SpecificationTest : public testing::Test
 {
@@ -45,35 +45,32 @@ class SpecificationTest : public testing::Test
 TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
-  
-  ASSERT_EQ(2, m_component->getConfiguration().size());
-    
-  auto ci = m_component->getConfiguration().begin();
-  // Get the second configuration.
-  ci++;
-  const auto conf = ci->get();
-  ASSERT_EQ(typeid(Specifications), typeid(*conf));
-  
-  const auto specs = dynamic_cast<const Specifications*>(conf);
-  ASSERT_NE(nullptr, specs);
-  ASSERT_EQ(3, specs->getSpecifications().size());
 
-  const auto &spec = specs->getSpecifications().front();
-  EXPECT_EQ("ROTARY_VELOCITY", spec->m_type);
-  EXPECT_EQ("ACTUAL", spec->m_subType);
-  EXPECT_EQ("REVOLUTION/MINUTE", spec->m_units);
-  EXPECT_EQ("speed_limit", spec->m_name);
-  EXPECT_EQ("cmotor", spec->m_compositionIdRef);
-  EXPECT_EQ("machine", spec->m_coordinateSystemIdRef);
-  EXPECT_EQ("c1", spec->m_dataItemIdRef);
-  EXPECT_EQ("Specification", spec->getClass());
-  EXPECT_FALSE(spec->hasGroups());
+  auto &configurations_list = m_component->getConfiguration();
+  ASSERT_TRUE(configurations_list);
 
-  EXPECT_EQ(10000.0, spec->getLimit("Maximum"));
-  EXPECT_EQ(100.0, spec->getLimit("Minimum"));
-  EXPECT_EQ(1000.0, spec->getLimit("Nominal"));
+  auto configurations_entity = configurations_list->getEntity();
+
+  const auto &specs = configurations_entity->getList("Specifications");
+  ASSERT_TRUE(specs);
+  ASSERT_EQ(3, specs->size());
+  
+  auto it = specs->begin();
+
+  EXPECT_EQ("spec", (*it)->get<string>("id"));
+  EXPECT_EQ("ROTARY_VELOCITY", (*it)->get<string>("type"));
+  EXPECT_EQ("ACTUAL", (*it)->get<string>("subType"));
+  EXPECT_EQ("REVOLUTION/MINUTE", (*it)->get<string>("units"));
+  EXPECT_EQ("speed_limit", (*it)->get<string>("name"));
+  EXPECT_EQ("cmotor", (*it)->get<string>("compositionIdRef"));
+  EXPECT_EQ("machine", (*it)->get<string>("coordinateSystemIdRef"));
+  EXPECT_EQ("c1", (*it)->get<string>("dataItemIdRef"));
+  EXPECT_EQ("Specification", (*it)->getName());
+
+  EXPECT_EQ(10000.0, get<double>((*it)->getProperty("Maximum")));
+  EXPECT_EQ(100.0, get<double>((*it)->getProperty("Minimum")));
+  EXPECT_EQ(1000.0, get<double>((*it)->getProperty("Nominal")));
 }
-
 
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
@@ -191,99 +188,83 @@ TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
 TEST_F(SpecificationTest, Parse17SpecificationValues)
 {
   ASSERT_NE(nullptr, m_component);
+  const auto &ci = m_component->getConfiguration();
+  ASSERT_TRUE(ci);
+  auto conf = ci->getEntity();
   
-  ASSERT_EQ(2, m_component->getConfiguration().size());
-  
-  auto ci = m_component->getConfiguration().begin();
   // Get the second configuration.
-  ci++;
-  const auto conf = ci->get();
-  ASSERT_EQ(typeid(Specifications), typeid(*conf));
+  const auto &specs = conf->getList("Specifications");
+  ASSERT_TRUE(specs);
+  ASSERT_EQ(3, specs->size());
   
-  const auto specs = dynamic_cast<const Specifications*>(conf);
-  ASSERT_NE(nullptr, specs);
-  ASSERT_EQ(3, specs->getSpecifications().size());
-  
-  auto si = specs->getSpecifications().begin();
+  auto si = specs->begin();
   
   // Advance to second specificaiton
   si++;
 
-  EXPECT_EQ("Specification", (*si)->getClass());
+  EXPECT_EQ("Specification", (*si)->getName());
 
-  EXPECT_EQ("spec1", (*si)->m_id);
-  EXPECT_EQ("LOAD", (*si)->m_type);
-  EXPECT_EQ("PERCENT", (*si)->m_units);
-  EXPECT_EQ("loadspec", (*si)->m_name);
-  EXPECT_EQ("MANUFACTURER", (*si)->m_originator);
+  EXPECT_EQ("spec1", (*si)->get<string>("id"));
+  EXPECT_EQ("LOAD", (*si)->get<string>("type"));
+  EXPECT_EQ("PERCENT", (*si)->get<string>("units"));
+  EXPECT_EQ("loadspec", (*si)->get<string>("name"));
+  EXPECT_EQ("MANUFACTURER", (*si)->get<string>("originator"));
   
-  EXPECT_FALSE((*si)->hasGroups());
-
-  EXPECT_EQ(1000.0, (*si)->getLimit("Maximum"));
-  EXPECT_EQ(-1000.0, (*si)->getLimit("Minimum"));
-  EXPECT_EQ(100.0, (*si)->getLimit("Nominal"));
-  EXPECT_EQ(500.0, (*si)->getLimit("UpperLimit"));
-  EXPECT_EQ(-500.0, (*si)->getLimit("LowerLimit"));
-  EXPECT_EQ(200.0, (*si)->getLimit("UpperWarning"));
-  EXPECT_EQ(-200.0, (*si)->getLimit("LowerWarning"));
+  EXPECT_EQ(1000.0, (*si)->get<double>("Maximum"));
+  EXPECT_EQ(-1000.0, (*si)->get<double>("Minimum"));
+  EXPECT_EQ(100.0, (*si)->get<double>("Nominal"));
+  EXPECT_EQ(500.0, (*si)->get<double>("UpperLimit"));
+  EXPECT_EQ(-500.0, (*si)->get<double>("LowerLimit"));
+  EXPECT_EQ(200.0, (*si)->get<double>("UpperWarning"));
+  EXPECT_EQ(-200.0, (*si)->get<double>("LowerWarning"));
 }
 
 TEST_F(SpecificationTest, ParseProcessSpecificationValues)
 {
   ASSERT_NE(nullptr, m_component);
   
-  ASSERT_EQ(2, m_component->getConfiguration().size());
-  
-  auto ci = m_component->getConfiguration().begin();
-  // Get the second configuration.
-  ci++;
-  const auto conf = ci->get();
-  ASSERT_EQ(typeid(Specifications), typeid(*conf));
-  
-  const auto specs = dynamic_cast<const Specifications*>(conf);
-  ASSERT_NE(nullptr, specs);
-  ASSERT_EQ(3, specs->getSpecifications().size());
-  
-  auto si = specs->getSpecifications().begin();
+  ASSERT_NE(nullptr, m_component);
+  const auto &ci = m_component->getConfiguration();
+  ASSERT_TRUE(ci);
+  auto conf = ci->getEntity();
+
+  const auto &specs = conf->getList("Specifications");
+  ASSERT_TRUE(specs);
+  ASSERT_EQ(3, specs->size());
+  auto si = specs->begin();
   
   // Advance to third specificaiton
   si++; si++;
-  EXPECT_EQ("ProcessSpecification", (*si)->getClass());
+  EXPECT_EQ("ProcessSpecification", (*si)->getName());
   
-  EXPECT_EQ("pspec1", (*si)->m_id);
-  EXPECT_EQ("LOAD", (*si)->m_type);
-  EXPECT_EQ("PERCENT", (*si)->m_units);
-  EXPECT_EQ("procspec", (*si)->m_name);
-  EXPECT_EQ("USER", (*si)->m_originator);
-  
-  EXPECT_TRUE((*si)->hasGroups());
-  auto groups = (*si)->getGroupKeys();
-  std::set<string> expected = { "SpecificationLimits", "AlarmLimits", "ControlLimits" };
-  ASSERT_EQ(expected, groups);
-  
-  const auto spec = (*si)->getGroup("SpecificationLimits");
-  EXPECT_TRUE(spec);
-  
-  EXPECT_EQ(500.0, spec->find("UpperLimit")->second);
-  EXPECT_EQ(50.0, spec->find("Nominal")->second);
-  EXPECT_EQ(-500.0, spec->find("LowerLimit")->second);
+  EXPECT_EQ("pspec1", (*si)->get<string>("id"));
+  EXPECT_EQ("LOAD", (*si)->get<string>("type"));
+  EXPECT_EQ("PERCENT", (*si)->get<string>("units"));
+  EXPECT_EQ("procspec", (*si)->get<string>("name"));
+  EXPECT_EQ("USER", (*si)->get<string>("originator"));
 
-  const auto control = (*si)->getGroup("ControlLimits");
-  EXPECT_TRUE(control);
+  auto specLimits = (*si)->get<EntityPtr>("SpecificationLimits");
+  ASSERT_TRUE(specLimits);
+  EXPECT_EQ(500.0, specLimits->get<double>("UpperLimit"));
+  EXPECT_EQ(50.0, specLimits->get<double>("Nominal"));
+  EXPECT_EQ(-500.0, specLimits->get<double>("LowerLimit"));
   
-  EXPECT_EQ(500.0, control->find("UpperLimit")->second);
-  EXPECT_EQ(200.0, control->find("UpperWarning")->second);
-  EXPECT_EQ(10, control->find("Nominal")->second);
-  EXPECT_EQ(-200.0, control->find("LowerWarning")->second);
-  EXPECT_EQ(-500.0, control->find("LowerLimit")->second);
+  auto control = (*si)->get<EntityPtr>("ControlLimits");
+  ASSERT_TRUE(control);
 
-  const auto alarm = (*si)->getGroup("ControlLimits");
+  EXPECT_EQ(500.0, control->get<double>("UpperLimit"));
+  EXPECT_EQ(200.0, control->get<double>("UpperWarning"));
+  EXPECT_EQ(10, control->get<double>("Nominal"));
+  EXPECT_EQ(-200.0, control->get<double>("LowerWarning"));
+  EXPECT_EQ(-500.0, control->get<double>("LowerLimit"));
+
+  auto alarm = (*si)->get<EntityPtr>("AlarmLimits");
   EXPECT_TRUE(alarm);
   
-  EXPECT_EQ(500.0, alarm->find("UpperLimit")->second);
-  EXPECT_EQ(200.0, alarm->find("UpperWarning")->second);
-  EXPECT_EQ(-200.0, alarm->find("LowerWarning")->second);
-  EXPECT_EQ(-500.0, alarm->find("LowerLimit")->second);
+  EXPECT_EQ(500.0, alarm->get<double>("UpperLimit"));
+  EXPECT_EQ(200.0, alarm->get<double>("UpperWarning"));
+  EXPECT_EQ(-200.0, alarm->get<double>("LowerWarning"));
+  EXPECT_EQ(-500.0, alarm->get<double>("LowerLimit"));
 }
 
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"

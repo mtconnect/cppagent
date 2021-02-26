@@ -124,7 +124,7 @@ namespace mtconnect
         if (conversion != m_conversions.end())
           return make_unique<UnitConversion>(conversion->second);
 
-        double           factor {1.0}, offset {0.0};
+        double factor {1.0}, offset {0.0};
         std::string_view source(from);
         std::string_view target(to);
 

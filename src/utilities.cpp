@@ -126,7 +126,7 @@ namespace mtconnect
     if (aPrefix.empty())
       return aPath;
 
-    string            newPath = aPath;
+    string newPath = aPath;
     string::size_type pos = 0u;
 
     // Special case for relative pathing

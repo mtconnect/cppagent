@@ -68,7 +68,7 @@ namespace mtconnect
       }
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
-      TransformPtr                    getptr() { return shared_from_this(); }
+      TransformPtr getptr() { return shared_from_this(); }
 
       const entity::EntityPtr next(const entity::EntityPtr entity)
       {
@@ -113,12 +113,12 @@ namespace mtconnect
           return m_guard(entity);
       }
       const Guard &getGuard() const { return m_guard; }
-      void         setGuard(const Guard &guard) { m_guard = guard; }
+      void setGuard(const Guard &guard) { m_guard = guard; }
 
     protected:
-      std::string   m_name;
+      std::string m_name;
       TransformList m_next;
-      Guard         m_guard;
+      Guard m_guard;
     };
 
     class NullTransform : public Transform

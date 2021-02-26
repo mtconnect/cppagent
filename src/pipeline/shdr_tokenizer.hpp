@@ -50,7 +50,7 @@ namespace mtconnect
 
       const entity::EntityPtr operator()(const entity::EntityPtr data) override
       {
-        auto &             body = data->getValue<std::string>();
+        auto &body = data->getValue<std::string>();
         entity::Properties props;
         if (auto source = data->maybeGet<std::string>("source"))
           props["source"] = *source;
@@ -88,15 +88,15 @@ namespace mtconnect
       static inline void tokenize(const std::string &data, TokenList &tokens)
       {
         using namespace std;
-        auto        cp = data.c_str();
+        auto cp = data.c_str();
         std::string token;
-        bool        copied {false};
+        bool copied {false};
         while (*cp != '\0')
         {
           while (*cp != '\0' && isspace(*cp))
             cp++;
 
-          auto        start = cp, orig = cp;
+          auto start = cp, orig = cp;
           const char *end = 0;
           if (*cp == '"')
           {

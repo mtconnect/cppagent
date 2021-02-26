@@ -98,7 +98,7 @@ namespace mtconnect
         m_nsLen = 0;
       }
 
-      const auto &           getQName() const { return *this; }
+      const auto &getQName() const { return *this; }
       const std::string_view getName() const
       {
         if (m_nsLen == 0)

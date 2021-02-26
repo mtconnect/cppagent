@@ -126,9 +126,9 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
   ASSERT_EQ("2021-01-19T10:00:10Z", format(timestamped->m_timestamp));
 }
 
-#if 0
-
 // TODO: Make sure these RelativeTime test cases are covered.
+
+#if 0
 
 TEST(AdapterTest, RelativeTime)
 {

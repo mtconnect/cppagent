@@ -40,7 +40,7 @@ namespace mtconnect
 
     // Default the rolling logger to change create a new file every 10M of data
     RollingFileLogger(std::string filename, int maxBackupIndex = 9,
-                      uint64_t        maxSize = 10ull * 1024ull * 1024ull,
+                      uint64_t maxSize = 10ull * 1024ull * 1024ull,
                       RollingSchedule schedule = NEVER);
 
     ~RollingFileLogger();
@@ -50,18 +50,18 @@ namespace mtconnect
     uint64_t getMaxSize() const { return m_maxSize; }
 
   protected:
-    void        rollover(uint64_t size);
+    void rollover(uint64_t size);
     std::time_t getFileAge();
 
   private:
     std::mutex m_fileLock;
 
-    std::string     m_name;
+    std::string m_name;
     dlib::directory m_directory;
-    dlib::file      m_file;
+    dlib::file m_file;
 
-    int             m_maxBackupIndex;
-    uint64_t        m_maxSize;
+    int m_maxBackupIndex;
+    uint64_t m_maxSize;
     RollingSchedule m_schedule;
 
     int m_fd;
