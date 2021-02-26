@@ -40,18 +40,9 @@ namespace mtconnect
       protected:
         entity::EntityPtr m_entity;
       };
-
-      class ExtendedConfiguration : public Configuration
-      {
-      public:
-        ExtendedConfiguration(const std::string &content) : m_content(content) {}
-        ~ExtendedConfiguration() override = default;
-
-        const std::string &getContent() const { return m_content; }
-
-      protected:
-        std::string m_content;
-      };
+      
+      // TODO: Need to support extended configuration
+      
     }  // namespace configuration
   }    // namespace device_model
 }  // namespace mtconnect
