@@ -430,353 +430,352 @@ namespace mtconnect
   {
     entity::XmlPrinter printer;
     printer.print(writer, compositions->getEntity(), {});
+  }
+
+  void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
+                                    const char *name) const
+  {
+    AutoElement ele(writer, name);
+    addAttributes(writer, component->getAttributes());
+
+    const auto &desc = component->getDescription();
+    const auto &body = component->getDescriptionBody();
+
+    if (!desc.empty() || !body.empty())
+      addSimpleElement(writer, "Description", body, desc);
+
+    const auto &configurations = component->getConfiguration();
+    if (configurations)
+    {
+      printConfiguration(writer, configurations);
     }
 
-    void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component * component,
-                                      const char *name) const
+    auto datum = component->getDataItems();
+
+    if (!datum.empty())
     {
-      AutoElement ele(writer, name);
-      addAttributes(writer, component->getAttributes());
+      AutoElement ele(writer, "DataItems");
 
-      const auto &desc = component->getDescription();
-      const auto &body = component->getDescriptionBody();
+      for (const auto &data : datum)
+        printDataItem(writer, data);
+    }
 
-      if (!desc.empty() || !body.empty())
-        addSimpleElement(writer, "Description", body, desc);
+    const auto children = component->getChildren();
 
-      const auto &configurations = component->getConfiguration();
-      if (configurations)
+    if (!children.empty())
+    {
+      AutoElement ele(writer, "Components");
+
+      for (const auto &child : children)
       {
-        printConfiguration(writer, configurations);
-      }
-
-      auto datum = component->getDataItems();
-
-      if (!datum.empty())
-      {
-        AutoElement ele(writer, "DataItems");
-
-        for (const auto &data : datum)
-          printDataItem(writer, data);
-      }
-
-      const auto children = component->getChildren();
-
-      if (!children.empty())
-      {
-        AutoElement ele(writer, "Components");
-
-        for (const auto &child : children)
+        const char *name = nullptr;
+        if (!child->getPrefix().empty())
         {
-          const char *name = nullptr;
-          if (!child->getPrefix().empty())
-          {
-            const auto ns = m_devicesNamespaces.find(child->getPrefix());
-            if (ns != m_devicesNamespaces.end())
-              name = child->getPrefixedClass().c_str();
-          }
-
-          if (!name)
-            name = child->getClass().c_str();
-
-          printProbeHelper(writer, child, name);
+          const auto ns = m_devicesNamespaces.find(child->getPrefix());
+          if (ns != m_devicesNamespaces.end())
+            name = child->getPrefixedClass().c_str();
         }
+
+        if (!name)
+          name = child->getClass().c_str();
+
+        printProbeHelper(writer, child, name);
       }
+    }
 
-      if (component->getCompositions())
+    if (component->getCompositions())
+    {
+      printComposition(writer, component->getCompositions());
+    }
+
+    if (!component->getReferences().empty())
+    {
+      AutoElement ele(writer, "References");
+
+      for (const auto &ref : component->getReferences())
       {
-        printComposition(writer, component->getCompositions());
-      }
-
-      if (!component->getReferences().empty())
-      {
-        AutoElement ele(writer, "References");
-
-        for (const auto &ref : component->getReferences())
+        if (m_schemaVersion >= "1.4")
         {
-          if (m_schemaVersion >= "1.4")
+          if (ref.m_type == Component::Reference::DATA_ITEM)
           {
-            if (ref.m_type == Component::Reference::DATA_ITEM)
-            {
-              addSimpleElement(writer, "DataItemRef", "",
-                               {{"idRef", ref.m_id}, {"name", ref.m_name}});
-            }
-            else if (ref.m_type == Component::Reference::COMPONENT)
-            {
-              addSimpleElement(writer, "ComponentRef", "",
-                               {{"idRef", ref.m_id}, {"name", ref.m_name}});
-            }
+            addSimpleElement(writer, "DataItemRef", "",
+                             {{"idRef", ref.m_id}, {"name", ref.m_name}});
           }
-          else if (ref.m_type == Component::Reference::DATA_ITEM)
+          else if (ref.m_type == Component::Reference::COMPONENT)
           {
-            addSimpleElement(writer, "Reference", "",
-                             {{"dataItemId", ref.m_id}, {"name", ref.m_name}});
+            addSimpleElement(writer, "ComponentRef", "",
+                             {{"idRef", ref.m_id}, {"name", ref.m_name}});
           }
         }
+        else if (ref.m_type == Component::Reference::DATA_ITEM)
+        {
+          addSimpleElement(writer, "Reference", "",
+                           {{"dataItemId", ref.m_id}, {"name", ref.m_name}});
+        }
       }
     }
+  }
 
-    void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItemPtr dataItem) const
+  void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItemPtr dataItem) const
+  {
+    entity::XmlPrinter printer;
+    printer.print(writer, dataItem, m_deviceNsSet);
+  }
+
+  string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
+                                 const uint64_t nextSeq, const uint64_t firstSeq,
+                                 const uint64_t lastSeq, ObservationList &observations) const
+  {
+    string ret;
+
+    try
     {
-      entity::XmlPrinter printer;
-      printer.print(writer, dataItem, m_deviceNsSet);
-    }
+      XmlWriter writer(m_pretty);
 
-    string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
-                                   const uint64_t nextSeq, const uint64_t firstSeq,
-                                   const uint64_t lastSeq, ObservationList &observations) const
-    {
-      string ret;
+      initXmlDoc(writer, eSTREAMS, instanceId, bufferSize, 0, 0, nextSeq, firstSeq, lastSeq);
 
-      try
+      AutoElement streams(writer, "Streams");
+
+      // Sort the vector by category.
+      if (observations.size() > 0)
       {
-        XmlWriter writer(m_pretty);
+        observations.sort(ObservationCompare);
 
-        initXmlDoc(writer, eSTREAMS, instanceId, bufferSize, 0, 0, nextSeq, firstSeq, lastSeq);
-
-        AutoElement streams(writer, "Streams");
-
-        // Sort the vector by category.
-        if (observations.size() > 0)
+        AutoElement deviceElement(writer);
         {
-          observations.sort(ObservationCompare);
-
-          AutoElement deviceElement(writer);
+          AutoElement componentStreamElement(writer);
           {
-            AutoElement componentStreamElement(writer);
-            {
-              AutoElement categoryElement(writer);
+            AutoElement categoryElement(writer);
 
-              for (auto &observation : observations)
+            for (auto &observation : observations)
+            {
+              const auto &dataItem = observation->getDataItem();
+              const auto &component = dataItem->getComponent();
+              const auto &device = component->getDevice();
+
+              if (deviceElement.key() != device->getId())
               {
-                const auto &dataItem = observation->getDataItem();
-                const auto &component = dataItem->getComponent();
-                const auto &device = component->getDevice();
+                categoryElement.reset("");
+                componentStreamElement.reset("");
 
-                if (deviceElement.key() != device->getId())
-                {
-                  categoryElement.reset("");
-                  componentStreamElement.reset("");
-
-                  deviceElement.reset("DeviceStream", device->getId());
-                  addAttribute(writer, "name", device->getName());
-                  addAttribute(writer, "uuid", device->getUuid());
-                }
-
-                if (componentStreamElement.key() != component->getId())
-                {
-                  categoryElement.reset("");
-
-                  componentStreamElement.reset("ComponentStream", component->getId());
-                  addAttribute(writer, "component", component->getClass());
-                  addAttribute(writer, "name", component->getName());
-                  addAttribute(writer, "componentId", component->getId());
-                }
-
-                categoryElement.reset(dataItem->getCategoryText());
-
-                addObservation(writer, observation);
+                deviceElement.reset("DeviceStream", device->getId());
+                addAttribute(writer, "name", device->getName());
+                addAttribute(writer, "uuid", device->getUuid());
               }
+
+              if (componentStreamElement.key() != component->getId())
+              {
+                categoryElement.reset("");
+
+                componentStreamElement.reset("ComponentStream", component->getId());
+                addAttribute(writer, "component", component->getClass());
+                addAttribute(writer, "name", component->getName());
+                addAttribute(writer, "componentId", component->getId());
+              }
+
+              categoryElement.reset(dataItem->getCategoryText());
+
+              addObservation(writer, observation);
             }
           }
         }
-
-        streams.reset("");
-        closeElement(writer);  // MTConnectStreams
-
-        ret = writer.getContent();
-      }
-      catch (string error)
-      {
-        g_logger << dlib::LERROR << "printSample: " << error;
-      }
-      catch (...)
-      {
-        g_logger << dlib::LERROR << "printSample: unknown error";
       }
 
-      return ret;
+      streams.reset("");
+      closeElement(writer);  // MTConnectStreams
+
+      ret = writer.getContent();
     }
-
-    string XmlPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
-                                   const unsigned int assetCount, const AssetList &assets) const
+    catch (string error)
     {
-      string ret;
-      try
-      {
-        XmlWriter writer(m_pretty);
-        initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull);
-
-        {
-          AutoElement ele(writer, "Assets");
-          entity::XmlPrinter printer;
-
-          for (const auto &asset : assets)
-          {
-            printer.print(writer, asset, m_assetsNsSet);
-          }
-        }
-
-        ret = writer.getContent();
-      }
-      catch (string error)
-      {
-        g_logger << dlib::LERROR << "printAssets: " << error;
-      }
-      catch (...)
-      {
-        g_logger << dlib::LERROR << "printAssets: unknown error";
-      }
-
-      return ret;
+      g_logger << dlib::LERROR << "printSample: " << error;
     }
-
-    void XmlPrinter::addObservation(xmlTextWriterPtr writer, ObservationPtr result) const
+    catch (...)
     {
-      entity::XmlPrinter printer;
-      printer.print(writer, result, m_streamsNsSet);
+      g_logger << dlib::LERROR << "printSample: unknown error";
     }
 
-    void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
-                                const unsigned int instanceId, const unsigned int bufferSize,
-                                const unsigned int assetBufferSize, const unsigned int assetCount,
-                                const uint64_t nextSeq, const uint64_t firstSeq,
-                                const uint64_t lastSeq, const map<string, int> *count) const
+    return ret;
+  }
+
+  string XmlPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
+                                 const unsigned int assetCount, const AssetList &assets) const
+  {
+    string ret;
+    try
     {
-      THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, nullptr, "UTF-8", nullptr));
+      XmlWriter writer(m_pretty);
+      initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull);
 
-      // TODO: Cache the locations and header attributes.
-      // Write the root element
-      string xmlType, style;
-      const map<string, SchemaNamespace> *namespaces;
-
-      switch (aType)
       {
-        case eERROR:
-          namespaces = &m_errorNamespaces;
-          style = m_errorStyle;
-          xmlType = "Error";
-          break;
+        AutoElement ele(writer, "Assets");
+        entity::XmlPrinter printer;
 
-        case eSTREAMS:
-          namespaces = &m_streamsNamespaces;
-          style = m_streamsStyle;
-          xmlType = "Streams";
-          break;
-
-        case eDEVICES:
-          namespaces = &m_devicesNamespaces;
-          style = m_devicesStyle;
-          xmlType = "Devices";
-          break;
-
-        case eASSETS:
-          namespaces = &m_assetsNamespaces;
-          style = m_assetsStyle;
-          xmlType = "Assets";
-          break;
-      }
-
-      if (!style.empty())
-      {
-        string pi = R"(xml-stylesheet type="text/xsl" href=")" + style + '"';
-        THROW_IF_XML2_ERROR(xmlTextWriterStartPI(writer, BAD_CAST pi.c_str()));
-        THROW_IF_XML2_ERROR(xmlTextWriterEndPI(writer));
-      }
-
-      string rootName = "MTConnect" + xmlType;
-      string xmlns = "urn:mtconnect.org:" + rootName + ":" + m_schemaVersion;
-      string location;
-
-      openElement(writer, rootName.c_str());
-
-      // Always make the default namespace and the m: namespace MTConnect default.
-      addAttribute(writer, "xmlns:m", xmlns);
-      addAttribute(writer, "xmlns", xmlns);
-
-      // Alwats add the xsi namespace
-      addAttribute(writer, "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-
-      string mtcLocation;
-
-      // Add in the other namespaces if they exist
-      for (const auto &ns : *namespaces)
-      {
-        // Skip the mtconnect ns (always m)
-        if (ns.first != "m")
+        for (const auto &asset : assets)
         {
-          string attr = "xmlns:" + ns.first;
-          addAttribute(writer, attr.c_str(), ns.second.mUrn);
-
-          if (location.empty() && !ns.second.mSchemaLocation.empty())
-          {
-            // Always take the first location. There should only be one location!
-            location = ns.second.mUrn + " " + ns.second.mSchemaLocation;
-          }
-        }
-        else if (!ns.second.mSchemaLocation.empty())
-        {
-          // This is the mtconnect namespace
-          mtcLocation = xmlns + " " + ns.second.mSchemaLocation;
+          printer.print(writer, asset, m_assetsNsSet);
         }
       }
 
-      // Write the schema location
-      if (location.empty() && !mtcLocation.empty())
-        location = mtcLocation;
-      else if (location.empty())
-        location = xmlns + " http://schemas.mtconnect.org/schemas/" + rootName + "_" +
-                   m_schemaVersion + ".xsd";
+      ret = writer.getContent();
+    }
+    catch (string error)
+    {
+      g_logger << dlib::LERROR << "printAssets: " << error;
+    }
+    catch (...)
+    {
+      g_logger << dlib::LERROR << "printAssets: unknown error";
+    }
 
-      addAttribute(writer, "xsi:schemaLocation", location);
+    return ret;
+  }
 
-      // Create the header
-      AutoElement header(writer, "Header");
+  void XmlPrinter::addObservation(xmlTextWriterPtr writer, ObservationPtr result) const
+  {
+    entity::XmlPrinter printer;
+    printer.print(writer, result, m_streamsNsSet);
+  }
 
-      addAttribute(writer, "creationTime", getCurrentTime(GMT));
+  void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
+                              const unsigned int instanceId, const unsigned int bufferSize,
+                              const unsigned int assetBufferSize, const unsigned int assetCount,
+                              const uint64_t nextSeq, const uint64_t firstSeq,
+                              const uint64_t lastSeq, const map<string, int> *count) const
+  {
+    THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, nullptr, "UTF-8", nullptr));
 
-      static std::string sHostname;
-      if (sHostname.empty())
+    // TODO: Cache the locations and header attributes.
+    // Write the root element
+    string xmlType, style;
+    const map<string, SchemaNamespace> *namespaces;
+
+    switch (aType)
+    {
+      case eERROR:
+        namespaces = &m_errorNamespaces;
+        style = m_errorStyle;
+        xmlType = "Error";
+        break;
+
+      case eSTREAMS:
+        namespaces = &m_streamsNamespaces;
+        style = m_streamsStyle;
+        xmlType = "Streams";
+        break;
+
+      case eDEVICES:
+        namespaces = &m_devicesNamespaces;
+        style = m_devicesStyle;
+        xmlType = "Devices";
+        break;
+
+      case eASSETS:
+        namespaces = &m_assetsNamespaces;
+        style = m_assetsStyle;
+        xmlType = "Assets";
+        break;
+    }
+
+    if (!style.empty())
+    {
+      string pi = R"(xml-stylesheet type="text/xsl" href=")" + style + '"';
+      THROW_IF_XML2_ERROR(xmlTextWriterStartPI(writer, BAD_CAST pi.c_str()));
+      THROW_IF_XML2_ERROR(xmlTextWriterEndPI(writer));
+    }
+
+    string rootName = "MTConnect" + xmlType;
+    string xmlns = "urn:mtconnect.org:" + rootName + ":" + m_schemaVersion;
+    string location;
+
+    openElement(writer, rootName.c_str());
+
+    // Always make the default namespace and the m: namespace MTConnect default.
+    addAttribute(writer, "xmlns:m", xmlns);
+    addAttribute(writer, "xmlns", xmlns);
+
+    // Alwats add the xsi namespace
+    addAttribute(writer, "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+
+    string mtcLocation;
+
+    // Add in the other namespaces if they exist
+    for (const auto &ns : *namespaces)
+    {
+      // Skip the mtconnect ns (always m)
+      if (ns.first != "m")
       {
-        if (dlib::get_local_hostname(sHostname))
-          sHostname = "localhost";
-      }
-      addAttribute(writer, "sender", sHostname);
-      addAttribute(writer, "instanceId", to_string(instanceId));
+        string attr = "xmlns:" + ns.first;
+        addAttribute(writer, attr.c_str(), ns.second.mUrn);
 
-      char version[32] = {0};
-      sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
-              AGENT_VERSION_BUILD);
-      addAttribute(writer, "version", version);
-
-      if (aType == eASSETS || aType == eDEVICES)
-      {
-        addAttribute(writer, "assetBufferSize", to_string(assetBufferSize));
-        addAttribute(writer, "assetCount", to_string(assetCount));
-      }
-
-      if (aType == eDEVICES || aType == eERROR || aType == eSTREAMS)
-      {
-        addAttribute(writer, "bufferSize", to_string(bufferSize));
-      }
-
-      if (aType == eSTREAMS)
-      {
-        // Add additional attribtues for streams
-        addAttribute(writer, "nextSequence", to_string(nextSeq));
-        addAttribute(writer, "firstSequence", to_string(firstSeq));
-        addAttribute(writer, "lastSequence", to_string(lastSeq));
-      }
-
-      if (aType == eDEVICES && count && !count->empty())
-      {
-        AutoElement ele(writer, "AssetCounts");
-
-        for (const auto &pair : *count)
+        if (location.empty() && !ns.second.mSchemaLocation.empty())
         {
-          addSimpleElement(writer, "AssetCount", to_string(pair.second),
-                           {{"assetType", pair.first}});
+          // Always take the first location. There should only be one location!
+          location = ns.second.mUrn + " " + ns.second.mSchemaLocation;
         }
+      }
+      else if (!ns.second.mSchemaLocation.empty())
+      {
+        // This is the mtconnect namespace
+        mtcLocation = xmlns + " " + ns.second.mSchemaLocation;
       }
     }
-  }  // namespace mtconnect
+
+    // Write the schema location
+    if (location.empty() && !mtcLocation.empty())
+      location = mtcLocation;
+    else if (location.empty())
+      location = xmlns + " http://schemas.mtconnect.org/schemas/" + rootName + "_" +
+                 m_schemaVersion + ".xsd";
+
+    addAttribute(writer, "xsi:schemaLocation", location);
+
+    // Create the header
+    AutoElement header(writer, "Header");
+
+    addAttribute(writer, "creationTime", getCurrentTime(GMT));
+
+    static std::string sHostname;
+    if (sHostname.empty())
+    {
+      if (dlib::get_local_hostname(sHostname))
+        sHostname = "localhost";
+    }
+    addAttribute(writer, "sender", sHostname);
+    addAttribute(writer, "instanceId", to_string(instanceId));
+
+    char version[32] = {0};
+    sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
+            AGENT_VERSION_BUILD);
+    addAttribute(writer, "version", version);
+
+    if (aType == eASSETS || aType == eDEVICES)
+    {
+      addAttribute(writer, "assetBufferSize", to_string(assetBufferSize));
+      addAttribute(writer, "assetCount", to_string(assetCount));
+    }
+
+    if (aType == eDEVICES || aType == eERROR || aType == eSTREAMS)
+    {
+      addAttribute(writer, "bufferSize", to_string(bufferSize));
+    }
+
+    if (aType == eSTREAMS)
+    {
+      // Add additional attribtues for streams
+      addAttribute(writer, "nextSequence", to_string(nextSeq));
+      addAttribute(writer, "firstSequence", to_string(firstSeq));
+      addAttribute(writer, "lastSequence", to_string(lastSeq));
+    }
+
+    if (aType == eDEVICES && count && !count->empty())
+    {
+      AutoElement ele(writer, "AssetCounts");
+
+      for (const auto &pair : *count)
+      {
+        addSimpleElement(writer, "AssetCount", to_string(pair.second), {{"assetType", pair.first}});
+      }
+    }
+  }
+}  // namespace mtconnect

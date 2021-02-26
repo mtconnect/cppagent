@@ -15,9 +15,10 @@
 //    limitations under the License.
 //
 
-#include "utilities.hpp"
-#include "entity.hpp"
 #include "description.hpp"
+
+#include "entity.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <map>
@@ -30,24 +31,21 @@ using namespace std;
 namespace mtconnect
 {
   using namespace entity;
-  
-  FactoryPtr Description::getFactory() 
+
+  FactoryPtr Description::getFactory()
   {
-    auto description = make_shared<Factory>(Requirements{
-        Requirement("manufacturer", false),
-        Requirement("model", false),
-        Requirement("serialNumber", false),
-        Requirement("station", false),
-        Requirement("VALUE", false)
-        });
-    
+    auto description = make_shared<Factory>(
+        Requirements {Requirement("manufacturer", false), Requirement("model", false),
+                      Requirement("serialNumber", false), Requirement("station", false),
+                      Requirement("VALUE", false)});
+
     return description;
   }
-  
+
   FactoryPtr Description::getRoot()
   {
     auto root = make_shared<Factory>(
-        Requirements{Requirement("Description", ENTITY, Description::getFactory(), false)});
+        Requirements {Requirement("Description", ENTITY, Description::getFactory(), false)});
 
     return root;
   }

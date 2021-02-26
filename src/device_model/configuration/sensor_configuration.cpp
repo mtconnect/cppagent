@@ -32,21 +32,21 @@ namespace mtconnect
         if (!sensorConfiguration)
         {
           auto channel = make_shared<Factory>(Requirements {
-            Requirement("number", true),
-            Requirement("name", false),
-            Requirement("Description", false),
-            Requirement("CalibrationDate", false),
-            Requirement("NextCalibrationDate", false),
-            Requirement("CalibrationInitials", false),
+              Requirement("number", true),
+              Requirement("name", false),
+              Requirement("Description", false),
+              Requirement("CalibrationDate", false),
+              Requirement("NextCalibrationDate", false),
+              Requirement("CalibrationInitials", false),
           });
-          
+
           auto channels = make_shared<Factory>(
-                                               Requirements {Requirement("Channel", ENTITY, channel, 1, Requirement::Infinite)});
-          
+              Requirements {Requirement("Channel", ENTITY, channel, 1, Requirement::Infinite)});
+
           sensorConfiguration = make_shared<Factory>(Requirements {
-            Requirement("FirmwareVersion", true), Requirement("CalibrationDate", false),
-            Requirement("NextCalibrationDate", false), Requirement("CalibrationInitials", false),
-            Requirement("Channels", ENTITY_LIST, channels, false)});
+              Requirement("FirmwareVersion", true), Requirement("CalibrationDate", false),
+              Requirement("NextCalibrationDate", false), Requirement("CalibrationInitials", false),
+              Requirement("Channels", ENTITY_LIST, channels, false)});
         }
 
         return sensorConfiguration;

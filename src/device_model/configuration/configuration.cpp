@@ -16,8 +16,9 @@
 //
 
 #include "configuration.hpp"
-#include "entity/factory.hpp"
+
 #include "coordinate_systems.hpp"
+#include "entity/factory.hpp"
 #include "motion.hpp"
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"
@@ -35,21 +36,21 @@ namespace mtconnect
     {
       FactoryPtr Configuration::getFactory()
       {
-        static auto configuration = make_shared<Factory>(Requirements{
-          {"SensorConfiguration", ENTITY, SensorConfiguration::getFactory(), false},
-          {"Relationships", ENTITY_LIST, Relationships::getFactory(), false},
-          {"SolidModel", ENTITY, SolidModel::getFactory(), false},
-          {"Motion", ENTITY, Motion::getFactory(), false},
-          {"CoordinateSystems", ENTITY_LIST, CoordinateSystems::getFactory(), false},
-          {"Specifications", ENTITY_LIST, Specifications::getFactory(), false}});
+        static auto configuration = make_shared<Factory>(Requirements {
+            {"SensorConfiguration", ENTITY, SensorConfiguration::getFactory(), false},
+            {"Relationships", ENTITY_LIST, Relationships::getFactory(), false},
+            {"SolidModel", ENTITY, SolidModel::getFactory(), false},
+            {"Motion", ENTITY, Motion::getFactory(), false},
+            {"CoordinateSystems", ENTITY_LIST, CoordinateSystems::getFactory(), false},
+            {"Specifications", ENTITY_LIST, Specifications::getFactory(), false}});
 
         return configuration;
       }
 
       FactoryPtr Configuration::getRoot()
       {
-        static auto root = make_shared<Factory>(Requirements {
-          {"Configuration", ENTITY, Configuration::getFactory(), false}});
+        static auto root = make_shared<Factory>(
+            Requirements {{"Configuration", ENTITY, Configuration::getFactory(), false}});
 
         return root;
       }

@@ -90,9 +90,12 @@ namespace mtconnect
     const std::string &getUuid() const { return m_uuid; }
     const std::string &getDescriptionBody() const { return m_descriptionBody; }
     const std::string &getPrefix() const { return m_prefix; }
-    
+
     const auto &getConfiguration() const { return m_configuration; }
-    void setConfiguration(std::unique_ptr<Configuration> &conf) { m_configuration = std::move(conf); }
+    void setConfiguration(std::unique_ptr<Configuration> &conf)
+    {
+      m_configuration = std::move(conf);
+    }
 
     // Setter methods
     void setUuid(const std::string &uuid)
@@ -133,7 +136,7 @@ namespace mtconnect
       m_children.emplace_back(child);
     }
     std::list<Component *> &getChildren() { return m_children; }
-    
+
     const auto &getCompositions() const { return m_compositions; }
     void setCompositions(std::unique_ptr<Composition> &comp) { m_compositions = std::move(comp); }
 

@@ -32,31 +32,31 @@ namespace mtconnect
         if (!relationships)
         {
           auto relationship = make_shared<Factory>(Requirements {
-            Requirement("id", true), Requirement("name", false),
-            Requirement("type", ControlledVocab {"PARENT", "CHILD", "PEER"}, true),
-            Requirement("criticality", ControlledVocab {"CRITICAL", "NON_CRITICAL"}, false)});
-          
+              Requirement("id", true), Requirement("name", false),
+              Requirement("type", ControlledVocab {"PARENT", "CHILD", "PEER"}, true),
+              Requirement("criticality", ControlledVocab {"CRITICAL", "NON_CRITICAL"}, false)});
+
           auto deviceRelationship = make_shared<Factory>(*relationship);
-          
+
           deviceRelationship->addRequirements(Requirements {
-            Requirement("deviceUuidRef", true),
-            Requirement("role", ControlledVocab {"SYSTEM", "AUXILIARY"}, false),
-            Requirement("href", false),
-            Requirement("xlink:type", false),
+              Requirement("deviceUuidRef", true),
+              Requirement("role", ControlledVocab {"SYSTEM", "AUXILIARY"}, false),
+              Requirement("href", false),
+              Requirement("xlink:type", false),
           });
-          
+
           auto componentRelationship = make_shared<Factory>(*relationship);
-          
+
           componentRelationship->addRequirements(Requirements {Requirement("idRef", true)});
-          
+
           relationships = make_shared<Factory>(
-                                                    Requirements {Requirement("ComponentRelationship", ENTITY, componentRelationship, 0,
-                                                                              Requirement::Infinite),
-            Requirement("DeviceRelationship", ENTITY, deviceRelationship, 0,
-                        Requirement::Infinite)});
-          
+              Requirements {Requirement("ComponentRelationship", ENTITY, componentRelationship, 0,
+                                        Requirement::Infinite),
+                            Requirement("DeviceRelationship", ENTITY, deviceRelationship, 0,
+                                        Requirement::Infinite)});
+
           relationships->registerMatchers();
-          
+
           relationships->setMinListSize(1);
         }
         return relationships;

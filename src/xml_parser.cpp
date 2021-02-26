@@ -139,20 +139,21 @@ namespace mtconnect
            {"References",
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
            {"Reference", [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
-          {"DataItems", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItems(n, p); }},
+           {"DataItems", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItems(n, p); }},
            {"DataItemRef",
             [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
            {"ComponentRef",
             [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
            {"Description", [](xmlNodePtr n, Component *p,
                               Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
-           {"Compositions", [](xmlNodePtr n, Component *p, Device *d) {
-             auto c = handleComposition(n);
-             p->setCompositions(c); }},
-           {"Configuration",
+           {"Compositions",
             [](xmlNodePtr n, Component *p, Device *d) {
+              auto c = handleComposition(n);
+              p->setCompositions(c);
+            }},
+           {"Configuration", [](xmlNodePtr n, Component *p, Device *d) {
               auto c = handleConfiguration(n);
-              p->setConfiguration(c);              
+              p->setConfiguration(c);
             }}})
   {
   }

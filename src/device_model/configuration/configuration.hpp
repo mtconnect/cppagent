@@ -40,9 +40,9 @@ namespace mtconnect
       protected:
         entity::EntityPtr m_entity;
       };
-      
+
       // TODO: Need to support extended configuration
-      
+
     }  // namespace configuration
   }    // namespace device_model
 }  // namespace mtconnect

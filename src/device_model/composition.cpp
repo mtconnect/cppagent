@@ -36,14 +36,14 @@ namespace mtconnect
     if (!compositions)
     {
       auto config = Configuration::getFactory()->deepCopy();
-      auto composition = make_shared<Factory>(Requirements {
-        Requirement("id", true), Requirement("uuid", false), Requirement("name", false),
-        Requirement("type", true),
-        Requirement("Description", ENTITY, Description::getFactory(), false),
-        Requirement("Configuration", ENTITY, config, false)});
+      auto composition = make_shared<Factory>(
+          Requirements {Requirement("id", true), Requirement("uuid", false),
+                        Requirement("name", false), Requirement("type", true),
+                        Requirement("Description", ENTITY, Description::getFactory(), false),
+                        Requirement("Configuration", ENTITY, config, false)});
 
       compositions = make_shared<Factory>(
-        Requirements {Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
+          Requirements {Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
     }
     return compositions;
   }
