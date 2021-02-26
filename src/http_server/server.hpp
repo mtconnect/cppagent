@@ -20,7 +20,7 @@
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
-
+#include "config_options.hpp"
 #include <dlib/server.h>
 
 namespace mtconnect
@@ -52,10 +52,15 @@ namespace mtconnect
     class Server : public dlib::server_http
     {
     public:
-      Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0")
+      Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0",
+             const ConfigOptions &options = {})
       {
         set_listening_port(port);
         set_listening_ip(inter);
+        const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
+        if (fields)
+          m_fields = *fields;
+
         m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
                              const ResponseCode code) {
           response.writeResponse(msg, code);
@@ -77,6 +82,13 @@ namespace mtconnect
 
       // Shutdown
       void stop() { server::http_1a::clear(); }
+      
+      // Additional header fields
+      void setHttpHeaders(const StringList &fields)
+      {
+        m_fields = fields;
+      }
+      const auto &getHttpHeaders() const { return m_fields; }
 
       // PUT and POST handling
       void enablePut(bool flag = true) { m_putEnabled = flag; }
@@ -117,6 +129,7 @@ namespace mtconnect
       std::list<Routing> m_routings;
       std::unique_ptr<FileCache> m_fileCache;
       ErrorFunction m_errorFunction;
+      StringList m_fields;
     };
   }  // namespace http_server
 }  // namespace mtconnect
