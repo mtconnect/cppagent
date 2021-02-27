@@ -82,7 +82,7 @@ namespace mtconnect
     class Response
     {
     public:
-      Response(std::ostream &out) : m_out(out) {}
+      Response(std::ostream &out, const StringList &fields = {}) : m_out(out), m_fields(fields) {}
 
       virtual ~Response() = default;
 
@@ -115,9 +115,11 @@ namespace mtconnect
                    "Connection: close\r\n"
                    "Cache-Control: private, max-age=0\r\n"
                    "Content-Type: multipart/x-mixed-replace;boundary="
-                << m_boundary
-                << "\r\n"
-                   "Transfer-Encoding: chunked\r\n\r\n";
+                << m_boundary<< "\r\n"
+                  "Transfer-Encoding: chunked\r\n";
+          for (auto &f : m_fields)
+            m_out << f << "\r\n";
+          m_out << "\r\n";
         }
       }
 
@@ -199,7 +201,10 @@ namespace mtconnect
                 << expiry << "Content-Length: " << size
                 << "\r\n"
                    "Content-Type: "
-                << mimeType << "\r\n\r\n";
+                << mimeType << "\r\n";
+          for (auto &f : m_fields)
+            m_out << f << "\r\n";
+          m_out << "\r\n";
           m_out.write(body, size);
         }
       }
@@ -209,6 +214,7 @@ namespace mtconnect
       std::string m_boundary;
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;
+      StringList m_fields;
     };
   }  // namespace http_server
 }  // namespace mtconnect
