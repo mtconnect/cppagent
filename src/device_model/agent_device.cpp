@@ -24,6 +24,7 @@
 #include <dlib/logger.h>
 
 using namespace std;
+using namespace std::literals;
 
 namespace mtconnect
 {
@@ -78,11 +79,11 @@ namespace mtconnect
 
     {
       ErrorList errors;
-      auto di = DataItem::make({{"type", "OBSERVATION_UPDATE_RATE"},
-                                {"id", id + "_observation_update_rate"},
-                                {"units", "COUNT/SECOND"},
-                                {"statistic", "AVERAGE"},
-                                {"category", "SAMPLE"}},
+      auto di = DataItem::make({{"type", "OBSERVATION_UPDATE_RATE"s},
+                                {"id", id + "_observation_update_rate"s},
+                                {"units", "COUNT/SECOND"s},
+                                {"statistic", "AVERAGE"s},
+                                {"category", "SAMPLE"s}},
                                errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
@@ -90,11 +91,11 @@ namespace mtconnect
 
     {
       ErrorList errors;
-      auto di = DataItem::make({{"type", "ASSET_UPDATE_RATE"},
-                                {"id", id + "_asset_update_rate"},
-                                {"units", "COUNT/SECOND"},
-                                {"statistic", "AVERAGE"},
-                                {"category", "SAMPLE"}},
+      auto di = DataItem::make({{"type", "ASSET_UPDATE_RATE"s},
+                                {"id", id + "_asset_update_rate"s},
+                                {"units", "COUNT/SECOND"s},
+                                {"statistic", "AVERAGE"s},
+                                {"category", "SAMPLE"s}},
                                errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
@@ -102,9 +103,9 @@ namespace mtconnect
 
     {
       ErrorList errors;
-      auto di = DataItem::make({{"type", "ADAPTER_SOFTWARE_VERSION"},
-                                {"id", id + "_adapter_software_version"},
-                                {"category", "EVENT"}},
+      auto di = DataItem::make({{"type", "ADAPTER_SOFTWARE_VERSION"s},
+                                {"id", id + "_adapter_software_version"s},
+                                {"category", "EVENT"s}},
                                errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
@@ -113,7 +114,7 @@ namespace mtconnect
     {
       ErrorList errors;
       auto di = DataItem::make(
-          {{"type", "MTCONNECT_VERSION"}, {"id", id + "_mtconnect_version"}, {"category", "EVENT"}},
+          {{"type", "MTCONNECT_VERSION"s}, {"id", id + "_mtconnect_version"s}, {"category", "EVENT"s}},
           errors);
       di->setComponent(*comp);
       comp->addDataItem(di);
@@ -128,23 +129,23 @@ namespace mtconnect
 
     // Add the required data items
     auto di = DataItem::make(
-        {{"type", "AVAILABILITY"}, {"id", "agent_avail"}, {"category", "EVENT"}}, errors);
+        {{"type", "AVAILABILITY"s}, {"id", "agent_avail"s}, {"category", "EVENT"s}}, errors);
     di->setComponent(*this);
     addDataItem(di);
 
     // Add the required data items
     auto add = DataItem::make(
-        {{"type", "DEVICE_ADDED"}, {"id", "device_added"}, {"category", "EVENT"}}, errors);
+        {{"type", "DEVICE_ADDED"s}, {"id", "device_added"s}, {"category", "EVENT"s}}, errors);
     add->setComponent(*this);
     addDataItem(add);
 
     auto removed = DataItem::make(
-        {{"type", "DEVICE_REMOVED"}, {"id", "device_removed"}, {"category", "EVENT"}}, errors);
+        {{"type", "DEVICE_REMOVED"s}, {"id", "device_removed"s}, {"category", "EVENT"s}}, errors);
     removed->setComponent(*this);
     addDataItem(removed);
 
     auto changed = DataItem::make(
-        {{"type", "DEVICE_CHANGED"}, {"id", "device_changed"}, {"category", "EVENT"}}, errors);
+        {{"type", "DEVICE_CHANGED"s}, {"id", "device_changed"s}, {"category", "EVENT"s}}, errors);
     changed->setComponent(*this);
     addDataItem(changed);
   }
