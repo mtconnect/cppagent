@@ -122,7 +122,7 @@ TEST_F(DataItemTest, HasNameAndSource)
   ASSERT_FALSE(m_dataItemB->hasName("DataItemTest2Source"));
   ASSERT_EQ("DataItemTest2", m_dataItemB->getSourceOrName());
   
-  Properties sp{{"VALUE", "DataItemTest2Source"}};
+  Properties sp{{"VALUE", "DataItemTest2Source"s}};
   ErrorList errors;
   auto source = Source::getFactory()->make("Source", sp, errors);
   ASSERT_TRUE(errors.empty());

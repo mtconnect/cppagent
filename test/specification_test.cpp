@@ -25,6 +25,9 @@ class SpecificationTest : public testing::Test
  protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
+    dlib::set_all_logging_output_streams(std::cout);
+    dlib::set_all_logging_levels(dlib::LDEBUG);
+
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/configuration.xml",
                                    8, 4, "1.7", 25);

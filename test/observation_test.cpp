@@ -179,8 +179,8 @@ TEST_F(ObservationTest, ConvertSimpleUnits)
 TEST_F(ObservationTest, ConditionEventChaining)
 {
   ErrorList errors;
-  auto dataItem = DataItem::make({{"id", "c1"}, {"category", "CONDITION"},
-    {"type","TEMPERATURE"}
+  auto dataItem = DataItem::make({{"id", "c1"s}, {"category", "CONDITION"s},
+    {"type","TEMPERATURE"s}
   }, errors);
   
   ConditionPtr event1 = Cond(Observation::make(dataItem, {{"level", "FAULT"s}}, m_time, errors));

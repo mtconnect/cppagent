@@ -196,7 +196,7 @@ namespace mtconnect
             if (c->getName() == "Filter")
             {
               if (!c->hasProperty("type"))
-                c->setProperty("type", "MINIMUM_DELTA");
+                c->setProperty("type", "MINIMUM_DELTA"s);
 
               // Legacy filter only supported minimum delta.
               m_minimumDelta = c->getValue<double>();

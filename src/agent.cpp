@@ -260,9 +260,9 @@ namespace mtconnect
     {
       // Create asset removed data item and add it to the device.
       entity::ErrorList errors;
-      auto di = DataItem::make({{"type", "ASSET_REMOVED"},
+      auto di = DataItem::make({{"type", "ASSET_REMOVED"s},
                                 {"id", device->getId() + "_asset_rem"},
-                                {"category", "EVENT"}},
+                                {"category", "EVENT"s}},
                                errors);
       di->setComponent(*device);
       device->addDataItem(di);
