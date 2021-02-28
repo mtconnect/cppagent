@@ -38,6 +38,7 @@ namespace mtconnect
     DECLARE_CONFIGURATION(SchemaVersion);
     DECLARE_CONFIGURATION(AllowPut);
     DECLARE_CONFIGURATION(AllowPutFrom);
+    DECLARE_CONFIGURATION(HttpHeaders);
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);

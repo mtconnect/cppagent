@@ -638,13 +638,17 @@ namespace mtconnect
 
     m_name = get_with_default(reader, configuration::ServiceName, "MTConnect Agent");
 
+    // Get the HTTP Headers
+    ConfigOptions options;
+    loadHttpHeaders(reader, options);
+
     // Check for schema version
     m_version =
         get_with_default(reader, configuration::SchemaVersion,
                          to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
-    auto server = make_unique<http_server::Server>(port, serverIp);
+    auto server = make_unique<http_server::Server>(port, serverIp, options);
     loadAllowPut(reader, server.get());
 
     auto cp = make_unique<http_server::FileCache>();
@@ -660,7 +664,6 @@ namespace mtconnect
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
     m_pipelineContext->m_contract = m_agent->makePipelineContract();
 
-    ConfigOptions options;
     options[configuration::PreserveUUID] = defaultPreserve;
     options[configuration::LegacyTimeout] = legacyTimeout;
     options[configuration::ReconnectInterval] = reconnectInterval;
@@ -693,6 +696,7 @@ namespace mtconnect
     loadStyle(reader, "ErrorStyle", cache, xmlPrinter, &XmlPrinter::setErrorStyle);
 
     loadTypes(reader, cache);
+    
   }
 
   void AgentConfiguration::loadAdapters(ConfigReader &reader, const ConfigOptions &options)
@@ -919,6 +923,24 @@ namespace mtconnect
           }
         }
       }
+    }
+  }
+
+  void AgentConfiguration::loadHttpHeaders(ConfigReader &reader, ConfigOptions &options)
+  {
+    if (reader.is_block_defined(configuration::HttpHeaders))
+    {
+      const config_reader::kernel_1a &headers = reader.block(configuration::HttpHeaders);
+      StringList fields;
+      std::vector<string> keys;
+      headers.get_keys(keys);
+
+      for (auto &f : keys)
+      {
+        fields.emplace_back(f + ": " + headers[f]);
+      }
+      
+      options[configuration::HttpHeaders] = fields;
     }
   }
 

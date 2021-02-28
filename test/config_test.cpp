@@ -531,4 +531,24 @@ namespace
     fl = m_config->getLogger();
     ASSERT_EQ(15ULL * 1024ULL * 1024ULL * 1024ULL, fl->getMaxSize());
   }
+  
+  TEST_F(ConfigTest, check_http_headers)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    std::istringstream str("HttpHeaders {\n"
+                           "  Access-Control-Allow-Origin = *\n"
+                           "\n"
+                           "}\n");
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+
+    const auto &server = agent->getServer();
+    const auto &headers = server->getHttpHeaders();
+    
+    ASSERT_EQ(1, headers.size());
+    ASSERT_EQ("Access-Control-Allow-Origin: *", headers.front());
+  }
 }  // namespace

@@ -110,6 +110,40 @@ TEST_F(HttpServerTest, PutBlocking)
   queries["time"] = "TIME";
   queries["line"] = "205";
   queries["power"] = "ON";
+}
 
-  
+TEST_F(HttpServerTest, test_additional_server_fields)
+{
+  m_server->setHttpHeaders({"Access-Control-Origin: *"});
+  auto probe = [&](const Routing::Request &request,
+                                Response &response) -> bool {
+    if (request.m_parameters.count("device") > 0)
+      response.writeResponse(string("Device given as: ") + get<string>(request.m_parameters.find("device")->second));
+    else
+      response.writeResponse("All Devices");
+    
+    return true;
+  };
+  stringstream out;
+  TestResponse response(out, m_server->getHttpHeaders());
+  Routing::Request request;
+
+  m_server->addRouting({"GET", "/probe", probe});
+  request.m_verb = "GET";
+  request.m_path = "/probe";
+  ASSERT_TRUE(m_server->dispatch(request, response));
+
+  string r1 = "HTTP/1.1 200 OK\r\n"
+       "Date: TIME+DATE\r\n"
+       "Server: MTConnectAgent\r\n"
+       "Connection: close\r\n"
+       "Expires: -1\r\n"
+       "Cache-Control: private, max-age=0\r\nContent-Length: 11\r\n"
+       "Content-Type: text/plain\r\n"
+       "Access-Control-Origin: *\r\n"
+       "\r\n"
+  "All Devices";
+  out.flush();
+  EXPECT_EQ(r1, out.str());
+  EXPECT_EQ(200, response.m_code);
 }
