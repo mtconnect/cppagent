@@ -77,6 +77,7 @@ namespace mtconnect
     void loadStyle(ConfigReader &reader, const char *styleName, http_server::FileCache *cache,
                    XmlPrinter *printer, StyleFunction styleFunction);
     void loadTypes(ConfigReader &reader, http_server::FileCache *cache);
+    void loadHttpHeaders(ConfigReader &reader, ConfigOptions &options);
 
     void LoggerHook(const std::string &loggerName, const dlib::log_level &l,
                     const dlib::uint64 threadId, const char *message);
