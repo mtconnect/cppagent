@@ -103,7 +103,7 @@ protected:
 
 TEST_F(DuplicateFilterTest, test_simple_event)
 {
-  makeDataItem({{"id", "a"}, {"type", "EXECUTION"}, {"category", "EVENT"}});
+  makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
 
   auto filter = make_shared<DuplicateFilter>(m_context);
   m_mapper->bind(filter);
@@ -123,8 +123,8 @@ TEST_F(DuplicateFilterTest, test_simple_event)
 
 TEST_F(DuplicateFilterTest, test_simple_sample)
 {
-  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}
+  makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
+    {"units", "MILLIMETER"s}
   });
 
   auto filter = make_shared<DuplicateFilter>(m_context);
@@ -150,8 +150,8 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
   EntityList list{f};
   auto filters = DataItem::getFactory()->create("Filters", list, errors);
   
-  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}, {"Filters", filters}
+  makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
+    {"units", "MILLIMETER"s}, {"Filters", filters}
   });
   
   auto filter = make_shared<DuplicateFilter>(m_context);
@@ -199,8 +199,8 @@ TEST_F(DuplicateFilterTest, test_period_filter)
   EntityList list{f};
   auto filters = DataItem::getFactory()->create("Filters", list, errors);
 
-  makeDataItem({{"id", "a"}, {"type", "POSITION"}, {"category", "SAMPLE"},
-    {"units", "MILLIMETER"}, {"Filters", filters}
+  makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
+    {"units", "MILLIMETER"s}, {"Filters", filters}
   });
   
   Timestamp now = chrono::system_clock::now();
