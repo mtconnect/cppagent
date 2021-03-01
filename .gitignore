@@ -10,5 +10,5 @@ Release
 test/agent.log*
 build/
 cmake-build-debug/**
-cmake-build-debug/**
+cmake-build-release/**
 .idea/**
