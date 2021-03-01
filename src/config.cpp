@@ -647,7 +647,8 @@ namespace mtconnect
                          to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
-    auto server = make_unique<http_server::Server>(port, serverIp, options);
+    //auto server = make_unique<http_server::Server>(port, serverIp, options);
+    auto server = make_unique<http_server::Server>(port, serverIp);
     loadAllowPut(reader, server.get());
 
     auto cp = make_unique<http_server::FileCache>();
