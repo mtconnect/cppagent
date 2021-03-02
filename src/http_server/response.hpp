@@ -17,6 +17,17 @@
 
 #pragma once
 
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast.hpp>
+#include <boost/bind/bind.hpp>
+//#include <boost/beast/ssl.hpp>
+//#include <boost/asio/ssl/stream.hpp>
+
+#include <boost/beast/version.hpp>
+#include <boost/asio/connect.hpp>
+#include <boost/asio/ip/tcp.hpp>
+
 #include "utilities.hpp"
 #include <unordered_map>
 
@@ -30,10 +41,19 @@
 #include <string>
 #include <variant>
 
+
 namespace mtconnect
 {
   namespace http_server
   {
+
+    namespace beast = boost::beast;         // from <boost/beast.hpp>
+    namespace http = beast::http;           // from <boost/beast/http.hpp>
+    namespace net = boost::asio;            // from <boost/asio.hpp>
+    //namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+    using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+
+
     enum ResponseCode
     {
       CONTINUE = 100,
@@ -82,7 +102,14 @@ namespace mtconnect
     class Response
     {
     public:
-      Response(std::ostream &out, const StringList &fields = {}) : m_out(out), m_fields(fields) {}
+      Response(std::ostream &out, const StringList &fields = {}) : m_out(out), m_fields(fields)
+      {
+        beast::error_code ec;
+        net::io_context ioc{1};
+        tcp::socket socket{ioc};
+        bool close{false};
+        send_lambda<tcp::socket> lambda{socket, close, ec};
+      }
 
       virtual ~Response() = default;
 

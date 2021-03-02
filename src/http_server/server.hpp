@@ -21,6 +21,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast.hpp>
+#include <boost/bind/bind.hpp>
 //#include <boost/beast/ssl.hpp>
 //#include <boost/asio/ssl/stream.hpp>
 
@@ -39,6 +40,7 @@
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
+#include "utilities.hpp"
 //#include "http_server.hpp"
 //#include <dlib/server.h>
 
@@ -78,13 +80,6 @@ namespace mtconnect
 
     class Server
     {
-      net::ip::address address;
-      unsigned short mPort{5000};
-      std::shared_ptr<std::string> doc_root;
-      //tcp::acceptor acceptor{0};
-      std::thread* httpProcess;
-      bool run{false};
-      bool enableSSL{false};
 
       //using alloc_t = fields_alloc<char>;
       // The allocator used for the fields in the request and reply.
@@ -98,7 +93,7 @@ namespace mtconnect
 
 
     public:
-      Server(unsigned short port=5000, const std::string &inter="0.0.0.0");
+      Server(unsigned short port, const std::string &inter, const ConfigOptions& options);
 //      {
 //        m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
 //                             const ResponseCode code) {
@@ -163,6 +158,14 @@ namespace mtconnect
                       unsigned short local_port, uint64_t);
 
     protected:
+      net::ip::address address;
+      unsigned short mPort{5000};
+      std::shared_ptr<std::string> doc_root;
+      //tcp::acceptor acceptor{0};
+      std::thread* httpProcess;
+      bool run{false};
+      bool enableSSL{false};
+      ConfigOptions options;
       // Put handling controls
       bool m_putEnabled;
       std::set<std::string> m_putAllowedHosts;
@@ -172,7 +175,6 @@ namespace mtconnect
       Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket);
       Routing::QueryMap getQueries(const std::string& queries);
       void send_response( http::status status, std::string const& error, tcp::socket socket);
-
     };
   }  // namespace http_server
 }  // namespace mtconnect

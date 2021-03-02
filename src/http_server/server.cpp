@@ -36,45 +36,11 @@ namespace mtconnect
 
     static dlib::logger g_logger("HttpServer");
 
-    // This is the C++11 equivalent of a generic lambda.
-    // The function object is used to send an HTTP message.
-    template<class Stream>
-    struct send_lambda
+
+    Server::Server(unsigned short port, const std::string &inter, const ConfigOptions& options)
     {
-      Stream& stream_;
-      bool& close_;
-      beast::error_code& ec_;
-
-      explicit
-      send_lambda(
-          Stream& stream,
-          bool& close,
-          beast::error_code& ec)
-          : stream_(stream)
-          , close_(close)
-          , ec_(ec)
-      {
-      }
-
-      template<bool isRequest, class Body, class Fields>
-      void
-      operator()(http::message<isRequest, Body, Fields>&& msg) const
-      {
-        // Determine if we should close the connection after
-        close_ = msg.need_eof();
-
-        // We need the serializer here because the serializer requires
-        // a non-const file_body, and the message oriented version of
-        // http::write only works with const messages.
-        http::serializer<isRequest, Body, Fields> sr{msg};
-        http::write(stream_, sr, ec_);
-      }
-    };
-
-    Server::Server(unsigned short port, const std::string &inter)
-    {
-      address = net::ip::make_address(inter);
-      mPort = port;
+      address = net::ip::make_address("0.0.0.0");
+      mPort = 5023;
       m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
                            const ResponseCode code) {
         response.writeResponse(msg, code);
@@ -126,15 +92,17 @@ namespace mtconnect
         // Block until we get a connection
         acceptor.accept(socket);
 
+        //beast::tcp_stream temp(std::move(socket));
+
         // This lambda is used to send messages
         send_lambda<tcp::socket> lambda{socket, close, ec};
+        //beast::tcp_stream out(std::move(socket));
 
         for (;;) {
           // Read a request
 
           http::request<http::string_body> req;
           http::read(socket, buffer, req, ec);
-
 
           if (ec == http::error::end_of_stream)
             break;
@@ -143,8 +111,9 @@ namespace mtconnect
           // Send the response
           Routing::Request request = getRequest(req, socket);
           //template<class Stream> T
-          //std::ostream out{0};
-          //Response response(out);
+          //beast::tcp_stream stream_(std::move(socket));
+          std::ostream out{0};//{std::move(stream_)};
+          Response response(out);
           //http_server::Response response();
           bool res{true};
           try
@@ -202,6 +171,7 @@ namespace mtconnect
         http::status status,
         std::string const& error, tcp::socket socket)
     {
+        http::response<http::string_body> string_response;
 //      string_response_.emplace(
 //          std::piecewise_construct,
 //          std::make_tuple(),
@@ -219,13 +189,13 @@ namespace mtconnect
 //      http::write(
 //          socket,
 //          *string_serializer_
-////          [this](beast::error_code ec, std::size_t)
-////          {
-////            socket.shutdown(tcp::socket::shutdown_send, ec);
-////            string_serializer_.reset();
-////            string_response_.reset();
-////            accept();
-////          }
+//          [this](beast::error_code ec, std::size_t)
+//          {
+//            socket.shutdown(tcp::socket::shutdown_send, ec);
+//            string_serializer_.reset();
+//            string_response_.reset();
+//            accept();
+//          }
 //          );
     }
 
@@ -246,7 +216,10 @@ namespace mtconnect
 
         request.m_verb = req.method_string().data();
         request.m_path = path;
-        request.m_query = getQueries(queries);
+        auto pt = queries.find_first_of('=');
+        if (pt != string::npos){
+          request.m_query = getQueries(queries);
+        }
         request.m_body = req.target().data();
         request.m_foreignIp = socket.remote_endpoint().address().to_string();
         request.m_foreignPort = socket.remote_endpoint().port();
@@ -305,76 +278,6 @@ namespace mtconnect
         g_logger << LERROR << __func__ << " error: " <<e.what();
         return queryMap;
       }
-    }
-    void Server::on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
-                            const std::string &local_ip, unsigned short foreign_port,
-                            unsigned short local_port, uint64_t)
-    {
-//      Response response(out);
-//      std::string accepts;
-//      try
-//      {
-//        IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
-//        //parse_http_request(in, incoming, get_max_content_length());
-//        auto ai = incoming.headers.find("Accept");
-//        if (ai != incoming.headers.end())
-//          accepts = ai->second;
-//
-//        if (incoming.request_type == "PUT" || incoming.request_type == "POST" ||
-//            incoming.request_type == "DELETE")
-//        {
-//          if (!m_putEnabled || !isPutAllowedFrom(foreign_ip))
-//          {
-//            stringstream msg;
-//            msg << "Error processing request from: " << foreign_ip << " - "
-//                << "Server is read-only. Only GET verb supported";
-//            g_logger << LERROR << msg.str();
-//
-//            if (m_errorFunction)
-//              m_errorFunction(accepts, response, msg.str(), FORBIDDEN);
-//            out.flush();
-//            return;
-//          }
-//        }
-//
-//        read_body(in, incoming);
-//        auto path = incoming.path;
-//        auto qp = path.find_first_of('?');
-//        if (qp != string::npos)
-//          path.erase(qp);
-//
-//        Routing::Request request;
-//        request.m_verb = incoming.request_type;
-//        request.m_path = path;
-//        request.m_query = incoming.queries;
-//        request.m_body = incoming.body;
-//        request.m_foreignIp = foreign_ip;
-//        request.m_foreignPort = foreign_port;
-//        request.m_accepts = accepts;
-//        auto media = incoming.headers.find("Content-Type");
-//        if (media != incoming.headers.end())
-//          request.m_contentType = media->second;
-//
-//        handleRequest(request, response);
-//      }
-//      catch (dlib::http_parse_error &e)
-//      {
-//        stringstream msg;
-//        msg << "Error processing request from: " << foreign_ip << " - " << e.what();
-//        g_logger << LERROR << msg.str();
-//
-//        if (m_errorFunction)
-//          m_errorFunction(accepts, response, msg.str(), BAD_REQUEST);
-//      }
-//      catch (std::exception &e)
-//      {
-//        stringstream msg;
-//        msg << "Error processing request from: " << foreign_ip << " - " << e.what();
-//        g_logger << LERROR << msg.str();
-//
-//        if (m_errorFunction)
-//          m_errorFunction(accepts, response, msg.str(), BAD_REQUEST);
-//      }
     }
 
     bool Server::handleRequest(Routing::Request &request, Response &response)
@@ -476,11 +379,11 @@ namespace mtconnect
       // Attempt to open the file
       beast::error_code ec;
       http::file_body::value_type body;
-      //body.open(path.c_str(), beast::file_mode::scan, ec);
+      body.open("device.xml", beast::file_mode::scan, ec);
 
-      // Handle the case where the file doesn't exist
-      //if (ec == beast::errc::no_such_file_or_directory)
-      //  return send(not_found(req.target()));
+      //Handle the case where the file doesn't exist
+      if (ec == beast::errc::no_such_file_or_directory)
+        return send(not_found(req.target()));
 
       // Handle an unknown error
       //if (ec)
@@ -493,23 +396,51 @@ namespace mtconnect
       if (req.method() == http::verb::head) {
         http::response<http::empty_body> res{http::status::ok, req.version()};
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-        //res.set(http::field::content_type, mime_type(path));
+        res.set(http::field::content_type, "text/xml");
         res.content_length(size);
         res.keep_alive(req.keep_alive());
         return send(std::move(res));
       }
 
-      // Respond to GET request
-      http::response<http::file_body> res{
-          std::piecewise_construct,
-          std::make_tuple(std::move(body)),
-          std::make_tuple(http::status::ok, req.version())};
-      res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-      //res.set(http::field::content_type, mime_type(path));
-      res.content_length(size);
-      res.keep_alive(req.keep_alive());
-      return send(std::move(res));
+      string queries{std::string().empty()};
+      auto path = static_cast<std::string>(req.target().data());
+      auto qp = path.find_first_of('?');
+      if (qp != string::npos){
+        queries = path.substr(qp+1);
+        path.erase(qp);
+      }
+
+      if (std::strcmp(path.c_str(), "/probe") == 0)
+      {
+        // Respond to GET request
+        http::response<http::file_body> res{
+            std::piecewise_construct,
+            std::make_tuple(std::move(body)),
+            std::make_tuple(http::status::ok, req.version())};
+        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.set(http::field::content_type, "text/xml");
+        res.content_length(size);
+        res.keep_alive(req.keep_alive());
+        return send(std::move(res));
+      }
+      else
+      {
+        //auto const std::string().size( textSize = req.target().data());
+        auto const textSize = req.target().size();
+        http::response<http::string_body> res{
+            std::piecewise_construct,
+            std::make_tuple(std::move(req.target().data())),
+            std::make_tuple(http::status::ok, req.version())};
+        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.set(http::field::content_type, "text/plain");
+        res.content_length(textSize);
+        res.keep_alive(req.keep_alive());
+        return send(std::move(res));
+      }
     }
+
+
+  //}
 
 //------------------------------------------------------------------------------
 
