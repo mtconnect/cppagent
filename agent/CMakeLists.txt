@@ -1,6 +1,6 @@
 set(AGENT_SOURCES cppagent.cpp)
 
-#set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.75.0 REQUIRED )
 
 
