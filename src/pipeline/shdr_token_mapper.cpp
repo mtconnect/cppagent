@@ -258,7 +258,7 @@ namespace mtconnect
           asset->setProperty("timestamp", timestamp);
           if (m_defaultDevice)
           {
-            Device *dev = m_contract->findDevice(*m_defaultDevice);
+            DevicePtr dev = m_contract->findDevice(*m_defaultDevice);
             if (dev != nullptr)
               asset->setProperty("deviceUuid", dev->getUuid());
           }

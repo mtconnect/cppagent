@@ -386,7 +386,7 @@ namespace mtconnect
 
   string XmlPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
-                                const unsigned int assetCount, const list<Device *> &deviceList,
+                                const unsigned int assetCount, const list<DevicePtr> &deviceList,
                                 const std::map<std::string, int> *count) const
   {
     string ret;
@@ -400,8 +400,8 @@ namespace mtconnect
 
       {
         AutoElement devices(writer, "Devices");
-        for (const auto dev : deviceList)
-          printProbeHelper(writer, dev, dev->getClass().c_str());
+        //for (const auto dev : deviceList)
+          //printProbeHelper(writer, dev, dev->getClass().c_str());
       }
       closeElement(writer);  // MTConnectDevices
 
@@ -419,6 +419,7 @@ namespace mtconnect
     return ret;
   }
 
+#if 0
   void printConfiguration(xmlTextWriterPtr writer, const unique_ptr<Configuration> &configuration)
   {
     entity::XmlPrinter printer;
@@ -778,4 +779,5 @@ namespace mtconnect
       }
     }
   }
+#endif
 }  // namespace mtconnect

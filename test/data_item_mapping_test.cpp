@@ -39,7 +39,7 @@ public:
   : m_dataItems(items)
   {
   }
-  Device *findDevice(const std::string &) override { return nullptr; }
+  DevicePtr findDevice(const std::string &) override { return nullptr; }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
     return m_dataItems[name];

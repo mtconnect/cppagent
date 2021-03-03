@@ -26,13 +26,9 @@ namespace mtconnect
   {
     namespace configuration
     {
-      class SolidModel : public Configuration
+      struct SolidModel
       {
-      public:
         static FactoryPtr getFactory();
-
-        SolidModel() = default;
-        ~SolidModel() override = default;
       };
     }  // namespace configuration
   }    // namespace device_model

@@ -35,7 +35,7 @@ protected:
 
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
-  Device *m_device{nullptr};
+  DevicePtr m_device{nullptr};
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 

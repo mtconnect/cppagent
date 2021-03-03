@@ -32,21 +32,24 @@ namespace mtconnect
 {
   using namespace entity;
 
-  FactoryPtr Description::getFactory()
+  namespace device_model
   {
-    auto description = make_shared<Factory>(
-        Requirements {Requirement("manufacturer", false), Requirement("model", false),
-                      Requirement("serialNumber", false), Requirement("station", false),
-                      Requirement("VALUE", false)});
-
-    return description;
-  }
-
-  FactoryPtr Description::getRoot()
-  {
-    auto root = make_shared<Factory>(
-        Requirements {Requirement("Description", ENTITY, Description::getFactory(), false)});
-
-    return root;
+    FactoryPtr Description::getFactory()
+    {
+      static auto description = make_shared<Factory>(
+                                                     Requirements {Requirement("manufacturer", false), Requirement("model", false),
+        Requirement("serialNumber", false), Requirement("station", false),
+        Requirement("VALUE", false)});
+      
+      return description;
+    }
+    
+    FactoryPtr Description::getRoot()
+    {
+      static auto root = make_shared<Factory>(
+                                              Requirements {Requirement("Description", ENTITY, Description::getFactory(), false)});
+      
+      return root;
+    }
   }
 }  // namespace mtconnect

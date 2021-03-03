@@ -25,12 +25,13 @@ namespace mtconnect
     {
       class DataItem;
     }
+    class Device;
   }  // namespace device_model
-  class Device;
   class Asset;
   using AssetPtr = std::shared_ptr<Asset>;
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
-
+  using DevicePtr = std::shared_ptr<device_model::Device>;
+  
   namespace observation
   {
     class Observation;
@@ -52,7 +53,7 @@ namespace mtconnect
 
       using EachDataItem = std::function<void(const DataItemPtr di)>;
 
-      virtual Device *findDevice(const std::string &device) = 0;
+      virtual DevicePtr findDevice(const std::string &device) = 0;
       virtual DataItemPtr findDataItem(const std::string &device, const std::string &name) = 0;
       virtual void eachDataItem(EachDataItem fun) = 0;
       virtual void deliverObservation(observation::ObservationPtr) = 0;

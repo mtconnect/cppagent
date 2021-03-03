@@ -173,6 +173,8 @@ namespace mtconnect
     return printer.print(item);
   }
 
+#if 0
+
   static inline json jsonReference(const Component::Reference &reference)
   {
     json ref = json::object({{"idRef", reference.m_id}});
@@ -253,7 +255,7 @@ namespace mtconnect
   std::string JsonPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const unsigned int assetBufferSize,
                                       const unsigned int assetCount,
-                                      const std::list<Device *> &devices,
+                                      const std::list<DevicePtr > &devices,
                                       const std::map<std::string, int> *count) const
   {
     json devicesDoc = json::array();
@@ -369,14 +371,14 @@ namespace mtconnect
   class DeviceRef
   {
   public:
-    DeviceRef(const Device *device) : m_device(device), m_componentRef(nullptr) {}
+    DeviceRef(const DevicePtr device) : m_device(device), m_componentRef(nullptr) {}
     DeviceRef(const DeviceRef &other) : m_device(other.m_device), m_components(other.m_components)
     {
     }
 
-    bool isDevice(const Device *device) { return device == m_device; }
+    bool isDevice(const DevicePtr device) { return device == m_device; }
 
-    bool addObservation(const ObservationPtr &observation, const Device *device,
+    bool addObservation(const ObservationPtr &observation, const DevicePtr device,
                         const Component *component, const DataItemPtr dataItem)
     {
       if (m_device == device)
@@ -409,7 +411,7 @@ namespace mtconnect
     }
 
   protected:
-    const Device *m_device;
+    const DevicePtr m_device;
     vector<ComponentRef> m_components;
     ComponentRef *m_componentRef;
   };
@@ -474,5 +476,5 @@ namespace mtconnect
 
     return print(doc, m_pretty);
   }
-
+#endif
 }  // namespace mtconnect

@@ -56,6 +56,7 @@ namespace mtconnect
 
   static dlib::logger g_logger("xml.parser");
 
+#if 0
   static inline auto handleConfiguration(xmlNodePtr node)
   {
     using namespace configuration;
@@ -80,7 +81,7 @@ namespace mtconnect
     compositions->setEntity(compositions_entity);
     return compositions;
   }
-
+#endif
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
     va_list args;
@@ -133,28 +134,30 @@ namespace mtconnect
   }
 
   XmlParser::XmlParser()
+#if 0
     : m_handlers(
           {{"Components",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+            [this](xmlNodePtr n, Component *p, DevicePtr d) { handleChildren(n, p, d); }},
            {"References",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-           {"Reference", [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
-           {"DataItems", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItems(n, p); }},
+            [this](xmlNodePtr n, Component *p, DevicePtr d) { handleChildren(n, p, d); }},
+           {"Reference", [this](xmlNodePtr n, Component *p, DevicePtr d) { handleReference(n, p); }},
+           {"DataItems", [this](xmlNodePtr n, Component *p, DevicePtr d) { loadDataItems(n, p); }},
            {"DataItemRef",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+            [this](xmlNodePtr n, Component *p, DevicePtr d) { handleReference(n, p); }},
            {"ComponentRef",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+            [this](xmlNodePtr n, Component *p, DevicePtr d) { handleReference(n, p); }},
            {"Description", [](xmlNodePtr n, Component *p,
-                              Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
+                              DevicePtr d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
            {"Compositions",
-            [](xmlNodePtr n, Component *p, Device *d) {
+            [](xmlNodePtr n, Component *p, DevicePtr d) {
               auto c = handleComposition(n);
               p->setCompositions(c);
             }},
-           {"Configuration", [](xmlNodePtr n, Component *p, Device *d) {
+           {"Configuration", [](xmlNodePtr n, Component *p, DevicePtr d) {
               auto c = handleConfiguration(n);
               p->setConfiguration(c);
             }}})
+#endif
   {
   }
 
@@ -163,7 +166,7 @@ namespace mtconnect
     return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27u);
   }
 
-  std::list<Device *> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
+  std::list<DevicePtr> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
   {
     if (m_doc)
     {
@@ -173,7 +176,7 @@ namespace mtconnect
 
     xmlXPathContextPtr xpathCtx = nullptr;
     xmlXPathObjectPtr devices = nullptr;
-    std::list<Device *> deviceList;
+    std::list<DevicePtr> deviceList;
 
     try
     {
@@ -269,8 +272,8 @@ namespace mtconnect
         throw(string) "Could not find Device in XML configuration";
 
       // Collect the Devices...
-      for (int i = 0; i != nodeset->nodeNr; ++i)
-        deviceList.emplace_back(static_cast<Device *>(handleNode(nodeset->nodeTab[i])));
+      //for (int i = 0; i != nodeset->nodeNr; ++i)
+      //deviceList.emplace_back(static_cast<DevicePtr >(handleNode(nodeset->nodeTab[i])));
 
       xmlXPathFreeObject(devices);
       xmlXPathFreeContext(xpathCtx);
@@ -445,8 +448,8 @@ namespace mtconnect
       g_logger << dlib::LWARN << "getDataItems: Could not parse path: " << inputPath;
     }
   }
-
-  Component *XmlParser::handleNode(xmlNodePtr node, Component *parent, Device *device)
+#if 0
+  Component *XmlParser::handleNode(xmlNodePtr node, Component *parent, DevicePtr device)
   {
     string name((const char *)node->name);
     auto lambda = m_handlers.find(name);
@@ -463,7 +466,7 @@ namespace mtconnect
 
       // Top level, then must be a device
       if (device == nullptr)
-        device = dynamic_cast<Device *>(component);
+        device = dynamic_cast<DevicePtr >(component);
 
       // Construct relationships
       if (component)
@@ -534,7 +537,7 @@ namespace mtconnect
     }
   }
 
-  void XmlParser::handleChildren(xmlNodePtr components, Component *parent, Device *device)
+  void XmlParser::handleChildren(xmlNodePtr components, Component *parent, DevicePtr device)
   {
     for (xmlNodePtr child = components->children; child; child = child->next)
     {
@@ -569,5 +572,5 @@ namespace mtconnect
       parent->addReference(ref);
     }
   }
-
+#endif
 }  // namespace mtconnect

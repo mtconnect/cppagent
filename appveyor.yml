@@ -38,7 +38,7 @@ before_build:
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version
-- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
+- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
     
 
 build:
@@ -66,6 +66,4 @@ only_commits:
     - src/
     - test/
     - cmake/
-    - dlib_fix/
-    - libxml2_make/
     - agent/

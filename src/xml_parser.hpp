@@ -42,7 +42,7 @@ namespace mtconnect
     virtual ~XmlParser();
 
     // Parses a file and returns a list of devices
-    std::list<Device *> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
+    std::list<device_model::DevicePtr> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
 
     // Just loads the document, assumed it has already been parsed before.
     void loadDocument(const std::string &aDoc);
@@ -52,26 +52,27 @@ namespace mtconnect
                       xmlNodePtr node = nullptr);
 
   protected:
+#if 0
     // Main method to process the nodes and return the objects
-    Component *handleNode(xmlNodePtr node, Component *parent = nullptr, Device *device = nullptr);
+    device_model::ComponentPtr handleNode(xmlNodePtr node, device_model::ComponentPtr parent = nullptr, DevicePtr device = nullptr);
 
     // Helper to handle/return each component of the device
-    Component *loadComponent(xmlNodePtr node, const std::string &name);
+    device_model::ComponentPtr loadComponent(xmlNodePtr node, const std::string &name);
 
     // Load the data items
-    void loadDataItems(xmlNodePtr dataItems, Component *component);
+    void loadDataItems(xmlNodePtr dataItems, device_model::ComponentPtr component);
 
     // Load the data items
     // Perform loading on children and set up relationships
-    void handleChildren(xmlNodePtr components, Component *parent = nullptr,
-                        Device *device = nullptr);
+    void handleChildren(xmlNodePtr components, device_model::ComponentPtr parent = {},
+                        device_model::DevicePtr device = {});
 
     // Perform loading of references and set up relationships
-    void handleReference(xmlNodePtr reference, Component *parent = nullptr);
-
+    void handleReference(xmlNodePtr reference, device_model::ComponentPtr parent = {});
+#endif
   protected:
     // LibXML XML Doc
     xmlDocPtr m_doc = nullptr;
-    std::map<std::string, std::function<void(xmlNodePtr, Component *, Device *)>> m_handlers;
+//    std::map<std::string, std::function<void(xmlNodePtr, Component *, DevicePtr )>> m_handlers;
   };
 }  // namespace mtconnect

@@ -56,7 +56,7 @@ class PipelineDeliverTest : public testing::Test
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   std::string m_agentId;
-  Device *m_device{nullptr};
+  DevicePtr m_device{nullptr};
 };
 
 TEST_F(PipelineDeliverTest, test_simple_flow)

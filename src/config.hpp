@@ -35,7 +35,11 @@ namespace mtconnect
     class Server;
   }
   class Agent;
-  class Device;
+  namespace device_model
+  {
+    class Device;
+  }
+  using DevicePtr = std::shared_ptr<device_model::Device>;
   class RollingFileLogger;
   class XmlPrinter;
 
@@ -67,7 +71,7 @@ namespace mtconnect
     void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
   protected:
-    Device *defaultDevice();
+    DevicePtr defaultDevice();
     void loadAdapters(ConfigReader &reader, const ConfigOptions &options);
     void loadAllowPut(ConfigReader &reader, http_server::Server *server);
     void loadNamespace(ConfigReader &reader, const char *namespaceType,

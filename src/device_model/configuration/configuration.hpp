@@ -25,20 +25,10 @@ namespace mtconnect
   {
     namespace configuration
     {
-      class Configuration
+      struct Configuration
       {
-      public:
-        Configuration() = default;
-        virtual ~Configuration() = default;
-
         static entity::FactoryPtr getFactory();
         static entity::FactoryPtr getRoot();
-
-        const entity::EntityPtr &getEntity() const { return m_entity; };
-        void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; };
-
-      protected:
-        entity::EntityPtr m_entity;
       };
 
       // TODO: Need to support extended configuration

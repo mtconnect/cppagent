@@ -72,7 +72,7 @@ class JsonPrinterProbeTest : public testing::Test
   std::unique_ptr<JsonPrinter> m_printer;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
-  std::list<Device *> m_devices;
+  std::list<DevicePtr > m_devices;
 
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
 };

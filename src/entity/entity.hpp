@@ -67,7 +67,7 @@ namespace mtconnect
       Entity(const Entity &entity) = default;
       virtual ~Entity() {}
 
-      EntityPtr getptr() { return shared_from_this(); }
+      EntityPtr getptr() const  { return const_cast<Entity*>(this)->shared_from_this(); }
 
       bool hasListWithAttribute() const
       {
@@ -128,6 +128,37 @@ namespace mtconnect
 
         return std::nullopt;
       }
+      
+      template<class T>
+      bool addToList(const std::string &name, EntityPtr entity,
+                     ErrorList &errors)
+      {
+        if (!hasProperty(name))
+        {
+          entity::EntityList list { entity };
+          auto entities = T::getFactory()->create(name, list, errors);
+          if (errors.empty())
+            setProperty(name, entities);
+          else
+            return false;
+        }
+        else
+        {
+          auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
+          if (entities)
+          {
+            std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
+          }
+          else
+          {
+            errors.emplace_back(new EntityError("Cannont find list for: " + name));
+            return false;
+          }
+        }
+        
+        return true;
+      }
+
       void setValue(const Value &v) { setProperty("VALUE", v); }
       void erase(const std::string &name) { m_properties.erase(name); }
 
@@ -160,6 +191,18 @@ namespace mtconnect
       auto erase(Properties::iterator &it) { return m_properties.erase(it); }
 
       // Entity Factory
+    protected:
+      Value &getProperty_(const std::string &name)
+      {
+        static Value noValue {std::monostate()};
+        auto it = m_properties.find(name);
+        if (it == m_properties.end())
+          return noValue;
+        else
+          return it->second;
+      }
+
+      
     protected:
       QName m_name;
       Properties m_properties;

@@ -409,7 +409,7 @@ namespace mtconnect
     g_logger << dlib::LINFO << "Agent Configuration stopped";
   }
 
-  Device *AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
+  DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
 
   static std::string timestamp()
   {
@@ -676,7 +676,7 @@ namespace mtconnect
     m_agent->initialize(m_pipelineContext, options);
 
     for (auto device : m_agent->getDevices())
-      device->m_preserveUuid = defaultPreserve;
+      device->setPreserveUuid(defaultPreserve);
 
     loadAdapters(reader, options);
 
@@ -704,7 +704,7 @@ namespace mtconnect
     using namespace adapter;
     using namespace pipeline;
 
-    Device *device;
+    DevicePtr device;
     if (reader.is_block_defined("Adapters"))
     {
       const auto &adapters = reader.block("Adapters");
@@ -759,7 +759,7 @@ namespace mtconnect
         assign_value<Seconds>(configuration::ReconnectInterval, adapter, adapterOptions);
         assign_value<Seconds>(configuration::LegacyTimeout, adapter, adapterOptions);
         assign_bool_value(configuration::PreserveUUID, adapter, adapterOptions);
-        device->m_preserveUuid = get<bool>(adapterOptions[configuration::PreserveUUID]);
+        device->setPreserveUuid(get<bool>(adapterOptions[configuration::PreserveUUID]));
 
         const string host = get_with_default(adapter, configuration::Host, (string) "localhost");
         auto port = get_with_default(adapter, configuration::Port, 7878);

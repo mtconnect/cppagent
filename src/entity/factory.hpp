@@ -33,7 +33,7 @@ namespace mtconnect
     {
     public:
       using Function =
-          std::function<std::shared_ptr<Entity>(const std::string &name, Properties &)>;
+          std::function<EntityPtr(const std::string &name, Properties &)>;
       using Matcher = std::function<bool(const std::string &)>;
       using MatchPair = std::pair<Matcher, FactoryPtr>;
       using StringFactory = std::unordered_map<std::string, FactoryPtr>;

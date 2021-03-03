@@ -26,13 +26,9 @@ namespace mtconnect
   {
     namespace configuration
     {
-      class Specifications : public Configuration
+      struct Specifications
       {
-      public:
         static FactoryPtr getFactory();
-
-        Specifications() = default;
-        ~Specifications() override = default;
       };
     }  // namespace configuration
   }    // namespace device_model

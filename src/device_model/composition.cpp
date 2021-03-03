@@ -29,31 +29,33 @@ namespace mtconnect
 {
   using namespace entity;
   using namespace device_model::configuration;
-
-  FactoryPtr Composition::getFactory()
+  
+  namespace device_model
   {
-    static FactoryPtr compositions;
-    if (!compositions)
+    FactoryPtr Composition::getFactory()
     {
-      auto config = Configuration::getFactory()->deepCopy();
-      auto composition = make_shared<Factory>(
-          Requirements {Requirement("id", true), Requirement("uuid", false),
-                        Requirement("name", false), Requirement("type", true),
-                        Requirement("Description", ENTITY, Description::getFactory(), false),
-                        Requirement("Configuration", ENTITY, config, false)});
-
-      compositions = make_shared<Factory>(
-          Requirements {Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
+      static FactoryPtr compositions;
+      if (!compositions)
+      {
+        auto config = Configuration::getFactory()->deepCopy();
+        auto composition = make_shared<Factory>(
+                                                Requirements {Requirement("id", true), Requirement("uuid", false),
+          Requirement("name", false), Requirement("type", true),
+          Requirement("Description", ENTITY, Description::getFactory(), false),
+          Requirement("Configuration", ENTITY, config, false)});
+        
+        compositions = make_shared<Factory>(
+                                            Requirements {Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
+      }
+      return compositions;
     }
-    return compositions;
+    
+    FactoryPtr Composition::getRoot()
+    {
+      static auto root = make_shared<Factory>(
+                                              Requirements {Requirement("Compositions", ENTITY_LIST, Composition::getFactory(), false)});
+      
+      return root;
+    }
   }
-
-  FactoryPtr Composition::getRoot()
-  {
-    static auto root = make_shared<Factory>(
-        Requirements {Requirement("Compositions", ENTITY_LIST, Composition::getFactory(), false)});
-
-    return root;
-  }
-
 }  // namespace mtconnect

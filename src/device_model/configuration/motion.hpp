@@ -26,13 +26,9 @@ namespace mtconnect
   {
     namespace configuration
     {
-      class Motion : public Configuration
+      struct Motion
       {
-      public:
         static FactoryPtr getFactory();
-
-        Motion() = default;
-        ~Motion() override = default;
       };
     }  // namespace configuration
   }    // namespace device_model

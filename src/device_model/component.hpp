@@ -18,8 +18,8 @@
 #pragma once
 
 #include "composition.hpp"
-#include "configuration/configuration.hpp"
 #include "utilities.hpp"
+#include "entity/factory.hpp"
 
 #include <list>
 #include <map>
@@ -36,176 +36,100 @@ namespace mtconnect
     {
       class DataItem;
     }
-  }  // namespace device_model
-  class Device;
-  class Agent;
-  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
-  using namespace device_model::configuration;
-  class Component
-  {
-  public:
-    struct Reference
-    {
-      enum ReferenceType
-      {
-        DATA_ITEM,
-        COMPONENT
-      };
+    
+    class Component;
+    using ComponentPtr = std::shared_ptr<Component>;
 
-      Reference(std::string id, std::string name, ReferenceType type)
-        : m_type(type),
-          m_id(std::move(id)),
-          m_name(std::move(name)),
-          m_dataItem(nullptr),
-          m_component(nullptr)
+    class Device;
+    using DevicePtr = std::shared_ptr<Device>;
+    
+    using DataItemPtr = std::shared_ptr<data_item::DataItem>;
+    class Component : public entity::Entity
+    {
+    public:
+      Component(const std::string &name, const entity::Properties &props);
+      static ComponentPtr make(const std::string &name,
+                               const entity::Properties &props,
+                               entity::ErrorList &errors)
       {
+        entity::Properties ps(props);
+        auto ptr = getFactory()->make(name, ps, errors);
+        return std::dynamic_pointer_cast<Component>(ptr);
       }
 
-      ReferenceType m_type;
+      static entity::FactoryPtr getFactory();
+      auto getptr() const
+      {
+        return std::dynamic_pointer_cast<Component>(Entity::getptr());
+      }
+                  
+      // Virtual destructor
+      virtual ~Component();
+            
+      // Getter methods for the component ID/Name
+      const auto &getId() const { return m_id; }
+      const auto &getUuid() const { return m_uuid; }
+      
+      // Setter methods
+      void setUuid(const std::string &uuid)
+      {
+        m_uuid = uuid;
+        setProperty("uuid", uuid);
+      }
+      
+      // Get the device that any component is associated with
+      virtual DevicePtr getDevice() const
+      {
+        if (!m_device && m_parent)
+        {
+          const_cast<Component*>(this)->m_device = m_parent->getDevice();
+        }
+        return m_device;
+      }
+      
+      // Set/Get the component's parent component
+      ComponentPtr getParent() const { return m_parent; }
+      
+      // Add to/get the component's std::list of children
+      auto getChildren() const { return getList("Components"); }
+      void addChild(ComponentPtr child, entity::ErrorList &errors)
+      {
+        addToList<Component>("Components", child, errors);
+        child->setParent(getptr());
+      }
+
+      // Add to/get the component's std::list of data items
+      virtual void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors);
+      auto getDataItems() const { return getList("DataItems"); }
+      
+      bool operator<(const Component &comp) const { return m_id < comp.getId(); }
+      bool operator==(const Component &comp) const { return m_id == comp.getId(); }
+      
+      // References
+      void resolveReferences();
+      
+    protected:
+      void setParent(ComponentPtr parent) { m_parent = parent; }
+      
+    protected:
+      // Unique ID for each component
       std::string m_id;
-      std::string m_name;
-      DataItemPtr m_dataItem;
-      Component *m_component;
+      
+      // Name for itself
+      std::optional<std::string> m_name;
+
+      // Universal unique identifier
+      std::optional<std::string> m_uuid;
+      
+      // Component relationships
+      // Pointer to the parent component
+      ComponentPtr m_parent;
+      DevicePtr m_device;
     };
-
-  public:
-    // Take in a class name & mapping of attributes
-    Component(const std::string &className, const std::map<std::string, std::string> &attributes,
-              const std::string &prefix = "");
-
-    // Virtual destructor
-    virtual ~Component();
-
-    // Return a map of attributes of all the component specs
-    const std::map<std::string, std::string> &getAttributes() { return m_attributes; }
-
-    // Return what part of the component it is
-    const std::string &getClass() const { return m_class; }
-    const std::string &getPrefixedClass() const { return m_prefixedClass; }
-
-    // Getter methods for the component ID/Name
-    const std::string &getId() const { return m_id; }
-    const std::string &getName() const { return m_name; }
-    const std::string &getNativeName() const { return m_nativeName; }
-    const std::string &getUuid() const { return m_uuid; }
-    const std::string &getDescriptionBody() const { return m_descriptionBody; }
-    const std::string &getPrefix() const { return m_prefix; }
-
-    const auto &getConfiguration() const { return m_configuration; }
-    void setConfiguration(std::unique_ptr<Configuration> &conf)
+    
+    struct ComponentComp
     {
-      m_configuration = std::move(conf);
-    }
-
-    // Setter methods
-    void setUuid(const std::string &uuid)
-    {
-      m_uuid = uuid;
-      reBuildAttributes();
-    }
-    void setManufacturer(const std::string &manufacturer)
-    {
-      m_description["manufacturer"] = manufacturer;
-    }
-    void setSerialNumber(const std::string &serialNumber)
-    {
-      m_description["serialNumber"] = serialNumber;
-    }
-    void setStation(const std::string &station) { m_description["station"] = station; }
-    void setDescription(const std::string &description) { m_descriptionBody = description; }
-    void setNativeName(const std::string &nativeName)
-    {
-      m_nativeName = nativeName;
-      reBuildAttributes();
-    }
-
-    // Add/get description specifications using an attribute map
-    void addDescription(std::string body, const std::map<std::string, std::string> &attributes);
-    const std::map<std::string, std::string> &getDescription() const { return m_description; }
-
-    // Get the device that any component is associated with
-    Device *getDevice();
-
-    // Set/Get the component's parent component
-    Component *getParent() const { return m_parent; }
-
-    // Add to/get the component's std::list of children
-    void addChild(Component *child)
-    {
-      child->setParent(this);
-      m_children.emplace_back(child);
-    }
-    std::list<Component *> &getChildren() { return m_children; }
-
-    const auto &getCompositions() const { return m_compositions; }
-    void setCompositions(std::unique_ptr<Composition> &comp) { m_compositions = std::move(comp); }
-
-    // Add to/get the component's std::list of data items
-    virtual void addDataItem(DataItemPtr dataItem);
-    const std::list<DataItemPtr> &getDataItems() const { return m_dataItems; }
-
-    bool operator<(const Component &comp) const { return m_id < comp.getId(); }
-    bool operator==(const Component &comp) const { return m_id == comp.getId(); }
-
-    // References
-    void addReference(Reference &reference) { m_references.emplace_back(reference); }
-    const auto &getReferences() const { return m_references; }
-
-    void resolveReferences();
-
-  protected:
-    // Return a map of attributes of all the component specs
-    std::map<std::string, std::string> buildAttributes() const;
-    void reBuildAttributes() { m_attributes = buildAttributes(); }
-    void setParent(Component *parent);
-
-  protected:
-    // Unique ID for each component
-    std::string m_id;
-
-    // Name for itself
-    std::string m_name;
-    std::string m_nativeName;
-
-    // The class
-    std::string m_class;
-    std::string m_prefix;
-    std::string m_prefixedClass;
-
-    // Universal unique identifier
-    std::string m_uuid;
-
-    // If receiving data, a sample rate is needed
-    double m_sampleInterval;
-
-    // Description of itself
-    std::map<std::string, std::string> m_description;
-    std::string m_descriptionBody;
-    std::unique_ptr<Configuration> m_configuration;
-
-    // Component relationships
-    // Pointer to the parent component
-    Component *m_parent;
-    Device *m_device;
-
-    // Each component keeps track of it's children in a std::list
-    std::list<Component *> m_children;
-
-    // Keep Track of all the data items associated with this component
-    std::list<DataItemPtr> m_dataItems;
-
-    // List of all the compositions
-    std::unique_ptr<Composition> m_compositions;
-
-    // The set of attribtues
-    std::map<std::string, std::string> m_attributes;
-
-    // References
-    std::list<Reference> m_references;
-  };
-
-  struct ComponentComp
-  {
-    bool operator()(const Component *lhs, const Component *rhs) const { return *lhs < *rhs; }
-  };
+      bool operator()(const Component *lhs, const Component *rhs) const { return *lhs < *rhs; }
+    };
+  }
 }  // namespace mtconnect

@@ -55,7 +55,7 @@ class DeviceTest : public testing::Test
     m_devB = nullptr;
   }
 
-  Device *m_devA{nullptr}, *m_devB{nullptr};
+  DevicePtr m_devA{nullptr}, *m_devB{nullptr};
 };
 
 TEST_F(DeviceTest, Getters)

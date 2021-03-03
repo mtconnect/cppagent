@@ -55,7 +55,7 @@ class CuttingToolTest : public testing::Test
   }
   
   std::string m_agentId;
-  Device *m_device{nullptr};
+  DevicePtr m_device{nullptr};
   
   std::unique_ptr<XmlWriter> m_writer;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;

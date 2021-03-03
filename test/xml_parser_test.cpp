@@ -67,7 +67,7 @@ class XmlParserTest : public testing::Test
   }
 
   XmlParser *m_xmlParser{nullptr};
-  std::list<Device *> m_devices;
+  std::list<DevicePtr > m_devices;
 };
 
 TEST_F(XmlParserTest, Constructor)
@@ -300,7 +300,7 @@ TEST_F(XmlParserTest, FilteredDataItem13)
            << "/samples/filter_example_1.3.xml";
   }
 
-  Device *dev = m_devices.front();
+  DevicePtr dev = m_devices.front();
   DataItemPtr di = dev->getDeviceDataItem("c1");
 
   ASSERT_TRUE(di->getMinimumDelta());

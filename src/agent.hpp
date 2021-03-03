@@ -28,6 +28,9 @@
 #include "printer.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
+#include "device_model/device.hpp"
+#include "device_model/agent_device.hpp"
+
 #include <unordered_map>
 
 #include <chrono>
@@ -45,8 +48,6 @@ namespace mtconnect
   {
     class Adapter;
   }
-  class Device;
-  class AgentDevice;
   namespace device_model
   {
     namespace data_item
@@ -101,16 +102,16 @@ namespace mtconnect
     const auto &getAdapters() const { return m_adapters; }
 
     // Get device from device map
-    Device *getDeviceByName(const std::string &name);
-    Device *getDeviceByName(const std::string &name) const;
-    Device *findDeviceByUUIDorName(const std::string &idOrName) const;
+    DevicePtr getDeviceByName(const std::string &name);
+    DevicePtr getDeviceByName(const std::string &name) const;
+    DevicePtr findDeviceByUUIDorName(const std::string &idOrName) const;
     const auto &getDevices() const { return m_devices; }
-    Device *defaultDevice() const
+    DevicePtr defaultDevice() const
     {
       if (m_devices.size() > 0)
       {
         for (auto device : m_devices)
-          if (device->getClass() != "Agent")
+          if (device->getName() != "Agent")
             return device;
       }
 
@@ -118,8 +119,8 @@ namespace mtconnect
     }
 
     // Add the a device from a configuration file
-    void addDevice(Device *device);
-    void deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName);
+    void addDevice(DevicePtr device);
+    void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
 
     // Add component events to the sliding buffer
     observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation);
@@ -130,10 +131,10 @@ namespace mtconnect
 
     // Asset management
     void addAsset(AssetPtr asset);
-    AssetPtr addAsset(Device *device, const std::string &asset,
+    AssetPtr addAsset(DevicePtr device, const std::string &asset,
                       const std::optional<std::string> &id, const std::optional<std::string> &type,
                       const std::optional<std::string> &time, entity::ErrorList &errors);
-    bool removeAsset(Device *device, const std::string &id,
+    bool removeAsset(DevicePtr device, const std::string &id,
                      const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,
                          const std::optional<std::string> type, const std::optional<Timestamp> time,
@@ -243,8 +244,8 @@ namespace mtconnect
     // Initialization methods
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
-    void verifyDevice(Device *device);
-    void initializeDataItems(Device *device);
+    void verifyDevice(DevicePtr device);
+    void initializeDataItems(DevicePtr device);
     void loadCachedProbe();
 
     // HTTP Routings
@@ -277,7 +278,7 @@ namespace mtconnect
                            const std::string &text) const;
 
     // Handle the device/path parameters for the xpath search
-    std::string devicesAndPath(const std::optional<std::string> &path, const Device *device) const;
+    std::string devicesAndPath(const std::optional<std::string> &path, const DevicePtr device) const;
 
     // Find data items by name/id
     DataItemPtr getDataItemById(const std::string &id) const
@@ -293,8 +294,8 @@ namespace mtconnect
     void checkRange(const Printer *printer, const T value, const T min, const T max,
                     const std::string &param, bool notZero = false) const;
     void checkPath(const Printer *printer, const std::optional<std::string> &path,
-                   const Device *device, observation::FilterSet &filter) const;
-    Device *checkDevice(const Printer *printer, const std::string &uuid) const;
+                   const DevicePtr device, observation::FilterSet &filter) const;
+    DevicePtr checkDevice(const Printer *printer, const std::string &uuid) const;
 
   protected:
     // Unique id based on the time of creation
@@ -313,16 +314,16 @@ namespace mtconnect
     observation::CircularBuffer m_circularBuffer;
 
     // Agent Device
-    AgentDevice *m_agentDevice {nullptr};
+    device_model::AgentDevicePtr m_agentDevice;
 
     // Asset Buffer
     AssetBuffer m_assetBuffer;
 
     // Data containers
     std::list<adapter::Adapter *> m_adapters;
-    std::list<Device *> m_devices;
-    std::unordered_map<std::string, Device *> m_deviceNameMap;
-    std::unordered_map<std::string, Device *> m_deviceUuidMap;
+    std::list<DevicePtr> m_devices;
+    std::unordered_map<std::string, DevicePtr> m_deviceNameMap;
+    std::unordered_map<std::string, DevicePtr> m_deviceUuidMap;
     std::unordered_map<std::string, DataItemPtr> m_dataItemMap;
 
     // Loopback
@@ -343,13 +344,13 @@ namespace mtconnect
     AgentPipelineContract(Agent *agent) : m_agent(agent) {}
     ~AgentPipelineContract() = default;
 
-    Device *findDevice(const std::string &device) override
+    DevicePtr findDevice(const std::string &device) override
     {
       return m_agent->findDeviceByUUIDorName(device);
     }
     DataItemPtr findDataItem(const std::string &device, const std::string &name) override
     {
-      Device *dev = m_agent->findDeviceByUUIDorName(device);
+      DevicePtr dev = m_agent->findDeviceByUUIDorName(device);
       if (dev != nullptr)
       {
         return dev->getDeviceDataItem(name);

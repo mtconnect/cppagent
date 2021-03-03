@@ -67,7 +67,7 @@ class AgentDeviceTest : public testing::Test
   }
   
  public:
-  AgentDevice *m_agentDevice{nullptr};
+  AgentDevicePtr m_agentDevice{nullptr};
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   uint16_t m_port{21788};

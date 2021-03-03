@@ -141,8 +141,8 @@ namespace mtconnect
         }
 
         // Set/get component that data item is associated with
-        void setComponent(Component &component) { m_component = &component; }
-        Component *getComponent() const { return m_component; }
+        void setComponent(ComponentPtr component) { m_component = component; }
+        ComponentPtr getComponent() const { return m_component; }
 
         // Get the name for the adapter feed
         const std::string &getSourceOrName() const { return m_preferredName; }
@@ -191,7 +191,7 @@ namespace mtconnect
         std::string m_initialValue;
 
         // Component that data item is associated with
-        Component *m_component;
+        ComponentPtr m_component;
 
         // The data source for this data item
         std::optional<std::string> m_dataSource;

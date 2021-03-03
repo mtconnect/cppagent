@@ -43,15 +43,15 @@ namespace mtconnect
 
       FactoryPtr DataItem::getFactory()
       {
-        static FactoryPtr factory;
-        if (!factory)
+        static FactoryPtr dataItem;
+        if (!dataItem)
         {
           auto source = Source::getFactory();
           auto filter = Filter::getFactory();
           auto relationships = Relationships::getFactory();
           auto definition = device_model::data_item::Definition::getFactory();
           auto constraints = Constraints::getFactory();
-          factory = make_shared<Factory>(Requirements {
+          FactoryPtr factory = make_shared<Factory>(Requirements {
               // Attributes
               {"id", true},
               {"name", false},
@@ -85,9 +85,11 @@ namespace mtconnect
 
           factory->setOrder({"Source", "Constraints", "Filters", "InitialValue", "ResetTriger",
                              "Definition", "Relationships"});
+          dataItem = make_shared<Factory>(
+              Requirements {{"DataItem", ENTITY, factory, 1, Requirement::Infinite}});
         }
 
-        return factory;
+        return dataItem;
       }
 
       FactoryPtr DataItem::getRoot()
@@ -96,9 +98,7 @@ namespace mtconnect
         if (!root)
         {
           auto factory = DataItem::getFactory();
-          auto dataItem = make_shared<Factory>(
-              Requirements {{"DataItem", ENTITY, factory, 1, Requirement::Infinite}});
-          root = make_shared<Factory>(Requirements {{"DataItems", ENTITY_LIST, dataItem, false}});
+          root = make_shared<Factory>(Requirements {{"DataItems", ENTITY_LIST, factory, false}});
         }
         return root;
       }

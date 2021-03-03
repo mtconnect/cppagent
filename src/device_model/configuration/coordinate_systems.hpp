@@ -26,13 +26,9 @@ namespace mtconnect
   {
     namespace configuration
     {
-      class CoordinateSystems : public Configuration
+      struct CoordinateSystems
       {
-      public:
         static FactoryPtr getFactory();
-
-        CoordinateSystems() = default;
-        ~CoordinateSystems() override = default;
       };
     }  // namespace configuration
   }    // namespace device_model

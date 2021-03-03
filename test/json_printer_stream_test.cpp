@@ -98,7 +98,7 @@ class JsonPrinterStreamTest : public testing::Test
   std::unique_ptr<JsonPrinter> m_printer;
   std::unique_ptr<XmlParser> m_config;
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
-  std::list<Device *> m_devices;
+  std::list<DevicePtr > m_devices;
 };
 
 Properties operator "" _value(unsigned long long value)

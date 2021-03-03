@@ -44,7 +44,7 @@ namespace mtconnect
 
     std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                            const uint64_t nextSeq, const unsigned int assetBufferSize,
-                           const unsigned int assetCount, const std::list<Device *> &devices,
+                           const unsigned int assetCount, const std::list<DevicePtr> &devices,
                            const std::map<std::string, int> *count = nullptr) const override;
 
     std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
@@ -110,7 +110,7 @@ namespace mtconnect
                     const std::map<std::string, int> *counts = nullptr) const;
 
     // Helper to print individual components and details
-    void printProbeHelper(xmlTextWriterPtr writer, Component *component, const char *name) const;
+    void printProbeHelper(xmlTextWriterPtr writer, device_model::ComponentPtr component, const char *name) const;
     void printDataItem(xmlTextWriterPtr writer, DataItemPtr dataItem) const;
     void addObservation(xmlTextWriterPtr writer, observation::ObservationPtr result) const;
 

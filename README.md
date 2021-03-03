@@ -1091,3 +1091,69 @@ An example in ruby is as follows:
     => #<Net::HTTPOK 200 OK readbody=true>
     > r.body
     => "<success/>"
+	
+# Building the agent on Windows and Ubuntu
+
+## Building on Windows
+
+Installing vcpkg in c:\vcpkg
+
+    c:
+    cd \
+    git clone https://github.com/microsoft/vcpkg
+    vcpkg integrate install
+    vcpkg install boost:x64-windows-static For x86  boost:ix86-windows-static
+
+### This will create a toolchain file that needs to be referenced when settup up the build directory
+
+If you installed in c:\vcpkg, the following define must be used:
+
+    -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake
+	
+In general
+
+    -DCMAKE_TOOLCHAIN_FILE=[path-to-vcpkg]/scripts/buildsystems/vcpkg.cmake`
+	
+### Setting up build
+
+Clone the agent to another directory:
+
+    cd [home-directory]
+    git clone git@github.com:/mtconnect/cppagent_dev.git
+
+Make a build subdirectory of `cppagent_dev`
+
+    mkdir cppagent_dev\build	
+	cd cppagent_dev\build
+
+####  For the 64 bit build
+
+    cmake -G "Visual Studio 16 2019" -A x64 .. -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static
+	
+#### For the x86 build for XP
+
+    cmake -G "Visual Studio 16 2019" -A x86 .. -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-windows-static
+
+### Build from the command line
+
+#### For the x64 build
+
+    cmake -G "Visual Studio 16 2019" -A x64 ..
+    cmake --build . --config Release --target ALL_BUILD
+	ctest -C Release
+    cpack -G ZIP
+
+#### For the x86 build
+
+    cmake -T v141_xp -G "Visual Studio 16 2019" -A Win32 -D AGENT_ENABLE_UNITTESTS=false -D WINVER=0x0501 ..
+    cmake --build . --config Release 
+    cpack -G ZIP
+
+## Building on Ubuntu on 20.04 LTS
+
+	git clone git@github.com:/mtconnect/cppagent_dev.git
+    sudo apt-get install build-essential boost
+	mkdir build
+	cmake -D CMAKE_BUILD_TYPE=Release ../
+	cmake --build .
+	ctest -C Release

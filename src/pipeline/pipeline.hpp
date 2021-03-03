@@ -25,7 +25,10 @@
 namespace mtconnect
 {
   class Agent;
-  class Device;
+  namespace device_model
+  {
+    class Device;
+  }
   class Asset;
   using AssetPtr = std::shared_ptr<Asset>;
 

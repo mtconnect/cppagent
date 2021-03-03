@@ -25,67 +25,85 @@
 
 namespace mtconnect
 {
-  class Component;
   namespace adapter
   {
     class Adapter;
   }
-
-  class Device : public Component
+  
+  namespace device_model
   {
-  public:
-    // Constructor that sets variables from an attribute map
-    Device(const Attributes &attributes, const std::string block = "Device");
-    ~Device() override;
-
-    void setOptions(const ConfigOptions &options);
-
-    // Add/get items to/from the device name to data item mapping
-    void addDeviceDataItem(DataItemPtr dataItem);
-    DataItemPtr getDeviceDataItem(const std::string &name) const;
-    void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
-    Component *getComponentById(const std::string &aId) const
+    class Device : public Component
     {
-      auto comp = m_componentsById.find(aId);
-      if (comp != m_componentsById.end())
-        return comp->second;
-      else
-        return nullptr;
-    }
-    void addComponent(Component *aComponent)
-    {
-      m_componentsById.insert(make_pair(aComponent->getId(), aComponent));
-    }
+    public:
+      // Constructor that sets variables from an attribute map
+      Device(const std::string &name, entity::Properties &props);
+      ~Device() override = default;
+      static entity::FactoryPtr getFactory();
+      
+      auto getptr() const
+      {
+        return std::dynamic_pointer_cast<Device>(Entity::getptr());
+      }
 
-    // Return the mapping of Device to data items
-    const auto &getDeviceDataItems() const { return m_deviceDataItemsById; }
-
-    void addDataItem(DataItemPtr dataItem) override;
-
-    std::vector<adapter::Adapter *> m_adapters;
-    bool m_preserveUuid;
-    bool m_availabilityAdded;
-
-    const std::string &getMTConnectVersion() const { return m_mtconnectVersion; }
-
-    // Cached data items
-    DataItemPtr getAvailability() const { return m_availability; }
-    DataItemPtr getAssetChanged() const { return m_assetChanged; }
-    DataItemPtr getAssetRemoved() const { return m_assetRemoved; }
-
-  protected:
-    // The iso841Class of the device
-    unsigned int m_iso841Class;
-    std::string m_mtconnectVersion;
-
-    DataItemPtr m_availability;
-    DataItemPtr m_assetChanged;
-    DataItemPtr m_assetRemoved;
-
-    // Mapping of device names to data items
-    std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsByName;
-    std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsById;
-    std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsBySource;
-    std::unordered_map<std::string, Component *> m_componentsById;
-  };
+      void setOptions(const ConfigOptions &options);
+      
+      // Add/get items to/from the device name to data item mapping
+      void addDeviceDataItem(DataItemPtr dataItem);
+      DataItemPtr getDeviceDataItem(const std::string &name) const;
+      
+      void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
+      ComponentPtr getComponentById(const std::string &aId) const
+      {
+        auto comp = m_componentsById.find(aId);
+        if (comp != m_componentsById.end())
+          return comp->second;
+        else
+          return nullptr;
+      }
+      void addComponent(Component *aComponent)
+      {
+        m_componentsById.insert(make_pair(aComponent->getId(), aComponent));
+      }
+      
+      DevicePtr getDevice() const override { return getptr(); }
+      
+      // Return the mapping of Device to data items
+      const auto &getDeviceDataItems() const { return m_deviceDataItemsById; }
+      
+      void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors) override;
+      
+      std::vector<adapter::Adapter *> m_adapters;
+      
+      auto getMTConnectVersion() const { maybeGet<std::string>("mtconnectVersion"); }
+      
+      // Cached data items
+      DataItemPtr getAvailability() const { return m_availability; }
+      DataItemPtr getAssetChanged() const { return m_assetChanged; }
+      DataItemPtr getAssetRemoved() const { return m_assetRemoved; }
+      
+      void setPreserveUuid(bool v) { m_preserveUuid = v; }
+      bool preserveUuid() const { return m_preserveUuid; }
+      
+      const std::string &getUuid() const { return get<std::string>("uuid"); }
+      
+    protected:
+      void cachePointers(DataItemPtr dataItem);
+      
+    protected:
+      bool m_preserveUuid;
+      
+      DataItemPtr m_availability;
+      DataItemPtr m_assetChanged;
+      DataItemPtr m_assetRemoved;
+      
+      // Mapping of device names to data items
+      std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsByName;
+      std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsById;
+      std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsBySource;
+      std::unordered_map<std::string, ComponentPtr> m_componentsById;
+    };
+    
+    using DevicePtr = std::shared_ptr<Device>;
+  }
+  using DevicePtr = std::shared_ptr<device_model::Device>;
 }  // namespace mtconnect

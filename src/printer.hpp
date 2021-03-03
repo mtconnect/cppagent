@@ -12,9 +12,13 @@
 
 namespace mtconnect
 {
-  class Device;
+  namespace device_model
+  {
+    class Device;
+  }
   class Asset;
   class CuttingTool;
+  using DevicePtr = std::shared_ptr<device_model::Device>;
 
   using ProtoErrorList = std::list<std::pair<std::string, std::string>>;
 
@@ -36,7 +40,7 @@ namespace mtconnect
     virtual std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                    const uint64_t nextSeq, const unsigned int assetBufferSize,
                                    const unsigned int assetCount,
-                                   const std::list<Device *> &devices,
+                                   const std::list<DevicePtr> &devices,
                                    const std::map<std::string, int> *count = nullptr) const = 0;
 
     virtual std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,

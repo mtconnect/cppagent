@@ -26,16 +26,9 @@ namespace mtconnect
   {
     namespace configuration
     {
-      class SensorConfiguration : public Configuration
+      struct SensorConfiguration
       {
-      public:
         static FactoryPtr getFactory();
-
-        SensorConfiguration() = default;
-        ~SensorConfiguration() override = default;
-
-      protected:
-        EntityPtr m_entity;
       };
     }  // namespace configuration
   }    // namespace device_model

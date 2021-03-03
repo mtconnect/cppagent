@@ -61,7 +61,7 @@ class XmlPrinterTest : public testing::Test
 
   mtconnect::XmlParser *m_config{nullptr};
   mtconnect::XmlPrinter *m_printer{nullptr};
-  std::list<mtconnect::Device *> m_devices;
+  std::list<mtconnect::DevicePtr > m_devices;
 
   // Construct a component event and set it as the data item's latest event
   ObservationPtr addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
@@ -260,7 +260,7 @@ TEST_F(XmlPrinterTest, ChangeDevicesNamespace)
 
   {
     XmlParser ext;
-    std::list<Device *> extdevs =
+    std::list<DevicePtr > extdevs =
         ext.parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", m_printer);
     PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, extdevs));
 
