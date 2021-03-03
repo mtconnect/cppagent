@@ -53,7 +53,6 @@ namespace mtconnect
       try
       {
         run = true;
-        //do_session();
         httpProcess = new std::thread(&Server::listen, this );
         httpProcess->join();
       }
@@ -64,15 +63,12 @@ namespace mtconnect
       }
     }
 
-    // Handles an HTTP server connection
+    // Listen for an HTTP server connection
     void Server::listen()
     {
       bool close = false;
       beast::error_code ec;
-
-      // This buffer is required to persist across reads
       beast::flat_buffer buffer;
-      // The io_context is required for all I/O
       net::io_context ioc{1};
 
 //            if(enableSSL) {
@@ -83,79 +79,25 @@ namespace mtconnect
 //                load_server_certificate(ctx);
 //            }
 
-      // The acceptor receives incoming connections
+      // Blocking call to listen for a connection
       tcp::acceptor acceptor{ioc, {address, mPort}};
 
       tcp::socket socket{ioc};
 
       while (run) {
-        // Block until we get a connection
         acceptor.accept(socket);
-
-        //beast::tcp_stream temp(std::move(socket));
-
-        // This lambda is used to send messages
         send_lambda<tcp::socket> lambda{socket, close, ec};
-        //beast::tcp_stream out(std::move(socket));
 
         for (;;) {
-          // Read a request
-
           http::request<http::string_body> req;
           http::read(socket, buffer, req, ec);
-
           if (ec == http::error::end_of_stream)
             break;
-
-          //http::response<http::string_body, http::fields> reqRes = make_response(req);
-          // Send the response
           Routing::Request request = getRequest(req, socket);
-          //template<class Stream> T
-          //beast::tcp_stream stream_(std::move(socket));
-          std::ostream out{0};//{std::move(stream_)};
-          Response response(out);
-          //http_server::Response response();
-          bool res{true};
-          try
-          {
-//            if (!dispatch(request, response))
-//            {
-//              stringstream msg;
-//              msg << "Error processing request from: " << request.m_foreignIp << " - "
-//                  << "No matching route for: " << request.m_verb << " " << request.m_path;
-//              g_logger << LERROR << msg.str();
-//
-//              if (m_errorFunction)
-//                m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
-//              res = false;
-//            }
-          }
-          catch (RequestError &e)
-          {
-            g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - "
-                     << e.what();
-            //response.writeResponse(e.m_body, e.m_contentType, e.m_code);
-            res = false;
-          }
-          catch (ParameterError &e)
-          {
-            stringstream msg;
-            msg << "Parameter Error processing request from: " << request.m_foreignIp << " - "
-                << e.what();
-            g_logger << LERROR << msg.str();
-
-            //if (m_errorFunction)
-              //m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
-            res = false;
-          }
-
-
           handle_request(std::move(req), lambda);
           if (ec)
             return fail(ec, "write");
           if (close) {
-            // This means we should close the connection, usually because
-            // the response indicated the "Connection: close" semantic.
             break;
           }
         }
@@ -163,41 +105,8 @@ namespace mtconnect
         // Send a TCP shutdown
         socket.shutdown(tcp::socket::shutdown_send, ec);
       }
-      // At this point the connection is closed gracefully
     }
 
-    void accept() {};
-    void Server::send_response(
-        http::status status,
-        std::string const& error, tcp::socket socket)
-    {
-        http::response<http::string_body> string_response;
-//      string_response_.emplace(
-//          std::piecewise_construct,
-//          std::make_tuple(),
-//          std::make_tuple(alloc_));
-//
-//      string_response_->result(status);
-//      string_response_->keep_alive(false);
-//      string_response_->set(http::field::server, "Beast");
-//      string_response_->set(http::field::content_type, "text/plain");
-//      string_response_->body() = error;
-//      string_response_->prepare_payload();
-//
-//      string_serializer_.emplace(*string_response_);
-//
-//      http::write(
-//          socket,
-//          *string_serializer_
-//          [this](beast::error_code ec, std::size_t)
-//          {
-//            socket.shutdown(tcp::socket::shutdown_send, ec);
-//            string_serializer_.reset();
-//            string_response_.reset();
-//            accept();
-//          }
-//          );
-    }
 
     //Parse http::request and return
     Routing::Request Server::getRequest(const http::request<http::string_body>& req, const tcp::socket& socket)
@@ -280,50 +189,12 @@ namespace mtconnect
       }
     }
 
-    bool Server::handleRequest(Routing::Request &request, Response &response)
-    {
-      bool res{true};
-      try
-      {
-        if (!dispatch(request, response))
-        {
-          stringstream msg;
-          msg << "Error processing request from: " << request.m_foreignIp << " - "
-              << "No matching route for: " << request.m_verb << " " << request.m_path;
-          g_logger << LERROR << msg.str();
-
-          if (m_errorFunction)
-            m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
-          res = false;
-        }
-      }
-      catch (RequestError &e)
-      {
-        g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - "
-                 << e.what();
-        response.writeResponse(e.m_body, e.m_contentType, e.m_code);
-        res = false;
-      }
-      catch (ParameterError &e)
-      {
-        stringstream msg;
-        msg << "Parameter Error processing request from: " << request.m_foreignIp << " - "
-            << e.what();
-        g_logger << LERROR << msg.str();
-
-        if (m_errorFunction)
-          m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
-        res = false;
-      }
-
-      response.flush();
-      return res;
-    }
 
     template<class Body, class Allocator, class Send>
     void Server::handle_request(http::request<Body, http::basic_fields<Allocator>> &&req,
     Send &&send)
     {
+      beast::error_code ec;
       // Returns a bad request response
       auto const bad_request =
           [&req](beast::string_view why) {
@@ -359,37 +230,11 @@ namespace mtconnect
             res.prepare_payload();
             return res;
           };
-//
-//      // Make sure we can handle the method
-//      if (req.method() != http::verb::get &&
-//          req.method() != http::verb::head)
-//        return send(bad_request("Unknown HTTP-method"));
-//
-//      // Request path must be absolute and not contain "..".
-//      if (req.target().empty() ||
-//          req.target()[0] != '/' ||
-//          req.target().find("..") != beast::string_view::npos)
-//        return send(bad_request("Illegal request-target"));
-//
-//      // Build the path to the requested file
-//      std::string path = path_cat(doc_root, req.target());
-//      if (req.target().back() == '/')
-//        path.append("index.html");
 
-      // Attempt to open the file
-      beast::error_code ec;
       http::file_body::value_type body;
       body.open("device.xml", beast::file_mode::scan, ec);
-
-      //Handle the case where the file doesn't exist
-      if (ec == beast::errc::no_such_file_or_directory)
-        return send(not_found(req.target()));
-
-      // Handle an unknown error
-      //if (ec)
-      //  return send(server_error(ec.message()));
-
-      // Cache the size since we need it after the move
+      if (ec)
+        return send(server_error(ec.message()));
       auto const size = body.size();
 
       // Respond to HEAD request
@@ -425,7 +270,6 @@ namespace mtconnect
       }
       else
       {
-        //auto const std::string().size( textSize = req.target().data());
         auto const textSize = req.target().size();
         http::response<http::string_body> res{
             std::piecewise_construct,
@@ -438,9 +282,6 @@ namespace mtconnect
         return send(std::move(res));
       }
     }
-
-
-  //}
 
 //------------------------------------------------------------------------------
 

@@ -139,7 +139,6 @@ namespace mtconnect
         return false;
       }
 
-      bool handleRequest(Routing::Request &request, Response &response);
 
       //template<class Body, class Allocator, class Send>
       template<class Body, class Allocator, class Send>
@@ -151,11 +150,6 @@ namespace mtconnect
 
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
 
-    protected:
-      // HTTP Protocol
-      void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
-                      const std::string &local_ip, unsigned short foreign_port,
-                      unsigned short local_port, uint64_t);
 
     protected:
       net::ip::address address;
@@ -174,7 +168,6 @@ namespace mtconnect
       ErrorFunction m_errorFunction;
       Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket);
       Routing::QueryMap getQueries(const std::string& queries);
-      void send_response( http::status status, std::string const& error, tcp::socket socket);
     };
   }  // namespace http_server
 }  // namespace mtconnect
