@@ -17,17 +17,16 @@
 
 #pragma once
 //#include "fields_alloc.hpp"
-
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast.hpp>
 #include <boost/bind/bind.hpp>
-//#include <boost/beast/ssl.hpp>
-//#include <boost/asio/ssl/stream.hpp>
-
 #include <boost/beast/version.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
+//#include <boost/beast/ssl.hpp>
+//#include <boost/asio/ssl/stream.hpp>
+
 #include <cstdlib>
 #include <iostream>
 #include <string>
@@ -40,7 +39,9 @@
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
+#include "config_options.hpp"
 #include "utilities.hpp"
+
 //#include "http_server.hpp"
 //#include <dlib/server.h>
 
@@ -55,8 +56,6 @@ namespace mtconnect
     //namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
     using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
-    class Body
-    {};
 
     class RequestError : public std::logic_error
     {
@@ -81,35 +80,18 @@ namespace mtconnect
     class Server
     {
 
-      //using alloc_t = fields_alloc<char>;
-      // The allocator used for the fields in the request and reply.
-      // The allocator used for the fields in the request and reply.
-      //alloc_t alloc_{8192};
-
-      // The string-based response message.
-      //boost::optional<http::response<http::string_body, http::basic_fields<alloc_t>>> string_response_;
-      // The string-based response serializer.
-      //boost::optional<http::response_serializer<http::string_body, http::basic_fields<alloc_t>>> string_serializer_;
-
-
     public:
-      Server(unsigned short port, const std::string &inter, const ConfigOptions& options);
-//      {
-//        m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
-//                             const ResponseCode code) {
-//          response.writeResponse(msg, code);
-//          return true;
-//        };
-//      }
-
-      // Overridden method that is called per web request – not used
-      // using httpRequest which is called from our own on_connect method.
-//      const std::string on_request(const dlib::incoming_things &incoming,
-//                                   dlib::outgoing_things &outgoing) override
-//      {
-//        throw std::logic_error("Not Implemented");
-//        return "";
-//      }
+      Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {}):
+      mPort(port)
+      {
+        address = net::ip::make_address(inter);
+        const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
+        m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
+                             const ResponseCode code) {
+          response.writeResponse(msg, code);
+          return true;
+        };
+      }
 
       // Start the http server
       void start();
@@ -118,6 +100,11 @@ namespace mtconnect
       void stop(){run=false;};
 
       void listen();
+
+      void setHttpHeaders(const StringList &fields)
+      {
+        m_fields = fields;
+      }
 
       // PUT and POST handling
       void enablePut(bool flag = true) { m_putEnabled = flag; }
@@ -154,8 +141,6 @@ namespace mtconnect
     protected:
       net::ip::address address;
       unsigned short mPort{5000};
-      std::shared_ptr<std::string> doc_root;
-      //tcp::acceptor acceptor{0};
       std::thread* httpProcess;
       bool run{false};
       bool enableSSL{false};
@@ -166,6 +151,7 @@ namespace mtconnect
       std::list<Routing> m_routings;
       std::unique_ptr<FileCache> m_fileCache;
       ErrorFunction m_errorFunction;
+      StringList m_fields;
       Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket);
       Routing::QueryMap getQueries(const std::string& queries);
     };

@@ -37,16 +37,6 @@ namespace mtconnect
     static dlib::logger g_logger("HttpServer");
 
 
-    Server::Server(unsigned short port, const std::string &inter, const ConfigOptions& options)
-    {
-      address = net::ip::make_address("0.0.0.0");
-      mPort = 5023;
-      m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
-                           const ResponseCode code) {
-        response.writeResponse(msg, code);
-        return true;
-      };
-    }
 
     void Server::start()
     {
