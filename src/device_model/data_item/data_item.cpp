@@ -238,15 +238,18 @@ namespace mtconnect
       // Sort by: Device, Component, Category, DataItem
       bool DataItem::operator<(const DataItem &another) const
       {
-        auto dev = m_component->getDevice();
+        auto component = m_component.lock();
+        auto otherComponent = another.getComponent();
+        auto otherDev = otherComponent->getDevice();
+        auto dev = component->getDevice();
 
-        if (dev->getId() < another.getComponent()->getDevice()->getId())
+        if (dev->getId() < otherDev->getId())
           return true;
-        else if (dev->getId() > another.getComponent()->getDevice()->getId())
+        else if (dev->getId() > otherDev->getId())
           return false;
-        else if (m_component->getId() < another.getComponent()->getId())
+        else if (component->getId() < otherComponent->getId())
           return true;
-        else if (m_component->getId() > another.getComponent()->getId())
+        else if (component->getId() > otherComponent->getId())
           return false;
         else if (m_category < another.m_category)
           return true;
@@ -270,7 +273,7 @@ namespace mtconnect
         }
         else
         {
-          addToList("Constraints", DataItem::getFactory()->factoryFor("DataItem"),
+          addToList("Constraints", getFactory()->factoryFor("DataItem"),
                     v, errors);
           m_constantValue = value;
         }

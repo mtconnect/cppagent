@@ -81,15 +81,21 @@ namespace mtconnect
       // Get the device that any component is associated with
       virtual DevicePtr getDevice() const
       {
-        if (!m_device && m_parent)
+        DevicePtr device = m_device.lock();
+        if (!device)
         {
-          const_cast<Component*>(this)->m_device = m_parent->getDevice();
+          auto parent = m_parent.lock();
+          if (parent)
+          {
+            const_cast<Component*>(this)->m_device = parent->getDevice();
+            device = m_device.lock();
+          }
         }
-        return m_device;
+        return device;
       }
       
       // Set/Get the component's parent component
-      ComponentPtr getParent() const { return m_parent; }
+      ComponentPtr getParent() const { return m_parent.lock(); }
       
       // Add to/get the component's std::list of children
       auto getChildren() const { return getList("Components"); }
@@ -130,8 +136,8 @@ namespace mtconnect
       
       // Component relationships
       // Pointer to the parent component
-      ComponentPtr m_parent;
-      DevicePtr m_device;
+      std::weak_ptr<Component> m_parent;
+      std::weak_ptr<Device> m_device;
     };
     
     struct ComponentComp
