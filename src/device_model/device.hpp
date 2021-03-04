@@ -61,7 +61,7 @@ namespace mtconnect
         else
           return nullptr;
       }
-      void addComponent(Component *aComponent)
+      void addComponent(ComponentPtr aComponent)
       {
         m_componentsById.insert(make_pair(aComponent->getId(), aComponent));
       }
@@ -88,7 +88,8 @@ namespace mtconnect
       const std::string &getUuid() const { return get<std::string>("uuid"); }
       
       void registerDataItem(DataItemPtr di);
-      
+      void registerComponent(ComponentPtr c) { m_componentsById[c->getId()] = c; }
+
     protected:
       void cachePointers(DataItemPtr dataItem);
       

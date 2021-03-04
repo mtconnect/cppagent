@@ -39,7 +39,7 @@ class SolidModelTest : public testing::Test
 
   Adapter *m_adapter{nullptr};
   std::string m_agentId;
-  DevicePtr m_device{nullptr};
+  DevicePtr m_device;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
@@ -47,8 +47,8 @@ TEST_F(SolidModelTest, ParseDeviceSolidModel)
 {
   ASSERT_NE(nullptr, m_device);
 
-  auto &cl = m_device->getConfiguration();
-  auto clc = cl->getEntity();
+  auto &clc = m_device->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(clc);
   auto model = clc->get<EntityPtr>("SolidModel");
 
   EXPECT_EQ("SolidModel", model->getName());
@@ -70,10 +70,8 @@ TEST_F(SolidModelTest, ParseRotarySolidModel)
   ASSERT_NE(nullptr, m_device);
   
   auto rot = m_device->getComponentById("c");
-  auto &cl = rot->getConfiguration();
-  ASSERT_TRUE(cl);
-
-  auto clc = cl->getEntity();
+  auto &clc = rot->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(clc);
   auto model = clc->get<EntityPtr>("SolidModel");
     
   ASSERT_EQ("cm", model->get<string>("id"));

@@ -28,6 +28,8 @@
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
+using namespace device_model;
+using namespace entity;
 
 class AgentDeviceTest : public testing::Test
 {
@@ -67,7 +69,7 @@ class AgentDeviceTest : public testing::Test
   }
   
  public:
-  AgentDevicePtr m_agentDevice{nullptr};
+  AgentDevicePtr m_agentDevice;
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   uint16_t m_port{21788};

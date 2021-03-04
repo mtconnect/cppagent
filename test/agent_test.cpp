@@ -1235,6 +1235,7 @@ TEST_F(AgentTest, ResetTriggered)
   }
 }
 
+#if 0
 TEST_F(AgentTest, References)
 {
   m_agentTestHelper->createAgent("/samples/reference_example.xml");
@@ -1280,6 +1281,7 @@ TEST_F(AgentTest, References)
                           "UNAVAILABLE");
   }
 }
+#endif
 
 TEST_F(AgentTest, Discrete)
 {
@@ -1636,7 +1638,7 @@ TEST_F(AgentTest, AdapterCommands)
 
   auto device = agent->getDeviceByName("LinuxCNC");
   ASSERT_TRUE(device);
-  ASSERT_FALSE(device->m_preserveUuid);
+  ASSERT_FALSE(device->preserveUuid());
 
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
   m_agentTestHelper->m_adapter->parseBuffer("* manufacturer: Big Tool\n");
@@ -1651,7 +1653,7 @@ TEST_F(AgentTest, AdapterCommands)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
 
-  device->m_preserveUuid = true;
+  device->setPreserveUuid(true);
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: XXXXXXX\n");
 
   {
@@ -1719,7 +1721,7 @@ TEST_F(AgentTest, UUIDChange)
   auto agent = m_agentTestHelper->getAgent();
   auto device = agent->getDeviceByName("LinuxCNC");
   ASSERT_TRUE(device);
-  ASSERT_FALSE(device->m_preserveUuid);
+  ASSERT_FALSE(device->preserveUuid());
 
   addAdapter();
   

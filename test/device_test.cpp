@@ -31,91 +31,74 @@ class DeviceTest : public testing::Test
  protected:
   void SetUp() override
   {
-    std::map<string, string> attributes1;
-    attributes1["id"] = "1";
-    attributes1["name"] = "DeviceTest1";
-    attributes1["uuid"] = "UnivUniqId1";
-    attributes1["iso841Class"] = "4";
-    m_devA = new Device(attributes1);
+    ErrorList errors;
+    Properties d1{{"id", "1"s},
+      {"name", "DeviceTest1"s},
+      {"uuid", "UnivUniqId1"s},
+      {"iso841Class", "4"s}
+    };
+    m_devA = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", d1, errors));
 
-    std::map<string, string> attributes2;
-    attributes2["id"] = "3";
-    attributes2["name"] = "DeviceTest2";
-    attributes2["uuid"] = "UnivUniqId2";
-    attributes2["sampleRate"] = "123.4";
-    attributes2["iso841Class"] = "6";
-    m_devB = new Device(attributes2);
+    Properties d2{{"id", "3"s},
+      {"name", "DeviceTest2"s},
+      {"uuid", "UnivUniqId2"s},
+      {"iso841Class", "6"s}
+    };
+    m_devB = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", d2, errors));
   }
 
   void TearDown() override
   {
-    delete m_devA;
-    m_devA = nullptr;
-    delete m_devB;
-    m_devB = nullptr;
+    m_devA.reset();
+    m_devB.reset();
   }
 
-  DevicePtr m_devA{nullptr}, *m_devB{nullptr};
+  DevicePtr m_devA, m_devB;
 };
 
 TEST_F(DeviceTest, Getters)
 {
-  ASSERT_EQ((string) "Device", m_devA->getClass());
+  ASSERT_EQ((string) "Device", string(m_devA->getName()));
   ASSERT_EQ((string) "1", m_devA->getId());
-  ASSERT_EQ((string) "DeviceTest1", m_devA->getName());
+  ASSERT_EQ((string) "DeviceTest1", m_devA->getComponentName());
   ASSERT_EQ((string) "UnivUniqId1", m_devA->getUuid());
 
-  ASSERT_EQ((string) "Device", m_devB->getClass());
+  ASSERT_EQ((string) "Device", string(m_devB->getName()));
   ASSERT_EQ((string) "3", m_devB->getId());
-  ASSERT_EQ((string) "DeviceTest2", m_devB->getName());
+  ASSERT_EQ((string) "DeviceTest2", m_devB->getComponentName());
   ASSERT_EQ((string) "UnivUniqId2", m_devB->getUuid());
-}
-
-TEST_F(DeviceTest, GetAttributes)
-{
-  const auto &attributes1 = m_devA->getAttributes();
-
-  ASSERT_EQ((string) "1", attributes1.at("id"));
-  ASSERT_EQ((string) "DeviceTest1", attributes1.at("name"));
-  ASSERT_EQ((string) "UnivUniqId1", attributes1.at("uuid"));
-  ASSERT_TRUE(attributes1.find("sampleRate") == attributes1.end());
-  ASSERT_EQ((string) "4", attributes1.at("iso841Class"));
-
-  const auto &attributes2 = m_devB->getAttributes();
-
-  ASSERT_EQ((string) "3", attributes2.at("id"));
-  ASSERT_EQ((string) "DeviceTest2", attributes2.at("name"));
-  ASSERT_EQ((string) "UnivUniqId2", attributes2.at("uuid"));
-  ASSERT_EQ((string) "123.400001525879", attributes2.at("sampleInterval"));
-  ASSERT_EQ((string) "6", attributes2.at("iso841Class"));
 }
 
 TEST_F(DeviceTest, Description)
 {
-  map<string, string> attributes;
-  attributes["manufacturer"] = "MANUFACTURER";
-  attributes["serialNumber"] = "SERIAL_NUMBER";
+  ErrorList errors;
+  Properties psA{{"manufacturer", "MANUFACTURER"s}, {"serialNumber", "SERIAL_NUMBER"s}, {"VALUE", "Machine 1"s}};
+  auto descriptionA = Device::getFactory()->create("Description", psA, errors);
+  ASSERT_TRUE(errors.empty());
 
-  m_devA->addDescription((string) "Machine 1", attributes);
-  auto description1 = m_devA->getDescription();
+  m_devA->setProperty("Description", descriptionA);
+  auto descA = m_devA->get<EntityPtr>("Description");
+  
+  ASSERT_EQ((string) "MANUFACTURER", descA->get<string>("manufacturer"));
+  ASSERT_EQ((string) "SERIAL_NUMBER", descA->get<string>("serialNumber"));
+  ASSERT_FALSE(descA->hasProperty("station"));
+  ASSERT_EQ((string) "Machine 1", descA->getValue<string>());
+  
+  Properties psB{{"manufacturer", "MANUFACTURER"s}, {"serialNumber", "SERIAL_NUMBER"s}, {"VALUE", "Machine 2"s}, {"station", "STATION"s}};
+  auto descriptionB = Device::getFactory()->create("Description", psB, errors);
+  ASSERT_TRUE(errors.empty());
 
-  ASSERT_EQ((string) "MANUFACTURER", description1["manufacturer"]);
-  ASSERT_EQ((string) "SERIAL_NUMBER", description1["serialNumber"]);
-  ASSERT_TRUE(description1["station"].empty());
+  m_devB->setProperty("Description", descriptionB);
+  auto descB = m_devB->get<EntityPtr>("Description");
 
-  ASSERT_EQ((string) "Machine 1", m_devA->getDescriptionBody());
-
-  attributes["station"] = "STATION";
-  m_devB->addDescription((string) "Machine 2", attributes);
-  auto description2 = m_devB->getDescription();
-
-  ASSERT_EQ((string) "MANUFACTURER", description2["manufacturer"]);
-  ASSERT_EQ((string) "SERIAL_NUMBER", description2["serialNumber"]);
-  ASSERT_EQ((string) "STATION", description2["station"]);
-
-  ASSERT_EQ((string) "Machine 2", m_devB->getDescriptionBody());
+  ASSERT_EQ((string) "MANUFACTURER", descB->get<string>("manufacturer"));
+  ASSERT_EQ((string) "SERIAL_NUMBER", descB->get<string>("serialNumber"));
+  ASSERT_EQ((string) "STATION", descB->get<string>("station"));
+  ASSERT_EQ((string) "Machine 2", descB->getValue<string>());
 }
 
+// TODO: Need to replace once we complete the relationships
+#if 0
 TEST_F(DeviceTest, Relationships)
 {
   // Test get/set parents
@@ -153,30 +136,33 @@ TEST_F(DeviceTest, Relationships)
   ASSERT_EQ(thermostat, *it); it++;
   ASSERT_EQ(m_devA->getChildren().end(), it);
 }
+#endif
 
 TEST_F(DeviceTest, DataItems)
 {
-  ASSERT_TRUE(m_devA->getDataItems().empty());
+  ASSERT_FALSE(m_devA->getDataItems());
 
   ErrorList errors;
   auto data1 = DataItem::make({{"id", "a"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
   auto data2 = DataItem::make({{"id", "b"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
-  m_devA->addDataItem(data1);
-  m_devA->addDataItem(data2);
+  
+  m_devA->addDataItem(data1, errors);
+  m_devA->addDataItem(data2, errors);
 
-  ASSERT_EQ((size_t)2, m_devA->getDataItems().size());
-  ASSERT_TRUE(data1 == m_devA->getDataItems().front());
-  ASSERT_TRUE(data2 == m_devA->getDataItems().back());
+  const auto &items = m_devA->getDataItems();
+  ASSERT_EQ(2, items->size());
+  
+  ASSERT_TRUE(data1 == items->front());
+  ASSERT_TRUE(data2 == items->back());
 }
 
 TEST_F(DeviceTest, DeviceDataItem)
 {
-  ASSERT_TRUE(m_devA->getDeviceDataItems().empty());
-  ASSERT_TRUE(!m_devA->getDeviceDataItem("DataItemTest1"));
-  ASSERT_TRUE(!m_devA->getDeviceDataItem("DataItemTest2"));
-
+  ASSERT_FALSE(m_devA->getDataItems());
+  ASSERT_FALSE(m_devA->getDeviceDataItem("DataItemTest1"));
+  ASSERT_FALSE(m_devA->getDeviceDataItem("DataItemTest2"));
   
   ErrorList errors;
   auto data1 = DataItem::make({{"id", "DataItemTest1"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
@@ -184,8 +170,8 @@ TEST_F(DeviceTest, DeviceDataItem)
   auto data2 = DataItem::make({{"id", "DataItemTest2"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
 
-  m_devA->addDataItem(data1);
-  m_devA->addDataItem(data2);
+  m_devA->addDataItem(data1, errors);
+  m_devA->addDataItem(data2, errors);
 
   ASSERT_EQ((size_t)2, m_devA->getDeviceDataItems().size());
   ASSERT_TRUE(data1 == m_devA->getDeviceDataItem("DataItemTest1"));
@@ -199,13 +185,13 @@ TEST_F(DeviceTest, GetDataItem)
   auto source1 = Source::getFactory()->make("Source", sp1, errors);
   auto data1 = DataItem::make({{"id", "by_id"s}, {"type", "A"s}, {"category", "EVENT"s}, {"name", "by_name"s}, {"Source", source1}}, errors);
   ASSERT_TRUE(errors.empty());
-  m_devA->addDataItem(data1);
+  m_devA->addDataItem(data1, errors);
 
   Properties sp2{{"VALUE", "by_source2"s}};
   auto source2 = Source::getFactory()->make("Source", sp2, errors);
   auto data2 = DataItem::make({{"id", "by_id2"s}, {"type", "A"s}, {"name", "by_name2"s}, {"category", "EVENT"s}, {"Source", source2}}, errors);
   ASSERT_TRUE(errors.empty());
-  m_devA->addDataItem(data2);
+  m_devA->addDataItem(data2, errors);
 
   Properties sp{{"VALUE", "by_source3"s}};
   auto source = Source::getFactory()->make("Source", sp, errors);
@@ -213,7 +199,7 @@ TEST_F(DeviceTest, GetDataItem)
   auto data3 = DataItem::make(p3, errors);
   ASSERT_TRUE(errors.empty());
 
-  m_devA->addDataItem(data3);
+  m_devA->addDataItem(data3, errors);
 
   ASSERT_TRUE(data1 == m_devA->getDeviceDataItem("by_id"));
   ASSERT_TRUE(m_devA->getDeviceDataItem("by_name"));

@@ -47,6 +47,7 @@ TEST_F(KinematicsTest, ParseZAxisKinematics)
   ASSERT_NE(nullptr, m_device);
 
   auto linear = m_device->getComponentById("z");
+  ASSERT_TRUE(linear);
   
   auto &ent = linear->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);

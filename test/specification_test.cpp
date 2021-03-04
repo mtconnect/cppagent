@@ -19,6 +19,7 @@ using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace entity;
+using namespace device_model;
 
 class SpecificationTest : public testing::Test
 {
@@ -38,10 +39,11 @@ class SpecificationTest : public testing::Test
   void TearDown() override
   {
     m_agentTestHelper.reset();
+    m_component.reset();
   }
 
   adapter::Adapter *m_adapter{nullptr};
-  Component *m_component{nullptr};
+  ComponentPtr m_component;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
@@ -49,12 +51,10 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
 
-  auto &configurations_list = m_component->getConfiguration();
-  ASSERT_TRUE(configurations_list);
+  auto &ent = m_component->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(ent);
 
-  auto configurations_entity = configurations_list->getEntity();
-
-  const auto &specs = configurations_entity->getList("Specifications");
+  const auto &specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
   
@@ -191,12 +191,12 @@ TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
 TEST_F(SpecificationTest, Parse17SpecificationValues)
 {
   ASSERT_NE(nullptr, m_component);
-  const auto &ci = m_component->getConfiguration();
-  ASSERT_TRUE(ci);
-  auto conf = ci->getEntity();
   
+  auto &ent = m_component->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(ent);
+
   // Get the second configuration.
-  const auto &specs = conf->getList("Specifications");
+  const auto &specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
   
@@ -226,12 +226,10 @@ TEST_F(SpecificationTest, ParseProcessSpecificationValues)
 {
   ASSERT_NE(nullptr, m_component);
   
-  ASSERT_NE(nullptr, m_component);
-  const auto &ci = m_component->getConfiguration();
-  ASSERT_TRUE(ci);
-  auto conf = ci->getEntity();
+  auto &ent = m_component->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(ent);
 
-  const auto &specs = conf->getList("Specifications");
+  const auto &specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
   auto si = specs->begin();

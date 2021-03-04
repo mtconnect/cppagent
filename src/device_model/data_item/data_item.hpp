@@ -85,7 +85,7 @@ namespace mtconnect
                                               entity::ErrorList &errors)
         {
           entity::Properties ps(props);
-          auto ptr = getFactory()->make("DataItem", ps, errors);
+          auto ptr = getFactory()->create("DataItem", ps, errors);
           return std::dynamic_pointer_cast<DataItem>(ptr);
         }
 

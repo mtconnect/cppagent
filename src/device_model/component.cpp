@@ -55,8 +55,10 @@ namespace mtconnect
       }
     }
     
-    void Component::registerDataItems(DevicePtr device)
+    void Component::buildDeviceMaps(DevicePtr device)
     {
+      device->registerComponent(getptr());
+      
       auto items = getList("DataItems");
       if (items)
       {
@@ -71,7 +73,8 @@ namespace mtconnect
         {
           auto cp = dynamic_pointer_cast<Component>(child);
           cp->setParent(getptr());
-          cp->registerDataItems(device);
+          cp->setDevice(device);
+          cp->buildDeviceMaps(device);
         }
       }
     }
@@ -151,8 +154,11 @@ namespace mtconnect
         
     void Component::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)
     {
-      addToList<data_item::DataItem>("DataItems", dataItem, errors);
-      dataItem->setComponent(getptr());
+      if (addToList<Component>("DataItems", dataItem, errors))
+      {
+        dataItem->setComponent(getptr());
+        getDevice()->registerDataItem(dataItem);
+      }
     }
   }
 }  // namespace mtconnect

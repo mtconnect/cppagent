@@ -18,6 +18,7 @@ using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
+using namespace entity;
 
 class CoordinateSystemTest : public testing::Test
 {
@@ -46,11 +47,10 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_device);
 
-  auto &configurations_list = m_device->getConfiguration();
-  ASSERT_TRUE(configurations_list);
+  auto &clc = m_device->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(clc);
 
-  auto ent = configurations_list->getEntity();
-  const auto &cds = ent->getList("CoordinateSystems");
+  const auto &cds = clc->getList("CoordinateSystems");
   ASSERT_TRUE(cds);
   ASSERT_EQ(2, cds->size());
 

@@ -97,6 +97,7 @@ namespace mtconnect
       {
         addToList<Component>("Components", child, errors);
         child->setParent(getptr());
+        child->buildDeviceMaps(getDevice());
       }
 
       // Add to/get the component's std::list of data items
@@ -111,10 +112,11 @@ namespace mtconnect
       
       // Connect data items
       void connectDataItems();
-      void registerDataItems(DevicePtr device);
+      void buildDeviceMaps(DevicePtr device);
       
     protected:
       void setParent(ComponentPtr parent) { m_parent = parent; }
+      void setDevice(DevicePtr device) { m_device = device; }
       
     protected:
       // Unique ID for each component

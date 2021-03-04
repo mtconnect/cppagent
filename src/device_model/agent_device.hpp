@@ -43,6 +43,7 @@ namespace mtconnect
       void addAdapter(const adapter::Adapter *adapter);
       
       DataItemPtr getConnectionStatus(const std::string &adapter);
+      auto &getAdapters() { return m_adapters; }
       
     protected:
       void addRequiredDataItems();

@@ -19,6 +19,8 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace device_model;
+using namespace entity;
 
 class CompositionTest : public testing::Test
 {
@@ -38,7 +40,7 @@ class CompositionTest : public testing::Test
     m_agentTestHelper.reset();
   }
 
-  Component *m_component{nullptr};
+  ComponentPtr m_component;
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -48,12 +50,9 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
   using namespace mtconnect::entity;
   ASSERT_NE(nullptr, m_component);
   
-  auto &compositions_list = m_component->getCompositions();  
-  ASSERT_TRUE(compositions_list);
-
-  auto compositions_entity = compositions_list->getEntity();
-  auto &compositions = compositions_entity->maybeGet<EntityList>("LIST");
+  const auto &compositions = m_component->getList("Compositions");
   ASSERT_TRUE(compositions);
+
   ASSERT_EQ(1, compositions->size());
   auto composition = compositions->begin();
 

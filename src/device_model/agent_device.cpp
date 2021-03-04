@@ -40,7 +40,11 @@ namespace mtconnect
         factory = make_shared<Factory>(*Device::getFactory());
         factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr
         {
-          return make_shared<AgentDevice>("AgentDevice"s, ps);
+          auto dev = make_shared<AgentDevice>("AgentDevice"s, ps);
+          dev->addRequiredDataItems();
+          ErrorList errors;
+          dev->addChild(dev->getAdapters(), errors);
+          return dev;
         });
         Component::getFactory()->registerFactory("AgentDevice", factory);
       }
@@ -49,11 +53,15 @@ namespace mtconnect
 
     AgentDevice::AgentDevice(const std::string &name, entity::Properties &props) : Device(name, props)
     {
-      addRequiredDataItems();
-      
       ErrorList errors;
       m_adapters = Component::make("Adapters", {{"id", "__adapters__"s}}, errors);
-      addChild(m_adapters, errors);
+      if (!errors.empty())
+      {
+        for (auto &e : errors)
+        {
+          g_logger << dlib::LFATAL << "Cannot create AgentDevice: " << e->what();
+        }
+      }
     }
     
     DataItemPtr AgentDevice::getConnectionStatus(const std::string &adapter)

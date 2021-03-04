@@ -104,7 +104,7 @@ namespace
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
     
     auto device = agent->findDeviceByUUIDorName(*deviceName);
-    ASSERT_TRUE(device->m_preserveUuid);
+    ASSERT_TRUE(device->preserveUuid());
   }
 
   TEST_F(ConfigTest, Adapter)
@@ -151,7 +151,7 @@ namespace
     ASSERT_TRUE(agent);
     const auto device = agent->getDevices().front();
 
-    ASSERT_TRUE(device->m_preserveUuid);
+    ASSERT_TRUE(device->preserveUuid());
   }
 
   TEST_F(ConfigTest, DefaultPreserveOverride)
@@ -168,7 +168,7 @@ namespace
     ASSERT_TRUE(agent);
     const auto device = agent->findDeviceByUUIDorName("LinuxCNC");
 
-    ASSERT_FALSE(device->m_preserveUuid);
+    ASSERT_FALSE(device->preserveUuid());
   }
 
   TEST_F(ConfigTest, DisablePut)

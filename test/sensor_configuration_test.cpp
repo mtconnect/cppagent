@@ -43,11 +43,9 @@ TEST_F(SensorConfigurationTest, ParseSensorConfiguration)
 {
   ASSERT_NE(nullptr, m_device);
 
-  auto &cl = m_device->getConfiguration();
-  ASSERT_TRUE(cl);
-
-  auto ent = cl->getEntity();
-  auto config = ent->get<EntityPtr>("SensorConfiguration");
+  auto &clc = m_device->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(clc);
+  auto config = clc->get<EntityPtr>("SensorConfiguration");
 
   auto channels = config->getList("Channels");
   auto channel = channels->front();

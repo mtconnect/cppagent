@@ -174,8 +174,15 @@ namespace mtconnect
     Properties ps{
       {"uuid", "0b49a3a0-18ca-0139-8748-2cde48001122"s},
       {"id", "agent_2cde48001122"s},
+      {"name", "agent"s},
       {"mtconnectVersion", "1.7"s}};
     m_agentDevice = dynamic_pointer_cast<AgentDevice>(AgentDevice::getFactory()->make("Agent", ps, errors));
+    if (!errors.empty())
+    {
+      for (auto &e : errors)
+        g_logger << dlib::LFATAL << "Error creating the agent device: " << e->what();
+      throw EntityError("Cannot create AgentDevice");
+    }
     addDevice(m_agentDevice);
   }
 

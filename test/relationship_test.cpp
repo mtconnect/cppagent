@@ -20,6 +20,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace entity;
+using namespace device_model;
 
 class RelationshipTest : public testing::Test
 {
@@ -42,7 +43,7 @@ class RelationshipTest : public testing::Test
 
   adapter::Adapter *m_adapter{nullptr};
   std::string m_agentId;
-  Component *m_component{nullptr};
+  ComponentPtr m_component{nullptr};
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -51,18 +52,10 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
 
-  auto &configurations_list = m_component->getConfiguration();
+  const auto &clc = m_component->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(clc);
 
-  ASSERT_TRUE(configurations_list);
-
-  auto configurations_entity = configurations_list->getEntity();
-  ASSERT_EQ(2, configurations_entity->getProperties().size());
-  
-  auto relationships = configurations_entity->get<EntityPtr>("Relationships");
-  EXPECT_EQ("Relationships", relationships->getName());
- 
-  const auto &rels = configurations_entity->getList("Relationships");
-  ASSERT_TRUE(rels);
+  auto rels = clc->getList("Relationships");
   
   ASSERT_EQ(2, rels->size());
 
