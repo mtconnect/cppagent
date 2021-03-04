@@ -54,6 +54,7 @@ add_agent_test(agent_device TRUE device_model)
 add_agent_test(component FALSE device_model)
 add_agent_test(composition TRUE device_model)
 add_agent_test(device FALSE device_model)
+add_agent_test(references TRUE device_model)
 
 add_agent_test(data_item FALSE device_model/data_item)
 add_agent_test(unit_conversion FALSE device_model/data_item)

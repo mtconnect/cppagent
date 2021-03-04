@@ -1245,9 +1245,26 @@ TEST_F(AgentTest, References)
   auto item = agent->getDataItemForDevice((string) "LinuxCNC", id);
   auto comp = item->getComponent();
 
+  auto &references_list = comp->getReferences();
+  ASSERT_TRUE(references_list);
+
+  auto references_entity = references_list->getEntity();
+  auto &references = references_entity->maybeGet<entity::EntityList>("LIST");
+
+  ASSERT_TRUE(references);
+  ASSERT_EQ(3, references->size());
+  auto reference = references->begin();
+
+  EXPECT_EQ("DataItemRef", (*reference)->getName());
+
+  EXPECT_EQ("chuck", get<string>((*reference)->getProperty("name")));
+  EXPECT_EQ("c4", get<string>((*reference)->getProperty("idRef")));
+
+
+  //TODO: Resolving references needs to be redone with entities
+  /*
   const auto refs = comp->getReferences();
   auto ref = refs.begin();
-
   ASSERT_EQ((string) "c4", ref->m_id);
   ASSERT_EQ((string) "chuck", ref->m_name);
   ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref->m_type);
@@ -1265,7 +1282,7 @@ TEST_F(AgentTest, References)
   ASSERT_EQ(mtconnect::Component::Reference::COMPONENT, ref->m_type);
 
   ASSERT_TRUE(ref->m_component) << "DataItem was not resolved";
-
+  */
 
   // Additional data items should be included
   {

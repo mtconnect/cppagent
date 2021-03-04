@@ -176,15 +176,3 @@ TEST_F(ComponentTest, DataItems)
   ASSERT_TRUE(data1 == m_compA->getDataItems().front());
   ASSERT_TRUE(data2 == m_compA->getDataItems().back());
 }
-
-TEST_F(ComponentTest, References)
-{
-  string id("a"), name("xxx");
-  mtconnect::Component::Reference ref(id, name, mtconnect::Component::Reference::DATA_ITEM);
-
-  m_compA->addReference(ref);
-  ASSERT_EQ((size_t)1, m_compA->getReferences().size());
-
-  ASSERT_EQ((string) "xxx", m_compA->getReferences().front().m_name);
-  ASSERT_EQ((string) "a", m_compA->getReferences().front().m_id);
-}
