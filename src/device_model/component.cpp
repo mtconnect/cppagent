@@ -154,7 +154,7 @@ namespace mtconnect
         
     void Component::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)
     {
-      if (addToList<Component>("DataItems", dataItem, errors))
+      if (addToList("DataItems", Component::getFactory(), dataItem, errors))
       {
         dataItem->setComponent(getptr());
         getDevice()->registerDataItem(dataItem);

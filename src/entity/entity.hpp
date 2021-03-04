@@ -129,35 +129,8 @@ namespace mtconnect
         return std::nullopt;
       }
       
-      template<class T>
-      bool addToList(const std::string &name, EntityPtr entity,
-                     ErrorList &errors)
-      {
-        if (!hasProperty(name))
-        {
-          entity::EntityList list { entity };
-          auto entities = T::getFactory()->create(name, list, errors);
-          if (errors.empty())
-            setProperty(name, entities);
-          else
-            return false;
-        }
-        else
-        {
-          auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
-          if (entities)
-          {
-            std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
-          }
-          else
-          {
-            errors.emplace_back(new EntityError("Cannont find list for: " + name));
-            return false;
-          }
-        }
-        
-        return true;
-      }
+      bool addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
+                     ErrorList &errors);
 
       void setValue(const Value &v) { setProperty("VALUE", v); }
       void erase(const std::string &name) { m_properties.erase(name); }

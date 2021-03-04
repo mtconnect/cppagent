@@ -96,6 +96,7 @@ set(AGENT_SOURCES
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/entity.hpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/entity.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/qname.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/requirement.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/requirement.cpp"  

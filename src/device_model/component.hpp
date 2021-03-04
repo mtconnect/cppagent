@@ -95,7 +95,7 @@ namespace mtconnect
       auto getChildren() const { return getList("Components"); }
       void addChild(ComponentPtr child, entity::ErrorList &errors)
       {
-        addToList<Component>("Components", child, errors);
+        addToList("Components", Component::getFactory(), child, errors);
         child->setParent(getptr());
         child->buildDeviceMaps(getDevice());
       }
