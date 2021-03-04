@@ -110,6 +110,7 @@ namespace mtconnect
       {
         string queries{std::string().empty()};
         auto path = static_cast<std::string>(req.target().data());
+        //path = path.substr(1,path.size()-1);
         auto qp = path.find_first_of('?');
         if (qp != string::npos){
           queries = path.substr(qp+1);
