@@ -261,7 +261,7 @@ namespace mtconnect
         ErrorList errors;
         Properties url {{"VALUE", value}};
         EntityList values {Constraints::getFactory()->create("Value", url, errors)};
-        auto list = getFactory()->create("Constraints", values, errors);
+        auto list = getFactory()->factoryFor("DataItem")->create("Constraints", values, errors);
         if (!errors.empty())
         {
           g_logger << dlib::LERROR << "Cannot set constant value for data item " << m_id << " to "

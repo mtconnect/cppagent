@@ -48,6 +48,9 @@ namespace
    protected:
     void SetUp() override
     {
+      dlib::set_all_logging_output_streams(std::cout);
+      dlib::set_all_logging_levels(dlib::LDEBUG);
+
       m_config = std::make_unique<mtconnect::AgentConfiguration>();
       m_cwd = std::filesystem::current_path();
     }

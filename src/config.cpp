@@ -675,8 +675,11 @@ namespace mtconnect
 
     m_agent->initialize(m_pipelineContext, options);
 
-    for (auto device : m_agent->getDevices())
-      device->setPreserveUuid(defaultPreserve);
+    if (defaultPreserve)
+    {
+      for (auto device : m_agent->getDevices())
+        device->setPreserveUuid(defaultPreserve);
+    }
 
     loadAdapters(reader, options);
 
