@@ -92,6 +92,10 @@ namespace mtconnect
         {
           address = net::ip::make_address(inter);
         }
+        if (mPort == 0 || mPort < 0)
+        {
+          mPort = 5000;
+        }
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
         m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
                              const ResponseCode code) {
@@ -133,6 +137,7 @@ namespace mtconnect
         return false;
       }
 
+      bool handleRequest(Routing::Request &request, Response &response);
 
       //template<class Body, class Allocator, class Send>
       template<class Body, class Allocator, class Send>

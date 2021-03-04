@@ -84,7 +84,7 @@ namespace mtconnect
   }
 }
 
-namespace http = mtconnect::http_server;
+namespace mhttp = mtconnect::http_server;
 namespace adpt = mtconnect::adapter;
 namespace observe = mtconnect::observation;
 
@@ -127,10 +127,10 @@ class AgentTestHelper
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
 
-    auto server = std::make_unique<http::Server>();
+    auto server = std::make_unique<mhttp::Server>();
     server->enablePut(put);
     m_server = server.get();
-    auto cache = std::make_unique<http::FileCache>();
+    auto cache = std::make_unique<mhttp::FileCache>();
     m_agent = std::make_unique<mtconnect::Agent>(server, cache,
                                                  PROJECT_ROOT_DIR + file,
                                                  bufferSize, maxAssets, version,
@@ -178,7 +178,7 @@ class AgentTestHelper
   void printResponse()
   {
     std::cout << "Status " << m_response.m_code << " "
-              << http::Response::getStatus(m_response.m_code) << std::endl
+              << mhttp::Response::getStatus(m_response.m_code) << std::endl
               << m_response.m_body << std::endl << "------------------------"
               << std::endl;
   }
@@ -186,12 +186,12 @@ class AgentTestHelper
   void printResponseStream()
   {
     std::cout << "Status " << m_response.m_code << " "
-              << http::Response::getStatus(m_response.m_code) << std::endl
+              << mhttp::Response::getStatus(m_response.m_code) << std::endl
               << m_out.str() << std::endl << "------------------------"
               << std::endl;
   }
 
-  http::Server *m_server{nullptr};
+  mhttp::Server *m_server{nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   adpt::Adapter *m_adapter{nullptr};
   bool m_dispatched { false };

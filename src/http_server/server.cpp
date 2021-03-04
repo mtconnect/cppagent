@@ -72,19 +72,22 @@ namespace mtconnect
       // Blocking call to listen for a connection
       tcp::acceptor acceptor{ioc, {address, mPort}};
 
-      tcp::socket socket{ioc};
 
       while (run) {
+        tcp::socket socket{ioc};
         acceptor.accept(socket);
         send_lambda<tcp::socket> lambda{socket, close, ec};
 
-        for (;;) {
+        //for (;;)
+        {
           http::request<http::string_body> req;
           http::read(socket, buffer, req, ec);
           if (ec == http::error::end_of_stream)
             break;
+          Response response(socket, m_fields);
           Routing::Request request = getRequest(req, socket);
-          handle_request(std::move(req), lambda);
+          close = handleRequest(request, response);
+          //handle_request(std::move(req), lambda);
           if (ec)
             return fail(ec, "write");
           if (close) {
@@ -114,6 +117,7 @@ namespace mtconnect
         }
 
         request.m_verb = req.method_string().data();
+
         request.m_path = path;
         auto pt = queries.find_first_of('=');
         if (pt != string::npos){
@@ -177,6 +181,46 @@ namespace mtconnect
         g_logger << LERROR << __func__ << " error: " <<e.what();
         return queryMap;
       }
+    }
+
+    bool Server::handleRequest(Routing::Request &request, Response &response)
+    {
+      bool res{true};
+      try
+      {
+        if (!dispatch(request, response))
+        {
+          stringstream msg;
+          msg << "Error processing request from: " << request.m_foreignIp << " - "
+              << "No matching route for: " << request.m_verb << " " << request.m_path;
+          g_logger << LERROR << msg.str();
+
+          if (m_errorFunction)
+            m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
+          res = false;
+        }
+      }
+      catch (RequestError &e)
+      {
+        g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - "
+                 << e.what();
+        response.writeResponse(e.m_body, e.m_contentType, e.m_code);
+        res = false;
+      }
+      catch (ParameterError &e)
+      {
+        stringstream msg;
+        msg << "Parameter Error processing request from: " << request.m_foreignIp << " - "
+            << e.what();
+        g_logger << LERROR << msg.str();
+
+        if (m_errorFunction)
+          m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
+        res = false;
+      }
+
+      response.flush();
+      return res;
     }
 
 

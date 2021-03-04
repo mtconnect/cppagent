@@ -37,6 +37,7 @@
 #include <chrono>
 #include <map>
 #include <ostream>
+#include <iostream>
 #include <sstream>
 #include <string>
 #include <variant>
@@ -102,11 +103,11 @@ namespace mtconnect
     class Response
     {
     public:
-      Response(std::ostream &out, const StringList &fields = {}) : m_out(out), m_fields(fields)
+      //Response(tcp::socket &socket, std::ostream &out, const StringList &fields = {}) : m_socket(std::move(socket)) ,m_out(out), m_fields(fields)
+      Response(tcp::socket &socket, const StringList &fields = {}) : m_socket(std::move(socket)) , m_fields(fields)
       {
         beast::error_code ec;
-        net::io_context ioc{1};
-        tcp::socket socket{ioc};
+        //m_out <<"";//"">>;
         bool close{false};
         send_lambda<tcp::socket> lambda{socket, close, ec};
       }
@@ -233,11 +234,15 @@ namespace mtconnect
             m_out << f << "\r\n";
           m_out << "\r\n";
           m_out.write(body, size);
+          std::cout << m_out.str() << std::endl;
         }
       }
 
     protected:
-      std::ostream &m_out;
+      //std::ostream &m_out;
+      std::stringstream m_out;
+      std::string outputString;
+      tcp::socket m_socket;
       std::string m_boundary;
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;

@@ -588,7 +588,7 @@ namespace mtconnect
 
     auto defaultPreserve = get_bool_with_default(reader, configuration::PreserveUUID, true);
     auto port = get_with_default(reader, configuration::Port, 5000);
-    string serverIp = get_with_default(reader, configuration::ServerIp, "");
+    string serverIp = get_with_default(reader, configuration::ServerIp, "0.0.0.0");
     auto bufferSize = get_with_default(reader, configuration::BufferSize, DEFAULT_SLIDING_BUFFER_EXP);
     auto maxAssets = get_with_default(reader, configuration::MaxAssets, DEFAULT_MAX_ASSETS);
     auto checkpointFrequency = get_with_default(reader, configuration::CheckpointFrequency, 1000);
