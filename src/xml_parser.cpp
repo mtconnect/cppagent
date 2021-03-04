@@ -69,6 +69,17 @@ namespace mtconnect
     return configuration;
   }
 
+  static inline auto handleReferences(xmlNodePtr node)
+  {
+    entity::ErrorList errors;
+
+    auto references_entity = entity::XmlParser::parseXmlNode(Reference::getRoot(), node, errors);
+
+    shared_ptr<Reference> references = make_shared<Reference>();
+    references->setEntity(references_entity);
+    return references;
+  }
+
   static inline auto handleComposition(xmlNodePtr node)
   {
     entity::ErrorList errors;
@@ -136,20 +147,18 @@ namespace mtconnect
     : m_handlers(
           {{"Components",
             [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-           {"References",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-           {"Reference", [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
            {"DataItems", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItems(n, p); }},
-           {"DataItemRef",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
-           {"ComponentRef",
-            [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
            {"Description", [](xmlNodePtr n, Component *p,
                               Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
            {"Compositions",
             [](xmlNodePtr n, Component *p, Device *d) {
               auto c = handleComposition(n);
               p->setCompositions(c);
+            }},
+           {"References",
+            [](xmlNodePtr n, Component *p, Device *d) {
+              auto c = handleReferences(n);
+              p->addReference(c);
             }},
            {"Configuration", [](xmlNodePtr n, Component *p, Device *d) {
               auto c = handleConfiguration(n);
@@ -542,31 +551,6 @@ namespace mtconnect
         continue;
 
       handleNode(child, parent, device);
-    }
-  }
-
-  void XmlParser::handleReference(xmlNodePtr reference, Component *parent)
-  {
-    auto attrs = getAttributes(reference);
-    string name;
-
-    if (attrs.count("name") > 0)
-      name = attrs["name"];
-
-    if (xmlStrcmp(reference->name, BAD_CAST "Reference") == 0)
-    {
-      Component::Reference ref(attrs["dataItemId"], name, Component::Reference::DATA_ITEM);
-      parent->addReference(ref);
-    }
-    else if (xmlStrcmp(reference->name, BAD_CAST "DataItemRef") == 0)
-    {
-      Component::Reference ref(attrs["idRef"], name, Component::Reference::DATA_ITEM);
-      parent->addReference(ref);
-    }
-    else if (xmlStrcmp(reference->name, BAD_CAST "ComponentRef") == 0)
-    {
-      Component::Reference ref(attrs["idRef"], name, Component::Reference::COMPONENT);
-      parent->addReference(ref);
     }
   }
 

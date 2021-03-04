@@ -19,6 +19,7 @@
 
 #include "agent.hpp"
 #include "composition.hpp"
+#include "reference.hpp"
 #include "data_item/data_item.hpp"
 #include "device_model/device.hpp"
 
@@ -125,7 +126,9 @@ namespace mtconnect
       getDevice()->addDeviceDataItem(dataItem);
   }
 
-  void Component::resolveReferences()
+  // TODO: Resolving References needs to be redone with entity
+
+  /*void Component::resolveReferences()
   {
     Device *device = getDevice();
 
@@ -152,7 +155,7 @@ namespace mtconnect
 
     for (const auto &childComponent : m_children)
       childComponent->resolveReferences();
-  }
+  }*/
 
   void Component::setParent(Component *parent)
   {

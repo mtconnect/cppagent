@@ -19,6 +19,7 @@
 
 #include "composition.hpp"
 #include "configuration/configuration.hpp"
+#include "reference.hpp"
 #include "utilities.hpp"
 
 #include <list>
@@ -43,31 +44,6 @@ namespace mtconnect
   using namespace device_model::configuration;
   class Component
   {
-  public:
-    struct Reference
-    {
-      enum ReferenceType
-      {
-        DATA_ITEM,
-        COMPONENT
-      };
-
-      Reference(std::string id, std::string name, ReferenceType type)
-        : m_type(type),
-          m_id(std::move(id)),
-          m_name(std::move(name)),
-          m_dataItem(nullptr),
-          m_component(nullptr)
-      {
-      }
-
-      ReferenceType m_type;
-      std::string m_id;
-      std::string m_name;
-      DataItemPtr m_dataItem;
-      Component *m_component;
-    };
-
   public:
     // Take in a class name & mapping of attributes
     Component(const std::string &className, const std::map<std::string, std::string> &attributes,
@@ -148,10 +124,11 @@ namespace mtconnect
     bool operator==(const Component &comp) const { return m_id == comp.getId(); }
 
     // References
-    void addReference(Reference &reference) { m_references.emplace_back(reference); }
+    void addReference(std::shared_ptr<Reference> &reference) { m_references = reference; }
     const auto &getReferences() const { return m_references; }
 
-    void resolveReferences();
+    // TODO: Resolving References needs to be redone with entity
+    //void resolveReferences();
 
   protected:
     // Return a map of attributes of all the component specs
@@ -201,7 +178,7 @@ namespace mtconnect
     std::map<std::string, std::string> m_attributes;
 
     // References
-    std::list<Reference> m_references;
+    std::shared_ptr<Reference> m_references;
   };
 
   struct ComponentComp

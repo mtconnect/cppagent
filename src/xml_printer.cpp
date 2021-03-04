@@ -488,31 +488,11 @@ namespace mtconnect
       printComposition(writer, component->getCompositions());
     }
 
-    if (!component->getReferences().empty())
+    const auto &references = component->getReferences();
+    if (references)
     {
-      AutoElement ele(writer, "References");
-
-      for (const auto &ref : component->getReferences())
-      {
-        if (m_schemaVersion >= "1.4")
-        {
-          if (ref.m_type == Component::Reference::DATA_ITEM)
-          {
-            addSimpleElement(writer, "DataItemRef", "",
-                             {{"idRef", ref.m_id}, {"name", ref.m_name}});
-          }
-          else if (ref.m_type == Component::Reference::COMPONENT)
-          {
-            addSimpleElement(writer, "ComponentRef", "",
-                             {{"idRef", ref.m_id}, {"name", ref.m_name}});
-          }
-        }
-        else if (ref.m_type == Component::Reference::DATA_ITEM)
-        {
-          addSimpleElement(writer, "Reference", "",
-                           {{"dataItemId", ref.m_id}, {"name", ref.m_name}});
-        }
-      }
+      entity::XmlPrinter printer;
+      printer.print(writer, references->getEntity(), {});
     }
   }
 

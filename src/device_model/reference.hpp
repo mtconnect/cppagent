@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT ‚Äì The Association For Manufacturing Technology (‚ÄúAMT‚Äù)
+// Copyright Copyright 2009-2021, AMT ñ The Association For Manufacturing Technology (ìAMTî)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "description.hpp"
+#pragma once
 
 #include "entity.hpp"
 #include "utilities.hpp"
@@ -26,31 +26,21 @@
 #include <string>
 #include <utility>
 
-using namespace std;
-
 namespace mtconnect
 {
-  using namespace entity;
-
-  FactoryPtr Description::getFactory()
+  class Reference
   {
-    static FactoryPtr description;
-    if (!description)
-    {
-      description = make_shared<Factory>(
-          Requirements {Requirement("manufacturer", false), Requirement("model", false),
-                        Requirement("serialNumber", false), Requirement("station", false),
-                        Requirement("VALUE", false)});
+  public:
+    Reference() = default;
+    virtual ~Reference() = default;
 
-      return description;
-    }
-  }
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
 
-  FactoryPtr Description::getRoot()
-  {
-    auto root = make_shared<Factory>(
-        Requirements {Requirement("Description", ENTITY, Description::getFactory(), false)});
+    const entity::EntityPtr &getEntity() const { return m_entity; };
+    void setEntity(entity::EntityPtr new_entity) { m_entity = new_entity; };
 
-    return root;
-  }
+  protected:
+    entity::EntityPtr m_entity;
+  };
 }  // namespace mtconnect

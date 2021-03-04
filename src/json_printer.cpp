@@ -20,6 +20,7 @@
 #include "device_model/composition.hpp"
 #include "device_model/configuration/configuration.hpp"
 #include "device_model/device.hpp"
+#include "device_model/reference.hpp"
 #include "entity/json_printer.hpp"
 #include "version.h"
 
@@ -173,22 +174,10 @@ namespace mtconnect
     return printer.print(item);
   }
 
-  static inline json jsonReference(const Component::Reference &reference)
+  inline json toJson(const shared_ptr<Reference> &references)
   {
-    json ref = json::object({{"idRef", reference.m_id}});
-    add(ref, "name", reference.m_name);
-    return ref;
-  }
-
-  static inline json toJson(const Component::Reference &reference)
-  {
-    json obj;
-    if (reference.m_type == reference.DATA_ITEM)
-      obj["DataItemRef"] = jsonReference(reference);
-    else if (reference.m_type == reference.COMPONENT)
-      obj["ComponentRef"] = jsonReference(reference);
-
-    return obj;
+    entity::JsonPrinter printer;
+    return printer.print(references->getEntity())["References"];
   }
 
   template <class T>
@@ -241,9 +230,14 @@ namespace mtconnect
       comp["Compositions"] = toJson(compositions);
     }
 
+    const auto &references = component->getReferences();
+    if (references)
+    {
+      comp["References"] = toJson(references);
+    }
+
     toJson(comp, "DataItems", component->getDataItems());
     toJson(comp, "Components", component->getChildren());
-    toJson(comp, "References", component->getReferences());
 
     json doc = json::object({{component->getClass(), comp}});
 
