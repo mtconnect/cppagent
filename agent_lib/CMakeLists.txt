@@ -68,6 +68,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/description.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/device.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/device.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/reference.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/reference.cpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/data_item.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/data_item.hpp"

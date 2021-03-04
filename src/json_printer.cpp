@@ -20,6 +20,7 @@
 #include "device_model/composition.hpp"
 #include "device_model/configuration/configuration.hpp"
 #include "device_model/device.hpp"
+#include "device_model/reference.hpp"
 #include "entity/json_printer.hpp"
 #include "version.h"
 

@@ -327,7 +327,8 @@ namespace mtconnect
         m_deviceNameMap[device->get<string>("name")] = device;
         m_deviceUuidMap[uuid] = device;
 
-        device->resolveReferences();
+        //TODO: Redo Resolve Reference  with entity
+        //device->resolveReferences();
         verifyDevice(device);
         initializeDataItems(device);
 

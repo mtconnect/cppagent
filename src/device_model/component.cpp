@@ -19,6 +19,7 @@
 
 #include "agent.hpp"
 #include "composition.hpp"
+#include "reference.hpp"
 #include "data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "configuration/configuration.hpp"

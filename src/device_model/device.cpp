@@ -27,6 +27,7 @@ using namespace std;
 namespace mtconnect
 {
   using namespace entity;
+  using namespace configuration;
   
   static dlib::logger g_logger("device");
   
@@ -86,7 +87,7 @@ namespace mtconnect
     
     void Device::setOptions(const ConfigOptions &options)
     {
-      if (auto opt = GetOption<bool>(options, configuration::PreserveUUID))
+      if (auto opt = GetOption<bool>(options, PreserveUUID))
         m_preserveUuid = *opt;
     }
     

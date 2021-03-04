@@ -18,6 +18,8 @@
 #pragma once
 
 #include "composition.hpp"
+#include "configuration/configuration.hpp"
+#include "reference.hpp"
 #include "utilities.hpp"
 #include "entity/factory.hpp"
 
