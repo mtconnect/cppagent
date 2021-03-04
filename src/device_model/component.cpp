@@ -43,12 +43,36 @@ namespace mtconnect
       m_id = get<string>("id");
       m_name = maybeGet<string>("name");
       m_uuid = maybeGet<string>("uuid");
-      
+    }
+    
+    void Component::connectDataItems()
+    {
       auto items = getList("DataItems");
       if (items)
       {
         for (auto &item : *items)
-          dynamic_pointer_cast<DataItem>(item)->setComponent(getptr());
+          dynamic_pointer_cast<data_item::DataItem>(item)->setComponent(getptr());
+      }
+    }
+    
+    void Component::registerDataItems(DevicePtr device)
+    {
+      auto items = getList("DataItems");
+      if (items)
+      {
+        for (auto &item : *items)
+          device->registerDataItem(dynamic_pointer_cast<data_item::DataItem>(item));
+      }
+      
+      auto children = getChildren();
+      if (children)
+      {
+        for (auto &child : *children)
+        {
+          auto cp = dynamic_pointer_cast<Component>(child);
+          cp->setParent(getptr());
+          cp->registerDataItems(device);
+        }
       }
     }
     
@@ -67,6 +91,7 @@ namespace mtconnect
           {"name", false},
           {"nativeName", false},
           {"sampleRate", DOUBLE, false},
+          {"sampleInterval", DOUBLE, false},
                                         {"uuid", false},
           {"Description", ENTITY, description, false},
           {"DataItems", ENTITY_LIST, dataItems, false},
@@ -75,12 +100,14 @@ namespace mtconnect
         },
                                        [](const std::string &name, Properties &props) -> EntityPtr {
           auto ptr = make_shared<Component>(name, props);
+          ptr->connectDataItems();
           return dynamic_pointer_cast<Entity>(ptr);
         });
         factory->setOrder({"Description", "Configuration", "DataItems", "Compositions"});
         auto component = make_shared<Factory>(
             Requirements {{"Component", ENTITY, factory, 1, Requirement::Infinite}});
         component->registerFactory(regex(".+"), factory);
+        component->registerMatchers();
         factory->addRequirements(Requirements{{"Components", ENTITY_LIST, component, false}});
 
       }
@@ -94,6 +121,7 @@ namespace mtconnect
     void Component::resolveReferences()
     {
       DevicePtr device = getDevice();
+      // TODO: Need to connect references once we have references
 #if 0
       for (auto &reference : m_references)
       {

@@ -37,7 +37,7 @@ namespace mtconnect
       static FactoryPtr factory;
       if (!factory)
       {
-        factory = Device::getFactory()->deepCopy();
+        factory = make_shared<Factory>(*Device::getFactory());
         factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr
         {
           return make_shared<AgentDevice>("AgentDevice"s, ps);

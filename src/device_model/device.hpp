@@ -39,7 +39,8 @@ namespace mtconnect
       Device(const std::string &name, entity::Properties &props);
       ~Device() override = default;
       static entity::FactoryPtr getFactory();
-      
+      static entity::FactoryPtr getRoot();
+
       auto getptr() const
       {
         return std::dynamic_pointer_cast<Device>(Entity::getptr());
@@ -85,6 +86,8 @@ namespace mtconnect
       bool preserveUuid() const { return m_preserveUuid; }
       
       const std::string &getUuid() const { return get<std::string>("uuid"); }
+      
+      void registerDataItem(DataItemPtr di);
       
     protected:
       void cachePointers(DataItemPtr dataItem);

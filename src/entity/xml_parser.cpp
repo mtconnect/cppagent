@@ -46,14 +46,14 @@ namespace mtconnect
       g_logger << dlib::LERROR << "XML: " << buffer;
     }
 
-    string nodeQName(xmlNodePtr node)
+    entity::QName nodeQName(xmlNodePtr node)
     {
-      string qname((const char *)node->name);
+      entity::QName qname((const char *)node->name);
 
       if (node->ns && node->ns->prefix &&
           strncmp((const char *)node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
       {
-        qname.insert(0, (const char *)node->ns->prefix);
+        qname.setNs((const char *)node->ns->prefix);
       }
 
       return qname;

@@ -400,8 +400,10 @@ namespace mtconnect
 
       {
         AutoElement devices(writer, "Devices");
-        //for (const auto dev : deviceList)
-          //printProbeHelper(writer, dev, dev->getClass().c_str());
+        entity::XmlPrinter printer;
+        
+        for (auto &device : deviceList)
+          printer.print(writer, device, m_deviceNsSet);
       }
       closeElement(writer);  // MTConnectDevices
 
@@ -417,110 +419,6 @@ namespace mtconnect
     }
 
     return ret;
-  }
-
-#if 0
-  void printConfiguration(xmlTextWriterPtr writer, const unique_ptr<Configuration> &configuration)
-  {
-    entity::XmlPrinter printer;
-
-    printer.print(writer, configuration->getEntity(), {});
-  }
-
-  void printComposition(xmlTextWriterPtr writer, const unique_ptr<Composition> &compositions)
-  {
-    entity::XmlPrinter printer;
-    printer.print(writer, compositions->getEntity(), {});
-  }
-
-  void XmlPrinter::printProbeHelper(xmlTextWriterPtr writer, Component *component,
-                                    const char *name) const
-  {
-    AutoElement ele(writer, name);
-    addAttributes(writer, component->getAttributes());
-
-    const auto &desc = component->getDescription();
-    const auto &body = component->getDescriptionBody();
-
-    if (!desc.empty() || !body.empty())
-      addSimpleElement(writer, "Description", body, desc);
-
-    const auto &configurations = component->getConfiguration();
-    if (configurations)
-    {
-      printConfiguration(writer, configurations);
-    }
-
-    auto datum = component->getDataItems();
-
-    if (!datum.empty())
-    {
-      AutoElement ele(writer, "DataItems");
-
-      for (const auto &data : datum)
-        printDataItem(writer, data);
-    }
-
-    const auto children = component->getChildren();
-
-    if (!children.empty())
-    {
-      AutoElement ele(writer, "Components");
-
-      for (const auto &child : children)
-      {
-        const char *name = nullptr;
-        if (!child->getPrefix().empty())
-        {
-          const auto ns = m_devicesNamespaces.find(child->getPrefix());
-          if (ns != m_devicesNamespaces.end())
-            name = child->getPrefixedClass().c_str();
-        }
-
-        if (!name)
-          name = child->getClass().c_str();
-
-        printProbeHelper(writer, child, name);
-      }
-    }
-
-    if (component->getCompositions())
-    {
-      printComposition(writer, component->getCompositions());
-    }
-
-    if (!component->getReferences().empty())
-    {
-      AutoElement ele(writer, "References");
-
-      for (const auto &ref : component->getReferences())
-      {
-        if (m_schemaVersion >= "1.4")
-        {
-          if (ref.m_type == Component::Reference::DATA_ITEM)
-          {
-            addSimpleElement(writer, "DataItemRef", "",
-                             {{"idRef", ref.m_id}, {"name", ref.m_name}});
-          }
-          else if (ref.m_type == Component::Reference::COMPONENT)
-          {
-            addSimpleElement(writer, "ComponentRef", "",
-                             {{"idRef", ref.m_id}, {"name", ref.m_name}});
-          }
-        }
-        else if (ref.m_type == Component::Reference::DATA_ITEM)
-        {
-          addSimpleElement(writer, "Reference", "",
-                           {{"dataItemId", ref.m_id}, {"name", ref.m_name}});
-        }
-      }
-    }
-  }
-
-  void XmlPrinter::printDataItem(xmlTextWriterPtr writer, DataItemPtr dataItem) const
-  {
-    entity::XmlPrinter printer;
-    printer.print(writer, dataItem, m_deviceNsSet);
   }
 
   string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
@@ -569,8 +467,9 @@ namespace mtconnect
                 categoryElement.reset("");
 
                 componentStreamElement.reset("ComponentStream", component->getId());
-                addAttribute(writer, "component", component->getClass());
-                addAttribute(writer, "name", component->getName());
+                addAttribute(writer, "component", component->getName());
+                if (component->getComponentName())
+                  addAttribute(writer, "name", *component->getComponentName());
                 addAttribute(writer, "componentId", component->getId());
               }
 
@@ -779,5 +678,4 @@ namespace mtconnect
       }
     }
   }
-#endif
 }  // namespace mtconnect

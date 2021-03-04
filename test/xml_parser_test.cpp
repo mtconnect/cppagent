@@ -96,7 +96,9 @@ TEST_F(XmlParserTest, GetDevices)
   const auto device = m_devices.front();
 
   // Check for Description
-  ASSERT_EQ((string) "Linux CNC Device", device->getDescriptionBody());
+  auto &description = device->get<EntityPtr>("Description");
+  ASSERT_TRUE(description);
+  ASSERT_EQ((string) "Linux CNC Device", description->getValue<string>());
 
   list<DataItemPtr> dataItems;
   const auto &dataItemsMap = device->getDeviceDataItems();
@@ -221,16 +223,18 @@ TEST_F(XmlParserTest, ExtendedSchema)
   const auto device = m_devices.front();
 
   // Check for Description
-  ASSERT_EQ((string) "Extended Schema.", device->getDescriptionBody());
+  auto &description = device->get<EntityPtr>("Description");
+  ASSERT_TRUE(description);
+  ASSERT_EQ((string) "Extended Schema.", description->getValue<string>());
 
-  mtconnect::Component *pump = device->getChildren().front();
-  ASSERT_EQ((string) "pump", pump->getName());
-  ASSERT_EQ((string) "Pump", pump->getClass());
-  ASSERT_EQ((string) "x", pump->getPrefix());
+  ComponentPtr pump = dynamic_pointer_cast<Component>(device->getList("Components")->front());
+  ASSERT_EQ((string) "pump", pump->get<string>("name"));
+  ASSERT_EQ((string) "Pump", string(pump->getName().getName()));
+  ASSERT_EQ((string) "x", pump->getName().getNs());
 
-  auto item = pump->getDataItems().front();
+  auto item = dynamic_pointer_cast<DataItem>(pump->getList("DataItems")->front());
   ASSERT_EQ((string) "x:FLOW", item->getType());
-  ASSERT_EQ((string) "Flow", item->getObservationName().getName());
+  ASSERT_EQ((string) "Flow", string(item->getObservationName().getName()));
   ASSERT_EQ((string) "x", item->getObservationName().getNs());
 }
 
@@ -256,17 +260,17 @@ TEST_F(XmlParserTest, Configuration)
   const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
-  mtconnect::Component *power = nullptr;
+  EntityPtr power;
   const auto &children = dev->getChildren();
 
-  for (auto const &iter : children)
+  for (auto const &iter : *children)
   {
-    if (iter->getName() == "power")
+    if (iter->get<string>("name") == "power")
       power = iter;
   }
 
   ASSERT_TRUE(power);
-  ASSERT_TRUE(power->getConfiguration());
+  ASSERT_TRUE(power->hasProperty("Configuration"));
 }
 
 TEST_F(XmlParserTest, NoNamespace)
@@ -337,6 +341,8 @@ TEST_F(XmlParserTest, FilteredDataItem)
   ASSERT_EQ(10.0, di->getMinimumPeriod());
 }
 
+// TODO: Once we have references
+#if 0
 TEST_F(XmlParserTest, References)
 {
   if (m_xmlParser)
@@ -393,6 +399,7 @@ TEST_F(XmlParserTest, References)
   ASSERT_EQ((size_t)1, filter.count("d2"));
   ASSERT_EQ((size_t)1, filter.count("eps"));
 }
+#endif
 
 TEST_F(XmlParserTest, SourceReferences)
 {
@@ -486,5 +493,5 @@ TEST_F(XmlParserTest, ParseDeviceMTConnectVersion)
   const auto dev = m_devices.front();
   ASSERT_TRUE(dev);
 
-  ASSERT_EQ(string("1.7"), dev->getMTConnectVersion());
+  ASSERT_EQ(string("1.7"), dev->get<string>("mtconnectVersion"));
 }

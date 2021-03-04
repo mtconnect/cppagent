@@ -37,19 +37,39 @@ namespace mtconnect
       static FactoryPtr factory;
       if (!factory)
       {
-        factory = Component::getFactory()->deepCopy();
+        factory = make_shared<Factory>(*Component::getFactory());
         factory->getRequirement("name")->setMultiplicity(1, 1);
         factory->getRequirement("uuid")->setMultiplicity(1, 1);
-        factory->addRequirements({{"iso841Class", false}});
+        factory->addRequirements({{"iso841Class", false}, {"mtconnectVersion", false}});
         factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr
         {
-          return make_shared<Device>("Device"s, ps);
+          auto device = make_shared<Device>("Device"s, ps);
+          device->registerDataItems(device);
+          return device;
         });
         Component::getFactory()->registerFactory("Device", factory);
       }
       return factory;
     }
-  
+    
+    entity::FactoryPtr Device::getRoot()
+    {
+      static auto factory = make_shared<Factory>(Requirements{
+        {"Device", ENTITY, getFactory(), 1, Requirement::Infinite }
+      });
+      
+      return factory;
+    }
+    
+    void Device::registerDataItem(DataItemPtr di)
+    {
+      m_deviceDataItemsById[di->getId()] = di;
+      if (di->hasProperty("name"))
+        m_deviceDataItemsByName[di->get<string>("name")] = di;
+      if (di->hasProperty("Source") && di->get<EntityPtr>("Source")->hasValue())
+        m_deviceDataItemsBySource[di->get<EntityPtr>("Source")->getValue<string>()] = di;
+    }
+    
     Device::Device(const std::string &name, entity::Properties &props)
     : Component(name, props)
     {

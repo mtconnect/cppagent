@@ -52,27 +52,7 @@ namespace mtconnect
                       xmlNodePtr node = nullptr);
 
   protected:
-#if 0
-    // Main method to process the nodes and return the objects
-    device_model::ComponentPtr handleNode(xmlNodePtr node, device_model::ComponentPtr parent = nullptr, DevicePtr device = nullptr);
-
-    // Helper to handle/return each component of the device
-    device_model::ComponentPtr loadComponent(xmlNodePtr node, const std::string &name);
-
-    // Load the data items
-    void loadDataItems(xmlNodePtr dataItems, device_model::ComponentPtr component);
-
-    // Load the data items
-    // Perform loading on children and set up relationships
-    void handleChildren(xmlNodePtr components, device_model::ComponentPtr parent = {},
-                        device_model::DevicePtr device = {});
-
-    // Perform loading of references and set up relationships
-    void handleReference(xmlNodePtr reference, device_model::ComponentPtr parent = {});
-#endif
-  protected:
     // LibXML XML Doc
     xmlDocPtr m_doc = nullptr;
-//    std::map<std::string, std::function<void(xmlNodePtr, Component *, DevicePtr )>> m_handlers;
   };
 }  // namespace mtconnect

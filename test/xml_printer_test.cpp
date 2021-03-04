@@ -537,12 +537,12 @@ TEST_F(XmlPrinterTest, ChangeDeviceAttributes)
 
   string v = "Some_Crazy_Uuid";
   device->setUuid(v);
-  v = "Big Tool MFG";
-  device->setManufacturer(v);
-  v = "111999333444";
-  device->setSerialNumber(v);
-  v = "99999999";
-  device->setStation(v);
+  ErrorList errors;
+  auto description = mtconnect::device_model::Device::getFactory()->create("Description", {{"manufacturer", "Big Tool MFG"s},
+    {"serialNumber", "111999333444"}, {"station", "99999999"}
+  }, errors);
+  ASSERT_TRUE(errors.empty());
+  device->setProperty("Description", description);
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 

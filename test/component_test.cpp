@@ -70,6 +70,7 @@ TEST_F(ComponentTest, Getters)
   ASSERT_FALSE(m_compB->hasProperty("nativeName"));
 }
 
+// Workning our way through
 #if 0
 TEST_F(ComponentTest, Description)
 {

@@ -68,6 +68,7 @@ namespace mtconnect
             
       // Getter methods for the component ID/Name
       const auto &getId() const { return m_id; }
+      const auto &getComponentName() const { return m_name; }
       const auto &getUuid() const { return m_uuid; }
       
       // Setter methods
@@ -107,6 +108,10 @@ namespace mtconnect
       
       // References
       void resolveReferences();
+      
+      // Connect data items
+      void connectDataItems();
+      void registerDataItems(DevicePtr device);
       
     protected:
       void setParent(ComponentPtr parent) { m_parent = parent; }
