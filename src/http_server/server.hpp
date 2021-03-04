@@ -84,7 +84,14 @@ namespace mtconnect
       Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {}):
       mPort(port)
       {
-        address = net::ip::make_address(inter);
+        if (inter.empty())
+        {
+          address = net::ip::make_address("0.0.0.0");
+        }
+        else
+        {
+          address = net::ip::make_address(inter);
+        }
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
         m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
                              const ResponseCode code) {
