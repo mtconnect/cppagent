@@ -38,7 +38,8 @@ using json = nlohmann::json;
 namespace mtconnect
 {
   using namespace observation;
-
+  using namespace device_model;
+  
   static dlib::logger g_logger("json.printer");
 
   JsonPrinter::JsonPrinter(const string version, bool pretty)
@@ -91,23 +92,6 @@ namespace mtconnect
       buffer << "\n";
     return buffer.str();
   }
-
-  static inline void addAttributes(json &doc, const map<string, string> &attrs)
-  {
-    for (const auto &attr : attrs)
-    {
-      if (!attr.second.empty())
-        doc[attr.first] = attr.second;
-    }
-  }
-
-  static inline void add(json &doc, const char *key, const string &value)
-  {
-    if (!value.empty())
-      doc[key] = value;
-  }
-
-  static inline void addText(json &doc, const std::string &text) { add(doc, "text", trim(text)); }
 
   inline json header(const string &version, const string &hostname, const unsigned int instanceId,
                      const unsigned int bufferSize, const string &schemaVersion)
@@ -167,32 +151,6 @@ namespace mtconnect
     return print(doc, m_pretty);
   }
 
-  static inline json toJson(DataItemPtr item)
-  {
-    entity::JsonPrinter printer;
-    return printer.print(item);
-  }
-
-#if 0
-
-  static inline json jsonReference(const Component::Reference &reference)
-  {
-    json ref = json::object({{"idRef", reference.m_id}});
-    add(ref, "name", reference.m_name);
-    return ref;
-  }
-
-  static inline json toJson(const Component::Reference &reference)
-  {
-    json obj;
-    if (reference.m_type == reference.DATA_ITEM)
-      obj["DataItemRef"] = jsonReference(reference);
-    else if (reference.m_type == reference.COMPONENT)
-      obj["ComponentRef"] = jsonReference(reference);
-
-    return obj;
-  }
-
   template <class T>
   inline void toJson(json &parent, const string &collection, T &list)
   {
@@ -207,60 +165,17 @@ namespace mtconnect
     }
   }
 
-  inline json toJson(const unique_ptr<Configuration> &configuration)
-  {
-    entity::JsonPrinter printer;
-    return printer.print(configuration->getEntity())["Configuration"];
-  }
-
-  inline json toJson(const unique_ptr<Composition> &composition)
-  {
-    entity::JsonPrinter printer;
-    return printer.print(composition->getEntity())["Compositions"];
-  }
-
-  static json toJson(Component *component)
-  {
-    json desc = json::object();
-    addAttributes(desc, component->getDescription());
-    addText(desc, component->getDescriptionBody());
-
-    json comp = json::object();
-    addAttributes(comp, component->getAttributes());
-
-    if (desc.begin() != desc.end())
-      comp["Description"] = desc;
-
-    const auto &configuration = component->getConfiguration();
-    if (configuration)
-    {
-      comp["Configuration"] = toJson(configuration);
-    }
-
-    const auto &compositions = component->getCompositions();
-    if (compositions)
-    {
-      comp["Compositions"] = toJson(compositions);
-    }
-
-    toJson(comp, "DataItems", component->getDataItems());
-    toJson(comp, "Components", component->getChildren());
-    toJson(comp, "References", component->getReferences());
-
-    json doc = json::object({{component->getClass(), comp}});
-
-    return doc;
-  }
-
   std::string JsonPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const unsigned int assetBufferSize,
                                       const unsigned int assetCount,
                                       const std::list<DevicePtr > &devices,
                                       const std::map<std::string, int> *count) const
   {
+    entity::JsonPrinter printer;
+
     json devicesDoc = json::array();
-    for (const auto device : devices)
-      devicesDoc.emplace_back(toJson(device));
+    for (const auto &device : devices)
+      devicesDoc.emplace_back(printer.print(device));
 
     json doc =
         json::object({{"MTConnectDevices",
@@ -313,15 +228,15 @@ namespace mtconnect
   class ComponentRef
   {
   public:
-    ComponentRef(const Component *component) : m_component(component), m_categoryRef(nullptr) {}
+    ComponentRef(const ComponentPtr component) : m_component(component), m_categoryRef(nullptr) {}
     ComponentRef(const ComponentRef &other)
       : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
     {
     }
 
-    bool isComponent(const Component *component) { return m_component == component; }
+    bool isComponent(const ComponentPtr &component) { return m_component == component; }
 
-    bool addObservation(const ObservationPtr &observation, const Component *component,
+    bool addObservation(const ObservationPtr &observation, const ComponentPtr &component,
                         const DataItemPtr dataItem)
     {
       if (m_component == component)
@@ -345,7 +260,7 @@ namespace mtconnect
       if (m_component != nullptr && !m_categories.empty())
       {
         json obj = json::object(
-            {{"component", m_component->getClass()}, {"componentId", m_component->getId()}});
+            {{"component", m_component->getName()}, {"componentId", m_component->getId()}});
 
         if (!m_component->getName().empty())
           obj["name"] = m_component->getName();
@@ -363,7 +278,7 @@ namespace mtconnect
     }
 
   protected:
-    const Component *m_component;
+    const ComponentPtr m_component;
     vector<CategoryRef> m_categories;
     CategoryRef *m_categoryRef;
   };
@@ -379,7 +294,7 @@ namespace mtconnect
     bool isDevice(const DevicePtr device) { return device == m_device; }
 
     bool addObservation(const ObservationPtr &observation, const DevicePtr device,
-                        const Component *component, const DataItemPtr dataItem)
+                        const ComponentPtr component, const DataItemPtr dataItem)
     {
       if (m_device == device)
       {
@@ -476,5 +391,4 @@ namespace mtconnect
 
     return print(doc, m_pretty);
   }
-#endif
 }  // namespace mtconnect

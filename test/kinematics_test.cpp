@@ -48,10 +48,9 @@ TEST_F(KinematicsTest, ParseZAxisKinematics)
 
   auto linear = m_device->getComponentById("z");
   
-  auto &configurations_list = linear->getConfiguration();
-  ASSERT_TRUE(configurations_list);
+  auto &ent = linear->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(ent);
 
-  auto ent = configurations_list->getEntity();
   auto motion = ent->get<EntityPtr>("Motion");
   
   EXPECT_EQ("Motion", motion->getName());
@@ -80,10 +79,8 @@ TEST_F(KinematicsTest, ParseCAxisKinematics)
   ASSERT_NE(nullptr, m_device);
   
   auto rot = m_device->getComponentById("c");
-  auto &cl = rot->getConfiguration();
-  ASSERT_TRUE(cl);
-
-  auto ent = cl->getEntity();
+  auto &ent = rot->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(ent);
   auto motion = ent->get<EntityPtr>("Motion");
     
   ASSERT_EQ("spin", motion->get<string>("id"));
