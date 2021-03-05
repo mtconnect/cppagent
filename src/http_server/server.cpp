@@ -167,6 +167,7 @@ namespace mtconnect
         request.m_foreignIp = socket.remote_endpoint().address().to_string();
         request.m_foreignPort = socket.remote_endpoint().port();
         request.m_accepts = req.find(http::field::accept)->value().data();
+        request.m_accepts = request.m_accepts.substr(0,request.m_accepts.size()-2);
         auto media = req.find(http::field::content_type)->value().data();
         if (media != nullptr)
           request.m_contentType = media;
