@@ -9,3 +9,5 @@ Release
 *.log
 test/agent.log*
 build/
+cmake-build-debug/**
+.idea/**
