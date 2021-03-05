@@ -128,7 +128,7 @@ TEST_F(XmlParserTest, Condition)
   const auto device = m_devices.front();
   auto dataItemsMap = device->getDeviceDataItems();
 
-  const auto item = dataItemsMap.at("clc");
+  const auto item = dataItemsMap.at("clc").lock();
   ASSERT_TRUE(item);
 
   ASSERT_EQ((string) "clc", item->getId());
@@ -451,7 +451,7 @@ TEST_F(XmlParserTest, DataItemRelationships)
   const auto &device = m_devices.front();
   auto &dataItemsMap = device->getDeviceDataItems();
   
-  const auto item1 = dataItemsMap.at("xlc");
+  const auto item1 = dataItemsMap.at("xlc").lock();
   ASSERT_TRUE(item1 != nullptr);
     
   const auto &relations = item1->getList("Relationships");
@@ -478,7 +478,7 @@ TEST_F(XmlParserTest, DataItemRelationships)
   ASSERT_EQ(string("spec1"),
             (*rel)->get<string>("idRef"));
   
-  const auto item2 = dataItemsMap.at("xlcpl");
+  const auto item2 = dataItemsMap.at("xlcpl").lock();
   ASSERT_TRUE(item2 != nullptr);
   
   const auto &relations2 = item2->getList("Relationships");
