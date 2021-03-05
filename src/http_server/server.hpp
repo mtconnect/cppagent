@@ -20,6 +20,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast.hpp>
+#include <boost/thread.hpp>
 #include <boost/bind/bind.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/asio/connect.hpp>
@@ -136,6 +137,8 @@ namespace mtconnect
 
         return false;
       }
+
+      void session (tcp::socket& socket);
 
       bool handleRequest(Routing::Request &request, Response &response);
 

@@ -249,10 +249,8 @@ namespace mtconnect
       }
 
     protected:
-      //std::ostream &m_out;
       std::stringstream m_out;
       tcp::socket m_socket;
-      http::request<http::string_body> m_req;
       std::string m_boundary;
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;

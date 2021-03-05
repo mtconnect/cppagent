@@ -25,6 +25,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/asio.hpp>
+#include <thread>
 
 
 namespace mtconnect
@@ -77,22 +78,21 @@ namespace mtconnect
         try{
         tcp::socket socket{ioc};
         acceptor.accept(socket);
-        acceptor.wait_write;
-        http::request<http::string_body> req;
-        http::read(socket, buffer, req, ec);
-
-        if (ec)
-          return fail(ec, "write");
-
-        Routing::Request request = getRequest(req, socket);
-        Response response(socket, m_fields);
-        if(!handleRequest(request, response))
-        {
-          throw "Server failed to handle request";
-        };
-
-        socket.shutdown(tcp::socket::shutdown_send, ec);
-        buffer.clear();
+        std::thread{std::bind(&Server::session, this, std::move(socket))}.detach();
+        socket.shutdown(tcp::socket::shutdown_send, ec);//        http::request<http::string_body> req;
+//        http::read(socket, buffer, req, ec);
+//
+//        if (ec)
+//          return fail(ec, "write");
+//
+//        Routing::Request request = getRequest(req, socket);
+//        Response response(socket, m_fields);
+//        if(!handleRequest(request, response))
+//        {
+//          throw "Server failed to handle request";
+//        };
+//
+//        buffer.clear();
         }
         catch (exception &e)
         {
@@ -101,6 +101,33 @@ namespace mtconnect
       }
     }
 
+    void Server::session( tcp::socket &socket)
+    {
+      tcp::socket m_socket(std::move(socket));
+      try{
+        beast::error_code ec;
+        beast::flat_buffer buffer;
+        http::request<http::string_body> req;
+        http::read(m_socket, buffer, req, ec);
+
+        if (ec)
+          return fail(ec, "write");
+
+        Routing::Request request = getRequest(req, m_socket);
+        Response response(m_socket, m_fields);
+        if(!handleRequest(request, response))
+        {
+          g_logger << LERROR << "Server::session error handling Request. ";
+        };
+
+        m_socket.shutdown(tcp::socket::shutdown_send, ec);
+        buffer.clear();
+      }
+      catch (exception &e)
+      {
+        g_logger << LERROR << "Server::listen error: "<< e.what();
+      }
+    }
 
     //Parse http::request and return
     Routing::Request Server::getRequest(const http::request<http::string_body>& req, const tcp::socket& socket)
