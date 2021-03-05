@@ -1112,7 +1112,7 @@ If you installed in c:\vcpkg, the following define must be used:
 	
 In general
 
-    -DCMAKE_TOOLCHAIN_FILE=[path-to-vcpkg]/scripts/buildsystems/vcpkg.cmake`
+    -DCMAKE_TOOLCHAIN_FILE=[path-to-vcpkg]/scripts/buildsystems/vcpkg.cmake
 	
 ### Setting up build
 
@@ -1124,28 +1124,26 @@ Clone the agent to another directory:
 Make a build subdirectory of `cppagent_dev`
 
     mkdir cppagent_dev\build	
-	cd cppagent_dev\build
+    cd cppagent_dev\build
 
 ####  For the 64 bit build
 
     cmake -G "Visual Studio 16 2019" -A x64 .. -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static
 	
-#### For the x86 build for XP
+#### For the Win32 build for XP
 
-    cmake -G "Visual Studio 16 2019" -A x86 .. -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-windows-static
+    cmake -G "Visual Studio 16 2019" -A Win32 -T v141_xp -D AGENT_ENABLE_UNITTESTS=false -D WINVER=0x0501 .. -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-windows-static
 
 ### Build from the command line
 
 #### For the x64 build
 
-    cmake -G "Visual Studio 16 2019" -A x64 ..
     cmake --build . --config Release --target ALL_BUILD
-	ctest -C Release
+    ctest -C Release
     cpack -G ZIP
 
-#### For the x86 build
+#### For the Win32 build
 
-    cmake -T v141_xp -G "Visual Studio 16 2019" -A Win32 -D AGENT_ENABLE_UNITTESTS=false -D WINVER=0x0501 ..
     cmake --build . --config Release 
     cpack -G ZIP
 
