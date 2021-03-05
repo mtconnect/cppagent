@@ -22,7 +22,7 @@
 #include "test_utilities.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
-
+#include "device_model/reference.hpp"
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -341,10 +341,10 @@ TEST_F(XmlParserTest, FilteredDataItem)
   ASSERT_EQ(10.0, di->getMinimumPeriod());
 }
 
-// TODO: Once we have references
-#if 0
 TEST_F(XmlParserTest, References)
 {
+  using namespace device_model;
+  
   if (m_xmlParser)
   {
     delete m_xmlParser;
@@ -367,27 +367,32 @@ TEST_F(XmlParserTest, References)
   const auto item = m_devices.front()->getDeviceDataItem(id);
   const auto comp = item->getComponent();
 
-  //comp->resolveReferences(); // TODO: redo resolve references with entities
-  /*
-  const auto refs = comp->getReferences();
-  auto ref = refs.begin();
+  auto refs = comp->getList("References");
+  ASSERT_TRUE(refs);
+  auto ref = refs->begin();
 
-  ASSERT_EQ((string) "c4", ref->m_id);
-  ASSERT_EQ((string) "chuck", ref->m_name);
+  ASSERT_EQ((string) "c4", (*ref)->get<string>("idRef"));
+  ASSERT_EQ((string) "chuck", (*ref)->get<string>("name"));
 
-  ASSERT_TRUE(ref->m_dataItem) << "DataItem was not resolved.";
+  auto r = dynamic_pointer_cast<Reference>(*ref);
+  ASSERT_TRUE(r);
+  ASSERT_TRUE(r->getDataItem().lock()) << "DataItem was not resolved.";
   
   ref++;
-  ASSERT_EQ((string) "d2", ref->m_id);
-  ASSERT_EQ((string) "door", ref->m_name);
+  ASSERT_EQ((string) "d2", (*ref)->get<string>("idRef"));
+  ASSERT_EQ((string) "door", (*ref)->get<string>("name"));
 
-  ASSERT_TRUE(ref->m_dataItem) << "DataItem was not resolved.";
-  
+  r = dynamic_pointer_cast<Reference>(*ref);
+  ASSERT_TRUE(r);
+  ASSERT_TRUE(r->getDataItem().lock()) << "DataItem was not resolved.";
+
   ref++;
-  ASSERT_EQ((string) "ele", ref->m_id);
-  ASSERT_EQ((string) "electric", ref->m_name);
+  ASSERT_EQ((string) "ele", (*ref)->get<string>("idRef"));
+  ASSERT_EQ((string) "electric", (*ref)->get<string>("name"));
 
-  ASSERT_TRUE(ref->m_component) << "DataItem was not resolved.";
+  r = dynamic_pointer_cast<Reference>(*ref);
+  ASSERT_TRUE(r);
+  ASSERT_TRUE(r->getComponent().lock()) << "Component was not resolved.";
 
   std::set<string> filter;
   m_xmlParser->getDataItems(filter, "//BarFeederInterface");
@@ -398,9 +403,7 @@ TEST_F(XmlParserTest, References)
   ASSERT_EQ((size_t)1, filter.count("bfc"));
   ASSERT_EQ((size_t)1, filter.count("d2"));
   ASSERT_EQ((size_t)1, filter.count("eps"));
-  */
 }
-#endif
 
 TEST_F(XmlParserTest, SourceReferences)
 {

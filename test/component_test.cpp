@@ -71,45 +71,51 @@ TEST_F(ComponentTest, Getters)
 }
 
 // Workning our way through
-#if 0
 TEST_F(ComponentTest, Description)
 {
   map<string, string> attributes;
   attributes["manufacturer"] = "MANUFACTURER";
   attributes["serialNumber"] = "SERIAL_NUMBER";
 
-  m_compA->addDescription((string) "Machine 1", attributes);
-  auto description1 = m_compA->getDescription();
+  m_compA->setManufacturer("MANUFACTURER");
+  m_compA->setSerialNumber("SERIAL_NUMBER");
+  m_compA->setDescriptionValue("Machine 1");
+  
+  auto d1 = m_compA->getDescription();
 
-  ASSERT_EQ((string) "MANUFACTURER", description1["manufacturer"]);
-  ASSERT_EQ((string) "SERIAL_NUMBER", description1["serialNumber"]);
-  ASSERT_TRUE(description1["station"].empty());
-  ASSERT_EQ((string) "Machine 1", m_compA->getDescriptionBody());
+  ASSERT_EQ((string) "MANUFACTURER", d1->get<string>("manufacturer"));
+  ASSERT_EQ((string) "SERIAL_NUMBER", d1->get<string>("serialNumber"));
+  ASSERT_FALSE(d1->hasProperty("station"));
+  ASSERT_EQ((string) "Machine 1", d1->getValue<string>());
 
-  attributes["station"] = "STATION";
-  m_compB->addDescription((string) "", attributes);
-  auto description2 = m_compB->getDescription();
+  m_compB->setManufacturer("MANUFACTURER");
+  m_compB->setSerialNumber("SERIAL_NUMBER");
+  m_compB->setStation("STATION");
+  auto d2 = m_compB->getDescription();
 
-  ASSERT_EQ((string) "MANUFACTURER", description2["manufacturer"]);
-  ASSERT_EQ((string) "SERIAL_NUMBER", description2["serialNumber"]);
-  ASSERT_EQ((string) "STATION", description2["station"]);
-  ASSERT_TRUE(m_compB->getDescriptionBody().empty());
+  ASSERT_EQ((string) "MANUFACTURER", d2->get<string>("manufacturer"));
+  ASSERT_EQ((string) "SERIAL_NUMBER", d2->get<string>("serialNumber"));
+  ASSERT_EQ((string) "STATION", d2->get<string>("station"));
+  ASSERT_FALSE(d2->hasValue());
 }
 
 TEST_F(ComponentTest, Relationships)
 {
   // Test get/set parents
-  map<string, string> dummy;
-  auto *linear = new mtconnect::Component("Linear", dummy);
-  linear->addChild(m_compA);
-  ASSERT_TRUE(linear == m_compA->getParent());
+  ErrorList errors;
+  
+  auto linear = Component::make("Linear", {{"id", "x"s}}, errors);
+  ASSERT_TRUE(errors.empty());
+  linear->addChild(m_compA, errors);
+  ASSERT_TRUE(errors.empty());
+  ASSERT_EQ(linear, m_compA->getParent());
 
-  auto *device = new Device(dummy);
-  auto devPointer = dynamic_cast<mtconnect::Component *>(device);
-
-  ASSERT_TRUE(devPointer);
-  devPointer->addChild(linear);
-  ASSERT_TRUE(devPointer == linear->getParent());
+  Properties dps{{"id", "d"s}, {"name", "d"s}, {"uuid", "d"}};
+  auto device = dynamic_pointer_cast<Device>(Device::getFactory()->create("Device", dps, errors));
+  ASSERT_TRUE(errors.empty());
+  ASSERT_TRUE(device);
+  device->addChild(linear, errors);
+  ASSERT_TRUE(device == linear->getParent());
 
   // Test get device
   ASSERT_TRUE(device == m_compA->getDevice());
@@ -117,42 +123,41 @@ TEST_F(ComponentTest, Relationships)
   ASSERT_TRUE(device == device->getDevice());
 
   // Test add/get children
-  ASSERT_TRUE(m_compA->getChildren().empty());
-
-  auto *axes = new mtconnect::Component("Axes", dummy),
-       *thermostat = new mtconnect::Component("Thermostat", dummy);
-  m_compA->addChild(axes);
-  m_compA->addChild(thermostat);
-
-  ASSERT_EQ((size_t)2, m_compA->getChildren().size());
-  ASSERT_TRUE(axes == m_compA->getChildren().front());
-  ASSERT_TRUE(thermostat == m_compA->getChildren().back());
-
-  delete device;
-
-  m_compA = nullptr;
-  m_compB = nullptr;
+  ASSERT_FALSE(m_compA->getChildren());
+  
+  ASSERT_EQ(1, device.use_count());
+  ASSERT_EQ(2, linear.use_count());
+  ASSERT_EQ(2, m_compA.use_count());
 }
 
 TEST_F(ComponentTest, DataItems)
 {
-  ASSERT_TRUE(m_compA->getDataItems().empty());
+  ASSERT_FALSE(m_compA->getDataItems());
 
   ErrorList errors;
   auto data1 = DataItem::make({{"id", "a"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
   auto data2 = DataItem::make({{"id", "b"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
-  m_compA->addDataItem(data1);
-  m_compA->addDataItem(data2);
+  m_compA->addDataItem(data1, errors);
+  ASSERT_TRUE(errors.empty());
+  m_compA->addDataItem(data2, errors);
+  ASSERT_TRUE(errors.empty());
 
-  ASSERT_EQ((size_t)2, m_compA->getDataItems().size());
-  ASSERT_TRUE(data1 == m_compA->getDataItems().front());
-  ASSERT_TRUE(data2 == m_compA->getDataItems().back());
+  auto dataItems = m_compA->getDataItems();
+  ASSERT_TRUE(m_compA->getDataItems());
+
+  ASSERT_EQ((size_t)2, dataItems->size());
+  ASSERT_EQ(data1, dataItems->front());
+  ASSERT_EQ(data2, dataItems->back());
 }
 
+// Not relevant right now. Tested as references in other places
+#if 0
 TEST_F(ComponentTest, References)
 {
+  
+  
   string id("a"), name("xxx");
   mtconnect::Component::Reference ref(id, name, mtconnect::Component::Reference::DATA_ITEM);
 

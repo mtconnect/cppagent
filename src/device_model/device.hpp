@@ -48,6 +48,7 @@ namespace mtconnect
       {
         Component::initialize();
         buildDeviceMaps(getptr());
+        resolveReferences(getptr());
       }
       
       static entity::FactoryPtr getFactory();

@@ -174,7 +174,7 @@ namespace mtconnect
         else
           return it->second;
       }
-
+      
       
     protected:
       QName m_name;

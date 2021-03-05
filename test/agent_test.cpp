@@ -25,7 +25,7 @@
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
 #include "assets/file_asset.hpp"
-
+#include "device_model/reference.hpp"
 #include <dlib/server.h>
 
 #include <chrono>
@@ -1235,9 +1235,10 @@ TEST_F(AgentTest, ResetTriggered)
   }
 }
 
-#if 0
 TEST_F(AgentTest, References)
 {
+  using namespace device_model;
+
   m_agentTestHelper->createAgent("/samples/reference_example.xml");
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
@@ -1246,44 +1247,41 @@ TEST_F(AgentTest, References)
   auto item = agent->getDataItemForDevice((string) "LinuxCNC", id);
   auto comp = item->getComponent();
 
-  auto &references_list = comp->getReferences();
-  ASSERT_TRUE(references_list);
-
-  auto references_entity = references_list->getEntity();
-  auto &references = references_entity->maybeGet<entity::EntityList>("LIST");
-
+  auto references = comp->getList("References");
   ASSERT_TRUE(references);
   ASSERT_EQ(3, references->size());
   auto reference = references->begin();
 
   EXPECT_EQ("DataItemRef", (*reference)->getName());
 
-  EXPECT_EQ("chuck", get<string>((*reference)->getProperty("name")));
-  EXPECT_EQ("c4", get<string>((*reference)->getProperty("idRef")));
+  EXPECT_EQ("chuck", (*reference)->get<string>("name"));
+  EXPECT_EQ("c4", (*reference)->get<string>("idRef"));
 
-
-  //TODO: Resolving references needs to be redone with entities
-  /*
-  const auto refs = comp->getReferences();
-  auto ref = refs.begin();
-  ASSERT_EQ((string) "c4", ref->m_id);
-  ASSERT_EQ((string) "chuck", ref->m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref->m_type);
-
-  ASSERT_TRUE(ref->m_dataItem) << "DataItem was not resolved";
-  ref++;
+  auto ref = dynamic_pointer_cast<Reference>(*reference);
+  ASSERT_TRUE(ref);
   
-  ASSERT_EQ((string) "d2", ref->m_id);
-  ASSERT_EQ((string) "door", ref->m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref->m_type);
+  ASSERT_EQ(Reference::DATA_ITEM, ref->getReferenceType());
+  ASSERT_TRUE(ref->getDataItem().lock()) << "DataItem was not resolved";
+  reference++;
+  
+  EXPECT_EQ("door", (*reference)->get<string>("name"));
+  EXPECT_EQ("d2", (*reference)->get<string>("idRef"));
+  
+  ref = dynamic_pointer_cast<Reference>(*reference);
+  ASSERT_TRUE(ref);
+  
+  ASSERT_EQ(Reference::DATA_ITEM, ref->getReferenceType());
+  ASSERT_TRUE(ref->getDataItem().lock()) << "DataItem was not resolved";
 
-  ref++;
-  ASSERT_EQ((string) "ele", ref->m_id);
-  ASSERT_EQ((string) "electric", ref->m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::COMPONENT, ref->m_type);
+  reference++;
+  EXPECT_EQ("electric", (*reference)->get<string>("name"));
+  EXPECT_EQ("ele", (*reference)->get<string>("idRef"));
 
-  ASSERT_TRUE(ref->m_component) << "DataItem was not resolved";
-  */
+  ref = dynamic_pointer_cast<Reference>(*reference);
+  ASSERT_TRUE(ref);
+  
+  ASSERT_EQ(Reference::COMPONENT, ref->getReferenceType());
+  ASSERT_TRUE(ref->getComponent().lock()) << "DataItem was not resolved";
 
   // Additional data items should be included
   {
@@ -1298,7 +1296,6 @@ TEST_F(AgentTest, References)
                           "UNAVAILABLE");
   }
 }
-#endif
 
 TEST_F(AgentTest, Discrete)
 {

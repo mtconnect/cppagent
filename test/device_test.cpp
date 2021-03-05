@@ -97,47 +97,6 @@ TEST_F(DeviceTest, Description)
   ASSERT_EQ((string) "Machine 2", descB->getValue<string>());
 }
 
-// TODO: Need to replace once we complete the relationships
-#if 0
-TEST_F(DeviceTest, Relationships)
-{
-  // Test get/set parents
-  map<string, string> dummy;
-  auto *linear = new mtconnect::Component("Linear", dummy);
-
-  auto devPointer = dynamic_cast<mtconnect::Component *>(m_devA);
-  ASSERT_TRUE(devPointer);
-
-  m_devA->addChild(linear);
-  ASSERT_TRUE(devPointer == linear->getParent());
-
-  auto *controller = new mtconnect::Component("Controller", dummy);
-  m_devA->addChild(controller);
-  ASSERT_TRUE(devPointer == controller->getParent());
-
-  // Test get device
-  ASSERT_TRUE(m_devA == m_devA->getDevice());
-  ASSERT_TRUE(m_devA == linear->getDevice());
-  ASSERT_TRUE(m_devA == controller->getDevice());
-
-  // Test add/get children
-  ASSERT_FALSE(m_devA->getChildren().empty());
-
-  auto *axes = new mtconnect::Component("Axes", dummy),
-       *thermostat = new mtconnect::Component("Thermostat", dummy);
-  m_devA->addChild(axes);
-  m_devA->addChild(thermostat);
-
-  ASSERT_EQ((size_t)4, m_devA->getChildren().size());
-  auto it = m_devA->getChildren().begin();
-  ASSERT_EQ(linear, *it); it++;
-  ASSERT_EQ(controller, *it); it++;
-  ASSERT_EQ(axes, *it); it++;
-  ASSERT_EQ(thermostat, *it); it++;
-  ASSERT_EQ(m_devA->getChildren().end(), it);
-}
-#endif
-
 TEST_F(DeviceTest, DataItems)
 {
   ASSERT_FALSE(m_devA->getDataItems());

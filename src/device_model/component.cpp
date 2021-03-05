@@ -24,6 +24,7 @@
 #include "device_model/device.hpp"
 #include "configuration/configuration.hpp"
 #include "description.hpp"
+#include "reference.hpp"
 
 #include <cstdlib>
 #include <stdexcept>
@@ -125,35 +126,22 @@ namespace mtconnect
     {
     }
     
-    void Component::resolveReferences()
+    void Component::resolveReferences(DevicePtr device)
     {
-      DevicePtr device = getDevice();
-      // TODO: Need to connect references once we have references
-#if 0
-      for (auto &reference : m_references)
+      auto references = getList("References");
+      if (references)
       {
-        if (reference.m_type == Component::Reference::DATA_ITEM)
+        for (auto &reference : *references)
         {
-          auto di = device->getDeviceDataItem(reference.m_id);
-          if (!di)
-            throw runtime_error("Cannot resolve Reference for component " + m_name +
-                                " to data item " + reference.m_id);
-          reference.m_dataItem = di;
-        }
-        else if (reference.m_type == Component::Reference::COMPONENT)
-        {
-          auto comp = device->getComponentById(reference.m_id);
-          if (!comp)
-            throw runtime_error("Cannot resolve Reference for component " + m_name +
-                                " to component " + reference.m_id);
-          
-          reference.m_component = comp;
+          dynamic_pointer_cast<Reference>(reference)->resolve(device);
         }
       }
-      
-      for (const auto &childComponent : m_children)
-        childComponent->resolveReferences();
-#endif
+      auto children = getChildren();
+      if (children)
+      {
+        for (const auto &child : *children)
+          dynamic_pointer_cast<Component>(child)->resolveReferences(device);
+      }
     }
         
     void Component::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)

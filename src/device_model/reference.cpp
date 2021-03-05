@@ -18,14 +18,17 @@
 #include "reference.hpp"
 #include "entity.hpp"
 #include "utilities.hpp"
+#include "device.hpp"
 
 #include <list>
 #include <map>
 #include <optional>
 #include <string>
 #include <utility>
+#include <dlib/logger.h>
 
 using namespace std;
+static dlib::logger g_logger("reference");
 
 namespace mtconnect
 {
@@ -38,8 +41,16 @@ namespace mtconnect
       static FactoryPtr references;
       if (!references)
       {
-        auto reference = make_shared<Factory>(
-                                              Requirements {Requirement("idRef", false), Requirement("name", false)});
+        auto reference = make_shared<Factory>(Requirements {{"idRef", true},
+          {"name", false}}, [](const std::string &name, Properties &ps) -> EntityPtr {
+            auto r = make_shared<Reference>(name, ps);
+            if (name == "ComponentRef")
+              r->m_type = COMPONENT;
+            else if (name == "DataItemRef")
+              r->m_type = DATA_ITEM;
+            
+            return r;
+          });
         
         references = make_shared<Factory>(Requirements {
           Requirement("ComponentRef", ENTITY, reference, 0, Requirement::Infinite),
@@ -58,5 +69,30 @@ namespace mtconnect
       
       return root;
     }
+    
+    void Reference::resolve(DevicePtr device)
+    {
+      if (m_type == COMPONENT)
+      {
+        auto comp = device->getComponentById(get<string>("idRef"));
+        if (comp)
+          m_component = comp;
+        else
+          g_logger << dlib::LWARN << "Refernce: Cannot find Component for idRef " << get<string>("idRef");
+      }
+      else if (m_type == DATA_ITEM)
+      {
+        auto di = device->getDeviceDataItem(get<string>("idRef"));
+        if (di)
+          m_dataItem = di;
+        else
+          g_logger << dlib::LWARN << "Refernce: Cannot find DataItem for idRef " << get<string>("idRef");
+      }
+      else
+      {
+        g_logger << dlib::LWARN << "Reference: Unknown Reference type for: " << getName();
+      }
+    }
+
   }
 }  // namespace mtconnect

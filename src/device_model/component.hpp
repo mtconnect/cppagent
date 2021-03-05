@@ -19,7 +19,6 @@
 
 #include "composition.hpp"
 #include "configuration/configuration.hpp"
-#include "reference.hpp"
 #include "utilities.hpp"
 #include "entity/factory.hpp"
 
@@ -162,7 +161,7 @@ namespace mtconnect
       bool operator==(const Component &comp) const { return m_id == comp.getId(); }
       
       // References
-      void resolveReferences();
+      void resolveReferences(DevicePtr device);
       
       // Connect data items
       void connectDataItems();
