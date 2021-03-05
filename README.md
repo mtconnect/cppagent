@@ -1144,7 +1144,7 @@ Make a build subdirectory of `cppagent_dev`
 
 #### For the Win32 build
 
-    cmake --build . --config Release 
+    cmake --build . --config Release --target ALL_BUILD
     cpack -G ZIP
 
 ## Building on Ubuntu on 20.04 LTS
