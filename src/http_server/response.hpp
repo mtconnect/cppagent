@@ -104,12 +104,8 @@ namespace mtconnect
     {
     public:
       //Response(tcp::socket &socket, std::ostream &out, const StringList &fields = {}) : m_socket(std::move(socket)) ,m_out(out), m_fields(fields)
-      Response(tcp::socket &socket, const StringList &fields = {}) : m_socket(std::move(socket)) , m_fields(fields)
+      Response(tcp::socket &socket,  const StringList &fields = {}) : m_socket(std::move(socket)), m_fields(fields)
       {
-        beast::error_code ec;
-        //m_out <<"";//"">>;
-        bool close{false};
-        send_lambda<tcp::socket> lambda{socket, close, ec};
       }
 
       virtual ~Response() = default;
@@ -215,38 +211,54 @@ namespace mtconnect
             expiry = getCurrentTime(chrono::system_clock::now() + expires, HUM_READ);
           }
 
-          m_out << "HTTP/1.1 " << code << " ";
-          auto cm = m_status.find(code);
-          if (cm == m_status.end())
-            m_out << "Unknown";
-          else
-            m_out << cm->second;
-          m_out << "\r\n"
-                << "Date: " << getHeaderDate()
-                << "\r\n"
-                   "Server: MTConnectAgent\r\n"
-                   "Connection: close\r\n"
-                << expiry << "Content-Length: " << size
-                << "\r\n"
-                   "Content-Type: "
-                << mimeType << "\r\n";
-          for (auto &f : m_fields)
-            m_out << f << "\r\n";
-          m_out << "\r\n";
+//          m_out << "HTTP/1.1 " << code << " ";
+//          auto cm = m_status.find(code);
+//          if (cm == m_status.end())
+//            m_out << "Unknown";
+//          else
+//            m_out << cm->second;
+//          m_out << "\r\n"
+//                << "Date: " << getHeaderDate()
+//                << "\r\n"
+//                   "Server: MTConnectAgent\r\n"
+//                   "Connection: close\r\n"
+//                << expiry << "Content-Length: " << size
+//                << "\r\n"
+//                   "Content-Type: "
+//                << mimeType << "\r\n";
+//          for (auto &f : m_fields)
+//            m_out << f << "\r\n";
+//          m_out << "\r\n";
           m_out.write(body, size);
-          std::cout << m_out.str() << std::endl;
+          auto const textSize = m_out.str().size();
+          http::response<http::string_body> res
+          {
+              std::piecewise_construct,
+              std::make_tuple(std::move(m_out.str().c_str())),
+              std::make_tuple(http::status::ok, 11)// m_req.version())
+          };
+          res.set(http::field::server, "MTConnectAgent");
+          res.set(http::field::date, getHeaderDate());
+          res.set(http::field::connection, "close");
+          res.set(http::field::expires, "-1");
+          res.set(http::field::content_type, "text/xml");
+          res.content_length(textSize);
+          http::serializer<false, http::string_body , http::fields> sr{res};
+          http::write(m_socket, sr, ec);
         }
       }
 
     protected:
       //std::ostream &m_out;
       std::stringstream m_out;
-      std::string outputString;
       tcp::socket m_socket;
+      http::request<http::string_body> m_req;
       std::string m_boundary;
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;
       StringList m_fields;
+      beast::error_code ec;
+      bool close{false};
     };
   }  // namespace http_server
 }  // namespace mtconnect

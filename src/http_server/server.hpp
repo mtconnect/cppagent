@@ -139,10 +139,6 @@ namespace mtconnect
 
       bool handleRequest(Routing::Request &request, Response &response);
 
-      //template<class Body, class Allocator, class Send>
-      template<class Body, class Allocator, class Send>
-      void handle_request(http::request<Body, http::basic_fields<Allocator>> &&req ,Send &&send);
-
       void fail(beast::error_code ec, char const *what);
 
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }

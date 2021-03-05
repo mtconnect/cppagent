@@ -46,7 +46,7 @@ namespace mtconnect
         httpProcess = new std::thread(&Server::listen, this );
         httpProcess->join();
       }
-      catch (dlib::socket_error &e)
+      catch (exception &e)
       {
         g_logger << LFATAL << "Cannot start server: " << e.what();
         std::exit(1);
@@ -74,29 +74,30 @@ namespace mtconnect
 
 
       while (run) {
+        try{
         tcp::socket socket{ioc};
         acceptor.accept(socket);
-        send_lambda<tcp::socket> lambda{socket, close, ec};
+        acceptor.wait_write;
+        http::request<http::string_body> req;
+        http::read(socket, buffer, req, ec);
 
-        //for (;;)
+        if (ec)
+          return fail(ec, "write");
+
+        Routing::Request request = getRequest(req, socket);
+        Response response(socket, m_fields);
+        if(!handleRequest(request, response))
         {
-          http::request<http::string_body> req;
-          http::read(socket, buffer, req, ec);
-          if (ec == http::error::end_of_stream)
-            break;
-          Response response(socket, m_fields);
-          Routing::Request request = getRequest(req, socket);
-          close = handleRequest(request, response);
-          //handle_request(std::move(req), lambda);
-          if (ec)
-            return fail(ec, "write");
-          if (close) {
-            break;
-          }
-        }
+          throw "Server failed to handle request";
+        };
 
-        // Send a TCP shutdown
         socket.shutdown(tcp::socket::shutdown_send, ec);
+        buffer.clear();
+        }
+        catch (exception &e)
+        {
+          g_logger << LERROR << "Server::listen error: "<< e.what();
+        }
       }
     }
 
@@ -108,8 +109,18 @@ namespace mtconnect
 
       try
       {
-        string queries{std::string().empty()};
-        auto path = static_cast<std::string>(req.target().data());
+
+        string queries;
+
+        string path = static_cast<std::string>(req.target().data()).substr(0,req.target().length());
+        while(path.find("%22")!=path.npos)
+        {
+          auto pt = path.find_first_of("%22");
+          path.replace(pt,3,"\"");
+        }
+
+        //auto sizeString = path.size();
+        //path = path.substr(0,sizeString-1);
         //path = path.substr(1,path.size()-1);
         auto qp = path.find_first_of('?');
         if (qp != string::npos){
@@ -124,7 +135,8 @@ namespace mtconnect
         if (pt != string::npos){
           request.m_query = getQueries(queries);
         }
-        request.m_body = req.target().data();
+//        request.m_query.clear();
+        request.m_body = "";
         request.m_foreignIp = socket.remote_endpoint().address().to_string();
         request.m_foreignPort = socket.remote_endpoint().port();
         request.m_accepts = req.find(http::field::accept)->value().data();
@@ -152,9 +164,9 @@ namespace mtconnect
           auto ptr = tmpStr.find_first_of("&");
           if (ptr != std::string().npos)
           {
-            std:string string1 = tmpStr.substr(0,ptr-1);
+            std:string string1 = tmpStr.substr(0,ptr);
             tmpStr = tmpStr.substr(ptr+1);
-            ptr = string1.find('=');
+            ptr = string1.find_first_of('=');
             if (ptr != std::string().npos){
               queryMap.insert(std::pair<std::string,std::string >(string1.substr(0,ptr),string1.substr(ptr+1)));
             }
@@ -220,103 +232,10 @@ namespace mtconnect
         res = false;
       }
 
-      response.flush();
+      //response.flush();
       return res;
     }
 
-
-    template<class Body, class Allocator, class Send>
-    void Server::handle_request(http::request<Body, http::basic_fields<Allocator>> &&req,
-    Send &&send)
-    {
-      beast::error_code ec;
-      // Returns a bad request response
-      auto const bad_request =
-          [&req](beast::string_view why) {
-            http::response<http::string_body> res{http::status::bad_request, req.version()};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(req.keep_alive());
-            res.body() = std::string(why);
-            res.prepare_payload();
-            return res;
-          };
-
-      // Returns a not found response
-      auto const not_found =
-          [&req](beast::string_view target) {
-            http::response<http::string_body> res{http::status::not_found, req.version()};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(req.keep_alive());
-            res.body() = "The resource '" + std::string(target) + "' was not found.";
-            res.prepare_payload();
-            return res;
-          };
-
-      // Returns a server error response
-      auto const server_error =
-          [&req](beast::string_view what) {
-            http::response<http::string_body> res{http::status::internal_server_error, req.version()};
-            res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            res.set(http::field::content_type, "text/html");
-            res.keep_alive(req.keep_alive());
-            res.body() = "An error occurred: '" + std::string(what) + "'";
-            res.prepare_payload();
-            return res;
-          };
-
-      http::file_body::value_type body;
-      body.open("device.xml", beast::file_mode::scan, ec);
-      if (ec)
-        return send(server_error(ec.message()));
-      auto const size = body.size();
-
-      // Respond to HEAD request
-      if (req.method() == http::verb::head) {
-        http::response<http::empty_body> res{http::status::ok, req.version()};
-        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(http::field::content_type, "text/xml");
-        res.content_length(size);
-        res.keep_alive(req.keep_alive());
-        return send(std::move(res));
-      }
-
-      string queries{std::string().empty()};
-      auto path = static_cast<std::string>(req.target().data());
-      auto qp = path.find_first_of('?');
-      if (qp != string::npos){
-        queries = path.substr(qp+1);
-        path.erase(qp);
-      }
-
-      if (std::strcmp(path.c_str(), "/probe") == 0)
-      {
-        // Respond to GET request
-        http::response<http::file_body> res{
-            std::piecewise_construct,
-            std::make_tuple(std::move(body)),
-            std::make_tuple(http::status::ok, req.version())};
-        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(http::field::content_type, "text/xml");
-        res.content_length(size);
-        res.keep_alive(req.keep_alive());
-        return send(std::move(res));
-      }
-      else
-      {
-        auto const textSize = req.target().size();
-        http::response<http::string_body> res{
-            std::piecewise_construct,
-            std::make_tuple(std::move(req.target().data())),
-            std::make_tuple(http::status::ok, req.version())};
-        res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-        res.set(http::field::content_type, "text/plain");
-        res.content_length(textSize);
-        res.keep_alive(req.keep_alive());
-        return send(std::move(res));
-      }
-    }
 
 //------------------------------------------------------------------------------
 
