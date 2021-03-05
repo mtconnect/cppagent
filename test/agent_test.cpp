@@ -870,7 +870,7 @@ TEST_F(AgentTest, AutoAvailable)
   auto id = adapter->getIdentity();
   auto d = agent->getDevices().front();
   StringList devices;
-  devices.emplace_back(d->getName());
+  devices.emplace_back(*d->getComponentName());
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -914,7 +914,7 @@ TEST_F(AgentTest, MultipleDisconnect)
 
   auto d = agent->getDevices().front();
   StringList devices;
-  devices.emplace_back(d->getName());
+  devices.emplace_back(*d->getComponentName());
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -1692,21 +1692,21 @@ TEST_F(AgentTest, AdapterDeviceCommand)
   addAdapter();
 
   auto device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
-  ASSERT_EQ(device1->getName(), device);
+  ASSERT_EQ(device1->getComponentName(), device);
   
   m_agentTestHelper->m_adapter->parseBuffer("* device: device-2\n");
   device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
-  ASSERT_EQ(device2->getUuid(), device);
+  ASSERT_EQ(string(*device2->getUuid()), device);
   
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: new-uuid\n");
-  ASSERT_EQ("new-uuid", device2->getUuid());
+  ASSERT_EQ("new-uuid", string(*device2->getUuid()));
 
   m_agentTestHelper->m_adapter->parseBuffer("* device: device-1\n");
   device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
-  ASSERT_EQ(device1->getUuid(), device);
+  ASSERT_EQ(string(*device1->getUuid()), device);
   
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: another-uuid\n");
-  ASSERT_EQ("another-uuid", device1->getUuid());
+  ASSERT_EQ("another-uuid", string(*device1->getUuid()));
 }
 
 TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)

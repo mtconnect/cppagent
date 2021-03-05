@@ -1623,13 +1623,13 @@ namespace mtconnect
             {"uuid",
              [](DevicePtr device, const string &uuid) {
                if (!device->preserveUuid())
-                 device->setProperty("uuid", uuid);
+                 device->setUuid(uuid);
              }},
-//            {"manufacturer", mem_fn(&Device::setManufacturer)},
-  //          {"station", mem_fn(&Device::setStation)},
-//            {"serialNumber", mem_fn(&Device::setSerialNumber)},
-//            {"description", mem_fn(&Device::setDescription)},
-//            {"nativeName", mem_fn(&Device::setNativeName)},
+            {"manufacturer", mem_fn(&Device::setManufacturer)},
+            {"station", mem_fn(&Device::setStation)},
+            {"serialNumber", mem_fn(&Device::setSerialNumber)},
+            {"description", mem_fn(&Device::setDescriptionValue)},
+          {"nativeName", [](DevicePtr device, const string &name) { device->setProperty("nativeName", name); }},
             {"calibration",
              [](DevicePtr device, const string &value) {
                istringstream line(value);

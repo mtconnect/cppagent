@@ -78,13 +78,54 @@ namespace mtconnect
       const auto &getComponentName() const { return m_name; }
       const auto &getUuid() const { return m_uuid; }
       
+      entity::EntityPtr getDescription()
+      {
+        if (hasProperty("Description"))
+          return get<entity::EntityPtr>("Description");
+        else
+        {
+          entity::ErrorList errors;
+          auto desc = getFactory()->create("Description", {{}}, errors);
+          return desc;
+        }
+      }
+      
+      void setManufacturer(const std::string &value)
+      {
+        auto desc = getDescription();
+        desc->setProperty("manufacturer", value);
+      }
+
+      void setStation(const std::string &value)
+      {
+        auto desc = getDescription();
+        desc->setProperty("station", value);
+      }
+
+      void setSerialNumber(const std::string &value)
+      {
+        auto desc = getDescription();
+        desc->setProperty("serialNumber", value);
+      }
+
+      void setDescriptionValue(const std::string &value)
+      {
+        auto desc = getDescription();
+        desc->setValue(value);
+      }
+
       // Setter methods
       void setUuid(const std::string &uuid)
       {
         m_uuid = uuid;
         setProperty("uuid", uuid);
       }
-      
+      void setComponentName(const std::string &name)
+      {
+        m_name = name;
+        setProperty("name", name);
+      }
+
       // Get the device that any component is associated with
       virtual DevicePtr getDevice() const
       {
