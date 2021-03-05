@@ -129,15 +129,15 @@ namespace mtconnect
     {
       const auto sourcePos = m_deviceDataItemsBySource.find(name);
       if (sourcePos != m_deviceDataItemsBySource.end())
-        return sourcePos->second;
+        return sourcePos->second.lock();
       
       const auto namePos = m_deviceDataItemsByName.find(name);
       if (namePos != m_deviceDataItemsByName.end())
-        return namePos->second;
+        return namePos->second.lock();
       
       const auto &idPos = m_deviceDataItemsById.find(name);
       if (idPos != m_deviceDataItemsById.end())
-        return idPos->second;
+        return idPos->second.lock();
       
       return nullptr;
     }

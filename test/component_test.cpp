@@ -110,8 +110,8 @@ TEST_F(ComponentTest, Relationships)
   ASSERT_TRUE(errors.empty());
   ASSERT_EQ(linear, m_compA->getParent());
 
-  Properties dps{{"id", "d"s}, {"name", "d"s}, {"uuid", "d"}};
-  auto device = dynamic_pointer_cast<Device>(Device::getFactory()->create("Device", dps, errors));
+  Properties dps{{"id", "d"s}, {"name", "d"s}, {"uuid", "d"s}};
+  auto device = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", dps, errors));
   ASSERT_TRUE(errors.empty());
   ASSERT_TRUE(device);
   device->addChild(linear, errors);

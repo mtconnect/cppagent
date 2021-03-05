@@ -279,7 +279,7 @@ namespace mtconnect
     // Initialize the id mapping for the devices and set all data items to UNAVAILABLE
     for (auto item : device->getDeviceDataItems())
     {
-      auto d = item.second;
+      auto d = item.second.lock();
       if (m_dataItemMap.count(d->getId()) > 0)
       {
         if (m_dataItemMap[d->getId()] != d)
@@ -784,7 +784,7 @@ namespace mtconnect
       const auto &dataItems = device->getDeviceDataItems();
       for (const auto &dataItemAssoc : dataItems)
       {
-        auto dataItem = dataItemAssoc.second;
+        auto dataItem = dataItemAssoc.second.lock();
         if (dataItem && ((dataItem->getDataSource() && *dataItem->getDataSource() == adapter) ||
                          (autoAvailable && !dataItem->getDataSource() &&
                           dataItem->getType() == "AVAILABILITY")))

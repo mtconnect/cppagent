@@ -84,7 +84,9 @@ namespace mtconnect
         else
         {
           entity::ErrorList errors;
-          auto desc = getFactory()->create("Description", {{}}, errors);
+          auto desc = getFactory()->create("Description", {}, errors);
+          if (desc)
+            setProperty("Description", desc);
           return desc;
         }
       }
@@ -150,7 +152,9 @@ namespace mtconnect
       {
         addToList("Components", Component::getFactory(), child, errors);
         child->setParent(getptr());
-        child->buildDeviceMaps(getDevice());
+        auto device = getDevice();
+        if (device)
+          child->buildDeviceMaps(device);
       }
 
       // Add to/get the component's std::list of data items

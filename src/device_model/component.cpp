@@ -149,7 +149,9 @@ namespace mtconnect
       if (addToList("DataItems", Component::getFactory(), dataItem, errors))
       {
         dataItem->setComponent(getptr());
-        getDevice()->registerDataItem(dataItem);
+        auto device = getDevice();
+        if (device)
+          device->registerDataItem(dataItem);
       }
     }
   }

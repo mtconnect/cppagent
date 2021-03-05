@@ -65,7 +65,7 @@ namespace mtconnect
       {
         auto comp = m_componentsById.find(aId);
         if (comp != m_componentsById.end())
-          return comp->second;
+          return comp->second.lock();
         else
           return nullptr;
       }
@@ -107,10 +107,10 @@ namespace mtconnect
       DataItemPtr m_assetRemoved;
       
       // Mapping of device names to data items
-      std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsByName;
-      std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsById;
-      std::unordered_map<std::string, DataItemPtr> m_deviceDataItemsBySource;
-      std::unordered_map<std::string, ComponentPtr> m_componentsById;
+      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsByName;
+      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsById;
+      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsBySource;
+      std::unordered_map<std::string, std::weak_ptr<Component>> m_componentsById;
     };
     
     using DevicePtr = std::shared_ptr<Device>;
