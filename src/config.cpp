@@ -733,14 +733,14 @@ namespace mtconnect
           device = defaultDevice();
           if (device)
           {
-            deviceName = device->getName();
+            deviceName = *device->getComponentName();
             adapterOptions[configuration::Device] = deviceName;
             g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
           }
         }
         else
         {
-          adapterOptions[configuration::Device] = device->getName();
+          adapterOptions[configuration::Device] = *device->getComponentName();
         }
         if (!device)
         {
@@ -798,7 +798,7 @@ namespace mtconnect
     {
       ConfigOptions adapterOptions {options};
 
-      auto deviceName = device->getName();
+      auto deviceName = *device->getComponentName();
       adapterOptions[configuration::Device] = deviceName;
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";

@@ -151,7 +151,7 @@ class AgentTestHelper
     
     if (!IsOptionSet(options, configuration::Device))
     {
-      options[configuration::Device] = m_agent->defaultDevice()->getName();
+      options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
     }
     auto pipeline = std::make_unique<AdapterPipeline>(m_context);
     m_adapter = new adpt::Adapter(host, port, options, pipeline);

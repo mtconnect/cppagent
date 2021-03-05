@@ -458,8 +458,8 @@ namespace mtconnect
                 componentStreamElement.reset("");
 
                 deviceElement.reset("DeviceStream", device->getId());
-                addAttribute(writer, "name", device->getName());
-                addAttribute(writer, "uuid", device->getUuid());
+                addAttribute(writer, "name", *device->getComponentName());
+                addAttribute(writer, "uuid", *device->getUuid());
               }
 
               if (componentStreamElement.key() != component->getId())

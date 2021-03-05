@@ -148,7 +148,7 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
   ErrorList errors;
   auto f = Filter::getFactory()->create("Filter", {{"type", "MINIMUM_DELTA"s}, {"VALUE", 1.0}}, errors);
   EntityList list{f};
-  auto filters = DataItem::getFactory()->create("Filters", list, errors);
+  auto filters = DataItem::getFactory()->factoryFor("DataItem")->create("Filters", list, errors);
   
   makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
     {"units", "MILLIMETER"s}, {"Filters", filters}
@@ -197,7 +197,7 @@ TEST_F(DuplicateFilterTest, test_period_filter)
   ErrorList errors;
   auto f = Filter::getFactory()->create("Filter", {{"type", "PERIOD"s}, {"VALUE", 10.0}}, errors);
   EntityList list{f};
-  auto filters = DataItem::getFactory()->create("Filters", list, errors);
+  auto filters = DataItem::getFactory()->factoryFor("DataItem")->create("Filters", list, errors);
 
   makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
     {"units", "MILLIMETER"s}, {"Filters", filters}

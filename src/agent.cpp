@@ -285,7 +285,7 @@ namespace mtconnect
         if (m_dataItemMap[d->getId()] != d)
         {
           g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
-                   << " for device: " << device->getName() << " and data item name: " << d->getId();
+                   << " for device: " << *device->getComponentName() << " and data item name: " << d->getId();
           std::exit(1);
         }
       }
@@ -308,12 +308,12 @@ namespace mtconnect
   void Agent::addDevice(DevicePtr device)
   {
     // Check if device already exists
-    string uuid = device->getUuid();
+    string uuid = *device->getUuid();
     auto old = m_deviceUuidMap.find(uuid);
     if (old != m_deviceUuidMap.end())
     {
       // Update existing device
-      g_logger << LFATAL << "Device " << device->getUuid() << " already exists. "
+      g_logger << LFATAL << "Device " << *device->getUuid() << " already exists. "
                << " Update not supported yet";
       std::exit(1);
     }
@@ -347,7 +347,7 @@ namespace mtconnect
 
   void Agent::deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName)
   {
-    string uuid = device->getUuid();
+    string uuid = *device->getUuid();
     if (uuid != oldUuid)
     {
       if (m_agentDevice)
@@ -359,7 +359,7 @@ namespace mtconnect
       m_deviceUuidMap[uuid] = device;
     }
 
-    if (device->getName() != oldName)
+    if (*device->getComponentName() != oldName)
     {
       m_deviceNameMap.erase(oldName);
       m_deviceNameMap[device->get<string>("name")] = device;
@@ -838,7 +838,7 @@ namespace mtconnect
         addToBuffer(avail, g_available);
       }
       else
-        g_logger << LDEBUG << "Cannot find availability for " << device->getName();
+        g_logger << LDEBUG << "Cannot find availability for " << *device->getComponentName();
     }
   }
 
@@ -915,7 +915,7 @@ namespace mtconnect
 
     if (asset->getDeviceUuid() && *asset->getDeviceUuid() != device->getUuid())
     {
-      asset->setProperty("deviceUuid", device->getUuid());
+      asset->setProperty("deviceUuid", *device->getUuid());
     }
 
     string aid = asset->getAssetId();
@@ -924,7 +924,7 @@ namespace mtconnect
       if (aid.empty())
         aid = asset->getAssetId();
       aid.erase(0, 1);
-      aid.insert(0, device->getUuid());
+      aid.insert(0, *device->getUuid());
     }
     if (aid != asset->getAssetId())
     {
@@ -978,7 +978,7 @@ namespace mtconnect
 
     auto ad = asset->getDeviceUuid();
     if (!ad)
-      asset->setProperty("deviceUuid", device->getUuid());
+      asset->setProperty("deviceUuid", *device->getUuid());
 
     addAsset(asset);
 
@@ -1110,7 +1110,7 @@ namespace mtconnect
       if (device->getName() == "Agent")
         prefix = "//Devices/Agent";
       else
-        prefix = "//Devices/Device[@uuid=\"" + device->getUuid() + "\"]";
+        prefix = "//Devices/Device[@uuid=\"" + *device->getUuid() + "\"]";
 
       if (path)
       {
@@ -1614,8 +1614,8 @@ namespace mtconnect
     std::string oldName, oldUuid;
     if (device)
     {
-      oldName = device->getName();
-      oldUuid = device->getUuid();
+      oldName = *device->getComponentName();
+      oldUuid = *device->getUuid();
     }
 
     static std::unordered_map<string, function<void(DevicePtr , const string &value)>>
@@ -1832,7 +1832,7 @@ namespace mtconnect
     }
     else if (dev != nullptr)
     {
-      auto iopt = m_assetBuffer.getAssetsForDevice(dev->getUuid());
+      auto iopt = m_assetBuffer.getAssetsForDevice(*dev->getUuid());
       if (iopt)
       {
         for (auto &ap : **iopt)

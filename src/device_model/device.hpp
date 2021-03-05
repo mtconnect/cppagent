@@ -91,9 +91,7 @@ namespace mtconnect
       
       void setPreserveUuid(bool v) { m_preserveUuid = v; }
       bool preserveUuid() const { return m_preserveUuid; }
-      
-      const std::string &getUuid() const { return get<std::string>("uuid"); }
-      
+            
       void registerDataItem(DataItemPtr di);
       void registerComponent(ComponentPtr c) { m_componentsById[c->getId()] = c; }
 

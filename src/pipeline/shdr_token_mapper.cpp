@@ -260,7 +260,7 @@ namespace mtconnect
           {
             DevicePtr dev = m_contract->findDevice(*m_defaultDevice);
             if (dev != nullptr)
-              asset->setProperty("deviceUuid", dev->getUuid());
+              asset->setProperty("deviceUuid", *dev->getUuid());
           }
         }
         else
