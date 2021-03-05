@@ -101,13 +101,13 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
             device.at("/uuid"_json_pointer).get<string>());
 
   ASSERT_EQ(string("This is a simple CNC example"),
-            device.at("/Description/text"_json_pointer).get<string>());
+            device.at("/Description/value"_json_pointer).get<string>());
   ASSERT_EQ(string("MTConnectInstitute"),
             device.at("/Description/manufacturer"_json_pointer).get<string>());
   ASSERT_EQ(string("12"), device.at("/Description/serialNumber"_json_pointer).get<string>());
 
   ASSERT_EQ(string("This is another simple CNC example"),
-            device2.at("/Description/text"_json_pointer).get<string>());
+            device2.at("/Description/value"_json_pointer).get<string>());
 }
 
 TEST_F(JsonPrinterProbeTest, TopLevelDataItems)

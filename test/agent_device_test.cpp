@@ -81,7 +81,7 @@ TEST_F(AgentDeviceTest, AgentDeviceCreation)
 {
   ASSERT_NE(nullptr, m_agentDevice);
   ASSERT_EQ(2, m_agentTestHelper->m_agent->getDevices().size());
-  ASSERT_EQ("Agent", m_agentDevice->getName());
+  ASSERT_EQ("Agent", m_agentDevice->getName().str());
 }
 
 TEST_F(AgentDeviceTest, VerifyRequiredDataItems)

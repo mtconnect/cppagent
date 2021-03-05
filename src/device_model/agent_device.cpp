@@ -40,13 +40,11 @@ namespace mtconnect
         factory = make_shared<Factory>(*Device::getFactory());
         factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr
         {
-          auto dev = make_shared<AgentDevice>("AgentDevice"s, ps);
-          dev->addRequiredDataItems();
-          ErrorList errors;
-          dev->addChild(dev->getAdapters(), errors);
+          auto dev = make_shared<AgentDevice>("Agent"s, ps);
+          dev->initialize();
           return dev;
         });
-        Component::getFactory()->registerFactory("AgentDevice", factory);
+        Component::getFactory()->registerFactory("Agent", factory);
       }
       return factory;
     }

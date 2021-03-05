@@ -117,6 +117,9 @@ namespace mtconnect
         else
           return std::string_view(c_str(), m_nsLen);
       }
+      
+      std::string &str() { return *this; }
+      const std::string &str() const { return *this; }
 
     protected:
       size_t m_nsLen;

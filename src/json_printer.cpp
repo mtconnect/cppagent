@@ -263,8 +263,8 @@ namespace mtconnect
         json obj = json::object(
             {{"component", m_component->getName()}, {"componentId", m_component->getId()}});
 
-        if (!m_component->getName().empty())
-          obj["name"] = m_component->getName();
+        if (m_component->getComponentName())
+          obj["name"] = *m_component->getComponentName();
 
         for (auto &cat : m_categories)
         {
@@ -316,7 +316,7 @@ namespace mtconnect
       json ret;
       if (m_device != nullptr && !m_components.empty())
       {
-        json obj = json::object({{"name", m_device->getName()}, {"uuid", m_device->getUuid()}});
+        json obj = json::object({{"name", *m_device->getComponentName() }, {"uuid", m_device->getUuid()}});
         json items = json::array();
         for (auto &comp : m_components)
           items.emplace_back(comp.toJson());

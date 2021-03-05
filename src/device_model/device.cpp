@@ -45,7 +45,7 @@ namespace mtconnect
         factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr
         {
           auto device = make_shared<Device>("Device"s, ps);
-          device->buildDeviceMaps(device);
+          device->initialize();
           return device;
         });
         Component::getFactory()->registerFactory("Device", factory);

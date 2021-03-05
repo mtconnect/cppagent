@@ -64,6 +64,11 @@ namespace mtconnect
       {
         return std::dynamic_pointer_cast<Component>(Entity::getptr());
       }
+      
+      virtual void initialize()
+      {
+        connectDataItems();
+      }
                   
       // Virtual destructor
       virtual ~Component();

@@ -89,6 +89,7 @@ namespace mtconnect
         auto compositions = Composition::getFactory();
         auto configuration = configuration::Configuration::getFactory();
         auto description = Description::getFactory();
+        auto references = Reference::getFactory();
         factory = make_shared<Factory>(Requirements {
                                         // Attributes
                                         {"id", true},
@@ -100,20 +101,22 @@ namespace mtconnect
           {"Description", ENTITY, description, false},
           {"DataItems", ENTITY_LIST, dataItems, false},
           {"Compositions", ENTITY_LIST, compositions, false},
+          {"References", ENTITY_LIST, references, false},
           {"Configuration", ENTITY, configuration, false}
         },
                                        [](const std::string &name, Properties &props) -> EntityPtr {
           auto ptr = make_shared<Component>(name, props);
-          ptr->connectDataItems();
+          ptr->initialize();
           return dynamic_pointer_cast<Entity>(ptr);
         });
-        factory->setOrder({"Description", "Configuration", "DataItems", "Compositions"});
+        factory->setOrder({"Description", "Configuration", "DataItems", "Compositions",
+          "References"
+        });
         auto component = make_shared<Factory>(
             Requirements {{"Component", ENTITY, factory, 1, Requirement::Infinite}});
         component->registerFactory(regex(".+"), factory);
         component->registerMatchers();
         factory->addRequirements(Requirements{{"Components", ENTITY_LIST, component, false}});
-
       }
       return factory;
     }

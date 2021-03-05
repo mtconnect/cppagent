@@ -38,13 +38,20 @@ namespace mtconnect
       // Constructor that sets variables from an attribute map
       Device(const std::string &name, entity::Properties &props);
       ~Device() override = default;
-      static entity::FactoryPtr getFactory();
-      static entity::FactoryPtr getRoot();
-
+      
       auto getptr() const
       {
         return std::dynamic_pointer_cast<Device>(Entity::getptr());
       }
+
+      void initialize() override
+      {
+        Component::initialize();
+        buildDeviceMaps(getptr());
+      }
+      
+      static entity::FactoryPtr getFactory();
+      static entity::FactoryPtr getRoot();
 
       void setOptions(const ConfigOptions &options);
       

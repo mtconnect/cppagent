@@ -38,7 +38,15 @@ namespace mtconnect
       // Constructor that sets variables from an attribute map
       AgentDevice(const std::string &name, entity::Properties &props);
       ~AgentDevice() override = default;      
-      static entity::FactoryPtr getFactory();      
+      static entity::FactoryPtr getFactory();
+      
+      void initialize() override
+      {
+        addRequiredDataItems();
+        entity::ErrorList errors;
+        addChild(m_adapters, errors);
+        Device::initialize();
+      }
 
       void addAdapter(const adapter::Adapter *adapter);
       

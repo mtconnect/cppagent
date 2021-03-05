@@ -142,7 +142,6 @@ TEST_F(JsonPrinterStreamTest, DeviceStream)
   ObservationList list;
   checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
-  // cout << "\n" << doc << endl;
 
   auto jdoc = json::parse(doc);
   json stream = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream"_json_pointer);
