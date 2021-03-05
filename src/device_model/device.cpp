@@ -16,9 +16,9 @@
 //
 
 #include "device.hpp"
-#include "entity/factory.hpp"
 
 #include "config_options.hpp"
+#include "entity/factory.hpp"
 
 #include <dlib/logger.h>
 
@@ -28,9 +28,9 @@ namespace mtconnect
 {
   using namespace entity;
   using namespace configuration;
-  
+
   static dlib::logger g_logger("device");
-  
+
   namespace device_model
   {
     entity::FactoryPtr Device::getFactory()
@@ -42,8 +42,7 @@ namespace mtconnect
         factory->getRequirement("name")->setMultiplicity(1, 1);
         factory->getRequirement("uuid")->setMultiplicity(1, 1);
         factory->addRequirements({{"iso841Class", false}, {"mtconnectVersion", false}});
-        factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr
-        {
+        factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr {
           auto device = make_shared<Device>("Device"s, ps);
           device->initialize();
           return device;
@@ -52,16 +51,15 @@ namespace mtconnect
       }
       return factory;
     }
-    
+
     entity::FactoryPtr Device::getRoot()
     {
-      static auto factory = make_shared<Factory>(Requirements{
-        {"Device", ENTITY, getFactory(), 1, Requirement::Infinite }
-      });
-      
+      static auto factory = make_shared<Factory>(
+          Requirements {{"Device", ENTITY, getFactory(), 1, Requirement::Infinite}});
+
       return factory;
     }
-    
+
     void Device::registerDataItem(DataItemPtr di)
     {
       m_deviceDataItemsById[di->getId()] = di;
@@ -70,9 +68,8 @@ namespace mtconnect
       if (di->hasProperty("Source") && di->get<EntityPtr>("Source")->hasValue())
         m_deviceDataItemsBySource[di->get<EntityPtr>("Source")->getValue<string>()] = di;
     }
-    
-    Device::Device(const std::string &name, entity::Properties &props)
-    : Component(name, props)
+
+    Device::Device(const std::string &name, entity::Properties &props) : Component(name, props)
     {
       auto items = getList("DataItems");
       if (items)
@@ -84,37 +81,37 @@ namespace mtconnect
         }
       }
     }
-    
+
     void Device::setOptions(const ConfigOptions &options)
     {
       if (auto opt = GetOption<bool>(options, PreserveUUID))
         m_preserveUuid = *opt;
     }
-    
+
     // TODO: Clean up these initialization methods for data items
     void Device::addDeviceDataItem(DataItemPtr dataItem)
     {
       if (dataItem->hasProperty("Source") && dataItem->getSource()->hasValue())
         m_deviceDataItemsBySource[dataItem->getSource()->getValue<string>()] = dataItem;
-      
+
       if (dataItem->getName())
         m_deviceDataItemsByName[*dataItem->getName()] = dataItem;
-      
+
       if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
       {
-        g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem->getId() << " for device "
-        << get<string>("name") << ", skipping";
+        g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem->getId()
+                 << " for device " << get<string>("name") << ", skipping";
       }
       else
         m_deviceDataItemsById[dataItem->getId()] = dataItem;
     }
-    
+
     void Device::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)
     {
       Component::addDataItem(dataItem, errors);
       cachePointers(dataItem);
     }
-    
+
     void Device::cachePointers(DataItemPtr dataItem)
     {
       if (dataItem->getType() == "AVAILABILITY")
@@ -124,22 +121,22 @@ namespace mtconnect
       else if (dataItem->getType() == "ASSET_REMOVED")
         m_assetRemoved = dataItem;
     }
-    
+
     DataItemPtr Device::getDeviceDataItem(const std::string &name) const
     {
       const auto sourcePos = m_deviceDataItemsBySource.find(name);
       if (sourcePos != m_deviceDataItemsBySource.end())
         return sourcePos->second.lock();
-      
+
       const auto namePos = m_deviceDataItemsByName.find(name);
       if (namePos != m_deviceDataItemsByName.end())
         return namePos->second.lock();
-      
+
       const auto &idPos = m_deviceDataItemsById.find(name);
       if (idPos != m_deviceDataItemsById.end())
         return idPos->second.lock();
-      
+
       return nullptr;
     }
-  }
+  }  // namespace device_model
 }  // namespace mtconnect

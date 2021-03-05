@@ -115,8 +115,9 @@ namespace mtconnect
                    "Connection: close\r\n"
                    "Cache-Control: private, max-age=0\r\n"
                    "Content-Type: multipart/x-mixed-replace;boundary="
-                << m_boundary<< "\r\n"
-                  "Transfer-Encoding: chunked\r\n";
+                << m_boundary
+                << "\r\n"
+                   "Transfer-Encoding: chunked\r\n";
           for (auto &f : m_fields)
             m_out << f << "\r\n";
           m_out << "\r\n";

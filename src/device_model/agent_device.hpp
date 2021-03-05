@@ -29,7 +29,7 @@ namespace mtconnect
   {
     class Adapter;
   }
-  
+
   namespace device_model
   {
     class AgentDevice : public Device
@@ -37,9 +37,9 @@ namespace mtconnect
     public:
       // Constructor that sets variables from an attribute map
       AgentDevice(const std::string &name, entity::Properties &props);
-      ~AgentDevice() override = default;      
+      ~AgentDevice() override = default;
       static entity::FactoryPtr getFactory();
-      
+
       void initialize() override
       {
         addRequiredDataItems();
@@ -49,16 +49,16 @@ namespace mtconnect
       }
 
       void addAdapter(const adapter::Adapter *adapter);
-      
+
       DataItemPtr getConnectionStatus(const std::string &adapter);
       auto &getAdapters() { return m_adapters; }
-      
+
     protected:
       void addRequiredDataItems();
-      
+
     protected:
       ComponentPtr m_adapters;
     };
     using AgentDevicePtr = std::shared_ptr<AgentDevice>;
-  }
+  }  // namespace device_model
 }  // namespace mtconnect

@@ -17,10 +17,11 @@
 
 #pragma once
 
+#include "config_options.hpp"
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
-#include "config_options.hpp"
+
 #include <dlib/server.h>
 
 namespace mtconnect
@@ -82,12 +83,9 @@ namespace mtconnect
 
       // Shutdown
       void stop() { server::http_1a::clear(); }
-      
+
       // Additional header fields
-      void setHttpHeaders(const StringList &fields)
-      {
-        m_fields = fields;
-      }
+      void setHttpHeaders(const StringList &fields) { m_fields = fields; }
       const auto &getHttpHeaders() const { return m_fields; }
 
       // PUT and POST handling

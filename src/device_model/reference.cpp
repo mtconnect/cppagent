@@ -16,16 +16,18 @@
 //
 
 #include "reference.hpp"
+
+#include "device.hpp"
 #include "entity.hpp"
 #include "utilities.hpp"
-#include "device.hpp"
+
+#include <dlib/logger.h>
 
 #include <list>
 #include <map>
 #include <optional>
 #include <string>
 #include <utility>
-#include <dlib/logger.h>
 
 using namespace std;
 static dlib::logger g_logger("reference");
@@ -35,41 +37,41 @@ namespace mtconnect
   using namespace entity;
   namespace device_model
   {
-    
     FactoryPtr Reference::getFactory()
     {
       static FactoryPtr references;
       if (!references)
       {
-        auto reference = make_shared<Factory>(Requirements {{"idRef", true},
-          {"name", false}}, [](const std::string &name, Properties &ps) -> EntityPtr {
-            auto r = make_shared<Reference>(name, ps);
-            if (name == "ComponentRef")
-              r->m_type = COMPONENT;
-            else if (name == "DataItemRef")
-              r->m_type = DATA_ITEM;
-            
-            return r;
-          });
-        
-        references = make_shared<Factory>(Requirements {
-          Requirement("ComponentRef", ENTITY, reference, 0, Requirement::Infinite),
-          Requirement("DataItemRef", ENTITY, reference, 0, Requirement::Infinite)});
-        
+        auto reference =
+            make_shared<Factory>(Requirements {{"idRef", true}, {"name", false}},
+                                 [](const std::string &name, Properties &ps) -> EntityPtr {
+                                   auto r = make_shared<Reference>(name, ps);
+                                   if (name == "ComponentRef")
+                                     r->m_type = COMPONENT;
+                                   else if (name == "DataItemRef")
+                                     r->m_type = DATA_ITEM;
+
+                                   return r;
+                                 });
+
+        references = make_shared<Factory>(
+            Requirements {Requirement("ComponentRef", ENTITY, reference, 0, Requirement::Infinite),
+                          Requirement("DataItemRef", ENTITY, reference, 0, Requirement::Infinite)});
+
         references->registerMatchers();
         references->setMinListSize(1);
       }
       return references;
     }
-    
+
     FactoryPtr Reference::getRoot()
     {
       static auto root = make_shared<Factory>(
-                                              Requirements {Requirement("References", ENTITY_LIST, Reference::getFactory(), false)});
-      
+          Requirements {Requirement("References", ENTITY_LIST, Reference::getFactory(), false)});
+
       return root;
     }
-    
+
     void Reference::resolve(DevicePtr device)
     {
       if (m_type == COMPONENT)
@@ -78,7 +80,8 @@ namespace mtconnect
         if (comp)
           m_component = comp;
         else
-          g_logger << dlib::LWARN << "Refernce: Cannot find Component for idRef " << get<string>("idRef");
+          g_logger << dlib::LWARN << "Refernce: Cannot find Component for idRef "
+                   << get<string>("idRef");
       }
       else if (m_type == DATA_ITEM)
       {
@@ -86,7 +89,8 @@ namespace mtconnect
         if (di)
           m_dataItem = di;
         else
-          g_logger << dlib::LWARN << "Refernce: Cannot find DataItem for idRef " << get<string>("idRef");
+          g_logger << dlib::LWARN << "Refernce: Cannot find DataItem for idRef "
+                   << get<string>("idRef");
       }
       else
       {
@@ -94,5 +98,5 @@ namespace mtconnect
       }
     }
 
-  }
+  }  // namespace device_model
 }  // namespace mtconnect

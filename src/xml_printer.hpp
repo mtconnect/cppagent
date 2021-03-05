@@ -110,7 +110,8 @@ namespace mtconnect
                     const std::map<std::string, int> *counts = nullptr) const;
 
     // Helper to print individual components and details
-    void printProbeHelper(xmlTextWriterPtr writer, device_model::ComponentPtr component, const char *name) const;
+    void printProbeHelper(xmlTextWriterPtr writer, device_model::ComponentPtr component,
+                          const char *name) const;
     void printDataItem(xmlTextWriterPtr writer, DataItemPtr dataItem) const;
     void addObservation(xmlTextWriterPtr writer, observation::ObservationPtr result) const;
 

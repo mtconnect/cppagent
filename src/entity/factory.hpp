@@ -32,8 +32,7 @@ namespace mtconnect
     class Factory : public Matcher, public std::enable_shared_from_this<Factory>
     {
     public:
-      using Function =
-          std::function<EntityPtr(const std::string &name, Properties &)>;
+      using Function = std::function<EntityPtr(const std::string &name, Properties &)>;
       using Matcher = std::function<bool(const std::string &)>;
       using MatchPair = std::pair<Matcher, FactoryPtr>;
       using StringFactory = std::unordered_map<std::string, FactoryPtr>;

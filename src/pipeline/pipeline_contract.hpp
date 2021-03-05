@@ -31,7 +31,7 @@ namespace mtconnect
   using AssetPtr = std::shared_ptr<Asset>;
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   using DevicePtr = std::shared_ptr<device_model::Device>;
-  
+
   namespace observation
   {
     class Observation;

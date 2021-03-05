@@ -17,9 +17,10 @@
 
 #pragma once
 
+#include <string_view>
+
 #include <optional>
 #include <string>
-#include <string_view>
 
 namespace mtconnect
 {
@@ -117,7 +118,7 @@ namespace mtconnect
         else
           return std::string_view(c_str(), m_nsLen);
       }
-      
+
       std::string &str() { return *this; }
       const std::string &str() const { return *this; }
 

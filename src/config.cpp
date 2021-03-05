@@ -699,7 +699,6 @@ namespace mtconnect
     loadStyle(reader, "ErrorStyle", cache, xmlPrinter, &XmlPrinter::setErrorStyle);
 
     loadTypes(reader, cache);
-    
   }
 
   void AgentConfiguration::loadAdapters(ConfigReader &reader, const ConfigOptions &options)
@@ -942,7 +941,7 @@ namespace mtconnect
       {
         fields.emplace_back(f + ": " + headers[f]);
       }
-      
+
       options[configuration::HttpHeaders] = fields;
     }
   }

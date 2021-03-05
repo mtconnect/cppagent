@@ -401,7 +401,7 @@ namespace mtconnect
       {
         AutoElement devices(writer, "Devices");
         entity::XmlPrinter printer;
-        
+
         for (auto &device : deviceList)
           printer.print(writer, device, m_deviceNsSet);
       }

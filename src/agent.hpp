@@ -20,6 +20,8 @@
 #include "adapter/adapter.hpp"
 #include "agent_loopback_pipeline.hpp"
 #include "assets/asset_buffer.hpp"
+#include "device_model/agent_device.hpp"
+#include "device_model/device.hpp"
 #include "http_server/server.hpp"
 #include "observation/checkpoint.hpp"
 #include "observation/circular_buffer.hpp"
@@ -28,9 +30,6 @@
 #include "printer.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
-#include "device_model/device.hpp"
-#include "device_model/agent_device.hpp"
-
 #include <unordered_map>
 
 #include <chrono>
@@ -278,7 +277,8 @@ namespace mtconnect
                            const std::string &text) const;
 
     // Handle the device/path parameters for the xpath search
-    std::string devicesAndPath(const std::optional<std::string> &path, const DevicePtr device) const;
+    std::string devicesAndPath(const std::optional<std::string> &path,
+                               const DevicePtr device) const;
 
     // Find data items by name/id
     DataItemPtr getDataItemById(const std::string &id) const

@@ -28,5 +28,5 @@ namespace mtconnect
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
     };
-  }
+  }  // namespace device_model
 }  // namespace mtconnect

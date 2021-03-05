@@ -50,7 +50,7 @@ namespace mtconnect
 {
   using namespace device_model;
   using namespace data_item;
-  using namespace entity;  
+  using namespace entity;
 
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
@@ -171,12 +171,12 @@ namespace mtconnect
   {
     // Create the Agent Device
     ErrorList errors;
-    Properties ps{
-      {"uuid", "0b49a3a0-18ca-0139-8748-2cde48001122"s},
-      {"id", "agent_2cde48001122"s},
-      {"name", "Agent"s},
-      {"mtconnectVersion", "1.7"s}};
-    m_agentDevice = dynamic_pointer_cast<AgentDevice>(AgentDevice::getFactory()->make("Agent", ps, errors));
+    Properties ps {{"uuid", "0b49a3a0-18ca-0139-8748-2cde48001122"s},
+                   {"id", "agent_2cde48001122"s},
+                   {"name", "Agent"s},
+                   {"mtconnectVersion", "1.7"s}};
+    m_agentDevice =
+        dynamic_pointer_cast<AgentDevice>(AgentDevice::getFactory()->make("Agent", ps, errors));
     if (!errors.empty())
     {
       for (auto &e : errors)
@@ -285,7 +285,8 @@ namespace mtconnect
         if (m_dataItemMap[d->getId()] != d)
         {
           g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
-                   << " for device: " << *device->getComponentName() << " and data item name: " << d->getId();
+                   << " for device: " << *device->getComponentName()
+                   << " and data item name: " << d->getId();
           std::exit(1);
         }
       }
@@ -327,8 +328,8 @@ namespace mtconnect
         m_deviceNameMap[device->get<string>("name")] = device;
         m_deviceUuidMap[uuid] = device;
 
-        //TODO: Redo Resolve Reference  with entity
-        //device->resolveReferences();
+        // TODO: Redo Resolve Reference  with entity
+        // device->resolveReferences();
         verifyDevice(device);
         initializeDataItems(device);
 
@@ -345,7 +346,8 @@ namespace mtconnect
     }
   }
 
-  void Agent::deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName)
+  void Agent::deviceChanged(DevicePtr device, const std::string &oldUuid,
+                            const std::string &oldName)
   {
     string uuid = *device->getUuid();
     if (uuid != oldUuid)
@@ -1143,7 +1145,7 @@ namespace mtconnect
   Agent::RequestResult Agent::probeRequest(const std::string &format,
                                            const std::optional<std::string> &device)
   {
-    list<DevicePtr > deviceList;
+    list<DevicePtr> deviceList;
     auto printer = getPrinter(format);
 
     if (device)
@@ -1618,7 +1620,7 @@ namespace mtconnect
       oldUuid = *device->getUuid();
     }
 
-    static std::unordered_map<string, function<void(DevicePtr , const string &value)>>
+    static std::unordered_map<string, function<void(DevicePtr, const string &value)>>
         deviceCommands {
             {"uuid",
              [](DevicePtr device, const string &uuid) {
@@ -1629,7 +1631,8 @@ namespace mtconnect
             {"station", mem_fn(&Device::setStation)},
             {"serialNumber", mem_fn(&Device::setSerialNumber)},
             {"description", mem_fn(&Device::setDescriptionValue)},
-          {"nativeName", [](DevicePtr device, const string &name) { device->setProperty("nativeName", name); }},
+            {"nativeName",
+             [](DevicePtr device, const string &name) { device->setProperty("nativeName", name); }},
             {"calibration",
              [](DevicePtr device, const string &value) {
                istringstream line(value);

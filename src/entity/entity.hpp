@@ -67,7 +67,7 @@ namespace mtconnect
       Entity(const Entity &entity) = default;
       virtual ~Entity() {}
 
-      EntityPtr getptr() const  { return const_cast<Entity*>(this)->shared_from_this(); }
+      EntityPtr getptr() const { return const_cast<Entity *>(this)->shared_from_this(); }
 
       bool hasListWithAttribute() const
       {
@@ -128,7 +128,7 @@ namespace mtconnect
 
         return std::nullopt;
       }
-      
+
       bool addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
                      ErrorList &errors);
 
@@ -174,8 +174,7 @@ namespace mtconnect
         else
           return it->second;
       }
-      
-      
+
     protected:
       QName m_name;
       Properties m_properties;

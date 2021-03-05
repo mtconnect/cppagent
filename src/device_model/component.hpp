@@ -19,8 +19,8 @@
 
 #include "composition.hpp"
 #include "configuration/configuration.hpp"
-#include "utilities.hpp"
 #include "entity/factory.hpp"
+#include "utilities.hpp"
 
 #include <list>
 #include <map>
@@ -37,20 +37,19 @@ namespace mtconnect
     {
       class DataItem;
     }
-    
+
     class Component;
     using ComponentPtr = std::shared_ptr<Component>;
 
     class Device;
     using DevicePtr = std::shared_ptr<Device>;
-    
+
     using DataItemPtr = std::shared_ptr<data_item::DataItem>;
     class Component : public entity::Entity
     {
     public:
       Component(const std::string &name, const entity::Properties &props);
-      static ComponentPtr make(const std::string &name,
-                               const entity::Properties &props,
+      static ComponentPtr make(const std::string &name, const entity::Properties &props,
                                entity::ErrorList &errors)
       {
         entity::Properties ps(props);
@@ -59,24 +58,18 @@ namespace mtconnect
       }
 
       static entity::FactoryPtr getFactory();
-      auto getptr() const
-      {
-        return std::dynamic_pointer_cast<Component>(Entity::getptr());
-      }
-      
-      virtual void initialize()
-      {
-        connectDataItems();
-      }
-                  
+      auto getptr() const { return std::dynamic_pointer_cast<Component>(Entity::getptr()); }
+
+      virtual void initialize() { connectDataItems(); }
+
       // Virtual destructor
       virtual ~Component();
-            
+
       // Getter methods for the component ID/Name
       const auto &getId() const { return m_id; }
       const auto &getComponentName() const { return m_name; }
       const auto &getUuid() const { return m_uuid; }
-      
+
       entity::EntityPtr getDescription()
       {
         if (hasProperty("Description"))
@@ -90,7 +83,7 @@ namespace mtconnect
           return desc;
         }
       }
-      
+
       void setManufacturer(const std::string &value)
       {
         auto desc = getDescription();
@@ -136,16 +129,16 @@ namespace mtconnect
           auto parent = m_parent.lock();
           if (parent)
           {
-            const_cast<Component*>(this)->m_device = parent->getDevice();
+            const_cast<Component *>(this)->m_device = parent->getDevice();
             device = m_device.lock();
           }
         }
         return device;
       }
-      
+
       // Set/Get the component's parent component
       ComponentPtr getParent() const { return m_parent.lock(); }
-      
+
       // Add to/get the component's std::list of children
       auto getChildren() const { return getList("Components"); }
       void addChild(ComponentPtr child, entity::ErrorList &errors)
@@ -160,40 +153,40 @@ namespace mtconnect
       // Add to/get the component's std::list of data items
       virtual void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors);
       auto getDataItems() const { return getList("DataItems"); }
-      
+
       bool operator<(const Component &comp) const { return m_id < comp.getId(); }
       bool operator==(const Component &comp) const { return m_id == comp.getId(); }
-      
+
       // References
       void resolveReferences(DevicePtr device);
-      
+
       // Connect data items
       void connectDataItems();
       void buildDeviceMaps(DevicePtr device);
-      
+
     protected:
       void setParent(ComponentPtr parent) { m_parent = parent; }
       void setDevice(DevicePtr device) { m_device = device; }
-      
+
     protected:
       // Unique ID for each component
       std::string m_id;
-      
+
       // Name for itself
       std::optional<std::string> m_name;
 
       // Universal unique identifier
       std::optional<std::string> m_uuid;
-      
+
       // Component relationships
       // Pointer to the parent component
       std::weak_ptr<Component> m_parent;
       std::weak_ptr<Device> m_device;
     };
-    
+
     struct ComponentComp
     {
       bool operator()(const Component *lhs, const Component *rhs) const { return *lhs < *rhs; }
     };
-  }
+  }  // namespace device_model
 }  // namespace mtconnect

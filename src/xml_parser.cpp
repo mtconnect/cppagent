@@ -53,7 +53,7 @@ namespace mtconnect
 {
   using namespace observation;
   using namespace device_model;
-  
+
   static dlib::logger g_logger("xml.parser");
 
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
@@ -81,9 +81,7 @@ namespace mtconnect
     return res;
   }
 
-  XmlParser::XmlParser()
-  {
-  }
+  XmlParser::XmlParser() {}
 
   inline static bool isMTConnectUrn(const char *aUrn)
   {
@@ -194,14 +192,15 @@ namespace mtconnect
 
       if (!nodeset || !nodeset->nodeNr)
         throw(string) "Could not find Device in XML configuration";
-            
+
       entity::ErrorList errors;
       for (int i = 0; i != nodeset->nodeNr; ++i)
       {
-        auto device = entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
+        auto device =
+            entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
         if (device)
           deviceList.emplace_back(dynamic_pointer_cast<Device>(device));
-        
+
         if (!errors.empty())
         {
           for (auto &e : errors)

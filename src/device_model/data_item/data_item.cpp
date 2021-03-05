@@ -273,8 +273,7 @@ namespace mtconnect
         }
         else
         {
-          addToList("Constraints", getFactory()->factoryFor("DataItem"),
-                    v, errors);
+          addToList("Constraints", getFactory()->factoryFor("DataItem"), v, errors);
           m_constantValue = value;
         }
       }

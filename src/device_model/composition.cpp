@@ -29,7 +29,7 @@ namespace mtconnect
 {
   using namespace entity;
   using namespace device_model::configuration;
-  
+
   namespace device_model
   {
     FactoryPtr Composition::getFactory()
@@ -39,23 +39,23 @@ namespace mtconnect
       {
         auto config = Configuration::getFactory()->deepCopy();
         auto composition = make_shared<Factory>(
-                                                Requirements {Requirement("id", true), Requirement("uuid", false),
-          Requirement("name", false), Requirement("type", true),
-          Requirement("Description", ENTITY, Description::getFactory(), false),
-          Requirement("Configuration", ENTITY, config, false)});
-        
-        compositions = make_shared<Factory>(
-                                            Requirements {Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
+            Requirements {Requirement("id", true), Requirement("uuid", false),
+                          Requirement("name", false), Requirement("type", true),
+                          Requirement("Description", ENTITY, Description::getFactory(), false),
+                          Requirement("Configuration", ENTITY, config, false)});
+
+        compositions = make_shared<Factory>(Requirements {
+            Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
       }
       return compositions;
     }
-    
+
     FactoryPtr Composition::getRoot()
     {
-      static auto root = make_shared<Factory>(
-                                              Requirements {Requirement("Compositions", ENTITY_LIST, Composition::getFactory(), false)});
-      
+      static auto root = make_shared<Factory>(Requirements {
+          Requirement("Compositions", ENTITY_LIST, Composition::getFactory(), false)});
+
       return root;
     }
-  }
+  }  // namespace device_model
 }  // namespace mtconnect

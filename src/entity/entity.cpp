@@ -16,7 +16,6 @@
 //
 
 #include "factory.hpp"
-
 #include <unordered_set>
 
 #include <dlib/logger.h>
@@ -27,12 +26,12 @@ namespace mtconnect
 {
   namespace entity
   {
-    bool Entity::addToList(const std::string &name, FactoryPtr factory,
-                           EntityPtr entity, ErrorList &errors)
+    bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
+                           ErrorList &errors)
     {
       if (!hasProperty(name))
       {
-        entity::EntityList list { entity };
+        entity::EntityList list {entity};
         auto entities = factory->create(name, list, errors);
         if (errors.empty())
           setProperty(name, entities);
@@ -52,8 +51,8 @@ namespace mtconnect
           return false;
         }
       }
-      
+
       return true;
     }
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

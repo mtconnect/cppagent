@@ -40,7 +40,7 @@ namespace mtconnect
 {
   using namespace observation;
   using namespace device_model;
-  
+
   static dlib::logger g_logger("json.printer");
 
   JsonPrinter::JsonPrinter(const string version, bool pretty)
@@ -169,7 +169,7 @@ namespace mtconnect
   std::string JsonPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const unsigned int assetBufferSize,
                                       const unsigned int assetCount,
-                                      const std::list<DevicePtr > &devices,
+                                      const std::list<DevicePtr> &devices,
                                       const std::map<std::string, int> *count) const
   {
     entity::JsonPrinter printer;
@@ -316,7 +316,8 @@ namespace mtconnect
       json ret;
       if (m_device != nullptr && !m_components.empty())
       {
-        json obj = json::object({{"name", *m_device->getComponentName() }, {"uuid", *m_device->getUuid()}});
+        json obj =
+            json::object({{"name", *m_device->getComponentName()}, {"uuid", *m_device->getUuid()}});
         json items = json::array();
         for (auto &comp : m_components)
           items.emplace_back(comp.toJson());
