@@ -157,32 +157,48 @@ namespace mtconnect
       {
 
         string queries;
-
+        string parameters;
         string path = static_cast<std::string>(req.target().data()).substr(0,req.target().length());
-        while(path.find("%22")!=path.npos)
-        {
-          auto pt = path.find_first_of("%22");
-          path.replace(pt,3,"\"");
-        }
-
-        //auto sizeString = path.size();
-        //path = path.substr(0,sizeString-1);
-        //path = path.substr(1,path.size()-1);
-        auto qp = path.find_first_of('?');
-        if (qp != string::npos){
-          queries = path.substr(qp+1);
-          path.erase(qp);
-        }
-
         request.m_verb = req.method_string().data();
+        if (request.m_verb == "GET")
+        {
+          while(path.find("%22")!=path.npos)
+          {
+            auto pt = path.find_first_of("%22");
+            path.replace(pt,3,"\"");
+          }
 
-        request.m_path = path;
-        auto pt = queries.find_first_of('=');
-        if (pt != string::npos){
-          request.m_query = getQueries(queries);
+          //auto sizeString = path.size();
+          //path = path.substr(0,sizeString-1);
+          //path = path.substr(1,path.size()-1);
+          auto qp = path.find_first_of('?');
+          if (qp != string::npos){
+            queries = path.substr(qp+1);
+            path.erase(qp);
+          }
+
+
+          request.m_path = path;
+          auto pt = queries.find_first_of('=');
+          if (pt != string::npos){
+            request.m_query = getQueries(queries);
+          }
+        }
+        else if (request.m_verb == "PUT" || request.m_verb == "POST" || request.m_verb == "DELETE")
+        {
+          request.m_path = path;
+          request.m_body = req.body();
+          //string data = req.body();
+          auto pt = req.body().find_first_of('=');
+          if (pt != string::npos){
+            request.m_query = getQueries(req.body());
+          }
+//          Routing::ParameterMap pMap;
+//          Routing::ParameterValue parmVal(path.substr(1));
+//          pMap.insert(std::pair<string,Routing::ParameterValue>("device",parmVal));
+//          request.m_parameters = pMap;
         }
 //        request.m_query.clear();
-        request.m_body = "";
         request.m_foreignIp = socket.remote_endpoint().address().to_string();
         request.m_foreignPort = socket.remote_endpoint().port();
         request.m_accepts = req.find(http::field::accept)->value().data();
