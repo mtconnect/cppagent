@@ -115,6 +115,24 @@ namespace mtconnect
 
         Routing::Request request = getRequest(req, m_socket);
         Response response(m_socket, m_fields);
+
+        if (request.m_verb == "PUT" || request.m_verb == "POST" ||
+            request.m_verb == "DELETE")
+        {
+          if (!m_putEnabled || !isPutAllowedFrom(request.m_foreignIp))
+          {
+            stringstream msg;
+            msg << "Error processing request from: " << request.m_foreignIp << " - "
+                << "Server is read-only. Only GET verb supported";
+            g_logger << LERROR << msg.str();
+
+            if (m_errorFunction)
+              m_errorFunction(request.m_accepts, response, msg.str(), FORBIDDEN);
+            //out.flush();
+            return;
+          }
+        }
+
         if(!handleRequest(request, response))
         {
           g_logger << LERROR << "Server::session error handling Request. ";
@@ -128,6 +146,7 @@ namespace mtconnect
         g_logger << LERROR << "Server::listen error: "<< e.what();
       }
     }
+
 
     //Parse http::request and return
     Routing::Request Server::getRequest(const http::request<http::string_body>& req, const tcp::socket& socket)
