@@ -126,6 +126,7 @@ namespace mtconnect
       {
         return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
       }
+      Routing::QueryMap parseAsset(const std::string &s1, const std::string &s2);
 
       bool dispatch(Routing::Request &request, Response &response)
       {

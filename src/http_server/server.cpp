@@ -186,9 +186,18 @@ namespace mtconnect
         }
         else if (request.m_verb == "PUT" || request.m_verb == "POST" || request.m_verb == "DELETE")
         {
-          request.m_path = path;
-          request.m_body = req.body();
+
+          if (path.find("asset") != path.npos)
+          {
+            auto qp = path.find_first_of('?');
+            if (qp != string::npos){
+              queries = path.substr(qp+1);
+              path.erase(qp);
+            }
+            request.m_query = parseAsset(queries, req.body());
+          }
           //string data = req.body();
+          request.m_path = path;
           auto pt = req.body().find_first_of('=');
           if (pt != string::npos){
             request.m_query = getQueries(req.body());
@@ -199,6 +208,7 @@ namespace mtconnect
 //          request.m_parameters = pMap;
         }
 //        request.m_query.clear();
+        request.m_body = req.body();
         request.m_foreignIp = socket.remote_endpoint().address().to_string();
         request.m_foreignPort = socket.remote_endpoint().port();
         request.m_accepts = req.find(http::field::accept)->value().data();
@@ -297,6 +307,41 @@ namespace mtconnect
 
       //response.flush();
       return res;
+    }
+
+    Routing::QueryMap Server::parseAsset(const std::string &s1, const std::string &s2)
+    {
+      Routing::QueryMap queryMap;
+      std::string tmpStr = s1;
+      try
+      {
+        if (tmpStr.empty()) throw("queries does not contain a query.");
+        std::regex reg1("([a-zA-Z0-9]+)=([a-zA-Z-0-9]+)");
+        std::regex reg2("([a-zA-Z0-9]+)=([\"a-zA-Z-0-9\"]+)");
+        std::smatch match;
+
+        while (regex_search(tmpStr, match, reg1))
+        {
+          Routing::Parameter qp1(match[1]);
+          Routing::Parameter qp2(match[2]);
+          queryMap.insert(std::pair<std::string,std::string >(qp1.m_name,qp2.m_name));
+          tmpStr = match.suffix().str();
+        }
+        tmpStr = s2;
+        while (regex_search(tmpStr, match, reg2))
+        {
+          Routing::Parameter qp1(match[1]);
+          Routing::Parameter qp2(match[2]);
+          queryMap.insert(std::pair<std::string,std::string >(qp1.m_name,qp2.m_name));
+          tmpStr = match.suffix().str();
+        }
+      }
+      catch (exception& e)
+      {
+        g_logger << LERROR << __func__ << " error: " <<e.what();
+        return queryMap;
+      }
+      return queryMap;
     }
 
 
