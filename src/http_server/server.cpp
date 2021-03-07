@@ -196,12 +196,12 @@ namespace mtconnect
             }
             request.m_query = parseAsset(queries, req.body());
           }
-          //string data = req.body();
-          request.m_path = path;
-          auto pt = req.body().find_first_of('=');
-          if (pt != string::npos){
+          else
+          {
             request.m_query = getQueries(req.body());
           }
+          //string data = req.body();
+          request.m_path = path;
 //          Routing::ParameterMap pMap;
 //          Routing::ParameterValue parmVal(path.substr(1));
 //          pMap.insert(std::pair<string,Routing::ParameterValue>("device",parmVal));
@@ -230,8 +230,6 @@ namespace mtconnect
       std::string tmpStr = queries;
       try
       {
-        if (tmpStr.empty()) throw("queries does not contain a query.");
-
         while (!tmpStr.empty())
         {
           auto ptr = tmpStr.find_first_of("&");
@@ -316,23 +314,22 @@ namespace mtconnect
       try
       {
         if (tmpStr.empty()) throw("queries does not contain a query.");
-        std::regex reg1("([a-zA-Z0-9]+)=([a-zA-Z-0-9]+)");
-        std::regex reg2("([a-zA-Z0-9]+)=([\"a-zA-Z-0-9\"]+)");
+        std::regex reg("([a-zA-Z0-9]+)=([\"a-zA-Z-0-9\"]+)&?");
         std::smatch match;
 
-        while (regex_search(tmpStr, match, reg1))
+        while (regex_search(tmpStr, match, reg))
         {
-          Routing::Parameter qp1(match[1]);
-          Routing::Parameter qp2(match[2]);
-          queryMap.insert(std::pair<std::string,std::string >(qp1.m_name,qp2.m_name));
+          string str1(match[1]);
+          string str2(match[2]);
+          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
           tmpStr = match.suffix().str();
         }
         tmpStr = s2;
-        while (regex_search(tmpStr, match, reg2))
+        while (regex_search(tmpStr, match, reg))
         {
-          Routing::Parameter qp1(match[1]);
-          Routing::Parameter qp2(match[2]);
-          queryMap.insert(std::pair<std::string,std::string >(qp1.m_name,qp2.m_name));
+          string str1(match[1]);
+          string str2(match[2]);
+          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
           tmpStr = match.suffix().str();
         }
       }
