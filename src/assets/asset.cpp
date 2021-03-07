@@ -29,7 +29,7 @@ namespace mtconnect
   FactoryPtr Asset::getFactory()
   {
     static auto asset = make_shared<Factory>(
-        Requirements({Requirement("assetId", true), Requirement("deviceUuid", false),
+        Requirements({Requirement("assetId", false), Requirement("deviceUuid", false),
                       Requirement("timestamp", TIMESTAMP, false),
                       Requirement("removed", BOOL, false)}),
         [](const std::string &name, Properties &props) -> EntityPtr {
