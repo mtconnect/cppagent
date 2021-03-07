@@ -155,9 +155,7 @@ namespace mtconnect
 
       try
       {
-
         string queries;
-        string parameters;
         string path = static_cast<std::string>(req.target().data()).substr(0,req.target().length());
         request.m_verb = req.method_string().data();
         if (request.m_verb == "GET")
@@ -168,16 +166,11 @@ namespace mtconnect
             path.replace(pt,3,"\"");
           }
 
-          //auto sizeString = path.size();
-          //path = path.substr(0,sizeString-1);
-          //path = path.substr(1,path.size()-1);
           auto qp = path.find_first_of('?');
           if (qp != string::npos){
             queries = path.substr(qp+1);
             path.erase(qp);
           }
-
-
           request.m_path = path;
           auto pt = queries.find_first_of('=');
           if (pt != string::npos){
@@ -186,7 +179,6 @@ namespace mtconnect
         }
         else if (request.m_verb == "PUT" || request.m_verb == "POST" || request.m_verb == "DELETE")
         {
-
           if (path.find("asset") != path.npos)
           {
             auto qp = path.find_first_of('?');
@@ -202,12 +194,7 @@ namespace mtconnect
           }
           //string data = req.body();
           request.m_path = path;
-//          Routing::ParameterMap pMap;
-//          Routing::ParameterValue parmVal(path.substr(1));
-//          pMap.insert(std::pair<string,Routing::ParameterValue>("device",parmVal));
-//          request.m_parameters = pMap;
         }
-//        request.m_query.clear();
         request.m_body = req.body();
         request.m_foreignIp = socket.remote_endpoint().address().to_string();
         request.m_foreignPort = socket.remote_endpoint().port();
