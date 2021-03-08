@@ -972,6 +972,16 @@ namespace mtconnect
       return asset;
     }
 
+    if (!id && !asset->hasProperty("assetId"))
+    {
+      stringstream msg;
+      msg << "Asset does not have an assetId and assetId not given";
+      g_logger << LWARN << msg.str();
+      g_logger << LWARN << document;
+      errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
+      return asset;
+    }
+
     if (id)
       asset->setAssetId(*id);
 

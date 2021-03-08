@@ -100,6 +100,11 @@ namespace mtconnect
     {
       asset->setProperty("timestamp", getCurrentTime(GMT_UV_SEC));
     }
+    
+    if (!asset->hasProperty("assetId"))
+    {
+      throw entity::PropertyError("Asset does not have an asset id");
+    }
 
     auto id = asset->getAssetId();
     auto it = m_primaryIndex.find(id);
