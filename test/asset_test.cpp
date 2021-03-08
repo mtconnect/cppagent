@@ -68,3 +68,21 @@ TEST_F(AssetTest, TestExtendedAsset)
   ASSERT_EQ(expected, m_writer->getContent());
 }
 
+TEST_F(AssetTest, asset_should_parse_and_load_if_asset_id_is_missing_from_xml)
+{
+  auto doc = R"DOC(<PlexHeader>
+  <PlexContainerNumber>72626</PlexContainerNumber>
+  <Command>1</Command>
+  <PartStatus>2</PartStatus>
+  <PlexStatus>1</PlexStatus>
+  <LastOperationCompleted>30</LastOperationCompleted>
+</PlexHeader>)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  auto asset = dynamic_cast<Asset*>(entity.get());
+  ASSERT_NE(nullptr, asset);
+}
