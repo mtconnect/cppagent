@@ -1102,7 +1102,11 @@ Installing vcpkg in c:\vcpkg
     cd \
     git clone https://github.com/microsoft/vcpkg
     vcpkg integrate install
-    vcpkg install boost:x64-windows-static For x86  boost:ix86-windows-static
+    vcpkg install boost:x64-windows-static 
+    
+ For x86  
+ 
+    vcpkg install boost:ix86-windows-static
 
 ### This will create a toolchain file that needs to be referenced when settup up the build directory
 
