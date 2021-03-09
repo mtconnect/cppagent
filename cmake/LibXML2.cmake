@@ -9,7 +9,7 @@
 option(AGENT_USE_NATIVE_LIBXML2 "Use systems LibXML2" OFF)
 
 if(UNIX AND AGENT_USE_NATIVE_LIBXML2)
-  find_package(LibXML2 REQUIRED)
+  find_package(LibXml2 REQUIRED)
 
   if(NOT TARGET LibXml2::LibXml2)
     add_library(LibXml2::LibXml2 SHARED IMPORTED)
