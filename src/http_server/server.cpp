@@ -80,23 +80,15 @@ namespace mtconnect
         acceptor.accept(socket);
         std::thread{std::bind(&Server::session, this, std::move(socket))}.detach();
         socket.shutdown(tcp::socket::shutdown_send, ec);//        http::request<http::string_body> req;
-//        http::read(socket, buffer, req, ec);
-//
-//        if (ec)
-//          return fail(ec, "write");
-//
-//        Routing::Request request = getRequest(req, socket);
-//        Response response(socket, m_fields);
-//        if(!handleRequest(request, response))
-//        {
-//          throw "Server failed to handle request";
-//        };
-//
-//        buffer.clear();
+        if (ec)
+          fail(ec, "write");
         }
         catch (exception &e)
         {
           g_logger << LERROR << "Server::listen error: "<< e.what();
+          stringstream msg;
+          msg << "Error processing request - " << e.what();
+          g_logger << LERROR << msg.str();
         }
       }
     }
