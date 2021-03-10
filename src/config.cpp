@@ -18,7 +18,7 @@
 #include "config.hpp"
 
 #include "agent.hpp"
-#include "config_options.hpp"
+#include "configuration/options.hpp"
 #include "device_model/device.hpp"
 #include "options.hpp"
 #include "rolling_file_logger.hpp"

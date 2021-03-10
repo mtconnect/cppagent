@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "config_options.hpp"
+#include "configuration/options.hpp"
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"

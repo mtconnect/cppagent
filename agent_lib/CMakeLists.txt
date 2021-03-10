@@ -5,7 +5,6 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent_loopback_pipeline.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/config.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/config_options.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"
@@ -24,7 +23,12 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer_helper.hpp"
-  
+
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/options.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/parser.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/parser.cpp"
+
+
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.cpp"

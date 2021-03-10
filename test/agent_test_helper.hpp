@@ -26,7 +26,7 @@
 #include <dlib/server.h>
 #include "config.hpp"
 #include "agent.hpp"
-#include "config_options.hpp"
+#include "configuration/options.hpp"
 
 #include <chrono>
 #include <iosfwd>
