@@ -18,7 +18,7 @@
 #include "adapter_pipeline.hpp"
 
 #include "agent.hpp"
-#include "config.hpp"
+#include "configuration/config.hpp"
 #include "configuration/options.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"

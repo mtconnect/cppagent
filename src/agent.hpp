@@ -28,7 +28,7 @@
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
-#include "service.hpp"
+#include "configuration/service.hpp"
 #include "xml_parser.hpp"
 #include <unordered_map>
 

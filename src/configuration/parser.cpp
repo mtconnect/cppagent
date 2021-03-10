@@ -17,6 +17,7 @@
 
 #include "parser.hpp"
 #include <ostream>
+#include <fstream>
 
 //#define BOOST_SPIRIT_DEBUG 1
 namespace std
@@ -135,8 +136,8 @@ namespace mtconnect
         using spirit::ascii::char_;
         
         m_name %= lexeme[+(char_ - char_(" \t=\n{}"))];
-        m_value %= m_name;
-        m_property = (m_name >> "=" > m_value > eol)[property(_val, _1, _2)];
+        m_value %= *blank > no_skip[+(char_ - (char_('}') | eol))];
+        m_property = (m_name >> "=" > m_value > (eol | &char_('}')))[property(_val, _1, _2)];
         m_tree = (m_name >> "{" >> *m_node > "}")[tree(_val, _1, _2)];
         m_blank = eol;
         m_node = (m_property | m_tree | m_blank);
@@ -209,7 +210,7 @@ namespace mtconnect
       bool r = phrase_parse(s, e, parser, skipper, tree);
       if (r && s == e)
       {
-        cout << "Success: " << tree << endl;
+        //cout << "Success: " << tree << endl;
       }
       else
       {
@@ -223,7 +224,12 @@ namespace mtconnect
     
     pt::ptree Parser::parse(const std::filesystem::path &path)
     {
-      return pt::ptree();
+      std::ifstream t(path);
+      std::stringstream buffer;
+      buffer << t.rdbuf();
+      
+      cout << "Parsing file: " << path << endl;
+      return parse(buffer.str());
     }
 
   }
