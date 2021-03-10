@@ -17,7 +17,7 @@
 
 #include "agent_loopback_pipeline.hpp"
 
-#include "configuration/options.hpp"
+#include "configuration/config_options.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"
 #include "pipeline/delta_filter.hpp"

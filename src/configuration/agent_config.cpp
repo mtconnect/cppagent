@@ -15,18 +15,16 @@
 //    limitations under the License.
 //
 
-#include "config.hpp"
+#include "agent_config.hpp"
 
 #include "agent.hpp"
-#include "configuration/options.hpp"
+#include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
-#include "options.hpp"
 #include "option.hpp"
 #include "rolling_file_logger.hpp"
 #include "version.h"
 #include "xml_printer.hpp"
 #include <sys/stat.h>
-#include <boost/lexical_cast.hpp>
 
 #include <date/date.h>
 
@@ -106,7 +104,7 @@ namespace mtconnect
         if (val)
           options.insert_or_assign(e.first, Convert(*val, e.second));
         else
-          options.emplace(e);
+          options.insert_or_assign(e.first, e.second);
       }
     }
     
@@ -509,16 +507,6 @@ namespace mtconnect
         set_all_logging_output_hooks<AgentConfiguration>(*this, &AgentConfiguration::LoggerHook);
       }
 #endif
-    }
-    
-    inline static void trim(std::string &str)
-    {
-      auto index = str.find_first_not_of(" \r\t");
-      if (index != string::npos && index > 0)
-        str.erase(0, index);
-      index = str.find_last_not_of(" \r\t");
-      if (index != string::npos)
-        str.erase(index + 1);
     }
     
     std::optional<fs::path> AgentConfiguration::checkPath(const std::string &name)

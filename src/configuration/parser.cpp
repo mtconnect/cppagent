@@ -16,6 +16,7 @@
 //
 
 #include "parser.hpp"
+#include "utilities.hpp"
 #include <ostream>
 #include <fstream>
 
@@ -81,7 +82,7 @@ namespace mtconnect
                     const std::string &f,
                     const std::string &s)
       {
-        t = make_pair(f, s);
+        t = make_pair(f, trim(s));
       }
     };
     BOOST_PHOENIX_ADAPT_FUNCTION(void, property, property::f, 3);
@@ -135,9 +136,9 @@ namespace mtconnect
         using qi::lexeme;
         using spirit::ascii::char_;
         
-        m_name %= lexeme[+(char_ - char_(" \t=\n{}"))];
-        m_value %= *blank > no_skip[+(char_ - (char_('}') | eol))];
-        m_property = (m_name >> "=" > m_value > (eol | &char_('}')))[property(_val, _1, _2)];
+        m_name %= lexeme[+(char_ - (space | char_("=\{}") | eol))];
+        m_value %= *blank > no_skip[+(char_ - (char_("}#") | eol))];
+        m_property = (m_name >> "=" > m_value > (eol | &char_("}#")))[property(_val, _1, _2)];
         m_tree = (m_name >> "{" >> *m_node > "}")[tree(_val, _1, _2)];
         m_blank = eol;
         m_node = (m_property | m_tree | m_blank);

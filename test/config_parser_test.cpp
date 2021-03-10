@@ -110,3 +110,36 @@ cow = bull
   
   ASSERT_THROW(Parser::parse(cfg), ParseError);
 }
+
+TEST(ConfigParserTest, last_property_ending_with_curly)
+{
+  string cfg = R"DOC(
+food = beverage
+# this is a comment
+animals {
+  ducks = row # This comment comes at the end
+  cows = bench}
+)DOC";
+  
+  auto tree = Parser::parse(cfg);
+
+  ASSERT_EQ(2, tree.size());
+  ASSERT_EQ("beverage", tree.get<string>("food"));
+  auto animals = tree.find("animals");
+  ASSERT_EQ(2, animals->second.size());
+  ASSERT_EQ("row", animals->second.get<string>("ducks"));
+  ASSERT_EQ("bench", animals->second.get<string>("cows"));
+}
+
+TEST(ConfigParserTest, single_line_block)
+{
+  string cfg = "parents { mother = father }";
+  
+  auto tree = Parser::parse(cfg);
+
+  ASSERT_EQ(1, tree.size());
+  auto animals = tree.find("parents");
+  ASSERT_EQ(1, animals->second.size());
+  auto mother = tree.get<string>("parents.mother");
+  ASSERT_EQ("father", mother);
+}

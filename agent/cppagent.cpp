@@ -16,7 +16,7 @@
 //
 
 #include "agent.hpp"
-#include "config.hpp"
+#include "configuration/agent_config.hpp"
 #include "fcntl.h"
 #include "sys/stat.h"
 
@@ -39,7 +39,7 @@ static logger g_logger("main");
 
 int main(int aArgc, const char *aArgv[])
 {
-  AgentConfiguration config;
+  configuration::AgentConfiguration config;
 
   int ret = config.main(aArgc, aArgv);
   fclose(stdin);

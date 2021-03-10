@@ -20,8 +20,8 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "agent.hpp"
-#include "configuration/config.hpp"
-#include "configuration/options.hpp"
+#include "configuration/agent_config.hpp"
+#include "configuration/config_options.hpp"
 #include "rolling_file_logger.hpp"
 #include "xml_printer.hpp"
 
