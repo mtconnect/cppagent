@@ -136,76 +136,18 @@ namespace mtconnect
           res.set(http::field::date, getHeaderDate());
           res.set(http::field::connection, "close");
           res.set(http::field::expires, "-1");
-          res.set(http::field::cache_control, "private, max-age=0\r\n" );
+          res.set(http::field::cache_control, "private, max-age=0\r\n");
           // Set Transfer-Encoding to "chunked".
           // If a Content-Length was present, it is removed.
           std::string content_type = "multipart/x-mixed-replace;boundary=";
           content_type.append(m_boundary);
-          res.set(http::field::content_type ,content_type);
+          res.set(http::field::content_type, content_type);
           res.chunked(true);
 
           // Set up the serializer
           http::response_serializer<http::empty_body> sr{res};
           // Write the header first
           write_header(m_socket, sr);
-//
-//          std::string content_type = "multipart/x-mixed-replace;boundary=";
-//          content_type.append(m_boundary);
-//          http::response<http::string_body> res
-//          {
-//              std::piecewise_construct,
-//              std::make_tuple(std::move("")),
-//              std::make_tuple(http::status::ok, 11)// m_req.version())
-//          };
-//          res.set(http::field::server, "MTConnectAgent");
-//          res.set(http::field::date, getHeaderDate());
-//          res.set(http::field::connection, "close");
-//          res.set(http::field::expires, "-1");
-//          res.set(http::field::content_type, content_type);
-//          http::serializer<false, http::string_body , http::fields> sr{res};
-//          http::write_header(m_socket, sr, ec);
-
-//          m_out << "HTTP/1.1 200 OK\r\n"
-//                   "Date: "
-//                << getHeaderDate()
-//                << "\r\n"
-//                   "Server: MTConnectAgent\r\n"
-//                   "Expires: -1\r\n"
-//                   "Connection: close\r\n"
-//                   "Cache-Control: private, max-age=0\r\n"
-//                   "Content-Type: multipart/x-mixed-replace;boundary="
-//                << m_boundary<< "\r\n"
-//                  "Transfer-Encoding: chunked\r\n";
-//          for (auto &f : m_fields)
-//            m_out << f << "\r\n";
-//          m_out << "\r\n";
-        }
-      }
-
-      virtual void writeChunk(const std::string &chunk)
-      {
-        if (good())
-        {
-//          std::string content_type{"multipart/x-mixed-replace;boundary="};
-          http::response<http::string_body> res
-              {
-                  std::piecewise_construct,
-                  std::make_tuple(std::move(m_out.str().c_str())),
-                  std::make_tuple(http::status::ok, 11)// m_req.version())
-              };
-          res.set(http::field::server, "MTConnectAgent");
-          res.set(http::field::date, getHeaderDate());
-          res.set(http::field::connection, "close");
-          res.set(http::field::expires, "-1");
-          res.set(http::field::content_type, "text/xml");
-          res.content_length(0);
-          http::serializer<false, http::string_body , http::fields> sr{res};
-          http::write(m_socket, sr, ec);
-
-          using namespace std;
-          m_out.setf(ios::hex, ios::basefield);
-          m_out << chunk.length() << "\r\n" << chunk << "\r\n";
-          m_out.flush();
         }
       }
 
@@ -226,18 +168,10 @@ namespace mtconnect
                  "Content-length: "
               << body.length() << "\r\n\r\n"
               << body << "\r\n\r\n";
-          str.setf(ios::hex, ios::basefield);
-          //str << str.str().length() << "\r\n" << str.str() << "\r\n";
-          //string temp{str.str()};
-          //m_out << temp;
 
-          http::response<http::string_body> res;//{std::piecewise_construct,std::make_tuple(std::move(str.str()))};
+          http::response<http::string_body> res;
           res.clear();
           res.body() = str.str();
-          //res.body().size = str.str().size();
-          //res.body().more = false;
-//
-//        // Write everything in the body buffer
           http::serializer< false, http::string_body , http::fields> sr{res};
           write(m_socket, sr, ec);
           if (ec)
@@ -258,52 +192,7 @@ namespace mtconnect
             http::serializer<false, http::string_body, http::fields> sr{errorRes};
             http::write(m_socket, sr, ec);
           }
-
-
-//          ostringstream str;
-//          m_out.setf(ios::dec, ios::basefield);
-//          response<buffer_body> res;
-//          str << "--" << m_boundary
-//              << "\r\n"
-//                 "Content-type: "
-//              << mimeType
-//              << "\r\n"
-//                 "Content-length: "
-//              << body.length() << "\r\n\r\n"
-//              << body << "\r\n\r\n";
-//          fields trailer;
-//          trailer.set(field::content_md5, m_boundary);
-//          trailer.set(field::expires, "never");
-//          chunk_body cBody(make_chunk(net::const_buffer(&body,body.size())));
-//          net::write(m_socket, chunk_header{1024, "d"});
-//          string buf{body.data()};
-//          net::write(m_socket, make_chunk(net::const_buffer(&buf,buf.length())));
-//          net::write(m_socket, make_chunk_last(trailer));
-
-
-//          http::response<http::string_body> res
-//              {
-//                  std::piecewise_construct,
-//                  std::make_tuple(std::move(str.str().c_str())),
-//                  std::make_tuple(http::status::ok, 11)// m_req.version())
-//              };
-          //res.set(http::field::server, "MTConnectAgent");
-          //res.set(http::field::date, getHeaderDate());
-          //res.set(http::field::connection, "close");
-          //res.set(http::field::expires, "-1");
-          //res.set(http::field::content_type, mimeType);
-          //res.content_length(0);
-//          http::serializer<false, http::buffer_body , http::fields> sr{res_c};
-//          http::write(m_socket, sr, ec);
-
-          //writeChunk(str.str());
         }
-      }
-
-      net::const_buffer get_next_chunk_body(const std::string& body)
-      {
-        std::string tesmp = "eoriwoeirow";
-         return net::const_buffer(&body,body.size());
       }
 
       void writeResponse(const std::string &body, const std::string &mimeType = "text/plain",
