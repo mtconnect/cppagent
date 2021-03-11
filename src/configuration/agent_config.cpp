@@ -25,10 +25,15 @@
 #include "version.h"
 #include "xml_printer.hpp"
 #include <sys/stat.h>
+#include <boost/asio.hpp>
 
 #include <date/date.h>
 
 #include <dlib/logger.h>
+
+#include <stdio.h>
+#include <errno.h>
+
 
 #include <algorithm>
 #include <chrono>
@@ -759,30 +764,57 @@ namespace mtconnect
     
     void AgentConfiguration::loadAllowPut(http_server::Server *server, ConfigOptions &options)
     {
+      namespace asio = boost::asio;
+      namespace ip = asio::ip;
+      
       server->enablePut(get<bool>(options[configuration::AllowPut]));
-      string putHosts = get<string>(options[configuration::AllowPutFrom]);
-      if (!putHosts.empty())
+      string hosts = get<string>(options[configuration::AllowPutFrom]);
+      if (!hosts.empty())
       {
-        istringstream toParse(putHosts);
-        string putHost;
+        istringstream line(hosts);
         do
         {
-          getline(toParse, putHost, ',');
-          trim(putHost);
-          if (!putHost.empty())
+          string host;
+          getline(line, host, ',');
+          host = trim(host);
+          if (!host.empty())
           {
-            string ip;
-            for (auto n = 0; !dlib::hostname_to_ip(putHost, ip, n) && ip == "0.0.0.0"; n++)
+            // Check if it is a simple numeric address
+            using br = ip::resolver_base;
+            boost::system::error_code ec;
+            auto addr = ip::make_address(host, ec);
+            if (ec)
             {
-              ip = "";
+              asio::io_service ios;
+              ip::tcp::resolver resolver(ios);
+              ip::tcp::resolver::query query(host, "0", br::v4_mapped);
+              
+              auto it = resolver.resolve(query, ec);
+              if (ec)
+              {
+                cout << "Failed to resolve " << host << ": " << ec.message() << endl;
+              }
+              else
+              {
+                ip::tcp::resolver::iterator end;
+                for (; it != end; it++)
+                {
+                  const auto &addr = it->endpoint().address();
+                  if (!addr.is_multicast() && !addr.is_unspecified())
+                  {
+                    server->enablePut();
+                    server->allowPutFrom(addr.to_string());
+                  }
+                }
+              }
             }
-            if (!ip.empty())
+            else
             {
               server->enablePut();
-              server->allowPutFrom(ip);
+              server->allowPutFrom(addr.to_string());
             }
           }
-        } while (!toParse.eof());
+        } while (!line.eof());
       }
     }
     
