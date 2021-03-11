@@ -545,7 +545,7 @@ namespace mtconnect
       GetOptions(config, options, {
         {configuration::PreserveUUID, true},
         {configuration::Port, 5000},
-        {configuration::ServerIp, ""},
+        {configuration::ServerIp, string()},
         {configuration::BufferSize, int(DEFAULT_SLIDING_BUFFER_EXP)},
         {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
         {configuration::CheckpointFrequency, 1000},
@@ -558,14 +558,14 @@ namespace mtconnect
         {configuration::MonitorConfigFiles, false},
         {configuration::MinimumConfigReloadAge, 15},
         {configuration::Pretty, false},
-        {configuration::PidFile, "agent.pid"},
-        {configuration::ServiceName, "MTConnect Agent"},
+        {configuration::PidFile, "agent.pid"s},
+        {configuration::ServiceName, "MTConnect Agent"s},
         {configuration::SchemaVersion,
-          to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR)},
+          to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},
         {configuration::LogStreams, false},
         {configuration::ShdrVersion, 1},
         {configuration::AllowPut, false},
-        {configuration::AllowPutFrom, ""}
+        {configuration::AllowPutFrom, ""s}
       });
             
       auto devices = config.get_optional<string>(configuration::Devices);
@@ -681,7 +681,7 @@ namespace mtconnect
           });
           
           AddDefaultedOptions(block.second, adapterOptions, {
-            {configuration::Host, "localhost"},
+            {configuration::Host, "localhost"s},
             {configuration::Port, 7878},
             {configuration::AutoAvailable, false},
             {configuration::RealTime, false},
