@@ -137,16 +137,11 @@ namespace mtconnect
           res.set(http::field::connection, "close");
           res.set(http::field::expires, "-1");
           res.set(http::field::cache_control, "private, max-age=0\r\n");
-          // Set Transfer-Encoding to "chunked".
-          // If a Content-Length was present, it is removed.
           std::string content_type = "multipart/x-mixed-replace;boundary=";
           content_type.append(m_boundary);
           res.set(http::field::content_type, content_type);
           res.chunked(true);
-
-          // Set up the serializer
           http::response_serializer<http::empty_body> sr{res};
-          // Write the header first
           write_header(m_socket, sr);
         }
       }
@@ -169,11 +164,9 @@ namespace mtconnect
               << body.length() << "\r\n\r\n"
               << body << "\r\n\r\n";
 
-          http::response<http::string_body> res;
-          res.clear();
-          res.body() = str.str();
-          http::serializer< false, http::string_body , http::fields> sr{res};
-          write(m_socket, sr, ec);
+          net::const_buffers_1 buf(str.str().c_str(),str.str().size());
+          chunk_body chunk(buf);
+          net::write(m_socket,chunk,ec);
           if (ec)
           {
             string errorMsg = "Error writing chunk - ";
@@ -187,7 +180,7 @@ namespace mtconnect
             errorRes.set(http::field::date, getHeaderDate());
             errorRes.set(http::field::connection, "close");
             errorRes.set(http::field::expires, "-1");
-            res.set(http::field::content_type, "text/xml");
+            errorRes.set(http::field::content_type, "text/xml");
             errorRes.content_length(textSize);
             http::serializer<false, http::string_body, http::fields> sr{errorRes};
             http::write(m_socket, sr, ec);
@@ -239,7 +232,8 @@ namespace mtconnect
           res.set(http::field::date, getHeaderDate());
           res.set(http::field::connection, "close");
           res.set(http::field::expires, "-1");
-          res.set(http::field::content_type, "text/xml");
+          res.set(http::field::content_type, mimeType);
+          //res.set(http::status::continue_, 100, 100);
           res.content_length(textSize);
           http::serializer<false, http::string_body , http::fields> sr{res};
           http::write(m_socket, sr, ec);
