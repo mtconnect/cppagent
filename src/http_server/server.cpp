@@ -80,9 +80,9 @@ namespace mtconnect
         acceptor.accept(socket);
         std::thread{std::bind(&Server::session, this, std::move(socket))}.detach();
         socket.shutdown(tcp::socket::shutdown_send, ec);//        http::request<http::string_body> req;
-        if (ec)
-          fail(ec, "write");
-        }
+//        if (ec)
+//          fail(ec, "write");
+       }
         catch (exception &e)
         {
           g_logger << LERROR << "Server::listen error: "<< e.what();
