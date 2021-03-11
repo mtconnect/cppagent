@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <mutex>
+#include <cassert>
 
 namespace mtconnect
 {
@@ -81,13 +82,6 @@ namespace mtconnect
         std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
         auto seq = m_sequence;
-
-        if (m_slidingBuffer.full())
-        {
-          ObservationPtr old = m_slidingBuffer.front();
-          m_first.addObservation(old);
-          m_firstSequence++;
-        }
         
         event->setSequence(seq);
         m_slidingBuffer.push_back(event);
@@ -96,6 +90,14 @@ namespace mtconnect
         // Special case for the first event in the series to prime the first checkpoint.
         if (seq == 1)
           m_first.addObservation(event);
+        else if (m_slidingBuffer.full())
+        {
+          ObservationPtr old = m_slidingBuffer.front();
+          m_first.addObservation(old);
+          if (old->getSequence() > 1)
+            m_firstSequence++;
+          //assert(old->getSequence() == m_firstSequence);
+        }
 
         // Checkpoint management
         if (m_checkpointCount > 0 && (seq % m_checkpointFreq) == 0)
@@ -104,8 +106,6 @@ namespace mtconnect
           m_checkpoints.push_back(std::make_unique<Checkpoint>(m_latest));
         }
 
-        // See if the next sequence has an event. If the event exists it
-        // should be added to the first checkpoint.
         m_sequence++;
           
         return seq;
@@ -127,29 +127,38 @@ namespace mtconnect
         // use first.
         auto fi = (m_firstSequence / m_checkpointFreq);
         auto in = (at / m_checkpointFreq);
-        auto cp = in * m_checkpointFreq;
         int dt = int(in - fi) - 1;
         
         std::unique_ptr<Checkpoint> check;
-        SequenceNumber_t ind;
+        decltype(m_slidingBuffer.cbegin()) iter;
+        decltype(m_slidingBuffer.cend()) end;
 
         if (dt < 0)
         {
-          ind = 0;
           check = std::make_unique<Checkpoint>(m_first, filterSet);
+          if (at == m_firstSequence)
+            return check;
+          
+          iter = m_slidingBuffer.cbegin();
+          end = iter + (at - m_firstSequence) + 1;
         }
         else
         {
-          ind = cp - m_firstSequence + 1;
           check = std::make_unique<Checkpoint>(*m_checkpoints[dt], filterSet);
+          
+          auto cps = in * m_checkpointFreq;
+          if (at == cps)
+            return check;
+          
+          auto ind = cps - m_firstSequence;
+          iter = m_slidingBuffer.cbegin() + ind;
+          end = iter + (at - cps) + 1;
         }
                 
         // Roll forward from the checkpoint.
-        auto limit = at - m_firstSequence;
-        for (; ind <= limit; ind++)
+        while (iter != end)
         {
-          ObservationPtr o = m_slidingBuffer[ind];
-          check->addObservation(o);
+          check->addObservation(*iter++);
         }
 
         return check;
