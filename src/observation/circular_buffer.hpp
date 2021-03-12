@@ -170,8 +170,9 @@ namespace mtconnect
         int limit, inc;
 
         SequenceNumber_t first;
+        size_t max = m_slidingBuffer.size();
 
-        // START SHOULD BE BETWEEN 0 AND SEQUENCE NUMBER
+        // Determine where to start and direction of iteration.
         if (count >= 0)
         {
           if (to)
@@ -195,12 +196,9 @@ namespace mtconnect
           inc = -1;
         }
 
-        SequenceNumber_t sin = first - m_firstSequence;
-        SequenceNumber_t ein = firstSeq - m_firstSequence;
-
-        SequenceNumber_t i;
-        for (i = sin; int(results->size()) < limit && i < m_slidingBuffer.size() && i >= ein;
-             i += inc)
+        size_t min = firstSeq - m_firstSequence;
+        size_t i = first - m_firstSequence;
+        for (int added = 0; added < limit && i < max && i >= min; i += inc)
         {
           // Filter out according to if it exists in the list
           auto &event = m_slidingBuffer[i];
@@ -208,6 +206,7 @@ namespace mtconnect
           if (!filterSet || filterSet->count(dataId) > 0)
           {
             results->push_back(event);
+            added++;
           }
         }
 
