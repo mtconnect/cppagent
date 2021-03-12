@@ -150,10 +150,7 @@ namespace mtconnect
       {
         if (good())
         {
-          using namespace http;
           using namespace std;
-          using chunk_extensions = basic_chunk_extensions< std::allocator< char > >;
-          char buffer[2048];
           ostringstream str;
           str << "--" << m_boundary
               << "\r\n"
@@ -165,26 +162,26 @@ namespace mtconnect
               << body << "\r\n\r\n";
 
           net::const_buffers_1 buf(str.str().c_str(),str.str().size());
-          chunk_body chunk(buf);
+          http::chunk_body chunk(buf);
           net::write(m_socket,chunk,ec);
-          if (ec)
-          {
-            string errorMsg = "Error writing chunk - ";
-            errorMsg.append(ec.message());
-            auto const textSize = errorMsg.length();
-            http::response<http::string_body> errorRes{
-                std::piecewise_construct, std::make_tuple(std::move(errorMsg.c_str())),
-                std::make_tuple(http::status::ok, 11)  // m_req.version())
-            };
-            errorRes.set(http::field::server, "MTConnectAgent");
-            errorRes.set(http::field::date, getHeaderDate());
-            errorRes.set(http::field::connection, "close");
-            errorRes.set(http::field::expires, "-1");
-            errorRes.set(http::field::content_type, "text/xml");
-            errorRes.content_length(textSize);
-            http::serializer<false, http::string_body, http::fields> sr{errorRes};
-            http::write(m_socket, sr, ec);
-          }
+//          if (ec)
+//          {
+//            string errorMsg = "Error writing chunk - ";
+//            errorMsg.append(ec.message());
+//            auto const textSize = errorMsg.length();
+//            http::response<http::string_body> errorRes{
+//                std::piecewise_construct, std::make_tuple(std::move(errorMsg.c_str())),
+//                std::make_tuple(http::status::ok, 11)  // m_req.version())
+//            };
+//            errorRes.set(http::field::server, "MTConnectAgent");
+//            errorRes.set(http::field::date, getHeaderDate());
+//            errorRes.set(http::field::connection, "close");
+//            errorRes.set(http::field::expires, "-1");
+//            errorRes.set(http::field::content_type, "text/xml");
+//            errorRes.content_length(textSize);
+//            http::serializer<false, http::string_body, http::fields> sr{errorRes};
+//            http::write(m_socket, sr, ec);
+//          }
         }
       }
 
@@ -245,7 +242,6 @@ namespace mtconnect
       tcp::socket m_socket;
       std::string m_boundary;
       std::string content_type;
-      http::response<http::buffer_body> res_c{http::status::ok, 11};
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;
       StringList m_fields;
