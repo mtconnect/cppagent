@@ -250,8 +250,10 @@ TEST_F(AgentTest, CurrentAt)
   // Check each current at all the positions.
   for (int i = 0; i < 100; i++)
   {
+    //cout << "Line #: " << i + 1 << " at " << i + seq << endl;
     query["at"] = to_string(i + seq);;
     PARSE_XML_RESPONSE_QUERY("/current", query);
+    //m_agentTestHelper->printResponse();
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
                           to_string(i + 1).c_str());
   }
@@ -2572,14 +2574,17 @@ TEST_F(AgentTest, StreamDataObserver)
   query["heartbeat"] = "1000";
   query["count"] = "10";
   query["from"] = to_string(agent->getSequence());
+  query["path"] = "//DataItem[@name='line']";
 
   // Test to make sure the signal will push the sequence number forward and capture
   // the new data.
   {
     auto streamThreadLambda = [](AgentTest *test) {
-      auto agent = test->m_agentTestHelper->getAgent();
       this_thread::sleep_for(test->m_delay);
-      agent->setSequence(agent->getSequence() + 20ull);
+      for (int i = 0; i < 20; i++)
+      {
+        test->m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|" + to_string(i));
+      }
       test->m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
       this_thread::sleep_for(120ms);
       test->m_agentTestHelper->m_out.setstate(ios::eofbit);

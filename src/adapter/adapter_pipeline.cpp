@@ -18,8 +18,8 @@
 #include "adapter_pipeline.hpp"
 
 #include "agent.hpp"
-#include "config.hpp"
-#include "config_options.hpp"
+#include "configuration/agent_config.hpp"
+#include "configuration/config_options.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"
 #include "pipeline/delta_filter.hpp"

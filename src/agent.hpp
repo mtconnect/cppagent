@@ -20,6 +20,7 @@
 #include "adapter/adapter.hpp"
 #include "agent_loopback_pipeline.hpp"
 #include "assets/asset_buffer.hpp"
+#include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
 #include "http_server/server.hpp"
@@ -28,7 +29,6 @@
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
-#include "service.hpp"
 #include "xml_parser.hpp"
 #include <unordered_map>
 

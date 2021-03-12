@@ -24,9 +24,9 @@
 #include "adapter/adapter.hpp"
 #include "pipeline/pipeline.hpp"
 #include <dlib/server.h>
-#include "config.hpp"
+#include "configuration/agent_config.hpp"
 #include "agent.hpp"
-#include "config_options.hpp"
+#include "configuration/config_options.hpp"
 
 #include <chrono>
 #include <iosfwd>

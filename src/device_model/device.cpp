@@ -17,7 +17,7 @@
 
 #include "device.hpp"
 
-#include "config_options.hpp"
+#include "configuration/config_options.hpp"
 #include "entity/factory.hpp"
 
 #include <dlib/logger.h>

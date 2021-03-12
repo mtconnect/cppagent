@@ -18,7 +18,7 @@
 #define __STDC_LIMIT_MACROS 1
 #include "adapter/adapter.hpp"
 
-#include "config_options.hpp"
+#include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
 
 #include <dlib/logger.h>
