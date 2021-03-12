@@ -19,12 +19,11 @@
 
 #include "checkpoint.hpp"
 #include "utilities.hpp"
-
 #include <boost/circular_buffer.hpp>
 
+#include <cassert>
 #include <memory>
 #include <mutex>
-#include <cassert>
 
 namespace mtconnect
 {
@@ -36,7 +35,9 @@ namespace mtconnect
     {
     public:
       CircularBuffer(unsigned int bufferSize, int checkpointFreq)
-        : m_sequence(1ull), m_firstSequence(m_sequence), m_slidingBufferSize(1 << bufferSize),
+        : m_sequence(1ull),
+          m_firstSequence(m_sequence),
+          m_slidingBufferSize(1 << bufferSize),
           m_slidingBuffer(m_slidingBufferSize),
           m_checkpointFreq(checkpointFreq),
           m_checkpointCount(m_slidingBufferSize / checkpointFreq),
@@ -44,10 +45,7 @@ namespace mtconnect
       {
       }
 
-      ~CircularBuffer()
-      {
-        m_checkpoints.clear();
-      }
+      ~CircularBuffer() { m_checkpoints.clear(); }
 
       ObservationPtr getFromBuffer(uint64_t seq) const
       {
@@ -57,18 +55,12 @@ namespace mtconnect
         else
           return ObservationPtr();
       }
-      auto getIndexAt(uint64_t at)
-      {
-        return at - m_firstSequence;
-      }
+      auto getIndexAt(uint64_t at) { return at - m_firstSequence; }
 
       SequenceNumber_t getSequence() const { return m_sequence; }
       unsigned int getBufferSize() const { return m_slidingBufferSize; }
 
-      SequenceNumber_t getFirstSequence() const
-      {
-        return m_firstSequence;
-      }
+      SequenceNumber_t getFirstSequence() const { return m_firstSequence; }
 
       void setSequence(SequenceNumber_t seq)
       {
@@ -82,7 +74,7 @@ namespace mtconnect
         std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
         auto seq = m_sequence;
-        
+
         event->setSequence(seq);
         m_slidingBuffer.push_back(event);
         m_latest.addObservation(event);
@@ -96,7 +88,7 @@ namespace mtconnect
           m_first.addObservation(old);
           if (old->getSequence() > 1)
             m_firstSequence++;
-          //assert(old->getSequence() == m_firstSequence);
+          // assert(old->getSequence() == m_firstSequence);
         }
 
         // Checkpoint management
@@ -107,7 +99,7 @@ namespace mtconnect
         }
 
         m_sequence++;
-          
+
         return seq;
       }
 
@@ -128,7 +120,7 @@ namespace mtconnect
         auto fi = (m_firstSequence / m_checkpointFreq);
         auto in = (at / m_checkpointFreq);
         int dt = int(in - fi) - 1;
-        
+
         std::unique_ptr<Checkpoint> check;
         decltype(m_slidingBuffer.cbegin()) iter;
         decltype(m_slidingBuffer.cend()) end;
@@ -138,23 +130,23 @@ namespace mtconnect
           check = std::make_unique<Checkpoint>(m_first, filterSet);
           if (at == m_firstSequence)
             return check;
-          
+
           iter = m_slidingBuffer.cbegin();
           end = iter + (at - m_firstSequence) + 1;
         }
         else
         {
           check = std::make_unique<Checkpoint>(*m_checkpoints[dt], filterSet);
-          
+
           auto cps = in * m_checkpointFreq;
           if (at == cps)
             return check;
-          
+
           auto ind = cps - m_firstSequence;
           iter = m_slidingBuffer.cbegin() + ind;
           end = iter + (at - cps) + 1;
         }
-                
+
         // Roll forward from the checkpoint.
         while (iter != end)
         {
@@ -202,12 +194,13 @@ namespace mtconnect
           limit = -count;
           inc = -1;
         }
-        
+
         SequenceNumber_t sin = first - m_firstSequence;
         SequenceNumber_t ein = firstSeq - m_firstSequence;
 
         SequenceNumber_t i;
-        for (i = sin; int(results->size()) < limit && i < m_slidingBuffer.size() && i >= ein; i += inc)
+        for (i = sin; int(results->size()) < limit && i < m_slidingBuffer.size() && i >= ein;
+             i += inc)
         {
           // Filter out according to if it exists in the list
           auto &event = m_slidingBuffer[i];
@@ -255,7 +248,6 @@ namespace mtconnect
       Checkpoint m_latest;
       Checkpoint m_first;
       boost::circular_buffer<std::unique_ptr<Checkpoint>> m_checkpoints;
-
     };
   }  // namespace observation
 }  // namespace mtconnect

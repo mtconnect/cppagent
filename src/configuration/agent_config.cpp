@@ -24,25 +24,23 @@
 #include "rolling_file_logger.hpp"
 #include "version.h"
 #include "xml_printer.hpp"
-#include <sys/stat.h>
 #include <boost/asio.hpp>
+#include <sys/stat.h>
 
 #include <date/date.h>
 
 #include <dlib/logger.h>
 
-#include <stdio.h>
-#include <errno.h>
-
-
 #include <algorithm>
 #include <chrono>
+#include <errno.h>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <stdio.h>
 #include <thread>
 #include <vector>
 
@@ -69,26 +67,24 @@ namespace pt = boost::property_tree;
 namespace mtconnect
 {
   static logger g_logger("init.config");
-  
+
   namespace configuration
   {
     static inline auto Convert(const std::string &s, const ConfigOption &def)
     {
       ConfigOption option;
-      visit(overloaded {
-        [&option, &s](const std::string &) { option = s; },
-        [&option, &s](const int &) { option = stoi(s); },
-        [&option, &s](const Milliseconds &) { option = Milliseconds{stoi(s)}; },
-        [&option, &s](const Seconds &) { option = Seconds{stoi(s)}; },
-        [&option, &s](const double &) { option = stod(s); },
-        [&option, &s](const bool &) { option = s == "yes" || s == "true"; },
-        [](const auto &) {  }
-      }, def);
+      visit(overloaded {[&option, &s](const std::string &) { option = s; },
+                        [&option, &s](const int &) { option = stoi(s); },
+                        [&option, &s](const Milliseconds &) { option = Milliseconds {stoi(s)}; },
+                        [&option, &s](const Seconds &) { option = Seconds {stoi(s)}; },
+                        [&option, &s](const double &) { option = stod(s); },
+                        [&option, &s](const bool &) { option = s == "yes" || s == "true"; },
+                        [](const auto &) {}},
+            def);
       return option;
     }
-    
-    static inline void AddOptions(const pt::ptree &tree,
-                                  ConfigOptions &options,
+
+    static inline void AddOptions(const pt::ptree &tree, ConfigOptions &options,
                                   const ConfigOptions &entries)
     {
       for (auto &e : entries)
@@ -98,10 +94,9 @@ namespace mtconnect
           options.insert_or_assign(e.first, Convert(*val, e.second));
       }
     }
-    
-    static inline void AddDefaultedOptions(const pt::ptree &tree,
-                                  ConfigOptions &options,
-                                  const ConfigOptions &entries)
+
+    static inline void AddDefaultedOptions(const pt::ptree &tree, ConfigOptions &options,
+                                           const ConfigOptions &entries)
     {
       for (auto &e : entries)
       {
@@ -112,20 +107,19 @@ namespace mtconnect
           options.insert_or_assign(e.first, e.second);
       }
     }
-    
-    static inline void GetOptions(const pt::ptree &tree,
-                                  ConfigOptions &options,
+
+    static inline void GetOptions(const pt::ptree &tree, ConfigOptions &options,
                                   const ConfigOptions &entries)
     {
       options = entries;
       AddOptions(tree, options, entries);
     }
-    
+
     AgentConfiguration::AgentConfiguration()
     {
       bool success = false;
       char pathSep = '/';
-      
+
 #if _WINDOWS
       char path[MAX_PATH];
       pathSep = '\\';
@@ -145,12 +139,12 @@ namespace mtconnect
 #endif
 #endif
 #endif
-      
+
       if (success)
       {
         string ep(path);
         size_t found = ep.rfind(pathSep);
-        
+
         if (found != std::string::npos)
           ep.erase(found + 1);
         m_exePath = fs::path(ep);
@@ -158,48 +152,48 @@ namespace mtconnect
       }
       m_working = fs::current_path();
     }
-    
+
     void AgentConfiguration::initialize(int argc, const char *argv[])
     {
       MTConnectService::initialize(argc, argv);
-      
+
       const char *configFile = "agent.cfg";
-      
+
       OptionsList optionList;
       optionList.append(new Option(0, configFile, "The configuration file", "file", false));
       optionList.parse(argc, (const char **)argv);
-      
+
       m_configFile = configFile;
-      
+
       try
       {
         struct stat buf = {0};
-        
+
         // Check first if the file is in the current working directory...
         if (stat(m_configFile.c_str(), &buf))
         {
           if (!m_exePath.empty())
           {
             g_logger << LINFO << "Cannot find " << m_configFile
-            << " in current directory, searching exe path: " << m_exePath;
+                     << " in current directory, searching exe path: " << m_exePath;
             cerr << "Cannot find " << m_configFile
-            << " in current directory, searching exe path: " << m_exePath << endl;
+                 << " in current directory, searching exe path: " << m_exePath << endl;
             m_configFile = (m_exePath / m_configFile).string();
           }
           else
           {
             g_logger << LFATAL << "Agent failed to load: Cannot find configuration file: '"
-            << m_configFile;
+                     << m_configFile;
             cerr << "Agent failed to load: Cannot find configuration file: '" << m_configFile
-            << std::endl;
+                 << std::endl;
             optionList.usage();
           }
         }
-        
+
         ifstream file(m_configFile.c_str());
         std::stringstream buffer;
         buffer << file.rdbuf();
-        
+
         loadConfig(buffer.str());
       }
       catch (std::exception &e)
@@ -209,15 +203,15 @@ namespace mtconnect
         optionList.usage();
       }
     }
-    
+
     AgentConfiguration::~AgentConfiguration() { set_all_logging_output_streams(cout); }
-    
+
 #ifdef _WINDOWS
     static time_t GetFileModificationTime(const string &file)
     {
       FILETIME createTime, accessTime, writeTime = {0, 0};
       auto handle =
-      CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+          CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
       if (handle == INVALID_HANDLE_VALUE)
       {
         g_logger << LWARN << "Could not find file: " << file;
@@ -229,9 +223,10 @@ namespace mtconnect
         writeTime = {0, 0};
       }
       CloseHandle(handle);
-      
-      uint64_t windowsFileTime = (writeTime.dwLowDateTime | uint64_t(writeTime.dwHighDateTime) << 32);
-      
+
+      uint64_t windowsFileTime =
+          (writeTime.dwLowDateTime | uint64_t(writeTime.dwHighDateTime) << 32);
+
       return windowsFileTime / 10000000ull - 11644473600ull;
     }
 #else
@@ -244,21 +239,21 @@ namespace mtconnect
         perror("Cannot stat file");
         return 0;
       }
-      
+
       return buf.st_mtime;
     }
 #endif
-    
+
     void AgentConfiguration::monitorThread()
     {
       // shut this off for now.
       return;
-      
+
       time_t devices_at_start = 0, cfg_at_start = 0;
-      
+
       g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile
-      << ", will warm start if they change.";
-      
+               << ", will warm start if they change.";
+
       if ((cfg_at_start = GetFileModificationTime(m_configFile)) == 0)
       {
         g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
@@ -269,53 +264,54 @@ namespace mtconnect
         g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
         return;
       }
-      
+
       g_logger << LTRACE << "Configuration start time: " << cfg_at_start;
       g_logger << LTRACE << "Device start time: " << devices_at_start;
-      
+
       bool changed = false;
-      
+
       // Check every 10 seconds
       do
       {
         dlib::sleep(10000);
-        
+
         time_t devices = 0, cfg = 0;
         bool check = true;
-        
+
         if ((cfg = GetFileModificationTime(m_configFile)) == 0)
         {
           g_logger << LWARN << "Cannot stat config file: " << m_configFile
-          << ", retrying in 10 seconds";
+                   << ", retrying in 10 seconds";
           check = false;
         }
-        
+
         if ((devices = GetFileModificationTime(m_devicesFile)) == 0)
         {
           g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile
-          << ", retrying in 10 seconds";
+                   << ", retrying in 10 seconds";
           check = false;
         }
-        
+
         g_logger << LTRACE << "Configuration times: " << cfg_at_start << " -- " << cfg;
         g_logger << LTRACE << "Device times: " << devices_at_start << " -- " << devices;
-        
+
         // Check if the files have changed.
         if (check && (cfg_at_start != cfg || devices_at_start != devices))
         {
           time_t now = time(nullptr);
           g_logger
-          << LWARN
-          << "Dected change in configuarion files. Will reload when youngest file is at least "
-          << m_minimumConfigReloadAge << " seconds old";
-          g_logger << LWARN << "    Devices.xml file modified " << (now - devices) << " seconds ago";
+              << LWARN
+              << "Dected change in configuarion files. Will reload when youngest file is at least "
+              << m_minimumConfigReloadAge << " seconds old";
+          g_logger << LWARN << "    Devices.xml file modified " << (now - devices)
+                   << " seconds ago";
           g_logger << LWARN << "    ...cfg file modified " << (now - cfg) << " seconds ago";
-          
+
           changed =
-          (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
+              (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
         }
       } while (!changed);  // && m_agent->is_running());
-      
+
       // TODO: Put monitor thread back in place
 #if 0
       // Restart agent if changed...
@@ -339,11 +335,11 @@ namespace mtconnect
 #endif
       g_logger << LDEBUG << "Monitor thread is exiting";
     }
-    
+
     void AgentConfiguration::start()
     {
       unique_ptr<dlib::thread_function> mon;
-      
+
       do
       {
         m_restart = false;
@@ -352,11 +348,11 @@ namespace mtconnect
           // Start the file monitor to check for changes to cfg or devices.
           g_logger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
           mon = std::make_unique<dlib::thread_function>(
-                                                        make_mfp(*this, &AgentConfiguration::monitorThread));
+              make_mfp(*this, &AgentConfiguration::monitorThread));
         }
-        
+
         m_agent->start();
-        
+
         if (m_restart && m_monitorFiles)
         {
           // Will destruct and wait to re-initialize.
@@ -366,7 +362,7 @@ namespace mtconnect
         }
       } while (m_restart);
     }
-    
+
     void AgentConfiguration::stop()
     {
       g_logger << dlib::LINFO << "Agent stopping";
@@ -374,20 +370,20 @@ namespace mtconnect
       m_agent->stop();
       g_logger << dlib::LINFO << "Agent Configuration stopped";
     }
-    
+
     DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
-    
+
     static std::string timestamp()
     {
       return format(date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
     }
-    
+
     void AgentConfiguration::LoggerHook(const std::string &loggerName, const dlib::log_level &l,
                                         const dlib::uint64 threadId, const char *message)
     {
       stringstream out;
       out << timestamp() << ": " << l.name << " [" << threadId << "] " << loggerName << ": "
-      << message;
+          << message;
 #ifdef WIN32
       out << "\r\n";
 #else
@@ -398,7 +394,7 @@ namespace mtconnect
       else
         cout << out.str();
     }
-    
+
     static dlib::log_level string_to_log_level(const std::string &level)
     {
       using namespace std;
@@ -418,10 +414,10 @@ namespace mtconnect
         return LERROR;
       else if (level == "LFATAL" || level == "FATAL" || level == "fatal")
         return LFATAL;
-      
+
       return LINFO;
     }
-    
+
     void AgentConfiguration::configureLogger(const ptree &config)
     {
 #if 0
@@ -513,7 +509,7 @@ namespace mtconnect
       }
 #endif
     }
-    
+
     std::optional<fs::path> AgentConfiguration::checkPath(const std::string &name)
     {
       auto work = m_working / name;
@@ -529,45 +525,44 @@ namespace mtconnect
           return exec;
         }
       }
-      
+
       return nullopt;
     }
-    
+
     void AgentConfiguration::loadConfig(const std::string &file)
     {
       // Now get our configuration
       auto config = Parser::parse(file);
-            
+
       if (!m_loggerFile)
         configureLogger(config);
-      
+
       ConfigOptions options;
-      GetOptions(config, options, {
-        {configuration::PreserveUUID, true},
-        {configuration::Port, 5000},
-        {configuration::ServerIp, string()},
-        {configuration::BufferSize, int(DEFAULT_SLIDING_BUFFER_EXP)},
-        {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
-        {configuration::CheckpointFrequency, 1000},
-        {configuration::LegacyTimeout, 600s},
-        {configuration::ReconnectInterval, 10000ms},
-        {configuration::IgnoreTimestamps, false},
-        {configuration::ConversionRequired, true},
-        {configuration::UpcaseDataItemValue, true},
-        {configuration::FilterDuplicates, false},
-        {configuration::MonitorConfigFiles, false},
-        {configuration::MinimumConfigReloadAge, 15},
-        {configuration::Pretty, false},
-        {configuration::PidFile, "agent.pid"s},
-        {configuration::ServiceName, "MTConnect Agent"s},
-        {configuration::SchemaVersion,
-          to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},
-        {configuration::LogStreams, false},
-        {configuration::ShdrVersion, 1},
-        {configuration::AllowPut, false},
-        {configuration::AllowPutFrom, ""s}
-      });
-            
+      GetOptions(config, options,
+                 {{configuration::PreserveUUID, true},
+                  {configuration::Port, 5000},
+                  {configuration::ServerIp, string()},
+                  {configuration::BufferSize, int(DEFAULT_SLIDING_BUFFER_EXP)},
+                  {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
+                  {configuration::CheckpointFrequency, 1000},
+                  {configuration::LegacyTimeout, 600s},
+                  {configuration::ReconnectInterval, 10000ms},
+                  {configuration::IgnoreTimestamps, false},
+                  {configuration::ConversionRequired, true},
+                  {configuration::UpcaseDataItemValue, true},
+                  {configuration::FilterDuplicates, false},
+                  {configuration::MonitorConfigFiles, false},
+                  {configuration::MinimumConfigReloadAge, 15},
+                  {configuration::Pretty, false},
+                  {configuration::PidFile, "agent.pid"s},
+                  {configuration::ServiceName, "MTConnect Agent"s},
+                  {configuration::SchemaVersion,
+                   to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},
+                  {configuration::LogStreams, false},
+                  {configuration::ShdrVersion, 1},
+                  {configuration::AllowPut, false},
+                  {configuration::AllowPutFrom, ""s}});
+
       auto devices = config.get_optional<string>(configuration::Devices);
       if (devices)
       {
@@ -588,83 +583,83 @@ namespace mtconnect
             m_devicesFile = (*probe).string();
         }
       }
-      
+
       if (m_devicesFile.empty())
       {
         throw runtime_error(((string) "Please make sure the configuration "
-                             "file probe.xml or Devices.xml is in the current "
-                             "directory or specify the correct file "
-                             "in the configuration file " +
+                                      "file probe.xml or Devices.xml is in the current "
+                                      "directory or specify the correct file "
+                                      "in the configuration file " +
                              m_configFile + " using Devices = <file>")
-                            .c_str());
+                                .c_str());
       }
-      
+
       m_name = get<string>(options[configuration::ServiceName]);
-      
+
       // Get the HTTP Headers
       loadHttpHeaders(config, options);
-      
+
       // Check for schema version
       m_version = get<string>(options[configuration::SchemaVersion]);
       auto port = get<int>(options[configuration::Port]);
       g_logger << LINFO << "Starting agent on port " << port;
-      
-      auto server = make_unique<http_server::Server>(port,
-                                                     get<string>(options[configuration::ServerIp]),
-                                                     options);
+
+      auto server = make_unique<http_server::Server>(
+          port, get<string>(options[configuration::ServerIp]), options);
       loadAllowPut(server.get(), options);
-      
+
       auto cp = make_unique<http_server::FileCache>();
-      
+
       // Make the Agent
       m_agent = make_unique<Agent>(server, cp, m_devicesFile,
                                    get<int>(options[configuration::BufferSize]),
-                                   get<int>(options[configuration::MaxAssets]),
-                                   m_version, get<int>(options[configuration::CheckpointFrequency]),
+                                   get<int>(options[configuration::MaxAssets]), m_version,
+                                   get<int>(options[configuration::CheckpointFrequency]),
                                    get<bool>(options[configuration::Pretty]));
       XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
-      
-      
+
       m_agent->setLogStreamData(get<bool>(options[configuration::LogStreams]));
       auto cache = m_agent->getFileCache();
-      
+
       // Make the PipelineContext
       m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
       m_pipelineContext->m_contract = m_agent->makePipelineContract();
-            
+
       m_agent->initialize(m_pipelineContext, options);
-      
+
       if (get<bool>(options[configuration::PreserveUUID]))
       {
         for (auto device : m_agent->getDevices())
           device->setPreserveUuid(get<bool>(options[configuration::PreserveUUID]));
       }
-      
+
       loadAdapters(config, options);
-      
+
       // Files served by the Agent... allows schema files to be served by
       // agent.
       loadFiles(xmlPrinter, config, cache);
-      
+
       // Load namespaces, allow for local file system serving as well.
-      loadNamespace(config, "DevicesNamespaces", cache, xmlPrinter, &XmlPrinter::addDevicesNamespace);
-      loadNamespace(config, "StreamsNamespaces", cache, xmlPrinter, &XmlPrinter::addStreamsNamespace);
+      loadNamespace(config, "DevicesNamespaces", cache, xmlPrinter,
+                    &XmlPrinter::addDevicesNamespace);
+      loadNamespace(config, "StreamsNamespaces", cache, xmlPrinter,
+                    &XmlPrinter::addStreamsNamespace);
       loadNamespace(config, "AssetsNamespaces", cache, xmlPrinter, &XmlPrinter::addAssetsNamespace);
       loadNamespace(config, "ErrorNamespaces", cache, xmlPrinter, &XmlPrinter::addErrorNamespace);
-      
+
       loadStyle(config, "DevicesStyle", cache, xmlPrinter, &XmlPrinter::setDevicesStyle);
       loadStyle(config, "StreamsStyle", cache, xmlPrinter, &XmlPrinter::setStreamStyle);
       loadStyle(config, "AssetsStyle", cache, xmlPrinter, &XmlPrinter::setAssetsStyle);
       loadStyle(config, "ErrorStyle", cache, xmlPrinter, &XmlPrinter::setErrorStyle);
-      
+
       loadTypes(config, cache);
     }
-    
+
     void AgentConfiguration::loadAdapters(const pt::ptree &config, const ConfigOptions &options)
     {
       using namespace adapter;
       using namespace pipeline;
-      
+
       DevicePtr device;
       auto adapters = config.get_child_optional("Adapters");
       if (adapters)
@@ -672,28 +667,25 @@ namespace mtconnect
         for (const auto &block : *adapters)
         {
           ConfigOptions adapterOptions = options;
-          
+
           GetOptions(block.second, adapterOptions, options);
-          AddOptions(block.second, adapterOptions, {
-            {configuration::UUID, string()},
-            {configuration::Manufacturer, string()},
-            {configuration::Station, string()}
-          });
-          
-          AddDefaultedOptions(block.second, adapterOptions, {
-            {configuration::Host, "localhost"s},
-            {configuration::Port, 7878},
-            {configuration::AutoAvailable, false},
-            {configuration::RealTime, false},
-            {configuration::RelativeTime, false}
-          });
-          
-          auto deviceName = block.second.
-                    get_optional<string>(configuration::Device).
-                    value_or(block.first);
-          
+          AddOptions(block.second, adapterOptions,
+                     {{configuration::UUID, string()},
+                      {configuration::Manufacturer, string()},
+                      {configuration::Station, string()}});
+
+          AddDefaultedOptions(block.second, adapterOptions,
+                              {{configuration::Host, "localhost"s},
+                               {configuration::Port, 7878},
+                               {configuration::AutoAvailable, false},
+                               {configuration::RealTime, false},
+                               {configuration::RelativeTime, false}});
+
+          auto deviceName =
+              block.second.get_optional<string>(configuration::Device).value_or(block.first);
+
           device = m_agent->getDeviceByName(deviceName);
-          
+
           if (!device)
           {
             g_logger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
@@ -711,9 +703,10 @@ namespace mtconnect
           }
           if (!device)
           {
-            g_logger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
+            g_logger << LWARN << "Cannot locate device name '" << deviceName
+                     << "', assuming dynamic";
           }
-                  
+
           auto additional = block.second.get_optional<string>(configuration::AdditionalDevices);
           if (additional)
           {
@@ -728,30 +721,33 @@ namespace mtconnect
               index = name.find_last_not_of(" \r\t");
               if (index != string::npos)
                 name.erase(index + 1);
-              
+
               deviceList.push_back(name);
             }
-            
+
             adapterOptions[configuration::AdditionalDevices] = deviceList;
           }
-          
-          g_logger << LINFO << "Adding adapter for " << deviceName << " on " << get<string>(adapterOptions[configuration::Host]) << ":" << get<string>(adapterOptions[configuration::Host]);
-          
+
+          g_logger << LINFO << "Adding adapter for " << deviceName << " on "
+                   << get<string>(adapterOptions[configuration::Host]) << ":"
+                   << get<string>(adapterOptions[configuration::Host]);
+
           auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-          auto adp = new Adapter(get<string>(adapterOptions[configuration::Host]),
-                                 get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
+          auto adp =
+              new Adapter(get<string>(adapterOptions[configuration::Host]),
+                          get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
           m_agent->addAdapter(adp, false);
         }
       }
       else if ((device = defaultDevice()))
       {
         ConfigOptions adapterOptions {options};
-        
+
         auto deviceName = *device->getComponentName();
         adapterOptions[configuration::Device] = deviceName;
         g_logger << LINFO << "Adding default adapter for " << device->getName()
-        << " on localhost:7878";
-        
+                 << " on localhost:7878";
+
         auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
         auto adp = new Adapter("localhost", 7878, adapterOptions, pipeline);
         m_agent->addAdapter(adp, false);
@@ -761,12 +757,12 @@ namespace mtconnect
         throw runtime_error("Adapters must be defined if more than one device is present");
       }
     }
-    
+
     void AgentConfiguration::loadAllowPut(http_server::Server *server, ConfigOptions &options)
     {
       namespace asio = boost::asio;
       namespace ip = asio::ip;
-      
+
       server->enablePut(get<bool>(options[configuration::AllowPut]));
       string hosts = get<string>(options[configuration::AllowPutFrom]);
       if (!hosts.empty())
@@ -788,7 +784,7 @@ namespace mtconnect
               asio::io_service ios;
               ip::tcp::resolver resolver(ios);
               ip::tcp::resolver::query query(host, "0", br::v4_mapped);
-              
+
               auto it = resolver.resolve(query, ec);
               if (ec)
               {
@@ -817,9 +813,8 @@ namespace mtconnect
         } while (!line.eof());
       }
     }
-    
-    void AgentConfiguration::loadNamespace(const ptree &tree,
-                                           const char *namespaceType,
+
+    void AgentConfiguration::loadNamespace(const ptree &tree, const char *namespaceType,
                                            http_server::FileCache *cache, XmlPrinter *xmlPrinter,
                                            NamespaceFunction callback)
     {
@@ -844,15 +839,15 @@ namespace mtconnect
               auto xns = cache->registerFile(location, *path, m_version);
               if (!xns)
               {
-                g_logger << LDEBUG << "Cannot register " << urn << " at " << location << " and path "
-                << *path;
+                g_logger << LDEBUG << "Cannot register " << urn << " at " << location
+                         << " and path " << *path;
               }
             }
           }
         }
       }
     }
-    
+
     void AgentConfiguration::loadFiles(XmlPrinter *xmlPrinter, const ptree &tree,
                                        http_server::FileCache *cache)
     {
@@ -865,8 +860,8 @@ namespace mtconnect
           auto path = file.second.get_optional<string>("Path");
           if (!location || !path)
           {
-            g_logger << LERROR
-            << "Name space must have a Location (uri) or Directory and Path: " << file.first;
+            g_logger << LERROR << "Name space must have a Location (uri) or Directory and Path: "
+                     << file.first;
           }
           else
           {
@@ -894,22 +889,22 @@ namespace mtconnect
         }
       }
     }
-    
+
     void AgentConfiguration::loadHttpHeaders(const ptree &tree, ConfigOptions &options)
     {
       auto headers = tree.get_child_optional(configuration::HttpHeaders);
-     if (headers)
+      if (headers)
       {
         list<string> fields;
         for (auto &f : *headers)
         {
           fields.emplace_back(f.first + ": " + f.second.data());
         }
-        
+
         options[configuration::HttpHeaders] = fields;
       }
     }
-    
+
     void AgentConfiguration::loadStyle(const ptree &tree, const char *styleName,
                                        http_server::FileCache *cache, XmlPrinter *xmlPrinter,
                                        StyleFunction styleFunction)
@@ -933,7 +928,7 @@ namespace mtconnect
         }
       }
     }
-    
+
     void AgentConfiguration::loadTypes(const ptree &tree, http_server::FileCache *cache)
     {
       auto types = tree.get_child_optional("MimeTypes");
@@ -945,5 +940,5 @@ namespace mtconnect
         }
       }
     }
-  }
+  }  // namespace configuration
 }  // namespace mtconnect

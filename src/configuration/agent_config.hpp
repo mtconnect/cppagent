@@ -20,9 +20,9 @@
 #include "adapter/adapter.hpp"
 #include "adapter/adapter_pipeline.hpp"
 #include "http_server/file_cache.hpp"
+#include "parser.hpp"
 #include "service.hpp"
 #include "utilities.hpp"
-#include "parser.hpp"
 
 #include <dlib/logger.h>
 
@@ -40,42 +40,42 @@ namespace mtconnect
   {
     class Device;
   }
-  
+
   class XmlPrinter;
   class RollingFileLogger;
   namespace configuration
   {
     using DevicePtr = std::shared_ptr<device_model::Device>;
-    
+
     using ConfigReader = dlib::config_reader::kernel_1a;
-    
+
     using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
                                                    const std::string &);
     using StyleFunction = void (XmlPrinter::*)(const std::string &);
-    
+
     class AgentConfiguration : public MTConnectService
     {
     public:
       using ptree = boost::property_tree::ptree;
-      
+
       AgentConfiguration();
       virtual ~AgentConfiguration();
-      
+
       // For MTConnectService
       void stop() override;
       void start() override;
       void initialize(int argc, const char *argv[]) override;
-      
+
       void configureLogger(const ptree &config);
       void loadConfig(const std::string &file);
-      
+
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
       const Agent *getAgent() const { return m_agent.get(); }
-      
+
       const RollingFileLogger *getLogger() const { return m_loggerFile.get(); }
-      
+
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
-      
+
     protected:
       DevicePtr defaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
@@ -88,14 +88,14 @@ namespace mtconnect
                      XmlPrinter *printer, StyleFunction styleFunction);
       void loadTypes(const ptree &tree, http_server::FileCache *cache);
       void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
-      
+
       void LoggerHook(const std::string &loggerName, const dlib::log_level &l,
                       const dlib::uint64 threadId, const char *message);
-      
+
       std::optional<std::filesystem::path> checkPath(const std::string &name);
-      
+
       void monitorThread();
-      
+
     protected:
       std::unique_ptr<Agent> m_agent;
       pipeline::PipelineContextPtr m_pipelineContext;
@@ -109,5 +109,5 @@ namespace mtconnect
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
     };
-  }
+  }  // namespace configuration
 }  // namespace mtconnect

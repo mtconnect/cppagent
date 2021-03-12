@@ -286,7 +286,7 @@ namespace mtconnect
       return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
   }
-  
+
   inline std::string ltrim(std::string s)
   {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));

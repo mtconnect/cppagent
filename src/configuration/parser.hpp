@@ -18,8 +18,8 @@
 #pragma once
 
 #include <boost/property_tree/ptree.hpp>
-#include <filesystem>
 
+#include <filesystem>
 
 namespace mtconnect
 {
@@ -30,11 +30,11 @@ namespace mtconnect
     public:
       using std::runtime_error::runtime_error;
     };
-    
+
     struct Parser
     {
       static boost::property_tree::ptree parse(const std::string &text);
       static boost::property_tree::ptree parse(const std::filesystem::path &path);
     };
-  }
-}
+  }  // namespace configuration
+}  // namespace mtconnect
