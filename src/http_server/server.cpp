@@ -325,7 +325,7 @@ namespace mtconnect
 
 // Report a failure
     void Server::fail(beast::error_code ec, char const *what) {
-      std::cerr << what << ": " << ec.message() << "\n";
+      g_logger << LERROR  << " error: " << ec.message();
     }
 
   }  // namespace http_server

@@ -130,6 +130,8 @@ namespace mtconnect
         if (good())
         {
           m_boundary = dlib::md5(std::to_string(time(nullptr)));
+          trailer.set(http::field::content_md5, m_boundary);
+          trailer.set(http::field::expires, "never");
 
           http::response<http::empty_body> res{http::status::ok, 11};
           res.set(http::field::server, "MTConnectAgent");
@@ -140,6 +142,7 @@ namespace mtconnect
           std::string content_type = "multipart/x-mixed-replace;boundary=";
           content_type.append(m_boundary);
           res.set(http::field::content_type, content_type);
+          //res.set(http::field::trailer, "Content-MD5, Expires");
           res.chunked(true);
           http::response_serializer<http::empty_body> sr{res};
           write_header(m_socket, sr);
@@ -151,37 +154,34 @@ namespace mtconnect
         if (good())
         {
           using namespace std;
-          ostringstream str;
-          str << "--" << m_boundary
-              << "\r\n"
-                 "Content-type: "
-              << mimeType
-              << "\r\n"
-                 "Content-length: "
-              << body.length() << "\r\n\r\n"
-              << body << "\r\n\r\n";
 
-          net::const_buffers_1 buf(str.str().c_str(),str.str().size());
-          http::chunk_body chunk(buf);
-          net::write(m_socket,chunk,ec);
-//          if (ec)
-//          {
-//            string errorMsg = "Error writing chunk - ";
-//            errorMsg.append(ec.message());
-//            auto const textSize = errorMsg.length();
-//            http::response<http::string_body> errorRes{
-//                std::piecewise_construct, std::make_tuple(std::move(errorMsg.c_str())),
-//                std::make_tuple(http::status::ok, 11)  // m_req.version())
-//            };
-//            errorRes.set(http::field::server, "MTConnectAgent");
-//            errorRes.set(http::field::date, getHeaderDate());
-//            errorRes.set(http::field::connection, "close");
-//            errorRes.set(http::field::expires, "-1");
-//            errorRes.set(http::field::content_type, "text/xml");
-//            errorRes.content_length(textSize);
-//            http::serializer<false, http::string_body, http::fields> sr{errorRes};
-//            http::write(m_socket, sr, ec);
-//          }
+          http::chunk_extensions ext;
+          ext.insert("\r\n--"+m_boundary);
+          ext.insert("\r\nContent-type: "+ mimeType);
+          ext.insert("\r\nContent-length: "+ to_string(body.length())+";\r\n\r\n");
+
+          net::const_buffers_1 buf(body.c_str(), body.size());
+          http::chunk_body chunk{http::make_chunk(buf,move(ext))};
+          net::write(m_socket, chunk, ec);
+          //net::write(m_socket, http::make_chunk_last(trailer), ec);
+          if (ec)
+          {
+            string errorMsg = "Error writing chunk - ";
+            errorMsg.append(ec.message());
+            auto const textSize = errorMsg.length();
+            http::response<http::string_body> errorRes{
+                std::piecewise_construct, std::make_tuple(std::move(errorMsg.c_str())),
+                std::make_tuple(http::status::ok, 11)  // m_req.version())
+            };
+            errorRes.set(http::field::server, "MTConnectAgent");
+            errorRes.set(http::field::date, getHeaderDate());
+            errorRes.set(http::field::connection, "close");
+            errorRes.set(http::field::expires, "-1");
+            errorRes.set(http::field::content_type, "text/xml");
+            errorRes.content_length(textSize);
+            http::serializer<false, http::string_body, http::fields> sr{errorRes};
+            http::write(m_socket, sr, ec);
+          }
         }
       }
 
@@ -241,6 +241,7 @@ namespace mtconnect
       std::stringstream m_out;
       tcp::socket m_socket;
       std::string m_boundary;
+      http::fields trailer;
       std::string content_type;
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;
