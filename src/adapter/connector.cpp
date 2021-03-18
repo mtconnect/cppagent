@@ -324,12 +324,17 @@ namespace mtconnect
 
     void Connector::close()
     {
+      m_heartbeatTimer.cancel();
+      m_receiveTimeout.cancel();
+      m_timer.cancel();
+      
       if (m_connected)
       {
         if (m_socket.is_open())
           m_socket.close();
         m_connected = false;
         disconnected();
+        
       }
     }
   }

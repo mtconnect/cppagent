@@ -69,8 +69,7 @@ namespace mtconnect
       // Virtual destructor
       ~Adapter() override
       {
-        if (m_running)
-          stop();
+        stop();
       }
 
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }

@@ -96,6 +96,11 @@ class AgentTestHelper
     dlib::set_all_logging_output_streams(std::cout);
     dlib::set_all_logging_levels(dlib::LDEBUG);
   }
+  
+  ~AgentTestHelper()
+  {
+    m_agent.reset();
+  }
     
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
