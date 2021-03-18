@@ -26,7 +26,7 @@
 #include "version.h"
 
 #include <dlib/logger.h>
-#include <dlib/sockets.h>
+#include <boost/asio/ip/host_name.hpp>
 
 #include <libxml/xmlwriter.h>
 
@@ -638,7 +638,9 @@ namespace mtconnect
     static std::string sHostname;
     if (sHostname.empty())
     {
-      if (dlib::get_local_hostname(sHostname))
+      boost::system::error_code ec;
+      sHostname = boost::asio::ip::host_name(ec);
+      if (ec)
         sHostname = "localhost";
     }
     addAttribute(writer, "sender", sHostname);

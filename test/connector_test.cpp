@@ -26,6 +26,9 @@ using namespace date;
 
 #include "adapter/connector.hpp"
 
+#include <boost/asio/read_until.hpp>
+#include <boost/asio/write.hpp>
+
 #include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
 
 #include <chrono>
@@ -33,18 +36,32 @@ using namespace date;
 #include <sstream>
 #include <thread>
 
+#include <dlib/logger.h>
+
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
 
+namespace asio = boost::asio;
+using tcp = boost::asio::ip::tcp;
+namespace ip = boost::asio::ip;
+namespace sys = boost::system;
+
 class TestConnector : public Connector
 {
  public:
-  TestConnector(const std::string &server, unsigned int port,
+  TestConnector(boost::asio::io_context &context, const std::string &server, unsigned int port,
                 std::chrono::seconds legacyTimeout = std::chrono::seconds{5})
-      : Connector(server, port, legacyTimeout), m_disconnected(false)
+      : Connector(context, server, port, legacyTimeout), m_disconnected(false),
+        m_context(context)
   {
+  }
+  
+  bool start(unsigned short port)
+  {
+    m_port = port;
+    return Connector::start();
   }
 
   void processData(const std::string &data) override
@@ -73,15 +90,11 @@ class TestConnector : public Connector
     return m_heartbeats;
   }
 
-  void pushData(const char *data)
-  {
-    parseBuffer(data);
-  }
-
   void startHeartbeats(std::string &aString)
   {
     Connector::startHeartbeats(aString);
   }
+  
   void resetHeartbeats()
   {
     m_heartbeats = false;
@@ -92,122 +105,210 @@ class TestConnector : public Connector
   std::string m_data;
   std::string m_command;
   bool m_disconnected;
+  
+  boost::asio::io_context &m_context;
 };
 
-class ConnectorTest : public testing::Test, public dlib::threaded_object
+class ConnectorTest : public testing::Test
 {
  protected:
   void SetUp() override
   {
-    ASSERT_TRUE(!create_listener(m_server, 0, "127.0.0.1"));
-    m_port = m_server->get_listening_port();
-    m_connector = std::make_unique<TestConnector>("127.0.0.1", m_port);
+    dlib::set_all_logging_output_streams(std::cout);
+    dlib::set_all_logging_levels(dlib::LDEBUG);
+
+    m_connector = std::make_unique<TestConnector>(m_context, "127.0.0.1", m_port);
     m_connector->m_disconnected = true;
+    m_connected = false;
   }
 
   void TearDown() override
   {
-    m_server.reset();
-    m_serverSocket.reset();
-    stop();
-    wait();
     m_connector.reset();
+    m_context.stop();
+    if (m_server)
+      m_server->close();
+    m_server.reset();
+    m_acceptor.reset();
   }
-
-  void thread() override
+  
+  void startServer(const std::string addr = "127.0.0.1")
   {
-    m_connector->connect();
+    tcp::endpoint sp(ip::make_address(addr), 0);
+    m_connected = false;
+    m_acceptor = make_unique<tcp::acceptor>(m_context, sp);
+    ASSERT_TRUE(m_acceptor->is_open());
+    tcp::endpoint ep = m_acceptor->local_endpoint();
+    m_port = ep.port();
+
+    m_acceptor->async_accept([this](sys::error_code ec, tcp::socket socket){
+      if (ec)
+        cout << ec.category().message(ec.value()) << ": " << ec.message() << endl;
+      ASSERT_FALSE(ec);
+      ASSERT_TRUE(socket.is_open());
+      m_connected = true;
+      m_server = make_unique<tcp::socket>(std::move(socket));
+    });
+  }
+  
+  template<typename Rep, typename Period>
+  void runUntil(chrono::duration<Rep, Period> to, function<bool()> pred)
+  {
+    for (int runs = 0; runs < 10 && !pred(); runs++)
+    {
+      if (m_context.run_one_for(to) == 0)
+        break;
+    }
+    
+    EXPECT_TRUE(pred());
+  }
+  
+  void send(const std::string &s)
+  {
+    ASSERT_TRUE(m_server);
+    
+    asio::streambuf outoging;
+    std::ostream os(&outoging);
+    os << s;
+    
+    sys::error_code ec;
+    asio::write(*m_server, outoging, ec);
+    ASSERT_FALSE(ec);
+  }
+  
+  template<typename Rep, typename Period>
+  string read(chrono::duration<Rep, Period> dur)
+  {
+    m_line.clear();
+    
+    asio::streambuf data;
+    asio::async_read_until(*m_server, data, '\n', [this, &data](sys::error_code ec, size_t len){
+      EXPECT_FALSE(ec);
+      if (ec)
+      {
+        cout << ec.category().message(ec.value()) << ": " << ec.message() << endl;
+      }
+      else
+      {
+        istream is(&data);
+        string line;
+        getline(is, m_line);
+      }
+    });
+    
+    runUntil(dur, [this](){ return !m_line.empty(); });
+    
+    return m_line;
   }
 
-  dlib::scoped_ptr<dlib::listener> m_server;
-  dlib::scoped_ptr<dlib::connection> m_serverSocket;
-  dlib::scoped_ptr<TestConnector> m_connector;
+  std::unique_ptr<TestConnector> m_connector;
   unsigned short m_port{0};
+  boost::asio::io_context m_context;
+  
+  std::unique_ptr<asio::ip::tcp::socket> m_server;
+  std::unique_ptr<tcp::acceptor> m_acceptor;
+  bool m_connected;
+  string m_line;
 };
 
 TEST_F(ConnectorTest, Connection)
 {
   ASSERT_TRUE(m_connector->m_disconnected);
-  start();
+  
+  startServer();
+  
+  m_connector->start(m_port);
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  this_thread::sleep_for(100ms);
-  ASSERT_TRUE(m_serverSocket.get());
-  ASSERT_TRUE(!m_connector->m_disconnected);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
+  
+  EXPECT_FALSE(m_connector->m_disconnected);
+  auto line = read(1s);
+  ASSERT_EQ("* PING", line);
 }
 
 TEST_F(ConnectorTest, DataCapture)
 {
   // Start the accept thread
-  start();
+  ASSERT_TRUE(m_connector->m_disconnected);
+  
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  ASSERT_TRUE(m_serverSocket.get());
+  send("Hello Connector\n");
+  
+  runUntil(1s, [this]() -> bool {
+    return !m_connector->m_data.empty();
+  });
 
-  string command("Hello Connector\n");
-  ASSERT_TRUE((size_t)m_serverSocket->write(command.c_str(), command.length()) == command.length());
-  this_thread::sleep_for(1000ms);
-
-  // \n is stripped from the posted data.
-  ASSERT_EQ(command.substr(0, command.length() - 1), m_connector->m_data);
+  ASSERT_EQ("Hello Connector", m_connector->m_data);
 }
 
 TEST_F(ConnectorTest, Disconnect)
 {
   // Start the accept thread
-  start();
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
+  
+  ASSERT_FALSE(m_connector->m_disconnected);
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  this_thread::sleep_for(1000ms);
-  ASSERT_TRUE(m_serverSocket.get());
-  ASSERT_TRUE(!m_connector->m_disconnected);
-  m_serverSocket.reset();
-  this_thread::sleep_for(1000ms);
+  m_server->close();
+  
+  runUntil(2s, [this]() -> bool {
+    return m_connector->m_disconnected;
+  });
+  
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
 TEST_F(ConnectorTest, ProtocolCommand)
 {
   // Start the accept thread
-  start();
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  ASSERT_TRUE(m_serverSocket.get());
+  send("* Hello Connector\n");
+  
+  runUntil(1s, [this]() -> bool {
+    return !m_connector->m_command.empty();
+  });
 
-  const auto cmd = "* Hello Connector\n";
-  ASSERT_EQ(strlen(cmd), (size_t)m_serverSocket->write(cmd, strlen(cmd)));
-  this_thread::sleep_for(1000ms);
-
-  // \n is stripped from the posted data.
-  ASSERT_TRUE(strncmp(cmd, m_connector->m_command.c_str(), strlen(cmd) - 1) == 0);
+  ASSERT_EQ("* Hello Connector", m_connector->m_command);
 }
 
 TEST_F(ConnectorTest, Heartbeat)
 {
   // Start the accept thread
-  start();
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
+  
+  auto line = read(1s);
+  ASSERT_EQ("* PING", line);
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  ASSERT_TRUE(m_serverSocket.get());
+  send("* PONG 1000\n");
 
-  // Receive initial heartbeat request "* PING\n"
-  char buf[1024] = {0};
-  auto numRead = m_serverSocket->read(buf, 1023, 5000);
-  ASSERT_EQ(7L, numRead);
-  buf[7] = '\0';
-  ASSERT_TRUE(strcmp(buf, "* PING\n") == 0);
+  runUntil(2s, [this]() -> bool {
+    return m_connector->heartbeats();
+  });
 
   // Respond to the heartbeat of 1 second
-  const auto pong = "* PONG 1000\n";
-  auto written = (size_t)m_serverSocket->write(pong, strlen(pong));
-  ASSERT_EQ(strlen(pong), written);
-  this_thread::sleep_for(1000ms);
-
   ASSERT_TRUE(m_connector->heartbeats());
   ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
 }
@@ -216,191 +317,179 @@ TEST_F(ConnectorTest, HeartbeatPong)
 {
   // TODO Copy&Paste from Heartbeat
   // Start the accept thread
-  start();
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  ASSERT_TRUE(m_serverSocket.get());
-
-  // Receive initial heartbeat request "* PING\n"
-  char buf[1024] = {0};
-  auto numRead = m_serverSocket->read(buf, 1023, 5000);
-  ASSERT_EQ(7L, numRead);
-  buf[7] = '\0';
-  ASSERT_TRUE(strcmp(buf, "* PING\n") == 0);
+  auto line = read(1s);
+  ASSERT_EQ("* PING", line);
+  
+  send("* PONG 1000\n");
+  runUntil(2s, [this]() -> bool {
+    return m_connector->heartbeats();
+  });
 
   // Respond to the heartbeat of 1 second
-  const auto pong = "* PONG 1000\n";
-  auto written = (size_t)m_serverSocket->write(pong, strlen(pong));
-  ASSERT_EQ(strlen(pong), written);
-  this_thread::sleep_for(1000ms);
-
   ASSERT_TRUE(m_connector->heartbeats());
   ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
-  // TODO END Copy&Paste from Heartbeat
 
   auto last_heartbeat = system_clock::now();
 
   // Test to make sure we can send and receive 5 heartbeats
   for (int i = 0; i < 5; i++)
   {
-    // Receive initial heartbeat request "* PING\n"
-    char buf[1024] = {0};
-    ASSERT_TRUE(m_serverSocket->read(buf, 1023, 1100) > 0);
-    buf[7] = '\0';
-    ASSERT_TRUE(!strcmp(buf, "* PING\n"));
+    auto line = read(2s);
 
     auto now = system_clock::now();
     ASSERT_TRUE(now - last_heartbeat < 2000ms);
     last_heartbeat = now;
 
+    
     // Respond to the heartbeat of 1 second
-    const auto pong = "* PONG 1000\n";
-    auto written = (size_t)m_serverSocket->write(pong, strlen(pong));
-    ASSERT_EQ(strlen(pong), written);
-    this_thread::sleep_for(10ms);
-
-    ASSERT_TRUE(!m_connector->m_disconnected);
+    send("* PONG 1000\n");    
+    ASSERT_FALSE(m_connector->m_disconnected);
   }
 }
 
 TEST_F(ConnectorTest, HeartbeatDataKeepAlive)
 {
-  // TODO Copy&Paste from Heartbeat
-  // Start the accept thread
-  start();
+  startServer();
   
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  ASSERT_TRUE(m_serverSocket.get());
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
+
+  auto line = read(1s);
+  ASSERT_EQ("* PING", line);
   
-  // Receive initial heartbeat request "* PING\n"
-  char buf[1024] = {0};
-  auto numRead = m_serverSocket->read(buf, 1023, 5000);
-  ASSERT_EQ(7L, numRead);
-  buf[7] = '\0';
-  ASSERT_TRUE(strcmp(buf, "* PING\n") == 0);
-  
+  send("* PONG 1000\n");
+  runUntil(2s, [this]() -> bool {
+    return m_connector->heartbeats();
+  });
+
   // Respond to the heartbeat of 1 second
-  const auto pong = "* PONG 1000\n";
-  auto written = (size_t)m_serverSocket->write(pong, strlen(pong));
-  ASSERT_EQ(strlen(pong), written);
-  this_thread::sleep_for(1000ms);
-  
   ASSERT_TRUE(m_connector->heartbeats());
   ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
-  // TODO END Copy&Paste from Heartbeat
-  
+
   auto last_heartbeat = system_clock::now();
-  
+
   // Test to make sure we can send and receive 5 heartbeats
   for (int i = 0; i < 5; i++)
   {
-    // Receive initial heartbeat request "* PING\n"
-    char buf[1024] = {0};
-    ASSERT_TRUE(m_serverSocket->read(buf, 1023, 1100) > 0);
-    buf[7] = '\0';
-    ASSERT_TRUE(!strcmp(buf, "* PING\n"));
-    
+    auto line = read(2s);
+
     auto now = system_clock::now();
     ASSERT_TRUE(now - last_heartbeat < 2000ms);
     last_heartbeat = now;
+
     
     // Respond to the heartbeat of 1 second
-    const auto data = "Some Data\n";
-    auto written = (size_t)m_serverSocket->write(data, strlen(data));
-    ASSERT_EQ(strlen(data), written);
-    this_thread::sleep_for(10ms);
-    
-    ASSERT_TRUE(!m_connector->m_disconnected);
+    send("Some Data\n");
+    ASSERT_FALSE(m_connector->m_disconnected);
   }
 }
 
 TEST_F(ConnectorTest, HeartbeatTimeout)
 {
-  // TODO Copy&Paste from Heartbeat
-  // Start the accept thread
-  start();
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  ASSERT_TRUE(m_serverSocket.get());
-
-  // Receive initial heartbeat request "* PING\n"
-  char buf[1024] = {0};
-  auto numRead = m_serverSocket->read(buf, 1023, 5000);
-  ASSERT_EQ(7L, numRead);
-  buf[7] = '\0';
-  ASSERT_TRUE(strcmp(buf, "* PING\n") == 0);
+  auto line = read(1s);
+  ASSERT_EQ("* PING", line);
+  
+  send("* PONG 1000\n");
+  runUntil(2s, [this]() -> bool {
+    return m_connector->heartbeats();
+  });
 
   // Respond to the heartbeat of 1 second
-  const auto pong = "* PONG 1000\n";
-  auto written = (size_t)m_serverSocket->write(pong, strlen(pong));
-  ASSERT_EQ(strlen(pong), written);
-  this_thread::sleep_for(1000ms);
-
   ASSERT_TRUE(m_connector->heartbeats());
   ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
-  // TODO END Copy&Paste from Heartbeat
 
-  this_thread::sleep_for(2100ms);
-
+  // Respond to the heartbeat of 1 second
+  m_context.run_for(2200ms);
+  
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
 
-
 TEST_F(ConnectorTest, LegacyTimeout)
 {
-  // Start the accept thread
-  start();
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  ASSERT_TRUE(m_serverSocket.get());
-
-  char buf[1024] = {0};
-  auto numRead = m_serverSocket->read(buf, 1023, 5000);
-  ASSERT_EQ(7L, numRead);
-  buf[7] = '\0';
-  ASSERT_TRUE(!strcmp(buf, "* PING\n"));
+  auto line = read(1s);
+  ASSERT_EQ("* PING", line);
 
   // Write some data...
-  const auto cmd = "* Hello Connector\n";
-  auto written = (size_t)m_serverSocket->write(cmd, strlen(cmd));
-  ASSERT_EQ(strlen(cmd), written);
+  send("Hello connector\n");
 
   // No pings, but timeout after 5 seconds of silence
-  this_thread::sleep_for(11000ms);
-
+  // Respond to the heartbeat of 1 second
+  m_context.run_for(5200ms);
+  
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
 TEST_F(ConnectorTest, ParseBuffer)
 {
-  // Test data fragmentation
-  m_connector->pushData("Hello");
-  ASSERT_EQ((string) "", m_connector->m_data);
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
 
-  m_connector->pushData(" There\n");
+  // Test data fragmentation
+  send("Hello");
+  ASSERT_EQ((string) "", m_connector->m_data);
+  m_context.run_for(2ms);
+
+  send(" There\n");
+  runUntil(1s, [this]() { return !m_connector->m_data.empty(); } );
   ASSERT_EQ((string) "Hello There", m_connector->m_data);
   m_connector->m_data.clear();
 
-  m_connector->pushData("Hello");
+  send("Hello");
+  m_context.run_for(2ms);
   ASSERT_EQ((string) "", m_connector->m_data);
 
-  m_connector->pushData(" There\nAnd ");
+  send(" There\nAnd ");
+  runUntil(1s, [this]() { return !m_connector->m_data.empty(); } );
   ASSERT_EQ((string) "Hello There", m_connector->m_data);
-
-  m_connector->pushData("Again\nXXX");
+  m_connector->m_data.clear();
+  
+  send("Again\nXXX");
+  runUntil(1s, [this]() { return !m_connector->m_data.empty(); } );
   ASSERT_EQ((string) "And Again", m_connector->m_data);
 }
 
 TEST_F(ConnectorTest, ParseBufferFraming)
 {
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
+
   m_connector->m_list.clear();
-  m_connector->pushData("first\nseco");
-  m_connector->pushData("nd\nthird\nfourth\nfifth");
+  send("first\nseco");
+  m_context.run_for(2ms);
+  send("nd\nthird\nfourth\nfifth");
+  m_context.run_for(2ms);
   ASSERT_EQ((size_t)4, m_connector->m_list.size());
   ASSERT_EQ((string) "first", m_connector->m_list[0]);
   ASSERT_EQ((string) "second", m_connector->m_list[1]);
@@ -410,28 +499,22 @@ TEST_F(ConnectorTest, ParseBufferFraming)
 
 TEST_F(ConnectorTest, SendCommand)
 {
-  // Start the accept thread
-  start();
+  startServer();
+  
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  ASSERT_TRUE(m_serverSocket.get());
 
-  // Receive initial heartbeat request "* PING\n"
-  char buf[1024];
-  auto numRead = m_serverSocket->read(buf, 1023, 1000);
-  ASSERT_EQ(7L, numRead);
-  buf[7] = '\0';
-  ASSERT_TRUE(!strcmp(buf, "* PING\n"));
-  this_thread::sleep_for(200ms);
+  auto line = read(1s);
+  ASSERT_EQ("* PING", line);
 
   ASSERT_TRUE(m_connector->isConnected());
   m_connector->sendCommand("Hello There;");
 
-  auto len = m_serverSocket->read(buf, 1023, 1000);
-  ASSERT_EQ(15L, len);
-  buf[15] = '\0';
-  ASSERT_TRUE(!strcmp(buf, "* Hello There;\n"));
+  line = read(1s);
+  ASSERT_EQ("* Hello There;", line);
 }
 
 TEST_F(ConnectorTest, IPV6Connection)
@@ -440,19 +523,15 @@ TEST_F(ConnectorTest, IPV6Connection)
 #if !defined(WIN32)
   m_connector.reset();
 
-  ASSERT_TRUE(!create_listener(m_server, 0, "::1"));
-  m_port = m_server->get_listening_port();
-  m_connector = std::make_unique<TestConnector>("::1", m_port);
-  m_connector->m_disconnected = true;
+  startServer("::1");
+  m_connector = std::make_unique<TestConnector>(m_context, "::1", m_port);
 
-  ASSERT_TRUE(m_connector->m_disconnected);
-  start();
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool {
+    return m_connected && m_connector->isConnected();
+  });
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  this_thread::sleep_for(100ms);
-  ASSERT_TRUE(m_serverSocket.get());
-  ASSERT_TRUE(!m_connector->m_disconnected);
+  ASSERT_FALSE(m_connector->m_disconnected);
 #endif
 }
 

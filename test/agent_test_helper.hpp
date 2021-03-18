@@ -23,7 +23,6 @@
 #include "http_server/routing.hpp"
 #include "adapter/adapter.hpp"
 #include "pipeline/pipeline.hpp"
-#include <dlib/server.h>
 #include "configuration/agent_config.hpp"
 #include "agent.hpp"
 #include "configuration/config_options.hpp"

@@ -19,11 +19,25 @@
 
 #include <dlib/logger.h>
 
+#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/asio/bind_executor.hpp>
+#include <boost/asio/connect.hpp>
+#include <boost/asio/read_until.hpp>
+#include <boost/asio/write.hpp>
 #include <chrono>
 #include <utility>
+#include <functional>
 
 using namespace std;
 using namespace std::chrono;
+using namespace dlib;
+using namespace std::chrono_literals;
+using namespace boost::placeholders;
+
+namespace asio = boost::asio;
+namespace ip = asio::ip;
+namespace sys = boost::system;
 
 namespace mtconnect
 {
@@ -32,284 +46,244 @@ namespace mtconnect
     static dlib::logger g_logger("input.connector");
 
     // Connector public methods
-    Connector::Connector(string server, unsigned int port, seconds legacyTimeout)
+    Connector::Connector(asio::io_context &context,
+                         string server, unsigned int port, seconds legacyTimeout,
+                         seconds reconnectInterval)
       : m_server(std::move(server)),
+        m_strand(context),
+        m_socket(context),
         m_port(port),
         m_localPort(0),
+        m_incoming(1024 * 1024),
+        m_timer(context),
+        m_heartbeatTimer(context),
+        m_receiveTimeout(context),
         m_connected(false),
         m_realTime(false),
-        m_heartbeatFrequency {HEARTBEAT_FREQ},
         m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
-        m_connectionActive(false)
+        m_reconnectInterval(reconnectInterval),
+        m_receiveTimeLimit(m_legacyTimeout)
     {
     }
 
-    Connector::~Connector() { close(); }
+    Connector::~Connector()
+    {
+      if (m_socket.is_open())
+        m_socket.close();
+    }
+    
+    bool Connector::start()
+    {
+      return resolve() && connect();
+    }
+    
+    bool Connector::resolve()
+    {
+      boost::system::error_code ec;
+      
+      ip::tcp::resolver resolve(m_strand.context());
+      m_results = resolve.resolve(m_server, to_string(m_port), ec);
+      if (ec)
+      {
+        g_logger << dlib::LERROR << "Cannot resolve address: " << m_server << ":" << m_port;
+        g_logger << dlib::LERROR << ec.category().message(ec.value()) << ": "
+        << ec.message();
+        return false;
+      }
+      
+      return true;
+    }
 
-    void Connector::connect()
+    bool Connector::connect()
     {
       m_connected = false;
-      connecting();
+      using boost::placeholders::_1;
+      using boost::placeholders::_2;
 
-      const char *ping = "* PING\n";
-
-      try
-      {
-        m_connectionActive = true;
-
-        // Connect to server:port, failure will throw dlib::socket_error exception
-        // Using a smart pointer to ensure connection is deleted if exception thrown
-        g_logger << LDEBUG << "Connecting to data source: " << m_server << " on port: " << m_port;
-        m_connection.reset(dlib::connect(m_server, m_port));
-
-        m_localPort = m_connection->get_local_port();
-
-        // Check to see if this connection supports heartbeats.
-        m_heartbeats = false;
-        g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                 << "Sending initial PING";
-        auto status = m_connection->write(ping, strlen(ping));
-        if (status < 0)
-        {
-          g_logger << LWARN << "(Port:" << m_localPort << ")"
-                   << "connect: Could not write initial heartbeat: " << to_string(status);
+      m_timer.expires_from_now(m_reconnectInterval);
+      m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+        if (ec != boost::asio::error::operation_aborted)
           close();
-          return;
-        }
+      }));
 
+      // Connect to server:port, failure will throw dlib::socket_error exception
+      // Using a smart pointer to ensure connection is deleted if exception thrown
+      g_logger << LDEBUG << "Connecting to data source: " << m_server << " on port: " << m_port;
+
+      asio::async_connect(m_socket, m_results.begin(),
+                          m_results.end(),
+                          asio::bind_executor(m_strand, boost::bind(&Connector::connected, this, _1, _2)));
+      
+      return true;
+    }
+    
+    void Connector::connected(const boost::system::error_code& ec,
+                              ip::tcp::resolver::iterator it)
+    {
+      if (ec)
+      {
+        g_logger << dlib::LERROR << ec.category().message(ec.value()) << ": "
+        << ec.message();
+        m_timer.expires_from_now(m_reconnectInterval);
+        m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+          if (ec != boost::asio::error::operation_aborted)
+            connect();
+        }));
+      }
+      else
+      {
+        g_logger << dlib::LINFO << "Connected with: " << m_socket.remote_endpoint();
+        m_timer.cancel();
+        
+        m_localPort = m_socket.local_endpoint().port();
+        
         connected();
-
-        // If we have heartbeats, make sure we receive something every freq milliseconds.
-        m_lastSent = m_lastHeartbeat = system_clock::now();
-
-        // Make sure connection buffer is clear
-        m_buffer.clear();
-
-        // Socket buffer to put the extracted data into
-        char sockBuf[SOCKET_BUFFER_SIZE + 1] = {0};
-
-        // Keep track of the status return, else status = character bytes read
-        // Assuming it always enters the while loop, it should never be 1
         m_connected = true;
-
-        // Boost priority if this is a real-time adapter
-        if (m_realTime)
+        sendCommand("PING");
+        
+        reader(sys::error_code(), 0);
+      }
+    }
+    
+#include <boost/asio/yield.hpp>
+    
+    void Connector::reader(sys::error_code ec, size_t len)
+    {
+      if (!m_connected) return;
+      
+      if (ec)
+      {
+        g_logger << dlib::LERROR << "reader: " << ec.category().message(ec.value()) << ": "
+        << ec.message();
+        close();
+      }
+      else
+      {
+        reenter(m_coroutine)
         {
-#ifdef _WINDOWS
-          HANDLE hand = OpenThread(THREAD_ALL_ACCESS, FALSE, GetCurrentThreadId());
-          SetThreadPriority(hand, THREAD_PRIORITY_TIME_CRITICAL);
-          CloseHandle(hand);
-#else
-          struct sched_param param;
-          param.sched_priority = 30;
-          if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param))
-            g_logger << LDEBUG << "Cannot set high thread priority";
-#endif
+          while (m_connected && m_socket.is_open())
+          {
+            m_timer.expires_from_now(20s);
+            m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+              if (ec != boost::asio::error::operation_aborted)
+                close();
+            }));
+            yield asio::async_read_until(m_socket, m_incoming, '\n',
+                               asio::bind_executor(m_strand,
+                                 boost::bind(&Connector::reader, this, _1, _2)));
+            m_timer.cancel();
+            parseSocketBuffer();
+          }
+          close();
         }
-        g_logger << LTRACE << "(Port:" << m_localPort << ")"
-                 << "Heartbeat : " << m_heartbeats;
-        g_logger << LTRACE << "(Port:" << m_localPort << ")"
-                 << "Heartbeat Freq: " << m_heartbeatFrequency.count();
-        // Read from the socket, read is a blocking call
-        while (m_connected)
-        {
-          auto now = system_clock::now();
-          milliseconds timeout(0);
-          if (m_heartbeats)
-          {
-            timeout = m_heartbeatFrequency - duration_cast<milliseconds>(now - m_lastSent);
-            g_logger << LTRACE << "(Port:" << m_localPort << ")"
-                     << "Heartbeat Send Countdown: " << timeout.count();
-          }
-          else
-          {
-            timeout = m_legacyTimeout;
-            g_logger << LTRACE << "(Port:" << m_localPort << ")"
-                     << "Legacy Timeout: " << timeout.count();
-          }
-
-          if (timeout < milliseconds {0})
-            timeout = milliseconds {1};
-          sockBuf[0] = 0;
-
-          if (m_connected)
-            status = m_connection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout.count());
-          else
-          {
-            g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                     << "Connection was closed, exiting adapter connect";
-            break;
-          }
-
-          if (!m_connected)
-          {
-            g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                     << "Connection was closed during read, exiting adapter";
-            break;
-          }
-
-          if (status > 0)
-          {
-            // Give a null terminator for the end of buffer
-            sockBuf[status] = '\0';
-            parseBuffer(sockBuf);
-          }
-          else if (status == TIMEOUT && !m_heartbeats && (system_clock::now() - now) >= timeout)
-          {
-            // We don't stop on heartbeats, but if we have a legacy timeout, then we stop.
-            g_logger << LERROR << "(Port:" << m_localPort << ")"
-                     << "connect: Did not receive data for over: "
-                     << duration_cast<seconds>(timeout).count() << " seconds";
-            break;
-          }
-          else if (status != TIMEOUT)  // Something other than timeout occurred
-          {
-            g_logger << LERROR << "(Port:" << m_localPort << ")"
-                     << "connect: Socket error, disconnecting";
-            break;
-          }
-
-          if (m_heartbeats)
-          {
-            now = system_clock::now();
-            if ((now - m_lastHeartbeat) > (m_heartbeatFrequency * 2))
-            {
-              g_logger << LERROR << "(Port:" << m_localPort << ")"
-                       << "connect: Did not receive heartbeat for over: "
-                       << (m_heartbeatFrequency * 2).count();
-              break;
-            }
-            else if ((now - m_lastSent) >= m_heartbeatFrequency)
-            {
-              std::lock_guard<std::mutex> lock(m_commandLock);
-              g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                       << "Sending a PING for " << m_server << " on port " << m_port;
-              status = m_connection->write(ping, strlen(ping));
-              if (status <= 0)
-              {
-                g_logger << LERROR << "(Port:" << m_localPort << ")"
-                         << "connect: Could not write heartbeat: " << status;
-                break;
-              }
-              m_lastSent = now;
-            }
-          }
-        }
-
-        g_logger << LERROR << "(Port:" << m_localPort << ")"
-                 << "connect: Connection exited with status: " << status;
       }
-      catch (dlib::socket_error &e)
+    }
+
+#include <boost/asio/unyield.hpp>
+
+    void Connector::writer(sys::error_code ec, size_t lenght)
+    {
+      if (ec)
       {
-        g_logger << LWARN << "(Port:" << m_localPort << ")"
-                 << "connect: Socket exception: " << e.what();
+        g_logger << dlib::LERROR << "writer: " << ec.category().message(ec.value()) << ": "
+        << ec.message();
+        close();
       }
-      catch (exception &e)
-      {
-        g_logger << LERROR << "(Port:" << m_localPort << ")"
-                 << "connect: Exception in connect: " << e.what();
-      }
-      catch (...)
-      {
-        g_logger << LERROR << "(Port:" << m_localPort << ")"
-                 << "connect: Unknown Exception in connect";
-      }
-      {
-        std::unique_lock<std::mutex> lk(m_connectionMutex);
-        m_connectionActive = false;
-        lk.unlock();
-        m_connectionCondition.notify_all();
-      }
-      close();
     }
 
     void Connector::parseBuffer(const char *buffer)
     {
+      std::ostream os(&m_incoming);
+      os << buffer;
+      parseSocketBuffer();
+    }
+    
+    inline void Connector::setReceiveTimeout()
+    {
+      m_receiveTimeout.expires_from_now(m_receiveTimeLimit);
+      m_receiveTimeout.async_wait([this](sys::error_code ec) {
+        if (!ec)
+        {
+          g_logger << LERROR << "(Port:" << m_localPort << ")"
+                   << " connect: Did not receive data for over: "
+                   << m_receiveTimeLimit.count() << " ms";
+          close();
+        }
+        else if (ec != boost::asio::error::operation_aborted)
+        {
+          g_logger << dlib::LERROR << "Receive timeout: " << ec.category().message(ec.value()) << ": "
+                   << ec.message();
+        }
+      });
+    }
+
+    void Connector::parseSocketBuffer()
+    {
+      // Cancel receive time limit
+      setReceiveTimeout();
+      
       // Treat any data as a heartbeat.
-      if (m_heartbeats)
-        m_lastHeartbeat = system_clock::now();
+      istream is(&m_incoming);
+      string line;
+      getline(is, line);
 
-      // Append the temporary buffer to the socket buffer
-      m_buffer.append(buffer);
+      if (line.empty())
+        return;
 
-      auto newLine = m_buffer.find_last_of('\n');
+      auto end = line.find_last_not_of(" \t\n\r");
+      if (end != string::npos)
+        line.erase(end + 1);
 
-      // Check to see if there is even a '\n' in buffer
-      if (newLine != string::npos)
+      // Check for heartbeats
+      if (line[0] == '*')
       {
-        // If the '\n' is not at the end of the buffer, then save the overflow
-        string overflow;
-
-        if (newLine != m_buffer.length() - 1)
+        if (!line.compare(0, 6, "* PONG"))
         {
-          overflow = m_buffer.substr(newLine + 1);
-          m_buffer = m_buffer.substr(0, newLine);
+          if (g_logger.level().priority <= LDEBUG.priority)
+          {
+            g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+                     << " Received a PONG for " << m_server << " on port " << m_port;
+          }
+          if (!m_heartbeats)
+            startHeartbeats(line);
         }
-
-        // TODO: Use string Views and skip getline. Use
-        // find_first_of and then clip to subview of line.
-        // Search the buffer for new complete lines
-        string line;
-        stringstream stream(m_buffer, stringstream::in);
-
-        while (!stream.eof())
+        else
         {
-          getline(stream, line);
-          g_logger << LTRACE << "(Port:" << m_localPort << ") Received line: '" << line << '\'';
-
-          if (line.empty())
-            continue;
-
-          auto end = line.find_last_not_of(" \t\n\r");
-          if (end != string::npos)
-            line.erase(end + 1);
-
-          // Check for heartbeats
-          if (line[0] == '*')
-          {
-            if (!line.compare(0, 6, "* PONG"))
-            {
-              if (g_logger.level().priority <= LDEBUG.priority)
-              {
-                g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                         << "Received a PONG for " << m_server << " on port " << m_port;
-                auto delta = date::floor<milliseconds>(system_clock::now() - m_lastHeartbeat);
-                g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                         << "    Time since last heartbeat: " << delta.count() << "ms";
-              }
-              if (!m_heartbeats)
-                startHeartbeats(line);
-            }
-            else
-            {
-              protocolCommand(line);
-            }
-          }
-          else
-          {
-            processData(line);
-          }
+          protocolCommand(line);
         }
-
-        // Clear buffer/insert overflow data
-        m_buffer = overflow;
+      }
+      else
+      {
+        processData(line);
       }
     }
 
     void Connector::sendCommand(const string &command)
     {
-      std::lock_guard<std::mutex> lock(m_commandLock);
-
       if (m_connected)
       {
-        string completeCommand = "* " + command + "\n";
-        long status = m_connection->write(completeCommand.c_str(), completeCommand.length());
-        if (status <= 0)
-        {
-          g_logger << LWARN << "(Port:" << m_localPort << ")"
-                   << "sendCommand: Could not write command: '" << command << "' - "
-                   << to_string(status);
-        }
+        g_logger << dlib::LDEBUG << "(Port:" << m_localPort << ") "
+                  << "Sending " << command;
+        ostream os(&m_outgoing);
+        os << "* " << command << "\n";
+        asio::async_write(m_socket, m_outgoing,
+                          asio::bind_executor(m_strand, boost::bind(&Connector::writer, this, _1, _2)));
+      }
+    }
+
+    void Connector::heartbeat(boost::system::error_code ec)
+    {
+      if (!ec)
+      {
+        g_logger << dlib::LDEBUG << "Sending heartbeat";
+        sendCommand("* PING");
+        m_heartbeatTimer.expires_from_now(m_heartbeatFrequency);
+        m_heartbeatTimer.async_wait(asio::bind_executor(m_strand, boost::bind(&Connector::heartbeat, this, _1)));
+      }
+      else if (ec != boost::asio::error::operation_aborted)
+      {
+        g_logger << dlib::LERROR << "heartbeat: " << ec.category().message(ec.value()) << ": "
+                 << ec.message();
       }
     }
 
@@ -328,6 +302,12 @@ namespace mtconnect
                    << "Received PONG, starting heartbeats every " << freq.count() << "ms";
           m_heartbeats = true;
           m_heartbeatFrequency = freq;
+          m_receiveTimeLimit = 2 * m_heartbeatFrequency;
+          setReceiveTimeout();
+
+          m_heartbeatTimer.expires_from_now(m_heartbeatFrequency);
+          m_heartbeatTimer.async_wait(asio::bind_executor(m_strand, boost::bind(&Connector::heartbeat, this, _1)));
+          
         }
         else
         {
@@ -344,34 +324,13 @@ namespace mtconnect
 
     void Connector::close()
     {
-      if (m_connected && m_connection.get())
+      if (m_connected)
       {
-        // Shutdown the socket and close the connection.
-        try
-        {
-          m_connected = false;
-          m_connection->shutdown();
-        }
-        catch (exception &e)
-        {
-          g_logger << LERROR << "(Port:" << m_localPort << ")"
-                   << "close: Exception when shutting down connection: " << e.what();
-        }
-
-        g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                 << "Waiting for connect method to exit and signal connection closed";
-
-        if (m_connectionActive)
-        {
-          std::unique_lock<std::mutex> lk(m_connectionMutex);
-          m_connectionCondition.wait(lk, [this]() { return !m_connectionActive; });
-        }
-
-        // Destroy the connection object.
-        m_connection.reset();
-
+        if (m_socket.is_open())
+          m_socket.close();
+        m_connected = false;
         disconnected();
       }
     }
-  }  // namespace adapter
-}  // namespace mtconnect
+  }
+}

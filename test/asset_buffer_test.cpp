@@ -26,7 +26,6 @@
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
 #include "entity.hpp"
-#include <dlib/server.h>
 
 #include <chrono>
 #include <iostream>

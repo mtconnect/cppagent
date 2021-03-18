@@ -24,9 +24,6 @@
 
 #include <date/tz.h>
 
-#include <dlib/sockets.h>
-#include <dlib/threads.h>
-
 #include <chrono>
 #include <optional>
 #include <set>
@@ -65,7 +62,7 @@ namespace mtconnect
     {
     public:
       // Associate adapter with a device & connect to the server & port
-      Adapter(const std::string &server, const unsigned int port, const ConfigOptions &options,
+      Adapter(boost::asio::io_context &context, const std::string &server, const unsigned int port, const ConfigOptions &options,
               std::unique_ptr<AdapterPipeline> &pipeline);
       Adapter(const Adapter &) = delete;
 
@@ -114,10 +111,15 @@ namespace mtconnect
 
       // Start and Stop
       void stop();
-      void start()
+      bool start() override
       {
-        m_thread = std::thread([this]() { thread(); });
-        m_pipeline->start();
+        if (Connector::start())
+        {
+          m_pipeline->start();
+          return true;
+        }
+        else
+          return false;
       }
 
       const ConfigOptions &getOptions() const { return m_options; }

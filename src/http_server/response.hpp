@@ -21,8 +21,9 @@
 #include <unordered_map>
 
 #include <dlib/logger.h>
-#include <dlib/md5.h>
-
+#include <boost/uuid/random_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/lexical_cast.hpp>
 #include <chrono>
 #include <map>
 #include <ostream>
@@ -104,8 +105,11 @@ namespace mtconnect
       {
         if (good())
         {
-          m_boundary = dlib::md5(std::to_string(time(nullptr)));
-
+          using namespace boost::uuids;
+          random_generator gen;
+          auto id = gen();
+          m_boundary = to_string(id);
+          
           m_out << "HTTP/1.1 200 OK\r\n"
                    "Date: "
                 << getHeaderDate()

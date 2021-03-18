@@ -39,9 +39,11 @@ namespace mtconnect
     static dlib::logger g_logger("input.adapter");
 
     // Adapter public methods
-    Adapter::Adapter(const string &server, const unsigned int port, const ConfigOptions &options,
+    Adapter::Adapter(boost::asio::io_context &context,
+                     const string &server, const unsigned int port,
+                     const ConfigOptions &options,
                      std::unique_ptr<AdapterPipeline> &pipeline)
-      : Connector(server, port, 60s),
+      : Connector(context, server, port, 60s),
         m_pipeline(std::move(pipeline)),
         m_running(true),
         m_reconnectInterval {10000ms},
@@ -54,7 +56,7 @@ namespace mtconnect
       stringstream url;
       url << "shdr://" << server << ':' << port;
       m_url = url.str();
-
+      
       stringstream identity;
       identity << '_' << server << '_' << port;
       m_identity = identity.str();

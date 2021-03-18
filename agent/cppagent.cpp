@@ -28,11 +28,6 @@ using namespace std;
 using namespace dlib;
 using namespace mtconnect;
 
-#include <dlib/logger.h>
-#include <dlib/threads.h>
-
-static logger g_logger("main");
-
 #ifdef _WINDOWS
 #define strncasecmp strnicmp
 #endif

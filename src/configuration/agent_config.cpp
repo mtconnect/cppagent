@@ -734,7 +734,7 @@ namespace mtconnect
 
           auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
           auto adp =
-              new Adapter(get<string>(adapterOptions[configuration::Host]),
+              new Adapter(m_context, get<string>(adapterOptions[configuration::Host]),
                           get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
           m_agent->addAdapter(adp, false);
         }
@@ -749,7 +749,7 @@ namespace mtconnect
                  << " on localhost:7878";
 
         auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-        auto adp = new Adapter("localhost", 7878, adapterOptions, pipeline);
+        auto adp = new Adapter(m_context, "localhost", 7878, adapterOptions, pipeline);
         m_agent->addAdapter(adp, false);
       }
       else

@@ -108,6 +108,8 @@ namespace mtconnect
       bool m_restart = false;
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
+      
+      boost::asio::io_context m_context;
     };
   }  // namespace configuration
 }  // namespace mtconnect
