@@ -1101,6 +1101,7 @@ Installing vcpkg in c:\vcpkg
     c:
     cd \
     git clone https://github.com/microsoft/vcpkg
+    cd vcpkg
     vcpkg integrate install
     vcpkg install boost:x64-windows-static 
     
