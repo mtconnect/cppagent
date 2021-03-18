@@ -111,6 +111,7 @@ namespace mtconnect
       
       boost::asio::io_context m_context;
       std::list<std::thread> m_workers;
+      int m_workerThreadCount {1};
     };
   }  // namespace configuration
 }  // namespace mtconnect

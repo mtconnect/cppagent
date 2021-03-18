@@ -115,7 +115,7 @@ namespace mtconnect
       {
         if (Connector::start())
         {
-          m_pipeline->start();
+          m_pipeline->start(m_strand);
           return true;
         }
         else
@@ -129,11 +129,8 @@ namespace mtconnect
           m_options.insert_or_assign(o.first, o.second);
         m_pipeline->build(m_options);
         if (m_pipeline->started())
-          m_pipeline->start();
+          m_pipeline->start(m_strand);
       }
-
-    protected:
-      void thread();
 
     protected:
       std::unique_ptr<Handler> m_handler;
@@ -145,13 +142,12 @@ namespace mtconnect
 
       // If the connector has been running
       bool m_running;
-      std::thread m_thread;
 
       std::optional<std::string> m_terminator;
       std::stringstream m_body;
 
       // Timeout for reconnection attempts, given in milliseconds
-      std::chrono::milliseconds m_reconnectInterval;
+      Milliseconds m_reconnectInterval;
 
       ConfigOptions m_options;
     };

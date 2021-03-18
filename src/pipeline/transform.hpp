@@ -64,10 +64,10 @@ namespace mtconnect
         for (auto &t : m_next)
           t->stop();
       }
-      virtual void start()
+      virtual void start(boost::asio::io_context::strand &st)
       {
         for (auto &t : m_next)
-          t->start();
+          t->start(st);
       }
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;

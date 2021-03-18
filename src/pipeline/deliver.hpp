@@ -18,6 +18,7 @@
 #pragma once
 
 #include <boost/asio/steady_timer.hpp>
+#include <chrono>
 
 #include "assets/asset.hpp"
 #include "observation/observation.hpp"
@@ -29,22 +30,33 @@ namespace mtconnect
   {
     struct ComputeMetrics
     {
-      ComputeMetrics(PipelineContract *contract, const std::optional<std::string> &dataItem,
+      ComputeMetrics(boost::asio::io_context::strand &st, PipelineContract *contract, const std::optional<std::string> &dataItem,
                      std::shared_ptr<size_t> &count)
-        : m_count(count), m_contract(contract), m_dataItem(dataItem)
+        : m_count(count), m_contract(contract), m_dataItem(dataItem),
+          m_strand(st), m_timer(st.context())
       {
       }
 
-      void operator()();
+      void compute(boost::system::error_code ec);
 
-      void stop();
+      void stop()
+      {
+        m_timer.cancel();
+      }
+      
+      void start();
 
-      bool m_running {true};
       std::shared_ptr<size_t> m_count;
       PipelineContract *m_contract {nullptr};
       std::optional<std::string> m_dataItem;
-      std::mutex m_mutex;
-      std::condition_variable m_condition;
+      std::chrono::time_point<std::chrono::steady_clock> m_lastTime;
+      
+      boost::asio::io_context::strand &m_strand;
+      boost::asio::steady_timer m_timer;
+      bool m_first{true};
+      size_t m_last {0};
+      double m_lastAvg {0.0};
+
     };
 
     class MeteredTransform : public Transform
@@ -59,46 +71,35 @@ namespace mtconnect
       {
       }
 
-      ~MeteredTransform() override { stopThread(); }
+      ~MeteredTransform() override {
+        if (m_metrics)
+          m_metrics->stop();
+      }
 
       void stop() override
       {
-        stopThread();
+        if (m_metrics)
+          m_metrics->stop();
+
         Transform::stop();
       }
 
-      void start() override
+      void start(boost::asio::io_context::strand &st) override
       {
         if (m_dataItem)
         {
-          auto metrics = m_metrics =
-              std::make_shared<ComputeMetrics>(m_contract, m_dataItem, m_count);
-
-          m_metricsThread = std::thread([metrics]() {
-            if (metrics->m_running)
-              (*metrics)();
-          });
+          m_metrics =
+              std::make_shared<ComputeMetrics>(st, m_contract, m_dataItem, m_count);
+          m_metrics->start();
         }
+        Transform::start(st);
       }
 
     protected:
       friend struct ComputeMetrics;
 
-      void stopThread()
-      {
-        using namespace std;
-        if (m_metrics)
-        {
-          m_metrics->stop();
-          if (m_metricsThread.joinable())
-            m_metricsThread.join();
-          m_metrics.reset();
-        }
-      }
-
       PipelineContract *m_contract;
       std::shared_ptr<size_t> m_count;
-      std::thread m_metricsThread;
       std::shared_ptr<ComputeMetrics> m_metrics;
       std::optional<std::string> m_dataItem;
     };

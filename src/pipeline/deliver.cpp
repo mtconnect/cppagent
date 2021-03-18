@@ -20,6 +20,13 @@
 #include "agent.hpp"
 #include "assets/cutting_tool.hpp"
 #include "assets/file_asset.hpp"
+#include <boost/asio/bind_executor.hpp>
+#include <boost/bind.hpp>
+#include <boost/bind/placeholders.hpp>
+
+#include <chrono>
+
+using namespace std::literals::chrono_literals;
 
 namespace mtconnect
 {
@@ -45,65 +52,72 @@ namespace mtconnect
 
       return entity;
     }
-
-    void ComputeMetrics::stop()
+    
+    void ComputeMetrics::start()
     {
-      g_logger << dlib::LDEBUG << "Stopping compute thread";
-      {
-        std::unique_lock<std::mutex> lk(m_mutex);
-        m_running = false;
-        m_condition.notify_all();
-      }
-      g_logger << dlib::LDEBUG << "Compute thread stopped";
+      m_timer.cancel();
+      m_first = true;
+      
+      compute(boost::system::error_code());
     }
 
-    void ComputeMetrics::operator()()
+    void ComputeMetrics::compute(boost::system::error_code ec)
 
     {
-      using namespace std;
-      using namespace chrono;
-      using namespace chrono_literals;
-
-      if (!m_dataItem)
-        return;
-
-      auto di = m_contract->findDataItem("Agent", *m_dataItem);
-      if (di == nullptr)
+      if (!ec)
       {
-        g_logger << LWARN << "Could not find data item: " << *m_dataItem << ", exiting metrics";
-        return;
-      }
-
-      size_t last {0};
-      double lastAvg {0.0};
-      while (m_running)
-      {
-        auto count = *m_count;
-        auto delta = count - last;
-
-        double avg = delta + exp(-(10.0 / 60.0)) * (lastAvg - delta);
-        g_logger << dlib::LDEBUG << *m_dataItem
-                 << " - Average for last 1 minutes: " << (avg / 10.0);
-        g_logger << dlib::LDEBUG << *m_dataItem
-                 << " - Delta for last 10 seconds: " << (double(delta) / 10.0);
-
-        last = count;
-        if (avg != lastAvg)
+        using namespace std;
+        using namespace chrono;
+        using namespace chrono_literals;
+        
+        if (!m_dataItem)
+          return;
+        
+        auto di = m_contract->findDataItem("Agent", *m_dataItem);
+        if (di == nullptr)
         {
-          ErrorList errors;
-          auto obs = Observation::make(
-              di, Properties {{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
-              system_clock::now(), errors);
-          m_contract->deliverObservation(obs);
-          lastAvg = avg;
+          g_logger << LWARN << "Could not find data item: " << *m_dataItem << ", exiting metrics";
+          return;
         }
+        
+        auto now = std::chrono::steady_clock::now();
+        if (m_first)
         {
-          unique_lock<std::mutex> lk(m_mutex);
-          m_condition.wait_for(lk, 10s, [this] { return !m_running; });
+          m_last = 0;
+          m_lastAvg = 0.0;
+          m_lastTime = now;
+          m_first = false;
         }
+        else
+        {
+          std::chrono::duration<double> dt = now - m_lastTime;
+          m_lastTime = now;
+          
+          auto count = *m_count;
+          auto delta = count - m_last;
+          
+          double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
+          g_logger << dlib::LDEBUG << *m_dataItem
+          << " - Average for last 1 minutes: " << (avg / dt.count());
+          g_logger << dlib::LDEBUG << *m_dataItem
+          << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
+          
+          m_last = count;
+          if (avg != m_lastAvg)
+          {
+            ErrorList errors;
+            auto obs = Observation::make(
+                                         di, Properties {{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
+                                         system_clock::now(), errors);
+            m_contract->deliverObservation(obs);
+            m_lastAvg = avg;
+          }
+        }
+        
+        using boost::placeholders::_1;
+        m_timer.expires_from_now(10s);
+        m_timer.async_wait(boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, this, _1)));
       }
-
-      g_logger << dlib::LDEBUG << "Metrics thread exited";
     }
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
