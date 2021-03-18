@@ -40,6 +40,7 @@ namespace mtconnect
     DECLARE_CONFIGURATION(AllowPutFrom);
     DECLARE_CONFIGURATION(HttpHeaders);
     DECLARE_CONFIGURATION(LogStreams);
+    DECLARE_CONFIGURATION(WorkerThreads);
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);

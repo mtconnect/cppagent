@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/io_context_strand.hpp>
+
 #include "entity/entity.hpp"
 #include "guard.hpp"
 #include "pipeline_context.hpp"

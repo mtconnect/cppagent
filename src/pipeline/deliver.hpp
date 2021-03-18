@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <boost/asio/steady_timer.hpp>
+
 #include "assets/asset.hpp"
 #include "observation/observation.hpp"
 #include "transform.hpp"

@@ -352,6 +352,8 @@ namespace mtconnect
         }
 
         m_agent->start();
+        
+        
 
         if (m_restart && m_monitorFiles)
         {
@@ -560,6 +562,7 @@ namespace mtconnect
                    to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},
                   {configuration::LogStreams, false},
                   {configuration::ShdrVersion, 1},
+                  {configuration::WorkerThreads, 1},
                   {configuration::AllowPut, false},
                   {configuration::AllowPutFrom, ""s}});
 

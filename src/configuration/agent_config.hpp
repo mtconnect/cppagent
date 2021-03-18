@@ -110,6 +110,7 @@ namespace mtconnect
       std::filesystem::path m_working;
       
       boost::asio::io_context m_context;
+      std::list<std::thread> m_workers;
     };
   }  // namespace configuration
 }  // namespace mtconnect
