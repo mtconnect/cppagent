@@ -73,14 +73,6 @@ namespace mtconnect
       }
 
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
-
-      // Set pointer to the agent
-      void setReconnectInterval(std::chrono::milliseconds interval)
-      {
-        m_reconnectInterval = interval;
-      }
-      std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
-
       auto &getTerminator() const { return m_terminator; }
 
       // Inherited method to incoming data from the server
@@ -144,9 +136,6 @@ namespace mtconnect
 
       std::optional<std::string> m_terminator;
       std::stringstream m_body;
-
-      // Timeout for reconnection attempts, given in milliseconds
-      Milliseconds m_reconnectInterval;
 
       ConfigOptions m_options;
     };

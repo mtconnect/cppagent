@@ -61,7 +61,7 @@ namespace mtconnect
         m_connected(false),
         m_realTime(false),
         m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
-        m_reconnectInterval(reconnectInterval),
+        m_reconnectInterval(duration_cast<milliseconds>(reconnectInterval)),
         m_receiveTimeLimit(m_legacyTimeout)
     {
     }
@@ -97,14 +97,9 @@ namespace mtconnect
     bool Connector::connect()
     {
       m_connected = false;
+      connecting();
       using boost::placeholders::_1;
       using boost::placeholders::_2;
-
-      m_timer.expires_from_now(m_reconnectInterval);
-      m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
-        if (ec != boost::asio::error::operation_aborted)
-          close();
-      }));
 
       // Connect to server:port, failure will throw dlib::socket_error exception
       // Using a smart pointer to ensure connection is deleted if exception thrown
@@ -117,6 +112,21 @@ namespace mtconnect
       return true;
     }
     
+    void Connector::reconnect()
+    {
+      g_logger << dlib::LINFO << "reconnect: retry connection in "
+        << m_reconnectInterval.count() << "ms";
+      close();
+      m_timer.expires_from_now(m_reconnectInterval);
+      m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+        if (ec != boost::asio::error::operation_aborted)
+        {
+          g_logger << dlib::LINFO << "reconnect: retrying connection";
+          connect();
+        }
+      }));
+    }
+    
     void Connector::connected(const boost::system::error_code& ec,
                               ip::tcp::resolver::iterator it)
     {
@@ -124,11 +134,7 @@ namespace mtconnect
       {
         g_logger << dlib::LERROR << ec.category().message(ec.value()) << ": "
         << ec.message();
-        m_timer.expires_from_now(m_reconnectInterval);
-        m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
-          if (ec != boost::asio::error::operation_aborted)
-            connect();
-        }));
+        reconnect();
       }
       else
       {
@@ -155,7 +161,7 @@ namespace mtconnect
       {
         g_logger << dlib::LERROR << "reader: " << ec.category().message(ec.value()) << ": "
         << ec.message();
-        close();
+        reconnect();
       }
       else
       {
@@ -163,10 +169,13 @@ namespace mtconnect
         {
           while (m_connected && m_socket.is_open())
           {
-            m_timer.expires_from_now(20s);
+            m_timer.expires_from_now(m_receiveTimeLimit);
             m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
               if (ec != boost::asio::error::operation_aborted)
-                close();
+              {
+                g_logger << dlib::LWARN << "reader: operation timed out after " << m_receiveTimeLimit.count() << "ms";
+                reconnect();
+              }
             }));
             yield asio::async_read_until(m_socket, m_incoming, '\n',
                                asio::bind_executor(m_strand,
@@ -174,7 +183,7 @@ namespace mtconnect
             m_timer.cancel();
             parseSocketBuffer();
           }
-          close();
+          reconnect();
         }
       }
     }
@@ -195,7 +204,8 @@ namespace mtconnect
     {
       std::ostream os(&m_incoming);
       os << buffer;
-      parseSocketBuffer();
+      while (m_incoming.size() > 0)
+        parseSocketBuffer();
     }
     
     inline void Connector::setReceiveTimeout()
@@ -334,7 +344,6 @@ namespace mtconnect
           m_socket.close();
         m_connected = false;
         disconnected();
-        
       }
     }
   }

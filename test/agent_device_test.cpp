@@ -25,11 +25,19 @@
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 
+#include <boost/asio/read_until.hpp>
+#include <boost/asio/write.hpp>
+
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace device_model;
 using namespace entity;
+
+namespace asio = boost::asio;
+using tcp = boost::asio::ip::tcp;
+namespace ip = boost::asio::ip;
+namespace sys = boost::system;
 
 class AgentDeviceTest : public testing::Test
 {
@@ -46,12 +54,11 @@ class AgentDeviceTest : public testing::Test
 
   void TearDown() override
   {
+    m_agentTestHelper->m_ioContext.stop();
     if (m_server)
-    {
-      m_agentTestHelper->m_adapter->stop();
-      m_server.reset();
-      m_serverSocket.reset();
-    }
+      m_server->close();
+    m_server.reset();
+    m_acceptor.reset();
 
     m_agentTestHelper.reset();
   }
@@ -62,19 +69,48 @@ class AgentDeviceTest : public testing::Test
     m_agentTestHelper->m_adapter->setReconnectInterval(1s);
   }
   
-  void createListener()
+  void startServer(const std::string addr = "127.0.0.1")
   {
-    ASSERT_TRUE(!create_listener(m_server, m_port, "127.0.0.1"));
-    m_port = m_server->get_listening_port();
+    tcp::endpoint sp(ip::make_address(addr), m_port);
+    m_connected = false;
+    m_acceptor = make_unique<tcp::acceptor>(m_agentTestHelper->m_ioContext, sp);
+    ASSERT_TRUE(m_acceptor->is_open());
+    tcp::endpoint ep = m_acceptor->local_endpoint();
+    m_port = ep.port();
+
+    m_acceptor->async_accept([this](sys::error_code ec, tcp::socket socket){
+      if (ec)
+        cout << ec.category().message(ec.value()) << ": " << ec.message() << endl;
+      ASSERT_FALSE(ec);
+      ASSERT_TRUE(socket.is_open());
+      m_connected = true;
+      m_server = make_unique<tcp::socket>(std::move(socket));
+    });
   }
   
+  template<typename Rep, typename Period>
+  void runUntil(chrono::duration<Rep, Period> to, function<bool()> pred)
+  {
+    for (int runs = 0; runs < 10 && !pred(); runs++)
+    {
+      m_agentTestHelper->m_ioContext.run_one_for(to);
+    }
+    
+    EXPECT_TRUE(pred());
+  }
+
  public:
   AgentDevicePtr m_agentDevice;
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
-  uint16_t m_port{21788};
-  dlib::scoped_ptr<dlib::listener> m_server;
-  dlib::scoped_ptr<dlib::connection> m_serverSocket;
+  
+  unsigned short m_port{0};
+  
+  std::unique_ptr<asio::ip::tcp::socket> m_server;
+  std::unique_ptr<tcp::acceptor> m_acceptor;
+  bool m_connected;
+  string m_line;
+
 };
 
 TEST_F(AgentDeviceTest, AgentDeviceCreation)
@@ -132,6 +168,7 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 
 TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
 {
+  m_port = 21788;
   addAdapter();
   {
     PARSE_XML_RESPONSE("/Agent/probe");
@@ -174,6 +211,7 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 
 TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
 {
+  srand(chrono::system_clock::now().time_since_epoch().count());
   m_port = rand() % 10000 + 5000;
   addAdapter();
   
@@ -186,9 +224,10 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
                           "UNAVAILABLE");
 
   }
+  
   m_agentTestHelper->m_adapter->start();
-  this_thread::sleep_for(100ms);
-
+  m_agentTestHelper->m_ioContext.run_for(1500ms);
+  
   {
     PARSE_XML_RESPONSE("/Agent/current");
 
@@ -196,13 +235,9 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
                           "LISTENING");
 
   }
-  createListener();
-  this_thread::sleep_for(100ms);
-
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  this_thread::sleep_for(100ms);
-  ASSERT_TRUE(m_serverSocket.get());
+  
+  startServer();
+  runUntil(10s, [this](){ return m_connected; });
 
   {
     PARSE_XML_RESPONSE("/Agent/current");
@@ -212,9 +247,10 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
     
   }
   
-  m_serverSocket->shutdown();
-  m_server.reset();
-  this_thread::sleep_for(100ms);
+  ASSERT_TRUE(m_server);
+  m_server->close();
+  m_acceptor->close();
+  runUntil(1s, [this](){ return !m_agentTestHelper->m_adapter->isConnected(); });
 
   {
     PARSE_XML_RESPONSE("/Agent/current");
@@ -223,7 +259,9 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
                           "CLOSED");
     
   }
-  this_thread::sleep_for(1100ms);
+  
+  m_agentTestHelper->m_ioContext.run_for(1500ms);
+
   {
     PARSE_XML_RESPONSE("/Agent/current");
 

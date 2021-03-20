@@ -62,6 +62,15 @@ namespace mtconnect
       // Abstract method to handle what to do with each line of data from Socket
       virtual void processData(const std::string &data) = 0;
       virtual void protocolCommand(const std::string &data) = 0;
+      
+      // Set Reconnect intervals
+      void setReconnectInterval(std::chrono::milliseconds interval)
+      {
+        m_reconnectInterval = interval;
+      }
+      std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
+
+
 
       // The connected state of this connection
       bool isConnected() const { return m_connected; }
@@ -93,6 +102,7 @@ namespace mtconnect
 
     protected:
       void close();
+      void reconnect();
       void connected(const boost::system::error_code& error,
                      boost::asio::ip::tcp::resolver::iterator it);
       void writer(boost::system::error_code ec, std::size_t length);
@@ -137,7 +147,7 @@ namespace mtconnect
       bool m_heartbeats = false;
       std::chrono::milliseconds m_heartbeatFrequency = std::chrono::milliseconds {HEARTBEAT_FREQ};
       std::chrono::milliseconds m_legacyTimeout;
-      std::chrono::seconds m_reconnectInterval;
+      std::chrono::milliseconds m_reconnectInterval;
       std::chrono::milliseconds m_receiveTimeLimit;
     };
   }  // namespace adapter

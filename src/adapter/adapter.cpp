@@ -46,7 +46,6 @@ namespace mtconnect
       : Connector(context, server, port, 60s),
         m_pipeline(std::move(pipeline)),
         m_running(true),
-        m_reconnectInterval {10000ms},
         m_options(options)
     {
       auto timeout = options.find(configuration::LegacyTimeout);
