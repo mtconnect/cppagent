@@ -22,8 +22,6 @@
 #include "adapter/adapter.hpp"
 #include "device_model/data_item/data_item.hpp"
 
-#include <dlib/misc_api.h>
-
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;

@@ -23,7 +23,6 @@
 #include "http_server/routing.hpp"
 #include "adapter/adapter.hpp"
 #include "pipeline/pipeline.hpp"
-#include <dlib/server.h>
 #include "configuration/agent_config.hpp"
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
@@ -97,6 +96,11 @@ class AgentTestHelper
     dlib::set_all_logging_output_streams(std::cout);
     dlib::set_all_logging_levels(dlib::LDEBUG);
   }
+  
+  ~AgentTestHelper()
+  {
+    m_agent.reset();
+  }
     
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
@@ -154,7 +158,7 @@ class AgentTestHelper
       options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
     }
     auto pipeline = std::make_unique<AdapterPipeline>(m_context);
-    m_adapter = new adpt::Adapter(host, port, options, pipeline);
+    m_adapter = new adpt::Adapter(m_ioContext, host, port, options, pipeline);
     m_agent->addAdapter(m_adapter);
 
     return m_adapter;
@@ -199,6 +203,7 @@ class AgentTestHelper
   std::stringstream m_out;
   mtconnect::http_server::TestResponse m_response;
   mtconnect::http_server::Routing::Request m_request;
+  boost::asio::io_context m_ioContext;
   
   std::string m_incomingIp;
 };

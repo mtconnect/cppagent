@@ -39,12 +39,13 @@ namespace mtconnect
     static dlib::logger g_logger("input.adapter");
 
     // Adapter public methods
-    Adapter::Adapter(const string &server, const unsigned int port, const ConfigOptions &options,
+    Adapter::Adapter(boost::asio::io_context &context,
+                     const string &server, const unsigned int port,
+                     const ConfigOptions &options,
                      std::unique_ptr<AdapterPipeline> &pipeline)
-      : Connector(server, port, 60s),
+      : Connector(context, server, port, 60s),
         m_pipeline(std::move(pipeline)),
         m_running(true),
-        m_reconnectInterval {10000ms},
         m_options(options)
     {
       auto timeout = options.find(configuration::LegacyTimeout);
@@ -54,7 +55,7 @@ namespace mtconnect
       stringstream url;
       url << "shdr://" << server << ':' << port;
       m_url = url.str();
-
+      
       stringstream identity;
       identity << '_' << server << '_' << port;
       m_identity = identity.str();
@@ -62,6 +63,8 @@ namespace mtconnect
       m_handler = m_pipeline->makeHandler();
       if (m_pipeline->hasContract())
         m_pipeline->build(m_options);
+      auto intv = GetOption<Milliseconds>(options, configuration::ReconnectInterval);
+      if (intv) m_reconnectInterval = *intv;
     }
 
     void Adapter::processData(const string &data)
@@ -101,8 +104,6 @@ namespace mtconnect
       g_logger << dlib::LDEBUG << "Waiting for adatpter to stop: " << m_url;
       m_running = false;
       close();
-      if (m_thread.joinable())
-        m_thread.join();
       g_logger << dlib::LDEBUG << "Adapter eexited: " << m_url;
     }
 
@@ -136,49 +137,6 @@ namespace mtconnect
         else if (m_handler && m_handler->m_command)
           m_handler->m_command(data, getIdentity());
       }
-    }
-
-    // Adapter private methods
-    void Adapter::thread()
-    {
-      while (m_running)
-      {
-        try
-        {
-          // Start the connection to the socket
-          connect();
-
-          // make sure we're closed...
-          close();
-        }
-        catch (std::invalid_argument &err)
-        {
-          g_logger << LERROR << "Adapter for " << m_url
-                   << "'s thread threw an argument error, stopping adapter: " << err.what();
-          stop();
-        }
-        catch (std::exception &err)
-        {
-          g_logger << LERROR << "Adapter for " << m_url
-                   << "'s thread threw an exceotion, stopping adapter: " << err.what();
-          stop();
-        }
-        catch (...)
-        {
-          g_logger << LERROR << "Thread for adapter " << m_url
-                   << "'s thread threw an unhandled exception, stopping adapter";
-          stop();
-        }
-
-        if (!m_running)
-          break;
-
-        // Try to reconnect every 10 seconds
-        g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval.count()
-                 << " milliseconds";
-        this_thread::sleep_for(m_reconnectInterval);
-      }
-      g_logger << LINFO << "Adapter thread stopped";
     }
   }  // namespace adapter
 }  // namespace mtconnect

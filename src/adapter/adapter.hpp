@@ -24,9 +24,6 @@
 
 #include <date/tz.h>
 
-#include <dlib/sockets.h>
-#include <dlib/threads.h>
-
 #include <chrono>
 #include <optional>
 #include <set>
@@ -65,26 +62,17 @@ namespace mtconnect
     {
     public:
       // Associate adapter with a device & connect to the server & port
-      Adapter(const std::string &server, const unsigned int port, const ConfigOptions &options,
+      Adapter(boost::asio::io_context &context, const std::string &server, const unsigned int port, const ConfigOptions &options,
               std::unique_ptr<AdapterPipeline> &pipeline);
       Adapter(const Adapter &) = delete;
 
       // Virtual destructor
       ~Adapter() override
       {
-        if (m_running)
-          stop();
+        stop();
       }
 
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
-
-      // Set pointer to the agent
-      void setReconnectInterval(std::chrono::milliseconds interval)
-      {
-        m_reconnectInterval = interval;
-      }
-      std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
-
       auto &getTerminator() const { return m_terminator; }
 
       // Inherited method to incoming data from the server
@@ -114,10 +102,15 @@ namespace mtconnect
 
       // Start and Stop
       void stop();
-      void start()
+      bool start() override
       {
-        m_thread = std::thread([this]() { thread(); });
-        m_pipeline->start();
+        if (Connector::start())
+        {
+          m_pipeline->start(m_strand);
+          return true;
+        }
+        else
+          return false;
       }
 
       const ConfigOptions &getOptions() const { return m_options; }
@@ -127,11 +120,8 @@ namespace mtconnect
           m_options.insert_or_assign(o.first, o.second);
         m_pipeline->build(m_options);
         if (m_pipeline->started())
-          m_pipeline->start();
+          m_pipeline->start(m_strand);
       }
-
-    protected:
-      void thread();
 
     protected:
       std::unique_ptr<Handler> m_handler;
@@ -143,13 +133,9 @@ namespace mtconnect
 
       // If the connector has been running
       bool m_running;
-      std::thread m_thread;
 
       std::optional<std::string> m_terminator;
       std::stringstream m_body;
-
-      // Timeout for reconnection attempts, given in milliseconds
-      std::chrono::milliseconds m_reconnectInterval;
 
       ConfigOptions m_options;
     };

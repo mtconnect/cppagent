@@ -26,7 +26,6 @@
 #include "xml_printer.hpp"
 #include "assets/file_asset.hpp"
 #include "device_model/reference.hpp"
-#include <dlib/server.h>
 
 #include <chrono>
 #include <iostream>

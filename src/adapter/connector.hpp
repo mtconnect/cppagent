@@ -17,19 +17,24 @@
 
 #pragma once
 
-#include "utilities.hpp"
-#include <condition_variable>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
 
-#include <dlib/server.h>
-#include <dlib/sockets.h>
+#include "utilities.hpp"
+
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/io_context_strand.hpp>
+#include <boost/asio/streambuf.hpp>
+#include <boost/asio/coroutine.hpp>
+#include <boost/array.hpp>
+#include <boost/asio/detached.hpp>
+
 
 #include <chrono>
 #include <mutex>
 #include <thread>
 
 #define HEARTBEAT_FREQ 60000
-
-using namespace dlib;
 
 namespace mtconnect
 {
@@ -39,8 +44,10 @@ namespace mtconnect
     {
     public:
       // Instantiate the server by assigning it a server and port/
-      Connector(std::string server, unsigned int port,
-                std::chrono::seconds legacyTimout = std::chrono::seconds {600});
+      Connector(boost::asio::io_context &context,
+                std::string server, unsigned int port,
+                std::chrono::seconds legacyTimout = std::chrono::seconds {600},
+                std::chrono::seconds reconnectInterval = std::chrono::seconds {10});
 
       // Virtual desctructor
       virtual ~Connector();
@@ -48,11 +55,22 @@ namespace mtconnect
       // Blocking call to connect to the server/port
       // Put data from the socket in the string buffer
       //
-      void connect();
+      virtual bool start();
+      virtual bool resolve();
+      virtual bool connect();
 
       // Abstract method to handle what to do with each line of data from Socket
       virtual void processData(const std::string &data) = 0;
       virtual void protocolCommand(const std::string &data) = 0;
+      
+      // Set Reconnect intervals
+      void setReconnectInterval(std::chrono::milliseconds interval)
+      {
+        m_reconnectInterval = interval;
+      }
+      std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
+
+
 
       // The connected state of this connection
       bool isConnected() const { return m_connected; }
@@ -83,22 +101,41 @@ namespace mtconnect
       void setRealTime(bool realTime = true) { m_realTime = realTime; }
 
     protected:
-      void startHeartbeats(const std::string &buf);
       void close();
+      void reconnect();
+      void connected(const boost::system::error_code& error,
+                     boost::asio::ip::tcp::resolver::iterator it);
+      void writer(boost::system::error_code ec, std::size_t length);
+      void reader(boost::system::error_code ec, std::size_t length);
+      void parseSocketBuffer();
+      void startHeartbeats(const std::string &buf);
+      void heartbeat(boost::system::error_code ec);
+      void setReceiveTimeout();
 
     protected:
       // Name of the server to connect to
       std::string m_server;
 
       // Connection
-      dlib::scoped_ptr<dlib::connection> m_connection;
+      boost::asio::io_context::strand m_strand;
+      boost::asio::ip::tcp::socket m_socket;
+      boost::asio::ip::tcp::endpoint m_endpoint;
+      boost::asio::ip::tcp::resolver::results_type m_results;
+      
+      // For reentry
+      boost::asio::coroutine m_coroutine;
 
       // The port number to connect to
       unsigned int m_port;
       unsigned int m_localPort;
 
-      // The string buffer to hold the data from socket
-      std::string m_buffer;
+      boost::asio::streambuf m_incoming;
+      boost::asio::streambuf m_outgoing;
+
+      // Some timeers
+      boost::asio::steady_timer m_timer;
+      boost::asio::steady_timer m_heartbeatTimer;
+      boost::asio::steady_timer m_receiveTimeout;
 
       // The connected state of this connector
       bool m_connected;
@@ -109,19 +146,9 @@ namespace mtconnect
       // Heartbeats
       bool m_heartbeats = false;
       std::chrono::milliseconds m_heartbeatFrequency = std::chrono::milliseconds {HEARTBEAT_FREQ};
-      std::chrono::milliseconds m_legacyTimeout = std::chrono::milliseconds {600000};
-      std::chrono::time_point<std::chrono::system_clock> m_lastHeartbeat;
-      std::chrono::time_point<std::chrono::system_clock> m_lastSent;
-
-      std::mutex m_commandLock;
-      bool m_connectionActive;
-      std::mutex m_connectionMutex;
-      ;
-      std::condition_variable m_connectionCondition;
-
-    private:
-      // Size of buffer to read at a time from the socket
-      static const unsigned int SOCKET_BUFFER_SIZE = 8192;
+      std::chrono::milliseconds m_legacyTimeout;
+      std::chrono::milliseconds m_reconnectInterval;
+      std::chrono::milliseconds m_receiveTimeLimit;
     };
   }  // namespace adapter
 }  // namespace mtconnect

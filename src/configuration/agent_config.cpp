@@ -352,7 +352,16 @@ namespace mtconnect
         }
 
         m_agent->start();
-
+        
+        for (int i = 0; i < m_workerThreadCount; i++)
+        {
+          m_workers.emplace_back(std::thread([this]() { m_context.run(); }));
+        }
+        for (auto &w : m_workers)
+        {
+          w.join();
+        }
+        
         if (m_restart && m_monitorFiles)
         {
           // Will destruct and wait to re-initialize.
@@ -368,6 +377,7 @@ namespace mtconnect
       g_logger << dlib::LINFO << "Agent stopping";
       m_restart = false;
       m_agent->stop();
+      m_context.stop();
       g_logger << dlib::LINFO << "Agent Configuration stopped";
     }
 
@@ -560,8 +570,11 @@ namespace mtconnect
                    to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},
                   {configuration::LogStreams, false},
                   {configuration::ShdrVersion, 1},
+                  {configuration::WorkerThreads, 1},
                   {configuration::AllowPut, false},
                   {configuration::AllowPutFrom, ""s}});
+      
+      m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
 
       auto devices = config.get_optional<string>(configuration::Devices);
       if (devices)
@@ -734,7 +747,7 @@ namespace mtconnect
 
           auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
           auto adp =
-              new Adapter(get<string>(adapterOptions[configuration::Host]),
+              new Adapter(m_context, get<string>(adapterOptions[configuration::Host]),
                           get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
           m_agent->addAdapter(adp, false);
         }
@@ -749,7 +762,7 @@ namespace mtconnect
                  << " on localhost:7878";
 
         auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-        auto adp = new Adapter("localhost", 7878, adapterOptions, pipeline);
+        auto adp = new Adapter(m_context, "localhost", 7878, adapterOptions, pipeline);
         m_agent->addAdapter(adp, false);
       }
       else

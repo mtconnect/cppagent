@@ -54,11 +54,11 @@ namespace mtconnect
         m_started = false;
         m_start = std::make_shared<Start>();
       }
-      virtual void start()
+      virtual void start(boost::asio::io_context::strand &st)
       {
         if (m_start)
         {
-          m_start->start();
+          m_start->start(st);
           m_started = true;
         }
       }

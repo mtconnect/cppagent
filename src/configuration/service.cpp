@@ -51,8 +51,7 @@ namespace mtconnect
 #define _WINSOCKAPI_
 #include <sys/stat.h>
 
-#include <dlib/threads.h>
-
+#include <thread>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
@@ -151,7 +150,7 @@ namespace mtconnect
 
             initialize(argc - 2, argv + 2);
             start();
-            dlib::thread_function cmd(commandLine);
+            std::thread cmd(commandLine);
             return 0;
           }
         }
