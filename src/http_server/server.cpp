@@ -21,6 +21,13 @@
 
 #include <dlib/logger.h>
 
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/asio.hpp>
+#include <thread>
+
+
 namespace mtconnect
 {
   namespace http_server
@@ -30,88 +37,212 @@ namespace mtconnect
 
     static dlib::logger g_logger("HttpServer");
 
+
+
     void Server::start()
     {
       try
       {
-        // Start the server. This blocks until the server stops.
-        server_http::start();
+        run = true;
+        httpProcess = new std::thread(&Server::listen, this );
+        httpProcess->join();
       }
-      catch (dlib::socket_error &e)
+      catch (exception &e)
       {
         g_logger << LFATAL << "Cannot start server: " << e.what();
         std::exit(1);
       }
     }
 
-    void Server::on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
-                            const std::string &local_ip, unsigned short foreign_port,
-                            unsigned short local_port, uint64)
+    // Listen for an HTTP server connection
+    void Server::listen()
     {
-      Response response(out, m_fields);
-      std::string accepts;
-      try
-      {
-        IncomingThings incoming(foreign_ip, local_ip, foreign_port, local_port);
-        parse_http_request(in, incoming, get_max_content_length());
-        auto ai = incoming.headers.find("Accept");
-        if (ai != incoming.headers.end())
-          accepts = ai->second;
+      bool close = false;
+      beast::error_code ec;
+      beast::flat_buffer buffer;
+      net::io_context ioc{1};
 
-        if (incoming.request_type == "PUT" || incoming.request_type == "POST" ||
-            incoming.request_type == "DELETE")
+//            if(enableSSL) {
+//                // The SSL context is required, and holds certificates
+//                ssl::context ctx{ssl::context::tlsv12};
+//
+//                // This holds the self-signed certificate used by the server
+//                load_server_certificate(ctx);
+//            }
+
+      // Blocking call to listen for a connection
+      tcp::acceptor acceptor{ioc, {address, mPort}};
+
+
+      while (run) {
+        try{
+        tcp::socket socket{ioc};
+        acceptor.accept(socket);
+        std::thread{std::bind(&Server::session, this, std::move(socket))}.detach();
+        socket.shutdown(tcp::socket::shutdown_send, ec);//        http::request<http::string_body> req;
+//        if (ec)
+//          fail(ec, "write");
+       }
+        catch (exception &e)
         {
-          if (!m_putEnabled || !isPutAllowedFrom(foreign_ip))
+          g_logger << LERROR << "Server::listen error: "<< e.what();
+          stringstream msg;
+          msg << "Error processing request - " << e.what();
+          g_logger << LERROR << msg.str();
+        }
+      }
+    }
+
+    void Server::session( tcp::socket &socket)
+    {
+      tcp::socket m_socket(std::move(socket));
+      try{
+        beast::error_code ec;
+        beast::flat_buffer buffer;
+        http::request<http::string_body> req;
+        http::read(m_socket, buffer, req, ec);
+
+        if (ec)
+          return fail(ec, "write");
+
+        Routing::Request request = getRequest(req, m_socket);
+        Response response(m_socket, m_fields);
+
+        if (request.m_verb == "PUT" || request.m_verb == "POST" ||
+            request.m_verb == "DELETE")
+        {
+          if (!m_putEnabled || !isPutAllowedFrom(request.m_foreignIp))
           {
             stringstream msg;
-            msg << "Error processing request from: " << foreign_ip << " - "
+            msg << "Error processing request from: " << request.m_foreignIp << " - "
                 << "Server is read-only. Only GET verb supported";
             g_logger << LERROR << msg.str();
 
             if (m_errorFunction)
-              m_errorFunction(accepts, response, msg.str(), FORBIDDEN);
-            out.flush();
+              m_errorFunction(request.m_accepts, response, msg.str(), FORBIDDEN);
+            //out.flush();
             return;
           }
         }
 
-        read_body(in, incoming);
-        auto path = incoming.path;
-        auto qp = path.find_first_of('?');
-        if (qp != string::npos)
-          path.erase(qp);
+        if(!handleRequest(request, response))
+        {
+          g_logger << LERROR << "Server::session error handling Request. ";
+        };
 
-        Routing::Request request;
-        request.m_verb = incoming.request_type;
-        request.m_path = path;
-        request.m_query = incoming.queries;
-        request.m_body = incoming.body;
-        request.m_foreignIp = foreign_ip;
-        request.m_foreignPort = foreign_port;
-        request.m_accepts = accepts;
-        auto media = incoming.headers.find("Content-Type");
-        if (media != incoming.headers.end())
-          request.m_contentType = media->second;
-
-        handleRequest(request, response);
+        m_socket.shutdown(tcp::socket::shutdown_send, ec);
+        buffer.clear();
       }
-      catch (dlib::http_parse_error &e)
+      catch (exception &e)
       {
-        stringstream msg;
-        msg << "Error processing request from: " << foreign_ip << " - " << e.what();
-        g_logger << LERROR << msg.str();
-
-        if (m_errorFunction)
-          m_errorFunction(accepts, response, msg.str(), BAD_REQUEST);
+        g_logger << LERROR << "Server::listen error: "<< e.what();
       }
-      catch (std::exception &e)
-      {
-        stringstream msg;
-        msg << "Error processing request from: " << foreign_ip << " - " << e.what();
-        g_logger << LERROR << msg.str();
+    }
 
-        if (m_errorFunction)
-          m_errorFunction(accepts, response, msg.str(), BAD_REQUEST);
+
+    //Parse http::request and return
+    Routing::Request Server::getRequest(const http::request<http::string_body>& req, const tcp::socket& socket)
+    {
+      Routing::Request request;
+
+      try
+      {
+        string queries;
+        string path = static_cast<std::string>(req.target().data()).substr(0,req.target().length());
+        request.m_verb = req.method_string().data();
+        if (request.m_verb == "GET")
+        {
+          while(path.find("%22")!=path.npos)
+          {
+            auto pt = path.find_first_of("%22");
+            path.replace(pt,3,"\"");
+          }
+
+          auto qp = path.find_first_of('?');
+          if (qp != string::npos){
+            queries = path.substr(qp+1);
+            path.erase(qp);
+          }
+          request.m_path = path;
+          auto pt = queries.find_first_of('=');
+          if (pt != string::npos){
+            request.m_query = getQueries(queries);
+          }
+        }
+        else if (request.m_verb == "PUT" || request.m_verb == "POST" || request.m_verb == "DELETE")
+        {
+          if (path.find("asset") != path.npos)
+          {
+            auto qp = path.find_first_of('?');
+            if (qp != string::npos){
+              queries = path.substr(qp+1);
+              path.erase(qp);
+            }
+            request.m_query = parseAsset(queries, req.body());
+          }
+          else
+          {
+            request.m_query = getQueries(req.body());
+          }
+          //string data = req.body();
+          request.m_path = path;
+        }
+        request.m_body = req.body();
+        request.m_foreignIp = socket.remote_endpoint().address().to_string();
+        request.m_foreignPort = socket.remote_endpoint().port();
+        request.m_accepts = req.find(http::field::accept)->value().data();
+        request.m_accepts = request.m_accepts.substr(0,request.m_accepts.size()-2);
+        auto media = req.find(http::field::content_type)->value().data();
+        if (media != nullptr)
+          request.m_contentType = media;
+      }
+      catch (exception &e)
+      {
+        g_logger << LERROR << "method:" << __func__  <<" error: " <<e.what();
+      }
+      return request;
+    }
+
+    Routing::QueryMap Server::getQueries(const std::string& queries)
+    {
+      Routing::QueryMap queryMap;
+      std::string tmpStr = queries;
+      try
+      {
+        while (!tmpStr.empty())
+        {
+          auto ptr = tmpStr.find_first_of("&");
+          if (ptr != std::string().npos)
+          {
+            std:string string1 = tmpStr.substr(0,ptr);
+            tmpStr = tmpStr.substr(ptr+1);
+            ptr = string1.find_first_of('=');
+            if (ptr != std::string().npos){
+              queryMap.insert(std::pair<std::string,std::string >(string1.substr(0,ptr),string1.substr(ptr+1)));
+            }
+            else{
+              throw("String does not contain a query.");
+            }
+          }
+          else
+          {
+            //get the last parameter set
+            ptr = tmpStr.find_first_of("=");
+            if (ptr != std::string().npos){
+              queryMap.insert(std::pair<std::string,std::string >(tmpStr.substr(0,ptr),tmpStr.substr(ptr+1)));
+              tmpStr.clear();
+            }
+            else{
+              throw("Error: string does not contain a query.");
+            }
+          }
+        }
+        return queryMap;
+      }
+      catch (exception& e)
+      {
+        g_logger << LERROR << __func__ << " error: " <<e.what();
+        return queryMap;
       }
     }
 
@@ -151,8 +282,51 @@ namespace mtconnect
         res = false;
       }
 
-      response.flush();
+      //response.flush();
       return res;
     }
+
+    Routing::QueryMap Server::parseAsset(const std::string &s1, const std::string &s2)
+    {
+      Routing::QueryMap queryMap;
+      std::string tmpStr = s1;
+      try
+      {
+        if (tmpStr.empty()) throw("queries does not contain a query.");
+        std::regex reg("([a-zA-Z0-9]+)=([\"a-zA-Z-0-9\"]+)&?");
+        std::smatch match;
+
+        while (regex_search(tmpStr, match, reg))
+        {
+          string str1(match[1]);
+          string str2(match[2]);
+          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
+          tmpStr = match.suffix().str();
+        }
+        tmpStr = s2;
+        while (regex_search(tmpStr, match, reg))
+        {
+          string str1(match[1]);
+          string str2(match[2]);
+          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
+          tmpStr = match.suffix().str();
+        }
+      }
+      catch (exception& e)
+      {
+        g_logger << LERROR << __func__ << " error: " <<e.what();
+        return queryMap;
+      }
+      return queryMap;
+    }
+
+
+//------------------------------------------------------------------------------
+
+// Report a failure
+    void Server::fail(beast::error_code ec, char const *what) {
+      g_logger << LERROR  << " error: " << ec.message();
+    }
+
   }  // namespace http_server
 }  // namespace mtconnect

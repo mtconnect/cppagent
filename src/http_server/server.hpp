@@ -16,19 +16,47 @@
 //
 
 #pragma once
+//#include "fields_alloc.hpp"
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast.hpp>
+#include <boost/thread.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/asio/connect.hpp>
+#include <boost/asio/ip/tcp.hpp>
+//#include <boost/beast/ssl.hpp>
+//#include <boost/asio/ssl/stream.hpp>
 
-#include "configuration/config_options.hpp"
+#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <thread>
+#include <chrono>
+#include <mutex>
+#include <regex>
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
+#include "config_options.hpp"
+#include "utilities.hpp"
 
-#include <dlib/server.h>
+//#include "http_server.hpp"
+//#include <dlib/server.h>
 
 namespace mtconnect
 {
   namespace http_server
   {
-    using IncomingThings = dlib::incoming_things;
+    //using IncomingThings = dlib::incoming_things;
+    namespace beast = boost::beast;         // from <boost/beast.hpp>
+    namespace http = beast::http;           // from <boost/beast/http.hpp>
+    namespace net = boost::asio;            // from <boost/asio.hpp>
+    //namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
+    using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+
 
     class RequestError : public std::logic_error
     {
@@ -50,18 +78,26 @@ namespace mtconnect
     using ErrorFunction = std::function<void(const std::string &accepts, Response &response,
                                              const std::string &msg, const ResponseCode code)>;
 
-    class Server : public dlib::server_http
+    class Server
     {
-    public:
-      Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0",
-             const ConfigOptions &options = {})
-      {
-        set_listening_port(port);
-        set_listening_ip(inter);
-        const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
-        if (fields)
-          m_fields = *fields;
 
+    public:
+      Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {}):
+      mPort(port)
+      {
+        if (inter.empty())
+        {
+          address = net::ip::make_address("0.0.0.0");
+        }
+        else
+        {
+          address = net::ip::make_address(inter);
+        }
+        if (mPort == 0 || mPort < 0)
+        {
+          mPort = 5000;
+        }
+        const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
         m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
                              const ResponseCode code) {
           response.writeResponse(msg, code);
@@ -69,24 +105,18 @@ namespace mtconnect
         };
       }
 
-      // Overridden method that is called per web request – not used
-      // using httpRequest which is called from our own on_connect method.
-      const std::string on_request(const dlib::incoming_things &incoming,
-                                   dlib::outgoing_things &outgoing) override
-      {
-        throw std::logic_error("Not Implemented");
-        return "";
-      }
-
       // Start the http server
       void start();
 
       // Shutdown
-      void stop() { server::http_1a::clear(); }
+      void stop(){run=false;};
 
-      // Additional header fields
-      void setHttpHeaders(const StringList &fields) { m_fields = fields; }
-      const auto &getHttpHeaders() const { return m_fields; }
+      void listen();
+
+      void setHttpHeaders(const StringList &fields)
+      {
+        m_fields = fields;
+      }
 
       // PUT and POST handling
       void enablePut(bool flag = true) { m_putEnabled = flag; }
@@ -96,6 +126,7 @@ namespace mtconnect
       {
         return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
       }
+      Routing::QueryMap parseAsset(const std::string &s1, const std::string &s2);
 
       bool dispatch(Routing::Request &request, Response &response)
       {
@@ -108,19 +139,24 @@ namespace mtconnect
         return false;
       }
 
+      void session (tcp::socket& socket);
+
       bool handleRequest(Routing::Request &request, Response &response);
+
+      void fail(beast::error_code ec, char const *what);
 
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
 
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
 
-    protected:
-      // HTTP Protocol
-      void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
-                      const std::string &local_ip, unsigned short foreign_port,
-                      unsigned short local_port, dlib::uint64) override;
 
     protected:
+      net::ip::address address;
+      unsigned short mPort{5000};
+      std::thread* httpProcess;
+      bool run{false};
+      bool enableSSL{false};
+      ConfigOptions options;
       // Put handling controls
       bool m_putEnabled;
       std::set<std::string> m_putAllowedHosts;
@@ -128,6 +164,8 @@ namespace mtconnect
       std::unique_ptr<FileCache> m_fileCache;
       ErrorFunction m_errorFunction;
       StringList m_fields;
+      Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket);
+      Routing::QueryMap getQueries(const std::string& queries);
     };
   }  // namespace http_server
 }  // namespace mtconnect

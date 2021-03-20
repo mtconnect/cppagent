@@ -34,7 +34,6 @@
 #include <unordered_map>
 
 #include <date/date.h>
-
 #include <chrono>
 #include <ctime>
 #include <fstream>
@@ -47,6 +46,13 @@
 #include <string>
 #include <time.h>
 #include <variant>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast.hpp>
+namespace beast=boost::beast;
+namespace beast = boost::beast;         // from <boost/beast.hpp>
+namespace http = beast::http;           // from <boost/beast/http.hpp>
+namespace net = boost::asio;            // from <boost/asio.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef _WINDOWS
