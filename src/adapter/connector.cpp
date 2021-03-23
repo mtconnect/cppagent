@@ -68,6 +68,7 @@ namespace mtconnect
 
     Connector::~Connector()
     {
+      m_socket.cancel();
       if (m_socket.is_open())
         m_socket.close();
     }
@@ -93,7 +94,7 @@ namespace mtconnect
       
       return true;
     }
-
+    
     bool Connector::connect()
     {
       m_connected = false;
@@ -112,11 +113,8 @@ namespace mtconnect
       return true;
     }
     
-    void Connector::reconnect()
+    inline void Connector::asyncTryConnect()
     {
-      g_logger << dlib::LINFO << "reconnect: retry connection in "
-        << m_reconnectInterval.count() << "ms";
-      close();
       m_timer.expires_from_now(m_reconnectInterval);
       m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
         if (ec != boost::asio::error::operation_aborted)
@@ -127,6 +125,14 @@ namespace mtconnect
       }));
     }
     
+    void Connector::reconnect()
+    {
+      g_logger << dlib::LINFO << "reconnect: retry connection in "
+        << m_reconnectInterval.count() << "ms";
+      close();
+      asyncTryConnect();
+    }
+    
     void Connector::connected(const boost::system::error_code& ec,
                               ip::tcp::resolver::iterator it)
     {
@@ -134,13 +140,16 @@ namespace mtconnect
       {
         g_logger << dlib::LERROR << ec.category().message(ec.value()) << ": "
         << ec.message();
-        reconnect();
+        asyncTryConnect();
       }
       else
       {
         g_logger << dlib::LINFO << "Connected with: " << m_socket.remote_endpoint();
         m_timer.cancel();
         
+        m_socket.set_option(asio::ip::tcp::no_delay(true));
+        m_socket.set_option(asio::socket_base::linger(false, 0));
+        m_socket.set_option(asio::socket_base::keep_alive(true));
         m_localPort = m_socket.local_endpoint().port();
         
         connected();

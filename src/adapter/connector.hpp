@@ -70,8 +70,6 @@ namespace mtconnect
       }
       std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
 
-
-
       // The connected state of this connection
       bool isConnected() const { return m_connected; }
 
@@ -103,6 +101,7 @@ namespace mtconnect
     protected:
       void close();
       void reconnect();
+      void asyncTryConnect();
       void connected(const boost::system::error_code& error,
                      boost::asio::ip::tcp::resolver::iterator it);
       void writer(boost::system::error_code ec, std::size_t length);
