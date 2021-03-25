@@ -17,18 +17,18 @@
 
 #pragma once
 
-#include "utilities.hpp"
-#include <unordered_map>
-
-#include <dlib/logger.h>
-#include <dlib/md5.h>
-
 #include <chrono>
 #include <map>
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <variant>
+
+#include <dlib/logger.h>
+#include <dlib/md5.h>
+
+#include "utilities.hpp"
 
 namespace mtconnect
 {

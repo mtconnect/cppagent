@@ -17,6 +17,10 @@
 
 #pragma once
 
+#include <functional>
+#include <list>
+#include <string>
+
 namespace mtconnect
 {
   namespace device_model
@@ -31,6 +35,7 @@ namespace mtconnect
   using AssetPtr = std::shared_ptr<Asset>;
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   using DevicePtr = std::shared_ptr<device_model::Device>;
+  using StringList = std::list<std::string>;
 
   namespace observation
   {

@@ -17,12 +17,12 @@
 
 #include "rolling_file_logger.hpp"
 
-#include "utilities.hpp"
-#include <sys/stat.h>
-
 #include <cstdio>
 #include <fcntl.h>
 #include <ostream>
+#include <sys/stat.h>
+
+#include "utilities.hpp"
 
 using namespace dlib;
 using namespace std;

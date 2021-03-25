@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "entity/entity.hpp"
-#include "transform.hpp"
-
 #include <chrono>
 #include <regex>
+
+#include "entity/entity.hpp"
+#include "transform.hpp"
 
 namespace mtconnect
 {

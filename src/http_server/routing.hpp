@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include <dlib/logger.h>
-
 #include <list>
 #include <optional>
 #include <regex>
@@ -26,6 +24,8 @@
 #include <sstream>
 #include <string>
 #include <variant>
+
+#include <dlib/logger.h>
 
 namespace mtconnect
 {

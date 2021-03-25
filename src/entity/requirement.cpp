@@ -17,18 +17,17 @@
 
 #include "requirement.hpp"
 
-#include "entity.hpp"
-#include "factory.hpp"
-#include <string_view>
-
-#include <date/date.h>
-
-#include <dlib/logger.h>
-
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <date/date.h>
+#include <string_view>
+
+#include <dlib/logger.h>
+
+#include "entity.hpp"
+#include "factory.hpp"
 
 using namespace std;
 

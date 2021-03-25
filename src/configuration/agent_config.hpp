@@ -17,17 +17,19 @@
 
 #pragma once
 
+#include <boost/asio.hpp>
+
+#include <chrono>
+#include <string>
+
+#include <dlib/logger.h>
+
 #include "adapter/adapter.hpp"
 #include "adapter/adapter_pipeline.hpp"
 #include "http_server/file_cache.hpp"
 #include "parser.hpp"
 #include "service.hpp"
 #include "utilities.hpp"
-
-#include <dlib/logger.h>
-
-#include <chrono>
-#include <string>
 
 namespace mtconnect
 {
@@ -94,7 +96,7 @@ namespace mtconnect
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 
-      //void boost_set_log_level(const boost::log::trivial::severity_level level);
+      // void boost_set_log_level(const boost::log::trivial::severity_level level);
 
       void monitorThread();
 

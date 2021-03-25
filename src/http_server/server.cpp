@@ -17,9 +17,9 @@
 
 #include "server.hpp"
 
-#include "response.hpp"
-
 #include <dlib/logger.h>
+
+#include "response.hpp"
 
 namespace mtconnect
 {

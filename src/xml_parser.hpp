@@ -17,17 +17,17 @@
 
 #pragma once
 
+#include <list>
+#include <set>
+
+#include <libxml/tree.h>
+
 #include "assets/cutting_tool.hpp"
 #include "device_model/component.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "observation/checkpoint.hpp"
 #include "utilities.hpp"
-
-#include <libxml/tree.h>
-
-#include <list>
-#include <set>
 
 namespace mtconnect
 {

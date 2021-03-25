@@ -17,10 +17,10 @@
 
 #include "device.hpp"
 
+#include <dlib/logger.h>
+
 #include "configuration/config_options.hpp"
 #include "entity/factory.hpp"
-
-#include <dlib/logger.h>
 
 using namespace std;
 

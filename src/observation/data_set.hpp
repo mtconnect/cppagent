@@ -17,10 +17,6 @@
 
 #pragma once
 
-#include "utilities.hpp"
-
-#include <dlib/logger.h>
-
 #include <cmath>
 #include <regex>
 #include <set>
@@ -28,6 +24,10 @@
 #include <utility>
 #include <variant>
 #include <vector>
+
+#include <dlib/logger.h>
+
+#include "utilities.hpp"
 
 namespace mtconnect
 {

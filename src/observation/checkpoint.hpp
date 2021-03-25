@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include "observation.hpp"
-#include "utilities.hpp"
-#include <unordered_map>
-
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+#include "observation.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

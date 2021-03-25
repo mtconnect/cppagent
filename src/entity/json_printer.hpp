@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "entity.hpp"
-
 #include <nlohmann/json.hpp>
+
+#include "entity.hpp"
 
 using json = nlohmann::json;
 

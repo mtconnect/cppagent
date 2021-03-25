@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "observation/observation.hpp"
 #include "pipeline_context.hpp"
 #include "pipeline_contract.hpp"
 #include "transform.hpp"

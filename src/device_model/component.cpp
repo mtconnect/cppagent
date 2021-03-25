@@ -17,6 +17,9 @@
 
 #include "component.hpp"
 
+#include <cstdlib>
+#include <stdexcept>
+
 #include "agent.hpp"
 #include "composition.hpp"
 #include "configuration/configuration.hpp"
@@ -24,9 +27,6 @@
 #include "description.hpp"
 #include "device_model/device.hpp"
 #include "reference.hpp"
-
-#include <cstdlib>
-#include <stdexcept>
 
 using namespace std;
 

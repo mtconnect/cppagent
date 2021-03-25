@@ -17,9 +17,9 @@
 
 #include "file_cache.hpp"
 
-#include "cached_file.hpp"
-
 #include <dlib/logger.h>
+
+#include "cached_file.hpp"
 
 using namespace std;
 

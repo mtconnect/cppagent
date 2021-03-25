@@ -17,15 +17,15 @@
 
 #pragma once
 
-#include "utilities.hpp"
+#include <chrono>
 #include <condition_variable>
+#include <mutex>
+#include <thread>
 
 #include <dlib/server.h>
 #include <dlib/sockets.h>
 
-#include <chrono>
-#include <mutex>
-#include <thread>
+#include "utilities.hpp"
 
 #define HEARTBEAT_FREQ 60000
 

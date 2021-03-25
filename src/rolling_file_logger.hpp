@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include "utilities.hpp"
+#include <mutex>
+#include <streambuf>
+#include <string>
 
 #include <dlib/dir_nav.h>
 #include <dlib/threads.h>
 
-#include <mutex>
-#include <streambuf>
-#include <string>
+#include "utilities.hpp"
 
 namespace mtconnect
 {

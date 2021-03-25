@@ -17,20 +17,19 @@
 
 #pragma once
 
-#include "data_set.hpp"
-#include "device_model/component.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "entity/entity.hpp"
-#include "utilities.hpp"
-
-#include <date/date.h>
-
 #include <cmath>
+#include <date/date.h>
 #include <set>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
+
+#include "data_set.hpp"
+#include "device_model/component.hpp"
+#include "device_model/data_item/data_item.hpp"
+#include "entity/entity.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

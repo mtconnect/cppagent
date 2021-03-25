@@ -17,13 +17,13 @@
 
 #include "entity/xml_parser.hpp"
 
-#include "xml_helper.hpp"
-
 #include <dlib/logger.h>
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+
+#include "xml_helper.hpp"
 
 using namespace std;
 

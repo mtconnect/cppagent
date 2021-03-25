@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#include <boost/asio.hpp>
+
 #include "adapter_pipeline.hpp"
 
 #include "agent.hpp"

@@ -17,9 +17,9 @@
 
 #include "assets/cutting_tool.hpp"
 
-#include "printer.hpp"
-
 #include <sstream>
+
+#include "printer.hpp"
 
 using namespace std;
 

@@ -18,7 +18,6 @@
 #include "timestamp_extractor.hpp"
 
 #include <date/date.h>
-
 #include <optional>
 
 using namespace std;

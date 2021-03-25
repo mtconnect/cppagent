@@ -17,11 +17,11 @@
 
 #include "agent_device.hpp"
 
+#include <dlib/logger.h>
+
 #include "adapter/adapter.hpp"
 #include "data_item/constraints.hpp"
 #include "data_item/data_item.hpp"
-
-#include <dlib/logger.h>
 
 using namespace std;
 using namespace std::literals;

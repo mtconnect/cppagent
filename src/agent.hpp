@@ -17,6 +17,16 @@
 
 #pragma once
 
+#include <chrono>
+#include <list>
+#include <map>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "adapter/adapter.hpp"
 #include "agent_loopback_pipeline.hpp"
 #include "assets/asset_buffer.hpp"
@@ -30,16 +40,6 @@
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
 #include "xml_parser.hpp"
-#include <unordered_map>
-
-#include <chrono>
-#include <list>
-#include <map>
-#include <memory>
-#include <set>
-#include <sstream>
-#include <string>
-#include <vector>
 
 namespace mtconnect
 {

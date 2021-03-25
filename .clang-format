@@ -21,6 +21,10 @@ BraceWrapping:
   SplitEmptyFunction: false
   SplitEmptyRecord: false
 IncludeCategories:
+  - Regex:           '^("|<)boost/'
+    Priority:        1
+  - Regex:           '^<boost/asio.+'
+    Priority:        -1
   - Regex:           '^("|<)date/'
     Priority:        2
   - Regex:           '^("|<)dlib/'
@@ -29,7 +33,7 @@ IncludeCategories:
     Priority:        4
   - Regex:           '^("|<)nlohmann/'
     Priority:        5
-  - Regex:           '<[[:alnum:].]+>'
-    Priority:        6
+  - Regex:           '^<.+'
+    Priority:        2
   - Regex:           '.*'
-    Priority:        1
+    Priority:        8

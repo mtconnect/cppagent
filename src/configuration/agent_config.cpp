@@ -15,42 +15,28 @@
 //    limitations under the License.
 //
 
-#include <boost/asio.hpp>
 #include "agent_config.hpp"
 
-#include "agent.hpp"
-#include "configuration/config_options.hpp"
-#include "device_model/device.hpp"
-#include "option.hpp"
-#include "rolling_file_logger.hpp"
-#include "version.h"
-#include "xml_printer.hpp"
-#include <sys/stat.h>
-
-#include <date/date.h>
-
-#include <dlib/logger.h>
-
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
+#include <boost/asio.hpp>
 #include <boost/log/attributes.hpp>
+#include <boost/log/attributes/scoped_attribute.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/expressions/formatters.hpp>
-#include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/attributes/scoped_attribute.hpp>
-#include <boost/log/utility/setup/console.hpp>
-#include <boost/log/support/date_time.hpp>
+#include <boost/log/expressions/formatters/named_scope.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sources/global_logger_storage.hpp>
 #include <boost/log/sources/severity_feature.hpp>
 #include <boost/log/sources/severity_logger.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/expressions/formatters/named_scope.hpp>
+#include <boost/log/support/date_time.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/sinks/text_ostream_backend.hpp>
 
 #include <algorithm>
 #include <chrono>
+#include <date/date.h>
 #include <errno.h>
 #include <filesystem>
 #include <fstream>
@@ -59,8 +45,18 @@
 #include <sstream>
 #include <stdexcept>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <thread>
 #include <vector>
+
+
+#include "agent.hpp"
+#include "configuration/config_options.hpp"
+#include "device_model/device.hpp"
+#include "option.hpp"
+#include "rolling_file_logger.hpp"
+#include "version.h"
+#include "xml_printer.hpp"
 
 // If Windows XP
 #if defined(_WINDOWS)
@@ -441,15 +437,14 @@ namespace mtconnect
     void AgentConfiguration::configureLogger(const ptree &config)
     {
       auto logger_config = config.get_child_optional("logger_config");
-      
+
       b_logger::add_console_log(
-        std::cout, b_logger::keywords::format =
-                        (b_logger::expressions::stream
-                        << b_logger::expressions::format_date_time<boost::posix_time::ptime>(
-                                "TimeStamp", "%Y-%m-%d %H:%M:%S ")
-                        << "[" << b_logger::trivial::severity << "] " << named_scope << ": "
-                        << b_logger::expressions::smessage));
-     
+          std::cout, b_logger::keywords::format =
+                         (b_logger::expressions::stream
+                          << b_logger::expressions::format_date_time<boost::posix_time::ptime>(
+                                 "TimeStamp", "%Y-%m-%d %H:%M:%S ")
+                          << "[" << b_logger::trivial::severity << "] " << named_scope << ": "
+                          << b_logger::expressions::smessage));
 
 #if 0
       m_loggerFile.reset();

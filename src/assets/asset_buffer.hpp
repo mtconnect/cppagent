@@ -17,15 +17,15 @@
 
 #pragma once
 
-#include "asset.hpp"
-#include "entity.hpp"
-#include "utilities.hpp"
-#include <unordered_map>
-
 #include <list>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
+
+#include "asset.hpp"
+#include "entity.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

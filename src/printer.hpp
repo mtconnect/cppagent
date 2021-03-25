@@ -1,14 +1,14 @@
 
 #pragma once
 
-#include "assets/asset.hpp"
-#include "observation/observation.hpp"
-#include "utilities.hpp"
-
 #include <list>
 #include <map>
 #include <string>
 #include <vector>
+
+#include "assets/asset.hpp"
+#include "observation/observation.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

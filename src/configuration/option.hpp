@@ -16,10 +16,10 @@
 //
 
 #pragma once
-#include "utilities.hpp"
-
 #include <list>
 #include <string>
+
+#include "utilities.hpp"
 
 namespace mtconnect
 {

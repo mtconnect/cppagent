@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "utilities.hpp"
-
 #include <string>
+
+#include "utilities.hpp"
 
 namespace mtconnect
 {

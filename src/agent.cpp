@@ -17,6 +17,22 @@
 
 #include "agent.hpp"
 
+#include <algorithm>
+#include <chrono>
+#include <fcntl.h>
+#include <functional>
+#include <sstream>
+#include <stdexcept>
+#include <sys/stat.h>
+#include <thread>
+
+#include <dlib/config_reader.h>
+#include <dlib/dir_nav.h>
+#include <dlib/logger.h>
+#include <dlib/misc_api.h>
+#include <dlib/queue.h>
+#include <dlib/tokenizer.h>
+
 #include "assets/asset.hpp"
 #include "assets/cutting_tool.hpp"
 #include "assets/file_asset.hpp"
@@ -26,22 +42,6 @@
 #include "json_printer.hpp"
 #include "observation/observation.hpp"
 #include "xml_printer.hpp"
-#include <sys/stat.h>
-
-#include <dlib/config_reader.h>
-#include <dlib/dir_nav.h>
-#include <dlib/logger.h>
-#include <dlib/misc_api.h>
-#include <dlib/queue.h>
-#include <dlib/tokenizer.h>
-
-#include <algorithm>
-#include <chrono>
-#include <fcntl.h>
-#include <functional>
-#include <sstream>
-#include <stdexcept>
-#include <thread>
 
 using namespace std;
 using namespace mtconnect::observation;

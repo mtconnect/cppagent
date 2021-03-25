@@ -16,14 +16,14 @@
 
 #pragma once
 
+#include <chrono>
+#include <regex>
+
 #include "entity/entity.hpp"
 #include "observation/observation.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
 #include "transform.hpp"
-
-#include <chrono>
-#include <regex>
 
 namespace mtconnect
 {

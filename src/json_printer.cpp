@@ -17,21 +17,21 @@
 
 #include "json_printer.hpp"
 
-#include "device_model/composition.hpp"
-#include "device_model/configuration/configuration.hpp"
-#include "device_model/device.hpp"
-#include "device_model/reference.hpp"
-#include "entity/json_printer.hpp"
-#include "version.h"
+#include <cstdlib>
+#include <set>
+#include <sstream>
 
 #include <dlib/logger.h>
 #include <dlib/sockets.h>
 
 #include <nlohmann/json.hpp>
 
-#include <cstdlib>
-#include <set>
-#include <sstream>
+#include "device_model/composition.hpp"
+#include "device_model/configuration/configuration.hpp"
+#include "device_model/device.hpp"
+#include "device_model/reference.hpp"
+#include "entity/json_printer.hpp"
+#include "version.h"
 
 using namespace std;
 using json = nlohmann::json;

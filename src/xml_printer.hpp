@@ -17,10 +17,11 @@
 
 #pragma once
 
+#include <unordered_set>
+
 #include "assets/asset.hpp"
 #include "printer.hpp"
 #include "utilities.hpp"
-#include <unordered_set>
 
 extern "C"
 {

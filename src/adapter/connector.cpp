@@ -17,10 +17,10 @@
 
 #include "connector.hpp"
 
-#include <dlib/logger.h>
-
 #include <chrono>
 #include <utility>
+
+#include <dlib/logger.h>
 
 using namespace std;
 using namespace std::chrono;

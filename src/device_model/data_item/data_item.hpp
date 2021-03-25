@@ -16,6 +16,10 @@
 //
 
 #pragma once
+#include <map>
+
+#include <dlib/threads.h>
+
 #include "constraints.hpp"
 #include "definition.hpp"
 #include "device_model/component.hpp"
@@ -26,10 +30,6 @@
 #include "source.hpp"
 #include "unit_conversion.hpp"
 #include "utilities.hpp"
-
-#include <dlib/threads.h>
-
-#include <map>
 
 #ifdef PASCAL
 #undef PASCAL

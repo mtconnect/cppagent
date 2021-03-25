@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include <string_view>
-
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace mtconnect
 {

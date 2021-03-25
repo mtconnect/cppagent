@@ -17,12 +17,12 @@
 
 #pragma once
 
+#include <dlib/server.h>
+
 #include "configuration/config_options.hpp"
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
-
-#include <dlib/server.h>
 
 namespace mtconnect
 {

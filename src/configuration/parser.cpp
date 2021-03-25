@@ -17,10 +17,10 @@
 
 #include "parser.hpp"
 
-#include "utilities.hpp"
-
 #include <fstream>
 #include <ostream>
+
+#include "utilities.hpp"
 
 //#define BOOST_SPIRIT_DEBUG 1
 namespace std
@@ -140,7 +140,7 @@ namespace mtconnect
         using qi::on_error;
         using spirit::ascii::char_;
 
-        m_name %= lexeme[+(char_ - (space | char_("=\{}") | eol))];
+        m_name %= lexeme[+(char_ - (space | char_("=\\{}") | eol))];
         m_value %= *blank > no_skip[+(char_ - (char_("}#") | eol))];
         m_property = (m_name >> "=" > m_value > (eol | &char_("}#")))[property(_val, _1, _2)];
         m_tree = (m_name >> "{" >> *m_node > "}")[tree(_val, _1, _2)];
