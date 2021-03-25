@@ -49,7 +49,6 @@
 #include <thread>
 #include <vector>
 
-
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"

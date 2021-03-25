@@ -19,6 +19,8 @@
 
 #include <memory>
 #include <mutex>
+#include <unordered_map>
+#include <memory>
 
 #include "pipeline_contract.hpp"
 
