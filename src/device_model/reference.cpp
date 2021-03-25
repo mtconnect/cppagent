@@ -17,17 +17,17 @@
 
 #include "reference.hpp"
 
-#include "device.hpp"
-#include "entity.hpp"
-#include "utilities.hpp"
-
-#include <dlib/logger.h>
-
 #include <list>
 #include <map>
 #include <optional>
 #include <string>
 #include <utility>
+
+#include <dlib/logger.h>
+
+#include "device.hpp"
+#include "entity.hpp"
+#include "utilities.hpp"
 
 using namespace std;
 static dlib::logger g_logger("reference");

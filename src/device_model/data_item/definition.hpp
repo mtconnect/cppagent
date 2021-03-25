@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "entity.hpp"
-
 #include <regex>
+
+#include "entity.hpp"
 
 namespace mtconnect
 {

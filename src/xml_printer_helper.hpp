@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "xml_helper.hpp"
-
 #include <libxml/xmlwriter.h>
+
+#include "xml_helper.hpp"
 
 namespace mtconnect
 {

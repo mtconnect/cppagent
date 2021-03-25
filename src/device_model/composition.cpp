@@ -17,11 +17,11 @@
 
 #include "composition.hpp"
 
+#include <sstream>
+
 #include "configuration/configuration.hpp"
 #include "description.hpp"
 #include "entity.hpp"
-
-#include <sstream>
 
 using namespace std;
 

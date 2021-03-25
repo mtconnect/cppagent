@@ -17,22 +17,14 @@
 
 #pragma once
 
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/steady_timer.hpp>
-
-#include "utilities.hpp"
-
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/io_context_strand.hpp>
-#include <boost/asio/streambuf.hpp>
-#include <boost/asio/coroutine.hpp>
-#include <boost/array.hpp>
-#include <boost/asio/detached.hpp>
-
+#include <boost/asio.hpp>
 
 #include <chrono>
+#include <condition_variable>
 #include <mutex>
 #include <thread>
+
+#include "utilities.hpp"
 
 #define HEARTBEAT_FREQ 60000
 

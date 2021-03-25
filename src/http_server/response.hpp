@@ -42,8 +42,13 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <variant>
 
+#include <dlib/logger.h>
+#include <dlib/md5.h>
+
+#include "utilities.hpp"
 
 namespace mtconnect
 {

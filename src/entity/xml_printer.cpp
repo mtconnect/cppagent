@@ -17,12 +17,13 @@
 
 #include "xml_printer.hpp"
 
-#include "xml_printer_helper.hpp"
 #include <unordered_map>
 
 #include <dlib/logger.h>
 
 #include <libxml/xmlwriter.h>
+
+#include "xml_printer_helper.hpp"
 
 using namespace std;
 using namespace mtconnect::observation;

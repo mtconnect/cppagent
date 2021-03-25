@@ -31,11 +31,9 @@
 #define NOMINMAX 1
 #endif
 
-#include <unordered_map>
-
-#include <date/date.h>
 #include <chrono>
 #include <ctime>
+#include <date/date.h>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -45,6 +43,7 @@
 #include <sstream>
 #include <string>
 #include <time.h>
+#include <unordered_map>
 #include <variant>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
@@ -70,10 +69,9 @@ typedef unsigned __int64 uint64_t;
 #else
 #define O_BINARY 0
 #define ISNAN(x) std::isnan(x)
-#include <sys/resource.h>
-
 #include <cstdint>
 #include <memory>
+#include <sys/resource.h>
 #include <unistd.h>
 #endif
 

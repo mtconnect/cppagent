@@ -17,14 +17,14 @@
 
 #pragma once
 
+#include <map>
+#include <utility>
+#include <vector>
+
 #include "entity.hpp"
 #include "factory.hpp"
 #include "requirement.hpp"
 #include "utilities.hpp"
-
-#include <map>
-#include <utility>
-#include <vector>
 
 struct _xmlNode;
 namespace mtconnect

@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "asset.hpp"
-#include "utilities.hpp"
-
 #include <map>
 #include <utility>
 #include <vector>
+
+#include "asset.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

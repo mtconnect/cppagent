@@ -17,10 +17,7 @@
 
 #include "xml_parser.hpp"
 
-#include "assets/cutting_tool.hpp"
-#include "device_model/composition.hpp"
-#include "entity/xml_parser.hpp"
-#include "xml_printer.hpp"
+#include <stdexcept>
 
 #include <dlib/logger.h>
 
@@ -28,7 +25,10 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
-#include <stdexcept>
+#include "assets/cutting_tool.hpp"
+#include "device_model/composition.hpp"
+#include "entity/xml_parser.hpp"
+#include "xml_printer.hpp"
 
 #if _MSC_VER >= 1900
 #define gets gets_s

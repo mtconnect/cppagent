@@ -17,10 +17,11 @@
 
 #pragma once
 
+#include <unordered_map>
+
 #include "observation/data_set.hpp"
 #include "qname.hpp"
 #include "requirement.hpp"
-#include <unordered_map>
 
 namespace mtconnect
 {

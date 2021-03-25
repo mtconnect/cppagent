@@ -17,10 +17,10 @@
 
 #include "parser.hpp"
 
-#include "utilities.hpp"
-
 #include <fstream>
 #include <ostream>
+
+#include "utilities.hpp"
 
 //#define BOOST_SPIRIT_DEBUG 1
 namespace std
@@ -78,16 +78,16 @@ namespace mtconnect
 {
   namespace configuration
   {
-    struct property
+    struct config_property
     {
       static void f(pair<std::string, std::string> &t, const std::string &f, const std::string &s)
       {
         t = make_pair(f, trim(s));
       }
     };
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, property, property::f, 3);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, property, config_property::f, 3);
 
-    struct tree
+    struct config_tree
     {
       static void f(pair<std::string, pt::ptree> &t, const std::string &f,
                     const vector<pair<std::string, pt::ptree>> &s)
@@ -100,7 +100,7 @@ namespace mtconnect
         }
       }
     };
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, tree, tree::f, 3);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, tree, config_tree::f, 3);
 
     struct top
     {
@@ -140,7 +140,7 @@ namespace mtconnect
         using qi::on_error;
         using spirit::ascii::char_;
 
-        m_name %= lexeme[+(char_ - (space | char_("=\{}") | eol))];
+        m_name %= lexeme[+(char_ - (space | char_("=\\{}") | eol))];
         m_value %= *blank > no_skip[+(char_ - (char_("}#") | eol))];
         m_property = (m_name >> "=" > m_value > (eol | &char_("}#")))[property(_val, _1, _2)];
         m_tree = (m_name >> "{" >> *m_node > "}")[tree(_val, _1, _2)];

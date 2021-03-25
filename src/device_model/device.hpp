@@ -16,12 +16,12 @@
 //
 
 #pragma once
+#include <map>
+#include <unordered_map>
+
 #include "component.hpp"
 #include "data_item/data_item.hpp"
 #include "utilities.hpp"
-#include <unordered_map>
-
-#include <map>
 
 namespace mtconnect
 {

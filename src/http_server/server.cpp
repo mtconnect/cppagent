@@ -17,8 +17,6 @@
 
 #include "server.hpp"
 
-#include "response.hpp"
-
 #include <dlib/logger.h>
 
 #include <boost/beast/core.hpp>
@@ -26,7 +24,6 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio.hpp>
 #include <thread>
-
 
 namespace mtconnect
 {

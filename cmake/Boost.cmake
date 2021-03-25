@@ -1,11 +1,9 @@
-if(NOT Boost_FOUND)
-  if(WIN32)
-    set(Boost_USE_MULTITHREADED ON CACHE BOOL "Boost thread support")
-    set(Boost_USE_STATIC_LIBS ON CACHE BOOL "Boost static libs")
-    set(Boost_USE_STATIC_RUNTIME ON CACHE BOOL "Boost static runtime")
-  endif()
-  
-  find_package(Boost 1.72.0 REQUIRED COMPONENTS system exception filesystem thread chrono date_time regex)
+set(Boost_USE_MULTITHREADED ON CACHE BOOL "Boost thread support" FORCE)
+set(Boost_USE_STATIC_LIBS OFF CACHE BOOL "" FORCE)
+set(Boost_USE_STATIC_RUNTIME OFF CACHE BOOL "" FORCE)
+ 
+find_package(Boost 1.72 REQUIRED COMPONENTS log_setup log REQUIRED)
+set_target_properties(${TARGET} PROPERTIES COMPILE_DEFINITIONS "BOOST_LOG_DYN_LINK")
 
-  include_directories(${Boost_INCLUDE_DIRS})
-endif()
+include_directories(${Boost_INCLUDE_DIRS})
+

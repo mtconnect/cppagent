@@ -18,15 +18,15 @@
 #define __STDC_LIMIT_MACROS 1
 #include "adapter/adapter.hpp"
 
-#include "configuration/config_options.hpp"
-#include "device_model/device.hpp"
-
-#include <dlib/logger.h>
-
 #include <algorithm>
 #include <chrono>
 #include <thread>
 #include <utility>
+
+#include <dlib/logger.h>
+
+#include "configuration/config_options.hpp"
+#include "device_model/device.hpp"
 
 using namespace std;
 using namespace std::literals;

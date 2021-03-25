@@ -169,6 +169,7 @@ target_link_libraries(
     date
     json
     LibXml2::LibXml2
+    Boost::log Boost::log_setup
     $<$<PLATFORM_ID:Linux>:pthread>
 )
 target_compile_definitions(

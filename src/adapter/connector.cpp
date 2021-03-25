@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#include <boost/asio.hpp>
+
 #include "connector.hpp"
 
 #include <dlib/logger.h>
@@ -25,9 +27,12 @@
 #include <boost/asio/connect.hpp>
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
+
 #include <chrono>
 #include <utility>
 #include <functional>
+
+#include <dlib/logger.h>
 
 using namespace std;
 using namespace std::chrono;

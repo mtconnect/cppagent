@@ -17,12 +17,12 @@
 
 #include "service.hpp"
 
-#include "version.h"
+#include <cstring>
+#include <fstream>
 
 #include <dlib/logger.h>
 
-#include <cstring>
-#include <fstream>
+#include "version.h"
 
 #ifdef _WINDOWS
 #define stricmp _stricmp
@@ -49,16 +49,16 @@ namespace mtconnect
 
 // Don't include WinSock.h when processing <windows.h>
 #define _WINSOCKAPI_
-#include <sys/stat.h>
-
-#include <thread>
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <strsafe.h>
+#include <sys/stat.h>
 #include <windows.h>
+
+#include <dlib/threads.h>
 
 #if _MSC_VER >= 1900
 #define gets gets_s
@@ -639,11 +639,11 @@ namespace mtconnect
   }  // namespace configuration
 }  // namespace mtconnect
 #else
-#include "fcntl.h"
-#include "sys/stat.h"
-
 #include <csignal>
 #include <iostream>
+
+#include "fcntl.h"
+#include "sys/stat.h"
 
 namespace mtconnect
 {

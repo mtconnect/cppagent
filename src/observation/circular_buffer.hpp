@@ -17,13 +17,14 @@
 
 #pragma once
 
-#include "checkpoint.hpp"
-#include "utilities.hpp"
 #include <boost/circular_buffer.hpp>
 
 #include <cassert>
 #include <memory>
 #include <mutex>
+
+#include "checkpoint.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

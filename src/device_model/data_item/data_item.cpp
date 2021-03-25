@@ -18,15 +18,15 @@
 
 #include "data_item.hpp"
 
-#include "adapter/adapter.hpp"
-#include "device_model/device.hpp"
-#include "entity/requirement.hpp"
-
-#include <dlib/logger.h>
-
 #include <array>
 #include <map>
 #include <string>
+
+#include <dlib/logger.h>
+
+#include "adapter/adapter.hpp"
+#include "device_model/device.hpp"
+#include "entity/requirement.hpp"
 
 using namespace std;
 

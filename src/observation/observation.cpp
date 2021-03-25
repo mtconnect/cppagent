@@ -17,13 +17,13 @@
 
 #include "observation.hpp"
 
-#include "device_model/data_item/data_item.hpp"
-#include "entity/factory.hpp"
+#include <mutex>
+#include <regex>
 
 #include <dlib/logger.h>
 
-#include <mutex>
-#include <regex>
+#include "device_model/data_item/data_item.hpp"
+#include "entity/factory.hpp"
 
 #ifdef _WINDOWS
 #define strcasecmp stricmp

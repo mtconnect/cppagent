@@ -16,12 +16,12 @@
 //
 
 #pragma once
+#include <map>
+
 #include "component.hpp"
 #include "data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "utilities.hpp"
-
-#include <map>
 
 namespace mtconnect
 {

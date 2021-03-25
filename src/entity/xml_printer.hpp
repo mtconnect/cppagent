@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include "entity.hpp"
 #include <unordered_set>
+
+#include "entity.hpp"
 
 extern "C"
 {

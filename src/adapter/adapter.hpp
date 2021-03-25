@@ -17,19 +17,23 @@
 
 #pragma once
 
-#include "adapter_pipeline.hpp"
-#include "connector.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "utilities.hpp"
-
 #include <date/tz.h>
 
 #include <chrono>
+#include <date/tz.h>
 #include <optional>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+
+#include <dlib/sockets.h>
+#include <dlib/threads.h>
+
+#include "adapter_pipeline.hpp"
+#include "connector.hpp"
+#include "device_model/data_item/data_item.hpp"
+#include "utilities.hpp"
 
 using namespace dlib;
 

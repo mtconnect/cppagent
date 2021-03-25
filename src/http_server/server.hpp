@@ -16,7 +16,7 @@
 //
 
 #pragma once
-//#include "fields_alloc.hpp"
+
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast.hpp>
@@ -25,8 +25,6 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
-//#include <boost/beast/ssl.hpp>
-//#include <boost/asio/ssl/stream.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -37,14 +35,13 @@
 #include <chrono>
 #include <mutex>
 #include <regex>
+#include "configuration/config_options.hpp"
+
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
-#include "config_options.hpp"
+#include "configuration/config_options.hpp"
 #include "utilities.hpp"
-
-//#include "http_server.hpp"
-//#include <dlib/server.h>
 
 namespace mtconnect
 {

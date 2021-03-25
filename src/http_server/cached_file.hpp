@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "utilities.hpp"
-
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <memory>
+
+#include "utilities.hpp"
 
 namespace mtconnect
 {

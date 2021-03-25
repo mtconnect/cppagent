@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "utilities.hpp"
 #include <condition_variable>
-
 #include <mutex>
 #include <vector>
+
+#include "utilities.hpp"
 
 namespace mtconnect
 {

@@ -19,13 +19,12 @@
 
 #include "option.hpp"
 
-#include <sys/stat.h>
-
 #include <cctype>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <sys/stat.h>
 
 using namespace std;
 

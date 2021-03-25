@@ -17,17 +17,17 @@
 
 #pragma once
 
-#include "composition.hpp"
-#include "configuration/configuration.hpp"
-#include "entity/factory.hpp"
-#include "utilities.hpp"
-
 #include <list>
 #include <map>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "composition.hpp"
+#include "configuration/configuration.hpp"
+#include "entity/factory.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {

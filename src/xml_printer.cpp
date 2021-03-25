@@ -15,7 +15,21 @@
 //    limitations under the License.
 //
 
+// Exclude
+#include <boost/asio.hpp>
+// End Exclude
+
 #include "xml_printer.hpp"
+
+#include <set>
+#include <typeindex>
+#include <typeinfo>
+#include <utility>
+
+#include <dlib/logger.h>
+#include <dlib/sockets.h>
+
+#include <libxml/xmlwriter.h>
 
 #include "assets/asset.hpp"
 #include "assets/cutting_tool.hpp"
@@ -25,15 +39,7 @@
 #include "entity/xml_printer.hpp"
 #include "version.h"
 
-#include <dlib/logger.h>
 #include <boost/asio/ip/host_name.hpp>
-
-#include <libxml/xmlwriter.h>
-
-#include <set>
-#include <typeindex>
-#include <typeinfo>
-#include <utility>
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr)                                           \

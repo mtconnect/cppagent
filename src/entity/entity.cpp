@@ -15,10 +15,11 @@
 //    limitations under the License.
 //
 
-#include "factory.hpp"
 #include <unordered_set>
 
 #include <dlib/logger.h>
+
+#include "factory.hpp"
 
 using namespace std;
 

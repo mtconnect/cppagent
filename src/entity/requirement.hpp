@@ -17,10 +17,6 @@
 
 #pragma once
 
-#include "observation/data_set.hpp"
-#include "utilities.hpp"
-#include <unordered_set>
-
 #include <atomic>
 #include <cmath>
 #include <functional>
@@ -35,9 +31,13 @@
 #include <string>
 #include <tuple>
 #include <typeindex>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
+
+#include "observation/data_set.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {
