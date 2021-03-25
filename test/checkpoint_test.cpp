@@ -17,10 +17,9 @@
 
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
+#include <boost/asio.hpp>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
 #include "observation/checkpoint.hpp"
 #include "agent_test_helper.hpp"
 

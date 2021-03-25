@@ -15,6 +15,7 @@
 //    limitations under the License.
 //
 
+#include <boost/asio.hpp>
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "fcntl.h"
