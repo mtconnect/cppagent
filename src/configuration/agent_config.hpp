@@ -94,6 +94,8 @@ namespace mtconnect
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 
+      //void boost_set_log_level(const boost::log::trivial::severity_level level);
+
       void monitorThread();
 
     protected:

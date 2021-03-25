@@ -78,16 +78,16 @@ namespace mtconnect
 {
   namespace configuration
   {
-    struct property
+    struct config_property
     {
       static void f(pair<std::string, std::string> &t, const std::string &f, const std::string &s)
       {
         t = make_pair(f, trim(s));
       }
     };
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, property, property::f, 3);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, property, config_property::f, 3);
 
-    struct tree
+    struct config_tree
     {
       static void f(pair<std::string, pt::ptree> &t, const std::string &f,
                     const vector<pair<std::string, pt::ptree>> &s)
@@ -100,7 +100,7 @@ namespace mtconnect
         }
       }
     };
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, tree, tree::f, 3);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, tree, config_tree::f, 3);
 
     struct top
     {
