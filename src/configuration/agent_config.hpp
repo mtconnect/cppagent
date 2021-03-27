@@ -18,6 +18,11 @@
 #pragma once
 
 #include <boost/asio.hpp>
+#include <boost/log/attributes.hpp>
+#include <boost/log/sinks/text_file_backend.hpp>
+#include <boost/log/support/date_time.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/utility/setup/console.hpp>
 
 #include <chrono>
 #include <string>
@@ -44,7 +49,6 @@ namespace mtconnect
   }
 
   class XmlPrinter;
-  class RollingFileLogger;
   namespace configuration
   {
     using DevicePtr = std::shared_ptr<device_model::Device>;
@@ -74,8 +78,6 @@ namespace mtconnect
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
       const Agent *getAgent() const { return m_agent.get(); }
 
-      const RollingFileLogger *getLogger() const { return m_loggerFile.get(); }
-
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
     protected:
@@ -91,12 +93,9 @@ namespace mtconnect
       void loadTypes(const ptree &tree, http_server::FileCache *cache);
       void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
 
-      void LoggerHook(const std::string &loggerName, const dlib::log_level &l,
-                      const dlib::uint64 threadId, const char *message);
-
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 
-      // void boost_set_log_level(const boost::log::trivial::severity_level level);
+      void boost_set_log_level(const boost::log::trivial::severity_level level);
 
       void monitorThread();
 
@@ -104,7 +103,8 @@ namespace mtconnect
       std::unique_ptr<Agent> m_agent;
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
-      std::unique_ptr<RollingFileLogger> m_loggerFile;
+      boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>
+          m_sink;
       std::string m_version;
       bool m_monitorFiles = false;
       int m_minimumConfigReloadAge = 15;

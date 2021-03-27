@@ -19,19 +19,13 @@
 
 #include <boost/asio.hpp>
 #include <boost/log/attributes.hpp>
-#include <boost/log/attributes/scoped_attribute.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
-#include <boost/log/expressions/formatters.hpp>
-#include <boost/log/expressions/formatters/named_scope.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
-#include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/sources/global_logger_storage.hpp>
-#include <boost/log/sources/severity_feature.hpp>
-#include <boost/log/sources/severity_logger.hpp>
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
+#include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/console.hpp>
 
 #include <algorithm>
@@ -78,11 +72,10 @@ namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
 namespace b_logger = boost::log;
 BOOST_LOG_ATTRIBUTE_KEYWORD(named_scope, "Scope", b_logger::attributes::named_scope::value_type);
+BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", b_logger::attributes::utc_clock::value_type);
 
 namespace mtconnect
 {
-  static logger g_logger("init.config");
-
   namespace configuration
   {
     static inline auto Convert(const std::string &s, const ConfigOption &def)
@@ -132,6 +125,7 @@ namespace mtconnect
 
     AgentConfiguration::AgentConfiguration()
     {
+      BOOST_LOG_NAMED_SCOPE("init.config");
       bool success = false;
       char pathSep = '/';
 
@@ -170,6 +164,8 @@ namespace mtconnect
 
     void AgentConfiguration::initialize(int argc, const char *argv[])
     {
+      BOOST_LOG_NAMED_SCOPE("config.initialize");
+
       MTConnectService::initialize(argc, argv);
 
       const char *configFile = "agent.cfg";
@@ -189,7 +185,7 @@ namespace mtconnect
         {
           if (!m_exePath.empty())
           {
-            g_logger << LINFO << "Cannot find " << m_configFile
+            BOOST_LOG_TRIVIAL(info) << "Cannot find " << m_configFile
                      << " in current directory, searching exe path: " << m_exePath;
             cerr << "Cannot find " << m_configFile
                  << " in current directory, searching exe path: " << m_exePath << endl;
@@ -197,7 +193,7 @@ namespace mtconnect
           }
           else
           {
-            g_logger << LFATAL << "Agent failed to load: Cannot find configuration file: '"
+            BOOST_LOG_TRIVIAL(fatal) << "Agent failed to load: Cannot find configuration file: '"
                      << m_configFile;
             cerr << "Agent failed to load: Cannot find configuration file: '" << m_configFile
                  << std::endl;
@@ -213,13 +209,17 @@ namespace mtconnect
       }
       catch (std::exception &e)
       {
-        g_logger << LFATAL << "Agent failed to load: " << e.what();
+        BOOST_LOG_TRIVIAL(fatal) << "Agent failed to load: " << e.what();
         cerr << "Agent failed to load: " << e.what() << std::endl;
         optionList.usage();
       }
     }
 
-    AgentConfiguration::~AgentConfiguration() { set_all_logging_output_streams(cout); }
+    AgentConfiguration::~AgentConfiguration()
+    {
+      b_logger::core::get()->remove_all_sinks();
+      m_sink.reset();
+    }
 
 #ifdef _WINDOWS
     static time_t GetFileModificationTime(const string &file)
@@ -229,12 +229,12 @@ namespace mtconnect
           CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
       if (handle == INVALID_HANDLE_VALUE)
       {
-        g_logger << LWARN << "Could not find file: " << file;
+        BOOST_LOG_TRIVIAL(warning) << "Could not find file: " << file;
         return 0;
       }
       if (!GetFileTime(handle, &createTime, &accessTime, &writeTime))
       {
-        g_logger << LWARN << "GetFileTime failed for: " << file;
+        BOOST_LOG_TRIVIAL(warning) << "GetFileTime failed for: " << file;
         writeTime = {0, 0};
       }
       CloseHandle(handle);
@@ -250,7 +250,7 @@ namespace mtconnect
       struct stat buf = {0};
       if (stat(file.c_str(), &buf) != 0)
       {
-        g_logger << LWARN << "Cannot stat file (" << errno << "): " << file;
+        BOOST_LOG_TRIVIAL(warning) << "Cannot stat file (" << errno << "): " << file;
         perror("Cannot stat file");
         return 0;
       }
@@ -264,24 +264,26 @@ namespace mtconnect
       // shut this off for now.
       return;
 
+      BOOST_LOG_NAMED_SCOPE("config.monitorThread");
+
       time_t devices_at_start = 0, cfg_at_start = 0;
 
-      g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile
+      BOOST_LOG_TRIVIAL(debug) << "Monitoring files: " << m_configFile << " and " << m_devicesFile
                << ", will warm start if they change.";
 
       if ((cfg_at_start = GetFileModificationTime(m_configFile)) == 0)
       {
-        g_logger << LWARN << "Cannot stat config file: " << m_configFile << ", exiting monitor";
+        BOOST_LOG_TRIVIAL(warning) << "Cannot stat config file: " << m_configFile << ", exiting monitor";
         return;
       }
       if ((devices_at_start = GetFileModificationTime(m_devicesFile)) == 0)
       {
-        g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
+        BOOST_LOG_TRIVIAL(warning) << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
         return;
       }
 
-      g_logger << LTRACE << "Configuration start time: " << cfg_at_start;
-      g_logger << LTRACE << "Device start time: " << devices_at_start;
+      BOOST_LOG_TRIVIAL(trace) << "Configuration start time: " << cfg_at_start;
+      BOOST_LOG_TRIVIAL(trace) << "Device start time: " << devices_at_start;
 
       bool changed = false;
 
@@ -295,32 +297,31 @@ namespace mtconnect
 
         if ((cfg = GetFileModificationTime(m_configFile)) == 0)
         {
-          g_logger << LWARN << "Cannot stat config file: " << m_configFile
+          BOOST_LOG_TRIVIAL(warning) << "Cannot stat config file: " << m_configFile
                    << ", retrying in 10 seconds";
           check = false;
         }
 
         if ((devices = GetFileModificationTime(m_devicesFile)) == 0)
         {
-          g_logger << LWARN << "Cannot stat devices file: " << m_devicesFile
+          BOOST_LOG_TRIVIAL(warning) << "Cannot stat devices file: " << m_devicesFile
                    << ", retrying in 10 seconds";
           check = false;
         }
 
-        g_logger << LTRACE << "Configuration times: " << cfg_at_start << " -- " << cfg;
-        g_logger << LTRACE << "Device times: " << devices_at_start << " -- " << devices;
+        BOOST_LOG_TRIVIAL(trace) << "Configuration times: " << cfg_at_start << " -- " << cfg;
+        BOOST_LOG_TRIVIAL(trace) << "Device times: " << devices_at_start << " -- " << devices;
 
         // Check if the files have changed.
         if (check && (cfg_at_start != cfg || devices_at_start != devices))
         {
           time_t now = time(nullptr);
-          g_logger
-              << LWARN
-              << "Dected change in configuarion files. Will reload when youngest file is at least "
+          BOOST_LOG_TRIVIAL(warning)
+              << "Detected change in configuration files. Will reload when youngest file is at least "
               << m_minimumConfigReloadAge << " seconds old";
-          g_logger << LWARN << "    Devices.xml file modified " << (now - devices)
+          BOOST_LOG_TRIVIAL(warning) << "    Devices.xml file modified " << (now - devices)
                    << " seconds ago";
-          g_logger << LWARN << "    ...cfg file modified " << (now - cfg) << " seconds ago";
+          BOOST_LOG_TRIVIAL(warning) << "    ...cfg file modified " << (now - cfg) << " seconds ago";
 
           changed =
               (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
@@ -333,7 +334,7 @@ namespace mtconnect
       // stop agent and signal to warm start
       if (m_agent->is_running() && changed)
       {
-        g_logger << LWARN
+        BOOST_LOG_TRIVIAL(warning)
         << "Monitor thread has detected change in configuration files, restarting agent.";
         
         m_restart = true;
@@ -341,14 +342,14 @@ namespace mtconnect
         delete m_agent;
         m_agent = nullptr;
         
-        g_logger << LWARN << "Monitor agent has completed shutdown, reinitializing agent.";
+        BOOST_LOG_TRIVIAL(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
         
         // Re initialize
         const char *argv[] = {m_configFile.c_str()};
         initialize(1, argv);
       }
 #endif
-      g_logger << LDEBUG << "Monitor thread is exiting";
+      BOOST_LOG_TRIVIAL(debug) << "Monitor thread is exiting";
     }
 
     void AgentConfiguration::start()
@@ -361,7 +362,7 @@ namespace mtconnect
         if (m_monitorFiles)
         {
           // Start the file monitor to check for changes to cfg or devices.
-          g_logger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
+          BOOST_LOG_TRIVIAL(debug) << "Waiting for monitor thread to exit to restart agent";
           mon = std::make_unique<dlib::thread_function>(
               make_mfp(*this, &AgentConfiguration::monitorThread));
         }
@@ -371,19 +372,19 @@ namespace mtconnect
         if (m_restart && m_monitorFiles)
         {
           // Will destruct and wait to re-initialize.
-          g_logger << LDEBUG << "Waiting for monitor thread to exit to restart agent";
+          BOOST_LOG_TRIVIAL(debug) << "Waiting for monitor thread to exit to restart agent";
           mon.reset(nullptr);
-          g_logger << LDEBUG << "Monitor has exited";
+          BOOST_LOG_TRIVIAL(debug) << "Monitor has exited";
         }
       } while (m_restart);
     }
 
     void AgentConfiguration::stop()
     {
-      g_logger << dlib::LINFO << "Agent stopping";
+      BOOST_LOG_TRIVIAL(info) << "Agent stopping";
       m_restart = false;
       m_agent->stop();
-      g_logger << dlib::LINFO << "Agent Configuration stopped";
+      BOOST_LOG_TRIVIAL(info) << "Agent Configuration stopped";
     }
 
     DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
@@ -393,98 +394,124 @@ namespace mtconnect
       return format(date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
     }
 
-    void AgentConfiguration::LoggerHook(const std::string &loggerName, const dlib::log_level &l,
-                                        const dlib::uint64 threadId, const char *message)
+    void AgentConfiguration::boost_set_log_level(const b_logger::trivial::severity_level level)
     {
-      stringstream out;
-      out << timestamp() << ": " << l.name << " [" << threadId << "] " << loggerName << ": "
-          << message;
-#ifdef WIN32
-      out << "\r\n";
-#else
-      out << "\n";
-#endif
-      if (m_loggerFile)
-        m_loggerFile->write(out.str().c_str());
-      else
-        cout << out.str();
+      using namespace b_logger::trivial;
+      b_logger::core::get()->set_filter(severity >= level);
     }
 
-    static dlib::log_level string_to_log_level(const std::string &level)
+    static b_logger::trivial::severity_level boost_string_to_log_level(const std::string level)
     {
-      using namespace std;
+      using namespace b_logger::trivial;
       if (level == "LALL" || level == "ALL" || level == "all")
-        return LALL;
+        return severity_level::trace;  // Boost.Log does not have "ALL" so "trace" is the lowest
       else if (level == "LNONE" || level == "NONE" || level == "none")
-        return LNONE;
+        return severity_level::fatal;  // Boost.Log does not have a "NONE"
       else if (level == "LTRACE" || level == "TRACE" || level == "trace")
-        return LTRACE;
+        return severity_level::trace;
       else if (level == "LDEBUG" || level == "DEBUG" || level == "debug")
-        return LDEBUG;
+        return severity_level::debug;
       else if (level == "LINFO" || level == "INFO" || level == "info")
-        return LINFO;
+        return severity_level::info;
       else if (level == "LWARN" || level == "WARN" || level == "warn")
-        return LWARN;
+        return severity_level::warning;
       else if (level == "LERROR" || level == "ERROR" || level == "error")
-        return LERROR;
+        return severity_level::error;
       else if (level == "LFATAL" || level == "FATAL" || level == "fatal")
-        return LFATAL;
+        return severity_level::fatal;
 
-      return LINFO;
+      return severity_level::info;
     }
 
     void AgentConfiguration::configureLogger(const ptree &config)
     {
-      auto logger_config = config.get_child_optional("logger_config");
+      m_sink.reset();
+      
+      //// Add the commonly used attributes; includes TimeStamp, ProcessID and ThreadID and others
+      b_logger::add_common_attributes();
+      b_logger::core::get()->add_global_attribute("Scope", b_logger::attributes::named_scope());
+      b_logger::core::get()->add_global_attribute(
+          b_logger::aux::default_attribute_names::thread_id(),
+          b_logger::attributes::current_thread_id());
+      b_logger::core::get()->add_global_attribute("Timestamp", b_logger::attributes::utc_clock());
 
-      b_logger::add_console_log(
-          std::cout, b_logger::keywords::format =
-                         (b_logger::expressions::stream
-                          << b_logger::expressions::format_date_time<boost::posix_time::ptime>(
-                                 "TimeStamp", "%Y-%m-%d %H:%M:%S ")
-                          << "[" << b_logger::trivial::severity << "] " << named_scope << ": "
-                          << b_logger::expressions::smessage));
+      auto logger = config.get_child_optional("logger_config");
 
-#if 0
-      m_loggerFile.reset();
       if (m_isDebug)
       {
-        set_all_logging_output_streams(cout);
-        set_all_logging_levels(LDEBUG);
-        
-        auto logger = config.get_child_optional("logger_config");
+        b_logger::add_console_log(
+            std::cout, b_logger::keywords::format =
+                           (b_logger::expressions::stream
+                            << b_logger::expressions::format_date_time<boost::posix_time::ptime>(
+                                   "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
+                            << "("
+                            << b_logger::expressions::attr<
+                                   b_logger::attributes::current_thread_id::value_type>("ThreadID")
+                            << ") "
+                            << "[" << b_logger::trivial::severity << "] " << named_scope << ": "
+                            << b_logger::expressions::smessage));
         if (logger)
         {
-          if (cr.is_key_defined("logging_level"))
+          if (logger->get_optional<string>("logging_level"))
           {
-            auto level = string_to_log_level(cr["logging_level"]);
-            if (level.priority < LDEBUG.priority)
-              set_all_logging_levels(level);
+            boost_set_log_level(boost_string_to_log_level(logger->get<string>("logging_level")));
           }
+        }
+        else
+        {
+          boost_set_log_level(boost_string_to_log_level("debug"));
         }
       }
       else
       {
         string name("agent.log");
-        auto sched = RollingFileLogger::NEVER;
-        uint64 maxSize = 10ull * 1024ull * 1024ull;  // 10MB
-        int maxIndex = 9;
-        
-        auto logger = config.get_child_optional("logger_config");
+        int max_size = 10; // in MB
+        int rotation_size = 2; // in MB
+        int rotation_time_interval = 0; // in hr
+        int max_index = 9;
+
         if (logger)
         {
-          if (cr.is_key_defined("logging_level"))
-            set_all_logging_levels(string_to_log_level(cr["logging_level"]));
+          if (logger->get_optional<string>("logging_level"))
+            boost_set_log_level(boost_string_to_log_level(logger->get<string>("logging_level")));
           else
-            set_all_logging_levels(LINFO);
-          
-          if (cr.is_key_defined("output"))
+            boost_set_log_level(boost_string_to_log_level("info"));
+
+          if (logger->get_optional<string>("output"))
           {
-            string output = cr["output"];
+            auto output = logger->get<string>("output");
             if (output == "cout")
-              set_all_logging_output_streams(cout);
+            {
+              b_logger::add_console_log(
+                  std::cout,
+                  b_logger::keywords::format =
+                      (b_logger::expressions::stream
+                       << b_logger::expressions::format_date_time<boost::posix_time::ptime>(
+                              "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
+                       << "("
+                       << b_logger::expressions::attr<
+                              b_logger::attributes::current_thread_id::value_type>("ThreadID")
+                       << ") "
+                       << "[" << b_logger::trivial::severity << "] " << named_scope << ": "
+                       << b_logger::expressions::smessage));
+              return;
+            }
             else if (output == "cerr")
-              set_all_logging_output_streams(cerr);
+            {
+              b_logger::add_console_log(
+                  std::cerr,
+                  b_logger::keywords::format =
+                      (b_logger::expressions::stream
+                       << b_logger::expressions::format_date_time<boost::posix_time::ptime>(
+                              "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
+                       << "("
+                       << b_logger::expressions::attr<
+                              b_logger::attributes::current_thread_id::value_type>("ThreadID")
+                       << ") "
+                       << "[" << b_logger::trivial::severity << "] " << named_scope << ": "
+                       << b_logger::expressions::smessage));
+              return;
+            }
             else
             {
               istringstream sin(output);
@@ -498,41 +525,78 @@ namespace mtconnect
                 name = one;
             }
           }
-          
-          string maxSizeStr = get_with_default(cr, "max_size", "10M");
-          stringstream ss(maxSizeStr);
-          char mag = '\0';
-          ss >> maxSize >> mag;
-          
-          switch (mag)
+
+          if (logger->get_optional<string>("max_size"))
           {
-            case 'G':
-            case 'g':
-              maxSize *= 1024ull;
-            case 'M':
-            case 'm':
-              maxSize *= 1024ull;
-            case 'K':
-            case 'k':
-              maxSize *= 1024ull;
-            case 'B':
-            case 'b':
-            case '\0':
-              break;
+            stringstream ss(logger->get<string>("max_size"));
+            ss >> max_size;
+          }
+
+          if (logger->get_optional<string>("max_index"))
+          {
+            stringstream si(logger->get<string>("max_index"));
+            si >> max_index;
           }
           
-          maxIndex = get_with_default(cr, "max_index", maxIndex);
-          string schedCfg = get_with_default(cr, "schedule", "NEVER");
-          if (schedCfg == "DAILY")
-            sched = RollingFileLogger::DAILY;
-          else if (schedCfg == "WEEKLY")
-            sched = RollingFileLogger::WEEKLY;
+          if (logger->get_optional<string>("schedule"))
+          {
+            auto sched = logger->get<string>("schedule");
+            if (sched == "DAILY")
+              rotation_time_interval = 24;
+            else if (sched == "WEEKLY")
+              rotation_time_interval = 168;
+            else if (sched != "NEVER")
+              BOOST_LOG_TRIVIAL(error) << "Invalid schedule value.";
+          }
         }
+
+        auto log_directory = fs::path().parent_path().string();
+
+        fs::path path(log_directory);
+        if (!path.is_absolute())
+          path = fs::absolute(path);
+
+        path /= name+".%N";
         
-        m_loggerFile = make_unique<RollingFileLogger>(name, maxIndex, maxSize, sched);
-        set_all_logging_output_hooks<AgentConfiguration>(*this, &AgentConfiguration::LoggerHook);
+        boost::shared_ptr<b_logger::core> core = b_logger::core::get();
+
+        // Create a text file sink
+        typedef b_logger::sinks::synchronous_sink<b_logger::sinks::text_file_backend> text_sink;
+        boost::shared_ptr<text_sink> m_sink = boost::make_shared<text_sink>();
+        m_sink->locked_backend()->set_file_name_pattern(name);
+        m_sink->locked_backend()->set_target_file_name_pattern(path);
+        m_sink->locked_backend()->auto_flush(true);
+        m_sink->locked_backend()->set_open_mode(ios_base::out | ios_base::app);
+        m_sink->locked_backend()->set_rotation_size(rotation_size * 1024 * 1024);
+
+        // Set up where the rotated files will be stored
+        m_sink->locked_backend()->set_file_collector(b_logger::sinks::file::make_collector(
+            b_logger::keywords::target = log_directory,
+            b_logger::keywords::max_size = max_size * 1024 * 1024,
+            b_logger::keywords::max_files = max_index));
+
+        if (rotation_time_interval > 0)
+          m_sink->locked_backend()->set_time_based_rotation(
+              b_logger::sinks::file::rotation_at_time_interval(
+                  boost::posix_time::hours(rotation_time_interval)));
+
+        // Upon restart, scan the target directory for files matching the file_name pattern
+        m_sink->locked_backend()->scan_for_files();
+
+        // Formatter for the logger
+        m_sink->set_formatter(
+            b_logger::expressions::stream
+            << b_logger::expressions::format_date_time<boost::posix_time::ptime>(
+                   "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
+            << "("
+            << b_logger::expressions::attr<b_logger::attributes::current_thread_id::value_type>(
+                   "ThreadID")
+            << ") "
+            << "[" << boost::log::trivial::severity << "] " << named_scope << ": "
+            << b_logger::expressions::smessage);
+        
+        core->add_sink(m_sink);
       }
-#endif
     }
 
     std::optional<fs::path> AgentConfiguration::checkPath(const std::string &name)
@@ -556,11 +620,17 @@ namespace mtconnect
 
     void AgentConfiguration::loadConfig(const std::string &file)
     {
+      BOOST_LOG_NAMED_SCOPE("config.load");
+
       // Now get our configuration
       auto config = Parser::parse(file);
 
-      if (!m_loggerFile)
+      //if (!m_loggerFile)
+      if (!m_sink)
+      {
         configureLogger(config);
+      }
+
 
       ConfigOptions options;
       GetOptions(config, options,
@@ -627,7 +697,7 @@ namespace mtconnect
       // Check for schema version
       m_version = get<string>(options[configuration::SchemaVersion]);
       auto port = get<int>(options[configuration::Port]);
-      g_logger << LINFO << "Starting agent on port " << port;
+      BOOST_LOG_TRIVIAL(info) << "Starting agent on port " << port;
 
       auto server = make_unique<http_server::Server>(
           port, get<string>(options[configuration::ServerIp]), options);
@@ -685,6 +755,8 @@ namespace mtconnect
       using namespace adapter;
       using namespace pipeline;
 
+      BOOST_LOG_NAMED_SCOPE("config.adapters");
+
       DevicePtr device;
       auto adapters = config.get_child_optional("Adapters");
       if (adapters)
@@ -713,13 +785,13 @@ namespace mtconnect
 
           if (!device)
           {
-            g_logger << LWARN << "Cannot locate device name '" << deviceName << "', trying default";
+            BOOST_LOG_TRIVIAL(warning) << "Cannot locate device name '" << deviceName << "', trying default";
             device = defaultDevice();
             if (device)
             {
               deviceName = *device->getComponentName();
               adapterOptions[configuration::Device] = deviceName;
-              g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
+              BOOST_LOG_TRIVIAL(info) << "Assigning default device " << deviceName << " to adapter";
             }
           }
           else
@@ -728,7 +800,7 @@ namespace mtconnect
           }
           if (!device)
           {
-            g_logger << LWARN << "Cannot locate device name '" << deviceName
+            BOOST_LOG_TRIVIAL(warning) << "Cannot locate device name '" << deviceName
                      << "', assuming dynamic";
           }
 
@@ -753,7 +825,7 @@ namespace mtconnect
             adapterOptions[configuration::AdditionalDevices] = deviceList;
           }
 
-          g_logger << LINFO << "Adding adapter for " << deviceName << " on "
+          BOOST_LOG_TRIVIAL(info) << "Adding adapter for " << deviceName << " on "
                    << get<string>(adapterOptions[configuration::Host]) << ":"
                    << get<string>(adapterOptions[configuration::Host]);
 
@@ -770,7 +842,7 @@ namespace mtconnect
 
         auto deviceName = *device->getComponentName();
         adapterOptions[configuration::Device] = deviceName;
-        g_logger << LINFO << "Adding default adapter for " << device->getName()
+        BOOST_LOG_TRIVIAL(info) << "Adding default adapter for " << device->getName()
                  << " on localhost:7878";
 
         auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
@@ -852,7 +924,7 @@ namespace mtconnect
           auto urn = block.second.get_optional<string>("Urn");
           if (block.first != "m" && !urn)
           {
-            g_logger << LERROR << "Name space must have a Urn: " << block.first;
+            BOOST_LOG_TRIVIAL(error) << "Name space must have a Urn: " << block.first;
           }
           else
           {
@@ -864,7 +936,7 @@ namespace mtconnect
               auto xns = cache->registerFile(location, *path, m_version);
               if (!xns)
               {
-                g_logger << LDEBUG << "Cannot register " << urn << " at " << location
+                BOOST_LOG_TRIVIAL(debug) << "Cannot register " << urn << " at " << location
                          << " and path " << *path;
               }
             }
@@ -885,7 +957,7 @@ namespace mtconnect
           auto path = file.second.get_optional<string>("Path");
           if (!location || !path)
           {
-            g_logger << LERROR << "Name space must have a Location (uri) or Directory and Path: "
+            BOOST_LOG_TRIVIAL(error) << "Name space must have a Location (uri) or Directory and Path: "
                      << file.first;
           }
           else
@@ -940,7 +1012,7 @@ namespace mtconnect
         auto location = style->get_optional<string>("Location");
         if (!location)
         {
-          g_logger << LERROR << "A style must have a Location: " << styleName;
+          BOOST_LOG_TRIVIAL(error) << "A style must have a Location: " << styleName;
         }
         else
         {
