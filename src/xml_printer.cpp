@@ -22,7 +22,9 @@
 #include <typeinfo>
 #include <utility>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
+
 #include <dlib/sockets.h>
 
 #include <libxml/xmlwriter.h>
@@ -51,7 +53,6 @@ using namespace std;
 
 namespace mtconnect
 {
-  static dlib::logger g_logger("xml.printer");
   using namespace observation;
   using namespace device_model::configuration;
 
@@ -104,6 +105,7 @@ namespace mtconnect
   XmlPrinter::XmlPrinter(const string version, bool pretty)
     : Printer(pretty), m_schemaVersion(version)
   {
+    BOOST_LOG_NAMED_SCOPE("xml.printer");
     if (m_schemaVersion.empty())
       m_schemaVersion = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
   }
@@ -374,11 +376,11 @@ namespace mtconnect
     }
     catch (string error)
     {
-      g_logger << dlib::LERROR << "printError: " << error;
+      BOOST_LOG_TRIVIAL(error) << "printError: " << error;
     }
     catch (...)
     {
-      g_logger << dlib::LERROR << "printError: unknown error";
+      BOOST_LOG_TRIVIAL(error) << "printError: unknown error";
     }
 
     return ret;
@@ -411,11 +413,11 @@ namespace mtconnect
     }
     catch (string error)
     {
-      g_logger << dlib::LERROR << "printProbe: " << error;
+      BOOST_LOG_TRIVIAL(error) << "printProbe: " << error;
     }
     catch (...)
     {
-      g_logger << dlib::LERROR << "printProbe: unknown error";
+      BOOST_LOG_TRIVIAL(error) << "printProbe: unknown error";
     }
 
     return ret;
@@ -488,11 +490,11 @@ namespace mtconnect
     }
     catch (string error)
     {
-      g_logger << dlib::LERROR << "printSample: " << error;
+      BOOST_LOG_TRIVIAL(error) << "printSample: " << error;
     }
     catch (...)
     {
-      g_logger << dlib::LERROR << "printSample: unknown error";
+      BOOST_LOG_TRIVIAL(error) << "printSample: unknown error";
     }
 
     return ret;
@@ -521,11 +523,11 @@ namespace mtconnect
     }
     catch (string error)
     {
-      g_logger << dlib::LERROR << "printAssets: " << error;
+      BOOST_LOG_TRIVIAL(error) << "printAssets: " << error;
     }
     catch (...)
     {
-      g_logger << dlib::LERROR << "printAssets: unknown error";
+      BOOST_LOG_TRIVIAL(error) << "printAssets: unknown error";
     }
 
     return ret;

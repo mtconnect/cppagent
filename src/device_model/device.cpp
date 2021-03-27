@@ -17,7 +17,8 @@
 
 #include "device.hpp"
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "configuration/config_options.hpp"
 #include "entity/factory.hpp"
@@ -28,8 +29,6 @@ namespace mtconnect
 {
   using namespace entity;
   using namespace configuration;
-
-  static dlib::logger g_logger("device");
 
   namespace device_model
   {
@@ -71,6 +70,7 @@ namespace mtconnect
 
     Device::Device(const std::string &name, entity::Properties &props) : Component(name, props)
     {
+      BOOST_LOG_NAMED_SCOPE("device");
       auto items = getList("DataItems");
       if (items)
       {
@@ -99,7 +99,7 @@ namespace mtconnect
 
       if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
       {
-        g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem->getId()
+        BOOST_LOG_TRIVIAL(error) << "Duplicate data item id: " << dataItem->getId()
                  << " for device " << get<string>("name") << ", skipping";
       }
       else

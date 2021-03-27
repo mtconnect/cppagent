@@ -24,7 +24,8 @@
 #include <date/date.h>
 #include <string_view>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "entity.hpp"
 #include "factory.hpp"
@@ -36,11 +37,11 @@ namespace mtconnect
   using namespace observation;
   namespace entity
   {
-    static dlib::logger g_logger("EntityRequirement");
-
     Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, bool required)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
+      BOOST_LOG_NAMED_SCOPE("EntityRequirement");
+      
       if (type == ENTITY_LIST)
       {
         f->setList(true);

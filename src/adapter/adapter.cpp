@@ -23,7 +23,8 @@
 #include <thread>
 #include <utility>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
@@ -36,8 +37,6 @@ namespace mtconnect
 {
   namespace adapter
   {
-    static dlib::logger g_logger("input.adapter");
-
     // Adapter public methods
     Adapter::Adapter(const string &server, const unsigned int port, const ConfigOptions &options,
                      std::unique_ptr<AdapterPipeline> &pipeline)
@@ -97,13 +96,14 @@ namespace mtconnect
 
     void Adapter::stop()
     {
+      BOOST_LOG_NAMED_SCOPE("input.adapter.stop");
       // Will stop threaded object gracefully Adapter::thread()
-      g_logger << dlib::LDEBUG << "Waiting for adatpter to stop: " << m_url;
+      BOOST_LOG_TRIVIAL(debug) << "Waiting for adapter to stop: " << m_url;
       m_running = false;
       close();
       if (m_thread.joinable())
         m_thread.join();
-      g_logger << dlib::LDEBUG << "Adapter eexited: " << m_url;
+      BOOST_LOG_TRIVIAL(debug) << "Adapter exited: " << m_url;
     }
 
     inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }
@@ -141,6 +141,7 @@ namespace mtconnect
     // Adapter private methods
     void Adapter::thread()
     {
+      BOOST_LOG_NAMED_SCOPE("input.adapter");
       while (m_running)
       {
         try
@@ -153,19 +154,19 @@ namespace mtconnect
         }
         catch (std::invalid_argument &err)
         {
-          g_logger << LERROR << "Adapter for " << m_url
+          BOOST_LOG_TRIVIAL(error) << "Adapter for " << m_url
                    << "'s thread threw an argument error, stopping adapter: " << err.what();
           stop();
         }
         catch (std::exception &err)
         {
-          g_logger << LERROR << "Adapter for " << m_url
+          BOOST_LOG_TRIVIAL(error) << "Adapter for " << m_url
                    << "'s thread threw an exceotion, stopping adapter: " << err.what();
           stop();
         }
         catch (...)
         {
-          g_logger << LERROR << "Thread for adapter " << m_url
+          BOOST_LOG_TRIVIAL(error) << "Thread for adapter " << m_url
                    << "'s thread threw an unhandled exception, stopping adapter";
           stop();
         }
@@ -174,11 +175,11 @@ namespace mtconnect
           break;
 
         // Try to reconnect every 10 seconds
-        g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval.count()
+        BOOST_LOG_TRIVIAL(info) << "Will try to reconnect in " << m_reconnectInterval.count()
                  << " milliseconds";
         this_thread::sleep_for(m_reconnectInterval);
       }
-      g_logger << LINFO << "Adapter thread stopped";
+      BOOST_LOG_TRIVIAL(info) << "Adapter thread stopped";
     }
   }  // namespace adapter
 }  // namespace mtconnect

@@ -17,7 +17,8 @@
 
 #include "entity/xml_parser.hpp"
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
@@ -31,8 +32,6 @@ namespace mtconnect
 {
   namespace entity
   {
-    static dlib::logger g_logger("entity.xml_parser");
-
     extern "C" void XMLCDECL entityXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
     {
       va_list args;
@@ -43,7 +42,7 @@ namespace mtconnect
       buffer[2047] = '0';
       va_end(args);
 
-      g_logger << dlib::LERROR << "XML: " << buffer;
+      BOOST_LOG_TRIVIAL(error) << "XML: " << buffer;
     }
 
     entity::QName nodeQName(xmlNodePtr node)
@@ -158,7 +157,7 @@ namespace mtconnect
                 }
                 else
                 {
-                  g_logger << dlib::LWARN << "Unexpected element: " << nodeQName(child);
+                  BOOST_LOG_TRIVIAL(warning) << "Unexpected element: " << nodeQName(child);
                   errors.emplace_back(
                       new EntityError("Invalid element '" + nodeQName(child) + "'", qname));
                 }
@@ -192,6 +191,7 @@ namespace mtconnect
     EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, const string &version,
                                ErrorList &errors)
     {
+      BOOST_LOG_NAMED_SCOPE("entity.xml_parser");
       EntityPtr entity;
       try
       {
@@ -212,21 +212,21 @@ namespace mtconnect
 
       catch (EntityError e)
       {
-        g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
+        BOOST_LOG_TRIVIAL(error) << "Cannot parse XML document: " << e.what();
         errors.emplace_back(e.dup());
         entity.reset();
       }
 
       catch (XmlError e)
       {
-        g_logger << dlib::LERROR << "Cannot parse XML document: " << e.what();
+        BOOST_LOG_TRIVIAL(error) << "Cannot parse XML document: " << e.what();
         errors.emplace_back(new EntityError(e.what()));
         entity.reset();
       }
 
       catch (...)
       {
-        g_logger << dlib::LERROR << "Cannot parse XML document: unknown error";
+        BOOST_LOG_TRIVIAL(error) << "Cannot parse XML document: unknown error";
         errors.emplace_back(new EntityError("Unknown Error"));
         entity.reset();
       }

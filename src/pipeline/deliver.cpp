@@ -17,6 +17,9 @@
 
 #include "deliver.hpp"
 
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
+
 #include "agent.hpp"
 #include "assets/cutting_tool.hpp"
 #include "assets/file_asset.hpp"
@@ -28,8 +31,6 @@ namespace mtconnect
 
   namespace pipeline
   {
-    static dlib::logger g_logger("pipeline.deliver");
-
     const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
     {
       using namespace observation;
@@ -48,21 +49,24 @@ namespace mtconnect
 
     void ComputeMetrics::stop()
     {
-      g_logger << dlib::LDEBUG << "Stopping compute thread";
+      BOOST_LOG_NAMED_SCOPE("pipeline.deliver");
+
+      BOOST_LOG_TRIVIAL(debug) << "Stopping compute thread";
       {
         std::unique_lock<std::mutex> lk(m_mutex);
         m_running = false;
         m_condition.notify_all();
       }
-      g_logger << dlib::LDEBUG << "Compute thread stopped";
+      BOOST_LOG_TRIVIAL(debug) << "Compute thread stopped";
     }
 
     void ComputeMetrics::operator()()
-
     {
       using namespace std;
       using namespace chrono;
       using namespace chrono_literals;
+      
+      BOOST_LOG_NAMED_SCOPE("pipeline.deliver");
 
       if (!m_dataItem)
         return;
@@ -70,7 +74,7 @@ namespace mtconnect
       auto di = m_contract->findDataItem("Agent", *m_dataItem);
       if (di == nullptr)
       {
-        g_logger << LWARN << "Could not find data item: " << *m_dataItem << ", exiting metrics";
+        BOOST_LOG_TRIVIAL(warning) << "Could not find data item: " << *m_dataItem << ", exiting metrics";
         return;
       }
 
@@ -82,9 +86,9 @@ namespace mtconnect
         auto delta = count - last;
 
         double avg = delta + exp(-(10.0 / 60.0)) * (lastAvg - delta);
-        g_logger << dlib::LDEBUG << *m_dataItem
+        BOOST_LOG_TRIVIAL(debug) << *m_dataItem
                  << " - Average for last 1 minutes: " << (avg / 10.0);
-        g_logger << dlib::LDEBUG << *m_dataItem
+        BOOST_LOG_TRIVIAL(debug) << *m_dataItem
                  << " - Delta for last 10 seconds: " << (double(delta) / 10.0);
 
         last = count;
@@ -103,7 +107,7 @@ namespace mtconnect
         }
       }
 
-      g_logger << dlib::LDEBUG << "Metrics thread exited";
+      BOOST_LOG_TRIVIAL(debug) << "Metrics thread exited";
     }
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)

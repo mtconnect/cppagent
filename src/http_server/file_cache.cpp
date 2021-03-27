@@ -17,7 +17,8 @@
 
 #include "file_cache.hpp"
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "cached_file.hpp"
 
@@ -38,9 +39,9 @@ namespace mtconnect
                       {".png", "image/png"},
                       {".ico", "image/x-icon"}}})
     {
+      BOOST_LOG_NAMED_SCOPE("file_cache");
     }
 
-    static dlib::logger g_logger("file_cache");
     namespace fs = std::filesystem;
 
     XmlNamespaceList FileCache::registerFiles(const string &uri, const string &pathName,
@@ -61,7 +62,7 @@ namespace mtconnect
 
         if (!fs::exists(path))
         {
-          g_logger << dlib::LWARN << "The following path " << pathName
+          BOOST_LOG_TRIVIAL(warning) << "The following path " << pathName
                    << " cannot be found, full path: " << path;
         }
         else if (!fs::is_directory(path))
@@ -87,7 +88,7 @@ namespace mtconnect
       }
       catch (fs::filesystem_error e)
       {
-        g_logger << dlib::LWARN << "The following path " << pathName
+        BOOST_LOG_TRIVIAL(warning) << "The following path " << pathName
                  << " cannot be accessed: " << e.what();
       }
 
@@ -103,13 +104,13 @@ namespace mtconnect
       fs::path path(pathName);
       if (!fs::exists(path))
       {
-        g_logger << dlib::LWARN << "The following path " << pathName
+        BOOST_LOG_TRIVIAL(warning) << "The following path " << pathName
                  << " cannot be found, full path: " << fs::absolute(path);
         return nullopt;
       }
       else if (!fs::is_regular_file(path))
       {
-        g_logger << dlib::LWARN << "The following path " << path
+        BOOST_LOG_TRIVIAL(warning) << "The following path " << path
                  << " is not a regular file: " << fs::absolute(path);
         return nullopt;
       }
@@ -182,7 +183,7 @@ namespace mtconnect
       }
       catch (fs::filesystem_error e)
       {
-        g_logger << dlib::LWARN << "Cannot open file " << name << ": " << e.what();
+        BOOST_LOG_TRIVIAL(warning) << "Cannot open file " << name << ": " << e.what();
       }
 
       return nullptr;

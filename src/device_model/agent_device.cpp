@@ -17,7 +17,8 @@
 
 #include "agent_device.hpp"
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "adapter/adapter.hpp"
 #include "data_item/constraints.hpp"
@@ -28,7 +29,6 @@ using namespace std::literals;
 
 namespace mtconnect
 {
-  static dlib::logger g_logger("agent_device");
   using namespace entity;
   namespace device_model
   {
@@ -51,13 +51,14 @@ namespace mtconnect
     AgentDevice::AgentDevice(const std::string &name, entity::Properties &props)
       : Device(name, props)
     {
+      BOOST_LOG_NAMED_SCOPE("agent_device");
       ErrorList errors;
       m_adapters = Component::make("Adapters", {{"id", "__adapters__"s}}, errors);
       if (!errors.empty())
       {
         for (auto &e : errors)
         {
-          g_logger << dlib::LFATAL << "Cannot create AgentDevice: " << e->what();
+          BOOST_LOG_TRIVIAL(fatal) << "Cannot create AgentDevice: " << e->what();
         }
       }
     }

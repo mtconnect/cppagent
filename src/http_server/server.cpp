@@ -17,7 +17,8 @@
 
 #include "server.hpp"
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "response.hpp"
 
@@ -28,10 +29,9 @@ namespace mtconnect
     using namespace std;
     using namespace dlib;
 
-    static dlib::logger g_logger("HttpServer");
-
     void Server::start()
     {
+      BOOST_LOG_NAMED_SCOPE("HttpServer");
       try
       {
         // Start the server. This blocks until the server stops.
@@ -39,7 +39,7 @@ namespace mtconnect
       }
       catch (dlib::socket_error &e)
       {
-        g_logger << LFATAL << "Cannot start server: " << e.what();
+        BOOST_LOG_TRIVIAL(fatal) << "Cannot start server: " << e.what();
         std::exit(1);
       }
     }
@@ -66,7 +66,7 @@ namespace mtconnect
             stringstream msg;
             msg << "Error processing request from: " << foreign_ip << " - "
                 << "Server is read-only. Only GET verb supported";
-            g_logger << LERROR << msg.str();
+            BOOST_LOG_TRIVIAL(error) << msg.str();
 
             if (m_errorFunction)
               m_errorFunction(accepts, response, msg.str(), FORBIDDEN);
@@ -99,7 +99,7 @@ namespace mtconnect
       {
         stringstream msg;
         msg << "Error processing request from: " << foreign_ip << " - " << e.what();
-        g_logger << LERROR << msg.str();
+        BOOST_LOG_TRIVIAL(error) << msg.str();
 
         if (m_errorFunction)
           m_errorFunction(accepts, response, msg.str(), BAD_REQUEST);
@@ -108,7 +108,7 @@ namespace mtconnect
       {
         stringstream msg;
         msg << "Error processing request from: " << foreign_ip << " - " << e.what();
-        g_logger << LERROR << msg.str();
+        BOOST_LOG_TRIVIAL(error) << msg.str();
 
         if (m_errorFunction)
           m_errorFunction(accepts, response, msg.str(), BAD_REQUEST);
@@ -125,7 +125,7 @@ namespace mtconnect
           stringstream msg;
           msg << "Error processing request from: " << request.m_foreignIp << " - "
               << "No matching route for: " << request.m_verb << " " << request.m_path;
-          g_logger << LERROR << msg.str();
+          BOOST_LOG_TRIVIAL(error) << msg.str();
 
           if (m_errorFunction)
             m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
@@ -134,7 +134,7 @@ namespace mtconnect
       }
       catch (RequestError &e)
       {
-        g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - "
+        BOOST_LOG_TRIVIAL(error) << "Error processing request from: " << request.m_foreignIp << " - "
                  << e.what();
         response.writeResponse(e.m_body, e.m_contentType, e.m_code);
         res = false;
@@ -144,7 +144,7 @@ namespace mtconnect
         stringstream msg;
         msg << "Parameter Error processing request from: " << request.m_foreignIp << " - "
             << e.what();
-        g_logger << LERROR << msg.str();
+        BOOST_LOG_TRIVIAL(error) << msg.str();
 
         if (m_errorFunction)
           m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);

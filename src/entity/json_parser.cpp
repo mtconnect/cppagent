@@ -17,7 +17,8 @@
 
 #include "entity/json_parser.hpp"
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -28,8 +29,6 @@ namespace mtconnect
 {
   namespace entity
   {
-    static dlib::logger g_logger("entity.json_parser");
-
     static EntityPtr parseJson(FactoryPtr factory, string entity_name, json jNode,
                                ErrorList& errors)
     {
@@ -135,6 +134,7 @@ namespace mtconnect
     EntityPtr JsonParser::parse(FactoryPtr factory, const string& document, const string& version,
                                 ErrorList& errors)
     {
+      BOOST_LOG_NAMED_SCOPE("entity.json_parser");
       EntityPtr entity;
       auto jsonObj = json::parse(document.c_str());
       auto entity_name = jsonObj.begin().key();

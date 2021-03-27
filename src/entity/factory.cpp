@@ -19,7 +19,8 @@
 
 #include <unordered_set>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 using namespace std;
 
@@ -27,8 +28,6 @@ namespace mtconnect
 {
   namespace entity
   {
-    static dlib::logger g_logger("EntityFactory");
-
     void Factory::_dupFactory(FactoryPtr &factory, FactoryMap &factories)
     {
       auto old = factories.find(factory);
@@ -77,7 +76,7 @@ namespace mtconnect
       return copy;
     }
 
-    void Factory::LogError(const std::string &what) { g_logger << dlib::LWARN << what; }
+    void Factory::LogError(const std::string &what) { BOOST_LOG_TRIVIAL(warning) << what; }
 
     void Factory::performConversions(Properties &properties, ErrorList &errors) const
     {
@@ -95,7 +94,7 @@ namespace mtconnect
             }
             catch (PropertyError &e)
             {
-              g_logger << dlib::LWARN << "Error occurred converting " << r.getName() << ": "
+              BOOST_LOG_TRIVIAL(warning) << "Error occurred converting " << r.getName() << ": "
                        << e.what();
               e.setProperty(r.getName());
               errors.emplace_back(e.dup());
@@ -108,6 +107,7 @@ namespace mtconnect
 
     bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
     {
+      BOOST_LOG_NAMED_SCOPE("EntityFactory");
       bool success {true};
       for (auto &p : properties)
         p.first.clearMark();

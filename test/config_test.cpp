@@ -20,10 +20,10 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include <boost/asio.hpp>
+
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
-#include "rolling_file_logger.hpp"
 #include "xml_printer.hpp"
 
 #include <chrono>
@@ -35,8 +35,6 @@
 #define getcwd _getcwd
 #define chdir _chdir
 #endif
-
-static dlib::logger g_logger("config_test");
 
 using namespace std;
 using namespace mtconnect;
@@ -50,9 +48,6 @@ namespace
    protected:
     void SetUp() override
     {
-      dlib::set_all_logging_output_streams(std::cout);
-      dlib::set_all_logging_levels(dlib::LDEBUG);
-
       m_config = std::make_unique<AgentConfiguration>();
       m_cwd = std::filesystem::current_path();
     }

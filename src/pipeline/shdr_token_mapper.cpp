@@ -17,6 +17,9 @@
 
 #include "shdr_token_mapper.hpp"
 
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
+
 #include "assets/asset.hpp"
 #include "device_model/device.hpp"
 #include "entity/factory.hpp"
@@ -30,8 +33,6 @@ namespace mtconnect
   using namespace observation;
   namespace pipeline
   {
-    static dlib::logger g_logger("DataItemMapper");
-
     inline bool unavailable(const string &str)
     {
       const static string unavailable("UNAVAILABLE");
@@ -152,7 +153,7 @@ namespace mtconnect
         }
         catch (entity::PropertyError &e)
         {
-          g_logger << dlib::LWARN << "Cannot convert value for: " << *token << " - " << e.what();
+          BOOST_LOG_TRIVIAL(warning) << "Cannot convert value for: " << *token << " - " << e.what();
           throw;
         }
       }
@@ -166,6 +167,7 @@ namespace mtconnect
                                                    const TokenList::const_iterator &end,
                                                    ErrorList &errors)
     {
+      BOOST_LOG_NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.toDataItem");
       auto dataItemKey = splitKey(*token++);
       string device = dataItemKey.second.value_or(m_defaultDevice.value_or(""));
       auto dataItem = m_contract->findDataItem(device, dataItemKey.first);
@@ -174,10 +176,10 @@ namespace mtconnect
       {
         // resync to next item
         if (m_logOnce.count(dataItemKey.first) > 0)
-          g_logger << dlib::LTRACE << "Could not find data item: " << dataItemKey.first;
+          BOOST_LOG_TRIVIAL(trace) << "Could not find data item: " << dataItemKey.first;
         else
         {
-          g_logger << dlib::LINFO << "Could not find data item: " << dataItemKey.first;
+          BOOST_LOG_TRIVIAL(info) << "Could not find data item: " << dataItemKey.first;
           m_logOnce.insert(dataItemKey.first);
         }
 
@@ -229,7 +231,7 @@ namespace mtconnect
       }
       else
       {
-        g_logger << dlib::LWARN << "Cannot find requirements for " << dataItemKey.first;
+        BOOST_LOG_TRIVIAL(warning) << "Cannot find requirements for " << dataItemKey.first;
         throw entity::PropertyError("Unresolved data item requirements");
       }
 
@@ -297,6 +299,7 @@ namespace mtconnect
 
     const EntityPtr ShdrTokenMapper::operator()(const EntityPtr entity)
     {
+      BOOST_LOG_NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.operator");
       if (auto timestamped = std::dynamic_pointer_cast<Timestamped>(entity))
       {
         // Don't copy the tokens.
@@ -345,13 +348,13 @@ namespace mtconnect
           }
           catch (entity::EntityError &e)
           {
-            g_logger << dlib::LERROR << "Could not create observation: " << e.what();
+            BOOST_LOG_TRIVIAL(error) << "Could not create observation: " << e.what();
           }
           for (auto &e : errors)
           {
-            g_logger << dlib::LWARN << "Error while parsing tokens: " << e->what();
+            BOOST_LOG_TRIVIAL(warning) << "Error while parsing tokens: " << e->what();
             for (auto it = start; it != token; it++)
-              g_logger << dlib::LWARN << "    token: " << *token;
+              BOOST_LOG_TRIVIAL(warning) << "    token: " << *token;
           }
         }
 

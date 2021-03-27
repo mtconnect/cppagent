@@ -20,7 +20,8 @@
 #include <chrono>
 #include <utility>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 using namespace std;
 using namespace std::chrono;
@@ -29,8 +30,6 @@ namespace mtconnect
 {
   namespace adapter
   {
-    static dlib::logger g_logger("input.connector");
-
     // Connector public methods
     Connector::Connector(string server, unsigned int port, seconds legacyTimeout)
       : m_server(std::move(server)),
@@ -48,6 +47,8 @@ namespace mtconnect
 
     void Connector::connect()
     {
+      BOOST_LOG_NAMED_SCOPE("input.connector");
+
       m_connected = false;
       connecting();
 
@@ -59,19 +60,19 @@ namespace mtconnect
 
         // Connect to server:port, failure will throw dlib::socket_error exception
         // Using a smart pointer to ensure connection is deleted if exception thrown
-        g_logger << LDEBUG << "Connecting to data source: " << m_server << " on port: " << m_port;
+        BOOST_LOG_TRIVIAL(debug) << "Connecting to data source: " << m_server << " on port: " << m_port;
         m_connection.reset(dlib::connect(m_server, m_port));
 
         m_localPort = m_connection->get_local_port();
 
         // Check to see if this connection supports heartbeats.
         m_heartbeats = false;
-        g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
                  << "Sending initial PING";
         auto status = m_connection->write(ping, strlen(ping));
         if (status < 0)
         {
-          g_logger << LWARN << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(warning) << "(Port:" << m_localPort << ")"
                    << "connect: Could not write initial heartbeat: " << to_string(status);
           close();
           return;
@@ -103,12 +104,12 @@ namespace mtconnect
           struct sched_param param;
           param.sched_priority = 30;
           if (pthread_setschedparam(pthread_self(), SCHED_FIFO, &param))
-            g_logger << LDEBUG << "Cannot set high thread priority";
+            BOOST_LOG_TRIVIAL(debug) << "Cannot set high thread priority";
 #endif
         }
-        g_logger << LTRACE << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(trace) << "(Port:" << m_localPort << ")"
                  << "Heartbeat : " << m_heartbeats;
-        g_logger << LTRACE << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(trace) << "(Port:" << m_localPort << ")"
                  << "Heartbeat Freq: " << m_heartbeatFrequency.count();
         // Read from the socket, read is a blocking call
         while (m_connected)
@@ -118,13 +119,13 @@ namespace mtconnect
           if (m_heartbeats)
           {
             timeout = m_heartbeatFrequency - duration_cast<milliseconds>(now - m_lastSent);
-            g_logger << LTRACE << "(Port:" << m_localPort << ")"
+            BOOST_LOG_TRIVIAL(trace) << "(Port:" << m_localPort << ")"
                      << "Heartbeat Send Countdown: " << timeout.count();
           }
           else
           {
             timeout = m_legacyTimeout;
-            g_logger << LTRACE << "(Port:" << m_localPort << ")"
+            BOOST_LOG_TRIVIAL(trace) << "(Port:" << m_localPort << ")"
                      << "Legacy Timeout: " << timeout.count();
           }
 
@@ -136,14 +137,14 @@ namespace mtconnect
             status = m_connection->read(sockBuf, SOCKET_BUFFER_SIZE, timeout.count());
           else
           {
-            g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+            BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
                      << "Connection was closed, exiting adapter connect";
             break;
           }
 
           if (!m_connected)
           {
-            g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+            BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
                      << "Connection was closed during read, exiting adapter";
             break;
           }
@@ -157,14 +158,14 @@ namespace mtconnect
           else if (status == TIMEOUT && !m_heartbeats && (system_clock::now() - now) >= timeout)
           {
             // We don't stop on heartbeats, but if we have a legacy timeout, then we stop.
-            g_logger << LERROR << "(Port:" << m_localPort << ")"
+            BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                      << "connect: Did not receive data for over: "
                      << duration_cast<seconds>(timeout).count() << " seconds";
             break;
           }
           else if (status != TIMEOUT)  // Something other than timeout occurred
           {
-            g_logger << LERROR << "(Port:" << m_localPort << ")"
+            BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                      << "connect: Socket error, disconnecting";
             break;
           }
@@ -174,7 +175,7 @@ namespace mtconnect
             now = system_clock::now();
             if ((now - m_lastHeartbeat) > (m_heartbeatFrequency * 2))
             {
-              g_logger << LERROR << "(Port:" << m_localPort << ")"
+              BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                        << "connect: Did not receive heartbeat for over: "
                        << (m_heartbeatFrequency * 2).count();
               break;
@@ -182,12 +183,12 @@ namespace mtconnect
             else if ((now - m_lastSent) >= m_heartbeatFrequency)
             {
               std::lock_guard<std::mutex> lock(m_commandLock);
-              g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+              BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
                        << "Sending a PING for " << m_server << " on port " << m_port;
               status = m_connection->write(ping, strlen(ping));
               if (status <= 0)
               {
-                g_logger << LERROR << "(Port:" << m_localPort << ")"
+                BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                          << "connect: Could not write heartbeat: " << status;
                 break;
               }
@@ -196,22 +197,22 @@ namespace mtconnect
           }
         }
 
-        g_logger << LERROR << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                  << "connect: Connection exited with status: " << status;
       }
       catch (dlib::socket_error &e)
       {
-        g_logger << LWARN << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(warning) << "(Port:" << m_localPort << ")"
                  << "connect: Socket exception: " << e.what();
       }
       catch (exception &e)
       {
-        g_logger << LERROR << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                  << "connect: Exception in connect: " << e.what();
       }
       catch (...)
       {
-        g_logger << LERROR << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                  << "connect: Unknown Exception in connect";
       }
       {
@@ -255,7 +256,7 @@ namespace mtconnect
         while (!stream.eof())
         {
           getline(stream, line);
-          g_logger << LTRACE << "(Port:" << m_localPort << ") Received line: '" << line << '\'';
+          BOOST_LOG_TRIVIAL(trace) << "(Port:" << m_localPort << ") Received line: '" << line << '\'';
 
           if (line.empty())
             continue;
@@ -269,14 +270,15 @@ namespace mtconnect
           {
             if (!line.compare(0, 6, "* PONG"))
             {
-              if (g_logger.level().priority <= LDEBUG.priority)
-              {
-                g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                         << "Received a PONG for " << m_server << " on port " << m_port;
-                auto delta = date::floor<milliseconds>(system_clock::now() - m_lastHeartbeat);
-                g_logger << LDEBUG << "(Port:" << m_localPort << ")"
-                         << "    Time since last heartbeat: " << delta.count() << "ms";
-              }
+              //TODO with BOOST.log
+              //if (g_logger.level().priority <= LDEBUG.priority)
+              //{
+              BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
+                            << "Received a PONG for " << m_server << " on port " << m_port;
+              auto delta = date::floor<milliseconds>(system_clock::now() - m_lastHeartbeat);
+              BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
+                            << "    Time since last heartbeat: " << delta.count() << "ms";
+              //}
               if (!m_heartbeats)
                 startHeartbeats(line);
             }
@@ -306,7 +308,7 @@ namespace mtconnect
         long status = m_connection->write(completeCommand.c_str(), completeCommand.length());
         if (status <= 0)
         {
-          g_logger << LWARN << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(warning) << "(Port:" << m_localPort << ")"
                    << "sendCommand: Could not write command: '" << command << "' - "
                    << to_string(status);
         }
@@ -324,20 +326,20 @@ namespace mtconnect
 
         if (freq > 0ms && freq < maxTimeOut)
         {
-          g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
                    << "Received PONG, starting heartbeats every " << freq.count() << "ms";
           m_heartbeats = true;
           m_heartbeatFrequency = freq;
         }
         else
         {
-          g_logger << LERROR << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                    << "startHeartbeats: Bad heartbeat frequency " << arg << ", ignoring";
         }
       }
       else
       {
-        g_logger << LERROR << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                  << "startHeartbeats: Bad heartbeat command " << arg << ", ignoring";
       }
     }
@@ -354,11 +356,11 @@ namespace mtconnect
         }
         catch (exception &e)
         {
-          g_logger << LERROR << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                    << "close: Exception when shutting down connection: " << e.what();
         }
 
-        g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
                  << "Waiting for connect method to exit and signal connection closed";
 
         if (m_connectionActive)

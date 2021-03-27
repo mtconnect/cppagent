@@ -20,7 +20,8 @@
 #include <mutex>
 #include <regex>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "device_model/data_item/data_item.hpp"
 #include "entity/factory.hpp"
@@ -39,8 +40,6 @@ namespace mtconnect
 
   namespace observation
   {
-    static dlib::logger g_logger("Observation");
-
     FactoryPtr Observation::getFactory()
     {
       static FactoryPtr factory;
@@ -91,6 +90,8 @@ namespace mtconnect
     ObservationPtr Observation::make(const DataItemPtr dataItem, const Properties &incompingProps,
                                      const Timestamp &timestamp, entity::ErrorList &errors)
     {
+      BOOST_LOG_NAMED_SCOPE("Observation");
+      
       auto props = entity::Properties(incompingProps);
       setProperties(dataItem, props);
       props.insert_or_assign("timestamp", timestamp);
@@ -136,11 +137,11 @@ namespace mtconnect
       auto ent = getFactory()->create(key, props, errors);
       if (!ent)
       {
-        g_logger << dlib::LWARN
+        BOOST_LOG_TRIVIAL(warning)
                  << "Could not parse properties for data item: " << dataItem->getId();
         for (auto &e : errors)
         {
-          g_logger << dlib::LWARN << "   Error: " << e->what();
+          BOOST_LOG_TRIVIAL(warning) << "   Error: " << e->what();
         }
         throw EntityError("Invalid properties for data item");
       }

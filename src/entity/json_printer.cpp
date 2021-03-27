@@ -17,7 +17,8 @@
 
 #include "json_printer.hpp"
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -28,8 +29,6 @@ namespace mtconnect
 {
   namespace entity
   {
-    static dlib::logger g_logger("entity.xml.printer");
-
     inline static json toJson(const observation::DataSet &set)
     {
       using namespace observation;
@@ -54,7 +53,7 @@ namespace mtconnect
                                           [&row, &c](const int64_t &i) { row[c.m_key] = i; },
                                           [&row, &c](const double &d) { row[c.m_key] = d; },
                                           [](auto &a) {
-                                            g_logger << dlib::LERROR
+                                            BOOST_LOG_TRIVIAL(error)
                                                      << "Invalid  variant type for table cell";
                                           }},
                                       c.m_value);
@@ -83,6 +82,7 @@ namespace mtconnect
 
     json JsonPrinter::printEntity(const EntityPtr entity) const
     {
+      BOOST_LOG_NAMED_SCOPE("entity.json_printer");
       json jsonObj;
 
       for (auto &e : entity->getProperties())
