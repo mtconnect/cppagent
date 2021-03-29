@@ -32,7 +32,8 @@
 #include <utility>
 #include <functional>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 using namespace std;
 using namespace std::chrono;
@@ -48,8 +49,6 @@ namespace mtconnect
 {
   namespace adapter
   {
-    static dlib::logger g_logger("input.connector");
-
     // Connector public methods
     Connector::Connector(asio::io_context &context,
                          string server, unsigned int port, seconds legacyTimeout,
@@ -91,8 +90,8 @@ namespace mtconnect
       m_results = resolve.resolve(m_server, to_string(m_port), ec);
       if (ec)
       {
-        g_logger << dlib::LERROR << "Cannot resolve address: " << m_server << ":" << m_port;
-        g_logger << dlib::LERROR << ec.category().message(ec.value()) << ": "
+        BOOST_LOG_TRIVIAL(error) << "Cannot resolve address: " << m_server << ":" << m_port;
+        BOOST_LOG_TRIVIAL(error) << ec.category().message(ec.value()) << ": "
         << ec.message();
         return false;
       }
@@ -102,6 +101,8 @@ namespace mtconnect
     
     bool Connector::connect()
     {
+      BOOST_LOG_NAMED_SCOPE("input.connector");
+
       m_connected = false;
       connecting();
       using boost::placeholders::_1;
@@ -109,7 +110,7 @@ namespace mtconnect
 
       // Connect to server:port, failure will throw dlib::socket_error exception
       // Using a smart pointer to ensure connection is deleted if exception thrown
-      g_logger << LDEBUG << "Connecting to data source: " << m_server << " on port: " << m_port;
+      BOOST_LOG_TRIVIAL(debug) << "Connecting to data source: " << m_server << " on port: " << m_port;
 
       asio::async_connect(m_socket, m_results.begin(),
                           m_results.end(),
@@ -124,7 +125,7 @@ namespace mtconnect
       m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
         if (ec != boost::asio::error::operation_aborted)
         {
-          g_logger << dlib::LINFO << "reconnect: retrying connection";
+          BOOST_LOG_TRIVIAL(info) << "reconnect: retrying connection";
           connect();
         }
       }));
@@ -132,7 +133,7 @@ namespace mtconnect
     
     void Connector::reconnect()
     {
-      g_logger << dlib::LINFO << "reconnect: retry connection in "
+      BOOST_LOG_TRIVIAL(info) << "reconnect: retry connection in "
         << m_reconnectInterval.count() << "ms";
       close();
       asyncTryConnect();
@@ -143,13 +144,13 @@ namespace mtconnect
     {
       if (ec)
       {
-        g_logger << dlib::LERROR << ec.category().message(ec.value()) << ": "
+        BOOST_LOG_TRIVIAL(error) << ec.category().message(ec.value()) << ": "
         << ec.message();
         asyncTryConnect();
       }
       else
       {
-        g_logger << dlib::LINFO << "Connected with: " << m_socket.remote_endpoint();
+        BOOST_LOG_TRIVIAL(info) << "Connected with: " << m_socket.remote_endpoint();
         m_timer.cancel();
         
         m_socket.set_option(asio::ip::tcp::no_delay(true));
@@ -173,7 +174,7 @@ namespace mtconnect
       
       if (ec)
       {
-        g_logger << dlib::LERROR << "reader: " << ec.category().message(ec.value()) << ": "
+        BOOST_LOG_TRIVIAL(error) << "reader: " << ec.category().message(ec.value()) << ": "
         << ec.message();
         reconnect();
       }
@@ -187,7 +188,7 @@ namespace mtconnect
             m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
               if (ec != boost::asio::error::operation_aborted)
               {
-                g_logger << dlib::LWARN << "reader: operation timed out after " << m_receiveTimeLimit.count() << "ms";
+                BOOST_LOG_TRIVIAL(warning) << "reader: operation timed out after " << m_receiveTimeLimit.count() << "ms";
                 reconnect();
               }
             }));
@@ -208,7 +209,7 @@ namespace mtconnect
     {
       if (ec)
       {
-        g_logger << dlib::LERROR << "writer: " << ec.category().message(ec.value()) << ": "
+        BOOST_LOG_TRIVIAL(error) << "writer: " << ec.category().message(ec.value()) << ": "
         << ec.message();
         close();
       }
@@ -228,14 +229,14 @@ namespace mtconnect
       m_receiveTimeout.async_wait([this](sys::error_code ec) {
         if (!ec)
         {
-          g_logger << LERROR << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                    << " connect: Did not receive data for over: "
                    << m_receiveTimeLimit.count() << " ms";
           close();
         }
         else if (ec != boost::asio::error::operation_aborted)
         {
-          g_logger << dlib::LERROR << "Receive timeout: " << ec.category().message(ec.value()) << ": "
+          BOOST_LOG_TRIVIAL(error) << "Receive timeout: " << ec.category().message(ec.value()) << ": "
                    << ec.message();
         }
       });
@@ -263,11 +264,8 @@ namespace mtconnect
       {
         if (!line.compare(0, 6, "* PONG"))
         {
-          if (g_logger.level().priority <= LDEBUG.priority)
-          {
-            g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
                      << " Received a PONG for " << m_server << " on port " << m_port;
-          }
           if (!m_heartbeats)
             startHeartbeats(line);
         }
@@ -286,7 +284,7 @@ namespace mtconnect
     {
       if (m_connected)
       {
-        g_logger << dlib::LDEBUG << "(Port:" << m_localPort << ") "
+        BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ") "
                   << "Sending " << command;
         ostream os(&m_outgoing);
         os << "* " << command << "\n";
@@ -299,14 +297,14 @@ namespace mtconnect
     {
       if (!ec)
       {
-        g_logger << dlib::LDEBUG << "Sending heartbeat";
+        BOOST_LOG_TRIVIAL(debug) << "Sending heartbeat";
         sendCommand("* PING");
         m_heartbeatTimer.expires_from_now(m_heartbeatFrequency);
         m_heartbeatTimer.async_wait(asio::bind_executor(m_strand, boost::bind(&Connector::heartbeat, this, _1)));
       }
       else if (ec != boost::asio::error::operation_aborted)
       {
-        g_logger << dlib::LERROR << "heartbeat: " << ec.category().message(ec.value()) << ": "
+        BOOST_LOG_TRIVIAL(error) << "heartbeat: " << ec.category().message(ec.value()) << ": "
                  << ec.message();
       }
     }
@@ -322,7 +320,7 @@ namespace mtconnect
 
         if (freq > 0ms && freq < maxTimeOut)
         {
-          g_logger << LDEBUG << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(debug) << "(Port:" << m_localPort << ")"
                    << "Received PONG, starting heartbeats every " << freq.count() << "ms";
           m_heartbeats = true;
           m_heartbeatFrequency = freq;
@@ -335,13 +333,13 @@ namespace mtconnect
         }
         else
         {
-          g_logger << LERROR << "(Port:" << m_localPort << ")"
+          BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                    << "startHeartbeats: Bad heartbeat frequency " << arg << ", ignoring";
         }
       }
       else
       {
-        g_logger << LERROR << "(Port:" << m_localPort << ")"
+        BOOST_LOG_TRIVIAL(error) << "(Port:" << m_localPort << ")"
                  << "startHeartbeats: Bad heartbeat command " << arg << ", ignoring";
       }
     }

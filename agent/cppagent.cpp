@@ -18,6 +18,7 @@
 #include <boost/asio.hpp>
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
+
 #include "fcntl.h"
 #include "sys/stat.h"
 
@@ -29,12 +30,17 @@ using namespace std;
 using namespace dlib;
 using namespace mtconnect;
 
+#include <dlib/logger.h>
+#include <dlib/threads.h>
+
 #ifdef _WINDOWS
 #define strncasecmp strnicmp
 #endif
 
 int main(int aArgc, const char *aArgv[])
 {
+  BOOST_LOG_NAMED_SCOPE("MAIN");
+
   configuration::AgentConfiguration config;
 
   int ret = config.main(aArgc, aArgv);

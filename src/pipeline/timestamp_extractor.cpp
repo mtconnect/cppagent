@@ -17,6 +17,9 @@
 
 #include "timestamp_extractor.hpp"
 
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
+
 #include <date/date.h>
 #include <optional>
 
@@ -26,8 +29,6 @@ namespace mtconnect
 {
   namespace pipeline
   {
-    static dlib::logger g_logger("TimestampExtractor");
-
     inline optional<double> getDuration(std::string &timestamp)
     {
       optional<double> duration;
@@ -55,6 +56,8 @@ namespace mtconnect
       using namespace chrono_literals;
       using namespace date::literals;
       using namespace date;
+
+      BOOST_LOG_NAMED_SCOPE("TimestampExtractor");
 
       // Extract duration
       string timestamp = token;

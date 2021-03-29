@@ -19,7 +19,8 @@
 
 #include <stdexcept>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
@@ -54,8 +55,6 @@ namespace mtconnect
   using namespace observation;
   using namespace device_model;
 
-  static dlib::logger g_logger("xml.parser");
-
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
     va_list args;
@@ -66,7 +65,7 @@ namespace mtconnect
     buffer[2047] = '0';
     va_end(args);
 
-    g_logger << dlib::LERROR << "XML: " << buffer;
+    BOOST_LOG_TRIVIAL(error) << "XML: " << buffer;
   }
 
   static inline std::string getAttribute(xmlNodePtr node, const char *name)
@@ -81,7 +80,7 @@ namespace mtconnect
     return res;
   }
 
-  XmlParser::XmlParser() {}
+  XmlParser::XmlParser() { BOOST_LOG_NAMED_SCOPE("xml.parser"); }
 
   inline static bool isMTConnectUrn(const char *aUrn)
   {
@@ -204,7 +203,7 @@ namespace mtconnect
         if (!errors.empty())
         {
           for (auto &e : errors)
-            g_logger << dlib::LWARN << "Error parsing device: " << e->what();
+            BOOST_LOG_TRIVIAL(warning) << "Error parsing device: " << e->what();
         }
       }
 
@@ -219,7 +218,7 @@ namespace mtconnect
       if (xpathCtx)
         xmlXPathFreeContext(xpathCtx);
 
-      g_logger << dlib::LFATAL << "Cannot parse XML file: " << e;
+      BOOST_LOG_TRIVIAL(fatal) << "Cannot parse XML file: " << e;
       throw;
     }
     catch (...)
@@ -265,7 +264,7 @@ namespace mtconnect
 
     catch (string e)
     {
-      g_logger << dlib::LFATAL << "Cannot parse XML document: " << e;
+      BOOST_LOG_TRIVIAL(fatal) << "Cannot parse XML document: " << e;
       throw;
     }
   }
@@ -378,7 +377,7 @@ namespace mtconnect
       if (xpathCtx)
         xmlXPathFreeContext(xpathCtx);
 
-      g_logger << dlib::LWARN << "getDataItems: Could not parse path: " << inputPath;
+      BOOST_LOG_TRIVIAL(warning) << "getDataItems: Could not parse path: " << inputPath;
     }
   }
 }  // namespace mtconnect

@@ -19,7 +19,8 @@
 
 #include <unordered_map>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <libxml/xmlwriter.h>
 
@@ -32,8 +33,6 @@ namespace mtconnect
 {
   namespace entity
   {
-    static dlib::logger g_logger("entity.xml.printer");
-
     inline string stripUndeclaredNamespace(const QName &qname,
                                            const unordered_set<string> &namespaces)
     {
@@ -122,7 +121,7 @@ namespace mtconnect
                                           addSimpleElement(writer, "Cell", format(d), attrs);
                                         },
                                         [](auto &a) {
-                                          g_logger << dlib::LERROR
+                                          BOOST_LOG_TRIVIAL(error)
                                                    << "Invalid type for DataSetVariant cell";
                                         }},
                                     c.m_value);
@@ -176,6 +175,7 @@ namespace mtconnect
     void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity,
                            const std::unordered_set<std::string> &namespaces)
     {
+      BOOST_LOG_NAMED_SCOPE("entity.xml_printer");
       string qname = stripUndeclaredNamespace(entity->getName(), namespaces);
       AutoElement element(writer, qname);
 

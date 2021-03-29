@@ -21,10 +21,12 @@
 #include <set>
 #include <sstream>
 
-#include <dlib/logger.h>
+#include <dlib/sockets.h>
+
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <nlohmann/json.hpp>
-#include <boost/asio/ip/host_name.hpp>
 
 #include "device_model/composition.hpp"
 #include "device_model/configuration/configuration.hpp"
@@ -41,11 +43,10 @@ namespace mtconnect
   using namespace observation;
   using namespace device_model;
 
-  static dlib::logger g_logger("json.printer");
-
   JsonPrinter::JsonPrinter(const string version, bool pretty)
     : Printer(pretty), m_schemaVersion(version)
   {
+    BOOST_LOG_NAMED_SCOPE("json.printer");
     char appVersion[32] = {0};
     std::sprintf(appVersion, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR,
                  AGENT_VERSION_PATCH, AGENT_VERSION_BUILD);
@@ -57,9 +58,7 @@ namespace mtconnect
     if (m_hostname.empty())
     {
       string name;
-      boost::system::error_code ec;
-      name = boost::asio::ip::host_name(ec);
-      if (ec)
+      if (dlib::get_local_hostname(name))
         name = "localhost";
       // Breaking the rules, this is a one off
       const_cast<JsonPrinter *>(this)->m_hostname = name;

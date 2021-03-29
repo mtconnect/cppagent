@@ -22,15 +22,14 @@
 #include <map>
 #include <string>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "adapter/adapter.hpp"
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
 
 using namespace std;
-
-static dlib::logger g_logger("data_item");
 
 namespace mtconnect
 {
@@ -106,6 +105,8 @@ namespace mtconnect
       // DataItem public methods
       DataItem::DataItem(const string &name, const Properties &props) : Entity(name, props)
       {
+        BOOST_LOG_NAMED_SCOPE("data_item");
+
         static const char *samples = "Samples";
         static const char *events = "Events";
         static const char *condition = "Condition";
@@ -266,10 +267,10 @@ namespace mtconnect
         auto v = Constraints::getFactory()->create("Value", url, errors);
         if (!errors.empty())
         {
-          g_logger << dlib::LERROR << "Cannot set constant value for data item " << m_id << " to "
+          BOOST_LOG_TRIVIAL(error) << "Cannot set constant value for data item " << m_id << " to "
                    << value;
           for (auto &e : errors)
-            g_logger << dlib::LERROR << e->what();
+            BOOST_LOG_TRIVIAL(error) << e->what();
         }
         else
         {

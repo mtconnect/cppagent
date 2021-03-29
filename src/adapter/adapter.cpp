@@ -23,7 +23,8 @@
 #include <thread>
 #include <utility>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
@@ -36,8 +37,6 @@ namespace mtconnect
 {
   namespace adapter
   {
-    static dlib::logger g_logger("input.adapter");
-
     // Adapter public methods
     Adapter::Adapter(boost::asio::io_context &context,
                      const string &server, const unsigned int port,
@@ -100,11 +99,12 @@ namespace mtconnect
 
     void Adapter::stop()
     {
+      BOOST_LOG_NAMED_SCOPE("input.adapter.stop");
       // Will stop threaded object gracefully Adapter::thread()
-      g_logger << dlib::LDEBUG << "Waiting for adatpter to stop: " << m_url;
+      BOOST_LOG_TRIVIAL(debug) << "Waiting for adapter to stop: " << m_url;
       m_running = false;
       close();
-      g_logger << dlib::LDEBUG << "Adapter eexited: " << m_url;
+      BOOST_LOG_TRIVIAL(debug) << "Adapter exited: " << m_url;
     }
 
     inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }

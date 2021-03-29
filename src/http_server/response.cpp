@@ -17,8 +17,6 @@
 
 #include "response.hpp"
 
-#include <dlib/logger.h>
-
 using namespace std;
 
 namespace mtconnect

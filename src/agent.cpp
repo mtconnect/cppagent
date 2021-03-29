@@ -26,7 +26,14 @@
 #include <sys/stat.h>
 #include <thread>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
+
+#include <dlib/config_reader.h>
+#include <dlib/dir_nav.h>
+#include <dlib/misc_api.h>
+#include <dlib/queue.h>
+#include <dlib/tokenizer.h>
 
 #include "assets/asset.hpp"
 #include "assets/cutting_tool.hpp"
@@ -49,7 +56,6 @@ namespace mtconnect
 
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
-  static dlib::logger g_logger("agent");
 
   // Agent public methods
   Agent::Agent(std::unique_ptr<http_server::Server> &server,
@@ -81,6 +87,7 @@ namespace mtconnect
 
   void Agent::initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options)
   {
+    BOOST_LOG_NAMED_SCOPE("agent");
     m_loopback = std::make_unique<AgentLoopbackPipeline>(context);
     m_loopback->build(options);
 
@@ -134,7 +141,7 @@ namespace mtconnect
     }
     catch (dlib::socket_error &e)
     {
-      g_logger << LFATAL << "Cannot start server: " << e.what();
+      BOOST_LOG_TRIVIAL(fatal) << "Cannot start server: " << e.what();
       std::exit(1);
     }
   }
@@ -142,20 +149,20 @@ namespace mtconnect
   void Agent::stop()
   {
     // Stop all adapter threads...
-    g_logger << LINFO << "Shutting down adapters";
+    BOOST_LOG_TRIVIAL(info) << "Shutting down adapters";
     // Deletes adapter and waits for it to exit.
     for (const auto adapter : m_adapters)
       adapter->stop();
 
-    g_logger << LINFO << "Shutting down server";
+    BOOST_LOG_TRIVIAL(info) << "Shutting down server";
     m_server->stop();
 
-    g_logger << LINFO << "Shutting down adapters";
+    BOOST_LOG_TRIVIAL(info) << "Shutting down adapters";
     for (const auto adapter : m_adapters)
       delete adapter;
 
     m_adapters.clear();
-    g_logger << LINFO << "Shutting down completed";
+    BOOST_LOG_TRIVIAL(info) << "Shutting down completed";
   }
 
   // ---------------------------------------
@@ -175,7 +182,7 @@ namespace mtconnect
     if (!errors.empty())
     {
       for (auto &e : errors)
-        g_logger << dlib::LFATAL << "Error creating the agent device: " << e->what();
+        BOOST_LOG_TRIVIAL(fatal) << "Error creating the agent device: " << e->what();
       throw EntityError("Cannot create AgentDevice");
     }
     addDevice(m_agentDevice);
@@ -199,15 +206,15 @@ namespace mtconnect
     }
     catch (runtime_error &e)
     {
-      g_logger << LFATAL << "Error loading xml configuration: " + configXmlPath;
-      g_logger << LFATAL << "Error detail: " << e.what();
+      BOOST_LOG_TRIVIAL(fatal) << "Error loading xml configuration: " + configXmlPath;
+      BOOST_LOG_TRIVIAL(fatal) << "Error detail: " << e.what();
       cerr << e.what() << endl;
       throw e;
     }
     catch (exception &f)
     {
-      g_logger << LFATAL << "Error loading xml configuration: " + configXmlPath;
-      g_logger << LFATAL << "Error detail: " << f.what();
+      BOOST_LOG_TRIVIAL(fatal) << "Error loading xml configuration: " + configXmlPath;
+      BOOST_LOG_TRIVIAL(fatal) << "Error detail: " << f.what();
       cerr << f.what() << endl;
       throw f;
     }
@@ -279,7 +286,7 @@ namespace mtconnect
       {
         if (m_dataItemMap[d->getId()] != d)
         {
-          g_logger << LFATAL << "Duplicate DataItem id " << d->getId()
+          BOOST_LOG_TRIVIAL(fatal) << "Duplicate DataItem id " << d->getId()
                    << " for device: " << *device->getComponentName()
                    << " and data item name: " << d->getId();
           std::exit(1);
@@ -309,7 +316,7 @@ namespace mtconnect
     if (old != m_deviceUuidMap.end())
     {
       // Update existing device
-      g_logger << LFATAL << "Device " << *device->getUuid() << " already exists. "
+      BOOST_LOG_TRIVIAL(fatal) << "Device " << *device->getUuid() << " already exists. "
                << " Update not supported yet";
       std::exit(1);
     }
@@ -336,7 +343,7 @@ namespace mtconnect
         }
       }
       else
-        g_logger << LWARN << "Adding device " << uuid
+        BOOST_LOG_TRIVIAL(warning) << "Adding device " << uuid
                  << " after initialialization not supported yet";
     }
   }
@@ -714,7 +721,7 @@ namespace mtconnect
     }
     else
     {
-      g_logger << LERROR << "Unexpected connection status received: " << value;
+      BOOST_LOG_TRIVIAL(error) << "Unexpected connection status received: " << value;
     }
   }
 
@@ -733,17 +740,17 @@ namespace mtconnect
 
       if (!device || !source)
       {
-        g_logger << LERROR << "Invalid command: " << command << ", device or source not specified";
+        BOOST_LOG_TRIVIAL(error) << "Invalid command: " << command << ", device or source not specified";
       }
       else
       {
-        g_logger << LDEBUG << "Processing command: " << command << ": " << value;
+        BOOST_LOG_TRIVIAL(debug) << "Processing command: " << command << ": " << value;
         m_agent->receiveCommand(*device, command, param, *source);
       }
     }
     else
     {
-      g_logger << LWARN << "Cannot parse command: " << value;
+      BOOST_LOG_TRIVIAL(warning) << "Cannot parse command: " << value;
     }
   }
 
@@ -760,7 +767,7 @@ namespace mtconnect
   void Agent::disconnected(const std::string &adapter, const StringList &devices,
                            bool autoAvailable)
   {
-    g_logger << LDEBUG << "Disconnected from adapter, setting all values to UNAVAILABLE";
+    BOOST_LOG_TRIVIAL(debug) << "Disconnected from adapter, setting all values to UNAVAILABLE";
 
     if (m_agentDevice)
     {
@@ -773,7 +780,7 @@ namespace mtconnect
       DevicePtr device = findDeviceByUUIDorName(name);
       if (device == nullptr)
       {
-        g_logger << LWARN << "Cannot find device " << name << " when adapter " << adapter
+        BOOST_LOG_TRIVIAL(warning) << "Cannot find device " << name << " when adapter " << adapter
                  << "disconnected";
         continue;
       }
@@ -801,7 +808,7 @@ namespace mtconnect
           }
         }
         else if (!dataItem)
-          g_logger << LWARN << "No data Item for " << dataItemAssoc.first;
+          BOOST_LOG_TRIVIAL(warning) << "No data Item for " << dataItemAssoc.first;
       }
     }
   }
@@ -822,20 +829,20 @@ namespace mtconnect
       DevicePtr device = findDeviceByUUIDorName(name);
       if (device == nullptr)
       {
-        g_logger << LWARN << "Cannot find device " << name << " when adapter " << adapter
+        BOOST_LOG_TRIVIAL(warning) << "Cannot find device " << name << " when adapter " << adapter
                  << "connected";
         continue;
       }
-      g_logger << LDEBUG
+      BOOST_LOG_TRIVIAL(debug)
                << "Connected to adapter, setting all Availability data items to AVAILABLE";
 
       if (auto avail = device->getAvailability())
       {
-        g_logger << LDEBUG << "Adding availabilty event for " << device->getAvailability()->getId();
+        BOOST_LOG_TRIVIAL(debug) << "Adding availabilty event for " << device->getAvailability()->getId();
         addToBuffer(avail, g_available);
       }
       else
-        g_logger << LDEBUG << "Cannot find availability for " << *device->getComponentName();
+        BOOST_LOG_TRIVIAL(debug) << "Cannot find availability for " << *device->getComponentName();
     }
   }
 
@@ -879,10 +886,10 @@ namespace mtconnect
     }
     else
     {
-      g_logger << LERROR << "Cannot add observation: ";
+      BOOST_LOG_TRIVIAL(error) << "Cannot add observation: ";
       for (auto &e : errors)
       {
-        g_logger << LERROR << "Cannot add observation: " << e->what();
+        BOOST_LOG_TRIVIAL(error) << "Cannot add observation: " << e->what();
       }
     }
 
@@ -934,7 +941,7 @@ namespace mtconnect
       addToBuffer(cdi, {{"assetType", asset->getType()}, {"VALUE", asset->getAssetId()}},
                   asset->getTimestamp());
     else
-      g_logger << LERROR << "Cannot find data item for asset removed or changed. Schema Version: "
+      BOOST_LOG_TRIVIAL(error) << "Cannot find data item for asset removed or changed. Schema Version: "
                << m_version;
   }
 
@@ -947,10 +954,10 @@ namespace mtconnect
     auto entity = entity::XmlParser::parse(Asset::getRoot(), document, "1.7", errors);
     if (!entity)
     {
-      g_logger << LWARN << "Asset could not be parsed";
-      g_logger << LWARN << document;
+      BOOST_LOG_TRIVIAL(warning) << "Asset could not be parsed";
+      BOOST_LOG_TRIVIAL(warning) << document;
       for (auto &e : errors)
-        g_logger << LWARN << e->what();
+        BOOST_LOG_TRIVIAL(warning) << e->what();
       return nullptr;
     }
 
@@ -961,8 +968,8 @@ namespace mtconnect
       stringstream msg;
       msg << "Asset types do not match: "
           << "Parsed type: " << asset->getType() << " does not match " << *type;
-      g_logger << LWARN << msg.str();
-      g_logger << LWARN << document;
+      BOOST_LOG_TRIVIAL(warning) << msg.str();
+      BOOST_LOG_TRIVIAL(warning) << document;
       errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
       return asset;
     }
@@ -971,8 +978,8 @@ namespace mtconnect
     {
       stringstream msg;
       msg << "Asset does not have an assetId and assetId not given";
-      g_logger << LWARN << msg.str();
-      g_logger << LWARN << document;
+      BOOST_LOG_TRIVIAL(warning) << msg.str();
+      BOOST_LOG_TRIVIAL(warning) << document;
       errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
       return asset;
     }
@@ -1287,7 +1294,7 @@ namespace mtconnect
         // MTConnectError and return.
         if (start < getFirstSequence())
         {
-          g_logger << LWARN << "Client fell too far behind, disconnecting";
+          BOOST_LOG_TRIVIAL(warning) << "Client fell too far behind, disconnecting";
           throw logic_error("Client can't keep up with event stream, disconnecting");
         }
 
@@ -1373,7 +1380,7 @@ namespace mtconnect
     }
     catch (RequestError &aError)
     {
-      g_logger << LINFO << "Caught a parameter error.";
+      BOOST_LOG_TRIVIAL(info) << "Caught a parameter error.";
       if (response.good())
       {
         response.writeMultipartChunk(printError(printer, "BAD_REQUEST", aError.m_body),
@@ -1382,7 +1389,7 @@ namespace mtconnect
     }
     catch (std::exception &e)
     {
-      g_logger << LWARN << "Error occurred during streaming data";
+      BOOST_LOG_TRIVIAL(warning) << "Error occurred during streaming data";
       if (response.good())
       {
         response.writeMultipartChunk(printError(printer, "INTERNAL_ERROR", e.what()),
@@ -1391,7 +1398,7 @@ namespace mtconnect
     }
     catch (...)
     {
-      g_logger << LWARN << "Error occurred during streaming data";
+      BOOST_LOG_TRIVIAL(warning) << "Error occurred during streaming data";
       if (response.good())
       {
         response.writeMultipartChunk(
@@ -1608,7 +1615,7 @@ namespace mtconnect
     }
     else
     {
-      g_logger << LERROR << "Invalid assent command: " << cmd;
+      BOOST_LOG_TRIVIAL(error) << "Invalid assent command: " << cmd;
     }
   }
 
@@ -1650,7 +1657,7 @@ namespace mtconnect
                  // Convert to a floating point number
                  auto di = device->getDeviceDataItem(name);
                  if (!di)
-                   g_logger << LWARN << "Cannot find data item to calibrate for " << name;
+                   BOOST_LOG_TRIVIAL(warning) << "Cannot find data item to calibrate for " << name;
                  else
                  {
                    double fact_value = stod(factor);
@@ -1674,7 +1681,7 @@ namespace mtconnect
       auto agentDi = adapterDataItems.find(command);
       if (agentDi == adapterDataItems.end())
       {
-        g_logger << LWARN << "Unknown command '" << command << "' for device '" << deviceName;
+        BOOST_LOG_TRIVIAL(warning) << "Unknown command '" << command << "' for device '" << deviceName;
       }
       else
       {
@@ -1684,7 +1691,7 @@ namespace mtconnect
           addToBuffer(di, value);
         else
         {
-          g_logger << LWARN << "Cannot find data item for the Agent device when processing command "
+          BOOST_LOG_TRIVIAL(warning) << "Cannot find data item for the Agent device when processing command "
                    << command << " with value " << value << " for adapter " << source;
         }
       }
@@ -1703,7 +1710,7 @@ namespace mtconnect
   string Agent::printError(const Printer *printer, const string &errorCode,
                            const string &text) const
   {
-    g_logger << LDEBUG << "Returning error " << errorCode << ": " << text;
+    BOOST_LOG_TRIVIAL(debug) << "Returning error " << errorCode << ": " << text;
     if (printer)
       return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
                                  m_circularBuffer.getSequence(), errorCode, text);

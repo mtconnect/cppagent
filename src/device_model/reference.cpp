@@ -23,14 +23,14 @@
 #include <string>
 #include <utility>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "device.hpp"
 #include "entity.hpp"
 #include "utilities.hpp"
 
 using namespace std;
-static dlib::logger g_logger("reference");
 
 namespace mtconnect
 {
@@ -74,13 +74,14 @@ namespace mtconnect
 
     void Reference::resolve(DevicePtr device)
     {
+      BOOST_LOG_NAMED_SCOPE("reference");
       if (m_type == COMPONENT)
       {
         auto comp = device->getComponentById(get<string>("idRef"));
         if (comp)
           m_component = comp;
         else
-          g_logger << dlib::LWARN << "Refernce: Cannot find Component for idRef "
+          BOOST_LOG_TRIVIAL(warning) << "Refernce: Cannot find Component for idRef "
                    << get<string>("idRef");
       }
       else if (m_type == DATA_ITEM)
@@ -89,12 +90,12 @@ namespace mtconnect
         if (di)
           m_dataItem = di;
         else
-          g_logger << dlib::LWARN << "Refernce: Cannot find DataItem for idRef "
+          BOOST_LOG_TRIVIAL(warning) << "Refernce: Cannot find DataItem for idRef "
                    << get<string>("idRef");
       }
       else
       {
-        g_logger << dlib::LWARN << "Reference: Unknown Reference type for: " << getName();
+        BOOST_LOG_TRIVIAL(warning) << "Reference: Unknown Reference type for: " << getName();
       }
     }
 

@@ -17,6 +17,9 @@
 
 #include "deliver.hpp"
 
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
+
 #include "agent.hpp"
 #include "assets/cutting_tool.hpp"
 #include "assets/file_asset.hpp"
@@ -35,8 +38,6 @@ namespace mtconnect
 
   namespace pipeline
   {
-    static dlib::logger g_logger("pipeline.deliver");
-
     const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
     {
       using namespace observation;
@@ -64,6 +65,8 @@ namespace mtconnect
     void ComputeMetrics::compute(boost::system::error_code ec)
 
     {
+      BOOST_LOG_NAMED_SCOPE("pipeline.deliver");
+
       if (!ec)
       {
         using namespace std;
@@ -76,7 +79,7 @@ namespace mtconnect
         auto di = m_contract->findDataItem("Agent", *m_dataItem);
         if (di == nullptr)
         {
-          g_logger << LWARN << "Could not find data item: " << *m_dataItem << ", exiting metrics";
+          BOOST_LOG_TRIVIAL(warning) << "Could not find data item: " << *m_dataItem << ", exiting metrics";
           return;
         }
         
@@ -97,9 +100,9 @@ namespace mtconnect
           auto delta = count - m_last;
           
           double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
-          g_logger << dlib::LDEBUG << *m_dataItem
+          BOOST_LOG_TRIVIAL(debug) << *m_dataItem
           << " - Average for last 1 minutes: " << (avg / dt.count());
-          g_logger << dlib::LDEBUG << *m_dataItem
+          BOOST_LOG_TRIVIAL(debug) << *m_dataItem
           << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
           
           m_last = count;
