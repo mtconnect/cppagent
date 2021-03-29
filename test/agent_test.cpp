@@ -33,6 +33,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <thread>
+#include <map>
 
 #if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;
@@ -80,7 +81,7 @@ class AgentTest : public testing::Test
 
 TEST_F(AgentTest, Constructor)
 {
-  auto server1 = make_unique<http_server::Server>();
+  auto server1 = make_unique<http_server::Server>(m_agentTestHelper->m_ioContext);
   auto cache1 = make_unique<http_server::FileCache>();
   unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7");
   auto context = std::make_shared<pipeline::PipelineContext>();
@@ -89,7 +90,7 @@ TEST_F(AgentTest, Constructor)
   ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
   agent.reset();
   
-  auto server2 = make_unique<http_server::Server>();
+  auto server2 = make_unique<http_server::Server>(m_agentTestHelper->m_ioContext);
   auto cache2 = make_unique<http_server::FileCache>();
   agent = make_unique<Agent>(server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7");
   
@@ -123,7 +124,7 @@ TEST_F(AgentTest, Probe)
 
 TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
-  auto server1 = make_unique<http_server::Server>();
+  auto server1 = make_unique<http_server::Server>(m_agentTestHelper->m_ioContext);
   auto cache1 = make_unique<http_server::FileCache>();
   unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 17, 8, "1.5");
   auto context = std::make_shared<pipeline::PipelineContext>();
@@ -2569,7 +2570,7 @@ TEST_F(AgentTest, StreamDataObserver)
   auto agent = m_agentTestHelper->getAgent();
   
   // Start a thread...
-  key_value_map query;
+  std::map<string, string>  query;
   query["interval"] = "100";
   query["heartbeat"] = "1000";
   query["count"] = "10";

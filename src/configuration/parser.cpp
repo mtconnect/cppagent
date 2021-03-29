@@ -143,7 +143,7 @@ namespace mtconnect
         m_name %= lexeme[+(char_ - (space | char_("=\\{}") | eol))];
         m_value %= *blank > no_skip[+(char_ - (char_("}#") | eol))];
         m_property = (m_name >> "=" > m_value > (eol | &char_("}#")))[property(_val, _1, _2)];
-        m_tree = (m_name >> "{" >> *m_node > "}")[tree(_val, _1, _2)];
+        m_tree = (m_name >> *eol >> "{" >> *m_node > "}")[tree(_val, _1, _2)];
         m_blank = eol;
         m_node = (m_property | m_tree | m_blank);
         m_start = (*m_node)[start(_val, _1)];

@@ -29,24 +29,37 @@ namespace mtconnect
 {
   namespace http_server
   {
+    namespace asio = boost::asio;
+    namespace ip = boost::asio::ip;
+    using tcp = boost::asio::ip::tcp;
     using namespace std;
-    using namespace dlib;
+    using boost::placeholders::_1;
+    using boost::placeholders::_2;
 
     static dlib::logger g_logger("HttpServer");
 
-
+    class Session : public enable_shared_from_this<Session>
+    {
+    public:
+      Session(tcp::socket &&socket)
+      : m_socket(socket)
+      {}
+      
+    protected:
+      tcp::socket &m_socket;
+      unique_ptr<http::request_parser<http::string_body>> m_parser;
+    };
 
     void Server::start()
     {
       try
       {
-        run = true;
-        httpProcess = new std::thread(&Server::listen, this );
-        httpProcess->join();
+        m_run = true;
+        listen();
       }
       catch (exception &e)
       {
-        g_logger << LFATAL << "Cannot start server: " << e.what();
+        g_logger << dlib::LFATAL << "Cannot start server: " << e.what();
         std::exit(1);
       }
     }
@@ -54,11 +67,8 @@ namespace mtconnect
     // Listen for an HTTP server connection
     void Server::listen()
     {
-      bool close = false;
       beast::error_code ec;
-      beast::flat_buffer buffer;
-      net::io_context ioc{1};
-
+      
 //            if(enableSSL) {
 //                // The SSL context is required, and holds certificates
 //                ssl::context ctx{ssl::context::tlsv12};
@@ -68,29 +78,54 @@ namespace mtconnect
 //            }
 
       // Blocking call to listen for a connection
-      tcp::acceptor acceptor{ioc, {address, mPort}};
-
-
-      while (run) {
-        try{
-        tcp::socket socket{ioc};
-        acceptor.accept(socket);
-        std::thread{std::bind(&Server::session, this, std::move(socket))}.detach();
-        socket.shutdown(tcp::socket::shutdown_send, ec);//        http::request<http::string_body> req;
-//        if (ec)
-//          fail(ec, "write");
-       }
-        catch (exception &e)
-        {
-          g_logger << LERROR << "Server::listen error: "<< e.what();
-          stringstream msg;
-          msg << "Error processing request - " << e.what();
-          g_logger << LERROR << msg.str();
-        }
+      tcp::endpoint ep(m_address, m_port);
+      m_acceptor.open(ep.protocol(), ec);
+      if (ec)
+      {
+        fail(ec, "Cannot open server socket");
+        return;
       }
+
+      m_acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
+      if (ec)
+      {
+        fail(ec, "Cannot set reuse address");
+        return;
+      }
+      
+      m_acceptor.bind(ep, ec);
+      if (ec)
+      {
+        fail(ec, "Cannot bind to server address");
+        return;
+      }
+      
+      m_acceptor.listen(net::socket_base::max_listen_connections, ec);
+      if (ec)
+      {
+        fail(ec, "Cannot set listen queue length");
+        return;
+      }
+      
+      m_acceptor.async_accept(net::make_strand(m_context),
+                              beast::bind_front_handler(&Server::accept, this));
     }
 
-    void Server::session( tcp::socket &socket)
+    void Server::accept(beast::error_code ec, tcp::socket socket)
+    {
+      if (ec)
+      {
+        fail(ec, "Accept failed");
+      }
+      else
+      {
+        session(ec, socket);
+        m_acceptor.async_accept(net::make_strand(m_context),
+                                beast::bind_front_handler(&Server::accept, this));
+      }
+    }
+    
+    void Server::session(beast::error_code ec, tcp::socket &socket)
     {
       tcp::socket m_socket(std::move(socket));
       try{
@@ -113,7 +148,7 @@ namespace mtconnect
             stringstream msg;
             msg << "Error processing request from: " << request.m_foreignIp << " - "
                 << "Server is read-only. Only GET verb supported";
-            g_logger << LERROR << msg.str();
+            g_logger << dlib::LERROR << msg.str();
 
             if (m_errorFunction)
               m_errorFunction(request.m_accepts, response, msg.str(), FORBIDDEN);
@@ -124,7 +159,7 @@ namespace mtconnect
 
         if(!handleRequest(request, response))
         {
-          g_logger << LERROR << "Server::session error handling Request. ";
+          g_logger << dlib::LERROR << "Server::session error handling Request. ";
         };
 
         m_socket.shutdown(tcp::socket::shutdown_send, ec);
@@ -132,7 +167,7 @@ namespace mtconnect
       }
       catch (exception &e)
       {
-        g_logger << LERROR << "Server::listen error: "<< e.what();
+        g_logger << dlib::LERROR << "Server::listen error: "<< e.what();
       }
     }
 
@@ -195,7 +230,7 @@ namespace mtconnect
       }
       catch (exception &e)
       {
-        g_logger << LERROR << "method:" << __func__  <<" error: " <<e.what();
+        g_logger << dlib::LERROR << "method:" << __func__  <<" error: " <<e.what();
       }
       return request;
     }
@@ -211,7 +246,7 @@ namespace mtconnect
           auto ptr = tmpStr.find_first_of("&");
           if (ptr != std::string().npos)
           {
-            std:string string1 = tmpStr.substr(0,ptr);
+            std::string string1 = tmpStr.substr(0,ptr);
             tmpStr = tmpStr.substr(ptr+1);
             ptr = string1.find_first_of('=');
             if (ptr != std::string().npos){
@@ -238,7 +273,7 @@ namespace mtconnect
       }
       catch (exception& e)
       {
-        g_logger << LERROR << __func__ << " error: " <<e.what();
+        g_logger << dlib::LERROR << __func__ << " error: " <<e.what();
         return queryMap;
       }
     }
@@ -253,7 +288,7 @@ namespace mtconnect
           stringstream msg;
           msg << "Error processing request from: " << request.m_foreignIp << " - "
               << "No matching route for: " << request.m_verb << " " << request.m_path;
-          g_logger << LERROR << msg.str();
+          g_logger << dlib::LERROR << msg.str();
 
           if (m_errorFunction)
             m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
@@ -262,7 +297,7 @@ namespace mtconnect
       }
       catch (RequestError &e)
       {
-        g_logger << LERROR << "Error processing request from: " << request.m_foreignIp << " - "
+        g_logger << dlib::LERROR << "Error processing request from: " << request.m_foreignIp << " - "
                  << e.what();
         response.writeResponse(e.m_body, e.m_contentType, e.m_code);
         res = false;
@@ -272,7 +307,7 @@ namespace mtconnect
         stringstream msg;
         msg << "Parameter Error processing request from: " << request.m_foreignIp << " - "
             << e.what();
-        g_logger << LERROR << msg.str();
+        g_logger << dlib::LERROR << msg.str();
 
         if (m_errorFunction)
           m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
@@ -311,7 +346,7 @@ namespace mtconnect
       }
       catch (exception& e)
       {
-        g_logger << LERROR << __func__ << " error: " <<e.what();
+        g_logger << dlib::LERROR << __func__ << " error: " <<e.what();
         return queryMap;
       }
       return queryMap;
@@ -322,7 +357,7 @@ namespace mtconnect
 
 // Report a failure
     void Server::fail(beast::error_code ec, char const *what) {
-      g_logger << LERROR  << " error: " << ec.message();
+      g_logger << dlib::LERROR  << " error: " << ec.message();
     }
 
   }  // namespace http_server

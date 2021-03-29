@@ -47,7 +47,6 @@ namespace mtconnect
 {
   namespace http_server
   {
-    //using IncomingThings = dlib::incoming_things;
     namespace beast = boost::beast;         // from <boost/beast.hpp>
     namespace http = beast::http;           // from <boost/beast/http.hpp>
     namespace net = boost::asio;            // from <boost/asio.hpp>
@@ -79,20 +78,20 @@ namespace mtconnect
     {
 
     public:
-      Server(unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {}):
-      mPort(port)
+      Server(net::io_context &context, unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
+      : m_context(context), m_port(port), m_acceptor(context)
       {
         if (inter.empty())
         {
-          address = net::ip::make_address("0.0.0.0");
+          m_address = net::ip::make_address("0.0.0.0");
         }
         else
         {
-          address = net::ip::make_address(inter);
+          m_address = net::ip::make_address(inter);
         }
-        if (mPort == 0 || mPort < 0)
+        if (m_port == 0 || m_port < 0)
         {
-          mPort = 5000;
+          m_port = 5000;
         }
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
         m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
@@ -106,7 +105,7 @@ namespace mtconnect
       void start();
 
       // Shutdown
-      void stop(){run=false;};
+      void stop(){m_run=false;};
 
       void listen();
 
@@ -136,7 +135,9 @@ namespace mtconnect
         return false;
       }
 
-      void session (tcp::socket& socket);
+      void accept(beast::error_code ec, tcp::socket socket);
+
+      void session(beast::error_code ec, tcp::socket& socket);
 
       bool handleRequest(Routing::Request &request, Response &response);
 
@@ -146,14 +147,20 @@ namespace mtconnect
 
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
 
+    protected:
+      Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket);
+      Routing::QueryMap getQueries(const std::string& queries);
 
     protected:
-      net::ip::address address;
-      unsigned short mPort{5000};
-      std::thread* httpProcess;
-      bool run{false};
-      bool enableSSL{false};
-      ConfigOptions options;
+      net::io_context &m_context;
+      
+      net::ip::address m_address;
+      unsigned short m_port{5000};
+
+      bool m_run{false};
+      bool m_enableSSL{false};
+      
+      ConfigOptions m_options;
       // Put handling controls
       bool m_putEnabled;
       std::set<std::string> m_putAllowedHosts;
@@ -161,8 +168,8 @@ namespace mtconnect
       std::unique_ptr<FileCache> m_fileCache;
       ErrorFunction m_errorFunction;
       StringList m_fields;
-      Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket);
-      Routing::QueryMap getQueries(const std::string& queries);
+      
+      tcp::acceptor m_acceptor;
     };
   }  // namespace http_server
 }  // namespace mtconnect

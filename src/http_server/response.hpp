@@ -135,7 +135,9 @@ namespace mtconnect
       {
         if (good())
         {
-          m_boundary = dlib::md5(std::to_string(time(nullptr)));
+          using namespace boost::uuids;
+          random_generator gen;
+          m_boundary = to_string(gen());
           trailer.set(http::field::content_md5, m_boundary);
           trailer.set(http::field::expires, "never");
 
@@ -148,6 +150,8 @@ namespace mtconnect
           std::string content_type = "multipart/x-mixed-replace;boundary=";
           content_type.append(m_boundary);
           res.set(http::field::content_type, content_type);
+          // TODO: Add additional fields
+          
           //res.set(http::field::trailer, "Content-MD5, Expires");
           res.chunked(true);
           http::response_serializer<http::empty_body> sr{res};

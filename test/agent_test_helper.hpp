@@ -91,7 +91,8 @@ class AgentTestHelper
 {
  public:
   AgentTestHelper()
-  : m_out(), m_response(m_out), m_incomingIp("127.0.0.1")
+  : m_incomingIp("127.0.0.1"),
+    m_socket(m_ioContext), m_response(m_socket)
   {
     dlib::set_all_logging_output_streams(std::cout);
     dlib::set_all_logging_levels(dlib::LDEBUG);
@@ -131,7 +132,7 @@ class AgentTestHelper
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
 
-    auto server = std::make_unique<mhttp::Server>();
+    auto server = std::make_unique<mhttp::Server>(m_ioContext);
     server->enablePut(put);
     m_server = server.get();
     auto cache = std::make_unique<mhttp::FileCache>();
@@ -199,13 +200,15 @@ class AgentTestHelper
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   adpt::Adapter *m_adapter{nullptr};
   bool m_dispatched { false };
+  std::string m_incomingIp;
+  
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::stringstream m_out;
-  mtconnect::http_server::TestResponse m_response;
   mtconnect::http_server::Routing::Request m_request;
   boost::asio::io_context m_ioContext;
-  
-  std::string m_incomingIp;
+  boost::asio::ip::tcp::socket m_socket;
+  mtconnect::http_server::TestResponse m_response;
+
 };
 
 #define PARSE_XML_RESPONSE(path)                                                           \

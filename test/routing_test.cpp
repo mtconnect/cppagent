@@ -22,16 +22,22 @@ class RoutingTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_response = make_unique<Response>(m_out);
+    m_socket = make_unique<boost::asio::ip::tcp::socket>(m_context);
+    m_response = make_unique<Response>(*m_socket);
   }
 
   void TearDown() override
   {
     m_response.reset();
+    m_socket.reset();
   }
 
   std::unique_ptr<Response> m_response;
   stringstream m_out;
+
+  std::unique_ptr<boost::asio::ip::tcp::socket> m_socket;
+  boost::asio::io_context m_context;
+  
   const Routing::Function m_func { [](const Routing::Request &, Response &response) { return true; } };
 
 };

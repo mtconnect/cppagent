@@ -642,7 +642,7 @@ namespace mtconnect
       auto port = get<int>(options[configuration::Port]);
       g_logger << LINFO << "Starting agent on port " << port;
 
-      auto server = make_unique<http_server::Server>(
+      auto server = make_unique<http_server::Server>(m_context, 
           port, get<string>(options[configuration::ServerIp]), options);
       loadAllowPut(server.get(), options);
 
@@ -819,8 +819,7 @@ namespace mtconnect
             auto addr = ip::make_address(host, ec);
             if (ec)
             {
-              asio::io_service ios;
-              ip::tcp::resolver resolver(ios);
+              ip::tcp::resolver resolver(m_context);
               ip::tcp::resolver::query query(host, "0", br::v4_mapped);
 
               auto it = resolver.resolve(query, ec);

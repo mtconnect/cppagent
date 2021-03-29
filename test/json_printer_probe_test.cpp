@@ -327,8 +327,8 @@ TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
 
 TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
 {
-  auto server = std::make_unique<http::Server>();
-  auto cache = std::make_unique<http::FileCache>();
+  auto server = std::make_unique<http_server::Server>(m_agentTestHelper->m_ioContext);
+  auto cache = std::make_unique<http_server::FileCache>();
 
   m_agentTestHelper->createAgent("/samples/relationship_test.xml",
                                  8, 4, "1.7", 25);
