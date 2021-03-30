@@ -37,9 +37,6 @@ class ShdrTokenizerTest : public testing::Test
 protected:
   void SetUp() override
   {
-    dlib::set_all_logging_output_streams(cout);
-    dlib::set_all_logging_levels(dlib::LDEBUG);
-
     m_tokenizer = make_shared<ShdrTokenizer>();
     m_tokenizer->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }

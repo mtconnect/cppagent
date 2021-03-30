@@ -50,8 +50,8 @@ using namespace mtconnect::observation;
 class AgentTest : public testing::Test
 {
  public:
-  typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
-  using queue_type = dlib::queue<std::string>::kernel_1a_c;
+  typedef std::map<std::string, std::string> map_type;
+  using queue_type = list<string>;
 
  protected:
   void SetUp() override
@@ -1174,7 +1174,7 @@ TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
   }
 
   m_agentTestHelper->m_adapter->processData("2018-04-27T05:01:32.000666|load|103|pos|25");
-  dlib::sleep(11 * 1000);
+  this_thread::sleep_for(11s);
   m_agentTestHelper->m_adapter->processData("2018-04-27T05:01:40.888666|load|106|pos|30");
 
   {

@@ -110,7 +110,7 @@ namespace mtconnect
               }
               else
               {
-                cout << "Unexpected element: " << it.key();
+                BOOST_LOG_TRIVIAL(debug) << "Unexpected element: " << it.key();
                 errors.emplace_back(
                     new EntityError("Invalid element '" + it.key() + "'", entity_name));
               }

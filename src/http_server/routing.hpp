@@ -25,7 +25,8 @@
 #include <string>
 #include <variant>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 namespace mtconnect
 {
@@ -175,7 +176,7 @@ namespace mtconnect
 
         catch (ParameterError &e)
         {
-          m_logger << dlib::LDEBUG << "Pattern error: " << e.what();
+          BOOST_LOG_TRIVIAL(debug) << "Pattern error: " << e.what();
           throw e;
         }
 
@@ -308,7 +309,6 @@ namespace mtconnect
       ParameterList m_pathParameters;
       QuerySet m_queryParameters;
       Function m_function;
-      static dlib::logger m_logger;
     };
   }  // namespace http_server
 }  // namespace mtconnect

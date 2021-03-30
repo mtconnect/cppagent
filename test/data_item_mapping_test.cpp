@@ -59,9 +59,6 @@ class DataItemMappingTest : public testing::Test
 protected:
   void SetUp() override
   {
-    dlib::set_all_logging_output_streams(std::cout);
-    dlib::set_all_logging_levels(dlib::LDEBUG);
-
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
     m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);

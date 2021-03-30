@@ -94,8 +94,6 @@ class AgentTestHelper
   : m_incomingIp("127.0.0.1"),
     m_socket(m_ioContext), m_response(m_socket)
   {
-    dlib::set_all_logging_output_streams(std::cout);
-    dlib::set_all_logging_levels(dlib::LDEBUG);
   }
   
   ~AgentTestHelper()

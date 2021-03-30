@@ -25,7 +25,8 @@
 #include <variant>
 #include <vector>
 
-#include <dlib/logger.h>
+#include <boost/log/attributes.hpp>
+#include <boost/log/trivial.hpp>
 
 #include "utilities.hpp"
 
@@ -155,7 +156,6 @@ namespace mtconnect
     inline void DataSet::parse(const std::string &s, bool table)
     {
       using namespace std;
-      static dlib::logger logger("DataSet");
       constexpr const char *reg =
           "[ \t]*"                      // Whitespace
           "([^ \t=]+)"                  // Key
@@ -239,14 +239,14 @@ namespace mtconnect
 
       catch (regex_error &e)
       {
-        logger << dlib::LWARN << "Error parsing \"" << rest << "\", \nReason: " << e.what();
+        BOOST_LOG_TRIVIAL(warning) << "Error parsing \"" << rest << "\", \nReason: " << e.what();
       }
 
       // If there is leftover text, the text was invalid.
       // Warn that it is being discarded
       if (!rest.empty())
       {
-        logger << dlib::LWARN << "Cannot parse complete string, malformed data set: '" << rest
+        BOOST_LOG_TRIVIAL(warning) << "Cannot parse complete string, malformed data set: '" << rest
                << "'";
       }
     }

@@ -60,8 +60,6 @@ namespace mtconnect
 #include <sys/stat.h>
 #include <windows.h>
 
-#include <dlib/threads.h>
-
 #if _MSC_VER >= 1900
 #define gets gets_s
 #endif

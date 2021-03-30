@@ -27,8 +27,6 @@
 #include <chrono>
 #include <string>
 
-#include <dlib/logger.h>
-
 #include "adapter/adapter.hpp"
 #include "adapter/adapter_pipeline.hpp"
 #include "http_server/file_cache.hpp"
@@ -52,8 +50,6 @@ namespace mtconnect
   namespace configuration
   {
     using DevicePtr = std::shared_ptr<device_model::Device>;
-
-    using ConfigReader = dlib::config_reader::kernel_1a;
 
     using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
                                                    const std::string &);

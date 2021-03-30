@@ -32,7 +32,6 @@
 #include "utilities.hpp"
 #include <unordered_map>
 
-#include <dlib/logger.h>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/lexical_cast.hpp>
@@ -44,9 +43,6 @@
 #include <string>
 #include <unordered_map>
 #include <variant>
-
-#include <dlib/logger.h>
-#include <dlib/md5.h>
 
 #include "utilities.hpp"
 

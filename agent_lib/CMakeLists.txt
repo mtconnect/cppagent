@@ -8,8 +8,6 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rolling_file_logger.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rolling_file_logger.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/version.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_helper.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_parser.cpp"
@@ -165,7 +163,6 @@ target_include_directories(
 target_link_libraries(
   agent_lib
   PUBLIC
-    dlib::dlib
     date
     json
     LibXml2::LibXml2

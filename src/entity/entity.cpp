@@ -17,8 +17,6 @@
 
 #include <unordered_set>
 
-#include <dlib/logger.h>
-
 #include "factory.hpp"
 
 using namespace std;

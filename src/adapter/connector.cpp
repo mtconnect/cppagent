@@ -19,8 +19,6 @@
 
 #include "connector.hpp"
 
-#include <dlib/logger.h>
-
 #include <boost/bind.hpp>
 #include <boost/bind/bind.hpp>
 #include <boost/asio/bind_executor.hpp>
@@ -37,7 +35,6 @@
 
 using namespace std;
 using namespace std::chrono;
-using namespace dlib;
 using namespace std::chrono_literals;
 using namespace boost::placeholders;
 
@@ -108,7 +105,6 @@ namespace mtconnect
       using boost::placeholders::_1;
       using boost::placeholders::_2;
 
-      // Connect to server:port, failure will throw dlib::socket_error exception
       // Using a smart pointer to ensure connection is deleted if exception thrown
       BOOST_LOG_TRIVIAL(debug) << "Connecting to data source: " << m_server << " on port: " << m_port;
 

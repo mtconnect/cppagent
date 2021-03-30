@@ -21,10 +21,9 @@
 #include <set>
 #include <sstream>
 
-#include <dlib/sockets.h>
-
 #include <boost/log/attributes.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/asio/ip/host_name.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -58,8 +57,10 @@ namespace mtconnect
     if (m_hostname.empty())
     {
       string name;
-      if (dlib::get_local_hostname(name))
-        name = "localhost";
+      boost::system::error_code ec;
+      name = boost::asio::ip::host_name(ec);
+        if (ec)
+          name = "localhost";
       // Breaking the rules, this is a one off
       const_cast<JsonPrinter *>(this)->m_hostname = name;
     }

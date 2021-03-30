@@ -39,9 +39,6 @@ class XmlParserTest : public testing::Test
  protected:
   void SetUp() override
   {
-    dlib::set_all_logging_output_streams(std::cout);
-    dlib::set_all_logging_levels(dlib::LDEBUG);
-
     m_xmlParser = nullptr;
 
     try

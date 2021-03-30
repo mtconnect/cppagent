@@ -29,12 +29,6 @@
 #include <boost/log/attributes.hpp>
 #include <boost/log/trivial.hpp>
 
-#include <dlib/config_reader.h>
-#include <dlib/dir_nav.h>
-#include <dlib/misc_api.h>
-#include <dlib/queue.h>
-#include <dlib/tokenizer.h>
-
 #include "assets/asset.hpp"
 #include "assets/cutting_tool.hpp"
 #include "assets/file_asset.hpp"
@@ -139,7 +133,7 @@ namespace mtconnect
       // Start the server. This blocks until the server stops.
       m_server->start();
     }
-    catch (dlib::socket_error &e)
+    catch (std::runtime_error &e)
     {
       BOOST_LOG_TRIVIAL(fatal) << "Cannot start server: " << e.what();
       std::exit(1);
@@ -1254,9 +1248,9 @@ namespace mtconnect
     ofstream log;
     if (m_logStreamData)
     {
-      string filename = "Stream_" + getCurrentTime(LOCAL) + "_" +
-                        to_string((uint64_t)dlib::get_thread_id()) + ".log";
-      log.open(filename.c_str());
+      stringstream filename;
+      filename << "Stream_" << getCurrentTime(LOCAL) << "_" << this_thread::get_id() << ".log";
+      log.open(filename.str().c_str());
     }
 
     // This object will automatically clean up all the observer from the

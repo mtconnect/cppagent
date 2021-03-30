@@ -3,7 +3,7 @@ set(AGENT_VERSION_MAJOR 1)
 set(AGENT_VERSION_MINOR 7)
 set(AGENT_VERSION_PATCH 1)
 set(AGENT_VERSION_BUILD 1)
-set(AGENT_VERSION_RC "RC1")
+set(AGENT_VERSION_RC "RC2")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
@@ -19,7 +19,6 @@ set(INSTALL_GTEST OFF FORCE)
 
 project(cppagent LANGUAGES C CXX)
 
-# All of the C++ Agent code, DLib require C++ 14 features to compile.
 # We will define these properties by default for each CMake target to be created.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -68,7 +67,6 @@ include(cmake/ClangTidy.cmake)
 
 # Add our dependency projects
 include(cmake/LibXML2.cmake)
-include(cmake/DLib.cmake)
 include(cmake/Date.cmake)
 include(cmake/json.cmake)
 include(cmake/Boost.cmake)

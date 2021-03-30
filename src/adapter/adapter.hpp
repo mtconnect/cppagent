@@ -27,15 +27,10 @@
 #include <stdexcept>
 #include <string>
 
-#include <dlib/sockets.h>
-#include <dlib/threads.h>
-
 #include "adapter_pipeline.hpp"
 #include "connector.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "utilities.hpp"
-
-using namespace dlib;
 
 namespace mtconnect
 {

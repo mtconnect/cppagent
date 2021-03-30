@@ -47,7 +47,6 @@
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
 #include "option.hpp"
-#include "rolling_file_logger.hpp"
 #include "version.h"
 #include "xml_printer.hpp"
 
@@ -67,7 +66,6 @@
 #define strfy(line) _strfy(line)
 
 using namespace std;
-using namespace dlib;
 namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
 namespace b_logger = boost::log;
@@ -290,7 +288,7 @@ namespace mtconnect
       // Check every 10 seconds
       do
       {
-        dlib::sleep(10000);
+        this_thread::sleep_for(10ms);
 
         time_t devices = 0, cfg = 0;
         bool check = true;
@@ -354,8 +352,6 @@ namespace mtconnect
 
     void AgentConfiguration::start()
     {
-      unique_ptr<dlib::thread_function> mon;
-
       do
       {
         m_restart = false;
@@ -363,8 +359,8 @@ namespace mtconnect
         {
           // Start the file monitor to check for changes to cfg or devices.
           BOOST_LOG_TRIVIAL(debug) << "Waiting for monitor thread to exit to restart agent";
-          mon = std::make_unique<dlib::thread_function>(
-              make_mfp(*this, &AgentConfiguration::monitorThread));
+          //mon = std::make_unique<>(
+          //make_mfp(*this, &AgentConfiguration::monitorThread));
         }
 
         m_agent->start();
@@ -382,7 +378,7 @@ namespace mtconnect
         {
           // Will destruct and wait to re-initialize.
           BOOST_LOG_TRIVIAL(debug) << "Waiting for monitor thread to exit to restart agent";
-          mon.reset(nullptr);
+          //mon.reset(nullptr);
           BOOST_LOG_TRIVIAL(debug) << "Monitor has exited";
         }
       } while (m_restart);

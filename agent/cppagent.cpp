@@ -22,20 +22,10 @@
 #include "fcntl.h"
 #include "sys/stat.h"
 
-#include "dlib/config_reader.h"
-
 #include <cstring>
 
 using namespace std;
-using namespace dlib;
 using namespace mtconnect;
-
-#include <dlib/logger.h>
-#include <dlib/threads.h>
-
-#ifdef _WINDOWS
-#define strncasecmp strnicmp
-#endif
 
 int main(int aArgc, const char *aArgv[])
 {

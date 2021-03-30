@@ -18,8 +18,6 @@
 #pragma once
 #include <map>
 
-#include <dlib/threads.h>
-
 #include "constraints.hpp"
 #include "definition.hpp"
 #include "device_model/component.hpp"

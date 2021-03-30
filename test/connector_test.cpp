@@ -36,8 +36,6 @@ using namespace date;
 #include <sstream>
 #include <thread>
 
-#include <dlib/logger.h>
-
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
@@ -114,9 +112,6 @@ class ConnectorTest : public testing::Test
  protected:
   void SetUp() override
   {
-    dlib::set_all_logging_output_streams(std::cout);
-    dlib::set_all_logging_levels(dlib::LDEBUG);
-
     m_connector = std::make_unique<TestConnector>(m_context, "127.0.0.1", m_port);
     m_connector->m_disconnected = true;
     m_connected = false;

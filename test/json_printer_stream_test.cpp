@@ -50,9 +50,6 @@ class JsonPrinterStreamTest : public testing::Test
  protected:
   void SetUp() override
   {
-    dlib::set_all_logging_output_streams(std::cout);
-    dlib::set_all_logging_levels(dlib::LDEBUG);
-
     m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
     m_printer = std::make_unique<JsonPrinter>("1.5", true);
     m_config = std::make_unique<XmlParser>();
