@@ -28,6 +28,10 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/console.hpp>
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 #include <algorithm>
 #include <chrono>
 #include <date/date.h>
@@ -123,38 +127,32 @@ namespace mtconnect
 
     AgentConfiguration::AgentConfiguration()
     {
-      BOOST_LOG_NAMED_SCOPE("init.config");
+      BOOST_LOG_NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
+            
       bool success = false;
-      char pathSep = '/';
 
 #if _WINDOWS
-      char path[MAX_PATH];
-      pathSep = '\\';
-      success = GetModuleFileName(nullptr, path, MAX_PATH) > 0;
+      char execPath[MAX_PATH];
+      success = GetModuleFileName(nullptr, execPath, MAX_PATH) > 0;
 #else
 #ifdef __linux__
-      char path[PATH_MAX];
-      success = readlink("/proc/self/exe", path, PATH_MAX) >= 0;
+      char execPath[PATH_MAX];
+      success = readlink("/proc/self/exe", execPath, PATH_MAX) >= 0;
 #else
-#ifdef MACOSX
-      char path[PATH_MAX];
+#ifdef __APPLE__
+      char execPath[PATH_MAX];
       uint32_t size = PATH_MAX;
-      success = !_NSGetExecutablePath(path, &size);
+      success = !_NSGetExecutablePath(execPath, &size);
 #else
-      char *path = "";
       success = false;
 #endif
 #endif
 #endif
-
+      
       if (success)
       {
-        string ep(path);
-        size_t found = ep.rfind(pathSep);
-
-        if (found != std::string::npos)
-          ep.erase(found + 1);
-        m_exePath = fs::path(ep);
+        fs::path ep(execPath);
+        m_exePath = ep.root_path().parent_path();
         cout << "Configuration search path: current directory and " << m_exePath << endl;
       }
       m_working = fs::current_path();
@@ -162,7 +160,7 @@ namespace mtconnect
 
     void AgentConfiguration::initialize(int argc, const char *argv[])
     {
-      BOOST_LOG_NAMED_SCOPE("config.initialize");
+      BOOST_LOG_NAMED_SCOPE("AgentConfiguration::initialize");
 
       MTConnectService::initialize(argc, argv);
 
@@ -262,7 +260,7 @@ namespace mtconnect
       // shut this off for now.
       return;
 
-      BOOST_LOG_NAMED_SCOPE("config.monitorThread");
+      BOOST_LOG_NAMED_SCOPE("AgentConfiguration::monitorThread");
 
       time_t devices_at_start = 0, cfg_at_start = 0;
 
@@ -394,11 +392,6 @@ namespace mtconnect
     }
 
     DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
-
-    static std::string timestamp()
-    {
-      return format(date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
-    }
 
     void AgentConfiguration::boost_set_log_level(const b_logger::trivial::severity_level level)
     {

@@ -119,8 +119,8 @@ class ConnectorTest : public testing::Test
 
   void TearDown() override
   {
-    m_connector.reset();
     m_context.stop();
+    m_connector.reset();
     if (m_server)
       m_server->close();
     m_server.reset();

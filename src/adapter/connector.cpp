@@ -69,9 +69,11 @@ namespace mtconnect
 
     Connector::~Connector()
     {
-      m_socket.cancel();
       if (m_socket.is_open())
+      {
+        m_socket.cancel();
         m_socket.close();
+      }
     }
     
     bool Connector::start()
