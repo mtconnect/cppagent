@@ -34,16 +34,13 @@
 #include <unordered_map>
 #include <variant>
 
-#include "utilities.hpp"
+namespace net = boost::asio;            // from <boost/asio.hpp>
 
 namespace mtconnect
 {
   namespace http_server
   {
 
-    namespace beast = boost::beast;         // from <boost/beast.hpp>
-    namespace http = beast::http;           // from <boost/beast/http.hpp>
-    namespace net = boost::asio;            // from <boost/asio.hpp>
     //namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
     using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
@@ -138,12 +135,10 @@ namespace mtconnect
     protected:
       tcp::socket m_socket;
       std::string m_boundary;
-      http::fields trailer;
-      std::string content_type;
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;
       StringList m_fields;
-      beast::error_code m_ec;
+      boost::system::error_code m_ec;
     };
   }  // namespace http_server
 }  // namespace mtconnect

@@ -115,7 +115,6 @@ namespace mtconnect
       {
         return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
       }
-      Routing::QueryMap parseAsset(const std::string &s1, const std::string &s2);
 
       bool dispatch(Routing::Request &request, Response &response)
       {
@@ -128,21 +127,17 @@ namespace mtconnect
         return false;
       }
 
-      void accept(beast::error_code ec, tcp::socket socket);
+      void accept(boost::system::error_code ec, tcp::socket socket);
 
-      void session(beast::error_code ec, tcp::socket& socket);
+      void session(boost::system::error_code ec, tcp::socket& socket);
 
       bool handleRequest(Routing::Request &request, Response &response);
 
-      void fail(beast::error_code ec, char const *what);
+      void fail(boost::system::error_code ec, char const *what);
 
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
 
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
-
-    protected:
-      Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket);
-      Routing::QueryMap getQueries(const std::string& queries);
 
     protected:
       net::io_context &m_context;

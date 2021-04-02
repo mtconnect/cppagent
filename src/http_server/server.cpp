@@ -31,10 +31,15 @@
 
 #include <thread>
 
+
+
 namespace mtconnect
 {
   namespace http_server
   {
+    namespace beast = boost::beast;         // from <boost/beast.hpp>
+    namespace http = beast::http;           // from <boost/beast/http.hpp>
+    namespace net = boost::asio;            // from <boost/asio.hpp>
     namespace asio = boost::asio;
     namespace ip = boost::asio::ip;
     using tcp = boost::asio::ip::tcp;
@@ -133,57 +138,86 @@ namespace mtconnect
       }
     }
     
-    void Server::session(beast::error_code ec, tcp::socket &socket)
+    static Routing::QueryMap getQueries(const std::string& queries)
     {
-      BOOST_LOG_NAMED_SCOPE("Server::session");
-
-      tcp::socket m_socket(std::move(socket));
-      try{
-        beast::error_code ec;
-        beast::flat_buffer buffer;
-        http::request<http::string_body> req;
-        http::read(m_socket, buffer, req, ec);
-
-        if (ec)
-          return fail(ec, "write");
-
-        Routing::Request request = getRequest(req, m_socket);
-        Response response(m_socket, m_fields);
-
-        if (request.m_verb == "PUT" || request.m_verb == "POST" ||
-            request.m_verb == "DELETE")
+      Routing::QueryMap queryMap;
+      std::string tmpStr = queries;
+      try
+      {
+        while (!tmpStr.empty())
         {
-          if (!m_putEnabled || !isPutAllowedFrom(request.m_foreignIp))
+          auto ptr = tmpStr.find_first_of("&");
+          if (ptr != std::string().npos)
           {
-            stringstream msg;
-            msg << "Error processing request from: " << request.m_foreignIp << " - "
-                << "Server is read-only. Only GET verb supported";
-            BOOST_LOG_TRIVIAL(error) << msg.str();
-
-            if (m_errorFunction)
-              m_errorFunction(request.m_accepts, response, msg.str(), FORBIDDEN);
-            //out.flush();
-            return;
+            std::string string1 = tmpStr.substr(0,ptr);
+            tmpStr = tmpStr.substr(ptr+1);
+            ptr = string1.find_first_of('=');
+            if (ptr != std::string().npos){
+              queryMap.insert(std::pair<std::string,std::string >(string1.substr(0,ptr),string1.substr(ptr+1)));
+            }
+            else{
+              throw("String does not contain a query.");
+            }
+          }
+          else
+          {
+            //get the last parameter set
+            ptr = tmpStr.find_first_of("=");
+            if (ptr != std::string().npos){
+              queryMap.insert(std::pair<std::string,std::string >(tmpStr.substr(0,ptr),tmpStr.substr(ptr+1)));
+              tmpStr.clear();
+            }
+            else{
+              throw("Error: string does not contain a query.");
+            }
           }
         }
-
-        if(!handleRequest(request, response))
-        {
-          BOOST_LOG_TRIVIAL(error) << "Server::session error handling Request. ";
-        };
-
-        m_socket.shutdown(tcp::socket::shutdown_send, ec);
-        buffer.clear();
+        return queryMap;
       }
-      catch (exception &e)
+      catch (exception& e)
       {
-        BOOST_LOG_TRIVIAL(error) << "Server::listen error: "<< e.what();
+        BOOST_LOG_TRIVIAL(error) << __func__ << " error: " <<e.what();
+        return queryMap;
       }
     }
 
+    static Routing::QueryMap parseAsset(const std::string &s1, const std::string &s2)
+    {
+      Routing::QueryMap queryMap;
+      std::string tmpStr = s1;
+      try
+      {
+        if (tmpStr.empty()) throw("queries does not contain a query.");
+        std::regex reg("([a-zA-Z0-9]+)=([\"a-zA-Z-0-9\"]+)&?");
+        std::smatch match;
 
+        while (regex_search(tmpStr, match, reg))
+        {
+          string str1(match[1]);
+          string str2(match[2]);
+          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
+          tmpStr = match.suffix().str();
+        }
+        tmpStr = s2;
+        while (regex_search(tmpStr, match, reg))
+        {
+          string str1(match[1]);
+          string str2(match[2]);
+          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
+          tmpStr = match.suffix().str();
+        }
+      }
+      catch (exception& e)
+      {
+        BOOST_LOG_TRIVIAL(error) << __func__ << " error: " <<e.what();
+        return queryMap;
+      }
+      return queryMap;
+    }
+
+    
     //Parse http::request and return
-    Routing::Request Server::getRequest(const http::request<http::string_body>& req, const tcp::socket& socket)
+    static Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket)
     {
       BOOST_LOG_NAMED_SCOPE("Server::getRequest");
 
@@ -247,48 +281,55 @@ namespace mtconnect
       return request;
     }
 
-    Routing::QueryMap Server::getQueries(const std::string& queries)
+    
+    void Server::session(beast::error_code ec, tcp::socket &socket)
     {
-      Routing::QueryMap queryMap;
-      std::string tmpStr = queries;
-      try
-      {
-        while (!tmpStr.empty())
+      BOOST_LOG_NAMED_SCOPE("Server::session");
+
+      tcp::socket m_socket(std::move(socket));
+      try{
+        beast::error_code ec;
+        beast::flat_buffer buffer;
+        http::request<http::string_body> req;
+        http::read(m_socket, buffer, req, ec);
+
+        if (ec)
+          return fail(ec, "write");
+
+        Routing::Request request = getRequest(req, m_socket);
+        Response response(m_socket, m_fields);
+
+        if (request.m_verb == "PUT" || request.m_verb == "POST" ||
+            request.m_verb == "DELETE")
         {
-          auto ptr = tmpStr.find_first_of("&");
-          if (ptr != std::string().npos)
+          if (!m_putEnabled || !isPutAllowedFrom(request.m_foreignIp))
           {
-            std::string string1 = tmpStr.substr(0,ptr);
-            tmpStr = tmpStr.substr(ptr+1);
-            ptr = string1.find_first_of('=');
-            if (ptr != std::string().npos){
-              queryMap.insert(std::pair<std::string,std::string >(string1.substr(0,ptr),string1.substr(ptr+1)));
-            }
-            else{
-              throw("String does not contain a query.");
-            }
-          }
-          else
-          {
-            //get the last parameter set
-            ptr = tmpStr.find_first_of("=");
-            if (ptr != std::string().npos){
-              queryMap.insert(std::pair<std::string,std::string >(tmpStr.substr(0,ptr),tmpStr.substr(ptr+1)));
-              tmpStr.clear();
-            }
-            else{
-              throw("Error: string does not contain a query.");
-            }
+            stringstream msg;
+            msg << "Error processing request from: " << request.m_foreignIp << " - "
+                << "Server is read-only. Only GET verb supported";
+            BOOST_LOG_TRIVIAL(error) << msg.str();
+
+            if (m_errorFunction)
+              m_errorFunction(request.m_accepts, response, msg.str(), FORBIDDEN);
+            //out.flush();
+            return;
           }
         }
-        return queryMap;
+
+        if(!handleRequest(request, response))
+        {
+          BOOST_LOG_TRIVIAL(error) << "Server::session error handling Request. ";
+        };
+
+        m_socket.shutdown(tcp::socket::shutdown_send, ec);
+        buffer.clear();
       }
-      catch (exception& e)
+      catch (exception &e)
       {
-        BOOST_LOG_TRIVIAL(error) << __func__ << " error: " <<e.what();
-        return queryMap;
+        BOOST_LOG_TRIVIAL(error) << "Server::listen error: "<< e.what();
       }
     }
+
 
     bool Server::handleRequest(Routing::Request &request, Response &response)
     {
@@ -332,39 +373,6 @@ namespace mtconnect
       return res;
     }
 
-    Routing::QueryMap Server::parseAsset(const std::string &s1, const std::string &s2)
-    {
-      Routing::QueryMap queryMap;
-      std::string tmpStr = s1;
-      try
-      {
-        if (tmpStr.empty()) throw("queries does not contain a query.");
-        std::regex reg("([a-zA-Z0-9]+)=([\"a-zA-Z-0-9\"]+)&?");
-        std::smatch match;
-
-        while (regex_search(tmpStr, match, reg))
-        {
-          string str1(match[1]);
-          string str2(match[2]);
-          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
-          tmpStr = match.suffix().str();
-        }
-        tmpStr = s2;
-        while (regex_search(tmpStr, match, reg))
-        {
-          string str1(match[1]);
-          string str2(match[2]);
-          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
-          tmpStr = match.suffix().str();
-        }
-      }
-      catch (exception& e)
-      {
-        BOOST_LOG_TRIVIAL(error) << __func__ << " error: " <<e.what();
-        return queryMap;
-      }
-      return queryMap;
-    }
 
 
 //------------------------------------------------------------------------------
