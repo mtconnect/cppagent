@@ -55,14 +55,12 @@ namespace mtconnect
         m_code = code;
         m_mimeType = mimeType;
         m_expires = expires;
-        Response::writeResponse(body, size, code, mimeType, expires);
       }
       
       void writeMultipartChunk(const std::string &body, const std::string &mimeType) override
       {
         m_chunkBody = body;
         m_chunkMimeType = mimeType;
-        Response::writeMultipartChunk(body, mimeType);
       }
 
       
