@@ -17,8 +17,7 @@
 
 #include "deliver.hpp"
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include "agent.hpp"
 #include "assets/cutting_tool.hpp"

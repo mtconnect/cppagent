@@ -17,8 +17,7 @@
 
 #include "timestamp_extractor.hpp"
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include <date/date.h>
 #include <optional>

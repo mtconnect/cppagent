@@ -22,8 +22,7 @@
 #include <map>
 #include <string>
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include "adapter/adapter.hpp"
 #include "device_model/device.hpp"

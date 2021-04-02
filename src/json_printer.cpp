@@ -21,8 +21,7 @@
 #include <set>
 #include <sstream>
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 #include <boost/asio/ip/host_name.hpp>
 
 #include <nlohmann/json.hpp>

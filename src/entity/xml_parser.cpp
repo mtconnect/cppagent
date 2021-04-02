@@ -17,8 +17,7 @@
 
 #include "entity/xml_parser.hpp"
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>

@@ -26,8 +26,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include <thread>
 

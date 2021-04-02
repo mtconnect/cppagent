@@ -17,8 +17,7 @@
 
 #include "entity/json_parser.hpp"
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include <nlohmann/json.hpp>
 

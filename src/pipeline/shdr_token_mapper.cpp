@@ -17,8 +17,7 @@
 
 #include "shdr_token_mapper.hpp"
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include "assets/asset.hpp"
 #include "device_model/device.hpp"

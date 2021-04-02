@@ -20,8 +20,7 @@
 #include <mutex>
 #include <regex>
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include "device_model/data_item/data_item.hpp"
 #include "entity/factory.hpp"

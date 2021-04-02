@@ -30,8 +30,7 @@
 #include <utility>
 #include <functional>
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 using namespace std;
 using namespace std::chrono;

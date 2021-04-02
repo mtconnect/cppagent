@@ -19,8 +19,7 @@
 
 #include <unordered_map>
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include <libxml/xmlwriter.h>
 

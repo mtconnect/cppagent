@@ -23,9 +23,7 @@
 #include <ctime>
 #include <date/date.h>
 #include <string_view>
-
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include "entity.hpp"
 #include "factory.hpp"

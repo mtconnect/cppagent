@@ -20,9 +20,7 @@
 #include <cstring>
 #include <fstream>
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
-
+#include "logging.hpp"
 #include "version.h"
 
 #ifdef _WINDOWS

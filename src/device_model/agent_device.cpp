@@ -17,8 +17,7 @@
 
 #include "agent_device.hpp"
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
+#include "logging.hpp"
 
 #include "adapter/adapter.hpp"
 #include "data_item/constraints.hpp"

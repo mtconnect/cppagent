@@ -26,9 +26,7 @@
 #include <sys/stat.h>
 #include <thread>
 
-#include <boost/log/attributes.hpp>
-#include <boost/log/trivial.hpp>
-
+#include "logging.hpp"
 #include "assets/asset.hpp"
 #include "assets/cutting_tool.hpp"
 #include "assets/file_asset.hpp"
