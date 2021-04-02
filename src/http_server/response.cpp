@@ -17,6 +17,10 @@
 
 #include "response.hpp"
 
+#include <boost/beast/http/message.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/beast/http/chunk_encode.hpp>
+
 using namespace std;
 
 namespace mtconnect
@@ -76,5 +80,105 @@ namespace mtconnect
     }
 
     const std::unordered_map<std::string, uint16_t> Response::m_codes = flip_map(m_status);
+    
+    void Response::beginMultipartStream()
+    {
+      if (good())
+      {
+        using namespace boost::uuids;
+        random_generator gen;
+        m_boundary = to_string(gen());
+        trailer.set(http::field::content_md5, m_boundary);
+        trailer.set(http::field::expires, "never");
+
+        http::response<http::empty_body> res{http::status::ok, 11};
+        res.set(http::field::server, "MTConnectAgent");
+        res.set(http::field::date, getHeaderDate());
+        res.set(http::field::connection, "close");
+        res.set(http::field::expires, "-1");
+        res.set(http::field::cache_control, "private, max-age=0\r\n");
+        std::string content_type = "multipart/x-mixed-replace;boundary=";
+        content_type.append(m_boundary);
+        res.set(http::field::content_type, content_type);
+        // TODO: Add additional fields
+        
+        //res.set(http::field::trailer, "Content-MD5, Expires");
+        res.chunked(true);
+        http::response_serializer<http::empty_body> sr{res};
+        write_header(m_socket, sr);
+      }
+    }
+    
+    void Response::writeMultipartChunk(const std::string &body, const std::string &mimeType)
+    {
+      if (good())
+      {
+        using namespace std;
+
+        http::chunk_extensions ext;
+        ext.insert("\r\n--"+m_boundary);
+        ext.insert("\r\nContent-type: "+ mimeType);
+        ext.insert("\r\nContent-length: "+ to_string(body.length())+";\r\n\r\n");
+
+        net::const_buffers_1 buf(body.c_str(), body.size());
+        http::chunk_body chunk{http::make_chunk(buf,move(ext))};
+        net::write(m_socket, chunk, m_ec);
+        //net::write(m_socket, http::make_chunk_last(trailer), ec);
+        if (m_ec)
+        {
+          string errorMsg = "Error writing chunk - ";
+          errorMsg.append(m_ec.message());
+          auto const textSize = errorMsg.length();
+          http::response<http::string_body> errorRes{
+              std::piecewise_construct, std::make_tuple(std::move(errorMsg.c_str())),
+              std::make_tuple(http::status::ok, 11)  // m_req.version())
+          };
+          errorRes.set(http::field::server, "MTConnectAgent");
+          errorRes.set(http::field::date, getHeaderDate());
+          errorRes.set(http::field::connection, "close");
+          errorRes.set(http::field::expires, "-1");
+          errorRes.set(http::field::content_type, "text/xml");
+          errorRes.content_length(textSize);
+          http::serializer<false, http::string_body, http::fields> sr{errorRes};
+          http::write(m_socket, sr, m_ec);
+        }
+      }
+    }
+
+    void Response::writeResponse(const char *body, const size_t size, const ResponseCode code,
+                                 const std::string &mimeType, const std::chrono::seconds expires)
+    {
+      if (good())
+      {
+        using namespace std;
+        string expiry;
+        if (expires == 0s)
+        {
+          expiry =
+              "Expires: -1\r\n"
+              "Cache-Control: private, max-age=0\r\n";
+        }
+        else
+        {
+          expiry = getCurrentTime(chrono::system_clock::now() + expires, HUM_READ);
+        }
+        http::response<http::string_body> res
+        {
+            std::piecewise_construct,
+            std::make_tuple(body),
+            std::make_tuple(http::status::ok, 11)// m_req.version())
+        };
+        res.set(http::field::server, "MTConnectAgent");
+        res.set(http::field::date, getHeaderDate());
+        res.set(http::field::connection, "close");
+        res.set(http::field::expires, "-1");
+        res.set(http::field::content_type, mimeType);
+        //res.set(http::status::continue_, 100, 100);
+        res.content_length(size);
+        http::serializer<false, http::string_body , http::fields> sr{res};
+        http::write(m_socket, sr, m_ec);
+      }
+    }
+
   }  // namespace http_server
 }  // namespace mtconnect

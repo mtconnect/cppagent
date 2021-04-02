@@ -17,16 +17,6 @@
 
 #pragma once
 
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/beast/http/chunk_encode.hpp>
-//#include <boost/beast/ssl.hpp>
-//#include <boost/asio/ssl/stream.hpp>
-
-#include <boost/beast/version.hpp>
-#include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
 #include "utilities.hpp"
@@ -115,9 +105,8 @@ namespace mtconnect
 
       virtual std::string getHeaderDate() { return getCurrentTime(HUM_READ); }
 
-      bool good() const { return m_out.good(); }
-      void setBad() { m_out.setstate(std::ios::badbit); }
-      void flush() { m_out.flush(); }
+      bool good() const { return m_socket.is_open(); }
+      void setBad() { m_socket.close(); }
       static std::string getStatus(uint16_t code)
       {
         auto cm = m_status.find(code);
@@ -127,70 +116,8 @@ namespace mtconnect
           return cm->second;
       }
 
-      virtual void beginMultipartStream()
-      {
-        if (good())
-        {
-          using namespace boost::uuids;
-          random_generator gen;
-          m_boundary = to_string(gen());
-          trailer.set(http::field::content_md5, m_boundary);
-          trailer.set(http::field::expires, "never");
-
-          http::response<http::empty_body> res{http::status::ok, 11};
-          res.set(http::field::server, "MTConnectAgent");
-          res.set(http::field::date, getHeaderDate());
-          res.set(http::field::connection, "close");
-          res.set(http::field::expires, "-1");
-          res.set(http::field::cache_control, "private, max-age=0\r\n");
-          std::string content_type = "multipart/x-mixed-replace;boundary=";
-          content_type.append(m_boundary);
-          res.set(http::field::content_type, content_type);
-          // TODO: Add additional fields
-          
-          //res.set(http::field::trailer, "Content-MD5, Expires");
-          res.chunked(true);
-          http::response_serializer<http::empty_body> sr{res};
-          write_header(m_socket, sr);
-        }
-      }
-
-      virtual void writeMultipartChunk(const std::string &body, const std::string &mimeType)
-      {
-        if (good())
-        {
-          using namespace std;
-
-          http::chunk_extensions ext;
-          ext.insert("\r\n--"+m_boundary);
-          ext.insert("\r\nContent-type: "+ mimeType);
-          ext.insert("\r\nContent-length: "+ to_string(body.length())+";\r\n\r\n");
-
-          net::const_buffers_1 buf(body.c_str(), body.size());
-          http::chunk_body chunk{http::make_chunk(buf,move(ext))};
-          net::write(m_socket, chunk, ec);
-          //net::write(m_socket, http::make_chunk_last(trailer), ec);
-          if (ec)
-          {
-            string errorMsg = "Error writing chunk - ";
-            errorMsg.append(ec.message());
-            auto const textSize = errorMsg.length();
-            http::response<http::string_body> errorRes{
-                std::piecewise_construct, std::make_tuple(std::move(errorMsg.c_str())),
-                std::make_tuple(http::status::ok, 11)  // m_req.version())
-            };
-            errorRes.set(http::field::server, "MTConnectAgent");
-            errorRes.set(http::field::date, getHeaderDate());
-            errorRes.set(http::field::connection, "close");
-            errorRes.set(http::field::expires, "-1");
-            errorRes.set(http::field::content_type, "text/xml");
-            errorRes.content_length(textSize);
-            http::serializer<false, http::string_body, http::fields> sr{errorRes};
-            http::write(m_socket, sr, ec);
-          }
-        }
-      }
-
+      virtual void beginMultipartStream();
+      virtual void writeMultipartChunk(const std::string &body, const std::string &mimeType);
       void writeResponse(const std::string &body, const std::string &mimeType = "text/plain",
                          const ResponseCode code = OK,
                          const std::chrono::seconds expires = std::chrono::seconds(0))
@@ -207,44 +134,8 @@ namespace mtconnect
 
       virtual void writeResponse(const char *body, const size_t size, const ResponseCode code,
                                  const std::string &mimeType = "text/plain",
-                                 const std::chrono::seconds expires = std::chrono::seconds(0))
-      {
-        if (good())
-        {
-          using namespace std;
-          string expiry;
-          if (expires == 0s)
-          {
-            expiry =
-                "Expires: -1\r\n"
-                "Cache-Control: private, max-age=0\r\n";
-          }
-          else
-          {
-            expiry = getCurrentTime(chrono::system_clock::now() + expires, HUM_READ);
-          }
-          m_out.write(body, size);
-          auto const textSize = m_out.str().size();
-          http::response<http::string_body> res
-          {
-              std::piecewise_construct,
-              std::make_tuple(std::move(m_out.str().c_str())),
-              std::make_tuple(http::status::ok, 11)// m_req.version())
-          };
-          res.set(http::field::server, "MTConnectAgent");
-          res.set(http::field::date, getHeaderDate());
-          res.set(http::field::connection, "close");
-          res.set(http::field::expires, "-1");
-          res.set(http::field::content_type, mimeType);
-          //res.set(http::status::continue_, 100, 100);
-          res.content_length(textSize);
-          http::serializer<false, http::string_body , http::fields> sr{res};
-          http::write(m_socket, sr, ec);
-        }
-      }
-
+                                 const std::chrono::seconds expires = std::chrono::seconds(0));
     protected:
-      std::stringstream m_out;
       tcp::socket m_socket;
       std::string m_boundary;
       http::fields trailer;
@@ -252,8 +143,7 @@ namespace mtconnect
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;
       StringList m_fields;
-      beast::error_code ec;
-      bool close{false};
+      beast::error_code m_ec;
     };
   }  // namespace http_server
 }  // namespace mtconnect
