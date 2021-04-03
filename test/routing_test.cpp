@@ -32,13 +32,13 @@ class RoutingTest : public testing::Test
     m_socket.reset();
   }
 
-  std::unique_ptr<Response> m_response;
+  ResponsePtr m_response;
   stringstream m_out;
 
   std::unique_ptr<boost::asio::ip::tcp::socket> m_socket;
   boost::asio::io_context m_context;
   
-  const Routing::Function m_func { [](const Routing::Request &, Response &response) { return true; } };
+  const Routing::Function m_func { [](const Routing::Request &, ResponsePtr &response) { return true; } };
 
 };
 
@@ -52,11 +52,11 @@ TEST_F(RoutingTest, TestSimplePattern)
   EXPECT_EQ(0, probe.getQueryParameters().size());
   
   request.m_path = "/probe";
-  ASSERT_TRUE(probe.matches(request, *(m_response.get())));
+  ASSERT_TRUE(probe.matches(request, m_response));
   request.m_path = "/probe";
-  ASSERT_TRUE(probe.matches(request, *(m_response.get())));
+  ASSERT_TRUE(probe.matches(request, m_response));
   request.m_verb = "PUT";
-  ASSERT_FALSE(probe.matches(request, *(m_response.get())));
+  ASSERT_FALSE(probe.matches(request, m_response));
 
   Routing probeWithDevice("GET", "/{device}/probe", m_func);
   ASSERT_EQ(1, probeWithDevice.getPathParameters().size());
@@ -65,7 +65,7 @@ TEST_F(RoutingTest, TestSimplePattern)
   
   request.m_verb = "GET";
   request.m_path = "/ABC123/probe";
-  ASSERT_TRUE(probeWithDevice.matches(request, *(m_response.get())));
+  ASSERT_TRUE(probeWithDevice.matches(request, m_response));
   ASSERT_EQ("ABC123", get<string>(request.m_parameters["device"]));
 }
 
@@ -79,10 +79,10 @@ TEST_F(RoutingTest, TestComplexPatterns)
   EXPECT_EQ("assets", r.getPathParameters().front().m_name);
 
   request.m_path = "/asset/A1,A2,A3";
-  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_TRUE(r.matches(request, m_response));
   ASSERT_EQ("A1,A2,A3", get<string>(request.m_parameters["assets"]));
   request.m_path = "/ABC123/probe";
-  ASSERT_FALSE(r.matches(request, *(m_response.get())));
+  ASSERT_FALSE(r.matches(request, m_response));
 }
 
 TEST_F(RoutingTest, TestCurrentAtQueryParameter)
@@ -153,14 +153,14 @@ TEST_F(RoutingTest, TestQueryParameterMatch)
   ASSERT_EQ(4, r.getQueryParameters().size());
 
   request.m_path = "/ABC123/sample";
-  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_TRUE(r.matches(request, m_response));
   ASSERT_EQ("ABC123", get<string>(request.m_parameters["device"]));
   ASSERT_EQ(100, get<int32_t>(request.m_parameters["count"]));
   ASSERT_EQ(10000.0, get<double>(request.m_parameters["heartbeat"]));
 
   request.m_path = "/ABC123/sample";
   request.m_query = {{ "count", "1000"}, {"from", "12345"}};
-  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_TRUE(r.matches(request, m_response));
   ASSERT_EQ("ABC123", get<string>(request.m_parameters["device"]));
   ASSERT_EQ(1000, get<int32_t>(request.m_parameters["count"]));
   ASSERT_EQ(12345, get<uint64_t>(request.m_parameters["from"]));
@@ -168,7 +168,7 @@ TEST_F(RoutingTest, TestQueryParameterMatch)
 
   request.m_query = {{ "count", "1000"}, {"from", "12345"}, { "dummy" , "1" }
   };
-  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_TRUE(r.matches(request, m_response));
   ASSERT_EQ("ABC123", get<string>(request.m_parameters["device"]));
   ASSERT_EQ(1000, get<int32_t>(request.m_parameters["count"]));
   ASSERT_EQ(12345, get<uint64_t>(request.m_parameters["from"]));
@@ -185,7 +185,7 @@ TEST_F(RoutingTest, TestQueryParameterError)
   request.m_verb = "GET";
   request.m_path = "/ABC123/sample";
   request.m_query = {{ "count", "xxx"} };
-  ASSERT_THROW(r.matches(request, *(m_response.get())),
+  ASSERT_THROW(r.matches(request, m_response),
                ParameterError);
 }
 
@@ -195,10 +195,10 @@ TEST_F(RoutingTest, RegexPatterns)
   Routing::Request request;
   request.m_verb = "GET";
   request.m_path = "/some random stuff";
-  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_TRUE(r.matches(request, m_response));
 
-  Routing no("GET", regex("/.+"), [](const Routing::Request &, Response &response) { return false; });
-  ASSERT_FALSE(no.matches(request, *(m_response.get())));
+  Routing no("GET", regex("/.+"), [](const Routing::Request &, ResponsePtr &response) { return false; });
+  ASSERT_FALSE(no.matches(request, m_response));
 }
 
 TEST_F(RoutingTest, simple_put_with_trailing_slash)
@@ -207,10 +207,10 @@ TEST_F(RoutingTest, simple_put_with_trailing_slash)
   Routing::Request request;
   request.m_verb = "PUT";
   request.m_path = "/ADevice";
-  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_TRUE(r.matches(request, m_response));
   ASSERT_EQ("ADevice", get<string>(request.m_parameters["device"]));
 
   request.m_path = "/ADevice/";
-  ASSERT_TRUE(r.matches(request, *(m_response.get())));
+  ASSERT_TRUE(r.matches(request, m_response));
   ASSERT_EQ("ADevice", get<string>(request.m_parameters["device"]));
 }

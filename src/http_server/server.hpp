@@ -120,7 +120,7 @@ namespace mtconnect
       {
         for (auto &r : m_routings)
         {
-          if (r.matches(request, std::forward<ResponsePtr>(response)))
+          if (r.matches(request, response))
             return true;
         }
 

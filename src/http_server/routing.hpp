@@ -128,7 +128,7 @@ namespace mtconnect
       const ParameterList &getPathParameters() const { return m_pathParameters; }
       const QuerySet &getQueryParameters() const { return m_queryParameters; }
 
-      bool matches(Request &request, ResponsePtr &&response)
+      bool matches(Request &request, ResponsePtr &response)
       {
         try
         {
