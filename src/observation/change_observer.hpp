@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <boost/asio.hpp>
+
 #include <condition_variable>
 #include <mutex>
 #include <vector>
@@ -31,19 +33,28 @@ namespace mtconnect
     class ChangeObserver
     {
     public:
-      ChangeObserver() = default;
+      ChangeObserver(boost::asio::io_context &context)
+      : m_timer(context)
+      {
+      }
 
       virtual ~ChangeObserver();
 
-      bool wait(unsigned long timeout) const
+      bool wait(std::chrono::milliseconds duration,
+                std::function<void(boost::system::error_code)> handler)
       {
         std::unique_lock<std::recursive_mutex> lock(m_mutex);
 
         if (m_sequence != UINT64_MAX)
-          return true;
-
-        return m_cv.wait_for(m_mutex, std::chrono::milliseconds {timeout},
-                             [this]() { return m_sequence != UINT64_MAX; });
+        {
+          handler({});
+        }
+        else
+        {
+          m_timer.expires_from_now(duration);
+          m_timer.async_wait(handler);
+        }
+        return true;
       }
 
       void signal(uint64_t sequence)
@@ -53,7 +64,7 @@ namespace mtconnect
         if (m_sequence > sequence && sequence)
           m_sequence = sequence;
 
-        m_cv.notify_one();
+        m_timer.cancel();
       }
 
       uint64_t getSequence() const { return m_sequence; }
@@ -68,8 +79,8 @@ namespace mtconnect
 
     private:
       mutable std::recursive_mutex m_mutex;
-      mutable std::condition_variable_any m_cv;
-
+      boost::asio::steady_timer m_timer;
+      
       std::list<ChangeSignaler *> m_signalers;
       volatile uint64_t m_sequence = UINT64_MAX;
 

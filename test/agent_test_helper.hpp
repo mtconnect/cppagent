@@ -57,13 +57,17 @@ namespace mtconnect
         m_expires = expires;
       }
       
-      void writeMultipartChunk(const std::string &body, const std::string &mimeType) override
+      void beginMultipartStream(std::function<void(boost::system::error_code ec, std::size_t len)> handler) override
+      {    
+      }
+      
+      void writeMultipartChunk(const std::string &body, const std::string &mimeType, std::function<void(boost::system::error_code ec, std::size_t len)> handler) override
       {
         m_chunkBody = body;
         m_chunkMimeType = mimeType;
+
       }
 
-      
       std::string getHeaderDate() override
       {
         return "TIME+DATE";
@@ -90,7 +94,7 @@ class AgentTestHelper
  public:
   AgentTestHelper()
   : m_incomingIp("127.0.0.1"),
-    m_socket(m_ioContext), m_response(m_socket)
+    m_socket(m_ioContext), m_response(std::make_unique<mtconnect::http_server::TestResponse>(m_socket))
   {
   }
   
@@ -98,6 +102,8 @@ class AgentTestHelper
   {
     m_agent.reset();
   }
+  
+  
     
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
@@ -121,6 +127,10 @@ class AgentTestHelper
   
   auto getAgent() { return m_agent.get(); }
   
+  mtconnect::http_server::TestResponse *response() {
+    return dynamic_cast<mtconnect::http_server::TestResponse*>(m_response.get());
+  }
+  
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
                    const std::string &version = "1.7", int checkpoint = 25,
                    bool put = false)
@@ -132,7 +142,7 @@ class AgentTestHelper
     server->enablePut(put);
     m_server = server.get();
     auto cache = std::make_unique<mhttp::FileCache>();
-    m_agent = std::make_unique<mtconnect::Agent>(server, cache,
+    m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, server, cache,
                                                  PROJECT_ROOT_DIR + file,
                                                  bufferSize, maxAssets, version,
                                                  checkpoint, true);
@@ -178,16 +188,16 @@ class AgentTestHelper
   
   void printResponse()
   {
-    std::cout << "Status " << m_response.m_code << " "
-              << mhttp::Response::getStatus(m_response.m_code) << std::endl
-              << m_response.m_body << std::endl << "------------------------"
+    std::cout << "Status " << response()->m_code << " "
+              << mhttp::Response::getStatus(response()->m_code) << std::endl
+              << response()->m_body << std::endl << "------------------------"
               << std::endl;
   }
 
   void printResponseStream()
   {
-    std::cout << "Status " << m_response.m_code << " "
-              << mhttp::Response::getStatus(m_response.m_code) << std::endl
+    std::cout << "Status " << response()->m_code << " "
+              << mhttp::Response::getStatus(response()->m_code) << std::endl
               << m_out.str() << std::endl << "------------------------"
               << std::endl;
   }
@@ -203,8 +213,7 @@ class AgentTestHelper
   mtconnect::http_server::Routing::Request m_request;
   boost::asio::io_context m_ioContext;
   boost::asio::ip::tcp::socket m_socket;
-  mtconnect::http_server::TestResponse m_response;
-
+  mtconnect::http_server::ResponsePtr m_response;
 };
 
 #define PARSE_XML_RESPONSE(path)                                                           \

@@ -37,7 +37,8 @@ namespace mtconnect
     };
 
     class Response;
-
+    using ResponsePtr = std::unique_ptr<Response>;
+    
     class Routing
     {
     public:
@@ -100,7 +101,7 @@ namespace mtconnect
         }
       };
 
-      using Function = std::function<bool(const Request &, Response &response)>;
+      using Function = std::function<bool(const Request &, ResponsePtr &response)>;
 
       Routing(const Routing &r) = default;
       Routing(const std::string &verb, const std::string &pattern, const Function function)
@@ -127,7 +128,7 @@ namespace mtconnect
       const ParameterList &getPathParameters() const { return m_pathParameters; }
       const QuerySet &getQueryParameters() const { return m_queryParameters; }
 
-      bool matches(Request &request, Response &response) const
+      bool matches(Request &request, ResponsePtr &&response)
       {
         try
         {

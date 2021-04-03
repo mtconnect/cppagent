@@ -43,6 +43,8 @@
 
 namespace mtconnect
 {
+  struct AsyncSampleResponse;
+  struct AsyncCurrentResponse;
   namespace adapter
   {
     class Adapter;
@@ -77,7 +79,7 @@ namespace mtconnect
     };
 
     // Load agent with the xml configuration
-    Agent(std::unique_ptr<http_server::Server> &server,
+    Agent(boost::asio::io_context &context, std::unique_ptr<http_server::Server> &server,
           std::unique_ptr<http_server::FileCache> &cache, const std::string &configXmlPath,
           int bufferSize, int maxAssets, const std::string &version, int checkpointFreq = 1000,
           bool pretty = false);
@@ -194,15 +196,23 @@ namespace mtconnect
         const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
         const std::optional<std::string> &path = std::nullopt);
     RequestResult streamSampleRequest(
-        http_server::Response &response, const std::string &format, const int interval,
+        http_server::ResponsePtr &response, const std::string &format, const int interval,
         const int heartbeat, const int count = 100,
         const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
         const std::optional<std::string> &path = std::nullopt);
-    RequestResult streamCurrentRequest(http_server::Response &response, const std::string &format,
+    
+    // Async stream method
+    void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse, boost::system::error_code ec, std::size_t len);
+    void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse, boost::system::error_code ec);
+    
+    RequestResult streamCurrentRequest(http_server::ResponsePtr &response, const std::string &format,
                                        const int interval,
                                        const std::optional<std::string> &device = std::nullopt,
                                        const std::optional<std::string> &path = std::nullopt);
+    
+    void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse, boost::system::error_code ec);
+
     RequestResult assetRequest(const std::string &format, const int32_t count, const bool removed,
                                const std::optional<std::string> &type = std::nullopt,
                                const std::optional<std::string> &device = std::nullopt);
@@ -298,6 +308,9 @@ namespace mtconnect
     DevicePtr checkDevice(const Printer *printer, const std::string &uuid) const;
 
   protected:
+    boost::asio::io_context &m_context;
+    boost::asio::io_context::strand m_strand;
+    
     // Unique id based on the time of creation
     uint64_t m_instanceId;
     bool m_initialized {false};

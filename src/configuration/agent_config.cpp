@@ -708,7 +708,7 @@ namespace mtconnect
       auto cp = make_unique<http_server::FileCache>();
 
       // Make the Agent
-      m_agent = make_unique<Agent>(server, cp, m_devicesFile,
+      m_agent = make_unique<Agent>(m_context, server, cp, m_devicesFile,
                                    get<int>(options[configuration::BufferSize]),
                                    get<int>(options[configuration::MaxAssets]), m_version,
                                    get<int>(options[configuration::CheckpointFrequency]),

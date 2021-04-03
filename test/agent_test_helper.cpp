@@ -57,8 +57,8 @@ void AgentTestHelper::responseHelper(const char *file, int line,
                                      xmlDocPtr *doc, const char *path)
 {
   makeRequest(file, line, "GET", "", aQueries, path);
-  if (ends_with(m_response.m_mimeType, "xml"))
-    *doc = xmlParseMemory(m_response.m_body.c_str(), m_response.m_body.size());
+  if (ends_with(response()->m_mimeType, "xml"))
+    *doc = xmlParseMemory(response()->m_body.c_str(), response()->m_body.size());
 }
 
 void AgentTestHelper::responseStreamHelper(const char *file, int line,
@@ -66,8 +66,8 @@ void AgentTestHelper::responseStreamHelper(const char *file, int line,
                                      xmlDocPtr *doc, const char *path)
 {
   makeRequest(file, line, "GET", "", aQueries, path);
-  if (ends_with(m_response.m_chunkMimeType, "xml"))
-    *doc = xmlParseMemory(m_response.m_chunkBody.c_str(), m_response.m_chunkBody.size());
+  if (ends_with(response()->m_chunkMimeType, "xml"))
+    *doc = xmlParseMemory(response()->m_chunkBody.c_str(), response()->m_chunkBody.size());
 }
 
 void AgentTestHelper::putResponseHelper(const char *file, int line, const string &body,
@@ -75,8 +75,8 @@ void AgentTestHelper::putResponseHelper(const char *file, int line, const string
                                         const char *path)
 {
   makeRequest(file, line, "PUT", body, aQueries, path);
-  if (ends_with(m_response.m_mimeType, "xml"))
-    *doc = xmlParseMemory(m_response.m_body.c_str(), m_response.m_body.size());
+  if (ends_with(response()->m_mimeType, "xml"))
+    *doc = xmlParseMemory(response()->m_body.c_str(), response()->m_body.size());
 }
 
 void AgentTestHelper::deleteResponseHelper(const char *file, int line,
@@ -84,8 +84,8 @@ void AgentTestHelper::deleteResponseHelper(const char *file, int line,
                                            const char *path)
 {
   makeRequest(file, line, "DELETE", "", aQueries, path);
-  if (ends_with(m_response.m_mimeType, "xml"))
-      *doc = xmlParseMemory(m_response.m_body.c_str(), m_response.m_body.size());
+  if (ends_with(response()->m_mimeType, "xml"))
+      *doc = xmlParseMemory(response()->m_body.c_str(), response()->m_body.size());
 }
 
 void AgentTestHelper::responseHelper(const char *file, int line,
@@ -94,5 +94,5 @@ void AgentTestHelper::responseHelper(const char *file, int line,
                                      const char *path)
 {
   makeRequest(file, line, "GET", "", aQueries, path);
-  doc = nlohmann::json::parse(m_response.m_body);
+  doc = nlohmann::json::parse(response()->m_body);
 }

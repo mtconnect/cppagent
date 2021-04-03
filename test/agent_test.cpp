@@ -83,7 +83,7 @@ TEST_F(AgentTest, Constructor)
 {
   auto server1 = make_unique<http_server::Server>(m_agentTestHelper->m_ioContext);
   auto cache1 = make_unique<http_server::FileCache>();
-  unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7");
+  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7");
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
@@ -92,7 +92,7 @@ TEST_F(AgentTest, Constructor)
   
   auto server2 = make_unique<http_server::Server>(m_agentTestHelper->m_ioContext);
   auto cache2 = make_unique<http_server::FileCache>();
-  agent = make_unique<Agent>(server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7");
+  agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7");
   
   context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
@@ -126,7 +126,7 @@ TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
   auto server1 = make_unique<http_server::Server>(m_agentTestHelper->m_ioContext);
   auto cache1 = make_unique<http_server::FileCache>();
-  unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 17, 8, "1.5");
+  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server1, cache1, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 17, 8, "1.5");
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
@@ -140,7 +140,7 @@ TEST_F(AgentTest, BadDevices)
     string message = (string) "Could not find the device 'LinuxCN'";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "NO_DEVICE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
-    ASSERT_EQ(NOT_FOUND, m_agentTestHelper->m_response.m_code);
+    ASSERT_EQ(NOT_FOUND, m_agentTestHelper->response()->m_code);
   }
 }
 
@@ -207,7 +207,7 @@ TEST_F(AgentTest, BadPath)
     PARSE_XML_RESPONSE("/bad_path");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /bad_path");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->response()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 
@@ -215,7 +215,7 @@ TEST_F(AgentTest, BadPath)
     PARSE_XML_RESPONSE("/bad/path/");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /bad/path/");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->response()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 
@@ -223,7 +223,7 @@ TEST_F(AgentTest, BadPath)
     PARSE_XML_RESPONSE("/LinuxCNC/current/blah");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /LinuxCNC/current/blah");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->response()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 }
@@ -384,8 +384,8 @@ TEST_F(AgentTest, FileDownload)
 
   // Reqyest the file...
   PARSE_TEXT_RESPONSE(uri.c_str());
-  ASSERT_FALSE(m_agentTestHelper->m_response.m_body.empty());
-  ASSERT_TRUE(m_agentTestHelper->m_response.m_body.find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
+  ASSERT_FALSE(m_agentTestHelper->response()->m_body.empty());
+  ASSERT_TRUE(m_agentTestHelper->response()->m_body.find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
 }
 
 TEST_F(AgentTest, FailedFileDownload)

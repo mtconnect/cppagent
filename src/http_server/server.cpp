@@ -295,8 +295,8 @@ namespace mtconnect
         if (ec)
           return fail(ec, "write");
 
-        Routing::Request request = getRequest(req, m_socket);
-        Response response(m_socket, m_fields);
+        Routing::Request request = getRequest(req, socket);
+        ResponsePtr response = make_unique<Response>(socket, m_fields);
 
         if (request.m_verb == "PUT" || request.m_verb == "POST" ||
             request.m_verb == "DELETE")
@@ -309,7 +309,7 @@ namespace mtconnect
             BOOST_LOG_TRIVIAL(error) << msg.str();
 
             if (m_errorFunction)
-              m_errorFunction(request.m_accepts, response, msg.str(), FORBIDDEN);
+              m_errorFunction(request.m_accepts, *response, msg.str(), FORBIDDEN);
             //out.flush();
             return;
           }
@@ -320,7 +320,6 @@ namespace mtconnect
           BOOST_LOG_TRIVIAL(error) << "Server::session error handling Request. ";
         };
 
-        m_socket.shutdown(tcp::socket::shutdown_send, ec);
         buffer.clear();
       }
       catch (exception &e)
@@ -330,7 +329,7 @@ namespace mtconnect
     }
 
 
-    bool Server::handleRequest(Routing::Request &request, Response &response)
+    bool Server::handleRequest(Routing::Request &request, ResponsePtr &response)
     {
       BOOST_LOG_NAMED_SCOPE("Server::handleRequest");
 
@@ -345,7 +344,7 @@ namespace mtconnect
           BOOST_LOG_TRIVIAL(error) << msg.str();
 
           if (m_errorFunction)
-            m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
+            m_errorFunction(request.m_accepts, *response, msg.str(), BAD_REQUEST);
           res = false;
         }
       }
@@ -353,7 +352,7 @@ namespace mtconnect
       {
         BOOST_LOG_TRIVIAL(error) << "Error processing request from: " << request.m_foreignIp << " - "
                  << e.what();
-        response.writeResponse(e.m_body, e.m_contentType, e.m_code);
+        response->writeResponse(e.m_body, e.m_contentType, e.m_code);
         res = false;
       }
       catch (ParameterError &e)
@@ -364,7 +363,7 @@ namespace mtconnect
         BOOST_LOG_TRIVIAL(error) << msg.str();
 
         if (m_errorFunction)
-          m_errorFunction(request.m_accepts, response, msg.str(), BAD_REQUEST);
+          m_errorFunction(request.m_accepts, *response, msg.str(), BAD_REQUEST);
         res = false;
       }
 

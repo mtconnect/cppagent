@@ -94,16 +94,21 @@ namespace mtconnect
     {
     public:
       //Response(tcp::socket &socket, std::ostream &out, const StringList &fields = {}) : m_socket(std::move(socket)) ,m_out(out), m_fields(fields)
-      Response(tcp::socket &socket,  const StringList &fields = {}) : m_socket(std::move(socket)), m_fields(fields)
+      Response(tcp::socket &socket,  const StringList &fields = {},
+               std::function<void(boost::system::error_code, std::size_t size)> writeComplete = nullptr) : m_socket(std::move(socket)), m_fields(fields),
+         m_writeComplete(writeComplete)
       {
       }
 
-      virtual ~Response() = default;
+      virtual ~Response()
+      {
+        m_socket.close();
+      }
 
       virtual std::string getHeaderDate() { return getCurrentTime(HUM_READ); }
 
       bool good() const { return m_socket.is_open(); }
-      void setBad() { m_socket.close(); }
+      void close() { m_socket.close(); }
       static std::string getStatus(uint16_t code)
       {
         auto cm = m_status.find(code);
@@ -113,8 +118,11 @@ namespace mtconnect
           return cm->second;
       }
 
-      virtual void beginMultipartStream();
-      virtual void writeMultipartChunk(const std::string &body, const std::string &mimeType);
+      // Streaming
+      virtual void beginMultipartStream(std::function<void(boost::system::error_code ec, std::size_t len)> handler);
+      virtual void writeMultipartChunk(const std::string &body, const std::string &mimeType, std::function<void(boost::system::error_code ec, std::size_t len)> handler);
+      
+      // Responses 
       void writeResponse(const std::string &body, const std::string &mimeType = "text/plain",
                          const ResponseCode code = OK,
                          const std::chrono::seconds expires = std::chrono::seconds(0))
@@ -138,7 +146,10 @@ namespace mtconnect
       static const std::unordered_map<uint16_t, std::string> m_status;
       static const std::unordered_map<std::string, uint16_t> m_codes;
       StringList m_fields;
+      std::function<void(boost::system::error_code, std::size_t size)>  m_writeComplete;
       boost::system::error_code m_ec;
     };
+    
+    using ResponsePtr = std::unique_ptr<Response>;
   }  // namespace http_server
 }  // namespace mtconnect

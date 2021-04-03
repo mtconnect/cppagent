@@ -22,6 +22,8 @@
 #include <boost/bind/bind.hpp>
 #include <boost/beast/http/chunk_encode.hpp>
 
+#include "logging.hpp"
+
 using namespace std;
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -85,7 +87,7 @@ namespace mtconnect
 
     const std::unordered_map<std::string, uint16_t> Response::m_codes = flip_map(m_status);
     
-    void Response::beginMultipartStream()
+    void Response::beginMultipartStream(std::function<void(boost::system::error_code ec, std::size_t len)> handler)
     {
       using namespace http;
       
@@ -107,11 +109,11 @@ namespace mtconnect
         // TODO: Add additional fields
         
         response_serializer<empty_body> sr{res};
-        write_header(m_socket, sr);
+        async_write_header(m_socket, sr, handler);
       }
     }
     
-    void Response::writeMultipartChunk(const std::string &body, const std::string &mimeType)
+    void Response::writeMultipartChunk(const std::string &body, const std::string &mimeType, std::function<void(boost::system::error_code ec, std::size_t len)> handler)
     {
       if (good())
       {
@@ -124,7 +126,7 @@ namespace mtconnect
 
         net::const_buffers_1 buf(body.c_str(), body.size());
         http::chunk_body chunk{http::make_chunk(buf,move(ext))};
-        net::write(m_socket, chunk, m_ec);
+        net::async_write(m_socket, chunk, handler);
 
         if (m_ec)
         {
@@ -174,13 +176,25 @@ namespace mtconnect
         };
         res.set(http::field::server, "MTConnectAgent");
         res.set(http::field::date, getHeaderDate());
-        res.set(http::field::connection, "close");
+        if (!m_writeComplete)
+          res.set(http::field::connection, "close");
         res.set(http::field::expires, "-1");
         res.set(http::field::content_type, mimeType);
         //res.set(http::status::continue_, 100, 100);
         res.content_length(size);
         http::serializer<false, http::string_body , http::fields> sr{res};
-        http::write(m_socket, sr, m_ec);
+        if (m_writeComplete)
+          http::async_write(m_socket, sr, m_writeComplete);
+        else
+          http::async_write(m_socket, sr, [](boost::system::error_code ec, std::size_t size){
+            if (ec)
+            {
+              BOOST_LOG_TRIVIAL(error) << "Write failed";
+              BOOST_LOG_TRIVIAL(error) << "Receive timeout: " << ec.category().message(ec.value()) << ": "
+              << ec.message();
+            }
+          });
+
       }
     }
 

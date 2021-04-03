@@ -116,11 +116,11 @@ namespace mtconnect
         return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
       }
 
-      bool dispatch(Routing::Request &request, Response &response)
+      bool dispatch(Routing::Request &request, ResponsePtr &response)
       {
         for (auto &r : m_routings)
         {
-          if (r.matches(request, response))
+          if (r.matches(request, std::forward<ResponsePtr>(response)))
             return true;
         }
 
@@ -131,7 +131,7 @@ namespace mtconnect
 
       void session(boost::system::error_code ec, tcp::socket& socket);
 
-      bool handleRequest(Routing::Request &request, Response &response);
+      bool handleRequest(Routing::Request &request, ResponsePtr &response);
 
       void fail(boost::system::error_code ec, char const *what);
 

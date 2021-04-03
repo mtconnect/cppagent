@@ -50,11 +50,12 @@ namespace mtconnect
   static const string g_available("AVAILABLE");
 
   // Agent public methods
-  Agent::Agent(std::unique_ptr<http_server::Server> &server,
+  Agent::Agent(boost::asio::io_context &context, std::unique_ptr<http_server::Server> &server,
                std::unique_ptr<http_server::FileCache> &cache, const string &configXmlPath,
                int bufferSize, int maxAssets, const std::string &version, int checkpointFreq,
                bool pretty)
-    : m_server(move(server)),
+    : m_context(context), m_strand(m_context),
+      m_server(move(server)),
       m_fileCache(move(cache)),
       m_xmlParser(make_unique<mtconnect::XmlParser>()),
       m_circularBuffer(bufferSize, checkpointFreq),
@@ -122,6 +123,7 @@ namespace mtconnect
 
   void Agent::start()
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::start");
     try
     {
       // Start all the adapters
@@ -140,6 +142,8 @@ namespace mtconnect
 
   void Agent::stop()
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::stop");
+
     // Stop all adapter threads...
     BOOST_LOG_TRIVIAL(info) << "Shutting down adapters";
     // Deletes adapter and waits for it to exit.
@@ -163,6 +167,8 @@ namespace mtconnect
 
   void Agent::createAgentDevice()
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::createAgentDevice");
+
     // Create the Agent Device
     ErrorList errors;
     Properties ps {{"uuid", "0b49a3a0-18ca-0139-8748-2cde48001122"s},
@@ -186,6 +192,8 @@ namespace mtconnect
 
   void Agent::loadXMLDeviceFile(const std::string &configXmlPath)
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::loadXMLDeviceFile");
+
     try
     {
       // Load the configuration for the Agent
@@ -214,6 +222,8 @@ namespace mtconnect
 
   void Agent::verifyDevice(DevicePtr device)
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::verifyDevice");
+
     auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
     const auto &schemaVersion = xmlPrinter->getSchemaVersion();
 
@@ -267,6 +277,8 @@ namespace mtconnect
 
   void Agent::initializeDataItems(DevicePtr device)
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::initializeDataItems");
+
     // Grab data from configuration
     string time = getCurrentTime(GMT_UV_SEC);
 
@@ -302,6 +314,8 @@ namespace mtconnect
   // Add the a device from a configuration file
   void Agent::addDevice(DevicePtr device)
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::addDevice");
+
     // Check if device already exists
     string uuid = *device->getUuid();
     auto old = m_deviceUuidMap.find(uuid);
@@ -343,6 +357,8 @@ namespace mtconnect
   void Agent::deviceChanged(DevicePtr device, const std::string &oldUuid,
                             const std::string &oldName)
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::deviceChanged");
+
     string uuid = *device->getUuid();
     if (uuid != oldUuid)
     {
@@ -380,6 +396,8 @@ namespace mtconnect
 
   void Agent::loadCachedProbe()
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::loadCachedProbe");
+
     // Reload the document for path resolution
     auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
     m_xmlParser->loadDocument(xmlPrinter->printProbe(m_instanceId, m_circularBuffer.getBufferSize(),
@@ -391,19 +409,19 @@ namespace mtconnect
   // Request Routing
   // -----------------------------------------------------------
 
-  static inline void respond(http_server::Response &response, const Agent::RequestResult &res)
+  static inline void respond(http_server::ResponsePtr &response, const Agent::RequestResult &res)
   {
-    response.writeResponse(res.m_body, res.m_format, res.m_status);
+    response->writeResponse(res.m_body, res.m_format, res.m_status);
   }
 
   void Agent::createFileRoutings()
   {
     using namespace http_server;
-    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
       auto f = m_fileCache->getFile(request.m_path);
       if (f)
       {
-        response.writeResponse(f->m_buffer.get(), f->m_size, http_server::OK, f->m_mimeType);
+        response->writeResponse(f->m_buffer.get(), f->m_size, http_server::OK, f->m_mimeType);
       }
       return bool(f);
     };
@@ -414,7 +432,7 @@ namespace mtconnect
   {
     using namespace http_server;
     // Probe
-    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
       auto device = request.parameter<string>("device");
 
       if (device && !ends_with(request.m_path, string("probe")) &&
@@ -435,7 +453,7 @@ namespace mtconnect
   void Agent::createAssetRoutings()
   {
     using namespace http_server;
-    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
       auto removed = *request.parameter<string>("removed") == "true";
       auto count = *request.parameter<int32_t>("count");
       respond(response,
@@ -444,7 +462,7 @@ namespace mtconnect
       return true;
     };
 
-    auto idHandler = [&](const Routing::Request &request, Response &response) -> bool {
+    auto idHandler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
       auto assets = request.parameter<string>("assets");
       if (assets)
       {
@@ -458,7 +476,7 @@ namespace mtconnect
       else
       {
         auto printer = printerForAccepts(request.m_accepts);
-        response.writeResponse(printError(printer, "INVALID_REQUEST", "No assets given"),
+        response->writeResponse(printError(printer, "INVALID_REQUEST", "No assets given"),
                                printer->mimeType(), http_server::BAD_REQUEST);
       }
       return true;
@@ -475,7 +493,7 @@ namespace mtconnect
 
     if (m_server->isPutEnabled())
     {
-      auto putHandler = [&](const Routing::Request &request, Response &response) -> bool {
+      auto putHandler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
         respond(response, putAssetRequest(acceptFormat(request.m_accepts), request.m_body,
                                           request.parameter<string>("type"),
                                           request.parameter<string>("device"),
@@ -483,7 +501,7 @@ namespace mtconnect
         return true;
       };
 
-      auto deleteHandler = [&](const Routing::Request &request, Response &response) -> bool {
+      auto deleteHandler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
         auto assets = request.parameter<string>("assets");
         if (assets)
         {
@@ -523,7 +541,7 @@ namespace mtconnect
   void Agent::createCurrentRoutings()
   {
     using namespace http_server;
-    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
       auto interval = request.parameter<int32_t>("interval");
       if (interval)
       {
@@ -549,7 +567,7 @@ namespace mtconnect
   void Agent::createSampleRoutings()
   {
     using namespace http_server;
-    auto handler = [&](const Routing::Request &request, Response &response) -> bool {
+    auto handler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
       auto interval = request.parameter<int32_t>("interval");
       if (interval)
       {
@@ -585,7 +603,7 @@ namespace mtconnect
 
     if (m_server->isPutEnabled())
     {
-      auto handler = [&](const Routing::Request &request, Response &response) -> bool {
+      auto handler = [&](const Routing::Request &request, ResponsePtr &response) -> bool {
         if (!request.m_query.empty())
         {
           auto queries = request.m_query;
@@ -1219,15 +1237,40 @@ namespace mtconnect
     return {fetchSampleData(printer, filter, count, from, to, end, endOfBuffer), OK,
             printer->mimeType()};
   }
+  
+  struct AsyncSampleResponse
+  {
+    AsyncSampleResponse(http_server::ResponsePtr &resp, boost::asio::io_context &context)
+    : m_response(move(resp)), m_observer(context), m_last(chrono::system_clock::now())
+    {
+    }
+    
+    http_server::ResponsePtr m_response;
+    ofstream                 m_log;
+    SequenceNumber_t         m_sequence{0};
+    chrono::milliseconds     m_interval;
+    chrono::milliseconds     m_heartbeat;
+    int                      m_count{0};
+    bool                     m_logStreamData{false};
+    bool                     m_endOfBuffer{false};
+    Printer                 *m_printer{nullptr};
+    FilterSet                m_filter;
+    ChangeObserver           m_observer;
+    chrono::system_clock::time_point m_last;
+  };
 
-  Agent::RequestResult Agent::streamSampleRequest(http_server::Response &response,
+  Agent::RequestResult Agent::streamSampleRequest(http_server::ResponsePtr &response,
                                                   const std::string &format, const int interval,
                                                   const int heartbeatIn, const int count,
                                                   const std::optional<std::string> &device,
                                                   const std::optional<SequenceNumber_t> &from,
                                                   const std::optional<std::string> &path)
   {
+    BOOST_LOG_NAMED_SCOPE("Agent::streamSampleRequest");
+    
     using namespace http_server;
+    using boost::placeholders::_1;
+    using boost::placeholders::_2;
 
     auto printer = getPrinter(format);
     checkRange(printer, interval, -1, numeric_limits<int>().max(), "interval");
@@ -1238,173 +1281,187 @@ namespace mtconnect
       dev = checkDevice(printer, *device);
     }
 
-    std::chrono::milliseconds heartbeat(heartbeatIn);
+    auto asyncResponse = make_shared<AsyncSampleResponse>(response, m_context);
+    asyncResponse->m_count = count;
+    asyncResponse->m_printer = printer;
+    asyncResponse->m_heartbeat = std::chrono::milliseconds(heartbeatIn);
 
-    FilterSet filter;
-    checkPath(printer, path, dev, filter);
+    checkPath(asyncResponse->m_printer, path, dev, asyncResponse->m_filter);
 
-    ofstream log;
     if (m_logStreamData)
     {
       stringstream filename;
       filename << "Stream_" << getCurrentTime(LOCAL) << "_" << this_thread::get_id() << ".log";
-      log.open(filename.str().c_str());
+      asyncResponse->m_log.open(filename.str().c_str());
     }
 
     // This object will automatically clean up all the observer from the
     // signalers in an exception proof manor.
-    ChangeObserver observer;
-
     // Add observers
-    for (const auto &item : filter)
-      m_dataItemMap[item]->addObserver(&observer);
+    for (const auto &item : asyncResponse->m_filter)
+      m_dataItemMap[item]->addObserver(&asyncResponse->m_observer);
 
     chrono::milliseconds interMilli {interval};
-    SequenceNumber_t start {0};
     SequenceNumber_t firstSeq = getFirstSequence();
     if (!from || *from < firstSeq)
-      start = firstSeq;
+      asyncResponse->m_sequence = firstSeq;
     else
-      start = *from;
+      asyncResponse->m_sequence = *from;
 
-    response.beginMultipartStream();
-
-    try
-    {
-      while (response.good())
-      {
-        // Remember when we started this grab...
-        auto last = chrono::system_clock::now();
-
-        // Fetch sample data now resets the observer while holding the sequence
-        // mutex to make sure that a new event will be recorded in the observer
-        // when it returns.
-        string content;
-        uint64_t end(0ull);
-        bool endOfBuffer = true;
-        // Check if we're falling too far behind. If we are, generate an
-        // MTConnectError and return.
-        if (start < getFirstSequence())
-        {
-          BOOST_LOG_TRIVIAL(warning) << "Client fell too far behind, disconnecting";
-          throw logic_error("Client can't keep up with event stream, disconnecting");
-        }
-
-        // end and endOfBuffer are set during the fetch sample data while the
-        // mutex is held. This removed the race to check if we are at the end of
-        // the bufffer and setting the next start to the last sequence number
-        // sent.
-        content =
-            fetchSampleData(printer, filter, count, start, nullopt, end, endOfBuffer, &observer);
-
-        if (m_logStreamData)
-          log << content << endl;
-
-        response.writeMultipartChunk(content, printer->mimeType());
-        // Wait for up to frequency ms for something to arrive... Don't wait if
-        // we are not at the end of the buffer. Just put the next set after aInterval
-        // has elapsed. Check also if in the intervening time between the last fetch
-        // and now. If so, we just spin through and wait the next interval.
-
-        // Even if we are at the end of the buffer, or within range. If we are filtering,
-        // we will need to make sure we are not spinning when there are no valid events
-        // to be reported. we will waste cycles spinning on the end of the buffer when
-        // we should be in a heartbeat wait as well.
-        if (!endOfBuffer)
-        {
-          // If we're not at the end of the buffer, move to the end of the previous set and
-          // begin filtering from where we left off.
-          start = end;
-
-          // For replaying of events, we will stream as fast as we can with a 1ms sleep
-          // to allow other threads to run.
-          this_thread::sleep_for(1ms);
-        }
-        else
-        {
-          chrono::milliseconds delta;
-
-          // Busy wait to make sure the signal was actually signaled. We have observed that
-          // a signal can occur in rare conditions where there are multiple threads listening
-          // on separate condition variables and this pops out too soon. This will make sure
-          // observer was actually signaled and instead of throwing an error will wait again
-          // for the remaining hartbeat interval.
-          delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
-          while (delta < heartbeat && observer.wait((heartbeat - delta).count()) &&
-                 !observer.wasSignaled())
-          {
-            delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
-          }
-
-          {
-            std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-
-            // Make sure the observer was signaled!
-            if (!observer.wasSignaled())
-            {
-              // If nothing came out during the last wait, we may have still have advanced
-              // the sequence number. We should reset the start to something closer to the
-              // current sequence. If we lock the sequence lock, we can check if the observer
-              // was signaled between the time the wait timed out and the mutex was locked.
-              // Otherwise, nothing has arrived and we set to the next sequence number to
-              // the next sequence number to be allocated and continue.
-              start = m_circularBuffer.getSequence();
-            }
-            else
-            {
-              // Get the sequence # signaled in the observer when the earliest event arrived.
-              // This will allow the next set of data to be pulled. Any later events will have
-              // greater sequence numbers, so this should not cause a problem. Also, signaled
-              // sequence numbers can only decrease, never increase.
-              start = observer.getSequence();
-            }
-          }
-
-          // Now wait the remainder if we triggered before the timer was up.
-          delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - last);
-          if (delta < interMilli)
-          {
-            // Sleep the remainder
-            this_thread::sleep_for(interMilli - delta);
-          }
-        }
-      }
-    }
-    catch (RequestError &aError)
-    {
-      BOOST_LOG_TRIVIAL(info) << "Caught a parameter error.";
-      if (response.good())
-      {
-        response.writeMultipartChunk(printError(printer, "BAD_REQUEST", aError.m_body),
-                                     printer->mimeType());
-      }
-    }
-    catch (std::exception &e)
-    {
-      BOOST_LOG_TRIVIAL(warning) << "Error occurred during streaming data";
-      if (response.good())
-      {
-        response.writeMultipartChunk(printError(printer, "INTERNAL_ERROR", e.what()),
-                                     printer->mimeType());
-      }
-    }
-    catch (...)
-    {
-      BOOST_LOG_TRIVIAL(warning) << "Error occurred during streaming data";
-      if (response.good())
-      {
-        response.writeMultipartChunk(
-            printError(printer, "INTERNAL_ERROR", "Unknown error occurred during streaming"),
-            printer->mimeType());
-      }
-    }
-
-    response.setBad();
+    asyncResponse->m_interval = chrono::milliseconds(interval);
+    asyncResponse->m_logStreamData = m_logStreamData;
+    
+    asyncResponse->m_response->beginMultipartStream(net::bind_executor(m_strand,
+             boost::bind(&Agent::streamSampleWriteComplete, this,
+                         asyncResponse, _1, _2)));
 
     return {"", http_server::OK, ""};
   }
+  
+  void Agent::streamSampleWriteComplete(shared_ptr<AsyncSampleResponse> asyncResponse, boost::system::error_code ec, std::size_t len)
+  {
+    BOOST_LOG_NAMED_SCOPE("Agent::streamSampleWriteComplete");
 
-  Agent::RequestResult Agent::streamCurrentRequest(http_server::Response &response,
+    if (ec)
+    {
+      BOOST_LOG_TRIVIAL(warning) << "Error occured while streaming";
+      BOOST_LOG_TRIVIAL(warning) << ec.category().message(ec.value()) << ": "
+                << ec.message();
+      asyncResponse->m_response->close();
+    }
+    else
+    {
+      if(asyncResponse->m_endOfBuffer)
+      {
+        using boost::placeholders::_1;
+        using boost::placeholders::_2;
+
+        asyncResponse->m_observer.wait(asyncResponse->m_heartbeat,
+               net::bind_executor(m_strand,
+                        boost::bind(&Agent::streamNextSampleChunk, this,
+                                    asyncResponse, _1)));
+      }
+      else
+      {
+        streamNextSampleChunk(asyncResponse, ec);
+      }
+    }
+  }
+  
+  void Agent::streamNextSampleChunk(shared_ptr<AsyncSampleResponse> asyncResponse,
+                                    boost::system::error_code ec)
+  {
+    BOOST_LOG_NAMED_SCOPE("Agent::streamNextSampleChunk");
+    using boost::placeholders::_1;
+    using boost::placeholders::_2;
+    
+    if (ec && ec != boost::asio::error::operation_aborted)
+    {
+      BOOST_LOG_TRIVIAL(warning) << "Unexpected error streamNextSampleChunk, aborting";
+      BOOST_LOG_TRIVIAL(warning) << ec.category().message(ec.value()) << ": "
+                << ec.message();
+      return;
+    }
+    
+    if (!asyncResponse->m_endOfBuffer)
+    {
+      // Wsit to make sure the signal was actually signaled. We have observed that
+      // a signal can occur in rare conditions where there are multiple threads listening
+      // on separate condition variables and this pops out too soon. This will make sure
+      // observer was actually signaled and instead of throwing an error will wait again
+      // for the remaining hartbeat interval.
+      auto delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - asyncResponse->m_last);
+      if (delta < asyncResponse->m_interval)
+      {
+        asyncResponse->m_observer.wait(asyncResponse->m_interval - delta,
+                       net::bind_executor(m_strand,
+                                          boost::bind(&Agent::streamNextSampleChunk, this,
+                                                      asyncResponse, _1)));
+        return;
+      }
+    }
+    
+    {
+      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+      
+      // See if the observer was signaled!
+      if (!asyncResponse->m_observer.wasSignaled())
+      {
+        // If nothing came out during the last wait, we may have still have advanced
+        // the sequence number. We should reset the start to something closer to the
+        // current sequence. If we lock the sequence lock, we can check if the observer
+        // was signaled between the time the wait timed out and the mutex was locked.
+        // Otherwise, nothing has arrived and we set to the next sequence number to
+        // the next sequence number to be allocated and continue.
+        asyncResponse->m_sequence = m_circularBuffer.getSequence();
+      }
+      else
+      {
+        // Get the sequence # signaled in the observer when the earliest event arrived.
+        // This will allow the next set of data to be pulled. Any later events will have
+        // greater sequence numbers, so this should not cause a problem. Also, signaled
+        // sequence numbers can only decrease, never increase.
+        asyncResponse->m_sequence = asyncResponse->m_observer.getSequence();
+        asyncResponse->m_observer.reset();
+      }
+
+      // Fetch sample data now resets the observer while holding the sequence
+      // mutex to make sure that a new event will be recorded in the observer
+      // when it returns.
+      uint64_t end(0ull);
+      string content;
+      asyncResponse->m_endOfBuffer = true;
+      // Check if we're falling too far behind. If we are, generate an
+      // MTConnectError and return.
+      if (asyncResponse->m_sequence < getFirstSequence())
+      {
+        BOOST_LOG_TRIVIAL(warning) << "Client fell too far behind, disconnecting";
+        return;
+      }
+      
+      // end and endOfBuffer are set during the fetch sample data while the
+      // mutex is held. This removed the race to check if we are at the end of
+      // the bufffer and setting the next start to the last sequence number
+      // sent.
+      content =
+      fetchSampleData(asyncResponse->m_printer, asyncResponse->m_filter, asyncResponse->m_count, asyncResponse->m_sequence, nullopt, end, asyncResponse->m_endOfBuffer, &asyncResponse->m_observer);
+      
+      // Even if we are at the end of the buffer, or within range. If we are filtering,
+      // we will need to make sure we are not spinning when there are no valid events
+      // to be reported. we will waste cycles spinning on the end of the buffer when
+      // we should be in a heartbeat wait as well.
+      if (!asyncResponse->m_endOfBuffer)
+      {
+        // If we're not at the end of the buffer, move to the end of the previous set and
+        // begin filtering from where we left off.
+        asyncResponse->m_sequence = end;
+      }
+      if (m_logStreamData)
+        asyncResponse->m_log << content << endl;
+      asyncResponse->m_response->writeMultipartChunk(content, asyncResponse->m_printer->mimeType(),
+                                                     net::bind_executor(m_strand,
+                                                                        boost::bind(&Agent::streamSampleWriteComplete, this,
+                                                                                  asyncResponse, _1, _2)));
+    }
+  }
+
+  struct AsyncCurrentResponse
+  {
+    AsyncCurrentResponse(http_server::ResponsePtr &resp,
+                         net::io_context &context)
+    : m_response(move(resp)), m_timer(context)
+    {
+    }
+    
+    http_server::ResponsePtr m_response;
+    chrono::milliseconds     m_interval;
+    Printer                 *m_printer{nullptr};
+    FilterSetOpt             m_filter;
+    boost::asio::steady_timer m_timer;
+  };
+
+  
+  Agent::RequestResult Agent::streamCurrentRequest(http_server::ResponsePtr &response,
                                                    const std::string &format, const int interval,
                                                    const std::optional<std::string> &device,
                                                    const std::optional<std::string> &path)
@@ -1416,27 +1473,67 @@ namespace mtconnect
     {
       dev = checkDevice(printer, *device);
     }
-    FilterSetOpt filter;
+    
+    auto asyncResponse = make_shared<AsyncCurrentResponse>(response, m_context);
     if (path || device)
     {
-      filter = make_optional<FilterSet>();
-      checkPath(printer, path, dev, *filter);
+      asyncResponse->m_filter = make_optional<FilterSet>();
+      checkPath(printer, path, dev, *asyncResponse->m_filter);
     }
+    asyncResponse->m_interval = chrono::milliseconds{interval};
+    asyncResponse->m_printer = printer;
 
-    response.beginMultipartStream();
-    chrono::milliseconds interMilli {interval};
-
-    while (response.good())
-    {
-      response.writeMultipartChunk(fetchCurrentData(printer, filter, nullopt), printer->mimeType());
-
-      this_thread::sleep_for(interMilli);
-    }
-
-    response.setBad();
+    asyncResponse->m_response->beginMultipartStream(boost::asio::bind_executor(m_strand, [this, asyncResponse](boost::system::error_code ec, size_t size)
+                                                             {
+      if (ec)
+      {
+        BOOST_LOG_TRIVIAL(warning) << "Error occured while streaming";
+        BOOST_LOG_TRIVIAL(warning) << ec.category().message(ec.value()) << ": "
+                  << ec.message();
+        asyncResponse->m_response->close();
+      }
+      else
+      {
+        streamNextCurrent(asyncResponse, ec);
+      }
+    }));
 
     return {"", http_server::OK, ""};
   }
+  
+  void Agent::streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse, boost::system::error_code ec)
+  {
+    using boost::placeholders::_1;
+    
+    if (ec)
+    {
+      BOOST_LOG_TRIVIAL(warning) << "Error occured while streaming";
+      BOOST_LOG_TRIVIAL(warning) << ec.category().message(ec.value()) << ": "
+                << ec.message();
+      asyncResponse->m_response->close();
+      return;
+    }
+
+    asyncResponse->m_response->writeMultipartChunk(fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt), asyncResponse->m_printer->mimeType(),
+         boost::asio::bind_executor(m_strand, [this, asyncResponse](boost::system::error_code ec, size_t size)
+            {
+           if (ec)
+           {
+             BOOST_LOG_TRIVIAL(warning) << "Error occured while streaming";
+             BOOST_LOG_TRIVIAL(warning) << ec.category().message(ec.value()) << ": "
+                       << ec.message();
+             asyncResponse->m_response->close();
+           }
+           else
+           {
+             asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
+             asyncResponse->m_timer.async_wait(
+                     boost::asio::bind_executor(m_strand,
+                        boost::bind(&Agent::streamNextCurrent, this, asyncResponse, _1)));
+           }
+         }));
+  }
+
 
   Agent::RequestResult Agent::assetRequest(const std::string &format, const int32_t count,
                                            const bool removed,
