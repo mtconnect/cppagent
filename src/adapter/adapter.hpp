@@ -92,22 +92,23 @@ namespace mtconnect
       void connecting() override
       {
         if (m_handler && m_handler->m_connecting)
-          m_handler->m_connecting(getIdentity());
+          m_handler->m_connecting(getSecureIdentity());
       }
       void disconnected() override
       {
         if (m_handler && m_handler->m_disconnected)
-          m_handler->m_disconnected(getIdentity());
+          m_handler->m_disconnected(getSecureIdentity());
       }
       void connected() override
       {
         if (m_handler && m_handler->m_connected)
-          m_handler->m_connected(getIdentity());
+          m_handler->m_connected(getSecureIdentity());
       }
 
       // Agent Device methods
       const std::string &getUrl() const { return m_url; }
       const std::string &getIdentity() const { return m_identity; }
+      const std::string &getSecureIdentity() const { return m_secureIdentity; }
 
       // Start and Stop
       void stop();
@@ -137,6 +138,7 @@ namespace mtconnect
       // Name of device associated with adapter
       std::string m_url;
       std::string m_identity;
+      std::string m_secureIdentity;
 
       // If the connector has been running
       bool m_running;
