@@ -61,7 +61,7 @@ namespace mtconnect
       m_identity = identity.str();
       m_secureIdentity = string("_") + dlib::md5(m_identity).substr(0, 10);
 
-      m_options[configuration::AdapterIdentity] = m_identity;
+      m_options[configuration::AdapterIdentity] = m_secureIdentity;
       m_handler = m_pipeline->makeHandler();
       if (m_pipeline->hasContract())
         m_pipeline->build(m_options);
@@ -74,7 +74,7 @@ namespace mtconnect
         if (data == *m_terminator)
         {
           if (m_handler && m_handler->m_processData)
-            m_handler->m_processData(m_body.str(), getIdentity());
+            m_handler->m_processData(m_body.str(), getSecureIdentity());
           m_terminator.reset();
           m_body.str("");
         }
@@ -95,7 +95,7 @@ namespace mtconnect
       }
 
       if (m_handler && m_handler->m_processData)
-        m_handler->m_processData(data, getIdentity());
+        m_handler->m_processData(data, getSecureIdentity());
     }
     
     void Adapter::stop()
@@ -140,7 +140,7 @@ namespace mtconnect
         if (options.size() > 0)
           setOptions(options);
         else if (m_handler && m_handler->m_command)
-          m_handler->m_command(data, getIdentity());
+          m_handler->m_command(data, getSecureIdentity());
       }
     }
 
