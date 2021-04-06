@@ -46,7 +46,7 @@ namespace mtconnect
   void AgentDevice::addAdapter(const adapter::Adapter *adapter)
   {
     bool suppress = GetOption<bool>(adapter->getOptions(), configuration::SuppressIPAddress).value_or(false);
-    auto id = adapter->getSecureIdentity();
+    auto id = adapter->getIdentity();
 
     std::map<string, string> attrs{{"id", id}};
     if (!suppress)
