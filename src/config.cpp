@@ -671,6 +671,7 @@ namespace mtconnect
     options[configuration::UpcaseDataItemValue] = upcaseValue;
     options[configuration::FilterDuplicates] = filterDuplicates;
     assign_value<int>(configuration::ShdrVersion, reader, options, 1);
+    assign_bool_value(configuration::SuppressIPAddress, reader, options, false);
 
     m_agent->initialize(m_pipelineContext, options);
 
@@ -758,6 +759,7 @@ namespace mtconnect
         assign_value<Seconds>(configuration::ReconnectInterval, adapter, adapterOptions);
         assign_value<Seconds>(configuration::LegacyTimeout, adapter, adapterOptions);
         assign_bool_value(configuration::PreserveUUID, adapter, adapterOptions);
+        assign_bool_value(configuration::SuppressIPAddress, adapter, adapterOptions);
         device->m_preserveUuid = get<bool>(adapterOptions[configuration::PreserveUUID]);
 
         const string host = get_with_default(adapter, configuration::Host, (string) "localhost");
