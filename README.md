@@ -617,6 +617,9 @@ Configuration Parameters
 * `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. This is the default for all adapters.
 
     *Default*: 1
+	
+* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7. This applies to all adapters.
+    *Default*: false
 
 
 ### Adapter configuration items ###
@@ -720,6 +723,9 @@ Configuration Parameters
 	* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. Applies to only this adapter.
 
 	    *Default*: 1
+
+	* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7.
+		*Default*: false
 
 
 logger_config configuration items
