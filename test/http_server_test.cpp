@@ -41,7 +41,6 @@ using namespace mtconnect::http_server;
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
-
 using tcp = boost::asio::ip::tcp;
 
 class Client
@@ -82,6 +81,7 @@ public:
 
   void request(boost::beast::http::verb verb,
                std::string const& target,
+               std::string const& body,
                net::yield_context yield)
   {
     beast::error_code ec;
@@ -124,6 +124,20 @@ public:
     m_done = true;    
   }
   
+  void spawnRequest(boost::beast::http::verb verb,
+                    std::string const& target,
+                    std::string const &body = "")
+  {
+    m_done = false;
+    asio::spawn(m_context,
+                std::bind(&Client::request,
+                          this, verb, target, body,
+                          std::placeholders::_1));
+    
+    while (!m_done)
+      m_context.run_one();
+  }
+
   void close()
   {
     beast::error_code ec;
@@ -132,6 +146,7 @@ public:
     m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
   }
   
+
   bool m_connected{false};
   int m_status;
   std::string m_result;
@@ -151,7 +166,22 @@ class HttpServerTest : public testing::Test
   void start()
   {
     m_server->start();
+    while (!m_server->isListening())
+      m_context.run_one();
     m_client = make_unique<Client>(m_context);
+  }
+  
+  void startClient()
+  {
+    m_client->m_connected = false;
+    asio::spawn(m_context,
+                std::bind(&Client::connect,
+                          m_client.get(),
+                          static_cast<unsigned short>(m_server->getPort()),
+                          std::placeholders::_1));
+
+    while (!m_client->m_connected)
+      m_context.run_one();
   }
 
   void TearDown() override
@@ -165,7 +195,7 @@ class HttpServerTest : public testing::Test
   unique_ptr<Client> m_client;
 };
 
-TEST_F(HttpServerTest, TestSimpleRouting)
+TEST_F(HttpServerTest, simple_request_response)
 {
   weak_ptr<Session> session;
   
@@ -186,43 +216,14 @@ TEST_F(HttpServerTest, TestSimpleRouting)
   m_server->addRouting({boost::beast::http::verb::get, "/{device}/probe", probe});
   
   start();
-  m_client->m_done = false;
+  startClient();
 
-  while (!m_server->isListening())
-    m_context.run_one();
-
-  asio::spawn(m_context,
-              std::bind(&Client::connect,
-                        m_client.get(),
-                        static_cast<unsigned short>(m_server->getPort()),
-                        std::placeholders::_1));
-
-  while (!m_client->m_connected)
-    m_context.run_one();
-
-  asio::spawn(m_context,
-              std::bind(&Client::request,
-                        m_client.get(),
-                        http::verb::get,
-                        "/probe",
-                        std::placeholders::_1));
-  
-  while (!m_client->m_done)
-    m_context.run_one();
-  
+  m_client->spawnRequest(http::verb::get, "/probe");
+    
   EXPECT_EQ("All Devices", m_client->m_result);
   EXPECT_EQ(200, m_client->m_status);
   
-  m_client->m_done = false;
-  asio::spawn(m_context,
-              std::bind(&Client::request,
-                        m_client.get(),
-                        http::verb::get,
-                        "/device1/probe",
-                        std::placeholders::_1));
-  
-  while (!m_client->m_done)
-    m_context.run_one();
+  m_client->spawnRequest(http::verb::get, "/device1/probe");
 
   EXPECT_EQ("Device given as: device1", m_client->m_result);
   EXPECT_EQ(200, m_client->m_status);
@@ -233,56 +234,76 @@ TEST_F(HttpServerTest, TestSimpleRouting)
   ASSERT_TRUE(session.expired());
 }
 
-#if 0
-// Test diabling of HTTP PUT or POST
-TEST_F(HttpServerTest, PutBlocking)
+TEST_F(HttpServerTest, request_response_with_query_parameters)
 {
-  Routing::QueryMap queries;
-  string body;
+  auto handler = [&](RequestPtr request) -> bool {
+    EXPECT_EQ("device1", get<string>(request->m_parameters["device"]));
+    EXPECT_EQ("//DataItem[@type='POSITION' and @subType='ACTUAL']", get<string>(request->m_parameters["path"]));
+    EXPECT_EQ(123456, get<uint64_t>(request->m_parameters["from"]));
+    EXPECT_EQ(1000, get<int>(request->m_parameters["count"]));
+    EXPECT_EQ(10000, get<int>(request->m_parameters["heartbeat"]));
 
-  queries["time"] = "TIME";
-  queries["line"] = "205";
-  queries["power"] = "ON";
-}
-
-TEST_F(HttpServerTest, test_additional_server_fields)
-{
-  m_server->setHttpHeaders({"Access-Control-Origin: *"});
-  auto probe = [&](const Routing::Request &request,
-                                Response &response) -> bool {
-    if (request.m_parameters.count("device") > 0)
-      response.writeResponse(string("Device given as: ") + get<string>(request.m_parameters.find("device")->second));
-    else
-      response.writeResponse("All Devices");
-    
+    Response resp(status::ok);
+    resp.m_body = "Done";
+    request->m_session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
     return true;
   };
-  stringstream out;
-  TestResponse response(out, m_server->getHttpHeaders());
-  Routing::Request request;
+  
+  string qp(
+      "path={string}&from={unsigned_integer}&"
+      "interval={integer}&count={integer:100}&"
+      "heartbeat={integer:10000}&to={unsigned_integer}");
+  m_server->addRouting({boost::beast::http::verb::get, "/sample?" + qp, handler});
+  m_server->addRouting({boost::beast::http::verb::get, "/{device}/sample?" + qp, handler});
 
-  m_server->addRouting({"GET", "/probe", probe});
-  request.m_verb = "GET";
-  request.m_path = "/probe";
-  ASSERT_TRUE(m_server->dispatch(request, response));
+  start();
+  startClient();
 
-  string r1 = "HTTP/1.1 200 OK\r\n"
-       "Date: TIME+DATE\r\n"
-       "Server: MTConnectAgent\r\n"
-       "Connection: close\r\n"
-       "Expires: -1\r\n"
-       "Cache-Control: private, max-age=0\r\nContent-Length: 11\r\n"
-       "Content-Type: text/plain\r\n"
-       "Access-Control-Origin: *\r\n"
-       "\r\n"
-  "All Devices";
-  out.flush();
-  EXPECT_EQ(r1, out.str());
-  EXPECT_EQ(200, response.m_code);
+  m_client->spawnRequest(http::verb::get,
+                         "/device1/sample"
+                         "?path=//DataItem[@type=%27POSITION%27%20and%20@subType=%27ACTUAL%27]"
+                         "&from=123456&count=1000");
+  
+  while (!m_client->m_done)
+    m_context.run_one();
+  
+  EXPECT_EQ("Done", m_client->m_result);
+  EXPECT_EQ(200, m_client->m_status);
 }
 
-TEST_F(HttpServerTest, test_simple_get_response)
+TEST_F(HttpServerTest, request_put_blocking)
 {
-
+  
 }
-#endif
+
+TEST_F(HttpServerTest, request_put_blocking_with_ip_address)
+{
+  
+}
+
+TEST_F(HttpServerTest, request_with_connect_close)
+{
+  
+}
+
+TEST_F(HttpServerTest, content_payload)
+{
+  
+}
+
+TEST_F(HttpServerTest, content_with_put_values)
+{
+  
+}
+
+TEST_F(HttpServerTest, streaming_response)
+{
+  
+}
+
+TEST_F(HttpServerTest, additional_header_fields)
+{
+  
+}

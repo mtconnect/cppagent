@@ -109,7 +109,7 @@ namespace mtconnect
           auto cb = unhex(*ch);
           if (++ch == str.end())
             break;
-          result << (cb << 4 | unhex(*ch));
+          result << char(cb << 4 | unhex(*ch));
         }
         else
         {
@@ -134,8 +134,9 @@ namespace mtconnect
           auto eq = qv.find('=');
           if (eq != string_view::npos)
           {
-            auto pair = make_pair<string, string>(string(qv.substr(0, eq)),
-                                                  string(qv.substr(eq + 1)));
+            string f(urldecode(qv.substr(0, eq)));
+            string s(urldecode(qv.substr(eq + 1)));
+            auto pair = std::make_pair(f, s);
             queries.insert(pair);
           }
         }
@@ -168,6 +169,18 @@ namespace mtconnect
         read();
       }
     }
+    
+    void SessionImpl::reset()
+    {
+      m_response.reset();
+      m_request.reset();
+      m_serializer.reset();
+      m_buffer.clear();
+      m_boundary.clear();
+      m_mimeType.clear();
+      
+      m_parser.emplace();
+    }
 
 
     void SessionImpl::run()
@@ -181,7 +194,7 @@ namespace mtconnect
     void SessionImpl::read()
     {
       NAMED_SCOPE("SessionImpl::read");
-      m_parser.emplace();
+      reset();
       m_parser->body_limit(100000);
       m_stream.expires_after(30s);
       http::async_read(m_stream,

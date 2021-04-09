@@ -60,11 +60,10 @@ namespace mtconnect
       void requested(boost::system::error_code ec, size_t len);
       void sent(boost::system::error_code ec, size_t len);
       void read();
+      void reset();
 
     protected:
       boost::beast::tcp_stream m_stream;
-      std::optional<boost::beast::http::request_parser<boost::beast::http::string_body>> m_parser;
-      boost::beast::flat_buffer m_buffer;
       Complete    m_complete;
       
       // For Streaming
@@ -76,6 +75,8 @@ namespace mtconnect
       
       // References to retain lifecycle for callbacks.
       RequestPtr m_request;
+      boost::beast::flat_buffer m_buffer;
+      std::optional<boost::beast::http::request_parser<boost::beast::http::string_body>> m_parser;
       std::shared_ptr<void> m_response;
       std::shared_ptr<void> m_serializer;
     };
