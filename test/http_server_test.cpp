@@ -169,10 +169,10 @@ TEST_F(HttpServerTest, TestSimpleRouting)
   
   m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", probe});
   m_server->addRouting({boost::beast::http::verb::get, "/{device}/probe", probe});
-  m_client->m_done = false;
   
   start();
-  
+  m_client->m_done = false;
+
   while (!m_server->isListening())
     m_context.run_one();
   

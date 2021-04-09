@@ -293,7 +293,7 @@ namespace mtconnect
       ext.insert("\r\nContent-length: " + to_string(body.length()) + ";\r\n\r\n");
       
       net::const_buffers_1 buf(body.c_str(), body.size());
-      http::chunk_body chunk{http::make_chunk(buf,move(ext))};
+      http::chunk_body chunk{http::make_chunk(buf, move(ext))};
       
       async_write(m_stream, chunk,
                   beast::bind_front_handler(&SessionImpl::sent,
@@ -303,33 +303,31 @@ namespace mtconnect
     void SessionImpl::writeResponse(const Response &response, Complete complete)
     {
       using namespace std;
+      using namespace http;
+
       m_complete = complete;
-      http::response<http::string_body> res
-      {
-        std::piecewise_construct,
-        std::make_tuple(response.m_body),
-        std::make_tuple(response.m_status, 11)// m_req.version())
-      };
-      res.set(http::field::server, "MTConnectAgent");
+      auto res = make_shared<http::response<http::string_body>>(response.m_status, 11);
+      res->body() = response.m_body;
+      res->set(http::field::server, "MTConnectAgent");
       if (!complete)
-        res.set(http::field::connection, "close");
+        res->set(http::field::connection, "close");
       if (response.m_expires == 0s)
       {
-        res.set(http::field::expires, "-1");
-        res.set(http::field::cache_control, "private, max-age=0");
+        res->set(http::field::expires, "-1");
+        res->set(http::field::cache_control, "private, max-age=0");
       }
-      res.set(http::field::content_type, response.m_mimeType);
+      res->set(http::field::content_type, response.m_mimeType);
 //      for (const auto &f : m_fields)
 //      {
 //        //res.set(k, v);
 //      }
 
-      res.content_length(response.m_body.size());
-      res.prepare_payload();
+      res->content_length(response.m_body.size());
+      res->prepare_payload();
       
-      http::serializer<false, http::string_body , http::fields> sr{res};
-      
-      async_write(m_stream, sr,
+      m_response = res;
+
+      async_write(m_stream, *res,
                   beast::bind_front_handler(&SessionImpl::sent,
                                             shared_this_ptr()));
     }
