@@ -38,7 +38,7 @@ namespace mtconnect
     Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, bool required)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
-      BOOST_LOG_NAMED_SCOPE("EntityRequirement");
+      NAMED_SCOPE("EntityRequirement");
       
       if (type == ENTITY_LIST)
       {

@@ -25,8 +25,12 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
+#include <boost/asio/coroutine.hpp>
+#include <boost/tokenizer.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "logging.hpp"
+#include "session_impl.hpp"
 
 #include <thread>
 
@@ -42,21 +46,12 @@ namespace mtconnect
     namespace asio = boost::asio;
     namespace ip = boost::asio::ip;
     using tcp = boost::asio::ip::tcp;
+    namespace algo = boost::algorithm;
+    
     using namespace std;
     using boost::placeholders::_1;
     using boost::placeholders::_2;
-
-    class Session : public enable_shared_from_this<Session>
-    {
-    public:
-      Session(tcp::socket &&socket)
-      : m_socket(socket)
-      {}
-      
-    protected:
-      tcp::socket &m_socket;
-      unique_ptr<http::request_parser<http::string_body>> m_parser;
-    };
+    
 
     void Server::start()
     {
@@ -67,7 +62,7 @@ namespace mtconnect
       }
       catch (exception &e)
       {
-        BOOST_LOG_TRIVIAL(fatal) << "Cannot start server: " << e.what();
+        LOG(fatal) << "Cannot start server: " << e.what();
         std::exit(1);
       }
     }
@@ -75,7 +70,7 @@ namespace mtconnect
     // Listen for an HTTP server connection
     void Server::listen()
     {
-      BOOST_LOG_NAMED_SCOPE("Server::listen");
+      NAMED_SCOPE("Server::listen");
       
       beast::error_code ec;
       
@@ -95,130 +90,63 @@ namespace mtconnect
         fail(ec, "Cannot open server socket");
         return;
       }
-
       m_acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
       if (ec)
       {
         fail(ec, "Cannot set reuse address");
         return;
       }
-      
       m_acceptor.bind(ep, ec);
       if (ec)
       {
         fail(ec, "Cannot bind to server address");
         return;
       }
-      
+      if (m_port == 0)
+      {
+        m_port = m_acceptor.local_endpoint().port();
+      }
+
       m_acceptor.listen(net::socket_base::max_listen_connections, ec);
       if (ec)
       {
         fail(ec, "Cannot set listen queue length");
         return;
       }
-      
+       
+      m_listening = true;
       m_acceptor.async_accept(net::make_strand(m_context),
                               beast::bind_front_handler(&Server::accept, this));
     }
 
     void Server::accept(beast::error_code ec, tcp::socket socket)
     {
-      BOOST_LOG_NAMED_SCOPE("Server::accept");
+      NAMED_SCOPE("Server::accept");
 
       if (ec)
       {
+        LOG(error) << ec.category().message(ec.value()) << ": "
+        << ec.message();
+
         fail(ec, "Accept failed");
       }
       else
       {
-        session(ec, socket);
+        auto session = make_shared<SessionImpl>(socket, m_fields, [this](RequestPtr request){
+          dispatch(request);
+          return true; }, m_errorFunction);
+        session->run();
         m_acceptor.async_accept(net::make_strand(m_context),
                                 beast::bind_front_handler(&Server::accept, this));
       }
     }
     
-    static Routing::QueryMap getQueries(const std::string& queries)
-    {
-      Routing::QueryMap queryMap;
-      std::string tmpStr = queries;
-      try
-      {
-        while (!tmpStr.empty())
-        {
-          auto ptr = tmpStr.find_first_of("&");
-          if (ptr != std::string().npos)
-          {
-            std::string string1 = tmpStr.substr(0,ptr);
-            tmpStr = tmpStr.substr(ptr+1);
-            ptr = string1.find_first_of('=');
-            if (ptr != std::string().npos){
-              queryMap.insert(std::pair<std::string,std::string >(string1.substr(0,ptr),string1.substr(ptr+1)));
-            }
-            else{
-              throw("String does not contain a query.");
-            }
-          }
-          else
-          {
-            //get the last parameter set
-            ptr = tmpStr.find_first_of("=");
-            if (ptr != std::string().npos){
-              queryMap.insert(std::pair<std::string,std::string >(tmpStr.substr(0,ptr),tmpStr.substr(ptr+1)));
-              tmpStr.clear();
-            }
-            else{
-              throw("Error: string does not contain a query.");
-            }
-          }
-        }
-        return queryMap;
-      }
-      catch (exception& e)
-      {
-        BOOST_LOG_TRIVIAL(error) << __func__ << " error: " <<e.what();
-        return queryMap;
-      }
-    }
+#if 0
 
-    static Routing::QueryMap parseAsset(const std::string &s1, const std::string &s2)
-    {
-      Routing::QueryMap queryMap;
-      std::string tmpStr = s1;
-      try
-      {
-        if (tmpStr.empty()) throw("queries does not contain a query.");
-        std::regex reg("([a-zA-Z0-9]+)=([\"a-zA-Z-0-9\"]+)&?");
-        std::smatch match;
-
-        while (regex_search(tmpStr, match, reg))
-        {
-          string str1(match[1]);
-          string str2(match[2]);
-          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
-          tmpStr = match.suffix().str();
-        }
-        tmpStr = s2;
-        while (regex_search(tmpStr, match, reg))
-        {
-          string str1(match[1]);
-          string str2(match[2]);
-          queryMap.insert(std::pair<std::string,std::string >(str1,str2));
-          tmpStr = match.suffix().str();
-        }
-      }
-      catch (exception& e)
-      {
-        BOOST_LOG_TRIVIAL(error) << __func__ << " error: " <<e.what();
-        return queryMap;
-      }
-      return queryMap;
-    }
-
-    
     //Parse http::request and return
     static Routing::Request getRequest(const http::request<http::string_body>& req, const tcp::socket& socket)
     {
-      BOOST_LOG_NAMED_SCOPE("Server::getRequest");
+      NAMED_SCOPE("Server::getRequest");
 
       Routing::Request request;
 
@@ -275,22 +203,20 @@ namespace mtconnect
       }
       catch (exception &e)
       {
-        BOOST_LOG_TRIVIAL(error) << "method:" << __func__  <<" error: " <<e.what();
+        LOG(error) << "method:" << __func__  <<" error: " <<e.what();
       }
       return request;
     }
-
     
-    void Server::session(beast::error_code ec, tcp::socket &socket)
+    void Server::session(tcp::socket &socket)
     {
-      BOOST_LOG_NAMED_SCOPE("Server::session");
+      NAMED_SCOPE("Server::session");
 
-      tcp::socket m_socket(std::move(socket));
       try{
         beast::error_code ec;
         beast::flat_buffer buffer;
         http::request<http::string_body> req;
-        http::read(m_socket, buffer, req, ec);
+        http::read(socket, buffer, req, ec);
 
         if (ec)
           return fail(ec, "write");
@@ -306,7 +232,7 @@ namespace mtconnect
             stringstream msg;
             msg << "Error processing request from: " << request.m_foreignIp << " - "
                 << "Server is read-only. Only GET verb supported";
-            BOOST_LOG_TRIVIAL(error) << msg.str();
+            LOG(error) << msg.str();
 
             if (m_errorFunction)
               m_errorFunction(request.m_accepts, *response, msg.str(), FORBIDDEN);
@@ -315,23 +241,23 @@ namespace mtconnect
           }
         }
 
-        if(!handleRequest(request, response))
+        if(!handleRequest(request))
         {
-          BOOST_LOG_TRIVIAL(error) << "Server::session error handling Request. ";
+          LOG(error) << "error handling Request. ";
         };
 
         buffer.clear();
       }
       catch (exception &e)
       {
-        BOOST_LOG_TRIVIAL(error) << "Server::listen error: "<< e.what();
+        LOG(error) << "error handling Request: "<< e.what();
       }
     }
 
 
-    bool Server::handleRequest(Routing::Request &request, ResponsePtr &response)
+    bool Server::handleRequest(Routing::Request &request)
     {
-      BOOST_LOG_NAMED_SCOPE("Server::handleRequest");
+      NAMED_SCOPE("Server::handleRequest");
 
       bool res {true};
       try
@@ -341,7 +267,7 @@ namespace mtconnect
           stringstream msg;
           msg << "Error processing request from: " << request.m_foreignIp << " - "
               << "No matching route for: " << request.m_verb << " " << request.m_path;
-          BOOST_LOG_TRIVIAL(error) << msg.str();
+          LOG(error) << msg.str();
 
           if (m_errorFunction)
             m_errorFunction(request.m_accepts, *response, msg.str(), BAD_REQUEST);
@@ -350,7 +276,7 @@ namespace mtconnect
       }
       catch (RequestError &e)
       {
-        BOOST_LOG_TRIVIAL(error) << "Error processing request from: " << request.m_foreignIp << " - "
+        LOG(error) << "Error processing request from: " << request.m_foreignIp << " - "
                  << e.what();
         response->writeResponse(e.m_body, e.m_contentType, e.m_code);
         res = false;
@@ -360,7 +286,7 @@ namespace mtconnect
         stringstream msg;
         msg << "Parameter Error processing request from: " << request.m_foreignIp << " - "
             << e.what();
-        BOOST_LOG_TRIVIAL(error) << msg.str();
+        LOG(error) << msg.str();
 
         if (m_errorFunction)
           m_errorFunction(request.m_accepts, *response, msg.str(), BAD_REQUEST);
@@ -371,13 +297,14 @@ namespace mtconnect
       return res;
     }
 
+#endif
 
 
 //------------------------------------------------------------------------------
 
 // Report a failure
     void Server::fail(beast::error_code ec, char const *what) {
-      BOOST_LOG_TRIVIAL(error)  << " error: " << ec.message();
+      LOG(error)  << " error: " << ec.message();
     }
 
   }  // namespace http_server

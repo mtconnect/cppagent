@@ -19,3 +19,6 @@
 
 #include <boost/log/attributes.hpp>
 #include <boost/log/trivial.hpp>
+
+#define LOG BOOST_LOG_TRIVIAL
+#define NAMED_SCOPE BOOST_LOG_NAMED_SCOPE

@@ -64,7 +64,7 @@ namespace mtconnect
     void ComputeMetrics::compute(boost::system::error_code ec)
 
     {
-      BOOST_LOG_NAMED_SCOPE("pipeline.deliver");
+      NAMED_SCOPE("pipeline.deliver");
 
       if (!ec)
       {
@@ -78,7 +78,7 @@ namespace mtconnect
         auto di = m_contract->findDataItem("Agent", *m_dataItem);
         if (di == nullptr)
         {
-          BOOST_LOG_TRIVIAL(warning) << "Could not find data item: " << *m_dataItem << ", exiting metrics";
+          LOG(warning) << "Could not find data item: " << *m_dataItem << ", exiting metrics";
           return;
         }
         
@@ -99,9 +99,9 @@ namespace mtconnect
           auto delta = count - m_last;
           
           double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
-          BOOST_LOG_TRIVIAL(debug) << *m_dataItem
+          LOG(debug) << *m_dataItem
           << " - Average for last 1 minutes: " << (avg / dt.count());
-          BOOST_LOG_TRIVIAL(debug) << *m_dataItem
+          LOG(debug) << *m_dataItem
           << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
           
           m_last = count;

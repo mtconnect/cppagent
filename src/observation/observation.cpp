@@ -89,7 +89,7 @@ namespace mtconnect
     ObservationPtr Observation::make(const DataItemPtr dataItem, const Properties &incompingProps,
                                      const Timestamp &timestamp, entity::ErrorList &errors)
     {
-      BOOST_LOG_NAMED_SCOPE("Observation");
+      NAMED_SCOPE("Observation");
       
       auto props = entity::Properties(incompingProps);
       setProperties(dataItem, props);
@@ -136,11 +136,11 @@ namespace mtconnect
       auto ent = getFactory()->create(key, props, errors);
       if (!ent)
       {
-        BOOST_LOG_TRIVIAL(warning)
+        LOG(warning)
                  << "Could not parse properties for data item: " << dataItem->getId();
         for (auto &e : errors)
         {
-          BOOST_LOG_TRIVIAL(warning) << "   Error: " << e->what();
+          LOG(warning) << "   Error: " << e->what();
         }
         throw EntityError("Invalid properties for data item");
       }

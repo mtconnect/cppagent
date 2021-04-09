@@ -127,7 +127,7 @@ namespace mtconnect
 
     AgentConfiguration::AgentConfiguration()
     {
-      BOOST_LOG_NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
+      NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
             
       bool success = false;
 
@@ -160,7 +160,7 @@ namespace mtconnect
 
     void AgentConfiguration::initialize(int argc, const char *argv[])
     {
-      BOOST_LOG_NAMED_SCOPE("AgentConfiguration::initialize");
+      NAMED_SCOPE("AgentConfiguration::initialize");
 
       MTConnectService::initialize(argc, argv);
 
@@ -181,7 +181,7 @@ namespace mtconnect
         {
           if (!m_exePath.empty())
           {
-            BOOST_LOG_TRIVIAL(info) << "Cannot find " << m_configFile
+            LOG(info) << "Cannot find " << m_configFile
                      << " in current directory, searching exe path: " << m_exePath;
             cerr << "Cannot find " << m_configFile
                  << " in current directory, searching exe path: " << m_exePath << endl;
@@ -189,7 +189,7 @@ namespace mtconnect
           }
           else
           {
-            BOOST_LOG_TRIVIAL(fatal) << "Agent failed to load: Cannot find configuration file: '"
+            LOG(fatal) << "Agent failed to load: Cannot find configuration file: '"
                      << m_configFile;
             cerr << "Agent failed to load: Cannot find configuration file: '" << m_configFile
                  << std::endl;
@@ -205,7 +205,7 @@ namespace mtconnect
       }
       catch (std::exception &e)
       {
-        BOOST_LOG_TRIVIAL(fatal) << "Agent failed to load: " << e.what();
+        LOG(fatal) << "Agent failed to load: " << e.what();
         cerr << "Agent failed to load: " << e.what() << std::endl;
         optionList.usage();
       }
@@ -225,12 +225,12 @@ namespace mtconnect
           CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
       if (handle == INVALID_HANDLE_VALUE)
       {
-        BOOST_LOG_TRIVIAL(warning) << "Could not find file: " << file;
+        LOG(warning) << "Could not find file: " << file;
         return 0;
       }
       if (!GetFileTime(handle, &createTime, &accessTime, &writeTime))
       {
-        BOOST_LOG_TRIVIAL(warning) << "GetFileTime failed for: " << file;
+        LOG(warning) << "GetFileTime failed for: " << file;
         writeTime = {0, 0};
       }
       CloseHandle(handle);
@@ -246,7 +246,7 @@ namespace mtconnect
       struct stat buf = {0};
       if (stat(file.c_str(), &buf) != 0)
       {
-        BOOST_LOG_TRIVIAL(warning) << "Cannot stat file (" << errno << "): " << file;
+        LOG(warning) << "Cannot stat file (" << errno << "): " << file;
         perror("Cannot stat file");
         return 0;
       }
@@ -260,26 +260,26 @@ namespace mtconnect
       // shut this off for now.
       return;
 
-      BOOST_LOG_NAMED_SCOPE("AgentConfiguration::monitorThread");
+      NAMED_SCOPE("AgentConfiguration::monitorThread");
 
       time_t devices_at_start = 0, cfg_at_start = 0;
 
-      BOOST_LOG_TRIVIAL(debug) << "Monitoring files: " << m_configFile << " and " << m_devicesFile
+      LOG(debug) << "Monitoring files: " << m_configFile << " and " << m_devicesFile
                << ", will warm start if they change.";
 
       if ((cfg_at_start = GetFileModificationTime(m_configFile)) == 0)
       {
-        BOOST_LOG_TRIVIAL(warning) << "Cannot stat config file: " << m_configFile << ", exiting monitor";
+        LOG(warning) << "Cannot stat config file: " << m_configFile << ", exiting monitor";
         return;
       }
       if ((devices_at_start = GetFileModificationTime(m_devicesFile)) == 0)
       {
-        BOOST_LOG_TRIVIAL(warning) << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
+        LOG(warning) << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
         return;
       }
 
-      BOOST_LOG_TRIVIAL(trace) << "Configuration start time: " << cfg_at_start;
-      BOOST_LOG_TRIVIAL(trace) << "Device start time: " << devices_at_start;
+      LOG(trace) << "Configuration start time: " << cfg_at_start;
+      LOG(trace) << "Device start time: " << devices_at_start;
 
       bool changed = false;
 
@@ -293,31 +293,31 @@ namespace mtconnect
 
         if ((cfg = GetFileModificationTime(m_configFile)) == 0)
         {
-          BOOST_LOG_TRIVIAL(warning) << "Cannot stat config file: " << m_configFile
+          LOG(warning) << "Cannot stat config file: " << m_configFile
                    << ", retrying in 10 seconds";
           check = false;
         }
 
         if ((devices = GetFileModificationTime(m_devicesFile)) == 0)
         {
-          BOOST_LOG_TRIVIAL(warning) << "Cannot stat devices file: " << m_devicesFile
+          LOG(warning) << "Cannot stat devices file: " << m_devicesFile
                    << ", retrying in 10 seconds";
           check = false;
         }
 
-        BOOST_LOG_TRIVIAL(trace) << "Configuration times: " << cfg_at_start << " -- " << cfg;
-        BOOST_LOG_TRIVIAL(trace) << "Device times: " << devices_at_start << " -- " << devices;
+        LOG(trace) << "Configuration times: " << cfg_at_start << " -- " << cfg;
+        LOG(trace) << "Device times: " << devices_at_start << " -- " << devices;
 
         // Check if the files have changed.
         if (check && (cfg_at_start != cfg || devices_at_start != devices))
         {
           time_t now = time(nullptr);
-          BOOST_LOG_TRIVIAL(warning)
+          LOG(warning)
               << "Detected change in configuration files. Will reload when youngest file is at least "
               << m_minimumConfigReloadAge << " seconds old";
-          BOOST_LOG_TRIVIAL(warning) << "    Devices.xml file modified " << (now - devices)
+          LOG(warning) << "    Devices.xml file modified " << (now - devices)
                    << " seconds ago";
-          BOOST_LOG_TRIVIAL(warning) << "    ...cfg file modified " << (now - cfg) << " seconds ago";
+          LOG(warning) << "    ...cfg file modified " << (now - cfg) << " seconds ago";
 
           changed =
               (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
@@ -330,7 +330,7 @@ namespace mtconnect
       // stop agent and signal to warm start
       if (m_agent->is_running() && changed)
       {
-        BOOST_LOG_TRIVIAL(warning)
+        LOG(warning)
         << "Monitor thread has detected change in configuration files, restarting agent.";
         
         m_restart = true;
@@ -338,14 +338,14 @@ namespace mtconnect
         delete m_agent;
         m_agent = nullptr;
         
-        BOOST_LOG_TRIVIAL(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
+        LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
         
         // Re initialize
         const char *argv[] = {m_configFile.c_str()};
         initialize(1, argv);
       }
 #endif
-      BOOST_LOG_TRIVIAL(debug) << "Monitor thread is exiting";
+      LOG(debug) << "Monitor thread is exiting";
     }
 
     void AgentConfiguration::start()
@@ -356,7 +356,7 @@ namespace mtconnect
         if (m_monitorFiles)
         {
           // Start the file monitor to check for changes to cfg or devices.
-          BOOST_LOG_TRIVIAL(debug) << "Waiting for monitor thread to exit to restart agent";
+          LOG(debug) << "Waiting for monitor thread to exit to restart agent";
           //mon = std::make_unique<>(
           //make_mfp(*this, &AgentConfiguration::monitorThread));
         }
@@ -375,20 +375,20 @@ namespace mtconnect
         if (m_restart && m_monitorFiles)
         {
           // Will destruct and wait to re-initialize.
-          BOOST_LOG_TRIVIAL(debug) << "Waiting for monitor thread to exit to restart agent";
+          LOG(debug) << "Waiting for monitor thread to exit to restart agent";
           //mon.reset(nullptr);
-          BOOST_LOG_TRIVIAL(debug) << "Monitor has exited";
+          LOG(debug) << "Monitor has exited";
         }
       } while (m_restart);
     }
 
     void AgentConfiguration::stop()
     {
-      BOOST_LOG_TRIVIAL(info) << "Agent stopping";
+      LOG(info) << "Agent stopping";
       m_restart = false;
       m_agent->stop();
       m_context.stop();
-      BOOST_LOG_TRIVIAL(info) << "Agent Configuration stopped";
+      LOG(info) << "Agent Configuration stopped";
     }
 
     DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
@@ -545,7 +545,7 @@ namespace mtconnect
             else if (sched == "WEEKLY")
               rotation_time_interval = 168;
             else if (sched != "NEVER")
-              BOOST_LOG_TRIVIAL(error) << "Invalid schedule value.";
+              LOG(error) << "Invalid schedule value.";
           }
         }
 
@@ -619,7 +619,7 @@ namespace mtconnect
 
     void AgentConfiguration::loadConfig(const std::string &file)
     {
-      BOOST_LOG_NAMED_SCOPE("config.load");
+      NAMED_SCOPE("config.load");
 
       // Now get our configuration
       auto config = Parser::parse(file);
@@ -699,7 +699,7 @@ namespace mtconnect
       // Check for schema version
       m_version = get<string>(options[configuration::SchemaVersion]);
       auto port = get<int>(options[configuration::Port]);
-      BOOST_LOG_TRIVIAL(info) << "Starting agent on port " << port;
+      LOG(info) << "Starting agent on port " << port;
 
       auto server = make_unique<http_server::Server>(m_context, 
           port, get<string>(options[configuration::ServerIp]), options);
@@ -757,7 +757,7 @@ namespace mtconnect
       using namespace adapter;
       using namespace pipeline;
 
-      BOOST_LOG_NAMED_SCOPE("config.adapters");
+      NAMED_SCOPE("config.adapters");
 
       DevicePtr device;
       auto adapters = config.get_child_optional("Adapters");
@@ -787,13 +787,13 @@ namespace mtconnect
 
           if (!device)
           {
-            BOOST_LOG_TRIVIAL(warning) << "Cannot locate device name '" << deviceName << "', trying default";
+            LOG(warning) << "Cannot locate device name '" << deviceName << "', trying default";
             device = defaultDevice();
             if (device)
             {
               deviceName = *device->getComponentName();
               adapterOptions[configuration::Device] = deviceName;
-              BOOST_LOG_TRIVIAL(info) << "Assigning default device " << deviceName << " to adapter";
+              LOG(info) << "Assigning default device " << deviceName << " to adapter";
             }
           }
           else
@@ -802,7 +802,7 @@ namespace mtconnect
           }
           if (!device)
           {
-            BOOST_LOG_TRIVIAL(warning) << "Cannot locate device name '" << deviceName
+            LOG(warning) << "Cannot locate device name '" << deviceName
                      << "', assuming dynamic";
           }
 
@@ -827,7 +827,7 @@ namespace mtconnect
             adapterOptions[configuration::AdditionalDevices] = deviceList;
           }
 
-          BOOST_LOG_TRIVIAL(info) << "Adding adapter for " << deviceName << " on "
+          LOG(info) << "Adding adapter for " << deviceName << " on "
                    << get<string>(adapterOptions[configuration::Host]) << ":"
                    << get<string>(adapterOptions[configuration::Host]);
 
@@ -844,7 +844,7 @@ namespace mtconnect
 
         auto deviceName = *device->getComponentName();
         adapterOptions[configuration::Device] = deviceName;
-        BOOST_LOG_TRIVIAL(info) << "Adding default adapter for " << device->getName()
+        LOG(info) << "Adding default adapter for " << device->getName()
                  << " on localhost:7878";
 
         auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
@@ -925,7 +925,7 @@ namespace mtconnect
           auto urn = block.second.get_optional<string>("Urn");
           if (block.first != "m" && !urn)
           {
-            BOOST_LOG_TRIVIAL(error) << "Name space must have a Urn: " << block.first;
+            LOG(error) << "Name space must have a Urn: " << block.first;
           }
           else
           {
@@ -937,7 +937,7 @@ namespace mtconnect
               auto xns = cache->registerFile(location, *path, m_version);
               if (!xns)
               {
-                BOOST_LOG_TRIVIAL(debug) << "Cannot register " << urn << " at " << location
+                LOG(debug) << "Cannot register " << urn << " at " << location
                          << " and path " << *path;
               }
             }
@@ -958,7 +958,7 @@ namespace mtconnect
           auto path = file.second.get_optional<string>("Path");
           if (!location || !path)
           {
-            BOOST_LOG_TRIVIAL(error) << "Name space must have a Location (uri) or Directory and Path: "
+            LOG(error) << "Name space must have a Location (uri) or Directory and Path: "
                      << file.first;
           }
           else
@@ -1013,7 +1013,7 @@ namespace mtconnect
         auto location = style->get_optional<string>("Location");
         if (!location)
         {
-          BOOST_LOG_TRIVIAL(error) << "A style must have a Location: " << styleName;
+          LOG(error) << "A style must have a Location: " << styleName;
         }
         else
         {

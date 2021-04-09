@@ -69,7 +69,7 @@ namespace mtconnect
 
     Device::Device(const std::string &name, entity::Properties &props) : Component(name, props)
     {
-      BOOST_LOG_NAMED_SCOPE("device");
+      NAMED_SCOPE("device");
       auto items = getList("DataItems");
       if (items)
       {
@@ -98,7 +98,7 @@ namespace mtconnect
 
       if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
       {
-        BOOST_LOG_TRIVIAL(error) << "Duplicate data item id: " << dataItem->getId()
+        LOG(error) << "Duplicate data item id: " << dataItem->getId()
                  << " for device " << get<string>("name") << ", skipping";
       }
       else

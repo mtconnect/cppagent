@@ -8,6 +8,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/logging.hpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/version.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_helper.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_parser.cpp"
@@ -120,10 +121,13 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/server.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/file_cache.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/file_cache.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/parameter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/request.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/response.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/response.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/routing.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/routing.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/session.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/session_impl.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/session_impl.hpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.hpp"
@@ -166,7 +170,7 @@ target_link_libraries(
     date
     json
     LibXml2::LibXml2
-    Boost::log Boost::log_setup
+    Boost::log Boost::log_setup Boost::coroutine
     $<$<PLATFORM_ID:Linux>:pthread>
 )
 target_compile_definitions(

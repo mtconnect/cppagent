@@ -25,86 +25,27 @@
 #include <string>
 #include <variant>
 
+
+#include <boost/beast/http/verb.hpp>
+#include "parameter.hpp"
+#include "request.hpp"
+
 #include "logging.hpp"
 
 namespace mtconnect
 {
   namespace http_server
   {
-    class ParameterError : public std::logic_error
-    {
-      using std::logic_error::logic_error;
-    };
-
-    class Response;
-    using ResponsePtr = std::unique_ptr<Response>;
+    class Session;
+    using SessionPtr = std::shared_ptr<Session>;
     
     class Routing
     {
     public:
-      enum ParameterType
-      {
-        NONE = 0,
-        STRING = 1,
-        INTEGER = 2,
-        UNSIGNED_INTEGER = 3,
-        DOUBLE = 4
-      };
-      enum UrlPart
-      {
-        PATH,
-        QUERY
-      };
-      using ParameterValue = std::variant<std::monostate, std::string, int32_t, uint64_t, double>;
-      struct Parameter
-      {
-        Parameter() = default;
-        Parameter(const std::string &n, ParameterType t = STRING, UrlPart p = PATH)
-          : m_name(n), m_type(t), m_part(p)
-        {
-        }
-        Parameter(const Parameter &o) = default;
-
-        std::string m_name;
-        ParameterType m_type {STRING};
-        ParameterValue m_default;
-        UrlPart m_part {PATH};
-
-        bool operator<(const Parameter &o) const { return m_name < o.m_name; }
-      };
-
-      using ParameterList = std::list<Parameter>;
-      using QuerySet = std::set<Parameter>;
-      using ParameterMap = std::map<std::string, ParameterValue>;
-      using QueryMap = std::map<std::string, std::string>;
-
-      struct Request
-      {
-        std::string m_body;
-        std::string m_accepts;
-        std::string m_contentType;
-        std::string m_verb;
-        std::string m_path;
-        std::string m_foreignIp;
-        uint16_t m_foreignPort;
-        QueryMap m_query;
-        ParameterMap m_parameters;
-
-        template <typename T>
-        std::optional<T> parameter(const std::string &s) const
-        {
-          auto v = m_parameters.find(s);
-          if (v == m_parameters.end())
-            return std::nullopt;
-          else
-            return std::get<T>(v->second);
-        }
-      };
-
-      using Function = std::function<bool(const Request &, ResponsePtr &response)>;
+      using Function = std::function<bool(RequestPtr)>;
 
       Routing(const Routing &r) = default;
-      Routing(const std::string &verb, const std::string &pattern, const Function function)
+      Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function)
         : m_verb(verb), m_function(function)
       {
         std::string s(pattern);
@@ -120,7 +61,7 @@ namespace mtconnect
 
         pathParameters(s);
       }
-      Routing(const std::string &verb, const std::regex &pattern, const Function function)
+      Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function)
         : m_verb(verb), m_pattern(pattern), m_function(function)
       {
       }
@@ -128,13 +69,13 @@ namespace mtconnect
       const ParameterList &getPathParameters() const { return m_pathParameters; }
       const QuerySet &getQueryParameters() const { return m_queryParameters; }
 
-      bool matches(Request &request, ResponsePtr &response)
+      bool matches(RequestPtr request)
       {
         try
         {
-          request.m_parameters.clear();
+          request->m_parameters.clear();
           std::smatch m;
-          if (m_verb == request.m_verb && std::regex_match(request.m_path, m, m_pattern))
+          if (m_verb == request->m_verb && std::regex_match(request->m_path, m, m_pattern))
           {
             auto s = m.begin();
             s++;
@@ -143,20 +84,20 @@ namespace mtconnect
               if (s != m.end())
               {
                 ParameterValue v(s->str());
-                request.m_parameters.emplace(make_pair(p.m_name, v));
+                request->m_parameters.emplace(make_pair(p.m_name, v));
                 s++;
               }
             }
 
             for (auto &p : m_queryParameters)
             {
-              auto q = request.m_query.find(p.m_name);
-              if (q != request.m_query.end())
+              auto q = request->m_query.find(p.m_name);
+              if (q != request->m_query.end())
               {
                 try
                 {
                   auto v = convertValue(q->second, p.m_type);
-                  request.m_parameters.emplace(make_pair(p.m_name, v));
+                  request->m_parameters.emplace(make_pair(p.m_name, v));
                 }
                 catch (ParameterError &e)
                 {
@@ -167,16 +108,16 @@ namespace mtconnect
               }
               else if (!std::holds_alternative<std::monostate>(p.m_default))
               {
-                request.m_parameters.emplace(make_pair(p.m_name, p.m_default));
+                request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
               }
             }
-            return m_function(request, response);
+            return m_function(request);
           }
         }
 
         catch (ParameterError &e)
         {
-          BOOST_LOG_TRIVIAL(debug) << "Pattern error: " << e.what();
+          LOG(debug) << "Pattern error: " << e.what();
           throw e;
         }
 
@@ -303,7 +244,7 @@ namespace mtconnect
       }
 
     protected:
-      std::string m_verb;
+      boost::beast::http::verb m_verb;
       std::regex m_pattern;
       std::string m_patternText;
       ParameterList m_pathParameters;

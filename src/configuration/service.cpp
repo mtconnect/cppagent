@@ -40,7 +40,7 @@ namespace mtconnect
 
     void MTConnectService::initialize(int argc, const char *argv[])
     {
-      BOOST_LOG_NAMED_SCOPE("init.service");
+      NAMED_SCOPE("init.service");
     }
   }  // namespace configuration
 }  // namespace mtconnect
@@ -165,12 +165,12 @@ namespace mtconnect
       }
       catch (std::exception &e)
       {
-        BOOST_LOG_TRIVIAL(fatal) << "Agent top level exception: " << e.what();
+        LOG(fatal) << "Agent top level exception: " << e.what();
         std::cerr << "Agent top level exception: " << e.what() << std::endl;
       }
       catch (std::string &s)
       {
-        BOOST_LOG_TRIVIAL(fatal) << "Agent top level exception: " << s;
+        LOG(fatal) << "Agent top level exception: " << s;
         std::cerr << "Agent top level exception: " << s << std::endl;
       }
 
@@ -188,7 +188,7 @@ namespace mtconnect
       if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token))
       {
         std::cerr << "OpenProcessToken failed (" << GetLastError() << ")" << std::endl;
-        BOOST_LOG_TRIVIAL(error) << "OpenProcessToken (" << GetLastError() << ")";
+        LOG(error) << "OpenProcessToken (" << GetLastError() << ")";
         return false;
       }
 
@@ -210,7 +210,7 @@ namespace mtconnect
       char path[MAX_PATH] = {0};
       if (!GetModuleFileNameA(nullptr, path, MAX_PATH))
       {
-        BOOST_LOG_TRIVIAL(error) << "Cannot install service (" << GetLastError() << ")";
+        LOG(error) << "Cannot install service (" << GetLastError() << ")";
         std::cerr << "Cannot install service GetModuleFileName failed (" << GetLastError() << ")"
                   << std::endl;
         return;
@@ -218,7 +218,7 @@ namespace mtconnect
 
       if (!isElevated())
       {
-        BOOST_LOG_TRIVIAL(error) << "Process must have elevated permissions to run";
+        LOG(error) << "Process must have elevated permissions to run";
         std::cerr << "Process must have elevated permissions to run" << std::endl;
         return;
       }
@@ -240,7 +240,7 @@ namespace mtconnect
 
       if (!manager)
       {
-        BOOST_LOG_TRIVIAL(error) << "OpenSCManager failed (" << GetLastError() << ")";
+        LOG(error) << "OpenSCManager failed (" << GetLastError() << ")";
         std::cerr << "OpenSCManager failed (" << GetLastError() << ")" << std::endl;
         return;
       }
@@ -260,7 +260,7 @@ namespace mtconnect
                                   nullptr,            // password: no change
                                   nullptr))           // display name: no change
         {
-          BOOST_LOG_TRIVIAL(error) << "ChangeServiceConfig failed (" << GetLastError() << ")";
+          LOG(error) << "ChangeServiceConfig failed (" << GetLastError() << ")";
           std::cerr << "ChangeServiceConfig failed (" << GetLastError() << ")" << std::endl;
           CloseServiceHandle(service);
           CloseServiceHandle(manager);
@@ -286,7 +286,7 @@ namespace mtconnect
 
         if (!service)
         {
-          BOOST_LOG_TRIVIAL(error) << "CreateService failed (" << GetLastError() << ")";
+          LOG(error) << "CreateService failed (" << GetLastError() << ")";
           std::cerr << "CreateService failed (" << GetLastError() << ")" << std::endl;
           CloseServiceHandle(manager);
           return;
@@ -314,7 +314,7 @@ namespace mtconnect
       auto res = RegOpenKeyA(HKEY_LOCAL_MACHINE, "SOFTWARE", &software);
       if (res != ERROR_SUCCESS)
       {
-        BOOST_LOG_TRIVIAL(error) << "Could not open software key (" << res << ")";
+        LOG(error) << "Could not open software key (" << res << ")";
         std::cerr << "Could not open software key (" << res << ")" << std::endl;
         return;
       }
@@ -327,7 +327,7 @@ namespace mtconnect
         RegCloseKey(software);
         if (res != ERROR_SUCCESS)
         {
-          BOOST_LOG_TRIVIAL(error) << "Could not create MTConnect (" << res << ")";
+          LOG(error) << "Could not create MTConnect (" << res << ")";
           std::cerr << "Could not create MTConnect key (" << res << ")" << std::endl;
           return;
         }
@@ -343,7 +343,7 @@ namespace mtconnect
         if (res != ERROR_SUCCESS)
         {
           RegCloseKey(mtc);
-          BOOST_LOG_TRIVIAL(error) << "Could not create " << m_name << " (" << res << ")";
+          LOG(error) << "Could not create " << m_name << " (" << res << ")";
           std::cerr << "Could not create " << m_name << " (" << res << ")" << std::endl;
           return;
         }
@@ -354,14 +354,14 @@ namespace mtconnect
                      m_configFile.size() + 1);
       RegCloseKey(agent);
 
-      BOOST_LOG_TRIVIAL(info) << "Service installed successfully.";
+      LOG(info) << "Service installed successfully.";
     }
 
     void MTConnectService::remove()
     {
       if (!isElevated())
       {
-        BOOST_LOG_TRIVIAL(error) << "Process must have elevated permissions to run";
+        LOG(error) << "Process must have elevated permissions to run";
         std::cerr << "Process must have elevated permissions to run" << std::endl;
         return;
       }
@@ -369,7 +369,7 @@ namespace mtconnect
       auto manager = OpenSCManagerA(nullptr, nullptr, SC_MANAGER_ALL_ACCESS);
       if (!manager)
       {
-        BOOST_LOG_TRIVIAL(error) << "Could not open Service Control Manager";
+        LOG(error) << "Could not open Service Control Manager";
         return;
       }
 
@@ -378,7 +378,7 @@ namespace mtconnect
       manager = nullptr;
       if (!service)
       {
-        BOOST_LOG_TRIVIAL(error) << "Could not open Service " << m_name;
+        LOG(error) << "Could not open Service " << m_name;
         return;
       }
 
@@ -388,15 +388,15 @@ namespace mtconnect
       {
         // Stop the service
         if (!ControlService(service, SERVICE_CONTROL_STOP, &status))
-          BOOST_LOG_TRIVIAL(error) << "Could not stop service " << m_name;
+          LOG(error) << "Could not stop service " << m_name;
         else
-          BOOST_LOG_TRIVIAL(info) << "Successfully stopped service " << m_name;
+          LOG(info) << "Successfully stopped service " << m_name;
       }
 
       if (!::DeleteService(service))
-        BOOST_LOG_TRIVIAL(error) << "Could delete service " << m_name;
+        LOG(error) << "Could delete service " << m_name;
       else
-        BOOST_LOG_TRIVIAL(info) << "Successfully removed service " << m_name;
+        LOG(info) << "Successfully removed service " << m_name;
 
       ::CloseServiceHandle(service);
     }
@@ -422,7 +422,7 @@ namespace mtconnect
       char path[MAX_PATH] = {0};
       if (!GetModuleFileNameA(nullptr, path, MAX_PATH))
       {
-        BOOST_LOG_TRIVIAL(error) << "Cannot get path of executable (" << GetLastError() << ")";
+        LOG(error) << "Cannot get path of executable (" << GetLastError() << ")";
         return;
       }
 
@@ -556,11 +556,11 @@ namespace mtconnect
       switch (dwCtrl)
       {
         case SERVICE_CONTROL_STOP:
-          BOOST_LOG_TRIVIAL(info) << "Service stop requested";
+          LOG(info) << "Service stop requested";
           ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0ul);
           if (g_service)
             g_service->stop();
-          BOOST_LOG_TRIVIAL(info) << "Service stop completed";
+          LOG(info) << "Service stop completed";
 
           ReportSvcStatus(g_svcStatus.dwCurrentState, NO_ERROR, 0ul);
           return;
@@ -595,7 +595,7 @@ namespace mtconnect
         LPCSTR lpszStrings[2] = {nullptr, nullptr};
         char Buffer[80] = {0};
         sprintf_s(Buffer, 80u, "%s failed with %d", szFunction, GetLastError());
-        BOOST_LOG_TRIVIAL(error) << Buffer;
+        LOG(error) << Buffer;
 
         lpszStrings[0] = g_service->name().c_str();
         lpszStrings[1] = Buffer;
@@ -652,11 +652,11 @@ namespace mtconnect
       switch (sig)
       {
         case SIGHUP:
-          BOOST_LOG_TRIVIAL(warning) << "hangup signal catched";
+          LOG(warning) << "hangup signal catched";
           break;
 
         case SIGTERM:
-          BOOST_LOG_TRIVIAL(warning) << "terminate signal catched";
+          LOG(warning) << "terminate signal catched";
           exit(0);
           break;
       }
@@ -746,7 +746,7 @@ namespace mtconnect
           m_pidFile = "agent.pid";
           initialize(argc - 2, argv + 2);
           daemonize();
-          BOOST_LOG_TRIVIAL(info) << "Starting daemon";
+          LOG(info) << "Starting daemon";
         }
         else if (!strcasecmp(argv[1], "debug"))
         {

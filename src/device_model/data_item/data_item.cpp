@@ -104,7 +104,7 @@ namespace mtconnect
       // DataItem public methods
       DataItem::DataItem(const string &name, const Properties &props) : Entity(name, props)
       {
-        BOOST_LOG_NAMED_SCOPE("data_item");
+        NAMED_SCOPE("data_item");
 
         static const char *samples = "Samples";
         static const char *events = "Events";
@@ -266,10 +266,10 @@ namespace mtconnect
         auto v = Constraints::getFactory()->create("Value", url, errors);
         if (!errors.empty())
         {
-          BOOST_LOG_TRIVIAL(error) << "Cannot set constant value for data item " << m_id << " to "
+          LOG(error) << "Cannot set constant value for data item " << m_id << " to "
                    << value;
           for (auto &e : errors)
-            BOOST_LOG_TRIVIAL(error) << e->what();
+            LOG(error) << e->what();
         }
         else
         {

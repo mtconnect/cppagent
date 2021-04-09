@@ -41,7 +41,7 @@ namespace mtconnect
       buffer[2047] = '0';
       va_end(args);
 
-      BOOST_LOG_TRIVIAL(error) << "XML: " << buffer;
+      LOG(error) << "XML: " << buffer;
     }
 
     entity::QName nodeQName(xmlNodePtr node)
@@ -156,7 +156,7 @@ namespace mtconnect
                 }
                 else
                 {
-                  BOOST_LOG_TRIVIAL(warning) << "Unexpected element: " << nodeQName(child);
+                  LOG(warning) << "Unexpected element: " << nodeQName(child);
                   errors.emplace_back(
                       new EntityError("Invalid element '" + nodeQName(child) + "'", qname));
                 }
@@ -190,7 +190,7 @@ namespace mtconnect
     EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, const string &version,
                                ErrorList &errors)
     {
-      BOOST_LOG_NAMED_SCOPE("entity.xml_parser");
+      NAMED_SCOPE("entity.xml_parser");
       EntityPtr entity;
       try
       {
@@ -211,21 +211,21 @@ namespace mtconnect
 
       catch (EntityError e)
       {
-        BOOST_LOG_TRIVIAL(error) << "Cannot parse XML document: " << e.what();
+        LOG(error) << "Cannot parse XML document: " << e.what();
         errors.emplace_back(e.dup());
         entity.reset();
       }
 
       catch (XmlError e)
       {
-        BOOST_LOG_TRIVIAL(error) << "Cannot parse XML document: " << e.what();
+        LOG(error) << "Cannot parse XML document: " << e.what();
         errors.emplace_back(new EntityError(e.what()));
         entity.reset();
       }
 
       catch (...)
       {
-        BOOST_LOG_TRIVIAL(error) << "Cannot parse XML document: unknown error";
+        LOG(error) << "Cannot parse XML document: unknown error";
         errors.emplace_back(new EntityError("Unknown Error"));
         entity.reset();
       }

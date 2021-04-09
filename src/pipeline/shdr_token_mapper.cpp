@@ -152,7 +152,7 @@ namespace mtconnect
         }
         catch (entity::PropertyError &e)
         {
-          BOOST_LOG_TRIVIAL(warning) << "Cannot convert value for: " << *token << " - " << e.what();
+          LOG(warning) << "Cannot convert value for: " << *token << " - " << e.what();
           throw;
         }
       }
@@ -166,7 +166,7 @@ namespace mtconnect
                                                    const TokenList::const_iterator &end,
                                                    ErrorList &errors)
     {
-      BOOST_LOG_NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.toDataItem");
+      NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.toDataItem");
       auto dataItemKey = splitKey(*token++);
       string device = dataItemKey.second.value_or(m_defaultDevice.value_or(""));
       auto dataItem = m_contract->findDataItem(device, dataItemKey.first);
@@ -175,10 +175,10 @@ namespace mtconnect
       {
         // resync to next item
         if (m_logOnce.count(dataItemKey.first) > 0)
-          BOOST_LOG_TRIVIAL(trace) << "Could not find data item: " << dataItemKey.first;
+          LOG(trace) << "Could not find data item: " << dataItemKey.first;
         else
         {
-          BOOST_LOG_TRIVIAL(info) << "Could not find data item: " << dataItemKey.first;
+          LOG(info) << "Could not find data item: " << dataItemKey.first;
           m_logOnce.insert(dataItemKey.first);
         }
 
@@ -230,7 +230,7 @@ namespace mtconnect
       }
       else
       {
-        BOOST_LOG_TRIVIAL(warning) << "Cannot find requirements for " << dataItemKey.first;
+        LOG(warning) << "Cannot find requirements for " << dataItemKey.first;
         throw entity::PropertyError("Unresolved data item requirements");
       }
 
@@ -298,7 +298,7 @@ namespace mtconnect
 
     const EntityPtr ShdrTokenMapper::operator()(const EntityPtr entity)
     {
-      BOOST_LOG_NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.operator");
+      NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.operator");
       if (auto timestamped = std::dynamic_pointer_cast<Timestamped>(entity))
       {
         // Don't copy the tokens.
@@ -347,13 +347,13 @@ namespace mtconnect
           }
           catch (entity::EntityError &e)
           {
-            BOOST_LOG_TRIVIAL(error) << "Could not create observation: " << e.what();
+            LOG(error) << "Could not create observation: " << e.what();
           }
           for (auto &e : errors)
           {
-            BOOST_LOG_TRIVIAL(warning) << "Error while parsing tokens: " << e->what();
+            LOG(warning) << "Error while parsing tokens: " << e->what();
             for (auto it = start; it != token; it++)
-              BOOST_LOG_TRIVIAL(warning) << "    token: " << *token;
+              LOG(warning) << "    token: " << *token;
           }
         }
 

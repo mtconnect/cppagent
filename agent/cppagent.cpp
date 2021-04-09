@@ -29,7 +29,7 @@ using namespace mtconnect;
 
 int main(int aArgc, const char *aArgv[])
 {
-  BOOST_LOG_NAMED_SCOPE("MAIN");
+  NAMED_SCOPE("MAIN");
 
   configuration::AgentConfiguration config;
 

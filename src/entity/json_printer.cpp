@@ -52,7 +52,7 @@ namespace mtconnect
                                           [&row, &c](const int64_t &i) { row[c.m_key] = i; },
                                           [&row, &c](const double &d) { row[c.m_key] = d; },
                                           [](auto &a) {
-                                            BOOST_LOG_TRIVIAL(error)
+                                            LOG(error)
                                                      << "Invalid  variant type for table cell";
                                           }},
                                       c.m_value);
@@ -81,7 +81,7 @@ namespace mtconnect
 
     json JsonPrinter::printEntity(const EntityPtr entity) const
     {
-      BOOST_LOG_NAMED_SCOPE("entity.json_printer");
+      NAMED_SCOPE("entity.json_printer");
       json jsonObj;
 
       for (auto &e : entity->getProperties())

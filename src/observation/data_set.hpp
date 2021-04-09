@@ -238,14 +238,14 @@ namespace mtconnect
 
       catch (regex_error &e)
       {
-        BOOST_LOG_TRIVIAL(warning) << "Error parsing \"" << rest << "\", \nReason: " << e.what();
+        LOG(warning) << "Error parsing \"" << rest << "\", \nReason: " << e.what();
       }
 
       // If there is leftover text, the text was invalid.
       // Warn that it is being discarded
       if (!rest.empty())
       {
-        BOOST_LOG_TRIVIAL(warning) << "Cannot parse complete string, malformed data set: '" << rest
+        LOG(warning) << "Cannot parse complete string, malformed data set: '" << rest
                << "'";
       }
     }

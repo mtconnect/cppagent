@@ -73,8 +73,8 @@ add_agent_test(json_parser TRUE entity)
 add_agent_test(json_printer TRUE entity)
 add_agent_test(qname FALSE entity)
 
-#add_agent_test(file_cache FALSE http_server)
-#add_agent_test(http_server FALSE http_server)
+add_agent_test(file_cache FALSE http_server)
+add_agent_test(http_server FALSE http_server)
 add_agent_test(routing TRUE http_server)
 
 add_agent_test(json_printer_asset TRUE json)

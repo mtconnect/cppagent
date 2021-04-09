@@ -120,7 +120,7 @@ namespace mtconnect
                                           addSimpleElement(writer, "Cell", format(d), attrs);
                                         },
                                         [](auto &a) {
-                                          BOOST_LOG_TRIVIAL(error)
+                                          LOG(error)
                                                    << "Invalid type for DataSetVariant cell";
                                         }},
                                     c.m_value);
@@ -174,7 +174,7 @@ namespace mtconnect
     void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity,
                            const std::unordered_set<std::string> &namespaces)
     {
-      BOOST_LOG_NAMED_SCOPE("entity.xml_printer");
+      NAMED_SCOPE("entity.xml_printer");
       string qname = stripUndeclaredNamespace(entity->getName(), namespaces);
       AutoElement element(writer, qname);
 

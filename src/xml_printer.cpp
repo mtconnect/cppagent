@@ -108,7 +108,7 @@ namespace mtconnect
   XmlPrinter::XmlPrinter(const string version, bool pretty)
     : Printer(pretty), m_schemaVersion(version)
   {
-    BOOST_LOG_NAMED_SCOPE("xml.printer");
+    NAMED_SCOPE("xml.printer");
     if (m_schemaVersion.empty())
       m_schemaVersion = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
   }
@@ -379,11 +379,11 @@ namespace mtconnect
     }
     catch (string error)
     {
-      BOOST_LOG_TRIVIAL(error) << "printError: " << error;
+      LOG(error) << "printError: " << error;
     }
     catch (...)
     {
-      BOOST_LOG_TRIVIAL(error) << "printError: unknown error";
+      LOG(error) << "printError: unknown error";
     }
 
     return ret;
@@ -416,11 +416,11 @@ namespace mtconnect
     }
     catch (string error)
     {
-      BOOST_LOG_TRIVIAL(error) << "printProbe: " << error;
+      LOG(error) << "printProbe: " << error;
     }
     catch (...)
     {
-      BOOST_LOG_TRIVIAL(error) << "printProbe: unknown error";
+      LOG(error) << "printProbe: unknown error";
     }
 
     return ret;
@@ -493,11 +493,11 @@ namespace mtconnect
     }
     catch (string error)
     {
-      BOOST_LOG_TRIVIAL(error) << "printSample: " << error;
+      LOG(error) << "printSample: " << error;
     }
     catch (...)
     {
-      BOOST_LOG_TRIVIAL(error) << "printSample: unknown error";
+      LOG(error) << "printSample: unknown error";
     }
 
     return ret;
@@ -526,11 +526,11 @@ namespace mtconnect
     }
     catch (string error)
     {
-      BOOST_LOG_TRIVIAL(error) << "printAssets: " << error;
+      LOG(error) << "printAssets: " << error;
     }
     catch (...)
     {
-      BOOST_LOG_TRIVIAL(error) << "printAssets: unknown error";
+      LOG(error) << "printAssets: unknown error";
     }
 
     return ret;

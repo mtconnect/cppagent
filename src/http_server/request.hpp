@@ -17,37 +17,42 @@
 
 #pragma once
 
-#include <boost/asio/ip/tcp.hpp>
 
-#include "utilities.hpp"
-#include <unordered_map>
-
-#include <boost/beast/http/status.hpp>
-
-
-namespace net = boost::asio;            // from <boost/asio.hpp>
+#include <boost/beast/http/verb.hpp>
+#include "parameter.hpp"
 
 namespace mtconnect
 {
-  class Printer;
-  
   namespace http_server
   {
-    using status = boost::beast::http::status;
-
-    struct Response
+    class Session;
+    using SessionPtr = std::shared_ptr<Session>;
+    
+    struct Request
     {
-      Response(status status = status::ok,
-               const std::string &body = "",
-               const std::string &mimeType = "text/xml")
-      : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
+      boost::beast::http::verb m_verb;
+      std::string m_body;
+      std::string m_accepts;
+      std::string m_contentType;
+      std::string m_path;
+      std::string m_foreignIp;
+      uint16_t m_foreignPort;
+      QueryMap m_query;
+      ParameterMap m_parameters;
+      SessionPtr m_session;
+      
+      template <typename T>
+      std::optional<T> parameter(const std::string &s) const
       {
+        auto v = m_parameters.find(s);
+        if (v == m_parameters.end())
+          return std::nullopt;
+        else
+          return std::get<T>(v->second);
       }
-
-      status m_status;
-      std::string  m_body;
-      std::string  m_mimeType;
-      std::chrono::seconds m_expires;
     };
-  }  // namespace http_server
-}  // namespace mtconnect
+    
+    using RequestPtr = std::shared_ptr<Request>;
+  }
+}
+

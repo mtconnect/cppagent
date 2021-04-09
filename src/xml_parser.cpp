@@ -63,7 +63,7 @@ namespace mtconnect
     buffer[2047] = '0';
     va_end(args);
 
-    BOOST_LOG_TRIVIAL(error) << "XML: " << buffer;
+    LOG(error) << "XML: " << buffer;
   }
 
   static inline std::string getAttribute(xmlNodePtr node, const char *name)
@@ -78,7 +78,7 @@ namespace mtconnect
     return res;
   }
 
-  XmlParser::XmlParser() { BOOST_LOG_NAMED_SCOPE("xml.parser"); }
+  XmlParser::XmlParser() { NAMED_SCOPE("xml.parser"); }
 
   inline static bool isMTConnectUrn(const char *aUrn)
   {
@@ -201,7 +201,7 @@ namespace mtconnect
         if (!errors.empty())
         {
           for (auto &e : errors)
-            BOOST_LOG_TRIVIAL(warning) << "Error parsing device: " << e->what();
+            LOG(warning) << "Error parsing device: " << e->what();
         }
       }
 
@@ -216,7 +216,7 @@ namespace mtconnect
       if (xpathCtx)
         xmlXPathFreeContext(xpathCtx);
 
-      BOOST_LOG_TRIVIAL(fatal) << "Cannot parse XML file: " << e;
+      LOG(fatal) << "Cannot parse XML file: " << e;
       throw;
     }
     catch (...)
@@ -262,7 +262,7 @@ namespace mtconnect
 
     catch (string e)
     {
-      BOOST_LOG_TRIVIAL(fatal) << "Cannot parse XML document: " << e;
+      LOG(fatal) << "Cannot parse XML document: " << e;
       throw;
     }
   }
@@ -375,7 +375,7 @@ namespace mtconnect
       if (xpathCtx)
         xmlXPathFreeContext(xpathCtx);
 
-      BOOST_LOG_TRIVIAL(warning) << "getDataItems: Could not parse path: " << inputPath;
+      LOG(warning) << "getDataItems: Could not parse path: " << inputPath;
     }
   }
 }  // namespace mtconnect

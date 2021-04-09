@@ -50,14 +50,14 @@ namespace mtconnect
     AgentDevice::AgentDevice(const std::string &name, entity::Properties &props)
       : Device(name, props)
     {
-      BOOST_LOG_NAMED_SCOPE("agent_device");
+      NAMED_SCOPE("agent_device");
       ErrorList errors;
       m_adapters = Component::make("Adapters", {{"id", "__adapters__"s}}, errors);
       if (!errors.empty())
       {
         for (auto &e : errors)
         {
-          BOOST_LOG_TRIVIAL(fatal) << "Cannot create AgentDevice: " << e->what();
+          LOG(fatal) << "Cannot create AgentDevice: " << e->what();
         }
       }
     }

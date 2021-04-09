@@ -63,21 +63,6 @@ namespace mtconnect
   class Agent
   {
   public:
-    struct RequestResult
-    {
-      RequestResult() {};
-      RequestResult(const std::string &body, const http_server::ResponseCode status,
-                    const std::string &format)
-        : m_body(body), m_status(status), m_format(format)
-      {
-      }
-      RequestResult(const RequestResult &) = default;
-
-      std::string m_body;
-      http_server::ResponseCode m_status;
-      std::string m_format;
-    };
-
     // Load agent with the xml configuration
     Agent(boost::asio::io_context &context, std::unique_ptr<http_server::Server> &server,
           std::unique_ptr<http_server::FileCache> &cache, const std::string &configXmlPath,
@@ -183,50 +168,52 @@ namespace mtconnect
     auto getAgentDevice() { return m_agentDevice; }
 
     // MTConnect Requests
-    RequestResult probeRequest(const std::string &format,
+    http_server::Response probeRequest(const Printer *,
                                const std::optional<std::string> &device = std::nullopt);
-    RequestResult currentRequest(
-        const std::string &format, const std::optional<std::string> &device = std::nullopt,
+    http_server::Response currentRequest(const Printer *,
+        const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &at = std::nullopt,
         const std::optional<std::string> &path = std::nullopt);
-    RequestResult sampleRequest(
-        const std::string &format, const int count = 100,
+    http_server::Response sampleRequest(
+                                        const Printer *, const int count = 100,
         const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
         const std::optional<std::string> &path = std::nullopt);
-    RequestResult streamSampleRequest(
-        http_server::ResponsePtr &response, const std::string &format, const int interval,
+    void streamSampleRequest(
+        http_server::SessionPtr session,
+        const Printer *, const int interval,
         const int heartbeat, const int count = 100,
         const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
         const std::optional<std::string> &path = std::nullopt);
     
     // Async stream method
-    void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse, boost::system::error_code ec, std::size_t len);
+    void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
     void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse, boost::system::error_code ec);
     
-    RequestResult streamCurrentRequest(http_server::ResponsePtr &response, const std::string &format,
+    void streamCurrentRequest(http_server::SessionPtr session,
+                                               const Printer *,
                                        const int interval,
                                        const std::optional<std::string> &device = std::nullopt,
                                        const std::optional<std::string> &path = std::nullopt);
     
     void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse, boost::system::error_code ec);
 
-    RequestResult assetRequest(const std::string &format, const int32_t count, const bool removed,
+    http_server::Response assetRequest(const Printer *, const int32_t count, const bool removed,
                                const std::optional<std::string> &type = std::nullopt,
                                const std::optional<std::string> &device = std::nullopt);
-    RequestResult assetIdsRequest(const std::string &format, const std::list<std::string> &ids);
-    RequestResult putAssetRequest(const std::string &format, const std::string &asset,
+    http_server::Response assetIdsRequest(const Printer *, const std::list<std::string> &ids);
+    http_server::Response putAssetRequest(const Printer *, const std::string &asset,
                                   const std::optional<std::string> &type,
                                   const std::optional<std::string> &device = std::nullopt,
                                   const std::optional<std::string> &uuid = std::nullopt);
-    RequestResult deleteAssetRequest(const std::string &format, const std::list<std::string> &ids);
-    RequestResult deleteAllAssetsRequest(const std::string &format,
+    http_server::Response deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
+    http_server::Response deleteAllAssetsRequest(const Printer *,
                                          const std::optional<std::string> &device = std::nullopt,
                                          const std::optional<std::string> &type = std::nullopt);
-    RequestResult putObservationRequest(const std::string &format, const std::string &device,
-                                        const http_server::Routing::QueryMap observations,
+    http_server::Response putObservationRequest(const Printer *, const std::string &device,
+                                        const http_server::QueryMap observations,
                                         const std::optional<std::string> &time = std::nullopt);
 
     // For debugging

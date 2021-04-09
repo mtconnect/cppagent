@@ -56,7 +56,7 @@ namespace mtconnect
       using namespace date::literals;
       using namespace date;
 
-      BOOST_LOG_NAMED_SCOPE("TimestampExtractor");
+      NAMED_SCOPE("TimestampExtractor");
 
       // Extract duration
       string timestamp = token;

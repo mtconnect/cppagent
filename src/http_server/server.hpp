@@ -20,6 +20,7 @@
 #include <boost/bind/bind.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/http/status.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -35,24 +36,19 @@
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
-#include "configuration/config_options.hpp"
 #include "utilities.hpp"
+#include "session.hpp"
 
 namespace mtconnect
 {
   namespace http_server
   {
-    namespace net = boost::asio;            // from <boost/asio.hpp>
-    //namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
-    using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
-
-
     class RequestError : public std::logic_error
     {
     public:
       RequestError(const char *w) : std::logic_error::logic_error(w) {}
       RequestError(const char *w, const std::string &body, const std::string &type,
-                   ResponseCode code)
+                   http_server::status code)
         : std::logic_error::logic_error(w), m_contentType(type), m_body(body), m_code(code)
       {
       }
@@ -61,11 +57,8 @@ namespace mtconnect
 
       std::string m_contentType;
       std::string m_body;
-      ResponseCode m_code;
+      http_server::status m_code;
     };
-
-    using ErrorFunction = std::function<void(const std::string &accepts, Response &response,
-                                             const std::string &msg, const ResponseCode code)>;
 
     class Server
     {
@@ -82,14 +75,10 @@ namespace mtconnect
         {
           m_address = net::ip::make_address(inter);
         }
-        if (m_port == 0 || m_port < 0)
-        {
-          m_port = 5000;
-        }
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
-        m_errorFunction = [](const std::string &accepts, Response &response, const std::string &msg,
-                             const ResponseCode code) {
-          response.writeResponse(msg, code);
+        m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
+          Response response(st, msg, "text/plain");
+          session->writeResponse(response);
           return true;
         };
       }
@@ -106,9 +95,12 @@ namespace mtconnect
       {
         m_fields = fields;
       }
+      
+      auto getPort() const { return m_port; }
 
       // PUT and POST handling
       void enablePut(bool flag = true) { m_putEnabled = flag; }
+      bool isListening() const { return m_listening; }
       bool isPutEnabled() const { return m_putEnabled; }
       void allowPutFrom(const std::string &host) { m_putAllowedHosts.insert(host); }
       bool isPutAllowedFrom(const std::string &host) const
@@ -116,27 +108,20 @@ namespace mtconnect
         return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
       }
 
-      bool dispatch(Routing::Request &request, ResponsePtr &response)
+      bool dispatch(RequestPtr request)
       {
         for (auto &r : m_routings)
         {
-          if (r.matches(request, response))
+          if (r.matches(request))
             return true;
         }
 
         return false;
       }
 
-      void accept(boost::system::error_code ec, tcp::socket socket);
-
-      void session(boost::system::error_code ec, tcp::socket& socket);
-
-      bool handleRequest(Routing::Request &request, ResponsePtr &response);
-
+      void accept(boost::system::error_code ec, boost::asio::ip::tcp::socket soc);
       void fail(boost::system::error_code ec, char const *what);
-
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
-
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
 
     protected:
@@ -147,6 +132,7 @@ namespace mtconnect
 
       bool m_run{false};
       bool m_enableSSL{false};
+      bool m_listening{false};
       
       ConfigOptions m_options;
       // Put handling controls
@@ -157,7 +143,7 @@ namespace mtconnect
       ErrorFunction m_errorFunction;
       StringList m_fields;
       
-      tcp::acceptor m_acceptor;
+      boost::asio::ip::tcp::acceptor m_acceptor;
     };
   }  // namespace http_server
 }  // namespace mtconnect

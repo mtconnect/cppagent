@@ -73,14 +73,14 @@ namespace mtconnect
 
     void Reference::resolve(DevicePtr device)
     {
-      BOOST_LOG_NAMED_SCOPE("reference");
+      NAMED_SCOPE("reference");
       if (m_type == COMPONENT)
       {
         auto comp = device->getComponentById(get<string>("idRef"));
         if (comp)
           m_component = comp;
         else
-          BOOST_LOG_TRIVIAL(warning) << "Refernce: Cannot find Component for idRef "
+          LOG(warning) << "Refernce: Cannot find Component for idRef "
                    << get<string>("idRef");
       }
       else if (m_type == DATA_ITEM)
@@ -89,12 +89,12 @@ namespace mtconnect
         if (di)
           m_dataItem = di;
         else
-          BOOST_LOG_TRIVIAL(warning) << "Refernce: Cannot find DataItem for idRef "
+          LOG(warning) << "Refernce: Cannot find DataItem for idRef "
                    << get<string>("idRef");
       }
       else
       {
-        BOOST_LOG_TRIVIAL(warning) << "Reference: Unknown Reference type for: " << getName();
+        LOG(warning) << "Reference: Unknown Reference type for: " << getName();
       }
     }
 

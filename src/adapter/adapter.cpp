@@ -98,12 +98,12 @@ namespace mtconnect
 
     void Adapter::stop()
     {
-      BOOST_LOG_NAMED_SCOPE("input.adapter.stop");
+      NAMED_SCOPE("input.adapter.stop");
       // Will stop threaded object gracefully Adapter::thread()
-      BOOST_LOG_TRIVIAL(debug) << "Waiting for adapter to stop: " << m_url;
+      LOG(debug) << "Waiting for adapter to stop: " << m_url;
       m_running = false;
       close();
-      BOOST_LOG_TRIVIAL(debug) << "Adapter exited: " << m_url;
+      LOG(debug) << "Adapter exited: " << m_url;
     }
 
     inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }

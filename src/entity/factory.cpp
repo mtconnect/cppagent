@@ -75,7 +75,7 @@ namespace mtconnect
       return copy;
     }
 
-    void Factory::LogError(const std::string &what) { BOOST_LOG_TRIVIAL(warning) << what; }
+    void Factory::LogError(const std::string &what) { LOG(warning) << what; }
 
     void Factory::performConversions(Properties &properties, ErrorList &errors) const
     {
@@ -93,7 +93,7 @@ namespace mtconnect
             }
             catch (PropertyError &e)
             {
-              BOOST_LOG_TRIVIAL(warning) << "Error occurred converting " << r.getName() << ": "
+              LOG(warning) << "Error occurred converting " << r.getName() << ": "
                        << e.what();
               e.setProperty(r.getName());
               errors.emplace_back(e.dup());
@@ -106,7 +106,7 @@ namespace mtconnect
 
     bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
     {
-      BOOST_LOG_NAMED_SCOPE("EntityFactory");
+      NAMED_SCOPE("EntityFactory");
       bool success {true};
       for (auto &p : properties)
         p.first.clearMark();

@@ -109,7 +109,7 @@ namespace mtconnect
               }
               else
               {
-                BOOST_LOG_TRIVIAL(debug) << "Unexpected element: " << it.key();
+                LOG(debug) << "Unexpected element: " << it.key();
                 errors.emplace_back(
                     new EntityError("Invalid element '" + it.key() + "'", entity_name));
               }
@@ -133,7 +133,7 @@ namespace mtconnect
     EntityPtr JsonParser::parse(FactoryPtr factory, const string& document, const string& version,
                                 ErrorList& errors)
     {
-      BOOST_LOG_NAMED_SCOPE("entity.json_parser");
+      NAMED_SCOPE("entity.json_parser");
       EntityPtr entity;
       auto jsonObj = json::parse(document.c_str());
       auto entity_name = jsonObj.begin().key();

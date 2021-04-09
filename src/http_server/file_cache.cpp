@@ -38,7 +38,7 @@ namespace mtconnect
                       {".png", "image/png"},
                       {".ico", "image/x-icon"}}})
     {
-      BOOST_LOG_NAMED_SCOPE("file_cache");
+      NAMED_SCOPE("file_cache");
     }
 
     namespace fs = std::filesystem;
@@ -61,7 +61,7 @@ namespace mtconnect
 
         if (!fs::exists(path))
         {
-          BOOST_LOG_TRIVIAL(warning) << "The following path " << pathName
+          LOG(warning) << "The following path " << pathName
                    << " cannot be found, full path: " << path;
         }
         else if (!fs::is_directory(path))
@@ -87,7 +87,7 @@ namespace mtconnect
       }
       catch (fs::filesystem_error e)
       {
-        BOOST_LOG_TRIVIAL(warning) << "The following path " << pathName
+        LOG(warning) << "The following path " << pathName
                  << " cannot be accessed: " << e.what();
       }
 
@@ -103,13 +103,13 @@ namespace mtconnect
       fs::path path(pathName);
       if (!fs::exists(path))
       {
-        BOOST_LOG_TRIVIAL(warning) << "The following path " << pathName
+        LOG(warning) << "The following path " << pathName
                  << " cannot be found, full path: " << fs::absolute(path);
         return nullopt;
       }
       else if (!fs::is_regular_file(path))
       {
-        BOOST_LOG_TRIVIAL(warning) << "The following path " << path
+        LOG(warning) << "The following path " << path
                  << " is not a regular file: " << fs::absolute(path);
         return nullopt;
       }
@@ -182,7 +182,7 @@ namespace mtconnect
       }
       catch (fs::filesystem_error e)
       {
-        BOOST_LOG_TRIVIAL(warning) << "Cannot open file " << name << ": " << e.what();
+        LOG(warning) << "Cannot open file " << name << ": " << e.what();
       }
 
       return nullptr;
