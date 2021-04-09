@@ -197,7 +197,7 @@ namespace mtconnect
       NAMED_SCOPE("SessionImpl::requested");
       if (ec)
       {
-        fail(status::internal_server_error, "Error sending message - ", ec);
+        fail(status::internal_server_error, "Could not read request", ec);
       }
       else
       {
@@ -207,12 +207,12 @@ namespace mtconnect
         m_request->m_path = parseUrl(string(msg.target()), m_request->m_query);
         
         if (auto a = msg.find(http::field::accept); a != msg.end())
-        m_request->m_accepts = string(a->value());
+          m_request->m_accepts = string(a->value());
         if (auto a = msg.find(http::field::content_type); a != msg.end())
-        m_request->m_contentType = string(a->value());
+          m_request->m_contentType = string(a->value());
+        m_request->m_body = msg.body();
         
         auto remote = m_stream.socket().remote_endpoint();
-        
         m_request->m_foreignIp = remote.address().to_string();
         m_request->m_foreignPort = remote.port();
         
@@ -240,8 +240,8 @@ namespace mtconnect
       {
         if (m_complete)
           m_complete();
+        read();
       }
-      
       m_request.reset();
     }
       
@@ -292,10 +292,8 @@ namespace mtconnect
       ext.insert("\r\nContent-type: " + m_mimeType);
       ext.insert("\r\nContent-length: " + to_string(body.length()) + ";\r\n\r\n");
       
-      net::const_buffers_1 buf(body.c_str(), body.size());
-      http::chunk_body chunk{http::make_chunk(buf, move(ext))};
-      
-      async_write(m_stream, chunk,
+      net::const_buffers_1 buf(body.c_str(), body.size());      
+      async_write(m_stream, http::make_chunk(buf, ext),
                   beast::bind_front_handler(&SessionImpl::sent,
                                             shared_this_ptr()));
     }

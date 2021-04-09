@@ -48,17 +48,39 @@ class Client
 {
 public:
   Client(net::io_context& ioc)
-  : m_context(ioc)
+  : m_context(ioc), m_stream(ioc)
   {
   }
+  
+  ~Client() { close(); }
   
   void fail(beast::error_code ec, char const* what)
   {
     LOG(error) << what << ": " << ec.message() << "\n";
     m_done = true;
+    ASSERT_TRUE(false);
+  }
+  
+  void connect(unsigned short port, net::yield_context yield)
+  {
+    beast::error_code ec;
+
+    // These objects perform our I/O
+    tcp::endpoint server(net::ip::address_v4::from_string("127.0.0.1"), port);
+        
+    // Set the timeout.
+    m_stream.expires_after(std::chrono::seconds(30));
+    
+    // Make the connection on the IP address we get from a lookup
+    m_stream.async_connect(server, yield[ec]);
+    if(ec)
+    {
+      return fail(ec, "connect");
+    }
+    m_connected = true;
   }
 
-  void request(unsigned short port, boost::beast::http::verb verb,
+  void request(boost::beast::http::verb verb,
                std::string const& target,
                net::yield_context yield)
   {
@@ -68,17 +90,6 @@ public:
     m_status = -1;
     m_result.clear();
     
-    // These objects perform our I/O
-    beast::tcp_stream stream(m_context);
-    tcp::endpoint server(net::ip::address_v4::from_string("127.0.0.1"), port);
-        
-    // Set the timeout.
-    stream.expires_after(std::chrono::seconds(30));
-    
-    // Make the connection on the IP address we get from a lookup
-    stream.async_connect(server, yield[ec]);
-    if(ec)
-      return fail(ec, "connect");
     
     // Set up an HTTP GET request message
     http::request<http::string_body> req{verb, target, 11};
@@ -86,10 +97,10 @@ public:
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
     
     // Set the timeout.
-    stream.expires_after(std::chrono::seconds(30));
+    m_stream.expires_after(std::chrono::seconds(30));
     
     // Send the HTTP request to the remote host
-    http::async_write(stream, req, yield[ec]);
+    http::async_write(m_stream, req, yield[ec]);
     if(ec)
       return fail(ec, "write");
     
@@ -100,7 +111,7 @@ public:
     http::response<http::string_body> res;
     
     // Receive the HTTP response
-    http::async_read(stream, b, res, yield[ec]);
+    http::async_read(m_stream, b, res, yield[ec]);
     if(ec)
       return fail(ec, "read");
     
@@ -109,25 +120,24 @@ public:
     
     // Write the message to standard out
     std::cout << res << std::endl;
-    
-    // Gracefully close the socket
-    stream.socket().shutdown(tcp::socket::shutdown_both, ec);
-    
-    m_done = true;
-    
-    // not_connected happens sometimes
-    // so don't bother reporting it.
-    //
-    if(ec && ec != beast::errc::not_connected)
-      return fail(ec, "shutdown");
-    
-    // If we get here then the connection is closed gracefully
+        
+    m_done = true;    
   }
   
+  void close()
+  {
+    beast::error_code ec;
+
+    // Gracefully close the socket
+    m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
+  }
+  
+  bool m_connected{false};
   int m_status;
   std::string m_result;
   asio::io_context &m_context;
   bool m_done{false};
+  beast::tcp_stream m_stream;
 };
 
 class HttpServerTest : public testing::Test
@@ -157,13 +167,18 @@ class HttpServerTest : public testing::Test
 
 TEST_F(HttpServerTest, TestSimpleRouting)
 {
+  weak_ptr<Session> session;
+  
   auto probe = [&](RequestPtr request) -> bool {
+    session = request->m_session;
     Response resp(status::ok);
     if (request->m_parameters.count("device") > 0)
       resp.m_body = string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
     else
       resp.m_body = "All Devices";
-    request->m_session->writeResponse(resp);
+    request->m_session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
     return true;
   };
   
@@ -175,11 +190,19 @@ TEST_F(HttpServerTest, TestSimpleRouting)
 
   while (!m_server->isListening())
     m_context.run_one();
-  
+
+  asio::spawn(m_context,
+              std::bind(&Client::connect,
+                        m_client.get(),
+                        static_cast<unsigned short>(m_server->getPort()),
+                        std::placeholders::_1));
+
+  while (!m_client->m_connected)
+    m_context.run_one();
+
   asio::spawn(m_context,
               std::bind(&Client::request,
                         m_client.get(),
-                        static_cast<unsigned short>(m_server->getPort()),
                         http::verb::get,
                         "/probe",
                         std::placeholders::_1));
@@ -189,6 +212,25 @@ TEST_F(HttpServerTest, TestSimpleRouting)
   
   EXPECT_EQ("All Devices", m_client->m_result);
   EXPECT_EQ(200, m_client->m_status);
+  
+  m_client->m_done = false;
+  asio::spawn(m_context,
+              std::bind(&Client::request,
+                        m_client.get(),
+                        http::verb::get,
+                        "/device1/probe",
+                        std::placeholders::_1));
+  
+  while (!m_client->m_done)
+    m_context.run_one();
+
+  EXPECT_EQ("Device given as: device1", m_client->m_result);
+  EXPECT_EQ(200, m_client->m_status);
+  
+  // Make sure session closes when client closes the connection
+  m_client->close();
+  m_context.run_for(2ms);
+  ASSERT_TRUE(session.expired());
 }
 
 #if 0

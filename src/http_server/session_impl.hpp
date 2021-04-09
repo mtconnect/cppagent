@@ -42,7 +42,7 @@ namespace mtconnect
       : Session(dispatch, error), m_stream(std::move(socket)), m_fields(list)
       {}
       SessionImpl(const SessionImpl &) = delete;
-      virtual ~SessionImpl() {}
+      virtual ~SessionImpl() { close(); }
       std::shared_ptr<SessionImpl> shared_this_ptr() {
         return std::dynamic_pointer_cast<SessionImpl>(shared_from_this());
       }
@@ -63,14 +63,19 @@ namespace mtconnect
 
     protected:
       boost::beast::tcp_stream m_stream;
-      RequestPtr m_request;
       std::optional<boost::beast::http::request_parser<boost::beast::http::string_body>> m_parser;
       boost::beast::flat_buffer m_buffer;
       Complete    m_complete;
+      
+      // For Streaming
       std::string m_boundary;
       std::string m_mimeType;
+      
+      // Additional fields
       StringList  m_fields;
-      Printer    *m_printer{nullptr};
+      
+      // References to retain lifecycle for callbacks.
+      RequestPtr m_request;
       std::shared_ptr<void> m_response;
       std::shared_ptr<void> m_serializer;
     };
