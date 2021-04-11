@@ -19,6 +19,7 @@
 
 #include "routing.hpp"
 #include <boost/beast/http/status.hpp>
+#include <boost/asio/ip/address.hpp>
 
 #include <memory>
 #include <functional>
@@ -49,10 +50,22 @@ namespace mtconnect
       virtual void beginStreaming(const std::string &mimeType, Complete complete) = 0;
       virtual void writeChunk(const std::string &chunk, Complete complete) = 0;
       virtual void close() = 0;
-      
+      void allowPuts(bool allow = true)
+      {
+        m_allowPuts = allow;
+      }
+      void allowPutsFrom(std::set<boost::asio::ip::address> &hosts)
+      {
+        m_allowPuts = true;
+        m_allowPutsFrom = hosts;
+      }
+
     protected:
       Dispatch m_dispatch;
       ErrorFunction m_errorFunction;
+      
+      bool m_allowPuts{false};
+      std::set<boost::asio::ip::address> m_allowPutsFrom;
     };
     
   }

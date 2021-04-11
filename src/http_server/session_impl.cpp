@@ -164,9 +164,7 @@ namespace mtconnect
       }
       else
       {
-        m_errorFunction(shared_from_this(), status, message);
-        m_request.reset();
-        read();
+        m_errorFunction(shared_this_ptr(), status, message);
       }
     }
     
@@ -215,6 +213,25 @@ namespace mtconnect
       else
       {
         auto msg = m_parser->get();
+        auto remote = m_stream.socket().remote_endpoint();
+
+        // Check for put, post, or delete
+        if (msg.method() != http::verb::get)
+        {
+          if (!m_allowPuts)
+          {
+            fail(http::status::bad_request, "PUT, POST, and DELETE are not allowed. MTConnect Agent is read only and only GET is allowed.");
+            return;
+          }
+          else if (!m_allowPutsFrom.empty() &&
+                   m_allowPutsFrom.find(remote.address()) == m_allowPutsFrom.end())
+          {
+            fail(http::status::bad_request, "PUT, POST, and DELETE are not allowed from "
+                 + remote.address().to_string());
+            return;
+          }
+        }
+        
         m_request = make_shared<Request>();
         m_request->m_verb = msg.method();
         m_request->m_path = parseUrl(string(msg.target()), m_request->m_query);
@@ -225,11 +242,13 @@ namespace mtconnect
           m_request->m_contentType = string(a->value());
         m_request->m_body = msg.body();
         
-        auto remote = m_stream.socket().remote_endpoint();
         m_request->m_foreignIp = remote.address().to_string();
         m_request->m_foreignPort = remote.port();
+        if (auto a = msg.find(http::field::connection); a != msg.end())
+          m_close = a->value() == "close";
         
-        m_request->m_session = shared_from_this();
+        m_request->m_session = shared_this_ptr();
+        
         
         if (!m_dispatch(m_request))
         {
@@ -320,7 +339,7 @@ namespace mtconnect
       auto res = make_shared<http::response<http::string_body>>(response.m_status, 11);
       res->body() = response.m_body;
       res->set(http::field::server, "MTConnectAgent");
-      if (!complete)
+      if (response.m_close || m_close)
         res->set(http::field::connection, "close");
       if (response.m_expires == 0s)
       {

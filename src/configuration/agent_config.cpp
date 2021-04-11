@@ -862,7 +862,7 @@ namespace mtconnect
       namespace asio = boost::asio;
       namespace ip = asio::ip;
 
-      server->enablePut(get<bool>(options[configuration::AllowPut]));
+      server->allowPuts(get<bool>(options[configuration::AllowPut]));
       string hosts = get<string>(options[configuration::AllowPutFrom]);
       if (!hosts.empty())
       {
@@ -896,7 +896,6 @@ namespace mtconnect
                   const auto &addr = it->endpoint().address();
                   if (!addr.is_multicast() && !addr.is_unspecified())
                   {
-                    server->enablePut();
                     server->allowPutFrom(addr.to_string());
                   }
                 }
@@ -904,7 +903,6 @@ namespace mtconnect
             }
             else
             {
-              server->enablePut();
               server->allowPutFrom(addr.to_string());
             }
           }

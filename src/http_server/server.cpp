@@ -118,6 +118,33 @@ namespace mtconnect
       m_acceptor.async_accept(net::make_strand(m_context),
                               beast::bind_front_handler(&Server::accept, this));
     }
+    
+    bool Server::allowPutFrom(const std::string &host)
+    {
+      NAMED_SCOPE("Server::allowPutFrom");
+      
+      // Resolve the host to an ip address to verify remote addr
+      beast::error_code ec;
+      ip::tcp::resolver resolve(m_context);
+      auto results = resolve.resolve(host, "0", ec);
+      if (ec)
+      {
+        LOG(error) << "Cannot resolve address: " << host;
+        LOG(error) << ec.category().message(ec.value()) << ": "
+        << ec.message();
+        return false;
+      }
+
+      // Add the results to the set of allowed hosts
+      for (auto &addr : results)
+      {
+        m_allowPutsFrom.insert(addr.endpoint().address());
+      }
+      m_allowPuts = true;
+      
+      return true;
+    }
+
 
     void Server::accept(beast::error_code ec, tcp::socket socket)
     {
@@ -135,6 +162,10 @@ namespace mtconnect
         auto session = make_shared<SessionImpl>(socket, m_fields, [this](RequestPtr request){
           dispatch(request);
           return true; }, m_errorFunction);
+        if (!m_allowPutsFrom.empty())
+          session->allowPutsFrom(m_allowPutsFrom);
+        else if (m_allowPuts)
+          session->allowPuts();
         session->run();
         m_acceptor.async_accept(net::make_strand(m_context),
                                 beast::bind_front_handler(&Server::accept, this));

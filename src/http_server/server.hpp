@@ -64,16 +64,16 @@ namespace mtconnect
     {
 
     public:
-      Server(net::io_context &context, unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
+      Server(boost::asio::io_context &context, unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
       : m_context(context), m_port(port), m_acceptor(context)
       {
         if (inter.empty())
         {
-          m_address = net::ip::make_address("0.0.0.0");
+          m_address = boost::asio::ip::make_address("0.0.0.0");
         }
         else
         {
-          m_address = net::ip::make_address(inter);
+          m_address = boost::asio::ip::make_address(inter);
         }
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
         m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
@@ -99,13 +99,16 @@ namespace mtconnect
       auto getPort() const { return m_port; }
 
       // PUT and POST handling
-      void enablePut(bool flag = true) { m_putEnabled = flag; }
       bool isListening() const { return m_listening; }
-      bool isPutEnabled() const { return m_putEnabled; }
-      void allowPutFrom(const std::string &host) { m_putAllowedHosts.insert(host); }
-      bool isPutAllowedFrom(const std::string &host) const
+      bool arePutsAllowed() const { return m_allowPuts; }
+      bool allowPutFrom(const std::string &host);
+      void allowPuts(bool allow = true)
       {
-        return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
+        m_allowPuts = allow;
+      }
+      bool isPutAllowedFrom(boost::asio::ip::address &addr) const
+      {
+        return m_allowPutsFrom.find(addr) != m_allowPutsFrom.end();
       }
 
       bool dispatch(RequestPtr request)
@@ -125,9 +128,9 @@ namespace mtconnect
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
 
     protected:
-      net::io_context &m_context;
+      boost::asio::io_context &m_context;
       
-      net::ip::address m_address;
+      boost::asio::ip::address m_address;
       unsigned short m_port{5000};
 
       bool m_run{false};
@@ -136,8 +139,8 @@ namespace mtconnect
       
       ConfigOptions m_options;
       // Put handling controls
-      bool m_putEnabled;
-      std::set<std::string> m_putAllowedHosts;
+      bool m_allowPuts{false};
+      std::set<boost::asio::ip::address> m_allowPutsFrom;
       std::list<Routing> m_routings;
       std::unique_ptr<FileCache> m_fileCache;
       ErrorFunction m_errorFunction;

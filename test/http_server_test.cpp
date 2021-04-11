@@ -46,7 +46,7 @@ using tcp = boost::asio::ip::tcp;
 class Client
 {
 public:
-  Client(net::io_context& ioc)
+  Client(asio::io_context& ioc)
   : m_context(ioc), m_stream(ioc)
   {
   }
@@ -60,12 +60,12 @@ public:
     ASSERT_TRUE(false);
   }
   
-  void connect(unsigned short port, net::yield_context yield)
+  void connect(unsigned short port, asio::yield_context yield)
   {
     beast::error_code ec;
 
     // These objects perform our I/O
-    tcp::endpoint server(net::ip::address_v4::from_string("127.0.0.1"), port);
+    tcp::endpoint server(asio::ip::address_v4::from_string("127.0.0.1"), port);
         
     // Set the timeout.
     m_stream.expires_after(std::chrono::seconds(30));
@@ -82,7 +82,7 @@ public:
   void request(boost::beast::http::verb verb,
                std::string const& target,
                std::string const& body,
-               net::yield_context yield)
+               asio::yield_context yield)
   {
     beast::error_code ec;
     
@@ -134,8 +134,8 @@ public:
                           this, verb, target, body,
                           std::placeholders::_1));
     
-    while (!m_done)
-      m_context.run_one();
+    while (!m_done && m_context.run_for(100ms) > 0)
+      ;
   }
 
   void close()
@@ -265,22 +265,109 @@ TEST_F(HttpServerTest, request_response_with_query_parameters)
                          "/device1/sample"
                          "?path=//DataItem[@type=%27POSITION%27%20and%20@subType=%27ACTUAL%27]"
                          "&from=123456&count=1000");
-  
-  while (!m_client->m_done)
-    m_context.run_one();
-  
+  ASSERT_TRUE(m_client->m_done);
   EXPECT_EQ("Done", m_client->m_result);
   EXPECT_EQ(200, m_client->m_status);
 }
 
-TEST_F(HttpServerTest, request_put_blocking)
+TEST_F(HttpServerTest, request_put_when_put_not_allowed)
 {
+  weak_ptr<Session> session;
   
+  auto probe = [&](RequestPtr request) -> bool {
+    EXPECT_TRUE(false);
+    return true;
+  };
+  
+  m_server->addRouting(Routing{boost::beast::http::verb::put, "/probe", probe});
+  
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::put,
+                         "/probe");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::bad_request), m_client->m_status);
+  EXPECT_EQ("PUT, POST, and DELETE are not allowed. MTConnect Agent is read only and only GET is allowed.", m_client->m_result);
 }
 
-TEST_F(HttpServerTest, request_put_blocking_with_ip_address)
+TEST_F(HttpServerTest, request_put_when_put_allowed)
 {
+  weak_ptr<Session> session;
   
+  auto handler = [&](RequestPtr request) -> bool {
+    EXPECT_EQ(http::verb::put, request->m_verb);
+    Response resp(status::ok);
+    resp.m_body = "Put ok";
+    request->m_session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+      return true;
+    });
+    return true;
+  };
+  
+  m_server->addRouting(Routing{boost::beast::http::verb::put, "/probe", handler});
+  m_server->allowPuts();
+  
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::put,
+                         "/probe");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::ok), m_client->m_status);
+  EXPECT_EQ("Put ok", m_client->m_result);
+
+}
+
+TEST_F(HttpServerTest, request_put_when_put_not_allowed_from_ip_address)
+{
+  weak_ptr<Session> session;
+  
+  auto probe = [&](RequestPtr request) -> bool {
+    EXPECT_TRUE(false);
+    return true;
+  };
+  
+  m_server->addRouting(Routing{boost::beast::http::verb::put, "/probe", probe});
+  m_server->allowPutFrom("1.1.1.1");
+  
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::put,
+                         "/probe");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::bad_request), m_client->m_status);
+  EXPECT_EQ("PUT, POST, and DELETE are not allowed from 127.0.0.1", m_client->m_result);
+}
+
+TEST_F(HttpServerTest, request_put_when_put_allowed_from_ip_address)
+{
+  weak_ptr<Session> session;
+  
+  auto handler = [&](RequestPtr request) -> bool {
+    EXPECT_EQ(http::verb::put, request->m_verb);
+    Response resp(status::ok);
+    resp.m_body = "Put ok";
+    request->m_session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+      return true;
+    });
+    return true;
+  };
+  
+  m_server->addRouting(Routing{boost::beast::http::verb::put, "/probe", handler});
+  m_server->allowPutFrom("127.0.0.1");
+  
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::put,
+                         "/probe");
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::ok), m_client->m_status);
+  EXPECT_EQ("Put ok", m_client->m_result);
 }
 
 TEST_F(HttpServerTest, request_with_connect_close)

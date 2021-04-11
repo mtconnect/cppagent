@@ -55,7 +55,7 @@ namespace mtconnect
       void fail(boost::beast::http::status status, const std::string &message,
                 boost::system::error_code ec = boost::system::error_code{});
       void close() override;
-      
+            
     protected:
       void requested(boost::system::error_code ec, size_t len);
       void sent(boost::system::error_code ec, size_t len);
@@ -69,6 +69,7 @@ namespace mtconnect
       // For Streaming
       std::string m_boundary;
       std::string m_mimeType;
+      bool m_close{false};
       
       // Additional fields
       StringList  m_fields;

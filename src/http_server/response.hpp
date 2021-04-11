@@ -24,9 +24,6 @@
 
 #include <boost/beast/http/status.hpp>
 
-
-namespace net = boost::asio;            // from <boost/asio.hpp>
-
 namespace mtconnect
 {
   class Printer;
@@ -48,6 +45,7 @@ namespace mtconnect
       std::string  m_body;
       std::string  m_mimeType;
       std::chrono::seconds m_expires;
+      bool m_close{false};
     };
   }  // namespace http_server
 }  // namespace mtconnect

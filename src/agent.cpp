@@ -47,7 +47,8 @@ namespace mtconnect
   using namespace data_item;
   using namespace entity;
   using namespace http_server;
-
+  namespace net = boost::asio;
+  
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
 
@@ -500,7 +501,7 @@ namespace mtconnect
     m_server->addRouting({boost::beast::http::verb::get, "/asset/{assets}", idHandler});
     m_server->addRouting({boost::beast::http::verb::get, "/assets/{assets}", idHandler});
 
-    if (m_server->isPutEnabled())
+    if (m_server->arePutsAllowed())
     {
       auto putHandler = [&](RequestPtr request) -> bool {
         auto printer = printerForAccepts(request->m_accepts);
@@ -612,7 +613,7 @@ namespace mtconnect
   {
     using namespace http_server;
 
-    if (m_server->isPutEnabled())
+    if (m_server->arePutsAllowed())
     {
       auto handler = [&](RequestPtr request) -> bool {
         if (!request->m_query.empty())
