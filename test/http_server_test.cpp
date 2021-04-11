@@ -57,7 +57,7 @@ public:
   {
     LOG(error) << what << ": " << ec.message() << "\n";
     m_done = true;
-    ASSERT_TRUE(false);
+    m_ec = ec;
   }
   
   void connect(unsigned short port, asio::yield_context yield)
@@ -82,6 +82,7 @@ public:
   void request(boost::beast::http::verb verb,
                std::string const& target,
                std::string const& body,
+               bool close,
                asio::yield_context yield)
   {
     beast::error_code ec;
@@ -95,6 +96,8 @@ public:
     http::request<http::string_body> req{verb, target, 11};
     req.set(http::field::host, "localhost");
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+    if (close)
+      req.set(http::field::connection, "close");
     
     // Set the timeout.
     m_stream.expires_after(std::chrono::seconds(30));
@@ -126,18 +129,19 @@ public:
   
   void spawnRequest(boost::beast::http::verb verb,
                     std::string const& target,
-                    std::string const &body = "")
+                    std::string const &body = "",
+                    bool close = false)
   {
     m_done = false;
     asio::spawn(m_context,
                 std::bind(&Client::request,
-                          this, verb, target, body,
+                          this, verb, target, body, close,
                           std::placeholders::_1));
     
     while (!m_done && m_context.run_for(100ms) > 0)
       ;
   }
-
+  
   void close()
   {
     beast::error_code ec;
@@ -153,6 +157,7 @@ public:
   asio::io_context &m_context;
   bool m_done{false};
   beast::tcp_stream m_stream;
+  boost::beast::error_code m_ec;
 };
 
 class HttpServerTest : public testing::Test
@@ -272,8 +277,6 @@ TEST_F(HttpServerTest, request_response_with_query_parameters)
 
 TEST_F(HttpServerTest, request_put_when_put_not_allowed)
 {
-  weak_ptr<Session> session;
-  
   auto probe = [&](RequestPtr request) -> bool {
     EXPECT_TRUE(false);
     return true;
@@ -293,8 +296,6 @@ TEST_F(HttpServerTest, request_put_when_put_not_allowed)
 
 TEST_F(HttpServerTest, request_put_when_put_allowed)
 {
-  weak_ptr<Session> session;
-  
   auto handler = [&](RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
     Response resp(status::ok);
@@ -372,7 +373,30 @@ TEST_F(HttpServerTest, request_put_when_put_allowed_from_ip_address)
 
 TEST_F(HttpServerTest, request_with_connect_close)
 {
+  auto handler = [&](RequestPtr request) -> bool {
+    Response resp(status::ok);
+    resp.m_body = "Probe";
+    request->m_session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+      return true;
+    });
+    return true;
+  };
   
+  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", handler});
+  
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::get,
+                         "/probe", "", true);
+  ASSERT_TRUE(m_client->m_done);
+  EXPECT_EQ(int(http::status::ok), m_client->m_status);
+  EXPECT_EQ("Probe", m_client->m_result);
+
+  m_client->spawnRequest(http::verb::get,
+                         "/probe", "", true);
+  EXPECT_EQ("end of stream", m_client->m_ec.message());
 }
 
 TEST_F(HttpServerTest, content_payload)

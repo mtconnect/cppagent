@@ -272,16 +272,18 @@ namespace mtconnect
       {
         if (m_complete)
           m_complete();
-        read();
       }
-      m_request.reset();
+      if (!m_close)
+        read();
+      else
+        close();
     }
       
     void SessionImpl::close()
     {
       m_request.reset();
       beast::error_code ec;
-      m_stream.socket().shutdown(tcp::socket::shutdown_send, ec);
+      m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
     }
         
     void SessionImpl::beginStreaming(const std::string &mimeType, Complete complete)
