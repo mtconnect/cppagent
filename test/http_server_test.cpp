@@ -82,7 +82,7 @@ public:
   void request(boost::beast::http::verb verb,
                std::string const& target,
                std::string const& body,
-               bool close,
+               bool close, string const& contentType,
                asio::yield_context yield)
   {
     beast::error_code ec;
@@ -96,11 +96,14 @@ public:
     http::request<http::string_body> req{verb, target, 11};
     req.set(http::field::host, "localhost");
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+    req.set(http::field::content_type, contentType);
     if (close)
       req.set(http::field::connection, "close");
+    req.body() = body;
     
     // Set the timeout.
     m_stream.expires_after(std::chrono::seconds(30));
+    req.prepare_payload();
     
     // Send the HTTP request to the remote host
     http::async_write(m_stream, req, yield[ec]);
@@ -122,7 +125,7 @@ public:
     m_status = res.result_int();
     
     // Write the message to standard out
-    std::cout << res << std::endl;
+    // std::cout << res << std::endl;
         
     m_done = true;    
   }
@@ -130,12 +133,13 @@ public:
   void spawnRequest(boost::beast::http::verb verb,
                     std::string const& target,
                     std::string const &body = "",
-                    bool close = false)
+                    bool close = false,
+                    string const &contentType = "text/plain")
   {
     m_done = false;
     asio::spawn(m_context,
                 std::bind(&Client::request,
-                          this, verb, target, body, close,
+                          this, verb, target, body, close, contentType,
                           std::placeholders::_1));
     
     while (!m_done && m_context.run_for(100ms) > 0)
@@ -373,7 +377,10 @@ TEST_F(HttpServerTest, request_put_when_put_allowed_from_ip_address)
 
 TEST_F(HttpServerTest, request_with_connect_close)
 {
+  weak_ptr<Session> session;
+
   auto handler = [&](RequestPtr request) -> bool {
+    session = request->m_session;
     Response resp(status::ok);
     resp.m_body = "Probe";
     request->m_session->writeResponse(resp, [](){
@@ -396,17 +403,63 @@ TEST_F(HttpServerTest, request_with_connect_close)
 
   m_client->spawnRequest(http::verb::get,
                          "/probe", "", true);
-  EXPECT_EQ("end of stream", m_client->m_ec.message());
+  EXPECT_TRUE(m_client->m_ec);
+  EXPECT_FALSE(session.lock());
 }
 
-TEST_F(HttpServerTest, content_payload)
+TEST_F(HttpServerTest, put_content_to_server)
 {
+  string body;
+  auto handler = [&](RequestPtr request) -> bool {
+    EXPECT_EQ("Body Content", request->m_body);
+    body = request->m_body;
+    
+    Response resp(status::ok);
+    request->m_session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+    return true;
+  };
   
+  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", handler});
+  
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::get,
+                         "/probe", "Body Content", false);
+  ASSERT_TRUE(m_client->m_done);
+  ASSERT_EQ("Body Content", body);
 }
 
-TEST_F(HttpServerTest, content_with_put_values)
+TEST_F(HttpServerTest, put_content_with_put_values)
 {
+  string body, ct;
+  auto handler = [&](RequestPtr request) -> bool {
+    EXPECT_EQ("fish=%27chips%27&time=%27money%27", request->m_body);
+    EXPECT_EQ("'chips'", request->m_query["fish"]);
+    EXPECT_EQ("'money'", request->m_query["time"]);
+    body = request->m_body;
+    ct = request->m_contentType;
+    
+    Response resp(status::ok);
+    request->m_session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+    return true;
+  };
   
+  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", handler});
+  
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::get,
+                         "/probe", "fish=%27chips%27&time=%27money%27", false,
+                         "application/x-www-form-urlencoded");
+  ASSERT_TRUE(m_client->m_done);
+  ASSERT_EQ("fish=%27chips%27&time=%27money%27", body);
+  ASSERT_EQ("application/x-www-form-urlencoded", ct);
 }
 
 TEST_F(HttpServerTest, streaming_response)
@@ -416,5 +469,5 @@ TEST_F(HttpServerTest, streaming_response)
 
 TEST_F(HttpServerTest, additional_header_fields)
 {
-  
+  FAIL() << "not implemented";
 }

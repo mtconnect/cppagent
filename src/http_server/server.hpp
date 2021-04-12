@@ -43,26 +43,8 @@ namespace mtconnect
 {
   namespace http_server
   {
-    class RequestError : public std::logic_error
-    {
-    public:
-      RequestError(const char *w) : std::logic_error::logic_error(w) {}
-      RequestError(const char *w, const std::string &body, const std::string &type,
-                   http_server::status code)
-        : std::logic_error::logic_error(w), m_contentType(type), m_body(body), m_code(code)
-      {
-      }
-      RequestError(const RequestError &) = default;
-      ~RequestError() override = default;
-
-      std::string m_contentType;
-      std::string m_body;
-      http_server::status m_code;
-    };
-
     class Server
     {
-
     public:
       Server(boost::asio::io_context &context, unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
       : m_context(context), m_port(port), m_acceptor(context)

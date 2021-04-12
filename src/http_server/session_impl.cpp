@@ -35,6 +35,7 @@
 
 #include "logging.hpp"
 #include "response.hpp"
+#include "request.hpp"
 
 namespace mtconnect
 {
@@ -118,6 +119,24 @@ namespace mtconnect
       }
       return result.str();
     }
+    
+    void parseQueries(string qp, map<string, string> &queries)
+    {
+      vector<boost::iterator_range<string::iterator>> toks;
+      algo::split(toks, qp, boost::is_any_of("&"));
+      for (auto tok : toks)
+      {
+        auto qv = string_view(tok.begin().base(), tok.size());
+        auto eq = qv.find('=');
+        if (eq != string_view::npos)
+        {
+          string f(urldecode(qv.substr(0, eq)));
+          string s(urldecode(qv.substr(eq + 1)));
+          auto pair = std::make_pair(f, s);
+          queries.insert(pair);
+        }
+      }
+    }
 
     string parseUrl(string url, map<string, string> &queries)
     {
@@ -126,21 +145,7 @@ namespace mtconnect
       {
         auto path = urldecode(url.substr(0, pos));
         auto qp = url.substr(pos + 1);
-        vector<boost::iterator_range<string::iterator>> toks;
-        algo::split(toks, qp, boost::is_any_of("&"));
-        for (auto tok : toks)
-        {
-          auto qv = string_view(tok.begin().base(), tok.size());
-          auto eq = qv.find('=');
-          if (eq != string_view::npos)
-          {
-            string f(urldecode(qv.substr(0, eq)));
-            string s(urldecode(qv.substr(eq + 1)));
-            auto pair = std::make_pair(f, s);
-            queries.insert(pair);
-          }
-        }
-        
+        parseQueries(qp, queries);
         return path;
       }
       else
@@ -242,6 +247,11 @@ namespace mtconnect
           m_request->m_contentType = string(a->value());
         m_request->m_body = msg.body();
         
+        if (auto f = msg.find(http::field::content_type); f != msg.end() && f->value() == "application/x-www-form-urlencoded" && m_request->m_body[0] != '<')
+        {
+          parseQueries(m_request->m_body, m_request->m_query);
+        }
+        
         m_request->m_foreignIp = remote.address().to_string();
         m_request->m_foreignPort = remote.port();
         if (auto a = msg.find(http::field::connection); a != msg.end())
@@ -249,12 +259,29 @@ namespace mtconnect
         
         m_request->m_session = shared_this_ptr();
         
-        
-        if (!m_dispatch(m_request))
+        try
         {
-          ostringstream txt;
-          txt << "Failed to find handler for " << msg.method() << " " <<
+          if (!m_dispatch(m_request))
+          {
+            ostringstream txt;
+            txt << "Failed to find handler for " << msg.method() << " " <<
                   msg.target();
+            LOG(error) << txt.str();
+            fail(status::not_found, txt.str());
+          }
+        }
+        catch (RequestError &e)
+        {
+          LOG(error) << "Error processing request from: " << remote.address() << " - "
+              << e.what();
+          fail(status::bad_request, e.what());
+        }
+        catch (ParameterError &e)
+        {
+          stringstream txt;
+          txt << "Parameter Error processing request from: " << remote.address() << " - "
+            << e.what();
+          LOG(error) << txt.str();
           fail(status::not_found, txt.str());
         }
       }

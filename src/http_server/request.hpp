@@ -19,12 +19,32 @@
 
 
 #include <boost/beast/http/verb.hpp>
+#include <boost/beast/http/status.hpp>
 #include "parameter.hpp"
 
 namespace mtconnect
 {
   namespace http_server
   {
+    
+    class RequestError : public std::logic_error
+    {
+    public:
+      RequestError(const char *w) : std::logic_error::logic_error(w) {}
+      RequestError(const char *w, const std::string &body, const std::string &type,
+                   boost::beast::http::status code)
+        : std::logic_error::logic_error(w), m_contentType(type), m_body(body), m_code(code)
+      {
+      }
+      RequestError(const RequestError &) = default;
+      ~RequestError() override = default;
+
+      std::string m_contentType;
+      std::string m_body;
+      boost::beast::http::status m_code;
+    };
+
+
     class Session;
     using SessionPtr = std::shared_ptr<Session>;
     
