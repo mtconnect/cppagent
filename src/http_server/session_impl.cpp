@@ -300,10 +300,13 @@ namespace mtconnect
         if (m_complete)
           m_complete();
       }
-      if (!m_close)
-        read();
-      else
-        close();
+      if (!m_streaming)
+      {
+        if (!m_close)
+          read();
+        else
+          close();
+      }
     }
       
     void SessionImpl::close()
@@ -321,15 +324,16 @@ namespace mtconnect
       m_boundary = to_string(gen());
       m_complete = complete;
       m_mimeType = mimeType;
+      m_streaming = true;
       
       auto res = make_shared<http::response<empty_body>>(status::ok, 11);
       m_response = res;
       res->chunked(true);
       res->set(field::server, "MTConnectAgent");
       res->set(field::connection, "close");
-      res->set(field::expires, "-1");
-      res->set(field::cache_control, "private, max-age=0\r\n");
       res->set(field::content_type, "multipart/x-mixed-replace;boundary=" + m_boundary);
+      res->set(field::expires, "-1");
+      res->set(field::cache_control, "private, max-age=0");
 //      for (const auto &f : m_fields)
 //      {
 //        //res.set(f.first, f.second);
@@ -349,12 +353,24 @@ namespace mtconnect
       m_complete = complete;
 
       http::chunk_extensions ext;
-      ext.insert("\r\n--" + m_boundary);
-      ext.insert("\r\nContent-type: " + m_mimeType);
-      ext.insert("\r\nContent-length: " + to_string(body.length()) + ";\r\n\r\n");
       
-      net::const_buffers_1 buf(body.c_str(), body.size());      
-      async_write(m_stream, http::make_chunk(buf, ext),
+      ostringstream str;
+      str << "--" + m_boundary << "\r\n"
+             "Content-type: " <<  m_mimeType << "\r\n"
+             "Content-length: " << to_string(body.length()) << ";\r\n\r\n" <<
+             body;
+      
+      net::const_buffers_1 buf(str.str().c_str(), str.str().size());
+      async_write(m_stream, http::make_chunk(buf),
+                  beast::bind_front_handler(&SessionImpl::sent,
+                                            shared_this_ptr()));
+    }
+    
+    void SessionImpl::closeStream()
+    {
+      m_complete = [this]() { close(); };
+      http::fields trailer;
+      async_write(m_stream, http::make_chunk_last(trailer),
                   beast::bind_front_handler(&SessionImpl::sent,
                                             shared_this_ptr()));
     }

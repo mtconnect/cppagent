@@ -50,6 +50,7 @@ namespace mtconnect
       virtual void beginStreaming(const std::string &mimeType, Complete complete) = 0;
       virtual void writeChunk(const std::string &chunk, Complete complete) = 0;
       virtual void close() = 0;
+      virtual void closeStream() = 0;
       void allowPuts(bool allow = true)
       {
         m_allowPuts = allow;
