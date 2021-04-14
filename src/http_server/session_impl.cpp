@@ -211,6 +211,7 @@ namespace mtconnect
     void SessionImpl::requested(boost::system::error_code ec, size_t len)
     {
       NAMED_SCOPE("SessionImpl::requested");
+      
       if (ec)
       {
         fail(status::internal_server_error, "Could not read request", ec);
@@ -310,6 +311,8 @@ namespace mtconnect
       
     void SessionImpl::close()
     {
+      NAMED_SCOPE("SessionImpl::close");
+
       m_request.reset();
       beast::error_code ec;
       m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
@@ -317,6 +320,8 @@ namespace mtconnect
         
     void SessionImpl::beginStreaming(const std::string &mimeType, Complete complete)
     {
+      NAMED_SCOPE("SessionImpl::beginStreaming");
+
       using namespace http;
       using namespace boost::uuids;
       random_generator gen;
@@ -348,10 +353,9 @@ namespace mtconnect
     
     void SessionImpl::writeChunk(const std::string &body, Complete complete)
     {
-      using namespace std;
-      m_complete = complete;
+      NAMED_SCOPE("SessionImpl::writeChunk");
 
-      http::chunk_extensions ext;
+      m_complete = complete;
       
       ostringstream str;
       str << "--" + m_boundary << "\r\n"
@@ -359,16 +363,21 @@ namespace mtconnect
              "Content-length: " << to_string(body.length()) << ";\r\n\r\n" <<
              body;
       
-      m_chunk = str.str();
-      auto buf = make_shared<net::const_buffers_1>(m_chunk.c_str(), m_chunk.size());
-      m_chunkBuffer = buf;
-      async_write(m_stream, http::make_chunk(*buf),
+      m_buffer.clear();
+      auto size = str.str().size();
+      net::const_buffers_1 buf(str.str().c_str(), size);
+      asio::buffer_copy(m_buffer.prepare(size), buf);
+      m_buffer.commit(size);
+      
+      async_write(m_stream, http::make_chunk(m_buffer.data()),
                   beast::bind_front_handler(&SessionImpl::sent,
                                             shared_this_ptr()));
     }
     
     void SessionImpl::closeStream()
     {
+      NAMED_SCOPE("SessionImpl::closeStream");
+
       m_complete = [this]() { close(); };
       http::fields trailer;
       async_write(m_stream, http::make_chunk_last(trailer),
@@ -378,6 +387,8 @@ namespace mtconnect
 
     void SessionImpl::writeResponse(const Response &response, Complete complete)
     {
+      NAMED_SCOPE("SessionImpl::writeResponse");
+
       using namespace std;
       using namespace http;
 

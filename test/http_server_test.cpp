@@ -243,7 +243,7 @@ public:
                           this, verb, target, body, close, contentType,
                           std::placeholders::_1));
     
-    while (!m_done && m_context.run_for(100ms) > 0)
+    while (!m_done && m_context.run_for(20ms) > 0)
       ;
   }
   
@@ -612,16 +612,16 @@ TEST_F(HttpServerTest, streaming_response)
   startClient();
   
   m_client->spawnRequest(http::verb::get, "/sample");
-  while (!ctx->m_written && m_context.run_for(100ms) > 0)
+  while (!ctx->m_written && m_context.run_for(20ms) > 0)
     ;
   m_client->spawnReadChunk();
-  while (m_context.run_for(100ms) > 0)
+  while (m_context.run_for(20ms) > 0)
     ;
 
   m_client->m_done = false;
   ctx->m_written = false;
   ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(100ms) > 0)
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
     ;
   cout << "Done: " << m_client->m_done << endl;
   EXPECT_EQ("Chunk Content #1", m_client->m_result);
@@ -636,26 +636,26 @@ TEST_F(HttpServerTest, streaming_response)
   ctx->m_written = false;
   m_client->m_done = false;
   ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(100ms) > 0)
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
     ;
   EXPECT_EQ("Chunk Content #3", m_client->m_result);
 
   ctx->m_written = false;
   m_client->m_done = false;
   ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(100ms) > 0)
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
     ;
   EXPECT_EQ("Chunk Content #4", m_client->m_result);
 
   ctx->m_written = false;
   m_client->m_done = false;
   ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(100ms) > 0)
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
     ;
   EXPECT_EQ("Chunk Content #5", m_client->m_result);
   
   ctx->m_request->m_session->closeStream();
-  while (m_context.run_for(100ms) > 0)
+  while (m_context.run_for(20ms) > 0)
     ;
 }
 

@@ -64,6 +64,8 @@ namespace mtconnect
       void reset();
 
     protected:
+      using RequestParser = boost::beast::http::request_parser<boost::beast::http::string_body>;
+      
       boost::beast::tcp_stream m_stream;
       Complete    m_complete;
       bool        m_streaming{false};
@@ -79,11 +81,9 @@ namespace mtconnect
       // References to retain lifecycle for callbacks.
       RequestPtr m_request;
       boost::beast::flat_buffer m_buffer;
-      std::optional<boost::beast::http::request_parser<boost::beast::http::string_body>> m_parser;
+      std::optional<RequestParser> m_parser;
       std::shared_ptr<void> m_response;
       std::shared_ptr<void> m_serializer;
-      std::shared_ptr<void> m_chunkBuffer;
-      std::string m_chunk;      
     };
   }
 }
