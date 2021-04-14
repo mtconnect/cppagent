@@ -147,7 +147,7 @@ TEST_F(AgentTest, BadDevices)
 TEST_F(AgentTest, BadXPath)
 {
   {
-    Routing::QueryMap query{{ "path", "//////Linear"}};
+    QueryMap query{{ "path", "//////Linear"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string) "The path could not be parsed. Invalid syntax: //////Linear";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
@@ -155,7 +155,7 @@ TEST_F(AgentTest, BadXPath)
   }
 
   {
-    Routing::QueryMap query{{ "path", "//Axes?//Linear"}};
+    QueryMap query{{ "path", "//Axes?//Linear"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string) "The path could not be parsed. Invalid syntax: //Axes?//Linear";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
@@ -163,7 +163,7 @@ TEST_F(AgentTest, BadXPath)
   }
 
   {
-    Routing::QueryMap query{{ "path", "//Devices/Device[@name=\"I_DON'T_EXIST\""}};
+    QueryMap query{{ "path", "//Devices/Device[@name=\"I_DON'T_EXIST\""}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string)
     "The path could not be parsed. Invalid syntax: //Devices/Device[@name=\"I_DON'T_EXIST\"";
@@ -175,7 +175,7 @@ TEST_F(AgentTest, BadXPath)
 TEST_F(AgentTest, GoodPath)
 {
   {
-    Routing::QueryMap query{{ "path", "//Power"}};
+    QueryMap query{{ "path", "//Power"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc,
                           "//m:ComponentStream[@component='Power']//m:PowerState",
@@ -184,7 +184,7 @@ TEST_F(AgentTest, GoodPath)
   }
   
   {
-    Routing::QueryMap query{{ "path",
+    QueryMap query{{ "path",
       "//Rotary[@name='C']//DataItem[@category='SAMPLE' or @category='CONDITION']"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
 
@@ -230,7 +230,7 @@ TEST_F(AgentTest, BadPath)
 
 TEST_F(AgentTest, CurrentAt)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   PARSE_XML_RESPONSE_QUERY("/current", query);
 
   auto agent = m_agentTestHelper->m_agent.get();
@@ -301,7 +301,7 @@ TEST_F(AgentTest, CurrentAt)
 TEST_F(AgentTest, CurrentAt64)
 {
   auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   addAdapter();
 
@@ -332,7 +332,7 @@ TEST_F(AgentTest, CurrentAt64)
 TEST_F(AgentTest, CurrentAtOutOfRange)
 {
   auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   addAdapter();
 
@@ -375,7 +375,7 @@ TEST_F(AgentTest, AddAdapter)
 TEST_F(AgentTest, FileDownload)
 {
   auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
@@ -391,7 +391,7 @@ TEST_F(AgentTest, FileDownload)
 TEST_F(AgentTest, FailedFileDownload)
 {
   auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
@@ -437,14 +437,14 @@ TEST_F(AgentTest, BadCount)
 {
   int size = m_agentTestHelper->m_agent->getBufferSize() + 1;
   {
-    Routing::QueryMap query{{"count", "NON_INTEGER"}};
+    QueryMap query{{"count", "NON_INTEGER"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Parameter Error processing request from:  - for query parameter 'count': cannot convert string 'NON_INTEGER' to integer");
   }
 
   {
-    Routing::QueryMap query{{"count", "-500"}};
+    QueryMap query{{"count", "-500"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be greater than ");
@@ -453,14 +453,14 @@ TEST_F(AgentTest, BadCount)
   }
 
   {
-    Routing::QueryMap query{{"count", "0"}};
+    QueryMap query{{"count", "0"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must not be zero(0)");
   }
 
   {
-    Routing::QueryMap query{{"count", "500"}};
+    QueryMap query{{"count", "500"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than ");
@@ -469,7 +469,7 @@ TEST_F(AgentTest, BadCount)
   }
 
   {
-    Routing::QueryMap query{{"count", "9999999"}};
+    QueryMap query{{"count", "9999999"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than ");
@@ -478,7 +478,7 @@ TEST_F(AgentTest, BadCount)
   }
   
   {
-    Routing::QueryMap query{{"count", "-9999999"}};
+    QueryMap query{{"count", "-9999999"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be greater than ");
@@ -519,7 +519,7 @@ TEST_F(AgentTest, Adapter)
 
 TEST_F(AgentTest, SampleAtNextSeq)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
 
@@ -543,7 +543,7 @@ TEST_F(AgentTest, SampleAtNextSeq)
 
 TEST_F(AgentTest, SampleCount)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
 
@@ -580,7 +580,7 @@ TEST_F(AgentTest, SampleCount)
 
 TEST_F(AgentTest, SampleLastCount)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
 
@@ -617,7 +617,7 @@ TEST_F(AgentTest, SampleLastCount)
 
 TEST_F(AgentTest, SampleToParameter)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
   auto agent = m_agentTestHelper->m_agent.get();
 
@@ -697,7 +697,7 @@ TEST_F(AgentTest, EmptyStream)
 
   {
     auto agent = m_agentTestHelper->m_agent.get();
-    Routing::QueryMap query{{"from", to_string(agent->getSequence())}};
+    QueryMap query{{"from", to_string(agent->getSequence())}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
@@ -706,7 +706,7 @@ TEST_F(AgentTest, EmptyStream)
 TEST_F(AgentTest, AddToBuffer)
 {
   auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   string device("LinuxCNC"), key("badKey"), value("ON");
   auto seqNum = 0;
@@ -743,7 +743,7 @@ TEST_F(AgentTest, SequenceNumberRollover)
 {
 #ifndef WIN32
   auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
 
   // Set the sequence number near MAX_UINT32
@@ -1288,7 +1288,7 @@ TEST_F(AgentTest, References)
 
   // Additional data items should be included
   {
-    Routing::QueryMap query {{"path", "//BarFeederInterface"}};
+    QueryMap query {{"path", "//BarFeederInterface"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
 
     ASSERT_XML_PATH_EQUAL(
@@ -1772,7 +1772,7 @@ TEST_F(AgentTest, AssetStorage)
 
   ASSERT_TRUE(agent->getServer()->isPutEnabled());
   string body = "<Part assetId='P1' deviceUuid='LinuxCNC'>TEST</Part>";
-  Routing::QueryMap queries;
+  QueryMap queries;
 
   queries["type"] = "Part";
   queries["device"] = "LinuxCNC";
@@ -1806,7 +1806,7 @@ TEST_F(AgentTest, AssetBuffer)
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
                                               8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
-  Routing::QueryMap queries;
+  QueryMap queries;
 
   queries["device"] = "000";
   queries["type"] = "Part";
@@ -2050,7 +2050,7 @@ TEST_F(AgentTest, BadAsset)
 TEST_F(AgentTest, AssetRemoval)
 {
   string body = "<Part assetId='P1'>TEST 1</Part>";
-  Routing::QueryMap query;
+  QueryMap query;
 
   query["device"] = "LinuxCNC";
   query["type"] = "Part";
@@ -2142,7 +2142,7 @@ TEST_F(AgentTest, AssetRemoval)
 TEST_F(AgentTest, AssetRemovalByAdapter)
 {
   addAdapter();
-  Routing::QueryMap query;
+  QueryMap query;
   auto agent = m_agentTestHelper->getAgent();
   
   ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
@@ -2356,7 +2356,7 @@ TEST_F(AgentTest, RemoveAllAssets)
   // TODO: When asset is removed and the content is literal, it will
   // not regenerate the attributes for the asset.
   {
-    Routing::QueryMap q{{ "removed", "true" }};
+    QueryMap q{{ "removed", "true" }};
     PARSE_XML_RESPONSE_QUERY("/assets", q);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
@@ -2371,7 +2371,7 @@ TEST_F(AgentTest, AssetProbe)
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
                                               8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
-  Routing::QueryMap queries;
+  QueryMap queries;
 
   queries["device"] = "LinuxCNC";
   queries["type"] = "Part";
@@ -2411,7 +2411,7 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
 </CuttingTool>
 )DOC" };
   
-  Routing::QueryMap queries;
+  QueryMap queries;
 
   queries["device"] = "LinuxCNC";
   queries["type"] = "CuttingTool";
@@ -2453,7 +2453,7 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
 
 TEST_F(AgentTest, BadInterval)
 {
-  Routing::QueryMap query;
+  QueryMap query;
 
   {
     query["interval"] = "NON_INTEGER";
@@ -2494,7 +2494,7 @@ TEST_F(AgentTest, StreamData)
   auto heartbeatFreq{200ms};
 
   // Start a thread...
-  Routing::QueryMap query;
+  QueryMap query;
   query["interval"] = "50";
   query["heartbeat"] = to_string(heartbeatFreq.count());
   query["from"] = to_string(agent->getSequence());
@@ -2616,7 +2616,7 @@ TEST_F(AgentTest, Put)
   m_agentTestHelper->createAgent("/samples/test_config.xml",
                                  8, 4, "1.3", 4, true);
 
-  Routing::QueryMap queries;
+  QueryMap queries;
   string body;
 
   queries["time"] = "2021-02-01T12:00:00Z";

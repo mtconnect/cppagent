@@ -158,7 +158,7 @@ TEST_F(KinematicsTest, RotaryXmlPrinting)
 TEST_F(KinematicsTest, ZAxisJsonPrinting)
 {
   {
-    m_agentTestHelper->m_request.m_accepts = "Application/json";
+    m_agentTestHelper->m_request->m_accepts = "Application/json";
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
 
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
@@ -195,7 +195,7 @@ TEST_F(KinematicsTest, ZAxisJsonPrinting)
 TEST_F(KinematicsTest, RotaryJsonPrinting)
 {
   {
-    m_agentTestHelper->m_request.m_accepts = "Application/json";
+    m_agentTestHelper->m_request->m_accepts = "Application/json";
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
 
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);

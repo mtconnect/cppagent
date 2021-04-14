@@ -18,6 +18,7 @@
 #pragma once
 
 #include "test_utilities.hpp"
+#include "http_server/session.hpp"
 #include "http_server/server.hpp"
 #include "http_server/response.hpp"
 #include "http_server/routing.hpp"
@@ -40,42 +41,43 @@ namespace mtconnect
   
   namespace http_server
   {
-    class TestResponse : public Response
+    class TestSession : public Session
     {
     public:
-      using Response::Response;
-      
-      void writeResponse(const char *body,
-                         const size_t size,
-                         const ResponseCode code,
-                         const std::string &mimeType = "text/plain",
-                         const std::chrono::seconds expires = std::chrono::seconds(0)) override
-      {
-        m_body = std::string(body, size);
-        m_code = code;
-        m_mimeType = mimeType;
-        m_expires = expires;
+      using Session::Session;
+      ~TestSession() {}
+      std::shared_ptr<TestSession> shared_ptr() {
+        return std::dynamic_pointer_cast<TestSession>(shared_from_this());
       }
       
-      void beginMultipartStream(std::function<void(boost::system::error_code ec, std::size_t len)> handler) override
-      {    
-      }
-      
-      void writeMultipartChunk(const std::string &body, const std::string &mimeType, std::function<void(boost::system::error_code ec, std::size_t len)> handler) override
+      void run() override
       {
-        m_chunkBody = body;
-        m_chunkMimeType = mimeType;
+        
+      }
+      void writeResponse(const Response &response, Complete complete = nullptr) override
+      {
+        
+      }
+      void beginStreaming(const std::string &mimeType, Complete complete) override
+      {
+        
+      }
+      void writeChunk(const std::string &chunk, Complete complete) override
+      {
+        
+      }
+      void close() override
+      {
+        
+      }
+      void closeStream() override
+      {
+        
+      }
 
-      }
-
-      std::string getHeaderDate() override
-      {
-        return "TIME+DATE";
-      }
-      
       std::string m_body;
       std::string m_mimeType;
-      ResponseCode m_code;
+      boost::beast::http::status m_code;
       std::chrono::seconds m_expires;
       
       std::string m_chunkBody;
@@ -94,8 +96,11 @@ class AgentTestHelper
  public:
   AgentTestHelper()
   : m_incomingIp("127.0.0.1"),
-    m_socket(m_ioContext), m_response(std::make_unique<mtconnect::http_server::TestResponse>(m_socket))
+    m_socket(m_ioContext)
   {
+    m_session = std::make_shared<mhttp::TestSession>([](mhttp::RequestPtr) { return true; }, [](mhttp::SessionPtr,
+   boost::beast::http::status status,
+   const std::string &msg){});
   }
   
   ~AgentTestHelper()
@@ -107,30 +112,26 @@ class AgentTestHelper
     
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
-                      const mtconnect::http_server::Routing::QueryMap &aQueries,
+                      const mtconnect::http_server::QueryMap &aQueries,
                       xmlDocPtr *doc, const char *path);
   void responseStreamHelper(const char *file, int line,
-                      const mtconnect::http_server::Routing::QueryMap &aQueries,
+                      const mtconnect::http_server::QueryMap &aQueries,
                       xmlDocPtr *doc, const char *path);
   void responseHelper(const char *file, int line,
-                      const mtconnect::http_server::Routing::QueryMap& aQueries, nlohmann::json &doc, const char *path);
+                      const mtconnect::http_server::QueryMap& aQueries, nlohmann::json &doc, const char *path);
   void putResponseHelper(const char *file, int line, const std::string &body,
-                         const mtconnect::http_server::Routing::QueryMap &aQueries,
+                         const mtconnect::http_server::QueryMap &aQueries,
                          xmlDocPtr *doc, const char *path);
   void deleteResponseHelper(const char *file, int line, 
-                            const mtconnect::http_server::Routing::QueryMap &aQueries, xmlDocPtr *doc, const char *path);
+                            const mtconnect::http_server::QueryMap &aQueries, xmlDocPtr *doc, const char *path);
 
-  void makeRequest(const char *file, int line, const char *verb,
+  void makeRequest(const char *file, int line, boost::beast::http::verb verb,
                    const std::string &body,
-                   const mtconnect::http_server::Routing::QueryMap &aQueries,
+                   const mtconnect::http_server::QueryMap &aQueries,
                    const char *path);
   
   auto getAgent() { return m_agent.get(); }
-  
-  mtconnect::http_server::TestResponse *response() {
-    return dynamic_cast<mtconnect::http_server::TestResponse*>(m_response.get());
-  }
-  
+    
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
                    const std::string &version = "1.7", int checkpoint = 25,
                    bool put = false)
@@ -139,7 +140,7 @@ class AgentTestHelper
     using namespace mtconnect::pipeline;
 
     auto server = std::make_unique<mhttp::Server>(m_ioContext);
-    server->enablePut(put);
+    server->allowPuts(put);
     m_server = server.get();
     auto cache = std::make_unique<mhttp::FileCache>();
     m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, server, cache,
@@ -188,16 +189,14 @@ class AgentTestHelper
   
   void printResponse()
   {
-    std::cout << "Status " << response()->m_code << " "
-              << mhttp::Response::getStatus(response()->m_code) << std::endl
-              << response()->m_body << std::endl << "------------------------"
+    std::cout << "Status " << m_response.m_status << " " << std::endl
+              << m_response.m_body << std::endl << "------------------------"
               << std::endl;
   }
 
   void printResponseStream()
   {
-    std::cout << "Status " << response()->m_code << " "
-              << mhttp::Response::getStatus(response()->m_code) << std::endl
+    std::cout << "Status " << m_response.m_status << " " << std::endl
               << m_out.str() << std::endl << "------------------------"
               << std::endl;
   }
@@ -210,10 +209,11 @@ class AgentTestHelper
   
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::stringstream m_out;
-  mtconnect::http_server::Routing::Request m_request;
+  mtconnect::http_server::RequestPtr m_request;
   boost::asio::io_context m_ioContext;
   boost::asio::ip::tcp::socket m_socket;
-  mtconnect::http_server::ResponsePtr m_response;
+  mtconnect::http_server::Response m_response;
+  std::shared_ptr<mtconnect::http_server::TestSession> m_session;
 };
 
 #define PARSE_XML_RESPONSE(path)                                                           \

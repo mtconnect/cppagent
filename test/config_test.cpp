@@ -179,7 +179,7 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
 
-    ASSERT_TRUE(agent->getServer()->isPutEnabled());
+    ASSERT_TRUE(agent->getServer()->arePutsAllowed());
   }
 
   TEST_F(ConfigTest, LimitPut)
@@ -191,8 +191,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->getServer()->isPutEnabled());
-    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("127.0.0.1")));
+    ASSERT_TRUE(agent->getServer()->arePutsAllowed());
+    ASSERT_TRUE(agent->getServer()->allowPutFrom(std::string("127.0.0.1")));
   }
 
   TEST_F(ConfigTest, LimitPutFromHosts)
@@ -204,9 +204,9 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->getServer()->isPutEnabled());
-    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("127.0.0.1")));
-    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("192.168.0.1")));
+    ASSERT_TRUE(agent->getServer()->arePutsAllowed());
+    ASSERT_TRUE(agent->getServer()->allowPutFrom(std::string("127.0.0.1")));
+    ASSERT_TRUE(agent->getServer()->allowPutFrom(std::string("192.168.0.1")));
   }
 
   TEST_F(ConfigTest, Namespaces)

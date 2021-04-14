@@ -183,7 +183,7 @@ TEST_F(TableTest, Current)
 TEST_F(TableTest, JsonCurrent)
 {
   m_agentTestHelper->addAdapter();
-  m_agentTestHelper->m_request.m_accepts = "Application/json";
+  m_agentTestHelper->m_request->m_accepts = "Application/json";
   
   m_agentTestHelper->m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
 
@@ -237,7 +237,7 @@ TEST_F(TableTest, JsonCurrentText)
 {
   m_agentTestHelper->addAdapter();
 
-  m_agentTestHelper->m_request.m_accepts = "Application/json";
+  m_agentTestHelper->m_request->m_accepts = "Application/json";
   
   m_agentTestHelper->m_adapter->processData("TIME|wpo|G53.1={X=1.0 Y=2.0 Z=3.0 s='string with space'} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
   
@@ -327,7 +327,7 @@ TEST_F(TableTest, JsonDefinitionTest)
 {
   m_agentTestHelper->addAdapter();
 
-  m_agentTestHelper->m_request.m_accepts = "Application/json";
+  m_agentTestHelper->m_request->m_accepts = "Application/json";
   
   {
     PARSE_JSON_RESPONSE("/probe");

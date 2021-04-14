@@ -169,7 +169,7 @@ namespace mtconnect
       }
       else
       {
-        m_errorFunction(shared_this_ptr(), status, message);
+        m_errorFunction(shared_ptr(), status, message);
       }
     }
     
@@ -191,7 +191,7 @@ namespace mtconnect
       NAMED_SCOPE("SessionImpl::run");
       net::dispatch(m_stream.get_executor(),
                     beast::bind_front_handler(&SessionImpl::read,
-                                              shared_this_ptr()));
+                                              shared_ptr()));
     }
       
     void SessionImpl::read()
@@ -204,7 +204,7 @@ namespace mtconnect
                        m_buffer,
                        *m_parser,
                        beast::bind_front_handler(&SessionImpl::requested,
-                                                 shared_this_ptr()));
+                                                 shared_ptr()));
       
     }
       
@@ -258,7 +258,7 @@ namespace mtconnect
         if (auto a = msg.find(http::field::connection); a != msg.end())
           m_close = a->value() == "close";
         
-        m_request->m_session = shared_this_ptr();
+        m_request->m_session = shared_ptr();
         
         try
         {
@@ -347,7 +347,7 @@ namespace mtconnect
       m_serializer = sr;
       async_write_header(m_stream, *sr,
                          beast::bind_front_handler(&SessionImpl::sent,
-                                                   shared_this_ptr()));
+                                                   shared_ptr()));
                          
     }
     
@@ -371,7 +371,7 @@ namespace mtconnect
       
       async_write(m_stream, http::make_chunk(m_buffer.data()),
                   beast::bind_front_handler(&SessionImpl::sent,
-                                            shared_this_ptr()));
+                                            shared_ptr()));
     }
     
     void SessionImpl::closeStream()
@@ -382,7 +382,7 @@ namespace mtconnect
       http::fields trailer;
       async_write(m_stream, http::make_chunk_last(trailer),
                   beast::bind_front_handler(&SessionImpl::sent,
-                                            shared_this_ptr()));
+                                            shared_ptr()));
     }
 
     void SessionImpl::writeResponse(const Response &response, Complete complete)
@@ -416,7 +416,7 @@ namespace mtconnect
 
       async_write(m_stream, *res,
                   beast::bind_front_handler(&SessionImpl::sent,
-                                            shared_this_ptr()));
+                                            shared_ptr()));
     }
   }
 }

@@ -43,7 +43,7 @@ namespace mtconnect
       {}
       SessionImpl(const SessionImpl &) = delete;
       virtual ~SessionImpl() { close(); }
-      std::shared_ptr<SessionImpl> shared_this_ptr() {
+      std::shared_ptr<SessionImpl> shared_ptr() {
         return std::dynamic_pointer_cast<SessionImpl>(shared_from_this());
       }
       

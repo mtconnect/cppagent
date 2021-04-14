@@ -409,13 +409,13 @@ TEST_F(DataSetTest, CurrentAt)
   m_agentTestHelper->m_adapter->processData("TIME|vars|r=good_bye");
 
   {
-    Routing::QueryMap query {{"at", to_string(seq - 1)}};
+    QueryMap query {{"at", to_string(seq - 1)}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
   }
 
   {
-    Routing::QueryMap query {{"at", to_string(seq)}};
+    QueryMap query {{"at", to_string(seq)}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
@@ -424,7 +424,7 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    Routing::QueryMap query {{"at", to_string(seq + 1)}};
+    QueryMap query {{"at", to_string(seq + 1)}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
@@ -433,7 +433,7 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    Routing::QueryMap query {{"at", to_string(seq + 2)}};
+    QueryMap query {{"at", to_string(seq + 2)}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "2");
@@ -442,7 +442,7 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    Routing::QueryMap query {{"at", to_string(seq + 3)}};
+    QueryMap query {{"at", to_string(seq + 3)}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "a", "xxx");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "b", "10");
@@ -451,7 +451,7 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    Routing::QueryMap query {{"at", to_string(seq + 4)}};
+    QueryMap query {{"at", to_string(seq + 4)}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_XML_PATH_EQUAL(doc, "///m:VariableDataSet@resetTriggered", "MANUAL");
@@ -459,7 +459,7 @@ TEST_F(DataSetTest, CurrentAt)
   }
 
   {
-    Routing::QueryMap query {{"at", to_string(seq + 5)}};
+    QueryMap query {{"at", to_string(seq + 5)}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "q", "hello_there");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[1]", "r", "good_bye");
@@ -688,7 +688,7 @@ TEST_F(DataSetTest, JsonCurrent)
   using namespace http_server;
   m_agentTestHelper->addAdapter();
 
-  m_agentTestHelper->m_request.m_accepts = "Application/json";  
+  m_agentTestHelper->m_request->m_accepts = "Application/json";  
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3 d=cow");
   
   {

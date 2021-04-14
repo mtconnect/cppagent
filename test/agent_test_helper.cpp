@@ -31,68 +31,70 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::http_server;
+namespace beast = boost::beast;
+namespace http = beast::http;
 
 void AgentTestHelper::makeRequest(const char *file, int line,
-                                  const char *verb, const std::string &body,
-                                  const mtconnect::http_server::Routing::QueryMap &aQueries,
+                                  boost::beast::http::verb verb, const std::string &body,
+                                  const mtconnect::http_server::QueryMap &aQueries,
                                   const char *path)
 {
   m_dispatched = false;
   m_out.str("");
-  m_request.m_verb = verb;
-  m_request.m_query = aQueries;
-  m_request.m_body = body;
-  m_request.m_parameters.clear();
+  m_request->m_verb = verb;
+  m_request->m_query = aQueries;
+  m_request->m_body = body;
+  m_request->m_parameters.clear();
   
   if (path != nullptr)
-    m_request.m_path = path;
+    m_request->m_path = path;
   
-  ASSERT_FALSE(m_request.m_path.empty());
-  m_dispatched = m_agent->getServer()->handleRequest(m_request, m_response);
+  ASSERT_FALSE(m_request->m_path.empty());
+  m_dispatched = m_agent->getServer()->dispatch(m_request);
 }
 
 
 void AgentTestHelper::responseHelper(const char *file, int line,
-                                     const Routing::QueryMap &aQueries,
+                                     const QueryMap &aQueries,
                                      xmlDocPtr *doc, const char *path)
 {
-  makeRequest(file, line, "GET", "", aQueries, path);
-  if (ends_with(response()->m_mimeType, "xml"))
-    *doc = xmlParseMemory(response()->m_body.c_str(), response()->m_body.size());
+  makeRequest(file, line, http::verb::get, "", aQueries, path);
+  if (ends_with(m_session->m_mimeType, "xml"))
+    *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
 void AgentTestHelper::responseStreamHelper(const char *file, int line,
-                                     const Routing::QueryMap &aQueries,
+                                     const QueryMap &aQueries,
                                      xmlDocPtr *doc, const char *path)
 {
-  makeRequest(file, line, "GET", "", aQueries, path);
-  if (ends_with(response()->m_chunkMimeType, "xml"))
-    *doc = xmlParseMemory(response()->m_chunkBody.c_str(), response()->m_chunkBody.size());
+  makeRequest(file, line, http::verb::get, "", aQueries, path);
+  if (ends_with(m_session->m_chunkMimeType, "xml"))
+    *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), m_session->m_chunkBody.size());
 }
 
 void AgentTestHelper::putResponseHelper(const char *file, int line, const string &body,
-                                        const Routing::QueryMap &aQueries, xmlDocPtr *doc,
+                                        const QueryMap &aQueries, xmlDocPtr *doc,
                                         const char *path)
 {
-  makeRequest(file, line, "PUT", body, aQueries, path);
-  if (ends_with(response()->m_mimeType, "xml"))
-    *doc = xmlParseMemory(response()->m_body.c_str(), response()->m_body.size());
+  makeRequest(file, line, http::verb::put, body, aQueries, path);
+  if (ends_with(m_session->m_mimeType, "xml"))
+    *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
 void AgentTestHelper::deleteResponseHelper(const char *file, int line,
-                                           const Routing::QueryMap &aQueries, xmlDocPtr *doc,
+                                           const QueryMap &aQueries, xmlDocPtr *doc,
                                            const char *path)
 {
-  makeRequest(file, line, "DELETE", "", aQueries, path);
-  if (ends_with(response()->m_mimeType, "xml"))
-      *doc = xmlParseMemory(response()->m_body.c_str(), response()->m_body.size());
+  makeRequest(file, line, http::verb::delete_, "", aQueries, path);
+  if (ends_with(m_session->m_mimeType, "xml"))
+      *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
 void AgentTestHelper::responseHelper(const char *file, int line,
-                                     const Routing::QueryMap &aQueries,
+                                     const QueryMap &aQueries,
                                      nlohmann::json &doc,
                                      const char *path)
 {
-  makeRequest(file, line, "GET", "", aQueries, path);
-  doc = nlohmann::json::parse(response()->m_body);
+  makeRequest(file, line, http::verb::get, "", aQueries, path);
+  doc = nlohmann::json::parse(m_session->m_body);
 }
