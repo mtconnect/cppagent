@@ -119,7 +119,6 @@ TEST_F(CoordinateSystemTest, XmlPrinting)
 TEST_F(CoordinateSystemTest, JsonPrinting)
 {
   {
-    m_agentTestHelper->m_request->m_accepts = "Application/json";
     PARSE_JSON_RESPONSE("/probe");
         
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);

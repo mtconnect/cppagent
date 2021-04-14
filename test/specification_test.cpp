@@ -122,8 +122,6 @@ TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
 
 TEST_F(SpecificationTest, JsonPrinting)
 {
-  m_agentTestHelper->m_request->m_accepts = "Application/json";
-  
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
     
@@ -153,8 +151,6 @@ TEST_F(SpecificationTest, JsonPrinting)
 
 TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
 {
-  m_agentTestHelper->m_request->m_accepts = "Application/json";
-
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
     
@@ -302,8 +298,6 @@ TEST_F(SpecificationTest, XmlPrintingForProcessSpecification)
 
 TEST_F(SpecificationTest, JsonPrintingForProcessSpecification)
 {
-  m_agentTestHelper->m_request->m_accepts = "Application/json";
-  
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
     

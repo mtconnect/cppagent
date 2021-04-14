@@ -687,7 +687,6 @@ TEST_F(DataSetTest, JsonCurrent)
   using namespace http_server;
   m_agentTestHelper->addAdapter();
 
-  m_agentTestHelper->m_request->m_accepts = "Application/json";  
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3 d=cow");
   
   {

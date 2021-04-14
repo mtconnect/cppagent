@@ -140,7 +140,6 @@ TEST_F(SolidModelTest, RotaryXmlPrinting)
 TEST_F(SolidModelTest, DeviceJsonPrinting)
 {
   {
-    m_agentTestHelper->m_request->m_accepts = "Application/json";
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
 
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
@@ -167,7 +166,6 @@ TEST_F(SolidModelTest, DeviceJsonPrinting)
 TEST_F(SolidModelTest, RotaryJsonPrinting)
 {
   {
-    m_agentTestHelper->m_request->m_accepts = "Application/json";
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
 
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);

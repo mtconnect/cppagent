@@ -108,8 +108,6 @@ TEST_F(RelationshipTest, XmlPrinting)
 
 TEST_F(RelationshipTest, JsonPrinting)
 {
-  m_agentTestHelper->m_request->m_accepts = "Application/json";
-
   {
     PARSE_JSON_RESPONSE("/probe");
     
