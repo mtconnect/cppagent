@@ -17,49 +17,43 @@
 
 #include "session_impl.hpp"
 
-#include <boost/bind/bind.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/http/message.hpp>
-#include <boost/beast/http/chunk_encode.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/asio/coroutine.hpp>
-#include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/asio/coroutine.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/http/chunk_encode.hpp>
+#include <boost/beast/http/message.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include "logging.hpp"
-#include "response.hpp"
 #include "request.hpp"
+#include "response.hpp"
 
 namespace mtconnect
 {
   namespace http_server
   {
-    namespace beast = boost::beast;         // from <boost/beast.hpp>
-    namespace http = beast::http;           // from <boost/beast/http.hpp>
-    namespace net = boost::asio;            // from <boost/asio.hpp>
+    namespace beast = boost::beast;  // from <boost/beast.hpp>
+    namespace http = beast::http;    // from <boost/beast/http.hpp>
+    namespace net = boost::asio;     // from <boost/asio.hpp>
     namespace asio = boost::asio;
     namespace ip = boost::asio::ip;
     using tcp = boost::asio::ip::tcp;
     namespace algo = boost::algorithm;
     namespace sys = boost::system;
-    
+
     using namespace std;
     using boost::placeholders::_1;
     using boost::placeholders::_2;
 
-    inline unsigned char hex( unsigned char x )
-    {
-        return x + (x > 9 ? ('A'-10) : '0');
-    }
+    inline unsigned char hex(unsigned char x) { return x + (x > 9 ? ('A' - 10) : '0'); }
 
-    const string urlencode(const string& s )
+    const string urlencode(const string &s)
     {
       ostringstream os;
       for (const auto ci : s)
@@ -77,23 +71,23 @@ namespace mtconnect
           os << '%' << hex(ci >> 4) << hex(ci & 0x0F);
         }
       }
-      
+
       return os.str();
     }
 
     inline unsigned char unhex(unsigned char ch)
     {
-        if (ch <= '9' && ch >= '0')
-            ch -= '0';
-        else if (ch <= 'f' && ch >= 'a')
-            ch -= 'a' - 10;
-        else if (ch <= 'F' && ch >= 'A')
-            ch -= 'A' - 10;
-        else
-            ch = 0;
-        return ch;
+      if (ch <= '9' && ch >= '0')
+        ch -= '0';
+      else if (ch <= 'f' && ch >= 'a')
+        ch -= 'a' - 10;
+      else if (ch <= 'F' && ch >= 'A')
+        ch -= 'A' - 10;
+      else
+        ch = 0;
+      return ch;
     }
-    
+
     const string urldecode(const string_view str)
     {
       ostringstream result;
@@ -119,7 +113,7 @@ namespace mtconnect
       }
       return result.str();
     }
-    
+
     void parseQueries(string qp, map<string, string> &queries)
     {
       vector<boost::iterator_range<string::iterator>> toks;
@@ -153,9 +147,8 @@ namespace mtconnect
         return urldecode(url);
       }
     }
-    
-    void SessionImpl::fail(boost::beast::http::status status,
-                           const std::string &message,
+
+    void SessionImpl::fail(boost::beast::http::status status, const std::string &message,
                            sys::error_code ec)
     {
       NAMED_SCOPE("SessionImpl::fail");
@@ -163,8 +156,7 @@ namespace mtconnect
       LOG(warning) << "Operation failed: " << message;
       if (ec)
       {
-        LOG(warning) << "Closing: " << ec.category().message(ec.value()) << " - "
-            << ec.message();
+        LOG(warning) << "Closing: " << ec.category().message(ec.value()) << " - " << ec.message();
         close();
       }
       else
@@ -172,7 +164,7 @@ namespace mtconnect
         m_errorFunction(shared_ptr(), status, message);
       }
     }
-    
+
     void SessionImpl::reset()
     {
       m_response.reset();
@@ -181,37 +173,31 @@ namespace mtconnect
       m_buffer.clear();
       m_boundary.clear();
       m_mimeType.clear();
-      
+
       m_parser.emplace();
     }
-
 
     void SessionImpl::run()
     {
       NAMED_SCOPE("SessionImpl::run");
       net::dispatch(m_stream.get_executor(),
-                    beast::bind_front_handler(&SessionImpl::read,
-                                              shared_ptr()));
+                    beast::bind_front_handler(&SessionImpl::read, shared_ptr()));
     }
-      
+
     void SessionImpl::read()
     {
       NAMED_SCOPE("SessionImpl::read");
       reset();
       m_parser->body_limit(100000);
       m_stream.expires_after(30s);
-      http::async_read(m_stream,
-                       m_buffer,
-                       *m_parser,
-                       beast::bind_front_handler(&SessionImpl::requested,
-                                                 shared_ptr()));
-      
+      http::async_read(m_stream, m_buffer, *m_parser,
+                       beast::bind_front_handler(&SessionImpl::requested, shared_ptr()));
     }
-      
+
     void SessionImpl::requested(boost::system::error_code ec, size_t len)
     {
       NAMED_SCOPE("SessionImpl::requested");
-      
+
       if (ec)
       {
         fail(status::internal_server_error, "Could not read request", ec);
@@ -226,62 +212,64 @@ namespace mtconnect
         {
           if (!m_allowPuts)
           {
-            fail(http::status::bad_request, "PUT, POST, and DELETE are not allowed. MTConnect Agent is read only and only GET is allowed.");
+            fail(http::status::bad_request,
+                 "PUT, POST, and DELETE are not allowed. MTConnect Agent is read only and only GET "
+                 "is allowed.");
             return;
           }
           else if (!m_allowPutsFrom.empty() &&
                    m_allowPutsFrom.find(remote.address()) == m_allowPutsFrom.end())
           {
-            fail(http::status::bad_request, "PUT, POST, and DELETE are not allowed from "
-                 + remote.address().to_string());
+            fail(http::status::bad_request,
+                 "PUT, POST, and DELETE are not allowed from " + remote.address().to_string());
             return;
           }
         }
-        
+
         m_request = make_shared<Request>();
         m_request->m_verb = msg.method();
         m_request->m_path = parseUrl(string(msg.target()), m_request->m_query);
-        
+
         if (auto a = msg.find(http::field::accept); a != msg.end())
           m_request->m_accepts = string(a->value());
         if (auto a = msg.find(http::field::content_type); a != msg.end())
           m_request->m_contentType = string(a->value());
         m_request->m_body = msg.body();
-        
-        if (auto f = msg.find(http::field::content_type); f != msg.end() && f->value() == "application/x-www-form-urlencoded" && m_request->m_body[0] != '<')
+
+        if (auto f = msg.find(http::field::content_type);
+            f != msg.end() && f->value() == "application/x-www-form-urlencoded" &&
+            m_request->m_body[0] != '<')
         {
           parseQueries(m_request->m_body, m_request->m_query);
         }
-        
+
         m_request->m_foreignIp = remote.address().to_string();
         m_request->m_foreignPort = remote.port();
         if (auto a = msg.find(http::field::connection); a != msg.end())
           m_close = a->value() == "close";
-        
+
         m_request->m_session = shared_ptr();
-        
+
         try
         {
           if (!m_dispatch(m_request))
           {
             ostringstream txt;
-            txt << "Failed to find handler for " << msg.method() << " " <<
-                  msg.target();
+            txt << "Failed to find handler for " << msg.method() << " " << msg.target();
             LOG(error) << txt.str();
             fail(status::not_found, txt.str());
           }
         }
         catch (RequestError &e)
         {
-          LOG(error) << "Error processing request from: " << remote.address() << " - "
-              << e.what();
+          LOG(error) << "Error processing request from: " << remote.address() << " - " << e.what();
           fail(status::bad_request, e.what());
         }
         catch (ParameterError &e)
         {
           stringstream txt;
           txt << "Parameter Error processing request from: " << remote.address() << " - "
-            << e.what();
+              << e.what();
           LOG(error) << txt.str();
           fail(status::not_found, txt.str());
         }
@@ -308,7 +296,7 @@ namespace mtconnect
           close();
       }
     }
-      
+
     void SessionImpl::close()
     {
       NAMED_SCOPE("SessionImpl::close");
@@ -317,7 +305,7 @@ namespace mtconnect
       beast::error_code ec;
       m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
     }
-        
+
     void SessionImpl::beginStreaming(const std::string &mimeType, Complete complete)
     {
       NAMED_SCOPE("SessionImpl::beginStreaming");
@@ -329,7 +317,7 @@ namespace mtconnect
       m_complete = complete;
       m_mimeType = mimeType;
       m_streaming = true;
-      
+
       auto res = make_shared<http::response<empty_body>>(status::ok, 11);
       m_response = res;
       res->chunked(true);
@@ -346,34 +334,35 @@ namespace mtconnect
       auto sr = make_shared<response_serializer<empty_body>>(*res);
       m_serializer = sr;
       async_write_header(m_stream, *sr,
-                         beast::bind_front_handler(&SessionImpl::sent,
-                                                   shared_ptr()));
-                         
+                         beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
-    
+
     void SessionImpl::writeChunk(const std::string &body, Complete complete)
     {
       NAMED_SCOPE("SessionImpl::writeChunk");
 
       m_complete = complete;
-      
+
       ostringstream str;
-      str << "--" + m_boundary << "\r\n"
-             "Content-type: " <<  m_mimeType << "\r\n"
-             "Content-length: " << to_string(body.length()) << ";\r\n\r\n" <<
-             body;
-      
+      str << "--" + m_boundary
+          << "\r\n"
+             "Content-type: "
+          << m_mimeType
+          << "\r\n"
+             "Content-length: "
+          << to_string(body.length()) << ";\r\n\r\n"
+          << body;
+
       m_buffer.clear();
       auto size = str.str().size();
       net::const_buffers_1 buf(str.str().c_str(), size);
       asio::buffer_copy(m_buffer.prepare(size), buf);
       m_buffer.commit(size);
-      
+
       async_write(m_stream, http::make_chunk(m_buffer.data()),
-                  beast::bind_front_handler(&SessionImpl::sent,
-                                            shared_ptr()));
+                  beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
-    
+
     void SessionImpl::closeStream()
     {
       NAMED_SCOPE("SessionImpl::closeStream");
@@ -381,8 +370,7 @@ namespace mtconnect
       m_complete = [this]() { close(); };
       http::fields trailer;
       async_write(m_stream, http::make_chunk_last(trailer),
-                  beast::bind_front_handler(&SessionImpl::sent,
-                                            shared_ptr()));
+                  beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
 
     void SessionImpl::writeResponse(const Response &response, Complete complete)
@@ -411,12 +399,10 @@ namespace mtconnect
 
       res->content_length(response.m_body.size());
       res->prepare_payload();
-      
+
       m_response = res;
 
-      async_write(m_stream, *res,
-                  beast::bind_front_handler(&SessionImpl::sent,
-                                            shared_ptr()));
+      async_write(m_stream, *res, beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
-  }
-}
+  }  // namespace http_server
+}  // namespace mtconnect

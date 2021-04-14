@@ -17,16 +17,15 @@
 
 #pragma once
 
-
-#include <boost/beast/http/verb.hpp>
 #include <boost/beast/http/status.hpp>
+#include <boost/beast/http/verb.hpp>
+
 #include "parameter.hpp"
 
 namespace mtconnect
 {
   namespace http_server
   {
-    
     class RequestError : public std::logic_error
     {
     public:
@@ -44,10 +43,9 @@ namespace mtconnect
       boost::beast::http::status m_code;
     };
 
-
     class Session;
     using SessionPtr = std::shared_ptr<Session>;
-    
+
     struct Request
     {
       boost::beast::http::verb m_verb;
@@ -60,7 +58,7 @@ namespace mtconnect
       QueryMap m_query;
       ParameterMap m_parameters;
       SessionPtr m_session;
-      
+
       template <typename T>
       std::optional<T> parameter(const std::string &s) const
       {
@@ -71,8 +69,7 @@ namespace mtconnect
           return std::get<T>(v->second);
       }
     };
-    
-    using RequestPtr = std::shared_ptr<Request>;
-  }
-}
 
+    using RequestPtr = std::shared_ptr<Request>;
+  }  // namespace http_server
+}  // namespace mtconnect

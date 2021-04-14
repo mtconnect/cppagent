@@ -18,34 +18,33 @@
 #pragma once
 
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/http/status.hpp>
 
-#include "utilities.hpp"
 #include <unordered_map>
 
-#include <boost/beast/http/status.hpp>
+#include "utilities.hpp"
 
 namespace mtconnect
 {
   class Printer;
-  
+
   namespace http_server
   {
     using status = boost::beast::http::status;
 
     struct Response
     {
-      Response(status status = status::ok,
-               const std::string &body = "",
+      Response(status status = status::ok, const std::string &body = "",
                const std::string &mimeType = "text/xml")
-      : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
+        : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
       {
       }
 
       status m_status;
-      std::string  m_body;
-      std::string  m_mimeType;
+      std::string m_body;
+      std::string m_mimeType;
       std::chrono::seconds m_expires;
-      bool m_close{false};
+      bool m_close {false};
     };
   }  // namespace http_server
 }  // namespace mtconnect

@@ -17,16 +17,16 @@
 
 #include "deliver.hpp"
 
-#include "logging.hpp"
-
-#include "agent.hpp"
-#include "assets/cutting_tool.hpp"
-#include "assets/file_asset.hpp"
 #include <boost/asio/bind_executor.hpp>
 #include <boost/bind.hpp>
 #include <boost/bind/placeholders.hpp>
 
 #include <chrono>
+
+#include "agent.hpp"
+#include "assets/cutting_tool.hpp"
+#include "assets/file_asset.hpp"
+#include "logging.hpp"
 
 using namespace std::literals::chrono_literals;
 
@@ -52,12 +52,12 @@ namespace mtconnect
 
       return entity;
     }
-    
+
     void ComputeMetrics::start()
     {
       m_timer.cancel();
       m_first = true;
-      
+
       compute(boost::system::error_code());
     }
 
@@ -71,17 +71,17 @@ namespace mtconnect
         using namespace std;
         using namespace chrono;
         using namespace chrono_literals;
-        
+
         if (!m_dataItem)
           return;
-        
+
         auto di = m_contract->findDataItem("Agent", *m_dataItem);
         if (di == nullptr)
         {
           LOG(warning) << "Could not find data item: " << *m_dataItem << ", exiting metrics";
           return;
         }
-        
+
         auto now = std::chrono::steady_clock::now();
         if (m_first)
         {
@@ -94,31 +94,31 @@ namespace mtconnect
         {
           std::chrono::duration<double> dt = now - m_lastTime;
           m_lastTime = now;
-          
+
           auto count = *m_count;
           auto delta = count - m_last;
-          
+
           double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
+          LOG(debug) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
           LOG(debug) << *m_dataItem
-          << " - Average for last 1 minutes: " << (avg / dt.count());
-          LOG(debug) << *m_dataItem
-          << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
-          
+                     << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
+
           m_last = count;
           if (avg != m_lastAvg)
           {
             ErrorList errors;
             auto obs = Observation::make(
-                                         di, Properties {{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
-                                         system_clock::now(), errors);
+                di, Properties {{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
+                system_clock::now(), errors);
             m_contract->deliverObservation(obs);
             m_lastAvg = avg;
           }
         }
-        
+
         using boost::placeholders::_1;
         m_timer.expires_from_now(10s);
-        m_timer.async_wait(boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, this, _1)));
+        m_timer.async_wait(
+            boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, this, _1)));
       }
     }
 

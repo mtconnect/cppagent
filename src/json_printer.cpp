@@ -17,12 +17,11 @@
 
 #include "json_printer.hpp"
 
+#include <boost/asio/ip/host_name.hpp>
+
 #include <cstdlib>
 #include <set>
 #include <sstream>
-
-#include "logging.hpp"
-#include <boost/asio/ip/host_name.hpp>
 
 #include <nlohmann/json.hpp>
 
@@ -31,6 +30,7 @@
 #include "device_model/device.hpp"
 #include "device_model/reference.hpp"
 #include "entity/json_printer.hpp"
+#include "logging.hpp"
 #include "version.h"
 
 using namespace std;
@@ -58,8 +58,8 @@ namespace mtconnect
       string name;
       boost::system::error_code ec;
       name = boost::asio::ip::host_name(ec);
-        if (ec)
-          name = "localhost";
+      if (ec)
+        name = "localhost";
       // Breaking the rules, this is a one off
       const_cast<JsonPrinter *>(this)->m_hostname = name;
     }

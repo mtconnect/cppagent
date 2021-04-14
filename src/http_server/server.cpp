@@ -17,41 +17,35 @@
 
 #include "server.hpp"
 
-#include <boost/asio.hpp>
-#include <boost/beast.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/asio/coroutine.hpp>
-#include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
-
-#include "logging.hpp"
-#include "session_impl.hpp"
+#include <boost/asio.hpp>
+#include <boost/asio/coroutine.hpp>
+#include <boost/beast.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <thread>
 
-
+#include "logging.hpp"
+#include "session_impl.hpp"
 
 namespace mtconnect
 {
   namespace http_server
   {
-    namespace beast = boost::beast;         // from <boost/beast.hpp>
-    namespace http = beast::http;           // from <boost/beast/http.hpp>
-    namespace net = boost::asio;            // from <boost/asio.hpp>
+    namespace beast = boost::beast;  // from <boost/beast.hpp>
+    namespace http = beast::http;    // from <boost/beast/http.hpp>
+    namespace net = boost::asio;     // from <boost/asio.hpp>
     namespace asio = boost::asio;
     namespace ip = boost::asio::ip;
     using tcp = boost::asio::ip::tcp;
     namespace algo = boost::algorithm;
-    
+
     using namespace std;
     using boost::placeholders::_1;
     using boost::placeholders::_2;
-    
 
     void Server::start()
     {
@@ -71,16 +65,16 @@ namespace mtconnect
     void Server::listen()
     {
       NAMED_SCOPE("Server::listen");
-      
+
       beast::error_code ec;
-      
-//            if(enableSSL) {
-//                // The SSL context is required, and holds certificates
-//                ssl::context ctx{ssl::context::tlsv12};
-//
-//                // This holds the self-signed certificate used by the server
-//                load_server_certificate(ctx);
-//            }
+
+      //            if(enableSSL) {
+      //                // The SSL context is required, and holds certificates
+      //                ssl::context ctx{ssl::context::tlsv12};
+      //
+      //                // This holds the self-signed certificate used by the server
+      //                load_server_certificate(ctx);
+      //            }
 
       // Blocking call to listen for a connection
       tcp::endpoint ep(m_address, m_port);
@@ -113,16 +107,16 @@ namespace mtconnect
         fail(ec, "Cannot set listen queue length");
         return;
       }
-       
+
       m_listening = true;
       m_acceptor.async_accept(net::make_strand(m_context),
                               beast::bind_front_handler(&Server::accept, this));
     }
-    
+
     bool Server::allowPutFrom(const std::string &host)
     {
       NAMED_SCOPE("Server::allowPutFrom");
-      
+
       // Resolve the host to an ip address to verify remote addr
       beast::error_code ec;
       ip::tcp::resolver resolve(m_context);
@@ -130,8 +124,7 @@ namespace mtconnect
       if (ec)
       {
         LOG(error) << "Cannot resolve address: " << host;
-        LOG(error) << ec.category().message(ec.value()) << ": "
-        << ec.message();
+        LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
         return false;
       }
 
@@ -141,10 +134,9 @@ namespace mtconnect
         m_allowPutsFrom.insert(addr.endpoint().address());
       }
       m_allowPuts = true;
-      
+
       return true;
     }
-
 
     void Server::accept(beast::error_code ec, tcp::socket socket)
     {
@@ -152,16 +144,19 @@ namespace mtconnect
 
       if (ec)
       {
-        LOG(error) << ec.category().message(ec.value()) << ": "
-        << ec.message();
+        LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
 
         fail(ec, "Accept failed");
       }
       else
       {
-        auto session = make_shared<SessionImpl>(socket, m_fields, [this](RequestPtr request){
-          dispatch(request);
-          return true; }, m_errorFunction);
+        auto session = make_shared<SessionImpl>(
+            socket, m_fields,
+            [this](RequestPtr request) {
+              dispatch(request);
+              return true;
+            },
+            m_errorFunction);
         if (!m_allowPutsFrom.empty())
           session->allowPutsFrom(m_allowPutsFrom);
         else if (m_allowPuts)
@@ -171,7 +166,7 @@ namespace mtconnect
                                 beast::bind_front_handler(&Server::accept, this));
       }
     }
-    
+
 #if 0
 
     bool Server::handleRequest(Routing::Request &request)
@@ -218,12 +213,12 @@ namespace mtconnect
 
 #endif
 
+    //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-
-// Report a failure
-    void Server::fail(beast::error_code ec, char const *what) {
-      LOG(error)  << " error: " << ec.message();
+    // Report a failure
+    void Server::fail(beast::error_code ec, char const *what)
+    {
+      LOG(error) << " error: " << ec.message();
     }
 
   }  // namespace http_server

@@ -93,8 +93,7 @@ namespace mtconnect
             }
             catch (PropertyError &e)
             {
-              LOG(warning) << "Error occurred converting " << r.getName() << ": "
-                       << e.what();
+              LOG(warning) << "Error occurred converting " << r.getName() << ": " << e.what();
               e.setProperty(r.getName());
               errors.emplace_back(e.dup());
               properties.erase(p);

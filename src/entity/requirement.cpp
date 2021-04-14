@@ -23,10 +23,10 @@
 #include <ctime>
 #include <date/date.h>
 #include <string_view>
-#include "logging.hpp"
 
 #include "entity.hpp"
 #include "factory.hpp"
+#include "logging.hpp"
 
 using namespace std;
 
@@ -39,7 +39,7 @@ namespace mtconnect
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
       NAMED_SCOPE("EntityRequirement");
-      
+
       if (type == ENTITY_LIST)
       {
         f->setList(true);

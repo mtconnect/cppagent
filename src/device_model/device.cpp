@@ -17,10 +17,9 @@
 
 #include "device.hpp"
 
-#include "logging.hpp"
-
 #include "configuration/config_options.hpp"
 #include "entity/factory.hpp"
+#include "logging.hpp"
 
 using namespace std;
 
@@ -98,8 +97,8 @@ namespace mtconnect
 
       if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
       {
-        LOG(error) << "Duplicate data item id: " << dataItem->getId()
-                 << " for device " << get<string>("name") << ", skipping";
+        LOG(error) << "Duplicate data item id: " << dataItem->getId() << " for device "
+                   << get<string>("name") << ", skipping";
       }
       else
         m_deviceDataItemsById[dataItem->getId()] = dataItem;

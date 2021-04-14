@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include <date/tz.h>
-
 #include <chrono>
 #include <date/tz.h>
 #include <optional>
@@ -61,15 +59,12 @@ namespace mtconnect
     {
     public:
       // Associate adapter with a device & connect to the server & port
-      Adapter(boost::asio::io_context &context, const std::string &server, const unsigned int port, const ConfigOptions &options,
-              std::unique_ptr<AdapterPipeline> &pipeline);
+      Adapter(boost::asio::io_context &context, const std::string &server, const unsigned int port,
+              const ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline);
       Adapter(const Adapter &) = delete;
 
       // Virtual destructor
-      ~Adapter() override
-      {
-        stop();
-      }
+      ~Adapter() override { stop(); }
 
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
       auto &getTerminator() const { return m_terminator; }

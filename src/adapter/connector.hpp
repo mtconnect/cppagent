@@ -36,8 +36,7 @@ namespace mtconnect
     {
     public:
       // Instantiate the server by assigning it a server and port/
-      Connector(boost::asio::io_context &context,
-                std::string server, unsigned int port,
+      Connector(boost::asio::io_context &context, std::string server, unsigned int port,
                 std::chrono::seconds legacyTimout = std::chrono::seconds {600},
                 std::chrono::seconds reconnectInterval = std::chrono::seconds {10});
 
@@ -54,7 +53,7 @@ namespace mtconnect
       // Abstract method to handle what to do with each line of data from Socket
       virtual void processData(const std::string &data) = 0;
       virtual void protocolCommand(const std::string &data) = 0;
-      
+
       // Set Reconnect intervals
       void setReconnectInterval(std::chrono::milliseconds interval)
       {
@@ -94,7 +93,7 @@ namespace mtconnect
       void close();
       void reconnect();
       void asyncTryConnect();
-      void connected(const boost::system::error_code& error,
+      void connected(const boost::system::error_code &error,
                      boost::asio::ip::tcp::resolver::iterator it);
       void writer(boost::system::error_code ec, std::size_t length);
       void reader(boost::system::error_code ec, std::size_t length);
@@ -112,7 +111,7 @@ namespace mtconnect
       boost::asio::ip::tcp::socket m_socket;
       boost::asio::ip::tcp::endpoint m_endpoint;
       boost::asio::ip::tcp::resolver::results_type m_results;
-      
+
       // For reentry
       boost::asio::coroutine m_coroutine;
 

@@ -33,10 +33,7 @@ namespace mtconnect
     class ChangeObserver
     {
     public:
-      ChangeObserver(boost::asio::io_context &context)
-      : m_timer(context)
-      {
-      }
+      ChangeObserver(boost::asio::io_context &context) : m_timer(context) {}
 
       virtual ~ChangeObserver();
 
@@ -80,7 +77,7 @@ namespace mtconnect
     private:
       mutable std::recursive_mutex m_mutex;
       boost::asio::steady_timer m_timer;
-      
+
       std::list<ChangeSignaler *> m_signalers;
       volatile uint64_t m_sequence = UINT64_MAX;
 

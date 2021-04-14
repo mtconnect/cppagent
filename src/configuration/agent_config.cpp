@@ -25,8 +25,8 @@
 #include <boost/log/support/date_time.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/file.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -74,7 +74,8 @@ namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
 namespace b_logger = boost::log;
 BOOST_LOG_ATTRIBUTE_KEYWORD(named_scope, "Scope", b_logger::attributes::named_scope::value_type);
-BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", b_logger::attributes::utc_clock::value_type);
+BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp",
+                            b_logger::attributes::utc_clock::value_type);
 
 namespace mtconnect
 {
@@ -128,7 +129,7 @@ namespace mtconnect
     AgentConfiguration::AgentConfiguration()
     {
       NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
-            
+
       bool success = false;
 
 #if _WINDOWS
@@ -148,7 +149,7 @@ namespace mtconnect
 #endif
 #endif
 #endif
-      
+
       if (success)
       {
         fs::path ep(execPath);
@@ -182,15 +183,14 @@ namespace mtconnect
           if (!m_exePath.empty())
           {
             LOG(info) << "Cannot find " << m_configFile
-                     << " in current directory, searching exe path: " << m_exePath;
+                      << " in current directory, searching exe path: " << m_exePath;
             cerr << "Cannot find " << m_configFile
                  << " in current directory, searching exe path: " << m_exePath << endl;
             m_configFile = (m_exePath / m_configFile).string();
           }
           else
           {
-            LOG(fatal) << "Agent failed to load: Cannot find configuration file: '"
-                     << m_configFile;
+            LOG(fatal) << "Agent failed to load: Cannot find configuration file: '" << m_configFile;
             cerr << "Agent failed to load: Cannot find configuration file: '" << m_configFile
                  << std::endl;
             optionList.usage();
@@ -265,7 +265,7 @@ namespace mtconnect
       time_t devices_at_start = 0, cfg_at_start = 0;
 
       LOG(debug) << "Monitoring files: " << m_configFile << " and " << m_devicesFile
-               << ", will warm start if they change.";
+                 << ", will warm start if they change.";
 
       if ((cfg_at_start = GetFileModificationTime(m_configFile)) == 0)
       {
@@ -293,15 +293,14 @@ namespace mtconnect
 
         if ((cfg = GetFileModificationTime(m_configFile)) == 0)
         {
-          LOG(warning) << "Cannot stat config file: " << m_configFile
-                   << ", retrying in 10 seconds";
+          LOG(warning) << "Cannot stat config file: " << m_configFile << ", retrying in 10 seconds";
           check = false;
         }
 
         if ((devices = GetFileModificationTime(m_devicesFile)) == 0)
         {
           LOG(warning) << "Cannot stat devices file: " << m_devicesFile
-                   << ", retrying in 10 seconds";
+                       << ", retrying in 10 seconds";
           check = false;
         }
 
@@ -312,11 +311,10 @@ namespace mtconnect
         if (check && (cfg_at_start != cfg || devices_at_start != devices))
         {
           time_t now = time(nullptr);
-          LOG(warning)
-              << "Detected change in configuration files. Will reload when youngest file is at least "
-              << m_minimumConfigReloadAge << " seconds old";
-          LOG(warning) << "    Devices.xml file modified " << (now - devices)
-                   << " seconds ago";
+          LOG(warning) << "Detected change in configuration files. Will reload when youngest file "
+                          "is at least "
+                       << m_minimumConfigReloadAge << " seconds old";
+          LOG(warning) << "    Devices.xml file modified " << (now - devices) << " seconds ago";
           LOG(warning) << "    ...cfg file modified " << (now - cfg) << " seconds ago";
 
           changed =
@@ -357,12 +355,12 @@ namespace mtconnect
         {
           // Start the file monitor to check for changes to cfg or devices.
           LOG(debug) << "Waiting for monitor thread to exit to restart agent";
-          //mon = std::make_unique<>(
-          //make_mfp(*this, &AgentConfiguration::monitorThread));
+          // mon = std::make_unique<>(
+          // make_mfp(*this, &AgentConfiguration::monitorThread));
         }
 
         m_agent->start();
-        
+
         for (int i = 0; i < m_workerThreadCount; i++)
         {
           m_workers.emplace_back(std::thread([this]() { m_context.run(); }));
@@ -371,12 +369,12 @@ namespace mtconnect
         {
           w.join();
         }
-        
+
         if (m_restart && m_monitorFiles)
         {
           // Will destruct and wait to re-initialize.
           LOG(debug) << "Waiting for monitor thread to exit to restart agent";
-          //mon.reset(nullptr);
+          // mon.reset(nullptr);
           LOG(debug) << "Monitor has exited";
         }
       } while (m_restart);
@@ -425,7 +423,7 @@ namespace mtconnect
     void AgentConfiguration::configureLogger(const ptree &config)
     {
       m_sink.reset();
-      
+
       //// Add the commonly used attributes; includes TimeStamp, ProcessID and ThreadID and others
       b_logger::add_common_attributes();
       b_logger::core::get()->add_global_attribute("Scope", b_logger::attributes::named_scope());
@@ -464,9 +462,9 @@ namespace mtconnect
       else
       {
         string name("agent.log");
-        int max_size = 10; // in MB
-        int rotation_size = 2; // in MB
-        int rotation_time_interval = 0; // in hr
+        int max_size = 10;               // in MB
+        int rotation_size = 2;           // in MB
+        int rotation_time_interval = 0;  // in hr
         int max_index = 9;
 
         if (logger)
@@ -536,7 +534,7 @@ namespace mtconnect
             stringstream si(logger->get<string>("max_index"));
             si >> max_index;
           }
-          
+
           if (logger->get_optional<string>("schedule"))
           {
             auto sched = logger->get<string>("schedule");
@@ -555,8 +553,8 @@ namespace mtconnect
         if (!path.is_absolute())
           path = fs::absolute(path);
 
-        path /= name+".%N";
-        
+        path /= name + ".%N";
+
         boost::shared_ptr<b_logger::core> core = b_logger::core::get();
 
         // Create a text file sink
@@ -593,7 +591,7 @@ namespace mtconnect
             << ") "
             << "[" << boost::log::trivial::severity << "] " << named_scope << ": "
             << b_logger::expressions::smessage);
-        
+
         core->add_sink(m_sink);
       }
     }
@@ -624,12 +622,11 @@ namespace mtconnect
       // Now get our configuration
       auto config = Parser::parse(file);
 
-      //if (!m_loggerFile)
+      // if (!m_loggerFile)
       if (!m_sink)
       {
         configureLogger(config);
       }
-
 
       ConfigOptions options;
       GetOptions(config, options,
@@ -657,7 +654,7 @@ namespace mtconnect
                   {configuration::WorkerThreads, 1},
                   {configuration::AllowPut, false},
                   {configuration::AllowPutFrom, ""s}});
-      
+
       m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
 
       auto devices = config.get_optional<string>(configuration::Devices);
@@ -701,8 +698,8 @@ namespace mtconnect
       auto port = get<int>(options[configuration::Port]);
       LOG(info) << "Starting agent on port " << port;
 
-      auto server = make_unique<http_server::Server>(m_context, 
-          port, get<string>(options[configuration::ServerIp]), options);
+      auto server = make_unique<http_server::Server>(
+          m_context, port, get<string>(options[configuration::ServerIp]), options);
       loadAllowPut(server.get(), options);
 
       auto cp = make_unique<http_server::FileCache>();
@@ -802,8 +799,7 @@ namespace mtconnect
           }
           if (!device)
           {
-            LOG(warning) << "Cannot locate device name '" << deviceName
-                     << "', assuming dynamic";
+            LOG(warning) << "Cannot locate device name '" << deviceName << "', assuming dynamic";
           }
 
           auto additional = block.second.get_optional<string>(configuration::AdditionalDevices);
@@ -828,8 +824,8 @@ namespace mtconnect
           }
 
           LOG(info) << "Adding adapter for " << deviceName << " on "
-                   << get<string>(adapterOptions[configuration::Host]) << ":"
-                   << get<string>(adapterOptions[configuration::Host]);
+                    << get<string>(adapterOptions[configuration::Host]) << ":"
+                    << get<string>(adapterOptions[configuration::Host]);
 
           auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
           auto adp =
@@ -844,8 +840,7 @@ namespace mtconnect
 
         auto deviceName = *device->getComponentName();
         adapterOptions[configuration::Device] = deviceName;
-        LOG(info) << "Adding default adapter for " << device->getName()
-                 << " on localhost:7878";
+        LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
 
         auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
         auto adp = new Adapter(m_context, "localhost", 7878, adapterOptions, pipeline);
@@ -935,8 +930,8 @@ namespace mtconnect
               auto xns = cache->registerFile(location, *path, m_version);
               if (!xns)
               {
-                LOG(debug) << "Cannot register " << urn << " at " << location
-                         << " and path " << *path;
+                LOG(debug) << "Cannot register " << urn << " at " << location << " and path "
+                           << *path;
               }
             }
           }
@@ -957,7 +952,7 @@ namespace mtconnect
           if (!location || !path)
           {
             LOG(error) << "Name space must have a Location (uri) or Directory and Path: "
-                     << file.first;
+                       << file.first;
           }
           else
           {

@@ -20,10 +20,9 @@
 #include <mutex>
 #include <regex>
 
-#include "logging.hpp"
-
 #include "device_model/data_item/data_item.hpp"
 #include "entity/factory.hpp"
+#include "logging.hpp"
 
 #ifdef _WINDOWS
 #define strcasecmp stricmp
@@ -90,7 +89,7 @@ namespace mtconnect
                                      const Timestamp &timestamp, entity::ErrorList &errors)
     {
       NAMED_SCOPE("Observation");
-      
+
       auto props = entity::Properties(incompingProps);
       setProperties(dataItem, props);
       props.insert_or_assign("timestamp", timestamp);
@@ -136,8 +135,7 @@ namespace mtconnect
       auto ent = getFactory()->create(key, props, errors);
       if (!ent)
       {
-        LOG(warning)
-                 << "Could not parse properties for data item: " << dataItem->getId();
+        LOG(warning) << "Could not parse properties for data item: " << dataItem->getId();
         for (auto &e : errors)
         {
           LOG(warning) << "   Error: " << e->what();

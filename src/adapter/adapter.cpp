@@ -23,10 +23,9 @@
 #include <thread>
 #include <utility>
 
-#include "logging.hpp"
-
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
+#include "logging.hpp"
 
 using namespace std;
 using namespace std::literals;
@@ -37,9 +36,8 @@ namespace mtconnect
   namespace adapter
   {
     // Adapter public methods
-    Adapter::Adapter(boost::asio::io_context &context,
-                     const string &server, const unsigned int port,
-                     const ConfigOptions &options,
+    Adapter::Adapter(boost::asio::io_context &context, const string &server,
+                     const unsigned int port, const ConfigOptions &options,
                      std::unique_ptr<AdapterPipeline> &pipeline)
       : Connector(context, server, port, 60s),
         m_pipeline(std::move(pipeline)),
@@ -53,7 +51,7 @@ namespace mtconnect
       stringstream url;
       url << "shdr://" << server << ':' << port;
       m_url = url.str();
-      
+
       stringstream identity;
       identity << '_' << server << '_' << port;
       m_identity = identity.str();
@@ -62,7 +60,8 @@ namespace mtconnect
       if (m_pipeline->hasContract())
         m_pipeline->build(m_options);
       auto intv = GetOption<Milliseconds>(options, configuration::ReconnectInterval);
-      if (intv) m_reconnectInterval = *intv;
+      if (intv)
+        m_reconnectInterval = *intv;
     }
 
     void Adapter::processData(const string &data)

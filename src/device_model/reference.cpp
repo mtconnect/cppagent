@@ -23,10 +23,9 @@
 #include <string>
 #include <utility>
 
-#include "logging.hpp"
-
 #include "device.hpp"
 #include "entity.hpp"
+#include "logging.hpp"
 #include "utilities.hpp"
 
 using namespace std;
@@ -80,8 +79,7 @@ namespace mtconnect
         if (comp)
           m_component = comp;
         else
-          LOG(warning) << "Refernce: Cannot find Component for idRef "
-                   << get<string>("idRef");
+          LOG(warning) << "Refernce: Cannot find Component for idRef " << get<string>("idRef");
       }
       else if (m_type == DATA_ITEM)
       {
@@ -89,8 +87,7 @@ namespace mtconnect
         if (di)
           m_dataItem = di;
         else
-          LOG(warning) << "Refernce: Cannot find DataItem for idRef "
-                   << get<string>("idRef");
+          LOG(warning) << "Refernce: Cannot find DataItem for idRef " << get<string>("idRef");
       }
       else
       {

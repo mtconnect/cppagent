@@ -17,9 +17,9 @@
 
 #include "entity/json_parser.hpp"
 
-#include "logging.hpp"
-
 #include <nlohmann/json.hpp>
+
+#include "logging.hpp"
 
 using namespace std;
 using json = nlohmann::json;

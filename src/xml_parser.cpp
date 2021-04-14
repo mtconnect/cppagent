@@ -19,7 +19,6 @@
 
 #include <stdexcept>
 
-#include "logging.hpp"
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
@@ -27,6 +26,7 @@
 #include "assets/cutting_tool.hpp"
 #include "device_model/composition.hpp"
 #include "entity/xml_parser.hpp"
+#include "logging.hpp"
 #include "xml_printer.hpp"
 
 #if _MSC_VER >= 1900

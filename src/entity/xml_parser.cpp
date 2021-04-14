@@ -17,12 +17,11 @@
 
 #include "entity/xml_parser.hpp"
 
-#include "logging.hpp"
-
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
+#include "logging.hpp"
 #include "xml_helper.hpp"
 
 using namespace std;

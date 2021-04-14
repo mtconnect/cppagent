@@ -19,14 +19,12 @@
 #include <boost/asio.hpp>
 // End Exclude
 
-#include "xml_printer.hpp"
+#include <boost/asio/ip/host_name.hpp>
 
 #include <set>
 #include <typeindex>
 #include <typeinfo>
 #include <utility>
-
-#include "logging.hpp"
 
 #include <libxml/xmlwriter.h>
 
@@ -36,9 +34,9 @@
 #include "device_model/configuration/configuration.hpp"
 #include "device_model/device.hpp"
 #include "entity/xml_printer.hpp"
+#include "logging.hpp"
 #include "version.h"
-
-#include <boost/asio/ip/host_name.hpp>
+#include "xml_printer.hpp"
 
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr)                                           \

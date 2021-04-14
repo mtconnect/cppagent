@@ -17,27 +17,27 @@
 
 #pragma once
 
-#include <boost/bind/bind.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/http/status.hpp>
+#include <boost/bind/bind.hpp>
 
+#include <chrono>
 #include <cstdlib>
 #include <iostream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <thread>
-#include <chrono>
 #include <mutex>
 #include <regex>
-#include "configuration/config_options.hpp"
+#include <sstream>
+#include <string>
+#include <thread>
+#include <vector>
 
+#include "configuration/config_options.hpp"
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
-#include "utilities.hpp"
 #include "session.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {
@@ -45,9 +45,10 @@ namespace mtconnect
   {
     class Server
     {
-    public:      
-      Server(boost::asio::io_context &context, unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
-      : m_context(context), m_port(port), m_acceptor(context)
+    public:
+      Server(boost::asio::io_context &context, unsigned short port = 5000,
+             const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
+        : m_context(context), m_port(port), m_acceptor(context)
       {
         if (inter.empty())
         {
@@ -60,7 +61,7 @@ namespace mtconnect
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
         if (fields)
           setHttpHeaders(*fields);
-        
+
         m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
           Response response(st, msg, "text/plain");
           session->writeResponse(response);
@@ -72,7 +73,7 @@ namespace mtconnect
       void start();
 
       // Shutdown
-      void stop(){m_run=false;};
+      void stop() { m_run = false; };
 
       void listen();
 
@@ -87,17 +88,14 @@ namespace mtconnect
           }
         }
       }
-      
+
       auto getPort() const { return m_port; }
 
       // PUT and POST handling
       bool isListening() const { return m_listening; }
       bool arePutsAllowed() const { return m_allowPuts; }
       bool allowPutFrom(const std::string &host);
-      void allowPuts(bool allow = true)
-      {
-        m_allowPuts = allow;
-      }
+      void allowPuts(bool allow = true) { m_allowPuts = allow; }
       bool isPutAllowedFrom(boost::asio::ip::address &addr) const
       {
         return m_allowPutsFrom.find(addr) != m_allowPutsFrom.end();
@@ -121,24 +119,24 @@ namespace mtconnect
 
     protected:
       boost::asio::io_context &m_context;
-      
-      boost::asio::ip::address m_address;
-      unsigned short m_port{5000};
 
-      bool m_run{false};
-      bool m_enableSSL{false};
-      bool m_listening{false};
-      
+      boost::asio::ip::address m_address;
+      unsigned short m_port {5000};
+
+      bool m_run {false};
+      bool m_enableSSL {false};
+      bool m_listening {false};
+
       ConfigOptions m_options;
       // Put handling controls
-      bool m_allowPuts{false};
+      bool m_allowPuts {false};
       std::set<boost::asio::ip::address> m_allowPutsFrom;
-      
+
       std::list<Routing> m_routings;
       std::unique_ptr<FileCache> m_fileCache;
       ErrorFunction m_errorFunction;
       FieldList m_fields;
-      
+
       boost::asio::ip::tcp::acceptor m_acceptor;
     };
   }  // namespace http_server

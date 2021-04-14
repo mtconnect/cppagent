@@ -17,12 +17,11 @@
 
 #include "shdr_token_mapper.hpp"
 
-#include "logging.hpp"
-
 #include "assets/asset.hpp"
 #include "device_model/device.hpp"
 #include "entity/factory.hpp"
 #include "entity/xml_parser.hpp"
+#include "logging.hpp"
 #include "observation/observation.hpp"
 
 using namespace std;

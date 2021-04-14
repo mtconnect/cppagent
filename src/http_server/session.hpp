@@ -17,12 +17,13 @@
 
 #pragma once
 
-#include "routing.hpp"
-#include <boost/beast/http/status.hpp>
 #include <boost/asio/ip/address.hpp>
+#include <boost/beast/http/status.hpp>
 
-#include <memory>
 #include <functional>
+#include <memory>
+
+#include "routing.hpp"
 
 namespace mtconnect
 {
@@ -31,9 +32,8 @@ namespace mtconnect
     struct Response;
     class Session;
     using SessionPtr = std::shared_ptr<Session>;
-    using ErrorFunction = std::function<void(SessionPtr,
-                                             boost::beast::http::status status,
-                                             const std::string &msg)>;
+    using ErrorFunction =
+        std::function<void(SessionPtr, boost::beast::http::status status, const std::string &msg)>;
 
     using Dispatch = std::function<bool(RequestPtr)>;
     using Complete = std::function<void()>;
@@ -42,8 +42,9 @@ namespace mtconnect
     class Session : public std::enable_shared_from_this<Session>
     {
     public:
-      Session(Dispatch dispatch, ErrorFunction func)
-      : m_dispatch(dispatch), m_errorFunction(func) {}
+      Session(Dispatch dispatch, ErrorFunction func) : m_dispatch(dispatch), m_errorFunction(func)
+      {
+      }
       virtual ~Session() {}
 
       virtual void run() = 0;
@@ -52,10 +53,7 @@ namespace mtconnect
       virtual void writeChunk(const std::string &chunk, Complete complete) = 0;
       virtual void close() = 0;
       virtual void closeStream() = 0;
-      void allowPuts(bool allow = true)
-      {
-        m_allowPuts = allow;
-      }
+      void allowPuts(bool allow = true) { m_allowPuts = allow; }
       void allowPutsFrom(std::set<boost::asio::ip::address> &hosts)
       {
         m_allowPuts = true;
@@ -65,10 +63,10 @@ namespace mtconnect
     protected:
       Dispatch m_dispatch;
       ErrorFunction m_errorFunction;
-      
-      bool m_allowPuts{false};
+
+      bool m_allowPuts {false};
       std::set<boost::asio::ip::address> m_allowPutsFrom;
     };
-    
-  }
-}
+
+  }  // namespace http_server
+}  // namespace mtconnect

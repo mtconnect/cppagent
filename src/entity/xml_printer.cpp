@@ -19,10 +19,9 @@
 
 #include <unordered_map>
 
-#include "logging.hpp"
-
 #include <libxml/xmlwriter.h>
 
+#include "logging.hpp"
 #include "xml_printer_helper.hpp"
 
 using namespace std;
@@ -120,8 +119,7 @@ namespace mtconnect
                                           addSimpleElement(writer, "Cell", format(d), attrs);
                                         },
                                         [](auto &a) {
-                                          LOG(error)
-                                                   << "Invalid type for DataSetVariant cell";
+                                          LOG(error) << "Invalid type for DataSetVariant cell";
                                         }},
                                     c.m_value);
                             }

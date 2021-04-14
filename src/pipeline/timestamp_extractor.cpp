@@ -17,10 +17,10 @@
 
 #include "timestamp_extractor.hpp"
 
-#include "logging.hpp"
-
 #include <date/date.h>
 #include <optional>
+
+#include "logging.hpp"
 
 using namespace std;
 

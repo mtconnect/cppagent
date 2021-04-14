@@ -46,7 +46,6 @@
 #include <unordered_map>
 #include <variant>
 
-
 #if defined(_WIN32) || defined(_WIN64)
 #ifndef _WINDOWS
 #define _WINDOWS 1

@@ -169,52 +169,50 @@ namespace mtconnect
 
     // MTConnect Requests
     http_server::Response probeRequest(const Printer *,
-                               const std::optional<std::string> &device = std::nullopt);
-    http_server::Response currentRequest(const Printer *,
-        const std::optional<std::string> &device = std::nullopt,
+                                       const std::optional<std::string> &device = std::nullopt);
+    http_server::Response currentRequest(
+        const Printer *, const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &at = std::nullopt,
         const std::optional<std::string> &path = std::nullopt);
     http_server::Response sampleRequest(
-                                        const Printer *, const int count = 100,
+        const Printer *, const int count = 100,
         const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
         const std::optional<std::string> &path = std::nullopt);
     void streamSampleRequest(
-        http_server::SessionPtr session,
-        const Printer *, const int interval,
-        const int heartbeat, const int count = 100,
-        const std::optional<std::string> &device = std::nullopt,
+        http_server::SessionPtr session, const Printer *, const int interval, const int heartbeat,
+        const int count = 100, const std::optional<std::string> &device = std::nullopt,
         const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
         const std::optional<std::string> &path = std::nullopt);
-    
+
     // Async stream method
     void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
-    void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse, boost::system::error_code ec);
-    
-    void streamCurrentRequest(http_server::SessionPtr session,
-                                               const Printer *,
-                                       const int interval,
-                                       const std::optional<std::string> &device = std::nullopt,
-                                       const std::optional<std::string> &path = std::nullopt);
-    
-    void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse, boost::system::error_code ec);
+    void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
+                               boost::system::error_code ec);
+
+    void streamCurrentRequest(http_server::SessionPtr session, const Printer *, const int interval,
+                              const std::optional<std::string> &device = std::nullopt,
+                              const std::optional<std::string> &path = std::nullopt);
+
+    void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
+                           boost::system::error_code ec);
 
     http_server::Response assetRequest(const Printer *, const int32_t count, const bool removed,
-                               const std::optional<std::string> &type = std::nullopt,
-                               const std::optional<std::string> &device = std::nullopt);
+                                       const std::optional<std::string> &type = std::nullopt,
+                                       const std::optional<std::string> &device = std::nullopt);
     http_server::Response assetIdsRequest(const Printer *, const std::list<std::string> &ids);
     http_server::Response putAssetRequest(const Printer *, const std::string &asset,
-                                  const std::optional<std::string> &type,
-                                  const std::optional<std::string> &device = std::nullopt,
-                                  const std::optional<std::string> &uuid = std::nullopt);
+                                          const std::optional<std::string> &type,
+                                          const std::optional<std::string> &device = std::nullopt,
+                                          const std::optional<std::string> &uuid = std::nullopt);
     http_server::Response deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
-    http_server::Response deleteAllAssetsRequest(const Printer *,
-                                         const std::optional<std::string> &device = std::nullopt,
-                                         const std::optional<std::string> &type = std::nullopt);
-    http_server::Response putObservationRequest(const Printer *, const std::string &device,
-                                        const http_server::QueryMap observations,
-                                        const std::optional<std::string> &time = std::nullopt);
+    http_server::Response deleteAllAssetsRequest(
+        const Printer *, const std::optional<std::string> &device = std::nullopt,
+        const std::optional<std::string> &type = std::nullopt);
+    http_server::Response putObservationRequest(
+        const Printer *, const std::string &device, const http_server::QueryMap observations,
+        const std::optional<std::string> &time = std::nullopt);
 
     // For debugging
     void setLogStreamData(bool log) { m_logStreamData = log; }
@@ -297,7 +295,7 @@ namespace mtconnect
   protected:
     boost::asio::io_context &m_context;
     boost::asio::io_context::strand m_strand;
-    
+
     // Unique id based on the time of creation
     uint64_t m_instanceId;
     bool m_initialized {false};

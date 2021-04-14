@@ -17,9 +17,9 @@
 
 #include "json_printer.hpp"
 
-#include "logging.hpp"
-
 #include <nlohmann/json.hpp>
+
+#include "logging.hpp"
 
 using namespace std;
 using json = nlohmann::json;
@@ -52,8 +52,7 @@ namespace mtconnect
                                           [&row, &c](const int64_t &i) { row[c.m_key] = i; },
                                           [&row, &c](const double &d) { row[c.m_key] = d; },
                                           [](auto &a) {
-                                            LOG(error)
-                                                     << "Invalid  variant type for table cell";
+                                            LOG(error) << "Invalid  variant type for table cell";
                                           }},
                                       c.m_value);
                               }

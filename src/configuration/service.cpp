@@ -38,10 +38,7 @@ namespace mtconnect
   {
     MTConnectService::MTConnectService() = default;
 
-    void MTConnectService::initialize(int argc, const char *argv[])
-    {
-      NAMED_SCOPE("init.service");
-    }
+    void MTConnectService::initialize(int argc, const char *argv[]) { NAMED_SCOPE("init.service"); }
   }  // namespace configuration
 }  // namespace mtconnect
 

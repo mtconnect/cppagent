@@ -17,9 +17,8 @@
 
 #include "file_cache.hpp"
 
-#include "logging.hpp"
-
 #include "cached_file.hpp"
+#include "logging.hpp"
 
 using namespace std;
 
@@ -62,7 +61,7 @@ namespace mtconnect
         if (!fs::exists(path))
         {
           LOG(warning) << "The following path " << pathName
-                   << " cannot be found, full path: " << path;
+                       << " cannot be found, full path: " << path;
         }
         else if (!fs::is_directory(path))
         {
@@ -87,8 +86,7 @@ namespace mtconnect
       }
       catch (fs::filesystem_error e)
       {
-        LOG(warning) << "The following path " << pathName
-                 << " cannot be accessed: " << e.what();
+        LOG(warning) << "The following path " << pathName << " cannot be accessed: " << e.what();
       }
 
       return namespaces;
@@ -104,13 +102,13 @@ namespace mtconnect
       if (!fs::exists(path))
       {
         LOG(warning) << "The following path " << pathName
-                 << " cannot be found, full path: " << fs::absolute(path);
+                     << " cannot be found, full path: " << fs::absolute(path);
         return nullopt;
       }
       else if (!fs::is_regular_file(path))
       {
         LOG(warning) << "The following path " << path
-                 << " is not a regular file: " << fs::absolute(path);
+                     << " is not a regular file: " << fs::absolute(path);
         return nullopt;
       }
 

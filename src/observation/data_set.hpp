@@ -26,7 +26,6 @@
 #include <vector>
 
 #include "logging.hpp"
-
 #include "utilities.hpp"
 
 namespace mtconnect
@@ -245,8 +244,7 @@ namespace mtconnect
       // Warn that it is being discarded
       if (!rest.empty())
       {
-        LOG(warning) << "Cannot parse complete string, malformed data set: '" << rest
-               << "'";
+        LOG(warning) << "Cannot parse complete string, malformed data set: '" << rest << "'";
       }
     }
   }  // namespace observation

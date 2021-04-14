@@ -22,11 +22,10 @@
 #include <map>
 #include <string>
 
-#include "logging.hpp"
-
 #include "adapter/adapter.hpp"
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
+#include "logging.hpp"
 
 using namespace std;
 
@@ -266,8 +265,7 @@ namespace mtconnect
         auto v = Constraints::getFactory()->create("Value", url, errors);
         if (!errors.empty())
         {
-          LOG(error) << "Cannot set constant value for data item " << m_id << " to "
-                   << value;
+          LOG(error) << "Cannot set constant value for data item " << m_id << " to " << value;
           for (auto &e : errors)
             LOG(error) << e->what();
         }

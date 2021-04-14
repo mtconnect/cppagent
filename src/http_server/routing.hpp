@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <boost/beast/http/verb.hpp>
+
 #include <list>
 #include <optional>
 #include <regex>
@@ -25,12 +27,9 @@
 #include <string>
 #include <variant>
 
-
-#include <boost/beast/http/verb.hpp>
+#include "logging.hpp"
 #include "parameter.hpp"
 #include "request.hpp"
-
-#include "logging.hpp"
 
 namespace mtconnect
 {
@@ -38,7 +37,7 @@ namespace mtconnect
   {
     class Session;
     using SessionPtr = std::shared_ptr<Session>;
-    
+
     class Routing
     {
     public:
