@@ -101,11 +101,11 @@ namespace mtconnect
         return m_allowPutsFrom.find(addr) != m_allowPutsFrom.end();
       }
 
-      bool dispatch(RequestPtr request)
+      bool dispatch(SessionPtr session, RequestPtr request)
       {
         for (auto &r : m_routings)
         {
-          if (r.matches(request))
+          if (r.matches(session, request))
             return true;
         }
 

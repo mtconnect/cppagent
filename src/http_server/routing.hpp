@@ -30,6 +30,7 @@
 #include "logging.hpp"
 #include "parameter.hpp"
 #include "request.hpp"
+#include "session.hpp"
 
 namespace mtconnect
 {
@@ -41,7 +42,7 @@ namespace mtconnect
     class Routing
     {
     public:
-      using Function = std::function<bool(RequestPtr)>;
+      using Function = std::function<bool(SessionPtr, RequestPtr)>;
 
       Routing(const Routing &r) = default;
       Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function)
@@ -68,7 +69,7 @@ namespace mtconnect
       const ParameterList &getPathParameters() const { return m_pathParameters; }
       const QuerySet &getQueryParameters() const { return m_queryParameters; }
 
-      bool matches(RequestPtr request)
+      bool matches(SessionPtr session, RequestPtr request)
       {
         try
         {
@@ -110,7 +111,7 @@ namespace mtconnect
                 request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
               }
             }
-            return m_function(request);
+            return m_function(session, request);
           }
         }
 

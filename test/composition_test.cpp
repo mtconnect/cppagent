@@ -120,7 +120,6 @@ TEST_F(CompositionTest, XmlPrinting)
 TEST_F(CompositionTest, JsonPrinting)
 {
   {
-    m_agentTestHelper->m_request->m_accepts = "Application/json";
     PARSE_JSON_RESPONSE("/probe");
     
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);

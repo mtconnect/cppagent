@@ -57,7 +57,6 @@ namespace mtconnect
       uint16_t m_foreignPort;
       QueryMap m_query;
       ParameterMap m_parameters;
-      SessionPtr m_session;
 
       template <typename T>
       std::optional<T> parameter(const std::string &s) const

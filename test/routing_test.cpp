@@ -33,7 +33,7 @@ class RoutingTest : public testing::Test
   std::unique_ptr<boost::asio::ip::tcp::socket> m_socket;
   boost::asio::io_context m_context;
   
-  const Routing::Function m_func { [](const RequestPtr ) { return true; } };
+  const Routing::Function m_func { [](SessionPtr, const RequestPtr ) { return true; } };
 
 };
 
@@ -47,11 +47,11 @@ TEST_F(RoutingTest, TestSimplePattern)
   EXPECT_EQ(0, probe.getQueryParameters().size());
   
   request->m_path = "/probe";
-  ASSERT_TRUE(probe.matches(request));
+  ASSERT_TRUE(probe.matches(0, request));
   request->m_path = "/probe";
-  ASSERT_TRUE(probe.matches(request));
+  ASSERT_TRUE(probe.matches(0, request));
   request->m_verb = verb::put;
-  ASSERT_FALSE(probe.matches(request));
+  ASSERT_FALSE(probe.matches(0, request));
 
   Routing probeWithDevice(verb::get, "/{device}/probe", m_func);
   ASSERT_EQ(1, probeWithDevice.getPathParameters().size());
@@ -60,7 +60,7 @@ TEST_F(RoutingTest, TestSimplePattern)
   
   request->m_verb = verb::get;
   request->m_path = "/ABC123/probe";
-  ASSERT_TRUE(probeWithDevice.matches(request));
+  ASSERT_TRUE(probeWithDevice.matches(0, request));
   ASSERT_EQ("ABC123", get<string>(request->m_parameters["device"]));
 }
 
@@ -74,10 +74,10 @@ TEST_F(RoutingTest, TestComplexPatterns)
   EXPECT_EQ("assets", r.getPathParameters().front().m_name);
 
   request->m_path = "/asset/A1,A2,A3";
-  ASSERT_TRUE(r.matches(request));
+  ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("A1,A2,A3", get<string>(request->m_parameters["assets"]));
   request->m_path = "/ABC123/probe";
-  ASSERT_FALSE(r.matches(request));
+  ASSERT_FALSE(r.matches(0, request));
 }
 
 TEST_F(RoutingTest, TestCurrentAtQueryParameter)
@@ -148,14 +148,14 @@ TEST_F(RoutingTest, TestQueryParameterMatch)
   ASSERT_EQ(4, r.getQueryParameters().size());
 
   request->m_path = "/ABC123/sample";
-  ASSERT_TRUE(r.matches(request));
+  ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("ABC123", get<string>(request->m_parameters["device"]));
   ASSERT_EQ(100, get<int32_t>(request->m_parameters["count"]));
   ASSERT_EQ(10000.0, get<double>(request->m_parameters["heartbeat"]));
 
   request->m_path = "/ABC123/sample";
   request->m_query = {{ "count", "1000"}, {"from", "12345"}};
-  ASSERT_TRUE(r.matches(request));
+  ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("ABC123", get<string>(request->m_parameters["device"]));
   ASSERT_EQ(1000, get<int32_t>(request->m_parameters["count"]));
   ASSERT_EQ(12345, get<uint64_t>(request->m_parameters["from"]));
@@ -163,7 +163,7 @@ TEST_F(RoutingTest, TestQueryParameterMatch)
 
   request->m_query = {{ "count", "1000"}, {"from", "12345"}, { "dummy" , "1" }
   };
-  ASSERT_TRUE(r.matches(request));
+  ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("ABC123", get<string>(request->m_parameters["device"]));
   ASSERT_EQ(1000, get<int32_t>(request->m_parameters["count"]));
   ASSERT_EQ(12345, get<uint64_t>(request->m_parameters["from"]));
@@ -180,7 +180,7 @@ TEST_F(RoutingTest, TestQueryParameterError)
   request->m_verb = verb::get;
   request->m_path = "/ABC123/sample";
   request->m_query = {{ "count", "xxx"} };
-  ASSERT_THROW(r.matches(request),
+  ASSERT_THROW(r.matches(0, request),
                ParameterError);
 }
 
@@ -190,10 +190,10 @@ TEST_F(RoutingTest, RegexPatterns)
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
   request->m_path = "/some random stuff";
-  ASSERT_TRUE(r.matches(request));
+  ASSERT_TRUE(r.matches(0, request));
 
-  Routing no(verb::get, regex("/.+"), [](const RequestPtr) { return false; });
-  ASSERT_FALSE(no.matches(request));
+  Routing no(verb::get, regex("/.+"), [](SessionPtr, const RequestPtr) { return false; });
+  ASSERT_FALSE(no.matches(0, request));
 }
 
 TEST_F(RoutingTest, simple_put_with_trailing_slash)
@@ -202,10 +202,10 @@ TEST_F(RoutingTest, simple_put_with_trailing_slash)
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::put;
   request->m_path = "/ADevice";
-  ASSERT_TRUE(r.matches(request));
+  ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("ADevice", get<string>(request->m_parameters["device"]));
 
   request->m_path = "/ADevice/";
-  ASSERT_TRUE(r.matches(request));
+  ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("ADevice", get<string>(request->m_parameters["device"]));
 }

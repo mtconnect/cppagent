@@ -321,22 +321,22 @@ class HttpServerTest : public testing::Test
 
 TEST_F(HttpServerTest, simple_request_response)
 {
-  weak_ptr<Session> session;
+  weak_ptr<Session> savedSession;
   
-  auto probe = [&](RequestPtr request) -> bool {
-    session = request->m_session;
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    savedSession = session;
     Response resp(status::ok);
     if (request->m_parameters.count("device") > 0)
       resp.m_body = string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
     else
       resp.m_body = "All Devices";
-    request->m_session->writeResponse(resp, [](){
+    session->writeResponse(resp, [](){
       cout << "Written" << endl;
     });
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", probe});
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
   m_server->addRouting({boost::beast::http::verb::get, "/{device}/probe", probe});
   
   start();
@@ -355,12 +355,12 @@ TEST_F(HttpServerTest, simple_request_response)
   // Make sure session closes when client closes the connection
   m_client->close();
   m_context.run_for(2ms);
-  ASSERT_TRUE(session.expired());
+  ASSERT_TRUE(savedSession.expired());
 }
 
 TEST_F(HttpServerTest, request_response_with_query_parameters)
 {
-  auto handler = [&](RequestPtr request) -> bool {
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ("device1", get<string>(request->m_parameters["device"]));
     EXPECT_EQ("//DataItem[@type='POSITION' and @subType='ACTUAL']", get<string>(request->m_parameters["path"]));
     EXPECT_EQ(123456, get<uint64_t>(request->m_parameters["from"]));
@@ -369,7 +369,7 @@ TEST_F(HttpServerTest, request_response_with_query_parameters)
 
     Response resp(status::ok);
     resp.m_body = "Done";
-    request->m_session->writeResponse(resp, [](){
+    session->writeResponse(resp, [](){
       cout << "Written" << endl;
     });
     return true;
@@ -396,12 +396,12 @@ TEST_F(HttpServerTest, request_response_with_query_parameters)
 
 TEST_F(HttpServerTest, request_put_when_put_not_allowed)
 {
-  auto probe = [&](RequestPtr request) -> bool {
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_TRUE(false);
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::put, "/probe", probe});
+  m_server->addRouting({boost::beast::http::verb::put, "/probe", probe});
   
   start();
   startClient();
@@ -415,18 +415,18 @@ TEST_F(HttpServerTest, request_put_when_put_not_allowed)
 
 TEST_F(HttpServerTest, request_put_when_put_allowed)
 {
-  auto handler = [&](RequestPtr request) -> bool {
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
     Response resp(status::ok);
     resp.m_body = "Put ok";
-    request->m_session->writeResponse(resp, [](){
+    session->writeResponse(resp, [](){
       cout << "Written" << endl;
       return true;
     });
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::put, "/probe", handler});
+  m_server->addRouting({boost::beast::http::verb::put, "/probe", handler});
   m_server->allowPuts();
   
   start();
@@ -444,12 +444,12 @@ TEST_F(HttpServerTest, request_put_when_put_not_allowed_from_ip_address)
 {
   weak_ptr<Session> session;
   
-  auto probe = [&](RequestPtr request) -> bool {
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_TRUE(false);
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::put, "/probe", probe});
+  m_server->addRouting({boost::beast::http::verb::put, "/probe", probe});
   m_server->allowPutFrom("1.1.1.1");
   
   start();
@@ -464,20 +464,18 @@ TEST_F(HttpServerTest, request_put_when_put_not_allowed_from_ip_address)
 
 TEST_F(HttpServerTest, request_put_when_put_allowed_from_ip_address)
 {
-  weak_ptr<Session> session;
-  
-  auto handler = [&](RequestPtr request) -> bool {
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
     Response resp(status::ok);
     resp.m_body = "Put ok";
-    request->m_session->writeResponse(resp, [](){
+    session->writeResponse(resp, [](){
       cout << "Written" << endl;
       return true;
     });
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::put, "/probe", handler});
+  m_server->addRouting({boost::beast::http::verb::put, "/probe", handler});
   m_server->allowPutFrom("127.0.0.1");
   
   start();
@@ -492,13 +490,13 @@ TEST_F(HttpServerTest, request_put_when_put_allowed_from_ip_address)
 
 TEST_F(HttpServerTest, request_with_connect_close)
 {
-  weak_ptr<Session> session;
+  weak_ptr<Session> savedSession;
 
-  auto handler = [&](RequestPtr request) -> bool {
-    session = request->m_session;
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
+    savedSession = session;
     Response resp(status::ok);
     resp.m_body = "Probe";
-    request->m_session->writeResponse(resp, [](){
+    session->writeResponse(resp, [](){
       cout << "Written" << endl;
       return true;
     });
@@ -519,24 +517,24 @@ TEST_F(HttpServerTest, request_with_connect_close)
   m_client->spawnRequest(http::verb::get,
                          "/probe", "", true);
   EXPECT_TRUE(m_client->m_ec);
-  EXPECT_FALSE(session.lock());
+  EXPECT_FALSE(savedSession.lock());
 }
 
 TEST_F(HttpServerTest, put_content_to_server)
 {
   string body;
-  auto handler = [&](RequestPtr request) -> bool {
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ("Body Content", request->m_body);
     body = request->m_body;
     
     Response resp(status::ok);
-    request->m_session->writeResponse(resp, [](){
+    session->writeResponse(resp, [](){
       cout << "Written" << endl;
     });
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", handler});
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", handler});
   
   start();
   startClient();
@@ -550,7 +548,7 @@ TEST_F(HttpServerTest, put_content_to_server)
 TEST_F(HttpServerTest, put_content_with_put_values)
 {
   string body, ct;
-  auto handler = [&](RequestPtr request) -> bool {
+  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ("fish=%27chips%27&time=%27money%27", request->m_body);
     EXPECT_EQ("'chips'", request->m_query["fish"]);
     EXPECT_EQ("'money'", request->m_query["time"]);
@@ -558,13 +556,13 @@ TEST_F(HttpServerTest, put_content_with_put_values)
     ct = request->m_contentType;
     
     Response resp(status::ok);
-    request->m_session->writeResponse(resp, [](){
+    session->writeResponse(resp, [](){
       cout << "Written" << endl;
     });
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", handler});
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", handler});
   
   start();
   startClient();
@@ -580,8 +578,9 @@ TEST_F(HttpServerTest, put_content_with_put_values)
 TEST_F(HttpServerTest, streaming_response)
 {
   struct context {
-    context(RequestPtr &r) : m_request(r) {}
+    context(RequestPtr r, SessionPtr s) : m_request(r), m_session(s) {}
     RequestPtr m_request;
+    SessionPtr m_session;
     bool m_written{false};
   };
 
@@ -599,14 +598,14 @@ TEST_F(HttpServerTest, streaming_response)
   };
   
   shared_ptr<context> ctx;
-  auto begin = [&](RequestPtr request) -> bool {
-    ctx = make_shared<context>(request);
+  auto begin = [&](SessionPtr session, RequestPtr request) -> bool {
+    ctx = make_shared<context>(request, session);
     ctx->m_written = false;
-    request->m_session->beginStreaming("plain/text", bind(begun, ctx));
+    session->beginStreaming("plain/text", bind(begun, ctx));
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::get, "/sample", begin});
+  m_server->addRouting({boost::beast::http::verb::get, "/sample", begin});
   
   start();
   startClient();
@@ -620,7 +619,7 @@ TEST_F(HttpServerTest, streaming_response)
 
   m_client->m_done = false;
   ctx->m_written = false;
-  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
   while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
     ;
   cout << "Done: " << m_client->m_done << endl;
@@ -628,33 +627,33 @@ TEST_F(HttpServerTest, streaming_response)
 
   ctx->m_written = false;
   m_client->m_done = false;
-  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
   while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(200ms) > 0)
     ;
   EXPECT_EQ("Chunk Content #2", m_client->m_result);
   
   ctx->m_written = false;
   m_client->m_done = false;
-  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
   while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
     ;
   EXPECT_EQ("Chunk Content #3", m_client->m_result);
 
   ctx->m_written = false;
   m_client->m_done = false;
-  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
   while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
     ;
   EXPECT_EQ("Chunk Content #4", m_client->m_result);
 
   ctx->m_written = false;
   m_client->m_done = false;
-  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
   while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
     ;
   EXPECT_EQ("Chunk Content #5", m_client->m_result);
   
-  ctx->m_request->m_session->closeStream();
+  ctx->m_session->closeStream();
   while (m_context.run_for(20ms) > 0)
     ;
 }
@@ -663,17 +662,17 @@ TEST_F(HttpServerTest, additional_header_fields)
 {
   m_server->setHttpHeaders({"Access-Control-Allow-Origin:*", "Origin:https://foo.example"});
   
-  auto probe = [&](RequestPtr request) -> bool {
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     Response resp(status::ok);
     resp.m_body = "Done";
-    request->m_session->writeResponse(resp, [](){
+    session->writeResponse(resp, [](){
       cout << "Written" << endl;
     });
 
     return true;
   };
   
-  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", probe});
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
 
   start();
   startClient();

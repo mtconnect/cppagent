@@ -56,15 +56,18 @@ namespace mtconnect
       }
       void writeResponse(const Response &response, Complete complete = nullptr) override
       {
-        
+        m_code = response.m_status;
+        m_body = response.m_body;
+        m_mimeType = response.m_mimeType;
       }
       void beginStreaming(const std::string &mimeType, Complete complete) override
       {
-        
+        m_mimeType = mimeType;
+
       }
       void writeChunk(const std::string &chunk, Complete complete) override
       {
-        
+        m_chunkBody = chunk;
       }
       void close() override
       {
@@ -98,7 +101,7 @@ class AgentTestHelper
   : m_incomingIp("127.0.0.1"),
     m_socket(m_ioContext)
   {
-    m_session = std::make_shared<mhttp::TestSession>([](mhttp::RequestPtr) { return true; }, [](mhttp::SessionPtr,
+    m_session = std::make_shared<mhttp::TestSession>([](mhttp::SessionPtr, mhttp::RequestPtr) { return true; }, [](mhttp::SessionPtr,
    boost::beast::http::status status,
    const std::string &msg){});
   }
@@ -108,27 +111,32 @@ class AgentTestHelper
     m_agent.reset();
   }
   
-  
+  auto session() { return m_session; }
     
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
                       const mtconnect::http_server::QueryMap &aQueries,
-                      xmlDocPtr *doc, const char *path);
+                      xmlDocPtr *doc, const char *path,
+                      const char *accepts = "text/xml");
   void responseStreamHelper(const char *file, int line,
-                      const mtconnect::http_server::QueryMap &aQueries,
-                      xmlDocPtr *doc, const char *path);
+                            const mtconnect::http_server::QueryMap &aQueries,
+                            xmlDocPtr *doc, const char *path,
+                            const char *accepts = "text/xml");
   void responseHelper(const char *file, int line,
-                      const mtconnect::http_server::QueryMap& aQueries, nlohmann::json &doc, const char *path);
+                      const mtconnect::http_server::QueryMap& aQueries, nlohmann::json &doc, const char *path,
+                      const char *accepts = "application/json");
   void putResponseHelper(const char *file, int line, const std::string &body,
                          const mtconnect::http_server::QueryMap &aQueries,
-                         xmlDocPtr *doc, const char *path);
+                         xmlDocPtr *doc, const char *path,
+                         const char *accepts = "text/xml");
   void deleteResponseHelper(const char *file, int line, 
-                            const mtconnect::http_server::QueryMap &aQueries, xmlDocPtr *doc, const char *path);
+                            const mtconnect::http_server::QueryMap &aQueries, xmlDocPtr *doc, const char *path,
+                            const char *accepts = "text/xml");
 
   void makeRequest(const char *file, int line, boost::beast::http::verb verb,
                    const std::string &body,
                    const mtconnect::http_server::QueryMap &aQueries,
-                   const char *path);
+                   const char *path, const char *accepts);
   
   auto getAgent() { return m_agent.get(); }
     

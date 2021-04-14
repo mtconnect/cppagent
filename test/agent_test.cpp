@@ -46,6 +46,8 @@ using namespace mtconnect::http_server;
 using namespace mtconnect::adapter;
 using namespace mtconnect::observation;
 
+using status = boost::beast::http::status;
+
 class AgentTest : public testing::Test
 {
  public:
@@ -139,7 +141,7 @@ TEST_F(AgentTest, BadDevices)
     string message = (string) "Could not find the device 'LinuxCN'";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "NO_DEVICE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
-    ASSERT_EQ(NOT_FOUND, m_agentTestHelper->response()->m_code);
+    ASSERT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
   }
 }
 
@@ -206,7 +208,7 @@ TEST_F(AgentTest, BadPath)
     PARSE_XML_RESPONSE("/bad_path");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /bad_path");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->response()->m_code);
+    EXPECT_EQ(status::bad_request, m_agentTestHelper->session()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 
@@ -214,7 +216,7 @@ TEST_F(AgentTest, BadPath)
     PARSE_XML_RESPONSE("/bad/path/");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /bad/path/");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->response()->m_code);
+    EXPECT_EQ(status::bad_request, m_agentTestHelper->session()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 
@@ -222,7 +224,7 @@ TEST_F(AgentTest, BadPath)
     PARSE_XML_RESPONSE("/LinuxCNC/current/blah");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /LinuxCNC/current/blah");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->response()->m_code);
+    EXPECT_EQ(status::bad_request, m_agentTestHelper->session()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 }
@@ -253,7 +255,7 @@ TEST_F(AgentTest, CurrentAt)
     //cout << "Line #: " << i + 1 << " at " << i + seq << endl;
     query["at"] = to_string(i + seq);;
     PARSE_XML_RESPONSE_QUERY("/current", query);
-    //m_agentTestHelper->printResponse();
+    //m_agentTestHelper->printsession();
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
                           to_string(i + 1).c_str());
   }
@@ -383,8 +385,8 @@ TEST_F(AgentTest, FileDownload)
 
   // Reqyest the file...
   PARSE_TEXT_RESPONSE(uri.c_str());
-  ASSERT_FALSE(m_agentTestHelper->response()->m_body.empty());
-  ASSERT_TRUE(m_agentTestHelper->response()->m_body.find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
+  ASSERT_FALSE(m_agentTestHelper->session()->m_body.empty());
+  ASSERT_TRUE(m_agentTestHelper->session()->m_body.find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
 }
 
 TEST_F(AgentTest, FailedFileDownload)
@@ -1769,7 +1771,7 @@ TEST_F(AgentTest, AssetStorage)
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
                                               8, 4, "1.3", 4, true);
 
-  ASSERT_TRUE(agent->getServer()->isPutEnabled());
+  ASSERT_TRUE(agent->getServer()->arePutsAllowed());
   string body = "<Part assetId='P1' deviceUuid='LinuxCNC'>TEST</Part>";
   QueryMap queries;
 
@@ -1784,7 +1786,6 @@ TEST_F(AgentTest, AssetStorage)
     ASSERT_EQ((unsigned int)1, agent->getAssetCount());
   }
 
-  m_agentTestHelper->m_request.m_verb = "GET";
   {
     PARSE_XML_RESPONSE("/asset/123");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
@@ -1920,7 +1921,7 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE("/asset/P1");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_status::not_found");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: P1");
   }
 
@@ -1969,7 +1970,7 @@ TEST_F(AgentTest, AssetBuffer)
   // Now since two and three have been modified, asset 4 should be removed.
   {
     PARSE_XML_RESPONSE("/asset/P4");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_status::not_found");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: P4");
   }
 }
@@ -1978,7 +1979,7 @@ TEST_F(AgentTest, AssetError)
 {
   {
     PARSE_XML_RESPONSE("/asset/123");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_status::not_found");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: 123");
   }
 }

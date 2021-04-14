@@ -36,55 +36,61 @@ namespace http = beast::http;
 void AgentTestHelper::makeRequest(const char *file, int line,
                                   boost::beast::http::verb verb, const std::string &body,
                                   const mtconnect::http_server::QueryMap &aQueries,
-                                  const char *path)
+                                  const char *path, const char *accepts)
 {
+  m_request = make_shared<Request>();
+  
   m_dispatched = false;
   m_out.str("");
   m_request->m_verb = verb;
   m_request->m_query = aQueries;
   m_request->m_body = body;
+  m_request->m_accepts = accepts;
   m_request->m_parameters.clear();
   
   if (path != nullptr)
     m_request->m_path = path;
   
   ASSERT_FALSE(m_request->m_path.empty());
-  m_dispatched = m_agent->getServer()->dispatch(m_request);
+  m_dispatched = m_agent->getServer()->dispatch(m_session, m_request);
 }
 
 
 void AgentTestHelper::responseHelper(const char *file, int line,
                                      const QueryMap &aQueries,
-                                     xmlDocPtr *doc, const char *path)
+                                     xmlDocPtr *doc, const char *path,
+                                     const char *accepts)
 {
-  makeRequest(file, line, http::verb::get, "", aQueries, path);
-  if (ends_with(m_session->m_mimeType, "xml"))
-    *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
+  makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
+  *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
 void AgentTestHelper::responseStreamHelper(const char *file, int line,
                                      const QueryMap &aQueries,
-                                     xmlDocPtr *doc, const char *path)
+                                     xmlDocPtr *doc, const char *path,
+                                           const char *accepts)
 {
-  makeRequest(file, line, http::verb::get, "", aQueries, path);
+  makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
   if (ends_with(m_session->m_chunkMimeType, "xml"))
     *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), m_session->m_chunkBody.size());
 }
 
 void AgentTestHelper::putResponseHelper(const char *file, int line, const string &body,
                                         const QueryMap &aQueries, xmlDocPtr *doc,
-                                        const char *path)
+                                        const char *path,
+                                        const char *accepts)
 {
-  makeRequest(file, line, http::verb::put, body, aQueries, path);
+  makeRequest(file, line, http::verb::put, body, aQueries, path, accepts);
   if (ends_with(m_session->m_mimeType, "xml"))
     *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
 void AgentTestHelper::deleteResponseHelper(const char *file, int line,
                                            const QueryMap &aQueries, xmlDocPtr *doc,
-                                           const char *path)
+                                           const char *path,
+                                           const char *accepts)
 {
-  makeRequest(file, line, http::verb::delete_, "", aQueries, path);
+  makeRequest(file, line, http::verb::delete_, "", aQueries, path, accepts);
   if (ends_with(m_session->m_mimeType, "xml"))
       *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
@@ -92,8 +98,9 @@ void AgentTestHelper::deleteResponseHelper(const char *file, int line,
 void AgentTestHelper::responseHelper(const char *file, int line,
                                      const QueryMap &aQueries,
                                      nlohmann::json &doc,
-                                     const char *path)
+                                     const char *path,
+                                     const char *accepts)
 {
-  makeRequest(file, line, http::verb::get, "", aQueries, path);
+  makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
   doc = nlohmann::json::parse(m_session->m_body);
 }

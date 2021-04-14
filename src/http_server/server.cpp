@@ -152,8 +152,8 @@ namespace mtconnect
       {
         auto session = make_shared<SessionImpl>(
             socket, m_fields,
-            [this](RequestPtr request) {
-              dispatch(request);
+            [this](SessionPtr session, RequestPtr request) {
+              dispatch(session, request);
               return true;
             },
             m_errorFunction);
@@ -166,53 +166,7 @@ namespace mtconnect
                                 beast::bind_front_handler(&Server::accept, this));
       }
     }
-
-#if 0
-
-    bool Server::handleRequest(Routing::Request &request)
-    {
-      NAMED_SCOPE("Server::handleRequest");
-
-      bool res {true};
-      try
-      {
-        if (!dispatch(request, response))
-        {
-          stringstream msg;
-          msg << "Error processing request from: " << request.m_foreignIp << " - "
-              << "No matching route for: " << request.m_verb << " " << request.m_path;
-          LOG(error) << msg.str();
-
-          if (m_errorFunction)
-            m_errorFunction(request.m_accepts, *response, msg.str(), BAD_REQUEST);
-          res = false;
-        }
-      }
-      catch (RequestError &e)
-      {
-        LOG(error) << "Error processing request from: " << request.m_foreignIp << " - "
-                 << e.what();
-        response->writeResponse(e.m_body, e.m_contentType, e.m_code);
-        res = false;
-      }
-      catch (ParameterError &e)
-      {
-        stringstream msg;
-        msg << "Parameter Error processing request from: " << request.m_foreignIp << " - "
-            << e.what();
-        LOG(error) << msg.str();
-
-        if (m_errorFunction)
-          m_errorFunction(request.m_accepts, *response, msg.str(), BAD_REQUEST);
-        res = false;
-      }
-
-      //response.flush();
-      return res;
-    }
-
-#endif
-
+    
     //------------------------------------------------------------------------------
 
     // Report a failure

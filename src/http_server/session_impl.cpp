@@ -248,11 +248,9 @@ namespace mtconnect
         if (auto a = msg.find(http::field::connection); a != msg.end())
           m_close = a->value() == "close";
 
-        m_request->m_session = shared_ptr();
-
         try
         {
-          if (!m_dispatch(m_request))
+          if (!m_dispatch(shared_ptr(), m_request))
           {
             ostringstream txt;
             txt << "Failed to find handler for " << msg.method() << " " << msg.target();

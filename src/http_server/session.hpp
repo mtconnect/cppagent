@@ -35,7 +35,7 @@ namespace mtconnect
     using ErrorFunction =
         std::function<void(SessionPtr, boost::beast::http::status status, const std::string &msg)>;
 
-    using Dispatch = std::function<bool(RequestPtr)>;
+    using Dispatch = std::function<bool(SessionPtr, RequestPtr)>;
     using Complete = std::function<void()>;
     using FieldList = std::list<std::pair<std::string, std::string>>;
 

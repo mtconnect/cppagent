@@ -419,12 +419,12 @@ namespace mtconnect
   void Agent::createFileRoutings()
   {
     using namespace http_server;
-    auto handler = [&](RequestPtr request) -> bool {
+    auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
       auto f = m_fileCache->getFile(request->m_path);
       if (f)
       {
         Response response(http_server::status::ok, f->m_buffer.get(), f->m_mimeType);
-        request->m_session->writeResponse(response);
+        session->writeResponse(response);
       }
       return bool(f);
     };
@@ -435,7 +435,7 @@ namespace mtconnect
   {
     using namespace http_server;
     // Probe
-    auto handler = [&](const RequestPtr request) -> bool {
+    auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
       auto device = request->parameter<string>("device");
       auto printer = printerForAccepts(request->m_accepts);
 
@@ -443,7 +443,7 @@ namespace mtconnect
           findDeviceByUUIDorName(*device) == nullptr)
         return false;
 
-      respond(request->m_session, probeRequest(printer, device));
+      respond(session, probeRequest(printer, device));
       return true;
     };
 
@@ -457,18 +457,18 @@ namespace mtconnect
   void Agent::createAssetRoutings()
   {
     using namespace http_server;
-    auto handler = [&](RequestPtr request) -> bool {
+    auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
       auto removed = *request->parameter<string>("removed") == "true";
       auto count = *request->parameter<int32_t>("count");
       auto printer = printerForAccepts(request->m_accepts);
 
-      respond(request->m_session,
+      respond(session,
               assetRequest(printer, count, removed, request->parameter<string>("type"),
                            request->parameter<string>("device")));
       return true;
     };
 
-    auto idHandler = [&](RequestPtr request) -> bool {
+    auto idHandler = [&](SessionPtr session, RequestPtr request) -> bool {
       auto assets = request->parameter<string>("assets");
       if (assets)
       {
@@ -479,13 +479,13 @@ namespace mtconnect
         string id;
         while (getline(str, id, ';'))
           ids.emplace_back(id);
-        respond(request->m_session, assetIdsRequest(printer, ids));
+        respond(session, assetIdsRequest(printer, ids));
       }
       else
       {
         auto printer = printerForAccepts(request->m_accepts);
         auto error = printError(printer, "INVALID_REQUEST", "No assets given");
-        respond(request->m_session, {http_server::status::bad_request, error, printer->mimeType()});
+        respond(session, {http_server::status::bad_request, error, printer->mimeType()});
       }
       return true;
     };
@@ -501,16 +501,16 @@ namespace mtconnect
 
     if (m_server->arePutsAllowed())
     {
-      auto putHandler = [&](RequestPtr request) -> bool {
+      auto putHandler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto printer = printerForAccepts(request->m_accepts);
-        respond(request->m_session,
+        respond(session,
                 putAssetRequest(printer, request->m_body, request->parameter<string>("type"),
                                 request->parameter<string>("device"),
                                 request->parameter<string>("uuid")));
         return true;
       };
 
-      auto deleteHandler = [&](RequestPtr request) -> bool {
+      auto deleteHandler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto assets = request->parameter<string>("assets");
         if (assets)
         {
@@ -521,11 +521,11 @@ namespace mtconnect
 
           while (getline(str, id, ';'))
             ids.emplace_back(id);
-          respond(request->m_session, deleteAssetRequest(printer, ids));
+          respond(session, deleteAssetRequest(printer, ids));
         }
         else
         {
-          respond(request->m_session, deleteAllAssetsRequest(printerForAccepts(request->m_accepts),
+          respond(session, deleteAllAssetsRequest(printerForAccepts(request->m_accepts),
                                                              request->parameter<string>("device"),
                                                              request->parameter<string>("type")));
         }
@@ -557,20 +557,20 @@ namespace mtconnect
   void Agent::createCurrentRoutings()
   {
     using namespace http_server;
-    auto handler = [&](RequestPtr request) -> bool {
+    auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
       auto interval = request->parameter<int32_t>("interval");
       if (interval)
       {
-        streamCurrentRequest(request->m_session, printerForAccepts(request->m_accepts), *interval,
+        streamCurrentRequest(session, printerForAccepts(request->m_accepts), *interval,
                              request->parameter<string>("device"),
                              request->parameter<string>("path"));
       }
       else
       {
-        respond(request->m_session, currentRequest(printerForAccepts(request->m_accepts),
-                                                   request->parameter<string>("device"),
-                                                   request->parameter<uint64_t>("at"),
-                                                   request->parameter<string>("path")));
+        respond(session, currentRequest(printerForAccepts(request->m_accepts),
+                                        request->parameter<string>("device"),
+                                        request->parameter<uint64_t>("at"),
+                                        request->parameter<string>("path")));
       }
       return true;
     };
@@ -583,19 +583,19 @@ namespace mtconnect
   void Agent::createSampleRoutings()
   {
     using namespace http_server;
-    auto handler = [&](RequestPtr request) -> bool {
+    auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
       auto interval = request->parameter<int32_t>("interval");
       if (interval)
       {
         streamSampleRequest(
-            request->m_session, printerForAccepts(request->m_accepts), *interval,
+            session, printerForAccepts(request->m_accepts), *interval,
             *request->parameter<int32_t>("heartbeat"), *request->parameter<int32_t>("count"),
             request->parameter<string>("device"), request->parameter<uint64_t>("from"),
             request->parameter<string>("path"));
       }
       else
       {
-        respond(request->m_session,
+        respond(session,
                 sampleRequest(
                     printerForAccepts(request->m_accepts), *request->parameter<int32_t>("count"),
                     request->parameter<string>("device"), request->parameter<uint64_t>("from"),
@@ -618,7 +618,7 @@ namespace mtconnect
 
     if (m_server->arePutsAllowed())
     {
-      auto handler = [&](RequestPtr request) -> bool {
+      auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
         if (!request->m_query.empty())
         {
           auto queries = request->m_query;
@@ -627,7 +627,7 @@ namespace mtconnect
             queries.erase("time");
           auto device = request->parameter<string>("device");
 
-          respond(request->m_session, putObservationRequest(printerForAccepts(request->m_accepts),
+          respond(session, putObservationRequest(printerForAccepts(request->m_accepts),
                                                             *device, queries, ts));
           return true;
         }
