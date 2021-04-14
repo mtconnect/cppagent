@@ -119,10 +119,27 @@ public:
     m_status = m_parser->get().result_int();
     
     for (const auto &f : m_parser->get())
-    {
       m_fields.insert({string(f.name_string()), string(f.value())});
-    }
 
+    auto f = m_parser->get().find(http::field::content_type);
+    if (f != m_parser->get().end())
+    {
+      m_contentType = string(f->value());
+      auto i = m_contentType.find(';');
+      if (i != string::npos)
+      {
+        auto b = m_contentType.substr(i + 1);
+        m_contentType = m_contentType.substr(0, i);
+        auto p = b.find("=");
+        if (p != string::npos)
+        {
+          if (b.substr(0, p) == "boundary")
+          {
+            m_boundary = b.substr(p + 1);
+          }
+        }
+      }
+    }
     if (m_parser->chunked())
     {
       using std::placeholders::_1;
@@ -148,6 +165,8 @@ public:
       m_headerHandler = header;
       m_parser->on_chunk_header(m_headerHandler);
       
+      
+      
       auto body = [this](std::uint64_t remain,
                       boost::string_view body,
                       boost::system::error_code& ev)
@@ -162,7 +181,10 @@ public:
         string buf;
         stringstream is(b);
         getline(is, buf);
-        m_boundary = buf;
+        buf.erase(std::find_if(buf.rbegin(), buf.rend(), [](int ch) { return ch != '\r'; }).base(),
+                  buf.end());
+        
+        EXPECT_EQ("--" + m_boundary, buf);
         
         while (getline(is, buf) && !buf.empty())
           ;
@@ -246,6 +268,7 @@ public:
   optional<http::response_parser<http::empty_body>> m_parser;
   string m_boundary;
   map<string,string> m_fields;
+  string m_contentType;
   
   std::function<std::uint64_t (std::uint64_t,
                               boost::string_view,
