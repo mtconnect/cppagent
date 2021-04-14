@@ -297,8 +297,7 @@ namespace mtconnect
       }
       else if (m_complete)
       {
-        if (m_complete)
-          m_complete();
+        m_complete();
       }
       if (!m_streaming)
       {
@@ -334,11 +333,11 @@ namespace mtconnect
       res->set(field::content_type, "multipart/x-mixed-replace;boundary=" + m_boundary);
       res->set(field::expires, "-1");
       res->set(field::cache_control, "private, max-age=0");
-//      for (const auto &f : m_fields)
-//      {
-//        //res.set(f.first, f.second);
-//      }
-      
+      for (const auto &f : m_fields)
+      {
+        res->set(f.first, f.second);
+      }
+
       auto sr = make_shared<response_serializer<empty_body>>(*res);
       m_serializer = sr;
       async_write_header(m_stream, *sr,
@@ -360,8 +359,10 @@ namespace mtconnect
              "Content-length: " << to_string(body.length()) << ";\r\n\r\n" <<
              body;
       
-      net::const_buffers_1 buf(str.str().c_str(), str.str().size());
-      async_write(m_stream, http::make_chunk(buf),
+      m_chunk = str.str();
+      auto buf = make_shared<net::const_buffers_1>(m_chunk.c_str(), m_chunk.size());
+      m_chunkBuffer = buf;
+      async_write(m_stream, http::make_chunk(*buf),
                   beast::bind_front_handler(&SessionImpl::sent,
                                             shared_this_ptr()));
     }
@@ -392,10 +393,10 @@ namespace mtconnect
         res->set(http::field::cache_control, "private, max-age=0");
       }
       res->set(http::field::content_type, response.m_mimeType);
-//      for (const auto &f : m_fields)
-//      {
-//        //res.set(k, v);
-//      }
+      for (const auto &f : m_fields)
+      {
+        res->set(f.first, f.second);
+      }
 
       res->content_length(response.m_body.size());
       res->prepare_payload();

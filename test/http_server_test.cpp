@@ -78,7 +78,7 @@ public:
     }
     m_connected = true;
   }
-
+  
   void request(boost::beast::http::verb verb,
                std::string const& target,
                std::string const& body,
@@ -87,10 +87,10 @@ public:
   {
     beast::error_code ec;
     
+    cout << "request: done: false" << endl;
     m_done = false;
     m_status = -1;
     m_result.clear();
-    
     
     // Set up an HTTP GET request message
     http::request<http::string_body> req{verb, target, 11};
@@ -105,7 +105,6 @@ public:
     m_stream.expires_after(std::chrono::seconds(30));
     req.prepare_payload();
     
-    
     // Send the HTTP request to the remote host
     http::async_write(m_stream, req, yield[ec]);
     if(ec)
@@ -117,14 +116,24 @@ public:
     http::async_read_header(m_stream, m_b, *m_parser, yield[ec]);
     if(ec)
       return fail(ec, "async_read_header");
+    m_status = m_parser->get().result_int();
     
+    for (const auto &f : m_parser->get())
+    {
+      m_fields.insert({string(f.name_string()), string(f.value())});
+    }
+
     if (m_parser->chunked())
     {
-      cout << m_parser->get() << endl;
-      auto header = [&](std::uint64_t size,
+      using std::placeholders::_1;
+      using std::placeholders::_2;
+      using std::placeholders::_3;
+
+      auto header = [this](std::uint64_t size,
                         boost::string_view extensions,
                         boost::system::error_code& ev)
       {
+        //cout << "Reading header" << endl;
         if (ev)
           fail(ev, "Failed in chunked header");
         
@@ -134,22 +143,36 @@ public:
           cout << "Ext: " << c.first << ": " << c.second << endl;
         
         if (ev)
-          fail(ec, "Failed in chunked extension parse");
+          fail(ev, "Failed in chunked extension parse");
       };
-      m_parser->on_chunk_header(header);
+      m_headerHandler = header;
+      m_parser->on_chunk_header(m_headerHandler);
       
-      auto body = [&](std::uint64_t remain,
+      auto body = [this](std::uint64_t remain,
                       boost::string_view body,
                       boost::system::error_code& ev)
       {
+        //cout << "Reading body" << endl;
+        m_count++;
+        m_ec = ev;
         if (ev)
           fail(ev, "Failed in chunked body");
-
-        m_result = string(body);
+        
+        string b(body.cbegin(), body.cend());
+        string buf;
+        stringstream is(b);
+        getline(is, buf);
+        m_boundary = buf;
+        
+        while (getline(is, buf) && !buf.empty())
+          ;
+        m_result = string(buf);
         m_done = true;
+        cout << "Read " << m_count << ": " << m_result << endl;
         return body.size();
       };
-      m_parser->on_chunk_body(body);
+      m_chunkHandler = body;
+      m_parser->on_chunk_body(m_chunkHandler);
     }
     else
     {
@@ -160,14 +183,13 @@ public:
 
       auto msg = resp.get();
       m_result = beast::buffers_to_string(msg.body().data());
-      m_status = msg.result_int();
     }
     // Write the message to standard out
     // std::cout << res << std::endl;
         
     m_done = true;    
   }
-  
+    
   void readChunk(asio::yield_context yield)
   {
     boost::system::error_code ec;
@@ -180,13 +202,9 @@ public:
   
   void spawnReadChunk()
   {
-    m_done = false;
     asio::spawn(m_context,
                 std::bind(&Client::readChunk,
                           this, std::placeholders::_1));
-    while (!m_done && m_context.run_for(100ms) > 0)
-      ;
-
   }
   
   void spawnRequest(boost::beast::http::verb verb,
@@ -195,7 +213,9 @@ public:
                     bool close = false,
                     string const &contentType = "text/plain")
   {
+    cout << "spawnRequest: done: false" << endl;
     m_done = false;
+    m_count = 0;
     asio::spawn(m_context,
                 std::bind(&Client::request,
                           this, verb, target, body, close, contentType,
@@ -222,7 +242,17 @@ public:
   beast::tcp_stream m_stream;
   boost::beast::error_code m_ec;
   beast::flat_buffer m_b;
+  int m_count{0};
   optional<http::response_parser<http::empty_body>> m_parser;
+  string m_boundary;
+  map<string,string> m_fields;
+  
+  std::function<std::uint64_t (std::uint64_t,
+                              boost::string_view,
+                              boost::system::error_code&)>  m_chunkHandler;
+  std::function<void (std::uint64_t,
+                              boost::string_view,
+                              boost::system::error_code&)>  m_headerHandler;
 
 };
 
@@ -529,18 +559,27 @@ TEST_F(HttpServerTest, streaming_response)
   struct context {
     context(RequestPtr &r) : m_request(r) {}
     RequestPtr m_request;
+    bool m_written{false};
   };
 
   int count = 0;
   function<void(shared_ptr<context>)> chunk = [&](shared_ptr<context> ctx) {
-    cout << "Wrote chunk" << endl;
+    //cout << "Wrote chunk" << endl;
+    ctx->m_written = true;
     // Stop after 5 chunks
+  };
+  
+  
+  function<void(shared_ptr<context>)> begun = [&](shared_ptr<context> ctx) {
+    //cout << "Begun chunking" << endl;
+    ctx->m_written = true;
   };
   
   shared_ptr<context> ctx;
   auto begin = [&](RequestPtr request) -> bool {
     ctx = make_shared<context>(request);
-    request->m_session->beginStreaming("plain/text", bind(chunk, ctx));
+    ctx->m_written = false;
+    request->m_session->beginStreaming("plain/text", bind(begun, ctx));
     return true;
   };
   
@@ -550,35 +589,81 @@ TEST_F(HttpServerTest, streaming_response)
   startClient();
   
   m_client->spawnRequest(http::verb::get, "/sample");
-  
-  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-
+  while (!ctx->m_written && m_context.run_for(100ms) > 0)
+    ;
   m_client->spawnReadChunk();
+  while (m_context.run_for(100ms) > 0)
+    ;
+
+  m_client->m_done = false;
+  ctx->m_written = false;
+  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(100ms) > 0)
+    ;
+  cout << "Done: " << m_client->m_done << endl;
   EXPECT_EQ("Chunk Content #1", m_client->m_result);
 
+  ctx->m_written = false;
+  m_client->m_done = false;
   ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-  
-  m_client->spawnReadChunk();
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(200ms) > 0)
+    ;
   EXPECT_EQ("Chunk Content #2", m_client->m_result);
-
-  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-
   
-  m_client->spawnReadChunk();
+  ctx->m_written = false;
+  m_client->m_done = false;
+  ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(100ms) > 0)
+    ;
   EXPECT_EQ("Chunk Content #3", m_client->m_result);
 
+  ctx->m_written = false;
+  m_client->m_done = false;
   ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-
-  m_client->spawnReadChunk();
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(100ms) > 0)
+    ;
   EXPECT_EQ("Chunk Content #4", m_client->m_result);
 
+  ctx->m_written = false;
+  m_client->m_done = false;
   ctx->m_request->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
-
-  m_client->spawnReadChunk();
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(100ms) > 0)
+    ;
   EXPECT_EQ("Chunk Content #5", m_client->m_result);
+  
+  ctx->m_request->m_session->closeStream();
+  while (m_context.run_for(100ms) > 0)
+    ;
 }
 
 TEST_F(HttpServerTest, additional_header_fields)
 {
-  FAIL() << "not implemented";
+  m_server->setHttpHeaders({"Access-Control-Allow-Origin:*", "Origin:https://foo.example"});
+  
+  auto probe = [&](RequestPtr request) -> bool {
+    Response resp(status::ok);
+    resp.m_body = "Done";
+    request->m_session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+
+    return true;
+  };
+  
+  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", probe});
+
+  start();
+  startClient();
+
+  m_client->spawnRequest(http::verb::get, "/probe");
+  ASSERT_TRUE(m_client->m_done);
+  
+  EXPECT_EQ(200, m_client->m_status);
+  auto f1 = m_client->m_fields.find("Access-Control-Allow-Origin");
+  ASSERT_NE(m_client->m_fields.end(), f1);
+  ASSERT_EQ("*", f1->second);
+
+  auto f2 = m_client->m_fields.find("Origin");
+  ASSERT_NE(m_client->m_fields.end(), f2);
+  ASSERT_EQ("https://foo.example", f2->second);
 }

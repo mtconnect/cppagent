@@ -32,12 +32,12 @@ namespace mtconnect
   class Printer;
 
   namespace http_server
-  {    
+  {
     class SessionImpl : public Session
     {
     public:
       SessionImpl(boost::asio::ip::tcp::socket &socket,
-                  const StringList &list,
+                  const FieldList &list,
                   Dispatch dispatch,ErrorFunction error)
       : Session(dispatch, error), m_stream(std::move(socket)), m_fields(list)
       {}
@@ -74,7 +74,7 @@ namespace mtconnect
       bool m_close{false};
       
       // Additional fields
-      StringList  m_fields;
+      FieldList  m_fields;
       
       // References to retain lifecycle for callbacks.
       RequestPtr m_request;
@@ -82,6 +82,8 @@ namespace mtconnect
       std::optional<boost::beast::http::request_parser<boost::beast::http::string_body>> m_parser;
       std::shared_ptr<void> m_response;
       std::shared_ptr<void> m_serializer;
+      std::shared_ptr<void> m_chunkBuffer;
+      std::string m_chunk;      
     };
   }
 }

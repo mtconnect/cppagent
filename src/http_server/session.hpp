@@ -36,7 +36,8 @@ namespace mtconnect
                                              const std::string &msg)>;
 
     using Dispatch = std::function<bool(RequestPtr)>;
-    using Complete = std::function<void()>;    
+    using Complete = std::function<void()>;
+    using FieldList = std::list<std::pair<std::string, std::string>>;
 
     class Session : public std::enable_shared_from_this<Session>
     {

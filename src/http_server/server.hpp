@@ -45,7 +45,7 @@ namespace mtconnect
   {
     class Server
     {
-    public:
+    public:      
       Server(boost::asio::io_context &context, unsigned short port = 5000, const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
       : m_context(context), m_port(port), m_acceptor(context)
       {
@@ -58,6 +58,9 @@ namespace mtconnect
           m_address = boost::asio::ip::make_address(inter);
         }
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
+        if (fields)
+          setHttpHeaders(*fields);
+        
         m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
           Response response(st, msg, "text/plain");
           session->writeResponse(response);
@@ -75,7 +78,14 @@ namespace mtconnect
 
       void setHttpHeaders(const StringList &fields)
       {
-        m_fields = fields;
+        for (auto &f : fields)
+        {
+          auto i = f.find(':');
+          if (i != std::string::npos)
+          {
+            m_fields.emplace_back(f.substr(0, i), f.substr(i + 1));
+          }
+        }
       }
       
       auto getPort() const { return m_port; }
@@ -123,10 +133,11 @@ namespace mtconnect
       // Put handling controls
       bool m_allowPuts{false};
       std::set<boost::asio::ip::address> m_allowPutsFrom;
+      
       std::list<Routing> m_routings;
       std::unique_ptr<FileCache> m_fileCache;
       ErrorFunction m_errorFunction;
-      StringList m_fields;
+      FieldList m_fields;
       
       boost::asio::ip::tcp::acceptor m_acceptor;
     };
