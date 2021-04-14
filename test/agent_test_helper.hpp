@@ -101,9 +101,6 @@ class AgentTestHelper
   : m_incomingIp("127.0.0.1"),
     m_socket(m_ioContext)
   {
-    m_session = std::make_shared<mhttp::TestSession>([](mhttp::SessionPtr, mhttp::RequestPtr) { return true; }, [](mhttp::SessionPtr,
-   boost::beast::http::status status,
-   const std::string &msg){});
   }
   
   ~AgentTestHelper()
@@ -155,10 +152,10 @@ class AgentTestHelper
                                                  PROJECT_ROOT_DIR + file,
                                                  bufferSize, maxAssets, version,
                                                  checkpoint, true);
-    
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
     m_agent->initialize(m_context, {});
+    m_session = std::make_shared<mhttp::TestSession>([](mhttp::SessionPtr, mhttp::RequestPtr) { return true; }, m_server->getErrorFunction());
     return m_agent.get();
   }
   

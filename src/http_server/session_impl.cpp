@@ -148,23 +148,6 @@ namespace mtconnect
       }
     }
 
-    void SessionImpl::fail(boost::beast::http::status status, const std::string &message,
-                           sys::error_code ec)
-    {
-      NAMED_SCOPE("SessionImpl::fail");
-
-      LOG(warning) << "Operation failed: " << message;
-      if (ec)
-      {
-        LOG(warning) << "Closing: " << ec.category().message(ec.value()) << " - " << ec.message();
-        close();
-      }
-      else
-      {
-        m_errorFunction(shared_ptr(), status, message);
-      }
-    }
-
     void SessionImpl::reset()
     {
       m_response.reset();
@@ -248,28 +231,11 @@ namespace mtconnect
         if (auto a = msg.find(http::field::connection); a != msg.end())
           m_close = a->value() == "close";
 
-        try
+        if (!m_dispatch(shared_ptr(), m_request))
         {
-          if (!m_dispatch(shared_ptr(), m_request))
-          {
-            ostringstream txt;
-            txt << "Failed to find handler for " << msg.method() << " " << msg.target();
-            LOG(error) << txt.str();
-            fail(status::not_found, txt.str());
-          }
-        }
-        catch (RequestError &e)
-        {
-          LOG(error) << "Error processing request from: " << remote.address() << " - " << e.what();
-          fail(status::bad_request, e.what());
-        }
-        catch (ParameterError &e)
-        {
-          stringstream txt;
-          txt << "Parameter Error processing request from: " << remote.address() << " - "
-              << e.what();
+          ostringstream txt;
+          txt << "Failed to find handler for " << msg.method() << " " << msg.target();
           LOG(error) << txt.str();
-          fail(status::not_found, txt.str());
         }
       }
     }

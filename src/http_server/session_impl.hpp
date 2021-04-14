@@ -40,6 +40,7 @@ namespace mtconnect
                   ErrorFunction error)
         : Session(dispatch, error), m_stream(std::move(socket)), m_fields(list)
       {
+        m_remote = m_stream.socket().remote_endpoint();
       }
       SessionImpl(const SessionImpl &) = delete;
       virtual ~SessionImpl() { close(); }
@@ -52,8 +53,6 @@ namespace mtconnect
       void writeResponse(const Response &response, Complete complete = nullptr) override;
       void beginStreaming(const std::string &mimeType, Complete complete) override;
       void writeChunk(const std::string &chunk, Complete complete) override;
-      void fail(boost::beast::http::status status, const std::string &message,
-                boost::system::error_code ec = boost::system::error_code {});
       void close() override;
       void closeStream() override;
 

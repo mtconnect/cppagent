@@ -103,10 +103,30 @@ namespace mtconnect
 
       bool dispatch(SessionPtr session, RequestPtr request)
       {
-        for (auto &r : m_routings)
+        try {
+          for (auto &r : m_routings)
+          {
+            if (r.matches(session, request))
+              return true;
+          }
+          
+          std::stringstream txt;
+          txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb << " " << request->m_path;
+          session->fail(boost::beast::http::status::not_found, txt.str());
+        }
+        catch (RequestError &re)
         {
-          if (r.matches(session, request))
-            return true;
+          LOG(error) << session->getRemote().address() << ": Error processing request: " << re.what();
+          Response resp(re);
+          session->writeResponse(resp);
+        }
+        catch (ParameterError &pe)
+        {
+          std::stringstream txt;
+          txt << session->getRemote().address() << ": Parameter Error: "
+              << pe.what();
+          LOG(error) << txt.str();
+          session->fail(boost::beast::http::status::not_found, txt.str());
         }
 
         return false;
@@ -116,6 +136,7 @@ namespace mtconnect
       void fail(boost::system::error_code ec, char const *what);
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
+      ErrorFunction getErrorFunction() const { return m_errorFunction; }
 
     protected:
       boost::asio::io_context &m_context;

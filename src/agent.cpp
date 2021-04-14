@@ -110,7 +110,7 @@ namespace mtconnect
         [this](SessionPtr session, http_server::status st, const string &msg) {
           auto printer = getPrinter("xml");
           auto doc = printError(printer, "INVALID_REQUEST", msg);
-          session->writeResponse({st, msg, printer->mimeType()});
+          session->writeResponse({st, doc, printer->mimeType()});
         });
 
     m_initialized = true;
@@ -637,7 +637,7 @@ namespace mtconnect
         }
       };
 
-      m_server->addRouting({boost::beast::http::verb::post, "/{device}?time={string}", handler});
+      m_server->addRouting({boost::beast::http::verb::put, "/{device}?time={string}", handler});
       m_server->addRouting({boost::beast::http::verb::post, "/{device}?time={string}", handler});
     }
   }

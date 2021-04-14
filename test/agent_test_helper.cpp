@@ -52,6 +52,7 @@ void AgentTestHelper::makeRequest(const char *file, int line,
     m_request->m_path = path;
   
   ASSERT_FALSE(m_request->m_path.empty());
+  
   m_dispatched = m_agent->getServer()->dispatch(m_session, m_request);
 }
 
