@@ -17,7 +17,6 @@
 
 #include "agent_config.hpp"
 
-#include <boost/asio.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>

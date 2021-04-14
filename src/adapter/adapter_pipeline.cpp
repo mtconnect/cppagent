@@ -15,10 +15,6 @@
 //    limitations under the License.
 //
 
-// Exclude from clang formatting
-#include <boost/asio.hpp>
-// End exclude
-
 #include "adapter_pipeline.hpp"
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
