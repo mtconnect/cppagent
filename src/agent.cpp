@@ -1320,6 +1320,9 @@ namespace mtconnect
     else
       asyncResponse->m_sequence = *from;
 
+    if (from >= m_circularBuffer.getSequence())
+      asyncResponse->m_endOfBuffer = true;
+    
     asyncResponse->m_interval = chrono::milliseconds(interval);
     asyncResponse->m_logStreamData = m_logStreamData;
 
@@ -1365,7 +1368,7 @@ namespace mtconnect
 
     if (!asyncResponse->m_endOfBuffer)
     {
-      // Wsit to make sure the signal was actually signaled. We have observed that
+      // Wait to make sure the signal was actually signaled. We have observed that
       // a signal can occur in rare conditions where there are multiple threads listening
       // on separate condition variables and this pops out too soon. This will make sure
       // observer was actually signaled and instead of throwing an error will wait again

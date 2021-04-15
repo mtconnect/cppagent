@@ -59,23 +59,30 @@ namespace mtconnect
         m_code = response.m_status;
         m_body = response.m_body;
         m_mimeType = response.m_mimeType;
+        if (complete)
+          complete();
       }
       void beginStreaming(const std::string &mimeType, Complete complete) override
       {
         m_mimeType = mimeType;
-
+        m_streaming = true;
+        complete();
       }
       void writeChunk(const std::string &chunk, Complete complete) override
       {
         m_chunkBody = chunk;
+        if (m_streaming)
+          complete();
+        else
+          std::cout << "Streaming done" << std::endl;
       }
       void close() override
       {
-        
+        m_streaming = false;
       }
       void closeStream() override
       {
-        
+        m_streaming = false;
       }
 
       std::string m_body;
@@ -85,6 +92,7 @@ namespace mtconnect
       
       std::string m_chunkBody;
       std::string m_chunkMimeType;
+      bool m_streaming{false};
     };
 
   }
@@ -117,7 +125,7 @@ class AgentTestHelper
                       const char *accepts = "text/xml");
   void responseStreamHelper(const char *file, int line,
                             const mtconnect::http_server::QueryMap &aQueries,
-                            xmlDocPtr *doc, const char *path,
+                            const char *path,
                             const char *accepts = "text/xml");
   void responseHelper(const char *file, int line,
                       const mtconnect::http_server::QueryMap& aQueries, nlohmann::json &doc, const char *path,
@@ -129,6 +137,8 @@ class AgentTestHelper
   void deleteResponseHelper(const char *file, int line, 
                             const mtconnect::http_server::QueryMap &aQueries, xmlDocPtr *doc, const char *path,
                             const char *accepts = "text/xml");
+  
+  void chunkStreamHelper(const char *file, int line, xmlDocPtr *doc);
 
   void makeRequest(const char *file, int line, boost::beast::http::verb verb,
                    const std::string &body,
@@ -237,8 +247,11 @@ class AgentTestHelper
   ASSERT_TRUE(doc)
 
 #define PARSE_XML_STREAM_QUERY(path, queries)                               \
+  m_agentTestHelper->responseStreamHelper(__FILE__, __LINE__, queries, path); \
+
+#define PARSE_XML_CHUNK()                               \
   xmlDocPtr doc = nullptr;                                              \
-  m_agentTestHelper->responseStreamHelper(__FILE__, __LINE__, queries, &doc, path); \
+  m_agentTestHelper->chunkStreamHelper(__FILE__, __LINE__, &doc); \
   ASSERT_TRUE(doc)
 
 

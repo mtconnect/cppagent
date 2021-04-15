@@ -67,13 +67,11 @@ void AgentTestHelper::responseHelper(const char *file, int line,
 }
 
 void AgentTestHelper::responseStreamHelper(const char *file, int line,
-                                     const QueryMap &aQueries,
-                                     xmlDocPtr *doc, const char *path,
+                                           const QueryMap &aQueries,
+                                           const char *path,
                                            const char *accepts)
 {
   makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
-  if (ends_with(m_session->m_chunkMimeType, "xml"))
-    *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), m_session->m_chunkBody.size());
 }
 
 void AgentTestHelper::putResponseHelper(const char *file, int line, const string &body,
@@ -96,6 +94,12 @@ void AgentTestHelper::deleteResponseHelper(const char *file, int line,
       *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
+void AgentTestHelper::chunkStreamHelper(const char *file, int line, xmlDocPtr *doc)
+{
+  *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), m_session->m_chunkBody.size());
+}
+
+
 void AgentTestHelper::responseHelper(const char *file, int line,
                                      const QueryMap &aQueries,
                                      nlohmann::json &doc,
@@ -105,3 +109,4 @@ void AgentTestHelper::responseHelper(const char *file, int line,
   makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
   doc = nlohmann::json::parse(m_session->m_body);
 }
+
