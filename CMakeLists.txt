@@ -3,7 +3,7 @@ set(AGENT_VERSION_MAJOR 1)
 set(AGENT_VERSION_MINOR 7)
 set(AGENT_VERSION_PATCH 0)
 set(AGENT_VERSION_BUILD 2)
-#set(AGENT_VERSION_RC "RC8")
+#set(AGENT_VERSION_RC "RC9")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
@@ -102,4 +102,5 @@ set(CPACK_PACKAGE_NAME "cppagent")
 set(CPACK_PACKAGE_VENDOR "MTConnect.org")
 
 include(CPack)
+
 

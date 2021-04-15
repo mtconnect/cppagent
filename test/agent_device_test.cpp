@@ -54,9 +54,10 @@ class AgentDeviceTest : public testing::Test
     m_agentTestHelper.reset();
   }
 
-  void addAdapter()
+  void addAdapter(bool suppress = false)
   {
-    m_agentTestHelper->addAdapter({}, "127.0.0.1", m_port, "LinuxCNC");
+    ConfigOptions options{{configuration::SuppressIPAddress, suppress}};
+    m_agentTestHelper->addAdapter(options, "127.0.0.1", m_port, "LinuxCNC");
     m_agentTestHelper->m_adapter->setReconnectInterval(1s);
   }
   
@@ -128,21 +129,38 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 #define ADAPTER_PATH ADAPTERS_PATH "/m:Components/m:Adapter"
 #define ADAPTER_DATA_ITEMS_PATH ADAPTER_PATH "/m:DataItems"
 
+#define ID_PREFIX "_83a0a5df80"
+
 TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
 {
   addAdapter();
   {
     PARSE_XML_RESPONSE("/Agent/probe");
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
-    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", "_127.0.0.1_21788");
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:21788");
     
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
-                          "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']@type",
+                          "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']@type",
                           "ADAPTER_URI");
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
-                          "/m:DataItem[@id='_127.0.0.1_21788_adapter_uri']/m:Constraints/m:Value",
+                          "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']/m:Constraints/m:Value",
                           m_agentTestHelper->m_adapter->getUrl().c_str());
+  }
+}
+
+TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
+{
+  addAdapter(true);
+  {
+    PARSE_XML_RESPONSE("/Agent/probe");
+    m_agentTestHelper->printResponse();
+    ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "LinuxCNC");
+    
+    ASSERT_XML_PATH_COUNT(doc, ADAPTER_DATA_ITEMS_PATH
+                          "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']", 0);
   }
 }
 

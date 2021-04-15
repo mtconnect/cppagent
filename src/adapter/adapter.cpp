@@ -22,6 +22,7 @@
 #include "device_model/device.hpp"
 
 #include <dlib/logger.h>
+#include <dlib/md5.h>
 
 #include <algorithm>
 #include <chrono>
@@ -57,7 +58,8 @@ namespace mtconnect
 
       stringstream identity;
       identity << '_' << server << '_' << port;
-      m_identity = identity.str();
+      m_identity = string("_") + dlib::md5(identity.str()).substr(0, 10);
+
       m_options[configuration::AdapterIdentity] = m_identity;
       m_handler = m_pipeline->makeHandler();
       if (m_pipeline->hasContract())

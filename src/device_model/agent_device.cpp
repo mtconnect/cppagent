@@ -18,8 +18,11 @@
 #include "agent_device.hpp"
 
 #include "adapter/adapter.hpp"
+#include "utilities.hpp"
+#include "config_options.hpp"
 
 #include <dlib/logger.h>
+#include <dlib/md5.h>
 
 using namespace std;
 
@@ -42,12 +45,23 @@ namespace mtconnect
 
   void AgentDevice::addAdapter(const adapter::Adapter *adapter)
   {
+    bool suppress = GetOption<bool>(adapter->getOptions(), configuration::SuppressIPAddress).value_or(false);
     auto id = adapter->getIdentity();
 
-    stringstream name;
-    name << adapter->getServer() << ':' << adapter->getPort();
-
-    auto comp = new Component("Adapter", {{"id", id}, {"name", name.str()}});
+    std::map<string, string> attrs{{"id", id}};
+    if (!suppress)
+    {
+      stringstream name;
+      name << adapter->getServer() << ':' << adapter->getPort();
+      attrs["name"] = name.str();
+    }
+    else
+    {
+      auto device = GetOption<string>(adapter->getOptions(), configuration::Device);
+      if (device)
+        attrs["name"] = *device;
+    }
+    auto comp = new Component("Adapter", attrs);
     m_adapters->addChild(comp);
 
     {
@@ -58,6 +72,7 @@ namespace mtconnect
       comp->addDataItem(di);
     }
 
+    if (!suppress)
     {
       auto di = new DataItem(
           {{"type", "ADAPTER_URI"}, {"id", id + "_adapter_uri"}, {"category", "EVENT"}});
