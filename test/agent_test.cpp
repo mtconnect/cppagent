@@ -2555,32 +2555,17 @@ TEST_F(AgentTest, StreamDataObserver)
   // Test to make sure the signal will push the sequence number forward and capture
   // the new data.
   {
-    auto streamThreadLambda = [](AgentTest *test) {
-      this_thread::sleep_for(test->m_delay);
-      for (int i = 0; i < 20; i++)
-      {
-        test->m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|" + to_string(i));
-      }
-      test->m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
-      this_thread::sleep_for(120ms);
-      test->m_agentTestHelper->m_out.setstate(ios::eofbit);
-    };
-
-    m_delay = 50ms;
+    PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
     auto seq = to_string(agent->getSequence() + 20ull);
+    for (int i = 0; i < 20; i++)
+    {
+      m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|" + to_string(i));
+    }
+    m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
+    m_agentTestHelper->m_ioContext.run_one_for(120ms);
 
-    auto streamThread = std::thread{streamThreadLambda, this};
-    try
-    {
-      PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
-      //ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
-      streamThread.join();
-    }
-    catch (...)
-    {
-      streamThread.join();
-      throw;
-    }
+    PARSE_XML_CHUNK();
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
   }
 }
 
