@@ -3,7 +3,8 @@ branches:
   only:
   - master
   - boost_refactor_master
-
+  - boost_asio_context_scheduling
+  
 # clone_folder: c:\projects\cppagent_dev
 image:
 - Visual Studio 2019
