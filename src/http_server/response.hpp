@@ -22,8 +22,8 @@
 
 #include <unordered_map>
 
-#include "utilities.hpp"
 #include "request.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {
@@ -40,11 +40,10 @@ namespace mtconnect
         : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
       {
       }
-      Response(RequestError &e)
-      : m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
-      {        
+      Response(RequestError &e) : m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
+      {
       }
-      
+
       status m_status;
       std::string m_body;
       std::string m_mimeType;

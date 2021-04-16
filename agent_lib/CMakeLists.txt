@@ -172,6 +172,7 @@ target_link_libraries(
     LibXml2::LibXml2
     Boost::log Boost::log_setup Boost::coroutine
     $<$<PLATFORM_ID:Linux>:pthread>
+    $<$<PLATFORM_ID:Windows>:bcrypt>
 )
 target_compile_definitions(
   agent_lib

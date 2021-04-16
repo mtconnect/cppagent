@@ -115,7 +115,7 @@ namespace mtconnect
 
   inline int stringToInt(const std::string &text, int outOfRangeDefault)
   {
-    int value = 0.0;
+    int value = 0;
     try
     {
       value = stoi(text);

@@ -462,9 +462,8 @@ namespace mtconnect
       auto count = *request->parameter<int32_t>("count");
       auto printer = printerForAccepts(request->m_accepts);
 
-      respond(session,
-              assetRequest(printer, count, removed, request->parameter<string>("type"),
-                           request->parameter<string>("device")));
+      respond(session, assetRequest(printer, count, removed, request->parameter<string>("type"),
+                                    request->parameter<string>("device")));
       return true;
     };
 
@@ -526,8 +525,8 @@ namespace mtconnect
         else
         {
           respond(session, deleteAllAssetsRequest(printerForAccepts(request->m_accepts),
-                                                             request->parameter<string>("device"),
-                                                             request->parameter<string>("type")));
+                                                  request->parameter<string>("device"),
+                                                  request->parameter<string>("type")));
         }
         return true;
       };
@@ -627,8 +626,8 @@ namespace mtconnect
             queries.erase("time");
           auto device = request->parameter<string>("device");
 
-          respond(session, putObservationRequest(printerForAccepts(request->m_accepts),
-                                                            *device, queries, ts));
+          respond(session, putObservationRequest(printerForAccepts(request->m_accepts), *device,
+                                                 queries, ts));
           return true;
         }
         else
@@ -1322,7 +1321,7 @@ namespace mtconnect
 
     if (from >= m_circularBuffer.getSequence())
       asyncResponse->m_endOfBuffer = true;
-    
+
     asyncResponse->m_interval = chrono::milliseconds(interval);
     asyncResponse->m_logStreamData = m_logStreamData;
 

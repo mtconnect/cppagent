@@ -19,6 +19,7 @@
 
 #include <cstring>
 #include <fstream>
+#include <thread>
 
 #include "logging.hpp"
 #include "version.h"

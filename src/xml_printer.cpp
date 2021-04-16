@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#include "entity/xml_printer.hpp"
+
 #include <boost/asio/ip/host_name.hpp>
 
 #include <set>
@@ -29,7 +31,6 @@
 #include "device_model/composition.hpp"
 #include "device_model/configuration/configuration.hpp"
 #include "device_model/device.hpp"
-#include "entity/xml_printer.hpp"
 #include "logging.hpp"
 #include "version.h"
 #include "xml_printer.hpp"

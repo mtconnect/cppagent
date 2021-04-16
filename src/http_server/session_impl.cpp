@@ -120,7 +120,7 @@ namespace mtconnect
       algo::split(toks, qp, boost::is_any_of("&"));
       for (auto tok : toks)
       {
-        auto qv = string_view(tok.begin().base(), tok.size());
+        auto qv = string_view(&*tok.begin(), tok.size());
         auto eq = qv.find('=');
         if (eq != string_view::npos)
         {

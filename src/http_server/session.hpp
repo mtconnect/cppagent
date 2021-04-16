@@ -55,7 +55,7 @@ namespace mtconnect
       virtual void close() = 0;
       virtual void closeStream() = 0;
       virtual void fail(boost::beast::http::status status, const std::string &message,
-                boost::system::error_code ec = boost::system::error_code {})
+                        boost::system::error_code ec = boost::system::error_code {})
       {
         NAMED_SCOPE("Session::fail");
 

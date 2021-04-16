@@ -166,7 +166,7 @@ namespace mtconnect
                                 beast::bind_front_handler(&Server::accept, this));
       }
     }
-    
+
     //------------------------------------------------------------------------------
 
     // Report a failure

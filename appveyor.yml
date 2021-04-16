@@ -16,6 +16,10 @@ configuration:
 platform:
 - x64
 
+cache:
+- c:\tools\vcpkg\installed\ -> appveyor.yml
+
+
 #environment:
 #  matrix:
 #  - arch: Win32
@@ -70,3 +74,4 @@ only_commits:
     - test/
     - cmake/
     - agent/
+

@@ -66,10 +66,10 @@ include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)
 
 # Add our dependency projects
+include(cmake/Boost.cmake)
 include(cmake/LibXML2.cmake)
 include(cmake/Date.cmake)
 include(cmake/json.cmake)
-include(cmake/Boost.cmake)
 
 # Add our projects
 add_subdirectory(agent_lib)
