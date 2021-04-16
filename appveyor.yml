@@ -2,10 +2,12 @@ version: '{build}'
 branches:
   only:
   - master
+  - boost_refactor_master
+
 # clone_folder: c:\projects\cppagent_dev
 image:
-- Ubuntu2004
 - Visual Studio 2019
+- Ubuntu2004
 
 configuration:
 - Release
@@ -29,10 +31,11 @@ init:
 
 before_build:
 - cmd: |-
+    C:\tools\vcpkg\vcpkg install boost:ix86-windows-static boost:x64-windows-static
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
+    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
 - sh: export CC=/usr/bin/gcc-9
 - sh: export CXX=/usr/bin/g++-9
 - sh: mkdir build
