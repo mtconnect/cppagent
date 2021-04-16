@@ -12,8 +12,9 @@ add_executable(agent ${AGENT_SOURCES})
 target_link_libraries(
   agent
   PRIVATE
-    agent_lib
-    $<$<PLATFORM_ID:Windows>:shlwapi>
+  agent_lib
+  Boost::log Boost::log_setup Boost::coroutine  
+  $<$<PLATFORM_ID:Windows>:shlwapi>
 )
 target_clangtidy_setup(agent_lib)
 
