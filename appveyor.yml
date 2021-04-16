@@ -61,7 +61,6 @@ build_script:
 test_script:
 - cmd: ctest -C Release --output-on-failure
 - sh: ctest
-
   
 only_commits:
   files:
