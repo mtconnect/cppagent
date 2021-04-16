@@ -32,7 +32,7 @@ init:
 
 before_build:
 - cmd: |-
-    C:\tools\vcpkg\vcpkg install boost:ix86-windows-static boost:x64-windows-static
+    C:\tools\vcpkg\vcpkg install boost:x86-windows-static boost:x64-windows-static
     mkdir build
     cd build
     cmake --version
