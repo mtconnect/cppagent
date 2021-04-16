@@ -14,7 +14,7 @@ configuration:
 - Release
 
 platform:
-- x86
+- x64
 
 #environment:
 #  matrix:
@@ -32,11 +32,11 @@ init:
 
 before_build:
 - cmd: |-
-    C:\tools\vcpkg\vcpkg install boost:x86-windows-static boost:x64-windows-static
+    C:\tools\vcpkg\vcpkg install boost:x64-windows-static
     mkdir build
     cd build
     cmake --version
-    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake
+    cmake -G "Visual Studio 16 2019" -A x64 .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static
 - sh: export CC=/usr/bin/gcc-9
 - sh: export CXX=/usr/bin/g++-9
 - sh: mkdir build
