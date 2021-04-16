@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,72 +19,43 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
-
+#include "adapter/adapter.hpp"
+#include "pipeline/pipeline_context.hpp"
 #include <map>
 #include <sstream>
 #include <string>
 #include <vector>
+#include <memory>
 
-TEST(AdapterTest, EscapedLine)
+using namespace std;
+using namespace mtconnect;
+using namespace mtconnect::adapter;
+
+TEST(AdapterTest, MultilineData)
 {
-  std::map<std::string, std::vector<std::string>> data;
-  // correctly escaped
-  data[R"("a\|b")"] = {"a|b"};
-  data[R"("a\|b"|z)"] = {"a|b", "z"};
-  data[R"(y|"a\|b")"] = {"y", "a|b"};
-  data[R"(y|"a\|b"|z)"] = {"y", "a|b", "z"};
-
-  // correctly escaped with multiple pipes
-  data[R"("a\|b\|c")"] = {"a|b|c"};
-  data[R"("a\|b\|c"|z)"] = {"a|b|c", "z"};
-  data[R"(y|"a\|b\|c")"] = {"y", "a|b|c"};
-  data[R"(y|"a\|b\|c"|z)"] = {"y", "a|b|c", "z"};
-
-  // correctly escaped with pipe at front
-  data[R"("\|b\|c")"] = {"|b|c"};
-  data[R"("\|b\|c"|z)"] = {"|b|c", "z"};
-  data[R"(y|"\|b\|c")"] = {"y", "|b|c"};
-  data[R"(y|"\|b\|c"|z)"] = {"y", "|b|c", "z"};
-
-  // correctly escaped with pipes at end
-  data[R"("a\|b\|")"] = {"a|b|"};
-  data[R"("a\|b\|"|z)"] = {"a|b|", "z"};
-  data[R"(y|"a\|b\|")"] = {"y", "a|b|"};
-  data[R"(y|"a\|b\|"|z)"] = {"y", "a|b|", "z"};
-
-  // missing first quote
-  data["a\\|b\""] = {"a\\", "b\""};
-  data["a\\|b\"|z"] = {"a\\", "b\"", "z"};
-  data["y|a\\|b\""] = {"y", "a\\", "b\""};
-  data["y|a\\|b\"|z"] = {"y", "a\\", "b\"", "z"};
-
-  // missing first quote and multiple pipes
-  data[R"(a\|b\|c")"] = {"a\\", "b\\", "c\""};
-  data[R"(a\|b\|c"|z)"] = {"a\\", "b\\", "c\"", "z"};
-  data[R"(y|a\|b\|c")"] = {"y", "a\\", "b\\", "c\""};
-  data[R"(y|a\|b\|c"|z)"] = {"y", "a\\", "b\\", "c\"", "z"};
-
-  // missing last quote
-  data["\"a\\|b"] = {"\"a\\", "b"};
-  data["\"a\\|b|z"] = {"\"a\\", "b", "z"};
-  data["y|\"a\\|b"] = {"y", "\"a\\", "b"};
-  data["y|\"a\\|b|z"] = {"y", "\"a\\", "b", "z"};
-
-  // missing last quote and pipe at end et al.
-  data["\"a\\|"] = {"\"a\\", ""};
-  data["y|\"a\\|"] = {"y", "\"a\\", ""};
-  data["y|\"a\\|z"] = {"y", "\"a\\", "z"};
-  data[R"(y|"a\|"z)"] = {"y", "\"a\\", "\"z"};
-
-  for (const auto &test : data)
-  {
-    std::string value;
-    std::istringstream toParse(test.first);
-    for (const std::string &expected : test.second)
-    {
-      mtconnect::Adapter::getEscapedLine(toParse, value);
-      ASSERT_EQ(expected, value);
-    }
-  }
+  pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
+  auto pipeline = make_unique<AdapterPipeline>(context);
+  auto adapter = make_unique<Adapter>("localhost", 7878, ConfigOptions{}, pipeline);
+  
+  auto handler = make_unique<Handler>();
+  string data;
+  handler->m_processData = [&](const string &d, const string &s) { data = d; };
+  adapter->setHandler(handler);
+  
+  adapter->processData("Simple Pass Through");
+  EXPECT_EQ("Simple Pass Through", data);
+  
+  EXPECT_FALSE(adapter->getTerminator());
+  adapter->processData("A multiline message: --multiline--ABC1234");
+  EXPECT_TRUE(adapter->getTerminator());
+  EXPECT_EQ("--multiline--ABC1234", *adapter->getTerminator());
+  adapter->processData("Another Line...");
+  adapter->processData("--multiline--ABC---");
+  adapter->processData("--multiline--ABC1234");
+  
+  const auto exp = R"DOC(A multiline message: 
+Another Line...
+--multiline--ABC---)DOC";
+  EXPECT_EQ(exp, data);
 }
+

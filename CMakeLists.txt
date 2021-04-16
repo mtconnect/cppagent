@@ -1,12 +1,14 @@
 # The version number.
 set(AGENT_VERSION_MAJOR 1)
-set(AGENT_VERSION_MINOR 6)
+set(AGENT_VERSION_MINOR 7)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 7)
-set(AGENT_VERSION_RC "")
+set(AGENT_VERSION_BUILD 2)
+#set(AGENT_VERSION_RC "RC9")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
 cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+
+set(USE_FOLDERS ON)
 
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
@@ -22,11 +24,12 @@ project(cppagent LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+set(CXX_COMPILE_FEATURES cxx_std_17)
 
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
 # The first type will be used as the default build type if the user does not specify one.
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs" FORCE)
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs")
 if(NOT CMAKE_BUILD_TYPE)
   list(GET CMAKE_CONFIGURATION_TYPES 0 _default_build_type)
   message(STATUS "Setting build type to '${_default_build_type}'.")
@@ -91,7 +94,7 @@ install(DIRECTORY tools/ DESTINATION "tools")
 install(FILES simulator/agent.cfg DESTINATION "bin")
 
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
-set(CPACK_PACKAGE_VERSION "${AGENT_VERSION_MAJOR}.${AGENT_VERSION_MINOR}.${AGENT_VERSION_PATCH}.${AGENT_VERSION_BUILD}")
+set(CPACK_PACKAGE_VERSION "${AGENT_VERSION_MAJOR}.${AGENT_VERSION_MINOR}.${AGENT_VERSION_PATCH}.${AGENT_VERSION_BUILD}${AGENT_VERSION_RC}")
 set(CPACK_PACKAGE_VERSION_MAJOR ${AGENT_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${AGENT_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${AGENT_VERSION_PATCH})
@@ -99,4 +102,5 @@ set(CPACK_PACKAGE_NAME "cppagent")
 set(CPACK_PACKAGE_VENDOR "MTConnect.org")
 
 include(CPack)
+
 

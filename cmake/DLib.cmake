@@ -15,18 +15,13 @@ if(NOT TARGET dlib::dlib)
     URL "https://github.com/davisking/dlib/archive/${agent_dlib_version_tag}.zip"
   )
   FetchContent_GetProperties(dlibprovider)
-
-  if(UNIX)
-    set(build_options "-j4")
-  else()
-    set(build_options "-m:4")
-  endif()
+  set(build_options "-j4")
 
   set(_link_library "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}")
   if(EXISTS "${_link_library}")
     message(STATUS "  * Reusing previously built dlib library")
   else()
-    message(STATUS "  * Donwload dlib library")
+    message(STATUS "  * Download dlib library")
     FetchContent_Populate(dlibprovider)
 
     message(STATUS "  * Patch dlib library")
@@ -71,7 +66,7 @@ if(NOT TARGET dlib::dlib)
 
     message(STATUS "  * Build Release dlib library")
     execute_process(
-      COMMAND ${CMAKE_COMMAND} --build . --target install --config Release -- ${build_options}
+      COMMAND ${CMAKE_COMMAND} --build . --target install --config Release ${build_options}
       WORKING_DIRECTORY ${dlibprovider_BINARY_DIR}
       OUTPUT_FILE       ${dlibprovider_BINARY_DIR}/build_output.log
       ERROR_FILE        ${dlibprovider_BINARY_DIR}/build_output.log
@@ -84,7 +79,7 @@ if(NOT TARGET dlib::dlib)
     if(MSVC)
       message(STATUS "  * Build Debug dlib library")
       execute_process(
-	COMMAND ${CMAKE_COMMAND} --build . --target install --config Debug -- ${build_options}
+	COMMAND ${CMAKE_COMMAND} --build . --target install --config Debug ${build_options}
 	WORKING_DIRECTORY ${dlibprovider_BINARY_DIR}
 	OUTPUT_FILE       ${dlibprovider_BINARY_DIR}/build_output.log
 	ERROR_FILE        ${dlibprovider_BINARY_DIR}/build_output.log
@@ -100,14 +95,27 @@ if(NOT TARGET dlib::dlib)
   message(STATUS "  * Create targets for dlib library")
   add_library(dlib::dlib STATIC IMPORTED)
 
-  set_target_properties(dlib::dlib PROPERTIES
-    IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}"
-    INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/install/dlib/include"
-    )
-
-  if(MSVC)
+  if(EXISTS "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}")
     set_target_properties(dlib::dlib PROPERTIES
-      IMPORTED_LOCATION_DEBUG "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlibd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+      IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}"
+      INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/install/dlib/include"
       )
+
+    if(MSVC)
+      set_target_properties(dlib::dlib PROPERTIES
+        IMPORTED_LOCATION_DEBUG "${CMAKE_BINARY_DIR}/install/dlib/lib/${CMAKE_STATIC_LIBRARY_PREFIX}dlibd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        )
+    endif()
+  else()
+    set_target_properties(dlib::dlib PROPERTIES
+      IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/install/dlib/lib64/${CMAKE_STATIC_LIBRARY_PREFIX}dlib${CMAKE_STATIC_LIBRARY_SUFFIX}"
+      INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_BINARY_DIR}/install/dlib/include"
+      )
+
+    if(MSVC)
+      set_target_properties(dlib::dlib PROPERTIES
+        IMPORTED_LOCATION_DEBUG "${CMAKE_BINARY_DIR}/install/dlib/lib64/${CMAKE_STATIC_LIBRARY_PREFIX}dlibd${CMAKE_STATIC_LIBRARY_SUFFIX}"
+        )
+    endif()
   endif()
 endif()

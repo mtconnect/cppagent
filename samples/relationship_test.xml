@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.7" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.7 http://schemas.mtconnect.org/schemas/MTConnectDevices_1.7.xsd">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.7" assetBufferSize="1024" assetCount="0"/>
+  <Devices>
+    <Device uuid="000" name="LinuxCNC" id="d" mtconnectVersion="1.7">
+      <Description manufacturer="NIST" serialNumber="1122">Linux CNC Device</Description>
+      <DataItems>
+        <DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
+        <DataItem type="AVAILABILITY" category="EVENT" id="avail" name="avail"/>
+      </DataItems>
+      <Components>
+        <Axes name="Axes" id="axes">
+          <Components>
+            <Linear name="X" id="x">
+							<Configuration>
+								<Specifications>
+									<Specification id="spec1" type="LOAD">
+										<UpperLimit>200.0</UpperLimit>
+										<LowerLimit>0.0</LowerLimit>
+									</Specification>
+								</Specifications>
+							</Configuration>
+              <DataItems>
+                <DataItem type="POSITION" significantDigits="6" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x1" subType="ACTUAL" name="Xact" statistic="AVERAGE"/>
+                <DataItem type="POSITION" significantDigits="6" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x1ts" subType="ACTUAL" name="Xts" representation="TIME_SERIES" sampleRate="46000"/>
+                <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="x2" subType="COMMANDED" name="Xcom"/>
+                <DataItem type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="x3" name="Xload" >
+                  <Constraints>
+                    <Minimum>0</Minimum>
+                    <Maximum>200</Maximum>
+                  </Constraints>
+                </DataItem>
+                <DataItem type="LOAD" category="CONDITION" id="xlc">
+									<Relationships>
+										<DataItemRelationship name="archie" type="LIMIT" idRef="xlcpl"/>
+										<SpecificationRelationship type="LIMIT" idRef="spec1"/>
+									</Relationships>
+								</DataItem>
+								<DataItem category="EVENT" type="PROCESS_LIMITS" id="xlcpl" representation="DATA_SET">
+									<Relationships>
+										<DataItemRelationship name="bob" type="OBSERVATION" idRef="xlc"/>
+										<!-- invalid relationship -->
+										<DataItemRelationship name="bob" idRef="xlc"/>
+									</Relationships>
+								</DataItem>
+              </DataItems>
+            </Linear>
+          </Components>
+        </Axes>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>

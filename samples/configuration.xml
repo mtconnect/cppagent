@@ -4,66 +4,111 @@
   <Devices>
     <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
       <Description manufacturer="NIST" serialNumber=""/>
-			<Configuration>
-				<CoordinateSystems>
-					<CoordinateSystem id="world" type="WORLD" name="worldy">
-						<Origin>101 102 103</Origin>
-					</CoordinateSystem>
-					<CoordinateSystem id="machine" type="MACHINE" name="machiney" nativeName="xxx" parentIdRef="world">
-						<Transformation>
-							<Translation>10 10 10</Translation>
-							<Rotation>90 0 90</Rotation>
-						</Transformation>
-					</CoordinateSystem>
-				</CoordinateSystems>
-			</Configuration>
+      <Configuration>
+        <CoordinateSystems>
+          <CoordinateSystem id="world" type="WORLD" name="worldy">
+            <Origin>101 102 103</Origin>
+          </CoordinateSystem>
+          <CoordinateSystem id="machine" type="MACHINE" name="machiney" nativeName="xxx" parentIdRef="world">
+            <Transformation>
+              <Translation>10 10 10</Translation>
+              <Rotation>90 0 90</Rotation>
+            </Transformation>
+          </CoordinateSystem>
+        </CoordinateSystems>
+      </Configuration>
       <DataItems>
-	<DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
+        <DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
       </DataItems>
       <Components>
         <Axes name="Axes" id="axes">
           <Components>
             <Rotary name="C" id="c">
-							<Configuration>
-								<Relationships>
-									<ComponentRelationship id="ref1" name="Power" type="PEER" criticality="CRITICAL" idRef="power"/>
-									<DeviceRelationship id="ref2" name="coffee" type="PARENT" criticality="NON_CRITICAL" role="AUXILIARY" href="http://127.0.0.1:2000/coffee" deviceUuidRef="bfccbfb0-5111-0138-6cd5-0c85909298d9"/>
-								</Relationships>
-								<Specifications>
-									<Specification type="ROTARY_VELOCITY" subType="ACTUAL" dataItemIdRef="c1" units="REVOLUTION/MINUTE" compositionIdRef="cmotor" name="speed_limit" coordinateSystemIdRef="machine">
-										<Maximum>10000</Maximum>
-										<Minimum>100</Minimum>
-										<Nominal>1000</Nominal>
-									</Specification>										
-								</Specifications>
-							</Configuration>
+              <Configuration>
+                <Relationships>
+                  <ComponentRelationship id="ref1" name="Power" type="PEER" criticality="CRITICAL" idRef="power"/>
+                  <DeviceRelationship id="ref2" name="coffee" type="PARENT" criticality="NON_CRITICAL" role="AUXILIARY" href="http://127.0.0.1:2000/coffee" deviceUuidRef="bfccbfb0-5111-0138-6cd5-0c85909298d9"/>
+                </Relationships>
+                <Specifications>
+                  <Specification type="ROTARY_VELOCITY" subType="ACTUAL" dataItemIdRef="c1" units="REVOLUTION/MINUTE" compositionIdRef="cmotor" name="speed_limit" coordinateSystemIdRef="machine">
+                    <Maximum>10000</Maximum>
+                    <Minimum>100</Minimum>
+                    <Nominal>1000</Nominal>
+                  </Specification>                    
+                  <Specification id="spec1" type="LOAD" units="PERCENT" name="loadspec" originator="MANUFACTURER">
+                    <Maximum>1000</Maximum>
+                    <Minimum>-1000</Minimum>
+                    <Nominal>100</Nominal>
+                    <UpperLimit>500</UpperLimit>
+                    <LowerLimit>-500</LowerLimit>
+                    <UpperWarning>200</UpperWarning>
+                    <LowerWarning>-200</LowerWarning>
+                  </Specification>
+                  <ProcessSpecification id="pspec1" type="LOAD" units="PERCENT" name="procspec" originator="USER">
+                    <SpecificationLimits>
+                      <UpperLimit>500</UpperLimit>
+                      <Nominal>50</Nominal>
+                      <LowerLimit>-500</LowerLimit>
+                    </SpecificationLimits>
+                    <ControlLimits>
+                      <UpperLimit>500</UpperLimit>
+                      <LowerLimit>-500</LowerLimit>
+                      <Nominal>10</Nominal>
+                      <UpperWarning>200</UpperWarning>
+                      <LowerWarning>-200</LowerWarning>
+                    </ControlLimits>
+                    <AlarmLimits>
+                      <UpperLimit>500</UpperLimit>
+                      <LowerLimit>-500</LowerLimit>
+                      <UpperWarning>200</UpperWarning>
+                      <LowerWarning>-200</LowerWarning>
+                    </AlarmLimits>
+                  </ProcessSpecification>
+                </Specifications>
+              </Configuration>
               <DataItems>
                 <DataItem type="ROTARY_VELOCITY" category="SAMPLE" units="REVOLUTION/MINUTE" nativeUnits="REVOLUTION/MINUTE" id="c1" subType="ACTUAL" name="Sspeed">
                   <Source>spindle_speed</Source>
-		</DataItem>
-		<DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c2">
-		  <Constraints><Value>SPINDLE</Value></Constraints>
+                </DataItem>
+                <DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c2">
+                  <Constraints><Value>SPINDLE</Value></Constraints>
                 </DataItem>
               </DataItems>
             </Rotary>
           </Components>
         </Axes>
         <Controller name="Controller" id="cont">
-	  <Components>
-	    <Path name="path" id="path">
+          <Components>
+            <Path name="path" id="path">
               <DataItems>
-		<DataItem type="BLOCK" category="EVENT" id="p1" name="block"/>
-		<DataItem type="CONTROLLER_MODE" category="EVENT" id="p2" name="mode"/>
-		<DataItem type="LINE" category="EVENT" id="p3" name="line"/>
-		<DataItem type="PROGRAM" category="EVENT" id="p4" name="program"/>
+                <DataItem type="BLOCK" category="EVENT" id="p1" name="block"/>
+                <DataItem type="CONTROLLER_MODE" category="EVENT" id="p2" name="mode"/>
+                <DataItem type="LINE" category="EVENT" id="p3" name="line"/>
+                <DataItem type="PROGRAM" category="EVENT" id="p4" name="program"/>
               </DataItems>
-	    </Path>
-	  </Components>
+            </Path>
+          </Components>
         </Controller>
         <Power name="power" id="power">
           <DataItems>
             <DataItem type="POWER_STATUS" category="EVENT" id="pw1" name="power"/>
           </DataItems>
+          <Compositions>
+            <Composition id="zmotor" type="MOTOR" uuid="12345" name="motor_name">
+							<Description manufacturer="open" model="vroom" serialNumber="12356" station="A">
+								Hello There
+							</Description>
+							<Configuration>
+								<Specifications>
+									<Specification type="VOLTAGE_AC" units="VOLT" name="voltage">
+										<Maximum>10000</Maximum>
+										<Minimum>100</Minimum>
+										<Nominal>1000</Nominal>
+									</Specification>
+								</Specifications>
+							</Configuration>
+						</Composition>
+          </Compositions>
         </Power>
       </Components>
     </Device>

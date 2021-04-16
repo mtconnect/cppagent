@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,13 @@
 
 #include "xml_parser.hpp"
 
-#include "composition.hpp"
-#include "coordinate_systems.hpp"
-#include "cutting_tool.hpp"
-#include "sensor_configuration.hpp"
-#include "specifications.hpp"
+#include "assets/cutting_tool.hpp"
+#include "device_model/composition.hpp"
+#include "device_model/coordinate_systems.hpp"
+#include "device_model/motion.hpp"
+#include "device_model/sensor_configuration.hpp"
+#include "device_model/solid_model.hpp"
+#include "device_model/specifications.hpp"
 #include "xml_printer.hpp"
 
 #include <dlib/logger.h>
@@ -53,7 +55,12 @@ using namespace std;
 
 namespace mtconnect
 {
+  using namespace observation;
+
   static dlib::logger g_logger("xml.parser");
+
+  template <class T>
+  void handleConfiguration(xmlNodePtr node, T *parent);
 
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
@@ -120,6 +127,45 @@ namespace mtconnect
     return toReturn;
   }
 
+  // Put all of the attributes of an element into a map
+  static inline std::map<string, string> getValidatedAttributes(
+      const xmlNodePtr node, const std::map<string, bool> &parameters)
+  {
+    std::map<string, string> toReturn;
+    std::map<string, bool> matched = parameters;
+
+    for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
+    {
+      if (attr->type == XML_ATTRIBUTE_NODE)
+      {
+        string key = (const char *)(attr->name);
+        auto it = matched.find(key);
+        if (it != matched.end())
+        {
+          matched.erase(it);
+          toReturn[key] = (const char *)attr->children->content;
+        }
+        else
+        {
+          g_logger << dlib::LWARN << "Unknown attribute for " << (const char *)node->name << ": "
+                   << key << ", skipping";
+        }
+      }
+    }
+
+    for (auto &p : matched)
+    {
+      if (p.second)
+      {
+        g_logger << dlib::LWARN << (const char *)node->name
+                 << " missing required attribute: " << p.first;
+        toReturn.clear();
+      }
+    }
+
+    return toReturn;
+  }
+
   static inline void forEachElement(const xmlNodePtr node,
                                     map<string, function<void(const xmlNodePtr)>> funs)
   {
@@ -128,42 +174,149 @@ namespace mtconnect
       if (child->type != XML_ELEMENT_NODE)
         continue;
 
+      auto other = funs.find("OTHERWISE");
+
       string name((const char *)child->name);
       auto lambda = funs.find(name);
       if (lambda != funs.end())
       {
         lambda->second(child);
       }
+      else if (other != funs.end())
+      {
+        other->second(child);
+      }
     }
   }
 
+  struct ThreeSpace
+  {
+    double m_1, m_2, m_3;
+  };
+
+  static inline std::optional<ThreeSpace> getThreeSpace(const string &cdata)
+  {
+    ThreeSpace v;
+
+    stringstream s(cdata);
+    s >> v.m_1 >> v.m_2 >> v.m_3;
+    if (s.rdstate() & std::istream::failbit)
+    {
+      g_logger << dlib::LWARN << "Cannot parse three space value: " << cdata;
+      return nullopt;
+    }
+    else
+    {
+      return make_optional(v);
+    }
+  }
+
+  static inline std::optional<Geometry> getGeometry(const xmlNodePtr node, bool hasScale,
+                                                    bool hasAxis)
+  {
+    Geometry geometry;
+    forEachElement(node, {{"Transformation",
+                           [&geometry](const xmlNodePtr n) {
+                             if (geometry.m_location.index() != 0)
+                             {
+                               g_logger << dlib::LWARN << "Translation or Origin already given";
+                               return;
+                             }
+
+                             Transformation t;
+                             forEachElement(n, {{"Translation",
+                                                 [&t](const xmlNodePtr c) {
+                                                   auto s = getThreeSpace(getCDATA(c));
+                                                   if (s)
+                                                     t.m_translation.emplace(s->m_1, s->m_2,
+                                                                             s->m_3);
+                                                 }},
+                                                {"Rotation", [&t](const xmlNodePtr c) {
+                                                   auto s = getThreeSpace(getCDATA(c));
+                                                   if (s)
+                                                     t.m_rotation.emplace(s->m_1, s->m_2, s->m_3);
+                                                 }}});
+                             if (t.m_rotation || t.m_translation)
+                               geometry.m_location.emplace<Transformation>(t);
+                             else
+                               g_logger << dlib::LWARN << "Cannot parse Translation";
+                           }},
+                          {"Origin",
+                           [&geometry](const xmlNodePtr n) {
+                             if (geometry.m_location.index() != 0)
+                             {
+                               g_logger << dlib::LWARN << "Translation or Origin already given";
+                               return;
+                             }
+
+                             auto s = getThreeSpace(getCDATA(n));
+                             if (s)
+                               geometry.m_location.emplace<Origin>(s->m_1, s->m_2, s->m_3);
+                             else
+                               g_logger << dlib::LWARN << "Cannot parse Origin";
+                           }},
+                          {"Scale",
+                           [&geometry, hasScale](const xmlNodePtr n) {
+                             if (hasScale)
+                             {
+                               auto s = getThreeSpace(getCDATA(n));
+                               if (s)
+                                 geometry.m_scale.emplace(s->m_1, s->m_2, s->m_3);
+                               else
+                                 g_logger << dlib::LWARN << "Cannot parse Scale";
+                             }
+                           }},
+                          {"Axis", [&geometry, hasAxis](const xmlNodePtr n) {
+                             if (hasAxis)
+                             {
+                               auto s = getThreeSpace(getCDATA(n));
+                               if (s)
+                                 geometry.m_axis.emplace(s->m_1, s->m_2, s->m_3);
+                               else
+                                 g_logger << dlib::LWARN << "Cannot parse Scale";
+                             }
+                           }}});
+
+    if (geometry.m_location.index() != 0 || geometry.m_scale)
+      return make_optional(geometry);
+    else
+      return nullopt;
+  }
+
   XmlParser::XmlParser()
-      : m_handlers(
-            {{"Components",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-             {"DataItems",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-             {"References",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-             {"Compositions",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
-             {"DataItem", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItem(n, p, d); }},
-             {"Reference",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p, d); }},
-             {"DataItemRef",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p, d); }},
-             {"ComponentRef",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p, d); }},
-             {"Composition",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleComposition(n, p); }},
-             {"Description", [](xmlNodePtr n, Component *p,
-                                Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
-             {"Configuration",
-              [this](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
+    : m_handlers(
+          {{"Components",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+           {"DataItems",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+           {"References",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+           {"Compositions",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleChildren(n, p, d); }},
+           {"DataItem", [this](xmlNodePtr n, Component *p, Device *d) { loadDataItem(n, p, d); }},
+           {"Reference", [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+           {"DataItemRef",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+           {"ComponentRef",
+            [this](xmlNodePtr n, Component *p, Device *d) { handleReference(n, p); }},
+           {"Composition",
+            [this](xmlNodePtr n, Component *p, Device *d) {
+              auto c = handleComposition(n);
+              p->addComposition(c);
+            }},
+           {"Description", [](xmlNodePtr n, Component *p,
+                              Device *d) { p->addDescription(getCDATA(n), getAttributes(n)); }},
+           {"Configuration",
+            [](xmlNodePtr n, Component *p, Device *d) { handleConfiguration(n, p); }}})
   {
   }
 
-  std::vector<Device *> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
+  inline static bool isMTConnectUrn(const char *aUrn)
+  {
+    return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27u);
+  }
+
+  std::list<Device *> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
   {
     if (m_doc)
     {
@@ -173,7 +326,7 @@ namespace mtconnect
 
     xmlXPathContextPtr xpathCtx = nullptr;
     xmlXPathObjectPtr devices = nullptr;
-    std::vector<Device *> deviceList;
+    std::list<Device *> deviceList;
 
     try
     {
@@ -334,7 +487,7 @@ namespace mtconnect
     }
   }
 
-  void XmlParser::getDataItems(set<string> &filterSet, const string &inputPath, xmlNodePtr node)
+  void XmlParser::getDataItems(FilterSet &filterSet, const string &inputPath, xmlNodePtr node)
   {
     xmlNodePtr root = xmlDocGetRootElement(m_doc);
 
@@ -459,29 +612,28 @@ namespace mtconnect
     else
     {
       // Node is a component
-      Component *component = nullptr;
-      component = loadComponent(node, name);
+      Component *component = loadComponent(node, name);
 
       // Top level, then must be a device
       if (device == nullptr)
         device = dynamic_cast<Device *>(component);
 
       // Construct relationships
-      if (component && parent)
+      if (component)
       {
-        parent->addChild(*component);
-        component->setParent(*parent);
-      }
+        if (parent)
+          parent->addChild(component);
 
-      // Recurse for children
-      if (component && node->children)
-      {
-        for (xmlNodePtr child = node->children; child; child = child->next)
+        // Recurse for children
+        if (node->children)
         {
-          if (child->type != XML_ELEMENT_NODE)
-            continue;
+          for (xmlNodePtr child = node->children; child; child = child->next)
+          {
+            if (child->type != XML_ELEMENT_NODE)
+              continue;
 
-          handleNode(child, component, device);
+            handleNode(child, component, device);
+          }
         }
       }
 
@@ -598,16 +750,20 @@ namespace mtconnect
         {
           loadDataItemDefinition(child, d, device);
         }
+        else if (!xmlStrcmp(child->name, BAD_CAST "Relationships"))
+        {
+          loadDataItemRelationships(child, d, device);
+        }
       }
     }
 
-    parent->addDataItem(*d);
-    device->addDeviceDataItem(*d);
+    parent->addDataItem(d);
   }
 
   void XmlParser::loadDefinition(xmlNodePtr definition, AbstractDefinition *def)
   {
     def->m_key = getAttribute(definition, "key");
+    def->m_keyType = getAttribute(definition, "keyType");
     def->m_units = getAttribute(definition, "units");
     def->m_type = getAttribute(definition, "type");
     def->m_subType = getAttribute(definition, "subType");
@@ -660,21 +816,58 @@ namespace mtconnect
     dataItem->setDefinition(def);
   }
 
-  void XmlParser::handleComposition(xmlNodePtr composition, Component *parent)
+  static void addDataItemRelationship(xmlNodePtr node, DataItem *dataItem)
   {
-    auto comp = new Composition(getAttributes(composition));
+    DataItem::Relationship rel;
+    auto attrs = getAttributes(node);
 
-    for (xmlNodePtr child = composition->children; child; child = child->next)
+    rel.m_relation = string((char *)node->name);
+    rel.m_name = attrs["name"];
+    rel.m_type = attrs["type"];
+    rel.m_idRef = attrs["idRef"];
+    if (!rel.m_type.empty() && !rel.m_idRef.empty())
+      dataItem->getRelationships().push_back(rel);
+    else
     {
-      if (!xmlStrcmp(child->name, BAD_CAST "Description"))
-      {
-        auto body = getCDATA(child);
-        auto *desc = new Composition::Description(body, getAttributes(child));
-        comp->setDescription(desc);
-      }
+      g_logger << dlib::LWARN << "Bad Data Item Relationship: " << rel.m_relation << ", "
+               << rel.m_name << ", " << rel.m_type << ", " << rel.m_idRef
+               << ": type or idRef missing, skipping";
     }
+  }
 
-    parent->addComposition(comp);
+  void XmlParser::loadDataItemRelationships(xmlNodePtr relationships, DataItem *dataItem,
+                                            Device *device)
+  {
+    forEachElement(relationships,
+                   {{"DataItemRelationship",
+                     [&dataItem](xmlNodePtr node) { addDataItemRelationship(node, dataItem); }},
+                    {"SpecificationRelationship",
+                     [&dataItem](xmlNodePtr node) { addDataItemRelationship(node, dataItem); }}});
+  }
+
+  unique_ptr<Composition> XmlParser::handleComposition(xmlNodePtr composition)
+  {
+    auto comp = make_unique<Composition>();
+    comp->m_attributes = getValidatedAttributes(composition, comp->properties());
+    if (!comp->m_attributes.empty())
+    {
+      forEachElement(composition, {{"Description",
+                                    [&comp](xmlNodePtr n) {
+                                      Description desc;
+                                      desc.m_attributes =
+                                          getValidatedAttributes(n, desc.properties());
+                                      desc.m_body = getCDATA(n);
+                                      comp->setDescription(desc);
+                                    }},
+                                   {"Configuration", [&comp](xmlNodePtr n) {
+                                      handleConfiguration(n, (Composition *)comp.get());
+                                    }}});
+    }
+    else
+    {
+      g_logger << dlib::LWARN << "Skipping Composition";
+    }
+    return comp;
   }
 
   void XmlParser::handleChildren(xmlNodePtr components, Component *parent, Device *device)
@@ -688,7 +881,7 @@ namespace mtconnect
     }
   }
 
-  void XmlParser::handleReference(xmlNodePtr reference, Component *parent, Device *device)
+  void XmlParser::handleReference(xmlNodePtr reference, Component *parent)
   {
     auto attrs = getAttributes(reference);
     string name;
@@ -713,7 +906,7 @@ namespace mtconnect
     }
   }
 
-  void handleSensorConfiguration(xmlNodePtr node, Component *parent)
+  unique_ptr<ComponentConfiguration> handleSensorConfiguration(xmlNodePtr node)
   {
     // Decode sensor configuration
     string firmware, date, nextDate, initials;
@@ -738,7 +931,8 @@ namespace mtconnect
     for (auto &text : rest)
       restText.append(getRawContent(text));
 
-    auto sensor = new SensorConfiguration(firmware, date, nextDate, initials, restText);
+    unique_ptr<SensorConfiguration> sensor(
+        new SensorConfiguration(firmware, date, nextDate, initials, restText));
 
     if (channels)
     {
@@ -763,10 +957,11 @@ namespace mtconnect
         sensor->addChannel(chl);
       }
     }
-    parent->addConfiguration(std::move(sensor));
+
+    return move(sensor);
   }
 
-  void handleRelationships(xmlNodePtr node, Component *parent)
+  unique_ptr<ComponentConfiguration> handleRelationships(xmlNodePtr node)
   {
     unique_ptr<Relationships> relationships = make_unique<Relationships>();
 
@@ -806,532 +1001,137 @@ namespace mtconnect
       }
     }
 
-    parent->addConfiguration(relationships.release());
+    return move(relationships);
   }
 
-  void handleCoordinateSystems(xmlNodePtr node, Component *parent)
+  template <class T>
+  unique_ptr<T> handleGeometricConfiguration(xmlNodePtr node)
+  {
+    unique_ptr<T> model = make_unique<T>();
+    model->m_attributes = getValidatedAttributes(node, model->properties());
+    if (!model->m_attributes.empty())
+    {
+      model->m_geometry = getGeometry(node, model->hasScale(), model->hasAxis());
+    }
+    else
+    {
+      g_logger << dlib::LWARN << "Skipping Geometric Definition";
+    }
+
+    if (model->hasDescription())
+    {
+      forEachElement(
+          node, {{"Description", [&model](xmlNodePtr n) { model->m_description = getCDATA(n); }}});
+    }
+
+    return model;
+  }
+
+  unique_ptr<ComponentConfiguration> handleCoordinateSystems(xmlNodePtr node)
   {
     unique_ptr<CoordinateSystems> systems = make_unique<CoordinateSystems>();
 
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
-      unique_ptr<CoordinateSystem> system{new CoordinateSystem()};
-
-      auto attrs = getAttributes(child);
-
-      system->m_id = attrs["id"];
-      system->m_name = attrs["name"];
-      system->m_type = attrs["type"];
-      system->m_nativeName = attrs["nativeName"];
-      system->m_parentIdRef = attrs["parentIdRef"];
-
-      for (xmlNodePtr val = child->children; val; val = val->next)
-      {
-        if (xmlStrcmp(val->name, BAD_CAST "Transformation") == 0)
-        {
-          for (xmlNodePtr t = val->children; t; t = t->next)
-          {
-            if (xmlStrcmp(t->name, BAD_CAST "Translation") == 0)
-            {
-              system->m_translation = getCDATA(t);
-            }
-            else if (xmlStrcmp(t->name, BAD_CAST "Rotation") == 0)
-            {
-              system->m_rotation = getCDATA(t);
-            }
-          }
-        }
-        else if (xmlStrcmp(val->name, BAD_CAST "Origin") == 0)
-        {
-          system->m_origin = getCDATA(val);
-        }
-      }
-
-      systems->addCoordinateSystem(system);
+      systems->addCoordinateSystem(handleGeometricConfiguration<CoordinateSystem>(child).release());
     }
 
-    parent->addConfiguration(systems.release());
+    return move(systems);
   }
 
-  void handleSpecifications(xmlNodePtr node, Component *parent)
+  unique_ptr<ComponentConfiguration> handleSpecifications(xmlNodePtr node)
   {
     unique_ptr<Specifications> specifications = make_unique<Specifications>();
     for (xmlNodePtr child = node->children; child; child = child->next)
     {
       auto attrs = getAttributes(child);
 
-      unique_ptr<Specification> spec{new Specification()};
-
-      spec->m_name = attrs["name"];
-      spec->m_type = attrs["type"];
-      spec->m_subType = attrs["subType"];
-      spec->m_units = attrs["units"];
-      spec->m_dataItemIdRef = attrs["dataItemIdRef"];
-      spec->m_compositionIdRef = attrs["compositionIdRef"];
-      spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
-
-      for (xmlNodePtr val = child->children; val; val = val->next)
+      std::string klass((const char *)child->name);
+      if (klass == "Specification" || klass == "ProcessSpecification")
       {
-        if (xmlStrcmp(val->name, BAD_CAST "Maximum") == 0)
-          spec->m_maximum = getCDATA(val);
-        else if (xmlStrcmp(val->name, BAD_CAST "Minimum") == 0)
-          spec->m_minimum = getCDATA(val);
-        else if (xmlStrcmp(val->name, BAD_CAST "Nominal") == 0)
-          spec->m_nominal = getCDATA(val);
-      }
+        unique_ptr<Specification> spec{new Specification(klass)};
 
-      specifications->addSpecification(spec);
-    }
+        spec->m_id = attrs["id"];
+        spec->m_name = attrs["name"];
+        spec->m_type = attrs["type"];
+        spec->m_subType = attrs["subType"];
+        spec->m_units = attrs["units"];
+        spec->m_dataItemIdRef = attrs["dataItemIdRef"];
+        spec->m_compositionIdRef = attrs["compositionIdRef"];
+        spec->m_coordinateSystemIdRef = attrs["coordinateSystemIdRef"];
+        spec->m_originator = attrs["originator"];
 
-    parent->addConfiguration(specifications.release());
-  }
+        for (xmlNodePtr limit = child->children; limit; limit = limit->next)
+        {
+          if (spec->hasGroups())
+          {
+            std::string group((const char *)limit->name);
 
-  void XmlParser::handleConfiguration(xmlNodePtr node, Component *parent, Device *device)
-  {
-    static std::map<std::string, std::function<void(xmlNodePtr, Component *)>> handlers(
-        {{"SensorConfiguration",
-          [](xmlNodePtr n, Component *p) { handleSensorConfiguration(n, p); }},
-         {"Relationships", [](xmlNodePtr n, Component *p) { handleRelationships(n, p); }},
-         {"CoordinateSystems", [](xmlNodePtr n, Component *p) { handleCoordinateSystems(n, p); }},
-         {"Specifications", [](xmlNodePtr n, Component *p) { handleSpecifications(n, p); }}});
+            for (xmlNodePtr val = limit->children; val; val = val->next)
+            {
+              std::string name((const char *)val->name);
+              std::string value(getCDATA(val));
+              spec->addLimitForGroup(group, name, stod(value));
+            }
+          }
+          else
+          {
+            std::string name((const char *)limit->name);
+            std::string value(getCDATA(limit));
+            spec->addLimit(name, stod(value));
+          }
+        }
 
-    // Get the first node
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      const char *qname = (const char *)child->name;
-      if (handlers.count(qname) > 0)
-      {
-        auto &handler = handlers[qname];
-        (handler)(child, parent);
+        specifications->addSpecification(spec);
       }
       else
       {
-        // Unknown configuration
-        auto ext = new ExtendedComponentConfiguration(getRawContent(child));
-        parent->addConfiguration(std::move(ext));
+        g_logger << dlib::LWARN << "Bad Specifictation type " << klass << ", skipping";
       }
     }
+
+    return move(specifications);
   }
 
-  AssetPtr XmlParser::parseAsset(const std::string &assetId, const std::string &type,
-                                 const std::string &content)
+  template <class T>
+  void handleConfiguration(xmlNodePtr node, T *parent)
   {
-    AssetPtr asset;
-
-    xmlXPathContextPtr xpathCtx = nullptr;
-    xmlXPathObjectPtr assetNodes = nullptr;
-    xmlDocPtr document = nullptr;
-    xmlBufferPtr buffer = nullptr;
-
-    try
-    {
-      // TODO: Check for asset fragment - check if top node is MTConnectAssets
-      // If we don't have complete doc, parse as a fragment and create a top level node
-      // adding namespaces from the printer namespaces and then using xmlParseInNodeContext.
-      // This will solve fragment xml namespace issues (unless the fragment has namespace)
-      // definition.
-
-      THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST content.c_str(),
-                                               ((string) "file://" + assetId + ".xml").c_str(),
-                                               nullptr, XML_PARSE_NOBLANKS));
-
-      std::string path = "//Assets/*";
-      THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(document));
-
-      auto root = xmlDocGetRootElement(document);
-
-      if (root->ns)
-      {
-        path = addNamespace(path, "m");
-        THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
-      }
-
-      // Spin through all the assets and create cutting tool objects for the cutting tools
-      // all others add as plain text.
-      xmlNodePtr node = nullptr;
-      assetNodes = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
-
-      if (!assetNodes || !assetNodes->nodesetval || !assetNodes->nodesetval->nodeNr)
-      {
-        // See if this is a fragment... the root node will be check when it is
-        // parsed...
-        node = root;
-      }
-      else
-      {
-        auto nodeset = assetNodes->nodesetval;
-        node = nodeset->nodeTab[0];
-      }
-
-      THROW_IF_XML2_NULL(buffer = xmlBufferCreate());
-
-      for (xmlNodePtr child = node->children; child; child = child->next)
-        xmlNodeDump(buffer, document, child, 0, 0);
-
-      asset = handleAsset(node, assetId, type, (const char *)buffer->content, document);
-
-      // Cleanup objects...
-      xmlBufferFree(buffer);
-      buffer = nullptr;
-      xmlXPathFreeObject(assetNodes);
-      assetNodes = nullptr;
-      xmlXPathFreeContext(xpathCtx);
-      xpathCtx = nullptr;
-      xmlFreeDoc(document);
-      document = nullptr;
-    }
-    catch (string e)
-    {
-      if (assetNodes)
-      {
-        xmlXPathFreeObject(assetNodes);
-        assetNodes = nullptr;
-      }
-
-      if (xpathCtx)
-      {
-        xmlXPathFreeContext(xpathCtx);
-        xpathCtx = nullptr;
-      }
-
-      if (document)
-      {
-        xmlFreeDoc(document);
-        document = nullptr;
-      }
-
-      if (buffer)
-      {
-        xmlBufferFree(buffer);
-        buffer = nullptr;
-      }
-
-      g_logger << dlib::LERROR << "Cannot parse asset XML: " << e;
-      asset = nullptr;
-    }
-    catch (...)
-    {
-      if (assetNodes)
-      {
-        xmlXPathFreeObject(assetNodes);
-        assetNodes = nullptr;
-      }
-
-      if (xpathCtx)
-      {
-        xmlXPathFreeContext(xpathCtx);
-        xpathCtx = nullptr;
-      }
-
-      if (document)
-      {
-        xmlFreeDoc(document);
-        document = nullptr;
-      }
-
-      if (buffer)
-      {
-        xmlBufferFree(buffer);
-        buffer = nullptr;
-      }
-
-      g_logger << dlib::LERROR << "Cannot parse asset XML, Unknown execption occurred";
-      asset = nullptr;
-    }
-
-    return asset;
-  }
-
-  CuttingToolValuePtr XmlParser::parseCuttingToolNode(xmlNodePtr node, xmlDocPtr doc)
-  {
-    CuttingToolValuePtr value(new CuttingToolValue(), true);
-    string name;
-
-    if (node->ns && node->ns->prefix)
-    {
-      name = (const char *)node->ns->prefix;
-      name += ':';
-    }
-
-    name += (const char *)node->name;
-    value->m_key = name;
-
-    if (!node->children)
-    {
-      value->m_value = getCDATA(node);
-    }
-    else
-    {
-      xmlBufferPtr buffer;
-      THROW_IF_XML2_NULL(buffer = xmlBufferCreate());
-
-      for (xmlNodePtr child = node->children; child; child = child->next)
-        xmlNodeDump(buffer, doc, child, 0, 0);
-
-      value->m_value = (char *)buffer->content;
-      xmlBufferFree(buffer);
-      buffer = nullptr;
-    }
-
-    for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
-    {
-      if (attr->type == XML_ATTRIBUTE_NODE)
-        value->m_properties[(const char *)attr->name] = (const char *)attr->children->content;
-    }
-
-    return value;
-  }
-
-  CuttingItemPtr XmlParser::parseCuttingItem(xmlNodePtr node, xmlDocPtr doc)
-  {
-    CuttingItemPtr item(new CuttingItem(), true);
-
-    for (xmlAttrPtr attr = node->properties; attr; attr = attr->next)
-    {
-      if (attr->type == XML_ATTRIBUTE_NODE)
-        item->m_identity[(const char *)attr->name] = (const char *)attr->children->content;
-    }
-
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      if (!xmlStrcmp(child->name, BAD_CAST "Measurements"))
-      {
-        for (xmlNodePtr meas = child->children; meas; meas = meas->next)
-        {
-          CuttingToolValuePtr value = parseCuttingToolNode(meas, doc);
-          item->m_measurements[value->m_key] = value;
-        }
-      }
-      else if (!xmlStrcmp(child->name, BAD_CAST "ItemLife"))
-      {
-        CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
-        item->m_lives.emplace_back(value);
-      }
-      else if (xmlStrcmp(child->name, BAD_CAST "text"))
-      {
-        CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
-        item->m_values[value->m_key] = value;
-      }
-    }
-
-    return item;
-  }
-
-  void XmlParser::parseCuttingToolLife(CuttingToolPtr tool, xmlNodePtr node, xmlDocPtr doc)
-  {
-    for (xmlNodePtr child = node->children; child; child = child->next)
-    {
-      if (!xmlStrcmp(child->name, BAD_CAST "CuttingItems"))
-      {
-        for (xmlAttrPtr attr = child->properties; attr; attr = attr->next)
-        {
-          if (attr->type == XML_ATTRIBUTE_NODE && !xmlStrcmp(attr->name, BAD_CAST "count"))
-          {
-            tool->m_itemCount = (const char *)attr->children->content;
-          }
-        }
-
-        for (xmlNodePtr itemNode = child->children; itemNode; itemNode = itemNode->next)
-        {
-          if (!xmlStrcmp(itemNode->name, BAD_CAST "CuttingItem"))
-          {
-            CuttingItemPtr item = parseCuttingItem(itemNode, doc);
-            tool->m_items.emplace_back(item);
-          }
-        }
-      }
-      else if (!xmlStrcmp(child->name, BAD_CAST "Measurements"))
-      {
-        for (xmlNodePtr meas = child->children; meas; meas = meas->next)
-        {
-          if (xmlStrcmp(meas->name, BAD_CAST "text"))
-          {
-            CuttingToolValuePtr value = parseCuttingToolNode(meas, doc);
-            tool->m_measurements[value->m_key] = value;
-          }
-        }
-      }
-      else if (!xmlStrcmp(child->name, BAD_CAST "CutterStatus"))
-      {
-        for (xmlNodePtr status = child->children; status; status = status->next)
-        {
-          if (!xmlStrcmp(status->name, BAD_CAST "Status"))
-          {
-            auto text = getCDATA(status);
-            if (!text.empty())
-              tool->m_status.emplace_back(text);
-          }
-        }
-      }
-      else if (!xmlStrcmp(child->name, BAD_CAST "ToolLife"))
-      {
-        CuttingToolValuePtr value = parseCuttingToolNode(child, doc);
-        tool->m_lives.emplace_back(value);
-      }
-      else if (xmlStrcmp(child->name, BAD_CAST "text"))
-        tool->addValue(parseCuttingToolNode(child, doc));
-    }
-  }
-
-  AssetPtr XmlParser::handleAsset(xmlNodePtr inputAsset, const std::string &assetId,
-                                  const std::string &type, const std::string &content,
-                                  xmlDocPtr doc)
-  {
-    AssetPtr asset;
-
-    // We only handle cuttng tools for now...
-    if (!xmlStrcmp(inputAsset->name, BAD_CAST "CuttingTool") ||
-        !xmlStrcmp(inputAsset->name, BAD_CAST "CuttingToolArchetype"))
-    {
-      asset = handleCuttingTool(inputAsset, doc);
-    }
-    else
-    {
-      asset.setObject(new Asset(assetId, (const char *)inputAsset->name, content), true);
-
-      for (xmlAttrPtr attr = inputAsset->properties; attr; attr = attr->next)
-      {
-        if (attr->type == XML_ATTRIBUTE_NODE)
-          asset->addIdentity(((const char *)attr->name), ((const char *)attr->children->content));
-      }
-    }
-
-    return asset;
-  }
-
-  CuttingToolPtr XmlParser::handleCuttingTool(xmlNodePtr asset, xmlDocPtr doc)
-  {
-    CuttingToolPtr tool;
-
-    // We only handle cuttng tools for now...
-    if (!xmlStrcmp(asset->name, BAD_CAST "CuttingTool") ||
-        !xmlStrcmp(asset->name, BAD_CAST "CuttingToolArchetype"))
-    {
-      // Get the attributes...
-      tool.setObject(new CuttingTool("", (const char *)asset->name, ""), true);
-
-      for (xmlAttrPtr attr = asset->properties; attr; attr = attr->next)
-      {
-        if (attr->type == XML_ATTRIBUTE_NODE)
-          tool->addIdentity((const char *)attr->name, (const char *)attr->children->content);
-      }
-
-      if (asset->children)
-      {
-        for (xmlNodePtr child = asset->children; child; child = child->next)
-        {
-          if (!xmlStrcmp(child->name, BAD_CAST "AssetArchetypeRef"))
-          {
-            XmlAttributes attrs;
-
-            for (xmlAttrPtr attr = child->properties; attr; attr = attr->next)
-            {
-              if (attr->type == XML_ATTRIBUTE_NODE)
-                attrs[(const char *)attr->name] = (const char *)attr->children->content;
-            }
-
-            tool->setArchetype(attrs);
-          }
-          else if (!xmlStrcmp(child->name, BAD_CAST "Description"))
-          {
-            tool->setDescription(getCDATA(child));
-          }
-          else if (!xmlStrcmp(child->name, BAD_CAST "CuttingToolDefinition"))
-          {
-            auto text = xmlNodeGetContent(child);
-            if (text)
-            {
-              tool->addValue(parseCuttingToolNode(child, doc));
-              xmlFree(text);
-              text = nullptr;
-            }
-          }
-          else if (!xmlStrcmp(child->name, BAD_CAST "CuttingToolLifeCycle"))
-          {
-            parseCuttingToolLife(tool, child, doc);
-          }
-          else if (xmlStrcmp(child->name, BAD_CAST "text"))
-          {
-            auto text = xmlNodeGetContent(child);
-            if (text)
-            {
-              tool->addValue(parseCuttingToolNode(child, doc));
-              xmlFree(text);
-              text = nullptr;
-            }
-          }
-        }
-      }
-    }
-
-    return tool;
-  }
-
-  void XmlParser::updateAsset(AssetPtr asset, const std::string &type, const std::string &content)
-  {
-    if (type != "CuttingTool" && type != "CuttingToolArchetype")
-    {
-      g_logger << dlib::LWARN << "Cannot update asset: " << type
-               << " is unsupported for incremental updates";
-      return;
-    }
-
-    xmlDocPtr document = nullptr;
-    CuttingToolPtr ptr = (CuttingTool *)asset.getObject();
-
-    try
-    {
-      THROW_IF_XML2_NULL(document = xmlReadDoc(BAD_CAST content.c_str(), "file://node.xml", nullptr,
-                                               XML_PARSE_NOBLANKS));
-
-      auto root = xmlDocGetRootElement(document);
-
-      if (!xmlStrcmp(BAD_CAST "CuttingItem", root->name))
-      {
-        auto item = parseCuttingItem(root, document);
-
-        for (auto &i : ptr->m_items)
-        {
-          if (item->m_identity["indices"] == i->m_identity["indices"])
-          {
-            i = item;
-            break;
-          }
-        }
-      }
-      else
-      {
-        auto value = parseCuttingToolNode(root, document);
-
-        if (ptr->m_values.count(value->m_key) > 0)
-          ptr->addValue(value);
-        else if (ptr->m_measurements.count(value->m_key) > 0)
-          ptr->m_measurements[value->m_key] = value;
-      }
-
-      ptr->changed();
-
-      // Cleanup objects...
-      xmlFreeDoc(document);
-      document = nullptr;
-    }
-    catch (string e)
-    {
-      if (document)
-      {
-        xmlFreeDoc(document);
-        document = nullptr;
-      }
-
-      g_logger << dlib::LERROR << "Cannot parse asset XML: " << e;
-    }
-    catch (...)
-    {
-      if (document)
-      {
-        xmlFreeDoc(document);
-        document = nullptr;
-      }
-    }
+    forEachElement(
+        node,
+        {{{"SensorConfiguration",
+           [&parent](xmlNodePtr n) {
+             auto s = handleSensorConfiguration(n);
+             parent->addConfiguration(s);
+           }},
+          {"Relationships",
+           [&parent](xmlNodePtr n) {
+             auto r = handleRelationships(n);
+             parent->addConfiguration(r);
+           }},
+          {"CoordinateSystems",
+           [&parent](xmlNodePtr n) {
+             auto c = handleCoordinateSystems(n);
+             parent->addConfiguration(c);
+           }},
+          {"Specifications",
+           [&parent](xmlNodePtr n) {
+             auto s = handleSpecifications(n);
+             parent->addConfiguration(s);
+           }},
+          {"SolidModel",
+           [&parent](xmlNodePtr n) {
+             unique_ptr<ComponentConfiguration> g(handleGeometricConfiguration<SolidModel>(n));
+             parent->addConfiguration(g);
+           }},
+          {"Motion",
+           [&parent](xmlNodePtr n) {
+             unique_ptr<ComponentConfiguration> g(handleGeometricConfiguration<Motion>(n));
+             parent->addConfiguration(g);
+           }},
+          {"OTHERWISE", [&parent](xmlNodePtr n) {
+             unique_ptr<ComponentConfiguration> ext(
+                 new ExtendedComponentConfiguration(getRawContent(n)));
+             parent->addConfiguration(ext);
+           }}}});
   }
 }  // namespace mtconnect

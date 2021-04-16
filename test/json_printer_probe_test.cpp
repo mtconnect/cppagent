@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,17 +19,18 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "checkpoint.hpp"
-#include "data_item.hpp"
-#include "device.hpp"
-#include "globals.hpp"
+#include "observation/checkpoint.hpp"
+#include "device_model/data_item.hpp"
+#include "device_model/device.hpp"
+#include "utilities.hpp"
 #include "json_helper.hpp"
 #include "json_printer.hpp"
-#include "observation.hpp"
-#include "test_globals.hpp"
+#include "observation/observation.hpp"
+#include "test_utilities.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "agent.hpp"
+#include "agent_test_helper.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -51,23 +52,28 @@ class JsonPrinterProbeTest : public testing::Test
     m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
     m_printer = std::make_unique<JsonPrinter>("1.5", true);
 
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", 4, 4, "1.5");
+    
+    m_agentTestHelper = make_unique<AgentTestHelper>();
+    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml",
+                                   8, 4, "1.5", 25);
 
-    m_devices = m_agent->getDevices();
+    // Asset types are registered in the agent.
+    m_devices = m_agentTestHelper->m_agent->getDevices();
   }
 
   void TearDown() override
   {
-    m_agent.reset();
+    m_agentTestHelper.reset();
     m_xmlPrinter.reset();
     m_printer.reset();
     m_devices.clear();
   }
 
   std::unique_ptr<JsonPrinter> m_printer;
-  std::vector<Device *> m_devices;
+  std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
-  std::unique_ptr<Agent> m_agent;
+  std::list<Device *> m_devices;
+
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
 };
 
@@ -76,6 +82,7 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
+    
   ASSERT_EQ(string("MTConnectDevices"), it.key());
   ASSERT_EQ(123, jdoc.at("/MTConnectDevices/Header/instanceId"_json_pointer).get<int32_t>());
   ASSERT_EQ(9999, jdoc.at("/MTConnectDevices/Header/bufferSize"_json_pointer).get<int32_t>());
@@ -123,7 +130,7 @@ TEST_F(JsonPrinterProbeTest, TopLevelDataItems)
   ASSERT_EQ(string("avail"), avail.at("/DataItem/name"_json_pointer).get<string>());
 
   // Availability event
-  cout << "\n" << dataItems << endl;
+  // cout << "\n" << dataItems << endl;
   auto change = dataItems.at(1);
 
   ASSERT_EQ(string("ASSET_CHANGED"), change.at("/DataItem/type"_json_pointer).get<string>());
@@ -306,3 +313,58 @@ TEST_F(JsonPrinterProbeTest, Configuration)
   ASSERT_EQ(string("2018-09-11"),
             config.at("/Channels/0/Channel/CalibrationDate"_json_pointer).get<string>());
 }
+
+TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
+{
+  auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+  auto jdoc = json::parse(doc);
+  auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+  auto device = devices.at(0).at("/Device"_json_pointer);
+
+  ASSERT_EQ(string("1.7"), device.at("/mtconnectVersion"_json_pointer).get<string>());
+
+}
+
+TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
+{
+  auto server = std::make_unique<http::Server>();
+  auto cache = std::make_unique<http::FileCache>();
+
+  m_agentTestHelper->createAgent("/samples/relationship_test.xml",
+                                 8, 4, "1.7", 25);
+  m_printer = std::make_unique<JsonPrinter>("1.7", true);
+  m_devices = m_agentTestHelper->m_agent->getDevices();
+  auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+  auto jdoc = json::parse(doc);
+
+  auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+  auto linear = devices.at(1).at("/Device/Components/0/Axes/Components/0/Linear"_json_pointer);
+  ASSERT_TRUE(linear.is_object());
+  
+  auto load = linear.at("/DataItems/4/DataItem"_json_pointer);
+  ASSERT_TRUE(load.is_object());
+  ASSERT_EQ(string("xlc"), load["id"].get<string>());
+  
+  auto dir1 = load.at("/Relationships/0"_json_pointer);
+  ASSERT_TRUE(dir1.is_object());
+  ASSERT_EQ(string("archie"), dir1.at("/DataItemRelationship/name"_json_pointer));
+  ASSERT_EQ(string("LIMIT"), dir1.at("/DataItemRelationship/type"_json_pointer));
+  ASSERT_EQ(string("xlcpl"), dir1.at("/DataItemRelationship/idRef"_json_pointer));
+
+  auto dir2 = load.at("/Relationships/1"_json_pointer);
+  ASSERT_TRUE(dir2.is_object());
+  ASSERT_EQ(string("LIMIT"), dir2.at("/SpecificationRelationship/type"_json_pointer));
+  ASSERT_EQ(string("spec1"), dir2.at("/SpecificationRelationship/idRef"_json_pointer));
+
+  auto limits = linear.at("/DataItems/5/DataItem"_json_pointer);
+  ASSERT_TRUE(load.is_object());
+  ASSERT_EQ(string("xlcpl"), limits["id"].get<string>());
+
+  auto dir3 = limits.at("/Relationships/0"_json_pointer);
+  ASSERT_TRUE(dir3.is_object());
+  ASSERT_EQ(string("bob"), dir3.at("/DataItemRelationship/name"_json_pointer));
+  ASSERT_EQ(string("OBSERVATION"), dir3.at("/DataItemRelationship/type"_json_pointer));
+  ASSERT_EQ(string("xlc"), dir3.at("/DataItemRelationship/idRef"_json_pointer));
+
+}
+

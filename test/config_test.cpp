@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,13 @@
 
 #include "agent.hpp"
 #include "config.hpp"
+#include "config_options.hpp"
 #include "rolling_file_logger.hpp"
 #include "xml_printer.hpp"
 
 #include <chrono>
 #include <string>
+#include <filesystem>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -35,6 +37,10 @@
 
 static dlib::logger g_logger("config_test");
 
+using namespace std;
+using namespace mtconnect;
+namespace fs = std::filesystem;
+
 namespace
 {
   class ConfigTest : public testing::Test
@@ -43,36 +49,35 @@ namespace
     void SetUp() override
     {
       m_config = std::make_unique<mtconnect::AgentConfiguration>();
-      char buf[1024 * 4];
-      getcwd(buf, sizeof(buf));
-      m_cwd = buf;
+      m_cwd = std::filesystem::current_path();
     }
 
     void TearDown() override
     {
       m_config.reset();
-      if (!m_cwd.empty())
-        chdir(m_cwd.c_str());
+      chdir(m_cwd.string().c_str());
     }
 
     std::unique_ptr<mtconnect::AgentConfiguration> m_config;
-    std::string m_cwd;
+    std::filesystem::path m_cwd;
   };
 
   TEST_F(ConfigTest, BlankConfig)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream str("");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_EQ(size_t(1), agent->getDevices().size());
+    ASSERT_EQ(size_t(2), agent->getDevices().size());
   }
 
   TEST_F(ConfigTest, BufferSize)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream str("BufferSize = 4\n");
     m_config->loadConfig(str);
 
@@ -88,13 +93,17 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto adapter = agent->getAdapters().front();
 
-    ASSERT_EQ(std::string("LinuxCNC"), device->getName());
-    ASSERT_FALSE(adapter->isDupChecking());
-    ASSERT_FALSE(adapter->isAutoAvailable());
-    ASSERT_FALSE(adapter->isIgnoringTimestamps());
+    auto deviceName = GetOption<string>(adapter->getOptions(), configuration::Device);
+    ASSERT_TRUE(deviceName);
+    ASSERT_EQ("LinuxCNC", *deviceName);
+
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
+    
+    auto device = agent->findDeviceByUUIDorName(*deviceName);
     ASSERT_TRUE(device->m_preserveUuid);
   }
 
@@ -117,16 +126,18 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto adapter = agent->getAdapters().front();
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
-    ASSERT_TRUE(adapter->isDupChecking());
-    ASSERT_TRUE(adapter->isAutoAvailable());
-    ASSERT_TRUE(adapter->isIgnoringTimestamps());
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
+    
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
-    ASSERT_TRUE(device->m_preserveUuid);
+    
+    // TODO: Need to link to device to the adapter.
+    //ASSERT_TRUE(device->m_preserveUuid);
   }
 
   TEST_F(ConfigTest, DefaultPreserveUUID)
@@ -138,7 +149,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
+    const auto device = agent->getDevices().front();
 
     ASSERT_TRUE(device->m_preserveUuid);
   }
@@ -155,7 +166,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
+    const auto device = agent->findDeviceByUUIDorName("LinuxCNC");
 
     ASSERT_FALSE(device->m_preserveUuid);
   }
@@ -170,7 +181,7 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
 
-    ASSERT_TRUE(agent->isPutEnabled());
+    ASSERT_TRUE(agent->getServer()->isPutEnabled());
   }
 
   TEST_F(ConfigTest, LimitPut)
@@ -182,8 +193,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->isPutEnabled());
-    ASSERT_TRUE(agent->isPutAllowedFrom(std::string("127.0.0.1")));
+    ASSERT_TRUE(agent->getServer()->isPutEnabled());
+    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("127.0.0.1")));
   }
 
   TEST_F(ConfigTest, LimitPutFromHosts)
@@ -195,14 +206,15 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->isPutEnabled());
-    ASSERT_TRUE(agent->isPutAllowedFrom(std::string("127.0.0.1")));
-    ASSERT_TRUE(agent->isPutAllowedFrom(std::string("192.168.0.1")));
+    ASSERT_TRUE(agent->getServer()->isPutEnabled());
+    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("127.0.0.1")));
+    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("192.168.0.1")));
   }
 
   TEST_F(ConfigTest, Namespaces)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream streams(
         "StreamsNamespaces {\n"
         "x {\n"
@@ -231,6 +243,10 @@ namespace
         "}\n");
 
     m_config->loadConfig(devices);
+    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    ASSERT_TRUE(printer);
     path = printer->getDevicesUrn("y");
     ASSERT_EQ(std::string("urn:example.com:ExampleDevices:1.2"), path);
 
@@ -244,6 +260,10 @@ namespace
         "}\n");
 
     m_config->loadConfig(assets);
+    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    ASSERT_TRUE(printer);
     path = printer->getAssetsUrn("z");
     ASSERT_EQ(std::string("urn:example.com:ExampleAssets:1.2"), path);
 
@@ -257,13 +277,12 @@ namespace
         "}\n");
 
     m_config->loadConfig(errors);
+    agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    ASSERT_TRUE(printer);
     path = printer->getErrorUrn("a");
     ASSERT_EQ(std::string("urn:example.com:ExampleErrors:1.2"), path);
-
-    printer->clearDevicesNamespaces();
-    printer->clearErrorNamespaces();
-    printer->clearStreamsNamespaces();
-    printer->clearAssetsNamespaces();
   }
 
   TEST_F(ConfigTest, LegacyTimeout)
@@ -277,8 +296,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto adapter = agent->getAdapters().front();
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }
@@ -292,10 +310,9 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto adapter = agent->getAdapters().front();
 
-    ASSERT_TRUE(adapter->isIgnoringTimestamps());
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
@@ -310,15 +327,15 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto device = agent->getDevices()[0];
-    const auto adapter = device->m_adapters[0];
+    const auto adapter = agent->getAdapters().front();
 
-    ASSERT_FALSE(adapter->isIgnoringTimestamps());
+    ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
   TEST_F(ConfigTest, SpecifyMTCNamespace)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream streams(
         "StreamsNamespaces {\n"
         "m {\n"
@@ -344,6 +361,7 @@ namespace
   TEST_F(ConfigTest, SetSchemaVersion)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream streams("SchemaVersion = 1.4\n");
 
     m_config->loadConfig(streams);
@@ -361,6 +379,7 @@ namespace
   TEST_F(ConfigTest, SchemaDirectory)
   {
     chdir(PROJECT_ROOT_DIR "/test");
+    m_config->updateWorkingDirectory();
     std::istringstream schemas(
         "SchemaVersion = 1.3\n"
         "Files {\n"
@@ -399,11 +418,6 @@ namespace
     ASSERT_EQ(std::string("urn:mtconnect.org:MTConnectError:1.3"), path);
     location = printer->getErrorLocation("m");
     ASSERT_EQ(std::string("/schemas/MTConnectError_1.3.xsd"), location);
-
-    printer->clearDevicesNamespaces();
-    printer->clearErrorNamespaces();
-    printer->clearStreamsNamespaces();
-    printer->clearAssetsNamespaces();
   }
 
   TEST_F(ConfigTest, LogFileRollover)
@@ -412,6 +426,7 @@ namespace
 // This test/rollover is fragile on Windows due to file caching.
 // Whilst the agent uses standard C runtime file functions
 // this can not easily be worked around. Better to disable the test.
+    m_config->updateWorkingDirectory();
 #ifndef _WINDOWS
     std::istringstream logger(
         "logger_config {"
@@ -474,6 +489,7 @@ namespace
   TEST_F(ConfigTest, MaxSize)
   {
     chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
     std::istringstream logger(
         "logger_config {"
         "max_size = 150\n"
@@ -514,5 +530,25 @@ namespace
 
     fl = m_config->getLogger();
     ASSERT_EQ(15ULL * 1024ULL * 1024ULL * 1024ULL, fl->getMaxSize());
+  }
+  
+  TEST_F(ConfigTest, check_http_headers)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    std::istringstream str("HttpHeaders {\n"
+                           "  Access-Control-Allow-Origin = *\n"
+                           "\n"
+                           "}\n");
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+
+    const auto &server = agent->getServer();
+    const auto &headers = server->getHttpHeaders();
+    
+    ASSERT_EQ(1, headers.size());
+    ASSERT_EQ("Access-Control-Allow-Origin: *", headers.front());
   }
 }  // namespace

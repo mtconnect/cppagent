@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,21 +17,23 @@
 
 #pragma once
 
-#include "adapter.hpp"
-#include "asset.hpp"
-#include "checkpoint.hpp"
+#include "adapter/adapter.hpp"
+#include "agent_loopback_pipeline.hpp"
+#include "assets/asset_buffer.hpp"
+#include "http_server/server.hpp"
+#include "observation/checkpoint.hpp"
+#include "observation/circular_buffer.hpp"
+#include "pipeline/pipeline.hpp"
+#include "pipeline/pipeline_contract.hpp"
+#include "printer.hpp"
 #include "service.hpp"
 #include "xml_parser.hpp"
-
-#include <dlib/md5.h>
-#include <dlib/server.h>
-#include <dlib/sliding_buffer.h>
+#include <unordered_map>
 
 #include <chrono>
 #include <list>
 #include <map>
 #include <memory>
-#include <mutex>
 #include <set>
 #include <sstream>
 #include <string>
@@ -39,284 +41,236 @@
 
 namespace mtconnect
 {
-  class Adapter;
-  class Observation;
+  namespace adapter
+  {
+    class Adapter;
+  }
   class DataItem;
   class Device;
+  class AgentDevice;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
-  struct OutgoingThings : public dlib::outgoing_things
+  class Agent
   {
-    OutgoingThings() = default;
-    std::ostream *m_out = nullptr;
-    const Printer *m_printer = nullptr;
-  };
-  using IncomingThings = struct dlib::incoming_things;
-
-  class Agent : public dlib::server_http
-  {
-    class ParameterError
+  public:
+    struct RequestResult
     {
-     public:
-      ParameterError(const std::string &code, const std::string &message)
+      RequestResult(){};
+      RequestResult(const std::string &body, const http_server::ResponseCode status,
+                    const std::string &format)
+        : m_body(body), m_status(status), m_format(format)
       {
-        m_code = code;
-        m_message = message;
       }
+      RequestResult(const RequestResult &) = default;
 
-      ParameterError(const ParameterError &anotherError)
-      {
-        m_code = anotherError.m_code;
-        m_message = anotherError.m_message;
-      }
-
-      ParameterError &operator=(const ParameterError &anotherError) = default;
-
-      std::string m_code;
-      std::string m_message;
+      std::string m_body;
+      http_server::ResponseCode m_status;
+      std::string m_format;
     };
 
-   public:
-    // Slowest frequency allowed
-    static const int SLOWEST_FREQ = 2147483646;
-
-    // Fastest frequency allowed
-    static const int FASTEST_FREQ = 0;
-
-    // Default count for sample query
-    static const unsigned int DEFAULT_COUNT = 100;
-
-    // Code to return when a parameter has no value
-    static const int NO_VALUE32 = -1;
-    static const uint64_t NO_VALUE64 = UINT64_MAX;
-
-    // Code to return for no frequency specified
-    static const int NO_FREQ = -2;
-
-    // Code to return for no heartbeat specified
-    static const int NO_HB = 0;
-
-    // Code for no start value specified
-    static const uint64_t NO_START = NO_VALUE64;
-
-    // Small file size
-    static const int SMALL_FILE = 10 * 1024;  // 10k is considered small
-
-   public:
     // Load agent with the xml configuration
-    Agent(const std::string &configXmlPath, int bufferSize, int maxAssets,
-          const std::string &version,
-          std::chrono::milliseconds checkpointFreq = std::chrono::milliseconds{1000},
+    Agent(std::unique_ptr<http_server::Server> &server,
+          std::unique_ptr<http_server::FileCache> &cache, const std::string &configXmlPath,
+          int bufferSize, int maxAssets, const std::string &version, int checkpointFreq = 1000,
           bool pretty = false);
 
     // Virtual destructor
-    ~Agent() override;
+    ~Agent();
 
-    // Overridden method that is called per web request – not used
-    // using httpRequest which is called from our own on_connect method.
-    const std::string on_request(const dlib::incoming_things &incoming,
-                                 dlib::outgoing_things &outgoing) override
-    {
-      throw std::logic_error("Not Implemented");
-      return "";
-    }
+    // Make loopback pipeline
+    void initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options);
 
-    const std::string httpRequest(const IncomingThings &incoming, OutgoingThings &outgoing);
+    // Start and stop
+    void start();
+    void stop();
+
+    // HTTP Server
+    auto getServer() const { return m_server.get(); }
+    std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
 
     // Add an adapter to the agent
-    Adapter *addAdapter(const std::string &device, const std::string &host, const unsigned int port,
-                        bool start = false,
-                        std::chrono::seconds legacyTimeout = std::chrono::seconds{600});
+    void addAdapter(adapter::Adapter *adapter, bool start = false);
+    const auto &getAdapters() const { return m_adapters; }
 
     // Get device from device map
     Device *getDeviceByName(const std::string &name);
-    const Device *getDeviceByName(const std::string &name) const;
-    Device *findDeviceByUUIDorName(const std::string &idOrName);
-    const std::vector<Device *> &getDevices() const
+    Device *getDeviceByName(const std::string &name) const;
+    Device *findDeviceByUUIDorName(const std::string &idOrName) const;
+    const auto &getDevices() const { return m_devices; }
+    Device *defaultDevice() const
     {
-      return m_devices;
+      if (m_devices.size() > 0)
+      {
+        for (auto device : m_devices)
+          if (device->getClass() != "Agent")
+            return device;
+      }
+
+      return nullptr;
     }
+
+    // Add the a device from a configuration file
+    void addDevice(Device *device);
+    void deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName);
 
     // Add component events to the sliding buffer
-    unsigned int addToBuffer(DataItem *dataItem, const std::string &value, std::string time = "");
+    observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation);
+    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, entity::Properties props,
+                                              std::optional<Timestamp> timestamp = std::nullopt);
+    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, const std::string &value,
+                                              std::optional<Timestamp> timestamp = std::nullopt);
 
     // Asset management
-    bool addAsset(Device *device, const std::string &id, const std::string &asset,
-                  const std::string &type, const std::string &time = "");
-
-    bool updateAsset(Device *device, const std::string &id, AssetChangeList &list,
-                     const std::string &time);
-
-    bool removeAsset(Device *device, const std::string &id, const std::string &time);
-    bool removeAllAssets(Device *device, const std::string &type, const std::string &time);
+    void addAsset(AssetPtr asset);
+    AssetPtr addAsset(Device *device, const std::string &asset,
+                      const std::optional<std::string> &id, const std::optional<std::string> &type,
+                      const std::optional<std::string> &time, entity::ErrorList &errors);
+    bool removeAsset(Device *device, const std::string &id,
+                     const std::optional<Timestamp> time = std::nullopt);
+    bool removeAllAssets(const std::optional<std::string> device,
+                         const std::optional<std::string> type, const std::optional<Timestamp> time,
+                         AssetList &list);
 
     // Message when adapter has connected and disconnected
-    void disconnected(Adapter *adapter, std::vector<Device *> devices);
-    void connected(Adapter *adapter, std::vector<Device *> devices);
+    void connecting(const std::string &adapter);
+    void disconnected(const std::string &adapter, const StringList &devices, bool autoAvailable);
+    void connected(const std::string &adapter, const StringList &devices, bool autoAvailable);
 
-    DataItem *getDataItemByName(const std::string &deviceName, const std::string &dataItemName);
+    // Message protocol command
+    void receiveCommand(const std::string &device, const std::string &command,
+                        const std::string &value, const std::string &source);
 
-    Observation *getFromBuffer(uint64_t seq) const
+    DataItem *getDataItemForDevice(const std::string &deviceName,
+                                const std::string &dataItemName) const
     {
-      return (*m_slidingBuffer)[seq];
-    }
-    uint64_t getSequence() const
-    {
-      return m_sequence;
-    }
-    unsigned int getBufferSize() const
-    {
-      return m_slidingBufferSize;
-    }
-    unsigned int getMaxAssets() const
-    {
-      return m_maxAssets;
-    }
-    unsigned int getAssetCount() const
-    {
-      return m_assets.size();
+      auto dev = findDeviceByUUIDorName(deviceName);
+      return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
 
-    int getAssetCount(const std::string &type) const
+    observation::ObservationPtr getFromBuffer(uint64_t seq) const
     {
-      const auto assetPos = m_assetCounts.find(type);
-      if (assetPos != m_assetCounts.end())
-        return assetPos->second;
-      return 0;
+      return m_circularBuffer.getFromBuffer(seq);
+    }
+    observation::SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
+    unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
+    auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
+    auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
+    const auto &getAssets() const { return m_assetBuffer.getAssets(); }
+    auto getFileCache() { return m_fileCache.get(); }
+
+    auto getAssetCount(const std::string &type, bool active = true) const
+    {
+      return m_assetBuffer.getCountForType(type, active);
     }
 
-    uint64_t getFirstSequence() const
+    observation::SequenceNumber_t getFirstSequence() const
     {
-      if (m_sequence > m_slidingBufferSize)
-        return m_sequence - m_slidingBufferSize;
-      else
-        return 1;
+      return m_circularBuffer.getFirstSequence();
     }
 
     // For testing...
-    void setSequence(uint64_t seq)
-    {
-      m_sequence = seq;
-    }
-    std::list<AssetPtr *> *getAssets()
-    {
-      return &m_assets;
-    }
+    void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
+    auto getAgentDevice() { return m_agentDevice; }
 
-    // Starting
-    virtual void start();
-
-    // Shutdown
-    void clear();
-
-    void registerFile(const std::string &uri, const std::string &path);
-    void addMimeType(const std::string &ext, const std::string &type)
-    {
-      m_mimeTypes[ext] = type;
-    }
-
-    // PUT and POST handling
-    void enablePut(bool flag = true)
-    {
-      m_putEnabled = flag;
-    }
-    bool isPutEnabled() const
-    {
-      return m_putEnabled;
-    }
-    void allowPutFrom(const std::string &host)
-    {
-      m_putAllowedHosts.insert(host);
-    }
-    bool isPutAllowedFrom(const std::string &host) const
-    {
-      return m_putAllowedHosts.find(host) != m_putAllowedHosts.end();
-    }
+    // MTConnect Requests
+    RequestResult probeRequest(const std::string &format,
+                               const std::optional<std::string> &device = std::nullopt);
+    RequestResult currentRequest(
+        const std::string &format, const std::optional<std::string> &device = std::nullopt,
+        const std::optional<observation::SequenceNumber_t> &at = std::nullopt,
+        const std::optional<std::string> &path = std::nullopt);
+    RequestResult sampleRequest(
+        const std::string &format, const int count = 100,
+        const std::optional<std::string> &device = std::nullopt,
+        const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
+        const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
+        const std::optional<std::string> &path = std::nullopt);
+    RequestResult streamSampleRequest(
+        http_server::Response &response, const std::string &format, const int interval,
+        const int heartbeat, const int count = 100,
+        const std::optional<std::string> &device = std::nullopt,
+        const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
+        const std::optional<std::string> &path = std::nullopt);
+    RequestResult streamCurrentRequest(http_server::Response &response, const std::string &format,
+                                       const int interval,
+                                       const std::optional<std::string> &device = std::nullopt,
+                                       const std::optional<std::string> &path = std::nullopt);
+    RequestResult assetRequest(const std::string &format, const int32_t count, const bool removed,
+                               const std::optional<std::string> &type = std::nullopt,
+                               const std::optional<std::string> &device = std::nullopt);
+    RequestResult assetIdsRequest(const std::string &format, const std::list<std::string> &ids);
+    RequestResult putAssetRequest(const std::string &format, const std::string &asset,
+                                  const std::optional<std::string> &type,
+                                  const std::optional<std::string> &device = std::nullopt,
+                                  const std::optional<std::string> &uuid = std::nullopt);
+    RequestResult deleteAssetRequest(const std::string &format, const std::list<std::string> &ids);
+    RequestResult deleteAllAssetsRequest(const std::string &format,
+                                         const std::optional<std::string> &device = std::nullopt,
+                                         const std::optional<std::string> &type = std::nullopt);
+    RequestResult putObservationRequest(const std::string &format, const std::string &device,
+                                        const http_server::Routing::QueryMap observations,
+                                        const std::optional<std::string> &time = std::nullopt);
 
     // For debugging
-    void setLogStreamData(bool log)
-    {
-      m_logStreamData = log;
-    }
-
-    // Handle probe calls
-    std::string handleProbe(const Printer *printer, const std::string &device);
+    void setLogStreamData(bool log) { m_logStreamData = log; }
 
     // Get the printer for a type
-    Printer *getPrinter(const std::string &aType)
+    const std::string acceptFormat(const std::string &accepts) const;
+    Printer *getPrinter(const std::string &aType) const
     {
-      return m_printers[aType].get();
+      auto printer = m_printers.find(aType);
+      if (printer != m_printers.end())
+        return printer->second.get();
+      else
+        return nullptr;
+    }
+    const Printer *printerForAccepts(const std::string &accepts) const
+    {
+      return getPrinter(acceptFormat(accepts));
     }
 
-   protected:
-    void on_connect(std::istream &in, std::ostream &out, const std::string &foreign_ip,
-                    const std::string &local_ip, unsigned short foreign_port,
-                    unsigned short local_port, dlib::uint64) override;
+  protected:
+    friend class AgentPipelineContract;
 
-    // HTTP methods to handle the 3 basic calls
-    std::string handleCall(const Printer *printer, std::ostream &out, const std::string &path,
-                           const dlib::key_value_map &queries, const std::string &call,
-                           const std::string &device);
+    // Initialization methods
+    void createAgentDevice();
+    void loadXMLDeviceFile(const std::string &config);
+    void verifyDevice(Device *device);
+    void initializeDataItems(Device *device);
+    void loadCachedProbe();
 
-    // HTTP methods to handle the 3 basic calls
-    std::string handlePut(const Printer *printer, std::ostream &out, const std::string &path,
-                          const dlib::key_value_map &queries, const std::string &call,
-                          const std::string &device);
+    // HTTP Routings
+    void createPutObservationRoutings();
+    void createFileRoutings();
+    void createProbeRoutings();
+    void createSampleRoutings();
+    void createCurrentRoutings();
+    void createAssetRoutings();
 
-    // Handle stream calls, which includes both current and sample
-    std::string handleStream(const Printer *printer, std::ostream &out, const std::string &path,
-                             bool current, unsigned int frequency, uint64_t start = 0,
-                             int count = 0,
-                             std::chrono::milliseconds heartbeat = std::chrono::milliseconds{
-                                 10000});
+    // Current Data Collection
+    std::string fetchCurrentData(const Printer *printer, const observation::FilterSetOpt &filterSet,
+                                 const std::optional<observation::SequenceNumber_t> &at);
 
-    // Asset related methods
-    std::string handleAssets(const Printer *printer, std::ostream &out,
-                             const dlib::key_value_map &queries, const std::string &list);
+    // Sample data collection
+    std::string fetchSampleData(const Printer *printer, const observation::FilterSetOpt &filterSet,
+                                int count, const std::optional<observation::SequenceNumber_t> &from,
+                                const std::optional<observation::SequenceNumber_t> &to,
+                                observation::SequenceNumber_t &end, bool &endOfBuffer,
+                                observation::ChangeObserver *observer = nullptr);
 
-    std::string storeAsset(std::ostream &out, const dlib::key_value_map &queries,
-                           const std::string &command, const std::string &asset,
-                           const std::string &body);
-
-    // Stream the data to the user
-    void streamData(const Printer *printer, std::ostream &out, std::set<std::string> &filterSet,
-                    bool current, unsigned int frequency, uint64_t start = 1,
-                    unsigned int count = 0,
-                    std::chrono::milliseconds heartbeat = std::chrono::milliseconds{10000});
-
-    // Fetch the current/sample data and return the XML in a std::string
-    std::string fetchCurrentData(const Printer *printer, std::set<std::string> &filterSet,
-                                 uint64_t at);
-    std::string fetchSampleData(const Printer *printer, std::set<std::string> &filterSet,
-                                uint64_t start, int count, uint64_t &end, bool &endOfBuffer,
-                                ChangeObserver *observer = nullptr);
+    // Asset methods
+    void getAssets(const Printer *printer, const std::list<std::string> &ids, AssetList &list);
+    void getAssets(const Printer *printer, const int32_t count, const bool removed,
+                   const std::optional<std::string> &type, const std::optional<std::string> &device,
+                   AssetList &list);
 
     // Output an XML Error
     std::string printError(const Printer *printer, const std::string &errorCode,
-                           const std::string &text);
+                           const std::string &text) const;
 
     // Handle the device/path parameters for the xpath search
-    std::string devicesAndPath(const std::string &path, const std::string &device);
-
-    // Get a file
-    std::string handleFile(const std::string &uri, OutgoingThings &outgoing);
-
-    bool isFile(const std::string &uri) const
-    {
-      return m_fileMap.find(uri) != m_fileMap.end();
-    }
-
-    // Perform a check on parameter and return a value or a code
-    int checkAndGetParam(const dlib::key_value_map &queries, const std::string &param,
-                         const int defaultValue, const int minValue = NO_VALUE32,
-                         bool minError = false, const int maxValue = NO_VALUE32,
-                         bool positive = true);
-
-    // Perform a check on parameter and return a value or a code
-    uint64_t checkAndGetParam64(const dlib::key_value_map &queries, const std::string &param,
-                                const uint64_t defaultValue, const uint64_t minValue = NO_VALUE64,
-                                bool minError = false, const uint64_t maxValue = NO_VALUE64);
+    std::string devicesAndPath(const std::optional<std::string> &path, const Device *device) const;
 
     // Find data items by name/id
     DataItem *getDataItemById(const std::string &id) const
@@ -327,110 +281,95 @@ namespace mtconnect
       return nullptr;
     }
 
-    const Printer *printerForAccepts(const std::string &accepts) const;
+    // Verification methods
+    template <typename T>
+    void checkRange(const Printer *printer, const T value, const T min, const T max,
+                    const std::string &param, bool notZero = false) const;
+    void checkPath(const Printer *printer, const std::optional<std::string> &path,
+                   const Device *device, observation::FilterSet &filter) const;
+    Device *checkDevice(const Printer *printer, const std::string &uuid) const;
 
-   protected:
+  protected:
     // Unique id based on the time of creation
     uint64_t m_instanceId;
+    bool m_initialized{false};
+
+    // HTTP Server
+    std::unique_ptr<http_server::Server> m_server;
+    std::unique_ptr<http_server::FileCache> m_fileCache;
 
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;
     std::map<std::string, std::unique_ptr<Printer>> m_printers;
 
-    // For access to the sequence number and sliding buffer, use the mutex
-    std::mutex m_sequenceLock;
-    std::mutex m_assetLock;
+    // Circular Buffer
+    observation::CircularBuffer m_circularBuffer;
 
-    // Sequence number
-    uint64_t m_sequence;
+    // Agent Device
+    AgentDevice *m_agentDevice{nullptr};
 
-    // The sliding/circular buffer to hold all of the events/sample data
-    std::unique_ptr<dlib::sliding_buffer_kernel_1<ObservationPtr>> m_slidingBuffer;
-    unsigned int m_slidingBufferSize;
-
-    // Asset storage, circ buffer stores ids
-    std::list<AssetPtr *> m_assets;
-    AssetIndex m_assetMap;
-
-    // Natural key indices for assets
-    std::map<std::string, AssetIndex> m_assetIndices;
-    unsigned int m_maxAssets;
-
-    // Checkpoints
-    Checkpoint m_latest;
-    Checkpoint m_first;
-    std::vector<Checkpoint> m_checkpoints;
-
-    int m_checkpointFreq;
-    long long m_checkpointCount;
+    // Asset Buffer
+    AssetBuffer m_assetBuffer;
 
     // Data containers
-    std::vector<Adapter *> m_adapters;
-    std::vector<Device *> m_devices;
-    std::map<std::string, Device *> m_deviceNameMap;
-    std::map<std::string, Device *> m_deviceUuidMap;
-    std::map<std::string, DataItem *> m_dataItemMap;
-    std::map<std::string, int> m_assetCounts;
+    std::list<adapter::Adapter *> m_adapters;
+    std::list<Device *> m_devices;
+    std::unordered_map<std::string, Device *> m_deviceNameMap;
+    std::unordered_map<std::string, Device *> m_deviceUuidMap;
+    std::unordered_map<std::string, DataItem *> m_dataItemMap;
 
-    struct CachedFile : public RefCounted
-    {
-      std::unique_ptr<char[]> m_buffer;
-      size_t m_size = 0;
+    // Loopback
+    std::unique_ptr<AgentLoopbackPipeline> m_loopback;
 
-      CachedFile() : m_buffer(nullptr)
-      {
-      }
-
-      CachedFile(const CachedFile &file) : RefCounted(file), m_buffer(nullptr), m_size(file.m_size)
-      {
-        m_buffer = std::make_unique<char[]>(file.m_size);
-        memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
-      }
-
-      CachedFile(char *buffer, size_t size) : m_buffer(nullptr), m_size(size)
-      {
-        m_buffer = std::make_unique<char[]>(m_size);
-        memcpy(m_buffer.get(), buffer, size);
-      }
-
-      CachedFile(size_t size) : m_buffer(nullptr), m_size(size)
-      {
-        m_buffer = std::make_unique<char[]>(m_size);
-      }
-
-      ~CachedFile() override
-      {
-        m_buffer.reset();
-      }
-
-      CachedFile &operator=(const CachedFile &file)
-      {
-        m_buffer.reset();
-        m_buffer = std::make_unique<char[]>(file.m_size);
-        memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
-        m_size = file.m_size;
-        return *this;
-      }
-
-      void allocate(size_t size)
-      {
-        m_buffer.reset();
-        m_buffer = std::make_unique<char[]>(size);
-        m_size = size;
-      }
-    };
-
-    // For file handling, small files will be cached
-    std::map<std::string, std::string> m_fileMap;
-    std::map<std::string, RefCountedPtr<CachedFile>> m_fileCache;
-    std::map<std::string, std::string> m_mimeTypes;
-
-    // Put handling controls
-    bool m_putEnabled;
-    std::set<std::string> m_putAllowedHosts;
+    // Xml Config
+    std::string m_version;
+    std::string m_configXmlPath;
 
     // For debugging
     bool m_logStreamData;
     bool m_pretty;
   };
+
+  class AgentPipelineContract : public pipeline::PipelineContract
+  {
+  public:
+    AgentPipelineContract(Agent *agent) : m_agent(agent) {}
+    ~AgentPipelineContract() = default;
+
+    Device *findDevice(const std::string &device) override
+    {
+      return m_agent->findDeviceByUUIDorName(device);
+    }
+    DataItem *findDataItem(const std::string &device, const std::string &name) override
+    {
+      Device *dev = m_agent->findDeviceByUUIDorName(device);
+      if (dev != nullptr)
+      {
+        return dev->getDeviceDataItem(name);
+      }
+      return nullptr;
+    }
+    void eachDataItem(EachDataItem fun) override
+    {
+      for (auto &di : m_agent->m_dataItemMap)
+      {
+        fun(di.second);
+      }
+    }
+    void deliverObservation(observation::ObservationPtr obs) override { m_agent->addToBuffer(obs); }
+    void deliverAsset(AssetPtr asset) override { m_agent->addAsset(asset); }
+    void deliverAssetCommand(entity::EntityPtr command) override;
+    void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
+                              bool autoAvailable) override;
+    void deliverCommand(entity::EntityPtr) override;
+
+  protected:
+    Agent *m_agent;
+  };
+
+  inline std::unique_ptr<pipeline::PipelineContract> Agent::makePipelineContract()
+  {
+    return std::make_unique<AgentPipelineContract>(this);
+  }
+
 }  // namespace mtconnect

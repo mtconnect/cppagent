@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,23 +19,28 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter.hpp"
+#include "adapter/adapter.hpp"
 #include "agent.hpp"
-#include "checkpoint.hpp"
+#include "observation/checkpoint.hpp"
+#include "agent_test_helper.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::observation;
+using namespace mtconnect::adapter;
+using namespace std::literals;
+using namespace date::literals;
+
+inline ConditionPtr Cond(ObservationPtr &ptr)
+{
+  return dynamic_pointer_cast<Condition>(ptr);
+}
 
 class CheckpointTest : public testing::Test
 {
  protected:
   void SetUp() override
   {
-    // Create an agent with only 16 slots and 8 data items.
-    m_agent = nullptr;
-    m_checkpoint = nullptr;
-    m_agent = make_unique<Agent>(PROJECT_ROOT_DIR "/samples/min_config.xml", 4, 4, "1.5");
-    m_agentId = int64ToString(getCurrentTimeInSec());
     m_checkpoint = make_unique<Checkpoint>();
 
     std::map<string, string> attributes1, attributes2;
@@ -57,114 +62,147 @@ class CheckpointTest : public testing::Test
 
   void TearDown() override
   {
-    m_agent.reset();
     m_checkpoint.reset();
     m_dataItem1.reset();
     m_dataItem2.reset();
   }
 
   std::unique_ptr<Checkpoint> m_checkpoint;
-  std::unique_ptr<Agent> m_agent;
-  std::string m_agentId;
   std::unique_ptr<DataItem> m_dataItem1;
   std::unique_ptr<DataItem> m_dataItem2;
 };
 
 TEST_F(CheckpointTest, AddObservations)
 {
-  ObservationPtr p1, p2, p3, p4, p5, p6;
-  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
-      warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||"), unavailable("UNAVAILABLE|||");
+  entity::ErrorList errors;
+  Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto warning1 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto warning2 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto normal = entity::Properties{
+    {"level", "NORMAL"s}
+  };
+  auto unavailable = entity::Properties{
+    {"level", "UNAVAILABLE"s}
+  };
+  auto value = entity::Properties{{"VALUE", "123"s}};
 
-  p1 = new Observation(*m_dataItem1, 2, time, warning1);
-  p1->unrefer();
-
-  ASSERT_EQ(1, (int)p1->refCount());
+  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  ASSERT_TRUE(p1);
+  EXPECT_EQ(1, p1.use_count());
   m_checkpoint->addObservation(p1);
-  ASSERT_EQ(2, (int)p1->refCount());
+  EXPECT_EQ(2, p1.use_count());
 
-  p2 = new Observation(*m_dataItem1, 2, time, warning2);
-  p2->unrefer();
-
+  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  ASSERT_TRUE(p2);
   m_checkpoint->addObservation(p2);
-  ASSERT_TRUE(p1.getObject() == p2->getPrev());
-
-  p3 = new Observation(*m_dataItem1, 2, time, normal);
-  p3->unrefer();
-
+  
+  {
+    auto prev = dynamic_pointer_cast<Condition>(p2)->getPrev();
+    ASSERT_TRUE(prev);
+    EXPECT_EQ(p1, prev);
+  }
+  
+  auto p3 = observation::Observation::make(m_dataItem1.get(), normal, time, errors);
+  ASSERT_TRUE(p3);
   m_checkpoint->addObservation(p3);
-  ASSERT_TRUE(nullptr == p3->getPrev());
-  ASSERT_EQ(2, (int)p1->refCount());
-  ASSERT_EQ(1, (int)p2->refCount());
 
-  p4 = new Observation(*m_dataItem1, 2, time, warning1);
-  p4->unrefer();
-
+  {
+    auto prev = dynamic_pointer_cast<Condition>(p3)->getPrev();
+    ASSERT_FALSE(prev);
+  }
+  
+  EXPECT_EQ(2, p1.use_count());
+  EXPECT_EQ(1, p2.use_count());
+  
+  auto p4 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   m_checkpoint->addObservation(p4);
-  ASSERT_TRUE(nullptr == p4->getPrev());
-  ASSERT_EQ(1, (int)p3->refCount());
 
-  // Test non condition
-  p3 = new Observation(*m_dataItem2, 2, time, value);
-  p3->unrefer();
-  m_checkpoint->addObservation(p3);
-  ASSERT_EQ(2, (int)p3->refCount());
+  {
+    auto prev = dynamic_pointer_cast<Condition>(p4)->getPrev();
+    ASSERT_FALSE(prev);
+  }
+  EXPECT_EQ(1, p3.use_count());
+  
+  auto p5 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  m_checkpoint->addObservation(p5);
+  EXPECT_EQ(2, p5.use_count());
 
-  p4 = new Observation(*m_dataItem2, 2, time, value);
-  p4->unrefer();
-
-  m_checkpoint->addObservation(p4);
-  ASSERT_EQ(2, (int)p4->refCount());
-
-  ASSERT_TRUE(nullptr == p4->getPrev());
-  ASSERT_EQ(1, (int)p3->refCount());
+  auto p6 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  m_checkpoint->addObservation(p6);
+  EXPECT_EQ(2, p6.use_count());
+  EXPECT_EQ(1, p5.use_count());
 }
 
 TEST_F(CheckpointTest, Copy)
 {
-  ObservationPtr p1, p2, p3, p4, p5, p6;
-  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
-      warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
-
-  p1 = new Observation(*m_dataItem1, 2, time, warning1);
-  p1->unrefer();
+  entity::ErrorList errors;
+  Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto warning1 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto warning2 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto value = entity::Properties{{"VALUE", "123"s}};
+  
+  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   m_checkpoint->addObservation(p1);
-  ASSERT_EQ(2, (int)p1->refCount());
+  ASSERT_EQ(2, p1.use_count());
 
-  p2 = new Observation(*m_dataItem1, 2, time, warning2);
-  p2->unrefer();
+  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
   m_checkpoint->addObservation(p2);
-  ASSERT_TRUE(p1.getObject() == p2->getPrev());
-  ASSERT_EQ(2, (int)p2->refCount());
+  ASSERT_EQ(2, p2.use_count());
 
-  auto copy = new Checkpoint(*m_checkpoint);
-  ASSERT_EQ(2, (int)p1->refCount());
-  ASSERT_EQ(3, (int)p2->refCount());
-  delete copy;
-  copy = nullptr;
-  ASSERT_EQ(2, (int)p2->refCount());
+  auto copy = make_unique<Checkpoint>(*m_checkpoint);
+  ASSERT_EQ(2, p1.use_count());
+  ASSERT_EQ(3, p2.use_count());
+  copy.reset();
+  ASSERT_EQ(2, p2.use_count());
 }
 
 TEST_F(CheckpointTest, GetObservations)
 {
-  ObservationPtr p;
-  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
-      warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
-  std::set<string> filter;
+  entity::ErrorList errors;
+  Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto warning1 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto warning2 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto value = entity::Properties{{"VALUE", "123"s}};
+  FilterSet filter;
   filter.insert(m_dataItem1->getId());
-
-  p = new Observation(*m_dataItem1, 2, time, warning1);
-  m_checkpoint->addObservation(p);
-  p->unrefer();
-
-  p = new Observation(*m_dataItem1, 2, time, warning2);
-  m_checkpoint->addObservation(p);
-  p->unrefer();
-
   filter.insert(m_dataItem2->getId());
-  p = new Observation(*m_dataItem2, 2, time, value);
+
+  auto p = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   m_checkpoint->addObservation(p);
-  p->unrefer();
+  p = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  m_checkpoint->addObservation(p);
+  p = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  m_checkpoint->addObservation(p);
 
   std::map<string, string> attributes;
   attributes["id"] = "4";
@@ -173,48 +211,53 @@ TEST_F(CheckpointTest, GetObservations)
   attributes["nativeUnits"] = "MILLIMETER";
   attributes["subType"] = "ACTUAL";
   attributes["category"] = "SAMPLE";
+  
   auto d1 = make_unique<DataItem>(attributes);
   filter.insert(d1->getId());
 
-  p = new Observation(*d1, 2, time, value);
+  p = observation::Observation::make(d1.get(), value, time, errors);
   m_checkpoint->addObservation(p);
-  p->unrefer();
 
-  ObservationPtrArray list;
-  m_checkpoint->getObservations(list, &filter);
+  ObservationList list;
+  m_checkpoint->getObservations(list, filter);
 
-  ASSERT_EQ(4, (int)list.size());
+  ASSERT_EQ(4, list.size());
 
-  std::set<string> filter2;
+  FilterSet filter2;
   filter2.insert(m_dataItem1->getId());
 
-  ObservationPtrArray list2;
-  m_checkpoint->getObservations(list2, &filter2);
+  ObservationList list2;
+  m_checkpoint->getObservations(list2, filter2);
 
-  ASSERT_EQ(2, (int)list2.size());
-
-  d1.reset();
+  ASSERT_EQ(2, list2.size());
 }
 
 TEST_F(CheckpointTest, Filter)
 {
-  ObservationPtr p1, p2, p3, p4;
-  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
-      warning2("WARNING|CODE2|HIGH|Over..."), normal("NORMAL|||");
-  std::set<string> filter;
+  entity::ErrorList errors;
+  Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto warning1 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto warning2 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto value = entity::Properties{{"VALUE", "123"s}};
+  FilterSet filter;
   filter.insert(m_dataItem1->getId());
 
-  p1 = new Observation(*m_dataItem1, 2, time, warning1);
+  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   m_checkpoint->addObservation(p1);
-  p1->unrefer();
-
-  p2 = new Observation(*m_dataItem1, 2, time, warning2);
+  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
   m_checkpoint->addObservation(p2);
-  p2->unrefer();
-
-  p3 = new Observation(*m_dataItem2, 2, time, value);
+  auto p3 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
   m_checkpoint->addObservation(p3);
-  p3->unrefer();
 
   std::map<string, string> attributes;
   attributes["id"] = "4";
@@ -224,12 +267,10 @@ TEST_F(CheckpointTest, Filter)
   attributes["subType"] = "ACTUAL";
   attributes["category"] = "SAMPLE";
   auto d1 = make_unique<DataItem>(attributes);
-
-  p4 = new Observation(*d1, 2, time, value);
+  auto p4 = observation::Observation::make(d1.get(), value, time, errors);
   m_checkpoint->addObservation(p4);
-  p4->unrefer();
 
-  ObservationPtrArray list;
+  ObservationList list;
   m_checkpoint->getObservations(list);
 
   ASSERT_EQ(4, (int)list.size());
@@ -244,24 +285,36 @@ TEST_F(CheckpointTest, Filter)
 
 TEST_F(CheckpointTest, CopyAndFilter)
 {
-  ObservationPtr p;
-  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
-      warning2("WARNING|CODE2|HIGH|Over..."), warning3("WARNING|CODE3|HIGH|Over..."),
-      normal("NORMAL|||");
-  std::set<string> filter;
+  entity::ErrorList errors;
+  Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto warning1 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto warning2 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto warning3 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE3"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto value = entity::Properties{{"VALUE", "123"s}};
+  FilterSet filter;
   filter.insert(m_dataItem1->getId());
-
-  p = new Observation(*m_dataItem1, 2, time, warning1);
-  m_checkpoint->addObservation(p);
-  p->unrefer();
-
-  p = new Observation(*m_dataItem1, 2, time, warning2);
-  m_checkpoint->addObservation(p);
-  p->unrefer();
-
-  p = new Observation(*m_dataItem2, 2, time, value);
-  m_checkpoint->addObservation(p);
-  p->unrefer();
+  
+  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
+  m_checkpoint->addObservation(p1);
+  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
+  m_checkpoint->addObservation(p2);
+  auto p3 = observation::Observation::make(m_dataItem2.get(), value, time, errors);
+  m_checkpoint->addObservation(p3);
 
   std::map<string, string> attributes;
   attributes["id"] = "4";
@@ -272,166 +325,202 @@ TEST_F(CheckpointTest, CopyAndFilter)
   attributes["category"] = "SAMPLE";
   auto d1 = make_unique<DataItem>(attributes);
 
-  p = new Observation(*d1, 2, time, value);
-  m_checkpoint->addObservation(p);
-  p->unrefer();
+  auto p4 = observation::Observation::make(d1.get(), value, time, errors);
+  m_checkpoint->addObservation(p4);
 
-  ObservationPtrArray list;
+  ObservationList list;
   m_checkpoint->getObservations(list);
+  ASSERT_EQ(4, list.size());
 
-  ASSERT_EQ(4, (int)list.size());
+  Checkpoint check(*m_checkpoint, filter);
   list.clear();
-
-  Checkpoint check(*m_checkpoint, &filter);
   check.getObservations(list);
+  ASSERT_EQ(2, list.size());
 
-  ASSERT_EQ(2, (int)list.size());
+  auto p5 = observation::Observation::make(m_dataItem1.get(), warning3, time, errors);
+  check.addObservation(p5);
+
   list.clear();
-
-  p = new Observation(*m_dataItem1, 2, time, warning3);
-  check.addObservation(p);
-  p->unrefer();
-
   check.getObservations(list);
+  ASSERT_EQ(3, list.size());
 
-  ASSERT_EQ(3, (int)list.size());
+  auto p6 = observation::Observation::make(d1.get(), value, time, errors);
+  m_checkpoint->addObservation(p6);
+  
   list.clear();
-
-  p = new Observation(*d1, 2, time, value);
-  m_checkpoint->addObservation(p);
-  p->unrefer();
-
   check.getObservations(list);
-  ASSERT_EQ(3, (int)list.size());
-
-  d1.reset();
+  ASSERT_EQ(3, list.size());
 }
 
 TEST_F(CheckpointTest, ConditionChaining)
 {
-  ObservationPtr p1, p2, p3, p4, p5, p6;
-  string time("NOW"), value("123"), warning1("WARNING|CODE1|HIGH|Over..."),
-      warning2("WARNING|CODE2|HIGH|Over..."), fault2("FAULT|CODE2|HIGH|Over..."),
-      warning3("WARNING|CODE3|HIGH|Over..."), normal("NORMAL|||"), normal1("NORMAL|CODE1||"),
-      normal2("NORMAL|CODE2||"), unavailable("UNAVAILABLE|||");
+  entity::ErrorList errors;
+  Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto warning1 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto warning2 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto warning3 = entity::Properties{
+    {"level", "WARNING"s},
+    {"nativeCode", "CODE3"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto fault2 = entity::Properties{
+    {"level", "FAULT"s},
+    {"nativeCode", "CODE2"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto normal = entity::Properties{
+    {"level", "NORMAL"s}
+  };
+  auto normal1 = entity::Properties{
+    {"nativeCode", "CODE1"s},
+    {"level", "NORMAL"s}
+  };
+  auto normal2 = entity::Properties{
+    {"nativeCode", "CODE2"s},
+    {"level", "NORMAL"s}
+  };
+  auto unavailable = entity::Properties{
+    {"level", "UNAVAILABLE"s}
+  };
+  auto value = entity::Properties{{"VALUE", "123"s}};
 
-  std::set<string> filter;
+  FilterSet filter;
   filter.insert(m_dataItem1->getId());
-  ObservationPtrArray list;
-
-  p1 = new Observation(*m_dataItem1, 2, time, warning1);
-  p1->unrefer();
+  ObservationList list;
+  
+  auto p1 = observation::Observation::make(m_dataItem1.get(), warning1, time, errors);
   m_checkpoint->addObservation(p1);
+  ASSERT_EQ(2, p1.use_count());
 
   m_checkpoint->getObservations(list);
-  ASSERT_EQ(1, (int)list.size());
+  ASSERT_EQ(1, list.size());
   list.clear();
 
-  p2 = new Observation(*m_dataItem1, 2, time, warning2);
-  p2->unrefer();
-
+  auto p2 = observation::Observation::make(m_dataItem1.get(), warning2, time, errors);
   m_checkpoint->addObservation(p2);
-  ASSERT_TRUE(p1.getObject() == p2->getPrev());
+  ASSERT_EQ(2, p2.use_count());
+  ASSERT_EQ(2, p1.use_count());
 
+  list.clear();
   m_checkpoint->getObservations(list);
-  ASSERT_EQ(2, (int)list.size());
+  ASSERT_EQ(2, list.size());
+  ASSERT_EQ(p1, dynamic_pointer_cast<Condition>(p2)->getPrev());
   list.clear();
 
-  p3 = new Observation(*m_dataItem1, 2, time, warning3);
-  p3->unrefer();
-
+  auto p3 = observation::Observation::make(m_dataItem1.get(), warning3, time, errors);
   m_checkpoint->addObservation(p3);
-  ASSERT_TRUE(p2.getObject() == p3->getPrev());
-  ASSERT_TRUE(p1.getObject() == p2->getPrev());
-  ASSERT_TRUE(nullptr == p1->getPrev());
+  ASSERT_EQ(2, p3.use_count());
+  ASSERT_EQ(2, p2.use_count());
+  ASSERT_EQ(2, p1.use_count());
+  
+  ASSERT_EQ(p2, dynamic_pointer_cast<Condition>(p3)->getPrev());
+  ASSERT_EQ(p1, dynamic_pointer_cast<Condition>(p2)->getPrev());
+  ASSERT_FALSE(dynamic_pointer_cast<Condition>(p1)->getPrev());
 
+  list.clear();
   m_checkpoint->getObservations(list);
-  ASSERT_EQ(3, (int)list.size());
+  ASSERT_EQ(3, list.size());
   list.clear();
 
   // Replace Warning on CODE 2 with a fault
-  p4 = new Observation(*m_dataItem1, 2, time, fault2);
-  p4->unrefer();
-
+  auto p4 = observation::Observation::make(m_dataItem1.get(), fault2, time, errors);
   m_checkpoint->addObservation(p4);
-  ASSERT_EQ(2, (int)p4->refCount());
-  ASSERT_EQ(1, (int)p3->refCount());
-  ASSERT_EQ(2, (int)p2->refCount());
-  ASSERT_EQ(2, (int)p1->refCount());
-
+  ASSERT_EQ(2, p4.use_count());
+  ASSERT_EQ(1, p3.use_count());
+  ASSERT_EQ(2, p2.use_count());
+  ASSERT_EQ(2, p1.use_count());
+  
   // Should have been deep copyied
-  ASSERT_TRUE(p3.getObject() != p4->getPrev());
+  ASSERT_NE(p3, Cond(p4)->getPrev());
 
   // Codes should still match
-  ASSERT_EQ(p3->getCode(), p4->getPrev()->getCode());
-  ASSERT_EQ(1, (int)p4->getPrev()->refCount());
-  ASSERT_EQ(p1->getCode(), p4->getPrev()->getPrev()->getCode());
-  ASSERT_EQ(1, (int)p4->getPrev()->getPrev()->refCount());
-  ASSERT_TRUE(nullptr == p4->getPrev()->getPrev()->getPrev());
+  ASSERT_EQ(Cond(p3)->getCode(), Cond(p4)->getPrev()->getCode());
+  ASSERT_EQ(2, Cond(p4)->getPrev().use_count());
+  ASSERT_EQ(Cond(p1)->getCode(), Cond(p4)->getPrev()->getPrev()->getCode());
+  ASSERT_EQ(2, Cond(p4)->getPrev()->getPrev().use_count());
+  ASSERT_FALSE(Cond(p4)->getPrev()->getPrev()->getPrev());
 
+  list.clear();
   m_checkpoint->getObservations(list);
-  ASSERT_EQ(3, (int)list.size());
+  ASSERT_EQ(3, list.size());
   list.clear();
 
-  // Clear Code 2
-  p5 = new Observation(*m_dataItem1, 2, time, normal2);
-  p5->unrefer();
-
+  auto p5 = observation::Observation::make(m_dataItem1.get(), normal2, time, errors);
   m_checkpoint->addObservation(p5);
-  ASSERT_TRUE(nullptr == p5->getPrev());
-
+  ASSERT_FALSE(Cond(p5)->getPrev());
+  
   // Check cleanup
-  ObservationPtr *p7 = m_checkpoint->getEvents().at(std::string("1"));
-  ASSERT_EQ(1, (int)(*p7)->refCount());
-
+  ObservationPtr p7 = m_checkpoint->getObservations().at(std::string("1"));
   ASSERT_TRUE(p7);
-  ASSERT_TRUE(p5.getObject() != (*p7).getObject());
-  ASSERT_EQ(std::string("CODE3"), (*p7)->getCode());
-  ASSERT_EQ(std::string("CODE1"), (*p7)->getPrev()->getCode());
-  ASSERT_TRUE(nullptr == (*p7)->getPrev()->getPrev());
+  ASSERT_EQ(2, p7.use_count());
+  ASSERT_NE(p5, p7);
+  ASSERT_EQ(std::string("CODE3"), Cond(p7)->getCode());
+  ASSERT_EQ(std::string("CODE1"), Cond(p7)->getPrev()->getCode());
+  ASSERT_FALSE(Cond(p7)->getPrev()->getPrev());
 
+
+  list.clear();
   m_checkpoint->getObservations(list);
-  ASSERT_EQ(2, (int)list.size());
+  ASSERT_EQ(2, list.size());
   list.clear();
 
   // Clear all
-  p6 = new Observation(*m_dataItem1, 2, time, normal);
-  p6->unrefer();
-
+  auto p6 = observation::Observation::make(m_dataItem1.get(), normal, time, errors);
   m_checkpoint->addObservation(p6);
-  ASSERT_TRUE(nullptr == p6->getPrev());
+  ASSERT_FALSE(Cond(p6)->getPrev());
 
+  list.clear();
   m_checkpoint->getObservations(list);
   ASSERT_EQ(1, (int)list.size());
-  list.clear();
 }
 
 TEST_F(CheckpointTest, LastConditionNormal)
 {
-  ObservationPtr p1, p2, p3;
+  entity::ErrorList errors;
+  Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto fault1 = entity::Properties{
+    {"level", "FAULT"s},
+    {"nativeCode", "CODE1"s},
+    {"qualifier", "HIGH"s},
+    {"VALUE", "Over..."s},
+  };
+  auto normal1 = entity::Properties{
+    {"nativeCode", "CODE1"s},
+    {"level", "NORMAL"s}
+  };
 
-  string time("NOW"), fault1("FAULT|CODE1|HIGH|Over..."), normal1("NORMAL|CODE1||");
-
-  std::set<string> filter;
+  FilterSet filter;
   filter.insert(m_dataItem1->getId());
-  ObservationPtrArray list;
+  ObservationList list;
 
-  p1 = new Observation(*m_dataItem1, 2, time, fault1);
-  p1->unrefer();
+  auto p1 = observation::Observation::make(m_dataItem1.get(), fault1, time, errors);
   m_checkpoint->addObservation(p1);
 
+  list.clear();
   m_checkpoint->getObservations(list);
   ASSERT_EQ(1, (int)list.size());
   list.clear();
 
-  p2 = new Observation(*m_dataItem1, 2, time, normal1);
-  p2->unrefer();
+  auto p2 = observation::Observation::make(m_dataItem1.get(), normal1, time, errors);
   m_checkpoint->addObservation(p2);
 
-  m_checkpoint->getObservations(list, &filter);
-  ASSERT_EQ(1, (int)list.size());
+  list.clear();
+  m_checkpoint->getObservations(list, filter);
+  ASSERT_EQ(1, list.size());
 
-  p3 = list[0];
-  ASSERT_EQ(Observation::NORMAL, p3->getLevel());
+  auto p3 = Cond(list.front());
+  ASSERT_EQ(Condition::NORMAL, p3->getLevel());
   ASSERT_EQ(string(""), p3->getCode());
 }

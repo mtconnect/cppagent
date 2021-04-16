@@ -9,7 +9,7 @@
 option(AGENT_USE_NATIVE_LIBXML2 "Use systems LibXML2" OFF)
 
 if(UNIX AND AGENT_USE_NATIVE_LIBXML2)
-  find_package(LibXML2 REQUIRED)
+  find_package(LibXml2 REQUIRED)
 
   if(NOT TARGET LibXml2::LibXml2)
     add_library(LibXml2::LibXml2 SHARED IMPORTED)
@@ -41,15 +41,10 @@ else()
     if(EXISTS "${_link_library}")
       message(STATUS "  * Reusing previously built LibXML2 library")
     else()
-      message(STATUS "  * Donwload LibXML2")
+      message(STATUS "  * Download LibXML2")
       FetchContent_Populate(libxmlprovider)
 
-      if(UNIX)
-        set(build_options "-j4")
-      else()
-        set(build_options "-m:4")
-      endif()
-
+      set(build_options "-j4")
 
       message(STATUS "  * Configure LibXML2")
       execute_process(
@@ -76,7 +71,7 @@ else()
 
       message(STATUS "  * Build LibXML2")
       execute_process(
-        COMMAND ${CMAKE_COMMAND} --build . --target install --config Release -- ${build_options}
+        COMMAND ${CMAKE_COMMAND} --build . --target install --config Release ${build_options}
         WORKING_DIRECTORY ${libxmlprovider_BINARY_DIR}
         OUTPUT_FILE       ${libxmlprovider_BINARY_DIR}/build_output.log
         ERROR_FILE        ${libxmlprovider_BINARY_DIR}/build_output.log

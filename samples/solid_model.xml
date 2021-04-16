@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.7">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.7"/>
+  <Devices>
+    <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
+      <Description manufacturer="NIST" serialNumber=""/>
+			<Configuration>
+				<CoordinateSystems>
+					<CoordinateSystem id="world" type="WORLD" name="worldy">
+						<Origin>101 102 103</Origin>
+					</CoordinateSystem>
+					<CoordinateSystem id="machine" type="MACHINE" name="machiney" nativeName="xxx" parentIdRef="world">
+						<Transformation>
+							<Translation>10 10 10</Translation>
+							<Rotation>90 0 90</Rotation>
+						</Transformation>
+					</CoordinateSystem>
+				</CoordinateSystems>
+				<SolidModel id="dm" mediaType="STL" href="/models/foo.stl" coordinateSystemIdRef="machine" dummy="junk">
+					<Origin>10.0 20.0 30.0</Origin>
+					<Scale>2.0 3.0 4.0</Scale>
+				</SolidModel>
+			</Configuration>
+      <DataItems>
+				<DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
+      </DataItems>
+      <Components>
+        <Axes name="Axes" id="axes">
+          <Components>
+            <Rotary name="C" id="c">
+							<Configuration>
+								<SolidModel id="cm" mediaType="STL" solidModelIdRef="dm" itemRef="spindle" coordinateSystemIdRef="machine">
+									<Transformation>
+										<Translation>10 20 30</Translation>
+										<Rotation>90 -90 180</Rotation>
+									</Transformation>
+								</SolidModel>
+							</Configuration>
+            </Rotary>
+          </Components>
+        </Axes>
+			</Components>
+		</Device>
+	</Devices>
+</MTConnectDevices>

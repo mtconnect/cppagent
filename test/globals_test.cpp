@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <date/date.h>
 
@@ -30,18 +30,18 @@ using namespace mtconnect;
 
 TEST(GlobalsTest, IntToString)
 {
-  ASSERT_EQ((string) "1234", intToString(1234));
-  ASSERT_EQ((string) "0", intToString(0));
-  ASSERT_EQ((string) "123456789", intToString(123456789));
-  ASSERT_EQ((string) "1", intToString(1));
+  ASSERT_EQ((string) "1234", to_string(1234));
+  ASSERT_EQ((string) "0", to_string(0));
+  ASSERT_EQ((string) "123456789", to_string(123456789));
+  ASSERT_EQ((string) "1", to_string(1));
 }
 
 TEST(GlobalsTest, FloatToString)
 {
-  ASSERT_EQ((string) "1.234", floatToString(1.234));
-  ASSERT_EQ((string) "0", floatToString(0.0));
-  ASSERT_EQ((string) "0.123456", floatToString(.123456));
-  ASSERT_EQ((string) "1", floatToString(1.0));
+  ASSERT_EQ((string) "1.234", format(1.234));
+  ASSERT_EQ((string) "0", format(0.0));
+  ASSERT_EQ((string) "0.123456", format(.123456));
+  ASSERT_EQ((string) "1", format(1.0));
 }
 
 TEST(GlobalsTest, ToUpperCase)
@@ -208,5 +208,5 @@ TEST(GlobalsTest, ParseTimeMilli)
 
 TEST(GlobalsTest, Int64ToString)
 {
-  ASSERT_EQ((string) "8805345009", int64ToString(8805345009ULL));
+  ASSERT_EQ((string) "8805345009", to_string(8805345009ULL));
 }

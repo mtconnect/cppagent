@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,10 @@
 
 #pragma once
 
-#include "cutting_tool.hpp"
-#include "globals.hpp"
+#include "assets/asset.hpp"
 #include "printer.hpp"
+#include "utilities.hpp"
+#include <unordered_set>
 
 extern "C"
 {
@@ -35,33 +36,24 @@ namespace mtconnect
 
   class XmlPrinter : public Printer
   {
-   public:
+  public:
     XmlPrinter(const std::string version = "", bool pretty = false);
     ~XmlPrinter() override = default;
 
-    std::string printError(const unsigned int instanceId, const unsigned int bufferSize,
-                           const uint64_t nextSeq, const std::string &errorCode,
-                           const std::string &errorText) const override;
+    std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                            const uint64_t nextSeq, const ProtoErrorList &list) const override;
 
     std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                            const uint64_t nextSeq, const unsigned int assetBufferSize,
-                           const unsigned int assetCount, const std::vector<Device *> &devices,
+                           const unsigned int assetCount, const std::list<Device *> &devices,
                            const std::map<std::string, int> *count = nullptr) const override;
 
     std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
-                            ObservationPtrArray &results) const override;
-
+                            observation::ObservationList &results) const override;
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
-                            const unsigned int assetCount,
-                            std::vector<AssetPtr> const &assets) const override;
-
-    std::string printCuttingTool(CuttingToolPtr const tool) const override;
-
-    std::string mimeType() const override
-    {
-      return "text/xml";
-    }
+                            const unsigned int assetCount, const AssetList &assets) const override;
+    std::string mimeType() const override { return "text/xml"; }
 
     void addDevicesNamespace(const std::string &urn, const std::string &location,
                              const std::string &prefix);
@@ -96,7 +88,7 @@ namespace mtconnect
     std::string getStreamsLocation(const std::string &prefix);
     std::string getAssetsLocation(const std::string &prefix);
 
-   protected:
+  protected:
     enum EDocumentType
     {
       eERROR,
@@ -123,27 +115,24 @@ namespace mtconnect
     void printDataItem(xmlTextWriterPtr writer, DataItem *dataItem) const;
     void printDataItemDefinition(xmlTextWriterPtr writer,
                                  const DataItemDefinition &definition) const;
+    void printDataItemRelationships(xmlTextWriterPtr writer,
+                                    const std::list<DataItem::Relationship> &relations) const;
     void printCellDefinitions(xmlTextWriterPtr writer,
                               const std::set<CellDefinition> &definitions) const;
 
-    void addObservation(xmlTextWriterPtr writer, Observation *result) const;
+    void addObservation(xmlTextWriterPtr writer, observation::ObservationPtr result) const;
 
-    // Asset printing
-    void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr tool, const char *value,
-                               std::set<std::string> *remaining = nullptr) const;
-    void printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr item, const char *value,
-                               std::set<std::string> *remaining = nullptr) const;
-    void printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value) const;
-    void printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item) const;
-    void printAssetNode(xmlTextWriterPtr writer, Asset *asset) const;
-
-    void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration *sensor) const;
-
-   protected:
+  protected:
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;
     std::map<std::string, SchemaNamespace> m_streamsNamespaces;
     std::map<std::string, SchemaNamespace> m_errorNamespaces;
     std::map<std::string, SchemaNamespace> m_assetsNamespaces;
+    
+    std::unordered_set<std::string> m_deviceNsSet;
+    std::unordered_set<std::string> m_streamsNsSet;
+    std::unordered_set<std::string> m_errorNsSet;
+    std::unordered_set<std::string> m_assetsNsSet;
+
     std::string m_schemaVersion;
     std::string m_streamsStyle;
     std::string m_devicesStyle;

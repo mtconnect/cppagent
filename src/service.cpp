@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,9 +39,7 @@ namespace mtconnect
 
   MTConnectService::MTConnectService() = default;
 
-  void MTConnectService::initialize(int argc, const char *argv[])
-  {
-  }
+  void MTConnectService::initialize(int argc, const char *argv[]) {}
 }  // namespace mtconnect
 
 #ifdef _WINDOWS
@@ -85,9 +83,7 @@ namespace mtconnect
 
   static MTConnectService *g_service = nullptr;
 
-  static void agent_termination_handler()
-  {
-  }
+  static void agent_termination_handler() {}
 
   void commandLine()
   {
@@ -562,8 +558,9 @@ namespace mtconnect
         ReportSvcStatus(SERVICE_STOP_PENDING, NO_ERROR, 0ul);
         if (g_service)
           g_service->stop();
-        ReportSvcStatus(g_svcStatus.dwCurrentState, NO_ERROR, 0ul);
+        g_logger << dlib::LINFO << "Service stop completed";
 
+        ReportSvcStatus(g_svcStatus.dwCurrentState, NO_ERROR, 0ul);
         return;
 
       case SERVICE_CONTROL_INTERROGATE:
@@ -661,10 +658,7 @@ namespace mtconnect
   }
 
   static std::string s_pidFile;
-  static void cleanup_pid()
-  {
-    unlink(s_pidFile.c_str());
-  }
+  static void cleanup_pid() { unlink(s_pidFile.c_str()); }
 
   void MTConnectService::daemonize()
   {
@@ -772,8 +766,6 @@ namespace mtconnect
     return 0;
   }
 
-  void MTConnectService::install()
-  {
-  }
+  void MTConnectService::install() {}
 }  // namespace mtconnect
 #endif

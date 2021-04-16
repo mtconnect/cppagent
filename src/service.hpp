@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "globals.hpp"
+#include "utilities.hpp"
 
 #include <string>
 
@@ -25,27 +25,20 @@ namespace mtconnect
 {
   class MTConnectService
   {
-   public:
+  public:
     MTConnectService();
+    virtual ~MTConnectService() = default;
+
     virtual int main(int argc, char const *argv[]);
     virtual void initialize(int argc, char const *argv[]) = 0;
     virtual void stop() = 0;
     virtual void start() = 0;
 
-    void setName(std::string const &name)
-    {
-      m_name = name;
-    }
-    std::string const &name() const
-    {
-      return m_name;
-    }
-    void setDebug(bool debug)
-    {
-      m_isDebug = debug;
-    }
+    void setName(std::string const &name) { m_name = name; }
+    std::string const &name() const { return m_name; }
+    void setDebug(bool debug) { m_isDebug = debug; }
 
-   protected:
+  protected:
     std::string m_name;
     std::string m_configFile;
     std::string m_pidFile;

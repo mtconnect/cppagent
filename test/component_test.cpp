@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "component.hpp"
-#include "device.hpp"
+#include "device_model/component.hpp"
+#include "device_model/device.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -92,7 +92,7 @@ TEST_F(ComponentTest, GetAttributes)
   ASSERT_EQ((string) "3", attributes2.at("id"));
   ASSERT_EQ((string) "ComponentTest2", attributes2.at("name"));
   ASSERT_EQ((string) "UnivUniqId2", attributes2.at("uuid"));
-  ASSERT_EQ((string) "123.4", attributes2.at("sampleInterval"));
+  ASSERT_EQ((string) "123.400001525879", attributes2.at("sampleInterval"));
 }
 
 TEST_F(ComponentTest, Description)
@@ -124,15 +124,14 @@ TEST_F(ComponentTest, Relationships)
   // Test get/set parents
   map<string, string> dummy;
   auto *linear = new mtconnect::Component("Linear", dummy);
-
-  m_compA->setParent(*linear);
+  linear->addChild(m_compA);
   ASSERT_TRUE(linear == m_compA->getParent());
 
   auto *device = new Device(dummy);
   auto devPointer = dynamic_cast<mtconnect::Component *>(device);
 
   ASSERT_TRUE(devPointer);
-  linear->setParent(*devPointer);
+  devPointer->addChild(linear);
   ASSERT_TRUE(devPointer == linear->getParent());
 
   // Test get device
@@ -145,8 +144,8 @@ TEST_F(ComponentTest, Relationships)
 
   auto *axes = new mtconnect::Component("Axes", dummy),
        *thermostat = new mtconnect::Component("Thermostat", dummy);
-  m_compA->addChild(*axes);
-  m_compA->addChild(*thermostat);
+  m_compA->addChild(axes);
+  m_compA->addChild(thermostat);
 
   ASSERT_EQ((size_t)2, m_compA->getChildren().size());
   ASSERT_TRUE(axes == m_compA->getChildren().front());
@@ -165,8 +164,8 @@ TEST_F(ComponentTest, DataItems)
   map<string, string> dummy;
 
   auto *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
-  m_compA->addDataItem(*data1);
-  m_compA->addDataItem(*data2);
+  m_compA->addDataItem(data1);
+  m_compA->addDataItem(data2);
 
   ASSERT_EQ((size_t)2, m_compA->getDataItems().size());
   ASSERT_TRUE(data1 == m_compA->getDataItems().front());

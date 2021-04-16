@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +16,13 @@
 //
 
 #include "config.hpp"
+#include "config_options.hpp"
 
 #include "agent.hpp"
-#include "device.hpp"
+#include "device_model/device.hpp"
 #include "options.hpp"
 #include "rolling_file_logger.hpp"
+#include "version.h"
 #include "xml_printer.hpp"
 #include <sys/stat.h>
 
@@ -31,6 +33,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -51,8 +54,12 @@
 #include <mach-o/dyld.h>
 #endif
 
+#define _strfy(line) #line
+#define strfy(line) _strfy(line)
+
 using namespace std;
 using namespace dlib;
+namespace fs = std::filesystem;
 
 namespace mtconnect
 {
@@ -76,22 +83,20 @@ namespace mtconnect
       return defaultValue;
   }
 
-  static inline std::chrono::milliseconds get_with_default(const config_reader::kernel_1a &reader,
-                                                           const char *key,
-                                                           std::chrono::milliseconds defaultValue)
+  static inline Milliseconds get_with_default(const config_reader::kernel_1a &reader,
+                                              const char *key, Milliseconds defaultValue)
   {
     if (reader.is_key_defined(key))
-      return std::chrono::milliseconds{atoi(reader[key].c_str())};
+      return Milliseconds{atoi(reader[key].c_str())};
     else
       return defaultValue;
   }
 
-  static inline std::chrono::seconds get_with_default(const config_reader::kernel_1a &reader,
-                                                      const char *key,
-                                                      std::chrono::seconds defaultValue)
+  static inline Seconds get_with_default(const config_reader::kernel_1a &reader, const char *key,
+                                         Seconds defaultValue)
   {
     if (reader.is_key_defined(key))
-      return std::chrono::seconds{atoi(reader[key].c_str())};
+      return Seconds{atoi(reader[key].c_str())};
     else
       return defaultValue;
   }
@@ -114,8 +119,47 @@ namespace mtconnect
       return defaultValue;
   }
 
-  AgentConfiguration::AgentConfiguration() : m_exePath("")
+  static inline void assign_value(const char *key, const config_reader::kernel_1a &reader,
+                                  ConfigOptions &options)
+  {
+    if (reader.is_key_defined(key))
+      options[key] = reader[key];
+  }
 
+  static inline void assign_bool_value(const char *key, const config_reader::kernel_1a &reader,
+                                       ConfigOptions &options, std::optional<bool> deflt = nullopt)
+  {
+    if (reader.is_key_defined(key))
+      options[key] = reader[key] == "true" || reader[key] == "yes";
+    else if (deflt)
+      options[key] = *deflt;
+  }
+  
+  istream &operator >>(istream &str, Seconds &value)
+  {
+    int64_t v{0};
+    str >> v;
+    value = Seconds(v);
+    return str;
+  }
+
+  template <typename T>
+  static inline void assign_value(const char *key, const config_reader::kernel_1a &reader,
+                                           ConfigOptions &options,
+                                           std::optional<T> deflt = nullopt)
+  {
+    if (reader.is_key_defined(key))
+    {
+      stringstream ss(reader[key]);
+      T value;
+      ss >> value;
+      options[key] = value;
+    }
+    else if (deflt)
+      options[key] = *deflt;
+  }
+
+  AgentConfiguration::AgentConfiguration()
   {
     bool success = false;
     char pathSep = '/';
@@ -142,16 +186,15 @@ namespace mtconnect
 
     if (success)
     {
-      m_exePath = path;
-      size_t found = m_exePath.rfind(pathSep);
+      string ep(path);
+      size_t found = ep.rfind(pathSep);
 
       if (found != std::string::npos)
-        m_exePath.erase(found + 1);
-
+        ep.erase(found + 1);
+      m_exePath = fs::path(ep);
       cout << "Configuration search path: current directory and " << m_exePath << endl;
     }
-    else
-      m_exePath = "";
+    m_working = fs::current_path();
   }
 
   void AgentConfiguration::initialize(int argc, const char *argv[])
@@ -179,7 +222,7 @@ namespace mtconnect
                    << " in current directory, searching exe path: " << m_exePath;
           cerr << "Cannot find " << m_configFile
                << " in current directory, searching exe path: " << m_exePath << endl;
-          m_configFile = m_exePath + m_configFile;
+          m_configFile = (m_exePath / m_configFile).string();
         }
         else
         {
@@ -202,20 +245,7 @@ namespace mtconnect
     }
   }
 
-  AgentConfiguration::~AgentConfiguration()
-  {
-    if (m_agent)
-    {
-      delete m_agent;
-      m_agent = nullptr;
-    }
-    if (m_loggerFile)
-    {
-      delete m_loggerFile;
-      m_loggerFile = nullptr;
-    }
-    set_all_logging_output_streams(cout);
-  }
+  AgentConfiguration::~AgentConfiguration() { set_all_logging_output_streams(cout); }
 
 #ifdef _WINDOWS
   static time_t GetFileModificationTime(const string &file)
@@ -256,6 +286,9 @@ namespace mtconnect
 
   void AgentConfiguration::monitorThread()
   {
+    // shut this off for now.
+    return;
+    
     time_t devices_at_start = 0, cfg_at_start = 0;
 
     g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile
@@ -316,8 +349,10 @@ namespace mtconnect
         changed =
             (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
       }
-    } while (!changed && m_agent->is_running());
+    } while (!changed);  // && m_agent->is_running());
 
+    // TODO: Put monitor thread back in place
+#if 0
     // Restart agent if changed...
     // stop agent and signal to warm start
     if (m_agent->is_running() && changed)
@@ -326,7 +361,7 @@ namespace mtconnect
                << "Monitor thread has detected change in configuration files, restarting agent.";
 
       m_restart = true;
-      m_agent->clear();
+      m_agent->stop();
       delete m_agent;
       m_agent = nullptr;
 
@@ -336,7 +371,7 @@ namespace mtconnect
       const char *argv[] = {m_configFile.c_str()};
       initialize(1, argv);
     }
-
+#endif
     g_logger << LDEBUG << "Monitor thread is exiting";
   }
 
@@ -369,22 +404,17 @@ namespace mtconnect
 
   void AgentConfiguration::stop()
   {
-    m_agent->clear();
+    g_logger << dlib::LINFO << "Agent stopping";
+    m_restart = false;
+    m_agent->stop();
+    g_logger << dlib::LINFO << "Agent Configuration stopped";
   }
 
-  Device *AgentConfiguration::defaultDevice()
-  {
-    const auto &devices = m_agent->getDevices();
-    if (devices.size() == 1)
-      return devices[0];
-    else
-      return nullptr;
-  }
+  Device *AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
 
   static std::string timestamp()
   {
-    return date::format("%Y-%m-%dT%H:%M:%SZ",
-                        date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
+    return format(date::floor<std::chrono::microseconds>(std::chrono::system_clock::now()));
   }
 
   void AgentConfiguration::LoggerHook(const std::string &loggerName, const dlib::log_level &l,
@@ -427,14 +457,9 @@ namespace mtconnect
     return LINFO;
   }
 
-  void AgentConfiguration::configureLogger(dlib::config_reader::kernel_1a &reader)
+  void AgentConfiguration::configureLogger(ConfigReader &reader)
   {
-    if (m_loggerFile)
-    {
-      delete m_loggerFile;
-      m_loggerFile = nullptr;
-    }
-
+    m_loggerFile.reset();
     if (m_isDebug)
     {
       set_all_logging_output_streams(cout);
@@ -519,7 +544,7 @@ namespace mtconnect
           sched = RollingFileLogger::WEEKLY;
       }
 
-      m_loggerFile = new RollingFileLogger(name, maxIndex, maxSize, sched);
+      m_loggerFile = make_unique<RollingFileLogger>(name, maxIndex, maxSize, sched);
       set_all_logging_output_hooks<AgentConfiguration>(*this, &AgentConfiguration::LoggerHook);
     }
   }
@@ -534,6 +559,25 @@ namespace mtconnect
       str.erase(index + 1);
   }
 
+  std::optional<fs::path> AgentConfiguration::checkPath(const std::string &name)
+  {
+    auto work = m_working / name;
+    if (fs::exists(work))
+    {
+      return work;
+    }
+    if (!m_exePath.empty())
+    {
+      auto exec = m_exePath / name;
+      if (fs::exists(exec))
+      {
+        return exec;
+      }
+    }
+
+    return nullopt;
+  }
+
   void AgentConfiguration::loadConfig(std::istream &file)
   {
     // Now get our configuration
@@ -542,65 +586,43 @@ namespace mtconnect
     if (!m_loggerFile)
       configureLogger(reader);
 
-    auto defaultPreserve = get_bool_with_default(reader, "PreserveUUID", true);
-    auto port = get_with_default(reader, "Port", 5000);
-    string serverIp = get_with_default(reader, "ServerIp", "");
-    auto bufferSize = get_with_default(reader, "BufferSize", DEFAULT_SLIDING_BUFFER_EXP);
-    auto maxAssets = get_with_default(reader, "MaxAssets", DEFAULT_MAX_ASSETS);
-    auto checkpointFrequency = get_with_default(reader, "CheckpointFrequency", 1000ms);
-    auto legacyTimeout = get_with_default(reader, "LegacyTimeout", 600s);
-    auto reconnectInterval = get_with_default(reader, "ReconnectInterval", 10000ms);
-    auto ignoreTimestamps = get_bool_with_default(reader, "IgnoreTimestamps", false);
-    auto conversionRequired = get_bool_with_default(reader, "ConversionRequired", true);
-    auto upcaseValue = get_bool_with_default(reader, "UpcaseDataItemValue", true);
-    auto filterDuplicates = get_bool_with_default(reader, "FilterDuplicates", false);
+    auto defaultPreserve = get_bool_with_default(reader, configuration::PreserveUUID, true);
+    auto port = get_with_default(reader, configuration::Port, 5000);
+    string serverIp = get_with_default(reader, configuration::ServerIp, "");
+    auto bufferSize = get_with_default(reader, configuration::BufferSize, DEFAULT_SLIDING_BUFFER_EXP);
+    auto maxAssets = get_with_default(reader, configuration::MaxAssets, DEFAULT_MAX_ASSETS);
+    auto checkpointFrequency = get_with_default(reader, configuration::CheckpointFrequency, 1000);
+    auto legacyTimeout = get_with_default(reader, configuration::LegacyTimeout, 600s);
+    auto reconnectInterval = get_with_default(reader, configuration::ReconnectInterval, 10000ms);
+    auto ignoreTimestamps = get_bool_with_default(reader, configuration::IgnoreTimestamps, false);
+    auto conversionRequired = get_bool_with_default(reader, configuration::ConversionRequired, true);
+    auto upcaseValue = get_bool_with_default(reader, configuration::UpcaseDataItemValue, true);
+    auto filterDuplicates = get_bool_with_default(reader, configuration::FilterDuplicates, false);
 
-    m_monitorFiles = get_bool_with_default(reader, "MonitorConfigFiles", false);
-    m_minimumConfigReloadAge = get_with_default(reader, "MinimumConfigReloadAge", 15);
-    m_pretty = get_bool_with_default(reader, "Pretty", false);
+    m_monitorFiles = get_bool_with_default(reader, configuration::MonitorConfigFiles, false);
+    m_minimumConfigReloadAge = get_with_default(reader, configuration::MinimumConfigReloadAge, 15);
+    m_pretty = get_bool_with_default(reader, configuration::Pretty, false);
 
-    m_pidFile = get_with_default(reader, "PidFile", "agent.pid");
-    std::vector<string> devices_files;
+    m_pidFile = get_with_default(reader, configuration::PidFile, "agent.pid");
 
-    if (reader.is_key_defined("Devices"))
+    if (reader.is_key_defined(configuration::Devices))
     {
-      auto fileName = reader["Devices"];
-      devices_files.emplace_back(fileName);
-
-      if (!m_exePath.empty() && !fileName.empty() && fileName[0] != '/' && fileName[0] != '\\' &&
-          fileName[1] != ':')
-      {
-        devices_files.emplace_back(m_exePath + reader["Devices"]);
-      }
+      auto name = reader[configuration::Devices];
+      auto path = checkPath(name);
+      if (path)
+        m_devicesFile = (*path).string();
     }
-
-    devices_files.emplace_back("Devices.xml");
-
-    if (!m_exePath.empty())
-      devices_files.emplace_back(m_exePath + "Devices.xml");
-
-    devices_files.emplace_back("probe.xml");
-
-    if (!m_exePath.empty())
-      devices_files.emplace_back(m_exePath + "probe.xml");
-
-    m_devicesFile.clear();
-
-    for (const auto &probe : devices_files)
+    else
     {
-      struct stat buf = {0};
-      g_logger << LDEBUG << "Checking for Devices XML configuration file: " << probe;
-      auto res = stat(probe.c_str(), &buf);
-      g_logger << LDEBUG << "  Stat returned: " << res;
-
-      if (!res)
+      auto path = checkPath("Devices.xml");
+      if (path)
+        m_devicesFile = (*path).string();
+      else
       {
-        m_devicesFile = probe;
-        break;
+        auto probe = checkPath("probe.xml");
+        if (probe)
+          m_devicesFile = (*probe).string();
       }
-
-      g_logger << LDEBUG << "Could not find file: " << probe;
-      cout << "Could not locate file: " << probe << endl;
     }
 
     if (m_devicesFile.empty())
@@ -613,52 +635,75 @@ namespace mtconnect
                               .c_str());
     }
 
-    m_name = get_with_default(reader, "ServiceName", "MTConnect Agent");
+    m_name = get_with_default(reader, configuration::ServiceName, "MTConnect Agent");
+
+    // Get the HTTP Headers
+    ConfigOptions options;
+    loadHttpHeaders(reader, options);
 
     // Check for schema version
-    string schemaVersion = get_with_default(reader, "SchemaVersion", "");
+    m_version =
+        get_with_default(reader, configuration::SchemaVersion,
+                         to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
     g_logger << LINFO << "Starting agent on port " << port;
 
-    if (!m_agent)
-      m_agent = new Agent(m_devicesFile, bufferSize, maxAssets, schemaVersion, checkpointFrequency,
-                          m_pretty);
-    XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
+    auto server = make_unique<http_server::Server>(port, serverIp, options);
+    loadAllowPut(reader, server.get());
 
-    m_agent->set_listening_port(port);
-    m_agent->set_listening_ip(serverIp);
+    auto cp = make_unique<http_server::FileCache>();
+
+    // Make the Agent
+    m_agent = make_unique<Agent>(server, cp, m_devicesFile, bufferSize, maxAssets, m_version,
+                                 checkpointFrequency, m_pretty);
+    XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
     m_agent->setLogStreamData(get_bool_with_default(reader, "LogStreams", false));
+    auto cache = m_agent->getFileCache();
+
+    // Make the PipelineContext
+    m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
+    m_pipelineContext->m_contract = m_agent->makePipelineContract();
+
+    options[configuration::PreserveUUID] = defaultPreserve;
+    options[configuration::LegacyTimeout] = legacyTimeout;
+    options[configuration::ReconnectInterval] = reconnectInterval;
+    options[configuration::IgnoreTimestamps] = ignoreTimestamps;
+    options[configuration::ConversionRequired] = conversionRequired;
+    options[configuration::UpcaseDataItemValue] = upcaseValue;
+    options[configuration::FilterDuplicates] = filterDuplicates;
+    assign_value<int>(configuration::ShdrVersion, reader, options, 1);
+    assign_bool_value(configuration::SuppressIPAddress, reader, options, false);
+
+    m_agent->initialize(m_pipelineContext, options);
 
     for (auto device : m_agent->getDevices())
       device->m_preserveUuid = defaultPreserve;
 
-    loadAllowPut(reader);
-    loadAdapters(reader, defaultPreserve, legacyTimeout, reconnectInterval, ignoreTimestamps,
-                 conversionRequired, upcaseValue, filterDuplicates);
+    loadAdapters(reader, options);
 
     // Files served by the Agent... allows schema files to be served by
     // agent.
-    loadFiles(reader);
+    loadFiles(xmlPrinter, reader, cache);
 
     // Load namespaces, allow for local file system serving as well.
-    loadNamespace(reader, "DevicesNamespaces", xmlPrinter, &XmlPrinter::addDevicesNamespace);
-    loadNamespace(reader, "StreamsNamespaces", xmlPrinter, &XmlPrinter::addStreamsNamespace);
-    loadNamespace(reader, "AssetsNamespaces", xmlPrinter, &XmlPrinter::addAssetsNamespace);
-    loadNamespace(reader, "ErrorNamespaces", xmlPrinter, &XmlPrinter::addErrorNamespace);
+    loadNamespace(reader, "DevicesNamespaces", cache, xmlPrinter, &XmlPrinter::addDevicesNamespace);
+    loadNamespace(reader, "StreamsNamespaces", cache, xmlPrinter, &XmlPrinter::addStreamsNamespace);
+    loadNamespace(reader, "AssetsNamespaces", cache, xmlPrinter, &XmlPrinter::addAssetsNamespace);
+    loadNamespace(reader, "ErrorNamespaces", cache, xmlPrinter, &XmlPrinter::addErrorNamespace);
 
-    loadStyle(reader, "DevicesStyle", xmlPrinter, &XmlPrinter::setDevicesStyle);
-    loadStyle(reader, "StreamsStyle", xmlPrinter, &XmlPrinter::setStreamStyle);
-    loadStyle(reader, "AssetsStyle", xmlPrinter, &XmlPrinter::setAssetsStyle);
-    loadStyle(reader, "ErrorStyle", xmlPrinter, &XmlPrinter::setErrorStyle);
+    loadStyle(reader, "DevicesStyle", cache, xmlPrinter, &XmlPrinter::setDevicesStyle);
+    loadStyle(reader, "StreamsStyle", cache, xmlPrinter, &XmlPrinter::setStreamStyle);
+    loadStyle(reader, "AssetsStyle", cache, xmlPrinter, &XmlPrinter::setAssetsStyle);
+    loadStyle(reader, "ErrorStyle", cache, xmlPrinter, &XmlPrinter::setErrorStyle);
 
-    loadTypes(reader);
+    loadTypes(reader, cache);
+    
   }
 
-  void AgentConfiguration::loadAdapters(dlib::config_reader::kernel_1a &reader,
-                                        bool defaultPreserve, std::chrono::seconds legacyTimeout,
-                                        std::chrono::milliseconds reconnectInterval,
-                                        bool ignoreTimestamps, bool conversionRequired,
-                                        bool upcaseValue, bool filterDuplicates)
+  void AgentConfiguration::loadAdapters(ConfigReader &reader, const ConfigOptions &options)
   {
+    using namespace adapter;
+    using namespace pipeline;
+
     Device *device;
     if (reader.is_block_defined("Adapters"))
     {
@@ -668,10 +713,12 @@ namespace mtconnect
 
       for (const auto &block : blocks)
       {
+        ConfigOptions adapterOptions = options;
+
         const auto &adapter = adapters.block(block);
         string deviceName;
-        if (adapter.is_key_defined("Device"))
-          deviceName = adapter["Device"];
+        if (adapter.is_key_defined(configuration::Device))
+          deviceName = adapter[configuration::Device];
         else
           deviceName = block;
 
@@ -684,48 +731,44 @@ namespace mtconnect
           if (device)
           {
             deviceName = device->getName();
+            adapterOptions[configuration::Device] = deviceName;
             g_logger << LINFO << "Assigning default device " << deviceName << " to adapter";
           }
+        }
+        else
+        {
+          adapterOptions[configuration::Device] = device->getName();
         }
         if (!device)
         {
           g_logger << LWARN << "Cannot locate device name '" << deviceName << "', assuming dynamic";
         }
 
-        const string host = get_with_default(adapter, "Host", (string) "localhost");
-        auto port = get_with_default(adapter, "Port", 7878);
+        assign_value(configuration::UUID, adapter, adapterOptions);
+        assign_value(configuration::Manufacturer, adapter, adapterOptions);
+        assign_value(configuration::Station, adapter, adapterOptions);
+        assign_value(configuration::SerialNumber, adapter, adapterOptions);
+        assign_bool_value(configuration::FilterDuplicates, adapter, adapterOptions);
+        assign_bool_value(configuration::AutoAvailable, adapter, adapterOptions);
+        assign_bool_value(configuration::IgnoreTimestamps, adapter, adapterOptions);
+        assign_bool_value(configuration::ConversionRequired, adapter, adapterOptions);
+        assign_bool_value(configuration::RealTime, adapter, adapterOptions);
+        assign_bool_value(configuration::RelativeTime, adapter, adapterOptions);
+        assign_bool_value(configuration::UpcaseDataItemValue, adapter, adapterOptions);
+        assign_value<int>(configuration::ShdrVersion, adapter, adapterOptions);
+        assign_value<Seconds>(configuration::ReconnectInterval, adapter, adapterOptions);
+        assign_value<Seconds>(configuration::LegacyTimeout, adapter, adapterOptions);
+        assign_bool_value(configuration::PreserveUUID, adapter, adapterOptions);
+        assign_bool_value(configuration::SuppressIPAddress, adapter, adapterOptions);
+        device->m_preserveUuid = get<bool>(adapterOptions[configuration::PreserveUUID]);
 
-        g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
-        auto adp = m_agent->addAdapter(deviceName, host, port, false,
-                                       get_with_default(adapter, "LegacyTimeout", legacyTimeout));
-        device->m_preserveUuid = get_bool_with_default(adapter, "PreserveUUID", defaultPreserve);
+        const string host = get_with_default(adapter, configuration::Host, (string) "localhost");
+        auto port = get_with_default(adapter, configuration::Port, 7878);
 
-        // Add additional device information
-        if (adapter.is_key_defined("UUID"))
-          device->setUuid(adapter["UUID"]);
-        if (adapter.is_key_defined("Manufacturer"))
-          device->setManufacturer(adapter["Manufacturer"]);
-        if (adapter.is_key_defined("Station"))
-          device->setStation(adapter["Station"]);
-        if (adapter.is_key_defined("SerialNumber"))
-          device->setSerialNumber(adapter["SerialNumber"]);
-
-        adp->setDupCheck(get_bool_with_default(adapter, "FilterDuplicates", filterDuplicates));
-        adp->setAutoAvailable(
-            get_bool_with_default(adapter, "AutoAvailable", adp->isAutoAvailable()));
-        adp->setIgnoreTimestamps(get_bool_with_default(
-            adapter, "IgnoreTimestamps", ignoreTimestamps || adp->isIgnoringTimestamps()));
-        adp->setConversionRequired(
-            get_bool_with_default(adapter, "ConversionRequired", conversionRequired));
-        adp->setRealTime(get_bool_with_default(adapter, "RealTime", false));
-        adp->setRelativeTime(get_bool_with_default(adapter, "RelativeTime", false));
-        adp->setReconnectInterval(
-            get_with_default(adapter, "ReconnectInterval", reconnectInterval));
-        adp->setUpcaseValue(get_bool_with_default(adapter, "UpcaseDataItemValue", upcaseValue));
-
-        if (adapter.is_key_defined("AdditionalDevices"))
+        if (adapter.is_key_defined(configuration::AdditionalDevices))
         {
-          istringstream devices(adapter["AdditionalDevices"]);
+          StringList deviceList;
+          istringstream devices(adapter[configuration::AdditionalDevices]);
           string name;
           while (getline(devices, name, ','))
           {
@@ -736,19 +779,31 @@ namespace mtconnect
             if (index != string::npos)
               name.erase(index + 1);
 
-            adp->addDevice(name);
+            deviceList.push_back(name);
           }
+
+          adapterOptions[configuration::AdditionalDevices] = deviceList;
         }
+
+        g_logger << LINFO << "Adding adapter for " << deviceName << " on " << host << ":" << port;
+
+        auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
+        auto adp = new Adapter(host, port, adapterOptions, pipeline);
+        m_agent->addAdapter(adp, false);
       }
     }
     else if ((device = defaultDevice()))
     {
+      ConfigOptions adapterOptions{options};
+
+      auto deviceName = device->getName();
+      adapterOptions[configuration::Device] = deviceName;
       g_logger << LINFO << "Adding default adapter for " << device->getName()
                << " on localhost:7878";
-      auto adp = m_agent->addAdapter(device->getName(), "localhost", 7878, false, legacyTimeout);
-      adp->setIgnoreTimestamps(ignoreTimestamps || adp->isIgnoringTimestamps());
-      adp->setReconnectInterval(reconnectInterval);
-      device->m_preserveUuid = defaultPreserve;
+
+      auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
+      auto adp = new Adapter("localhost", 7878, adapterOptions, pipeline);
+      m_agent->addAdapter(adp, false);
     }
     else
     {
@@ -756,12 +811,12 @@ namespace mtconnect
     }
   }
 
-  void AgentConfiguration::loadAllowPut(dlib::config_reader::kernel_1a &reader)
+  void AgentConfiguration::loadAllowPut(ConfigReader &reader, http_server::Server *server)
   {
-    auto putEnabled = get_bool_with_default(reader, "AllowPut", false);
-    m_agent->enablePut(putEnabled);
+    auto putEnabled = get_bool_with_default(reader, configuration::AllowPut, false);
+    server->enablePut(putEnabled);
 
-    string putHosts = get_with_default(reader, "AllowPutFrom", "");
+    string putHosts = get_with_default(reader, configuration::AllowPutFrom, "");
     if (!putHosts.empty())
     {
       istringstream toParse(putHosts);
@@ -774,19 +829,21 @@ namespace mtconnect
         {
           string ip;
           for (auto n = 0; !dlib::hostname_to_ip(putHost, ip, n) && ip == "0.0.0.0"; n++)
+          {
             ip = "";
+          }
           if (!ip.empty())
           {
-            m_agent->enablePut();
-            m_agent->allowPutFrom(ip);
+            server->enablePut();
+            server->allowPutFrom(ip);
           }
         }
       } while (!toParse.eof());
     }
   }
 
-  void AgentConfiguration::loadNamespace(dlib::config_reader::kernel_1a &reader,
-                                         const char *namespaceType, XmlPrinter *xmlPrinter,
+  void AgentConfiguration::loadNamespace(ConfigReader &reader, const char *namespaceType,
+                                         http_server::FileCache *cache, XmlPrinter *xmlPrinter,
                                          NamespaceFunction callback)
   {
     // Load namespaces, allow for local file system serving as well.
@@ -812,13 +869,22 @@ namespace mtconnect
             urn = ns["Urn"];
           (xmlPrinter->*callback)(urn, location, block);
           if (ns.is_key_defined("Path") && !location.empty())
-            m_agent->registerFile(location, ns["Path"]);
+          {
+            auto xns = cache->registerFile(location, ns["Path"], m_version);
+            if (!xns)
+            {
+              auto p = ns["Path"];
+              g_logger << LDEBUG << "Cannot register " << urn << " at " << location << " and path "
+                       << p;
+            }
+          }
         }
       }
     }
   }
 
-  void AgentConfiguration::loadFiles(dlib::config_reader::kernel_1a &reader)
+  void AgentConfiguration::loadFiles(XmlPrinter *xmlPrinter, ConfigReader &reader,
+                                     http_server::FileCache *cache)
   {
     if (reader.is_block_defined("Files"))
     {
@@ -830,33 +896,79 @@ namespace mtconnect
       {
         const auto &file = files.block(block);
         if (!file.is_key_defined("Location") || !file.is_key_defined("Path"))
+        {
           g_logger << LERROR
                    << "Name space must have a Location (uri) or Directory and Path: " << block;
+        }
         else
-          m_agent->registerFile(file["Location"], file["Path"]);
+        {
+          auto namespaces = cache->registerFiles(file["Location"], file["Path"], m_version);
+          for (auto &ns : namespaces)
+          {
+            if (ns.first.find(configuration::Devices) != string::npos)
+            {
+              xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
+            }
+            else if (ns.first.find("Streams") != string::npos)
+            {
+              xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
+            }
+            else if (ns.first.find("Assets") != string::npos)
+            {
+              xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
+            }
+            else if (ns.first.find("Error") != string::npos)
+            {
+              xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
+            }
+          }
+        }
       }
     }
   }
 
-  void AgentConfiguration::loadStyle(dlib::config_reader::kernel_1a &reader, const char *styleName,
-                                     XmlPrinter *xmlPrinter, StyleFunction styleFunction)
+  void AgentConfiguration::loadHttpHeaders(ConfigReader &reader, ConfigOptions &options)
+  {
+    if (reader.is_block_defined(configuration::HttpHeaders))
+    {
+      const config_reader::kernel_1a &headers = reader.block(configuration::HttpHeaders);
+      StringList fields;
+      std::vector<string> keys;
+      headers.get_keys(keys);
+
+      for (auto &f : keys)
+      {
+        fields.emplace_back(f + ": " + headers[f]);
+      }
+      
+      options[configuration::HttpHeaders] = fields;
+    }
+  }
+
+  void AgentConfiguration::loadStyle(ConfigReader &reader, const char *styleName,
+                                     http_server::FileCache *cache, XmlPrinter *xmlPrinter,
+                                     StyleFunction styleFunction)
   {
     if (reader.is_block_defined(styleName))
     {
       const config_reader::kernel_1a &doc = reader.block(styleName);
       if (!doc.is_key_defined("Location"))
+      {
         g_logger << LERROR << "A style must have a Location: " << styleName;
+      }
       else
       {
         string location = doc["Location"];
         (xmlPrinter->*styleFunction)(location);
         if (doc.is_key_defined("Path"))
-          m_agent->registerFile(location, doc["Path"]);
+        {
+          cache->registerFile(location, doc["Path"], m_version);
+        }
       }
     }
   }
 
-  void AgentConfiguration::loadTypes(dlib::config_reader::kernel_1a &reader)
+  void AgentConfiguration::loadTypes(ConfigReader &reader, http_server::FileCache *cache)
   {
     if (reader.is_block_defined("MimeTypes"))
     {
@@ -865,7 +977,9 @@ namespace mtconnect
       types.get_keys(keys);
 
       for (const auto &key : keys)
-        m_agent->addMimeType(key, types[key]);
+      {
+        cache->addMimeType(key, types[key]);
+      }
     }
   }
 }  // namespace mtconnect

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,13 +17,16 @@
 
 #include "xml_printer.hpp"
 
-#include "composition.hpp"
-#include "coordinate_systems.hpp"
-#include "cutting_tool.hpp"
-#include "device.hpp"
-#include "relationships.hpp"
-#include "sensor_configuration.hpp"
-#include "specifications.hpp"
+#include "assets/asset.hpp"
+#include "assets/cutting_tool.hpp"
+#include "device_model/composition.hpp"
+#include "device_model/coordinate_systems.hpp"
+#include "device_model/device.hpp"
+#include "device_model/relationships.hpp"
+#include "device_model/sensor_configuration.hpp"
+#include "device_model/solid_model.hpp"
+#include "device_model/specifications.hpp"
+#include "entity/xml_printer.hpp"
 #include "version.h"
 
 #include <dlib/logger.h>
@@ -53,10 +56,11 @@ using namespace std;
 namespace mtconnect
 {
   static dlib::logger g_logger("xml.printer");
+  using namespace observation;
 
   class XmlWriter
   {
-   public:
+  public:
     XmlWriter(bool pretty) : m_writer(nullptr), m_buf(nullptr)
     {
       THROW_IF_XML2_NULL(m_buf = xmlBufferCreate());
@@ -82,10 +86,7 @@ namespace mtconnect
       }
     }
 
-    operator xmlTextWriterPtr()
-    {
-      return m_writer;
-    }
+    operator xmlTextWriterPtr() { return m_writer; }
 
     string getContent()
     {
@@ -98,16 +99,16 @@ namespace mtconnect
       return string((char *)m_buf->content, m_buf->use);
     }
 
-   protected:
+  protected:
     xmlTextWriterPtr m_writer;
     xmlBufferPtr m_buf;
   };
 
   XmlPrinter::XmlPrinter(const string version, bool pretty)
-      : Printer(pretty), m_schemaVersion(version)
+    : Printer(pretty), m_schemaVersion(version)
   {
     if (m_schemaVersion.empty())
-      m_schemaVersion = "1.5";
+      m_schemaVersion = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
   }
 
   void XmlPrinter::addDevicesNamespace(const std::string &urn, const std::string &location,
@@ -117,14 +118,13 @@ namespace mtconnect
     item.second.mUrn = urn;
     item.second.mSchemaLocation = location;
     item.first = prefix;
+    
+    m_deviceNsSet.insert(prefix);
 
     m_devicesNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearDevicesNamespaces()
-  {
-    m_devicesNamespaces.clear();
-  }
+  void XmlPrinter::clearDevicesNamespaces() { m_devicesNamespaces.clear(); }
 
   string XmlPrinter::getDevicesUrn(const std::string &prefix)
   {
@@ -151,14 +151,13 @@ namespace mtconnect
     item.second.mUrn = urn;
     item.second.mSchemaLocation = location;
     item.first = prefix;
+    
+    m_errorNsSet.insert(prefix);
 
     m_errorNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearErrorNamespaces()
-  {
-    m_errorNamespaces.clear();
-  }
+  void XmlPrinter::clearErrorNamespaces() { m_errorNamespaces.clear(); }
 
   string XmlPrinter::getErrorUrn(const std::string &prefix)
   {
@@ -185,24 +184,17 @@ namespace mtconnect
     item.second.mUrn = urn;
     item.second.mSchemaLocation = location;
     item.first = prefix;
+    
+    m_streamsNsSet.insert(prefix);
 
     m_streamsNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearStreamsNamespaces()
-  {
-    m_streamsNamespaces.clear();
-  }
+  void XmlPrinter::clearStreamsNamespaces() { m_streamsNamespaces.clear(); }
 
-  void XmlPrinter::setSchemaVersion(const std::string &version)
-  {
-    m_schemaVersion = version;
-  }
+  void XmlPrinter::setSchemaVersion(const std::string &version) { m_schemaVersion = version; }
 
-  const std::string &XmlPrinter::getSchemaVersion()
-  {
-    return m_schemaVersion;
-  }
+  const std::string &XmlPrinter::getSchemaVersion() { return m_schemaVersion; }
 
   string XmlPrinter::getStreamsUrn(const std::string &prefix)
   {
@@ -229,14 +221,13 @@ namespace mtconnect
     item.second.mUrn = urn;
     item.second.mSchemaLocation = location;
     item.first = prefix;
+    
+    m_assetsNsSet.insert(prefix);
 
     m_assetsNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearAssetsNamespaces()
-  {
-    m_assetsNamespaces.clear();
-  }
+  void XmlPrinter::clearAssetsNamespaces() { m_assetsNamespaces.clear(); }
 
   string XmlPrinter::getAssetsUrn(const std::string &prefix)
   {
@@ -256,25 +247,13 @@ namespace mtconnect
       return "";
   }
 
-  void XmlPrinter::setStreamStyle(const std::string &style)
-  {
-    m_streamsStyle = style;
-  }
+  void XmlPrinter::setStreamStyle(const std::string &style) { m_streamsStyle = style; }
 
-  void XmlPrinter::setDevicesStyle(const std::string &style)
-  {
-    m_devicesStyle = style;
-  }
+  void XmlPrinter::setDevicesStyle(const std::string &style) { m_devicesStyle = style; }
 
-  void XmlPrinter::setErrorStyle(const std::string &style)
-  {
-    m_errorStyle = style;
-  }
+  void XmlPrinter::setErrorStyle(const std::string &style) { m_errorStyle = style; }
 
-  void XmlPrinter::setAssetsStyle(const std::string &style)
-  {
-    m_assetsStyle = style;
-  }
+  void XmlPrinter::setAssetsStyle(const std::string &style) { m_assetsStyle = style; }
 
   static inline void printRawContent(xmlTextWriterPtr writer, const char *element,
                                      const std::string &text)
@@ -307,18 +286,6 @@ namespace mtconnect
     }
   }
 
-  void addAttributes(xmlTextWriterPtr writer, const AttributeList &attributes)
-  {
-    for (const auto &attr : attributes)
-    {
-      if (!attr.second.empty() || attr.m_force)
-      {
-        THROW_IF_XML2_ERROR(
-            xmlTextWriterWriteAttribute(writer, BAD_CAST attr.first, BAD_CAST attr.second.c_str()));
-      }
-    }
-  }
-
   static inline void openElement(xmlTextWriterPtr writer, const char *name)
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST name));
@@ -331,17 +298,15 @@ namespace mtconnect
 
   class AutoElement
   {
-   public:
-    AutoElement(xmlTextWriterPtr writer) : m_writer(writer)
-    {
-    }
+  public:
+    AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}
     AutoElement(xmlTextWriterPtr writer, const char *name, string key = "")
-        : m_writer(writer), m_name(name), m_key(std::move(key))
+      : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name);
     }
     AutoElement(xmlTextWriterPtr writer, const string &name, string key = "")
-        : m_writer(writer), m_name(name), m_key(std::move(key))
+      : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name.c_str());
     }
@@ -368,16 +333,10 @@ namespace mtconnect
         xmlTextWriterEndElement(m_writer);
     }
 
-    const string &key() const
-    {
-      return m_key;
-    }
-    const string &name() const
-    {
-      return m_name;
-    }
+    const string &key() const { return m_key; }
+    const string &name() const { return m_name; }
 
-   protected:
+  protected:
     xmlTextWriterPtr m_writer;
     string m_name;
     string m_key;
@@ -404,9 +363,53 @@ namespace mtconnect
     }
   }
 
-  string XmlPrinter::printError(const unsigned int instanceId, const unsigned int bufferSize,
-                                const uint64_t nextSeq, const string &errorCode,
-                                const string &errorText) const
+  inline void printGeometry(xmlTextWriterPtr writer, const Geometry &geometry)
+  {
+    if (geometry.m_location.index() != 0)
+    {
+      visit(overloaded{[&writer](const Origin &o) {
+                         stringstream s;
+                         s << o.m_x << ' ' << o.m_y << ' ' << o.m_z;
+                         addSimpleElement(writer, "Origin", s.str());
+                       },
+                       [&writer](const Transformation &t) {
+                         AutoElement ele(writer, "Transformation");
+                         if (t.m_translation)
+                         {
+                           stringstream s;
+                           s << t.m_translation->m_x << ' ' << t.m_translation->m_y << ' '
+                             << t.m_translation->m_z;
+                           addSimpleElement(writer, "Translation", s.str());
+                         }
+                         if (t.m_rotation)
+                         {
+                           stringstream s;
+                           s << t.m_rotation->m_roll << ' ' << t.m_rotation->m_pitch << ' '
+                             << t.m_rotation->m_yaw;
+                           addSimpleElement(writer, "Rotation", s.str());
+                         }
+                       },
+                       [](const std::monostate &a) {}},
+            geometry.m_location);
+    }
+
+    if (geometry.m_scale)
+    {
+      stringstream s;
+      s << geometry.m_scale->m_scaleX << ' ' << geometry.m_scale->m_scaleY << ' '
+        << geometry.m_scale->m_scaleZ;
+      addSimpleElement(writer, "Scale", s.str());
+    }
+    if (geometry.m_axis)
+    {
+      stringstream s;
+      s << geometry.m_axis->m_x << ' ' << geometry.m_axis->m_y << ' ' << geometry.m_axis->m_z;
+      addSimpleElement(writer, "Axis", s.str());
+    }
+  }
+
+  std::string XmlPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                                      const uint64_t nextSeq, const ProtoErrorList &list) const
   {
     string ret;
 
@@ -418,7 +421,10 @@ namespace mtconnect
 
       {
         AutoElement e1(writer, "Errors");
-        addSimpleElement(writer, "Error", errorText, {{"errorCode", errorCode}});
+        for (auto &e : list)
+        {
+          addSimpleElement(writer, "Error", e.second, {{"errorCode", e.first}});
+        }
       }
       closeElement(writer);  // MTConnectError
 
@@ -439,7 +445,7 @@ namespace mtconnect
 
   string XmlPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
-                                const unsigned int assetCount, const vector<Device *> &deviceList,
+                                const unsigned int assetCount, const list<Device *> &deviceList,
                                 const std::map<std::string, int> *count) const
   {
     string ret;
@@ -454,7 +460,7 @@ namespace mtconnect
       {
         AutoElement devices(writer, "Devices");
         for (const auto dev : deviceList)
-          printProbeHelper(writer, dev, "Device");
+          printProbeHelper(writer, dev, dev->getClass().c_str());
       }
       closeElement(writer);  // MTConnectDevices
 
@@ -472,8 +478,7 @@ namespace mtconnect
     return ret;
   }
 
-  void XmlPrinter::printSensorConfiguration(xmlTextWriterPtr writer,
-                                            const SensorConfiguration *sensor) const
+  void printSensorConfiguration(xmlTextWriterPtr writer, const SensorConfiguration *sensor)
   {
     AutoElement sensorEle(writer, "SensorConfiguration");
 
@@ -539,7 +544,7 @@ namespace mtconnect
     AutoElement ele(writer, "Specifications");
     for (const auto &spec : specs->getSpecifications())
     {
-      AutoElement ele(writer, "Specification");
+      AutoElement ele(writer, spec->getClass());
       addAttributes(writer,
                     map<string, string>({{"type", spec->m_type},
                                          {"subType", spec->m_subType},
@@ -547,21 +552,40 @@ namespace mtconnect
                                          {"name", spec->m_name},
                                          {"coordinateSystemIdRef", spec->m_coordinateSystemIdRef},
                                          {"compositionIdRef", spec->m_compositionIdRef},
-                                         {"dataItemIdRef", spec->m_dataItemIdRef}}));
+                                         {"dataItemIdRef", spec->m_dataItemIdRef},
+                                         {"id", spec->m_id},
+                                         {"originator", spec->m_originator}}));
 
-      if (!spec->m_maximum.empty())
+      if (spec->hasGroups())
       {
-        addSimpleElement(writer, "Maximum", spec->m_maximum);
+        const auto &groups = spec->getGroups();
+        for (const auto &group : groups)
+        {
+          AutoElement ele(writer, group.first);
+          for (const auto &limit : group.second)
+            addSimpleElement(writer, limit.first, format(limit.second));
+        }
       }
-      if (!spec->m_minimum.empty())
+      else
       {
-        addSimpleElement(writer, "Minimum", spec->m_minimum);
-      }
-      if (!spec->m_nominal.empty())
-      {
-        addSimpleElement(writer, "Nominal", spec->m_nominal);
+        const auto group = spec->getLimits();
+        if (group)
+        {
+          for (const auto &limit : *group)
+            addSimpleElement(writer, limit.first, format(limit.second));
+        }
       }
     }
+  }
+
+  void printGeometricConfiguration(xmlTextWriterPtr writer, const GeometricConfiguration &model)
+  {
+    AutoElement ele(writer, model.klass());
+    addAttributes(writer, model.m_attributes);
+    if (!model.m_description.empty())
+      addSimpleElement(writer, "Description", model.m_description);
+    if (model.m_geometry)
+      printGeometry(writer, *model.m_geometry);
   }
 
   void printCoordinateSystems(xmlTextWriterPtr writer, const CoordinateSystems *systems)
@@ -569,24 +593,40 @@ namespace mtconnect
     AutoElement ele(writer, "CoordinateSystems");
     for (const auto &system : systems->getCoordinateSystems())
     {
-      AutoElement ele(writer, "CoordinateSystem");
-      addAttributes(writer, map<string, string>({{"id", system->m_id},
-                                                 {"type", system->m_type},
-                                                 {"name", system->m_name},
-                                                 {"nativeName", system->m_nativeName},
-                                                 {"parentIdRef", system->m_parentIdRef}}));
+      printGeometricConfiguration(writer, *system);
+    }
+  }
 
-      if (!system->m_origin.empty())
+  void printConfiguration(xmlTextWriterPtr writer,
+                          const std::list<unique_ptr<ComponentConfiguration>> &configurations)
+  {
+    AutoElement configEle(writer, "Configuration");
+    for (const auto &configuration : configurations)
+    {
+      auto c = configuration.get();
+      if (auto conf = dynamic_cast<const SensorConfiguration *>(c))
       {
-        addSimpleElement(writer, "Origin", system->m_origin);
+        printSensorConfiguration(writer, conf);
       }
-      if (!system->m_translation.empty() || !system->m_rotation.empty())
+      else if (auto conf = dynamic_cast<const ExtendedComponentConfiguration *>(c))
       {
-        AutoElement ele(writer, "Transformation");
-        if (!system->m_translation.empty())
-          addSimpleElement(writer, "Translation", system->m_translation);
-        if (!system->m_rotation.empty())
-          addSimpleElement(writer, "Rotation", system->m_rotation);
+        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST conf->getContent().c_str()));
+      }
+      else if (auto conf = dynamic_cast<const Relationships *>(c))
+      {
+        printRelationships(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const Specifications *>(c))
+      {
+        printSpecifications(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
+      {
+        printCoordinateSystems(writer, conf);
+      }
+      else if (auto conf = dynamic_cast<const GeometricConfiguration *>(c))
+      {
+        printGeometricConfiguration(writer, *conf);
       }
     }
   }
@@ -605,32 +645,7 @@ namespace mtconnect
 
     if (!component->getConfiguration().empty())
     {
-      AutoElement configEle(writer, "Configuration");
-      const auto &configurations = component->getConfiguration();
-      for (const auto &configuration : configurations)
-      {
-        auto c = configuration.get();
-        if (auto conf = dynamic_cast<const SensorConfiguration *>(c))
-        {
-          printSensorConfiguration(writer, conf);
-        }
-        else if (auto conf = dynamic_cast<const ExtendedComponentConfiguration *>(c))
-        {
-          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST conf->getContent().c_str()));
-        }
-        else if (auto conf = dynamic_cast<const Relationships *>(c))
-        {
-          printRelationships(writer, conf);
-        }
-        else if (auto conf = dynamic_cast<const Specifications *>(c))
-        {
-          printSpecifications(writer, conf);
-        }
-        else if (auto conf = dynamic_cast<const CoordinateSystems *>(c))
-        {
-          printCoordinateSystems(writer, conf);
-        }
-      }
+      printConfiguration(writer, component->getConfiguration());
     }
 
     auto datum = component->getDataItems();
@@ -670,15 +685,18 @@ namespace mtconnect
     {
       AutoElement ele(writer, "Compositions");
 
-      for (auto comp : component->getCompositions())
+      for (const auto &comp : component->getCompositions())
       {
         AutoElement ele2(writer, "Composition");
 
-        addAttributes(writer, comp->getAttributes());
-        const Composition::Description *desc = comp->getDescription();
-
+        addAttributes(writer, comp->m_attributes);
+        const auto &desc = comp->getDescription();
         if (desc)
-          addSimpleElement(writer, "Description", desc->getBody(), desc->getAttributes());
+          addSimpleElement(writer, "Description", desc->m_body, desc->m_attributes);
+        if (!comp->getConfiguration().empty())
+        {
+          printConfiguration(writer, comp->getConfiguration());
+        }
       }
     }
 
@@ -750,14 +768,14 @@ namespace mtconnect
       if (dataItem->hasMinimumDelta())
       {
         map<string, string> attributes;
-        auto value = floatToString(dataItem->getFilterValue());
+        auto value = format(dataItem->getFilterValue());
         addSimpleElement(writer, "Filter", value, {{"type", "MINIMUM_DELTA"}});
       }
 
       if (dataItem->hasMinimumPeriod())
       {
         map<string, string> attributes;
-        auto value = floatToString(dataItem->getFilterPeriod());
+        auto value = format(dataItem->getFilterPeriod());
         attributes["type"] = "PERIOD";
         addSimpleElement(writer, "Filter", value, {{"type", "PERIOD"}});
       }
@@ -771,6 +789,8 @@ namespace mtconnect
 
     if (dataItem->hasDefinition())
       printDataItemDefinition(writer, dataItem->getDefinition());
+
+    printDataItemRelationships(writer, dataItem->getRelationships());
   }
 
   void XmlPrinter::printDataItemDefinition(xmlTextWriterPtr writer,
@@ -788,6 +808,7 @@ namespace mtconnect
       {
         AutoElement ele(writer, "EntryDefinition");
         addAttributes(writer, {{string("key"), entry.m_key},
+                               {string("keyType"), entry.m_keyType},
                                {string("units"), entry.m_units},
                                {string("type"), entry.m_type},
                                {string("subType"), entry.m_subType}});
@@ -810,6 +831,7 @@ namespace mtconnect
       {
         AutoElement ele(writer, "CellDefinition");
         addAttributes(writer, {{string("key"), entry.m_key},
+                               {string("keyType"), entry.m_keyType},
                                {string("units"), entry.m_units},
                                {string("type"), entry.m_type},
                                {string("subType"), entry.m_subType}});
@@ -819,9 +841,25 @@ namespace mtconnect
     }
   }
 
+  void XmlPrinter::printDataItemRelationships(
+      xmlTextWriterPtr writer, const std::list<DataItem::Relationship> &relations) const
+  {
+    if (relations.size() > 0)
+    {
+      AutoElement ele(writer, "Relationships");
+      for (const auto &rel : relations)
+      {
+        addSimpleElement(writer, rel.m_relation, "",
+                         {{string("name"), rel.m_name},
+                          {string("type"), rel.m_type},
+                          {string("idRef"), rel.m_idRef}});
+      }
+    }
+  }
+
   string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
-                                 const uint64_t lastSeq, ObservationPtrArray &observations) const
+                                 const uint64_t lastSeq, ObservationList &observations) const
   {
     string ret;
 
@@ -836,8 +874,7 @@ namespace mtconnect
       // Sort the vector by category.
       if (observations.size() > 0)
       {
-        dlib::qsort_array<ObservationPtrArray, ObservationComparer>(
-            observations, 0ul, observations.size() - 1ul, ObservationCompare);
+        observations.sort(ObservationCompare);
 
         AutoElement deviceElement(writer);
         {
@@ -897,11 +934,9 @@ namespace mtconnect
   }
 
   string XmlPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
-                                 const unsigned int assetCount,
-                                 std::vector<AssetPtr> const &assets) const
+                                 const unsigned int assetCount, const AssetList &assets) const
   {
     string ret;
-
     try
     {
       XmlWriter writer(m_pretty);
@@ -909,24 +944,13 @@ namespace mtconnect
 
       {
         AutoElement ele(writer, "Assets");
+        entity::XmlPrinter printer;
 
-        for (const auto asset : assets)
+        for (const auto &asset : assets)
         {
-          if (asset->getType() == "CuttingTool" || asset->getType() == "CuttingToolArchetype")
-          {
-            THROW_IF_XML2_ERROR(
-                xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent(this).c_str()));
-          }
-          else
-          {
-            AutoElement ele(writer, asset->getType());
-            printAssetNode(writer, asset);
-            THROW_IF_XML2_ERROR(
-                xmlTextWriterWriteRaw(writer, BAD_CAST asset->getContent(this).c_str()));
-          }
+          printer.print(writer, asset, m_assetsNsSet);
         }
       }
-      closeElement(writer);  // MTConnectAssets
 
       ret = writer.getContent();
     }
@@ -942,118 +966,10 @@ namespace mtconnect
     return ret;
   }
 
-  void XmlPrinter::printAssetNode(xmlTextWriterPtr writer, Asset *asset) const
+  void XmlPrinter::addObservation(xmlTextWriterPtr writer, ObservationPtr result) const
   {
-    addAttributes(writer, asset->getIdentity());
-
-    // Add the timestamp and device uuid fields.
-    addAttribute(writer, "timestamp", asset->getTimestamp());
-    addAttribute(writer, "deviceUuid", asset->getDeviceUuid());
-    addAttribute(writer, "assetId", asset->getAssetId());
-
-    if (asset->isRemoved())
-      addAttribute(writer, "removed", "true");
-
-    if (!asset->getArchetype().empty())
-      addSimpleElement(writer, "AssetArchetypeRef", "", asset->getArchetype());
-
-    if (!asset->getDescription().empty())
-    {
-      const auto &body = asset->getDescription();
-      addSimpleElement(writer, "Description", body);
-    }
-  }
-
-  void XmlPrinter::addObservation(xmlTextWriterPtr writer, Observation *result) const
-  {
-    auto dataItem = result->getDataItem();
-    string name;
-
-    if (dataItem->isCondition())
-    {
-      name = result->getLevelString();
-    }
-    else
-    {
-      if (!dataItem->getPrefix().empty())
-      {
-        auto ns = m_streamsNamespaces.find(dataItem->getPrefix());
-        if (ns != m_streamsNamespaces.end())
-          name = dataItem->getPrefixedElementName();
-      }
-
-      if (name.empty())
-        name = dataItem->getElementName();
-    }
-
-    AutoElement ele(writer, name);
-    addAttributes(writer, result->getAttributes());
-
-    if (result->isTimeSeries() && result->getValue() != "UNAVAILABLE")
-    {
-      ostringstream ostr;
-      ostr.precision(6);
-      const auto &v = result->getTimeSeries();
-
-      for (auto &e : v)
-        ostr << e << ' ';
-
-      string str = ostr.str();
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST str.c_str()));
-    }
-    else if (result->isDataSet() && result->getValue() != "UNAVAILABLE")
-    {
-      const DataSet &set = result->getDataSet();
-      for (auto &e : set)
-      {
-        map<string, string> attrs = {{"key", e.m_key}};
-        if (e.m_removed)
-        {
-          attrs["removed"] = "true";
-        }
-        visit(overloaded{[&writer, &attrs](const string &st) {
-                           addSimpleElement(writer, "Entry", st, attrs);
-                         },
-                         [&writer, &attrs](const int64_t &i) {
-                           addSimpleElement(writer, "Entry", to_string(i), attrs);
-                         },
-                         [&writer, &attrs](const double &d) {
-                           addSimpleElement(writer, "Entry", to_string(d), attrs);
-                         },
-                         [&writer, &attrs](const DataSet &row) {
-                           // Table
-                           AutoElement ele(writer, "Entry");
-                           addAttributes(writer, attrs);
-                           for (auto &c : row)
-                           {
-                             map<string, string> attrs = {{"key", c.m_key}};
-                             visit(overloaded{
-                                       [&writer, &attrs](const string &s) {
-                                         addSimpleElement(writer, "Cell", s, attrs);
-                                       },
-                                       [&writer, &attrs](const int64_t &i) {
-                                         addSimpleElement(writer, "Cell", to_string(i), attrs);
-                                       },
-                                       [&writer, &attrs](const double &d) {
-                                         addSimpleElement(writer, "Cell", floatToString(d), attrs);
-                                       },
-                                       [](auto &a) {
-                                         g_logger << dlib::LERROR
-                                                  << "Invalid type for DataSetVariant cell";
-                                       }},
-                                   c.m_value);
-                           }
-                         }},
-              e.m_value);
-      }
-    }
-    else if (!result->getValue().empty())
-    {
-      auto text = xmlEncodeEntitiesReentrant(nullptr, BAD_CAST result->getValue().c_str());
-      THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, text));
-      xmlFree(text);
-      text = nullptr;
-    }
+    entity::XmlPrinter printer;
+    printer.print(writer, result, m_streamsNsSet);
   }
 
   void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
@@ -1119,7 +1035,7 @@ namespace mtconnect
     string mtcLocation;
 
     // Add in the other namespaces if they exist
-    for (const auto ns : *namespaces)
+    for (const auto &ns : *namespaces)
     {
       // Skip the mtconnect ns (always m)
       if (ns.first != "m")
@@ -1161,7 +1077,7 @@ namespace mtconnect
         sHostname = "localhost";
     }
     addAttribute(writer, "sender", sHostname);
-    addAttribute(writer, "instanceId", intToString(instanceId));
+    addAttribute(writer, "instanceId", to_string(instanceId));
 
     char version[32] = {0};
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
@@ -1170,21 +1086,21 @@ namespace mtconnect
 
     if (aType == eASSETS || aType == eDEVICES)
     {
-      addAttribute(writer, "assetBufferSize", intToString(assetBufferSize));
-      addAttribute(writer, "assetCount", intToString(assetCount));
+      addAttribute(writer, "assetBufferSize", to_string(assetBufferSize));
+      addAttribute(writer, "assetCount", to_string(assetCount));
     }
 
     if (aType == eDEVICES || aType == eERROR || aType == eSTREAMS)
     {
-      addAttribute(writer, "bufferSize", intToString(bufferSize));
+      addAttribute(writer, "bufferSize", to_string(bufferSize));
     }
 
     if (aType == eSTREAMS)
     {
       // Add additional attribtues for streams
-      addAttribute(writer, "nextSequence", int64ToString(nextSeq));
-      addAttribute(writer, "firstSequence", int64ToString(firstSeq));
-      addAttribute(writer, "lastSequence", int64ToString(lastSeq));
+      addAttribute(writer, "nextSequence", to_string(nextSeq));
+      addAttribute(writer, "firstSequence", to_string(firstSeq));
+      addAttribute(writer, "lastSequence", to_string(lastSeq));
     }
 
     if (aType == eDEVICES && count && !count->empty())
@@ -1193,158 +1109,8 @@ namespace mtconnect
 
       for (const auto &pair : *count)
       {
-        addSimpleElement(writer, "AssetCount", intToString(pair.second),
-                         {{"assetType", pair.first}});
+        addSimpleElement(writer, "AssetCount", to_string(pair.second), {{"assetType", pair.first}});
       }
     }
-  }
-
-  // Cutting tools
-  void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolValuePtr value) const
-  {
-    addSimpleElement(writer, value->m_key, value->m_value, value->m_properties, true);
-  }
-
-  void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingToolPtr tool,
-                                         const char *value, std::set<string> *remaining) const
-  {
-    if (tool->m_values.count(value) > 0)
-    {
-      if (remaining)
-        remaining->erase(value);
-
-      auto ptr = tool->m_values[value];
-      printCuttingToolValue(writer, ptr);
-    }
-  }
-
-  void XmlPrinter::printCuttingToolValue(xmlTextWriterPtr writer, CuttingItemPtr item,
-                                         const char *value, std::set<string> *remaining) const
-  {
-    if (item->m_values.count(value) > 0)
-    {
-      if (remaining)
-        remaining->erase(value);
-
-      auto ptr = item->m_values[value];
-      printCuttingToolValue(writer, ptr);
-    }
-  }
-
-  void XmlPrinter::printCuttingToolItem(xmlTextWriterPtr writer, CuttingItemPtr item) const
-  {
-    AutoElement ele(writer, "CuttingItem");
-    addAttributes(writer, item->m_identity);
-
-    set<string> remaining;
-    for (const auto &value : item->m_values)
-      remaining.insert(value.first);
-
-    printCuttingToolValue(writer, item, "Description", &remaining);
-    printCuttingToolValue(writer, item, "Locus", &remaining);
-
-    for (const auto &life : item->m_lives)
-      printCuttingToolValue(writer, life);
-
-    // Print extended items...
-    for (const auto &prop : remaining)
-      printCuttingToolValue(writer, item, prop.c_str());
-
-    // Print Measurements
-    if (!item->m_measurements.empty())
-    {
-      AutoElement ele(writer, "Measurements");
-
-      for (const auto &meas : item->m_measurements)
-        printCuttingToolValue(writer, meas.second);
-    }
-  }
-
-  string XmlPrinter::printCuttingTool(CuttingToolPtr const tool) const
-  {
-    string ret;
-
-    try
-    {
-      XmlWriter writer(m_pretty);
-
-      {
-        AutoElement ele(writer, tool->getType());
-        printAssetNode(writer, tool);
-
-        set<string> remaining;
-
-        for (const auto &value : tool->m_values)
-        {
-          if (value.first != "Description")
-            remaining.insert(value.first);
-        }
-
-        // Check for cutting tool definition
-        printCuttingToolValue(writer, tool, "CuttingToolDefinition", &remaining);
-
-        // Print the cutting tool life cycle.
-        {
-          AutoElement life(writer, "CuttingToolLifeCycle");
-
-          // Status...
-          if (!tool->m_status.empty())
-          {
-            AutoElement stat(writer, "CutterStatus");
-            for (const auto &status : tool->m_status)
-              addSimpleElement(writer, "Status", status);
-          }
-
-          // Other values
-          printCuttingToolValue(writer, tool, "ReconditionCount", &remaining);
-
-          // Tool life
-          for (const auto &life : tool->m_lives)
-            printCuttingToolValue(writer, life);
-
-          // Remaining items
-          printCuttingToolValue(writer, tool, "ProgramToolGroup", &remaining);
-          printCuttingToolValue(writer, tool, "ProgramToolNumber", &remaining);
-          printCuttingToolValue(writer, tool, "Location", &remaining);
-          printCuttingToolValue(writer, tool, "ProcessSpindleSpeed", &remaining);
-          printCuttingToolValue(writer, tool, "ProcessFeedRate", &remaining);
-          printCuttingToolValue(writer, tool, "ConnectionCodeMachineSide", &remaining);
-
-          // Print extended items...
-          for (const auto &prop : remaining)
-            printCuttingToolValue(writer, tool, prop.c_str());
-
-          // Print Measurements
-          if (!tool->m_measurements.empty())
-          {
-            AutoElement mes(writer, "Measurements");
-            for (const auto &meas : tool->m_measurements)
-              printCuttingToolValue(writer, meas.second);
-          }
-
-          // Print Cutting Items
-          if (!tool->m_items.empty())
-          {
-            AutoElement mes(writer, "CuttingItems");
-            addAttribute(writer, "count", tool->m_itemCount);
-
-            for (const auto &item : tool->m_items)
-              printCuttingToolItem(writer, item);
-          }
-        }
-      }
-
-      ret = writer.getContent();
-    }
-    catch (string error)
-    {
-      g_logger << dlib::LERROR << "printCuttingTool: " << error;
-    }
-    catch (...)
-    {
-      g_logger << dlib::LERROR << "printCuttingTool: unknown error";
-    }
-
-    return ret;
   }
 }  // namespace mtconnect

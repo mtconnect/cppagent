@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "device.hpp"
+#include "device_model/device.hpp"
 using namespace std;
 using namespace mtconnect;
 
@@ -83,7 +83,7 @@ TEST_F(DeviceTest, GetAttributes)
   ASSERT_EQ((string) "3", attributes2.at("id"));
   ASSERT_EQ((string) "DeviceTest2", attributes2.at("name"));
   ASSERT_EQ((string) "UnivUniqId2", attributes2.at("uuid"));
-  ASSERT_EQ((string) "123.4", attributes2.at("sampleInterval"));
+  ASSERT_EQ((string) "123.400001525879", attributes2.at("sampleInterval"));
   ASSERT_EQ((string) "6", attributes2.at("iso841Class"));
 }
 
@@ -122,11 +122,11 @@ TEST_F(DeviceTest, Relationships)
   auto devPointer = dynamic_cast<mtconnect::Component *>(m_devA);
   ASSERT_TRUE(devPointer);
 
-  linear->setParent(*m_devA);
+  m_devA->addChild(linear);
   ASSERT_TRUE(devPointer == linear->getParent());
 
   auto *controller = new mtconnect::Component("Controller", dummy);
-  controller->setParent(*m_devA);
+  m_devA->addChild(controller);
   ASSERT_TRUE(devPointer == controller->getParent());
 
   // Test get device
@@ -135,16 +135,20 @@ TEST_F(DeviceTest, Relationships)
   ASSERT_TRUE(m_devA == controller->getDevice());
 
   // Test add/get children
-  ASSERT_TRUE(m_devA->getChildren().empty());
+  ASSERT_FALSE(m_devA->getChildren().empty());
 
   auto *axes = new mtconnect::Component("Axes", dummy),
        *thermostat = new mtconnect::Component("Thermostat", dummy);
-  m_devA->addChild(*axes);
-  m_devA->addChild(*thermostat);
+  m_devA->addChild(axes);
+  m_devA->addChild(thermostat);
 
-  ASSERT_EQ((size_t)2, m_devA->getChildren().size());
-  ASSERT_TRUE(axes == m_devA->getChildren().front());
-  ASSERT_TRUE(thermostat == m_devA->getChildren().back());
+  ASSERT_EQ((size_t)4, m_devA->getChildren().size());
+  auto it = m_devA->getChildren().begin();
+  ASSERT_EQ(linear, *it); it++;
+  ASSERT_EQ(controller, *it); it++;
+  ASSERT_EQ(axes, *it); it++;
+  ASSERT_EQ(thermostat, *it); it++;
+  ASSERT_EQ(m_devA->getChildren().end(), it);
 }
 
 TEST_F(DeviceTest, DataItems)
@@ -154,8 +158,8 @@ TEST_F(DeviceTest, DataItems)
   map<string, string> dummy;
 
   auto *data1 = new DataItem(dummy), *data2 = new DataItem(dummy);
-  m_devA->addDataItem(*data1);
-  m_devA->addDataItem(*data2);
+  m_devA->addDataItem(data1);
+  m_devA->addDataItem(data2);
 
   ASSERT_EQ((size_t)2, m_devA->getDataItems().size());
   ASSERT_TRUE(data1 == m_devA->getDataItems().front());
@@ -171,47 +175,47 @@ TEST_F(DeviceTest, DeviceDataItem)
   map<string, string> attributes;
   attributes["id"] = "DataItemTest1";
 
-  DataItem data1(attributes);
-  m_devA->addDeviceDataItem(data1);
+  DataItem *data1 = new DataItem(attributes);
+  m_devA->addDataItem(data1);
 
   attributes["id"] = "DataItemTest2";
-  DataItem data2(attributes);
-  m_devA->addDeviceDataItem(data2);
+  DataItem *data2 = new DataItem(attributes);
+  m_devA->addDataItem(data2);
 
   ASSERT_EQ((size_t)2, m_devA->getDeviceDataItems().size());
-  ASSERT_TRUE(&data1 == m_devA->getDeviceDataItem("DataItemTest1"));
-  ASSERT_TRUE(&data2 == m_devA->getDeviceDataItem("DataItemTest2"));
+  ASSERT_TRUE(data1 == m_devA->getDeviceDataItem("DataItemTest1"));
+  ASSERT_TRUE(data2 == m_devA->getDeviceDataItem("DataItemTest2"));
 }
 
 TEST_F(DeviceTest, GetDataItem)
 {
   map<string, string> attributes;
   attributes["id"] = "by_id";
-  DataItem data1(attributes);
-  m_devA->addDeviceDataItem(data1);
+  DataItem *data1 = new DataItem(attributes);
+  m_devA->addDataItem(data1);
 
   map<string, string> attributes2;
   attributes2["id"] = "by_id2";
   attributes2["name"] = "by_name2";
-  DataItem data2(attributes2);
-  m_devA->addDeviceDataItem(data2);
+  DataItem *data2 = new DataItem(attributes2);
+  m_devA->addDataItem(data2);
 
   map<string, string> attributes3;
   attributes3["id"] = "by_id3";
   attributes3["name"] = "by_name3";
-  DataItem data3(attributes3);
-  data3.addSource("by_source3", "", "", "");
-  m_devA->addDeviceDataItem(data3);
+  DataItem *data3 = new DataItem(attributes3);
+  data3->addSource("by_source3", "", "", "");
+  m_devA->addDataItem(data3);
 
-  ASSERT_TRUE(&data1 == m_devA->getDeviceDataItem("by_id"));
+  ASSERT_TRUE(data1 == m_devA->getDeviceDataItem("by_id"));
   ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_name"));
   ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source"));
 
-  ASSERT_TRUE(&data2 == m_devA->getDeviceDataItem("by_id2"));
-  ASSERT_TRUE(&data2 == m_devA->getDeviceDataItem("by_name2"));
+  ASSERT_TRUE(data2 == m_devA->getDeviceDataItem("by_id2"));
+  ASSERT_TRUE(data2 == m_devA->getDeviceDataItem("by_name2"));
   ASSERT_TRUE((DataItem *)nullptr == m_devA->getDeviceDataItem("by_source2"));
 
-  ASSERT_TRUE(&data3 == m_devA->getDeviceDataItem("by_id3"));
-  ASSERT_TRUE(&data3 == m_devA->getDeviceDataItem("by_name3"));
-  ASSERT_TRUE(&data3 == m_devA->getDeviceDataItem("by_source3"));
+  ASSERT_TRUE(data3 == m_devA->getDeviceDataItem("by_id3"));
+  ASSERT_TRUE(data3 == m_devA->getDeviceDataItem("by_name3"));
+  ASSERT_TRUE(data3 == m_devA->getDeviceDataItem("by_source3"));
 }
