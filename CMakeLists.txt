@@ -6,7 +6,7 @@ set(AGENT_VERSION_BUILD 1)
 set(AGENT_VERSION_RC "RC2")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(Version 3.16 FATAL_ERROR)
 
 set(USE_FOLDERS ON)
 
