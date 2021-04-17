@@ -539,7 +539,7 @@ TEST_F(XmlPrinterTest, ChangeDeviceAttributes)
   device->setUuid(v);
   ErrorList errors;
   auto description = mtconnect::device_model::Device::getFactory()->create("Description", {{"manufacturer", "Big Tool MFG"s},
-    {"serialNumber", "111999333444"}, {"station", "99999999"}
+    {"serialNumber", "111999333444"s}, {"station", "99999999"s}
   }, errors);
   ASSERT_TRUE(errors.empty());
   device->setProperty("Description", description);

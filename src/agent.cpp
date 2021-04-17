@@ -423,7 +423,7 @@ namespace mtconnect
       auto f = m_fileCache->getFile(request->m_path);
       if (f)
       {
-        Response response(http_server::status::ok, f->m_buffer.get(), f->m_mimeType);
+        Response response(http_server::status::ok, f->m_buffer, f->m_mimeType);
         session->writeResponse(response);
       }
       return bool(f);

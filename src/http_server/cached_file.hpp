@@ -36,54 +36,58 @@ namespace mtconnect
       static const int SMALL_FILE = 10 * 1024;  // 10k is considered small
 
       CachedFile() : m_buffer(nullptr) {}
+      ~CachedFile() {
+        if (m_buffer != nullptr)
+          free(m_buffer);
+      }
       CachedFilePtr getptr() { return shared_from_this(); }
 
       CachedFile(const CachedFile &file, const std::string &mime)
         : m_size(file.m_size), m_mimeType(mime)
       {
-        m_buffer = std::make_unique<char[]>(file.m_size);
-        std::memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
+        m_buffer = static_cast<char*>(malloc(file.m_size));
+        std::memcpy(m_buffer, file.m_buffer, file.m_size);
       }
 
       CachedFile(char *buffer, size_t size) : m_buffer(nullptr), m_size(size)
       {
-        m_buffer = std::make_unique<char[]>(m_size);
-        std::memcpy(m_buffer.get(), buffer, size);
+        m_buffer = static_cast<char*>(malloc(m_size));
+        std::memcpy(m_buffer, buffer, size);
       }
 
       CachedFile(size_t size) : m_buffer(nullptr), m_size(size)
       {
-        m_buffer = std::make_unique<char[]>(m_size);
+        m_buffer = static_cast<char*>(malloc(m_size));
       }
 
       CachedFile(const std::filesystem::path &path, const std::string &mime)
         : m_buffer(nullptr), m_mimeType(mime)
       {
-        m_size = std::filesystem::file_size(path);
-        m_buffer = std::make_unique<char[]>(m_size);
+        auto size = std::filesystem::file_size(path);
+        m_size = size + 1;
+        m_buffer = static_cast<char*>(malloc(m_size));
         auto file = std::fopen(path.string().c_str(), "r");
-        std::fread(m_buffer.get(), 1, m_size, file);
+        std::fread(m_buffer, 1, size, file);
+        m_buffer[size] = '\0';
       }
-
-      ~CachedFile() { m_buffer.reset(); }
 
       CachedFile &operator=(const CachedFile &file)
       {
-        m_buffer.reset();
-        m_buffer = std::make_unique<char[]>(file.m_size);
-        std::memcpy(m_buffer.get(), file.m_buffer.get(), file.m_size);
+        if (m_buffer != nullptr)
+          free(m_buffer);
         m_size = file.m_size;
+        m_buffer = static_cast<char*>(malloc(m_size));
+        std::memcpy(m_buffer, file.m_buffer, m_size);
         return *this;
       }
 
       void allocate(size_t size)
       {
-        m_buffer.reset();
-        m_buffer = std::make_unique<char[]>(size);
         m_size = size;
+        m_buffer = static_cast<char*>(malloc(m_size));
       }
 
-      std::unique_ptr<char[]> m_buffer;
+      char  *m_buffer;
       size_t m_size = 0;
       std::string m_mimeType;
     };

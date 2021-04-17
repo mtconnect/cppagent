@@ -18,7 +18,7 @@
 #include "deliver.hpp"
 
 #include <boost/asio/bind_executor.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/bind/placeholders.hpp>
 
 #include <chrono>
