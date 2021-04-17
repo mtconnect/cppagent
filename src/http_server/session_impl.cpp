@@ -153,7 +153,6 @@ namespace mtconnect
       m_response.reset();
       m_request.reset();
       m_serializer.reset();
-      m_buffer.clear();
       m_boundary.clear();
       m_mimeType.clear();
 
@@ -306,8 +305,9 @@ namespace mtconnect
       NAMED_SCOPE("SessionImpl::writeChunk");
 
       m_complete = complete;
-
-      ostringstream str;
+      m_streamBuffer.emplace();
+      ostream str(&m_streamBuffer.value());
+      
       str << "--" + m_boundary
           << "\r\n"
              "Content-type: "
@@ -317,13 +317,7 @@ namespace mtconnect
           << to_string(body.length()) << ";\r\n\r\n"
           << body;
 
-      m_buffer.clear();
-      auto size = str.str().size();
-      net::const_buffers_1 buf(str.str().c_str(), size);
-      asio::buffer_copy(m_buffer.prepare(size), buf);
-      m_buffer.commit(size);
-
-      async_write(m_stream, http::make_chunk(m_buffer.data()),
+      async_write(m_stream, http::make_chunk(m_streamBuffer->data()),
                   beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
 

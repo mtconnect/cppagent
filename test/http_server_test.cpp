@@ -140,12 +140,14 @@ public:
         }
       }
     }
+    
+    m_bodyParser.emplace(std::move(*m_parser));
     if (m_parser->chunked())
     {
       using std::placeholders::_1;
       using std::placeholders::_2;
       using std::placeholders::_3;
-
+      
       auto header = [this](std::uint64_t size,
                         boost::string_view extensions,
                         boost::system::error_code& ev)
@@ -163,7 +165,7 @@ public:
           fail(ev, "Failed in chunked extension parse");
       };
       m_headerHandler = header;
-      m_parser->on_chunk_header(m_headerHandler);
+      m_bodyParser->on_chunk_header(m_headerHandler);
       
       
       
@@ -194,16 +196,15 @@ public:
         return body.size();
       };
       m_chunkHandler = body;
-      m_parser->on_chunk_body(m_chunkHandler);
+      m_bodyParser->on_chunk_body(m_chunkHandler);
     }
     else
     {
-      http::response_parser<http::dynamic_body> resp{std::move(*m_parser)};
-      http::async_read(m_stream, m_b, resp, yield[ec]);
+      http::async_read(m_stream, m_b, *m_bodyParser, yield[ec]);
       if(ec)
         return fail(ec, "async_read");
 
-      auto msg = resp.get();
+      auto msg = m_bodyParser->get();
       m_result = beast::buffers_to_string(msg.body().data());
     }
     // Write the message to standard out
@@ -215,7 +216,7 @@ public:
   void readChunk(asio::yield_context yield)
   {
     boost::system::error_code ec;
-    http::async_read(m_stream, m_b, *m_parser, yield[ec]);
+    http::async_read(m_stream, m_b, *m_bodyParser, yield[ec]);
     if (ec == http::error::end_of_chunk)
       cout << "End of chunk";
     else if (ec)
@@ -266,6 +267,7 @@ public:
   beast::flat_buffer m_b;
   int m_count{0};
   optional<http::response_parser<http::empty_body>> m_parser;
+  optional<http::response_parser<http::dynamic_body>> m_bodyParser;
   string m_boundary;
   map<string,string> m_fields;
   string m_contentType;

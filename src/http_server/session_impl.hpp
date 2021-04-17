@@ -80,6 +80,7 @@ namespace mtconnect
       // References to retain lifecycle for callbacks.
       RequestPtr m_request;
       boost::beast::flat_buffer m_buffer;
+      std::optional<boost::asio::streambuf> m_streamBuffer;
       std::optional<RequestParser> m_parser;
       std::shared_ptr<void> m_response;
       std::shared_ptr<void> m_serializer;
