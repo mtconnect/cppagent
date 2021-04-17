@@ -6,8 +6,8 @@ branches:
   
 # clone_folder: c:\projects\cppagent_dev
 image:
-- Visual Studio 2019
 - Ubuntu2004
+- Visual Studio 2019
 
 configuration:
 - Release
@@ -35,11 +35,11 @@ init:
 
 before_build:
 - cmd: |-
-    C:\tools\vcpkg\vcpkg install boost:x64-windows-static
+    C:\tools\vcpkg\vcpkg install boost-log:x86-windows boost-coroutine:x86-windows boost-beast:x86-windows boost-circular-buffer:x86-windows boost-uuid:x86-windows
     mkdir build
     cd build
     cmake --version
-    cmake -G "Visual Studio 16 2019" -A x64 .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static
+    cmake -G "Visual Studio 16 2019" .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-windows
 - sh: export CC=/usr/bin/gcc-9
 - sh: export CXX=/usr/bin/g++-9
 - sh: mkdir build
