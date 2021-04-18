@@ -7,7 +7,7 @@ branches:
 # clone_folder: c:\projects\cppagent_dev
 image:
 - Visual Studio 2019
-- Ubuntu2004
+#- Ubuntu2004
 
 configuration:
 - Release
