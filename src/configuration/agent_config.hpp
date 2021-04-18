@@ -95,6 +95,8 @@ namespace mtconnect
       void monitorThread();
 
     protected:
+      boost::asio::io_context m_context;
+      std::list<std::thread> m_workers;
       std::unique_ptr<Agent> m_agent;
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
@@ -108,8 +110,6 @@ namespace mtconnect
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
 
-      boost::asio::io_context m_context;
-      std::list<std::thread> m_workers;
       int m_workerThreadCount {1};
     };
   }  // namespace configuration
