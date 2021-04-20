@@ -1,35 +1,18 @@
+
 include(GoogleTest)
-
-# Include googletest
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/release-1.10.0.zip
-)
-FetchContent_GetProperties(googletest)
-if(NOT googletest_POPULATED)
-  set(BUILD_GMOCK "ON")
-  set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
-  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-  FetchContent_Populate(googletest)
-  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
-  set_target_properties(gmock PROPERTIES FOLDER gtest)  
-  set_target_properties(gmock_main PROPERTIES FOLDER gtest)  
-  set_target_properties(gtest PROPERTIES FOLDER gtest)  
-  set_target_properties(gtest_main PROPERTIES FOLDER gtest)  
-endif()
-
+find_package(GTest CONFIG REQUIRED)
 
 # Define test cases
 macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   set(_sources)
   list(APPEND _sources ${AGENT_TEST_NAME}_test.cpp)
-  list(APPEND _sources "${googletest_SOURCE_DIR}/googletest/src/gtest_main.cc")
+  #list(APPEND _sources "${googletest_SOURCE_DIR}/googletest/src/gtest_main.cc")
   if(${ADD_TEST_HELPER})
     list(APPEND _sources test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
   endif()
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
-  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib gtest)
+  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib GTest::gmock GTest::gtest GTest::gmock_main GTest::gtest_main)
   target_include_directories(${AGENT_TEST_NAME}_test
     PRIVATE "${googletest_SOURCE_DIR}/googletest/include")
 

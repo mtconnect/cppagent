@@ -66,6 +66,14 @@ include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)
 
 # Add our dependency projects
+include(cmake/pmm.cmake)
+pmm(VCPKG REVISION 807a7987612
+  REQUIRES
+   # boost-log boost-coroutine boost-beast boost-uuid libxml2
+   nlohmann-json date gtest
+  TRIPLET arm64-osx
+)
+
 include(cmake/Boost.cmake)
 include(cmake/LibXML2.cmake)
 include(cmake/Date.cmake)

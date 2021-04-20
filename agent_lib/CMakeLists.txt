@@ -167,8 +167,6 @@ target_include_directories(
 target_link_libraries(
   agent_lib
   PUBLIC
-    date
-    json
     LibXml2::LibXml2
     Boost::log Boost::log_setup Boost::coroutine
     $<$<PLATFORM_ID:Linux>:pthread>
