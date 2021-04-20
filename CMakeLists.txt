@@ -70,8 +70,8 @@ include(cmake/pmm.cmake)
 pmm(VCPKG REVISION 807a7987612
   REQUIRES
    # boost-log boost-coroutine boost-beast boost-uuid libxml2
-   nlohmann-json date gtest
-  TRIPLET arm64-osx
+   nlohmann-json date gtest liblzma zlib
+  TRIPLET ${VCPKG_TARGET_TRIPLET}
 )
 
 include(cmake/Boost.cmake)

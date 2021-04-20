@@ -169,6 +169,7 @@ target_link_libraries(
   PUBLIC
     LibXml2::LibXml2
     Boost::log Boost::log_setup Boost::coroutine
+    ZLIB::ZLIB LibLZMA::LibLZMA
     $<$<PLATFORM_ID:Linux>:pthread>
     $<$<PLATFORM_ID:Windows>:bcrypt>
 )
