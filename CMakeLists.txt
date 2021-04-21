@@ -69,10 +69,17 @@ include(cmake/ClangTidy.cmake)
 include(cmake/pmm.cmake)
 pmm(VCPKG REVISION 807a7987612
   REQUIRES
-   # boost-log boost-coroutine boost-beast boost-uuid libxml2
    nlohmann-json date gtest liblzma zlib
   TRIPLET ${VCPKG_TARGET_TRIPLET}
-)
+  )
+
+if (MSVC)
+  pmm(VCPKG REVISION 807a7987612
+    REQUIRES
+    boost-log boost-coroutine boost-beast boost-uuid boost-circular-buffer
+    libxml2
+    TRIPLET ${VCPKG_TARGET_TRIPLET})
+endif()
 
 include(cmake/Boost.cmake)
 include(cmake/LibXML2.cmake)
