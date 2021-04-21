@@ -161,18 +161,23 @@ add_dependencies(agent_lib UPDATE_VERSION)
 target_include_directories(
   agent_lib
   PUBLIC
+    "${CONAN_INCLUDE_DIRS}"
     "${PROJECT_BINARY_DIR}/agent_lib"
     "${CMAKE_CURRENT_LIST_DIR}/../src"
-)
+    )
+
+  
 target_link_libraries(
   agent_lib
   PUBLIC
     LibXml2::LibXml2
     Boost::log Boost::log_setup Boost::coroutine
     ZLIB::ZLIB LibLZMA::LibLZMA
+
     $<$<PLATFORM_ID:Linux>:pthread>
     $<$<PLATFORM_ID:Windows>:bcrypt>
 )
+  
 target_compile_definitions(
   agent_lib
   PUBLIC
