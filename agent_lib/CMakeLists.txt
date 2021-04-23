@@ -170,7 +170,7 @@ target_include_directories(
 target_link_libraries(
   agent_lib
   PUBLIC
-  ${PACKAGE_LIBRARIES}
+  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date
   
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>

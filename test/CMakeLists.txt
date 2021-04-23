@@ -1,14 +1,5 @@
 
 include(GoogleTest)
-enable_testing()
-
-
-if(USE_CONAN)
-  set(GTEST_LIBS CONAN_PKG::gtest)
-else()
-  find_package(GTest CONFIG REQUIRED)
-  set(GTEST_LIBS GTest::gmock GTest::gtest GTest::gtest_main)
-endif()
 
 # Define test cases
 macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
@@ -19,7 +10,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   endif()
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
-  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib ${GTEST_LIBS})
+  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib CONAN_PKG::gtest)
   target_include_directories(${AGENT_TEST_NAME}_test
     PRIVATE "${googletest_SOURCE_DIR}/googletest/include")
 

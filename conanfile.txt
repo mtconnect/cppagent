@@ -10,8 +10,14 @@ cmake
 
 [options]
 # boost:shared=True
-# boost:without_wave=True
+boost:bzip2=False
+boost:lzma=False
+boost:numa=False
+boost:without_wave=True
 boost:without_test=True
+boost:without_json=True
+boost:without_mpi=True
+boost:without_stacktrace=True
 
-boost:extra_b2_flags=-j 2 -d +1
+boost:extra_b2_flags=-j 2 -d +1 define=BOOST_USE_WINAPI_VERSION=0x0600 
 
