@@ -1096,29 +1096,12 @@ An example in ruby is as follows:
 
 ## Building on Windows
 
-Installing vcpkg in c:\vcpkg
+The MTConnect Agent uses the conan package manager to install dependencies:
 
-    c:
-    cd \
-    git clone https://github.com/microsoft/vcpkg
-    cd vcpkg
-    vcpkg integrate install
-    vcpkg install boost:x64-windows-static 
-    
- For x86  
- 
-    vcpkg install boost:ix86-windows-static
+  [Conan Package Manager Downloads](https://conan.io/downloads.html)
 
-### This will create a toolchain file that needs to be referenced when settup up the build directory
+Download the Windows installer for your platform and run the installer.
 
-If you installed in c:\vcpkg, the following define must be used:
-
-    -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake
-	
-In general
-
-    -DCMAKE_TOOLCHAIN_FILE=[path-to-vcpkg]/scripts/buildsystems/vcpkg.cmake
-	
 ### Setting up build
 
 Clone the agent to another directory:
@@ -1130,33 +1113,59 @@ Make a build subdirectory of `cppagent_dev`
 
     mkdir cppagent_dev\build	
     cd cppagent_dev\build
-
+	
 ####  For the 64 bit build
 
-    cmake -G "Visual Studio 16 2019" -A x64 .. -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static
+    conan install .. -s build_type=Release --build=missing
+    cmake -G "Visual Studio 16 2019" -A x64 ..
 	
 #### For the Win32 build for XP
 
-    cmake -G "Visual Studio 16 2019" -A Win32 -T v141_xp -D AGENT_ENABLE_UNITTESTS=false -D WINVER=0x0501 .. -DCMAKE_TOOLCHAIN_FILE=c:/vcpkg/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x86-windows-static
+    conan install .. -s build_type=Release --build=missing
+    cmake -G "Visual Studio 16 2019" -A Win32 -T v141_xp -D AGENT_ENABLE_UNITTESTS=false -D WINVER=0x0501 ..
 
 ### Build from the command line
 
 #### For the x64 build
 
     cmake --build . --config Release --target ALL_BUILD
+	
+#### Test and package the release
+
     ctest -C Release
     cpack -G ZIP
 
 #### For the Win32 build
 
     cmake --build . --config Release --target ALL_BUILD
+
+#### Package the release
+
     cpack -G ZIP
 
 ## Building on Ubuntu on 20.04 LTS
 
+### Setup the build
+
+    sudo apt-get install build-essential boost python3.9 git
+
+### Download the source
+
 	git clone git@github.com:/mtconnect/cppagent_dev.git
-    sudo apt-get install build-essential boost
+	
+### Install the dependencies
+
+	pip3 install conan
 	mkdir build
+	conan profile new default --detect
+	conan profile update settings.compiler.libcxx=libstdc++11 default
+	conan install .. -s build_type=Release --build=missing
+	
+### Build the agent
+	
 	cmake -D CMAKE_BUILD_TYPE=Release ../
 	cmake --build .
+	
+### Test the release
+
 	ctest -C Release
