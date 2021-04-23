@@ -65,6 +65,15 @@ include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)
 
+# On Windows, use VCPKG and on any other OS, default to using CONAN
+if(MSVC)
+  set(USE_VCPKG ON CACHE BOOL "Use the VCPKG package manager and pmm to install dependencies")
+  set(USE_CONAN OFF CACHE BOOL "Use the conan package manager and pmm to install dependencies")
+else()
+  set(USE_VCPKG OFF CACHE BOOL "Use the VCPKG package manager and pmm to install dependencies")
+  set(USE_CONAN ON CACHE BOOL "Use the conan package manager and pmm to install dependencies")
+endif()
+
 if(USE_VCPKG)
   # Add our dependency projects
   include(cmake/pmm.cmake)
