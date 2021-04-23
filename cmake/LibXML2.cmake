@@ -7,5 +7,7 @@
 ####################################################################################################
 
 find_package(LibXml2 REQUIRED)
-find_package(ZLIB REQUIRED)
-find_package(LibLZMA REQUIRED)
+if(USE_VCPKG)
+  find_package(ZLIB REQUIRED)
+  find_package(LibLZMA REQUIRED)
+endif()

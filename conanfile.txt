@@ -1,0 +1,18 @@
+[requires]
+boost/1.75.0
+libxml2/2.9.10
+date/2.4.1
+nlohmann_json/3.9.1
+gtest/1.10.0
+
+[generators]
+cmake
+
+[options]
+boost:without_wave=True
+boost:without_test=True
+boost:without_graph=True
+boost:without_graph_parallel=True
+boost:extra_b2_flags=-j 2 -d +1
+
+

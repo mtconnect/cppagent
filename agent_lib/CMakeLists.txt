@@ -170,12 +170,10 @@ target_include_directories(
 target_link_libraries(
   agent_lib
   PUBLIC
-    LibXml2::LibXml2
-    Boost::log Boost::log_setup Boost::coroutine
-    ZLIB::ZLIB LibLZMA::LibLZMA
-
-    $<$<PLATFORM_ID:Linux>:pthread>
-    $<$<PLATFORM_ID:Windows>:bcrypt>
+  ${PACKAGE_LIBRARIES}
+  
+  $<$<PLATFORM_ID:Linux>:pthread>
+  $<$<PLATFORM_ID:Windows>:bcrypt>
 )
   
 target_compile_definitions(

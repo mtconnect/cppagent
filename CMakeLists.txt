@@ -65,20 +65,23 @@ include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)
 
-# Add our dependency projects
-include(cmake/pmm.cmake)
-pmm(VCPKG REVISION 807a7987612
-  REQUIRES
-   nlohmann-json date gtest liblzma zlib
-  TRIPLET ${VCPKG_TARGET_TRIPLET}
-  )
-
-if (MSVC)
+if(USE_VCPKG)
+  # Add our dependency projects
+  include(cmake/pmm.cmake)
   pmm(VCPKG REVISION 807a7987612
     REQUIRES
-    boost-log boost-coroutine boost-beast boost-uuid boost-circular-buffer
-    libxml2
-    TRIPLET ${VCPKG_TARGET_TRIPLET})
+      nlohmann-json date gtest liblzma zlib
+      boost-log boost-coroutine boost-beast boost-uuid boost-circular-buffer
+      libxml2
+    TRIPLET ${VCPKG_TARGET_TRIPLET}
+    )
+  set(PACKAGE_LIBRARIES LibXml2::LibXml2
+      Boost::log Boost::log_setup Boost::coroutine
+      ZLIB::ZLIB LibLZMA::LibLZMA)
+elseif(USE_CONAN)
+  include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+  conan_basic_setup(TARGETS)
+  set(PACKAGE_LIBRARIES CONAN_PKG::boost CONAN_PKG::libxml2)
 endif()
 
 include(cmake/Boost.cmake)
