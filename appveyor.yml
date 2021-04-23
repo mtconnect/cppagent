@@ -17,7 +17,11 @@ platform:
 - x64
 
 cache:
-- c:\conan\ -> appveyor.yml
+- c:\conan\ -> appveyor.yml, conanfile.txt
+
+environment:
+  APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDXjETu2D5zHMYX0FGlvJm2FCBGjFBa/gFs9x+lDH2qfPXTxD44y0e7O0q2uv0wJZWUuTPNTIlreiMRpgs+cA79LDuE1nZc5CxenJ9KPDXUy8UzaBuK3qAKM+F+VLfJ16zOCytrcDFX+DAIDN9b4yf8ni0DNL+Kj50HJqxTdgaNasSll26mO6HOw3lqtXOuT9O9ilBqhS42mL8bD+AIoIN6RFJXXlXKrtdkquMqHWYNPOZp7ukO6hhoCx77+vzqNGjNK5wKeKv/MSykGmb1qUketXUVqVIu/EVMsJgXGLLGaG+WrnS9nriyYHa0J3MV2gOMNaf3MPxbT+8ilIgG+fHX will@myshkin.local
+  APPVEYOR_SSH_BLOCK: true
 
 
 #environment:
@@ -33,6 +37,7 @@ init:
 - cmd: |-
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     echo %MSBUILD_FLAGS%
+- sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
 
 before_build:
 - cmd: |-
