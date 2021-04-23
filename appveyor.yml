@@ -6,8 +6,9 @@ branches:
   
 # clone_folder: c:\projects\cppagent_dev
 image:
-- Visual Studio 2019
-#- Ubuntu2004
+#- Visual Studio 2019
+- Ubuntu2004
+# - macOS
 
 configuration:
 - Release
@@ -46,6 +47,8 @@ before_build:
     cmake -G "Visual Studio 16 2019" .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
 - sh: export CC=/usr/bin/gcc-9
 - sh: export CXX=/usr/bin/g++-9
+- sh: pip3 install conan
+- sh: conan install .. -s build_type=Release --build=missing
 - sh: mkdir build
 - sh: cd build
 - sh: cmake --version
