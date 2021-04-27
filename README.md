@@ -1102,6 +1102,8 @@ The MTConnect Agent uses the conan package manager to install dependencies:
 
 Download the Windows installer for your platform and run the installer.
 
+You also need CMake [CMake](https://cmake.org/download/) and git [git](https://git-scm.com/download/win)
+
 ### Setting up build
 
 Clone the agent to another directory:
@@ -1115,13 +1117,15 @@ Make a build subdirectory of `cppagent_dev`
     cd cppagent_dev\build
 	
 ####  For the 64 bit build
-
+	
     conan install .. -s build_type=Release --build=missing
     cmake -G "Visual Studio 16 2019" -A x64 ..
 	
 #### For the Win32 build for XP
 
-    conan install .. -s build_type=Release --build=missing
+The windows XP 140 XP toolchain needs to be installed under individual component in the Visual Studio 2019 installer.
+	
+    conan install ..\cppagent_dev -s build_type=Release --build=missing -s compiler.toolset=v140_xp -e define=WINVER=0x0501 -s arch=x86
     cmake -G "Visual Studio 16 2019" -A Win32 -T v141_xp -D AGENT_ENABLE_UNITTESTS=false -D WINVER=0x0501 ..
 
 ### Build from the command line
@@ -1169,3 +1173,34 @@ Make a build subdirectory of `cppagent_dev`
 ### Test the release
 
 	ctest -C Release
+
+## Building on Mac OS
+
+Install brew and xcode command line tools
+
+### Setup the build
+
+    brew install git
+
+### Download the source
+
+	git clone git@github.com:/mtconnect/cppagent_dev.git
+	
+### Install the dependencies
+
+	pip3 install conan
+	mkdir build
+	conan install .. -s build_type=Release --build=missing
+	
+### Build the agent
+	
+	cmake -D CMAKE_BUILD_TYPE=Release ../
+	cmake --build .
+	
+### Test the release
+
+	ctest -C Release
+
+### For XCode
+   
+    cmake -G Xcode ..
