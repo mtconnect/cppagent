@@ -71,7 +71,6 @@ conan_basic_setup(TARGETS)
 # Add our projects
 add_subdirectory(agent_lib)
 add_subdirectory(agent)
-set(AGENT_ENABLE_UNITTESTS ON)
 if(AGENT_ENABLE_UNITTESTS)
   enable_testing()
   add_subdirectory(test)

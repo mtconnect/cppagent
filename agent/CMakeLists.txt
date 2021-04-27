@@ -14,7 +14,12 @@ target_link_libraries(
   PRIVATE
   agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
-)
+  )
+if(APPLE)
+  add_custom_command(TARGET agent POST_BUILD COMMAND
+    ${CMAKE_INSTALL_NAME_TOOL} -add_rpath "@executable_path/../lib" $<TARGET_FILE:agent>)
+endif()
+
 target_clangtidy_setup(agent_lib)
 
 install(TARGETS agent RUNTIME DESTINATION bin)

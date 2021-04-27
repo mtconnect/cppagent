@@ -1,7 +1,7 @@
 from conans import ConanFile, CMake, tools
 
 class CppAgentConan(ConanFile):
-    name = "MTConnect_CppAgent"
+    name = "mtconnect_cppagent"
     version = "1.7"
     generators = "cmake", "xcode", "visual_studio"
     url = "https://github.com/mtconnect/cppagent_dev.git"
@@ -37,16 +37,21 @@ class CppAgentConan(ConanFile):
             self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + " define=BOOST_USE_WINAPI_VERSION=0x0600"
         elif self.settings.os == "Windows":
             self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + " define=BOOST_USE_WINAPI_VERSION=0x0501"
+            self.options["boost"].i18n_backend = "icu"
 
     def requirements(self):
         if self.settings.os != "Windows" or (not self.settings.compiler.toolset or self.settings.compiler.toolset != "v140_xp"):
-            self.requires("gtest/1.10.0")
+self.requires("gtest/1.10.0")
 
     def build(self):
-        build_type = self.settings.get_safe("build_type", default="Release")
-        cmake = CMake(self)
+        cmake = CMake(self, build_type=self.settings.get_safe("build_type", default="Release"))
+        if self.settings.os == "Windows" and (self.settings.compiler.toolset and self.settings.compiler.toolset == "v140_xp"):
+            cmake.definitions["AGENT_ENABLE_UNITTESTS"] = "OFF"
+            
         cmake.configure()
         cmake.build()
+        if self.settings.os == "Windows" and (self.settings.compiler.toolset and self.settings.compiler.toolset == "v140_xp"):
+            cmake.test()
 
     def imports(self):
         self.copy("*.dll", "bin", "bin")
