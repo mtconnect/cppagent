@@ -352,7 +352,6 @@ namespace mtconnect
     } while (!changed);  // && m_agent->is_running());
 
     // TODO: Put monitor thread back in place
-#if 0
     // Restart agent if changed...
     // stop agent and signal to warm start
     if (m_agent->is_running() && changed)
@@ -371,7 +370,7 @@ namespace mtconnect
       const char *argv[] = {m_configFile.c_str()};
       initialize(1, argv);
     }
-#endif
+
     g_logger << LDEBUG << "Monitor thread is exiting";
   }
 
