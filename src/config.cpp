@@ -285,10 +285,7 @@ namespace mtconnect
 #endif
 
   void AgentConfiguration::monitorThread()
-  {
-    // shut this off for now.
-    return;
-    
+  {    
     time_t devices_at_start = 0, cfg_at_start = 0;
 
     g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile
