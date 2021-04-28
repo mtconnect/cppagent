@@ -39,7 +39,13 @@ namespace mtconnect
                                      const std::string &version);
       XmlNamespaceList registerDirectory(const std::string &uri, const std::string &path,
                                          const std::string &version);
-      std::optional<XmlNamespace> registerFile(const std::string &uri, const std::string &path,
+      std::optional<XmlNamespace> registerFile(const std::string &uri, const std::string &pathName,
+                                               const std::string &version)
+      {
+        std::filesystem::path path(pathName);
+        return registerFile(uri, path, version);
+      }
+      std::optional<XmlNamespace> registerFile(const std::string &uri, const std::filesystem::path &path,
                                                const std::string &version);
       CachedFilePtr getFile(const std::string &name);
       bool hasFile(const std::string &name) const

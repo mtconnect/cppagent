@@ -66,7 +66,7 @@ namespace mtconnect
         }
         else if (!fs::is_directory(path))
         {
-          auto ns = registerFile(path.string(), uri, version);
+          auto ns = registerFile(uri, path, version);
           if (ns)
             namespaces.emplace_back(*ns);
         }
@@ -95,15 +95,14 @@ namespace mtconnect
     }
 
     std::optional<XmlNamespace> FileCache::registerFile(const std::string &uri,
-                                                        const std::string &pathName,
+                                                        const fs::path &path,
                                                         const std::string &version)
     {
       optional<XmlNamespace> ns;
 
-      fs::path path(pathName);
       if (!fs::exists(path))
       {
-        g_logger << dlib::LWARN << "The following path " << pathName
+        g_logger << dlib::LWARN << "The following path " << path.c_str()
                  << " cannot be found, full path: " << fs::absolute(path);
         return nullopt;
       }
