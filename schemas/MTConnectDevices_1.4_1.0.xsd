@@ -383,6 +383,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='BLOCK_COUNT'/>
       <xs:enumeration value='USER'/>
       <xs:enumeration value='PART_NUMBER'/>
+      <xs:enumeration value='EQUIPMENT_TIMER'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemEnumType'>
@@ -443,6 +444,11 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='TOOL_GROUP'/>
       <xs:enumeration value='ROTARY'/>
       <xs:enumeration value='LINEAR'/>
+      <xs:enumeration value='LOADED'/>
+      <xs:enumeration value='WORKING'/>
+      <xs:enumeration value='OPERATING'/>
+      <xs:enumeration value='POWERED'/>
+      <xs:enumeration value='DELAY'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
@@ -1115,6 +1121,94 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         A door on the machine
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='AuxiliariesType'>
+    <xs:annotation>
+      <xs:documentation>
+        An XML container used to organize information for \gls{lower level}
+        elements representing functional sub-systems that provide supplementary
+        or extended capabilities for a piece of equipment, but they are not
+        required for the basic operation of the equipment.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Auxiliaries' type='AuxiliariesType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        An XML container used to organize information for \gls{lower level}
+        elements representing functional sub-systems that provide supplementary
+        or extended capabilities for a piece of equipment, but they are not
+        required for the basic operation of the equipment.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='LoaderType'>
+    <xs:annotation>
+      <xs:documentation>
+        Loader is an XML container that represents the information for a unit
+        comprised of all the parts involved in moving and distributing
+        materials, parts, tooling, and other items to or from a piece of
+        equipment.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='Loader' type='LoaderType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        Loader is an XML container that represents the information for a unit
+        comprised of all the parts involved in moving and distributing
+        materials, parts, tooling, and other items to or from a piece of
+        equipment.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='WasteDisposalType'>
+    <xs:annotation>
+      <xs:documentation>
+        WasteDisposal is an XML container that represents the information for a
+        unit comprised of all the parts involved in removing manufacturing
+        byproducts from a piece of equipment.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='WasteDisposal' type='WasteDisposalType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        WasteDisposal is an XML container that represents the information for a
+        unit comprised of all the parts involved in removing manufacturing
+        byproducts from a piece of equipment.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='ToolingDeliveryType'>
+    <xs:annotation>
+      <xs:documentation>
+        ToolingDelivery is an XML container that represents the information for
+        a unit involved in managing, positioning, storing, and delivering
+        tooling within a piece of equipment
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base='CommonComponentType'/>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name='ToolingDelivery' type='ToolingDeliveryType' substitutionGroup='CommonComponent'>
+    <xs:annotation>
+      <xs:documentation>
+        ToolingDelivery is an XML container that represents the information for
+        a unit involved in managing, positioning, storing, and delivering
+        tooling within a piece of equipment
       </xs:documentation>
     </xs:annotation>
   </xs:element>

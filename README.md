@@ -1,7 +1,7 @@
 
 MTConnect C++ Agent Version 1.7
 --------
-[![Build status](https://ci.appveyor.com/api/projects/status/8ijbprd7rtwohv7c?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent-dev)
+[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent)
 
 The C++ Agent provides the a complete implementation of the HTTP
 server required by the MTConnect standard. The agent provides the
@@ -437,20 +437,20 @@ namespace -- you cannot change it.
 
 	StreamsNamespaces {
 	  m {
-	    Location = /schemas/MTConnectStreams_1.4.xsd
-	    Path = ./MTConnectStreams_1.4.xsd
+	    Location = /schemas/MTConnectStreams_1.7.xsd
+	    Path = ./MTConnectStreams_1.7.xsd
 	  }
 	}
 
 	DevicesNamespaces {
 	  m {
-	    Location = /schemas/MTConnectDevices_1.4.xsd
-	    Path = ./MTConnectDevices_1.4.xsd
+	    Location = /schemas/MTConnectDevices_1.7.xsd
+	    Path = ./MTConnectDevices_1.7.xsd
 	  }
 	}
     
 The MTConnect agent will now serve the standard MTConnect schema files
-from the local directory using the schema path /schemas/MTConnectDevices_1.4.xsd.
+from the local directory using the schema path /schemas/MTConnectDevices_1.7.xsd.
 
 
 ### Example: 10 ###
@@ -462,19 +462,19 @@ Agent serve them up locally.
 
 	DevicesNamespaces {
 	  x {
-	    Urn = urn:example.com:ExampleDevices:1.4
-	    Location = /schemas/ExampleDevices_1.4.xsd
-	    Path = ./ExampleDevices_1.4.xsd
+	    Urn = urn:example.com:ExampleDevices:1.7
+	    Location = /schemas/ExampleDevices_1.7.xsd
+	    Path = ./ExampleDevices_1.7.xsd
 	  }
 
 	Files {
 	  stream { 
-	    Location = /schemas/MTConnectStreams_1.4.xsd
-	    Path = ./MTConnectStreams_1.4.xsd
+	    Location = /schemas/MTConnectStreams_1.7.xsd
+	    Path = ./MTConnectStreams_1.7.xsd
 	  }
 	  device { 
-	    Location = /schemas/MTConnectDevices_1.4.xsd
-	    Path = ./MTConnectDevices_1.4.xsd
+	    Location = /schemas/MTConnectDevices_1.7.xsd
+	    Path = ./MTConnectDevices_1.7.xsd
 	  }
 	}
 	
@@ -482,20 +482,20 @@ Or use the short form for all files:
 
         Files {
           schemas { 
-            Location = /schemas/MTConnectStreams_1.4.xsd
-            Path = ./MTConnectStreams_1.4.xsd
+            Location = /schemas/MTConnectStreams_1.7.xsd
+            Path = ./MTConnectStreams_1.7.xsd
           }
         }
     
 If you have specified in your xs:include schemaLocation inside the 
-ExampleDevices_1.4.xsd file the location "/schemas/MTConnectStreams_1.4.xsd",
+ExampleDevices_1.7.xsd file the location "/schemas/MTConnectStreams_1.7.xsd",
 this will allow it to be served properly. This can also be done using the 
 Devices namespace:
 
 	DevicesNamespaces {
 	  m {
-	    Location = /schemas/MTConnectDevices_1.4.xsd
-	    Path = ./MTConnectDevices_1.4.xsd
+	    Location = /schemas/MTConnectDevices_1.7.xsd
+	    Path = ./MTConnectDevices_1.7.xsd
 	  }
 	}
 
@@ -617,6 +617,9 @@ Configuration Parameters
 * `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. This is the default for all adapters.
 
     *Default*: 1
+	
+* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7. This applies to all adapters.
+    *Default*: false
 
 
 ### Adapter configuration items ###
@@ -721,6 +724,9 @@ Configuration Parameters
 
 	    *Default*: 1
 
+	* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7.
+		*Default*: false
+
 
 logger_config configuration items
 -----
@@ -752,7 +758,7 @@ logger_config configuration items
             
         *Default*: NEVER
     
-Adapter Agent Protocol Version 1.4
+Adapter Agent Protocol Version 1.7
 =======
 
 The principle adapter data format is a simple plain text stream separated by the pipe character `|`. Every line except for commands starts with an optional timestamp in UTC. If the timestamp is not supplied the agent will supply a timestamp of its own taken at the arrival time of the data to the agent. The remainder of the line is a key followed by data – depending on the type of data item is being written to.
@@ -789,7 +795,7 @@ The data item name can also be prefixed with the device name if this adapter is 
 
 All data items follow the formatting requirements in the MTConnect standard for the vocabulary and coordinates like PathPosition.
 
-A new feature in version 1.4 is the ability to announce a reset has been triggered. If we have a part count named `pcount` that gets reset daily, the new protocol is as follows:
+A new feature introduced in version 1.4 is the ability to announce a reset has been triggered. If we have a part count named `pcount` that gets reset daily, the new protocol is as follows:
 
 	2014-09-29T23:59:33.460470Z|pcount|0:DAY
 	
