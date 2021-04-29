@@ -383,6 +383,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='BLOCK_COUNT'/>
       <xs:enumeration value='USER'/>
       <xs:enumeration value='PART_NUMBER'/>
+      <xs:enumeration value='EQUIPMENT_TIMER'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemEnumType'>
@@ -443,6 +444,11 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='TOOL_GROUP'/>
       <xs:enumeration value='ROTARY'/>
       <xs:enumeration value='LINEAR'/>
+      <xs:enumeration value='LOADED'/>
+      <xs:enumeration value='WORKING'/>
+      <xs:enumeration value='OPERATING'/>
+      <xs:enumeration value='POWERED'/>
+      <xs:enumeration value='DELAY'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
@@ -1985,6 +1991,25 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='EquipmentTimerType'>
+    <xs:annotation>
+      <xs:documentation>
+        The flow
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='SampleType'>
+        <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='EquipmentTimer' type='EquipmentTimerType' substitutionGroup='Sample'>
+    <xs:annotation>
+      <xs:documentation>
+        The flow
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='AbsTimeSeriesType' abstract='true'>
     <xs:annotation>
       <xs:documentation>
@@ -2656,6 +2681,23 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
+  <xs:complexType name='EquipmentTimerTimeSeriesType'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The flow
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='TimeSeriesType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='EquipmentTimerTimeSeries' type='EquipmentTimerTimeSeriesType' substitutionGroup='TimeSeries'>
+    <xs:annotation>
+      <xs:documentation>
+        Time series of The flow
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
   <xs:complexType name='AbsTimeSeriesTimeSeriesType'>
     <xs:annotation>
       <xs:documentation>
@@ -2775,6 +2817,24 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:string'>
       <xs:pattern value='[+-]?\d+(\.\d+)?([Ee][+-]?\d+)?|UNAVAILABLE'/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name='StringValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A text value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'/>
+  </xs:simpleType>
+  <xs:simpleType name='IntegerValueType'>
+    <xs:annotation>
+      <xs:documentation>
+        A integer numeric value
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base='xs:string'>
+      <xs:pattern value='[+-]?\d+|UNAVAILABLE'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DirectionValueType'>
@@ -3938,6 +3998,48 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     <xs:annotation>
       <xs:documentation>
         The name of the program being edited
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='LineLabelType'>
+    <xs:annotation>
+      <xs:documentation>
+        An optional identifier for a BLOCK of code in a PROGRAM.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'/>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='LineLabel' type='LineLabelType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        An optional identifier for a BLOCK of code in a PROGRAM.
+      </xs:documentation>
+    </xs:annotation>
+  </xs:element>
+  <xs:complexType name='LineNumberType'>
+    <xs:annotation>
+      <xs:documentation>
+        A reference to the position of a block of program code within a control
+        program. The line number MAY represent either an absolute position
+        starting with the first line of the program or an incremental position
+        relative to the occurrence of the last LINE_LABEL.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:restriction base='EventType'>
+        <xs:pattern value='[+-]?\d+|UNAVAILABLE'/>
+      </xs:restriction>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name='LineNumber' type='LineNumberType' substitutionGroup='Event'>
+    <xs:annotation>
+      <xs:documentation>
+        A reference to the position of a block of program code within a control
+        program. The line number MAY represent either an absolute position
+        starting with the first line of the program or an incremental position
+        relative to the occurrence of the last LINE_LABEL.
       </xs:documentation>
     </xs:annotation>
   </xs:element>

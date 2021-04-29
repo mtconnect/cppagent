@@ -383,6 +383,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='BLOCK_COUNT'/>
       <xs:enumeration value='USER'/>
       <xs:enumeration value='PART_NUMBER'/>
+      <xs:enumeration value='EQUIPMENT_TIMER'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemEnumType'>
@@ -443,6 +444,11 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:enumeration value='TOOL_GROUP'/>
       <xs:enumeration value='ROTARY'/>
       <xs:enumeration value='LINEAR'/>
+      <xs:enumeration value='LOADED'/>
+      <xs:enumeration value='WORKING'/>
+      <xs:enumeration value='OPERATING'/>
+      <xs:enumeration value='POWERED'/>
+      <xs:enumeration value='DELAY'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumType'>
