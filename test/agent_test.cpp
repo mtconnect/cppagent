@@ -377,7 +377,7 @@ TEST_F(AgentTest, FileDownload)
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
   // Register a file with the agent.
-  agent->getFileCache()->registerFile(uri, PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd", "1.1");
+  agent->getFileCache()->registerFile(uri, string(PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd"), "1.1");
 
   // Reqyest the file...
   PARSE_TEXT_RESPONSE(uri.c_str());
@@ -393,7 +393,7 @@ TEST_F(AgentTest, FailedFileDownload)
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
   // Register a file with the agent.
-  agent->getFileCache()->registerFile(uri, "./BadFileName.xsd", "1.1");
+  agent->getFileCache()->registerFile(uri, string("./BadFileName.xsd"), "1.1");
 
   {
     PARSE_XML_RESPONSE(uri.c_str());

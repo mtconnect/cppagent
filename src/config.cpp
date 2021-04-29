@@ -285,10 +285,7 @@ namespace mtconnect
 #endif
 
   void AgentConfiguration::monitorThread()
-  {
-    // shut this off for now.
-    return;
-    
+  {    
     time_t devices_at_start = 0, cfg_at_start = 0;
 
     g_logger << LDEBUG << "Monitoring files: " << m_configFile << " and " << m_devicesFile
@@ -349,21 +346,19 @@ namespace mtconnect
         changed =
             (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
       }
-    } while (!changed);  // && m_agent->is_running());
+    } while (!changed && m_agent->getServer()->is_running());
 
     // TODO: Put monitor thread back in place
-#if 0
     // Restart agent if changed...
     // stop agent and signal to warm start
-    if (m_agent->is_running() && changed)
+    if (m_agent->getServer()->is_running() && changed)
     {
       g_logger << LWARN
                << "Monitor thread has detected change in configuration files, restarting agent.";
 
       m_restart = true;
       m_agent->stop();
-      delete m_agent;
-      m_agent = nullptr;
+      m_agent.reset();
 
       g_logger << LWARN << "Monitor agent has completed shutdown, reinitializing agent.";
 
@@ -371,7 +366,7 @@ namespace mtconnect
       const char *argv[] = {m_configFile.c_str()};
       initialize(1, argv);
     }
-#endif
+
     g_logger << LDEBUG << "Monitor thread is exiting";
   }
 
