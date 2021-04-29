@@ -36,7 +36,8 @@ namespace mtconnect
       static const int SMALL_FILE = 10 * 1024;  // 10k is considered small
 
       CachedFile() : m_buffer(nullptr) {}
-      ~CachedFile() {
+      ~CachedFile()
+      {
         if (m_buffer != nullptr)
           free(m_buffer);
       }
@@ -45,19 +46,19 @@ namespace mtconnect
       CachedFile(const CachedFile &file, const std::string &mime)
         : m_size(file.m_size), m_mimeType(mime)
       {
-        m_buffer = static_cast<char*>(malloc(file.m_size));
+        m_buffer = static_cast<char *>(malloc(file.m_size));
         std::memcpy(m_buffer, file.m_buffer, file.m_size);
       }
 
       CachedFile(char *buffer, size_t size) : m_buffer(nullptr), m_size(size)
       {
-        m_buffer = static_cast<char*>(malloc(m_size));
+        m_buffer = static_cast<char *>(malloc(m_size));
         std::memcpy(m_buffer, buffer, size);
       }
 
       CachedFile(size_t size) : m_buffer(nullptr), m_size(size)
       {
-        m_buffer = static_cast<char*>(malloc(m_size));
+        m_buffer = static_cast<char *>(malloc(m_size));
       }
 
       CachedFile(const std::filesystem::path &path, const std::string &mime)
@@ -65,7 +66,7 @@ namespace mtconnect
       {
         auto size = std::filesystem::file_size(path);
         m_size = size + 1;
-        m_buffer = static_cast<char*>(malloc(m_size));
+        m_buffer = static_cast<char *>(malloc(m_size));
         auto file = std::fopen(path.string().c_str(), "r");
         std::fread(m_buffer, 1, size, file);
         m_buffer[size] = '\0';
@@ -76,7 +77,7 @@ namespace mtconnect
         if (m_buffer != nullptr)
           free(m_buffer);
         m_size = file.m_size;
-        m_buffer = static_cast<char*>(malloc(m_size));
+        m_buffer = static_cast<char *>(malloc(m_size));
         std::memcpy(m_buffer, file.m_buffer, m_size);
         return *this;
       }
@@ -84,10 +85,10 @@ namespace mtconnect
       void allocate(size_t size)
       {
         m_size = size;
-        m_buffer = static_cast<char*>(malloc(m_size));
+        m_buffer = static_cast<char *>(malloc(m_size));
       }
 
-      char  *m_buffer;
+      char *m_buffer;
       size_t m_size = 0;
       std::string m_mimeType;
     };

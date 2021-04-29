@@ -97,7 +97,7 @@ namespace mtconnect
       void cachePointers(DataItemPtr dataItem);
 
     protected:
-      bool m_preserveUuid { false };
+      bool m_preserveUuid {false};
 
       DataItemPtr m_availability;
       DataItemPtr m_assetChanged;

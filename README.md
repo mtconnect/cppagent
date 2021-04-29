@@ -1,7 +1,7 @@
 
 MTConnect C++ Agent Version 1.7
 --------
-[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent)
+[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent_dev)
 
 The C++ Agent provides the a complete implementation of the HTTP
 server required by the MTConnect standard. The agent provides the
@@ -137,7 +137,7 @@ Each set of files must be declared using a named file description, like schema o
 styles and the local `Path` and the `Location` the files will be mapped to in the
 HTTP server namespace. For example:
 
-    http://example.com:5000/schemas/MTConnectStreams_1.3.xsd will map to ../schemas/MTConnectStreams_1.3.xsd
+    http://example.com:5000/schemas/MTConnectStreams_1.7.xsd will map to ../schemas/MTConnectStreams_1.7.xsd
 
 All files will be mapped and the directory names do not need to be the same. These files can be either served directly or can be used to extend the schema or add XSLT stylesheets for formatting the XML in browsers.
 
@@ -147,12 +147,12 @@ To specify the new schema for the documents, use the following declaration:
 
     StreamsNamespaces {
       e {
-        Urn = urn:example.com:ExampleStreams:1.3
-        Location = /schemas/ExampleStreams_1.3.xsd
+        Urn = urn:example.com:ExampleStreams:1.7
+        Location = /schemas/ExampleStreams_1.7.xsd
       }
     }
 
-This will use the ExampleStreams_1.3.xsd schema in the document. The `e` is the alias that will be
+This will use the ExampleStreams_1.7.xsd schema in the document. The `e` is the alias that will be
 used to reference the extended schema. The `Location` is the location of the xsd file relative in 
 the agent namespace. The `Location` must be mapped in the `Files` section.
 

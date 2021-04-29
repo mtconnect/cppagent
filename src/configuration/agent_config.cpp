@@ -256,9 +256,6 @@ namespace mtconnect
 
     void AgentConfiguration::monitorThread()
     {
-      // shut this off for now.
-      return;
-
       NAMED_SCOPE("AgentConfiguration::monitorThread");
 
       time_t devices_at_start = 0, cfg_at_start = 0;
@@ -321,27 +318,23 @@ namespace mtconnect
         }
       } while (!changed);  // && m_agent->is_running());
 
-      // TODO: Put monitor thread back in place
-#if 0
       // Restart agent if changed...
       // stop agent and signal to warm start
-      if (m_agent->is_running() && changed)
+      if (m_agent->getServer()->is_running() && changed)
       {
-        LOG(warning)
-        << "Monitor thread has detected change in configuration files, restarting agent.";
-        
+        g_logger << LWARN
+                 << "Monitor thread has detected change in configuration files, restarting agent.";
+
         m_restart = true;
         m_agent->stop();
-        delete m_agent;
-        m_agent = nullptr;
-        
-        LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
-        
+        m_agent.reset();
+
+        g_logger << LWARN << "Monitor agent has completed shutdown, reinitializing agent.";
+
         // Re initialize
         const char *argv[] = {m_configFile.c_str()};
         initialize(1, argv);
       }
-#endif
       LOG(debug) << "Monitor thread is exiting";
     }
 
@@ -545,7 +538,7 @@ namespace mtconnect
               LOG(error) << "Invalid schedule value.";
           }
         }
-        
+
         auto log_directory = fs::path(name).parent_path();
         if (!log_directory.is_absolute())
           log_directory = fs::absolute(fs::current_path() / log_directory);

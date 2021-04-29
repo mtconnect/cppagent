@@ -45,7 +45,8 @@ namespace mtconnect
         std::filesystem::path path(pathName);
         return registerFile(uri, path, version);
       }
-      std::optional<XmlNamespace> registerFile(const std::string &uri, const std::filesystem::path &path,
+      std::optional<XmlNamespace> registerFile(const std::string &uri,
+                                               const std::filesystem::path &path,
                                                const std::string &version);
       CachedFilePtr getFile(const std::string &name);
       bool hasFile(const std::string &name) const

@@ -307,7 +307,7 @@ namespace mtconnect
       m_complete = complete;
       m_streamBuffer.emplace();
       ostream str(&m_streamBuffer.value());
-      
+
       str << "--" + m_boundary
           << "\r\n"
              "Content-type: "
