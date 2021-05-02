@@ -44,7 +44,8 @@ before_build:
     mkdir C:\conan
     set CONAN_USER_HOME=C:\conan
     set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
-    pip install conan    
+    pip install conan
+    conan export mqtt_cpp
     mkdir build
     cd build
     conan install .. -s build_type=Release --build=missing
@@ -54,6 +55,7 @@ before_build:
 - sh: export CXX=/usr/bin/g++-9
 - sh: export PATH=$HOME/venv3.9/bin:$PATH
 - sh: pip install conan
+- sh: conan export mqtt_cpp
 - sh: mkdir build
 - sh: cd build
 - sh: conan install .. -s build_type=Release -s compiler.libcxx=libstdc++11 --build=missing
