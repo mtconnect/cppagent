@@ -17,6 +17,7 @@ platform:
 - x64
 
 cache:
+- c:\.conan\ -> appveyor.yml, conanfile.txt
 - c:\conan\ -> appveyor.yml, conanfile.txt
 
 #environment:
@@ -48,9 +49,9 @@ before_build:
     conan export mqtt_cpp
     mkdir build
     cd build
-    conan install .. -s build_type=Release --build=missing
+    conan install .. -s build_type=Release --build=missing -s arch=x86_64
     cmake --version
-    cmake -G "Visual Studio 16 2019" .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
+    cmake -G "Visual Studio 16 2019" .. -A x64 -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
 - sh: export CC=/usr/bin/gcc-9
 - sh: export CXX=/usr/bin/g++-9
 - sh: export PATH=$HOME/venv3.9/bin:$PATH
