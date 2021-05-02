@@ -54,11 +54,9 @@ before_build:
 - sh: export CXX=/usr/bin/g++-9
 - sh: export PATH=$HOME/venv3.9/bin:$PATH
 - sh: pip install conan
-- sh: conan profile new default --detect
-- sh: conan profile update settings.compiler.libcxx=libstdc++11 default
 - sh: mkdir build
 - sh: cd build
-- sh: conan install .. -s build_type=Release --build=missing
+- sh: conan install .. -s build_type=Release -s compiler.libcxx=libstdc++11 --build=missing
 - sh: cmake --version
 - sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
     
