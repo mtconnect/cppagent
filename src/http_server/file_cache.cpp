@@ -100,7 +100,7 @@ namespace mtconnect
 
       if (!fs::exists(path))
       {
-        LOG(warning) << "The following path " << pathName
+        LOG(warning) << "The following path " << path
                      << " cannot be found, full path: " << fs::absolute(path);
         return nullopt;
       }

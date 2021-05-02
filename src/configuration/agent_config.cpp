@@ -320,16 +320,16 @@ namespace mtconnect
 
       // Restart agent if changed...
       // stop agent and signal to warm start
-      if (m_agent->getServer()->is_running() && changed)
+      if (!m_context.stopped() && changed)
       {
-        g_logger << LWARN
+        LOG(warning)
                  << "Monitor thread has detected change in configuration files, restarting agent.";
 
         m_restart = true;
         m_agent->stop();
         m_agent.reset();
 
-        g_logger << LWARN << "Monitor agent has completed shutdown, reinitializing agent.";
+        LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
 
         // Re initialize
         const char *argv[] = {m_configFile.c_str()};
@@ -643,6 +643,7 @@ namespace mtconnect
                   {configuration::ShdrVersion, 1},
                   {configuration::WorkerThreads, 1},
                   {configuration::AllowPut, false},
+                  {configuration::SuppressIPAddress, false},
                   {configuration::AllowPutFrom, ""s}});
 
       m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
@@ -765,7 +766,8 @@ namespace mtconnect
                                {configuration::Port, 7878},
                                {configuration::AutoAvailable, false},
                                {configuration::RealTime, false},
-                               {configuration::RelativeTime, false}});
+                               {configuration::RelativeTime, false},
+          });
 
           auto deviceName =
               block.second.get_optional<string>(configuration::Device).value_or(block.first);

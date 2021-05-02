@@ -38,6 +38,7 @@ namespace asio = boost::asio;
 using tcp = boost::asio::ip::tcp;
 namespace ip = boost::asio::ip;
 namespace sys = boost::system;
+namespace config = mtconnect::configuration;
 
 class AgentDeviceTest : public testing::Test
 {
@@ -65,7 +66,8 @@ class AgentDeviceTest : public testing::Test
 
   void addAdapter(bool suppress = false)
   {
-    ConfigOptions options{{configuration::SuppressIPAddress, suppress}};
+    
+    ConfigOptions options{{config::SuppressIPAddress, suppress}};
     m_agentTestHelper->addAdapter(options, "127.0.0.1", m_port, "LinuxCNC");
     m_agentTestHelper->m_adapter->setReconnectInterval(1s);
   }
@@ -167,7 +169,7 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 #define ADAPTER_PATH ADAPTERS_PATH "/m:Components/m:Adapter"
 #define ADAPTER_DATA_ITEMS_PATH ADAPTER_PATH "/m:DataItems"
 
-#define ID_PREFIX "_83a0a5df80"
+#define ID_PREFIX "_d0c33d4315"
 
 TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
 {
@@ -190,6 +192,7 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
 
 TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 {
+  m_port = 21788;
   addAdapter(true);
   {
     PARSE_XML_RESPONSE("/Agent/probe");

@@ -62,5 +62,6 @@ namespace mtconnect
     DECLARE_CONFIGURATION(LegacyTimeout);
     DECLARE_CONFIGURATION(AdditionalDevices);
     DECLARE_CONFIGURATION(AdapterIdentity);
+    DECLARE_CONFIGURATION(SuppressIPAddress);
   }  // namespace configuration
 }  // namespace mtconnect
