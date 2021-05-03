@@ -9,6 +9,8 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
     list(APPEND _sources test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
   endif()
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
+  set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
   target_link_libraries(${AGENT_TEST_NAME}_test agent_lib CONAN_PKG::gtest)
   target_include_directories(${AGENT_TEST_NAME}_test

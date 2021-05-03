@@ -9,6 +9,11 @@ if(WIN32)
 endif()
 
 add_executable(agent ${AGENT_SOURCES})
+
+set_property(TARGET agent PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+
 target_link_libraries(
   agent
   PRIVATE

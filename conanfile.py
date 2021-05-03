@@ -23,15 +23,28 @@ class CppAgentConan(ConanFile):
         "boost:extra_b2_flags": "-j 2 -d +1 cxxstd=17 ",
         "boost:i18n_backend": 'icu',
 
+        "libxml2:shared": False,
+        "libxml2:include_utils": False,
         "libxml2:http": False,
         "libxml2:ftp": False,
         "libxml2:iconv": False,
-        "libxml2:zlib": False
+        "libxml2:zlib": False,
+
+        "gtest:shared": False,
+        
+        "date:use_system_tz_db": True
         }
 
     def configure(self):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
+        if self.settings.os == 'Windows':
+            self.options['boost'].i18n_backend = None
+            if self.settings.build_type and self.settings.build_type == 'Debug':
+                self.settings.compiler.runtime = 'MTd'
+            else:
+                self.settings.compiler.runtime = 'MT'
+            self.settings.compiler.version = '16'
         
         if "libcxx" in self.settings.compiler.fields and self.settings.compiler.libcxx == "libstdc++":
             raise Exception("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")
@@ -40,7 +53,6 @@ class CppAgentConan(ConanFile):
         
         if self.windows_xp:
             self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + " define=BOOST_USE_WINAPI_VERSION=0x0501 boost.locale.icu=off boost.locale.iconv=off boost.locale.winapi=on"
-            self.options['boost'].i18n_backend = None
         elif self.settings.os == 'Windows':
             self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + " define=BOOST_USE_WINAPI_VERSION=0x0600 "            
 

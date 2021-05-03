@@ -154,7 +154,6 @@ list(FILTER AGENT_LIB_SOURCES INCLUDE REGEX "\\.(c|cpp)$")
 source_group("Header Files")
 source_group("Source Files")
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Header Files" FILES ${AGENT_LIB_HEADERS})
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Source Files" FILES ${AGENT_LIB_SOURCES})
 
 add_library(agent_lib STATIC ${AGENT_SOURCES})
 add_dependencies(agent_lib UPDATE_VERSION)
@@ -166,6 +165,8 @@ target_include_directories(
     "${CMAKE_CURRENT_LIST_DIR}/../src"
     )
 
+set_property(TARGET agent_lib PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   
 target_link_libraries(
   agent_lib

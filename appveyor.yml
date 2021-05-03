@@ -42,14 +42,16 @@ init:
 
 before_build:
 - cmd: |-
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars64.bat"
     mkdir C:\conan
     set CONAN_USER_HOME=C:\conan
     set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
     pip install conan
     conan export mqtt_cpp
+    conan export boost boost/1.75.0@
     mkdir build
     cd build
-    conan install .. -s build_type=Release --build=missing -s arch=x86_64
+    conan install .. -s build_type=Release --build=missing -s arch=x86_64 -s compiler.runtime=MT
     cmake --version
     cmake -G "Visual Studio 16 2019" .. -A x64 -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
 - sh: export CC=/usr/bin/gcc-9
