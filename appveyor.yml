@@ -48,7 +48,7 @@ before_build:
     set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
     pip install conan
     conan export mqtt_cpp
-    conan export boost boost/1.75.0@
+    conan export boost/all boost/1.75.0@
     mkdir build
     cd build
     conan install .. -s build_type=Release --build=missing -s arch=x86_64 -s compiler.runtime=MT
@@ -82,6 +82,10 @@ build_script:
 test_script:
 - cmd: ctest -C Release --output-on-failure
 - sh: ctest
+
+on_finish:
+  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
   
 only_commits:
   files:
