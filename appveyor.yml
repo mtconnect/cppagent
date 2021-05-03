@@ -35,6 +35,7 @@ matrix:
   
 # skip unsupported combinations
 init:
+- ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))  
 - cmd: |-
     echo %APPVEYOR_BUILD_WORKER_IMAGE%
     echo %MSBUILD_FLAGS%
@@ -42,7 +43,6 @@ init:
 
 before_build:
 - cmd: |-
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars64.bat"
     mkdir C:\conan
     set CONAN_USER_HOME=C:\conan
     set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
