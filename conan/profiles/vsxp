@@ -7,4 +7,3 @@ compiler.toolset=v141_xp
 compiler.runtime=MT
 
 [env]
-WINVER=0x0501

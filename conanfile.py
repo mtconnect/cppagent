@@ -41,7 +41,7 @@ class CppAgentConan(ConanFile):
         if self.settings.os == 'Windows':
             self.options['boost'].i18n_backend = 'winapi'
             self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + \
-                " boost.locale.icu=off boost.locale.iconv=off boost.locale.winapi=on asmflags=/safeseh "
+                "boost.locale.icu=off boost.locale.iconv=off boost.locale.winapi=on "
             if self.settings.build_type and self.settings.build_type == 'Debug':
                 self.settings.compiler.runtime = 'MTd'
             else:

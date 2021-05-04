@@ -1114,29 +1114,46 @@ You also need CMake [CMake](https://cmake.org/download/) and git [git](https://g
 
 Clone the agent to another directory:
 
-    cd [home-directory]
     git clone git@github.com:/mtconnect/cppagent_dev.git
 
 Make a build subdirectory of `cppagent_dev`
 
-    mkdir cppagent_dev\build	
-    cd cppagent_dev\build
+    cd cppagent_dev
+	conan export conan\mqtt_cpp
+	conan export conan\boost\all boost/1.75.0@
+	mkdir build
+	cd build
 	
-####  For the 64 bit build
+####  To build for 64 bit Windows
 	
-    conan install .. -s build_type=Release --build=missing
-    cmake -G "Visual Studio 16 2019" -A x64 ..
-	
-#### For the Win32 build for XP
+Make sure to setup the environment:
 
-The windows XP 140 XP toolchain needs to be installed under individual component in the Visual Studio 2019 installer.
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars64.bat"
+
+or
+
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 	
-    conan install ..\cppagent_dev -s build_type=Release --build=missing -s compiler.toolset=v140_xp -e define=WINVER=0x0501 -s arch=x86
+    conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/vs64
+    cmake -G "Visual Studio 16 2019" -A x64 ..
+
+#### To build for 32 bit Windows
+
+    conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/vs32
+    cmake -G "Visual Studio 16 2019" -A Win32 ..
+
+#### To build for Windows XP
+
+The windows XP 140 XP toolchain needs to be installed under individual component in the Visual Studio 2019 installer. 
+
+**WARNING: This build is not currently working. There is a header include issue in the service.cpp module that conflicts with boost.**
+	
+    conan install ..\cppagent_dev -s build_type=Release --build=missing -pr ../conan/profiles/vsxp
     cmake -G "Visual Studio 16 2019" -A Win32 -T v141_xp -D AGENT_ENABLE_UNITTESTS=false -D WINVER=0x0501 ..
 
 ### Build from the command line
 
-#### For the x64 build
+#### For the 64 and 32 bit build
 
     cmake --build . --config Release --target ALL_BUILD
 	
@@ -1145,7 +1162,7 @@ The windows XP 140 XP toolchain needs to be installed under individual component
     ctest -C Release
     cpack -G ZIP
 
-#### For the Win32 build
+#### For the XP build
 
     cmake --build . --config Release --target ALL_BUILD
 
@@ -1158,18 +1175,18 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 ### Setup the build
 
     sudo apt-get install build-essential boost python3.9 git
+	pip3 install conan
 
 ### Download the source
 
 	git clone git@github.com:/mtconnect/cppagent_dev.git
 	
 ### Install the dependencies
-
-	pip3 install conan
-	mkdir build
-	conan profile new default --detect
-	conan profile update settings.compiler.libcxx=libstdc++11 default
-	conan install .. -s build_type=Release --build=missing
+	
+	cd cppagent_dev
+	conan export conan/mqtt_cpp
+	mkdir build && cd build
+	conan install .. -s build_type=Release --build=missing -pr ../conan/profile/gcc
 	
 ### Build the agent
 	
@@ -1183,10 +1200,16 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 ## Building on Mac OS
 
 Install brew and xcode command line tools
+	
+	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	xcode-select —install
 
 ### Setup the build
 
     brew install git
+    brew install cmake
+
+	pip3 install conan
 
 ### Download the source
 
@@ -1194,8 +1217,9 @@ Install brew and xcode command line tools
 	
 ### Install the dependencies
 
-	pip3 install conan
-	mkdir build
+	cd cppagent_dev
+    conan export conan/mqtt_cpp
+	mkdir build && cd build
 	conan install .. -s build_type=Release --build=missing
 	
 ### Build the agent
@@ -1210,3 +1234,35 @@ Install brew and xcode command line tools
 ### For XCode
    
     cmake -G Xcode ..
+
+## Building on Fedora Alpine
+
+### As Root
+
+	apk add g++
+    apk add python3
+	apk add cmake
+	apk add git
+	apk add linux-headers
+	
+	python3 -m ensurepip
+	python3 -m pip install --upgrade pip
+
+### As the user
+	
+	pip3 install conan	
+	git clone git@github.com:/mtconnect/cppagent_dev.git	
+
+### Export mqtt_cpp package
+
+	cd cppagent_dev
+	conan export conan/mqtt_cpp/
+
+### Install packages
+
+	mkdir build && cd build
+    conan install .. -pr ../conan/profiles/gcc --build=missing
+	cmake .. -DCMAKE_BUILD_TYPE=Release
+	make
+	ctest
+
