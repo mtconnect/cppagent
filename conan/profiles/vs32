@@ -1,0 +1,8 @@
+include(default)
+
+[settings]
+arch=x86_32
+arch_build=x86_32
+compiler.runtime=MT
+
+[env]
