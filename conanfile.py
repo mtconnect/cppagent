@@ -39,7 +39,9 @@ class CppAgentConan(ConanFile):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
-            self.options['boost'].i18n_backend = None
+            self.options['boost'].i18n_backend = 'winapi'
+            self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + \
+                "boost.locale.icu=off boost.locale.iconv=off boost.locale.winapi=on "
             if self.settings.build_type and self.settings.build_type == 'Debug':
                 self.settings.compiler.runtime = 'MTd'
             else:
@@ -52,9 +54,9 @@ class CppAgentConan(ConanFile):
         self.settings.compiler.cppstd = 17
         
         if self.windows_xp:
-            self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + " define=BOOST_USE_WINAPI_VERSION=0x0501 boost.locale.icu=off boost.locale.iconv=off boost.locale.winapi=on"
+            self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0501 "
         elif self.settings.os == 'Windows':
-            self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + " define=BOOST_USE_WINAPI_VERSION=0x0600 "            
+            self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0600 "            
 
     def requirements(self):
         if not self.windows_xp:

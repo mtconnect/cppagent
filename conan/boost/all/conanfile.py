@@ -92,7 +92,7 @@ class BoostConan(ConanFile):
         "debug_level": [i for i in range(0, 14)],
         "pch": [True, False],
         "extra_b2_flags": "ANY",  # custom b2 flags
-        "i18n_backend": ["iconv", "icu", None],
+        "i18n_backend": ["iconv", "icu", 'winapi', None],
         "visibility": ["global", "protected", "hidden"],
     }
     options.update({"without_{}".format(_name): [True, False] for _name in CONFIGURE_OPTIONS})
@@ -304,11 +304,12 @@ class BoostConan(ConanFile):
         elif self.options.shared:
             del self.options.fPIC
 
-        #if self.options.without_locale:
-        #    self.options.i18n_backend = None
-        #else:
-        #    if not self.options.i18n_backend:
-        #        raise ConanInvalidConfiguration("Boost.locale library requires a i18n_backend (either 'icu' or 'iconv')")
+
+        if self.options.without_locale:
+            self.options.i18n_backend = None
+        else:
+            if not self.options.i18n_backend:
+                raise ConanInvalidConfiguration("Boost.locale library requires a i18n_backend (either 'icu','iconv', or 'winapi')")
 
         if not self.options.without_python:
             if not self.options.python_version:
