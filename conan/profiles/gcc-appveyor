@@ -2,6 +2,7 @@ include(default)
 
 [settings]
 compiler.libcxx=libstdc++11
+compiler.version=9
 
 [env]
 CC=/usr/bin/gcc-9
