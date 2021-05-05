@@ -2,7 +2,7 @@ version: '{build}'
 branches:
   only:
   - master
-  - boost_refactor_master
+  - /.*master.*/
   
 # clone_folder: c:\projects\cppagent_dev
 image:
@@ -17,9 +17,9 @@ platform:
 - x64
 
 cache:
-- c:\.conan\ -> appveyor.yml, conanfile.txt
-- c:\conan\ -> conanfile.txt
-- /home/appveyor/.conan -> conanfile.txt
+- c:\.conan\ -> conanfile.py
+- c:\conan\ -> conanfile.py
+- /home/appveyor/.conan -> conanfile.py
 
 #environment:
 #  matrix:
