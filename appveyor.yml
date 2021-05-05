@@ -45,11 +45,11 @@ before_build:
     pip install conan
     conan export conan/mqtt_cpp
     conan export conan/boost/all boost/1.75.0@
-    conan install . -if build --build=missing -pr ../conan/profiles/vs32 -o run_tests=False
+    conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False
 - sh: export PATH=$HOME/venv3.9/bin:$PATH
 - sh: pip install conan
 - sh: conan export mqtt_cpp
-- sh: conan install . -if build --build=missing -pr ../conan/profiles/gcc-appveyor -o run_tests=False
+- sh: conan install . -if build --build=missing -pr conan/profiles/gcc-appveyor -o run_tests=False
     
 
 build:
