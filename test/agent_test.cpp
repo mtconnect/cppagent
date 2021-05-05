@@ -2504,7 +2504,7 @@ TEST_F(AgentTest, StreamData)
   {
     auto startTime = system_clock::now();
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
-    m_agentTestHelper->m_ioContext.run_one_for(210ms);
+    m_agentTestHelper->m_ioContext.run_for(220ms);
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     
     PARSE_XML_CHUNK();
@@ -2527,7 +2527,7 @@ TEST_F(AgentTest, StreamData)
     m_agentTestHelper->m_ioContext.run_for(delay);
 
     m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
-    m_agentTestHelper->m_ioContext.run_one_for(200ms);
+    m_agentTestHelper->m_ioContext.run_for(10ms);
     
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     PARSE_XML_CHUNK();
