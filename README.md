@@ -1146,26 +1146,15 @@ or
 
 The windows XP 140 XP toolchain needs to be installed under individual component in the Visual Studio 2019 installer. 
 
-**WARNING: This build is not currently working. There is a header include issue in the service.cpp module that conflicts with boost.**
-	
-    conan install ..\cppagent_dev -s build_type=Release --build=missing -pr ../conan/profiles/vsxp
-    cmake -G "Visual Studio 16 2019" -A Win32 -T v141_xp -D AGENT_ENABLE_UNITTESTS=false -D WINVER=0x0501 ..
+    conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/vsxp
+    conan build ..
 
 ### Build from the command line
 
 #### For the 64 and 32 bit build
 
-    cmake --build . --config Release --target ALL_BUILD
+    conan build ..
 	
-#### Test and package the release
-
-    ctest -C Release
-    cpack -G ZIP
-
-#### For the XP build
-
-    cmake --build . --config Release --target ALL_BUILD
-
 #### Package the release
 
     cpack -G ZIP
@@ -1190,13 +1179,8 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 	
 ### Build the agent
 	
-	cmake -D CMAKE_BUILD_TYPE=Release ../
-	cmake --build .
+	conan build ..
 	
-### Test the release
-
-	ctest -C Release
-
 ## Building on Mac OS
 
 Install brew and xcode command line tools
@@ -1224,13 +1208,8 @@ Install brew and xcode command line tools
 	
 ### Build the agent
 	
-	cmake -D CMAKE_BUILD_TYPE=Release ../
-	cmake --build .
+	conan build ..
 	
-### Test the release
-
-	ctest -C Release
-
 ### For XCode
    
     cmake -G Xcode ..
@@ -1262,7 +1241,8 @@ Install brew and xcode command line tools
 
 	mkdir build && cd build
     conan install .. -pr ../conan/profiles/gcc --build=missing
-	cmake .. -DCMAKE_BUILD_TYPE=Release
-	make
-	ctest
+	
+## Build the agent
+
+	conan build ..
 

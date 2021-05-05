@@ -48,19 +48,16 @@ before_build:
     conan export conan/boost/all boost/1.75.0@
     mkdir build
     cd build
-    conan install .. -s build_type=Release --build=missing -s arch=x86_64 -s compiler.runtime=MT
+    conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/vs32 -o run_tests=False
     cmake --version
-    cmake -G "Visual Studio 16 2019" .. -A x64 -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
-- sh: export CC=/usr/bin/gcc-9
-- sh: export CXX=/usr/bin/g++-9
+    conan build ..
 - sh: export PATH=$HOME/venv3.9/bin:$PATH
 - sh: pip install conan
 - sh: conan export mqtt_cpp
 - sh: mkdir build
 - sh: cd build
-- sh: conan install .. -s build_type=Release -s compiler.libcxx=libstdc++11 --build=missing
-- sh: cmake --version
-- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
+- sh: conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/gcc-appveyor -o run_tests=False
+- sh: conan build ..
     
 
 build:
