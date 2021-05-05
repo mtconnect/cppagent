@@ -63,7 +63,14 @@ class CppAgentConan(ConanFile):
             self.requires("gtest/1.10.0")
         
     def build(self):
-        cmake = CMake(self, build_type=self.settings.get_safe("build_type", default="Release"))
+        cmake = CMake(self)
+        cmake.verbose = True
+        if self.windows_xp:
+            cmake.definitions['AGENT_ENABLE_UNITTESTS'] = 'OFF'
+            cmake.definitions['WINVER'] = '0x0501'
+        else:
+            flags = False
+
         cmake.configure()
         cmake.build()
         if not self.windows_xp:

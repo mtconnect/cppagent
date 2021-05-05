@@ -154,6 +154,14 @@ list(FILTER AGENT_LIB_SOURCES INCLUDE REGEX "\\.(c|cpp)$")
 source_group("Header Files")
 source_group("Source Files")
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Header Files" FILES ${AGENT_LIB_HEADERS})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Source Files" FILES ${AGENT_LIB_SOURCES})
+
+if(MSVC AND ${CMAKE_GENERATOR_TOOLSET} MATCHES "v14[01]_xp")
+  message(info ": Setting /Ob1 for http_server/session_impl.cpp")
+  set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/session_impl.cpp"
+    PROPERTY COMPILE_FLAGS "/Ob1")
+endif()
+
 
 add_library(agent_lib STATIC ${AGENT_SOURCES})
 add_dependencies(agent_lib UPDATE_VERSION)

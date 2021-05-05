@@ -323,7 +323,7 @@ namespace mtconnect
       if (!m_context.stopped() && changed)
       {
         LOG(warning)
-                 << "Monitor thread has detected change in configuration files, restarting agent.";
+            << "Monitor thread has detected change in configuration files, restarting agent.";
 
         m_restart = true;
         m_agent->stop();
@@ -762,12 +762,13 @@ namespace mtconnect
                       {configuration::Station, string()}});
 
           AddDefaultedOptions(block.second, adapterOptions,
-                              {{configuration::Host, "localhost"s},
-                               {configuration::Port, 7878},
-                               {configuration::AutoAvailable, false},
-                               {configuration::RealTime, false},
-                               {configuration::RelativeTime, false},
-          });
+                              {
+                                  {configuration::Host, "localhost"s},
+                                  {configuration::Port, 7878},
+                                  {configuration::AutoAvailable, false},
+                                  {configuration::RealTime, false},
+                                  {configuration::RelativeTime, false},
+                              });
 
           auto deviceName =
               block.second.get_optional<string>(configuration::Device).value_or(block.first);

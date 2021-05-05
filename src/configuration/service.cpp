@@ -15,13 +15,16 @@
 //    limitations under the License.
 //
 
-#include "service.hpp"
+/* -- this file needs to be first for the servics to build correctly */
+#include "windows.h"
+/* keep this file first */
 
 #include <cstring>
 #include <fstream>
 #include <thread>
 
 #include "logging.hpp"
+#include "service.hpp"
 #include "version.h"
 
 #ifdef _WINDOWS

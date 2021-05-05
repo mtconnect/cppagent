@@ -17,8 +17,8 @@
 
 #include "agent_device.hpp"
 
-#include "configuration/config_options.hpp"
 #include "adapter/adapter.hpp"
+#include "configuration/config_options.hpp"
 #include "data_item/constraints.hpp"
 #include "data_item/data_item.hpp"
 #include "logging.hpp"
@@ -72,14 +72,15 @@ namespace mtconnect
     {
       using namespace entity;
       using namespace device_model::data_item;
-      bool suppress = GetOption<bool>(adapter->getOptions(), config::SuppressIPAddress).value_or(false);
+      bool suppress =
+          GetOption<bool>(adapter->getOptions(), config::SuppressIPAddress).value_or(false);
       auto id = adapter->getIdentity();
 
       stringstream name;
       name << adapter->getServer() << ':' << adapter->getPort();
 
       ErrorList errors;
-      Properties attrs{{"id", id}};
+      Properties attrs {{"id", id}};
       if (!suppress)
       {
         stringstream name;
