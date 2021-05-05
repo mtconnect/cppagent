@@ -16,7 +16,9 @@
 //
 
 /* -- this file needs to be first for the servics to build correctly */
+#ifdef _WINDOWS
 #include "windows.h"
+#endif
 /* keep this file first */
 
 #include <cstring>
