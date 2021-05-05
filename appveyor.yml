@@ -18,8 +18,8 @@ platform:
 
 cache:
 - c:\.conan\ -> appveyor.yml, conanfile.txt
-- c:\conan\ -> appveyor.yml, conanfile.txt
-- /home/appveyor/.conan -> appveyor.yml, conanfile.txt
+- c:\conan\ -> conanfile.txt
+- /home/appveyor/.conan -> conanfile.txt
 
 #environment:
 #  matrix:
@@ -39,7 +39,7 @@ init:
 
 before_build:
 - cmd: |-
-    mkdir C:\conan
+    if not exist C:\conan mkdir C:\conan
     set CONAN_USER_HOME=C:\conan
     set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
     pip install conan
