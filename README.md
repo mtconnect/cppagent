@@ -1121,8 +1121,6 @@ Make a build subdirectory of `cppagent_dev`
     cd cppagent_dev
 	conan export conan\mqtt_cpp
 	conan export conan\boost\all boost/1.75.0@
-	mkdir build
-	cd build
 	
 ####  To build for 64 bit Windows
 	
@@ -1134,28 +1132,23 @@ or
 
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 	
-    conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/vs64
-    cmake -G "Visual Studio 16 2019" -A x64 ..
+    conan install . -if build -s build_type=Release --build=missing -pr conan/profiles/vs64
+   	conan build . -bf build
+
 
 #### To build for 32 bit Windows
 
-    conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/vs32
-    cmake -G "Visual Studio 16 2019" -A Win32 ..
+    conan install . -if build -s build_type=Release --build=missing -pr conan/profiles/vs32
+	conan build . -bf build
 
 #### To build for Windows XP
 
 The windows XP 140 XP toolchain needs to be installed under individual component in the Visual Studio 2019 installer. 
 
-    conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/vsxp
-    conan build ..
+    conan install . -s build_type=Release --build=missing -pr conan/profiles/vsxp
+	conan build . -bf build
 
-### Build from the command line
-
-#### For the 64 and 32 bit build
-
-    conan build ..
-	
-#### Package the release
+### Package the release
 
     cpack -G ZIP
 
@@ -1174,12 +1167,11 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 	
 	cd cppagent_dev
 	conan export conan/mqtt_cpp
-	mkdir build && cd build
-	conan install .. -s build_type=Release --build=missing -pr ../conan/profile/gcc
+	conan install . -if build --build=missing -pr conan/profile/gcc
 	
 ### Build the agent
 	
-	conan build ..
+	conan build . -bf build
 	
 ## Building on Mac OS
 
@@ -1203,15 +1195,15 @@ Install brew and xcode command line tools
 
 	cd cppagent_dev
     conan export conan/mqtt_cpp
-	mkdir build && cd build
-	conan install .. -s build_type=Release --build=missing
+	conan install . -if build  --build=missing
 	
 ### Build the agent
 	
-	conan build ..
+	conan build . -bf build
 	
 ### For XCode
    
+	mkdir build & cd build
     cmake -G Xcode ..
 
 ## Building on Fedora Alpine
@@ -1239,10 +1231,9 @@ Install brew and xcode command line tools
 
 ### Install packages
 
-	mkdir build && cd build
-    conan install .. -pr ../conan/profiles/gcc --build=missing
+    conan install . -if build -pr conan/profiles/gcc --build=missing
 	
 ## Build the agent
 
-	conan build ..
+	conan build . -bf build
 

@@ -39,43 +39,34 @@ init:
 
 before_build:
 - cmd: |-
-    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
     mkdir C:\conan
     set CONAN_USER_HOME=C:\conan
     set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
     pip install conan
     conan export conan/mqtt_cpp
     conan export conan/boost/all boost/1.75.0@
-    mkdir build
-    cd build
-    conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/vs32 -o run_tests=False
-    cmake --version
-    conan build ..
+    conan install . -if build --build=missing -pr ../conan/profiles/vs32 -o run_tests=False
 - sh: export PATH=$HOME/venv3.9/bin:$PATH
 - sh: pip install conan
 - sh: conan export mqtt_cpp
-- sh: mkdir build
-- sh: cd build
-- sh: conan install .. -s build_type=Release --build=missing -pr ../conan/profiles/gcc-appveyor -o run_tests=False
-- sh: conan build ..
+- sh: conan install . -if build --build=missing -pr ../conan/profiles/gcc-appveyor -o run_tests=False
     
 
 build:
-  project: '{APPVEYOR_BUILD_FOLDER}/build'
   verbosity: minimal
   parallel: true
 
 build_script:
 - cmd: |-
-    cd %APPVEYOR_BUILD_FOLDER%\build
-    cmake --build . --config Release --target ALL_BUILD -- %MSBUILD_FLAGS%
+    cd %APPVEYOR_BUILD_FOLDER%
+    conan build . -bf build
 - sh: |-
-    cd ${APPVEYOR_BUILD_FOLDER}/build
-    cmake --build . --config Release --target all -- -j4
+    cd ${APPVEYOR_BUILD_FOLDER}
+    conan build . -bf build
 
 test_script:
 - cmd: ctest -C Release --output-on-failure
-- sh: ctest
+- sh: ctest --output-on-failure
 
 #on_finish:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
