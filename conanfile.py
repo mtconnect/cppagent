@@ -10,7 +10,7 @@ class CppAgentConan(ConanFile):
     options = { "run_tests": [True, False] }
     
     requires = ["boost/1.75.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
-    	       "mqtt_cpp/9.0.0"]
+    	        "mqtt_cpp/9.0.0", "openssl/1.1.1k"]
     build_policy = "missing"
     default_options = {
         "run_tests": True,

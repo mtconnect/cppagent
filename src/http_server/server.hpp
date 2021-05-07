@@ -19,6 +19,7 @@
 
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/ssl.hpp>
 #include <boost/beast/http/status.hpp>
 #include <boost/bind/bind.hpp>
 
@@ -38,6 +39,7 @@
 #include "routing.hpp"
 #include "session.hpp"
 #include "utilities.hpp"
+#include "tls_dector.hpp"
 
 namespace mtconnect
 {
@@ -48,7 +50,7 @@ namespace mtconnect
     public:
       Server(boost::asio::io_context &context, unsigned short port = 5000,
              const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
-        : m_context(context), m_port(port), m_acceptor(context)
+        : m_context(context), m_port(port), m_acceptor(context), m_sslContext(boost::asio::ssl::context::tls)
       {
         if (inter.empty())
         {
@@ -67,6 +69,8 @@ namespace mtconnect
           session->writeResponse(response);
           return true;
         };
+        
+        loadTlsCertificate();
       }
 
       // Start the http server
@@ -139,6 +143,9 @@ namespace mtconnect
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
       ErrorFunction getErrorFunction() const { return m_errorFunction; }
+      
+    protected:
+      void loadTlsCertificate();
 
     protected:
       boost::asio::io_context &m_context;
@@ -147,7 +154,6 @@ namespace mtconnect
       unsigned short m_port {5000};
 
       bool m_run {false};
-      bool m_enableSSL {false};
       bool m_listening {false};
 
       ConfigOptions m_options;
@@ -161,6 +167,8 @@ namespace mtconnect
       FieldList m_fields;
 
       boost::asio::ip::tcp::acceptor m_acceptor;
+      boost::asio::ssl::context m_sslContext;
+      bool m_tlsEnabled{false};
     };
   }  // namespace http_server
 }  // namespace mtconnect

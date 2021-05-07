@@ -15,8 +15,6 @@
 //    limitations under the License.
 //
 
-#include "session_impl.hpp"
-
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/coroutine.hpp>
 #include <boost/beast/core.hpp>
@@ -33,6 +31,8 @@
 #include "logging.hpp"
 #include "request.hpp"
 #include "response.hpp"
+#include "session_impl.hpp"
+#include "tls_dector.hpp"
 
 namespace mtconnect
 {
@@ -46,6 +46,7 @@ namespace mtconnect
     using tcp = boost::asio::ip::tcp;
     namespace algo = boost::algorithm;
     namespace sys = boost::system;
+    namespace ssl = boost::asio::ssl;
 
     using namespace std;
     using boost::placeholders::_1;
@@ -148,7 +149,8 @@ namespace mtconnect
       }
     }
 
-    void SessionImpl::reset()
+    template<class Derived>
+    void SessionImpl<Derived>::reset()
     {
       m_response.reset();
       m_request.reset();
@@ -159,24 +161,27 @@ namespace mtconnect
       m_parser.emplace();
     }
 
-    void SessionImpl::run()
+    template<class Derived>
+    void SessionImpl<Derived>::run()
     {
       NAMED_SCOPE("SessionImpl::run");
-      net::dispatch(m_stream.get_executor(),
+      net::dispatch(derived().stream().get_executor(),
                     beast::bind_front_handler(&SessionImpl::read, shared_ptr()));
     }
 
-    void SessionImpl::read()
+    template<class Derived>
+    void SessionImpl<Derived>::read()
     {
       NAMED_SCOPE("SessionImpl::read");
       reset();
       m_parser->body_limit(100000);
-      m_stream.expires_after(30s);
-      http::async_read(m_stream, m_buffer, *m_parser,
+      beast::get_lowest_layer(derived().stream()).expires_after(30s);
+      http::async_read(derived().stream(), m_buffer, *m_parser,
                        beast::bind_front_handler(&SessionImpl::requested, shared_ptr()));
     }
 
-    void SessionImpl::requested(boost::system::error_code ec, size_t len)
+    template<class Derived>
+    void SessionImpl<Derived>::requested(boost::system::error_code ec, size_t len)
     {
       NAMED_SCOPE("SessionImpl::requested");
 
@@ -187,7 +192,7 @@ namespace mtconnect
       else
       {
         auto msg = m_parser->get();
-        auto remote = m_stream.socket().remote_endpoint();
+        auto remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
 
         // Check for put, post, or delete
         if (msg.method() != http::verb::get)
@@ -239,7 +244,8 @@ namespace mtconnect
       }
     }
 
-    void SessionImpl::sent(boost::system::error_code ec, size_t len)
+    template<class Derived>
+    void SessionImpl<Derived>::sent(boost::system::error_code ec, size_t len)
     {
       NAMED_SCOPE("SessionImpl::sent");
 
@@ -260,16 +266,18 @@ namespace mtconnect
       }
     }
 
-    void SessionImpl::close()
+    template<class Derived>
+    void SessionImpl<Derived>::close()
     {
       NAMED_SCOPE("SessionImpl::close");
 
       m_request.reset();
       beast::error_code ec;
-      m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
+      beast::get_lowest_layer(derived().stream()).socket().shutdown(tcp::socket::shutdown_both, ec);
     }
 
-    void SessionImpl::beginStreaming(const std::string &mimeType, Complete complete)
+    template<class Derived>
+    void SessionImpl<Derived>::beginStreaming(const std::string &mimeType, Complete complete)
     {
       NAMED_SCOPE("SessionImpl::beginStreaming");
 
@@ -296,11 +304,12 @@ namespace mtconnect
 
       auto sr = make_shared<response_serializer<empty_body>>(*res);
       m_serializer = sr;
-      async_write_header(m_stream, *sr,
+      async_write_header(derived().stream(), *sr,
                          beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
 
-    void SessionImpl::writeChunk(const std::string &body, Complete complete)
+    template<class Derived>
+    void SessionImpl<Derived>::writeChunk(const std::string &body, Complete complete)
     {
       NAMED_SCOPE("SessionImpl::writeChunk");
 
@@ -317,21 +326,23 @@ namespace mtconnect
           << to_string(body.length()) << ";\r\n\r\n"
           << body;
 
-      async_write(m_stream, http::make_chunk(m_streamBuffer->data()),
+      async_write(derived().stream(), http::make_chunk(m_streamBuffer->data()),
                   beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
 
-    void SessionImpl::closeStream()
+    template<class Derived>
+    void SessionImpl<Derived>::closeStream()
     {
       NAMED_SCOPE("SessionImpl::closeStream");
 
       m_complete = [this]() { close(); };
       http::fields trailer;
-      async_write(m_stream, http::make_chunk_last(trailer),
+      async_write(derived().stream(), http::make_chunk_last(trailer),
                   beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
 
-    void SessionImpl::writeResponse(const Response &response, Complete complete)
+    template<class Derived>
+    void SessionImpl<Derived>::writeResponse(const Response &response, Complete complete)
     {
       NAMED_SCOPE("SessionImpl::writeResponse");
 
@@ -360,7 +371,128 @@ namespace mtconnect
 
       m_response = res;
 
-      async_write(m_stream, *res, beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
+      async_write(derived().stream(), *res, beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
+    
+    class HttpsSession : public SessionImpl<HttpsSession>
+    {
+    public:
+      HttpsSession(boost::beast::tcp_stream &&socket,
+                  boost::asio::ssl::context &context,
+                  boost::beast::flat_buffer &&buffer,
+                  const FieldList &list,
+                  Dispatch dispatch, ErrorFunction error)
+      : SessionImpl<HttpsSession>(move(buffer), list, dispatch, error), m_stream(std::move(socket), context)
+      {
+        m_remote = beast::get_lowest_layer(m_stream).socket().remote_endpoint();
+      }
+      std::shared_ptr<HttpsSession> shared_ptr()
+      {
+        return std::dynamic_pointer_cast<HttpsSession>(shared_from_this());
+      }
+      
+      auto &stream() { return m_stream; }
+      
+      void run() override
+      {
+        beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
+
+        // Perform the SSL handshake
+        // Note, this is the buffered version of the handshake.
+        m_stream.async_handshake(
+            ssl::stream_base::server,
+            m_buffer.data(),
+            beast::bind_front_handler(
+                &HttpsSession::handshake, shared_ptr()));
+      }
+      
+      beast::ssl_stream<beast::tcp_stream> releaseStream()
+      {
+          return std::move(m_stream);
+      }
+
+      void close() override
+      {
+          // Set the timeout.
+          beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
+
+          // Perform the SSL shutdown
+        m_stream.async_shutdown(
+              beast::bind_front_handler(
+                  &HttpsSession::shutdown, shared_ptr()));
+      }
+
+    protected:
+      void handshake(beast::error_code ec, size_t bytes_used)
+      {
+        if(ec)
+          return fail(boost::beast::http::status::internal_server_error,
+                      "handshake", ec);
+        
+        // Consume the portion of the buffer used by the handshake
+        m_buffer.consume(bytes_used);
+
+        SessionImpl<HttpsSession>::run();
+      }
+
+      void shutdown(beast::error_code ec)
+      {
+          if(ec)
+            return fail(boost::beast::http::status::internal_server_error, "shutdown", ec);
+      }
+
+      
+    protected:
+      beast::ssl_stream<beast::tcp_stream> m_stream;
+    };
+    
+    void TlsDector::run()
+    {
+      boost::asio::dispatch(m_stream.get_executor(),
+            boost::beast::bind_front_handler(&TlsDector::detect,
+                                             this->shared_from_this()));
+    }
+    
+    void TlsDector::detect()
+    {
+        m_stream.expires_after(std::chrono::seconds(30));
+
+        auto detector = [this](boost::beast::error_code ec, bool isTls) {
+          if(ec)
+          {
+            return fail(ec, "Failed to detect TLS Connection");
+          }
+          else
+          {
+            shared_ptr<Session> session;
+            if(isTls)
+            {
+              // Create https session
+              session = std::make_shared<HttpsSession>(move(m_stream),
+                                             m_tlsContext,
+                                             move(m_buffer),
+                                             m_fields, m_dispatch,
+                                             m_errorFunction);
+            }
+            else
+            {
+              // Create http session
+              session = std::make_shared<HttpSession>(move(m_stream), move(m_buffer),
+                                            m_fields, m_dispatch,
+                                            m_errorFunction);
+            }
+            if (!m_allowPutsFrom.empty())
+              session->allowPutsFrom(m_allowPutsFrom);
+            else if (m_allowPuts)
+              session->allowPuts();
+            session->run();
+          }
+        };
+        
+        boost::beast::async_detect_ssl(m_stream, m_buffer,
+                                       boost::beast::bind_front_handler(detector));
+      }
+
+
   }  // namespace http_server
 }  // namespace mtconnect

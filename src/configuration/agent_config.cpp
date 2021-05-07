@@ -642,6 +642,10 @@ namespace mtconnect
                   {configuration::LogStreams, false},
                   {configuration::ShdrVersion, 1},
                   {configuration::WorkerThreads, 1},
+                  {configuration::TlsCertificateChain, ""s},
+                  {configuration::TlsPrivateKey, ""s},
+                  {configuration::TlsDHKey, ""s},
+                  {configuration::TlsCertificatePassword, ""s},
                   {configuration::AllowPut, false},
                   {configuration::SuppressIPAddress, false},
                   {configuration::AllowPutFrom, ""s}});

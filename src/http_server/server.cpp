@@ -25,7 +25,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/tokenizer.hpp>
-
+#include <boost/beast/ssl.hpp>
 #include <thread>
 
 #include "logging.hpp"
@@ -42,11 +42,36 @@ namespace mtconnect
     namespace ip = boost::asio::ip;
     using tcp = boost::asio::ip::tcp;
     namespace algo = boost::algorithm;
+    namespace ssl = boost::asio::ssl;
 
     using namespace std;
     using boost::placeholders::_1;
     using boost::placeholders::_2;
-
+    
+    void Server::loadTlsCertificate()
+    {
+      if (IsOptionSet(m_options, configuration::TlsCertificateChain) &&
+          IsOptionSet(m_options, configuration::TlsPrivateKey) &&
+          IsOptionSet(m_options, configuration::TlsDHKey))
+      {
+        if (IsOptionSet(m_options, configuration::TlsCertificatePassword))
+        {
+          m_sslContext.set_password_callback([this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
+            return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
+          });
+        }
+        
+        m_sslContext.set_options(boost::asio::ssl::context::default_workarounds |
+                                 boost::asio::ssl::context::no_sslv2 |
+                                 boost::asio::ssl::context::single_dh_use);
+        m_sslContext.use_certificate_chain_file(*GetOption<string>(m_options, configuration::TlsCertificatePassword));
+        m_sslContext.use_private_key_file(*GetOption<string>(m_options, configuration::TlsPrivateKey), asio::ssl::context::file_format::pem);
+        m_sslContext.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
+        
+        m_tlsEnabled = true;
+      }
+    }
+    
     void Server::start()
     {
       try
@@ -67,14 +92,6 @@ namespace mtconnect
       NAMED_SCOPE("Server::listen");
 
       beast::error_code ec;
-
-      //            if(enableSSL) {
-      //                // The SSL context is required, and holds certificates
-      //                ssl::context ctx{ssl::context::tlsv12};
-      //
-      //                // This holds the self-signed certificate used by the server
-      //                load_server_certificate(ctx);
-      //            }
 
       // Blocking call to listen for a connection
       tcp::endpoint ep(m_address, m_port);
@@ -150,18 +167,33 @@ namespace mtconnect
       }
       else
       {
-        auto session = make_shared<SessionImpl>(
-            socket, m_fields,
-            [this](SessionPtr session, RequestPtr request) {
-              dispatch(session, request);
-              return true;
-            },
+        auto dispatcher = [this](SessionPtr session, RequestPtr request) {
+          dispatch(session, request);
+          return true;
+        };
+        if (m_tlsEnabled)
+        {
+          auto dectector = make_shared<TlsDector>(
+            move(socket), m_sslContext, m_allowPuts, m_allowPutsFrom,
+            m_fields, dispatcher, m_errorFunction);
+        
+          dectector->run();
+        }
+        else
+        {
+          boost::beast::flat_buffer buffer;
+          boost::beast::tcp_stream stream(move(socket));
+          auto session = make_shared<HttpSession>(
+            move(stream), move(buffer), m_fields, dispatcher,
             m_errorFunction);
-        if (!m_allowPutsFrom.empty())
-          session->allowPutsFrom(m_allowPutsFrom);
-        else if (m_allowPuts)
-          session->allowPuts();
-        session->run();
+
+          if (!m_allowPutsFrom.empty())
+            session->allowPutsFrom(m_allowPutsFrom);
+          else if (m_allowPuts)
+            session->allowPuts();
+          
+          session->run();
+        }
         m_acceptor.async_accept(net::make_strand(m_context),
                                 beast::bind_front_handler(&Server::accept, this));
       }

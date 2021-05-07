@@ -4,11 +4,10 @@ branches:
     - master
     - /.*master.*/
   
-# clone_folder: c:\projects\cppagent_dev
 image:
-#  - Visual Studio 2019
+  - Visual Studio 2019
   - Ubuntu2004
-  - macOS
+#  - macOS
 
 configuration:
   - Release
@@ -36,15 +35,9 @@ cache:
   - c:\conan\ -> conanfile.py
   - /home/appveyor/.conan -> conanfile.py
 
-#environment:
-#  matrix:
-#  - arch: Win32
-#  - arch: #does not work, Release|x64 not a valid target
-
 matrix:
   fast_finish: true
   
-# skip unsupported combinations
 init:
   - cmd: |-
       echo %APPVEYOR_BUILD_WORKER_IMAGE%

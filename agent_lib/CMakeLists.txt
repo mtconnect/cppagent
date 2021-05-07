@@ -117,6 +117,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.cpp"
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/cached_file.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/tls_dector.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/server.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/server.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/file_cache.hpp"
@@ -146,7 +147,7 @@ add_custom_target(UPDATE_VERSION ALL
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../src/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/version.h")
 
 set(AGENT_LIB_HEADERS ${AGENT_SOURCES})
-list(FILTER AGENT_LIB_HEADERS INCLUDE REGEX "\\.(h|hpp)$")
+list(FILTER AGENT_LIB_HEADERS INCLUDE REGEX "\\.(h|hpp|ipp)$")
 set(AGENT_LIB_SOURCES ${AGENT_SOURCES})
 list(FILTER AGENT_LIB_SOURCES INCLUDE REGEX "\\.(c|cpp)$")
 
@@ -183,7 +184,7 @@ set_property(TARGET agent_lib PROPERTY
 target_link_libraries(
   agent_lib
   PUBLIC
-  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date
+  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl 
   
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
