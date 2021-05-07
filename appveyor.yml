@@ -15,22 +15,6 @@ configuration:
 platform:
   - x64
 
-for:
-  -
-    matrix:
-      only:
-        - image: macOS
-    environment:
-      CONAN_PROFILE: ""
-      PYTHON_PATH: "/bin"
-  -
-    matrix:
-      only:
-        - image: Ubuntu2004
-    environment:
-      CONAN_PROFILE: "-pr conan/profiles/gcc-appveyor"
-      PYTHON_PATH: /venv3.9/bin
-
 cache:
   - c:\.conan\ -> conanfile.py
   - c:\conan\ -> conanfile.py
@@ -56,12 +40,19 @@ before_build:
       conan export conan/mqtt_cpp
       conan export conan/boost/all boost/1.75.0@
       conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False
-  - sh: env
-  - sh: export PATH=$HOME/venv3.9/bin:$PATH
-  - sh: pip install conan
-  - sh: conan export conan/mqtt_cpp
-  - sh: conan install . -if build --build=missing $CONAN_PROFILE -o run_tests=False
-    
+  - sh: |-
+      export PATH=$HOME/venv3.9/bin:$PATH
+      if [[  $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
+      then
+        export PATH=$HOME/venv3.9/bin:$PATH
+        export CONAN_PROFILE=conan/profiles/gcc-appveyor
+      else
+        echo Not Ubuntu
+      fi
+      env
+      pip install conan
+      conan export conan/mqtt_cpp
+      conan install . -if build --build=missing $CONAN_PROFILE -o run_tests=False
 
 build:
   verbosity: minimal
