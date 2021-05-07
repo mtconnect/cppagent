@@ -58,7 +58,8 @@ namespace mtconnect
 
       void run();
       void detect();
-            
+      void detected(boost::beast::error_code ec, bool isTls);
+      
     protected:
       boost::beast::tcp_stream m_stream;
       boost::asio::ssl::context& m_tlsContext;

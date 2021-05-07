@@ -50,7 +50,7 @@ namespace mtconnect
     public:
       Server(boost::asio::io_context &context, unsigned short port = 5000,
              const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
-        : m_context(context), m_port(port), m_acceptor(context), m_sslContext(boost::asio::ssl::context::tls)
+        : m_context(context), m_port(port), m_options(options), m_acceptor(context), m_sslContext(boost::asio::ssl::context::tls)
       {
         if (inter.empty())
         {

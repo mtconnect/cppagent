@@ -50,11 +50,11 @@ namespace mtconnect
     
     void Server::loadTlsCertificate()
     {
-      if (IsOptionSet(m_options, configuration::TlsCertificateChain) &&
-          IsOptionSet(m_options, configuration::TlsPrivateKey) &&
-          IsOptionSet(m_options, configuration::TlsDHKey))
+      if (HasOption(m_options, configuration::TlsCertificateChain) &&
+          HasOption(m_options, configuration::TlsPrivateKey) &&
+          HasOption(m_options, configuration::TlsDHKey))
       {
-        if (IsOptionSet(m_options, configuration::TlsCertificatePassword))
+        if (HasOption(m_options, configuration::TlsCertificatePassword))
         {
           m_sslContext.set_password_callback([this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
             return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
@@ -64,7 +64,7 @@ namespace mtconnect
         m_sslContext.set_options(boost::asio::ssl::context::default_workarounds |
                                  boost::asio::ssl::context::no_sslv2 |
                                  boost::asio::ssl::context::single_dh_use);
-        m_sslContext.use_certificate_chain_file(*GetOption<string>(m_options, configuration::TlsCertificatePassword));
+        m_sslContext.use_certificate_chain_file(*GetOption<string>(m_options, configuration::TlsCertificateChain));
         m_sslContext.use_private_key_file(*GetOption<string>(m_options, configuration::TlsPrivateKey), asio::ssl::context::file_format::pem);
         m_sslContext.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
         

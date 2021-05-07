@@ -281,22 +281,24 @@ public:
 
 };
 
+const string CertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
+const string KeyFile{PROJECT_ROOT_DIR "/test/resources/user.key"};
+const string DhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+
 class HttpsServerTest : public testing::Test
 {
  protected:
-  const static string CertFile{PROJECT_ROOT_DIR "test/resources/user.crt"};
-  const static string KeyFile{PROJECT_ROOT_DIR "test/resources/user.key"};
-  const static string DhFile{PROJECT_ROOT_DIR "test/resources/dh2048.pem"};
 
   
   void SetUp() override
   {
     using namespace mtconnect::configuration;
+    ConfigOptions options{{TlsCertificateChain, CertFile},
+      {TlsPrivateKey, KeyFile},
+      {TlsDHKey, DhFile},
+      {TlsCertificatePassword, "mtconnect"s}};
     m_server = make_unique<Server>(m_context, 0, "127.0.0.1",
-                                   {{TlsCertificateChain, CertFile},
-                                    {TlsPrivateKey, KeyFile},
-                                    {TlsDHKey, DhFile},
-                                    {TlsCertificatePassword, "mtconnect"s}});
+                                   options);
   }
   
   void start()

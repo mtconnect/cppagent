@@ -455,44 +455,42 @@ namespace mtconnect
     
     void TlsDector::detect()
     {
-        m_stream.expires_after(std::chrono::seconds(30));
+      m_stream.expires_after(std::chrono::seconds(30));
+      boost::beast::async_detect_ssl(m_stream, m_buffer,
+                                     boost::beast::bind_front_handler(&TlsDector::detected, this->shared_from_this()));
+    }
 
-        auto detector = [this](boost::beast::error_code ec, bool isTls) {
-          if(ec)
-          {
-            return fail(ec, "Failed to detect TLS Connection");
-          }
-          else
-          {
-            shared_ptr<Session> session;
-            if(isTls)
-            {
-              // Create https session
-              session = std::make_shared<HttpsSession>(move(m_stream),
-                                             m_tlsContext,
-                                             move(m_buffer),
-                                             m_fields, m_dispatch,
-                                             m_errorFunction);
-            }
-            else
-            {
-              // Create http session
-              session = std::make_shared<HttpSession>(move(m_stream), move(m_buffer),
-                                            m_fields, m_dispatch,
-                                            m_errorFunction);
-            }
-            if (!m_allowPutsFrom.empty())
-              session->allowPutsFrom(m_allowPutsFrom);
-            else if (m_allowPuts)
-              session->allowPuts();
-            session->run();
-          }
-        };
-        
-        boost::beast::async_detect_ssl(m_stream, m_buffer,
-                                       boost::beast::bind_front_handler(detector));
+    void TlsDector::detected(boost::beast::error_code ec, bool isTls)
+    {
+      if(ec)
+      {
+        fail(ec, "Failed to detect TLS Connection");
       }
-
-
+      else
+      {
+        shared_ptr<Session> session;
+        if(isTls)
+        {
+          // Create https session
+          session = std::make_shared<HttpsSession>(move(m_stream),
+                                         m_tlsContext,
+                                         move(m_buffer),
+                                         m_fields, m_dispatch,
+                                         m_errorFunction);
+        }
+        else
+        {
+          // Create http session
+          session = std::make_shared<HttpSession>(move(m_stream), move(m_buffer),
+                                        m_fields, m_dispatch,
+                                        m_errorFunction);
+        }
+        if (!m_allowPutsFrom.empty())
+          session->allowPutsFrom(m_allowPutsFrom);
+        else if (m_allowPuts)
+          session->allowPuts();
+        session->run();
+      }
+    }
   }  // namespace http_server
 }  // namespace mtconnect

@@ -367,6 +367,12 @@ namespace mtconnect
       return false;
   }
 
+  inline bool HasOption(const ConfigOptions &options, const std::string &name)
+  {
+    auto v = options.find(name);
+    return v != options.end();
+  }
+  
   inline std::string format(const Timestamp &ts)
   {
     using namespace std;
