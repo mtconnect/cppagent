@@ -41,6 +41,10 @@ namespace mtconnect
     DECLARE_CONFIGURATION(HttpHeaders);
     DECLARE_CONFIGURATION(LogStreams);
     DECLARE_CONFIGURATION(WorkerThreads);
+    DECLARE_CONFIGURATION(TlsCertificateChain);
+    DECLARE_CONFIGURATION(TlsPrivateKey);
+    DECLARE_CONFIGURATION(TlsDHKey);
+    DECLARE_CONFIGURATION(TlsCertificatePassword);
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);

@@ -1,55 +1,63 @@
 version: '{build}'
 branches:
   only:
-  - master
-  - boost_refactor_master
+    - master
+    - /.*master.*/
   
-# clone_folder: c:\projects\cppagent_dev
 image:
-- Visual Studio 2019
-- Ubuntu2004
-# - macOS
+  - Visual Studio 2019
+  - Ubuntu2004
+#  - macOS
 
 configuration:
-- Release
+  - Release
 
 platform:
-- x64
+  - x64
+
+for:
+  -
+    matrix:
+      only:
+        - image: macOS
+    environment:
+      CONAN_PROFILE: ""
+  -
+    matrix:
+      only:
+        - image: Ubuntu2004
+    environment:
+      CONAN_PROFILE: "-pr conan/profiles/gcc-appveyor"
+      PATH: $(HOME)/venv3.9/bin:$(PATH)
 
 cache:
-- c:\.conan\ -> appveyor.yml, conanfile.txt
-- c:\conan\ -> appveyor.yml, conanfile.txt
-- /home/appveyor/.conan -> appveyor.yml, conanfile.txt
-
-#environment:
-#  matrix:
-#  - arch: Win32
-#  - arch: #does not work, Release|x64 not a valid target
+  - c:\.conan\ -> conanfile.py
+  - c:\conan\ -> conanfile.py
+  - /home/appveyor/.conan -> conanfile.py
 
 matrix:
   fast_finish: true
   
-# skip unsupported combinations
 init:
-- cmd: |-
-    echo %APPVEYOR_BUILD_WORKER_IMAGE%
-    echo %MSBUILD_FLAGS%
+  - cmd: |-
+      echo %APPVEYOR_BUILD_WORKER_IMAGE%
+      echo %MSBUILD_FLAGS%
+
 #- ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))  
 # - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
 
 before_build:
-- cmd: |-
-    mkdir C:\conan
-    set CONAN_USER_HOME=C:\conan
-    set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
-    pip install conan
-    conan export conan/mqtt_cpp
-    conan export conan/boost/all boost/1.75.0@
-    conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False
-- sh: export PATH=$HOME/venv3.9/bin:$PATH
-- sh: pip install conan
-- sh: conan export mqtt_cpp
-- sh: conan install . -if build --build=missing -pr conan/profiles/gcc-appveyor -o run_tests=False
+  - cmd: |-
+      if not exist C:\conan mkdir C:\conan
+      set CONAN_USER_HOME=C:\conan
+      set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
+      pip install conan
+      conan export conan/mqtt_cpp
+      conan export conan/boost/all boost/1.75.0@
+      conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False
+  - sh: pip install conan
+  - sh: conan export conan/mqtt_cpp
+  - sh: conan install . -if build --build=missing $CONAN_PROFILE -o run_tests=False
     
 
 build:
@@ -57,20 +65,15 @@ build:
   parallel: true
 
 build_script:
-- cmd: |-
-    cd %APPVEYOR_BUILD_FOLDER%
-    conan build . -bf build
-- sh: |-
-    cd ${APPVEYOR_BUILD_FOLDER}
-    conan build . -bf build
+  - conan build . -bf build
 
 test_script:
-- cmd: |-
-    cd %APPVEYOR_BUILD_FOLDER%/build
-    ctest -C Release --output-on-failure
-- sh: |-
-    cd ${APPVEYOR_BUILD_FOLDER}/build
-    ctest --output-on-failure
+  - cmd: |-
+      cd %APPVEYOR_BUILD_FOLDER%/build
+      ctest -C Release --output-on-failure
+  - sh: |-
+      cd ${APPVEYOR_BUILD_FOLDER}/build
+      ctest --output-on-failure
 
 #on_finish:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
@@ -84,4 +87,5 @@ only_commits:
     - test/
     - cmake/
     - agent/
+    - conan/
 
