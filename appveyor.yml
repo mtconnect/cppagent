@@ -56,7 +56,7 @@ before_build:
       conan export conan/mqtt_cpp
       conan export conan/boost/all boost/1.75.0@
       conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False
-  - sh: export PATH=${HOME}/${PYTHON_PATH}:$PATH
+  - sh: export PATH=$HOME/$PYTHON_PATH:$PATH
   - sh: pip install conan
   - sh: conan export conan/mqtt_cpp
   - sh: conan install . -if build --build=missing $CONAN_PROFILE -o run_tests=False
