@@ -5,9 +5,9 @@ branches:
     - /.*master.*/
   
 image:
+  - macOS
   - Ubuntu2004
 #  - Visual Studio 2019
-#  - macOS
 
 configuration:
   - Release
@@ -42,14 +42,19 @@ before_build:
       conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False
   - sh: |-
       export PATH=$HOME/venv3.9/bin:$PATH
-      if [[  $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
-      then
-        export PATH=$HOME/venv3.9/bin:$PATH
-        export CONAN_PROFILE=conan/profiles/gcc-appveyor
-      else
-        echo Not Ubuntu
-      fi
       env
+      if [[ $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
+      then
+        export CONAN_PROFILE=conan/profiles/gcc-appveyor
+      elif [[ $APPVEYOR_BUILD_WORKER_IMAGE = "macOS" ]]
+      then
+        export CONAN_PROFILE=conan/profiles/macos
+      else
+        echo "*NIX Operating System" $APPVEYOR_BUILD_WORKER_IMAGE "Not Supported"
+        exit 99
+      fi
+      echo $PATH
+      echo $CONAN_PROFILE
       pip install conan
       conan export conan/mqtt_cpp
       conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False
