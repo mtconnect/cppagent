@@ -52,7 +52,7 @@ before_build:
       env
       pip install conan
       conan export conan/mqtt_cpp
-      conan install . -if build --build=missing $CONAN_PROFILE -o run_tests=False
+      conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False
 
 build:
   verbosity: minimal
