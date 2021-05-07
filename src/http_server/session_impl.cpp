@@ -188,59 +188,58 @@ namespace mtconnect
       if (ec)
       {
         fail(status::internal_server_error, "Could not read request", ec);
+        return;
       }
-      else
+
+      auto msg = m_parser->get();
+      auto remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
+
+      // Check for put, post, or delete
+      if (msg.method() != http::verb::get)
       {
-        auto msg = m_parser->get();
-        auto remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
-
-        // Check for put, post, or delete
-        if (msg.method() != http::verb::get)
+        if (!m_allowPuts)
         {
-          if (!m_allowPuts)
-          {
-            fail(http::status::bad_request,
-                 "PUT, POST, and DELETE are not allowed. MTConnect Agent is read only and only GET "
-                 "is allowed.");
-            return;
-          }
-          else if (!m_allowPutsFrom.empty() &&
-                   m_allowPutsFrom.find(remote.address()) == m_allowPutsFrom.end())
-          {
-            fail(http::status::bad_request,
-                 "PUT, POST, and DELETE are not allowed from " + remote.address().to_string());
-            return;
-          }
+          fail(http::status::bad_request,
+               "PUT, POST, and DELETE are not allowed. MTConnect Agent is read only and only GET "
+               "is allowed.");
+          return;
         }
-
-        m_request = make_shared<Request>();
-        m_request->m_verb = msg.method();
-        m_request->m_path = parseUrl(string(msg.target()), m_request->m_query);
-
-        if (auto a = msg.find(http::field::accept); a != msg.end())
-          m_request->m_accepts = string(a->value());
-        if (auto a = msg.find(http::field::content_type); a != msg.end())
-          m_request->m_contentType = string(a->value());
-        m_request->m_body = msg.body();
-
-        if (auto f = msg.find(http::field::content_type);
-            f != msg.end() && f->value() == "application/x-www-form-urlencoded" &&
-            m_request->m_body[0] != '<')
+        else if (!m_allowPutsFrom.empty() &&
+                 m_allowPutsFrom.find(remote.address()) == m_allowPutsFrom.end())
         {
-          parseQueries(m_request->m_body, m_request->m_query);
+          fail(http::status::bad_request,
+               "PUT, POST, and DELETE are not allowed from " + remote.address().to_string());
+          return;
         }
+      }
 
-        m_request->m_foreignIp = remote.address().to_string();
-        m_request->m_foreignPort = remote.port();
-        if (auto a = msg.find(http::field::connection); a != msg.end())
-          m_close = a->value() == "close";
+      m_request = make_shared<Request>();
+      m_request->m_verb = msg.method();
+      m_request->m_path = parseUrl(string(msg.target()), m_request->m_query);
 
-        if (!m_dispatch(shared_ptr(), m_request))
-        {
-          ostringstream txt;
-          txt << "Failed to find handler for " << msg.method() << " " << msg.target();
-          LOG(error) << txt.str();
-        }
+      if (auto a = msg.find(http::field::accept); a != msg.end())
+        m_request->m_accepts = string(a->value());
+      if (auto a = msg.find(http::field::content_type); a != msg.end())
+        m_request->m_contentType = string(a->value());
+      m_request->m_body = msg.body();
+
+      if (auto f = msg.find(http::field::content_type);
+          f != msg.end() && f->value() == "application/x-www-form-urlencoded" &&
+          m_request->m_body[0] != '<')
+      {
+        parseQueries(m_request->m_body, m_request->m_query);
+      }
+
+      m_request->m_foreignIp = remote.address().to_string();
+      m_request->m_foreignPort = remote.port();
+      if (auto a = msg.find(http::field::connection); a != msg.end())
+        m_close = a->value() == "close";
+
+      if (!m_dispatch(shared_ptr(), m_request))
+      {
+        ostringstream txt;
+        txt << "Failed to find handler for " << msg.method() << " " << msg.target();
+        LOG(error) << txt.str();
       }
     }
 
@@ -264,16 +263,6 @@ namespace mtconnect
         else
           close();
       }
-    }
-
-    template<class Derived>
-    void SessionImpl<Derived>::close()
-    {
-      NAMED_SCOPE("SessionImpl::close");
-
-      m_request.reset();
-      beast::error_code ec;
-      beast::get_lowest_layer(derived().stream()).socket().shutdown(tcp::socket::shutdown_both, ec);
     }
 
     template<class Derived>
@@ -390,7 +379,7 @@ namespace mtconnect
       {
         return std::dynamic_pointer_cast<HttpsSession>(shared_from_this());
       }
-      
+      virtual ~HttpsSession() { close(); }
       auto &stream() { return m_stream; }
       
       void run() override
@@ -413,13 +402,17 @@ namespace mtconnect
 
       void close() override
       {
+        if (!m_closing)
+        {
+          m_closing = true;
           // Set the timeout.
           beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
 
           // Perform the SSL shutdown
-        m_stream.async_shutdown(
+          m_stream.async_shutdown(
               beast::bind_front_handler(
                   &HttpsSession::shutdown, shared_ptr()));
+        }
       }
 
     protected:
@@ -444,6 +437,7 @@ namespace mtconnect
       
     protected:
       beast::ssl_stream<beast::tcp_stream> m_stream;
+      bool m_closing{false};
     };
     
     void TlsDector::run()

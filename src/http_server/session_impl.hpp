@@ -43,7 +43,7 @@ namespace mtconnect
       {
       }
       SessionImpl(const SessionImpl &) = delete;
-      virtual ~SessionImpl() { close(); }
+      virtual ~SessionImpl() { }
       std::shared_ptr<SessionImpl> shared_ptr()
       {
         return std::dynamic_pointer_cast<SessionImpl>(shared_from_this());
@@ -58,7 +58,6 @@ namespace mtconnect
       void writeResponse(const Response &response, Complete complete = nullptr) override;
       void beginStreaming(const std::string &mimeType, Complete complete) override;
       void writeChunk(const std::string &chunk, Complete complete) override;
-      void close() override;
       void closeStream() override;
 
     protected:
@@ -104,8 +103,19 @@ namespace mtconnect
       {
         return std::dynamic_pointer_cast<HttpSession>(shared_from_this());
       }
+      virtual ~HttpSession() { close(); }
 
       auto &stream() { return m_stream; }
+      
+      void close() override
+      {
+        NAMED_SCOPE("HttpSession::close");
+
+        m_request.reset();
+        boost::beast::error_code ec;
+        m_stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+      }
+
       
     protected:
       boost::beast::tcp_stream m_stream;

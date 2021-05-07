@@ -23,6 +23,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/asio/spawn.hpp>
+#include <boost/beast/ssl.hpp>
 
 #include "http_server/server.hpp"
 #include "logging.hpp"
@@ -41,13 +42,14 @@ using namespace mtconnect::http_server;
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
+namespace ssl = boost::asio::ssl;
 using tcp = boost::asio::ip::tcp;
 
 class Client
 {
 public:
-  Client(asio::io_context& ioc)
-  : m_context(ioc), m_stream(ioc)
+  Client(asio::io_context& ioc, ssl::context &context)
+  : m_context(ioc), m_stream(ioc, context)
   {
   }
   
@@ -63,19 +65,27 @@ public:
   void connect(unsigned short port, asio::yield_context yield)
   {
     beast::error_code ec;
+    
+    SSL_set_tlsext_host_name(m_stream.native_handle(), "localhost");
 
     // These objects perform our I/O
     tcp::endpoint server(asio::ip::address_v4::from_string("127.0.0.1"), port);
         
     // Set the timeout.
-    m_stream.expires_after(std::chrono::seconds(30));
+    beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
     
     // Make the connection on the IP address we get from a lookup
-    m_stream.async_connect(server, yield[ec]);
+    beast::get_lowest_layer(m_stream).async_connect(server, yield[ec]);
     if(ec)
     {
       return fail(ec, "connect");
     }
+    
+    beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
+    m_stream.async_handshake(ssl::stream_base::client, yield[ec]);
+    if(ec)
+        return fail(ec, "handshake");
+
     m_connected = true;
   }
   
@@ -102,7 +112,7 @@ public:
     req.body() = body;
     
     // Set the timeout.
-    m_stream.expires_after(std::chrono::seconds(30));
+    beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
     req.prepare_payload();
     
     // Send the HTTP request to the remote host
@@ -250,10 +260,21 @@ public:
   
   void close()
   {
-    beast::error_code ec;
+    m_done = false;
+    auto closeStream = [this](asio::yield_context yield)
+    {
+      beast::error_code ec;
 
-    // Gracefully close the socket
-    m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
+      // Gracefully close the socket
+      m_stream.async_shutdown(yield[ec]);
+      if(ec)
+        fail(ec, "shutdown");
+      m_done = true;
+    };
+    
+    asio::spawn(m_context, std::bind(closeStream, std::placeholders::_1));
+    while (!m_done && m_context.run_for(20ms) > 0)
+      ;
   }
   
 
@@ -262,7 +283,7 @@ public:
   std::string m_result;
   asio::io_context &m_context;
   bool m_done{false};
-  beast::tcp_stream m_stream;
+  beast::ssl_stream<beast::tcp_stream> m_stream;
   boost::beast::error_code m_ec;
   beast::flat_buffer m_b;
   int m_count{0};
@@ -284,12 +305,11 @@ public:
 const string CertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
 const string KeyFile{PROJECT_ROOT_DIR "/test/resources/user.key"};
 const string DhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
 
 class HttpsServerTest : public testing::Test
 {
  protected:
-
-  
   void SetUp() override
   {
     using namespace mtconnect::configuration;
@@ -306,7 +326,15 @@ class HttpsServerTest : public testing::Test
     m_server->start();
     while (!m_server->isListening())
       m_context.run_one();
-    m_client = make_unique<Client>(m_context);
+    
+    ifstream root;
+    root.open(RootCertFile);
+    std::string cert((istreambuf_iterator<char>(root)), (istreambuf_iterator<char>()));
+    
+    ssl::context ctx{ssl::context::tlsv12_client};
+    ctx.add_certificate_authority(boost::asio::buffer(cert.data(), cert.size()));
+    
+    m_client = make_unique<Client>(m_context, ctx);
   }
   
   void startClient()
@@ -328,6 +356,7 @@ class HttpsServerTest : public testing::Test
     m_client.reset();
   }
 
+  
   asio::io_context m_context;
   unique_ptr<Server> m_server;
   unique_ptr<Client> m_client;
@@ -372,43 +401,85 @@ TEST_F(HttpsServerTest, create_server_and_load_certificates)
   ASSERT_TRUE(savedSession.expired());
 }
 
-#if 0
-TEST_F(HttpsServerTest, simple_request_response)
+TEST_F(HttpsServerTest, streaming_response)
 {
-  weak_ptr<Session> savedSession;
+  struct context {
+    context(RequestPtr r, SessionPtr s) : m_request(r), m_session(s) {}
+    RequestPtr m_request;
+    SessionPtr m_session;
+    bool m_written{false};
+  };
+
+  int count = 0;
+  function<void(shared_ptr<context>)> chunk = [&](shared_ptr<context> ctx) {
+    //cout << "Wrote chunk" << endl;
+    ctx->m_written = true;
+    // Stop after 5 chunks
+  };
   
-  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    savedSession = session;
-    Response resp(status::ok);
-    if (request->m_parameters.count("device") > 0)
-      resp.m_body = string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
-    else
-      resp.m_body = "All Devices";
-    session->writeResponse(resp, [](){
-      cout << "Written" << endl;
-    });
+  
+  function<void(shared_ptr<context>)> begun = [&](shared_ptr<context> ctx) {
+    //cout << "Begun chunking" << endl;
+    ctx->m_written = true;
+  };
+  
+  shared_ptr<context> ctx;
+  auto begin = [&](SessionPtr session, RequestPtr request) -> bool {
+    ctx = make_shared<context>(request, session);
+    ctx->m_written = false;
+    session->beginStreaming("plain/text", bind(begun, ctx));
     return true;
   };
   
-  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
-  m_server->addRouting({boost::beast::http::verb::get, "/{device}/probe", probe});
+  m_server->addRouting({boost::beast::http::verb::get, "/sample", begin});
   
   start();
   startClient();
-
-  m_client->spawnRequest(http::verb::get, "/probe");
-    
-  EXPECT_EQ("All Devices", m_client->m_result);
-  EXPECT_EQ(200, m_client->m_status);
   
-  m_client->spawnRequest(http::verb::get, "/device1/probe");
+  m_client->spawnRequest(http::verb::get, "/sample");
+  while (!ctx->m_written && m_context.run_for(20ms) > 0)
+    ;
+  m_client->spawnReadChunk();
+  while (m_context.run_for(20ms) > 0)
+    ;
 
-  EXPECT_EQ("Device given as: device1", m_client->m_result);
-  EXPECT_EQ(200, m_client->m_status);
+  m_client->m_done = false;
+  ctx->m_written = false;
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
+    ;
+  cout << "Done: " << m_client->m_done << endl;
+  EXPECT_EQ("Chunk Content #1", m_client->m_result);
+
+  ctx->m_written = false;
+  m_client->m_done = false;
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(200ms) > 0)
+    ;
+  EXPECT_EQ("Chunk Content #2", m_client->m_result);
   
-  // Make sure session closes when client closes the connection
-  m_client->close();
-  m_context.run_for(2ms);
-  ASSERT_TRUE(savedSession.expired());
+  ctx->m_written = false;
+  m_client->m_done = false;
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
+    ;
+  EXPECT_EQ("Chunk Content #3", m_client->m_result);
+
+  ctx->m_written = false;
+  m_client->m_done = false;
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
+    ;
+  EXPECT_EQ("Chunk Content #4", m_client->m_result);
+
+  ctx->m_written = false;
+  m_client->m_done = false;
+  ctx->m_session->writeChunk("Chunk Content #" + to_string(++count), bind(chunk, ctx));
+  while ((!ctx->m_written || !m_client->m_done) && m_context.run_for(20ms) > 0)
+    ;
+  EXPECT_EQ("Chunk Content #5", m_client->m_result);
+  
+  ctx->m_session->closeStream();
+  while (m_context.run_for(20ms) > 0)
+    ;
 }
-#endif
