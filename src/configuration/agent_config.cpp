@@ -83,7 +83,12 @@ namespace mtconnect
     static inline auto Convert(const std::string &s, const ConfigOption &def)
     {
       ConfigOption option;
-      visit(overloaded {[&option, &s](const std::string &) { option = s; },
+      visit(overloaded {[&option, &s](const std::string &) {
+        if (s.empty())
+          option = std::monostate();
+        else
+          option = s;        
+      },
                         [&option, &s](const int &) { option = stoi(s); },
                         [&option, &s](const Milliseconds &) { option = Milliseconds {stoi(s)}; },
                         [&option, &s](const Seconds &) { option = Seconds {stoi(s)}; },
@@ -101,7 +106,11 @@ namespace mtconnect
       {
         auto val = tree.get_optional<string>(e.first);
         if (val)
-          options.insert_or_assign(e.first, Convert(*val, e.second));
+        {
+          auto v = Convert(*val, e.second);
+          if (v.index() != 0)
+            options.insert_or_assign(e.first, v);
+        }
       }
     }
 
@@ -112,7 +121,11 @@ namespace mtconnect
       {
         auto val = tree.get_optional<string>(e.first);
         if (val)
-          options.insert_or_assign(e.first, Convert(*val, e.second));
+        {
+          auto v = Convert(*val, e.second);
+          if (v.index() != 0)
+            options.insert_or_assign(e.first, v);
+        }
         else
           options.insert_or_assign(e.first, e.second);
       }
@@ -121,7 +134,13 @@ namespace mtconnect
     static inline void GetOptions(const pt::ptree &tree, ConfigOptions &options,
                                   const ConfigOptions &entries)
     {
-      options = entries;
+      for (auto &e : entries)
+      {
+        if (!holds_alternative<string>(e.second) || !get<string>(e.second).empty())
+        {
+          options.emplace(e.first, e.second);
+        }
+      }
       AddOptions(tree, options, entries);
     }
 
@@ -855,10 +874,10 @@ namespace mtconnect
       namespace ip = asio::ip;
 
       server->allowPuts(get<bool>(options[configuration::AllowPut]));
-      string hosts = get<string>(options[configuration::AllowPutFrom]);
-      if (!hosts.empty())
+      auto hosts = GetOption<string>(options, configuration::AllowPutFrom);
+      if (hosts && !hosts->empty())
       {
-        istringstream line(hosts);
+        istringstream line(*hosts);
         do
         {
           string host;
