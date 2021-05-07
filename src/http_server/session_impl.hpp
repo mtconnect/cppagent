@@ -22,6 +22,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include "configuration/config_options.hpp"
 #include "session.hpp"
