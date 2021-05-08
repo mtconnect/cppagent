@@ -2506,12 +2506,12 @@ TEST_F(AgentTest, StreamData)
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
     m_agentTestHelper->m_ioContext.run_for(220ms);
     auto delta = system_clock::now() - startTime;
+    cout << "Delta after heartbeat: " << delta.count() << endl;
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
 
     PARSE_XML_CHUNK();
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
-    //cout << "Delta: " << delta.count() << endl;
-    EXPECT_GT((heartbeatFreq + 150ms), delta) << "delta < hbf + 50ms: " << delta.count();
+    EXPECT_GT((heartbeatFreq + 150ms), delta) << "delta < hbf + 150ms: " << delta.count();
     EXPECT_LT(heartbeatFreq, delta)  << "delta > hbf: " << delta.count();
     
     m_agentTestHelper->m_session->closeStream();
@@ -2529,12 +2529,12 @@ TEST_F(AgentTest, StreamData)
     m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
     m_agentTestHelper->m_ioContext.run_for(10ms);
     auto delta = system_clock::now() - startTime;
+    cout << "Delta after data: " << delta.count() << endl;
 
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     PARSE_XML_CHUNK();
 
-    //cout << "Delta: " << delta.count() << endl;
-    EXPECT_GT((delay + 110ms), delta) << "delta < delay + 50ms: " << delta.count();
+    EXPECT_GT((delay + 110ms), delta) << "delta < delay + 110ms: " << delta.count();
     EXPECT_LT(delay, delta)  << "delta > delay: " << delta.count();
   }
 }
