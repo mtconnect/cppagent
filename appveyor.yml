@@ -12,8 +12,8 @@ image:
 configuration:
   - Release
 
-platform:
-  - x64
+#platform:
+#C:\  - x86
 
 cache:
   - c:\.conan\ -> conanfile.py
@@ -34,6 +34,8 @@ init:
 
 before_build:
   - cmd: |-
+      if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat" ("C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat")
+      if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars32.bat" ("C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars32.bat")
       if not exist C:\conan mkdir C:\conan
       set CONAN_USER_HOME=C:\conan
       set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
@@ -50,7 +52,7 @@ before_build:
       then
         export CONAN_PROFILE=conan/profiles/macos
       else
-        echo "*NIX Operating System" $APPVEYOR_BUILD_WORKER_IMAGE "Not Supported"
+        echo "*NIX Operating System" $APPVEYOR_BUILD_WORKER_IMAGE " Not Supported"
         exit 99
       fi
       pip install conan

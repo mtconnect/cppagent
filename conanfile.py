@@ -3,12 +3,12 @@ from conans import ConanFile, CMake, tools
 class CppAgentConan(ConanFile):
     name = "mtconnect_cppagent"
     version = "1.7"
-    generators = "cmake", "xcode", "visual_studio"
+    generators = "cmake"
     url = "https://github.com/mtconnect/cppagent_dev.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False] }
-    description = "MTConnect reference C++ agent"
+    description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.75.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
     	        "mqtt_cpp/9.0.0", "openssl/1.1.1k"]
