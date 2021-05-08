@@ -8,6 +8,7 @@ class CppAgentConan(ConanFile):
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False] }
+    description = "MTConnect reference C++ agent"
     
     requires = ["boost/1.75.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
     	        "mqtt_cpp/9.0.0", "openssl/1.1.1k"]
