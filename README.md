@@ -642,6 +642,19 @@ The following parameters must be present to enable https requests. If there is n
 
     *Default*: *NULL*
 
+* `TlsOnly` -  Only allow secure connections, http requests will be rejected
+
+    *Default*: false
+
+* `TlsVerifyClientCertificate` - Request and verify the client certificate against root authorities
+
+    *Default*: false
+
+* `TlsClientCAs` - For `TlsVerifyClientCertificate`, specifies a file that contains additional certificate authorities for verification
+
+    *Default*: *NULL*
+
+
 ### Adapter configuration items ###
 
 * `Adapters` - Adapters begins a list of device blocks. If the Adapters

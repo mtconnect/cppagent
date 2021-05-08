@@ -45,6 +45,9 @@ namespace mtconnect
     DECLARE_CONFIGURATION(TlsPrivateKey);
     DECLARE_CONFIGURATION(TlsDHKey);
     DECLARE_CONFIGURATION(TlsCertificatePassword);
+    DECLARE_CONFIGURATION(TlsOnly);
+    DECLARE_CONFIGURATION(TlsVerifyClientCertificate);
+    DECLARE_CONFIGURATION(TlsClientCAs);
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);

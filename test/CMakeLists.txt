@@ -16,17 +16,11 @@ set_property(TARGET agent_test_lib PROPERTY
 target_link_libraries(
   agent_test_lib
   PUBLIC
-  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl 
-  $<$<PLATFORM_ID:Linux>:pthread>
-  $<$<PLATFORM_ID:Windows>:bcrypt>
+  agent_lib
 )
 target_compile_definitions(agent_test_lib
-  PRIVATE
+  PUBLIC
     "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-    $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
-    $<$<PLATFORM_ID:Windows>:NOMINMAX>
-    $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
-    $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>
   )
 target_clangtidy_setup(agent_test_lib)
 set_target_properties(agent_test_lib PROPERTIES FOLDER "test")

@@ -666,6 +666,9 @@ namespace mtconnect
                   {configuration::TlsDHKey, ""s},
                   {configuration::TlsCertificatePassword, ""s},
                   {configuration::AllowPut, false},
+                  {configuration::TlsOnly, false},
+                  {configuration::TlsVerifyClientCertificate, false},
+                  {configuration::TlsClientCAs, ""s},
                   {configuration::SuppressIPAddress, false},
                   {configuration::AllowPutFrom, ""s}});
 
