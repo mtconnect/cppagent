@@ -2517,7 +2517,7 @@ TEST_F(AgentTest, StreamData)
 
     PARSE_XML_CHUNK();
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
-    EXPECT_GT((heartbeatFreq + slop), delta) << "delta < hbf" << (heartbeatFreq + slop).count() << ": " << delta.count();
+    EXPECT_GT((heartbeatFreq + slop), delta) << "delta " << delta.count() << " < hbf " << (heartbeatFreq + slop).count();
     EXPECT_LT(heartbeatFreq, delta)  << "delta > hbf: " << delta.count();
     
     m_agentTestHelper->m_session->closeStream();
@@ -2528,7 +2528,7 @@ TEST_F(AgentTest, StreamData)
   {
     auto delay{40ms};
 #ifdef APPVEYOR
-    auto slop{150ms};
+    auto slop{160ms};
 #else
     auto slop{35ms};
 #endif
@@ -2545,7 +2545,7 @@ TEST_F(AgentTest, StreamData)
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     PARSE_XML_CHUNK();
 
-    EXPECT_GT((delay + slop), delta) << "delta < delay" << (delay + slop).count() << ": " << delta.count();
+    EXPECT_GT((delay + slop), delta) << "delta " << delta.count() << " < delay " << (delay + slop).count();
     EXPECT_LT(delay, delta)  << "delta > delay: " << delta.count();
   }
 }
