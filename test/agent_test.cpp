@@ -2502,6 +2502,12 @@ TEST_F(AgentTest, StreamData)
   // Heartbeat test. Heartbeat should be sent in 200ms. Give
   // 25ms range.
   {
+#ifdef APPVEYOR
+    auto slop{150ms};
+#else
+    auto slop{35ms};
+#endif
+    
     auto startTime = system_clock::now();
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
     m_agentTestHelper->m_ioContext.run_for(220ms);
@@ -2511,7 +2517,7 @@ TEST_F(AgentTest, StreamData)
 
     PARSE_XML_CHUNK();
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
-    EXPECT_GT((heartbeatFreq + 150ms), delta) << "delta < hbf + 150ms: " << delta.count();
+    EXPECT_GT((heartbeatFreq + slop), delta) << "delta < hbf" << (heartbeatFreq + slop).count() << ": " << delta.count();
     EXPECT_LT(heartbeatFreq, delta)  << "delta > hbf: " << delta.count();
     
     m_agentTestHelper->m_session->closeStream();
@@ -2521,6 +2527,11 @@ TEST_F(AgentTest, StreamData)
   // Again, allow for some slop.
   {
     auto delay{40ms};
+#ifdef APPVEYOR
+    auto slop{150ms};
+#else
+    auto slop{35ms};
+#endif
     auto startTime = system_clock::now();
 
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
@@ -2534,7 +2545,7 @@ TEST_F(AgentTest, StreamData)
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     PARSE_XML_CHUNK();
 
-    EXPECT_GT((delay + 150ms), delta) << "delta < delay + 110ms: " << delta.count();
+    EXPECT_GT((delay + slop), delta) << "delta < delay" << (delay + slop).count() << ": " << delta.count();
     EXPECT_LT(delay, delta)  << "delta > delay: " << delta.count();
   }
 }

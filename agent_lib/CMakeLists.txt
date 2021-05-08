@@ -189,10 +189,11 @@ target_link_libraries(
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
 )
-  
+
 target_compile_definitions(
   agent_lib
   PUBLIC
+    $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
     $<$<PLATFORM_ID:Windows>:NOMINMAX>
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>
