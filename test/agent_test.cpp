@@ -2511,7 +2511,7 @@ TEST_F(AgentTest, StreamData)
     PARSE_XML_CHUNK();
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
     //cout << "Delta: " << delta.count() << endl;
-    EXPECT_GT((heartbeatFreq + 50ms), delta) << "delta < hbf + 50ms: " << delta.count();
+    EXPECT_GT((heartbeatFreq + 150ms), delta) << "delta < hbf + 50ms: " << delta.count();
     EXPECT_LT(heartbeatFreq, delta)  << "delta > hbf: " << delta.count();
     
     m_agentTestHelper->m_session->closeStream();
@@ -2534,7 +2534,7 @@ TEST_F(AgentTest, StreamData)
     PARSE_XML_CHUNK();
 
     //cout << "Delta: " << delta.count() << endl;
-    EXPECT_GT((delay + 50ms), delta) << "delta < delay + 50ms: " << delta.count();
+    EXPECT_GT((delay + 110ms), delta) << "delta < delay + 50ms: " << delta.count();
     EXPECT_LT(delay, delta)  << "delta > delay: " << delta.count();
   }
 }
