@@ -5,9 +5,9 @@ branches:
     - /.*master.*/
   
 image:
+  - macOS
   - Visual Studio 2019
   - Ubuntu2004
-  - macOS
 
 configuration:
   - Release
