@@ -2503,7 +2503,7 @@ TEST_F(AgentTest, StreamData)
   // 25ms range.
   {
 #ifdef APPVEYOR
-    auto slop{150ms};
+    auto slop{160ms};
 #else
     auto slop{35ms};
 #endif
