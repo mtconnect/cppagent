@@ -619,6 +619,7 @@ Configuration Parameters
     *Default*: 1
 	
 * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7. This applies to all adapters.
+
     *Default*: false
 	
 #### Configuration Pameters for TLS (https) Support ####
@@ -626,16 +627,20 @@ Configuration Parameters
 The following parameters must be present to enable https requests. If there is no password on the certificate, `TlsCertificatePassword` may be omitted.
 	
 * `TlsCertificateChain` - The name of the file containing the certificate chain created from signing authority
-    *Default*: 
+
+    *Default*: *NULL*
 
 * `TlsPrivateKey` -  The name of the file containing the private key for the certificate
-    *Default*: 
+
+    *Default*: *NULL*
 
 * `TlsDHKey` -  The name of the file containing the Diffie–Hellman key
-    *Default*: 
+
+    *Default*: *NULL*
 
 * `TlsCertificatePassword` -  The password used when creating the certificate. If none was supplied, do not use.
-    *Default*: 
+
+    *Default*: *NULL*
 
 ### Adapter configuration items ###
 
