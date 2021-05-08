@@ -2511,8 +2511,8 @@ TEST_F(AgentTest, StreamData)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
     auto delta = system_clock::now() - startTime;
     //cout << "Delta: " << delta.count() << endl;
-    EXPECT_GT((heartbeatFreq + 35ms), delta);
-    EXPECT_LT(heartbeatFreq, delta);
+    EXPECT_GT((heartbeatFreq + 50ms), delta) << "delta > hbf + 35ms: " << delta.count();
+    EXPECT_LT(heartbeatFreq, delta)  << "delta < hbf: " << delta.count();
     
     m_agentTestHelper->m_session->closeStream();
   }
@@ -2534,8 +2534,8 @@ TEST_F(AgentTest, StreamData)
 
     auto delta = system_clock::now() - startTime;
     //cout << "Delta: " << delta.count() << endl;
-    EXPECT_LT(delta, (delay + 50ms));
-    EXPECT_GT(delta, delay);
+    EXPECT_GT((delay + 50ms), delta) << "delta > delay + 50ms: " << delta.count();
+    EXPECT_LT(delay, delta)  << "delta < delat: " << delta.count();
   }
 }
 
