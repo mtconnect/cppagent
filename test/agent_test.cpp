@@ -2534,7 +2534,7 @@ TEST_F(AgentTest, StreamData)
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     PARSE_XML_CHUNK();
 
-    EXPECT_GT((delay + 110ms), delta) << "delta < delay + 110ms: " << delta.count();
+    EXPECT_GT((delay + 150ms), delta) << "delta < delay + 110ms: " << delta.count();
     EXPECT_LT(delay, delta)  << "delta > delay: " << delta.count();
   }
 }
