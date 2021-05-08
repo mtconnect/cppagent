@@ -2486,6 +2486,7 @@ TEST_F(AgentTest, BadInterval)
   }
 }
 
+#ifndef APPVEYOR
 
 TEST_F(AgentTest, StreamData)
 {
@@ -2549,6 +2550,7 @@ TEST_F(AgentTest, StreamData)
     EXPECT_LT(delay, delta)  << "delta > delay: " << delta.count();
   }
 }
+#endif
 
 TEST_F(AgentTest, StreamDataObserver)
 {
