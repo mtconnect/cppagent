@@ -5,8 +5,8 @@ branches:
     - /.*master.*/
   
 image:
-  - macOS
   - Visual Studio 2019
+  - macOS
   - Ubuntu2004
 
 configuration:
@@ -80,6 +80,7 @@ only_commits:
   files:
     - CMakeLists.txt
     - appveyor.yml
+    - conanfile.py
     - src/
     - test/
     - cmake/
