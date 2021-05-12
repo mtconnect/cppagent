@@ -45,6 +45,7 @@ namespace http = boost::beast::http;
 namespace ssl = boost::asio::ssl;
 using tcp = boost::asio::ip::tcp;
 
+
 class Client
 {
 public:
@@ -59,6 +60,7 @@ public:
   {
     LOG(error) << what << ": " << ec.message() << "\n";
     m_done = true;
+    m_failed = true;
     m_ec = ec;
   }
   
@@ -254,7 +256,7 @@ public:
                           this, verb, target, body, close, contentType,
                           std::placeholders::_1));
     
-    while (!m_done && m_context.run_for(20ms) > 0)
+    while (!m_done && !m_failed && m_context.run_for(20ms) > 0)
       ;
   }
   
@@ -273,12 +275,13 @@ public:
     };
     
     asio::spawn(m_context, std::bind(closeStream, std::placeholders::_1));
-    while (!m_done && m_context.run_for(20ms) > 0)
+    while (!m_done && !m_failed && m_context.run_for(20ms) > 0)
       ;
   }
   
-
+  bool m_clientCert{false};
   bool m_connected{false};
+  bool m_failed{false};
   int m_status;
   std::string m_result;
   asio::io_context &m_context;
@@ -307,6 +310,11 @@ const string KeyFile{PROJECT_ROOT_DIR "/test/resources/user.key"};
 const string DhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
 const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
 
+const string ClientCertFile(PROJECT_ROOT_DIR "/test/resources/client.crt");
+const string ClientKeyFile{PROJECT_ROOT_DIR "/test/resources/client.key"};
+const string ClientDhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+const string ClientCAFile(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+
 class HttpsServerTest : public testing::Test
 {
  protected:
@@ -321,12 +329,20 @@ class HttpsServerTest : public testing::Test
                                    options);
   }
   
+  void createServer(const ConfigOptions &options)
+  {
+    m_server = make_unique<Server>(m_context, 0, "127.0.0.1", options);
+  }
+
   void start()
   {
     m_server->start();
     while (!m_server->isListening())
       m_context.run_one();
-    
+  }
+  
+  void startClient(bool clientCert = false)
+  {
     ifstream root;
     root.open(RootCertFile);
     std::string cert((istreambuf_iterator<char>(root)), (istreambuf_iterator<char>()));
@@ -334,19 +350,24 @@ class HttpsServerTest : public testing::Test
     ssl::context ctx{ssl::context::tlsv12_client};
     ctx.add_certificate_authority(boost::asio::buffer(cert.data(), cert.size()));
     
+    if (clientCert)
+    {
+      ctx.set_verify_mode(ssl::verify_peer);
+      ctx.use_certificate_chain_file(ClientCertFile);
+      ctx.use_private_key_file(ClientKeyFile, asio::ssl::context::file_format::pem);
+    }
+    
     m_client = make_unique<Client>(m_context, ctx);
-  }
-  
-  void startClient()
-  {
+
     m_client->m_connected = false;
+    m_client->m_clientCert = clientCert;
     asio::spawn(m_context,
                 std::bind(&Client::connect,
                           m_client.get(),
                           static_cast<unsigned short>(m_server->getPort()),
                           std::placeholders::_1));
 
-    while (!m_client->m_connected)
+    while (!m_client->m_connected && !m_client->m_failed)
       m_context.run_one();
   }
 
@@ -482,4 +503,95 @@ TEST_F(HttpsServerTest, streaming_response)
   ctx->m_session->closeStream();
   while (m_context.run_for(20ms) > 0)
     ;
+}
+
+TEST_F(HttpsServerTest, check_failed_client_certificate)
+{
+  using namespace mtconnect::configuration;
+  ConfigOptions options{{TlsCertificateChain, CertFile},
+    {TlsPrivateKey, KeyFile},
+    {TlsDHKey, DhFile},
+    {TlsCertificatePassword, "mtconnect"s},
+    {TlsVerifyClientCertificate, true}
+  };
+  
+  createServer(options);
+  
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    Response resp(status::ok);
+    resp.m_body = "Done";
+    session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+
+    return true;
+  };
+  
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
+
+  start();
+  startClient();
+  ASSERT_TRUE(m_client->m_failed);
+}
+
+const string ClientCA(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+
+
+TEST_F(HttpsServerTest, check_valid_client_certificate)
+{
+  using namespace mtconnect::configuration;
+  ConfigOptions options{{TlsCertificateChain, CertFile},
+    {TlsPrivateKey, KeyFile},
+    {TlsDHKey, DhFile},
+    {TlsCertificatePassword, "mtconnect"s},
+    {TlsVerifyClientCertificate, true},
+    {TlsClientCAs, ClientCA}
+  };
+  
+  createServer(options);
+  
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    Response resp(status::ok);
+    resp.m_body = "Done";
+    session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+
+    return true;
+  };
+  
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
+
+  start();
+  startClient(true);
+  ASSERT_TRUE(m_client->m_connected);
+}
+
+TEST_F(HttpsServerTest, check_valid_client_certificate_without_server_ca)
+{
+  using namespace mtconnect::configuration;
+  ConfigOptions options{{TlsCertificateChain, CertFile},
+    {TlsPrivateKey, KeyFile},
+    {TlsDHKey, DhFile},
+    {TlsCertificatePassword, "mtconnect"s},
+    {TlsVerifyClientCertificate, true}
+  };
+  
+  createServer(options);
+  
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    Response resp(status::ok);
+    resp.m_body = "Done";
+    session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+
+    return true;
+  };
+  
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
+
+  start();
+  startClient(true);
+  ASSERT_TRUE(m_client->m_failed);
 }

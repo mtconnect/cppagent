@@ -61,16 +61,25 @@ namespace mtconnect
           });
         }
         
-        m_sslContext.set_options(boost::asio::ssl::context::default_workarounds |
-                                 boost::asio::ssl::context::no_sslv2 |
-                                 boost::asio::ssl::context::single_dh_use);
+        m_sslContext.set_options(ssl::context::default_workarounds |
+                                 asio::ssl::context::no_sslv2 |
+                                 asio::ssl::context::single_dh_use);
         m_sslContext.use_certificate_chain_file(*GetOption<string>(m_options, configuration::TlsCertificateChain));
         m_sslContext.use_private_key_file(*GetOption<string>(m_options, configuration::TlsPrivateKey), asio::ssl::context::file_format::pem);
         m_sslContext.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
         
         m_tlsEnabled = true;
         
-        m_tlsOnly = HasOption(m_options, configuration::TlsOnly);
+        m_tlsOnly = IsOptionSet(m_options, configuration::TlsOnly);
+        
+        if (HasOption(m_options, configuration::TlsVerifyClientCertificate))
+        {
+          m_sslContext.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
+          if (HasOption(m_options, configuration::TlsClientCAs))
+          {
+            m_sslContext.load_verify_file(*GetOption<string>(m_options, configuration::TlsClientCAs));
+          }
+        }
       }
     }
     

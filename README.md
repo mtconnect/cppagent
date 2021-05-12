@@ -1270,3 +1270,78 @@ Install brew and xcode command line tools
 
 	conan build . -bf build
 
+# Creating Test Certifications
+
+This section assumes you have installed openssl and can use the command line. The subject of the certificate is only for testing and should not be used in production. This section is provided to support testing and verification of the functionality. A certificate provided by a real certificate authority should be used in a production process.
+
+## Server Creating self-signed certificate chain
+
+### Create Signing authority key
+
+    openssl genrsa -out rootca.key 2048
+
+### Create password protected rsa key
+
+    openssl req -x509 -new -nodes -key rootca.key -days 20000 -out rootca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=serverca.org"
+
+### User Key
+
+    openssl genrsa -out user.key 2048
+
+### Signing Request
+
+    openssl req -new -key user.key -out user.csr
+
+### User Cert
+
+    openssl x509 -req -in user.csr -CA rootca.crt -CAkey rootca.key -CAcreateserial -out user.crt -days 20000 -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=server.org"
+
+### DH Parameters
+
+    openssl dhparam -out dh2048.pem 2048
+
+### Verify
+
+    openssl verify -CAfile rootca.crt rootca.crt
+    openssl verify -CAfile rootca.crt user.crt
+    openssl verify -CAfile user.crt user.crt
+
+## Client Certificate
+
+### Create Signing authority key
+
+    openssl genrsa -out clientca.key 2048
+
+### Create password protected rsa key
+
+    openssl req -x509 -new -nodes -key clientca.key -days 20000 -out clientca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=clientca.org"
+
+### Create Signing authority key
+
+    openssl genrsa -out client.key 2048
+
+### Create Signing Request
+
+    openssl req -new -key client.key -out client.csr -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=client.org"
+
+### Create Client Certificate
+
+For client.cnf
+
+    basicConstraints = CA:FALSE
+    nsCertType = client, email
+    nsComment = "OpenSSL Generated Client Certificate"
+    subjectKeyIdentifier = hash
+    authorityKeyIdentifier = keyid,issuer
+    keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+    extendedKeyUsage = clientAuth, emailProtection
+
+### Create the cert
+
+    openssl x509 -req -in client.csr -CA clientca.crt -CAkey clientca.key -out client.crt -CAcreateserial -days 20000 -sha256 -extfile client.cnf
+
+### Verify
+
+    openssl rsa -noout -text -in client.key
+    openssl req -noout -text -in client.csr
+    openssl x509 -noout -text -in client.crt
