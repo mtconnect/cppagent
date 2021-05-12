@@ -169,6 +169,7 @@ namespace mtconnect
       boost::asio::ip::tcp::acceptor m_acceptor;
       boost::asio::ssl::context m_sslContext;
       bool m_tlsEnabled{false};
+      bool m_tlsOnly{false};
     };
   }  // namespace http_server
 }  // namespace mtconnect

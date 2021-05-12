@@ -289,6 +289,11 @@ class HttpServerTest : public testing::Test
     m_server = make_unique<Server>(m_context, 0, "127.0.0.1");
   }
   
+  void createServer(const ConfigOptions &options)
+  {
+    m_server = make_unique<Server>(m_context, 0, "127.0.0.1", options);
+  }
+  
   void start()
   {
     m_server->start();
@@ -690,4 +695,43 @@ TEST_F(HttpServerTest, additional_header_fields)
   auto f2 = m_client->m_fields.find("Origin");
   ASSERT_NE(m_client->m_fields.end(), f2);
   ASSERT_EQ("https://foo.example", f2->second);
+}
+
+const string CertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
+const string KeyFile{PROJECT_ROOT_DIR "/test/resources/user.key"};
+const string DhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
+
+TEST_F(HttpServerTest, failure_when_tls_only)
+{
+  using namespace mtconnect::configuration;
+  ConfigOptions options{{TlsCertificateChain, CertFile},
+    {TlsPrivateKey, KeyFile},
+    {TlsDHKey, DhFile},
+    {TlsCertificatePassword, "mtconnect"s},
+    {TlsOnly, true}
+  };
+
+  createServer(options);
+  
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    Response resp(status::ok);
+    resp.m_body = "Done";
+    session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+
+    return true;
+  };
+  
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
+
+  start();
+  startClient();
+  
+  m_client->spawnRequest(http::verb::get, "/probe");
+  ASSERT_TRUE(m_client->m_done);
+
+  EXPECT_EQ((unsigned) boost::beast::http::status::unauthorized, m_client->m_status);
+
 }

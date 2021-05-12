@@ -31,11 +31,12 @@ namespace mtconnect
     public:
       TlsDector(boost::asio::ip::tcp::socket &&socket,
                 boost::asio::ssl::context &context,
+                bool tlsOnly,
                 bool allowPuts,
                 const std::set<boost::asio::ip::address> &allowPutsFrom,
                 const FieldList &list, Dispatch dispatch,
                 ErrorFunction error)
-      : m_stream(std::move(socket)), m_tlsContext(context),
+      : m_stream(std::move(socket)), m_tlsContext(context), m_tlsOnly(tlsOnly),
         m_allowPuts(allowPuts), m_allowPutsFrom(allowPutsFrom),
         m_fields(list), m_dispatch(dispatch), m_errorFunction(error)
       {
@@ -65,9 +66,10 @@ namespace mtconnect
       boost::asio::ssl::context& m_tlsContext;
       boost::beast::flat_buffer m_buffer;
       
+      bool m_tlsOnly;
       bool m_allowPuts;
       std::set<boost::asio::ip::address> m_allowPutsFrom;
-      
+            
       FieldList m_fields;
       Dispatch m_dispatch;
       ErrorFunction m_errorFunction;

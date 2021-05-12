@@ -69,6 +69,8 @@ namespace mtconnect
         m_sslContext.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
         
         m_tlsEnabled = true;
+        
+        m_tlsOnly = HasOption(m_options, configuration::TlsOnly);
       }
     }
     
@@ -174,7 +176,7 @@ namespace mtconnect
         if (m_tlsEnabled)
         {
           auto dectector = make_shared<TlsDector>(
-            move(socket), m_sslContext, m_allowPuts, m_allowPutsFrom,
+            move(socket), m_sslContext, m_tlsOnly, m_allowPuts, m_allowPutsFrom,
             m_fields, dispatcher, m_errorFunction);
         
           dectector->run();

@@ -190,6 +190,12 @@ namespace mtconnect
         fail(status::internal_server_error, "Could not read request", ec);
         return;
       }
+      
+      if (m_unauthorized)
+      {
+        fail(status::unauthorized, m_message, ec);
+        return;
+      }
 
       auto msg = m_parser->get();
       auto remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
@@ -478,7 +484,16 @@ namespace mtconnect
           session = std::make_shared<HttpSession>(move(m_stream), move(m_buffer),
                                         m_fields, m_dispatch,
                                         m_errorFunction);
+          
+          // Start the session, but set 
+          if (m_tlsOnly)
+          {
+            session->setUnauthorized("Only TLS (https) connections allowed");
+            session->run();
+            return;
+          }
         }
+        
         if (!m_allowPutsFrom.empty())
           session->allowPutsFrom(m_allowPutsFrom);
         else if (m_allowPuts)

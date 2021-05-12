@@ -78,11 +78,18 @@ namespace mtconnect
         m_allowPutsFrom = hosts;
       }
       auto getRemote() const { return m_remote; }
+      void setUnauthorized(const std::string &msg)
+      {
+        m_message = msg;
+        m_unauthorized = true;
+      }
 
     protected:
       Dispatch m_dispatch;
       ErrorFunction m_errorFunction;
 
+      std::string m_message;
+      bool m_unauthorized{false};
       bool m_allowPuts {false};
       std::set<boost::asio::ip::address> m_allowPutsFrom;
       boost::asio::ip::tcp::endpoint m_remote;
