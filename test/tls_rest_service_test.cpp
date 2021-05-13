@@ -275,7 +275,7 @@ public:
     };
     
     asio::spawn(m_context, std::bind(closeStream, std::placeholders::_1));
-    while (!m_done && !m_failed && m_context.run_for(20ms) > 0)
+    while (!m_done && m_context.run_for(100ms) > 0)
       ;
   }
   
@@ -347,17 +347,17 @@ class HttpsServerTest : public testing::Test
     root.open(RootCertFile);
     std::string cert((istreambuf_iterator<char>(root)), (istreambuf_iterator<char>()));
     
-    ssl::context ctx{ssl::context::tlsv12_client};
-    ctx.add_certificate_authority(boost::asio::buffer(cert.data(), cert.size()));
+    m_sslContext.emplace(ssl::context::tlsv12_client);
+    m_sslContext->add_certificate_authority(boost::asio::buffer(cert.data(), cert.size()));
     
     if (clientCert)
     {
-      ctx.set_verify_mode(ssl::verify_peer);
-      ctx.use_certificate_chain_file(ClientCertFile);
-      ctx.use_private_key_file(ClientKeyFile, asio::ssl::context::file_format::pem);
+      m_sslContext->set_verify_mode(ssl::verify_peer);
+      m_sslContext->use_certificate_chain_file(ClientCertFile);
+      m_sslContext->use_private_key_file(ClientKeyFile, asio::ssl::context::file_format::pem);
     }
     
-    m_client = make_unique<Client>(m_context, ctx);
+    m_client = make_unique<Client>(m_context, *m_sslContext);
 
     m_client->m_connected = false;
     m_client->m_clientCert = clientCert;
@@ -373,11 +373,15 @@ class HttpsServerTest : public testing::Test
 
   void TearDown() override
   {
-    m_server.reset();
     m_client.reset();
+    while (m_context.run_one_for(10ms))
+      ;
+    m_server.reset();
+    while (m_context.run_one_for(10ms))
+      ;
   }
 
-  
+  optional<ssl::context> m_sslContext;
   asio::io_context m_context;
   unique_ptr<Server> m_server;
   unique_ptr<Client> m_client;
@@ -565,6 +569,10 @@ TEST_F(HttpsServerTest, check_valid_client_certificate)
   start();
   startClient(true);
   ASSERT_TRUE(m_client->m_connected);
+
+  m_client->spawnRequest(http::verb::get, "/probe");
+
+  EXPECT_EQ(200, m_client->m_status);
 }
 
 TEST_F(HttpsServerTest, check_valid_client_certificate_without_server_ca)
