@@ -715,11 +715,11 @@ namespace mtconnect
       auto port = get<int>(options[configuration::Port]);
       LOG(info) << "Starting agent on port " << port;
 
-      auto server = make_unique<http_server::Server>(
+      auto server = make_unique<rest_service::Server>(
           m_context, port, get<string>(options[configuration::ServerIp]), options);
       loadAllowPut(server.get(), options);
 
-      auto cp = make_unique<http_server::FileCache>();
+      auto cp = make_unique<rest_service::FileCache>();
 
       // Make the Agent
       m_agent = make_unique<Agent>(m_context, server, cp, m_devicesFile,
@@ -871,7 +871,7 @@ namespace mtconnect
       }
     }
 
-    void AgentConfiguration::loadAllowPut(http_server::Server *server, ConfigOptions &options)
+    void AgentConfiguration::loadAllowPut(rest_service::Server *server, ConfigOptions &options)
     {
       namespace asio = boost::asio;
       namespace ip = asio::ip;
@@ -925,7 +925,7 @@ namespace mtconnect
     }
 
     void AgentConfiguration::loadNamespace(const ptree &tree, const char *namespaceType,
-                                           http_server::FileCache *cache, XmlPrinter *xmlPrinter,
+                                           rest_service::FileCache *cache, XmlPrinter *xmlPrinter,
                                            NamespaceFunction callback)
     {
       // Load namespaces, allow for local file system serving as well.
@@ -959,7 +959,7 @@ namespace mtconnect
     }
 
     void AgentConfiguration::loadFiles(XmlPrinter *xmlPrinter, const ptree &tree,
-                                       http_server::FileCache *cache)
+                                       rest_service::FileCache *cache)
     {
       auto files = tree.get_child_optional("Files");
       if (files)
@@ -1016,7 +1016,7 @@ namespace mtconnect
     }
 
     void AgentConfiguration::loadStyle(const ptree &tree, const char *styleName,
-                                       http_server::FileCache *cache, XmlPrinter *xmlPrinter,
+                                       rest_service::FileCache *cache, XmlPrinter *xmlPrinter,
                                        StyleFunction styleFunction)
     {
       auto style = tree.get_child_optional(styleName);
@@ -1039,7 +1039,7 @@ namespace mtconnect
       }
     }
 
-    void AgentConfiguration::loadTypes(const ptree &tree, http_server::FileCache *cache)
+    void AgentConfiguration::loadTypes(const ptree &tree, rest_service::FileCache *cache)
     {
       auto types = tree.get_child_optional("MimeTypes");
       if (types)

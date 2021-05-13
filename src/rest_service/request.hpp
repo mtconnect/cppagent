@@ -26,7 +26,7 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_service
   {
     class RequestError : public std::logic_error
     {
@@ -72,5 +72,5 @@ namespace mtconnect
     };
 
     using RequestPtr = std::shared_ptr<Request>;
-  }  // namespace http_server
+  }  // namespace rest_service
 }  // namespace mtconnect

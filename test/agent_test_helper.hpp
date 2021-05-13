@@ -18,10 +18,10 @@
 #pragma once
 
 #include "test_utilities.hpp"
-#include "http_server/session.hpp"
-#include "http_server/server.hpp"
-#include "http_server/response.hpp"
-#include "http_server/routing.hpp"
+#include "rest_service/session.hpp"
+#include "rest_service/server.hpp"
+#include "rest_service/response.hpp"
+#include "rest_service/routing.hpp"
 #include "adapter/adapter.hpp"
 #include "pipeline/pipeline.hpp"
 #include "configuration/agent_config.hpp"
@@ -39,7 +39,7 @@ namespace mtconnect
 {
   class Agent;
   
-  namespace http_server
+  namespace rest_service
   {
     class TestSession : public Session
     {
@@ -98,7 +98,7 @@ namespace mtconnect
   }
 }
 
-namespace mhttp = mtconnect::http_server;
+namespace mhttp = mtconnect::rest_service;
 namespace adpt = mtconnect::adapter;
 namespace observe = mtconnect::observation;
 
@@ -120,29 +120,29 @@ class AgentTestHelper
     
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
-                      const mtconnect::http_server::QueryMap &aQueries,
+                      const mtconnect::rest_service::QueryMap &aQueries,
                       xmlDocPtr *doc, const char *path,
                       const char *accepts = "text/xml");
   void responseStreamHelper(const char *file, int line,
-                            const mtconnect::http_server::QueryMap &aQueries,
+                            const mtconnect::rest_service::QueryMap &aQueries,
                             const char *path,
                             const char *accepts = "text/xml");
   void responseHelper(const char *file, int line,
-                      const mtconnect::http_server::QueryMap& aQueries, nlohmann::json &doc, const char *path,
+                      const mtconnect::rest_service::QueryMap& aQueries, nlohmann::json &doc, const char *path,
                       const char *accepts = "application/json");
   void putResponseHelper(const char *file, int line, const std::string &body,
-                         const mtconnect::http_server::QueryMap &aQueries,
+                         const mtconnect::rest_service::QueryMap &aQueries,
                          xmlDocPtr *doc, const char *path,
                          const char *accepts = "text/xml");
   void deleteResponseHelper(const char *file, int line, 
-                            const mtconnect::http_server::QueryMap &aQueries, xmlDocPtr *doc, const char *path,
+                            const mtconnect::rest_service::QueryMap &aQueries, xmlDocPtr *doc, const char *path,
                             const char *accepts = "text/xml");
   
   void chunkStreamHelper(const char *file, int line, xmlDocPtr *doc);
 
   void makeRequest(const char *file, int line, boost::beast::http::verb verb,
                    const std::string &body,
-                   const mtconnect::http_server::QueryMap &aQueries,
+                   const mtconnect::rest_service::QueryMap &aQueries,
                    const char *path, const char *accepts);
   
   auto getAgent() { return m_agent.get(); }
@@ -224,11 +224,11 @@ class AgentTestHelper
   
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::stringstream m_out;
-  mtconnect::http_server::RequestPtr m_request;
+  mtconnect::rest_service::RequestPtr m_request;
   boost::asio::io_context m_ioContext;
   boost::asio::ip::tcp::socket m_socket;
-  mtconnect::http_server::Response m_response;
-  std::shared_ptr<mtconnect::http_server::TestSession> m_session;
+  mtconnect::rest_service::Response m_response;
+  std::shared_ptr<mtconnect::rest_service::TestSession> m_session;
 };
 
 #define PARSE_XML_RESPONSE(path)                                                           \

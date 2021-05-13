@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "observation/checkpoint.hpp"
+#include "rest_service/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "utilities.hpp"
@@ -326,8 +326,8 @@ TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
 
 TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
 {
-  auto server = std::make_unique<http_server::Server>(m_agentTestHelper->m_ioContext);
-  auto cache = std::make_unique<http_server::FileCache>();
+  auto server = std::make_unique<rest_service::Server>(m_agentTestHelper->m_ioContext);
+  auto cache = std::make_unique<rest_service::FileCache>();
 
   m_agentTestHelper->createAgent("/samples/relationship_test.xml",
                                  8, 4, "1.7", 25);

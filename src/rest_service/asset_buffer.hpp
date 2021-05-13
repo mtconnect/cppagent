@@ -23,97 +23,99 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "asset.hpp"
+#include "assets/asset.hpp"
 #include "entity.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
 {
-  class AssetBuffer
+  namespace rest_service
   {
-  public:
-    using Index = std::map<std::string, AssetPtr>;
-    using SecondaryIndex = std::unordered_map<std::string, Index>;
-    using TypeCount = std::map<std::string, int>;
-    using Buffer = AssetList;
-    using RemoveCount = std::unordered_map<std::string, size_t>;
-
-    AssetBuffer(size_t max) : m_maxAssets(max) {}
-    ~AssetBuffer() = default;
-
-    auto getMaxAssets() const { return m_maxAssets; }
-    auto getCount(bool active = true) const
+    class AssetBuffer
     {
-      if (active)
-        return m_buffer.size() - m_removedAssets;
-      else
-        return m_buffer.size();
-    }
-
-    AssetPtr addAsset(AssetPtr asset);
-    AssetPtr removeAsset(AssetPtr asset, const std::optional<Timestamp> &time = std::nullopt)
-    {
-      return removeAsset(asset->getAssetId(), time);
-    }
-    AssetPtr removeAsset(const std::string &id,
-                         const std::optional<Timestamp> &time = std::nullopt);
-
-    AssetPtr getAsset(const std::string &id)
-    {
-      std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      auto idx = m_primaryIndex.find(id);
-      if (idx != m_primaryIndex.end())
-        return idx->second;
-      else
-        return nullptr;
-    }
-    const std::optional<const Index *> getAssetsForDevice(const std::string &id) const
-    {
-      std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      auto idx = m_deviceIndex.find(id);
-      if (idx != m_deviceIndex.end())
-        return std::make_optional(&idx->second);
-      else
-        return std::nullopt;
-    }
-    const std::optional<const Index *> getAssetsForType(const std::string &type) const
-    {
-      std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      auto idx = m_typeIndex.find(type);
-      if (idx != m_typeIndex.end())
-        return std::make_optional(&idx->second);
-      else
-        return std::nullopt;
-    }
-    TypeCount getCountsByType(bool active = true) const
-    {
-      std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      TypeCount res;
-      for (const auto &t : m_typeIndex)
+    public:
+      using Index = std::map<std::string, AssetPtr>;
+      using SecondaryIndex = std::unordered_map<std::string, Index>;
+      using TypeCount = std::map<std::string, int>;
+      using Buffer = AssetList;
+      using RemoveCount = std::unordered_map<std::string, size_t>;
+      
+      AssetBuffer(size_t max) : m_maxAssets(max) {}
+      ~AssetBuffer() = default;
+      
+      auto getMaxAssets() const { return m_maxAssets; }
+      auto getCount(bool active = true) const
       {
-        int delta = 0;
-        if (active)
-        {
-          auto cit = m_typeRemoveCount.find(t.first);
-          delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
-        }
-        res[t.first] = t.second.size() - delta;
+	if (active)
+	  return m_buffer.size() - m_removedAssets;
+	else
+	  return m_buffer.size();
       }
-      return res;
-    }
-    size_t getCountForType(const std::string &type, bool active = true) const
-    {
-      auto index = m_typeIndex.find(type);
-      if (index != m_typeIndex.end())
+      
+      AssetPtr addAsset(AssetPtr asset);
+      AssetPtr removeAsset(AssetPtr asset, const std::optional<Timestamp> &time = std::nullopt)
       {
-        int delta = 0;
-        if (active)
-        {
-          auto cit = m_typeRemoveCount.find(type);
-          delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+	return removeAsset(asset->getAssetId(), time);
+      }
+      AssetPtr removeAsset(const std::string &id,
+			   const std::optional<Timestamp> &time = std::nullopt);
+      
+      AssetPtr getAsset(const std::string &id)
+      {
+	std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
+	auto idx = m_primaryIndex.find(id);
+	if (idx != m_primaryIndex.end())
+	  return idx->second;
+	else
+	  return nullptr;
+      }
+      const std::optional<const Index *> getAssetsForDevice(const std::string &id) const
+      {
+	std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
+	auto idx = m_deviceIndex.find(id);
+	if (idx != m_deviceIndex.end())
+	  return std::make_optional(&idx->second);
+	else
+	  return std::nullopt;
+      }
+      const std::optional<const Index *> getAssetsForType(const std::string &type) const
+      {
+	std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
+	auto idx = m_typeIndex.find(type);
+	if (idx != m_typeIndex.end())
+	  return std::make_optional(&idx->second);
+	else
+	  return std::nullopt;
+      }
+      TypeCount getCountsByType(bool active = true) const
+      {
+	std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
+	TypeCount res;
+	for (const auto &t : m_typeIndex)
+	{
+	    int delta = 0;
+	    if (active)
+	    {
+	      auto cit = m_typeRemoveCount.find(t.first);
+	      delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+	    }
+	    res[t.first] = t.second.size() - delta;
+	}
+	return res;
+      }
+      size_t getCountForType(const std::string &type, bool active = true) const
+      {
+	auto index = m_typeIndex.find(type);
+	if (index != m_typeIndex.end())
+	{
+	  int delta = 0;
+	  if (active)
+	    {
+	      auto cit = m_typeRemoveCount.find(type);
+	      delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
         }
         return index->second.size() - delta;
-      }
+	}
       else
         return 0;
     }
@@ -189,5 +191,6 @@ namespace mtconnect
     SecondaryIndex m_typeIndex;
     RemoveCount m_deviceRemoveCount;
     RemoveCount m_typeRemoveCount;
-  };
+    };
+  }  
 }  // namespace mtconnect

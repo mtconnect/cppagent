@@ -32,7 +32,7 @@ namespace mtconnect
 {
   class Printer;
 
-  namespace http_server
+  namespace rest_service
   {
     template<class Derived>
     class SessionImpl : public Session
@@ -123,5 +123,5 @@ namespace mtconnect
     };
 
 
-  }  // namespace http_server
+  }  // namespace rest_service
 }  // namespace mtconnect

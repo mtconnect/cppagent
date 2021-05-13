@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "assets/asset_buffer.hpp"
+#include "rest_service/asset_buffer.hpp"
 #include "agent_test_helper.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"

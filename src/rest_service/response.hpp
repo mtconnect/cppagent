@@ -29,7 +29,7 @@ namespace mtconnect
 {
   class Printer;
 
-  namespace http_server
+  namespace rest_service
   {
     using status = boost::beast::http::status;
 
@@ -50,5 +50,5 @@ namespace mtconnect
       std::chrono::seconds m_expires;
       bool m_close {false};
     };
-  }  // namespace http_server
+  }  // namespace rest_service
 }  // namespace mtconnect

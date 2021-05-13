@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "observation.hpp"
+#include "observation/observation.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect

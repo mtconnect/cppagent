@@ -21,6 +21,9 @@ using namespace std;
 
 namespace mtconnect
 {
+  namespace rest_service
+  {
+    
   inline void AssetBuffer::adjustCount(AssetPtr asset, int delta)
   {
     m_removedAssets += delta;
@@ -173,5 +176,5 @@ namespace mtconnect
 
     return asset;
   }
-
+  }  
 }  // namespace mtconnect

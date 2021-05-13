@@ -2,8 +2,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "http_server/routing.hpp"
-#include "http_server/response.hpp"
+#include "rest_service/routing.hpp"
+#include "rest_service/response.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -14,7 +14,7 @@
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::http_server;
+using namespace mtconnect::rest_service;
 using verb = boost::beast::http::verb;
 
 class RoutingTest : public testing::Test

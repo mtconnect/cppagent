@@ -396,7 +396,7 @@ TEST_F(DataSetTest, Sample)
 
 TEST_F(DataSetTest, CurrentAt)
 {
-  using namespace mtconnect::http_server;
+  using namespace mtconnect::rest_service;
   m_agentTestHelper->addAdapter();
   auto seq = m_agentTestHelper->m_agent->getSequence();
 
@@ -684,7 +684,7 @@ TEST_F(DataSetTest, Probe)
 
 TEST_F(DataSetTest, JsonCurrent)
 {
-  using namespace http_server;
+  using namespace rest_service;
   m_agentTestHelper->addAdapter();
 
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3 d=cow");

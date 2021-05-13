@@ -43,7 +43,7 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_service
   {
     class Server
     {
@@ -171,5 +171,5 @@ namespace mtconnect
       bool m_tlsEnabled{false};
       bool m_tlsOnly{false};
     };
-  }  // namespace http_server
+  }  // namespace rest_service
 }  // namespace mtconnect

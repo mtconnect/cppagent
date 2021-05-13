@@ -33,7 +33,7 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_service
   {
     namespace beast = boost::beast;  // from <boost/beast.hpp>
     namespace http = beast::http;    // from <boost/beast/http.hpp>
@@ -218,5 +218,5 @@ namespace mtconnect
       LOG(error) << " error: " << ec.message();
     }
 
-  }  // namespace http_server
+  }  // namespace rest_service
 }  // namespace mtconnect

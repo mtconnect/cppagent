@@ -24,7 +24,7 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_service
   {
     class TlsDector : public std::enable_shared_from_this<TlsDector>
     {

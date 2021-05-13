@@ -34,7 +34,7 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_service
   {
     class Session;
     using SessionPtr = std::shared_ptr<Session>;
@@ -251,5 +251,5 @@ namespace mtconnect
       QuerySet m_queryParameters;
       Function m_function;
     };
-  }  // namespace http_server
+  }  // namespace rest_service
 }  // namespace mtconnect

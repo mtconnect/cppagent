@@ -28,7 +28,7 @@
 
 namespace mtconnect
 {
-  namespace observation
+  namespace rest_service
   {
     using SequenceNumber_t = uint64_t;
 

@@ -28,14 +28,14 @@
 
 #include "adapter/adapter.hpp"
 #include "adapter/adapter_pipeline.hpp"
-#include "http_server/file_cache.hpp"
+#include "rest_service/file_cache.hpp"
 #include "parser.hpp"
 #include "service.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_service
   {
     class Server;
   }
@@ -78,14 +78,14 @@ namespace mtconnect
     protected:
       DevicePtr defaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
-      void loadAllowPut(http_server::Server *server, ConfigOptions &options);
+      void loadAllowPut(rest_service::Server *server, ConfigOptions &options);
       void loadNamespace(const ptree &tree, const char *namespaceType,
-                         http_server::FileCache *cache, XmlPrinter *printer,
+                         rest_service::FileCache *cache, XmlPrinter *printer,
                          NamespaceFunction callback);
-      void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, http_server::FileCache *cache);
-      void loadStyle(const ptree &tree, const char *styleName, http_server::FileCache *cache,
+      void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, rest_service::FileCache *cache);
+      void loadStyle(const ptree &tree, const char *styleName, rest_service::FileCache *cache,
                      XmlPrinter *printer, StyleFunction styleFunction);
-      void loadTypes(const ptree &tree, http_server::FileCache *cache);
+      void loadTypes(const ptree &tree, rest_service::FileCache *cache);
       void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);

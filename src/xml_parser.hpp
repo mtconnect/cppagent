@@ -26,7 +26,9 @@
 #include "device_model/component.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
-#include "observation/checkpoint.hpp"
+
+// TODO: Move FilterSet someplace else
+#include "rest_service/checkpoint.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
