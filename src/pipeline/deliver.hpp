@@ -21,7 +21,7 @@
 
 #include <chrono>
 
-#include "assets/asset.hpp"
+#include "asset/asset.hpp"
 #include "observation/observation.hpp"
 #include "transform.hpp"
 

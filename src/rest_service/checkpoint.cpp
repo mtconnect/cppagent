@@ -23,7 +23,8 @@ using namespace std;
 
 namespace mtconnect
 {
-  namespace observation
+  using namespace observation;
+  namespace rest_service
   {
     Checkpoint::Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
     {

@@ -17,7 +17,7 @@
 
 #include "shdr_token_mapper.hpp"
 
-#include "assets/asset.hpp"
+#include "asset/asset.hpp"
 #include "device_model/device.hpp"
 #include "entity/factory.hpp"
 #include "entity/xml_parser.hpp"

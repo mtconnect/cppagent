@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "assets/cutting_tool.hpp"
+#include "asset/cutting_tool.hpp"
 #include "printer.hpp"
 #include "utilities.hpp"
 
@@ -41,7 +41,7 @@ namespace mtconnect
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
                             observation::ObservationList &results) const override;
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
-                            const unsigned int assetCount, const AssetList &assets) const override;
+                            const unsigned int assetCount, const AssetList &asset) const override;
     std::string mimeType() const override { return "application/mtconnect+json"; }
 
   protected:

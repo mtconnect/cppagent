@@ -17,137 +17,133 @@
 
 #pragma once
 
+#include "boost/asio/io_context.hpp"
+
 #include "sink.hpp"
-
+#include "asset_buffer.hpp"
+#include "circular_buffer.hpp"
+#include "request.hpp"
+#include "response.hpp"
+#include "utilities.hpp"
 #include "server.hpp"
-#include "observation/observation.hpp"
+#include "loopback_pipeline.hpp"
 
-namespace mtconnect 
+namespace mtconnect
 {
   namespace rest_service
-  {    
-    class RestService : Sink
+  {
+    struct AsyncSampleResponse;
+    struct AsyncCurrentResponse;
+
+    class RestService : public Sink
     {
     public:
-      RestService(boost::asio::io_context &context);
-      
-      virtual ~RestService() {}
-      
-      virtual void start();
-      virtual void stop();
-      
-      virtual receiveObservation();
-      virtual receiveAsset();
+      RestService(boost::asio::io_context &context,
+                  SinkContractPtr &&contract,
+                  pipeline::PipelineContextPtr pipelineContext,
+                  const ConfigOptions &options);
 
-      // Add component events to the sliding buffer
-      observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation);
-      observation::SequenceNumber_t addToBuffer(DataItemPtr dataItem, entity::Properties props,
-						std::optional<Timestamp> timestamp = std::nullopt);
-      observation::SequenceNumber_t addToBuffer(DataItemPtr dataItem, const std::string &value,
-						std::optional<Timestamp> timestamp = std::nullopt);
+      ~RestService() {}
 
-
-      // Asset management
-      void addAsset(AssetPtr asset);
-      AssetPtr addAsset(DevicePtr device, const std::string &asset,
-			const std::optional<std::string> &id, const std::optional<std::string> &type,
-			const std::optional<std::string> &time, entity::ErrorList &errors);
+      // Sink Methods
+      void start() override;
+      void stop() override;
+      
+      uint64_t publish(observation::ObservationPtr &observation) override;
+      bool publish(AssetPtr asset) override;
       
       bool removeAsset(DevicePtr device, const std::string &id,
-		       const std::optional<Timestamp> time = std::nullopt);
+                       const std::optional<Timestamp> time = std::nullopt) override;
       bool removeAllAssets(const std::optional<std::string> device,
-			   const std::optional<std::string> type, const std::optional<Timestamp> time,
-			   AssetList &list);
-      
+                           const std::optional<std::string> type,
+                           const std::optional<Timestamp> time, AssetList &list) override;
+
+      // Observation management
       observation::ObservationPtr getFromBuffer(uint64_t seq) const
       {
-	return m_circularBuffer.getFromBuffer(seq);
+        return m_circularBuffer.getFromBuffer(seq);
       }
-      observation::SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
+      SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
       unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
+      
+      // Asset information
       auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
       auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
       const auto &getAssets() const { return m_assetBuffer.getAssets(); }
-      auto getFileCache() { return m_fileCache.get(); }
-      
+      auto &getFileCache() { return m_fileCache; }
+
       auto getAssetCount(const std::string &type, bool active = true) const
       {
-	return m_assetBuffer.getCountForType(type, active);
+        return m_assetBuffer.getCountForType(type, active);
       }
-      
-      observation::SequenceNumber_t getFirstSequence() const
-      {
-	return m_circularBuffer.getFirstSequence();
-      }
-      
+
+      SequenceNumber_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
+
       // For testing...
       void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
 
       // MTConnect Requests
-      rest_service::Response probeRequest(const Printer *,
-                                       const std::optional<std::string> &device = std::nullopt);
-    rest_service::Response currentRequest(
-        const Printer *, const std::optional<std::string> &device = std::nullopt,
-        const std::optional<observation::SequenceNumber_t> &at = std::nullopt,
-        const std::optional<std::string> &path = std::nullopt);
-    rest_service::Response sampleRequest(
-        const Printer *, const int count = 100,
-        const std::optional<std::string> &device = std::nullopt,
-        const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
-        const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
-        const std::optional<std::string> &path = std::nullopt);
-    void streamSampleRequest(
-        rest_service::SessionPtr session, const Printer *, const int interval, const int heartbeat,
-        const int count = 100, const std::optional<std::string> &device = std::nullopt,
-        const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
-        const std::optional<std::string> &path = std::nullopt);
-
-    // Async stream method
-    void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
-    void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
-                               boost::system::error_code ec);
-
-    void streamCurrentRequest(rest_service::SessionPtr session, const Printer *, const int interval,
+      Response probeRequest(const Printer *,
+                            const std::optional<std::string> &device = std::nullopt);
+      Response currentRequest(const Printer *,
                               const std::optional<std::string> &device = std::nullopt,
+                              const std::optional<SequenceNumber_t> &at = std::nullopt,
                               const std::optional<std::string> &path = std::nullopt);
+      Response sampleRequest(const Printer *, const int count = 100,
+                             const std::optional<std::string> &device = std::nullopt,
+                             const std::optional<SequenceNumber_t> &from = std::nullopt,
+                             const std::optional<SequenceNumber_t> &to = std::nullopt,
+                             const std::optional<std::string> &path = std::nullopt);
+      void streamSampleRequest(SessionPtr session, const Printer *, const int interval,
+                               const int heartbeat, const int count = 100,
+                               const std::optional<std::string> &device = std::nullopt,
+                               const std::optional<SequenceNumber_t> &from = std::nullopt,
+                               const std::optional<std::string> &path = std::nullopt);
 
-    void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
-                           boost::system::error_code ec);
+      // Async stream method
+      void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
+      void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
+                                 boost::system::error_code ec);
 
-    rest_service::Response assetRequest(const Printer *, const int32_t count, const bool removed,
-                                       const std::optional<std::string> &type = std::nullopt,
-                                       const std::optional<std::string> &device = std::nullopt);
-    rest_service::Response assetIdsRequest(const Printer *, const std::list<std::string> &ids);
-    rest_service::Response putAssetRequest(const Printer *, const std::string &asset,
-                                          const std::optional<std::string> &type,
-                                          const std::optional<std::string> &device = std::nullopt,
-                                          const std::optional<std::string> &uuid = std::nullopt);
-    rest_service::Response deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
-    rest_service::Response deleteAllAssetsRequest(
-        const Printer *, const std::optional<std::string> &device = std::nullopt,
-        const std::optional<std::string> &type = std::nullopt);
-    rest_service::Response putObservationRequest(
-        const Printer *, const std::string &device, const rest_service::QueryMap observations,
-        const std::optional<std::string> &time = std::nullopt);
+      void streamCurrentRequest(SessionPtr session, const Printer *, const int interval,
+                                const std::optional<std::string> &device = std::nullopt,
+                                const std::optional<std::string> &path = std::nullopt);
 
-    // For debugging
-    void setLogStreamData(bool log) { m_logStreamData = log; }
+      void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
+                             boost::system::error_code ec);
 
-    // Get the printer for a type
-    const std::string acceptFormat(const std::string &accepts) const;
-    Printer *getPrinter(const std::string &aType) const
-    {
-      auto printer = m_printers.find(aType);
-      if (printer != m_printers.end())
-        return printer->second.get();
-      else
-        return nullptr;
-    }
-    const Printer *printerForAccepts(const std::string &accepts) const
-    {
-      return getPrinter(acceptFormat(accepts));
-    }
-      
+      // Asset requests
+      Response assetRequest(const Printer *, const int32_t count, const bool removed,
+                            const std::optional<std::string> &type = std::nullopt,
+                            const std::optional<std::string> &device = std::nullopt);
+      Response assetIdsRequest(const Printer *, const std::list<std::string> &ids);
+      Response putAssetRequest(const Printer *, const std::string &asset,
+                               const std::optional<std::string> &type,
+                               const std::optional<std::string> &device = std::nullopt,
+                               const std::optional<std::string> &uuid = std::nullopt);
+      Response deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
+      Response deleteAllAssetsRequest(const Printer *,
+                                      const std::optional<std::string> &device = std::nullopt,
+                                      const std::optional<std::string> &type = std::nullopt);
+      Response putObservationRequest(const Printer *, const std::string &device,
+                                     const QueryMap observations,
+                                     const std::optional<std::string> &time = std::nullopt);
+
+      // For debugging
+      void setLogStreamData(bool log) { m_logStreamData = log; }
+
+      // Get the printer for a type
+      const std::string acceptFormat(const std::string &accepts) const;
+      const Printer *printerForAccepts(const std::string &accepts) const
+      {
+        return m_sinkContract->getPrinter(acceptFormat(accepts));
+      }
+
+      // Output an XML Error
+      std::string printError(const Printer *printer, const std::string &errorCode,
+                             const std::string &text) const;
+
+
     protected:
       // HTTP Routings
       void createPutObservationRoutings();
@@ -158,43 +154,48 @@ namespace mtconnect
       void createAssetRoutings();
 
       // Current Data Collection
-      std::string fetchCurrentData(const Printer *printer, const observation::FilterSetOpt &filterSet,
-				   const std::optional<observation::SequenceNumber_t> &at);
-      
+      std::string fetchCurrentData(const Printer *printer,
+                                   const FilterSetOpt &filterSet,
+                                   const std::optional<SequenceNumber_t> &at);
+
       // Sample data collection
-      std::string fetchSampleData(const Printer *printer, const observation::FilterSetOpt &filterSet,
-				  int count, const std::optional<observation::SequenceNumber_t> &from,
-				  const std::optional<observation::SequenceNumber_t> &to,
-				  observation::SequenceNumber_t &end, bool &endOfBuffer,
-				  observation::ChangeObserver *observer = nullptr);
-      
+      std::string fetchSampleData(const Printer *printer,
+                                  const FilterSetOpt &filterSet, int count,
+                                  const std::optional<SequenceNumber_t> &from,
+                                  const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
+                                  bool &endOfBuffer,
+                                  observation::ChangeObserver *observer = nullptr);
+
       // Asset methods
       void getAssets(const Printer *printer, const std::list<std::string> &ids, AssetList &list);
       void getAssets(const Printer *printer, const int32_t count, const bool removed,
-		     const std::optional<std::string> &type, const std::optional<std::string> &device,
-		     AssetList &list);
-
+                     const std::optional<std::string> &type,
+                     const std::optional<std::string> &device, AssetList &list);
       
       // Verification methods
       template <typename T>
       void checkRange(const Printer *printer, const T value, const T min, const T max,
-		      const std::string &param, bool notZero = false) const;
+                      const std::string &param, bool notZero = false) const;
       void checkPath(const Printer *printer, const std::optional<std::string> &path,
-		     const DevicePtr device, observation::FilterSet &filter) const;
+                     const DevicePtr device, FilterSet &filter) const;
       DevicePtr checkDevice(const Printer *printer, const std::string &uuid) const;
-      
+
     protected:
       // Loopback
-      std::unique_ptr<AgentLoopbackPipeline> m_loopback;
-      
+      boost::asio::io_context &m_context;
+      boost::asio::io_context::strand m_strand;
+
+      ConfigOptions m_options;
+      LoopbackSource m_loopback;
+
       uint64_t m_instanceId;
       std::unique_ptr<Server> m_server;
-      std::unique_ptr<FileCache> m_fileCache;
 
       // Buffers
+      FileCache m_fileCache;
       CircularBuffer m_circularBuffer;
-      AssetBuffer m_assetBuffer;            
-    };      
-  }
-}
-
+      
+      bool m_logStreamData{false};
+    };
+  }  // namespace rest_service
+}  // namespace mtconnect

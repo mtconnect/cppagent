@@ -28,8 +28,8 @@
 
 #include "adapter/adapter.hpp"
 #include "adapter/adapter_pipeline.hpp"
-#include "rest_service/file_cache.hpp"
 #include "parser.hpp"
+#include "rest_service/file_cache.hpp"
 #include "service.hpp"
 #include "utilities.hpp"
 

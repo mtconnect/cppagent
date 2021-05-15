@@ -34,26 +34,22 @@ namespace mtconnect
 
   namespace rest_service
   {
-    template<class Derived>
+    template <class Derived>
     class SessionImpl : public Session
     {
     public:
-      SessionImpl(boost::beast::flat_buffer &&buffer, const FieldList &list,
-                  Dispatch dispatch, ErrorFunction error)
-        : Session(dispatch, error),  m_fields(list), m_buffer(std::move(buffer))
+      SessionImpl(boost::beast::flat_buffer &&buffer, const FieldList &list, Dispatch dispatch,
+                  ErrorFunction error)
+        : Session(dispatch, error), m_fields(list), m_buffer(std::move(buffer))
       {
       }
       SessionImpl(const SessionImpl &) = delete;
-      virtual ~SessionImpl() { }
+      virtual ~SessionImpl() {}
       std::shared_ptr<SessionImpl> shared_ptr()
       {
         return std::dynamic_pointer_cast<SessionImpl>(shared_from_this());
       }
-      Derived&
-      derived()
-      {
-          return static_cast<Derived&>(*this);
-      }
+      Derived &derived() { return static_cast<Derived &>(*this); }
 
       void run() override;
       void writeResponse(const Response &response, Complete complete = nullptr) override;
@@ -89,14 +85,13 @@ namespace mtconnect
       std::shared_ptr<void> m_response;
       std::shared_ptr<void> m_serializer;
     };
-    
+
     class HttpSession : public SessionImpl<HttpSession>
     {
     public:
-      HttpSession(boost::beast::tcp_stream &&stream,
-                  boost::beast::flat_buffer &&buffer, const FieldList &list,
-                  Dispatch dispatch, ErrorFunction error)
-      : SessionImpl<HttpSession>(move(buffer), list, dispatch, error), m_stream(std::move(stream))
+      HttpSession(boost::beast::tcp_stream &&stream, boost::beast::flat_buffer &&buffer,
+                  const FieldList &list, Dispatch dispatch, ErrorFunction error)
+        : SessionImpl<HttpSession>(move(buffer), list, dispatch, error), m_stream(std::move(stream))
       {
         m_remote = m_stream.socket().remote_endpoint();
       }
@@ -107,7 +102,7 @@ namespace mtconnect
       virtual ~HttpSession() { close(); }
 
       auto &stream() { return m_stream; }
-      
+
       void close() override
       {
         NAMED_SCOPE("HttpSession::close");
@@ -117,11 +112,9 @@ namespace mtconnect
         m_stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
       }
 
-      
     protected:
       boost::beast::tcp_stream m_stream;
     };
-
 
   }  // namespace rest_service
 }  // namespace mtconnect

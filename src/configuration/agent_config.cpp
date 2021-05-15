@@ -84,11 +84,11 @@ namespace mtconnect
     {
       ConfigOption option;
       visit(overloaded {[&option, &s](const std::string &) {
-        if (s.empty())
-          option = std::monostate();
-        else
-          option = s;        
-      },
+                          if (s.empty())
+                            option = std::monostate();
+                          else
+                            option = s;
+                        },
                         [&option, &s](const int &) { option = stoi(s); },
                         [&option, &s](const Milliseconds &) { option = Milliseconds {stoi(s)}; },
                         [&option, &s](const Seconds &) { option = Seconds {stoi(s)}; },

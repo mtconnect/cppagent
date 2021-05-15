@@ -111,7 +111,7 @@ namespace mtconnect
         next = next->bind(extract);
       }
 
-      // Token mapping to data items and assets
+      // Token mapping to data items and asset
       auto mapper = make_shared<ShdrTokenMapper>(
           m_context, GetOption<string>(m_options, configuration::Device).value_or(""),
           GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));

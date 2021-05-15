@@ -17,19 +17,16 @@
 
 #pragma once
 
-namespace mtconnect 
+namespace mtconnect
 {
   class Source
   {
   public:
     virtual ~Source() {}
-    
+
     virtual void start() = 0;
     virtual void stop() = 0;
-    
-    virtual receiveObservation() = 0;
-    virtual receiveAsset() = 0;    
   };
 
-  using SourceList = std::list<std::unique_ptr<Source>>;  
-}
+  using SourceList = std::list<std::unique_ptr<Source>>;
+}  // namespace mtconnect

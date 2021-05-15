@@ -23,6 +23,7 @@
 #include <memory>
 #include <mutex>
 
+#include "observation/observation.hpp"
 #include "checkpoint.hpp"
 #include "utilities.hpp"
 
@@ -48,13 +49,13 @@ namespace mtconnect
 
       ~CircularBuffer() { m_checkpoints.clear(); }
 
-      ObservationPtr getFromBuffer(uint64_t seq) const
+      observation::ObservationPtr getFromBuffer(uint64_t seq) const
       {
         auto off = seq - m_firstSequence;
         if (off < m_slidingBufferSize)
           return m_slidingBuffer[off];
         else
-          return ObservationPtr();
+          return observation::ObservationPtr();
       }
       auto getIndexAt(uint64_t at) { return at - m_firstSequence; }
 
@@ -70,7 +71,7 @@ namespace mtconnect
           m_firstSequence = seq - m_slidingBuffer.size();
       }
 
-      SequenceNumber_t addToBuffer(ObservationPtr &event)
+      SequenceNumber_t addToBuffer(observation::ObservationPtr &event)
       {
         std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
@@ -85,7 +86,7 @@ namespace mtconnect
           m_first.addObservation(event);
         else if (m_slidingBuffer.full())
         {
-          ObservationPtr old = m_slidingBuffer.front();
+          observation::ObservationPtr old = m_slidingBuffer.front();
           m_first.addObservation(old);
           if (old->getSequence() > 1)
             m_firstSequence++;
@@ -157,14 +158,14 @@ namespace mtconnect
         return check;
       }
 
-      std::unique_ptr<ObservationList> getObservations(int count, const FilterSetOpt &filterSet,
+      std::unique_ptr<observation::ObservationList> getObservations(int count, const FilterSetOpt &filterSet,
                                                        const std::optional<SequenceNumber_t> start,
                                                        const std::optional<SequenceNumber_t> to,
                                                        SequenceNumber_t &end,
                                                        SequenceNumber_t &firstSeq,
                                                        bool &endOfBuffer)
       {
-        auto results = std::make_unique<ObservationList>();
+        auto results = std::make_unique<observation::ObservationList>();
 
         std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
         firstSeq = m_firstSequence;
@@ -239,7 +240,7 @@ namespace mtconnect
 
       // The sliding/circular buffer to hold all of the events/sample data
       unsigned int m_slidingBufferSize;
-      boost::circular_buffer<ObservationPtr> m_slidingBuffer;
+      boost::circular_buffer<observation::ObservationPtr> m_slidingBuffer;
 
       // Checkpoints
       SequenceNumber_t m_checkpointFreq;
@@ -249,5 +250,5 @@ namespace mtconnect
       Checkpoint m_first;
       boost::circular_buffer<std::unique_ptr<Checkpoint>> m_checkpoints;
     };
-  }  // namespace observation
+  }  // namespace rest_service
 }  // namespace mtconnect

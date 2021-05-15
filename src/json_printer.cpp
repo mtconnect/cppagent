@@ -361,12 +361,12 @@ namespace mtconnect
   }
 
   std::string JsonPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
-                                       const unsigned int assetCount, const AssetList &assets) const
+                                       const unsigned int assetCount, const AssetList &asset) const
   {
     entity::JsonPrinter printer;
 
     json assetDoc = json::array();
-    for (const auto &asset : assets)
+    for (const auto &asset : asset)
       assetDoc.emplace_back(printer.print(asset));
 
     json doc =

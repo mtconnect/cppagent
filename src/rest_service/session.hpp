@@ -89,7 +89,7 @@ namespace mtconnect
       ErrorFunction m_errorFunction;
 
       std::string m_message;
-      bool m_unauthorized{false};
+      bool m_unauthorized {false};
       bool m_allowPuts {false};
       std::set<boost::asio::ip::address> m_allowPutsFrom;
       boost::asio::ip::tcp::endpoint m_remote;

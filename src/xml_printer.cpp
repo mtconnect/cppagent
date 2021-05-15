@@ -26,8 +26,8 @@
 
 #include <libxml/xmlwriter.h>
 
-#include "assets/asset.hpp"
-#include "assets/cutting_tool.hpp"
+#include "asset/asset.hpp"
+#include "asset/cutting_tool.hpp"
 #include "device_model/composition.hpp"
 #include "device_model/configuration/configuration.hpp"
 #include "device_model/device.hpp"
@@ -219,17 +219,17 @@ namespace mtconnect
     item.second.mSchemaLocation = location;
     item.first = prefix;
 
-    m_assetsNsSet.insert(prefix);
+    m_assetNsSet.insert(prefix);
 
-    m_assetsNamespaces.insert(item);
+    m_assetNamespaces.insert(item);
   }
 
-  void XmlPrinter::clearAssetsNamespaces() { m_assetsNamespaces.clear(); }
+  void XmlPrinter::clearAssetsNamespaces() { m_assetNamespaces.clear(); }
 
   string XmlPrinter::getAssetsUrn(const std::string &prefix)
   {
-    auto ns = m_assetsNamespaces.find(prefix);
-    if (ns != m_assetsNamespaces.end())
+    auto ns = m_assetNamespaces.find(prefix);
+    if (ns != m_assetNamespaces.end())
       return ns->second.mUrn;
     else
       return "";
@@ -237,8 +237,8 @@ namespace mtconnect
 
   string XmlPrinter::getAssetsLocation(const std::string &prefix)
   {
-    auto ns = m_assetsNamespaces.find(prefix);
-    if (ns != m_assetsNamespaces.end())
+    auto ns = m_assetNamespaces.find(prefix);
+    if (ns != m_assetNamespaces.end())
       return ns->second.mSchemaLocation;
     else
       return "";
@@ -250,7 +250,7 @@ namespace mtconnect
 
   void XmlPrinter::setErrorStyle(const std::string &style) { m_errorStyle = style; }
 
-  void XmlPrinter::setAssetsStyle(const std::string &style) { m_assetsStyle = style; }
+  void XmlPrinter::setAssetsStyle(const std::string &style) { m_assetStyle = style; }
 
   static inline void addAttribute(xmlTextWriterPtr writer, const char *key,
                                   const std::string &value)
@@ -499,7 +499,7 @@ namespace mtconnect
   }
 
   string XmlPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
-                                 const unsigned int assetCount, const AssetList &assets) const
+                                 const unsigned int assetCount, const AssetList &asset) const
   {
     string ret;
     try
@@ -511,9 +511,9 @@ namespace mtconnect
         AutoElement ele(writer, "Assets");
         entity::XmlPrinter printer;
 
-        for (const auto &asset : assets)
+        for (const auto &asset : asset)
         {
-          printer.print(writer, asset, m_assetsNsSet);
+          printer.print(writer, asset, m_assetNsSet);
         }
       }
 
@@ -571,8 +571,8 @@ namespace mtconnect
         break;
 
       case eASSETS:
-        namespaces = &m_assetsNamespaces;
-        style = m_assetsStyle;
+        namespaces = &m_assetNamespaces;
+        style = m_assetStyle;
         xmlType = "Assets";
         break;
     }

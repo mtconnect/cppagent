@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "assets/asset.hpp"
+#include "asset/asset.hpp"
 #include "observation/observation.hpp"
 #include "utilities.hpp"
 
@@ -65,7 +65,7 @@ namespace mtconnect
                                     observation::ObservationList &results) const = 0;
     virtual std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                                     const unsigned int assetCount,
-                                    AssetList const &assets) const = 0;
+                                    AssetList const &asset) const = 0;
     virtual std::string mimeType() const = 0;
 
   protected:

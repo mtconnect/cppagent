@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "assets/asset.hpp"
+#include "asset/asset.hpp"
 #include "rest_service/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
@@ -28,9 +28,11 @@
 #include "test_utilities.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
+#include "rest_service/checkpoint.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::rest_service;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 

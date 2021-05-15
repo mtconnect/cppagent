@@ -246,7 +246,7 @@ namespace
     path = printer->getDevicesUrn("y");
     ASSERT_EQ(std::string("urn:example.com:ExampleDevices:1.2"), path);
 
-    string assets(
+    string asset(
         "AssetsNamespaces {\n"
         "z {\n"
         "Urn = urn:example.com:ExampleAssets:1.2\n"
@@ -255,7 +255,7 @@ namespace
         "}\n"
         "}\n");
 
-    m_config->loadConfig(assets);
+    m_config->loadConfig(asset);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
     printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));

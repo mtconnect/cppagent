@@ -53,9 +53,9 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   gtest_discover_tests(${AGENT_TEST_NAME}_test DISCOVERY_MODE PRE_TEST)
 endmacro()
 
-add_agent_test(asset TRUE assets)
-add_agent_test(file_asset TRUE assets)
-add_agent_test(cutting_tool TRUE assets)
+add_agent_test(asset TRUE asset)
+add_agent_test(file_asset TRUE asset)
+add_agent_test(cutting_tool TRUE asset)
 
 add_agent_test(agent_device TRUE device_model)
 add_agent_test(component FALSE device_model)

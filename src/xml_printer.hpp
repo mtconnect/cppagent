@@ -19,7 +19,7 @@
 
 #include <unordered_set>
 
-#include "assets/asset.hpp"
+#include "asset/asset.hpp"
 #include "printer.hpp"
 #include "utilities.hpp"
 
@@ -52,7 +52,7 @@ namespace mtconnect
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
                             observation::ObservationList &results) const override;
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
-                            const unsigned int assetCount, const AssetList &assets) const override;
+                            const unsigned int assetCount, const AssetList &asset) const override;
     std::string mimeType() const override { return "text/xml"; }
 
     void addDevicesNamespace(const std::string &urn, const std::string &location,
@@ -120,17 +120,17 @@ namespace mtconnect
     std::map<std::string, SchemaNamespace> m_devicesNamespaces;
     std::map<std::string, SchemaNamespace> m_streamsNamespaces;
     std::map<std::string, SchemaNamespace> m_errorNamespaces;
-    std::map<std::string, SchemaNamespace> m_assetsNamespaces;
+    std::map<std::string, SchemaNamespace> m_assetNamespaces;
 
     std::unordered_set<std::string> m_deviceNsSet;
     std::unordered_set<std::string> m_streamsNsSet;
     std::unordered_set<std::string> m_errorNsSet;
-    std::unordered_set<std::string> m_assetsNsSet;
+    std::unordered_set<std::string> m_assetNsSet;
 
     std::string m_schemaVersion;
     std::string m_streamsStyle;
     std::string m_devicesStyle;
     std::string m_errorStyle;
-    std::string m_assetsStyle;
+    std::string m_assetStyle;
   };
 }  // namespace mtconnect

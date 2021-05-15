@@ -6,7 +6,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "assets/asset.hpp"
+#include "asset/asset.hpp"
 #include "entity.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"

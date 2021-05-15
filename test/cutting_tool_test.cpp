@@ -6,7 +6,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "assets/cutting_tool.hpp"
+#include "asset/cutting_tool.hpp"
 #include "xml_printer_helper.hpp"
 #include "entity.hpp"
 #include "entity/xml_parser.hpp"

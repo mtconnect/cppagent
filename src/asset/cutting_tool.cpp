@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "assets/cutting_tool.hpp"
+#include "asset/cutting_tool.hpp"
 
 #include <sstream>
 

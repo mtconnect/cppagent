@@ -23,9 +23,10 @@
 #include <boost/beast.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
+#include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/tokenizer.hpp>
-#include <boost/beast/ssl.hpp>
+
 #include <thread>
 
 #include "logging.hpp"
@@ -47,7 +48,7 @@ namespace mtconnect
     using namespace std;
     using boost::placeholders::_1;
     using boost::placeholders::_2;
-    
+
     void Server::loadTlsCertificate()
     {
       if (HasOption(m_options, configuration::TlsCertificateChain) &&
@@ -56,33 +57,37 @@ namespace mtconnect
       {
         if (HasOption(m_options, configuration::TlsCertificatePassword))
         {
-          m_sslContext.set_password_callback([this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
-            return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
-          });
+          m_sslContext.set_password_callback(
+              [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
+                return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
+              });
         }
-        
-        m_sslContext.set_options(ssl::context::default_workarounds |
-                                 asio::ssl::context::no_sslv2 |
+
+        m_sslContext.set_options(ssl::context::default_workarounds | asio::ssl::context::no_sslv2 |
                                  asio::ssl::context::single_dh_use);
-        m_sslContext.use_certificate_chain_file(*GetOption<string>(m_options, configuration::TlsCertificateChain));
-        m_sslContext.use_private_key_file(*GetOption<string>(m_options, configuration::TlsPrivateKey), asio::ssl::context::file_format::pem);
+        m_sslContext.use_certificate_chain_file(
+            *GetOption<string>(m_options, configuration::TlsCertificateChain));
+        m_sslContext.use_private_key_file(
+            *GetOption<string>(m_options, configuration::TlsPrivateKey),
+            asio::ssl::context::file_format::pem);
         m_sslContext.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
-        
+
         m_tlsEnabled = true;
-        
+
         m_tlsOnly = IsOptionSet(m_options, configuration::TlsOnly);
-        
+
         if (HasOption(m_options, configuration::TlsVerifyClientCertificate))
         {
           m_sslContext.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
           if (HasOption(m_options, configuration::TlsClientCAs))
           {
-            m_sslContext.load_verify_file(*GetOption<string>(m_options, configuration::TlsClientCAs));
+            m_sslContext.load_verify_file(
+                *GetOption<string>(m_options, configuration::TlsClientCAs));
           }
         }
       }
     }
-    
+
     void Server::start()
     {
       try
@@ -184,25 +189,24 @@ namespace mtconnect
         };
         if (m_tlsEnabled)
         {
-          auto dectector = make_shared<TlsDector>(
-            move(socket), m_sslContext, m_tlsOnly, m_allowPuts, m_allowPutsFrom,
-            m_fields, dispatcher, m_errorFunction);
-        
+          auto dectector =
+              make_shared<TlsDector>(move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
+                                     m_allowPutsFrom, m_fields, dispatcher, m_errorFunction);
+
           dectector->run();
         }
         else
         {
           boost::beast::flat_buffer buffer;
           boost::beast::tcp_stream stream(move(socket));
-          auto session = make_shared<HttpSession>(
-            move(stream), move(buffer), m_fields, dispatcher,
-            m_errorFunction);
+          auto session = make_shared<HttpSession>(move(stream), move(buffer), m_fields, dispatcher,
+                                                  m_errorFunction);
 
           if (!m_allowPutsFrom.empty())
             session->allowPutsFrom(m_allowPutsFrom);
           else if (m_allowPuts)
             session->allowPuts();
-          
+
           session->run();
         }
         m_acceptor.async_accept(net::make_strand(m_context),

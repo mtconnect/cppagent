@@ -24,7 +24,7 @@
 #include "agent_test_helper.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
-#include "assets/file_asset.hpp"
+#include "asset/file_asset.hpp"
 #include "device_model/reference.hpp"
 
 #include <chrono>
@@ -1877,7 +1877,7 @@ TEST_F(AgentTest, AssetBuffer)
 
   // Test multiple asset get
   {
-    PARSE_XML_RESPONSE("/assets");
+    PARSE_XML_RESPONSE("/asset");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 2");
@@ -1887,7 +1887,7 @@ TEST_F(AgentTest, AssetBuffer)
 
   // Test multiple asset get with filter
   {
-    PARSE_XML_RESPONSE_QUERY("/assets", queries);
+    PARSE_XML_RESPONSE_QUERY("/asset", queries);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 3");
@@ -1897,7 +1897,7 @@ TEST_F(AgentTest, AssetBuffer)
 
   queries["count"] = "2";
   {
-    PARSE_XML_RESPONSE_QUERY("/assets", queries);
+    PARSE_XML_RESPONSE_QUERY("/asset", queries);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
@@ -2120,7 +2120,7 @@ TEST_F(AgentTest, AssetRemoval)
   }
 
   {
-    PARSE_XML_RESPONSE("/assets");
+    PARSE_XML_RESPONSE("/asset");
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
@@ -2129,7 +2129,7 @@ TEST_F(AgentTest, AssetRemoval)
 
   query["removed"] = "true";
   {
-    PARSE_XML_RESPONSE_QUERY("/assets", query);
+    PARSE_XML_RESPONSE_QUERY("/asset", query);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 1");
@@ -2172,7 +2172,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   }
 
   {
-    PARSE_XML_RESPONSE("/assets");
+    PARSE_XML_RESPONSE("/asset");
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
@@ -2183,7 +2183,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   // not regenerate the attributes for the asset.
   query["removed"] = "true";
   {
-    PARSE_XML_RESPONSE_QUERY("/assets", query);
+    PARSE_XML_RESPONSE_QUERY("/asset", query);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
@@ -2348,7 +2348,7 @@ TEST_F(AgentTest, RemoveAllAssets)
   ASSERT_EQ((unsigned int)0, agent->getAssetCount());
 
   {
-    PARSE_XML_RESPONSE("/assets");
+    PARSE_XML_RESPONSE("/asset");
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 0);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
   }
@@ -2357,7 +2357,7 @@ TEST_F(AgentTest, RemoveAllAssets)
   // not regenerate the attributes for the asset.
   {
     QueryMap q{{ "removed", "true" }};
-    PARSE_XML_RESPONSE_QUERY("/assets", q);
+    PARSE_XML_RESPONSE_QUERY("/asset", q);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");

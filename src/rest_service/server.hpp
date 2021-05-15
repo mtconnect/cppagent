@@ -38,8 +38,8 @@
 #include "response.hpp"
 #include "routing.hpp"
 #include "session.hpp"
-#include "utilities.hpp"
 #include "tls_dector.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {
@@ -50,7 +50,11 @@ namespace mtconnect
     public:
       Server(boost::asio::io_context &context, unsigned short port = 5000,
              const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
-        : m_context(context), m_port(port), m_options(options), m_acceptor(context), m_sslContext(boost::asio::ssl::context::tls)
+        : m_context(context),
+          m_port(port),
+          m_options(options),
+          m_acceptor(context),
+          m_sslContext(boost::asio::ssl::context::tls)
       {
         if (inter.empty())
         {
@@ -69,7 +73,7 @@ namespace mtconnect
           session->writeResponse(response);
           return true;
         };
-        
+
         loadTlsCertificate();
       }
 
@@ -143,7 +147,7 @@ namespace mtconnect
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
       ErrorFunction getErrorFunction() const { return m_errorFunction; }
-      
+
     protected:
       void loadTlsCertificate();
 
@@ -168,8 +172,8 @@ namespace mtconnect
 
       boost::asio::ip::tcp::acceptor m_acceptor;
       boost::asio::ssl::context m_sslContext;
-      bool m_tlsEnabled{false};
-      bool m_tlsOnly{false};
+      bool m_tlsEnabled {false};
+      bool m_tlsOnly {false};
     };
   }  // namespace rest_service
 }  // namespace mtconnect

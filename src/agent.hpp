@@ -28,26 +28,23 @@
 #include <vector>
 
 #include "adapter/adapter.hpp"
-#include "agent_loopback_pipeline.hpp"
-#include "rest_service/asset_buffer.hpp"
+#include "loopback_pipeline.hpp"
 #include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
-#include "rest_service/server.hpp"
-#include "rest_service/checkpoint.hpp"
-#include "rest_service/circular_buffer.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
-#include "xml_parser.hpp"
-
+#include "rest_service/asset_buffer.hpp"
+#include "rest_service/checkpoint.hpp"
+#include "rest_service/circular_buffer.hpp"
+#include "rest_service/server.hpp"
 #include "sink.hpp"
 #include "source.hpp"
+#include "xml_parser.hpp"
 
 namespace mtconnect
 {
-  struct AsyncSampleResponse;
-  struct AsyncCurrentResponse;
   namespace adapter
   {
     class Adapter;
@@ -67,10 +64,8 @@ namespace mtconnect
   {
   public:
     // Load agent with the xml configuration
-    Agent(boost::asio::io_context &context, std::unique_ptr<rest_service::Server> &server,
-          std::unique_ptr<rest_service::FileCache> &cache, const std::string &configXmlPath,
-          int bufferSize, int maxAssets, const std::string &version, int checkpointFreq = 1000,
-          bool pretty = false);
+    Agent(boost::asio::io_context &context, const std::string &configXmlPath,
+          const std::string &version, bool pretty = false);
 
     // Virtual destructor
     ~Agent();
@@ -83,7 +78,6 @@ namespace mtconnect
     void stop();
 
     // HTTP Server
-    auto getServer() const { return m_server.get(); }
     std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
 
     // Add an adapter to the agent
@@ -111,7 +105,6 @@ namespace mtconnect
     void addDevice(DevicePtr device);
     void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
 
-
     // Message when adapter has connected and disconnected
     void connecting(const std::string &adapter);
     void disconnected(const std::string &adapter, const StringList &devices, bool autoAvailable);
@@ -127,9 +120,24 @@ namespace mtconnect
       auto dev = findDeviceByUUIDorName(deviceName);
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
+
+    // Pipeline methods
+    void receiveObservation(observation::ObservationPtr observation);
+    void receiveAsset(AssetPtr asset);
     
     // For testing
     auto getAgentDevice() { return m_agentDevice; }
+    
+    // Printers
+    Printer *getPrinter(const std::string &aType) const
+    {
+      auto printer = m_printers.find(aType);
+      if (printer != m_printers.end())
+        return printer->second.get();
+      else
+        return nullptr;
+    }
+
 
   protected:
     friend class AgentPipelineContract;
@@ -140,11 +148,6 @@ namespace mtconnect
     void verifyDevice(DevicePtr device);
     void initializeDataItems(DevicePtr device);
     void loadCachedProbe();
-
-
-    // Output an XML Error
-    std::string printError(const Printer *printer, const std::string &errorCode,
-                           const std::string &text) const;
 
     // Handle the device/path parameters for the xpath search
     std::string devicesAndPath(const std::optional<std::string> &path,
@@ -158,14 +161,29 @@ namespace mtconnect
         return diPos->second;
       return nullptr;
     }
-
+    
+    observation::ObservationPtr getLatest(const std::string &id)
+    {
+      auto o = m_latest.find(id);
+      if (o != m_latest.end())
+        return o->second;
+      else
+        return nullptr;
+    }
+    
   protected:
     boost::asio::io_context &m_context;
     boost::asio::io_context::strand m_strand;
 
+    std::unique_ptr<LoopbackPipeline> m_loopback;
+    std::unordered_map<std::string, observation::ObservationPtr> m_latest;
+    
+    // Asset Management
+    AssetBuffer m_assetBuffer;
+
     // Unique id based on the time of creation
     bool m_initialized {false};
-    
+
     // Sources and Sinks
     SourceList m_sources;
     SinkList m_sinks;
@@ -189,7 +207,6 @@ namespace mtconnect
     std::string m_configXmlPath;
 
     // For debugging
-    bool m_logStreamData;
     bool m_pretty;
   };
 
@@ -219,8 +236,8 @@ namespace mtconnect
         fun(di.second);
       }
     }
-    void deliverObservation(observation::ObservationPtr obs) override { m_agent->addToBuffer(obs); }
-    void deliverAsset(AssetPtr asset) override { m_agent->addAsset(asset); }
+    void deliverObservation(observation::ObservationPtr obs) override { m_agent->receiveObservation(obs); }
+    void deliverAsset(AssetPtr asset) override { m_agent->receiveAsset(asset); }
     void deliverAssetCommand(entity::EntityPtr command) override;
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
