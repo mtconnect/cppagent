@@ -28,7 +28,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "rest_service/checkpoint.hpp"
+#include "rest_sink/checkpoint.hpp"
 #include "asset/cutting_tool.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"

@@ -124,7 +124,7 @@ namespace mtconnect
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
     {
-      auto a = std::dynamic_pointer_cast<Asset>(entity);
+      auto a = std::dynamic_pointer_cast<asset::Asset>(entity);
       if (!a)
       {
         throw EntityError("Unexpected entity type, cannot convert to asset in DeliverAsset");

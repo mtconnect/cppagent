@@ -24,9 +24,10 @@ namespace mtconnect
   public:
     virtual ~Source() {}
 
-    virtual void start() = 0;
+    virtual bool start() = 0;
     virtual void stop() = 0;
   };
 
-  using SourceList = std::list<std::unique_ptr<Source>>;
+  using SourcePtr = std::shared_ptr<Source>;
+  using SourceList = std::list<SourcePtr>;
 }  // namespace mtconnect

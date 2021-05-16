@@ -23,8 +23,9 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/asio/spawn.hpp>
+#include <boost/beast/ssl.hpp>
 
-#include "rest_service/server.hpp"
+#include "rest_sink/server.hpp"
 #include "logging.hpp"
 
 #include <cstdio>
@@ -36,18 +37,20 @@
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::rest_service;
+using namespace mtconnect::rest_sink;
 
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
+namespace ssl = boost::asio::ssl;
 using tcp = boost::asio::ip::tcp;
+
 
 class Client
 {
 public:
-  Client(asio::io_context& ioc)
-  : m_context(ioc), m_stream(ioc)
+  Client(asio::io_context& ioc, ssl::context &context)
+  : m_context(ioc), m_stream(ioc, context)
   {
   }
   
@@ -57,25 +60,34 @@ public:
   {
     LOG(error) << what << ": " << ec.message() << "\n";
     m_done = true;
+    m_failed = true;
     m_ec = ec;
   }
   
   void connect(unsigned short port, asio::yield_context yield)
   {
     beast::error_code ec;
+    
+    SSL_set_tlsext_host_name(m_stream.native_handle(), "localhost");
 
     // These objects perform our I/O
     tcp::endpoint server(asio::ip::address_v4::from_string("127.0.0.1"), port);
         
     // Set the timeout.
-    m_stream.expires_after(std::chrono::seconds(30));
+    beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
     
     // Make the connection on the IP address we get from a lookup
-    m_stream.async_connect(server, yield[ec]);
+    beast::get_lowest_layer(m_stream).async_connect(server, yield[ec]);
     if(ec)
     {
       return fail(ec, "connect");
     }
+    
+    beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
+    m_stream.async_handshake(ssl::stream_base::client, yield[ec]);
+    if(ec)
+        return fail(ec, "handshake");
+
     m_connected = true;
   }
   
@@ -102,7 +114,7 @@ public:
     req.body() = body;
     
     // Set the timeout.
-    m_stream.expires_after(std::chrono::seconds(30));
+    beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
     req.prepare_payload();
     
     // Send the HTTP request to the remote host
@@ -244,25 +256,37 @@ public:
                           this, verb, target, body, close, contentType,
                           std::placeholders::_1));
     
-    while (!m_done && m_context.run_for(20ms) > 0)
+    while (!m_done && !m_failed && m_context.run_for(20ms) > 0)
       ;
   }
   
   void close()
   {
-    beast::error_code ec;
+    m_done = false;
+    auto closeStream = [this](asio::yield_context yield)
+    {
+      beast::error_code ec;
 
-    // Gracefully close the socket
-    m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
+      // Gracefully close the socket
+      m_stream.async_shutdown(yield[ec]);
+      if(ec)
+        fail(ec, "shutdown");
+      m_done = true;
+    };
+    
+    asio::spawn(m_context, std::bind(closeStream, std::placeholders::_1));
+    while (!m_done && m_context.run_for(100ms) > 0)
+      ;
   }
   
-
+  bool m_clientCert{false};
   bool m_connected{false};
+  bool m_failed{false};
   int m_status;
   std::string m_result;
   asio::io_context &m_context;
   bool m_done{false};
-  beast::tcp_stream m_stream;
+  beast::ssl_stream<beast::tcp_stream> m_stream;
   boost::beast::error_code m_ec;
   beast::flat_buffer m_b;
   int m_count{0};
@@ -281,52 +305,89 @@ public:
 
 };
 
-class RestServiceTest : public testing::Test
+const string CertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
+const string KeyFile{PROJECT_ROOT_DIR "/test/resources/user.key"};
+const string DhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
+
+const string ClientCertFile(PROJECT_ROOT_DIR "/test/resources/client.crt");
+const string ClientKeyFile{PROJECT_ROOT_DIR "/test/resources/client.key"};
+const string ClientDhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+const string ClientCAFile(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+
+class TlsRestServiceTest : public testing::Test
 {
  protected:
   void SetUp() override
   {
-    m_server = make_unique<Server>(m_context, 0, "127.0.0.1");
+    using namespace mtconnect::configuration;
+    ConfigOptions options{{TlsCertificateChain, CertFile},
+      {TlsPrivateKey, KeyFile},
+      {TlsDHKey, DhFile},
+      {TlsCertificatePassword, "mtconnect"s}};
+    m_server = make_unique<Server>(m_context, 0, "127.0.0.1",
+                                   options);
   }
   
   void createServer(const ConfigOptions &options)
   {
     m_server = make_unique<Server>(m_context, 0, "127.0.0.1", options);
   }
-  
+
   void start()
   {
     m_server->start();
     while (!m_server->isListening())
       m_context.run_one();
-    m_client = make_unique<Client>(m_context);
   }
   
-  void startClient()
+  void startClient(bool clientCert = false)
   {
+    ifstream root;
+    root.open(RootCertFile);
+    std::string cert((istreambuf_iterator<char>(root)), (istreambuf_iterator<char>()));
+    
+    m_sslContext.emplace(ssl::context::tlsv12_client);
+    m_sslContext->add_certificate_authority(boost::asio::buffer(cert.data(), cert.size()));
+    
+    if (clientCert)
+    {
+      m_sslContext->set_verify_mode(ssl::verify_peer);
+      m_sslContext->use_certificate_chain_file(ClientCertFile);
+      m_sslContext->use_private_key_file(ClientKeyFile, asio::ssl::context::file_format::pem);
+    }
+    
+    m_client = make_unique<Client>(m_context, *m_sslContext);
+
     m_client->m_connected = false;
+    m_client->m_clientCert = clientCert;
     asio::spawn(m_context,
                 std::bind(&Client::connect,
                           m_client.get(),
                           static_cast<unsigned short>(m_server->getPort()),
                           std::placeholders::_1));
 
-    while (!m_client->m_connected)
+    while (!m_client->m_connected && !m_client->m_failed)
       m_context.run_one();
   }
 
   void TearDown() override
   {
-    m_server.reset();
     m_client.reset();
+    while (m_context.run_one_for(10ms))
+      ;
+    m_server.reset();
+    while (m_context.run_one_for(10ms))
+      ;
   }
 
+  optional<ssl::context> m_sslContext;
   asio::io_context m_context;
   unique_ptr<Server> m_server;
   unique_ptr<Client> m_client;
 };
 
-TEST_F(RestServiceTest, simple_request_response)
+TEST_F(TlsRestServiceTest, create_server_and_load_certificates)
 {
   weak_ptr<Session> savedSession;
   
@@ -365,224 +426,7 @@ TEST_F(RestServiceTest, simple_request_response)
   ASSERT_TRUE(savedSession.expired());
 }
 
-TEST_F(RestServiceTest, request_response_with_query_parameters)
-{
-  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-    EXPECT_EQ("device1", get<string>(request->m_parameters["device"]));
-    EXPECT_EQ("//DataItem[@type='POSITION' and @subType='ACTUAL']", get<string>(request->m_parameters["path"]));
-    EXPECT_EQ(123456, get<uint64_t>(request->m_parameters["from"]));
-    EXPECT_EQ(1000, get<int>(request->m_parameters["count"]));
-    EXPECT_EQ(10000, get<int>(request->m_parameters["heartbeat"]));
-
-    Response resp(status::ok);
-    resp.m_body = "Done";
-    session->writeResponse(resp, [](){
-      cout << "Written" << endl;
-    });
-    return true;
-  };
-  
-  string qp(
-      "path={string}&from={unsigned_integer}&"
-      "interval={integer}&count={integer:100}&"
-      "heartbeat={integer:10000}&to={unsigned_integer}");
-  m_server->addRouting({boost::beast::http::verb::get, "/sample?" + qp, handler});
-  m_server->addRouting({boost::beast::http::verb::get, "/{device}/sample?" + qp, handler});
-
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::get,
-                         "/device1/sample"
-                         "?path=//DataItem[@type=%27POSITION%27%20and%20@subType=%27ACTUAL%27]"
-                         "&from=123456&count=1000");
-  ASSERT_TRUE(m_client->m_done);
-  EXPECT_EQ("Done", m_client->m_result);
-  EXPECT_EQ(200, m_client->m_status);
-}
-
-TEST_F(RestServiceTest, request_put_when_put_not_allowed)
-{
-  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    EXPECT_TRUE(false);
-    return true;
-  };
-  
-  m_server->addRouting({boost::beast::http::verb::put, "/probe", probe});
-  
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::put,
-                         "/probe");
-  ASSERT_TRUE(m_client->m_done);
-  EXPECT_EQ(int(http::status::bad_request), m_client->m_status);
-  EXPECT_EQ("PUT, POST, and DELETE are not allowed. MTConnect Agent is read only and only GET is allowed.", m_client->m_result);
-}
-
-TEST_F(RestServiceTest, request_put_when_put_allowed)
-{
-  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-    EXPECT_EQ(http::verb::put, request->m_verb);
-    Response resp(status::ok);
-    resp.m_body = "Put ok";
-    session->writeResponse(resp, [](){
-      cout << "Written" << endl;
-      return true;
-    });
-    return true;
-  };
-  
-  m_server->addRouting({boost::beast::http::verb::put, "/probe", handler});
-  m_server->allowPuts();
-  
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::put,
-                         "/probe");
-  ASSERT_TRUE(m_client->m_done);
-  EXPECT_EQ(int(http::status::ok), m_client->m_status);
-  EXPECT_EQ("Put ok", m_client->m_result);
-
-}
-
-TEST_F(RestServiceTest, request_put_when_put_not_allowed_from_ip_address)
-{
-  weak_ptr<Session> session;
-  
-  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    EXPECT_TRUE(false);
-    return true;
-  };
-  
-  m_server->addRouting({boost::beast::http::verb::put, "/probe", probe});
-  m_server->allowPutFrom("1.1.1.1");
-  
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::put,
-                         "/probe");
-  ASSERT_TRUE(m_client->m_done);
-  EXPECT_EQ(int(http::status::bad_request), m_client->m_status);
-  EXPECT_EQ("PUT, POST, and DELETE are not allowed from 127.0.0.1", m_client->m_result);
-}
-
-TEST_F(RestServiceTest, request_put_when_put_allowed_from_ip_address)
-{
-  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-    EXPECT_EQ(http::verb::put, request->m_verb);
-    Response resp(status::ok);
-    resp.m_body = "Put ok";
-    session->writeResponse(resp, [](){
-      cout << "Written" << endl;
-      return true;
-    });
-    return true;
-  };
-  
-  m_server->addRouting({boost::beast::http::verb::put, "/probe", handler});
-  m_server->allowPutFrom("127.0.0.1");
-  
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::put,
-                         "/probe");
-  ASSERT_TRUE(m_client->m_done);
-  EXPECT_EQ(int(http::status::ok), m_client->m_status);
-  EXPECT_EQ("Put ok", m_client->m_result);
-}
-
-TEST_F(RestServiceTest, request_with_connect_close)
-{
-  weak_ptr<Session> savedSession;
-
-  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-    savedSession = session;
-    Response resp(status::ok);
-    resp.m_body = "Probe";
-    session->writeResponse(resp, [](){
-      cout << "Written" << endl;
-      return true;
-    });
-    return true;
-  };
-  
-  m_server->addRouting(Routing{boost::beast::http::verb::get, "/probe", handler});
-  
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::get,
-                         "/probe", "", true);
-  ASSERT_TRUE(m_client->m_done);
-  EXPECT_EQ(int(http::status::ok), m_client->m_status);
-  EXPECT_EQ("Probe", m_client->m_result);
-
-  m_client->spawnRequest(http::verb::get,
-                         "/probe", "", true);
-  EXPECT_TRUE(m_client->m_ec);
-  EXPECT_FALSE(savedSession.lock());
-}
-
-TEST_F(RestServiceTest, put_content_to_server)
-{
-  string body;
-  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-    EXPECT_EQ("Body Content", request->m_body);
-    body = request->m_body;
-    
-    Response resp(status::ok);
-    session->writeResponse(resp, [](){
-      cout << "Written" << endl;
-    });
-    return true;
-  };
-  
-  m_server->addRouting({boost::beast::http::verb::get, "/probe", handler});
-  
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::get,
-                         "/probe", "Body Content", false);
-  ASSERT_TRUE(m_client->m_done);
-  ASSERT_EQ("Body Content", body);
-}
-
-TEST_F(RestServiceTest, put_content_with_put_values)
-{
-  string body, ct;
-  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-    EXPECT_EQ("fish=%27chips%27&time=%27money%27", request->m_body);
-    EXPECT_EQ("'chips'", request->m_query["fish"]);
-    EXPECT_EQ("'money'", request->m_query["time"]);
-    body = request->m_body;
-    ct = request->m_contentType;
-    
-    Response resp(status::ok);
-    session->writeResponse(resp, [](){
-      cout << "Written" << endl;
-    });
-    return true;
-  };
-  
-  m_server->addRouting({boost::beast::http::verb::get, "/probe", handler});
-  
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::get,
-                         "/probe", "fish=%27chips%27&time=%27money%27", false,
-                         "application/x-www-form-urlencoded");
-  ASSERT_TRUE(m_client->m_done);
-  ASSERT_EQ("fish=%27chips%27&time=%27money%27", body);
-  ASSERT_EQ("application/x-www-form-urlencoded", ct);
-}
-
-TEST_F(RestServiceTest, streaming_response)
+TEST_F(TlsRestServiceTest, streaming_response)
 {
   struct context {
     context(RequestPtr r, SessionPtr s) : m_request(r), m_session(s) {}
@@ -665,53 +509,16 @@ TEST_F(RestServiceTest, streaming_response)
     ;
 }
 
-TEST_F(RestServiceTest, additional_header_fields)
-{
-  m_server->setHttpHeaders({"Access-Control-Allow-Origin:*", "Origin:https://foo.example"});
-  
-  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    Response resp(status::ok);
-    resp.m_body = "Done";
-    session->writeResponse(resp, [](){
-      cout << "Written" << endl;
-    });
-
-    return true;
-  };
-  
-  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
-
-  start();
-  startClient();
-
-  m_client->spawnRequest(http::verb::get, "/probe");
-  ASSERT_TRUE(m_client->m_done);
-  
-  EXPECT_EQ(200, m_client->m_status);
-  auto f1 = m_client->m_fields.find("Access-Control-Allow-Origin");
-  ASSERT_NE(m_client->m_fields.end(), f1);
-  ASSERT_EQ("*", f1->second);
-
-  auto f2 = m_client->m_fields.find("Origin");
-  ASSERT_NE(m_client->m_fields.end(), f2);
-  ASSERT_EQ("https://foo.example", f2->second);
-}
-
-const string CertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
-const string KeyFile{PROJECT_ROOT_DIR "/test/resources/user.key"};
-const string DhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
-const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
-
-TEST_F(RestServiceTest, failure_when_tls_only)
+TEST_F(TlsRestServiceTest, check_failed_client_certificate)
 {
   using namespace mtconnect::configuration;
   ConfigOptions options{{TlsCertificateChain, CertFile},
     {TlsPrivateKey, KeyFile},
     {TlsDHKey, DhFile},
     {TlsCertificatePassword, "mtconnect"s},
-    {TlsOnly, true}
+    {TlsVerifyClientCertificate, true}
   };
-
+  
   createServer(options);
   
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
@@ -728,10 +535,71 @@ TEST_F(RestServiceTest, failure_when_tls_only)
 
   start();
   startClient();
+  ASSERT_TRUE(m_client->m_failed);
+}
+
+const string ClientCA(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+
+
+TEST_F(TlsRestServiceTest, check_valid_client_certificate)
+{
+  using namespace mtconnect::configuration;
+  ConfigOptions options{{TlsCertificateChain, CertFile},
+    {TlsPrivateKey, KeyFile},
+    {TlsDHKey, DhFile},
+    {TlsCertificatePassword, "mtconnect"s},
+    {TlsVerifyClientCertificate, true},
+    {TlsClientCAs, ClientCA}
+  };
   
+  createServer(options);
+  
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    Response resp(status::ok);
+    resp.m_body = "Done";
+    session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+
+    return true;
+  };
+  
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
+
+  start();
+  startClient(true);
+  ASSERT_TRUE(m_client->m_connected);
+
   m_client->spawnRequest(http::verb::get, "/probe");
-  ASSERT_TRUE(m_client->m_done);
 
-  EXPECT_EQ((unsigned) boost::beast::http::status::unauthorized, m_client->m_status);
+  EXPECT_EQ(200, m_client->m_status);
+}
 
+TEST_F(TlsRestServiceTest, check_valid_client_certificate_without_server_ca)
+{
+  using namespace mtconnect::configuration;
+  ConfigOptions options{{TlsCertificateChain, CertFile},
+    {TlsPrivateKey, KeyFile},
+    {TlsDHKey, DhFile},
+    {TlsCertificatePassword, "mtconnect"s},
+    {TlsVerifyClientCertificate, true}
+  };
+  
+  createServer(options);
+  
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    Response resp(status::ok);
+    resp.m_body = "Done";
+    session->writeResponse(resp, [](){
+      cout << "Written" << endl;
+    });
+
+    return true;
+  };
+  
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
+
+  start();
+  startClient(true);
+  ASSERT_TRUE(m_client->m_failed);
 }

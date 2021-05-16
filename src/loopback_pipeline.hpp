@@ -47,9 +47,10 @@ namespace mtconnect
       m_pipeline.build(options);
     }
     
-    void start() override
+    bool start() override
     {
       m_pipeline.start(m_strand);
+      return true;
     }
     void stop() override
     {
@@ -74,14 +75,15 @@ namespace mtconnect
                              const std::string &value,
                              std::optional<Timestamp> timestamp = std::nullopt);
     
-    void receive(AssetPtr asset)
+    void receive(asset::AssetPtr asset)
     {
       m_pipeline.run(asset);
     }
-    AssetPtr receiveAsset(DevicePtr device, const std::string &document,
+    asset::AssetPtr receiveAsset(DevicePtr device, const std::string &document,
                           const std::optional<std::string> &id,
                           const std::optional<std::string> &type,
                           const std::optional<std::string> &time, entity::ErrorList &errors);
+    void removeAsset(const std::string &id);
 
   protected:
     LoopbackPipeline m_pipeline;

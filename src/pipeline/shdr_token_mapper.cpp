@@ -242,6 +242,7 @@ namespace mtconnect
                                                 const TokenList::const_iterator &end,
                                                 ErrorList &errors)
     {
+      using namespace mtconnect::asset;
       EntityPtr res;
       auto command = *token++;
       if (command == "@ASSET@")

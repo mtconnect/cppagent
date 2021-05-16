@@ -22,20 +22,20 @@
 #include "agent.hpp"
 #include <nlohmann/json.hpp>
 #include "agent_test_helper.hpp"
-#include "rest_service/server.hpp"
+#include "rest_sink/server.hpp"
 
 #include <cstdio>
 
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
-using namespace mtconnect::rest_service;
+using namespace mtconnect::rest_sink;
 namespace beast = boost::beast;
 namespace http = beast::http;
 
 void AgentTestHelper::makeRequest(const char *file, int line,
                                   boost::beast::http::verb verb, const std::string &body,
-                                  const mtconnect::rest_service::QueryMap &aQueries,
+                                  const mtconnect::rest_sink::QueryMap &aQueries,
                                   const char *path, const char *accepts)
 {
   m_request = make_shared<Request>();
@@ -53,7 +53,7 @@ void AgentTestHelper::makeRequest(const char *file, int line,
   
   ASSERT_FALSE(m_request->m_path.empty());
   
-  m_dispatched = m_agent->getServer()->dispatch(m_session, m_request);
+  m_dispatched = m_restService->getServer()->dispatch(m_session, m_request);
 }
 
 

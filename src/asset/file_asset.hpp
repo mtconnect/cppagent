@@ -27,17 +27,20 @@
 
 namespace mtconnect
 {
-  class FileArchetypeAsset : public entity::Entity
+  namespace asset
   {
-  public:
-    static entity::FactoryPtr getFactory();
-    static void registerAsset();
-  };
-
-  class FileAsset : public FileArchetypeAsset
-  {
-  public:
-    static entity::FactoryPtr getFactory();
-    static void registerAsset();
-  };
+    class FileArchetypeAsset : public entity::Entity
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
+    
+    class FileAsset : public FileArchetypeAsset
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
+  }
 }  // namespace mtconnect

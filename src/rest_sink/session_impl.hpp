@@ -32,7 +32,7 @@ namespace mtconnect
 {
   class Printer;
 
-  namespace rest_service
+  namespace rest_sink
   {
     template <class Derived>
     class SessionImpl : public Session
@@ -116,5 +116,5 @@ namespace mtconnect
       boost::beast::tcp_stream m_stream;
     };
 
-  }  // namespace rest_service
+  }  // namespace rest_sink
 }  // namespace mtconnect

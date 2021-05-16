@@ -29,7 +29,7 @@
 
 namespace mtconnect
 {
-  namespace rest_service
+  namespace rest_sink
   {
     using SequenceNumber_t = uint64_t;
 
@@ -250,5 +250,5 @@ namespace mtconnect
       Checkpoint m_first;
       boost::circular_buffer<std::unique_ptr<Checkpoint>> m_checkpoints;
     };
-  }  // namespace rest_service
+  }  // namespace rest_sink
 }  // namespace mtconnect

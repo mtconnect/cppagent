@@ -52,6 +52,7 @@ using namespace std;
 namespace mtconnect
 {
   using namespace observation;
+  using namespace asset;
   using namespace device_model::configuration;
 
   class XmlWriter
@@ -387,7 +388,7 @@ namespace mtconnect
   string XmlPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
                                 const unsigned int assetCount, const list<DevicePtr> &deviceList,
-                                const std::map<std::string, int> *count) const
+                                const std::map<std::string, size_t> *count) const
   {
     string ret;
 
@@ -541,7 +542,7 @@ namespace mtconnect
                               const unsigned int instanceId, const unsigned int bufferSize,
                               const unsigned int assetBufferSize, const unsigned int assetCount,
                               const uint64_t nextSeq, const uint64_t firstSeq,
-                              const uint64_t lastSeq, const map<string, int> *count) const
+                              const uint64_t lastSeq, const map<string, size_t> *count) const
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartDocument(writer, nullptr, "UTF-8", nullptr));
 

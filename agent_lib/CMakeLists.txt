@@ -60,6 +60,9 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/file_asset.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/cutting_tool.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/cutting_tool.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset_storage.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset_buffer.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset_buffer.hpp"
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/agent_device.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/agent_device.cpp"
@@ -116,26 +119,24 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.cpp"
   
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/asset_buffer.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/asset_buffer.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/circular_buffer.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/cached_file.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/tls_dector.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/server.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/server.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/file_cache.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/file_cache.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/parameter.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/request.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/response.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/routing.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/session.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/session_impl.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/session_impl.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/checkpoint.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/checkpoint.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/rest_service.hpp"  
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/rest_service.cpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/circular_buffer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/cached_file.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/tls_dector.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/server.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/server.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/file_cache.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/file_cache.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/parameter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/request.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/response.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/routing.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/checkpoint.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/checkpoint.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/rest_service.hpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/rest_service.cpp"  
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.hpp"
@@ -164,8 +165,8 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Source Files" FIL
 if(MSVC)
   if(CMAKE_GENERATOR_TOOLSET)
     if(${CMAKE_GENERATOR_TOOLSET} MATCHES "v14[01]_xp")
-      message(info ": Setting /Ob1 for rest_service/session_impl.cpp")
-      set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_service/session_impl.cpp"
+      message(info ": Setting /Ob1 for rest_sink/session_impl.cpp")
+      set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
 	PROPERTY COMPILE_FLAGS "/Ob1")
     endif()
   endif()

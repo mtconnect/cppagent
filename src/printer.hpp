@@ -32,8 +32,11 @@ namespace mtconnect
   {
     class Device;
   }
-  class Asset;
-  class CuttingTool;
+  namespace asset
+  {
+    class Asset;
+    class CuttingTool;
+  }
   using DevicePtr = std::shared_ptr<device_model::Device>;
 
   using ProtoErrorList = std::list<std::pair<std::string, std::string>>;
@@ -57,7 +60,7 @@ namespace mtconnect
                                    const uint64_t nextSeq, const unsigned int assetBufferSize,
                                    const unsigned int assetCount,
                                    const std::list<DevicePtr> &devices,
-                                   const std::map<std::string, int> *count = nullptr) const = 0;
+                                   const std::map<std::string, size_t> *count = nullptr) const = 0;
 
     virtual std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
                                     const uint64_t nextSeq, const uint64_t firstSeq,
@@ -65,7 +68,7 @@ namespace mtconnect
                                     observation::ObservationList &results) const = 0;
     virtual std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
                                     const unsigned int assetCount,
-                                    AssetList const &asset) const = 0;
+                                    asset::AssetList const &asset) const = 0;
     virtual std::string mimeType() const = 0;
 
   protected:

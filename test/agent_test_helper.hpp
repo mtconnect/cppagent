@@ -18,15 +18,17 @@
 #pragma once
 
 #include "test_utilities.hpp"
-#include "rest_service/session.hpp"
-#include "rest_service/server.hpp"
-#include "rest_service/response.hpp"
-#include "rest_service/routing.hpp"
+#include "rest_sink/session.hpp"
+#include "rest_sink/server.hpp"
+#include "rest_sink/response.hpp"
+#include "rest_sink/routing.hpp"
 #include "adapter/adapter.hpp"
 #include "pipeline/pipeline.hpp"
 #include "configuration/agent_config.hpp"
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
+#include "rest_sink/rest_service.hpp"
+#include "loopback_pipeline.hpp"
 
 #include <chrono>
 #include <iosfwd>
@@ -39,7 +41,7 @@ namespace mtconnect
 {
   class Agent;
   
-  namespace rest_service
+  namespace rest_sink
   {
     class TestSession : public Session
     {
@@ -98,7 +100,7 @@ namespace mtconnect
   }
 }
 
-namespace mhttp = mtconnect::rest_service;
+namespace mhttp = mtconnect::rest_sink;
 namespace adpt = mtconnect::adapter;
 namespace observe = mtconnect::observation;
 
@@ -120,29 +122,29 @@ class AgentTestHelper
     
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
-                      const mtconnect::rest_service::QueryMap &aQueries,
+                      const mtconnect::rest_sink::QueryMap &aQueries,
                       xmlDocPtr *doc, const char *path,
                       const char *accepts = "text/xml");
   void responseStreamHelper(const char *file, int line,
-                            const mtconnect::rest_service::QueryMap &aQueries,
+                            const mtconnect::rest_sink::QueryMap &aQueries,
                             const char *path,
                             const char *accepts = "text/xml");
   void responseHelper(const char *file, int line,
-                      const mtconnect::rest_service::QueryMap& aQueries, nlohmann::json &doc, const char *path,
+                      const mtconnect::rest_sink::QueryMap& aQueries, nlohmann::json &doc, const char *path,
                       const char *accepts = "application/json");
   void putResponseHelper(const char *file, int line, const std::string &body,
-                         const mtconnect::rest_service::QueryMap &aQueries,
+                         const mtconnect::rest_sink::QueryMap &aQueries,
                          xmlDocPtr *doc, const char *path,
                          const char *accepts = "text/xml");
   void deleteResponseHelper(const char *file, int line, 
-                            const mtconnect::rest_service::QueryMap &aQueries, xmlDocPtr *doc, const char *path,
+                            const mtconnect::rest_sink::QueryMap &aQueries, xmlDocPtr *doc, const char *path,
                             const char *accepts = "text/xml");
   
   void chunkStreamHelper(const char *file, int line, xmlDocPtr *doc);
 
   void makeRequest(const char *file, int line, boost::beast::http::verb verb,
                    const std::string &body,
-                   const mtconnect::rest_service::QueryMap &aQueries,
+                   const mtconnect::rest_sink::QueryMap &aQueries,
                    const char *path, const char *accepts);
   
   auto getAgent() { return m_agent.get(); }
@@ -158,13 +160,25 @@ class AgentTestHelper
     server->allowPuts(put);
     m_server = server.get();
     auto cache = std::make_unique<mhttp::FileCache>();
-    m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, server, cache,
+    ConfigOptions options{{configuration::BufferSize, bufferSize},
+      {configuration::MaxAssets, maxAssets},
+      {configuration::CheckpointFrequency, checkpoint},
+      {configuration::AllowPut, put}};
+    m_agent = std::make_unique<mtconnect::Agent>(m_ioContext,
                                                  PROJECT_ROOT_DIR + file,
-                                                 bufferSize, maxAssets, version,
-                                                 checkpoint, true);
+                                                 options);
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
-    m_agent->initialize(m_context, {});
+    m_agent->initialize(m_context);
+    
+    boost::asio::io_context::strand strand(m_ioContext);
+    m_loopback = std::make_shared<LoopbackSource>(m_context, strand,                                                  options);
+    
+    auto sinkContract = m_agent->makeSinkContract();
+    m_restService = std::make_shared<rest_sink::RestService>(m_ioContext, move(sinkContract),
+                                                             options);
+    m_agent->addSink(m_restService);
+        
     m_session = std::make_shared<mhttp::TestSession>([](mhttp::SessionPtr, mhttp::RequestPtr) { return true; }, m_server->getErrorFunction());
     return m_agent.get();
   }
@@ -181,8 +195,8 @@ class AgentTestHelper
       options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
     }
     auto pipeline = std::make_unique<AdapterPipeline>(m_context);
-    m_adapter = new adpt::Adapter(m_ioContext, host, port, options, pipeline);
-    m_agent->addAdapter(m_adapter);
+    m_adapter = std::make_shared<adpt::Adapter>(m_ioContext, host, port, options, pipeline);
+    m_agent->addSource(m_adapter);
 
     return m_adapter;
   }
@@ -197,7 +211,7 @@ class AgentTestHelper
     auto obs = Observation::make(di, shdr, time, errors);
     if (errors.size() == 0 && obs)
     {
-      return m_agent->addToBuffer(obs);
+      return m_loopback->receive(obs);
     }
     return 0;
   }
@@ -218,17 +232,20 @@ class AgentTestHelper
 
   mhttp::Server *m_server{nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
-  adpt::Adapter *m_adapter{nullptr};
+  std::shared_ptr<adpt::Adapter> m_adapter;
+  std::shared_ptr<mtconnect::rest_sink::RestService> m_restService;
+  std::shared_ptr<mtconnect::LoopbackSource> m_loopback;
+  
   bool m_dispatched { false };
   std::string m_incomingIp;
   
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::stringstream m_out;
-  mtconnect::rest_service::RequestPtr m_request;
+  mtconnect::rest_sink::RequestPtr m_request;
   boost::asio::io_context m_ioContext;
   boost::asio::ip::tcp::socket m_socket;
-  mtconnect::rest_service::Response m_response;
-  std::shared_ptr<mtconnect::rest_service::TestSession> m_session;
+  mtconnect::rest_sink::Response m_response;
+  std::shared_ptr<mtconnect::rest_sink::TestSession> m_session;
 };
 
 #define PARSE_XML_RESPONSE(path)                                                           \

@@ -28,7 +28,7 @@
 
 namespace mtconnect
 {
-  namespace rest_service
+  namespace rest_sink
   {
     struct Response;
     class Session;
@@ -95,5 +95,5 @@ namespace mtconnect
       boost::asio::ip::tcp::endpoint m_remote;
     };
 
-  }  // namespace rest_service
+  }  // namespace rest_sink
 }  // namespace mtconnect

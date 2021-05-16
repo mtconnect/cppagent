@@ -20,7 +20,6 @@
 #include "boost/asio/io_context.hpp"
 
 #include "sink.hpp"
-#include "asset_buffer.hpp"
 #include "circular_buffer.hpp"
 #include "request.hpp"
 #include "response.hpp"
@@ -30,7 +29,7 @@
 
 namespace mtconnect
 {
-  namespace rest_service
+  namespace rest_sink
   {
     struct AsyncSampleResponse;
     struct AsyncCurrentResponse;
@@ -40,24 +39,26 @@ namespace mtconnect
     public:
       RestService(boost::asio::io_context &context,
                   SinkContractPtr &&contract,
-                  pipeline::PipelineContextPtr pipelineContext,
                   const ConfigOptions &options);
 
       ~RestService() {}
+
+      auto makeLoopbackSource(pipeline::PipelineContextPtr context)
+      {
+        m_loopback = std::make_shared<LoopbackSource>(context, m_strand, m_options);
+        return m_loopback;
+      }      
 
       // Sink Methods
       void start() override;
       void stop() override;
       
       uint64_t publish(observation::ObservationPtr &observation) override;
-      bool publish(AssetPtr asset) override;
+      bool publish(asset::AssetPtr asset) override { return false; }
       
-      bool removeAsset(DevicePtr device, const std::string &id,
-                       const std::optional<Timestamp> time = std::nullopt) override;
-      bool removeAllAssets(const std::optional<std::string> device,
-                           const std::optional<std::string> type,
-                           const std::optional<Timestamp> time, AssetList &list) override;
-
+      auto getServer() { return m_server.get(); }
+      auto getFileCache() { return &m_fileCache; }
+      
       // Observation management
       observation::ObservationPtr getFromBuffer(uint64_t seq) const
       {
@@ -66,17 +67,6 @@ namespace mtconnect
       SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
       unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
       
-      // Asset information
-      auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
-      auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
-      const auto &getAssets() const { return m_assetBuffer.getAssets(); }
-      auto &getFileCache() { return m_fileCache; }
-
-      auto getAssetCount(const std::string &type, bool active = true) const
-      {
-        return m_assetBuffer.getCountForType(type, active);
-      }
-
       SequenceNumber_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
 
       // For testing...
@@ -166,12 +156,6 @@ namespace mtconnect
                                   bool &endOfBuffer,
                                   observation::ChangeObserver *observer = nullptr);
 
-      // Asset methods
-      void getAssets(const Printer *printer, const std::list<std::string> &ids, AssetList &list);
-      void getAssets(const Printer *printer, const int32_t count, const bool removed,
-                     const std::optional<std::string> &type,
-                     const std::optional<std::string> &device, AssetList &list);
-      
       // Verification methods
       template <typename T>
       void checkRange(const Printer *printer, const T value, const T min, const T max,
@@ -186,7 +170,7 @@ namespace mtconnect
       boost::asio::io_context::strand m_strand;
 
       ConfigOptions m_options;
-      LoopbackSource m_loopback;
+      std::shared_ptr<LoopbackSource> m_loopback;
 
       uint64_t m_instanceId;
       std::unique_ptr<Server> m_server;
@@ -197,5 +181,5 @@ namespace mtconnect
       
       bool m_logStreamData{false};
     };
-  }  // namespace rest_service
+  }  // namespace rest_sink
 }  // namespace mtconnect

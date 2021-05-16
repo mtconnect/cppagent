@@ -35,10 +35,10 @@
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
-#include "rest_service/asset_buffer.hpp"
-#include "rest_service/checkpoint.hpp"
-#include "rest_service/circular_buffer.hpp"
-#include "rest_service/server.hpp"
+#include "rest_sink/checkpoint.hpp"
+#include "rest_sink/circular_buffer.hpp"
+#include "rest_sink/server.hpp"
+#include "asset/asset_buffer.hpp"
 #include "sink.hpp"
 #include "source.hpp"
 #include "xml_parser.hpp"
@@ -65,24 +65,27 @@ namespace mtconnect
   public:
     // Load agent with the xml configuration
     Agent(boost::asio::io_context &context, const std::string &configXmlPath,
-          const std::string &version, bool pretty = false);
+          const ConfigOptions &options);
 
     // Virtual destructor
     ~Agent();
 
     // Make loopback pipeline
-    void initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options);
+    void initialize(pipeline::PipelineContextPtr context);
 
     // Start and stop
     void start();
     void stop();
 
-    // HTTP Server
+    // Pipeline Contract
     std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
 
+    // Sink Contract
+    SinkContractPtr makeSinkContract();
+
     // Add an adapter to the agent
-    void addAdapter(adapter::Adapter *adapter, bool start = false);
-    const auto &getAdapters() const { return m_adapters; }
+    void addSource(SourcePtr adapter, bool start = false);
+    void addSink(SinkPtr sink, bool start = false);
 
     // Get device from device map
     DevicePtr getDeviceByName(const std::string &name);
@@ -100,6 +103,9 @@ namespace mtconnect
 
       return nullptr;
     }
+    
+    // Asset information
+    asset::AssetStorage *getAssetStorage() { return m_assetStorage.get(); }
 
     // Add the a device from a configuration file
     void addDevice(DevicePtr device);
@@ -121,10 +127,25 @@ namespace mtconnect
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
 
+    // Find data items by name/id
+    DataItemPtr getDataItemById(const std::string &id) const
+    {
+      auto diPos = m_dataItemMap.find(id);
+      if (diPos != m_dataItemMap.end())
+        return diPos->second;
+      return nullptr;
+    }
+
     // Pipeline methods
     void receiveObservation(observation::ObservationPtr observation);
-    void receiveAsset(AssetPtr asset);
-    
+    void receiveAsset(asset::AssetPtr asset);
+    bool removeAsset(DevicePtr device, const std::string &id,
+                     const std::optional<Timestamp> time = std::nullopt);
+    bool removeAllAssets(const std::optional<std::string> device,
+                         const std::optional<std::string> type,
+                         const std::optional<Timestamp> time, asset::AssetList &list);
+
+
     // For testing
     auto getAgentDevice() { return m_agentDevice; }
     
@@ -137,7 +158,6 @@ namespace mtconnect
       else
         return nullptr;
     }
-
 
   protected:
     friend class AgentPipelineContract;
@@ -153,14 +173,6 @@ namespace mtconnect
     std::string devicesAndPath(const std::optional<std::string> &path,
                                const DevicePtr device) const;
 
-    // Find data items by name/id
-    DataItemPtr getDataItemById(const std::string &id) const
-    {
-      auto diPos = m_dataItemMap.find(id);
-      if (diPos != m_dataItemMap.end())
-        return diPos->second;
-      return nullptr;
-    }
     
     observation::ObservationPtr getLatest(const std::string &id)
     {
@@ -172,14 +184,15 @@ namespace mtconnect
     }
     
   protected:
+    ConfigOptions m_options;
     boost::asio::io_context &m_context;
     boost::asio::io_context::strand m_strand;
 
-    std::unique_ptr<LoopbackPipeline> m_loopback;
+    std::unique_ptr<LoopbackSource> m_loopback;
     std::unordered_map<std::string, observation::ObservationPtr> m_latest;
     
     // Asset Management
-    AssetBuffer m_assetBuffer;
+    std::unique_ptr<asset::AssetStorage> m_assetStorage;
 
     // Unique id based on the time of creation
     bool m_initialized {false};
@@ -194,9 +207,8 @@ namespace mtconnect
 
     // Agent Device
     device_model::AgentDevicePtr m_agentDevice;
-
+    
     // Data containers
-    std::list<adapter::Adapter *> m_adapters;
     std::list<DevicePtr> m_devices;
     std::unordered_map<std::string, DevicePtr> m_deviceNameMap;
     std::unordered_map<std::string, DevicePtr> m_deviceUuidMap;
@@ -237,7 +249,7 @@ namespace mtconnect
       }
     }
     void deliverObservation(observation::ObservationPtr obs) override { m_agent->receiveObservation(obs); }
-    void deliverAsset(AssetPtr asset) override { m_agent->receiveAsset(asset); }
+    void deliverAsset(asset::AssetPtr asset) override { m_agent->receiveAsset(asset); }
     void deliverAssetCommand(entity::EntityPtr command) override;
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
@@ -251,5 +263,52 @@ namespace mtconnect
   {
     return std::make_unique<AgentPipelineContract>(this);
   }
+  
+  class AgentSinkContract : public SinkContract
+  {
+  public:
+    AgentSinkContract(Agent *agent) : m_agent(agent) {}
+    ~AgentSinkContract() = default;
 
+    Printer *getPrinter(const std::string &aType) const override
+    {
+      return m_agent->getPrinter(aType);
+    }
+    
+    // Get device from device map
+    DevicePtr getDeviceByName(const std::string &name) const override
+    {
+      return m_agent->getDeviceByName(name);
+    }
+    DevicePtr findDeviceByUUIDorName(const std::string &idOrName) const override
+    {
+      return m_agent->findDeviceByUUIDorName(idOrName);
+    }
+    const std::list<DevicePtr> &getDevices() const override
+    {
+      return m_agent->getDevices();
+    }
+    DevicePtr defaultDevice() const override
+    {
+      return m_agent->defaultDevice();
+    }
+    DataItemPtr getDataItemById(const std::string &id) const override
+    {
+      return m_agent->getDataItemById(id);
+    }
+    
+    // Asset information
+    asset::AssetStorage *getAssetStorage() override
+    {
+      return m_agent->getAssetStorage();
+    }
+
+  protected:
+    Agent *m_agent;
+  };
+
+  inline SinkContractPtr Agent::makeSinkContract()
+  {
+    return std::make_unique<AgentSinkContract>(this);
+  }
 }  // namespace mtconnect

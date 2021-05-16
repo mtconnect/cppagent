@@ -29,6 +29,7 @@
 #include "connector.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "utilities.hpp"
+#include "source.hpp"
 
 namespace mtconnect
 {
@@ -55,7 +56,7 @@ namespace mtconnect
       Connect m_disconnected;
     };
 
-    class Adapter : public Connector
+    class Adapter : public Connector, public Source
     {
     public:
       // Associate adapter with a device & connect to the server & port
@@ -95,7 +96,7 @@ namespace mtconnect
       const std::string &getIdentity() const { return m_identity; }
 
       // Start and Stop
-      void stop();
+      void stop() override;
       bool start() override
       {
         if (Connector::start())

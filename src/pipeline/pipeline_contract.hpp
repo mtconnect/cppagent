@@ -31,8 +31,10 @@ namespace mtconnect
     }
     class Device;
   }  // namespace device_model
-  class Asset;
-  using AssetPtr = std::shared_ptr<Asset>;
+  namespace asset {
+    class Asset;
+    using AssetPtr = std::shared_ptr<Asset>;
+  }
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   using DevicePtr = std::shared_ptr<device_model::Device>;
   using StringList = std::list<std::string>;
@@ -62,7 +64,7 @@ namespace mtconnect
       virtual DataItemPtr findDataItem(const std::string &device, const std::string &name) = 0;
       virtual void eachDataItem(EachDataItem fun) = 0;
       virtual void deliverObservation(observation::ObservationPtr) = 0;
-      virtual void deliverAsset(AssetPtr) = 0;
+      virtual void deliverAsset(asset::AssetPtr) = 0;
       virtual void deliverAssetCommand(entity::EntityPtr) = 0;
       virtual void deliverCommand(entity::EntityPtr) = 0;
       virtual void deliverConnectStatus(entity::EntityPtr, const StringList &devices,

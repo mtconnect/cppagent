@@ -25,47 +25,48 @@ using namespace std;
 namespace mtconnect
 {
   using namespace entity;
-
-  FactoryPtr Asset::getFactory()
+  namespace asset
   {
-    static auto asset = make_shared<Factory>(
-        Requirements({Requirement("assetId", false), Requirement("deviceUuid", false),
-                      Requirement("timestamp", TIMESTAMP, false),
-                      Requirement("removed", BOOL, false)}),
-        [](const std::string &name, Properties &props) -> EntityPtr {
-          return make_shared<Asset>(name, props);
-        });
-
-    return asset;
-  }
-
-  FactoryPtr ExtendedAsset::getFactory()
-  {
-    static auto asset = make_shared<Factory>(*Asset::getFactory());
-    asset->addRequirements(Requirements({{"RAW", false}}));
-
-    return asset;
-  }
-
-  void Asset::registerAssetType(const std::string &type, FactoryPtr factory)
-  {
-    auto root = getRoot();
-    root->registerFactory(type, factory);
-  }
-
-  entity::FactoryPtr Asset::getRoot()
-  {
-    static auto root = make_shared<Factory>();
-    static bool first {true};
-
-    if (first)
+    FactoryPtr Asset::getFactory()
     {
-      root->registerFactory(regex(".+"), ExtendedAsset::getFactory());
-      root->registerMatchers();
-      first = false;
+      static auto asset = make_shared<Factory>(
+                                               Requirements({Requirement("assetId", false), Requirement("deviceUuid", false),
+        Requirement("timestamp", TIMESTAMP, false),
+        Requirement("removed", BOOL, false)}),
+                                               [](const std::string &name, Properties &props) -> EntityPtr {
+        return make_shared<Asset>(name, props);
+      });
+      
+      return asset;
     }
-
-    return root;
+    
+    FactoryPtr ExtendedAsset::getFactory()
+    {
+      static auto asset = make_shared<Factory>(*Asset::getFactory());
+      asset->addRequirements(Requirements({{"RAW", false}}));
+      
+      return asset;
+    }
+    
+    void Asset::registerAssetType(const std::string &type, FactoryPtr factory)
+    {
+      auto root = getRoot();
+      root->registerFactory(type, factory);
+    }
+    
+    entity::FactoryPtr Asset::getRoot()
+    {
+      static auto root = make_shared<Factory>();
+      static bool first {true};
+      
+      if (first)
+      {
+        root->registerFactory(regex(".+"), ExtendedAsset::getFactory());
+        root->registerMatchers();
+        first = false;
+      }
+      
+      return root;
+    }
   }
-
 }  // namespace mtconnect

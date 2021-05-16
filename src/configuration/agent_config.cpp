@@ -52,6 +52,7 @@
 #include "option.hpp"
 #include "version.h"
 #include "xml_printer.hpp"
+#include "rest_sink/rest_service.hpp"
 
 // If Windows XP
 #if defined(_WINDOWS)
@@ -715,28 +716,26 @@ namespace mtconnect
       auto port = get<int>(options[configuration::Port]);
       LOG(info) << "Starting agent on port " << port;
 
-      auto server = make_unique<rest_service::Server>(
-          m_context, port, get<string>(options[configuration::ServerIp]), options);
-      loadAllowPut(server.get(), options);
-
-      auto cp = make_unique<rest_service::FileCache>();
-
       // Make the Agent
-      m_agent = make_unique<Agent>(m_context, server, cp, m_devicesFile,
-                                   get<int>(options[configuration::BufferSize]),
-                                   get<int>(options[configuration::MaxAssets]), m_version,
-                                   get<int>(options[configuration::CheckpointFrequency]),
-                                   get<bool>(options[configuration::Pretty]));
+      m_agent = make_unique<Agent>(m_context, m_devicesFile,
+                                   options);
       XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
-
-      m_agent->setLogStreamData(get<bool>(options[configuration::LogStreams]));
-      auto cache = m_agent->getFileCache();
-
+      
+      auto sinkContract = m_agent->makeSinkContract();
+      auto server = make_shared<rest_sink::RestService>(m_context, move(sinkContract),
+                                                        options);
+      
+      loadAllowPut(server->getServer(), options);
+      auto cache = server->getFileCache();
+      
+      m_agent->addSink(server);
+      
       // Make the PipelineContext
       m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
       m_pipelineContext->m_contract = m_agent->makePipelineContract();
+      auto loopback = server->makeLoopbackSource(m_pipelineContext);
 
-      m_agent->initialize(m_pipelineContext, options);
+      m_agent->initialize(m_pipelineContext);
 
       if (get<bool>(options[configuration::PreserveUUID]))
       {
@@ -847,10 +846,9 @@ namespace mtconnect
                     << get<string>(adapterOptions[configuration::Host]);
 
           auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-          auto adp =
-              new Adapter(m_context, get<string>(adapterOptions[configuration::Host]),
+          auto adp = make_shared<Adapter>(m_context, get<string>(adapterOptions[configuration::Host]),
                           get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
-          m_agent->addAdapter(adp, false);
+          m_agent->addSource(adp, false);
         }
       }
       else if ((device = defaultDevice()))
@@ -862,8 +860,8 @@ namespace mtconnect
         LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
 
         auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-        auto adp = new Adapter(m_context, "localhost", 7878, adapterOptions, pipeline);
-        m_agent->addAdapter(adp, false);
+        auto adp = make_shared<Adapter>(m_context, "localhost", 7878, adapterOptions, pipeline);
+        m_agent->addSource(adp, false);
       }
       else
       {
@@ -871,7 +869,7 @@ namespace mtconnect
       }
     }
 
-    void AgentConfiguration::loadAllowPut(rest_service::Server *server, ConfigOptions &options)
+    void AgentConfiguration::loadAllowPut(rest_sink::Server *server, ConfigOptions &options)
     {
       namespace asio = boost::asio;
       namespace ip = asio::ip;
@@ -925,7 +923,7 @@ namespace mtconnect
     }
 
     void AgentConfiguration::loadNamespace(const ptree &tree, const char *namespaceType,
-                                           rest_service::FileCache *cache, XmlPrinter *xmlPrinter,
+                                           rest_sink::FileCache *cache, XmlPrinter *xmlPrinter,
                                            NamespaceFunction callback)
     {
       // Load namespaces, allow for local file system serving as well.
@@ -959,7 +957,7 @@ namespace mtconnect
     }
 
     void AgentConfiguration::loadFiles(XmlPrinter *xmlPrinter, const ptree &tree,
-                                       rest_service::FileCache *cache)
+                                       rest_sink::FileCache *cache)
     {
       auto files = tree.get_child_optional("Files");
       if (files)
@@ -1016,7 +1014,7 @@ namespace mtconnect
     }
 
     void AgentConfiguration::loadStyle(const ptree &tree, const char *styleName,
-                                       rest_service::FileCache *cache, XmlPrinter *xmlPrinter,
+                                       rest_sink::FileCache *cache, XmlPrinter *xmlPrinter,
                                        StyleFunction styleFunction)
     {
       auto style = tree.get_child_optional(styleName);
@@ -1039,7 +1037,7 @@ namespace mtconnect
       }
     }
 
-    void AgentConfiguration::loadTypes(const ptree &tree, rest_service::FileCache *cache)
+    void AgentConfiguration::loadTypes(const ptree &tree, rest_sink::FileCache *cache)
     {
       auto types = tree.get_child_optional("MimeTypes");
       if (types)

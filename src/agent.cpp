@@ -34,19 +34,19 @@
 #include "json_printer.hpp"
 #include "logging.hpp"
 #include "observation/observation.hpp"
-#include "rest_service/file_cache.hpp"
-#include "rest_service/session.hpp"
+#include "rest_sink/file_cache.hpp"
+#include "rest_sink/session.hpp"
 #include "xml_printer.hpp"
+#include "configuration/config_options.hpp"
 
 using namespace std;
-using namespace mtconnect::observation;
 
 namespace mtconnect
 {
   using namespace device_model;
   using namespace data_item;
   using namespace entity;
-  using namespace rest_service;
+  using namespace rest_sink;
   namespace net = boost::asio;
 
   static const string g_unavailable("UNAVAILABLE");
@@ -54,30 +54,33 @@ namespace mtconnect
 
   // Agent public methods
   Agent::Agent(boost::asio::io_context &context, const string &configXmlPath,
-               const std::string &version, bool pretty)
-    : m_context(context),
+               const ConfigOptions &options)
+    : m_options(options), m_context(context),
       m_strand(m_context),
       m_xmlParser(make_unique<mtconnect::XmlParser>()),
-      m_version(version),
+      m_version(*GetOption<string>(options, mtconnect::configuration::SchemaVersion)),
       m_configXmlPath(configXmlPath),
-      m_pretty(pretty)
+      m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
   {
+    using namespace asset;
+    
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();
     FileArchetypeAsset::registerAsset();
     FileAsset::registerAsset();
+    
+    m_assetStorage = make_unique<AssetBuffer>(GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024)),
 
     // Create the Printers
-    m_printers["xml"] = make_unique<XmlPrinter>(version, m_pretty);
-    m_printers["json"] = make_unique<Printer>(version, m_pretty);
+    m_printers["xml"] = make_unique<XmlPrinter>(m_version, m_pretty);
+    m_printers["json"] = make_unique<JsonPrinter>(m_version, m_pretty);
   }
 
-  void Agent::initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options)
+  void Agent::initialize(pipeline::PipelineContextPtr context)
   {
     NAMED_SCOPE("Agent::initialize");
 
-    m_loopback = std::make_unique<LoopbackPipeline>(context);
-    m_loopback->build(options);
+    m_loopback = std::make_unique<LoopbackSource>(context, m_strand, m_options);
 
     int major, minor;
     char c;
@@ -95,8 +98,6 @@ namespace mtconnect
 
   Agent::~Agent()
   {
-    for (auto adp : m_adapters)
-      delete adp;
     m_xmlParser.reset();
     m_agentDevice = nullptr;
   }
@@ -106,12 +107,12 @@ namespace mtconnect
     NAMED_SCOPE("Agent::start");
     try
     {
-      // Start all the adapters
-      for (const auto adapter : m_adapters)
-        adapter->start();
+      // Start all the sources
+      for (auto source : m_sources)
+        source->start();
 
-      // Start the server. This blocks until the server stops.
-      //m_server->start();
+      for (auto sink : m_sinks)
+        sink->start();
     }
     catch (std::runtime_error &e)
     {
@@ -125,19 +126,14 @@ namespace mtconnect
     NAMED_SCOPE("Agent::stop");
 
     // Stop all adapter threads...
-    LOG(info) << "Shutting down adapters";
-    // Deletes adapter and waits for it to exit.
-    for (const auto adapter : m_adapters)
-      adapter->stop();
+    LOG(info) << "Shutting down sources";
+    for (auto source : m_sources)
+      source->stop();
 
-    LOG(info) << "Shutting down server";
-    // m_server->stop();
+    LOG(info) << "Shutting down sinks";
+    for (auto sink : m_sinks)
+      sink->stop();
 
-    LOG(info) << "Shutting down adapters";
-    for (const auto adapter : m_adapters)
-      delete adapter;
-
-    m_adapters.clear();
     LOG(info) << "Shutting down completed";
   }
 
@@ -285,7 +281,7 @@ namespace mtconnect
         else if (d->getConstantValue())
           value = &d->getConstantValue().value();
 
-        m_loopback->addObservation(d, *value);
+        m_loopback->receive(d, *value);
         m_dataItemMap[d->getId()] = d;
       }
     }
@@ -325,7 +321,7 @@ namespace mtconnect
         if (m_agentDevice && device != m_agentDevice)
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
-          m_loopback->addObservation(d, uuid);
+          m_loopback->receive(d, uuid);
         }
       }
       else
@@ -344,7 +340,7 @@ namespace mtconnect
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_removed");
-        m_loopback->addObservation(d, oldUuid);
+        m_loopback->receive(d, oldUuid);
       }
       m_deviceUuidMap.erase(oldUuid);
       m_deviceUuidMap[uuid] = device;
@@ -363,12 +359,12 @@ namespace mtconnect
       if (device->getUuid() != oldUuid)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_added");
-        m_loopback->addObservation(d, uuid);
+        m_loopback->receive(d, uuid);
       }
       else
       {
         auto d = m_agentDevice->getDeviceDataItem("device_changed");
-        m_loopback->addObservation(d, uuid);
+        m_loopback->receive(d, uuid);
       }
     }
   }
@@ -435,23 +431,35 @@ namespace mtconnect
   // Adapter Methods
   // ----------------------------------------------------
 
-  void Agent::addAdapter(adapter::Adapter *adapter, bool start)
+  void Agent::addSource(SourcePtr source, bool start)
   {
-    m_adapters.emplace_back(adapter);
+    m_sources.emplace_back(source);
 
     if (start)
-      adapter->start();
+      source->start();
 
     if (m_agentDevice)
     {
-      m_agentDevice->addAdapter(adapter);
-      initializeDataItems(m_agentDevice);
-      // Reload the document for path resolution
-      if (m_initialized)
+      auto adapter = dynamic_cast<adapter::Adapter*>(source.get());
+      if (adapter)
       {
-        loadCachedProbe();
+        m_agentDevice->addAdapter(adapter);
+        initializeDataItems(m_agentDevice);
+        // Reload the document for path resolution
+        if (m_initialized)
+        {
+          loadCachedProbe();
+        }
       }
     }
+  }
+
+  void Agent::addSink(SinkPtr sink, bool start)
+  {
+    m_sinks.emplace_back(sink);
+
+    if (start)
+      sink->start();
   }
 
   void AgentPipelineContract::deliverConnectStatus(entity::EntityPtr entity,
@@ -510,7 +518,7 @@ namespace mtconnect
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      m_loopback->addObservation(di, "LISTENING");
+      m_loopback->receive(di, "LISTENING");
     }
   }
 
@@ -523,7 +531,7 @@ namespace mtconnect
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      m_loopback->addObservation(di, "CLOSED");
+      m_loopback->receive(di, "CLOSED");
     }
 
     for (auto &name : devices)
@@ -555,7 +563,7 @@ namespace mtconnect
               value = &g_unavailable;
 
             if (value)
-              m_loopback->addObservation(dataItem, *value);
+              m_loopback->receive(dataItem, *value);
           }
         }
         else if (!dataItem)
@@ -569,7 +577,7 @@ namespace mtconnect
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      m_loopback->addObservation(di, "ESTABLISHED");
+      m_loopback->receive(di, "ESTABLISHED");
     }
 
     if (!autoAvailable)
@@ -588,7 +596,7 @@ namespace mtconnect
       if (auto avail = device->getAvailability())
       {
         LOG(debug) << "Adding availabilty event for " << device->getAvailability()->getId();
-        m_loopback->addObservation(avail, g_available);
+        m_loopback->receive(avail, g_available);
       }
       else
         LOG(debug) << "Cannot find availability for " << *device->getComponentName();
@@ -599,71 +607,6 @@ namespace mtconnect
   // -----------------------------------------------
   // Validation methods
   // -----------------------------------------------
-
-  template <typename T>
-  void Agent::checkRange(const Printer *printer, const T value, const T min, const T max,
-                         const string &param, bool notZero) const
-  {
-    using namespace rest_service;
-    if (value <= min)
-    {
-      stringstream str;
-      str << '\'' << param << '\'' << " must be greater than " << min;
-      throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
-                         printer->mimeType(), rest_service::status::bad_request);
-    }
-    if (value >= max)
-    {
-      stringstream str;
-      str << '\'' << param << '\'' << " must be less than " << max;
-      throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
-                         printer->mimeType(), rest_service::status::bad_request);
-    }
-    if (notZero && value == 0)
-    {
-      stringstream str;
-      str << '\'' << param << '\'' << " must not be zero(0)";
-      throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
-                         printer->mimeType(), rest_service::status::bad_request);
-    }
-  }
-
-  void Agent::checkPath(const Printer *printer, const std::optional<std::string> &path,
-                        const DevicePtr device, FilterSet &filter) const
-  {
-    using namespace rest_service;
-    try
-    {
-      auto pd = devicesAndPath(path, device);
-      m_xmlParser->getDataItems(filter, pd);
-    }
-    catch (exception &e)
-    {
-      throw RequestError(e.what(), printError(printer, "INVALID_XPATH", e.what()),
-                         printer->mimeType(), rest_service::status::bad_request);
-    }
-
-    if (filter.empty())
-    {
-      string msg = "The path could not be parsed. Invalid syntax: " + *path;
-      throw RequestError(msg.c_str(), printError(printer, "INVALID_XPATH", msg),
-                         printer->mimeType(), rest_service::status::bad_request);
-    }
-  }
-
-  DevicePtr Agent::checkDevice(const Printer *printer, const std::string &uuid) const
-  {
-    using namespace rest_service;
-    auto dev = findDeviceByUUIDorName(uuid);
-    if (!dev)
-    {
-      string msg("Could not find the device '" + uuid + "'");
-      throw RequestError(msg.c_str(), printError(printer, "NO_DEVICE", msg), printer->mimeType(),
-                         rest_service::status::not_found);
-    }
-
-    return dev;
-  }
 
   string Agent::devicesAndPath(const std::optional<string> &path, const DevicePtr device) const
   {
@@ -718,7 +661,7 @@ namespace mtconnect
     {
       string type = command->get<string>("type");
       auto device = command->maybeGet<string>("device");
-      AssetList list;
+      asset::AssetList list;
       m_agent->removeAllAssets(device, type, nullopt, list);
     }
     else
@@ -796,7 +739,7 @@ namespace mtconnect
         auto id = source + agentDi->second;
         auto di = getDataItemForDevice("Agent", id);
         if (di)
-          m_loopback->addObservation(di, value);
+          m_loopback->receive(di, value);
         else
         {
           LOG(warning) << "Cannot find data item for the Agent device when processing command "
@@ -811,179 +754,6 @@ namespace mtconnect
     }
   }
 
-#if 0
-  // -------------------------------------------
-  // Error formatting
-  // -------------------------------------------
-
-  string Agent::printError(const Printer *printer, const string &errorCode,
-                           const string &text) const
-  {
-    LOG(debug) << "Returning error " << errorCode << ": " << text;
-    if (printer)
-      return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
-                                 m_circularBuffer.getSequence(), errorCode, text);
-    else
-      return errorCode + ": " + text;
-  }
-
-  // -------------------------------------------
-  // Data Collection and Formatting
-  // -------------------------------------------
-
-  string Agent::fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
-                                 const optional<SequenceNumber_t> &at)
-  {
-    ObservationList observations;
-    SequenceNumber_t firstSeq, seq;
-
-    {
-      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-
-      firstSeq = getFirstSequence();
-      seq = m_circularBuffer.getSequence();
-      if (at)
-      {
-        checkRange(printer, *at, firstSeq - 1, seq, "at");
-
-        auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
-        check->getObservations(observations);
-      }
-      else
-      {
-        m_circularBuffer.getLatest().getObservations(observations, filterSet);
-      }
-    }
-
-    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq,
-                                seq - 1, observations);
-  }
-
-  string Agent::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
-                                const std::optional<SequenceNumber_t> &from,
-                                const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                bool &endOfBuffer, ChangeObserver *observer)
-  {
-    std::unique_ptr<ObservationList> observations;
-    SequenceNumber_t firstSeq, lastSeq;
-
-    {
-      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-      firstSeq = getFirstSequence();
-      auto seq = m_circularBuffer.getSequence();
-      lastSeq = seq - 1;
-      int upperCountLimit = m_circularBuffer.getBufferSize() + 1;
-      int lowerCountLimit = -upperCountLimit;
-
-      if (from)
-      {
-        checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
-      }
-      if (to)
-      {
-        auto lower = from ? *from : firstSeq;
-        checkRange(printer, *to, lower, seq + 1, "to");
-        lowerCountLimit = 0;
-      }
-      checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
-
-      observations =
-          m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
-
-      if (observer)
-        observer->reset();
-    }
-
-    return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), end, firstSeq,
-                                lastSeq, *observations);
-  }
-
-  // -------- Asset Helpers -------
-
-  void Agent::getAssets(const Printer *printer, const std::list<std::string> &ids, AssetList &list)
-  {
-    std::lock_guard<AssetBuffer> lock(m_assetBuffer);
-
-    using namespace rest_service;
-    for (auto &id : ids)
-    {
-      auto asset = m_assetBuffer.getAsset(id);
-      if (!asset)
-      {
-        string msg = "Cannot find asset for assetId: " + id;
-        throw RequestError(msg.c_str(), printError(printer, "ASSET_NOT_FOUND", msg),
-                           printer->mimeType(), status::not_found);
-      }
-      list.emplace_back(asset);
-    }
-  }
-
-  void Agent::getAssets(const Printer *printer, const int32_t count, const bool removed,
-                        const std::optional<std::string> &type,
-                        const std::optional<std::string> &device, AssetList &list)
-  {
-    if (printer)
-      checkRange(printer, count, 1, std::numeric_limits<int32_t>().max(), "count");
-
-    std::lock_guard<AssetBuffer> lock(m_assetBuffer);
-
-    DevicePtr dev {nullptr};
-    if (device)
-    {
-      dev = checkDevice(printer, *device);
-    }
-    if (type)
-    {
-      auto iopt = m_assetBuffer.getAssetsForType(*type);
-      if (iopt)
-      {
-        for (auto &ap : **iopt)
-        {
-          // Check if we need to filter
-          if (removed || !ap.second->isRemoved())
-          {
-            if (!device ||
-                (ap.second->getDeviceUuid() && dev->getUuid() == *ap.second->getDeviceUuid()))
-            {
-              list.emplace_back(ap.second);
-            }
-
-            if (list.size() >= count)
-              break;
-          }
-        }
-      }
-    }
-    else if (dev != nullptr)
-    {
-      auto iopt = m_assetBuffer.getAssetsForDevice(*dev->getUuid());
-      if (iopt)
-      {
-        for (auto &ap : **iopt)
-        {
-          if (removed || !ap.second->isRemoved())
-          {
-            list.emplace_back(ap.second);
-            if (list.size() >= count)
-              break;
-          }
-        }
-      }
-    }
-    else
-    {
-      for (auto &ap : reverse(m_assetBuffer.getAssets()))
-      {
-        if (removed || !ap->isRemoved())
-        {
-          list.emplace_back(ap);
-          if (list.size() >= count)
-            break;
-        }
-      }
-    }
-  }
-#endifØ
   // -------------------------------------------
   // End
   // -------------------------------------------

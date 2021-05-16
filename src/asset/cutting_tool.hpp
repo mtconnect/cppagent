@@ -26,18 +26,20 @@
 
 namespace mtconnect
 {
-  class CuttingToolArchetype : public Asset
+  namespace asset
   {
-  public:
-    static entity::FactoryPtr getFactory();
-    static void registerAsset();
-  };
-
-  class CuttingTool : public Asset
-  {
-  public:
-    static entity::FactoryPtr getFactory();
-    static void registerAsset();
-  };
-
+    class CuttingToolArchetype : public Asset
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
+    
+    class CuttingTool : public Asset
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
+  }
 }  // namespace mtconnect

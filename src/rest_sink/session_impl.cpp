@@ -37,7 +37,7 @@
 
 namespace mtconnect
 {
-  namespace rest_service
+  namespace rest_sink
   {
     namespace beast = boost::beast;  // from <boost/beast.hpp>
     namespace http = beast::http;    // from <boost/beast/http.hpp>
@@ -488,5 +488,5 @@ namespace mtconnect
         session->run();
       }
     }
-  }  // namespace rest_service
+  }  // namespace rest_sink
 }  // namespace mtconnect

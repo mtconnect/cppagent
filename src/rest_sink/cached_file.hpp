@@ -26,7 +26,7 @@
 
 namespace mtconnect
 {
-  namespace rest_service
+  namespace rest_sink
   {
     struct CachedFile;
     using CachedFilePtr = std::shared_ptr<CachedFile>;
@@ -92,5 +92,5 @@ namespace mtconnect
       size_t m_size = 0;
       std::string m_mimeType;
     };
-  }  // namespace rest_service
+  }  // namespace rest_sink
 }  // namespace mtconnect

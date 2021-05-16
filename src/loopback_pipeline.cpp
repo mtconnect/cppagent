@@ -34,6 +34,7 @@ using namespace std;
 namespace mtconnect
 {
   using namespace observation;
+  using namespace asset;
   using namespace pipeline;
   void LoopbackPipeline::build(const ConfigOptions &options)
   {
@@ -99,7 +100,7 @@ namespace mtconnect
                                         const std::optional<std::string> &time, entity::ErrorList &errors)
   {
     // Parse the asset
-    auto entity = entity::XmlParser::parse(Asset::getRoot(), document, "1.7", errors);
+    auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, "1.7", errors);
     if (!entity)
     {
       LOG(warning) << "Asset could not be parsed";
@@ -109,7 +110,7 @@ namespace mtconnect
       return nullptr;
     }
 
-    auto asset = dynamic_pointer_cast<Asset>(entity);
+    auto asset = dynamic_pointer_cast<asset::Asset>(entity);
 
     if (type && asset->getType() != *type)
     {

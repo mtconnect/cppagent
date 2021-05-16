@@ -28,7 +28,7 @@
 
 namespace mtconnect
 {
-  namespace rest_service
+  namespace rest_sink
   {
     class Checkpoint
     {

@@ -120,12 +120,12 @@ namespace mtconnect
     class DeliverAsset : public MeteredTransform
     {
     public:
-      using Deliver = std::function<void(AssetPtr)>;
+      using Deliver = std::function<void(asset::AssetPtr)>;
       DeliverAsset(PipelineContextPtr context,
                    const std::optional<std::string> &metricsDataItem = std::nullopt)
         : MeteredTransform("DeliverAsset", context, metricsDataItem)
       {
-        m_guard = TypeGuard<Asset>(RUN);
+        m_guard = TypeGuard<asset::Asset>(RUN);
       }
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
     };

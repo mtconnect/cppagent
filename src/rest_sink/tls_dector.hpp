@@ -24,7 +24,7 @@
 
 namespace mtconnect
 {
-  namespace rest_service
+  namespace rest_sink
   {
     class TlsDector : public std::enable_shared_from_this<TlsDector>
     {
@@ -74,5 +74,5 @@ namespace mtconnect
       Dispatch m_dispatch;
       ErrorFunction m_errorFunction;
     };
-  }  // namespace rest_service
+  }  // namespace rest_sink
 }  // namespace mtconnect

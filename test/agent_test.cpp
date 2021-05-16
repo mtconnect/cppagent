@@ -42,7 +42,7 @@ typedef __int64 int64_t;
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
-using namespace mtconnect::rest_service;
+using namespace mtconnect::rest_sink;
 using namespace mtconnect::adapter;
 using namespace mtconnect::observation;
 
@@ -82,8 +82,8 @@ class AgentTest : public testing::Test
 
 TEST_F(AgentTest, Constructor)
 {
-  auto server1 = make_unique<rest_service::Server>(m_agentTestHelper->m_ioContext);
-  auto cache1 = make_unique<rest_service::FileCache>();
+  auto server1 = make_unique<rest_sink::Server>(m_agentTestHelper->m_ioContext);
+  auto cache1 = make_unique<rest_sink::FileCache>();
   unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7");
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
@@ -91,8 +91,8 @@ TEST_F(AgentTest, Constructor)
   ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
   agent.reset();
   
-  auto server2 = make_unique<rest_service::Server>(m_agentTestHelper->m_ioContext);
-  auto cache2 = make_unique<rest_service::FileCache>();
+  auto server2 = make_unique<rest_sink::Server>(m_agentTestHelper->m_ioContext);
+  auto cache2 = make_unique<rest_sink::FileCache>();
   agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7");
   
   context = std::make_shared<pipeline::PipelineContext>();
@@ -125,8 +125,8 @@ TEST_F(AgentTest, Probe)
 
 TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
-  auto server1 = make_unique<rest_service::Server>(m_agentTestHelper->m_ioContext);
-  auto cache1 = make_unique<rest_service::FileCache>();
+  auto server1 = make_unique<rest_sink::Server>(m_agentTestHelper->m_ioContext);
+  auto cache1 = make_unique<rest_sink::FileCache>();
   unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server1, cache1, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 17, 8, "1.5");
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
@@ -203,7 +203,7 @@ TEST_F(AgentTest, GoodPath)
 
 TEST_F(AgentTest, BadPath)
 {
-  using namespace rest_service;
+  using namespace rest_sink;
   {
     PARSE_XML_RESPONSE("/bad_path");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
