@@ -1189,7 +1189,7 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 
 ### Setup the build
 
-    sudo apt-get install build-essential boost python3.9 git
+    sudo apt-get install build-essential python3.9 git
 	pip3 install conan
 
 ### Download the source
