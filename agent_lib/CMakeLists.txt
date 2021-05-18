@@ -1,8 +1,8 @@
 set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/loopback_pipeline.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/loopback_pipeline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/loopback_source.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/loopback_source.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"

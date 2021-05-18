@@ -25,7 +25,7 @@
 #include "response.hpp"
 #include "utilities.hpp"
 #include "server.hpp"
-#include "loopback_pipeline.hpp"
+#include "loopback_source.hpp"
 
 namespace mtconnect
 {
@@ -41,11 +41,11 @@ namespace mtconnect
                   SinkContractPtr &&contract,
                   const ConfigOptions &options);
 
-      ~RestService() {}
+      ~RestService() = default;
 
       auto makeLoopbackSource(pipeline::PipelineContextPtr context)
       {
-        m_loopback = std::make_shared<LoopbackSource>(context, m_strand, m_options);
+        m_loopback = std::make_shared<LoopbackSource>("RestSource", context, m_strand, m_options);
         return m_loopback;
       }      
 
@@ -123,7 +123,24 @@ namespace mtconnect
       void setLogStreamData(bool log) { m_logStreamData = log; }
 
       // Get the printer for a type
-      const std::string acceptFormat(const std::string &accepts) const;
+      const std::string acceptFormat(const std::string &accepts) const
+      {
+        std::stringstream list(accepts);
+        std::string accept;
+        while (std::getline(list, accept, ','))
+        {
+          for (const auto &p : m_sinkContract->getPrinters())
+          {
+            if (ends_with(accept, p.first))
+              return p.first;
+          }
+        }
+
+        return "xml";
+      }
+
+      
+      
       const Printer *printerForAccepts(const std::string &accepts) const
       {
         return m_sinkContract->getPrinter(acceptFormat(accepts));

@@ -98,6 +98,7 @@ namespace mtconnect
       boost::asio::io_context m_context;
       std::list<std::thread> m_workers;
       std::unique_ptr<Agent> m_agent;
+
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
       boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>

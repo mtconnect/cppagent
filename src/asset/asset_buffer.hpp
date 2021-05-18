@@ -182,28 +182,19 @@ namespace mtconnect
           return 0;
       }
 
-      size_t removeAllByType(const std::string &type) override
+      size_t removeAll(AssetList &list, const std::optional<std::string> device = std::nullopt,
+                               const std::optional<std::string> type = std::nullopt,
+                       const std::optional<Timestamp> &time = std::nullopt) override
       {
         std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-        auto &index = m_typeIndex[type];
-        auto count = index.size();
-        for (auto &asset : index)
-          removeAsset(asset.first);
-
-        return count;
+        getAssets(list, std::numeric_limits<size_t>().max(), false,
+                  device, type);
+        for (auto &a : list)
+          removeAsset(a->getAssetId(), time);
+        
+        return list.size();
       }
-
-      size_t removeAllByDevice(const std::string &uuid) override
-      {
-        std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-        auto &index = m_deviceIndex[uuid];
-        auto count = index.size();
-        for (auto &asset : index)
-          removeAsset(asset.first);
-
-        return count;
-      }
-
+      
     protected:
       AssetPtr updateAsset(const std::string &id, Index::iterator &it, AssetPtr asset);
       void adjustCount(AssetPtr asset, int delta);

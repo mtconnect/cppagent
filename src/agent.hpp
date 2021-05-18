@@ -28,7 +28,7 @@
 #include <vector>
 
 #include "adapter/adapter.hpp"
-#include "loopback_pipeline.hpp"
+#include "loopback_source.hpp"
 #include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
@@ -82,10 +82,33 @@ namespace mtconnect
 
     // Sink Contract
     SinkContractPtr makeSinkContract();
+    const auto &getXmlParser() const { return m_xmlParser; }
 
     // Add an adapter to the agent
     void addSource(SourcePtr adapter, bool start = false);
     void addSink(SinkPtr sink, bool start = false);
+    
+    // Source and Sink
+    SourcePtr findSource(const std::string &name) const
+    {
+      for (auto &s : m_sources)
+        if (s->getName() == name)
+          return s;
+      
+      return nullptr;
+    }
+
+    SinkPtr findSink(const std::string &name) const
+    {
+      for (auto &s : m_sinks)
+        if (s->getName() == name)
+          return s;
+      
+      return nullptr;
+    }
+    
+    const auto &getSources() const { return m_sources; }
+    const auto &getSinks() const { return m_sinks; }
 
     // Get device from device map
     DevicePtr getDeviceByName(const std::string &name);
@@ -158,6 +181,11 @@ namespace mtconnect
       else
         return nullptr;
     }
+    const auto &getPrinters() const { return m_printers; }
+    
+    // Handle the device/path parameters for the xpath search
+    std::string devicesAndPath(const std::optional<std::string> &path,
+                               const DevicePtr device) const;
 
   protected:
     friend class AgentPipelineContract;
@@ -169,9 +197,6 @@ namespace mtconnect
     void initializeDataItems(DevicePtr device);
     void loadCachedProbe();
 
-    // Handle the device/path parameters for the xpath search
-    std::string devicesAndPath(const std::optional<std::string> &path,
-                               const DevicePtr device) const;
 
     
     observation::ObservationPtr getLatest(const std::string &id)
@@ -203,7 +228,7 @@ namespace mtconnect
 
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;
-    std::map<std::string, std::unique_ptr<Printer>> m_printers;
+    PrinterMap m_printers;
 
     // Agent Device
     device_model::AgentDevicePtr m_agentDevice;
@@ -302,7 +327,20 @@ namespace mtconnect
     {
       return m_agent->getAssetStorage();
     }
+    const PrinterMap &getPrinters() const override
+    {
+      return m_agent->getPrinters();
+    }
+    
+    void getDataItemsForPath(const DevicePtr device,
+                             const std::optional<std::string> &path, FilterSet &filter) const override
+    {
+      std::string dataPath = m_agent->devicesAndPath(path, device);
+      const auto &parser = m_agent->getXmlParser();
+      parser->getDataItems(filter, dataPath);
+    }
 
+    
   protected:
     Agent *m_agent;
   };

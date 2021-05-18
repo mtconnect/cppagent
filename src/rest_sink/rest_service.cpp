@@ -28,27 +28,37 @@ namespace mtconnect
   using namespace configuration;
   using namespace observation;
   using namespace asset;
-
+  using namespace device_model;
   
   namespace rest_sink
   {
     RestService::RestService(asio::io_context &context,
                              SinkContractPtr &&contract,
                              const ConfigOptions &options)
-      : Sink(move(contract)), m_context(context), m_strand(context), m_options(options),
+      : Sink("RestService", move(contract)), m_context(context), m_strand(context), m_options(options),
         m_circularBuffer(GetOption<int>(options, BufferSize).value_or(17),
                          GetOption<int>(options, CheckpointFrequency).value_or(1000)),
 	m_logStreamData(GetOption<bool>(options, LogStreams).value_or(false))
     {
       // Unique id number for agent instance
       m_instanceId = getCurrentTimeInSec();
-      
+      m_server = make_unique<Server>(context, options);
       m_server->setErrorFunction(
           [this](SessionPtr session, rest_sink::status st, const string &msg) {
             auto printer = m_sinkContract->getPrinter("xml");
             auto doc = printError(printer, "INVALID_REQUEST", msg);
             session->writeResponse({st, doc, printer->mimeType()});
           });
+    }
+    
+    void RestService::start()
+    {
+      m_server->start();
+    }
+    
+    void RestService::stop()
+    {
+      m_server->stop();
     }
     
     // -----------------------------------------------------------
@@ -829,6 +839,143 @@ namespace mtconnect
         else
           return errorCode + ": " + text;
       }
+
+    // -----------------------------------------------
+    // Validation methods
+    // -----------------------------------------------
+
+    template <typename T>
+    void RestService::checkRange(const Printer *printer, const T value, const T min, const T max,
+                           const string &param, bool notZero) const
+    {
+      if (value <= min)
+      {
+        stringstream str;
+        str << '\'' << param << '\'' << " must be greater than " << min;
+        throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
+                           printer->mimeType(), status::bad_request);
+      }
+      if (value >= max)
+      {
+        stringstream str;
+        str << '\'' << param << '\'' << " must be less than " << max;
+        throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
+                           printer->mimeType(), status::bad_request);
+      }
+      if (notZero && value == 0)
+      {
+        stringstream str;
+        str << '\'' << param << '\'' << " must not be zero(0)";
+        throw RequestError(str.str().c_str(), printError(printer, "OUT_OF_RANGE", str.str()),
+                           printer->mimeType(), status::bad_request);
+      }
+    }
+
+    void RestService::checkPath(const Printer *printer, const std::optional<std::string> &path,
+                          const DevicePtr device, FilterSet &filter) const
+    {
+      try
+      {
+        m_sinkContract->getDataItemsForPath(device, path, filter);
+      }
+      catch (exception &e)
+      {
+        throw RequestError(e.what(), printError(printer, "INVALID_XPATH", e.what()),
+                           printer->mimeType(), status::bad_request);
+      }
+
+      if (filter.empty())
+      {
+        string msg = "The path could not be parsed. Invalid syntax: " + *path;
+        throw RequestError(msg.c_str(), printError(printer, "INVALID_XPATH", msg),
+                           printer->mimeType(), status::bad_request);
+      }
+    }
+
+    DevicePtr RestService::checkDevice(const Printer *printer, const std::string &uuid) const
+    {
+      auto dev = m_sinkContract->findDeviceByUUIDorName(uuid);
+      if (!dev)
+      {
+        string msg("Could not find the device '" + uuid + "'");
+        throw RequestError(msg.c_str(), printError(printer, "NO_DEVICE", msg), printer->mimeType(),
+                           status::not_found);
+      }
+
+      return dev;
+    }
+    
+    // -------------------------------------------
+    // Data Collection and Formatting
+    // -------------------------------------------
+
+    string RestService::fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
+                                   const optional<SequenceNumber_t> &at)
+    {
+      ObservationList observations;
+      SequenceNumber_t firstSeq, seq;
+
+      {
+        std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+
+        firstSeq = getFirstSequence();
+        seq = m_circularBuffer.getSequence();
+        if (at)
+        {
+          checkRange(printer, *at, firstSeq - 1, seq, "at");
+
+          auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
+          check->getObservations(observations);
+        }
+        else
+        {
+          m_circularBuffer.getLatest().getObservations(observations, filterSet);
+        }
+      }
+
+      return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq,
+                                  seq - 1, observations);
+    }
+
+    string RestService::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
+                                  const std::optional<SequenceNumber_t> &from,
+                                  const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
+                                  bool &endOfBuffer, ChangeObserver *observer)
+    {
+      std::unique_ptr<ObservationList> observations;
+      SequenceNumber_t firstSeq, lastSeq;
+
+      {
+        std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+        firstSeq = getFirstSequence();
+        auto seq = m_circularBuffer.getSequence();
+        lastSeq = seq - 1;
+        int upperCountLimit = m_circularBuffer.getBufferSize() + 1;
+        int lowerCountLimit = -upperCountLimit;
+
+        if (from)
+        {
+          checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
+        }
+        if (to)
+        {
+          auto lower = from ? *from : firstSeq;
+          checkRange(printer, *to, lower, seq + 1, "to");
+          lowerCountLimit = 0;
+        }
+        checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
+
+        observations =
+            m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
+
+        if (observer)
+          observer->reset();
+      }
+
+      return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), end, firstSeq,
+                                  lastSeq, *observations);
+    }
+
 
 
   }  // namespace rest_sink

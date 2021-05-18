@@ -23,6 +23,8 @@
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
 #include "xml_printer.hpp"
+#include "rest_sink/rest_service.hpp"
+#include "adapter/adapter.hpp"
 
 #include <chrono>
 #include <string>
@@ -79,7 +81,11 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_EQ(16U, agent->getBufferSize());
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+    ASSERT_EQ(16U, rest->getBufferSize());
   }
 
   TEST_F(ConfigTest, Device)
@@ -89,7 +95,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().front();
+    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
 
     auto deviceName = GetOption<string>(adapter->getOptions(), configuration::Device);
     ASSERT_TRUE(deviceName);
@@ -122,7 +129,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().front();
+    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
@@ -176,8 +184,11 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
 
-    ASSERT_TRUE(agent->getServer()->arePutsAllowed());
+    ASSERT_TRUE(rest->getServer()->arePutsAllowed());
   }
 
   TEST_F(ConfigTest, LimitPut)
@@ -189,8 +200,13 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->getServer()->arePutsAllowed());
-    ASSERT_TRUE(agent->getServer()->allowPutFrom(std::string("127.0.0.1")));
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+
+    ASSERT_TRUE(rest->getServer()->arePutsAllowed());
+    ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("127.0.0.1")));
   }
 
   TEST_F(ConfigTest, LimitPutFromHosts)
@@ -202,9 +218,14 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->getServer()->arePutsAllowed());
-    ASSERT_TRUE(agent->getServer()->allowPutFrom(std::string("127.0.0.1")));
-    ASSERT_TRUE(agent->getServer()->allowPutFrom(std::string("192.168.0.1")));
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+
+    ASSERT_TRUE(rest->getServer()->arePutsAllowed());
+    ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("127.0.0.1")));
+    ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("192.168.0.1")));
   }
 
   TEST_F(ConfigTest, Namespaces)
@@ -291,8 +312,8 @@ namespace
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
-    ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().front();
+    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }
@@ -305,8 +326,8 @@ namespace
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
-    ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().front();
+    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
 
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
@@ -323,7 +344,8 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().front();
+    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
 
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
@@ -416,122 +438,6 @@ namespace
     ASSERT_EQ(std::string("/schemas/MTConnectError_1.3.xsd"), location);
   }
 
-  TEST_F(ConfigTest, LogFileRollover)
-  {
-#if 0
-    chdir(TEST_BIN_ROOT_DIR);
-// This test/rollover is fragile on Windows due to file caching.
-// Whilst the agent uses standard C runtime file functions
-// this can not easily be worked around. Better to disable the test.
-    m_config->updateWorkingDirectory();
-#ifndef _WINDOWS
-    string logger(
-        "logger_config {"
-        "logging_level = ERROR\n"
-        "max_size = 150\n"
-        "max_index = 5\n"
-        "output = file agent.log"
-        "}\n");
-    char buffer[64] = {0};
-    ::remove("agent.log");
-
-    for (int i = 1; i <= 10; i++)
-    {
-      sprintf(buffer, "agent.log.%d", i);
-      ::remove(buffer);
-    }
-
-    m_config->loadConfig(logger);
-
-    ASSERT_TRUE(file_exists("agent.log"));
-    ASSERT_FALSE(file_exists("agent.log.1"));
-    ASSERT_FALSE(file_exists("agent.log.2"));
-    ASSERT_FALSE(file_exists("agent.log.3"));
-    ASSERT_FALSE(file_exists("agent.log.4"));
-    ASSERT_FALSE(file_exists("agent.log.5"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.1"));
-    ASSERT_FALSE(file_exists("agent.log.2"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.2"));
-    ASSERT_FALSE(file_exists("agent.log.3"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.3"));
-    ASSERT_FALSE(file_exists("agent.log.4"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.4"));
-    ASSERT_FALSE(file_exists("agent.log.5"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.5"));
-    ASSERT_FALSE(file_exists("agent.log.6"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.5"));
-    ASSERT_FALSE(file_exists("agent.log.6"));
-#endif
-#endif
-  }
-
-  TEST_F(ConfigTest, MaxSize)
-  {
-#if 0
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-    string logger(
-        "logger_config {"
-        "max_size = 150\n"
-        "}\n");
-    m_config->loadConfig(logger);
-    auto fl = m_config->getLogger();
-    ASSERT_EQ(150ULL, fl->getMaxSize());
-    m_config.reset();
-
-    m_config = std::make_unique<AgentConfiguration>();
-    string logger2(
-        "logger_config {"
-        "max_size = 15K\n"
-        "}\n");
-    m_config->loadConfig(logger2);
-
-    fl = m_config->getLogger();
-    ASSERT_EQ(15ULL * 1024ULL, fl->getMaxSize());
-    m_config.reset();
-
-    m_config = std::make_unique<AgentConfiguration>();
-    string logger3(
-        "logger_config {"
-        "max_size = 15M\n"
-        "}\n");
-    m_config->loadConfig(logger3);
-
-    fl = m_config->getLogger();
-    ASSERT_EQ(15ULL * 1024ULL * 1024ULL, fl->getMaxSize());
-    m_config.reset();
-
-    m_config = std::make_unique<AgentConfiguration>();
-    string logger4(
-        "logger_config {"
-        "max_size = 15G\n"
-        "}\n");
-    m_config->loadConfig(logger4);
-
-    fl = m_config->getLogger();
-    ASSERT_EQ(15ULL * 1024ULL * 1024ULL * 1024ULL, fl->getMaxSize());
-#endif
-  }
-  
   TEST_F(ConfigTest, check_http_headers)
   {
     chdir(TEST_BIN_ROOT_DIR);
@@ -545,14 +451,19 @@ namespace
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
 
-    const auto &server = agent->getServer();
+    ASSERT_TRUE(agent);
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+    const auto server = rest->getServer();
     
     // TODO: Get headers working again
-#if 0
     const auto &headers = server->getHttpHeaders();
     
     ASSERT_EQ(1, headers.size());
-    ASSERT_EQ("Access-Control-Allow-Origin: *", headers.front());
-#endif
+    const auto &first = headers.front();
+    ASSERT_EQ("Access-Control-Allow-Origin", first.first);
+    ASSERT_EQ("*", first.second);
   }
 }  // namespace

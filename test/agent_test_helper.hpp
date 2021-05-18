@@ -28,7 +28,7 @@
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "rest_sink/rest_service.hpp"
-#include "loopback_pipeline.hpp"
+#include "loopback_source.hpp"
 
 #include <chrono>
 #include <iosfwd>
@@ -172,7 +172,7 @@ class AgentTestHelper
     m_agent->initialize(m_context);
     
     boost::asio::io_context::strand strand(m_ioContext);
-    m_loopback = std::make_shared<LoopbackSource>(m_context, strand,                                                  options);
+    m_loopback = std::make_shared<LoopbackSource>("TestSource", m_context, strand,                                                  options);
     
     auto sinkContract = m_agent->makeSinkContract();
     m_restService = std::make_shared<rest_sink::RestService>(m_ioContext, move(sinkContract),

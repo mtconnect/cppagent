@@ -22,10 +22,17 @@ namespace mtconnect
   class Source
   {
   public:
+    Source(const std::string &name)
+    : m_name(name) {}
     virtual ~Source() {}
 
     virtual bool start() = 0;
     virtual void stop() = 0;
+    
+    const auto &getName() { return m_name; }
+    
+  protected:
+    std::string m_name;
   };
 
   using SourcePtr = std::shared_ptr<Source>;

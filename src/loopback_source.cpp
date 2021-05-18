@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "loopback_pipeline.hpp"
+#include "loopback_source.hpp"
 
 #include "configuration/config_options.hpp"
 #include "pipeline/convert_sample.hpp"
@@ -146,6 +146,16 @@ namespace mtconnect
     receive(asset);
 
     return asset;
+  }
+  
+  void LoopbackSource::removeAsset(const std::string &id)
+  {
+    auto ac = make_shared<AssetCommand>("AssetCommand", Properties {});
+    ac->m_timestamp = chrono::system_clock::now();
+    ac->setValue("RemoveAsset"s);
+    ac->setProperty("assetId", id);
+    
+    m_pipeline.run(ac);
   }
 
 

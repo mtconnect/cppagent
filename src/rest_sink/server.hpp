@@ -48,21 +48,21 @@ namespace mtconnect
     class Server
     {
     public:
-      Server(boost::asio::io_context &context, unsigned short port = 5000,
-             const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
+      Server(boost::asio::io_context &context, const ConfigOptions &options = {})
         : m_context(context),
-          m_port(port),
+          m_port(GetOption<int>(options, configuration::Port).value_or(5000)),
           m_options(options),
           m_acceptor(context),
           m_sslContext(boost::asio::ssl::context::tls)
       {
-        if (inter.empty())
+        auto inter = GetOption<std::string>(options, configuration::ServerIp);
+        if (!inter)
         {
           m_address = boost::asio::ip::make_address("0.0.0.0");
         }
         else
         {
-          m_address = boost::asio::ip::make_address(inter);
+          m_address = boost::asio::ip::make_address(*inter);
         }
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
         if (fields)
@@ -95,6 +95,11 @@ namespace mtconnect
             m_fields.emplace_back(f.substr(0, i), f.substr(i + 1));
           }
         }
+      }
+      
+      const auto &getHttpHeaders() const
+      {
+        return m_fields;
       }
 
       auto getPort() const { return m_port; }

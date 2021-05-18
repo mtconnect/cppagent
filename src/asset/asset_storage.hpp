@@ -60,10 +60,10 @@ namespace mtconnect
       virtual size_t getCountForType(const std::string &type, bool active = true) const = 0;
       virtual size_t getCountForDevice(const std::string &device, bool active = true) const = 0;
 
-
       // Bulk remove
-      virtual size_t removeAllByType(const std::string &type) = 0;
-      virtual size_t removeAllByDevice(const std::string &uuid) = 0;
+      virtual size_t removeAll(AssetList &list, const std::optional<std::string> device = std::nullopt,
+                               const std::optional<std::string> type = std::nullopt,
+                               const std::optional<Timestamp> &time = std::nullopt) = 0;
 
       // For mutex locking
       auto lock() { return m_bufferLock.lock(); }

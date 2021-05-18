@@ -39,10 +39,11 @@ namespace mtconnect
   class LoopbackSource : public Source
   {
   public:
-    LoopbackSource(pipeline::PipelineContextPtr context,
+    LoopbackSource(const std::string &name,
+                   pipeline::PipelineContextPtr context,
                    boost::asio::io_context::strand &st,
                    const ConfigOptions &options)
-    : m_pipeline(context), m_strand(st)
+    : Source(name), m_pipeline(context), m_strand(st)
     {
       m_pipeline.build(options);
     }
@@ -82,7 +83,8 @@ namespace mtconnect
     asset::AssetPtr receiveAsset(DevicePtr device, const std::string &document,
                           const std::optional<std::string> &id,
                           const std::optional<std::string> &type,
-                          const std::optional<std::string> &time, entity::ErrorList &errors);
+                          const std::optional<std::string> &time,
+                                 entity::ErrorList &errors);
     void removeAsset(const std::string &id);
 
   protected:

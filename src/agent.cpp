@@ -80,7 +80,7 @@ namespace mtconnect
   {
     NAMED_SCOPE("Agent::initialize");
 
-    m_loopback = std::make_unique<LoopbackSource>(context, m_strand, m_options);
+    m_loopback = std::make_unique<LoopbackSource>("AgentSource", context, m_strand, m_options);
 
     int major, minor;
     char c;
@@ -136,6 +136,47 @@ namespace mtconnect
 
     LOG(info) << "Shutting down completed";
   }
+  
+  // ---------------------------------------
+  // Pipeline methods
+  // ---------------------------------------
+  void Agent::receiveObservation(observation::ObservationPtr observation)
+  {
+    for (auto &sink : m_sinks)
+      sink->publish(observation);
+  }
+  
+  void Agent::receiveAsset(asset::AssetPtr asset)
+  {
+    for (auto &sink : m_sinks)
+      sink->publish(asset);
+  }
+  
+  bool Agent::removeAsset(DevicePtr device, const std::string &id,
+                   const std::optional<Timestamp> time)
+  {
+    auto asset = m_assetStorage->removeAsset(id);
+    if (asset)
+    {
+      receiveAsset(asset);
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  
+  bool Agent::removeAllAssets(const std::optional<std::string> device,
+                       const std::optional<std::string> type,
+                       const std::optional<Timestamp> time, asset::AssetList &list)
+  {
+    auto count = m_assetStorage->removeAll(list, device, type, time);
+    for (auto &asset : list)
+      receiveAsset(asset);
+    return count > 0;
+  }
+
 
   // ---------------------------------------
   // Agent Device
@@ -612,7 +653,7 @@ namespace mtconnect
   {
     string dataPath;
 
-    if (device != nullptr)
+    if (device)
     {
       string prefix;
       if (device->getName() == "Agent")
@@ -753,6 +794,7 @@ namespace mtconnect
       deviceChanged(device, oldUuid, oldName);
     }
   }
+  
 
   // -------------------------------------------
   // End
