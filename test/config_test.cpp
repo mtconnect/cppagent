@@ -464,6 +464,6 @@ namespace
     ASSERT_EQ(1, headers.size());
     const auto &first = headers.front();
     ASSERT_EQ("Access-Control-Allow-Origin", first.first);
-    ASSERT_EQ("*", first.second);
+    ASSERT_EQ(" *", first.second);
   }
 }  // namespace

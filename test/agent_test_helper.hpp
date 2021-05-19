@@ -148,6 +148,14 @@ class AgentTestHelper
                    const char *path, const char *accepts);
   
   auto getAgent() { return m_agent.get(); }
+  std::shared_ptr<mtconnect::rest_sink::RestService> getRestService()
+  {
+    using namespace mtconnect;
+    using namespace mtconnect::rest_sink;
+    SinkPtr sink = m_agent->findSink("RestService");
+    std::shared_ptr<RestService> rest = std::dynamic_pointer_cast<RestService>(sink);
+    return rest;
+  }
     
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
                    const std::string &version = "1.7", int checkpoint = 25,

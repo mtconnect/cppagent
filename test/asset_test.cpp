@@ -23,6 +23,7 @@ using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
+using namespace mtconnect::asset;
 
 class AssetTest : public testing::Test
 {

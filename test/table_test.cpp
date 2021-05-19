@@ -37,6 +37,7 @@ using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
+using namespace mtconnect::rest_sink;
 using namespace std::literals;
 using namespace chrono_literals;
 using namespace date::literals;

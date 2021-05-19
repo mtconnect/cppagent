@@ -26,6 +26,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::observation;
 using namespace mtconnect::adapter;
+using namespace mtconnect::rest_sink;
 using namespace device_model;
 using namespace entity;
 using namespace data_item;

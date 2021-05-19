@@ -82,22 +82,25 @@ class AgentTest : public testing::Test
 
 TEST_F(AgentTest, Constructor)
 {
-  auto server1 = make_unique<rest_sink::Server>(m_agentTestHelper->m_ioContext);
-  auto cache1 = make_unique<rest_sink::FileCache>();
-  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7");
+  using namespace configuration;
+  ConfigOptions options{
+    {BufferSize, 17},
+    {MaxAssets, 8},
+    {SchemaVersion, "1.7"s}
+  };
+  
+  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, PROJECT_ROOT_DIR "/samples/badPath.xml", options);
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
-  ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
+  ASSERT_THROW(agent->initialize(context), std::runtime_error);
   agent.reset();
   
-  auto server2 = make_unique<rest_sink::Server>(m_agentTestHelper->m_ioContext);
-  auto cache2 = make_unique<rest_sink::FileCache>();
-  agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7");
+  agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,  PROJECT_ROOT_DIR "/samples/test_config.xml", options);
   
   context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
-  ASSERT_NO_THROW(agent->initialize(context, {}));
+  ASSERT_NO_THROW(agent->initialize(context));
 }
 
 TEST_F(AgentTest, Probe)
@@ -125,13 +128,18 @@ TEST_F(AgentTest, Probe)
 
 TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
-  auto server1 = make_unique<rest_sink::Server>(m_agentTestHelper->m_ioContext);
-  auto cache1 = make_unique<rest_sink::FileCache>();
-  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, server1, cache1, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 17, 8, "1.5");
+  using namespace configuration;
+  ConfigOptions options{
+    {BufferSize, 17},
+    {MaxAssets, 8},
+    {SchemaVersion, "1.5"s}
+  };
+
+  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", options);
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
-  ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
+  ASSERT_THROW(agent->initialize(context), std::runtime_error);
 }
 
 TEST_F(AgentTest, BadDevices)
@@ -233,13 +241,12 @@ TEST_F(AgentTest, CurrentAt)
 {
   QueryMap query;
   PARSE_XML_RESPONSE_QUERY("/current", query);
-
-  auto agent = m_agentTestHelper->m_agent.get();
   
   addAdapter();
 
   // Get the current position
-  int seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  int seq = rest->getSequence();
   char line[80] = {0};
 
   // Add many events
@@ -280,7 +287,7 @@ TEST_F(AgentTest, CurrentAt)
   // Check the first couple of items in the list
   for (int j = 0; j < 10; j++)
   {
-    int i = agent->getSequence() - agent->getBufferSize() - seq + j;
+    int i = rest->getSequence() - rest->getBufferSize() - seq + j;
     query["at"] = to_string(i + seq);;
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
@@ -290,7 +297,7 @@ TEST_F(AgentTest, CurrentAt)
 
   // Test out of range...
   {
-    int i = agent->getSequence() - agent->getBufferSize() - seq - 1;
+    int i = rest->getSequence() - rest->getBufferSize() - seq - 1;
     sprintf(line, "'at' must be greater than %d", i + seq);
     query["at"] = to_string(i + seq);;
     PARSE_XML_RESPONSE_QUERY("/current", query);
@@ -301,7 +308,6 @@ TEST_F(AgentTest, CurrentAt)
 
 TEST_F(AgentTest, CurrentAt64)
 {
-  auto agent = m_agentTestHelper->m_agent.get();
   QueryMap query;
 
   addAdapter();
@@ -310,8 +316,9 @@ TEST_F(AgentTest, CurrentAt64)
   char line[80] = {0};
 
   // Initialize the sliding buffer at a very large number.
+  auto rest = m_agentTestHelper->getRestService();
   uint64_t start = (((uint64_t)1) << 48) + 1317;
-  agent->setSequence(start);
+  rest->setSequence(start);
 
   // Add many events
   for (int i = 1; i <= 500; i++)
@@ -332,7 +339,6 @@ TEST_F(AgentTest, CurrentAt64)
 
 TEST_F(AgentTest, CurrentAtOutOfRange)
 {
-  auto agent = m_agentTestHelper->m_agent.get();
   QueryMap query;
 
   addAdapter();
@@ -347,7 +353,8 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  int seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  int seq = rest->getSequence();
 
   {
     query["at"] = to_string(seq);
@@ -357,7 +364,7 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
 
-  seq = agent->getFirstSequence() - 1;
+  seq = rest->getFirstSequence() - 1;
 
   {
     query["at"] = to_string(seq);
@@ -375,13 +382,13 @@ TEST_F(AgentTest, AddAdapter)
 
 TEST_F(AgentTest, FileDownload)
 {
-  auto agent = m_agentTestHelper->m_agent.get();
   QueryMap query;
 
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
   // Register a file with the agent.
-  agent->getFileCache()->registerFile(uri, string(PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd"), "1.1");
+  auto rest = m_agentTestHelper->getRestService();
+  rest->getFileCache()->registerFile(uri, string(PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd"), "1.1");
 
   // Reqyest the file...
   PARSE_TEXT_RESPONSE(uri.c_str());
@@ -391,13 +398,13 @@ TEST_F(AgentTest, FileDownload)
 
 TEST_F(AgentTest, FailedFileDownload)
 {
-  auto agent = m_agentTestHelper->m_agent.get();
   QueryMap query;
 
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
   // Register a file with the agent.
-  agent->getFileCache()->registerFile(uri, string("./BadFileName.xsd"), "1.1");
+  auto rest = m_agentTestHelper->getRestService();
+  rest->getFileCache()->registerFile(uri, string("./BadFileName.xsd"), "1.1");
 
   {
     PARSE_XML_RESPONSE(uri.c_str());
@@ -436,7 +443,8 @@ TEST_F(AgentTest, Composition)
 
 TEST_F(AgentTest, BadCount)
 {
-  int size = m_agentTestHelper->m_agent->getBufferSize() + 1;
+  auto rest = m_agentTestHelper->getRestService();
+  int size = rest->getBufferSize() + 1;
   {
     QueryMap query{{"count", "NON_INTEGER"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -522,7 +530,6 @@ TEST_F(AgentTest, SampleAtNextSeq)
 {
   QueryMap query;
   addAdapter();
-  auto agent = m_agentTestHelper->m_agent.get();
 
   // Get the current position
   char line[80] = {0};
@@ -534,7 +541,8 @@ TEST_F(AgentTest, SampleAtNextSeq)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  int seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  int seq = rest->getSequence();
   {
     query["from"] = to_string(seq);
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -546,9 +554,8 @@ TEST_F(AgentTest, SampleCount)
 {
   QueryMap query;
   addAdapter();
-  auto agent = m_agentTestHelper->m_agent.get();
-
-  auto seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence();
 
   // Get the current position
   char line[80] = {0};
@@ -583,8 +590,6 @@ TEST_F(AgentTest, SampleLastCount)
 {
   QueryMap query;
   addAdapter();
-  auto agent = m_agentTestHelper->m_agent.get();
-
 
   // Get the current position
   char line[80] = {0};
@@ -596,7 +601,8 @@ TEST_F(AgentTest, SampleLastCount)
     m_agentTestHelper->m_adapter->processData(line);
   }
   
-  auto seq = agent->getSequence() - 20;
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence() - 20;
 
   {
     query["path"] = "//DataItem[@name='Xact']";
@@ -620,8 +626,6 @@ TEST_F(AgentTest, SampleToParameter)
 {
   QueryMap query;
   addAdapter();
-  auto agent = m_agentTestHelper->m_agent.get();
-
 
   // Get the current position
   char line[80] = {0};
@@ -633,7 +637,8 @@ TEST_F(AgentTest, SampleToParameter)
     m_agentTestHelper->m_adapter->processData(line);
   }
   
-  auto seq = agent->getSequence() - 20;
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence() - 20;
 
   {
     query["path"] = "//DataItem[@name='Xact']";
@@ -697,8 +702,8 @@ TEST_F(AgentTest, EmptyStream)
   }
 
   {
-    auto agent = m_agentTestHelper->m_agent.get();
-    QueryMap query{{"from", to_string(agent->getSequence())}};
+    auto rest = m_agentTestHelper->getRestService();
+    QueryMap query{{"from", to_string(rest->getSequence())}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
@@ -711,11 +716,12 @@ TEST_F(AgentTest, AddToBuffer)
 
   string device("LinuxCNC"), key("badKey"), value("ON");
   auto seqNum = 0;
-  auto event1 = agent->getFromBuffer(seqNum);
+  auto rest = m_agentTestHelper->getRestService();
+  auto event1 = rest->getFromBuffer(seqNum);
   ASSERT_FALSE(event1);
 
   {
-    query["from"] = to_string(agent->getSequence());
+    query["from"] = to_string(rest->getSequence());
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
@@ -724,7 +730,7 @@ TEST_F(AgentTest, AddToBuffer)
 
   auto di2 = agent->getDataItemForDevice(device, key);
   seqNum = m_agentTestHelper->addToBuffer(di2, {{"VALUE", value}}, chrono::system_clock::now());
-  auto event2 = agent->getFromBuffer(seqNum);
+  auto event2 = rest->getFromBuffer(seqNum);
   ASSERT_EQ(3, event2.use_count());
 
   {
@@ -743,13 +749,13 @@ TEST_F(AgentTest, AddToBuffer)
 TEST_F(AgentTest, SequenceNumberRollover)
 {
 #ifndef WIN32
-  auto agent = m_agentTestHelper->m_agent.get();
   QueryMap query;
   addAdapter();
 
   // Set the sequence number near MAX_UINT32
-  agent->setSequence(0xFFFFFFA0);
-  SequenceNumber_t seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  rest->setSequence(0xFFFFFFA0);
+  SequenceNumber_t seq = rest->getSequence();
   ASSERT_EQ((int64_t)0xFFFFFFA0, seq);
 
   // Get the current position
@@ -796,7 +802,7 @@ TEST_F(AgentTest, SequenceNumberRollover)
     }
   }
 
-  ASSERT_EQ(uint64_t(0xFFFFFFA0) + 128ul, agent->getSequence());
+  ASSERT_EQ(uint64_t(0xFFFFFFA0) + 128ul, rest->getSequence());
 #endif
 }
 
@@ -1771,19 +1777,20 @@ TEST_F(AgentTest, AssetStorage)
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
                                               8, 4, "1.3", 4, true);
 
-  ASSERT_TRUE(agent->getServer()->arePutsAllowed());
+  auto rest = m_agentTestHelper->getRestService();
+  ASSERT_TRUE(rest->getServer()->arePutsAllowed());
   string body = "<Part assetId='P1' deviceUuid='LinuxCNC'>TEST</Part>";
   QueryMap queries;
 
   queries["type"] = "Part";
   queries["device"] = "LinuxCNC";
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, agent->getAssetStorage()->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, agent->getAssetStorage()->getCount());
 
   {
     PARSE_XML_RESPONSE_PUT("/asset/123", body, queries);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+    ASSERT_EQ((unsigned int)1, agent->getAssetStorage()->getCount());
   }
 
   {
@@ -1810,14 +1817,16 @@ TEST_F(AgentTest, AssetBuffer)
 
   queries["device"] = "000";
   queries["type"] = "Part";
+  
+  const auto &storage = agent->getAssetStorage();
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, storage->getCount());
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
-    ASSERT_EQ(1, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+    ASSERT_EQ(1, storage->getCountForType("Part"));
   }
 
   {
@@ -1829,16 +1838,16 @@ TEST_F(AgentTest, AssetBuffer)
   // Make sure replace works properly
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
-    ASSERT_EQ(1, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+    ASSERT_EQ(1, storage->getCountForType("Part"));
   }
 
   body = "<Part assetId='P2'>TEST 2</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
-    ASSERT_EQ(2, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)2, storage->getCount());
+    ASSERT_EQ(2, storage->getCountForType("Part"));
   }
 
   {
@@ -1851,8 +1860,8 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)3, agent->getAssetCount());
-    ASSERT_EQ(3, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)3, storage->getCount());
+    ASSERT_EQ(3, storage->getCountForType("Part"));
   }
 
   {
@@ -1865,14 +1874,14 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
+    ASSERT_EQ((unsigned int)4, storage->getCount());
   }
 
   {
     PARSE_XML_RESPONSE("/asset/P4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 4");
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   // Test multiple asset get
@@ -1909,8 +1918,8 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)4, storage->getCount());
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   {
@@ -1929,8 +1938,8 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)4, storage->getCount());
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   {
@@ -1949,16 +1958,16 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)4, storage->getCount());
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   body = "<Part assetId='P6'>TEST 8</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)4, storage->getCount());
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   {
@@ -1988,10 +1997,11 @@ TEST_F(AgentTest, AdapterAddAsset)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/asset/P1");
@@ -2004,7 +2014,8 @@ TEST_F(AgentTest, MultiLineAsset)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  
+  const auto &storage = agent->getAssetStorage();
+
   m_agentTestHelper->m_adapter->parseBuffer("2021-02-01T12:00:00Z|@ASSET@|P1|Part|--multiline--AAAA\n");
   m_agentTestHelper->m_adapter->parseBuffer(
       "<Part assetId='P1'>\n"
@@ -2014,8 +2025,8 @@ TEST_F(AgentTest, MultiLineAsset)
   m_agentTestHelper->m_adapter->parseBuffer(
       "</Part>\n"
       "--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/asset/P1");
@@ -2039,12 +2050,12 @@ TEST_F(AgentTest, MultiLineAsset)
 TEST_F(AgentTest, BadAsset)
 {
   addAdapter();
-  auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = m_agentTestHelper->m_agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->parseBuffer("2021-02-01T12:00:00Z|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
   m_agentTestHelper->m_adapter->parseBuffer((getFile("asset4.xml") + "\n").c_str());
   m_agentTestHelper->m_adapter->parseBuffer("--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)0, storage->getCount());
 }
 
 TEST_F(AgentTest, AssetRemoval)
@@ -2055,13 +2066,16 @@ TEST_F(AgentTest, AssetRemoval)
   query["device"] = "LinuxCNC";
   query["type"] = "Part";
 
-  ASSERT_EQ((unsigned int)4, m_agentTestHelper->m_agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, m_agentTestHelper->m_agent->getAssetCount());
+  const auto &storage = m_agentTestHelper->m_agent->getAssetStorage();
+
+  
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, storage->getCount());
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
-    ASSERT_EQ(1, m_agentTestHelper->m_agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+    ASSERT_EQ(1, storage->getCountForType("Part"));
   }
 
   {
@@ -2073,16 +2087,16 @@ TEST_F(AgentTest, AssetRemoval)
   // Make sure replace works properly
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
-    ASSERT_EQ(1, m_agentTestHelper->m_agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+    ASSERT_EQ(1, storage->getCountForType("Part"));
   }
 
   body = "<Part assetId='P2'>TEST 2</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)2, m_agentTestHelper->m_agent->getAssetCount());
-    ASSERT_EQ(2, m_agentTestHelper->m_agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)2, storage->getCount());
+    ASSERT_EQ(2, storage->getCountForType("Part"));
   }
 
   {
@@ -2095,8 +2109,8 @@ TEST_F(AgentTest, AssetRemoval)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)3, m_agentTestHelper->m_agent->getAssetCount());
-    ASSERT_EQ(3, m_agentTestHelper->m_agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)3, storage->getCount());
+    ASSERT_EQ(3, storage->getCountForType("Part"));
   }
 
   {
@@ -2109,8 +2123,8 @@ TEST_F(AgentTest, AssetRemoval)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)3, m_agentTestHelper->m_agent->getAssetCount(false));
-    ASSERT_EQ(3, m_agentTestHelper->m_agent->getAssetCount("Part", false));
+    ASSERT_EQ((unsigned int)3, storage->getCount(false));
+    ASSERT_EQ(3, storage->getCountForType("Part", false));
   }
 
   {
@@ -2144,17 +2158,18 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   addAdapter();
   QueryMap query;
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
   
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
-  ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)2, storage->getCount());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
-  ASSERT_EQ((unsigned int)3, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)3, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2163,7 +2178,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   }
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P2\r");
-  ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
+  ASSERT_EQ((unsigned int)3, storage->getCount(false));
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2231,10 +2246,11 @@ TEST_F(AgentTest, AssetPrependId)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/asset/0001");
@@ -2248,11 +2264,12 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2261,7 +2278,7 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
   }
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P1");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount(false));
+  ASSERT_EQ((unsigned int)1, storage->getCount(false));
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2277,11 +2294,12 @@ TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
                                               8, 4, "1.3", 4, true);
   addAdapter();
+  const auto &storage = agent->getAssetStorage();
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount(false));
+  ASSERT_EQ((unsigned int)1, storage->getCount(false));
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2316,17 +2334,18 @@ TEST_F(AgentTest, RemoveAllAssets)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
-  ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)2, storage->getCount());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
-  ASSERT_EQ((unsigned int)3, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)3, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2335,7 +2354,7 @@ TEST_F(AgentTest, RemoveAllAssets)
   }
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ALL_ASSETS@|Part");
-  ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
+  ASSERT_EQ((unsigned int)3, storage->getCount(false));
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2345,7 +2364,7 @@ TEST_F(AgentTest, RemoveAllAssets)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
   }
   
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)0, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/asset");
@@ -2372,17 +2391,18 @@ TEST_F(AgentTest, AssetProbe)
                                               8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
+  const auto &storage = agent->getAssetStorage();
 
   queries["device"] = "LinuxCNC";
   queries["type"] = "Part";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+    ASSERT_EQ((unsigned int)1, storage->getCount());
   }
   {
     PARSE_XML_RESPONSE_PUT("/asset/P2", body, queries);
-    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+    ASSERT_EQ((unsigned int)2, storage->getCount());
   }
 
   {
@@ -2491,14 +2511,14 @@ TEST_F(AgentTest, BadInterval)
 TEST_F(AgentTest, StreamData)
 {
   addAdapter();
-  auto agent = m_agentTestHelper->getAgent();
   auto heartbeatFreq{200ms};
-
+  auto rest = m_agentTestHelper->getRestService();
+  
   // Start a thread...
   QueryMap query;
   query["interval"] = "50";
   query["heartbeat"] = to_string(heartbeatFreq.count());
-  query["from"] = to_string(agent->getSequence());
+  query["from"] = to_string(rest->getSequence());
 
   // Heartbeat test. Heartbeat should be sent in 200ms. Give
   // 25ms range.
@@ -2555,21 +2575,21 @@ TEST_F(AgentTest, StreamData)
 TEST_F(AgentTest, StreamDataObserver)
 {
   addAdapter();
-  auto agent = m_agentTestHelper->getAgent();
+  auto rest = m_agentTestHelper->getRestService();
   
   // Start a thread...
   std::map<string, string>  query;
   query["interval"] = "100";
   query["heartbeat"] = "1000";
   query["count"] = "10";
-  query["from"] = to_string(agent->getSequence());
+  query["from"] = to_string(rest->getSequence());
   query["path"] = "//DataItem[@name='line']";
 
   // Test to make sure the signal will push the sequence number forward and capture
   // the new data.
   {
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
-    auto seq = to_string(agent->getSequence() + 20ull);
+    auto seq = to_string(rest->getSequence() + 20ull);
     for (int i = 0; i < 20; i++)
     {
       m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|" + to_string(i));

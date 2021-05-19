@@ -43,6 +43,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
+using namespace mtconnect::rest_sink;
 
 class JsonPrinterStreamTest : public testing::Test
 {

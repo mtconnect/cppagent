@@ -150,9 +150,11 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
   ASSERT_EQ("000", uuid);
   auto found = false;
   
-  for (auto seq = agent->getSequence() - 1; !found && seq > 0ull; seq--)
+  auto rest = m_agentTestHelper->getRestService();
+  
+  for (auto seq = rest->getSequence() - 1; !found && seq > 0ull; seq--)
   {
-    auto event = agent->getFromBuffer(seq);
+    auto event = rest->getFromBuffer(seq);
     if (event->getDataItem()->getType() == "DEVICE_ADDED" &&
         uuid == event->getValue<string>())
     {

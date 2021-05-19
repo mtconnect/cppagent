@@ -195,6 +195,19 @@ namespace mtconnect
         return list.size();
       }
       
+      int getIndex(const std::string &id) const
+      {
+        int i = 0;
+        for (auto &a : m_buffer)
+        {
+          if (a->getAssetId() == id)
+            return i;
+          i++;
+        }
+        return -1;
+      }
+
+      
     protected:
       AssetPtr updateAsset(const std::string &id, Index::iterator &it, AssetPtr asset);
       void adjustCount(AssetPtr asset, int delta);

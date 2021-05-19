@@ -24,6 +24,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 using namespace mtconnect::adapter;
+using namespace mtconnect::asset;
 
 class FileAssetTest : public testing::Test
 {

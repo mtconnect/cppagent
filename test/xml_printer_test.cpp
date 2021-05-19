@@ -634,7 +634,7 @@ TEST_F(XmlPrinterTest, EscapedXMLCharacters)
 TEST_F(XmlPrinterTest, PrintAssetProbe)
 {
   // Add the xml to the agent...
-  map<string, int> counts;
+  map<string, size_t> counts;
   counts["CuttingTool"] = 10;
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices, &counts));

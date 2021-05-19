@@ -324,14 +324,20 @@ class TlsRestServiceTest : public testing::Test
     ConfigOptions options{{TlsCertificateChain, CertFile},
       {TlsPrivateKey, KeyFile},
       {TlsDHKey, DhFile},
-      {TlsCertificatePassword, "mtconnect"s}};
-    m_server = make_unique<Server>(m_context, 0, "127.0.0.1",
-                                   options);
+      {TlsCertificatePassword, "mtconnect"s},
+      {Port, 0},
+      {ServerIp, "127.0.0.1"s}
+    };
+    m_server = make_unique<Server>(m_context, options);
   }
   
   void createServer(const ConfigOptions &options)
   {
-    m_server = make_unique<Server>(m_context, 0, "127.0.0.1", options);
+    using namespace mtconnect::configuration;
+    ConfigOptions opts(options);
+    opts[Port] = 0;
+    opts[ServerIp] = "127.0.0.1"s;
+    m_server = make_unique<Server>(m_context, opts);
   }
 
   void start()

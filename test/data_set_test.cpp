@@ -32,6 +32,7 @@ using namespace std::literals;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace mtconnect::observation;
+using namespace mtconnect::rest_sink;
 
 class DataSetTest : public testing::Test
 {
@@ -398,7 +399,9 @@ TEST_F(DataSetTest, CurrentAt)
 {
   using namespace mtconnect::rest_sink;
   m_agentTestHelper->addAdapter();
-  auto seq = m_agentTestHelper->m_agent->getSequence();
+  
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence();
 
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
   m_agentTestHelper->m_adapter->processData("TIME|vars| c=5 ");

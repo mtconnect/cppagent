@@ -53,6 +53,8 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::rest_sink;
+using namespace mtconnect::asset;
 
 class JsonPrinterAssetTest : public testing::Test
 {
@@ -108,9 +110,9 @@ TEST_F(JsonPrinterAssetTest, CuttingTool)
 {
   auto xml = getFile("asset1.xml");
   entity::ErrorList errors;
-  AssetPtr asset = parseAsset(xml, errors);
-  ASSERT_TRUE(asset);
-  AssetList assetList{asset};
+  AssetPtr a = parseAsset(xml, errors);
+  ASSERT_TRUE(a);
+  AssetList assetList{a};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   
   auto jdoc = json::parse(doc);
@@ -137,9 +139,9 @@ TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
 {
   auto xml = getFile("asset1.xml");
   entity::ErrorList errors;
-  AssetPtr asset = parseAsset(xml, errors);
-  ASSERT_TRUE(asset);
-  AssetList assetList{asset};
+  AssetPtr a = parseAsset(xml, errors);
+  ASSERT_TRUE(a);
+  AssetList assetList{a};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
   
