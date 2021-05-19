@@ -150,6 +150,19 @@ namespace mtconnect
   {
     for (auto &sink : m_sinks)
       sink->publish(asset);
+    
+    auto device = m_deviceUuidMap.find(*asset->getDeviceUuid());
+    if (device != m_deviceUuidMap.end())
+    {
+      auto di = device->second->getAssetChanged();
+      if (di)
+      {
+        m_loopback->receive(di, {
+          {"assetType", asset->getName()},
+          {"VALUE", asset->getAssetId()}
+        });
+      }
+    }
   }
   
   bool Agent::removeAsset(DevicePtr device, const std::string &id,
@@ -158,7 +171,17 @@ namespace mtconnect
     auto asset = m_assetStorage->removeAsset(id);
     if (asset)
     {
-      receiveAsset(asset);
+      for (auto &sink : m_sinks)
+        sink->publish(asset);
+
+      auto di = device->getAssetRemoved();
+      if (di)
+      {
+        m_loopback->receive(di, {
+          {"assetType", asset->getName()},
+          {"VALUE", id}
+        });
+      }
       return true;
     }
     else
@@ -173,7 +196,13 @@ namespace mtconnect
   {
     auto count = m_assetStorage->removeAll(list, device, type, time);
     for (auto &asset : list)
-      receiveAsset(asset);
+    {
+      auto device = m_deviceUuidMap.find(*asset->getDeviceUuid());
+      if (device != m_deviceUuidMap.end())
+      {
+        removeAsset(device->second, asset->getAssetId(), time);
+      }
+    }
     return count > 0;
   }
 
@@ -794,7 +823,6 @@ namespace mtconnect
       deviceChanged(device, oldUuid, oldName);
     }
   }
-  
 
   // -------------------------------------------
   // End
