@@ -167,9 +167,6 @@ class AgentTestHelper
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
 
-    auto server = std::make_unique<mhttp::Server>(m_ioContext);
-    server->allowPuts(put);
-    m_server = server.get();
     auto cache = std::make_unique<mhttp::FileCache>();
     ConfigOptions options{{configuration::BufferSize, bufferSize},
       {configuration::MaxAssets, maxAssets},
@@ -189,11 +186,12 @@ class AgentTestHelper
     m_agent->addSource(m_loopback);
     
     auto sinkContract = m_agent->makeSinkContract();
-    m_restService = std::make_shared<rest_sink::RestService>(m_ioContext, move(sinkContract),
-                                                             options);
-    m_agent->addSink(m_restService);
+    m_restService = std::make_shared<rest_sink::RestService>(m_ioContext, move(sinkContract), options);
+    m_agent->addSink(m_restService);    
     m_agent->initialize(m_context);
 
+    m_server = m_restService->getServer();
+    
     m_session = std::make_shared<mhttp::TestSession>([](mhttp::SessionPtr, mhttp::RequestPtr) { return true; }, m_server->getErrorFunction());
     return m_agent.get();
   }

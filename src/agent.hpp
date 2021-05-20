@@ -186,7 +186,7 @@ namespace mtconnect
     // Handle the device/path parameters for the xpath search
     std::string devicesAndPath(const std::optional<std::string> &path,
                                const DevicePtr device) const;
-
+    
   protected:
     friend class AgentPipelineContract;
 
