@@ -148,9 +148,11 @@ namespace mtconnect
   
   void Agent::receiveAsset(asset::AssetPtr asset)
   {
+    m_assetStorage->addAsset(asset);
+
     for (auto &sink : m_sinks)
       sink->publish(asset);
-    
+        
     auto device = m_deviceUuidMap.find(*asset->getDeviceUuid());
     if (device != m_deviceUuidMap.end())
     {
