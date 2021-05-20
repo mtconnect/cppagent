@@ -115,6 +115,9 @@ class AgentTestHelper
   
   ~AgentTestHelper()
   {
+    m_adapter.reset();
+    if (m_agent)
+      m_agent->stop();
     m_agent.reset();
   }
   
@@ -171,22 +174,26 @@ class AgentTestHelper
     ConfigOptions options{{configuration::BufferSize, bufferSize},
       {configuration::MaxAssets, maxAssets},
       {configuration::CheckpointFrequency, checkpoint},
-      {configuration::AllowPut, put}};
+      {configuration::AllowPut, put},
+      {configuration::SchemaVersion, version},
+      {configuration::Pretty, true}
+    };
     m_agent = std::make_unique<mtconnect::Agent>(m_ioContext,
                                                  PROJECT_ROOT_DIR + file,
                                                  options);
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
-    m_agent->initialize(m_context);
     
     boost::asio::io_context::strand strand(m_ioContext);
     m_loopback = std::make_shared<LoopbackSource>("TestSource", m_context, strand,                                                  options);
+    m_agent->addSource(m_loopback);
     
     auto sinkContract = m_agent->makeSinkContract();
     m_restService = std::make_shared<rest_sink::RestService>(m_ioContext, move(sinkContract),
                                                              options);
     m_agent->addSink(m_restService);
-        
+    m_agent->initialize(m_context);
+
     m_session = std::make_shared<mhttp::TestSession>([](mhttp::SessionPtr, mhttp::RequestPtr) { return true; }, m_server->getErrorFunction());
     return m_agent.get();
   }

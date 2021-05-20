@@ -49,6 +49,13 @@ namespace mtconnect
             auto doc = printError(printer, "INVALID_REQUEST", msg);
             session->writeResponse({st, doc, printer->mimeType()});
           });
+      
+      createProbeRoutings();
+      createCurrentRoutings();
+      createSampleRoutings();
+      createAssetRoutings();
+      createPutObservationRoutings();
+      createFileRoutings();
     }
     
     void RestService::start()

@@ -58,7 +58,7 @@ namespace mtconnect
     : m_options(options), m_context(context),
       m_strand(m_context),
       m_xmlParser(make_unique<mtconnect::XmlParser>()),
-      m_version(*GetOption<string>(options, mtconnect::configuration::SchemaVersion)),
+      m_version(GetOption<string>(options, mtconnect::configuration::SchemaVersion).value_or("1.7")),
       m_configXmlPath(configXmlPath),
       m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
   {

@@ -65,7 +65,10 @@ namespace mtconnect
       Adapter(const Adapter &) = delete;
 
       // Virtual destructor
-      ~Adapter() override { stop(); }
+      ~Adapter() override
+      {
+        stop();
+      }
 
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
       auto &getTerminator() const { return m_terminator; }
