@@ -96,11 +96,8 @@ namespace mtconnect
           }
         }
       }
-      
-      const auto &getHttpHeaders() const
-      {
-        return m_fields;
-      }
+
+      const auto &getHttpHeaders() const { return m_fields; }
 
       auto getPort() const { return m_port; }
 
@@ -150,9 +147,7 @@ namespace mtconnect
       void accept(boost::system::error_code ec, boost::asio::ip::tcp::socket soc);
       void fail(boost::system::error_code ec, char const *what);
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
-      void setErrorFunction(const ErrorFunction &func) {
-        m_errorFunction = func;
-      }
+      void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
       ErrorFunction getErrorFunction() const { return m_errorFunction; }
 
     protected:

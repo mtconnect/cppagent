@@ -166,7 +166,7 @@ namespace mtconnect
     {
       NAMED_SCOPE("SessionImpl::run");
       asio::dispatch(derived().stream().get_executor(),
-                    beast::bind_front_handler(&SessionImpl::read, shared_ptr()));
+                     beast::bind_front_handler(&SessionImpl::read, shared_ptr()));
     }
 
     template <class Derived>

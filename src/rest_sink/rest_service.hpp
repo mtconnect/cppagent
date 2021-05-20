@@ -19,13 +19,13 @@
 
 #include "boost/asio/io_context.hpp"
 
-#include "sink.hpp"
 #include "circular_buffer.hpp"
+#include "loopback_source.hpp"
 #include "request.hpp"
 #include "response.hpp"
-#include "utilities.hpp"
 #include "server.hpp"
-#include "loopback_source.hpp"
+#include "sink.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {
@@ -37,8 +37,7 @@ namespace mtconnect
     class RestService : public Sink
     {
     public:
-      RestService(boost::asio::io_context &context,
-                  SinkContractPtr &&contract,
+      RestService(boost::asio::io_context &context, SinkContractPtr &&contract,
                   const ConfigOptions &options);
 
       ~RestService() = default;
@@ -47,18 +46,18 @@ namespace mtconnect
       {
         m_loopback = std::make_shared<LoopbackSource>("RestSource", context, m_strand, m_options);
         return m_loopback;
-      }      
+      }
 
       // Sink Methods
       void start() override;
       void stop() override;
-      
+
       uint64_t publish(observation::ObservationPtr &observation) override;
       bool publish(asset::AssetPtr asset) override { return false; }
-      
+
       auto getServer() { return m_server.get(); }
       auto getFileCache() { return &m_fileCache; }
-      
+
       // Observation management
       observation::ObservationPtr getFromBuffer(uint64_t seq) const
       {
@@ -66,7 +65,7 @@ namespace mtconnect
       }
       SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
       unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
-      
+
       SequenceNumber_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
 
       // For testing...
@@ -139,8 +138,6 @@ namespace mtconnect
         return "xml";
       }
 
-      
-      
       const Printer *printerForAccepts(const std::string &accepts) const
       {
         return m_sinkContract->getPrinter(acceptFormat(accepts));
@@ -149,7 +146,6 @@ namespace mtconnect
       // Output an XML Error
       std::string printError(const Printer *printer, const std::string &errorCode,
                              const std::string &text) const;
-
 
     protected:
       // HTTP Routings
@@ -161,13 +157,11 @@ namespace mtconnect
       void createAssetRoutings();
 
       // Current Data Collection
-      std::string fetchCurrentData(const Printer *printer,
-                                   const FilterSetOpt &filterSet,
+      std::string fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
                                    const std::optional<SequenceNumber_t> &at);
 
       // Sample data collection
-      std::string fetchSampleData(const Printer *printer,
-                                  const FilterSetOpt &filterSet, int count,
+      std::string fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
                                   const std::optional<SequenceNumber_t> &from,
                                   const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
                                   bool &endOfBuffer,
@@ -195,8 +189,8 @@ namespace mtconnect
       // Buffers
       FileCache m_fileCache;
       CircularBuffer m_circularBuffer;
-      
-      bool m_logStreamData{false};
+
+      bool m_logStreamData {false};
     };
   }  // namespace rest_sink
 }  // namespace mtconnect

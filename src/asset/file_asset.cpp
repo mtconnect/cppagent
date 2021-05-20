@@ -23,31 +23,31 @@ namespace mtconnect
   {
     using namespace entity;
     using namespace std;
-    
+
     FactoryPtr FileArchetypeAsset::getFactory()
     {
       static auto root = make_shared<Factory>();
-      
-      static auto fileProperty =
-      make_shared<Factory>(Requirements({Requirement("name", true), Requirement("VALUE", true)}));
-      
+
+      static auto fileProperty = make_shared<Factory>(
+          Requirements({Requirement("name", true), Requirement("VALUE", true)}));
+
       static auto fileProperties = make_shared<Factory>(Requirements(
-                                                                     {Requirement("FileProperty", ENTITY, fileProperty, 1, Requirement::Infinite)}));
-      
+          {Requirement("FileProperty", ENTITY, fileProperty, 1, Requirement::Infinite)}));
+
       static auto fileComment = make_shared<Factory>(
-                                                     Requirements({Requirement("timestamp", true), Requirement("VALUE", true)}));
-      
-      static auto fileComments = make_shared<Factory>(
-                                                      Requirements({Requirement("FileComment", ENTITY, fileComment, 1, Requirement::Infinite)}));
-      
+          Requirements({Requirement("timestamp", true), Requirement("VALUE", true)}));
+
+      static auto fileComments = make_shared<Factory>(Requirements(
+          {Requirement("FileComment", ENTITY, fileComment, 1, Requirement::Infinite)}));
+
       static auto fileArchetype = make_shared<Factory>(*Asset::getFactory());
       fileArchetype->addRequirements(Requirements {
-        Requirement("name", true), Requirement("mediaType", true),
-        Requirement("applicationCategory", true), Requirement("applicationType", true),
-        Requirement("FileComments", ENTITY_LIST, fileComments, false),
-        Requirement("FileProperties", ENTITY_LIST, fileProperties, false)});
+          Requirement("name", true), Requirement("mediaType", true),
+          Requirement("applicationCategory", true), Requirement("applicationType", true),
+          Requirement("FileComments", ENTITY_LIST, fileComments, false),
+          Requirement("FileProperties", ENTITY_LIST, fileProperties, false)});
       fileArchetype->setOrder({"FileProperties", "FileComments"});
-      
+
       static bool first {true};
       if (first)
       {
@@ -55,10 +55,10 @@ namespace mtconnect
         root->registerFactory("FileArchetype", fileArchetype);
         first = false;
       }
-      
+
       return fileArchetype;
     }
-    
+
     void FileArchetypeAsset::registerAsset()
     {
       static bool once {true};
@@ -68,28 +68,28 @@ namespace mtconnect
         once = false;
       }
     }
-    
+
     FactoryPtr FileAsset::getFactory()
     {
       static auto file = make_shared<Factory>(*FileArchetypeAsset::getFactory());
-      
+
       static auto destination = make_shared<Factory>(Requirements({Requirement("VALUE", true)}));
-      
-      static auto destinations = make_shared<Factory>(
-                                                      Requirements({Requirement("Destination", ENTITY, destination, 1, Requirement::Infinite)}));
-      
+
+      static auto destinations = make_shared<Factory>(Requirements(
+          {Requirement("Destination", ENTITY, destination, 1, Requirement::Infinite)}));
+
       static auto fileLocation = make_shared<Factory>(Requirements({Requirement("href", true)}));
-      
+
       file->addRequirements(
-                            Requirements({Requirement("size", INTEGER), Requirement("versionId", STRING),
-        Requirement("state", {"EXPERIMENTAL", "PRODUCTION", "REVISION"}),
-        Requirement("FileLocation", ENTITY, fileLocation),
-        Requirement("Signature", false), Requirement("PublicKey", false),
-        Requirement("CreationTime", false), Requirement("ModificationTime", false),
-        Requirement("Destinations", ENTITY_LIST, destinations)}));
+          Requirements({Requirement("size", INTEGER), Requirement("versionId", STRING),
+                        Requirement("state", {"EXPERIMENTAL", "PRODUCTION", "REVISION"}),
+                        Requirement("FileLocation", ENTITY, fileLocation),
+                        Requirement("Signature", false), Requirement("PublicKey", false),
+                        Requirement("CreationTime", false), Requirement("ModificationTime", false),
+                        Requirement("Destinations", ENTITY_LIST, destinations)}));
       file->setOrder({"FileProperties", "FileComments", "FileLocation", "Signature", "PublicKey",
-        "Destinations", "CreationTime", "ModificationTime"});
-      
+                      "Destinations", "CreationTime", "ModificationTime"});
+
       static bool first {true};
       if (first)
       {
@@ -97,10 +97,10 @@ namespace mtconnect
         root->registerFactory("File", file);
         first = false;
       }
-      
+
       return file;
     }
-    
+
     void FileAsset::registerAsset()
     {
       static bool once {true};
@@ -110,5 +110,5 @@ namespace mtconnect
         once = false;
       }
     }
-  }
+  }  // namespace asset
 }  // namespace mtconnect

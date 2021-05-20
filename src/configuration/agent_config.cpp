@@ -50,9 +50,9 @@
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
 #include "option.hpp"
+#include "rest_sink/rest_service.hpp"
 #include "version.h"
 #include "xml_printer.hpp"
-#include "rest_sink/rest_service.hpp"
 
 // If Windows XP
 #if defined(_WINDOWS)
@@ -717,19 +717,17 @@ namespace mtconnect
       LOG(info) << "Starting agent on port " << port;
 
       // Make the Agent
-      m_agent = make_unique<Agent>(m_context, m_devicesFile,
-                                   options);
+      m_agent = make_unique<Agent>(m_context, m_devicesFile, options);
       XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
-      
+
       auto sinkContract = m_agent->makeSinkContract();
-      auto server = make_shared<rest_sink::RestService>(m_context, move(sinkContract),
-                                                        options);
-      
+      auto server = make_shared<rest_sink::RestService>(m_context, move(sinkContract), options);
+
       loadAllowPut(server->getServer(), options);
       auto cache = server->getFileCache();
-      
+
       m_agent->addSink(server);
-      
+
       // Make the PipelineContext
       m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
       m_pipelineContext->m_contract = m_agent->makePipelineContract();
@@ -846,8 +844,9 @@ namespace mtconnect
                     << get<string>(adapterOptions[configuration::Host]);
 
           auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-          auto adp = make_shared<Adapter>(m_context, get<string>(adapterOptions[configuration::Host]),
-                          get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
+          auto adp = make_shared<Adapter>(
+              m_context, get<string>(adapterOptions[configuration::Host]),
+              get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
           m_agent->addSource(adp, false);
         }
       }

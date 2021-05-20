@@ -43,25 +43,25 @@ namespace mtconnect
       virtual size_t getCount(bool active = true) const = 0;
       virtual TypeCount getCountsByType(bool active = true) const = 0;
 
-      // Mutation 
+      // Mutation
       virtual AssetPtr addAsset(AssetPtr asset) = 0;
       virtual AssetPtr removeAsset(const std::string &id,
-				   const std::optional<Timestamp> &time = std::nullopt) = 0;
+                                   const std::optional<Timestamp> &time = std::nullopt) = 0;
 
       // Retrival
       virtual AssetPtr getAsset(const std::string &id) const = 0;
-      virtual size_t getAssets(AssetList &list, size_t max,
-                               const bool removed = false,
+      virtual size_t getAssets(AssetList &list, size_t max, const bool removed = false,
                                const std::optional<std::string> device = std::nullopt,
                                const std::optional<std::string> type = std::nullopt) const = 0;
       virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids) const = 0;
-           
+
       // Count
       virtual size_t getCountForType(const std::string &type, bool active = true) const = 0;
       virtual size_t getCountForDevice(const std::string &device, bool active = true) const = 0;
 
       // Bulk remove
-      virtual size_t removeAll(AssetList &list, const std::optional<std::string> device = std::nullopt,
+      virtual size_t removeAll(AssetList &list,
+                               const std::optional<std::string> device = std::nullopt,
                                const std::optional<std::string> type = std::nullopt,
                                const std::optional<Timestamp> &time = std::nullopt) = 0;
 
@@ -75,5 +75,5 @@ namespace mtconnect
       mutable std::recursive_mutex m_bufferLock;
       size_t m_maxAssets;
     };
-  }  // namespace rest_sink
+  }  // namespace asset
 }  // namespace mtconnect

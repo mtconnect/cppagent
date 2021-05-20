@@ -18,6 +18,8 @@
 #include "loopback_source.hpp"
 
 #include "configuration/config_options.hpp"
+#include "device_model/device.hpp"
+#include "entity/xml_parser.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"
 #include "pipeline/delta_filter.hpp"
@@ -26,8 +28,6 @@
 #include "pipeline/shdr_token_mapper.hpp"
 #include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/timestamp_extractor.hpp"
-#include "entity/xml_parser.hpp"
-#include "device_model/device.hpp"
 
 using namespace std;
 
@@ -40,10 +40,9 @@ namespace mtconnect
   {
     clear();
     TransformPtr next = m_start;
-    
+
     next->bind(make_shared<DeliverAsset>(m_context));
     next->bind(make_shared<DeliverAssetCommand>(m_context));
-
 
     if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
       next = next->bind(make_shared<UpcaseValue>());
@@ -60,12 +59,12 @@ namespace mtconnect
     // Deliver
     next->bind(make_shared<DeliverObservation>(m_context));
   }
-    
+
   SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, entity::Properties props,
-                                                         std::optional<Timestamp> timestamp)
+                                           std::optional<Timestamp> timestamp)
   {
     entity::ErrorList errors;
-    
+
     Timestamp ts = timestamp ? *timestamp : chrono::system_clock::now();
     auto observation = observation::Observation::make(dataItem, props, ts, errors);
     if (observation && errors.empty())
@@ -80,24 +79,24 @@ namespace mtconnect
         LOG(error) << "Cannot add observation: " << e->what();
       }
     }
-    
+
     return 0;
   }
 
-  SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem,
-                                                         const std::string &value,
-                                                         std::optional<Timestamp> timestamp)
+  SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, const std::string &value,
+                                           std::optional<Timestamp> timestamp)
   {
     if (dataItem->isCondition())
       return receive(dataItem, {{"level", value}}, timestamp);
     else
       return receive(dataItem, {{"VALUE", value}}, timestamp);
   }
-  
+
   AssetPtr LoopbackSource::receiveAsset(DevicePtr device, const std::string &document,
                                         const std::optional<std::string> &id,
                                         const std::optional<std::string> &type,
-                                        const std::optional<std::string> &time, entity::ErrorList &errors)
+                                        const std::optional<std::string> &time,
+                                        entity::ErrorList &errors)
   {
     // Parse the asset
     auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, "1.7", errors);
@@ -147,16 +146,15 @@ namespace mtconnect
 
     return asset;
   }
-  
+
   void LoopbackSource::removeAsset(const std::string &id)
   {
     auto ac = make_shared<AssetCommand>("AssetCommand", Properties {});
     ac->m_timestamp = chrono::system_clock::now();
     ac->setValue("RemoveAsset"s);
     ac->setProperty("assetId", id);
-    
+
     m_pipeline.run(ac);
   }
-
 
 }  // namespace mtconnect

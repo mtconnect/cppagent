@@ -36,7 +36,7 @@ namespace mtconnect
   {
     class Asset;
     class CuttingTool;
-  }
+  }  // namespace asset
   using DevicePtr = std::shared_ptr<device_model::Device>;
 
   using ProtoErrorList = std::list<std::pair<std::string, std::string>>;

@@ -41,7 +41,8 @@ namespace mtconnect
     Adapter::Adapter(boost::asio::io_context &context, const string &server,
                      const unsigned int port, const ConfigOptions &options,
                      std::unique_ptr<AdapterPipeline> &pipeline)
-      : Connector(context, server, port, 60s), Source("Adapter"),
+      : Connector(context, server, port, 60s),
+        Source("Adapter"),
         m_pipeline(std::move(pipeline)),
         m_running(true),
         m_options(options)

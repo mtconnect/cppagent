@@ -28,17 +28,17 @@
 #include <vector>
 
 #include "adapter/adapter.hpp"
-#include "loopback_source.hpp"
+#include "asset/asset_buffer.hpp"
 #include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
+#include "loopback_source.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
 #include "rest_sink/checkpoint.hpp"
 #include "rest_sink/circular_buffer.hpp"
 #include "rest_sink/server.hpp"
-#include "asset/asset_buffer.hpp"
 #include "sink.hpp"
 #include "source.hpp"
 #include "xml_parser.hpp"
@@ -87,14 +87,14 @@ namespace mtconnect
     // Add an adapter to the agent
     void addSource(SourcePtr adapter, bool start = false);
     void addSink(SinkPtr sink, bool start = false);
-    
+
     // Source and Sink
     SourcePtr findSource(const std::string &name) const
     {
       for (auto &s : m_sources)
         if (s->getName() == name)
           return s;
-      
+
       return nullptr;
     }
 
@@ -103,10 +103,10 @@ namespace mtconnect
       for (auto &s : m_sinks)
         if (s->getName() == name)
           return s;
-      
+
       return nullptr;
     }
-    
+
     const auto &getSources() const { return m_sources; }
     const auto &getSinks() const { return m_sinks; }
 
@@ -126,7 +126,7 @@ namespace mtconnect
 
       return nullptr;
     }
-    
+
     // Asset information
     asset::AssetStorage *getAssetStorage() { return m_assetStorage.get(); }
 
@@ -165,13 +165,12 @@ namespace mtconnect
     bool removeAsset(DevicePtr device, const std::string &id,
                      const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,
-                         const std::optional<std::string> type,
-                         const std::optional<Timestamp> time, asset::AssetList &list);
-
+                         const std::optional<std::string> type, const std::optional<Timestamp> time,
+                         asset::AssetList &list);
 
     // For testing
     auto getAgentDevice() { return m_agentDevice; }
-    
+
     // Printers
     Printer *getPrinter(const std::string &aType) const
     {
@@ -182,11 +181,11 @@ namespace mtconnect
         return nullptr;
     }
     const auto &getPrinters() const { return m_printers; }
-    
+
     // Handle the device/path parameters for the xpath search
     std::string devicesAndPath(const std::optional<std::string> &path,
                                const DevicePtr device) const;
-    
+
   protected:
     friend class AgentPipelineContract;
 
@@ -197,8 +196,6 @@ namespace mtconnect
     void initializeDataItems(DevicePtr device);
     void loadCachedProbe();
 
-
-    
     observation::ObservationPtr getLatest(const std::string &id)
     {
       auto o = m_latest.find(id);
@@ -207,7 +204,7 @@ namespace mtconnect
       else
         return nullptr;
     }
-    
+
   protected:
     ConfigOptions m_options;
     boost::asio::io_context &m_context;
@@ -215,7 +212,7 @@ namespace mtconnect
 
     std::unique_ptr<LoopbackSource> m_loopback;
     std::unordered_map<std::string, observation::ObservationPtr> m_latest;
-    
+
     // Asset Management
     std::unique_ptr<asset::AssetStorage> m_assetStorage;
 
@@ -232,7 +229,7 @@ namespace mtconnect
 
     // Agent Device
     device_model::AgentDevicePtr m_agentDevice;
-    
+
     // Data containers
     std::list<DevicePtr> m_devices;
     std::unordered_map<std::string, DevicePtr> m_deviceNameMap;
@@ -273,7 +270,10 @@ namespace mtconnect
         fun(di.second);
       }
     }
-    void deliverObservation(observation::ObservationPtr obs) override { m_agent->receiveObservation(obs); }
+    void deliverObservation(observation::ObservationPtr obs) override
+    {
+      m_agent->receiveObservation(obs);
+    }
     void deliverAsset(asset::AssetPtr asset) override { m_agent->receiveAsset(asset); }
     void deliverAssetCommand(entity::EntityPtr command) override;
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
@@ -288,7 +288,7 @@ namespace mtconnect
   {
     return std::make_unique<AgentPipelineContract>(this);
   }
-  
+
   class AgentSinkContract : public SinkContract
   {
   public:
@@ -299,7 +299,7 @@ namespace mtconnect
     {
       return m_agent->getPrinter(aType);
     }
-    
+
     // Get device from device map
     DevicePtr getDeviceByName(const std::string &name) const override
     {
@@ -309,38 +309,25 @@ namespace mtconnect
     {
       return m_agent->findDeviceByUUIDorName(idOrName);
     }
-    const std::list<DevicePtr> &getDevices() const override
-    {
-      return m_agent->getDevices();
-    }
-    DevicePtr defaultDevice() const override
-    {
-      return m_agent->defaultDevice();
-    }
+    const std::list<DevicePtr> &getDevices() const override { return m_agent->getDevices(); }
+    DevicePtr defaultDevice() const override { return m_agent->defaultDevice(); }
     DataItemPtr getDataItemById(const std::string &id) const override
     {
       return m_agent->getDataItemById(id);
     }
-    
+
     // Asset information
-    asset::AssetStorage *getAssetStorage() override
-    {
-      return m_agent->getAssetStorage();
-    }
-    const PrinterMap &getPrinters() const override
-    {
-      return m_agent->getPrinters();
-    }
-    
-    void getDataItemsForPath(const DevicePtr device,
-                             const std::optional<std::string> &path, FilterSet &filter) const override
+    asset::AssetStorage *getAssetStorage() override { return m_agent->getAssetStorage(); }
+    const PrinterMap &getPrinters() const override { return m_agent->getPrinters(); }
+
+    void getDataItemsForPath(const DevicePtr device, const std::optional<std::string> &path,
+                             FilterSet &filter) const override
     {
       std::string dataPath = m_agent->devicesAndPath(path, device);
       const auto &parser = m_agent->getXmlParser();
       parser->getDataItems(filter, dataPath);
     }
 
-    
   protected:
     Agent *m_agent;
   };

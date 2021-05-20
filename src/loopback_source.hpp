@@ -17,12 +17,12 @@
 
 #pragma once
 
+#include "asset/asset.hpp"
+#include "observation/observation.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_context.hpp"
-#include "utilities.hpp"
 #include "source.hpp"
-#include "observation/observation.hpp"
-#include "asset/asset.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {
@@ -35,27 +35,23 @@ namespace mtconnect
   protected:
     ConfigOptions m_options;
   };
-  
+
   class LoopbackSource : public Source
   {
   public:
-    LoopbackSource(const std::string &name,
-                   pipeline::PipelineContextPtr context,
-                   boost::asio::io_context::strand &st,
-                   const ConfigOptions &options)
-    : Source(name), m_pipeline(context), m_strand(st)
+    LoopbackSource(const std::string &name, pipeline::PipelineContextPtr context,
+                   boost::asio::io_context::strand &st, const ConfigOptions &options)
+      : Source(name), m_pipeline(context), m_strand(st)
     {
       m_pipeline.build(options);
     }
-    
+
     bool start() override
     {
       m_pipeline.start(m_strand);
       return true;
     }
-    void stop() override
-    {
-    }
+    void stop() override {}
 
     SequenceNumber_t receive(observation::ObservationPtr observation)
     {
@@ -69,22 +65,16 @@ namespace mtconnect
         return 0;
       }
     }
-    SequenceNumber_t receive(DataItemPtr dataItem,
-                             entity::Properties props,
+    SequenceNumber_t receive(DataItemPtr dataItem, entity::Properties props,
                              std::optional<Timestamp> timestamp = std::nullopt);
-    SequenceNumber_t receive(DataItemPtr dataItem,
-                             const std::string &value,
+    SequenceNumber_t receive(DataItemPtr dataItem, const std::string &value,
                              std::optional<Timestamp> timestamp = std::nullopt);
-    
-    void receive(asset::AssetPtr asset)
-    {
-      m_pipeline.run(asset);
-    }
+
+    void receive(asset::AssetPtr asset) { m_pipeline.run(asset); }
     asset::AssetPtr receiveAsset(DevicePtr device, const std::string &document,
-                          const std::optional<std::string> &id,
-                          const std::optional<std::string> &type,
-                          const std::optional<std::string> &time,
-                                 entity::ErrorList &errors);
+                                 const std::optional<std::string> &id,
+                                 const std::optional<std::string> &type,
+                                 const std::optional<std::string> &time, entity::ErrorList &errors);
     void removeAsset(const std::string &id);
 
   protected:

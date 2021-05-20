@@ -49,7 +49,8 @@ namespace mtconnect
         return m_observations;
       }
 
-      void getObservations(observation::ObservationList &list, const FilterSetOpt &filter = std::nullopt) const;
+      void getObservations(observation::ObservationList &list,
+                           const FilterSetOpt &filter = std::nullopt) const;
 
       observation::ObservationPtr getEventPtr(const std::string &id)
       {
@@ -61,11 +62,12 @@ namespace mtconnect
 
     protected:
       void addObservation(observation::ConditionPtr event, observation::ObservationPtr &&old);
-      void addObservation(const observation::DataSetEventPtr event, observation::ObservationPtr &&old);
+      void addObservation(const observation::DataSetEventPtr event,
+                          observation::ObservationPtr &&old);
 
     protected:
       std::unordered_map<std::string, observation::ObservationPtr> m_observations;
       FilterSetOpt m_filter;
     };
-  }  // namespace observation
+  }  // namespace rest_sink
 }  // namespace mtconnect

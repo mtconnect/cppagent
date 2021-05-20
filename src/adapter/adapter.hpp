@@ -28,8 +28,8 @@
 #include "adapter_pipeline.hpp"
 #include "connector.hpp"
 #include "device_model/data_item/data_item.hpp"
-#include "utilities.hpp"
 #include "source.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {
@@ -65,10 +65,7 @@ namespace mtconnect
       Adapter(const Adapter &) = delete;
 
       // Virtual destructor
-      ~Adapter() override
-      {
-        stop();
-      }
+      ~Adapter() override { stop(); }
 
       void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
       auto &getTerminator() const { return m_terminator; }

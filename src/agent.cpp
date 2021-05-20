@@ -29,6 +29,7 @@
 #include "asset/asset.hpp"
 #include "asset/cutting_tool.hpp"
 #include "asset/file_asset.hpp"
+#include "configuration/config_options.hpp"
 #include "device_model/agent_device.hpp"
 #include "entity/xml_parser.hpp"
 #include "json_printer.hpp"
@@ -37,7 +38,6 @@
 #include "rest_sink/file_cache.hpp"
 #include "rest_sink/session.hpp"
 #include "xml_printer.hpp"
-#include "configuration/config_options.hpp"
 
 using namespace std;
 
@@ -55,24 +55,27 @@ namespace mtconnect
   // Agent public methods
   Agent::Agent(boost::asio::io_context &context, const string &configXmlPath,
                const ConfigOptions &options)
-    : m_options(options), m_context(context),
+    : m_options(options),
+      m_context(context),
       m_strand(m_context),
       m_xmlParser(make_unique<mtconnect::XmlParser>()),
-      m_version(GetOption<string>(options, mtconnect::configuration::SchemaVersion).value_or("1.7")),
+      m_version(
+          GetOption<string>(options, mtconnect::configuration::SchemaVersion).value_or("1.7")),
       m_configXmlPath(configXmlPath),
       m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
   {
     using namespace asset;
-    
+
     CuttingToolArchetype::registerAsset();
     CuttingTool::registerAsset();
     FileArchetypeAsset::registerAsset();
     FileAsset::registerAsset();
-    
-    m_assetStorage = make_unique<AssetBuffer>(GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024)),
+
+    m_assetStorage = make_unique<AssetBuffer>(
+        GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024)),
 
     // Create the Printers
-    m_printers["xml"] = make_unique<XmlPrinter>(m_version, m_pretty);
+        m_printers["xml"] = make_unique<XmlPrinter>(m_version, m_pretty);
     m_printers["json"] = make_unique<JsonPrinter>(m_version, m_pretty);
   }
 
@@ -136,7 +139,7 @@ namespace mtconnect
 
     LOG(info) << "Shutting down completed";
   }
-  
+
   // ---------------------------------------
   // Pipeline methods
   // ---------------------------------------
@@ -145,30 +148,27 @@ namespace mtconnect
     for (auto &sink : m_sinks)
       sink->publish(observation);
   }
-  
+
   void Agent::receiveAsset(asset::AssetPtr asset)
   {
     m_assetStorage->addAsset(asset);
 
     for (auto &sink : m_sinks)
       sink->publish(asset);
-        
+
     auto device = m_deviceUuidMap.find(*asset->getDeviceUuid());
     if (device != m_deviceUuidMap.end())
     {
       auto di = device->second->getAssetChanged();
       if (di)
       {
-        m_loopback->receive(di, {
-          {"assetType", asset->getName()},
-          {"VALUE", asset->getAssetId()}
-        });
+        m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
       }
     }
   }
-  
+
   bool Agent::removeAsset(DevicePtr device, const std::string &id,
-                   const std::optional<Timestamp> time)
+                          const std::optional<Timestamp> time)
   {
     auto asset = m_assetStorage->removeAsset(id);
     if (asset)
@@ -179,10 +179,7 @@ namespace mtconnect
       auto di = device->getAssetRemoved();
       if (di)
       {
-        m_loopback->receive(di, {
-          {"assetType", asset->getName()},
-          {"VALUE", id}
-        });
+        m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", id}});
       }
       return true;
     }
@@ -191,10 +188,10 @@ namespace mtconnect
       return false;
     }
   }
-  
+
   bool Agent::removeAllAssets(const std::optional<std::string> device,
-                       const std::optional<std::string> type,
-                       const std::optional<Timestamp> time, asset::AssetList &list)
+                              const std::optional<std::string> type,
+                              const std::optional<Timestamp> time, asset::AssetList &list)
   {
     auto count = m_assetStorage->removeAll(list, device, type, time);
     for (auto &asset : list)
@@ -207,7 +204,6 @@ namespace mtconnect
     }
     return count > 0;
   }
-
 
   // ---------------------------------------
   // Agent Device
@@ -450,7 +446,6 @@ namespace mtconnect
     m_xmlParser->loadDocument(xmlPrinter->printProbe(0, 0, 0, 0, 0, m_devices));
   }
 
-
   // ----------------------------------------------------
   // Helper Methods
   // ----------------------------------------------------
@@ -512,7 +507,7 @@ namespace mtconnect
 
     if (m_agentDevice)
     {
-      auto adapter = dynamic_cast<adapter::Adapter*>(source.get());
+      auto adapter = dynamic_cast<adapter::Adapter *>(source.get());
       if (adapter)
       {
         m_agentDevice->addAdapter(adapter);
@@ -675,7 +670,6 @@ namespace mtconnect
     }
   }
 
-
   // -----------------------------------------------
   // Validation methods
   // -----------------------------------------------
@@ -715,7 +709,6 @@ namespace mtconnect
 
     return dataPath;
   }
-
 
   void AgentPipelineContract::deliverAssetCommand(entity::EntityPtr command)
   {

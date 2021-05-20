@@ -31,21 +31,21 @@ namespace mtconnect
     class Asset;
     using AssetPtr = std::shared_ptr<Asset>;
     using AssetList = std::list<AssetPtr>;
-    
+
     class Asset : public entity::Entity
     {
     public:
       Asset(const std::string &name, const entity::Properties &props)
-      : entity::Entity(name, props), m_removed(false)
+        : entity::Entity(name, props), m_removed(false)
       {
         auto removed = maybeGet<bool>("removed");
         m_removed = removed && *removed;
       }
       ~Asset() override = default;
-      
+
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
-      
+
       void setProperty(const std::string &key, const entity::Value &v) override
       {
         entity::Value r = v;
@@ -56,11 +56,11 @@ namespace mtconnect
           else
             entity::ConvertValueToType(r, entity::BOOL);
         }
-        
+
         m_properties.insert_or_assign(key, r);
       }
       void setProperty(const entity::Property &property) { Entity::setProperty(property); }
-      
+
       const auto &getType() const { return getName(); }
       const std::string &getAssetId() const
       {
@@ -79,7 +79,7 @@ namespace mtconnect
         m_assetId = id;
         setProperty("assetId", id);
       }
-      
+
       const std::optional<std::string> getDeviceUuid() const
       {
         const auto &v = getProperty("deviceUuid");
@@ -103,18 +103,18 @@ namespace mtconnect
         m_removed = true;
       }
       static void registerAssetType(const std::string &t, entity::FactoryPtr factory);
-      
+
       bool operator==(const Asset &another) const { return getAssetId() == another.getAssetId(); }
-      
+
     protected:
       std::string m_assetId;
       bool m_removed;
     };
-    
+
     class ExtendedAsset : public Asset
     {
     public:
       static entity::FactoryPtr getFactory();
     };
-  }
+  }  // namespace asset
 }  // namespace mtconnect

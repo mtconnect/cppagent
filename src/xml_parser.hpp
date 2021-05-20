@@ -48,8 +48,7 @@ namespace mtconnect
     void loadDocument(const std::string &aDoc);
 
     // Get std::list of data items in path
-    void getDataItems(FilterSet &filterSet, const std::string &path,
-                      xmlNodePtr node = nullptr);
+    void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
 
   protected:
     // LibXML XML Doc

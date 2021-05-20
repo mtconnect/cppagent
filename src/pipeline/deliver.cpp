@@ -132,7 +132,7 @@ namespace mtconnect
 
       m_contract->deliverAsset(a);
       (*m_count)++;
-      
+
       return entity;
     }
 

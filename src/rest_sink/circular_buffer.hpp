@@ -23,8 +23,8 @@
 #include <memory>
 #include <mutex>
 
-#include "observation/observation.hpp"
 #include "checkpoint.hpp"
+#include "observation/observation.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
@@ -158,12 +158,10 @@ namespace mtconnect
         return check;
       }
 
-      std::unique_ptr<observation::ObservationList> getObservations(int count, const FilterSetOpt &filterSet,
-                                                       const std::optional<SequenceNumber_t> start,
-                                                       const std::optional<SequenceNumber_t> to,
-                                                       SequenceNumber_t &end,
-                                                       SequenceNumber_t &firstSeq,
-                                                       bool &endOfBuffer)
+      std::unique_ptr<observation::ObservationList> getObservations(
+          int count, const FilterSetOpt &filterSet, const std::optional<SequenceNumber_t> start,
+          const std::optional<SequenceNumber_t> to, SequenceNumber_t &end,
+          SequenceNumber_t &firstSeq, bool &endOfBuffer)
       {
         auto results = std::make_unique<observation::ObservationList>();
 

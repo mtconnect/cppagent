@@ -31,10 +31,11 @@ namespace mtconnect
     }
     class Device;
   }  // namespace device_model
-  namespace asset {
+  namespace asset
+  {
     class Asset;
     using AssetPtr = std::shared_ptr<Asset>;
-  }
+  }  // namespace asset
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   using DevicePtr = std::shared_ptr<device_model::Device>;
   using StringList = std::list<std::string>;

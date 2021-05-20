@@ -17,8 +17,8 @@
 
 #include "rest_service.hpp"
 
-#include "server.hpp"
 #include "entity/xml_parser.hpp"
+#include "server.hpp"
 
 namespace asio = boost::asio;
 using namespace std;
@@ -29,16 +29,18 @@ namespace mtconnect
   using namespace observation;
   using namespace asset;
   using namespace device_model;
-  
+
   namespace rest_sink
   {
-    RestService::RestService(asio::io_context &context,
-                             SinkContractPtr &&contract,
+    RestService::RestService(asio::io_context &context, SinkContractPtr &&contract,
                              const ConfigOptions &options)
-      : Sink("RestService", move(contract)), m_context(context), m_strand(context), m_options(options),
+      : Sink("RestService", move(contract)),
+        m_context(context),
+        m_strand(context),
+        m_options(options),
         m_circularBuffer(GetOption<int>(options, BufferSize).value_or(17),
                          GetOption<int>(options, CheckpointFrequency).value_or(1000)),
-	m_logStreamData(GetOption<bool>(options, LogStreams).value_or(false))
+        m_logStreamData(GetOption<bool>(options, LogStreams).value_or(false))
     {
       // Unique id number for agent instance
       m_instanceId = getCurrentTimeInSec();
@@ -49,7 +51,7 @@ namespace mtconnect
             auto doc = printError(printer, "INVALID_REQUEST", msg);
             session->writeResponse({st, doc, printer->mimeType()});
           });
-      
+
       createProbeRoutings();
       createCurrentRoutings();
       createSampleRoutings();
@@ -57,17 +59,11 @@ namespace mtconnect
       createPutObservationRoutings();
       createFileRoutings();
     }
-    
-    void RestService::start()
-    {
-      m_server->start();
-    }
-    
-    void RestService::stop()
-    {
-      m_server->stop();
-    }
-    
+
+    void RestService::start() { m_server->start(); }
+
+    void RestService::stop() { m_server->stop(); }
+
     // -----------------------------------------------------------
     // Request Routing
     // -----------------------------------------------------------
@@ -330,7 +326,7 @@ namespace mtconnect
     // -------------------------------------------
 
     rest_sink::Response RestService::probeRequest(const Printer *printer,
-                                               const std::optional<std::string> &device)
+                                                  const std::optional<std::string> &device)
     {
       NAMED_SCOPE("RestService::probeRequest");
 
@@ -348,16 +344,17 @@ namespace mtconnect
 
       auto counts = m_sinkContract->getAssetStorage()->getCountsByType();
       return {rest_sink::status::ok,
-              printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(),
-                                  m_circularBuffer.getSequence(), m_sinkContract->getAssetStorage()->getMaxAssets(),
-                                  m_sinkContract->getAssetStorage()->getCount(), deviceList, &counts),
+              printer->printProbe(
+                  m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(),
+                  m_sinkContract->getAssetStorage()->getMaxAssets(),
+                  m_sinkContract->getAssetStorage()->getCount(), deviceList, &counts),
               printer->mimeType()};
     }
 
     rest_sink::Response RestService::currentRequest(const Printer *printer,
-                                                 const std::optional<std::string> &device,
-                                                 const std::optional<SequenceNumber_t> &at,
-                                                 const std::optional<std::string> &path)
+                                                    const std::optional<std::string> &device,
+                                                    const std::optional<SequenceNumber_t> &at,
+                                                    const std::optional<std::string> &path)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -377,10 +374,10 @@ namespace mtconnect
     }
 
     rest_sink::Response RestService::sampleRequest(const Printer *printer, const int count,
-                                                const std::optional<std::string> &device,
-                                                const std::optional<SequenceNumber_t> &from,
-                                                const std::optional<SequenceNumber_t> &to,
-                                                const std::optional<std::string> &path)
+                                                   const std::optional<std::string> &device,
+                                                   const std::optional<SequenceNumber_t> &from,
+                                                   const std::optional<SequenceNumber_t> &to,
+                                                   const std::optional<std::string> &path)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -426,10 +423,10 @@ namespace mtconnect
     };
 
     void RestService::streamSampleRequest(rest_sink::SessionPtr session, const Printer *printer,
-                                    const int interval, const int heartbeatIn, const int count,
-                                    const std::optional<std::string> &device,
-                                    const std::optional<SequenceNumber_t> &from,
-                                    const std::optional<std::string> &path)
+                                          const int interval, const int heartbeatIn,
+                                          const int count, const std::optional<std::string> &device,
+                                          const std::optional<SequenceNumber_t> &from,
+                                          const std::optional<std::string> &path)
     {
       NAMED_SCOPE("RestService::streamSampleRequest");
 
@@ -480,8 +477,8 @@ namespace mtconnect
 
       session->beginStreaming(
           printer->mimeType(),
-          asio::bind_executor(m_strand,
-                             boost::bind(&RestService::streamSampleWriteComplete, this, asyncResponse)));
+          asio::bind_executor(
+              m_strand, boost::bind(&RestService::streamSampleWriteComplete, this, asyncResponse)));
     }
 
     void RestService::streamSampleWriteComplete(shared_ptr<AsyncSampleResponse> asyncResponse)
@@ -495,8 +492,8 @@ namespace mtconnect
 
         asyncResponse->m_observer.wait(
             asyncResponse->m_heartbeat,
-            asio::bind_executor(m_strand,
-                               boost::bind(&RestService::streamNextSampleChunk, this, asyncResponse, _1)));
+            asio::bind_executor(m_strand, boost::bind(&RestService::streamNextSampleChunk, this,
+                                                      asyncResponse, _1)));
       }
       else
       {
@@ -505,7 +502,7 @@ namespace mtconnect
     }
 
     void RestService::streamNextSampleChunk(shared_ptr<AsyncSampleResponse> asyncResponse,
-                                      boost::system::error_code ec)
+                                            boost::system::error_code ec)
     {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
       using boost::placeholders::_1;
@@ -531,8 +528,8 @@ namespace mtconnect
         {
           asyncResponse->m_observer.wait(
               asyncResponse->m_interval - delta,
-              asio::bind_executor(
-                  m_strand, boost::bind(&RestService::streamNextSampleChunk, this, asyncResponse, _1)));
+              asio::bind_executor(m_strand, boost::bind(&RestService::streamNextSampleChunk, this,
+                                                        asyncResponse, _1)));
           return;
         }
       }
@@ -596,8 +593,9 @@ namespace mtconnect
         if (m_logStreamData)
           asyncResponse->m_log << content << endl;
         asyncResponse->m_session->writeChunk(
-            content, asio::bind_executor(m_strand, boost::bind(&RestService::streamSampleWriteComplete, this,
-                                                              asyncResponse)));
+            content,
+            asio::bind_executor(m_strand, boost::bind(&RestService::streamSampleWriteComplete, this,
+                                                      asyncResponse)));
       }
     }
 
@@ -615,9 +613,10 @@ namespace mtconnect
       boost::asio::steady_timer m_timer;
     };
 
-    void RestService::streamCurrentRequest(SessionPtr session, const Printer *printer, const int interval,
-                                     const std::optional<std::string> &device,
-                                     const std::optional<std::string> &path)
+    void RestService::streamCurrentRequest(SessionPtr session, const Printer *printer,
+                                           const int interval,
+                                           const std::optional<std::string> &device,
+                                           const std::optional<std::string> &path)
     {
       checkRange(printer, interval, 0, numeric_limits<int>().max(), "interval");
       DevicePtr dev {nullptr};
@@ -642,7 +641,7 @@ namespace mtconnect
     }
 
     void RestService::streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
-                                  boost::system::error_code ec)
+                                        boost::system::error_code ec)
     {
       using boost::placeholders::_1;
 
@@ -656,54 +655,52 @@ namespace mtconnect
     }
 
     rest_sink::Response RestService::assetRequest(const Printer *printer, const int32_t count,
-                                               const bool removed,
-                                               const std::optional<std::string> &type,
-                                               const std::optional<std::string> &device)
+                                                  const bool removed,
+                                                  const std::optional<std::string> &type,
+                                                  const std::optional<std::string> &device)
     {
       using namespace rest_sink;
-      
+
       AssetList list;
-      if (m_sinkContract->getAssetStorage()->getAssets(list, count, removed,
-                                                       device, type) == 0)
+      if (m_sinkContract->getAssetStorage()->getAssets(list, count, removed, device, type) == 0)
       {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND",
-                                              "Cannot find asseets"),
-          printer->mimeType()};
+        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
+                printer->mimeType()};
       }
       else
       {
-        return {status::ok,
-          printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                               m_sinkContract->getAssetStorage()->getCount(), list),
-          printer->mimeType()};
+        return {
+            status::ok,
+            printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
+                                 m_sinkContract->getAssetStorage()->getCount(), list),
+            printer->mimeType()};
       }
     }
 
-    Response RestService::assetIdsRequest(const Printer *printer,
-                                                  const std::list<std::string> &ids)
+    Response RestService::assetIdsRequest(const Printer *printer, const std::list<std::string> &ids)
     {
       using namespace rest_sink;
 
       AssetList list;
       if (m_sinkContract->getAssetStorage()->getAssets(list, ids) == 0)
       {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND",
-                                              "Cannot find asseets"),
-          printer->mimeType()};
+        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
+                printer->mimeType()};
       }
       else
       {
-        return {status::ok,
-          printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                               m_sinkContract->getAssetStorage()->getCount(), list),
-          printer->mimeType()};
+        return {
+            status::ok,
+            printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
+                                 m_sinkContract->getAssetStorage()->getCount(), list),
+            printer->mimeType()};
       }
     }
 
     Response RestService::putAssetRequest(const Printer *printer, const std::string &asset,
-                                                  const std::optional<std::string> &type,
-                                                  const std::optional<std::string> &device,
-                                                  const std::optional<std::string> &uuid)
+                                          const std::optional<std::string> &type,
+                                          const std::optional<std::string> &device,
+                                          const std::optional<std::string> &uuid)
     {
       using namespace rest_sink;
 
@@ -726,7 +723,7 @@ namespace mtconnect
                                      m_circularBuffer.getSequence(), errorResp),
                 printer->mimeType()};
       }
-      
+
       AssetList list {ap};
       return {status::ok,
               printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
@@ -735,42 +732,40 @@ namespace mtconnect
     }
 
     rest_sink::Response RestService::deleteAssetRequest(const Printer *printer,
-                                                     const std::list<std::string> &ids)
+                                                        const std::list<std::string> &ids)
     {
       using namespace rest_sink;
       AssetList list;
       if (m_sinkContract->getAssetStorage()->getAssets(list, ids) > 0)
       {
-
         for (auto asset : list)
         {
           m_loopback->removeAsset(asset->getAssetId());
         }
-        
-        return {status::ok,
-          printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                               m_sinkContract->getAssetStorage()->getCount(), list),
-          printer->mimeType()};
+
+        return {
+            status::ok,
+            printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
+                                 m_sinkContract->getAssetStorage()->getCount(), list),
+            printer->mimeType()};
       }
       else
       {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND",
-                                              "Cannot find asseets"),
-          printer->mimeType()};
+        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
+                printer->mimeType()};
       }
     }
 
-    rest_sink::Response RestService::deleteAllAssetsRequest(const Printer *printer,
-                                                         const std::optional<std::string> &device,
-                                                         const std::optional<std::string> &type)
+    rest_sink::Response RestService::deleteAllAssetsRequest(
+        const Printer *printer, const std::optional<std::string> &device,
+        const std::optional<std::string> &type)
     {
       AssetList list;
-      if (m_sinkContract->getAssetStorage()->getAssets(list, std::numeric_limits<size_t>().max(), false,
-                                                       device, type) == 0)
+      if (m_sinkContract->getAssetStorage()->getAssets(list, std::numeric_limits<size_t>().max(),
+                                                       false, device, type) == 0)
       {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND",
-                                              "Cannot find asseets"),
-          printer->mimeType()};
+        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
+                printer->mimeType()};
       }
       else
       {
@@ -786,9 +781,9 @@ namespace mtconnect
     }
 
     rest_sink::Response RestService::putObservationRequest(const Printer *printer,
-                                                        const std::string &device,
-                                                        const rest_sink::QueryMap observations,
-                                                        const std::optional<std::string> &time)
+                                                           const std::string &device,
+                                                           const rest_sink::QueryMap observations,
+                                                           const std::optional<std::string> &time)
     {
       using namespace rest_sink;
 
@@ -836,16 +831,16 @@ namespace mtconnect
       }
     }
 
-      string RestService::printError(const Printer *printer, const string &errorCode,
-                               const string &text) const
-      {
-        LOG(debug) << "Returning error " << errorCode << ": " << text;
-        if (printer)
-          return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
-                                     m_circularBuffer.getSequence(), errorCode, text);
-        else
-          return errorCode + ": " + text;
-      }
+    string RestService::printError(const Printer *printer, const string &errorCode,
+                                   const string &text) const
+    {
+      LOG(debug) << "Returning error " << errorCode << ": " << text;
+      if (printer)
+        return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
+                                   m_circularBuffer.getSequence(), errorCode, text);
+      else
+        return errorCode + ": " + text;
+    }
 
     // -----------------------------------------------
     // Validation methods
@@ -853,7 +848,7 @@ namespace mtconnect
 
     template <typename T>
     void RestService::checkRange(const Printer *printer, const T value, const T min, const T max,
-                           const string &param, bool notZero) const
+                                 const string &param, bool notZero) const
     {
       if (value <= min)
       {
@@ -879,7 +874,7 @@ namespace mtconnect
     }
 
     void RestService::checkPath(const Printer *printer, const std::optional<std::string> &path,
-                          const DevicePtr device, FilterSet &filter) const
+                                const DevicePtr device, FilterSet &filter) const
     {
       try
       {
@@ -911,13 +906,13 @@ namespace mtconnect
 
       return dev;
     }
-    
+
     // -------------------------------------------
     // Data Collection and Formatting
     // -------------------------------------------
 
     string RestService::fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
-                                   const optional<SequenceNumber_t> &at)
+                                         const optional<SequenceNumber_t> &at)
     {
       ObservationList observations;
       SequenceNumber_t firstSeq, seq;
@@ -944,10 +939,11 @@ namespace mtconnect
                                   seq - 1, observations);
     }
 
-    string RestService::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
-                                  const std::optional<SequenceNumber_t> &from,
-                                  const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                  bool &endOfBuffer, ChangeObserver *observer)
+    string RestService::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet,
+                                        int count, const std::optional<SequenceNumber_t> &from,
+                                        const std::optional<SequenceNumber_t> &to,
+                                        SequenceNumber_t &end, bool &endOfBuffer,
+                                        ChangeObserver *observer)
     {
       std::unique_ptr<ObservationList> observations;
       SequenceNumber_t firstSeq, lastSeq;
@@ -972,8 +968,8 @@ namespace mtconnect
         }
         checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
 
-        observations =
-            m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq, endOfBuffer);
+        observations = m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq,
+                                                        endOfBuffer);
 
         if (observer)
           observer->reset();
@@ -982,8 +978,6 @@ namespace mtconnect
       return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), end, firstSeq,
                                   lastSeq, *observations);
     }
-
-
 
   }  // namespace rest_sink
 

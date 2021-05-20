@@ -23,8 +23,8 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "asset_storage.hpp"
 #include "asset.hpp"
+#include "asset_storage.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
@@ -63,14 +63,13 @@ namespace mtconnect
         else
           return nullptr;
       }
-      
-      virtual size_t getAssets(AssetList &list, size_t max,
-                               const bool removed = false,
-             const std::optional<std::string> device = std::nullopt,
-             const std::optional<std::string> type = std::nullopt) const override
+
+      virtual size_t getAssets(AssetList &list, size_t max, const bool removed = false,
+                               const std::optional<std::string> device = std::nullopt,
+                               const std::optional<std::string> type = std::nullopt) const override
       {
         std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-        
+
         if (device)
         {
           auto idx = m_deviceIndex.find(*device);
@@ -79,12 +78,11 @@ namespace mtconnect
             for (auto &p : idx->second)
             {
               auto &a = p.second;
-              if ((removed || !a->isRemoved()) &&
-                  (!type || (type && a->getType() == *type)))
+              if ((removed || !a->isRemoved()) && (!type || (type && a->getType() == *type)))
               {
                 list.emplace_back(a);
               }
-              
+
               if (list.size() >= max)
                 break;
             }
@@ -121,7 +119,7 @@ namespace mtconnect
         }
         return list.size();
       }
-      
+
       virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids) const override
       {
         for (auto id : ids)
@@ -129,7 +127,7 @@ namespace mtconnect
           if (auto asset = AssetBuffer::getAsset(id); asset)
             list.emplace_back(asset);
         }
-        
+
         return list.size();
       }
 
@@ -183,18 +181,17 @@ namespace mtconnect
       }
 
       size_t removeAll(AssetList &list, const std::optional<std::string> device = std::nullopt,
-                               const std::optional<std::string> type = std::nullopt,
+                       const std::optional<std::string> type = std::nullopt,
                        const std::optional<Timestamp> &time = std::nullopt) override
       {
         std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-        getAssets(list, std::numeric_limits<size_t>().max(), false,
-                  device, type);
+        getAssets(list, std::numeric_limits<size_t>().max(), false, device, type);
         for (auto &a : list)
           removeAsset(a->getAssetId(), time);
-        
+
         return list.size();
       }
-      
+
       int getIndex(const std::string &id) const
       {
         int i = 0;
@@ -207,7 +204,6 @@ namespace mtconnect
         return -1;
       }
 
-      
     protected:
       AssetPtr updateAsset(const std::string &id, Index::iterator &it, AssetPtr asset);
       void adjustCount(AssetPtr asset, int delta);
@@ -221,5 +217,5 @@ namespace mtconnect
       RemoveCount m_deviceRemoveCount;
       RemoveCount m_typeRemoveCount;
     };
-  }  // namespace rest_sink
+  }  // namespace asset
 }  // namespace mtconnect

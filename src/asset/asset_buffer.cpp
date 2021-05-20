@@ -175,5 +175,5 @@ namespace mtconnect
 
       return asset;
     }
-  }  // namespace rest_sink
+  }  // namespace asset
 }  // namespace mtconnect

@@ -267,5 +267,5 @@ namespace mtconnect
 
       return true;
     }
-  }  // namespace observation
+  }  // namespace rest_sink
 }  // namespace mtconnect

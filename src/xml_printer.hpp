@@ -52,7 +52,8 @@ namespace mtconnect
                             const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
                             observation::ObservationList &results) const override;
     std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
-                            const unsigned int assetCount, const asset::AssetList &asset) const override;
+                            const unsigned int assetCount,
+                            const asset::AssetList &asset) const override;
     std::string mimeType() const override { return "text/xml"; }
 
     void addDevicesNamespace(const std::string &urn, const std::string &location,

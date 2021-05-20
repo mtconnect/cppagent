@@ -34,12 +34,12 @@ namespace mtconnect
       static entity::FactoryPtr getFactory();
       static void registerAsset();
     };
-    
+
     class CuttingTool : public Asset
     {
     public:
       static entity::FactoryPtr getFactory();
       static void registerAsset();
     };
-  }
+  }  // namespace asset
 }  // namespace mtconnect

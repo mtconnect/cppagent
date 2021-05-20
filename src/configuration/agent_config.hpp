@@ -79,9 +79,8 @@ namespace mtconnect
       DevicePtr defaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
       void loadAllowPut(rest_sink::Server *server, ConfigOptions &options);
-      void loadNamespace(const ptree &tree, const char *namespaceType,
-                         rest_sink::FileCache *cache, XmlPrinter *printer,
-                         NamespaceFunction callback);
+      void loadNamespace(const ptree &tree, const char *namespaceType, rest_sink::FileCache *cache,
+                         XmlPrinter *printer, NamespaceFunction callback);
       void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, rest_sink::FileCache *cache);
       void loadStyle(const ptree &tree, const char *styleName, rest_sink::FileCache *cache,
                      XmlPrinter *printer, StyleFunction styleFunction);
