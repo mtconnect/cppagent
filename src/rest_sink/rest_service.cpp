@@ -669,7 +669,7 @@ namespace mtconnect
         if (d)
           uuid = d->getUuid();
       }
-        
+
       if (m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type) == 0)
       {
         return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
@@ -696,7 +696,7 @@ namespace mtconnect
         str << "Cannot find asset for asset Ids: ";
         for (auto &id : ids)
           str << id << ", ";
-        
+
         auto message = str.str().substr(0, str.str().size() - 2);
         return {status::not_found, printError(printer, "ASSET_NOT_FOUND", message),
                 printer->mimeType()};

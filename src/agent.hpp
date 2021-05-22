@@ -205,12 +205,8 @@ namespace mtconnect
       else
         return nullptr;
     }
-    
-    observation::ObservationPtr getLatest(const DataItemPtr &di)
-    {
-      return getLatest(di->getId());
-    }
 
+    observation::ObservationPtr getLatest(const DataItemPtr &di) { return getLatest(di->getId()); }
 
   protected:
     ConfigOptions m_options;

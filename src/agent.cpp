@@ -165,7 +165,7 @@ namespace mtconnect
       {
         asset->setProperty("deviceUuid", *device->getUuid());
       }
-      
+
       string aid = asset->getAssetId();
       if (aid[0] == '@')
       {
@@ -179,12 +179,12 @@ namespace mtconnect
         asset->setAssetId(aid);
       }
     }
-    
+
     m_assetStorage->addAsset(asset);
 
     for (auto &sink : m_sinks)
       sink->publish(asset);
-    
+
     if (device)
     {
       DataItemPtr di;
@@ -207,7 +207,7 @@ namespace mtconnect
     {
       for (auto &sink : m_sinks)
         sink->publish(asset);
-      
+
       notifyAssetRemoved(device, asset);
       return true;
     }
@@ -230,7 +230,7 @@ namespace mtconnect
       else
         uuid = device;
     }
-    
+
     auto count = m_assetStorage->removeAll(list, uuid, type, time);
     for (auto &asset : list)
     {
@@ -238,7 +238,7 @@ namespace mtconnect
     }
     return count > 0;
   }
-  
+
   void Agent::notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset)
   {
     if (device || asset->getDeviceUuid())
@@ -254,7 +254,7 @@ namespace mtconnect
       {
         m_loopback->receive(dev->getAssetRemoved(),
                             {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
-        
+
         auto changed = dev->getAssetChanged();
         auto last = getLatest(changed);
         if (last && asset->getAssetId() == last->getValue<string>())
@@ -264,7 +264,6 @@ namespace mtconnect
       }
     }
   }
-
 
   // ---------------------------------------
   // Agent Device
