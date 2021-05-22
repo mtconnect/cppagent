@@ -232,8 +232,8 @@ class AgentTestHelper
   
   void printResponse()
   {
-    std::cout << "Status " << m_response.m_status << " " << std::endl
-              << m_response.m_body << std::endl << "------------------------"
+    std::cout << "Status " << m_session->m_code << " " << std::endl
+              << m_session->m_body << std::endl << "------------------------"
               << std::endl;
   }
 

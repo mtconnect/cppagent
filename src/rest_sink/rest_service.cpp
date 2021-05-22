@@ -672,7 +672,7 @@ namespace mtconnect
         
       if (m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type) == 0)
       {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
+        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
                 printer->mimeType()};
       }
       else
@@ -765,7 +765,7 @@ namespace mtconnect
       }
       else
       {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
+        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
                 printer->mimeType()};
       }
     }
@@ -778,7 +778,7 @@ namespace mtconnect
       if (m_sinkContract->getAssetStorage()->getAssets(list, std::numeric_limits<size_t>().max(),
                                                        false, device, type) == 0)
       {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
+        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
                 printer->mimeType()};
       }
       else

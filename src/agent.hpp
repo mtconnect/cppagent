@@ -167,6 +167,7 @@ namespace mtconnect
     bool removeAllAssets(const std::optional<std::string> device,
                          const std::optional<std::string> type, const std::optional<Timestamp> time,
                          asset::AssetList &list);
+    void notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset);
 
     // For testing
     auto getAgentDevice() { return m_agentDevice; }
@@ -204,6 +205,12 @@ namespace mtconnect
       else
         return nullptr;
     }
+    
+    observation::ObservationPtr getLatest(const DataItemPtr &di)
+    {
+      return getLatest(di->getId());
+    }
+
 
   protected:
     ConfigOptions m_options;

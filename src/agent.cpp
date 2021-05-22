@@ -207,15 +207,8 @@ namespace mtconnect
     {
       for (auto &sink : m_sinks)
         sink->publish(asset);
-
-      if (device)
-      {
-        auto di = device->getAssetRemoved();
-        if (di)
-        {
-          m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", id}});
-        }
-      }
+      
+      notifyAssetRemoved(device, asset);
       return true;
     }
     else
@@ -228,17 +221,50 @@ namespace mtconnect
                               const std::optional<std::string> type,
                               const std::optional<Timestamp> time, asset::AssetList &list)
   {
-    auto count = m_assetStorage->removeAll(list, device, type, time);
+    std::optional<std::string> uuid;
+    if (device)
+    {
+      auto dev = findDeviceByUUIDorName(*device);
+      if (dev)
+        uuid = dev->getUuid();
+      else
+        uuid = device;
+    }
+    
+    auto count = m_assetStorage->removeAll(list, uuid, type, time);
     for (auto &asset : list)
     {
-      auto device = m_deviceUuidMap.find(*asset->getDeviceUuid());
-      if (device != m_deviceUuidMap.end())
-      {
-        removeAsset(device->second, asset->getAssetId(), time);
-      }
+      notifyAssetRemoved(nullptr, asset);
     }
     return count > 0;
   }
+  
+  void Agent::notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset)
+  {
+    if (device || asset->getDeviceUuid())
+    {
+      auto dev = device;
+      if (!device)
+      {
+        auto it = m_deviceUuidMap.find(*asset->getDeviceUuid());
+        if (it != m_deviceUuidMap.end())
+          dev = it->second;
+      }
+      if (dev)
+      {
+        m_loopback->receive(dev->getAssetRemoved(),
+                            {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
+        
+        auto changed = dev->getAssetChanged();
+        auto last = getLatest(changed);
+        if (last && asset->getAssetId() == last->getValue<string>())
+        {
+          m_loopback->receive(changed, {{"assetType", asset->getName()}, {"VALUE", g_unavailable}});
+        }
+      }
+    }
+  }
+
 
   // ---------------------------------------
   // Agent Device

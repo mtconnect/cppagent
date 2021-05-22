@@ -2368,8 +2368,8 @@ TEST_F(AgentTest, RemoveAllAssets)
 
   {
     PARSE_XML_RESPONSE("/asset");
-    ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 0);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "ASSET_NOT_FOUND");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Cannot find assets");
   }
 
   // TODO: When asset is removed and the content is literal, it will
