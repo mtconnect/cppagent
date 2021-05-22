@@ -56,7 +56,7 @@ namespace mtconnect
       Connect m_disconnected;
     };
 
-    class Adapter : public Connector, public Source
+    class Adapter : public Connector, public mtconnect::Source
     {
     public:
       // Associate adapter with a device & connect to the server & port
