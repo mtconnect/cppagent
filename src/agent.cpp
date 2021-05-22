@@ -145,6 +145,7 @@ namespace mtconnect
   // ---------------------------------------
   void Agent::receiveObservation(observation::ObservationPtr observation)
   {
+    m_latest[observation->getDataItem()->getId()] = observation;
     for (auto &sink : m_sinks)
       sink->publish(observation);
   }
