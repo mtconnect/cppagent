@@ -55,6 +55,7 @@ namespace mtconnect
           HasOption(m_options, configuration::TlsPrivateKey) &&
           HasOption(m_options, configuration::TlsDHKey))
       {
+        LOG(info) << "Initializing TLS support";
         if (HasOption(m_options, configuration::TlsCertificatePassword))
         {
           m_sslContext.set_password_callback(
@@ -76,11 +77,14 @@ namespace mtconnect
 
         m_tlsOnly = IsOptionSet(m_options, configuration::TlsOnly);
 
-        if (HasOption(m_options, configuration::TlsVerifyClientCertificate))
+        if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
         {
+          LOG(info) << "Will only accept client connections with valid certificates";
+
           m_sslContext.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
           if (HasOption(m_options, configuration::TlsClientCAs))
           {
+            LOG(info) << "Adding Client Certificates.";
             m_sslContext.load_verify_file(
                 *GetOption<string>(m_options, configuration::TlsClientCAs));
           }
