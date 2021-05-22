@@ -75,7 +75,7 @@ namespace mtconnect
                                  const std::optional<std::string> &id,
                                  const std::optional<std::string> &type,
                                  const std::optional<std::string> &time, entity::ErrorList &errors);
-    void removeAsset(const std::string &id);
+    void removeAsset(const std::optional<std::string> device, const std::string &id);
 
   protected:
     LoopbackPipeline m_pipeline;

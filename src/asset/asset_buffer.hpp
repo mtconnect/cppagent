@@ -109,7 +109,7 @@ namespace mtconnect
         }
         else
         {
-          for (auto &a : m_buffer)
+          for (auto &a : reverse(m_buffer))
           {
             if (removed || !a->isRemoved())
               list.emplace_back(a);

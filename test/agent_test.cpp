@@ -731,7 +731,7 @@ TEST_F(AgentTest, AddToBuffer)
   auto di2 = agent->getDataItemForDevice(device, key);
   seqNum = m_agentTestHelper->addToBuffer(di2, {{"VALUE", value}}, chrono::system_clock::now());
   auto event2 = rest->getFromBuffer(seqNum);
-  ASSERT_EQ(3, event2.use_count());
+  ASSERT_EQ(4, event2.use_count());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1931,7 +1931,7 @@ TEST_F(AgentTest, AssetBuffer)
   {
     PARSE_XML_RESPONSE("/asset/P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for asset Ids: P1");
   }
 
   body = "<Part assetId='P3'>TEST 6</Part>";
@@ -1980,7 +1980,7 @@ TEST_F(AgentTest, AssetBuffer)
   {
     PARSE_XML_RESPONSE("/asset/P4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: P4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for asset Ids: P4");
   }
 }
 
@@ -1989,7 +1989,7 @@ TEST_F(AgentTest, AssetError)
   {
     PARSE_XML_RESPONSE("/asset/123");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: 123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for asset Ids: 123");
   }
 }
 

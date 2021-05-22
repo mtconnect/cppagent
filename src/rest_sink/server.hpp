@@ -52,6 +52,7 @@ namespace mtconnect
         : m_context(context),
           m_port(GetOption<int>(options, configuration::Port).value_or(5000)),
           m_options(options),
+          m_allowPuts(IsOptionSet(options, configuration::AllowPut)),
           m_acceptor(context),
           m_sslContext(boost::asio::ssl::context::tls)
       {

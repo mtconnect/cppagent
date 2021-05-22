@@ -152,15 +152,46 @@ namespace mtconnect
 
   void Agent::receiveAsset(asset::AssetPtr asset)
   {
+    DevicePtr device;
+    auto uuid = asset->getDeviceUuid();
+    if (uuid)
+      device = findDeviceByUUIDorName(*uuid);
+    else
+      device = defaultDevice();
+
+    if (device)
+    {
+      if (asset->getDeviceUuid() && *asset->getDeviceUuid() != *device->getUuid())
+      {
+        asset->setProperty("deviceUuid", *device->getUuid());
+      }
+      
+      string aid = asset->getAssetId();
+      if (aid[0] == '@')
+      {
+        if (aid.empty())
+          aid = asset->getAssetId();
+        aid.erase(0, 1);
+        aid.insert(0, *device->getUuid());
+      }
+      if (aid != asset->getAssetId())
+      {
+        asset->setAssetId(aid);
+      }
+    }
+    
     m_assetStorage->addAsset(asset);
 
     for (auto &sink : m_sinks)
       sink->publish(asset);
-
-    auto device = m_deviceUuidMap.find(*asset->getDeviceUuid());
-    if (device != m_deviceUuidMap.end())
+    
+    if (device)
     {
-      auto di = device->second->getAssetChanged();
+      DataItemPtr di;
+      if (asset->isRemoved())
+        di = device->getAssetRemoved();
+      else
+        di = device->getAssetChanged();
       if (di)
       {
         m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
@@ -177,10 +208,13 @@ namespace mtconnect
       for (auto &sink : m_sinks)
         sink->publish(asset);
 
-      auto di = device->getAssetRemoved();
-      if (di)
+      if (device)
       {
-        m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", id}});
+        auto di = device->getAssetRemoved();
+        if (di)
+        {
+          m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", id}});
+        }
       }
       return true;
     }

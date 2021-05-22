@@ -662,7 +662,15 @@ namespace mtconnect
       using namespace rest_sink;
 
       AssetList list;
-      if (m_sinkContract->getAssetStorage()->getAssets(list, count, removed, device, type) == 0)
+      optional<string> uuid;
+      if (device)
+      {
+        auto d = m_sinkContract->findDeviceByUUIDorName(*device);
+        if (d)
+          uuid = d->getUuid();
+      }
+        
+      if (m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type) == 0)
       {
         return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
                 printer->mimeType()};
@@ -684,7 +692,13 @@ namespace mtconnect
       AssetList list;
       if (m_sinkContract->getAssetStorage()->getAssets(list, ids) == 0)
       {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find asseets"),
+        stringstream str;
+        str << "Cannot find asset for asset Ids: ";
+        for (auto &id : ids)
+          str << id << ", ";
+        
+        auto message = str.str().substr(0, str.str().size() - 2);
+        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", message),
                 printer->mimeType()};
       }
       else
@@ -740,7 +754,7 @@ namespace mtconnect
       {
         for (auto asset : list)
         {
-          m_loopback->removeAsset(asset->getAssetId());
+          m_loopback->removeAsset(asset->getDeviceUuid(), asset->getAssetId());
         }
 
         return {
@@ -771,7 +785,7 @@ namespace mtconnect
       {
         for (auto asset : list)
         {
-          m_loopback->removeAsset(asset->getAssetId());
+          m_loopback->removeAsset(asset->getDeviceUuid(), asset->getAssetId());
         }
 
         stringstream str;

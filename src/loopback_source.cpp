@@ -147,12 +147,14 @@ namespace mtconnect
     return asset;
   }
 
-  void LoopbackSource::removeAsset(const std::string &id)
+  void LoopbackSource::removeAsset(const std::optional<std::string> device, const std::string &id)
   {
     auto ac = make_shared<AssetCommand>("AssetCommand", Properties {});
     ac->m_timestamp = chrono::system_clock::now();
     ac->setValue("RemoveAsset"s);
     ac->setProperty("assetId", id);
+    if (device)
+      ac->setProperty("device", *device);
 
     m_pipeline.run(ac);
   }
