@@ -2531,7 +2531,9 @@ TEST_F(AgentTest, StreamData)
     
     auto startTime = system_clock::now();
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
-    m_agentTestHelper->m_ioContext.run_for(220ms);
+    while (m_agentTestHelper->m_session->m_chunkBody.empty() &&
+           (system_clock::now() - startTime) < 230ms)
+      m_agentTestHelper->m_ioContext.run_one_for(5ms);
     auto delta = system_clock::now() - startTime;
     cout << "Delta after heartbeat: " << delta.count() << endl;
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
@@ -2553,21 +2555,20 @@ TEST_F(AgentTest, StreamData)
 #else
     auto slop{35ms};
 #endif
-    auto startTime = system_clock::now();
 
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
     m_agentTestHelper->m_ioContext.run_for(delay);
 
+    auto startTime = system_clock::now();
     m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
-    m_agentTestHelper->m_ioContext.run_for(10ms);
+    m_agentTestHelper->m_ioContext.run_for(5ms);
     auto delta = system_clock::now() - startTime;
     cout << "Delta after data: " << delta.count() << endl;
 
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     PARSE_XML_CHUNK();
 
-    EXPECT_GT((delay + slop), delta) << "delta " << delta.count() << " < delay " << (delay + slop).count();
-    EXPECT_LT(delay, delta)  << "delta > delay: " << delta.count();
+    EXPECT_GT(slop, delta) << "delta " << delta.count() << " < delay " << slop.count();
   }
 }
 #endif
