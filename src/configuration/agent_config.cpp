@@ -434,6 +434,8 @@ namespace mtconnect
 
     void AgentConfiguration::configureLogger(const ptree &config)
     {
+      using namespace b_logger::trivial;
+
       m_sink.reset();
 
       //// Add the commonly used attributes; includes TimeStamp, ProcessID and ThreadID and others
@@ -463,7 +465,10 @@ namespace mtconnect
         {
           if (logger->get_optional<string>("logging_level"))
           {
-            boost_set_log_level(boost_string_to_log_level(logger->get<string>("logging_level")));
+            auto level = boost_string_to_log_level(logger->get<string>("logging_level"));
+            if (level > severity_level::debug)
+              level = severity_level::debug;
+            boost_set_log_level(level);
           }
         }
         else

@@ -218,7 +218,7 @@ namespace mtconnect
           return;
         }
       }
-
+      
       m_request = make_shared<Request>();
       m_request->m_verb = msg.method();
       m_request->m_path = parseUrl(string(msg.target()), m_request->m_query);
@@ -241,6 +241,8 @@ namespace mtconnect
       if (auto a = msg.find(http::field::connection); a != msg.end())
         m_close = a->value() == "close";
 
+      LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port() << "]: " << msg.method()  << " " << msg.target();
+      
       if (!m_dispatch(shared_ptr(), m_request))
       {
         ostringstream txt;
@@ -453,6 +455,8 @@ namespace mtconnect
 
     void TlsDector::detected(boost::beast::error_code ec, bool isTls)
     {
+      NAMED_SCOPE("TlsDector::detected");
+      
       if (ec)
       {
         fail(ec, "Failed to detect TLS Connection");
@@ -462,12 +466,14 @@ namespace mtconnect
         shared_ptr<Session> session;
         if (isTls)
         {
+          LOG(debug) << "Received HTTPS request";
           // Create https session
           session = std::make_shared<HttpsSession>(move(m_stream), m_tlsContext, move(m_buffer),
                                                    m_fields, m_dispatch, m_errorFunction);
         }
         else
         {
+          LOG(debug) << "Received HTTP request";
           // Create http session
           session = std::make_shared<HttpSession>(move(m_stream), move(m_buffer), m_fields,
                                                   m_dispatch, m_errorFunction);
@@ -475,6 +481,7 @@ namespace mtconnect
           // Start the session, but set
           if (m_tlsOnly)
           {
+            LOG(debug) << "Rejecting HTTP request. Only allow TLS";
             session->setUnauthorized("Only TLS (https) connections allowed");
             session->run();
             return;
