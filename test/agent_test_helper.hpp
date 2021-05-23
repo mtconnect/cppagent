@@ -115,6 +115,7 @@ class AgentTestHelper
   
   ~AgentTestHelper()
   {
+    m_restService.reset();    
     m_adapter.reset();
     if (m_agent)
       m_agent->stop();

@@ -170,7 +170,7 @@ if(MSVC)
 	PROPERTY COMPILE_FLAGS "/Ob1")
     endif()
   endif()
-  set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/http_server/session_impl.cpp"
+  set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
     PROPERTY COMPILE_FLAGS "/bigobj")
 endif()
 
