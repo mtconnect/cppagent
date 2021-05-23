@@ -99,7 +99,6 @@ void AgentTestHelper::chunkStreamHelper(const char *file, int line, xmlDocPtr *d
   *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), m_session->m_chunkBody.size());
 }
 
-
 void AgentTestHelper::responseHelper(const char *file, int line,
                                      const QueryMap &aQueries,
                                      nlohmann::json &doc,
@@ -109,4 +108,3 @@ void AgentTestHelper::responseHelper(const char *file, int line,
   makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
   doc = nlohmann::json::parse(m_session->m_body);
 }
-

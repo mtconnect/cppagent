@@ -263,20 +263,35 @@ class AgentTestHelper
   std::shared_ptr<mtconnect::rest_sink::TestSession> m_session;
 };
 
+struct XmlDocFreer {
+  XmlDocFreer(xmlDocPtr doc) : m_doc(doc) {}
+  ~XmlDocFreer() {
+    if (m_doc)
+      xmlFreeDoc(m_doc);
+  }
+  xmlDocPtr m_doc;
+};
+
+
 #define PARSE_XML_RESPONSE(path)                                                           \
   xmlDocPtr doc = nullptr;                                                                   \
   m_agentTestHelper->responseHelper(__FILE__, __LINE__, {}, &doc, path); \
-  ASSERT_TRUE(doc)
+  ASSERT_TRUE(doc); \
+  XmlDocFreer cleanup(doc)
 
 #define PARSE_TEXT_RESPONSE(path)                                                           \
   xmlDocPtr doc = nullptr;                                                                   \
-  m_agentTestHelper->responseHelper(__FILE__, __LINE__, {}, &doc, path);
+  m_agentTestHelper->responseHelper(__FILE__, __LINE__, {}, &doc, path); \
+  XmlDocFreer cleanup(doc)
+
 
 
 #define PARSE_XML_RESPONSE_QUERY(path, queries)                               \
   xmlDocPtr doc = nullptr;                                              \
   m_agentTestHelper->responseHelper(__FILE__, __LINE__, queries, &doc, path); \
-  ASSERT_TRUE(doc)
+  ASSERT_TRUE(doc); \
+  XmlDocFreer cleanup(doc)
+
 
 #define PARSE_XML_STREAM_QUERY(path, queries)                               \
   m_agentTestHelper->responseStreamHelper(__FILE__, __LINE__, queries, path); \
@@ -284,7 +299,8 @@ class AgentTestHelper
 #define PARSE_XML_CHUNK()                               \
   xmlDocPtr doc = nullptr;                                              \
   m_agentTestHelper->chunkStreamHelper(__FILE__, __LINE__, &doc); \
-  ASSERT_TRUE(doc)
+  ASSERT_TRUE(doc); \
+  XmlDocFreer cleanup(doc)
 
 
 #define PARSE_XML_RESPONSE_PUT(path, body, queries)                                    \
@@ -295,7 +311,8 @@ class AgentTestHelper
 #define PARSE_XML_RESPONSE_DELETE(path)                                    \
   xmlDocPtr doc = nullptr;                                                       \
   m_agentTestHelper->deleteResponseHelper(__FILE__, __LINE__, {}, &doc, path); \
-  ASSERT_TRUE(doc)
+  ASSERT_TRUE(doc); \
+  XmlDocFreer cleanup(doc)
 
 #define PARSE_JSON_RESPONSE(path) \
   nlohmann::json doc; \
