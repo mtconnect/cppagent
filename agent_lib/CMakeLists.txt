@@ -144,6 +144,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"
   
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt_source/mqtt_adapter.hpp"
+  
 )
 
 ## configure a header file to pass some of the CMake settings to the source code
@@ -204,6 +206,12 @@ target_compile_definitions(
     $<$<PLATFORM_ID:Windows>:NOMINMAX>
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>
+    MQTT_USE_TLS=ON
+    MQTT_USE_WS=ON
+    MQTT_USE_STR_CHECK=ON
+    MQTT_STD_VARIANT
+    MQTT_STD_OPTIONAL
+    MQTT_STD_STRING_VIEW
     )
 
 # set_property(SOURCE ${AGENT_SOURCES} PROPERTY COMPILE_FLAGS_DEBUG "${COVERAGE_FLAGS}")

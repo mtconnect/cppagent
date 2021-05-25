@@ -26,6 +26,7 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
+#include <mqtt_source/mqtt_adapter.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
