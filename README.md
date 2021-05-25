@@ -621,6 +621,10 @@ Configuration Parameters
 * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7. This applies to all adapters.
 
     *Default*: false
+
+* `WorkerThreads` - The number of operating system threads dedicated to the Agent
+
+    *Default*: 1
 	
 #### Configuration Pameters for TLS (https) Support ####
 
