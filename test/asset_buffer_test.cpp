@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "assets/asset_buffer.hpp"
+#include "asset/asset_buffer.hpp"
 #include "agent_test_helper.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
@@ -40,6 +40,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::entity;
+using namespace mtconnect::asset;
 
 class AssetBufferTest : public testing::Test
 {
@@ -152,7 +153,7 @@ TEST_F(AssetBufferTest, RemovedAsset)
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D2"));
 
   auto a0 = m_assetBuffer->getAsset("A0");
-  m_assetBuffer->removeAsset(a0);
+  m_assetBuffer->removeAsset(a0->getAssetId());
   ASSERT_EQ(0, m_assetBuffer->getIndex("A0"));
   
   ASSERT_EQ(10, m_assetBuffer->getCount(false));

@@ -28,14 +28,14 @@
 
 #include "adapter/adapter.hpp"
 #include "adapter/adapter_pipeline.hpp"
-#include "http_server/file_cache.hpp"
 #include "parser.hpp"
+#include "rest_sink/file_cache.hpp"
 #include "service.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_sink
   {
     class Server;
   }
@@ -78,14 +78,13 @@ namespace mtconnect
     protected:
       DevicePtr defaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
-      void loadAllowPut(http_server::Server *server, ConfigOptions &options);
-      void loadNamespace(const ptree &tree, const char *namespaceType,
-                         http_server::FileCache *cache, XmlPrinter *printer,
-                         NamespaceFunction callback);
-      void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, http_server::FileCache *cache);
-      void loadStyle(const ptree &tree, const char *styleName, http_server::FileCache *cache,
+      void loadAllowPut(rest_sink::Server *server, ConfigOptions &options);
+      void loadNamespace(const ptree &tree, const char *namespaceType, rest_sink::FileCache *cache,
+                         XmlPrinter *printer, NamespaceFunction callback);
+      void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, rest_sink::FileCache *cache);
+      void loadStyle(const ptree &tree, const char *styleName, rest_sink::FileCache *cache,
                      XmlPrinter *printer, StyleFunction styleFunction);
-      void loadTypes(const ptree &tree, http_server::FileCache *cache);
+      void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
       void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
@@ -98,6 +97,7 @@ namespace mtconnect
       boost::asio::io_context m_context;
       std::list<std::thread> m_workers;
       std::unique_ptr<Agent> m_agent;
+
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
       boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>

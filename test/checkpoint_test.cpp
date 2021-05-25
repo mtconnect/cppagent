@@ -19,13 +19,14 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "observation/checkpoint.hpp"
+#include "rest_sink/checkpoint.hpp"
 #include "agent_test_helper.hpp"
 
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::observation;
 using namespace mtconnect::adapter;
+using namespace mtconnect::rest_sink;
 using namespace device_model;
 using namespace entity;
 using namespace data_item;

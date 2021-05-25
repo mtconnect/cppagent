@@ -25,7 +25,7 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/beast/ssl.hpp>
 
-#include "http_server/server.hpp"
+#include "rest_sink/server.hpp"
 #include "logging.hpp"
 
 #include <cstdio>
@@ -37,7 +37,7 @@
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::http_server;
+using namespace mtconnect::rest_sink;
 
 namespace asio = boost::asio;
 namespace beast = boost::beast;
@@ -315,7 +315,7 @@ const string ClientKeyFile{PROJECT_ROOT_DIR "/test/resources/client.key"};
 const string ClientDhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
 const string ClientCAFile(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
-class HttpsServerTest : public testing::Test
+class TlsRestServiceTest : public testing::Test
 {
  protected:
   void SetUp() override
@@ -324,14 +324,20 @@ class HttpsServerTest : public testing::Test
     ConfigOptions options{{TlsCertificateChain, CertFile},
       {TlsPrivateKey, KeyFile},
       {TlsDHKey, DhFile},
-      {TlsCertificatePassword, "mtconnect"s}};
-    m_server = make_unique<Server>(m_context, 0, "127.0.0.1",
-                                   options);
+      {TlsCertificatePassword, "mtconnect"s},
+      {Port, 0},
+      {ServerIp, "127.0.0.1"s}
+    };
+    m_server = make_unique<Server>(m_context, options);
   }
   
   void createServer(const ConfigOptions &options)
   {
-    m_server = make_unique<Server>(m_context, 0, "127.0.0.1", options);
+    using namespace mtconnect::configuration;
+    ConfigOptions opts(options);
+    opts[Port] = 0;
+    opts[ServerIp] = "127.0.0.1"s;
+    m_server = make_unique<Server>(m_context, opts);
   }
 
   void start()
@@ -387,7 +393,7 @@ class HttpsServerTest : public testing::Test
   unique_ptr<Client> m_client;
 };
 
-TEST_F(HttpsServerTest, create_server_and_load_certificates)
+TEST_F(TlsRestServiceTest, create_server_and_load_certificates)
 {
   weak_ptr<Session> savedSession;
   
@@ -426,7 +432,7 @@ TEST_F(HttpsServerTest, create_server_and_load_certificates)
   ASSERT_TRUE(savedSession.expired());
 }
 
-TEST_F(HttpsServerTest, streaming_response)
+TEST_F(TlsRestServiceTest, streaming_response)
 {
   struct context {
     context(RequestPtr r, SessionPtr s) : m_request(r), m_session(s) {}
@@ -509,7 +515,7 @@ TEST_F(HttpsServerTest, streaming_response)
     ;
 }
 
-TEST_F(HttpsServerTest, check_failed_client_certificate)
+TEST_F(TlsRestServiceTest, check_failed_client_certificate)
 {
   using namespace mtconnect::configuration;
   ConfigOptions options{{TlsCertificateChain, CertFile},
@@ -541,7 +547,7 @@ TEST_F(HttpsServerTest, check_failed_client_certificate)
 const string ClientCA(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
 
-TEST_F(HttpsServerTest, check_valid_client_certificate)
+TEST_F(TlsRestServiceTest, check_valid_client_certificate)
 {
   using namespace mtconnect::configuration;
   ConfigOptions options{{TlsCertificateChain, CertFile},
@@ -575,7 +581,7 @@ TEST_F(HttpsServerTest, check_valid_client_certificate)
   EXPECT_EQ(200, m_client->m_status);
 }
 
-TEST_F(HttpsServerTest, check_valid_client_certificate_without_server_ca)
+TEST_F(TlsRestServiceTest, check_valid_client_certificate_without_server_ca)
 {
   using namespace mtconnect::configuration;
   ConfigOptions options{{TlsCertificateChain, CertFile},

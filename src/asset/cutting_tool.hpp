@@ -17,19 +17,29 @@
 
 #pragma once
 
-#include "pipeline/pipeline.hpp"
-#include "pipeline/pipeline_context.hpp"
+#include <map>
+#include <utility>
+#include <vector>
+
+#include "asset.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
 {
-  class AgentLoopbackPipeline : public pipeline::Pipeline
+  namespace asset
   {
-  public:
-    AgentLoopbackPipeline(pipeline::PipelineContextPtr context) : pipeline::Pipeline(context) {}
-    void build(const ConfigOptions &options) override;
+    class CuttingToolArchetype : public Asset
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
 
-  protected:
-    ConfigOptions m_options;
-  };
+    class CuttingTool : public Asset
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
+  }  // namespace asset
 }  // namespace mtconnect

@@ -28,7 +28,7 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_sink
   {
     struct Response;
     class Session;
@@ -89,11 +89,11 @@ namespace mtconnect
       ErrorFunction m_errorFunction;
 
       std::string m_message;
-      bool m_unauthorized{false};
+      bool m_unauthorized {false};
       bool m_allowPuts {false};
       std::set<boost::asio::ip::address> m_allowPutsFrom;
       boost::asio::ip::tcp::endpoint m_remote;
     };
 
-  }  // namespace http_server
+  }  // namespace rest_sink
 }  // namespace mtconnect

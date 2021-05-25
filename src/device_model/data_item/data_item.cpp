@@ -22,7 +22,6 @@
 #include <map>
 #include <string>
 
-#include "adapter/adapter.hpp"
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
 #include "logging.hpp"

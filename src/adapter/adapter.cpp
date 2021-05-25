@@ -42,6 +42,7 @@ namespace mtconnect
                      const unsigned int port, const ConfigOptions &options,
                      std::unique_ptr<AdapterPipeline> &pipeline)
       : Connector(context, server, port, 60s),
+        Source("Adapter"),
         m_pipeline(std::move(pipeline)),
         m_running(true),
         m_options(options)
@@ -56,6 +57,7 @@ namespace mtconnect
 
       stringstream identity;
       identity << '_' << server << '_' << port;
+      m_name = identity.str();
       boost::uuids::detail::sha1 sha1;
       sha1.process_bytes(identity.str().c_str(), identity.str().length());
       boost::uuids::detail::sha1::digest_type digest;

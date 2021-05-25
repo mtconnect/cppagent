@@ -111,6 +111,8 @@ TEST_F(DataItemTest, Getters)
 
 TEST_F(DataItemTest, HasNameAndSource)
 {
+  namespace di = mtconnect::device_model::data_item;
+  
   ASSERT_TRUE(m_dataItemA->hasName("DataItemTest1"));
   ASSERT_TRUE(m_dataItemB->hasName("DataItemTest2"));
 
@@ -122,7 +124,7 @@ TEST_F(DataItemTest, HasNameAndSource)
   
   Properties sp{{"VALUE", "DataItemTest2Source"s}};
   ErrorList errors;
-  auto source = Source::getFactory()->make("Source", sp, errors);
+  auto source = di::Source::getFactory()->make("Source", sp, errors);
   ASSERT_TRUE(errors.empty());
   
   Properties props{

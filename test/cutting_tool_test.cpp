@@ -6,7 +6,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "assets/cutting_tool.hpp"
+#include "asset/cutting_tool.hpp"
 #include "xml_printer_helper.hpp"
 #include "entity.hpp"
 #include "entity/xml_parser.hpp"
@@ -25,6 +25,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 using namespace mtconnect::adapter;
+using namespace mtconnect::asset;
 
 class CuttingToolTest : public testing::Test
 {
@@ -451,7 +452,7 @@ TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
   m_agentTestHelper->m_adapter->parseBuffer("TIME|@ASSET@|XXX.200|CuttingTool|--multiline--AAAA\n");
   m_agentTestHelper->m_adapter->parseBuffer((getFile("asset5.xml") + "\n").c_str());
   m_agentTestHelper->m_adapter->parseBuffer("--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
+  ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetStorage()->getCount());
 
   {
     PARSE_XML_RESPONSE("/asset/XXX.200");

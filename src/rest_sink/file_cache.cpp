@@ -24,7 +24,7 @@ using namespace std;
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_sink
   {
     FileCache::FileCache()
       : m_mimeTypes({{{".xsl", "text/xsl"},
@@ -184,5 +184,5 @@ namespace mtconnect
 
       return nullptr;
     }
-  }  // namespace http_server
+  }  // namespace rest_sink
 }  // namespace mtconnect

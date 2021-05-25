@@ -6,8 +6,8 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "assets/file_asset.hpp"
-#include "assets/asset.hpp"
+#include "asset/file_asset.hpp"
+#include "asset/asset.hpp"
 #include "xml_printer_helper.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
@@ -24,6 +24,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 using namespace mtconnect::adapter;
+using namespace mtconnect::asset;
 
 class FileAssetTest : public testing::Test
 {

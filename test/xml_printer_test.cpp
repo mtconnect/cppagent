@@ -19,19 +19,20 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "assets/asset.hpp"
-#include "observation/checkpoint.hpp"
+#include "asset/asset.hpp"
+#include "rest_sink/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "utilities.hpp"
 #include "observation/observation.hpp"
-#include "observation/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
+#include "rest_sink/checkpoint.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::rest_sink;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 
@@ -633,7 +634,7 @@ TEST_F(XmlPrinterTest, EscapedXMLCharacters)
 TEST_F(XmlPrinterTest, PrintAssetProbe)
 {
   // Add the xml to the agent...
-  map<string, int> counts;
+  map<string, size_t> counts;
   counts["CuttingTool"] = 10;
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices, &counts));

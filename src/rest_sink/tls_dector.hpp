@@ -24,27 +24,27 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_sink
   {
     class TlsDector : public std::enable_shared_from_this<TlsDector>
     {
     public:
-      TlsDector(boost::asio::ip::tcp::socket &&socket,
-                boost::asio::ssl::context &context,
-                bool tlsOnly,
-                bool allowPuts,
-                const std::set<boost::asio::ip::address> &allowPutsFrom,
-                const FieldList &list, Dispatch dispatch,
-                ErrorFunction error)
-      : m_stream(std::move(socket)), m_tlsContext(context), m_tlsOnly(tlsOnly),
-        m_allowPuts(allowPuts), m_allowPutsFrom(allowPutsFrom),
-        m_fields(list), m_dispatch(dispatch), m_errorFunction(error)
+      TlsDector(boost::asio::ip::tcp::socket &&socket, boost::asio::ssl::context &context,
+                bool tlsOnly, bool allowPuts,
+                const std::set<boost::asio::ip::address> &allowPutsFrom, const FieldList &list,
+                Dispatch dispatch, ErrorFunction error)
+        : m_stream(std::move(socket)),
+          m_tlsContext(context),
+          m_tlsOnly(tlsOnly),
+          m_allowPuts(allowPuts),
+          m_allowPutsFrom(allowPutsFrom),
+          m_fields(list),
+          m_dispatch(dispatch),
+          m_errorFunction(error)
       {
       }
-      
-      ~TlsDector()
-      {        
-      }
+
+      ~TlsDector() {}
 
       void fail(boost::system::error_code ec, const std::string &message)
       {
@@ -60,19 +60,19 @@ namespace mtconnect
       void run();
       void detect();
       void detected(boost::beast::error_code ec, bool isTls);
-      
+
     protected:
       boost::beast::tcp_stream m_stream;
-      boost::asio::ssl::context& m_tlsContext;
+      boost::asio::ssl::context &m_tlsContext;
       boost::beast::flat_buffer m_buffer;
-      
+
       bool m_tlsOnly;
       bool m_allowPuts;
       std::set<boost::asio::ip::address> m_allowPutsFrom;
-            
+
       FieldList m_fields;
       Dispatch m_dispatch;
       ErrorFunction m_errorFunction;
     };
-  }
-}
+  }  // namespace rest_sink
+}  // namespace mtconnect

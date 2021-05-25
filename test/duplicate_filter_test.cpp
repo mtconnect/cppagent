@@ -30,6 +30,7 @@
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
+using namespace mtconnect::asset;
 using namespace device_model;
 using namespace data_item;
 using namespace entity;

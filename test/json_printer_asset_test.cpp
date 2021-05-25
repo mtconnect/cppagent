@@ -28,8 +28,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "observation/checkpoint.hpp"
-#include "assets/cutting_tool.hpp"
+#include "rest_sink/checkpoint.hpp"
+#include "asset/cutting_tool.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "utilities.hpp"
@@ -40,7 +40,7 @@
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
 #include "entity/xml_parser.hpp"
-#include "assets/file_asset.hpp"
+#include "asset/file_asset.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -53,6 +53,8 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::rest_sink;
+using namespace mtconnect::asset;
 
 class JsonPrinterAssetTest : public testing::Test
 {
@@ -93,8 +95,8 @@ class JsonPrinterAssetTest : public testing::Test
 
 TEST_F(JsonPrinterAssetTest, AssetHeader)
 {
-  AssetList assets;
-  auto doc = m_printer->printAssets(123, 1024, 10, assets);
+  AssetList asset;
+  auto doc = m_printer->printAssets(123, 1024, 10, asset);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
 
@@ -108,18 +110,18 @@ TEST_F(JsonPrinterAssetTest, CuttingTool)
 {
   auto xml = getFile("asset1.xml");
   entity::ErrorList errors;
-  AssetPtr asset = parseAsset(xml, errors);
-  ASSERT_TRUE(asset);
-  AssetList assetList{asset};
+  AssetPtr a = parseAsset(xml, errors);
+  ASSERT_TRUE(a);
+  AssetList assetList{a};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   
   auto jdoc = json::parse(doc);
 
-  auto assets = jdoc.at("/MTConnectAssets/Assets"_json_pointer);
-  ASSERT_TRUE(assets.is_array());
-  ASSERT_EQ(1_S, assets.size());
+  auto asset = jdoc.at("/MTConnectAssets/Assets"_json_pointer);
+  ASSERT_TRUE(asset.is_array());
+  ASSERT_EQ(1_S, asset.size());
 
-  auto cuttingTool = assets.at(0);
+  auto cuttingTool = asset.at(0);
   ASSERT_EQ(string("1"), cuttingTool.at("/CuttingTool/serialNumber"_json_pointer).get<string>());
   ASSERT_EQ(string("KSSP300R4SD43L240"),
             cuttingTool.at("/CuttingTool/toolId"_json_pointer).get<string>());
@@ -137,17 +139,17 @@ TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
 {
   auto xml = getFile("asset1.xml");
   entity::ErrorList errors;
-  AssetPtr asset = parseAsset(xml, errors);
-  ASSERT_TRUE(asset);
-  AssetList assetList{asset};
+  AssetPtr a = parseAsset(xml, errors);
+  ASSERT_TRUE(a);
+  AssetList assetList{a};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
   
-  auto assets = jdoc.at("/MTConnectAssets/Assets"_json_pointer);
-  ASSERT_TRUE(assets.is_array());
-  ASSERT_EQ(1_S, assets.size());
+  auto asset = jdoc.at("/MTConnectAssets/Assets"_json_pointer);
+  ASSERT_TRUE(asset.is_array());
+  ASSERT_EQ(1_S, asset.size());
 
-  auto cuttingTool = assets.at(0);
+  auto cuttingTool = asset.at(0);
   auto lifeCycle = cuttingTool.at("/CuttingTool/CuttingToolLifeCycle"_json_pointer);
   ASSERT_TRUE(lifeCycle.is_object());
 

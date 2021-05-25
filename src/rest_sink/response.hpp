@@ -17,27 +17,38 @@
 
 #pragma once
 
-#include <map>
-#include <utility>
-#include <vector>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/beast/http/status.hpp>
 
-#include "asset.hpp"
-#include "entity.hpp"
+#include <unordered_map>
+
+#include "request.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
 {
-  class FileArchetypeAsset : public entity::Entity
-  {
-  public:
-    static entity::FactoryPtr getFactory();
-    static void registerAsset();
-  };
+  class Printer;
 
-  class FileAsset : public FileArchetypeAsset
+  namespace rest_sink
   {
-  public:
-    static entity::FactoryPtr getFactory();
-    static void registerAsset();
-  };
+    using status = boost::beast::http::status;
+
+    struct Response
+    {
+      Response(status status = status::ok, const std::string &body = "",
+               const std::string &mimeType = "text/xml")
+        : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
+      {
+      }
+      Response(RequestError &e) : m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
+      {
+      }
+
+      status m_status;
+      std::string m_body;
+      std::string m_mimeType;
+      std::chrono::seconds m_expires;
+      bool m_close {false};
+    };
+  }  // namespace rest_sink
 }  // namespace mtconnect

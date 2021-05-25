@@ -24,7 +24,7 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_sink
   {
     class ParameterError : public std::logic_error
     {
@@ -68,5 +68,5 @@ namespace mtconnect
     using QuerySet = std::set<Parameter>;
     using ParameterMap = std::map<std::string, ParameterValue>;
     using QueryMap = std::map<std::string, std::string>;
-  }  // namespace http_server
+  }  // namespace rest_sink
 }  // namespace mtconnect

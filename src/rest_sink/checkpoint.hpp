@@ -23,16 +23,13 @@
 #include <unordered_map>
 #include <vector>
 
-#include "observation.hpp"
+#include "observation/observation.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
 {
-  namespace observation
+  namespace rest_sink
   {
-    using FilterSet = std::set<std::string>;
-    using FilterSetOpt = std::optional<FilterSet>;
-
     class Checkpoint
     {
     public:
@@ -40,21 +37,22 @@ namespace mtconnect
       Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
       ~Checkpoint();
 
-      void addObservation(ObservationPtr event);
-      bool dataSetDifference(ObservationPtr event) const;
+      void addObservation(observation::ObservationPtr event);
+      bool dataSetDifference(observation::ObservationPtr event) const;
       void copy(Checkpoint const &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
       void clear();
       void filter(const FilterSet &filterSet);
       bool hasFilter() const { return bool(m_filter); }
 
-      const std::unordered_map<std::string, ObservationPtr> &getObservations() const
+      const std::unordered_map<std::string, observation::ObservationPtr> &getObservations() const
       {
         return m_observations;
       }
 
-      void getObservations(ObservationList &list, const FilterSetOpt &filter = std::nullopt) const;
+      void getObservations(observation::ObservationList &list,
+                           const FilterSetOpt &filter = std::nullopt) const;
 
-      ObservationPtr getEventPtr(const std::string &id)
+      observation::ObservationPtr getEventPtr(const std::string &id)
       {
         auto pos = m_observations.find(id);
         if (pos != m_observations.end())
@@ -63,12 +61,13 @@ namespace mtconnect
       }
 
     protected:
-      void addObservation(ConditionPtr event, ObservationPtr &&old);
-      void addObservation(const DataSetEventPtr event, ObservationPtr &&old);
+      void addObservation(observation::ConditionPtr event, observation::ObservationPtr &&old);
+      void addObservation(const observation::DataSetEventPtr event,
+                          observation::ObservationPtr &&old);
 
     protected:
-      std::unordered_map<std::string, ObservationPtr> m_observations;
+      std::unordered_map<std::string, observation::ObservationPtr> m_observations;
       FilterSetOpt m_filter;
     };
-  }  // namespace observation
+  }  // namespace rest_sink
 }  // namespace mtconnect

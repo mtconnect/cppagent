@@ -24,8 +24,8 @@
 #include <chrono>
 
 #include "agent.hpp"
-#include "assets/cutting_tool.hpp"
-#include "assets/file_asset.hpp"
+#include "asset/cutting_tool.hpp"
+#include "asset/file_asset.hpp"
 #include "logging.hpp"
 
 using namespace std::literals::chrono_literals;
@@ -124,10 +124,10 @@ namespace mtconnect
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
     {
-      auto a = std::dynamic_pointer_cast<Asset>(entity);
+      auto a = std::dynamic_pointer_cast<asset::Asset>(entity);
       if (!a)
       {
-        throw EntityError("Unexpected entity type, cannot convert to asset in DeliverObservation");
+        throw EntityError("Unexpected entity type, cannot convert to asset in DeliverAsset");
       }
 
       m_contract->deliverAsset(a);

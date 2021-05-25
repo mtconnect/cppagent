@@ -2,8 +2,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "http_server/routing.hpp"
-#include "http_server/response.hpp"
+#include "rest_sink/routing.hpp"
+#include "rest_sink/response.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -14,7 +14,7 @@
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::http_server;
+using namespace mtconnect::rest_sink;
 using verb = boost::beast::http::verb;
 
 class RoutingTest : public testing::Test
@@ -69,13 +69,13 @@ TEST_F(RoutingTest, TestComplexPatterns)
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
 
-  Routing r(verb::get, "/asset/{assets}", m_func);
+  Routing r(verb::get, "/asset/{asset}", m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
-  EXPECT_EQ("assets", r.getPathParameters().front().m_name);
+  EXPECT_EQ("asset", r.getPathParameters().front().m_name);
 
   request->m_path = "/asset/A1,A2,A3";
   ASSERT_TRUE(r.matches(0, request));
-  ASSERT_EQ("A1,A2,A3", get<string>(request->m_parameters["assets"]));
+  ASSERT_EQ("A1,A2,A3", get<string>(request->m_parameters["asset"]));
   request->m_path = "/ABC123/probe";
   ASSERT_FALSE(r.matches(0, request));
 }

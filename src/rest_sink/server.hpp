@@ -38,27 +38,32 @@
 #include "response.hpp"
 #include "routing.hpp"
 #include "session.hpp"
-#include "utilities.hpp"
 #include "tls_dector.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_sink
   {
     class Server
     {
     public:
-      Server(boost::asio::io_context &context, unsigned short port = 5000,
-             const std::string &inter = "0.0.0.0", const ConfigOptions &options = {})
-        : m_context(context), m_port(port), m_options(options), m_acceptor(context), m_sslContext(boost::asio::ssl::context::tls)
+      Server(boost::asio::io_context &context, const ConfigOptions &options = {})
+        : m_context(context),
+          m_port(GetOption<int>(options, configuration::Port).value_or(5000)),
+          m_options(options),
+          m_allowPuts(IsOptionSet(options, configuration::AllowPut)),
+          m_acceptor(context),
+          m_sslContext(boost::asio::ssl::context::tls)
       {
-        if (inter.empty())
+        auto inter = GetOption<std::string>(options, configuration::ServerIp);
+        if (!inter)
         {
           m_address = boost::asio::ip::make_address("0.0.0.0");
         }
         else
         {
-          m_address = boost::asio::ip::make_address(inter);
+          m_address = boost::asio::ip::make_address(*inter);
         }
         const auto fields = GetOption<StringList>(options, configuration::HttpHeaders);
         if (fields)
@@ -69,7 +74,7 @@ namespace mtconnect
           session->writeResponse(response);
           return true;
         };
-        
+
         loadTlsCertificate();
       }
 
@@ -92,6 +97,8 @@ namespace mtconnect
           }
         }
       }
+
+      const auto &getHttpHeaders() const { return m_fields; }
 
       auto getPort() const { return m_port; }
 
@@ -143,7 +150,7 @@ namespace mtconnect
       void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
       void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
       ErrorFunction getErrorFunction() const { return m_errorFunction; }
-      
+
     protected:
       void loadTlsCertificate();
 
@@ -168,8 +175,8 @@ namespace mtconnect
 
       boost::asio::ip::tcp::acceptor m_acceptor;
       boost::asio::ssl::context m_sslContext;
-      bool m_tlsEnabled{false};
-      bool m_tlsOnly{false};
+      bool m_tlsEnabled {false};
+      bool m_tlsOnly {false};
     };
-  }  // namespace http_server
+  }  // namespace rest_sink
 }  // namespace mtconnect

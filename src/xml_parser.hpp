@@ -22,11 +22,11 @@
 
 #include <libxml/tree.h>
 
-#include "assets/cutting_tool.hpp"
+#include "asset/cutting_tool.hpp"
 #include "device_model/component.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
-#include "observation/checkpoint.hpp"
+#include "rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect
@@ -48,8 +48,7 @@ namespace mtconnect
     void loadDocument(const std::string &aDoc);
 
     // Get std::list of data items in path
-    void getDataItems(observation::FilterSet &filterSet, const std::string &path,
-                      xmlNodePtr node = nullptr);
+    void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
 
   protected:
     // LibXML XML Doc

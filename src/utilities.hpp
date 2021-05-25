@@ -40,6 +40,7 @@
 #include <list>
 #include <map>
 #include <optional>
+#include <set>
 #include <sstream>
 #include <string>
 #include <time.h>
@@ -340,6 +341,9 @@ namespace mtconnect
     auto end() const { return std::rend(m_iterable); }
   };
 
+  using SequenceNumber_t = uint64_t;
+  using FilterSet = std::set<std::string>;
+  using FilterSetOpt = std::optional<FilterSet>;
   using Milliseconds = std::chrono::milliseconds;
   using Microseconds = std::chrono::microseconds;
   using Seconds = std::chrono::seconds;
@@ -372,7 +376,7 @@ namespace mtconnect
     auto v = options.find(name);
     return v != options.end();
   }
-  
+
   inline std::string format(const Timestamp &ts)
   {
     using namespace std;

@@ -154,7 +154,7 @@ namespace mtconnect
                                       const uint64_t nextSeq, const unsigned int assetBufferSize,
                                       const unsigned int assetCount,
                                       const std::list<DevicePtr> &devices,
-                                      const std::map<std::string, int> *count) const
+                                      const std::map<std::string, size_t> *count) const
   {
     entity::JsonPrinter printer;
 
@@ -361,12 +361,13 @@ namespace mtconnect
   }
 
   std::string JsonPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
-                                       const unsigned int assetCount, const AssetList &assets) const
+                                       const unsigned int assetCount,
+                                       const asset::AssetList &asset) const
   {
     entity::JsonPrinter printer;
 
     json assetDoc = json::array();
-    for (const auto &asset : assets)
+    for (const auto &asset : asset)
       assetDoc.emplace_back(printer.print(asset));
 
     json doc =

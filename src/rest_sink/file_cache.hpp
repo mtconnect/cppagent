@@ -26,7 +26,7 @@
 
 namespace mtconnect
 {
-  namespace http_server
+  namespace rest_sink
   {
     using XmlNamespace = std::pair<std::string, std::string>;
     using XmlNamespaceList = std::list<XmlNamespace>;
@@ -66,5 +66,5 @@ namespace mtconnect
       std::map<std::string, CachedFilePtr> m_fileCache;
       std::map<std::string, std::string> m_mimeTypes;
     };
-  }  // namespace http_server
+  }  // namespace rest_sink
 }  // namespace mtconnect

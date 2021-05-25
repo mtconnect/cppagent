@@ -224,8 +224,10 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
       cerr << "Cannot handle type: " << first->type << endl;
   }
 
-  trim(actual);
+  xmlXPathFreeObject(obj);
+  xmlXPathFreeContext(xpathCtx);
 
+  trim(actual);
   string message = (string) "Incorrect value for path " + xpath;
 
   if (expected[0] != '!')
@@ -279,6 +281,10 @@ void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected, const std::s
   string message = (string) "Incorrect count of elements for path " + xpath;
 
   int actual = obj->nodesetval->nodeNr;
+  
+  xmlXPathFreeObject(obj);
+  xmlXPathFreeContext(xpathCtx);
+
   failNotEqualIf(actual != expected, toString(expected), toString(actual), message, file, line);
 }
 

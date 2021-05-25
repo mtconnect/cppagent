@@ -28,8 +28,11 @@ namespace mtconnect
   {
     class Device;
   }
-  class Asset;
-  using AssetPtr = std::shared_ptr<Asset>;
+  namespace asset
+  {
+    class Asset;
+    using AssetPtr = std::shared_ptr<Asset>;
+  }  // namespace asset
 
   namespace adapter
   {

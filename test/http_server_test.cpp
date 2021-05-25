@@ -24,7 +24,7 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio/spawn.hpp>
 
-#include "http_server/server.hpp"
+#include "rest_sink/server.hpp"
 #include "logging.hpp"
 
 #include <cstdio>
@@ -36,7 +36,7 @@
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::http_server;
+using namespace mtconnect::rest_sink;
 
 namespace asio = boost::asio;
 namespace beast = boost::beast;
@@ -281,17 +281,21 @@ public:
 
 };
 
-class HttpServerTest : public testing::Test
+class RestServiceTest : public testing::Test
 {
  protected:
   void SetUp() override
   {
-    m_server = make_unique<Server>(m_context, 0, "127.0.0.1");
+    using namespace mtconnect::configuration;
+    m_server = make_unique<Server>(m_context, ConfigOptions{{Port, 0}, {ServerIp, "127.0.0.1"s}});
   }
   
   void createServer(const ConfigOptions &options)
   {
-    m_server = make_unique<Server>(m_context, 0, "127.0.0.1", options);
+    using namespace mtconnect::configuration;
+    ConfigOptions opts{{Port, 0}, {ServerIp, "127.0.0.1"s}};
+    opts.merge(ConfigOptions(options));
+    m_server = make_unique<Server>(m_context, opts);
   }
   
   void start()
@@ -326,7 +330,7 @@ class HttpServerTest : public testing::Test
   unique_ptr<Client> m_client;
 };
 
-TEST_F(HttpServerTest, simple_request_response)
+TEST_F(RestServiceTest, simple_request_response)
 {
   weak_ptr<Session> savedSession;
   
@@ -365,7 +369,7 @@ TEST_F(HttpServerTest, simple_request_response)
   ASSERT_TRUE(savedSession.expired());
 }
 
-TEST_F(HttpServerTest, request_response_with_query_parameters)
+TEST_F(RestServiceTest, request_response_with_query_parameters)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ("device1", get<string>(request->m_parameters["device"]));
@@ -401,7 +405,7 @@ TEST_F(HttpServerTest, request_response_with_query_parameters)
   EXPECT_EQ(200, m_client->m_status);
 }
 
-TEST_F(HttpServerTest, request_put_when_put_not_allowed)
+TEST_F(RestServiceTest, request_put_when_put_not_allowed)
 {
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_TRUE(false);
@@ -420,7 +424,7 @@ TEST_F(HttpServerTest, request_put_when_put_not_allowed)
   EXPECT_EQ("PUT, POST, and DELETE are not allowed. MTConnect Agent is read only and only GET is allowed.", m_client->m_result);
 }
 
-TEST_F(HttpServerTest, request_put_when_put_allowed)
+TEST_F(RestServiceTest, request_put_when_put_allowed)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
@@ -447,7 +451,7 @@ TEST_F(HttpServerTest, request_put_when_put_allowed)
 
 }
 
-TEST_F(HttpServerTest, request_put_when_put_not_allowed_from_ip_address)
+TEST_F(RestServiceTest, request_put_when_put_not_allowed_from_ip_address)
 {
   weak_ptr<Session> session;
   
@@ -469,7 +473,7 @@ TEST_F(HttpServerTest, request_put_when_put_not_allowed_from_ip_address)
   EXPECT_EQ("PUT, POST, and DELETE are not allowed from 127.0.0.1", m_client->m_result);
 }
 
-TEST_F(HttpServerTest, request_put_when_put_allowed_from_ip_address)
+TEST_F(RestServiceTest, request_put_when_put_allowed_from_ip_address)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
@@ -495,7 +499,7 @@ TEST_F(HttpServerTest, request_put_when_put_allowed_from_ip_address)
   EXPECT_EQ("Put ok", m_client->m_result);
 }
 
-TEST_F(HttpServerTest, request_with_connect_close)
+TEST_F(RestServiceTest, request_with_connect_close)
 {
   weak_ptr<Session> savedSession;
 
@@ -527,7 +531,7 @@ TEST_F(HttpServerTest, request_with_connect_close)
   EXPECT_FALSE(savedSession.lock());
 }
 
-TEST_F(HttpServerTest, put_content_to_server)
+TEST_F(RestServiceTest, put_content_to_server)
 {
   string body;
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
@@ -552,7 +556,7 @@ TEST_F(HttpServerTest, put_content_to_server)
   ASSERT_EQ("Body Content", body);
 }
 
-TEST_F(HttpServerTest, put_content_with_put_values)
+TEST_F(RestServiceTest, put_content_with_put_values)
 {
   string body, ct;
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
@@ -582,7 +586,7 @@ TEST_F(HttpServerTest, put_content_with_put_values)
   ASSERT_EQ("application/x-www-form-urlencoded", ct);
 }
 
-TEST_F(HttpServerTest, streaming_response)
+TEST_F(RestServiceTest, streaming_response)
 {
   struct context {
     context(RequestPtr r, SessionPtr s) : m_request(r), m_session(s) {}
@@ -665,7 +669,7 @@ TEST_F(HttpServerTest, streaming_response)
     ;
 }
 
-TEST_F(HttpServerTest, additional_header_fields)
+TEST_F(RestServiceTest, additional_header_fields)
 {
   m_server->setHttpHeaders({"Access-Control-Allow-Origin:*", "Origin:https://foo.example"});
   
@@ -702,7 +706,7 @@ const string KeyFile{PROJECT_ROOT_DIR "/test/resources/user.key"};
 const string DhFile{PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
 const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
 
-TEST_F(HttpServerTest, failure_when_tls_only)
+TEST_F(RestServiceTest, failure_when_tls_only)
 {
   using namespace mtconnect::configuration;
   ConfigOptions options{{TlsCertificateChain, CertFile},
