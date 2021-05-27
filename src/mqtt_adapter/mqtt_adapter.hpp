@@ -17,18 +17,15 @@
 
 #pragma once
 
-#include <sstream>
-
-#include <mqtt_client_cpp.hpp>
-#include <boost/uuid/name_generator_sha1.hpp>
-
+#include "source.hpp"
 #include "pipeline/pipeline.hpp"
-
 
 namespace mtconnect
 {
-  class source
+  namespace source
   {
+    class MqttAdapterImpl;
+    
     class MqttPipeline : public pipeline::Pipeline
     {
     public:
@@ -42,54 +39,25 @@ namespace mtconnect
       ConfigOptions m_options;
     };
 
-    class MqttSource : public Source
+    class MqttAdapter : public Source
     {
     public:
-      MqttSource(boost::asio::io_context &context, const ConfigOptions &options,
-                 std::unique_ptr<MqttPipeline> &&pipeline)
-      : Source("MQTT"), m_pipeline(std::move(pipeline))
-      {
-        std::stringstream url;
-        url << "mqtt://" << m_server << ':' << m_port;
-        m_url = url.str();
-
-        std::stringstream identity;
-        identity << '_' << m_server << '_' << m_port;
-        m_name = identity.str();
-        
-        boost::uuids::detail::sha1 sha1;
-        sha1.process_bytes(identity.str().c_str(), identity.str().length());
-        boost::uuids::detail::sha1::digest_type digest;
-        sha1.get_digest(digest);
-
-        identity.str("");
-        identity << std::hex << digest[0] << digest[1] << digest[2];
-        m_identity = std::string("_") + (identity.str()).substr(0, 10);
-      }
-      ~MqttSource() {}
+      MqttAdapter(boost::asio::io_context &context, const ConfigOptions &options,
+                  std::unique_ptr<MqttPipeline> &pipeline);
+      ~MqttAdapter() override;
       
-      bool start() override
-      {
-        return true;
-      }
+      bool start() override;
+      void stop() override;
       
-      void stop() override
-      {
-        
-      }
-    
     protected:
-      // Name of device associated with adapter
-      std::string m_url;
-      std::string m_identity;
+      boost::asio::io_context &m_ioContext;
+      ConfigOptions m_options;
       
-      std::string m_server;
-      unsigned int m_port;
-
       // If the connector has been running
       bool m_running;
-
+      
       std::unique_ptr<MqttPipeline> m_pipeline;
+      std::shared_ptr<MqttAdapterImpl> m_client;
     };
   };
 }

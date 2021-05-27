@@ -31,18 +31,6 @@ namespace mtconnect
 
   namespace pipeline
   {
-    class AssetCommand : public Timestamped
-    {
-    public:
-      using Timestamped::Timestamped;
-    };
-
-    class Observations : public Timestamped
-    {
-    public:
-      using Timestamped::Timestamped;
-    };
-
     using namespace entity;
     class ShdrTokenMapper : public Transform
     {
@@ -76,36 +64,5 @@ namespace mtconnect
       std::optional<std::string> m_defaultDevice;
       int m_shdrVersion {1};
     };
-
-    inline static std::string &upcase(std::string &s)
-    {
-      std::transform(s.begin(), s.end(), s.begin(),
-                     [](unsigned char c) -> unsigned char { return std::toupper(c); });
-      return s;
-    }
-
-    class UpcaseValue : public Transform
-    {
-    public:
-      UpcaseValue(const UpcaseValue &) = default;
-      UpcaseValue() : Transform("UpcaseValue")
-      {
-        using namespace observation;
-        m_guard = ExactTypeGuard<Event>(RUN) || TypeGuard<Observation>(SKIP);
-      }
-
-      const EntityPtr operator()(const EntityPtr entity) override
-      {
-        using namespace observation;
-        auto event = std::dynamic_pointer_cast<Event>(entity);
-        if (!entity)
-          throw EntityError("Unexpected Entity type in UpcaseValue: ", entity->getName());
-        auto nos = std::make_shared<Event>(*event.get());
-
-        upcase(std::get<std::string>(nos->getValue()));
-        return next(nos);
-      }
-    };
-
   }  // namespace pipeline
 }  // namespace mtconnect

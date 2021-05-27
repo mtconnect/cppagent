@@ -44,6 +44,18 @@ namespace mtconnect
       std::optional<double> m_duration;
     };
     using TimestampedPtr = std::shared_ptr<Timestamped>;
+    
+    class AssetCommand : public Timestamped
+    {
+    public:
+      using Timestamped::Timestamped;
+    };
+
+    class Observations : public Timestamped
+    {
+    public:
+      using Timestamped::Timestamped;
+    };
 
     class ExtractTimestamp : public Transform
     {

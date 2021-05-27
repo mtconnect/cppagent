@@ -70,5 +70,8 @@ namespace mtconnect
     DECLARE_CONFIGURATION(AdditionalDevices);
     DECLARE_CONFIGURATION(AdapterIdentity);
     DECLARE_CONFIGURATION(SuppressIPAddress);
+    DECLARE_CONFIGURATION(Topics);
+    DECLARE_CONFIGURATION(Protocol);
+    DECLARE_CONFIGURATION(Url);
   }  // namespace configuration
 }  // namespace mtconnect

@@ -25,9 +25,8 @@
 #include "pipeline/delta_filter.hpp"
 #include "pipeline/duplicate_filter.hpp"
 #include "pipeline/period_filter.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
-#include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/timestamp_extractor.hpp"
+#include "pipeline/upcase_value.hpp"
 
 using namespace std;
 

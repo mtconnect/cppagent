@@ -23,6 +23,7 @@
 #include "entity/xml_parser.hpp"
 #include "logging.hpp"
 #include "observation/observation.hpp"
+#include "upcase_value.hpp"
 
 using namespace std;
 

@@ -53,6 +53,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/deliver.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/guard.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/convert_sample.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/topic_mapper.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/upcase_value.hpp"
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.hpp"
@@ -144,7 +146,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"
   
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt_source/mqtt_adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt_adapter/mqtt_adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt_adapter/mqtt_adapter.cpp"
   
 )
 

@@ -26,7 +26,8 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
-#include <mqtt_source/mqtt_adapter.hpp>
+#include <mqtt_adapter/mqtt_adapter.hpp>
+#include <boost/algorithm/string.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -788,7 +789,9 @@ namespace mtconnect
           AddOptions(block.second, adapterOptions,
                      {{configuration::UUID, string()},
                       {configuration::Manufacturer, string()},
-                      {configuration::Station, string()}});
+                      {configuration::Station, string()},
+                      {configuration::Url, string()}
+          });
 
           AddDefaultedOptions(block.second, adapterOptions,
                               {
@@ -797,6 +800,7 @@ namespace mtconnect
                                   {configuration::AutoAvailable, false},
                                   {configuration::RealTime, false},
                                   {configuration::RelativeTime, false},
+            {configuration::Protocol, "shdr"}
                               });
 
           auto deviceName =
@@ -849,11 +853,27 @@ namespace mtconnect
                     << get<string>(adapterOptions[configuration::Host]) << ":"
                     << get<string>(adapterOptions[configuration::Host]);
 
-          auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-          auto adp = make_shared<Adapter>(
-              m_context, get<string>(adapterOptions[configuration::Host]),
-              get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
-          m_agent->addSource(adp, false);
+          string protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
+          if (protocol == "shdr")
+          {
+            auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
+            auto adp = make_shared<Adapter>(
+                                            m_context, get<string>(adapterOptions[configuration::Host]),
+                                            get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
+            m_agent->addSource(adp, false);
+          }
+          else if (protocol == "mqtt")
+          {
+            auto pipeline = make_unique<source::MqttPipeline>(m_pipelineContext);
+            auto adp = make_shared<source::MqttAdapter>(
+                                            m_context, adapterOptions, pipeline);
+            m_agent->addSource(adp, false);
+          }
+          else
+          {
+            LOG(error) << "Unknown protocol: " << protocol << ", stopping";
+            exit(1);
+          }
         }
       }
       else if ((device = defaultDevice()))
@@ -1008,7 +1028,7 @@ namespace mtconnect
       auto headers = tree.get_child_optional(configuration::HttpHeaders);
       if (headers)
       {
-        list<string> fields;
+        StringList fields;
         for (auto &f : *headers)
         {
           fields.emplace_back(f.first + ": " + f.second.data());
@@ -1017,6 +1037,22 @@ namespace mtconnect
         options[configuration::HttpHeaders] = fields;
       }
     }
+    
+    void AgentConfiguration::loadTopics(const ptree &tree, ConfigOptions &options)
+    {
+      auto topics = tree.get_child_optional(configuration::Topics);
+      if (topics)
+      {
+        StringList list;
+        for (auto &f : *topics)
+        {
+          list.emplace_back(f.first + ":" + f.second.data());
+        }
+
+        options[configuration::Topics] = list;
+      }
+    }
+
 
     void AgentConfiguration::loadStyle(const ptree &tree, const char *styleName,
                                        rest_sink::FileCache *cache, XmlPrinter *xmlPrinter,

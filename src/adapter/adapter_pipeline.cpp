@@ -28,6 +28,7 @@
 #include "pipeline/shdr_token_mapper.hpp"
 #include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/timestamp_extractor.hpp"
+#include "pipeline/upcase_value.hpp"
 
 using namespace std;
 using namespace std::literals;
@@ -35,7 +36,6 @@ using namespace std::literals;
 namespace mtconnect
 {
   using namespace observation;
-  using namespace entity;
   using namespace entity;
   using namespace pipeline;
 
