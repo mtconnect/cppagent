@@ -41,7 +41,7 @@ TEST(AdapterTest, MultilineData)
 {
   asio::io_context ioc;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
-  auto pipeline = make_unique<AdapterPipeline>(context);
+  auto pipeline = make_unique<ShdrPipeline>(context);
   auto adapter = make_unique<ShdrAdapter>(ioc, "localhost", 7878, ConfigOptions{}, pipeline);
   
   auto handler = make_unique<Handler>();

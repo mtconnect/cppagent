@@ -18,7 +18,7 @@
 #pragma once
 
 #include "adapter/adapter.hpp"
-#include "pipeline/pipeline.hpp"
+#include "adapter/adapter_pipeline.hpp"
 
 namespace mtconnect
 {
@@ -43,10 +43,10 @@ namespace mtconnect
         std::string m_identity;
       };
 
-      class MqttPipeline : public pipeline::Pipeline
+      class MqttPipeline : public adapter::AdapterPipeline
       {
       public:
-        MqttPipeline(pipeline::PipelineContextPtr context) : Pipeline(context) {}
+        MqttPipeline(pipeline::PipelineContextPtr context) : AdapterPipeline(context) {}
 
         const auto &getContract() { return m_context->m_contract; }
 
@@ -66,12 +66,17 @@ namespace mtconnect
         const std::string &getHost() const override { return m_host; };
         unsigned int getPort() const override { return m_port; }
 
-        bool start() override { return m_client->start(); }
+        bool start() override
+        {
+          
+          m_pipeline->start(m_strand);
+          return m_client->start();
+        }
         void stop() override { m_client->stop(); }
 
       protected:
         boost::asio::io_context &m_ioContext;
-
+        boost::asio::io_context::strand m_strand;
         // If the connector has been running
         bool m_running;
 
@@ -81,6 +86,6 @@ namespace mtconnect
         std::unique_ptr<MqttPipeline> m_pipeline;
         std::shared_ptr<MqttAdapterImpl> m_client;
       };
-    };  // namespace mqtt
+    };  // namespace mqtt_adapter
   }     // namespace adapter
 }  // namespace mtconnect

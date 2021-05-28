@@ -209,7 +209,7 @@ class AgentTestHelper
     {
       options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
     }
-    auto pipeline = std::make_unique<shdr::AdapterPipeline>(m_context);
+    auto pipeline = std::make_unique<shdr::ShdrPipeline>(m_context);
     m_adapter = std::make_shared<shdr::ShdrAdapter>(m_ioContext, host, port, options, pipeline);
     m_agent->addSource(m_adapter);
 

@@ -27,7 +27,7 @@
 #include <string>
 
 #include "adapter/adapter.hpp"
-#include "adapter/shdr/adapter_pipeline.hpp"
+#include "adapter/shdr/shdr_pipeline.hpp"
 #include "parser.hpp"
 #include "rest_sink/file_cache.hpp"
 #include "service.hpp"
@@ -100,7 +100,7 @@ namespace mtconnect
       std::unique_ptr<Agent> m_agent;
 
       pipeline::PipelineContextPtr m_pipelineContext;
-      std::unique_ptr<adapter::shdr::Handler> m_adapterHandler;
+      std::unique_ptr<adapter::Handler> m_adapterHandler;
       boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>
           m_sink;
       std::string m_version;

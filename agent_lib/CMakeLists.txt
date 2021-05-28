@@ -31,12 +31,14 @@ set(AGENT_SOURCES
 
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_adapter.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/connector.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/connector.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/adapter_pipeline.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/adapter_pipeline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_pipeline.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_pipeline.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.cpp"
 

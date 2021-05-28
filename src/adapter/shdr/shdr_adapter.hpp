@@ -26,9 +26,9 @@
 #include <string>
 
 #include "adapter/adapter.hpp"
-#include "adapter_pipeline.hpp"
 #include "connector.hpp"
 #include "device_model/data_item/data_item.hpp"
+#include "shdr_pipeline.hpp"
 #include "source.hpp"
 #include "utilities.hpp"
 
@@ -44,28 +44,13 @@ namespace mtconnect
   {
     namespace shdr
     {
-      class ShdrAdapter;
-
-      struct Handler
-      {
-        using ProcessData = std::function<void(const std::string &data, const std::string &source)>;
-        using Connect = std::function<void(const std::string &source)>;
-
-        ProcessData m_processData;
-        ProcessData m_command;
-
-        Connect m_connecting;
-        Connect m_connected;
-        Connect m_disconnected;
-      };
-
       class ShdrAdapter : public Connector, public adapter::Adapter
       {
       public:
         // Associate adapter with a device & connect to the server & port
         ShdrAdapter(boost::asio::io_context &context, const std::string &server,
-                const unsigned int port, const ConfigOptions &options,
-                std::unique_ptr<AdapterPipeline> &pipeline);
+                    const unsigned int port, const ConfigOptions &options,
+                    std::unique_ptr<ShdrPipeline> &pipeline);
         ShdrAdapter(const ShdrAdapter &) = delete;
 
         // Virtual destructor
@@ -122,8 +107,7 @@ namespace mtconnect
         }
 
       protected:
-        std::unique_ptr<Handler> m_handler;
-        std::unique_ptr<AdapterPipeline> m_pipeline;
+        std::unique_ptr<ShdrPipeline> m_pipeline;
 
         // If the connector has been running
         bool m_running;

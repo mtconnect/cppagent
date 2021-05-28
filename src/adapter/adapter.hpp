@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "adapter_pipeline.hpp"
 #include "source.hpp"
 
 namespace mtconnect
@@ -35,13 +36,14 @@ namespace mtconnect
       virtual const std::string &getHost() const = 0;
       virtual const std::string &getUrl() const { return m_url; }
       virtual const std::string &getIdentity() const { return m_identity; }
-      virtual unsigned int getPort() const { return 0; }
+      virtual unsigned int getPort() const = 0;
       virtual const ConfigOptions &getOptions() const { return m_options; }
 
     protected:
       std::string m_name;
       std::string m_identity;
       std::string m_url;
+      std::unique_ptr<Handler> m_handler;
       ConfigOptions m_options;
     };
 

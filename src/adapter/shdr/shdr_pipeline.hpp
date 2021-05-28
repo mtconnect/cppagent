@@ -17,34 +17,20 @@
 
 #pragma once
 
-#include "pipeline/pipeline.hpp"
-#include "pipeline/transform.hpp"
+#include "adapter/adapter_pipeline.hpp"
 
 namespace mtconnect
 {
-  class Agent;
-  namespace asset
-  {
-    class Asset;
-    using AssetPtr = std::shared_ptr<Asset>;
-  }  // namespace asset
-
   namespace adapter
   {
     namespace shdr
     {
-      struct Handler;
-      
-      class AdapterPipeline : public pipeline::Pipeline
+      class ShdrPipeline : public AdapterPipeline
       {
       public:
-        AdapterPipeline(pipeline::PipelineContextPtr context) : Pipeline(context) {}
+        ShdrPipeline(pipeline::PipelineContextPtr context) : AdapterPipeline(context) {}
 
         void build(const ConfigOptions &options) override;
-        std::unique_ptr<shdr::Handler> makeHandler();
-
-      protected:
-        ConfigOptions m_options;
       };
     }  // namespace shdr
   }    // namespace adapter

@@ -41,8 +41,8 @@ namespace mtconnect
     {
       // Adapter public methods
       ShdrAdapter::ShdrAdapter(boost::asio::io_context &context, const string &server,
-                       const unsigned int port, const ConfigOptions &options,
-                       std::unique_ptr<AdapterPipeline> &pipeline)
+                               const unsigned int port, const ConfigOptions &options,
+                               std::unique_ptr<ShdrPipeline> &pipeline)
         : Connector(context, server, port, 60s),
           Adapter("Adapter", options),
           m_pipeline(std::move(pipeline)),

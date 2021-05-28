@@ -33,6 +33,8 @@
 #include <mach-o/dyld.h>
 #endif
 
+#include <adapter/mqtt/mqtt_adapter.hpp>
+#include <adapter/shdr/shdr_adapter.hpp>
 #include <algorithm>
 #include <chrono>
 #include <date/date.h>
@@ -48,8 +50,6 @@
 #include <thread>
 #include <vector>
 
-#include <adapter/mqtt/mqtt_adapter.hpp>
-#include <adapter/shdr/shdr_adapter.hpp>
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
@@ -902,8 +902,9 @@ namespace mtconnect
               port = get<int>(adapterOptions[configuration::Port]);
             else
               port = 7878;
-            auto pipeline = make_unique<adapter::shdr::AdapterPipeline>(m_pipelineContext);
-            auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, host, port, adapterOptions, pipeline);
+            auto pipeline = make_unique<adapter::shdr::ShdrPipeline>(m_pipelineContext);
+            auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, host, port,
+                                                               adapterOptions, pipeline);
             m_agent->addSource(adp, false);
           }
           else if (protocol == "mqtt")
@@ -912,7 +913,8 @@ namespace mtconnect
             if (!HasOption(adapterOptions, configuration::Port))
               adapterOptions[configuration::Port] = 1883;
             auto pipeline = make_unique<adapter::mqtt_adapter::MqttPipeline>(m_pipelineContext);
-            auto adp = make_shared<adapter::mqtt_adapter::MqttAdapter>(m_context, adapterOptions, pipeline);
+            auto adp = make_shared<adapter::mqtt_adapter::MqttAdapter>(m_context, adapterOptions,
+                                                                       pipeline);
             m_agent->addSource(adp, false);
             port = adp->getPort();
           }
@@ -934,8 +936,9 @@ namespace mtconnect
         adapterOptions[configuration::Device] = deviceName;
         LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
 
-        auto pipeline = make_unique<adapter::shdr::AdapterPipeline>(m_pipelineContext);
-        auto adp = make_shared<shdr::ShdrAdapter>(m_context, "localhost", 7878, adapterOptions, pipeline);
+        auto pipeline = make_unique<adapter::shdr::ShdrPipeline>(m_pipelineContext);
+        auto adp =
+            make_shared<shdr::ShdrAdapter>(m_context, "localhost", 7878, adapterOptions, pipeline);
         m_agent->addSource(adp, false);
       }
       else

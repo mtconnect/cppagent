@@ -50,7 +50,7 @@ protected:
   }
 };
 
-TEST_F(MqttAdapterTest, test_parsing_of_simple_data)
+TEST_F(MqttAdapterTest, should_find_data_item_from_topic)
 {
   
 }
