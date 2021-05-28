@@ -112,6 +112,9 @@ namespace mtconnect
 #endif
 
         auto client = derived().getClient();
+        client->set_client_id(m_identity);
+        client->clean_session();
+        client->set_keep_alive_sec(10);
 
         client->set_connack_handler([this](bool sp, mqtt::connect_return_code connack_return_code) {
           if (connack_return_code == mqtt::connect_return_code::accepted)
@@ -285,9 +288,6 @@ namespace mtconnect
         if (!m_client)
         {
           m_client = mqtt::make_async_client(m_ioContext, m_host, m_port);
-          m_client->set_client_id(m_identity);
-          m_client->clean_session();
-          m_client->set_keep_alive_sec(10);
         }
 
         return m_client;
@@ -309,10 +309,6 @@ namespace mtconnect
         if (!m_client)
         {
           m_client = mqtt::make_tls_async_client(m_ioContext, m_host, m_port);
-          m_client->set_client_id(m_identity);
-          m_client->clean_session();
-          m_client->set_keep_alive_sec(10);
-
           auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
           {
