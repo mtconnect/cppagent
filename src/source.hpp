@@ -19,23 +19,22 @@
 
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+class Source
 {
-  class Source
-  {
-  public:
-    Source(const std::string &name) : m_name(name) {}
-    virtual ~Source() {}
+public:
+  Source(const std::string &name) : m_name(name) {}
+  virtual ~Source() {}
 
-    virtual bool start() = 0;
-    virtual void stop() = 0;
+  virtual bool start() = 0;
+  virtual void stop() = 0;
 
-    const auto &getName() { return m_name; }
+  const auto &getName() { return m_name; }
 
-  protected:
-    std::string m_name;
-  };
+protected:
+  std::string m_name;
+};
 
-  using SourcePtr = std::shared_ptr<Source>;
-  using SourceList = std::list<SourcePtr>;
+using SourcePtr = std::shared_ptr<Source>;
+using SourceList = std::list<SourcePtr>;
 }  // namespace mtconnect

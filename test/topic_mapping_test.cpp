@@ -76,12 +76,18 @@ protected:
     m_devices.clear();
   }
   
-  DataItemPtr makeDataItem(const Properties &props)
+  DataItemPtr makeDataItem(const std::string &device, const Properties &props)
   {
     Properties ps(props);
     ErrorList errors;
     auto di = DataItem::make(ps, errors);
     m_dataItems.emplace(di->getId(), di);
+    
+    auto dev = m_devices.find(device);
+    if (dev != m_devices.end())
+    {
+      dev->second->addDataItem(di, errors);
+    }
     
     return di;
   }
@@ -111,5 +117,5 @@ inline DataSetEntry operator"" _E(const char *c, std::size_t)
 TEST_F(TopicMappingTest, SimpleEvent)
 {
   Properties props{{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
-  auto di = makeDataItem(props);
+  auto di = makeDataItem("device", props);
 }

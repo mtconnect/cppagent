@@ -19,38 +19,35 @@
 
 using namespace std;
 
-namespace mtconnect
+namespace mtconnect {
+using namespace entity;
+namespace device_model {
+namespace configuration {
+FactoryPtr SensorConfiguration::getFactory()
 {
-  using namespace entity;
-  namespace device_model
+  static FactoryPtr sensorConfiguration;
+  if (!sensorConfiguration)
   {
-    namespace configuration
-    {
-      FactoryPtr SensorConfiguration::getFactory()
-      {
-        static FactoryPtr sensorConfiguration;
-        if (!sensorConfiguration)
-        {
-          auto channel = make_shared<Factory>(Requirements {
-              Requirement("number", true),
-              Requirement("name", false),
-              Requirement("Description", false),
-              Requirement("CalibrationDate", false),
-              Requirement("NextCalibrationDate", false),
-              Requirement("CalibrationInitials", false),
-          });
+    auto channel = make_shared<Factory>(Requirements {
+        Requirement("number", true),
+        Requirement("name", false),
+        Requirement("Description", false),
+        Requirement("CalibrationDate", false),
+        Requirement("NextCalibrationDate", false),
+        Requirement("CalibrationInitials", false),
+    });
 
-          auto channels = make_shared<Factory>(
-              Requirements {Requirement("Channel", ENTITY, channel, 1, Requirement::Infinite)});
+    auto channels = make_shared<Factory>(
+        Requirements {Requirement("Channel", ENTITY, channel, 1, Requirement::Infinite)});
 
-          sensorConfiguration = make_shared<Factory>(Requirements {
-              Requirement("FirmwareVersion", true), Requirement("CalibrationDate", false),
-              Requirement("NextCalibrationDate", false), Requirement("CalibrationInitials", false),
-              Requirement("Channels", ENTITY_LIST, channels, false)});
-        }
+    sensorConfiguration = make_shared<Factory>(Requirements {
+        Requirement("FirmwareVersion", true), Requirement("CalibrationDate", false),
+        Requirement("NextCalibrationDate", false), Requirement("CalibrationInitials", false),
+        Requirement("Channels", ENTITY_LIST, channels, false)});
+  }
 
-        return sensorConfiguration;
-      }
-    }  // namespace configuration
-  }    // namespace device_model
+  return sensorConfiguration;
+}
+}  // namespace configuration
+}  // namespace device_model
 }  // namespace mtconnect

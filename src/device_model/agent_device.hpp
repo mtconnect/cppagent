@@ -23,43 +23,40 @@
 #include "device_model/device.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace adapter {
+class Adapter;
+using AdapterPtr = std::shared_ptr<Adapter>;
+}  // namespace adapter
+
+namespace device_model {
+class AgentDevice : public Device
 {
-  namespace adapter
+public:
+  // Constructor that sets variables from an attribute map
+  AgentDevice(const std::string &name, entity::Properties &props);
+  ~AgentDevice() override = default;
+  static entity::FactoryPtr getFactory();
+
+  void initialize() override
   {
-    class Adapter;
-    using AdapterPtr = std::shared_ptr<Adapter>;
-  }  // namespace adapter
+    addRequiredDataItems();
+    entity::ErrorList errors;
+    addChild(m_adapters, errors);
+    Device::initialize();
+  }
 
-  namespace device_model
-  {
-    class AgentDevice : public Device
-    {
-    public:
-      // Constructor that sets variables from an attribute map
-      AgentDevice(const std::string &name, entity::Properties &props);
-      ~AgentDevice() override = default;
-      static entity::FactoryPtr getFactory();
+  void addAdapter(const adapter::AdapterPtr adapter);
 
-      void initialize() override
-      {
-        addRequiredDataItems();
-        entity::ErrorList errors;
-        addChild(m_adapters, errors);
-        Device::initialize();
-      }
+  DataItemPtr getConnectionStatus(const std::string &adapter);
+  auto &getAdapters() { return m_adapters; }
 
-      void addAdapter(const adapter::AdapterPtr adapter);
+protected:
+  void addRequiredDataItems();
 
-      DataItemPtr getConnectionStatus(const std::string &adapter);
-      auto &getAdapters() { return m_adapters; }
-
-    protected:
-      void addRequiredDataItems();
-
-    protected:
-      ComponentPtr m_adapters;
-    };
-    using AgentDevicePtr = std::shared_ptr<AgentDevice>;
-  }  // namespace device_model
+protected:
+  ComponentPtr m_adapters;
+};
+using AgentDevicePtr = std::shared_ptr<AgentDevice>;
+}  // namespace device_model
 }  // namespace mtconnect

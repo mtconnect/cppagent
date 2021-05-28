@@ -26,48 +26,45 @@
 #include "observation/observation.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace rest_sink {
+class Checkpoint
 {
-  namespace rest_sink
+public:
+  Checkpoint() = default;
+  Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
+  ~Checkpoint();
+
+  void addObservation(observation::ObservationPtr event);
+  bool dataSetDifference(observation::ObservationPtr event) const;
+  void copy(Checkpoint const &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
+  void clear();
+  void filter(const FilterSet &filterSet);
+  bool hasFilter() const { return bool(m_filter); }
+
+  const std::unordered_map<std::string, observation::ObservationPtr> &getObservations() const
   {
-    class Checkpoint
-    {
-    public:
-      Checkpoint() = default;
-      Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
-      ~Checkpoint();
+    return m_observations;
+  }
 
-      void addObservation(observation::ObservationPtr event);
-      bool dataSetDifference(observation::ObservationPtr event) const;
-      void copy(Checkpoint const &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
-      void clear();
-      void filter(const FilterSet &filterSet);
-      bool hasFilter() const { return bool(m_filter); }
+  void getObservations(observation::ObservationList &list,
+                       const FilterSetOpt &filter = std::nullopt) const;
 
-      const std::unordered_map<std::string, observation::ObservationPtr> &getObservations() const
-      {
-        return m_observations;
-      }
+  observation::ObservationPtr getEventPtr(const std::string &id)
+  {
+    auto pos = m_observations.find(id);
+    if (pos != m_observations.end())
+      return pos->second;
+    return nullptr;
+  }
 
-      void getObservations(observation::ObservationList &list,
-                           const FilterSetOpt &filter = std::nullopt) const;
+protected:
+  void addObservation(observation::ConditionPtr event, observation::ObservationPtr &&old);
+  void addObservation(const observation::DataSetEventPtr event, observation::ObservationPtr &&old);
 
-      observation::ObservationPtr getEventPtr(const std::string &id)
-      {
-        auto pos = m_observations.find(id);
-        if (pos != m_observations.end())
-          return pos->second;
-        return nullptr;
-      }
-
-    protected:
-      void addObservation(observation::ConditionPtr event, observation::ObservationPtr &&old);
-      void addObservation(const observation::DataSetEventPtr event,
-                          observation::ObservationPtr &&old);
-
-    protected:
-      std::unordered_map<std::string, observation::ObservationPtr> m_observations;
-      FilterSetOpt m_filter;
-    };
-  }  // namespace rest_sink
+protected:
+  std::unordered_map<std::string, observation::ObservationPtr> m_observations;
+  FilterSetOpt m_filter;
+};
+}  // namespace rest_sink
 }  // namespace mtconnect

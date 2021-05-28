@@ -26,44 +26,41 @@
 #include "entity.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace device_model {
+namespace data_item {
+class DataItem;
+}
+class Component;
+class Device;
+using DevicePtr = std::shared_ptr<Device>;
+
+class Reference : public entity::Entity
 {
-  namespace device_model
+public:
+  using entity::Entity::Entity;
+  ~Reference() override = default;
+
+  enum RefernceType
   {
-    namespace data_item
-    {
-      class DataItem;
-    }
-    class Component;
-    class Device;
-    using DevicePtr = std::shared_ptr<Device>;
+    COMPONENT,
+    DATA_ITEM,
+    UNKNOWN
+  };
 
-    class Reference : public entity::Entity
-    {
-    public:
-      using entity::Entity::Entity;
-      ~Reference() override = default;
+  static entity::FactoryPtr getFactory();
+  static entity::FactoryPtr getRoot();
 
-      enum RefernceType
-      {
-        COMPONENT,
-        DATA_ITEM,
-        UNKNOWN
-      };
+  void resolve(DevicePtr device);
 
-      static entity::FactoryPtr getFactory();
-      static entity::FactoryPtr getRoot();
+  auto &getComponent() const { return m_component; }
+  auto &getDataItem() const { return m_dataItem; }
+  auto getReferenceType() const { return m_type; }
 
-      void resolve(DevicePtr device);
-
-      auto &getComponent() const { return m_component; }
-      auto &getDataItem() const { return m_dataItem; }
-      auto getReferenceType() const { return m_type; }
-
-    protected:
-      std::weak_ptr<Component> m_component;
-      std::weak_ptr<data_item::DataItem> m_dataItem;
-      RefernceType m_type {UNKNOWN};
-    };
-  }  // namespace device_model
+protected:
+  std::weak_ptr<Component> m_component;
+  std::weak_ptr<data_item::DataItem> m_dataItem;
+  RefernceType m_type {UNKNOWN};
+};
+}  // namespace device_model
 }  // namespace mtconnect

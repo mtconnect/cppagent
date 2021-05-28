@@ -19,48 +19,44 @@
 
 using namespace std;
 
-namespace mtconnect
+namespace mtconnect {
+using namespace entity;
+namespace device_model {
+namespace configuration {
+FactoryPtr Relationships::getFactory()
 {
-  using namespace entity;
-  namespace device_model
+  static FactoryPtr relationships;
+  if (!relationships)
   {
-    namespace configuration
-    {
-      FactoryPtr Relationships::getFactory()
-      {
-        static FactoryPtr relationships;
-        if (!relationships)
-        {
-          auto relationship = make_shared<Factory>(Requirements {
-              Requirement("id", true), Requirement("name", false),
-              Requirement("type", ControlledVocab {"PARENT", "CHILD", "PEER"}, true),
-              Requirement("criticality", ControlledVocab {"CRITICAL", "NON_CRITICAL"}, false)});
+    auto relationship = make_shared<Factory>(Requirements {
+        Requirement("id", true), Requirement("name", false),
+        Requirement("type", ControlledVocab {"PARENT", "CHILD", "PEER"}, true),
+        Requirement("criticality", ControlledVocab {"CRITICAL", "NON_CRITICAL"}, false)});
 
-          auto deviceRelationship = make_shared<Factory>(*relationship);
+    auto deviceRelationship = make_shared<Factory>(*relationship);
 
-          deviceRelationship->addRequirements(Requirements {
-              Requirement("deviceUuidRef", true),
-              Requirement("role", ControlledVocab {"SYSTEM", "AUXILIARY"}, false),
-              Requirement("href", false),
-              Requirement("xlink:type", false),
-          });
+    deviceRelationship->addRequirements(Requirements {
+        Requirement("deviceUuidRef", true),
+        Requirement("role", ControlledVocab {"SYSTEM", "AUXILIARY"}, false),
+        Requirement("href", false),
+        Requirement("xlink:type", false),
+    });
 
-          auto componentRelationship = make_shared<Factory>(*relationship);
+    auto componentRelationship = make_shared<Factory>(*relationship);
 
-          componentRelationship->addRequirements(Requirements {Requirement("idRef", true)});
+    componentRelationship->addRequirements(Requirements {Requirement("idRef", true)});
 
-          relationships = make_shared<Factory>(
-              Requirements {Requirement("ComponentRelationship", ENTITY, componentRelationship, 0,
-                                        Requirement::Infinite),
-                            Requirement("DeviceRelationship", ENTITY, deviceRelationship, 0,
-                                        Requirement::Infinite)});
+    relationships = make_shared<Factory>(Requirements {
+        Requirement("ComponentRelationship", ENTITY, componentRelationship, 0,
+                    Requirement::Infinite),
+        Requirement("DeviceRelationship", ENTITY, deviceRelationship, 0, Requirement::Infinite)});
 
-          relationships->registerMatchers();
+    relationships->registerMatchers();
 
-          relationships->setMinListSize(1);
-        }
-        return relationships;
-      }
-    }  // namespace configuration
-  }    // namespace device_model
+    relationships->setMinListSize(1);
+  }
+  return relationships;
+}
+}  // namespace configuration
+}  // namespace device_model
 }  // namespace mtconnect

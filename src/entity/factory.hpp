@@ -23,273 +23,271 @@
 
 #include "entity.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace entity {
+using Requirements = std::list<Requirement>;
+
+class Factory : public Matcher, public std::enable_shared_from_this<Factory>
 {
-  namespace entity
+public:
+  using Function = std::function<EntityPtr(const std::string &name, Properties &)>;
+  using Matcher = std::function<bool(const std::string &)>;
+  using MatchPair = std::pair<Matcher, FactoryPtr>;
+  using StringFactory = std::unordered_map<std::string, FactoryPtr>;
+  using MatchFactory = std::list<MatchPair>;
+
+public:
+  // Factory Methods
+  static auto createEntity(const std::string &name, Properties &p)
   {
-    using Requirements = std::list<Requirement>;
+    return std::make_shared<Entity>(name, p);
+  }
 
-    class Factory : public Matcher, public std::enable_shared_from_this<Factory>
+  Factory(const Factory &other) = default;
+  Factory() : m_function(createEntity) {}
+  ~Factory() = default;
+  Factory(const Requirements r) : m_requirements(r), m_function(createEntity)
+  {
+    registerEntityRequirements();
+  }
+  Factory(const Requirements r, Function f) : m_requirements(r), m_function(f)
+  {
+    registerEntityRequirements();
+  }
+  FactoryPtr deepCopy() const;
+
+  FactoryPtr getptr() { return shared_from_this(); }
+
+  void setFunction(Function f) { m_function = f; }
+  void setOrder(OrderList list)
+  {
+    m_order = std::make_shared<OrderMap>();
+    int i = 0;
+    for (auto &e : list)
+      m_order->emplace(e, i++);
+  }
+  void setOrder(OrderMapPtr &list) { m_order = list; }
+  const OrderMapPtr &getOrder() const { return m_order; }
+
+  void setList(bool list) { m_isList = list; }
+  bool isList() const { return m_isList; }
+  void setHasRaw(bool raw) { m_hasRaw = raw; }
+  bool hasRaw() const { return m_hasRaw; }
+  void setMinListSize(size_t size)
+  {
+    m_minListSize = size;
+    m_isList = true;
+  }
+
+  bool isPropertySet(const std::string &name) const { return m_propertySets.count(name) > 0; }
+  bool isSimpleProperty(const std::string &name) const
+  {
+    return m_simpleProperties.count(name) > 0;
+  }
+
+  Requirement *getRequirement(const std::string &name)
+  {
+    for (auto &r : m_requirements)
     {
-    public:
-      using Function = std::function<EntityPtr(const std::string &name, Properties &)>;
-      using Matcher = std::function<bool(const std::string &)>;
-      using MatchPair = std::pair<Matcher, FactoryPtr>;
-      using StringFactory = std::unordered_map<std::string, FactoryPtr>;
-      using MatchFactory = std::list<MatchPair>;
+      if (r.getName() == name)
+        return &r;
+    }
+    return nullptr;
+  }
 
-    public:
-      // Factory Methods
-      static auto createEntity(const std::string &name, Properties &p)
+  void addRequirements(const Requirements &reqs)
+  {
+    for (const auto &r : reqs)
+    {
+      auto old = std::find_if(m_requirements.begin(), m_requirements.end(),
+                              [&r](Requirement &o) { return r.getName() == o.getName(); });
+      if (old != m_requirements.end())
       {
-        return std::make_shared<Entity>(name, p);
+        *old = r;
       }
-
-      Factory(const Factory &other) = default;
-      Factory() : m_function(createEntity) {}
-      ~Factory() = default;
-      Factory(const Requirements r) : m_requirements(r), m_function(createEntity)
+      else
       {
-        registerEntityRequirements();
+        m_requirements.emplace_back(r);
       }
-      Factory(const Requirements r, Function f) : m_requirements(r), m_function(f)
+    }
+    registerEntityRequirements();
+  }
+  void performConversions(Properties &p, ErrorList &errors) const;
+  virtual bool isSufficient(Properties &properties, ErrorList &errors) const;
+
+  EntityPtr make(const std::string &name, Properties &p, ErrorList &errors) const
+  {
+    try
+    {
+      performConversions(p, errors);
+      if (isSufficient(p, errors))
       {
-        registerEntityRequirements();
+        auto ent = m_function(name, p);
+        if (m_order)
+          ent->setOrder(m_order);
+        return ent;
       }
-      FactoryPtr deepCopy() const;
+    }
 
-      FactoryPtr getptr() { return shared_from_this(); }
+    catch (EntityError &e)
+    {
+      e.setEntity(name);
+      errors.emplace_back(std::make_unique<EntityError>(e));
+      LogError("Failed to create " + name + ": " + e.what());
+    }
 
-      void setFunction(Function f) { m_function = f; }
-      void setOrder(OrderList list)
+    for (auto &e : errors)
+    {
+      if (e->getEntity().empty())
+        e->setEntity(name);
+    }
+
+    return nullptr;
+  }
+
+  // Factory
+  bool registerFactory(const std::string &name, FactoryPtr factory)
+  {
+    m_stringFactory.emplace(make_pair(name, factory));
+    return true;
+  }
+
+  bool registerFactory(const std::regex &exp, FactoryPtr factory)
+  {
+    auto matcher = [exp](const std::string &name) { return std::regex_match(name, exp); };
+    m_matchFactory.emplace_back(make_pair(matcher, factory));
+    return true;
+  }
+
+  bool registerFactory(const Matcher &matcher, FactoryPtr factory)
+  {
+    m_matchFactory.emplace_back(make_pair(matcher, factory));
+    return true;
+  }
+
+  FactoryPtr factoryFor(const std::string &name) const
+  {
+    const auto it = m_stringFactory.find(name);
+    if (it != m_stringFactory.end())
+      return it->second;
+    else
+    {
+      for (const auto &r : m_matchFactory)
       {
-        m_order = std::make_shared<OrderMap>();
-        int i = 0;
-        for (auto &e : list)
-          m_order->emplace(e, i++);
+        if (r.first(name))
+          return r.second;
       }
-      void setOrder(OrderMapPtr &list) { m_order = list; }
-      const OrderMapPtr &getOrder() const { return m_order; }
+    }
 
-      void setList(bool list) { m_isList = list; }
-      bool isList() const { return m_isList; }
-      void setHasRaw(bool raw) { m_hasRaw = raw; }
-      bool hasRaw() const { return m_hasRaw; }
-      void setMinListSize(size_t size)
+    return nullptr;
+  }
+
+  bool matches(const std::string &s) const override
+  {
+    auto f = factoryFor(s);
+    return (bool)f;
+  }
+
+  EntityPtr operator()(const std::string &name, Properties &p, ErrorList &errors) const
+  {
+    return make(name, p, errors);
+  }
+
+  std::shared_ptr<Entity> create(const std::string &name, EntityList &a, ErrorList &errors)
+  {
+    auto factory = factoryFor(name);
+    if (factory)
+    {
+      Properties p {{"LIST", a}};
+      return factory->make(name, p, errors);
+    }
+    else
+      return nullptr;
+  }
+
+  std::shared_ptr<Entity> create(const std::string &name, Properties &a, ErrorList &errors)
+  {
+    auto factory = factoryFor(name);
+    if (factory)
+      return factory->make(name, a, errors);
+    else
+      return nullptr;
+  }
+  std::shared_ptr<Entity> create(const std::string &name, Properties &&a, ErrorList &errors)
+  {
+    auto factory = factoryFor(name);
+    if (factory)
+      return factory->make(name, a, errors);
+    else
+      return nullptr;
+  }
+
+  std::shared_ptr<Entity> create(const std::string &name, Properties &a)
+  {
+    ErrorList list;
+    return create(name, a, list);
+  }
+
+  void registerEntityRequirements()
+  {
+    for (auto &r : m_requirements)
+    {
+      auto factory = r.getFactory();
+      if (factory && (r.getType() == ENTITY || r.getType() == ENTITY_LIST))
       {
-        m_minListSize = size;
-        m_isList = true;
+        registerFactory(r.getName(), factory);
+        if (r.getUpperMultiplicity() > 1)
+          m_propertySets.insert(r.getName());
       }
-
-      bool isPropertySet(const std::string &name) const { return m_propertySets.count(name) > 0; }
-      bool isSimpleProperty(const std::string &name) const
+      else if (r.getName() == "RAW")
       {
-        return m_simpleProperties.count(name) > 0;
+        m_hasRaw = true;
       }
-
-      Requirement *getRequirement(const std::string &name)
+      else
       {
-        for (auto &r : m_requirements)
-        {
-          if (r.getName() == name)
-            return &r;
-        }
-        return nullptr;
+        m_simpleProperties.insert(r.getName());
       }
+    }
+  }
 
-      void addRequirements(const Requirements &reqs)
+  void registerMatchers()
+  {
+    auto m = getptr();
+    for (auto &r : m_requirements)
+    {
+      if (r.getUpperMultiplicity() > 1 && !r.hasMatcher())
       {
-        for (const auto &r : reqs)
-        {
-          auto old = std::find_if(m_requirements.begin(), m_requirements.end(),
-                                  [&r](Requirement &o) { return r.getName() == o.getName(); });
-          if (old != m_requirements.end())
-          {
-            *old = r;
-          }
-          else
-          {
-            m_requirements.emplace_back(r);
-          }
-        }
-        registerEntityRequirements();
+        r.setMatcher(m);
       }
-      void performConversions(Properties &p, ErrorList &errors) const;
-      virtual bool isSufficient(Properties &properties, ErrorList &errors) const;
+    }
+  }
 
-      EntityPtr make(const std::string &name, Properties &p, ErrorList &errors) const
-      {
-        try
-        {
-          performConversions(p, errors);
-          if (isSufficient(p, errors))
-          {
-            auto ent = m_function(name, p);
-            if (m_order)
-              ent->setOrder(m_order);
-            return ent;
-          }
-        }
+  // For testing
+  void clear()
+  {
+    m_stringFactory.clear();
+    m_matchFactory.clear();
+  }
 
-        catch (EntityError &e)
-        {
-          e.setEntity(name);
-          errors.emplace_back(std::make_unique<EntityError>(e));
-          LogError("Failed to create " + name + ": " + e.what());
-        }
+protected:
+  using FactoryMap = std::map<FactoryPtr, FactoryPtr>;
+  static void LogError(const std::string &what);
+  void _deepCopy(FactoryMap &factories);
+  static void _dupFactory(FactoryPtr &factory, FactoryMap &factories);
 
-        for (auto &e : errors)
-        {
-          if (e->getEntity().empty())
-            e->setEntity(name);
-        }
+protected:
+  Requirements m_requirements;
+  Function m_function;
+  OrderMapPtr m_order;
 
-        return nullptr;
-      }
+  StringFactory m_stringFactory;
+  MatchFactory m_matchFactory;
+  bool m_isList {false};
+  size_t m_minListSize {0};
+  bool m_hasRaw {false};
+  std::set<std::string> m_propertySets;
+  std::set<std::string> m_simpleProperties;
+};
 
-      // Factory
-      bool registerFactory(const std::string &name, FactoryPtr factory)
-      {
-        m_stringFactory.emplace(make_pair(name, factory));
-        return true;
-      }
-
-      bool registerFactory(const std::regex &exp, FactoryPtr factory)
-      {
-        auto matcher = [exp](const std::string &name) { return std::regex_match(name, exp); };
-        m_matchFactory.emplace_back(make_pair(matcher, factory));
-        return true;
-      }
-
-      bool registerFactory(const Matcher &matcher, FactoryPtr factory)
-      {
-        m_matchFactory.emplace_back(make_pair(matcher, factory));
-        return true;
-      }
-
-      FactoryPtr factoryFor(const std::string &name) const
-      {
-        const auto it = m_stringFactory.find(name);
-        if (it != m_stringFactory.end())
-          return it->second;
-        else
-        {
-          for (const auto &r : m_matchFactory)
-          {
-            if (r.first(name))
-              return r.second;
-          }
-        }
-
-        return nullptr;
-      }
-
-      bool matches(const std::string &s) const override
-      {
-        auto f = factoryFor(s);
-        return (bool)f;
-      }
-
-      EntityPtr operator()(const std::string &name, Properties &p, ErrorList &errors) const
-      {
-        return make(name, p, errors);
-      }
-
-      std::shared_ptr<Entity> create(const std::string &name, EntityList &a, ErrorList &errors)
-      {
-        auto factory = factoryFor(name);
-        if (factory)
-        {
-          Properties p {{"LIST", a}};
-          return factory->make(name, p, errors);
-        }
-        else
-          return nullptr;
-      }
-
-      std::shared_ptr<Entity> create(const std::string &name, Properties &a, ErrorList &errors)
-      {
-        auto factory = factoryFor(name);
-        if (factory)
-          return factory->make(name, a, errors);
-        else
-          return nullptr;
-      }
-      std::shared_ptr<Entity> create(const std::string &name, Properties &&a, ErrorList &errors)
-      {
-        auto factory = factoryFor(name);
-        if (factory)
-          return factory->make(name, a, errors);
-        else
-          return nullptr;
-      }
-
-      std::shared_ptr<Entity> create(const std::string &name, Properties &a)
-      {
-        ErrorList list;
-        return create(name, a, list);
-      }
-
-      void registerEntityRequirements()
-      {
-        for (auto &r : m_requirements)
-        {
-          auto factory = r.getFactory();
-          if (factory && (r.getType() == ENTITY || r.getType() == ENTITY_LIST))
-          {
-            registerFactory(r.getName(), factory);
-            if (r.getUpperMultiplicity() > 1)
-              m_propertySets.insert(r.getName());
-          }
-          else if (r.getName() == "RAW")
-          {
-            m_hasRaw = true;
-          }
-          else
-          {
-            m_simpleProperties.insert(r.getName());
-          }
-        }
-      }
-
-      void registerMatchers()
-      {
-        auto m = getptr();
-        for (auto &r : m_requirements)
-        {
-          if (r.getUpperMultiplicity() > 1 && !r.hasMatcher())
-          {
-            r.setMatcher(m);
-          }
-        }
-      }
-
-      // For testing
-      void clear()
-      {
-        m_stringFactory.clear();
-        m_matchFactory.clear();
-      }
-
-    protected:
-      using FactoryMap = std::map<FactoryPtr, FactoryPtr>;
-      static void LogError(const std::string &what);
-      void _deepCopy(FactoryMap &factories);
-      static void _dupFactory(FactoryPtr &factory, FactoryMap &factories);
-
-    protected:
-      Requirements m_requirements;
-      Function m_function;
-      OrderMapPtr m_order;
-
-      StringFactory m_stringFactory;
-      MatchFactory m_matchFactory;
-      bool m_isList {false};
-      size_t m_minListSize {0};
-      bool m_hasRaw {false};
-      std::set<std::string> m_propertySets;
-      std::set<std::string> m_simpleProperties;
-    };
-
-  }  // namespace entity
+}  // namespace entity
 }  // namespace mtconnect

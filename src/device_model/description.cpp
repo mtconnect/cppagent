@@ -28,28 +28,26 @@
 
 using namespace std;
 
-namespace mtconnect
+namespace mtconnect {
+using namespace entity;
+
+namespace device_model {
+FactoryPtr Description::getFactory()
 {
-  using namespace entity;
+  static auto description = make_shared<Factory>(
+      Requirements {Requirement("manufacturer", false), Requirement("model", false),
+                    Requirement("serialNumber", false), Requirement("station", false),
+                    Requirement("VALUE", false)});
 
-  namespace device_model
-  {
-    FactoryPtr Description::getFactory()
-    {
-      static auto description = make_shared<Factory>(
-          Requirements {Requirement("manufacturer", false), Requirement("model", false),
-                        Requirement("serialNumber", false), Requirement("station", false),
-                        Requirement("VALUE", false)});
+  return description;
+}
 
-      return description;
-    }
+FactoryPtr Description::getRoot()
+{
+  static auto root = make_shared<Factory>(
+      Requirements {Requirement("Description", ENTITY, Description::getFactory(), false)});
 
-    FactoryPtr Description::getRoot()
-    {
-      static auto root = make_shared<Factory>(
-          Requirements {Requirement("Description", ENTITY, Description::getFactory(), false)});
-
-      return root;
-    }
-  }  // namespace device_model
+  return root;
+}
+}  // namespace device_model
 }  // namespace mtconnect

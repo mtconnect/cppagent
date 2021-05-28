@@ -34,48 +34,45 @@
 using namespace std;
 using namespace std::literals;
 
-namespace mtconnect
+namespace mtconnect {
+using namespace observation;
+using namespace entity;
+using namespace pipeline;
+
+namespace adapter {
+namespace shdr {
+void ShdrPipeline::build(const ConfigOptions &options)
 {
-  using namespace observation;
-  using namespace entity;
-  using namespace pipeline;
+  AdapterPipeline::build(options);
+  buildDeviceList();
 
-  namespace adapter
+  buildCommandAndStatusDelivery();
+
+  TransformPtr next = bind(make_shared<ShdrTokenizer>());
+
+  // Optional type based transforms
+  if (IsOptionSet(m_options, configuration::IgnoreTimestamps))
+    next = next->bind(make_shared<IgnoreTimestamp>());
+  else
   {
-    namespace shdr
-    {
-      void ShdrPipeline::build(const ConfigOptions &options)
-      {
-        AdapterPipeline::build(options);
-        buildDeviceList();
+    auto extract =
+        make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
+    next = next->bind(extract);
+  }
 
-        buildCommandAndStatusDelivery();
+  // Token mapping to data items and asset
+  auto mapper = make_shared<ShdrTokenMapper>(
+      m_context, m_device.value_or(""),
+      GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
 
-        TransformPtr next = bind(make_shared<ShdrTokenizer>());
+  buildAssetDelivery(mapper);
+  mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
 
-        // Optional type based transforms
-        if (IsOptionSet(m_options, configuration::IgnoreTimestamps))
-          next = next->bind(make_shared<IgnoreTimestamp>());
-        else
-        {
-          auto extract =
-              make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
-          next = next->bind(extract);
-        }
+  next = next->bind(mapper);
 
-        // Token mapping to data items and asset
-        auto mapper = make_shared<ShdrTokenMapper>(
-            m_context, m_device.value_or(""),
-            GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
-
-        buildAssetDelivery(mapper);
-        mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
-
-        next = next->bind(mapper);
-
-        // Handle the observations and send to nowhere
-        buildObservationDelivery(next);
-      }
-    }  // namespace shdr
-  }    // namespace adapter
+  // Handle the observations and send to nowhere
+  buildObservationDelivery(next);
+}
+}  // namespace shdr
+}  // namespace adapter
 }  // namespace mtconnect

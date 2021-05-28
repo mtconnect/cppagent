@@ -19,26 +19,23 @@
 
 #include "entity.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace device_model {
+namespace data_item {
+class Filter : public entity::Entity
 {
-  namespace device_model
+public:
+  static entity::FactoryPtr getFactory()
   {
-    namespace data_item
-    {
-      class Filter : public entity::Entity
-      {
-      public:
-        static entity::FactoryPtr getFactory()
-        {
-          using namespace mtconnect::entity;
-          using namespace std;
-          static auto filter = make_shared<Factory>(Requirements {
-              {"type", ControlledVocab {"PERIOD", "MINIMUM_DELTA"}}, {"VALUE", DOUBLE, true}});
-          static auto filters = make_shared<Factory>(
-              Requirements {{"Filter", ENTITY, filter, 1, Requirement::Infinite}});
-          return filters;
-        }
-      };
-    }  // namespace data_item
-  }    // namespace device_model
+    using namespace mtconnect::entity;
+    using namespace std;
+    static auto filter = make_shared<Factory>(Requirements {
+        {"type", ControlledVocab {"PERIOD", "MINIMUM_DELTA"}}, {"VALUE", DOUBLE, true}});
+    static auto filters =
+        make_shared<Factory>(Requirements {{"Filter", ENTITY, filter, 1, Requirement::Infinite}});
+    return filters;
+  }
+};
+}  // namespace data_item
+}  // namespace device_model
 }  // namespace mtconnect

@@ -30,131 +30,128 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace mtconnect
+namespace mtconnect {
+using namespace observation;
+using namespace entity;
+
+namespace pipeline {
+const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
 {
   using namespace observation;
-  using namespace entity;
-
-  namespace pipeline
+  auto o = std::dynamic_pointer_cast<Observation>(entity);
+  if (!o)
   {
-    const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
+    throw EntityError(
+        "Unexpected entity type, cannot convert to observation in DeliverObservation");
+  }
+
+  m_contract->deliverObservation(o);
+  (*m_count)++;
+
+  return entity;
+}
+
+void ComputeMetrics::start()
+{
+  m_timer.cancel();
+  m_first = true;
+
+  compute(boost::system::error_code());
+}
+
+void ComputeMetrics::compute(boost::system::error_code ec)
+
+{
+  NAMED_SCOPE("pipeline.deliver");
+
+  if (!ec)
+  {
+    using namespace std;
+    using namespace chrono;
+    using namespace chrono_literals;
+
+    if (!m_dataItem)
+      return;
+
+    auto di = m_contract->findDataItem("Agent", *m_dataItem);
+    if (di == nullptr)
     {
-      using namespace observation;
-      auto o = std::dynamic_pointer_cast<Observation>(entity);
-      if (!o)
-      {
-        throw EntityError(
-            "Unexpected entity type, cannot convert to observation in DeliverObservation");
-      }
-
-      m_contract->deliverObservation(o);
-      (*m_count)++;
-
-      return entity;
+      LOG(warning) << "Could not find data item: " << *m_dataItem << ", exiting metrics";
+      return;
     }
 
-    void ComputeMetrics::start()
+    auto now = std::chrono::steady_clock::now();
+    if (m_first)
     {
-      m_timer.cancel();
-      m_first = true;
-
-      compute(boost::system::error_code());
+      m_last = 0;
+      m_lastAvg = 0.0;
+      m_lastTime = now;
+      m_first = false;
     }
-
-    void ComputeMetrics::compute(boost::system::error_code ec)
-
+    else
     {
-      NAMED_SCOPE("pipeline.deliver");
+      std::chrono::duration<double> dt = now - m_lastTime;
+      m_lastTime = now;
 
-      if (!ec)
+      auto count = *m_count;
+      auto delta = count - m_last;
+
+      double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
+      LOG(debug) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
+      LOG(debug) << *m_dataItem << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
+
+      m_last = count;
+      if (avg != m_lastAvg)
       {
-        using namespace std;
-        using namespace chrono;
-        using namespace chrono_literals;
-
-        if (!m_dataItem)
-          return;
-
-        auto di = m_contract->findDataItem("Agent", *m_dataItem);
-        if (di == nullptr)
-        {
-          LOG(warning) << "Could not find data item: " << *m_dataItem << ", exiting metrics";
-          return;
-        }
-
-        auto now = std::chrono::steady_clock::now();
-        if (m_first)
-        {
-          m_last = 0;
-          m_lastAvg = 0.0;
-          m_lastTime = now;
-          m_first = false;
-        }
-        else
-        {
-          std::chrono::duration<double> dt = now - m_lastTime;
-          m_lastTime = now;
-
-          auto count = *m_count;
-          auto delta = count - m_last;
-
-          double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
-          LOG(debug) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
-          LOG(debug) << *m_dataItem
-                     << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
-
-          m_last = count;
-          if (avg != m_lastAvg)
-          {
-            ErrorList errors;
-            auto obs = Observation::make(
-                di, Properties {{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
-                system_clock::now(), errors);
-            m_contract->deliverObservation(obs);
-            m_lastAvg = avg;
-          }
-        }
-
-        using boost::placeholders::_1;
-        m_timer.expires_from_now(10s);
-        m_timer.async_wait(
-            boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, this, _1)));
+        ErrorList errors;
+        auto obs =
+            Observation::make(di, Properties {{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
+                              system_clock::now(), errors);
+        m_contract->deliverObservation(obs);
+        m_lastAvg = avg;
       }
     }
 
-    const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
-    {
-      auto a = std::dynamic_pointer_cast<asset::Asset>(entity);
-      if (!a)
-      {
-        throw EntityError("Unexpected entity type, cannot convert to asset in DeliverAsset");
-      }
+    using boost::placeholders::_1;
+    m_timer.expires_from_now(10s);
+    m_timer.async_wait(
+        boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, this, _1)));
+  }
+}
 
-      m_contract->deliverAsset(a);
-      (*m_count)++;
+const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
+{
+  auto a = std::dynamic_pointer_cast<asset::Asset>(entity);
+  if (!a)
+  {
+    throw EntityError("Unexpected entity type, cannot convert to asset in DeliverAsset");
+  }
 
-      return entity;
-    }
+  m_contract->deliverAsset(a);
+  (*m_count)++;
 
-    const entity::EntityPtr DeliverConnectionStatus::operator()(const entity::EntityPtr entity)
-    {
-      m_contract->deliverConnectStatus(entity, m_devices, m_autoAvailable);
-      return entity;
-    }
+  return entity;
+}
 
-    const entity::EntityPtr DeliverAssetCommand::operator()(const entity::EntityPtr entity)
-    {
-      m_contract->deliverAssetCommand(entity);
-      return entity;
-    }
+const entity::EntityPtr DeliverConnectionStatus::operator()(const entity::EntityPtr entity)
+{
+  m_contract->deliverConnectStatus(entity, m_devices, m_autoAvailable);
+  return entity;
+}
 
-    const entity::EntityPtr DeliverCommand::operator()(const entity::EntityPtr entity)
-    {
-      if (m_defaultDevice)
-        entity->setProperty("device", *m_defaultDevice);
-      m_contract->deliverCommand(entity);
-      return entity;
-    }
+const entity::EntityPtr DeliverAssetCommand::operator()(const entity::EntityPtr entity)
+{
+  m_contract->deliverAssetCommand(entity);
+  return entity;
+}
 
-  }  // namespace pipeline
+const entity::EntityPtr DeliverCommand::operator()(const entity::EntityPtr entity)
+{
+  if (m_defaultDevice)
+    entity->setProperty("device", *m_defaultDevice);
+  m_contract->deliverCommand(entity);
+  return entity;
+}
+
+}  // namespace pipeline
 }  // namespace mtconnect

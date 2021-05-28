@@ -27,17 +27,15 @@ extern "C"
   using xmlTextWriterPtr = xmlTextWriter *;
 }
 
-namespace mtconnect
+namespace mtconnect {
+namespace entity {
+class XmlPrinter
 {
-  namespace entity
-  {
-    class XmlPrinter
-    {
-    public:
-      XmlPrinter() = default;
+public:
+  XmlPrinter() = default;
 
-      void print(xmlTextWriterPtr writer, const EntityPtr entity,
-                 const std::unordered_set<std::string> &namespaces);
-    };
-  }  // namespace entity
+  void print(xmlTextWriterPtr writer, const EntityPtr entity,
+             const std::unordered_set<std::string> &namespaces);
+};
+}  // namespace entity
 }  // namespace mtconnect

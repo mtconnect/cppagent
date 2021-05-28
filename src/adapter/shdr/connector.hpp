@@ -28,120 +28,114 @@
 
 #define HEARTBEAT_FREQ 60000
 
-namespace mtconnect
+namespace mtconnect {
+namespace adapter {
+namespace shdr {
+class Connector
 {
-  namespace adapter
+public:
+  // Instantiate the server by assigning it a server and port/
+  Connector(boost::asio::io_context &context, std::string server, unsigned int port,
+            std::chrono::seconds legacyTimout = std::chrono::seconds {600},
+            std::chrono::seconds reconnectInterval = std::chrono::seconds {10});
+
+  // Virtual desctructor
+  virtual ~Connector();
+
+  // Blocking call to connect to the server/port
+  // Put data from the socket in the string buffer
+  //
+  virtual bool start();
+  virtual bool resolve();
+  virtual bool connect();
+
+  // Abstract method to handle what to do with each line of data from Socket
+  virtual void processData(const std::string &data) = 0;
+  virtual void protocolCommand(const std::string &data) = 0;
+
+  // Set Reconnect intervals
+  void setReconnectInterval(std::chrono::milliseconds interval) { m_reconnectInterval = interval; }
+  std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
+
+  // The connected state of this connection
+  bool isConnected() const { return m_connected; }
+
+  // Method called when connection is lost.
+  virtual void connecting() = 0;
+  virtual void disconnected() = 0;
+  virtual void connected() = 0;
+
+  // heartbeats
+  bool heartbeats() const { return m_heartbeats; }
+  std::chrono::milliseconds heartbeatFrequency() const { return m_heartbeatFrequency; }
+
+  // Collect data and until it is \n terminated
+  void parseBuffer(const char *buffer);
+
+  // Send a command to the adapter
+  void sendCommand(const std::string &command);
+
+  unsigned int getPort() const { return m_port; }
+  const std::string &getServer() const { return m_server; }
+
+  std::chrono::seconds getLegacyTimeout() const
   {
-    namespace shdr
-    {
-      class Connector
-      {
-      public:
-        // Instantiate the server by assigning it a server and port/
-        Connector(boost::asio::io_context &context, std::string server, unsigned int port,
-                  std::chrono::seconds legacyTimout = std::chrono::seconds {600},
-                  std::chrono::seconds reconnectInterval = std::chrono::seconds {10});
+    return std::chrono::duration_cast<std::chrono::seconds>(m_legacyTimeout);
+  }
 
-        // Virtual desctructor
-        virtual ~Connector();
+  void setRealTime(bool realTime = true) { m_realTime = realTime; }
 
-        // Blocking call to connect to the server/port
-        // Put data from the socket in the string buffer
-        //
-        virtual bool start();
-        virtual bool resolve();
-        virtual bool connect();
+protected:
+  void close();
+  void reconnect();
+  void asyncTryConnect();
+  void connected(const boost::system::error_code &error,
+                 boost::asio::ip::tcp::resolver::iterator it);
+  void writer(boost::system::error_code ec, std::size_t length);
+  void reader(boost::system::error_code ec, std::size_t length);
+  void parseSocketBuffer();
+  void startHeartbeats(const std::string &buf);
+  void heartbeat(boost::system::error_code ec);
+  void setReceiveTimeout();
 
-        // Abstract method to handle what to do with each line of data from Socket
-        virtual void processData(const std::string &data) = 0;
-        virtual void protocolCommand(const std::string &data) = 0;
+protected:
+  // Name of the server to connect to
+  std::string m_server;
 
-        // Set Reconnect intervals
-        void setReconnectInterval(std::chrono::milliseconds interval)
-        {
-          m_reconnectInterval = interval;
-        }
-        std::chrono::milliseconds getReconnectInterval() const { return m_reconnectInterval; }
+  // Connection
+  boost::asio::io_context::strand m_strand;
+  boost::asio::ip::tcp::socket m_socket;
+  boost::asio::ip::tcp::endpoint m_endpoint;
+  boost::asio::ip::tcp::resolver::results_type m_results;
 
-        // The connected state of this connection
-        bool isConnected() const { return m_connected; }
+  // For reentry
+  boost::asio::coroutine m_coroutine;
 
-        // Method called when connection is lost.
-        virtual void connecting() = 0;
-        virtual void disconnected() = 0;
-        virtual void connected() = 0;
+  // The port number to connect to
+  unsigned int m_port;
+  unsigned int m_localPort;
 
-        // heartbeats
-        bool heartbeats() const { return m_heartbeats; }
-        std::chrono::milliseconds heartbeatFrequency() const { return m_heartbeatFrequency; }
+  boost::asio::streambuf m_incoming;
+  boost::asio::streambuf m_outgoing;
 
-        // Collect data and until it is \n terminated
-        void parseBuffer(const char *buffer);
+  // Some timeers
+  boost::asio::steady_timer m_timer;
+  boost::asio::steady_timer m_heartbeatTimer;
+  boost::asio::steady_timer m_receiveTimeout;
 
-        // Send a command to the adapter
-        void sendCommand(const std::string &command);
+  // The connected state of this connector
+  bool m_connected;
 
-        unsigned int getPort() const { return m_port; }
-        const std::string &getServer() const { return m_server; }
+  // Priority boost
+  bool m_realTime;
 
-        std::chrono::seconds getLegacyTimeout() const
-        {
-          return std::chrono::duration_cast<std::chrono::seconds>(m_legacyTimeout);
-        }
-
-        void setRealTime(bool realTime = true) { m_realTime = realTime; }
-
-      protected:
-        void close();
-        void reconnect();
-        void asyncTryConnect();
-        void connected(const boost::system::error_code &error,
-                       boost::asio::ip::tcp::resolver::iterator it);
-        void writer(boost::system::error_code ec, std::size_t length);
-        void reader(boost::system::error_code ec, std::size_t length);
-        void parseSocketBuffer();
-        void startHeartbeats(const std::string &buf);
-        void heartbeat(boost::system::error_code ec);
-        void setReceiveTimeout();
-
-      protected:
-        // Name of the server to connect to
-        std::string m_server;
-
-        // Connection
-        boost::asio::io_context::strand m_strand;
-        boost::asio::ip::tcp::socket m_socket;
-        boost::asio::ip::tcp::endpoint m_endpoint;
-        boost::asio::ip::tcp::resolver::results_type m_results;
-
-        // For reentry
-        boost::asio::coroutine m_coroutine;
-
-        // The port number to connect to
-        unsigned int m_port;
-        unsigned int m_localPort;
-
-        boost::asio::streambuf m_incoming;
-        boost::asio::streambuf m_outgoing;
-
-        // Some timeers
-        boost::asio::steady_timer m_timer;
-        boost::asio::steady_timer m_heartbeatTimer;
-        boost::asio::steady_timer m_receiveTimeout;
-
-        // The connected state of this connector
-        bool m_connected;
-
-        // Priority boost
-        bool m_realTime;
-
-        // Heartbeats
-        bool m_heartbeats = false;
-        std::chrono::milliseconds m_heartbeatFrequency = std::chrono::milliseconds {HEARTBEAT_FREQ};
-        std::chrono::milliseconds m_legacyTimeout;
-        std::chrono::milliseconds m_reconnectInterval;
-        std::chrono::milliseconds m_receiveTimeLimit;
-      };
-    }  // namespace shdr
-  }    // namespace adapter
+  // Heartbeats
+  bool m_heartbeats = false;
+  std::chrono::milliseconds m_heartbeatFrequency = std::chrono::milliseconds {HEARTBEAT_FREQ};
+  std::chrono::milliseconds m_legacyTimeout;
+  std::chrono::milliseconds m_reconnectInterval;
+  std::chrono::milliseconds m_receiveTimeLimit;
+};
+}  // namespace shdr
+}  // namespace adapter
 }  // namespace mtconnect

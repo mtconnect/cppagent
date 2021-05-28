@@ -19,19 +19,16 @@
 
 #include "adapter/adapter_pipeline.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace adapter {
+namespace shdr {
+class ShdrPipeline : public AdapterPipeline
 {
-  namespace adapter
-  {
-    namespace shdr
-    {
-      class ShdrPipeline : public AdapterPipeline
-      {
-      public:
-        ShdrPipeline(pipeline::PipelineContextPtr context) : AdapterPipeline(context) {}
+public:
+  ShdrPipeline(pipeline::PipelineContextPtr context) : AdapterPipeline(context) {}
 
-        void build(const ConfigOptions &options) override;
-      };
-    }  // namespace shdr
-  }    // namespace adapter
+  void build(const ConfigOptions &options) override;
+};
+}  // namespace shdr
+}  // namespace adapter
 }  // namespace mtconnect

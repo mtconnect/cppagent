@@ -20,35 +20,32 @@
 #include "entity.hpp"
 #include "filter.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace device_model {
+namespace data_item {
+class Constraints : public entity::Entity
 {
-  namespace device_model
+public:
+  static entity::FactoryPtr getFactory()
   {
-    namespace data_item
+    using namespace mtconnect::entity;
+    static FactoryPtr factory;
+    if (!factory)
     {
-      class Constraints : public entity::Entity
-      {
-      public:
-        static entity::FactoryPtr getFactory()
-        {
-          using namespace mtconnect::entity;
-          static FactoryPtr factory;
-          if (!factory)
-          {
-            auto limit = std::make_shared<Factory>(Requirements {{"VALUE", DOUBLE, true}});
-            auto value = std::make_shared<Factory>(Requirements {{"VALUE", true}});
-            auto filter = Filter::getFactory()->factoryFor("Filter")->deepCopy();
-            filter->getRequirement("type")->setMultiplicity(0, 1);
-            factory = std::make_shared<Factory>(
-                Requirements {{"Minimum", ENTITY, limit, 0, 1},
-                              {"Maximum", ENTITY, limit, 0, 1},
-                              {"Nominal", ENTITY, limit, 0, 1},
-                              {"Value", ENTITY, value, 0, Requirement::Infinite},
-                              {"Filter", ENTITY, filter, 0, Requirement::Infinite}});
-          }
-          return factory;
-        }
-      };
-    }  // namespace data_item
-  }    // namespace device_model
+      auto limit = std::make_shared<Factory>(Requirements {{"VALUE", DOUBLE, true}});
+      auto value = std::make_shared<Factory>(Requirements {{"VALUE", true}});
+      auto filter = Filter::getFactory()->factoryFor("Filter")->deepCopy();
+      filter->getRequirement("type")->setMultiplicity(0, 1);
+      factory = std::make_shared<Factory>(
+          Requirements {{"Minimum", ENTITY, limit, 0, 1},
+                        {"Maximum", ENTITY, limit, 0, 1},
+                        {"Nominal", ENTITY, limit, 0, 1},
+                        {"Value", ENTITY, value, 0, Requirement::Infinite},
+                        {"Filter", ENTITY, filter, 0, Requirement::Infinite}});
+    }
+    return factory;
+  }
+};
+}  // namespace data_item
+}  // namespace device_model
 }  // namespace mtconnect

@@ -30,132 +30,131 @@
 
 using namespace std;
 
-namespace mtconnect
+namespace mtconnect {
+using namespace observation;
+using namespace asset;
+using namespace pipeline;
+void LoopbackPipeline::build(const ConfigOptions &options)
 {
-  using namespace observation;
-  using namespace asset;
-  using namespace pipeline;
-  void LoopbackPipeline::build(const ConfigOptions &options)
+  clear();
+  TransformPtr next = m_start;
+
+  next->bind(make_shared<DeliverAsset>(m_context));
+  next->bind(make_shared<DeliverAssetCommand>(m_context));
+
+  if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
+    next = next->bind(make_shared<UpcaseValue>());
+
+  // Filter dups, by delta, and by period
+  next = next->bind(make_shared<DuplicateFilter>(m_context));
+  next = next->bind(make_shared<DeltaFilter>(m_context));
+  next = next->bind(make_shared<PeriodFilter>(m_context));
+
+  // Convert values
+  if (IsOptionSet(m_options, configuration::ConversionRequired))
+    next = next->bind(make_shared<ConvertSample>());
+
+  // Deliver
+  next->bind(make_shared<DeliverObservation>(m_context));
+}
+
+SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, entity::Properties props,
+                                         std::optional<Timestamp> timestamp)
+{
+  entity::ErrorList errors;
+
+  Timestamp ts = timestamp ? *timestamp : chrono::system_clock::now();
+  auto observation = observation::Observation::make(dataItem, props, ts, errors);
+  if (observation && errors.empty())
   {
-    clear();
-    TransformPtr next = m_start;
-
-    next->bind(make_shared<DeliverAsset>(m_context));
-    next->bind(make_shared<DeliverAssetCommand>(m_context));
-
-    if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
-      next = next->bind(make_shared<UpcaseValue>());
-
-    // Filter dups, by delta, and by period
-    next = next->bind(make_shared<DuplicateFilter>(m_context));
-    next = next->bind(make_shared<DeltaFilter>(m_context));
-    next = next->bind(make_shared<PeriodFilter>(m_context));
-
-    // Convert values
-    if (IsOptionSet(m_options, configuration::ConversionRequired))
-      next = next->bind(make_shared<ConvertSample>());
-
-    // Deliver
-    next->bind(make_shared<DeliverObservation>(m_context));
+    return receive(observation);
+  }
+  else
+  {
+    LOG(error) << "Cannot add observation: ";
+    for (auto &e : errors)
+    {
+      LOG(error) << "Cannot add observation: " << e->what();
+    }
   }
 
-  SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, entity::Properties props,
-                                           std::optional<Timestamp> timestamp)
+  return 0;
+}
+
+SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, const std::string &value,
+                                         std::optional<Timestamp> timestamp)
+{
+  if (dataItem->isCondition())
+    return receive(dataItem, {{"level", value}}, timestamp);
+  else
+    return receive(dataItem, {{"VALUE", value}}, timestamp);
+}
+
+AssetPtr LoopbackSource::receiveAsset(DevicePtr device, const std::string &document,
+                                      const std::optional<std::string> &id,
+                                      const std::optional<std::string> &type,
+                                      const std::optional<std::string> &time,
+                                      entity::ErrorList &errors)
+{
+  // Parse the asset
+  auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, "1.7", errors);
+  if (!entity)
   {
-    entity::ErrorList errors;
-
-    Timestamp ts = timestamp ? *timestamp : chrono::system_clock::now();
-    auto observation = observation::Observation::make(dataItem, props, ts, errors);
-    if (observation && errors.empty())
-    {
-      return receive(observation);
-    }
-    else
-    {
-      LOG(error) << "Cannot add observation: ";
-      for (auto &e : errors)
-      {
-        LOG(error) << "Cannot add observation: " << e->what();
-      }
-    }
-
-    return 0;
+    LOG(warning) << "Asset could not be parsed";
+    LOG(warning) << document;
+    for (auto &e : errors)
+      LOG(warning) << e->what();
+    return nullptr;
   }
 
-  SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, const std::string &value,
-                                           std::optional<Timestamp> timestamp)
+  auto asset = dynamic_pointer_cast<asset::Asset>(entity);
+
+  if (type && asset->getType() != *type)
   {
-    if (dataItem->isCondition())
-      return receive(dataItem, {{"level", value}}, timestamp);
-    else
-      return receive(dataItem, {{"VALUE", value}}, timestamp);
-  }
-
-  AssetPtr LoopbackSource::receiveAsset(DevicePtr device, const std::string &document,
-                                        const std::optional<std::string> &id,
-                                        const std::optional<std::string> &type,
-                                        const std::optional<std::string> &time,
-                                        entity::ErrorList &errors)
-  {
-    // Parse the asset
-    auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, "1.7", errors);
-    if (!entity)
-    {
-      LOG(warning) << "Asset could not be parsed";
-      LOG(warning) << document;
-      for (auto &e : errors)
-        LOG(warning) << e->what();
-      return nullptr;
-    }
-
-    auto asset = dynamic_pointer_cast<asset::Asset>(entity);
-
-    if (type && asset->getType() != *type)
-    {
-      stringstream msg;
-      msg << "Asset types do not match: "
-          << "Parsed type: " << asset->getType() << " does not match " << *type;
-      LOG(warning) << msg.str();
-      LOG(warning) << document;
-      errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
-      return asset;
-    }
-
-    if (!id && !asset->hasProperty("assetId"))
-    {
-      stringstream msg;
-      msg << "Asset does not have an assetId and assetId not given";
-      LOG(warning) << msg.str();
-      LOG(warning) << document;
-      errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
-      return asset;
-    }
-
-    if (id)
-      asset->setAssetId(*id);
-
-    if (time)
-      asset->setProperty("timestamp", *time);
-
-    auto ad = asset->getDeviceUuid();
-    if (!ad)
-      asset->setProperty("deviceUuid", *device->getUuid());
-
-    receive(asset);
-
+    stringstream msg;
+    msg << "Asset types do not match: "
+        << "Parsed type: " << asset->getType() << " does not match " << *type;
+    LOG(warning) << msg.str();
+    LOG(warning) << document;
+    errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
     return asset;
   }
 
-  void LoopbackSource::removeAsset(const std::optional<std::string> device, const std::string &id)
+  if (!id && !asset->hasProperty("assetId"))
   {
-    auto ac = make_shared<AssetCommand>("AssetCommand", Properties {});
-    ac->m_timestamp = chrono::system_clock::now();
-    ac->setValue("RemoveAsset"s);
-    ac->setProperty("assetId", id);
-    if (device)
-      ac->setProperty("device", *device);
-
-    m_pipeline.run(ac);
+    stringstream msg;
+    msg << "Asset does not have an assetId and assetId not given";
+    LOG(warning) << msg.str();
+    LOG(warning) << document;
+    errors.emplace_back(make_unique<entity::EntityError>(msg.str()));
+    return asset;
   }
+
+  if (id)
+    asset->setAssetId(*id);
+
+  if (time)
+    asset->setProperty("timestamp", *time);
+
+  auto ad = asset->getDeviceUuid();
+  if (!ad)
+    asset->setProperty("deviceUuid", *device->getUuid());
+
+  receive(asset);
+
+  return asset;
+}
+
+void LoopbackSource::removeAsset(const std::optional<std::string> device, const std::string &id)
+{
+  auto ac = make_shared<AssetCommand>("AssetCommand", Properties {});
+  ac->m_timestamp = chrono::system_clock::now();
+  ac->setValue("RemoveAsset"s);
+  ac->setProperty("assetId", id);
+  if (device)
+    ac->setProperty("device", *device);
+
+  m_pipeline.run(ac);
+}
 
 }  // namespace mtconnect

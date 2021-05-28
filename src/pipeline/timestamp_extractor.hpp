@@ -21,118 +21,112 @@
 #include "transform.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+class Agent;
+
+namespace pipeline {
+using namespace entity;
+
+class Timestamped : public Tokens
 {
-  class Agent;
+public:
+  using Tokens::Tokens;
+  Timestamped(const Timestamped &ts) = default;
+  Timestamped(const Tokens &ptr) : Tokens(ptr) {}
+  Timestamped(const Timestamped &ts, TokenList list)
+    : Tokens(ts, list), m_timestamp(ts.m_timestamp), m_duration(ts.m_duration)
+  {}
+  ~Timestamped() = default;
+  Timestamp m_timestamp;
+  std::optional<double> m_duration;
+};
+using TimestampedPtr = std::shared_ptr<Timestamped>;
 
-  namespace pipeline
+class AssetCommand : public Timestamped
+{
+public:
+  using Timestamped::Timestamped;
+};
+
+class Observations : public Timestamped
+{
+public:
+  using Timestamped::Timestamped;
+};
+
+class ExtractTimestamp : public Transform
+{
+public:
+  ExtractTimestamp(const ExtractTimestamp &) = default;
+  ExtractTimestamp(bool relativeTime) : Transform("ExtractTimestamp"), m_relativeTime(relativeTime)
   {
-    using namespace entity;
+    m_guard = TypeGuard<Tokens>(RUN);
+  }
+  ~ExtractTimestamp() override = default;
 
-    class Timestamped : public Tokens
+  using Now = std::function<Timestamp()>;
+  const EntityPtr operator()(const EntityPtr ptr) override
+  {
+    TimestampedPtr res;
+    std::optional<std::string> token;
+    if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr); tokens && tokens->m_tokens.size() > 0)
     {
-    public:
-      using Tokens::Tokens;
-      Timestamped(const Timestamped &ts) = default;
-      Timestamped(const Tokens &ptr) : Tokens(ptr) {}
-      Timestamped(const Timestamped &ts, TokenList list)
-        : Tokens(ts, list), m_timestamp(ts.m_timestamp), m_duration(ts.m_duration)
-      {
-      }
-      ~Timestamped() = default;
-      Timestamp m_timestamp;
-      std::optional<double> m_duration;
-    };
-    using TimestampedPtr = std::shared_ptr<Timestamped>;
-
-    class AssetCommand : public Timestamped
+      res = std::make_shared<Timestamped>(*tokens);
+      token = res->m_tokens.front();
+      res->m_tokens.pop_front();
+    }
+    else if (ptr->hasProperty("timestamp"))
     {
-    public:
-      using Timestamped::Timestamped;
-    };
+      token = res->maybeGet<std::string>("timestamp");
+      if (token)
+        res->erase("timestamp");
+    }
 
-    class Observations : public Timestamped
+    if (token)
+      extractTimestamp(*token, res);
+    else
+      res->m_timestamp = now();
+
+    res->setProperty("timestamp", res->m_timestamp);
+    return next(res);
+  }
+
+  void extractTimestamp(const std::string &token, TimestampedPtr &ts);
+  inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
+
+  Now m_now;
+
+protected:
+  bool m_relativeTime {false};
+  std::optional<Timestamp> m_base;
+  Microseconds m_offset;
+};
+
+class IgnoreTimestamp : public ExtractTimestamp
+{
+public:
+  IgnoreTimestamp() : ExtractTimestamp("IgnoreTimestamp") {}
+  IgnoreTimestamp(const IgnoreTimestamp &) = default;
+  ~IgnoreTimestamp() override = default;
+
+  const EntityPtr operator()(const EntityPtr ptr) override
+  {
+    TimestampedPtr res;
+    std::optional<std::string> token;
+    if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr); tokens && tokens->m_tokens.size() > 0)
     {
-    public:
-      using Timestamped::Timestamped;
-    };
-
-    class ExtractTimestamp : public Transform
+      res = std::make_shared<Timestamped>(*tokens);
+      res->m_tokens.pop_front();
+    }
+    else if (res->hasProperty("timestamp"))
     {
-    public:
-      ExtractTimestamp(const ExtractTimestamp &) = default;
-      ExtractTimestamp(bool relativeTime)
-        : Transform("ExtractTimestamp"), m_relativeTime(relativeTime)
-      {
-        m_guard = TypeGuard<Tokens>(RUN);
-      }
-      ~ExtractTimestamp() override = default;
+      res->erase("timestamp");
+    }
+    res->m_timestamp = now();
+    res->setProperty("timestamp", res->m_timestamp);
 
-      using Now = std::function<Timestamp()>;
-      const EntityPtr operator()(const EntityPtr ptr) override
-      {
-        TimestampedPtr res;
-        std::optional<std::string> token;
-        if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr);
-            tokens && tokens->m_tokens.size() > 0)
-        {
-          res = std::make_shared<Timestamped>(*tokens);
-          token = res->m_tokens.front();
-          res->m_tokens.pop_front();
-        }
-        else if (ptr->hasProperty("timestamp"))
-        {
-          token = res->maybeGet<std::string>("timestamp");
-          if (token)
-            res->erase("timestamp");
-        }
-
-        if (token)
-          extractTimestamp(*token, res);
-        else
-          res->m_timestamp = now();
-
-        res->setProperty("timestamp", res->m_timestamp);
-        return next(res);
-      }
-
-      void extractTimestamp(const std::string &token, TimestampedPtr &ts);
-      inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
-
-      Now m_now;
-
-    protected:
-      bool m_relativeTime {false};
-      std::optional<Timestamp> m_base;
-      Microseconds m_offset;
-    };
-
-    class IgnoreTimestamp : public ExtractTimestamp
-    {
-    public:
-      IgnoreTimestamp() : ExtractTimestamp("IgnoreTimestamp") {}
-      IgnoreTimestamp(const IgnoreTimestamp &) = default;
-      ~IgnoreTimestamp() override = default;
-
-      const EntityPtr operator()(const EntityPtr ptr) override
-      {
-        TimestampedPtr res;
-        std::optional<std::string> token;
-        if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr);
-            tokens && tokens->m_tokens.size() > 0)
-        {
-          res = std::make_shared<Timestamped>(*tokens);
-          res->m_tokens.pop_front();
-        }
-        else if (res->hasProperty("timestamp"))
-        {
-          res->erase("timestamp");
-        }
-        res->m_timestamp = now();
-        res->setProperty("timestamp", res->m_timestamp);
-
-        return next(res);
-      }
-    };
-  }  // namespace pipeline
+    return next(res);
+  }
+};
+}  // namespace pipeline
 }  // namespace mtconnect

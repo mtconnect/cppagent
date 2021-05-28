@@ -33,122 +33,119 @@ using namespace std;
 using namespace std::literals;
 using namespace date::literals;
 
-namespace mtconnect
+namespace mtconnect {
+namespace adapter {
+namespace shdr {
+// Adapter public methods
+ShdrAdapter::ShdrAdapter(boost::asio::io_context &context, const string &server,
+                         const unsigned int port, const ConfigOptions &options,
+                         std::unique_ptr<ShdrPipeline> &pipeline)
+  : Connector(context, server, port, 60s),
+    Adapter("Adapter", options),
+    m_pipeline(std::move(pipeline)),
+    m_running(true)
 {
-  namespace adapter
+  auto timeout = options.find(configuration::LegacyTimeout);
+  if (timeout != options.end())
+    m_legacyTimeout = get<Seconds>(timeout->second);
+
+  stringstream url;
+  url << "shdr://" << server << ':' << port;
+  m_url = url.str();
+
+  stringstream identity;
+  identity << '_' << server << '_' << port;
+  m_name = identity.str();
+  boost::uuids::detail::sha1 sha1;
+  sha1.process_bytes(identity.str().c_str(), identity.str().length());
+  boost::uuids::detail::sha1::digest_type digest;
+  sha1.get_digest(digest);
+
+  identity.str("");
+  identity << std::hex << digest[0] << digest[1] << digest[2];
+  m_identity = string("_") + (identity.str()).substr(0, 10);
+
+  m_options[configuration::AdapterIdentity] = m_identity;
+  m_handler = m_pipeline->makeHandler();
+  if (m_pipeline->hasContract())
+    m_pipeline->build(m_options);
+  auto intv = GetOption<Milliseconds>(options, configuration::ReconnectInterval);
+  if (intv)
+    m_reconnectInterval = *intv;
+}
+
+void ShdrAdapter::processData(const string &data)
+{
+  if (m_terminator)
   {
-    namespace shdr
+    if (data == *m_terminator)
     {
-      // Adapter public methods
-      ShdrAdapter::ShdrAdapter(boost::asio::io_context &context, const string &server,
-                               const unsigned int port, const ConfigOptions &options,
-                               std::unique_ptr<ShdrPipeline> &pipeline)
-        : Connector(context, server, port, 60s),
-          Adapter("Adapter", options),
-          m_pipeline(std::move(pipeline)),
-          m_running(true)
-      {
-        auto timeout = options.find(configuration::LegacyTimeout);
-        if (timeout != options.end())
-          m_legacyTimeout = get<Seconds>(timeout->second);
+      if (m_handler && m_handler->m_processData)
+        m_handler->m_processData(m_body.str(), getIdentity());
+      m_terminator.reset();
+      m_body.str("");
+    }
+    else
+    {
+      m_body << endl << data;
+    }
 
-        stringstream url;
-        url << "shdr://" << server << ':' << port;
-        m_url = url.str();
+    return;
+  }
 
-        stringstream identity;
-        identity << '_' << server << '_' << port;
-        m_name = identity.str();
-        boost::uuids::detail::sha1 sha1;
-        sha1.process_bytes(identity.str().c_str(), identity.str().length());
-        boost::uuids::detail::sha1::digest_type digest;
-        sha1.get_digest(digest);
+  if (size_t multi = data.find("--multiline--"); multi != string::npos)
+  {
+    m_body.str("");
+    m_body << data.substr(0, multi);
+    m_terminator = data.substr(multi);
+    return;
+  }
 
-        identity.str("");
-        identity << std::hex << digest[0] << digest[1] << digest[2];
-        m_identity = string("_") + (identity.str()).substr(0, 10);
+  if (m_handler && m_handler->m_processData)
+    m_handler->m_processData(data, getIdentity());
+}
 
-        m_options[configuration::AdapterIdentity] = m_identity;
-        m_handler = m_pipeline->makeHandler();
-        if (m_pipeline->hasContract())
-          m_pipeline->build(m_options);
-        auto intv = GetOption<Milliseconds>(options, configuration::ReconnectInterval);
-        if (intv)
-          m_reconnectInterval = *intv;
-      }
+void ShdrAdapter::stop()
+{
+  NAMED_SCOPE("input.adapter.stop");
+  // Will stop threaded object gracefully Adapter::thread()
+  LOG(debug) << "Waiting for adapter to stop: " << m_url;
+  m_running = false;
+  close();
+  LOG(debug) << "Adapter exited: " << m_url;
+}
 
-      void ShdrAdapter::processData(const string &data)
-      {
-        if (m_terminator)
-        {
-          if (data == *m_terminator)
-          {
-            if (m_handler && m_handler->m_processData)
-              m_handler->m_processData(m_body.str(), getIdentity());
-            m_terminator.reset();
-            m_body.str("");
-          }
-          else
-          {
-            m_body << endl << data;
-          }
+inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }
 
-          return;
-        }
+void ShdrAdapter::protocolCommand(const std::string &data)
+{
+  static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
+  smatch match;
 
-        if (size_t multi = data.find("--multiline--"); multi != string::npos)
-        {
-          m_body.str("");
-          m_body << data.substr(0, multi);
-          m_terminator = data.substr(multi);
-          return;
-        }
+  if (std::regex_match(data, match, pattern))
+  {
+    auto command = match[1].str();
+    auto value = match[2].str();
 
-        if (m_handler && m_handler->m_processData)
-          m_handler->m_processData(data, getIdentity());
-      }
+    ConfigOptions options;
 
-      void ShdrAdapter::stop()
-      {
-        NAMED_SCOPE("input.adapter.stop");
-        // Will stop threaded object gracefully Adapter::thread()
-        LOG(debug) << "Waiting for adapter to stop: " << m_url;
-        m_running = false;
-        close();
-        LOG(debug) << "Adapter exited: " << m_url;
-      }
+    if (command == "conversionRequired")
+      options[configuration::ConversionRequired] = is_true(value);
+    else if (command == "relativeTime")
+      options[configuration::RelativeTime] = is_true(value);
+    else if (command == "realTime")
+      options[configuration::RealTime] = is_true(value);
+    else if (command == "device")
+      options[configuration::Device] = value;
+    else if (command == "shdrVersion")
+      options[configuration::ShdrVersion] = value;
 
-      inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }
-
-      void ShdrAdapter::protocolCommand(const std::string &data)
-      {
-        static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
-        smatch match;
-
-        if (std::regex_match(data, match, pattern))
-        {
-          auto command = match[1].str();
-          auto value = match[2].str();
-
-          ConfigOptions options;
-
-          if (command == "conversionRequired")
-            options[configuration::ConversionRequired] = is_true(value);
-          else if (command == "relativeTime")
-            options[configuration::RelativeTime] = is_true(value);
-          else if (command == "realTime")
-            options[configuration::RealTime] = is_true(value);
-          else if (command == "device")
-            options[configuration::Device] = value;
-          else if (command == "shdrVersion")
-            options[configuration::ShdrVersion] = value;
-
-          if (options.size() > 0)
-            setOptions(options);
-          else if (m_handler && m_handler->m_command)
-            m_handler->m_command(data, getIdentity());
-        }
-      }
-    }  // namespace shdr
-  }    // namespace adapter
+    if (options.size() > 0)
+      setOptions(options);
+    else if (m_handler && m_handler->m_command)
+      m_handler->m_command(data, getIdentity());
+  }
+}
+}  // namespace shdr
+}  // namespace adapter
 }  // namespace mtconnect

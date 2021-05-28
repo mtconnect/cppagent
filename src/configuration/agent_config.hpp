@@ -33,85 +33,81 @@
 #include "service.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace rest_sink {
+class Server;
+}
+class Agent;
+namespace device_model {
+class Device;
+}
+
+class XmlPrinter;
+namespace configuration {
+using DevicePtr = std::shared_ptr<device_model::Device>;
+
+using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
+                                               const std::string &);
+using StyleFunction = void (XmlPrinter::*)(const std::string &);
+
+class AgentConfiguration : public MTConnectService
 {
-  namespace rest_sink
-  {
-    class Server;
-  }
-  class Agent;
-  namespace device_model
-  {
-    class Device;
-  }
+public:
+  using ptree = boost::property_tree::ptree;
 
-  class XmlPrinter;
-  namespace configuration
-  {
-    using DevicePtr = std::shared_ptr<device_model::Device>;
+  AgentConfiguration();
+  virtual ~AgentConfiguration();
 
-    using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
-                                                   const std::string &);
-    using StyleFunction = void (XmlPrinter::*)(const std::string &);
+  // For MTConnectService
+  void stop() override;
+  void start() override;
+  void initialize(int argc, const char *argv[]) override;
 
-    class AgentConfiguration : public MTConnectService
-    {
-    public:
-      using ptree = boost::property_tree::ptree;
+  void configureLogger(const ptree &config);
+  void loadConfig(const std::string &file);
 
-      AgentConfiguration();
-      virtual ~AgentConfiguration();
+  void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
+  const Agent *getAgent() const { return m_agent.get(); }
 
-      // For MTConnectService
-      void stop() override;
-      void start() override;
-      void initialize(int argc, const char *argv[]) override;
+  void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
-      void configureLogger(const ptree &config);
-      void loadConfig(const std::string &file);
+protected:
+  DevicePtr defaultDevice();
+  void loadAdapters(const ptree &tree, const ConfigOptions &options);
+  void loadAllowPut(rest_sink::Server *server, ConfigOptions &options);
+  void loadNamespace(const ptree &tree, const char *namespaceType, rest_sink::FileCache *cache,
+                     XmlPrinter *printer, NamespaceFunction callback);
+  void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, rest_sink::FileCache *cache);
+  void loadStyle(const ptree &tree, const char *styleName, rest_sink::FileCache *cache,
+                 XmlPrinter *printer, StyleFunction styleFunction);
+  void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
+  void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
+  void loadTopics(const ptree &tree, ConfigOptions &options);
 
-      void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
-      const Agent *getAgent() const { return m_agent.get(); }
+  std::optional<std::filesystem::path> checkPath(const std::string &name);
 
-      void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
+  void boost_set_log_level(const boost::log::trivial::severity_level level);
 
-    protected:
-      DevicePtr defaultDevice();
-      void loadAdapters(const ptree &tree, const ConfigOptions &options);
-      void loadAllowPut(rest_sink::Server *server, ConfigOptions &options);
-      void loadNamespace(const ptree &tree, const char *namespaceType, rest_sink::FileCache *cache,
-                         XmlPrinter *printer, NamespaceFunction callback);
-      void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, rest_sink::FileCache *cache);
-      void loadStyle(const ptree &tree, const char *styleName, rest_sink::FileCache *cache,
-                     XmlPrinter *printer, StyleFunction styleFunction);
-      void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
-      void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
-      void loadTopics(const ptree &tree, ConfigOptions &options);
+  void monitorThread();
 
-      std::optional<std::filesystem::path> checkPath(const std::string &name);
+protected:
+  boost::asio::io_context m_context;
+  std::list<std::thread> m_workers;
+  std::unique_ptr<Agent> m_agent;
 
-      void boost_set_log_level(const boost::log::trivial::severity_level level);
+  pipeline::PipelineContextPtr m_pipelineContext;
+  std::unique_ptr<adapter::Handler> m_adapterHandler;
+  boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>
+      m_sink;
+  std::string m_version;
+  bool m_monitorFiles = false;
+  int m_minimumConfigReloadAge = 15;
+  std::string m_devicesFile;
+  bool m_restart = false;
+  std::filesystem::path m_exePath;
+  std::filesystem::path m_working;
 
-      void monitorThread();
-
-    protected:
-      boost::asio::io_context m_context;
-      std::list<std::thread> m_workers;
-      std::unique_ptr<Agent> m_agent;
-
-      pipeline::PipelineContextPtr m_pipelineContext;
-      std::unique_ptr<adapter::Handler> m_adapterHandler;
-      boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>
-          m_sink;
-      std::string m_version;
-      bool m_monitorFiles = false;
-      int m_minimumConfigReloadAge = 15;
-      std::string m_devicesFile;
-      bool m_restart = false;
-      std::filesystem::path m_exePath;
-      std::filesystem::path m_working;
-
-      int m_workerThreadCount {1};
-    };
-  }  // namespace configuration
+  int m_workerThreadCount {1};
+};
+}  // namespace configuration
 }  // namespace mtconnect

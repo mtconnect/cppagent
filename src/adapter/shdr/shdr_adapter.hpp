@@ -32,89 +32,84 @@
 #include "source.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+class Agent;
+namespace device_model {
+class Device;
+}
+
+namespace adapter {
+namespace shdr {
+class ShdrAdapter : public Connector, public adapter::Adapter
 {
-  class Agent;
-  namespace device_model
+public:
+  // Associate adapter with a device & connect to the server & port
+  ShdrAdapter(boost::asio::io_context &context, const std::string &server, const unsigned int port,
+              const ConfigOptions &options, std::unique_ptr<ShdrPipeline> &pipeline);
+  ShdrAdapter(const ShdrAdapter &) = delete;
+
+  // Virtual destructor
+  ~ShdrAdapter() override { stop(); }
+
+  void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
+  auto &getTerminator() const { return m_terminator; }
+
+  // Inherited method to incoming data from the server
+  void processData(const std::string &data) override;
+  void protocolCommand(const std::string &data) override;
+
+  // Method called when connection is lost.
+  void connecting() override
   {
-    class Device;
+    if (m_handler && m_handler->m_connecting)
+      m_handler->m_connecting(getIdentity());
+  }
+  void disconnected() override
+  {
+    if (m_handler && m_handler->m_disconnected)
+      m_handler->m_disconnected(getIdentity());
+  }
+  void connected() override
+  {
+    if (m_handler && m_handler->m_connected)
+      m_handler->m_connected(getIdentity());
   }
 
-  namespace adapter
+  // Agent Device methods
+  const std::string &getHost() const override { return m_server; }
+  unsigned int getPort() const override { return m_port; }
+
+  // Start and Stop
+  void stop() override;
+  bool start() override
   {
-    namespace shdr
+    if (Connector::start())
     {
-      class ShdrAdapter : public Connector, public adapter::Adapter
-      {
-      public:
-        // Associate adapter with a device & connect to the server & port
-        ShdrAdapter(boost::asio::io_context &context, const std::string &server,
-                    const unsigned int port, const ConfigOptions &options,
-                    std::unique_ptr<ShdrPipeline> &pipeline);
-        ShdrAdapter(const ShdrAdapter &) = delete;
+      m_pipeline->start(m_strand);
+      return true;
+    }
+    else
+      return false;
+  }
 
-        // Virtual destructor
-        ~ShdrAdapter() override { stop(); }
+  void setOptions(const ConfigOptions &options)
+  {
+    for (auto &o : options)
+      m_options.insert_or_assign(o.first, o.second);
+    m_pipeline->build(m_options);
+    if (m_pipeline->started())
+      m_pipeline->start(m_strand);
+  }
 
-        void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
-        auto &getTerminator() const { return m_terminator; }
+protected:
+  std::unique_ptr<ShdrPipeline> m_pipeline;
 
-        // Inherited method to incoming data from the server
-        void processData(const std::string &data) override;
-        void protocolCommand(const std::string &data) override;
+  // If the connector has been running
+  bool m_running;
 
-        // Method called when connection is lost.
-        void connecting() override
-        {
-          if (m_handler && m_handler->m_connecting)
-            m_handler->m_connecting(getIdentity());
-        }
-        void disconnected() override
-        {
-          if (m_handler && m_handler->m_disconnected)
-            m_handler->m_disconnected(getIdentity());
-        }
-        void connected() override
-        {
-          if (m_handler && m_handler->m_connected)
-            m_handler->m_connected(getIdentity());
-        }
-
-        // Agent Device methods
-        const std::string &getHost() const override { return m_server; }
-        unsigned int getPort() const override { return m_port; }
-
-        // Start and Stop
-        void stop() override;
-        bool start() override
-        {
-          if (Connector::start())
-          {
-            m_pipeline->start(m_strand);
-            return true;
-          }
-          else
-            return false;
-        }
-
-        void setOptions(const ConfigOptions &options)
-        {
-          for (auto &o : options)
-            m_options.insert_or_assign(o.first, o.second);
-          m_pipeline->build(m_options);
-          if (m_pipeline->started())
-            m_pipeline->start(m_strand);
-        }
-
-      protected:
-        std::unique_ptr<ShdrPipeline> m_pipeline;
-
-        // If the connector has been running
-        bool m_running;
-
-        std::optional<std::string> m_terminator;
-        std::stringstream m_body;
-      };
-    }  // namespace shdr
-  }    // namespace adapter
+  std::optional<std::string> m_terminator;
+  std::stringstream m_body;
+};
+}  // namespace shdr
+}  // namespace adapter
 }  // namespace mtconnect

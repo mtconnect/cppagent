@@ -32,81 +32,79 @@
 #include "topic_mapper.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+class Device;
+
+namespace pipeline {
+class JsonMapper : public Transform
 {
-  class Device;
-
-  namespace pipeline
+public:
+  JsonMapper(const JsonMapper &) = default;
+  JsonMapper(PipelineContextPtr context) : Transform("JsonMapper"), m_context(context)
   {
-    class JsonMapper : public Transform
+    m_guard = TypeGuard<JsonMessage>(RUN);
+  }
+
+  const EntityPtr operator()(const EntityPtr entity) override
+  {
+    auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
+
+    return nullptr;
+  }
+
+protected:
+  PipelineContextPtr m_context;
+};
+
+class DataMapper : public Transform
+{
+public:
+  DataMapper(const DataMapper &) = default;
+  DataMapper(PipelineContextPtr context) : Transform("DataMapper"), m_context(context)
+  {
+    m_guard = TypeGuard<DataMessage>(RUN);
+  }
+
+  const EntityPtr operator()(const EntityPtr entity) override
+  {
+    auto data = std::dynamic_pointer_cast<DataMessage>(entity);
+    if (data->m_dataItem)
     {
-    public:
-      JsonMapper(const JsonMapper &) = default;
-      JsonMapper(PipelineContextPtr context) : Transform("JsonMapper"), m_context(context)
+      entity::Properties props {{"VALUE", data->getValue()}};
+      entity::ErrorList errors;
+      try
       {
-        m_guard = TypeGuard<JsonMessage>(RUN);
+        auto obs = observation::Observation::make(data->m_dataItem, props,
+                                                  std::chrono::system_clock::now(), errors);
+        if (errors.empty())
+          return next(obs);
+      }
+      catch (entity::EntityError &e)
+      {
+        LOG(error) << "Could not create observation: " << e.what();
+      }
+      for (auto &e : errors)
+      {
+        LOG(warning) << "Error while parsing message data: " << e->what();
       }
 
-      const EntityPtr operator()(const EntityPtr entity) override
-      {
-        auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
-
-        return nullptr;
-      }
-
-    protected:
-      PipelineContextPtr m_context;
-    };
-
-    class DataMapper : public Transform
+      return nullptr;
+    }
+    else
     {
-    public:
-      DataMapper(const DataMapper &) = default;
-      DataMapper(PipelineContextPtr context) : Transform("DataMapper"), m_context(context)
-      {
-        m_guard = TypeGuard<DataMessage>(RUN);
-      }
+      std::string msg;
+      if (auto topic = data->maybeGet<std::string>("topic"); topic)
+        msg = *topic;
+      else
+        msg = "unknown topic";
+      LOG(error) << "Cannot find data item for topic: " << msg
+                 << " and data: " << data->getValue<std::string>();
+      return nullptr;
+    }
+  }
 
-      const EntityPtr operator()(const EntityPtr entity) override
-      {
-        auto data = std::dynamic_pointer_cast<DataMessage>(entity);
-        if (data->m_dataItem)
-        {
-          entity::Properties props {{"VALUE", data->getValue()}};
-          entity::ErrorList errors;
-          try
-          {
-            auto obs = observation::Observation::make(data->m_dataItem, props,
-                                                      std::chrono::system_clock::now(), errors);
-            if (errors.empty())
-              return next(obs);
-          }
-          catch (entity::EntityError &e)
-          {
-            LOG(error) << "Could not create observation: " << e.what();
-          }
-          for (auto &e : errors)
-          {
-            LOG(warning) << "Error while parsing message data: " << e->what();
-          }
-
-          return nullptr;
-        }
-        else
-        {
-          std::string msg;
-          if (auto topic = data->maybeGet<std::string>("topic"); topic)
-            msg = *topic;
-          else
-            msg = "unknown topic";
-          LOG(error) << "Cannot find data item for topic: " << msg
-                     << " and data: " << data->getValue<std::string>();
-          return nullptr;
-        }
-      }
-
-    protected:
-      PipelineContextPtr m_context;
-    };
-  }  // namespace pipeline
+protected:
+  PipelineContextPtr m_context;
+};
+}  // namespace pipeline
 }  // namespace mtconnect

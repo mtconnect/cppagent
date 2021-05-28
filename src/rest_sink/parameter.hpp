@@ -22,51 +22,48 @@
 #include <set>
 #include <variant>
 
-namespace mtconnect
+namespace mtconnect {
+namespace rest_sink {
+class ParameterError : public std::logic_error
 {
-  namespace rest_sink
-  {
-    class ParameterError : public std::logic_error
-    {
-      using std::logic_error::logic_error;
-    };
+  using std::logic_error::logic_error;
+};
 
-    enum ParameterType
-    {
-      NONE = 0,
-      STRING = 1,
-      INTEGER = 2,
-      UNSIGNED_INTEGER = 3,
-      DOUBLE = 4
-    };
+enum ParameterType
+{
+  NONE = 0,
+  STRING = 1,
+  INTEGER = 2,
+  UNSIGNED_INTEGER = 3,
+  DOUBLE = 4
+};
 
-    enum UrlPart
-    {
-      PATH,
-      QUERY
-    };
+enum UrlPart
+{
+  PATH,
+  QUERY
+};
 
-    using ParameterValue = std::variant<std::monostate, std::string, int32_t, uint64_t, double>;
-    struct Parameter
-    {
-      Parameter() = default;
-      Parameter(const std::string &n, ParameterType t = STRING, UrlPart p = PATH)
-        : m_name(n), m_type(t), m_part(p)
-      {
-      }
-      Parameter(const Parameter &o) = default;
+using ParameterValue = std::variant<std::monostate, std::string, int32_t, uint64_t, double>;
+struct Parameter
+{
+  Parameter() = default;
+  Parameter(const std::string &n, ParameterType t = STRING, UrlPart p = PATH)
+    : m_name(n), m_type(t), m_part(p)
+  {}
+  Parameter(const Parameter &o) = default;
 
-      std::string m_name;
-      ParameterType m_type {STRING};
-      ParameterValue m_default;
-      UrlPart m_part {PATH};
+  std::string m_name;
+  ParameterType m_type {STRING};
+  ParameterValue m_default;
+  UrlPart m_part {PATH};
 
-      bool operator<(const Parameter &o) const { return m_name < o.m_name; }
-    };
+  bool operator<(const Parameter &o) const { return m_name < o.m_name; }
+};
 
-    using ParameterList = std::list<Parameter>;
-    using QuerySet = std::set<Parameter>;
-    using ParameterMap = std::map<std::string, ParameterValue>;
-    using QueryMap = std::map<std::string, std::string>;
-  }  // namespace rest_sink
+using ParameterList = std::list<Parameter>;
+using QuerySet = std::set<Parameter>;
+using ParameterMap = std::map<std::string, ParameterValue>;
+using QueryMap = std::map<std::string, std::string>;
+}  // namespace rest_sink
 }  // namespace mtconnect

@@ -30,70 +30,67 @@
 
 using namespace std;
 
-namespace mtconnect
+namespace mtconnect {
+using namespace entity;
+namespace device_model {
+FactoryPtr Reference::getFactory()
 {
-  using namespace entity;
-  namespace device_model
+  static FactoryPtr references;
+  if (!references)
   {
-    FactoryPtr Reference::getFactory()
-    {
-      static FactoryPtr references;
-      if (!references)
-      {
-        auto reference =
-            make_shared<Factory>(Requirements {{"idRef", true}, {"name", false}},
-                                 [](const std::string &name, Properties &ps) -> EntityPtr {
-                                   auto r = make_shared<Reference>(name, ps);
-                                   if (name == "ComponentRef")
-                                     r->m_type = COMPONENT;
-                                   else if (name == "DataItemRef")
-                                     r->m_type = DATA_ITEM;
+    auto reference = make_shared<Factory>(Requirements {{"idRef", true}, {"name", false}},
+                                          [](const std::string &name, Properties &ps) -> EntityPtr {
+                                            auto r = make_shared<Reference>(name, ps);
+                                            if (name == "ComponentRef")
+                                              r->m_type = COMPONENT;
+                                            else if (name == "DataItemRef")
+                                              r->m_type = DATA_ITEM;
 
-                                   return r;
-                                 });
+                                            return r;
+                                          });
 
-        references = make_shared<Factory>(
-            Requirements {Requirement("ComponentRef", ENTITY, reference, 0, Requirement::Infinite),
-                          Requirement("DataItemRef", ENTITY, reference, 0, Requirement::Infinite)});
+    references = make_shared<Factory>(
+        Requirements {Requirement("ComponentRef", ENTITY, reference, 0, Requirement::Infinite),
+                      Requirement("DataItemRef", ENTITY, reference, 0, Requirement::Infinite)});
 
-        references->registerMatchers();
-        references->setMinListSize(1);
-      }
-      return references;
-    }
+    references->registerMatchers();
+    references->setMinListSize(1);
+  }
+  return references;
+}
 
-    FactoryPtr Reference::getRoot()
-    {
-      static auto root = make_shared<Factory>(
-          Requirements {Requirement("References", ENTITY_LIST, Reference::getFactory(), false)});
+FactoryPtr Reference::getRoot()
+{
+  static auto root = make_shared<Factory>(
+      Requirements {Requirement("References", ENTITY_LIST, Reference::getFactory(), false)});
 
-      return root;
-    }
+  return root;
+}
 
-    void Reference::resolve(DevicePtr device)
-    {
-      NAMED_SCOPE("reference");
-      if (m_type == COMPONENT)
-      {
-        auto comp = device->getComponentById(get<string>("idRef"));
-        if (comp)
-          m_component = comp;
-        else
-          LOG(warning) << "Refernce: Cannot find Component for idRef " << get<string>("idRef");
-      }
-      else if (m_type == DATA_ITEM)
-      {
-        auto di = device->getDeviceDataItem(get<string>("idRef"));
-        if (di)
-          m_dataItem = di;
-        else
-          LOG(warning) << "Refernce: Cannot find DataItem for idRef " << get<string>("idRef");
-      }
-      else
-      {
-        LOG(warning) << "Reference: Unknown Reference type for: " << getName();
-      }
-    }
+void Reference::resolve(DevicePtr device)
+{
+  NAMED_SCOPE("reference");
+  if (m_type == COMPONENT)
+  {
+    auto comp = device->getComponentById(get<string>("idRef"));
+    if (comp)
+      m_component = comp;
+    else
+      LOG(warning) << "Refernce: Cannot find Component for idRef " << get<string>("idRef");
+  }
+  else if (m_type == DATA_ITEM)
+  {
+    auto di = device->getDeviceDataItem(get<string>("idRef"));
+    if (di)
+      m_dataItem = di;
+    else
+      LOG(warning) << "Refernce: Cannot find DataItem for idRef " << get<string>("idRef");
+  }
+  else
+  {
+    LOG(warning) << "Reference: Unknown Reference type for: " << getName();
+  }
+}
 
-  }  // namespace device_model
+}  // namespace device_model
 }  // namespace mtconnect

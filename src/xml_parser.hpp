@@ -29,29 +29,28 @@
 #include "rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+class XmlPrinter;
+
+class XmlParser
 {
-  class XmlPrinter;
+public:
+  // Constructor to set the open the correct file
+  XmlParser();
 
-  class XmlParser
-  {
-  public:
-    // Constructor to set the open the correct file
-    XmlParser();
+  virtual ~XmlParser();
 
-    virtual ~XmlParser();
+  // Parses a file and returns a list of devices
+  std::list<device_model::DevicePtr> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
 
-    // Parses a file and returns a list of devices
-    std::list<device_model::DevicePtr> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
+  // Just loads the document, assumed it has already been parsed before.
+  void loadDocument(const std::string &aDoc);
 
-    // Just loads the document, assumed it has already been parsed before.
-    void loadDocument(const std::string &aDoc);
+  // Get std::list of data items in path
+  void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
 
-    // Get std::list of data items in path
-    void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
-
-  protected:
-    // LibXML XML Doc
-    xmlDocPtr m_doc = nullptr;
-  };
+protected:
+  // LibXML XML Doc
+  xmlDocPtr m_doc = nullptr;
+};
 }  // namespace mtconnect

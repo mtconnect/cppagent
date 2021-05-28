@@ -44,119 +44,117 @@
 using namespace std;
 using namespace std::chrono;
 
-namespace mtconnect
+namespace mtconnect {
+void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
+
+uint64_t parseTimeMicro(const std::string &aTime)
 {
-  void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
+  struct tm timeinfo;
+  memset(&timeinfo, 0, sizeof(timeinfo));
+  char ms[16] = {0};
 
-  uint64_t parseTimeMicro(const std::string &aTime)
-  {
-    struct tm timeinfo;
-    memset(&timeinfo, 0, sizeof(timeinfo));
-    char ms[16] = {0};
+  int c =
+      sscanf(aTime.c_str(), "%d-%d-%dT%d:%d:%d%15s", &timeinfo.tm_year, &timeinfo.tm_mon,
+             &timeinfo.tm_mday, &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec, (char *)&ms);
 
-    int c = sscanf(aTime.c_str(), "%d-%d-%dT%d:%d:%d%15s", &timeinfo.tm_year, &timeinfo.tm_mon,
-                   &timeinfo.tm_mday, &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec,
-                   (char *)&ms);
+  if (c < 7)
+    return 0;
 
-    if (c < 7)
-      return 0;
+  ms[15] = '\0';
 
-    ms[15] = '\0';
-
-    timeinfo.tm_mon -= 1;
-    timeinfo.tm_year -= 1900;
+  timeinfo.tm_mon -= 1;
+  timeinfo.tm_year -= 1900;
 
 #ifndef _WINDOWS
-    auto existingTz = getenv("TZ");
-    setenv("TZ", "UTC", 1);
+  auto existingTz = getenv("TZ");
+  setenv("TZ", "UTC", 1);
 #endif
 
-    uint64_t time = (mktime(&timeinfo) - timezone) * 1000000ull;
+  uint64_t time = (mktime(&timeinfo) - timezone) * 1000000ull;
 
 #ifndef _WINDOWS
-    if (existingTz)
-      setenv("TZ", existingTz, 1);
+  if (existingTz)
+    setenv("TZ", existingTz, 1);
 #endif
 
-    uint64_t ms_v = 0;
-    uint64_t len = strlen(ms);
+  uint64_t ms_v = 0;
+  uint64_t len = strlen(ms);
 
-    if (len > 0u)
-    {
-      ms_v = strtol(ms + 1, nullptr, 10);
+  if (len > 0u)
+  {
+    ms_v = strtol(ms + 1, nullptr, 10);
 
-      if (len < 8u)
-        for (auto pf = 7 - len; pf > 0; pf--)
-          ms_v *= 10;
-    }
-
-    return time + ms_v;
+    if (len < 8u)
+      for (auto pf = 7 - len; pf > 0; pf--)
+        ms_v *= 10;
   }
 
-  inline string::size_type insertPrefix(string &aPath, string::size_type &aPos,
-                                        const string aPrefix)
-  {
-    aPath.insert(aPos, aPrefix);
-    aPos += aPrefix.length();
-    aPath.insert(aPos++, ":");
+  return time + ms_v;
+}
 
-    return aPos;
+inline string::size_type insertPrefix(string &aPath, string::size_type &aPos, const string aPrefix)
+{
+  aPath.insert(aPos, aPrefix);
+  aPos += aPrefix.length();
+  aPath.insert(aPos++, ":");
+
+  return aPos;
+}
+
+inline bool hasNamespace(const string &aPath, string::size_type aStart)
+{
+  string::size_type len = aPath.length(), pos = aStart;
+
+  while (pos < len)
+  {
+    if (aPath[pos] == ':')
+      return true;
+    else if (!isalpha(aPath[pos]))
+      return false;
+
+    pos++;
   }
 
-  inline bool hasNamespace(const string &aPath, string::size_type aStart)
+  return false;
+}
+
+string addNamespace(const string aPath, const string aPrefix)
+{
+  if (aPrefix.empty())
+    return aPath;
+
+  string newPath = aPath;
+  string::size_type pos = 0u;
+
+  // Special case for relative pathing
+  if (newPath[pos] != '/')
   {
-    string::size_type len = aPath.length(), pos = aStart;
-
-    while (pos < len)
-    {
-      if (aPath[pos] == ':')
-        return true;
-      else if (!isalpha(aPath[pos]))
-        return false;
-
-      pos++;
-    }
-
-    return false;
+    if (!hasNamespace(newPath, pos))
+      insertPrefix(newPath, pos, aPrefix);
   }
 
-  string addNamespace(const string aPath, const string aPrefix)
+  while ((pos = newPath.find('/', pos)) != string::npos && pos < newPath.length() - 1)
   {
-    if (aPrefix.empty())
-      return aPath;
+    pos++;
 
-    string newPath = aPath;
-    string::size_type pos = 0u;
-
-    // Special case for relative pathing
-    if (newPath[pos] != '/')
-    {
-      if (!hasNamespace(newPath, pos))
-        insertPrefix(newPath, pos, aPrefix);
-    }
-
-    while ((pos = newPath.find('/', pos)) != string::npos && pos < newPath.length() - 1)
-    {
-      pos++;
-
-      if (newPath[pos] == '/')
-        pos++;
-
-      // Make sure there are no existing prefixes
-      if (newPath[pos] != '*' && newPath[pos] != '\0' && !hasNamespace(newPath, pos))
-        insertPrefix(newPath, pos, aPrefix);
-    }
-
-    pos = 0u;
-
-    while ((pos = newPath.find('|', pos)) != string::npos)
-    {
+    if (newPath[pos] == '/')
       pos++;
 
-      if (newPath[pos] != '/' && !hasNamespace(newPath, pos))
-        insertPrefix(newPath, pos, aPrefix);
-    }
-
-    return newPath;
+    // Make sure there are no existing prefixes
+    if (newPath[pos] != '*' && newPath[pos] != '\0' && !hasNamespace(newPath, pos))
+      insertPrefix(newPath, pos, aPrefix);
   }
+
+  pos = 0u;
+
+  while ((pos = newPath.find('|', pos)) != string::npos)
+  {
+    pos++;
+
+    if (newPath[pos] != '/' && !hasNamespace(newPath, pos))
+      insertPrefix(newPath, pos, aPrefix);
+  }
+
+  return newPath;
+}
 }  // namespace mtconnect

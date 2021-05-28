@@ -81,384 +81,382 @@ const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 const unsigned int DEFAULT_MAX_ASSETS = 1024;
 
-namespace mtconnect
+namespace mtconnect {
+// Message for when enumerations do not exist in an array/enumeration
+const int ENUM_MISS = -1;
+
+// Time format
+enum TimeFormat
 {
-  // Message for when enumerations do not exist in an array/enumeration
-  const int ENUM_MISS = -1;
+  HUM_READ,
+  GMT,
+  GMT_UV_SEC,
+  LOCAL
+};
 
-  // Time format
-  enum TimeFormat
+//####### METHODS #######
+inline double stringToFloat(const std::string &text)
+{
+  double value = 0.0;
+  try
   {
-    HUM_READ,
-    GMT,
-    GMT_UV_SEC,
-    LOCAL
-  };
-
-  //####### METHODS #######
-  inline double stringToFloat(const std::string &text)
-  {
-    double value = 0.0;
-    try
-    {
-      value = stof(text);
-    }
-    catch (const std::out_of_range &)
-    {
-      value = 0.0;
-    }
-    catch (const std::invalid_argument &)
-    {
-      value = 0.0;
-    }
-    return value;
+    value = stof(text);
   }
-
-  inline int stringToInt(const std::string &text, int outOfRangeDefault)
+  catch (const std::out_of_range &)
   {
-    int value = 0;
-    try
-    {
-      value = stoi(text);
-    }
-    catch (const std::out_of_range &)
-    {
-      value = outOfRangeDefault;
-    }
-    catch (const std::invalid_argument &)
-    {
-      value = 0;
-    }
-    return value;
+    value = 0.0;
   }
-
-  // Convert a float to string
-  inline std::string format(double value)
+  catch (const std::invalid_argument &)
   {
-    std::stringstream s;
+    value = 0.0;
+  }
+  return value;
+}
+
+inline int stringToInt(const std::string &text, int outOfRangeDefault)
+{
+  int value = 0;
+  try
+  {
+    value = stoi(text);
+  }
+  catch (const std::out_of_range &)
+  {
+    value = outOfRangeDefault;
+  }
+  catch (const std::invalid_argument &)
+  {
+    value = 0;
+  }
+  return value;
+}
+
+// Convert a float to string
+inline std::string format(double value)
+{
+  std::stringstream s;
+  constexpr int precision = std::numeric_limits<double>::digits10;
+  s << std::setprecision(precision) << value;
+  return s.str();
+}
+
+class format_double_stream
+{
+protected:
+  double val;
+
+public:
+  format_double_stream(double v) { val = v; }
+
+  template <class _CharT, class _Traits>
+  inline friend std::basic_ostream<_CharT, _Traits> &operator<<(
+      std::basic_ostream<_CharT, _Traits> &os, const format_double_stream &fmter)
+  {
     constexpr int precision = std::numeric_limits<double>::digits10;
-    s << std::setprecision(precision) << value;
-    return s.str();
+    os << std::setprecision(precision) << fmter.val;
+    return os;
+  }
+};
+
+inline format_double_stream formatted(double v) { return format_double_stream(v); }
+
+// Convert a string to the same string with all upper case letters
+inline std::string toUpperCase(std::string &text)
+{
+  std::transform(text.begin(), text.end(), text.begin(),
+                 [](unsigned char c) { return std::toupper(c); });
+
+  return text;
+}
+
+// Check if each char in a string is a positive integer
+inline bool isNonNegativeInteger(const std::string &s)
+{
+  for (const char c : s)
+  {
+    if (!isdigit(c))
+      return false;
   }
 
-  class format_double_stream
+  return true;
+}
+
+inline bool isInteger(const std::string &s)
+{
+  auto iter = s.cbegin();
+  if (*iter == '-' || *iter == '+')
+    ++iter;
+
+  for (; iter != s.end(); iter++)
   {
-  protected:
-    double val;
-
-  public:
-    format_double_stream(double v) { val = v; }
-
-    template <class _CharT, class _Traits>
-    inline friend std::basic_ostream<_CharT, _Traits> &operator<<(
-        std::basic_ostream<_CharT, _Traits> &os, const format_double_stream &fmter)
-    {
-      constexpr int precision = std::numeric_limits<double>::digits10;
-      os << std::setprecision(precision) << fmter.val;
-      return os;
-    }
-  };
-
-  inline format_double_stream formatted(double v) { return format_double_stream(v); }
-
-  // Convert a string to the same string with all upper case letters
-  inline std::string toUpperCase(std::string &text)
-  {
-    std::transform(text.begin(), text.end(), text.begin(),
-                   [](unsigned char c) { return std::toupper(c); });
-
-    return text;
+    if (!isdigit(*iter))
+      return false;
   }
 
-  // Check if each char in a string is a positive integer
-  inline bool isNonNegativeInteger(const std::string &s)
-  {
-    for (const char c : s)
-    {
-      if (!isdigit(c))
-        return false;
-    }
+  return true;
+}
 
-    return true;
+void mt_localtime(const time_t *time, struct tm *buf);
+
+// Get a specified time formatted
+inline std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint,
+                                  TimeFormat format)
+{
+  using namespace std;
+  using namespace std::chrono;
+  constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
+
+  switch (format)
+  {
+    case HUM_READ:
+      return date::format("%a, %d %b %Y %H:%M:%S GMT", date::floor<seconds>(timePoint));
+    case GMT:
+      return date::format(ISO_8601_FMT, date::floor<seconds>(timePoint));
+    case GMT_UV_SEC:
+      return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
+    case LOCAL:
+      auto time = system_clock::to_time_t(timePoint);
+      struct tm timeinfo = {0};
+      mt_localtime(&time, &timeinfo);
+      char timestamp[64] = {0};
+      strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
+      return timestamp;
   }
 
-  inline bool isInteger(const std::string &s)
+  return "";
+}
+
+// Get the current time formatted
+inline std::string getCurrentTime(TimeFormat format)
+{
+  return getCurrentTime(std::chrono::system_clock::now(), format);
+}
+
+template <class timePeriod>
+inline uint64_t getCurrentTimeIn()
+{
+  return std::chrono::duration_cast<timePeriod>(std::chrono::system_clock::now().time_since_epoch())
+      .count();
+}
+
+// time_t to the ms
+inline uint64_t getCurrentTimeInMicros() { return getCurrentTimeIn<std::chrono::microseconds>(); }
+
+inline uint64_t getCurrentTimeInSec() { return getCurrentTimeIn<std::chrono::seconds>(); }
+
+// Get the current time in number of seconds as an integer
+uint64_t getCurrentTimeInSec();
+
+uint64_t parseTimeMicro(const std::string &aTime);
+
+// Replace illegal XML characters with the correct corresponding characters
+inline void replaceIllegalCharacters(std::string &data)
+{
+  for (auto i = 0u; i < data.length(); i++)
   {
-    auto iter = s.cbegin();
-    if (*iter == '-' || *iter == '+')
-      ++iter;
+    char c = data[i];
 
-    for (; iter != s.end(); iter++)
+    switch (c)
     {
-      if (!isdigit(*iter))
-        return false;
-    }
+      case '&':
+        data.replace(i, 1, "&amp;");
+        break;
 
-    return true;
+      case '<':
+        data.replace(i, 1, "&lt;");
+        break;
+
+      case '>':
+        data.replace(i, 1, "&gt;");
+        break;
+    }
   }
+}
 
-  void mt_localtime(const time_t *time, struct tm *buf);
+std::string addNamespace(const std::string aPath, const std::string aPrefix);
 
-  // Get a specified time formatted
-  inline std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint,
-                                    TimeFormat format)
+// Ends with
+inline bool ends_with(const std::string &value, const std::string_view &ending)
+{
+  if (ending.size() > value.size())
+    return false;
+  return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+inline std::string ltrim(std::string s)
+{
+  s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+  return s;
+}
+
+// trim from end (in place)
+static inline std::string rtrim(std::string s)
+{
+  s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(),
+          s.end());
+  return s;
+}
+
+// trim from both ends (in place)
+inline std::string trim(std::string s) { return rtrim(ltrim(s)); }
+
+inline bool starts_with(const std::string &value, const std::string_view &beginning)
+{
+  if (beginning.size() > value.size())
+    return false;
+  return std::equal(beginning.begin(), beginning.end(), value.begin());
+}
+
+inline bool iequals(const std::string &a, const std::string_view &b)
+{
+  if (a.size() != b.size())
+    return false;
+
+  return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b) {
+           return tolower(a) == tolower(b);
+         });
+}
+
+typedef std::map<std::string, std::string> Attributes;
+
+template <class... Ts>
+struct overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+template <typename T>
+class reverse
+{
+private:
+  T &m_iterable;
+
+public:
+  explicit reverse(T &iterable) : m_iterable(iterable) {}
+  auto begin() const { return std::rbegin(m_iterable); }
+  auto end() const { return std::rend(m_iterable); }
+};
+
+using SequenceNumber_t = uint64_t;
+using FilterSet = std::set<std::string>;
+using FilterSetOpt = std::optional<FilterSet>;
+using Milliseconds = std::chrono::milliseconds;
+using Microseconds = std::chrono::microseconds;
+using Seconds = std::chrono::seconds;
+using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
+using StringList = std::list<std::string>;
+using ConfigOption =
+    std::variant<std::monostate, bool, int, std::string, double, Seconds, Milliseconds, StringList>;
+using ConfigOptions = std::map<std::string, ConfigOption>;
+template <typename T>
+inline const std::optional<T> GetOption(const ConfigOptions &options, const std::string &name)
+{
+  auto v = options.find(name);
+  if (v != options.end())
+    return std::get<T>(v->second);
+  else
+    return std::nullopt;
+}
+
+inline bool IsOptionSet(const ConfigOptions &options, const std::string &name)
+{
+  auto v = options.find(name);
+  if (v != options.end())
+    return std::get<bool>(v->second);
+  else
+    return false;
+}
+
+inline bool HasOption(const ConfigOptions &options, const std::string &name)
+{
+  auto v = options.find(name);
+  return v != options.end();
+}
+
+inline std::string format(const Timestamp &ts)
+{
+  using namespace std;
+  string time = date::format("%FT%T", date::floor<Microseconds>(ts));
+  auto pos = time.find_last_not_of("0");
+  if (pos != string::npos)
   {
-    using namespace std;
-    using namespace std::chrono;
-    constexpr char ISO_8601_FMT[] = "%Y-%m-%dT%H:%M:%SZ";
+    if (time[pos] != '.')
+      pos++;
+    time.erase(pos);
+  }
+  time.append("Z");
+  return time;
+}
 
-    switch (format)
-    {
-      case HUM_READ:
-        return date::format("%a, %d %b %Y %H:%M:%S GMT", date::floor<seconds>(timePoint));
-      case GMT:
-        return date::format(ISO_8601_FMT, date::floor<seconds>(timePoint));
-      case GMT_UV_SEC:
-        return date::format(ISO_8601_FMT, date::floor<microseconds>(timePoint));
-      case LOCAL:
-        auto time = system_clock::to_time_t(timePoint);
-        struct tm timeinfo = {0};
-        mt_localtime(&time, &timeinfo);
-        char timestamp[64] = {0};
-        strftime(timestamp, 50u, "%Y-%m-%dT%H:%M:%S%z", &timeinfo);
-        return timestamp;
-    }
+inline void capitalize(std::string::iterator start, std::string::iterator end)
+{
+  using namespace std;
 
+  // Exceptions to the rule
+  const static std::unordered_map<std::string, std::string> exceptions = {
+      {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
+      {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+
+  const auto &w = exceptions.find(std::string(start, end));
+  if (w != exceptions.end())
+  {
+    copy(w->second.begin(), w->second.end(), start);
+  }
+  else
+  {
+    *start = ::toupper(*start);
+    start++;
+    transform(start, end, start, ::tolower);
+  }
+}
+
+inline std::string pascalize(const std::string &type, std::optional<std::string> &prefix)
+{
+  using namespace std;
+  if (type.empty())
     return "";
-  }
 
-  // Get the current time formatted
-  inline std::string getCurrentTime(TimeFormat format)
+  string camel;
+  auto colon = type.find(':');
+
+  if (colon != string::npos)
   {
-    return getCurrentTime(std::chrono::system_clock::now(), format);
+    prefix = type.substr(0ul, colon);
+    camel = type.substr(colon + 1ul);
   }
+  else
+    camel = type;
 
-  template <class timePeriod>
-  inline uint64_t getCurrentTimeIn()
+  auto start = camel.begin();
+  decltype(start) end;
+
+  bool done;
+  do
   {
-    return std::chrono::duration_cast<timePeriod>(
-               std::chrono::system_clock::now().time_since_epoch())
-        .count();
-  }
-
-  // time_t to the ms
-  inline uint64_t getCurrentTimeInMicros() { return getCurrentTimeIn<std::chrono::microseconds>(); }
-
-  inline uint64_t getCurrentTimeInSec() { return getCurrentTimeIn<std::chrono::seconds>(); }
-
-  // Get the current time in number of seconds as an integer
-  uint64_t getCurrentTimeInSec();
-
-  uint64_t parseTimeMicro(const std::string &aTime);
-
-  // Replace illegal XML characters with the correct corresponding characters
-  inline void replaceIllegalCharacters(std::string &data)
-  {
-    for (auto i = 0u; i < data.length(); i++)
+    end = find(start, camel.end(), '_');
+    capitalize(start, end);
+    done = end == camel.end();
+    if (!done)
     {
-      char c = data[i];
-
-      switch (c)
-      {
-        case '&':
-          data.replace(i, 1, "&amp;");
-          break;
-
-        case '<':
-          data.replace(i, 1, "&lt;");
-          break;
-
-        case '>':
-          data.replace(i, 1, "&gt;");
-          break;
-      }
+      camel.erase(end);
+      start = end;
     }
-  }
+  } while (!done);
 
-  std::string addNamespace(const std::string aPath, const std::string aPrefix);
-
-  // Ends with
-  inline bool ends_with(const std::string &value, const std::string_view &ending)
-  {
-    if (ending.size() > value.size())
-      return false;
-    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
-  }
-
-  inline std::string ltrim(std::string s)
-  {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
-    return s;
-  }
-
-  // trim from end (in place)
-  static inline std::string rtrim(std::string s)
-  {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(),
-            s.end());
-    return s;
-  }
-
-  // trim from both ends (in place)
-  inline std::string trim(std::string s) { return rtrim(ltrim(s)); }
-
-  inline bool starts_with(const std::string &value, const std::string_view &beginning)
-  {
-    if (beginning.size() > value.size())
-      return false;
-    return std::equal(beginning.begin(), beginning.end(), value.begin());
-  }
-
-  inline bool iequals(const std::string &a, const std::string_view &b)
-  {
-    if (a.size() != b.size())
-      return false;
-
-    return a.size() == b.size() && std::equal(a.begin(), a.end(), b.begin(), [](char a, char b) {
-             return tolower(a) == tolower(b);
-           });
-  }
-
-  typedef std::map<std::string, std::string> Attributes;
-
-  template <class... Ts>
-  struct overloaded : Ts...
-  {
-    using Ts::operator()...;
-  };
-  template <class... Ts>
-  overloaded(Ts...) -> overloaded<Ts...>;
-
-  template <typename T>
-  class reverse
-  {
-  private:
-    T &m_iterable;
-
-  public:
-    explicit reverse(T &iterable) : m_iterable(iterable) {}
-    auto begin() const { return std::rbegin(m_iterable); }
-    auto end() const { return std::rend(m_iterable); }
-  };
-
-  using SequenceNumber_t = uint64_t;
-  using FilterSet = std::set<std::string>;
-  using FilterSetOpt = std::optional<FilterSet>;
-  using Milliseconds = std::chrono::milliseconds;
-  using Microseconds = std::chrono::microseconds;
-  using Seconds = std::chrono::seconds;
-  using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
-  using StringList = std::list<std::string>;
-  using ConfigOption = std::variant<std::monostate, bool, int, std::string, double, Seconds,
-                                    Milliseconds, StringList>;
-  using ConfigOptions = std::map<std::string, ConfigOption>;
-  template <typename T>
-  inline const std::optional<T> GetOption(const ConfigOptions &options, const std::string &name)
-  {
-    auto v = options.find(name);
-    if (v != options.end())
-      return std::get<T>(v->second);
-    else
-      return std::nullopt;
-  }
-
-  inline bool IsOptionSet(const ConfigOptions &options, const std::string &name)
-  {
-    auto v = options.find(name);
-    if (v != options.end())
-      return std::get<bool>(v->second);
-    else
-      return false;
-  }
-
-  inline bool HasOption(const ConfigOptions &options, const std::string &name)
-  {
-    auto v = options.find(name);
-    return v != options.end();
-  }
-
-  inline std::string format(const Timestamp &ts)
-  {
-    using namespace std;
-    string time = date::format("%FT%T", date::floor<Microseconds>(ts));
-    auto pos = time.find_last_not_of("0");
-    if (pos != string::npos)
-    {
-      if (time[pos] != '.')
-        pos++;
-      time.erase(pos);
-    }
-    time.append("Z");
-    return time;
-  }
-
-  inline void capitalize(std::string::iterator start, std::string::iterator end)
-  {
-    using namespace std;
-
-    // Exceptions to the rule
-    const static std::unordered_map<std::string, std::string> exceptions = {
-        {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
-        {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
-
-    const auto &w = exceptions.find(std::string(start, end));
-    if (w != exceptions.end())
-    {
-      copy(w->second.begin(), w->second.end(), start);
-    }
-    else
-    {
-      *start = ::toupper(*start);
-      start++;
-      transform(start, end, start, ::tolower);
-    }
-  }
-
-  inline std::string pascalize(const std::string &type, std::optional<std::string> &prefix)
-  {
-    using namespace std;
-    if (type.empty())
-      return "";
-
-    string camel;
-    auto colon = type.find(':');
-
-    if (colon != string::npos)
-    {
-      prefix = type.substr(0ul, colon);
-      camel = type.substr(colon + 1ul);
-    }
-    else
-      camel = type;
-
-    auto start = camel.begin();
-    decltype(start) end;
-
-    bool done;
-    do
-    {
-      end = find(start, camel.end(), '_');
-      capitalize(start, end);
-      done = end == camel.end();
-      if (!done)
-      {
-        camel.erase(end);
-        start = end;
-      }
-    } while (!done);
-
-    return camel;
-  }
+  return camel;
+}
 
 #ifdef _WINDOWS
 #include <io.h>
-  typedef long volatile AtomicInt;
+typedef long volatile AtomicInt;
 #else
 #ifdef MACOSX
 #include <libkern/OSAtomic.h>
-  typedef volatile long AtomicInt;
+typedef volatile long AtomicInt;
 #else
-  using AtomicInt = int;
+using AtomicInt = int;
 #endif
 #endif
 }  // namespace mtconnect

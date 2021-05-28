@@ -26,14 +26,12 @@
 #include "entity.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace device_model {
+struct Description
 {
-  namespace device_model
-  {
-    struct Description
-    {
-      static entity::FactoryPtr getFactory();
-      static entity::FactoryPtr getRoot();
-    };
-  }  // namespace device_model
+  static entity::FactoryPtr getFactory();
+  static entity::FactoryPtr getRoot();
+};
+}  // namespace device_model
 }  // namespace mtconnect

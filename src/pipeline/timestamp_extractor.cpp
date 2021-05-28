@@ -24,100 +24,98 @@
 
 using namespace std;
 
-namespace mtconnect
+namespace mtconnect {
+namespace pipeline {
+inline optional<double> getDuration(std::string &timestamp)
 {
-  namespace pipeline
+  optional<double> duration;
+
+  auto pos = timestamp.find('@');
+  if (pos != string::npos)
   {
-    inline optional<double> getDuration(std::string &timestamp)
+    auto read = pos + 1;
+    ;
+    auto dur {timestamp.substr(read)};
+    duration = std::stod(dur, &read);
+    if (read == pos + 1)
+      duration.reset();
+    else
+      timestamp = timestamp.erase(pos);
+  }
+
+  return duration;
+}
+
+void ExtractTimestamp::extractTimestamp(const std::string &token, TimestampedPtr &entity)
+{
+  using namespace date;
+  using namespace chrono;
+  using namespace chrono_literals;
+  using namespace date::literals;
+  using namespace date;
+
+  NAMED_SCOPE("TimestampExtractor");
+
+  // Extract duration
+  string timestamp = token;
+  entity->m_duration = getDuration(timestamp);
+
+  if (timestamp.empty())
+  {
+    entity->m_timestamp = now();
+    return;
+  }
+
+  Timestamp ts;
+  bool has_t {timestamp.find('T') != string::npos};
+  if (has_t)
+  {
+    istringstream in(timestamp);
+    in >> std::setw(6) >> parse("%FT%T", ts);
+    if (!in.good())
     {
-      optional<double> duration;
-
-      auto pos = timestamp.find('@');
-      if (pos != string::npos)
-      {
-        auto read = pos + 1;
-        ;
-        auto dur {timestamp.substr(read)};
-        duration = std::stod(dur, &read);
-        if (read == pos + 1)
-          duration.reset();
-        else
-          timestamp = timestamp.erase(pos);
-      }
-
-      return duration;
+      ts = now();
     }
 
-    void ExtractTimestamp::extractTimestamp(const std::string &token, TimestampedPtr &entity)
+    if (!m_relativeTime)
     {
-      using namespace date;
-      using namespace chrono;
-      using namespace chrono_literals;
-      using namespace date::literals;
-      using namespace date;
-
-      NAMED_SCOPE("TimestampExtractor");
-
-      // Extract duration
-      string timestamp = token;
-      entity->m_duration = getDuration(timestamp);
-
-      if (timestamp.empty())
-      {
-        entity->m_timestamp = now();
-        return;
-      }
-
-      Timestamp ts;
-      bool has_t {timestamp.find('T') != string::npos};
-      if (has_t)
-      {
-        istringstream in(timestamp);
-        in >> std::setw(6) >> parse("%FT%T", ts);
-        if (!in.good())
-        {
-          ts = now();
-        }
-
-        if (!m_relativeTime)
-        {
-          entity->m_timestamp = ts;
-          return;
-        }
-      }
-
-      // Handle double offset
-      Timestamp n = now();
-      double offset;
-      if (!has_t)
-      {
-        offset = stod(timestamp);
-      }
-
-      if (!m_base)
-      {
-        m_base = n;
-        if (has_t)
-        {
-          auto t1 = round<Microseconds, system_clock>(ts);
-          auto t2 = round<Microseconds, system_clock>(n);
-          m_offset = t2 - t1;
-        }
-        else
-          m_offset = Microseconds(int64_t(offset * 1000.0));
-        entity->m_timestamp = n;
-      }
-      else
-      {
-        if (has_t)
-        {
-          entity->m_timestamp = ts + m_offset;
-        }
-        else
-        {
-          entity->m_timestamp = *m_base + Microseconds(int64_t(offset * 1000.0)) - m_offset;
-        }
-      }
+      entity->m_timestamp = ts;
+      return;
     }
-  }  // namespace pipeline
+  }
+
+  // Handle double offset
+  Timestamp n = now();
+  double offset;
+  if (!has_t)
+  {
+    offset = stod(timestamp);
+  }
+
+  if (!m_base)
+  {
+    m_base = n;
+    if (has_t)
+    {
+      auto t1 = round<Microseconds, system_clock>(ts);
+      auto t2 = round<Microseconds, system_clock>(n);
+      m_offset = t2 - t1;
+    }
+    else
+      m_offset = Microseconds(int64_t(offset * 1000.0));
+    entity->m_timestamp = n;
+  }
+  else
+  {
+    if (has_t)
+    {
+      entity->m_timestamp = ts + m_offset;
+    }
+    else
+    {
+      entity->m_timestamp = *m_base + Microseconds(int64_t(offset * 1000.0)) - m_offset;
+    }
+  }
+}
+}  // namespace pipeline
 }  // namespace mtconnect

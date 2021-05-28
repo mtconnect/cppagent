@@ -20,33 +20,29 @@
 #include "adapter_pipeline.hpp"
 #include "source.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace adapter {
+class Adapter : public Source
 {
-  namespace adapter
-  {
-    class Adapter : public Source
-    {
-    public:
-      Adapter(const std::string &name, const ConfigOptions &options)
-        : Source(name), m_options(options)
-      {
-      }
-      virtual ~Adapter() {}
+public:
+  Adapter(const std::string &name, const ConfigOptions &options) : Source(name), m_options(options)
+  {}
+  virtual ~Adapter() {}
 
-      virtual const std::string &getHost() const = 0;
-      virtual const std::string &getUrl() const { return m_url; }
-      virtual const std::string &getIdentity() const { return m_identity; }
-      virtual unsigned int getPort() const = 0;
-      virtual const ConfigOptions &getOptions() const { return m_options; }
+  virtual const std::string &getHost() const = 0;
+  virtual const std::string &getUrl() const { return m_url; }
+  virtual const std::string &getIdentity() const { return m_identity; }
+  virtual unsigned int getPort() const = 0;
+  virtual const ConfigOptions &getOptions() const { return m_options; }
 
-    protected:
-      std::string m_name;
-      std::string m_identity;
-      std::string m_url;
-      std::unique_ptr<Handler> m_handler;
-      ConfigOptions m_options;
-    };
+protected:
+  std::string m_name;
+  std::string m_identity;
+  std::string m_url;
+  std::unique_ptr<Handler> m_handler;
+  ConfigOptions m_options;
+};
 
-    using AdapterPtr = std::shared_ptr<Adapter>;
-  }  // namespace adapter
+using AdapterPtr = std::shared_ptr<Adapter>;
+}  // namespace adapter
 }  // namespace mtconnect

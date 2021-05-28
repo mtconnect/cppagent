@@ -19,14 +19,12 @@
 
 #include "entity.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace device_model {
+struct Composition
 {
-  namespace device_model
-  {
-    struct Composition
-    {
-      static entity::FactoryPtr getFactory();
-      static entity::FactoryPtr getRoot();
-    };
-  }  // namespace device_model
+  static entity::FactoryPtr getFactory();
+  static entity::FactoryPtr getRoot();
+};
+}  // namespace device_model
 }  // namespace mtconnect

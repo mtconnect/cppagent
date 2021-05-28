@@ -21,34 +21,33 @@
 #include "printer.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+class JsonPrinter : public Printer
 {
-  class JsonPrinter : public Printer
-  {
-  public:
-    JsonPrinter(const std::string version = "", bool pretty = false);
-    ~JsonPrinter() override = default;
+public:
+  JsonPrinter(const std::string version = "", bool pretty = false);
+  ~JsonPrinter() override = default;
 
-    std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
-                            const uint64_t nextSeq, const ProtoErrorList &list) const override;
+  std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                          const uint64_t nextSeq, const ProtoErrorList &list) const override;
 
-    std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
-                           const uint64_t nextSeq, const unsigned int assetBufferSize,
-                           const unsigned int assetCount, const std::list<DevicePtr> &devices,
-                           const std::map<std::string, size_t> *count = nullptr) const override;
+  std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
+                         const uint64_t nextSeq, const unsigned int assetBufferSize,
+                         const unsigned int assetCount, const std::list<DevicePtr> &devices,
+                         const std::map<std::string, size_t> *count = nullptr) const override;
 
-    std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
-                            const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
-                            observation::ObservationList &results) const override;
-    std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
-                            const unsigned int assetCount,
-                            const asset::AssetList &asset) const override;
-    std::string mimeType() const override { return "application/mtconnect+json"; }
+  std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
+                          const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
+                          observation::ObservationList &results) const override;
+  std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
+                          const unsigned int assetCount,
+                          const asset::AssetList &asset) const override;
+  std::string mimeType() const override { return "application/mtconnect+json"; }
 
-  protected:
-    const std::string &hostname() const;
-    std::string m_schemaVersion;
-    std::string m_version;
-    std::string m_hostname;
-  };
+protected:
+  const std::string &hostname() const;
+  std::string m_schemaVersion;
+  std::string m_version;
+  std::string m_hostname;
+};
 }  // namespace mtconnect

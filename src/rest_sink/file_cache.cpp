@@ -22,167 +22,163 @@
 
 using namespace std;
 
-namespace mtconnect
+namespace mtconnect {
+namespace rest_sink {
+FileCache::FileCache()
+  : m_mimeTypes({{{".xsl", "text/xsl"},
+                  {".xml", "text/xml"},
+                  {".json", "application/json"},
+                  {".css", "text/css"},
+                  {".xsd", "text/xml"},
+                  {".jpg", "image/jpeg"},
+                  {".jpeg", "image/jpeg"},
+                  {".png", "image/png"},
+                  {".ico", "image/x-icon"}}})
 {
-  namespace rest_sink
-  {
-    FileCache::FileCache()
-      : m_mimeTypes({{{".xsl", "text/xsl"},
-                      {".xml", "text/xml"},
-                      {".json", "application/json"},
-                      {".css", "text/css"},
-                      {".xsd", "text/xml"},
-                      {".jpg", "image/jpeg"},
-                      {".jpeg", "image/jpeg"},
-                      {".png", "image/png"},
-                      {".ico", "image/x-icon"}}})
-    {
-      NAMED_SCOPE("file_cache");
-    }
+  NAMED_SCOPE("file_cache");
+}
 
-    namespace fs = std::filesystem;
+namespace fs = std::filesystem;
 
-    XmlNamespaceList FileCache::registerFiles(const string &uri, const string &pathName,
+XmlNamespaceList FileCache::registerFiles(const string &uri, const string &pathName,
+                                          const string &version)
+{
+  return registerDirectory(uri, pathName, version);
+}
+
+// Register a file
+XmlNamespaceList FileCache::registerDirectory(const string &uri, const string &pathName,
                                               const string &version)
+{
+  XmlNamespaceList namespaces;
+
+  try
+  {
+    fs::path path(pathName);
+
+    if (!fs::exists(path))
     {
-      return registerDirectory(uri, pathName, version);
+      LOG(warning) << "The following path " << pathName << " cannot be found, full path: " << path;
     }
-
-    // Register a file
-    XmlNamespaceList FileCache::registerDirectory(const string &uri, const string &pathName,
-                                                  const string &version)
+    else if (!fs::is_directory(path))
     {
-      XmlNamespaceList namespaces;
+      auto ns = registerFile(uri, path, version);
+      if (ns)
+        namespaces.emplace_back(*ns);
+    }
+    else
+    {
+      fs::path baseUri(uri, fs::path::format::generic_format);
 
-      try
+      for (auto &file : fs::directory_iterator(path))
       {
-        fs::path path(pathName);
+        string name = (file.path().filename()).string();
+        fs::path uri = baseUri / name;
 
-        if (!fs::exists(path))
-        {
-          LOG(warning) << "The following path " << pathName
-                       << " cannot be found, full path: " << path;
-        }
-        else if (!fs::is_directory(path))
-        {
-          auto ns = registerFile(uri, path, version);
-          if (ns)
-            namespaces.emplace_back(*ns);
-        }
+        auto ns = registerFile(uri.generic_string(), (file.path()).string(), version);
+        if (ns)
+          namespaces.emplace_back(*ns);
+      }
+    }
+  }
+  catch (fs::filesystem_error e)
+  {
+    LOG(warning) << "The following path " << pathName << " cannot be accessed: " << e.what();
+  }
+
+  return namespaces;
+}
+
+std::optional<XmlNamespace> FileCache::registerFile(const std::string &uri, const fs::path &path,
+                                                    const std::string &version)
+{
+  optional<XmlNamespace> ns;
+
+  if (!fs::exists(path))
+  {
+    LOG(warning) << "The following path " << path
+                 << " cannot be found, full path: " << fs::absolute(path);
+    return nullopt;
+  }
+  else if (!fs::is_regular_file(path))
+  {
+    LOG(warning) << "The following path " << path
+                 << " is not a regular file: " << fs::absolute(path);
+    return nullopt;
+  }
+
+  // Make sure the uri is using /
+  string gen;
+  gen.resize(uri.size());
+  replace_copy(uri.begin(), uri.end(), gen.begin(), L'\\', L'/');
+
+  m_fileMap.emplace(gen, fs::absolute(path));
+  string name = path.filename().string();
+
+  // Check if the file name maps to a standard MTConnect schema file.
+  if (!name.find("MTConnect") && name.substr(name.length() - 4u, 4u) == ".xsd" &&
+      version == name.substr(name.length() - 7u, 3u))
+  {
+    string version = name.substr(name.length() - 7u, 3u);
+
+    if (name.substr(9u, 5u) == "Error")
+    {
+      string urn = "urn:mtconnect.org:MTConnectError:" + version;
+      ns = make_optional<XmlNamespace>(urn, uri);
+    }
+    else if (name.substr(9u, 7u) == "Devices")
+    {
+      string urn = "urn:mtconnect.org:MTConnectDevices:" + version;
+      ns = make_optional<XmlNamespace>(urn, uri);
+    }
+    else if (name.substr(9u, 6u) == "Assets")
+    {
+      string urn = "urn:mtconnect.org:MTConnectAssets:" + version;
+      ns = make_optional<XmlNamespace>(urn, uri);
+    }
+    else if (name.substr(9u, 7u) == "Streams")
+    {
+      string urn = "urn:mtconnect.org:MTConnectStreams:" + version;
+      ns = make_optional<XmlNamespace>(urn, uri);
+    }
+  }
+
+  return ns;
+}
+
+CachedFilePtr FileCache::getFile(const std::string &name)
+{
+  try
+  {
+    auto file = m_fileCache.find(name);
+    if (file != m_fileCache.end())
+    {
+      return file->second;
+    }
+    else
+    {
+      auto path = m_fileMap.find(name);
+      if (path != m_fileMap.end())
+      {
+        auto ext = path->second.extension().string();
+        string mime;
+        auto mt = m_mimeTypes.find(ext);
+        if (mt != m_mimeTypes.end())
+          mime = mt->second;
         else
-        {
-          fs::path baseUri(uri, fs::path::format::generic_format);
-
-          for (auto &file : fs::directory_iterator(path))
-          {
-            string name = (file.path().filename()).string();
-            fs::path uri = baseUri / name;
-
-            auto ns = registerFile(uri.generic_string(), (file.path()).string(), version);
-            if (ns)
-              namespaces.emplace_back(*ns);
-          }
-        }
+          mime = "application/octet-stream";
+        auto file = make_shared<CachedFile>(path->second, mime);
+        m_fileCache.emplace(name, file);
+        return file;
       }
-      catch (fs::filesystem_error e)
-      {
-        LOG(warning) << "The following path " << pathName << " cannot be accessed: " << e.what();
-      }
-
-      return namespaces;
     }
+  }
+  catch (fs::filesystem_error e)
+  {
+    LOG(warning) << "Cannot open file " << name << ": " << e.what();
+  }
 
-    std::optional<XmlNamespace> FileCache::registerFile(const std::string &uri,
-                                                        const fs::path &path,
-                                                        const std::string &version)
-    {
-      optional<XmlNamespace> ns;
-
-      if (!fs::exists(path))
-      {
-        LOG(warning) << "The following path " << path
-                     << " cannot be found, full path: " << fs::absolute(path);
-        return nullopt;
-      }
-      else if (!fs::is_regular_file(path))
-      {
-        LOG(warning) << "The following path " << path
-                     << " is not a regular file: " << fs::absolute(path);
-        return nullopt;
-      }
-
-      // Make sure the uri is using /
-      string gen;
-      gen.resize(uri.size());
-      replace_copy(uri.begin(), uri.end(), gen.begin(), L'\\', L'/');
-
-      m_fileMap.emplace(gen, fs::absolute(path));
-      string name = path.filename().string();
-
-      // Check if the file name maps to a standard MTConnect schema file.
-      if (!name.find("MTConnect") && name.substr(name.length() - 4u, 4u) == ".xsd" &&
-          version == name.substr(name.length() - 7u, 3u))
-      {
-        string version = name.substr(name.length() - 7u, 3u);
-
-        if (name.substr(9u, 5u) == "Error")
-        {
-          string urn = "urn:mtconnect.org:MTConnectError:" + version;
-          ns = make_optional<XmlNamespace>(urn, uri);
-        }
-        else if (name.substr(9u, 7u) == "Devices")
-        {
-          string urn = "urn:mtconnect.org:MTConnectDevices:" + version;
-          ns = make_optional<XmlNamespace>(urn, uri);
-        }
-        else if (name.substr(9u, 6u) == "Assets")
-        {
-          string urn = "urn:mtconnect.org:MTConnectAssets:" + version;
-          ns = make_optional<XmlNamespace>(urn, uri);
-        }
-        else if (name.substr(9u, 7u) == "Streams")
-        {
-          string urn = "urn:mtconnect.org:MTConnectStreams:" + version;
-          ns = make_optional<XmlNamespace>(urn, uri);
-        }
-      }
-
-      return ns;
-    }
-
-    CachedFilePtr FileCache::getFile(const std::string &name)
-    {
-      try
-      {
-        auto file = m_fileCache.find(name);
-        if (file != m_fileCache.end())
-        {
-          return file->second;
-        }
-        else
-        {
-          auto path = m_fileMap.find(name);
-          if (path != m_fileMap.end())
-          {
-            auto ext = path->second.extension().string();
-            string mime;
-            auto mt = m_mimeTypes.find(ext);
-            if (mt != m_mimeTypes.end())
-              mime = mt->second;
-            else
-              mime = "application/octet-stream";
-            auto file = make_shared<CachedFile>(path->second, mime);
-            m_fileCache.emplace(name, file);
-            return file;
-          }
-        }
-      }
-      catch (fs::filesystem_error e)
-      {
-        LOG(warning) << "Cannot open file " << name << ": " << e.what();
-      }
-
-      return nullptr;
-    }
-  }  // namespace rest_sink
+  return nullptr;
+}
+}  // namespace rest_sink
 }  // namespace mtconnect

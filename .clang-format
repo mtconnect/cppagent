@@ -2,7 +2,7 @@ BasedOnStyle: Google
 Language: Cpp
 Standard: c++17
 ColumnLimit: 100
-NamespaceIndentation: All
+NamespaceIndentation: None
 AccessModifierOffset: -2
 AllowShortBlocksOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
@@ -16,10 +16,26 @@ AlignEscapedNewlines: true
 BreakStringLiterals: true
 BinPackParameters: true
 BinPackArguments: true
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Custom
 BraceWrapping:
+  AfterCaseLabel:  true
+  AfterClass:      true
+  AfterControlStatement: Always
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  false
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterExternBlock: true
+  BeforeCatch:     true
+  BeforeElse:      true
+  BeforeLambdaBody: false
+  BeforeWhile:     false
+  IndentBraces:    false
   SplitEmptyFunction: false
   SplitEmptyRecord: false
+  SplitEmptyNamespace: true
 IncludeCategories:
   - Regex:           '^("|<)boost/'
     Priority:        1
@@ -27,8 +43,6 @@ IncludeCategories:
     Priority:        -1
   - Regex:           '^("|<)date/'
     Priority:        2
-  - Regex:           '^("|<)dlib/'
-    Priority:        3
   - Regex:           '^("|<)libxml/'
     Priority:        4
   - Regex:           '^("|<)nlohmann/'

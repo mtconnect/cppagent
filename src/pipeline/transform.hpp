@@ -24,112 +24,108 @@
 #include "guard.hpp"
 #include "pipeline_context.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace device_model {
+namespace data_item {
+class DataItem;
+}
+}  // namespace device_model
+using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+namespace pipeline {
+// A transform takes an entity and transforms it to another
+// entity. The transform is an object with the overloaded
+// operation () takes the object type and performs produces an
+// output. The entities are pass as shared pointers.
+//
+// Additiional parameters can be bound if additional context is
+// required.
+
+class Transform;
+using TransformPtr = std::shared_ptr<Transform>;
+using TransformList = std::list<TransformPtr>;
+
+using ApplyDataItem = std::function<void(const DataItemPtr di)>;
+using EachDataItem = std::function<void(ApplyDataItem)>;
+using FindDataItem = std::function<DataItemPtr(const std::string &, const std::string &)>;
+
+class Transform : public std::enable_shared_from_this<Transform>
 {
-  namespace device_model
+public:
+  Transform(const Transform &) = default;
+  Transform(const std::string &name) : m_name(name) {}
+  virtual ~Transform() = default;
+
+  virtual void stop()
   {
-    namespace data_item
+    for (auto &t : m_next)
+      t->stop();
+  }
+  virtual void start(boost::asio::io_context::strand &st)
+  {
+    for (auto &t : m_next)
+      t->start(st);
+  }
+
+  virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
+  TransformPtr getptr() { return shared_from_this(); }
+
+  const entity::EntityPtr next(const entity::EntityPtr entity)
+  {
+    if (m_next.empty())
+      return entity;
+
+    using namespace std;
+    using namespace entity;
+
+    for (auto &t : m_next)
     {
-      class DataItem;
+      switch (t->check(entity))
+      {
+        case RUN:
+          return (*t)(entity);
+
+        case SKIP:
+          return t->next(entity);
+
+        case CONTINUE:
+          // Move on to the next
+          break;
+      }
     }
-  }  // namespace device_model
-  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
-  namespace pipeline
+
+    throw EntityError("Cannot find matching transform for " + entity->getName());
+
+    return EntityPtr();
+  }
+
+  TransformPtr bind(TransformPtr trans)
   {
-    // A transform takes an entity and transforms it to another
-    // entity. The transform is an object with the overloaded
-    // operation () takes the object type and performs produces an
-    // output. The entities are pass as shared pointers.
-    //
-    // Additiional parameters can be bound if additional context is
-    // required.
+    m_next.emplace_back(trans);
+    return trans;
+  }
 
-    class Transform;
-    using TransformPtr = std::shared_ptr<Transform>;
-    using TransformList = std::list<TransformPtr>;
+  GuardAction check(const entity::EntityPtr entity)
+  {
+    if (!m_guard)
+      return RUN;
+    else
+      return m_guard(entity);
+  }
+  const Guard &getGuard() const { return m_guard; }
+  void setGuard(const Guard &guard) { m_guard = guard; }
 
-    using ApplyDataItem = std::function<void(const DataItemPtr di)>;
-    using EachDataItem = std::function<void(ApplyDataItem)>;
-    using FindDataItem = std::function<DataItemPtr(const std::string &, const std::string &)>;
+protected:
+  std::string m_name;
+  TransformList m_next;
+  Guard m_guard;
+};
 
-    class Transform : public std::enable_shared_from_this<Transform>
-    {
-    public:
-      Transform(const Transform &) = default;
-      Transform(const std::string &name) : m_name(name) {}
-      virtual ~Transform() = default;
+class NullTransform : public Transform
+{
+public:
+  NullTransform(Guard guard) : Transform("NullTransform") { m_guard = guard; }
+  const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
+};
 
-      virtual void stop()
-      {
-        for (auto &t : m_next)
-          t->stop();
-      }
-      virtual void start(boost::asio::io_context::strand &st)
-      {
-        for (auto &t : m_next)
-          t->start(st);
-      }
-
-      virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
-      TransformPtr getptr() { return shared_from_this(); }
-
-      const entity::EntityPtr next(const entity::EntityPtr entity)
-      {
-        if (m_next.empty())
-          return entity;
-
-        using namespace std;
-        using namespace entity;
-
-        for (auto &t : m_next)
-        {
-          switch (t->check(entity))
-          {
-            case RUN:
-              return (*t)(entity);
-
-            case SKIP:
-              return t->next(entity);
-
-            case CONTINUE:
-              // Move on to the next
-              break;
-          }
-        }
-
-        throw EntityError("Cannot find matching transform for " + entity->getName());
-
-        return EntityPtr();
-      }
-
-      TransformPtr bind(TransformPtr trans)
-      {
-        m_next.emplace_back(trans);
-        return trans;
-      }
-
-      GuardAction check(const entity::EntityPtr entity)
-      {
-        if (!m_guard)
-          return RUN;
-        else
-          return m_guard(entity);
-      }
-      const Guard &getGuard() const { return m_guard; }
-      void setGuard(const Guard &guard) { m_guard = guard; }
-
-    protected:
-      std::string m_name;
-      TransformList m_next;
-      Guard m_guard;
-    };
-
-    class NullTransform : public Transform
-    {
-    public:
-      NullTransform(Guard guard) : Transform("NullTransform") { m_guard = guard; }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
-    };
-
-  }  // namespace pipeline
+}  // namespace pipeline
 }  // namespace mtconnect

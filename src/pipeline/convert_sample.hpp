@@ -21,35 +21,33 @@
 #include "observation/observation.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
+namespace mtconnect {
+namespace pipeline {
+class ConvertSample : public Transform
 {
-  namespace pipeline
+public:
+  ConvertSample() : Transform("ConvertSample")
   {
-    class ConvertSample : public Transform
+    using namespace observation;
+    m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
+  }
+  const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+  {
+    using namespace observation;
+    using namespace entity;
+    auto sample = std::dynamic_pointer_cast<Sample>(entity);
+    if (sample && !sample->isUnavailable())
     {
-    public:
-      ConvertSample() : Transform("ConvertSample")
+      auto &converter = sample->getDataItem()->getConverter();
+      if (converter)
       {
-        using namespace observation;
-        m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
+        auto ns = sample->copy();
+        converter->convertValue(ns->getValue());
+        return next(ns);
       }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-      {
-        using namespace observation;
-        using namespace entity;
-        auto sample = std::dynamic_pointer_cast<Sample>(entity);
-        if (sample && !sample->isUnavailable())
-        {
-          auto &converter = sample->getDataItem()->getConverter();
-          if (converter)
-          {
-            auto ns = sample->copy();
-            converter->convertValue(ns->getValue());
-            return next(ns);
-          }
-        }
-        return next(entity);
-      }
-    };
-  }  // namespace pipeline
+    }
+    return next(entity);
+  }
+};
+}  // namespace pipeline
 }  // namespace mtconnect

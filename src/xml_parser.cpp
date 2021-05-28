@@ -48,334 +48,332 @@ using namespace std;
     throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
   }
 
-namespace mtconnect
+namespace mtconnect {
+using namespace observation;
+using namespace device_model;
+
+extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
 {
-  using namespace observation;
-  using namespace device_model;
+  va_list args;
 
-  extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
+  char buffer[2048] = {0};
+  va_start(args, msg);
+  vsnprintf(buffer, 2046u, msg, args);
+  buffer[2047] = '0';
+  va_end(args);
+
+  LOG(error) << "XML: " << buffer;
+}
+
+static inline std::string getAttribute(xmlNodePtr node, const char *name)
+{
+  auto value = xmlGetProp(node, BAD_CAST name);
+  string res;
+  if (value)
   {
-    va_list args;
+    res = (const char *)value;
+    xmlFree(value);
+  }
+  return res;
+}
 
-    char buffer[2048] = {0};
-    va_start(args, msg);
-    vsnprintf(buffer, 2046u, msg, args);
-    buffer[2047] = '0';
-    va_end(args);
+XmlParser::XmlParser() { NAMED_SCOPE("xml.parser"); }
 
-    LOG(error) << "XML: " << buffer;
+inline static bool isMTConnectUrn(const char *aUrn)
+{
+  return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27u);
+}
+
+std::list<DevicePtr> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
+{
+  if (m_doc)
+  {
+    xmlFreeDoc(m_doc);
+    m_doc = nullptr;
   }
 
-  static inline std::string getAttribute(xmlNodePtr node, const char *name)
+  xmlXPathContextPtr xpathCtx = nullptr;
+  xmlXPathObjectPtr devices = nullptr;
+  std::list<DevicePtr> deviceList;
+
+  try
   {
-    auto value = xmlGetProp(node, BAD_CAST name);
-    string res;
-    if (value)
+    xmlInitParser();
+    xmlXPathInit();
+    xmlSetGenericErrorFunc(nullptr, agentXMLErrorFunc);
+
+    THROW_IF_XML2_NULL(m_doc = xmlReadFile(filePath.c_str(), nullptr, XML_PARSE_NOBLANKS));
+
+    std::string path = "//Devices/*";
+    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(m_doc));
+
+    auto root = xmlDocGetRootElement(m_doc);
+
+    if (root->ns)
     {
-      res = (const char *)value;
-      xmlFree(value);
-    }
-    return res;
-  }
+      path = addNamespace(path, "m");
+      THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
 
-  XmlParser::XmlParser() { NAMED_SCOPE("xml.parser"); }
-
-  inline static bool isMTConnectUrn(const char *aUrn)
-  {
-    return !strncmp(aUrn, "urn:mtconnect.org:MTConnect", 27u);
-  }
-
-  std::list<DevicePtr> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
-  {
-    if (m_doc)
-    {
-      xmlFreeDoc(m_doc);
-      m_doc = nullptr;
-    }
-
-    xmlXPathContextPtr xpathCtx = nullptr;
-    xmlXPathObjectPtr devices = nullptr;
-    std::list<DevicePtr> deviceList;
-
-    try
-    {
-      xmlInitParser();
-      xmlXPathInit();
-      xmlSetGenericErrorFunc(nullptr, agentXMLErrorFunc);
-
-      THROW_IF_XML2_NULL(m_doc = xmlReadFile(filePath.c_str(), nullptr, XML_PARSE_NOBLANKS));
-
-      std::string path = "//Devices/*";
-      THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(m_doc));
-
-      auto root = xmlDocGetRootElement(m_doc);
-
-      if (root->ns)
+      // Get schema version from Devices.xml
+      if (aPrinter->getSchemaVersion().empty())
       {
-        path = addNamespace(path, "m");
+        string ns((const char *)root->ns->href);
+
+        if (!ns.find_first_of("urn:mtconnect.org:MTConnectDevices"))
+        {
+          auto last = ns.find_last_of(':');
+
+          if (last != string::npos)
+          {
+            string version = ns.substr(last + 1);
+            aPrinter->setSchemaVersion(version);
+          }
+        }
+      }
+    }
+
+    // Add additional namespaces to the printer if they are referenced
+    // here.
+    string locationUrn;
+    auto location = getAttribute(root, "schemaLocation");
+
+    if (location.substr(0, 34) != "urn:mtconnect.org:MTConnectDevices")
+    {
+      auto pos = location.find(' ');
+
+      if (pos != string::npos)
+      {
+        locationUrn = location.substr(0, pos);
+        auto uri = location.substr(pos + 1);
+
+        // Try to find the prefix for this urn...
+        auto ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
+        string prefix;
+
+        if (ns && ns->prefix)
+          prefix = (const char *)ns->prefix;
+
+        aPrinter->addDevicesNamespace(locationUrn, uri, prefix);
+      }
+    }
+
+    // Add the rest of the namespaces...
+    if (root->nsDef)
+    {
+      auto ns = root->nsDef;
+
+      while (ns)
+      {
+        // Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the
+        // schema location again.
+        if (!isMTConnectUrn((const char *)ns->href) &&
+            strncmp((const char *)ns->href, "http://www.w3.org/", 18u) != 0 &&
+            locationUrn != (const char *)ns->href && ns->prefix)
+        {
+          string urn = (const char *)ns->href;
+          string prefix = (const char *)ns->prefix;
+          aPrinter->addDevicesNamespace(urn, "", prefix);
+        }
+
+        ns = ns->next;
+      }
+    }
+
+    devices = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
+
+    if (!devices)
+      throw(string) xpathCtx->lastError.message;
+
+    xmlNodeSetPtr nodeset = devices->nodesetval;
+
+    if (!nodeset || !nodeset->nodeNr)
+      throw(string) "Could not find Device in XML configuration";
+
+    entity::ErrorList errors;
+    for (int i = 0; i != nodeset->nodeNr; ++i)
+    {
+      auto device = entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
+      if (device)
+        deviceList.emplace_back(dynamic_pointer_cast<Device>(device));
+
+      if (!errors.empty())
+      {
+        for (auto &e : errors)
+          LOG(warning) << "Error parsing device: " << e->what();
+      }
+    }
+
+    xmlXPathFreeObject(devices);
+    xmlXPathFreeContext(xpathCtx);
+  }
+  catch (string e)
+  {
+    if (devices)
+      xmlXPathFreeObject(devices);
+
+    if (xpathCtx)
+      xmlXPathFreeContext(xpathCtx);
+
+    LOG(fatal) << "Cannot parse XML file: " << e;
+    throw;
+  }
+  catch (...)
+  {
+    if (devices)
+      xmlXPathFreeObject(devices);
+
+    if (xpathCtx)
+      xmlXPathFreeContext(xpathCtx);
+
+    throw;
+  }
+
+  return deviceList;
+}
+
+XmlParser::~XmlParser()
+{
+  if (m_doc)
+  {
+    xmlFreeDoc(m_doc);
+    m_doc = nullptr;
+  }
+}
+
+void XmlParser::loadDocument(const std::string &doc)
+{
+  if (m_doc)
+  {
+    xmlFreeDoc(m_doc);
+    m_doc = nullptr;
+  }
+
+  try
+  {
+    xmlInitParser();
+    xmlXPathInit();
+    xmlSetGenericErrorFunc(nullptr, agentXMLErrorFunc);
+
+    THROW_IF_XML2_NULL(m_doc = xmlReadMemory(doc.c_str(), doc.length(), "Devices.xml", nullptr,
+                                             XML_PARSE_NOBLANKS));
+  }
+
+  catch (string e)
+  {
+    LOG(fatal) << "Cannot parse XML document: " << e;
+    throw;
+  }
+}
+
+void XmlParser::getDataItems(FilterSet &filterSet, const string &inputPath, xmlNodePtr node)
+{
+  xmlNodePtr root = xmlDocGetRootElement(m_doc);
+
+  if (!node)
+    node = root;
+
+  xmlXPathContextPtr xpathCtx = nullptr;
+  xmlXPathObjectPtr objs = nullptr;
+
+  try
+  {
+    string path;
+    THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(m_doc));
+    xpathCtx->node = node;
+    bool mtc = false;
+
+    if (root->ns)
+    {
+      for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next)
+      {
+        if (ns->prefix)
+        {
+          if (strncmp((const char *)ns->href, "urn:mtconnect.org:MTConnectDevices", 34u) != 0)
+          {
+            THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
+          }
+          else
+          {
+            mtc = true;
+            THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
+          }
+        }
+      }
+
+      if (!mtc)
+      {
         THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
-
-        // Get schema version from Devices.xml
-        if (aPrinter->getSchemaVersion().empty())
-        {
-          string ns((const char *)root->ns->href);
-
-          if (!ns.find_first_of("urn:mtconnect.org:MTConnectDevices"))
-          {
-            auto last = ns.find_last_of(':');
-
-            if (last != string::npos)
-            {
-              string version = ns.substr(last + 1);
-              aPrinter->setSchemaVersion(version);
-            }
-          }
-        }
       }
 
-      // Add additional namespaces to the printer if they are referenced
-      // here.
-      string locationUrn;
-      auto location = getAttribute(root, "schemaLocation");
+      path = addNamespace(inputPath, "m");
+    }
+    else
+      path = inputPath;
 
-      if (location.substr(0, 34) != "urn:mtconnect.org:MTConnectDevices")
-      {
-        auto pos = location.find(' ');
+    objs = xmlXPathEvalExpression(BAD_CAST path.c_str(), xpathCtx);
 
-        if (pos != string::npos)
-        {
-          locationUrn = location.substr(0, pos);
-          auto uri = location.substr(pos + 1);
+    if (!objs)
+    {
+      xmlXPathFreeContext(xpathCtx);
+      return;
+    }
 
-          // Try to find the prefix for this urn...
-          auto ns = xmlSearchNsByHref(m_doc, root, BAD_CAST locationUrn.c_str());
-          string prefix;
+    xmlNodeSetPtr nodeset = objs->nodesetval;
 
-          if (ns && ns->prefix)
-            prefix = (const char *)ns->prefix;
-
-          aPrinter->addDevicesNamespace(locationUrn, uri, prefix);
-        }
-      }
-
-      // Add the rest of the namespaces...
-      if (root->nsDef)
-      {
-        auto ns = root->nsDef;
-
-        while (ns)
-        {
-          // Skip the standard namespaces for MTConnect and the w3c. Make sure we don't re-add the
-          // schema location again.
-          if (!isMTConnectUrn((const char *)ns->href) &&
-              strncmp((const char *)ns->href, "http://www.w3.org/", 18u) != 0 &&
-              locationUrn != (const char *)ns->href && ns->prefix)
-          {
-            string urn = (const char *)ns->href;
-            string prefix = (const char *)ns->prefix;
-            aPrinter->addDevicesNamespace(urn, "", prefix);
-          }
-
-          ns = ns->next;
-        }
-      }
-
-      devices = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
-
-      if (!devices)
-        throw(string) xpathCtx->lastError.message;
-
-      xmlNodeSetPtr nodeset = devices->nodesetval;
-
-      if (!nodeset || !nodeset->nodeNr)
-        throw(string) "Could not find Device in XML configuration";
-
-      entity::ErrorList errors;
+    if (nodeset)
+    {
       for (int i = 0; i != nodeset->nodeNr; ++i)
       {
-        auto device =
-            entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
-        if (device)
-          deviceList.emplace_back(dynamic_pointer_cast<Device>(device));
+        xmlNodePtr n = nodeset->nodeTab[i];
 
-        if (!errors.empty())
+        if (!xmlStrcmp(n->name, BAD_CAST "DataItem"))
         {
-          for (auto &e : errors)
-            LOG(warning) << "Error parsing device: " << e->what();
+          filterSet.insert(getAttribute(n, "id"));
+        }
+        else if (!xmlStrcmp(n->name, BAD_CAST "DataItems"))
+        {
+          // Handle case where we are specifying the data items node...
+          getDataItems(filterSet, "DataItem", n);
+        }
+        else if (!xmlStrcmp(n->name, BAD_CAST "Reference"))
+        {
+          auto id = getAttribute(n, "dataItemId");
+          if (!id.empty())
+            filterSet.insert(id);
+        }
+        else if (!xmlStrcmp(n->name, BAD_CAST "DataItemRef"))
+        {
+          auto id = getAttribute(n, "idRef");
+          if (!id.empty())
+            filterSet.insert(id);
+        }
+        else if (!xmlStrcmp(n->name, BAD_CAST "ComponentRef"))
+        {
+          auto id = getAttribute(n, "idRef");
+          getDataItems(filterSet, "//*[@id='" + id + "']");
+        }
+        else  // Find all the data items and references below this node
+        {
+          getDataItems(filterSet, "*//DataItem", n);
+          getDataItems(filterSet, "*//Reference", n);
+          getDataItems(filterSet, "*//DataItemRef", n);
+          getDataItems(filterSet, "*//ComponentRef", n);
         }
       }
-
-      xmlXPathFreeObject(devices);
-      xmlXPathFreeContext(xpathCtx);
-    }
-    catch (string e)
-    {
-      if (devices)
-        xmlXPathFreeObject(devices);
-
-      if (xpathCtx)
-        xmlXPathFreeContext(xpathCtx);
-
-      LOG(fatal) << "Cannot parse XML file: " << e;
-      throw;
-    }
-    catch (...)
-    {
-      if (devices)
-        xmlXPathFreeObject(devices);
-
-      if (xpathCtx)
-        xmlXPathFreeContext(xpathCtx);
-
-      throw;
     }
 
-    return deviceList;
+    xmlXPathFreeObject(objs);
+    xmlXPathFreeContext(xpathCtx);
   }
-
-  XmlParser::~XmlParser()
+  catch (...)
   {
-    if (m_doc)
-    {
-      xmlFreeDoc(m_doc);
-      m_doc = nullptr;
-    }
-  }
-
-  void XmlParser::loadDocument(const std::string &doc)
-  {
-    if (m_doc)
-    {
-      xmlFreeDoc(m_doc);
-      m_doc = nullptr;
-    }
-
-    try
-    {
-      xmlInitParser();
-      xmlXPathInit();
-      xmlSetGenericErrorFunc(nullptr, agentXMLErrorFunc);
-
-      THROW_IF_XML2_NULL(m_doc = xmlReadMemory(doc.c_str(), doc.length(), "Devices.xml", nullptr,
-                                               XML_PARSE_NOBLANKS));
-    }
-
-    catch (string e)
-    {
-      LOG(fatal) << "Cannot parse XML document: " << e;
-      throw;
-    }
-  }
-
-  void XmlParser::getDataItems(FilterSet &filterSet, const string &inputPath, xmlNodePtr node)
-  {
-    xmlNodePtr root = xmlDocGetRootElement(m_doc);
-
-    if (!node)
-      node = root;
-
-    xmlXPathContextPtr xpathCtx = nullptr;
-    xmlXPathObjectPtr objs = nullptr;
-
-    try
-    {
-      string path;
-      THROW_IF_XML2_NULL(xpathCtx = xmlXPathNewContext(m_doc));
-      xpathCtx->node = node;
-      bool mtc = false;
-
-      if (root->ns)
-      {
-        for (xmlNsPtr ns = root->nsDef; ns; ns = ns->next)
-        {
-          if (ns->prefix)
-          {
-            if (strncmp((const char *)ns->href, "urn:mtconnect.org:MTConnectDevices", 34u) != 0)
-            {
-              THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, ns->prefix, ns->href));
-            }
-            else
-            {
-              mtc = true;
-              THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
-            }
-          }
-        }
-
-        if (!mtc)
-        {
-          THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
-        }
-
-        path = addNamespace(inputPath, "m");
-      }
-      else
-        path = inputPath;
-
-      objs = xmlXPathEvalExpression(BAD_CAST path.c_str(), xpathCtx);
-
-      if (!objs)
-      {
-        xmlXPathFreeContext(xpathCtx);
-        return;
-      }
-
-      xmlNodeSetPtr nodeset = objs->nodesetval;
-
-      if (nodeset)
-      {
-        for (int i = 0; i != nodeset->nodeNr; ++i)
-        {
-          xmlNodePtr n = nodeset->nodeTab[i];
-
-          if (!xmlStrcmp(n->name, BAD_CAST "DataItem"))
-          {
-            filterSet.insert(getAttribute(n, "id"));
-          }
-          else if (!xmlStrcmp(n->name, BAD_CAST "DataItems"))
-          {
-            // Handle case where we are specifying the data items node...
-            getDataItems(filterSet, "DataItem", n);
-          }
-          else if (!xmlStrcmp(n->name, BAD_CAST "Reference"))
-          {
-            auto id = getAttribute(n, "dataItemId");
-            if (!id.empty())
-              filterSet.insert(id);
-          }
-          else if (!xmlStrcmp(n->name, BAD_CAST "DataItemRef"))
-          {
-            auto id = getAttribute(n, "idRef");
-            if (!id.empty())
-              filterSet.insert(id);
-          }
-          else if (!xmlStrcmp(n->name, BAD_CAST "ComponentRef"))
-          {
-            auto id = getAttribute(n, "idRef");
-            getDataItems(filterSet, "//*[@id='" + id + "']");
-          }
-          else  // Find all the data items and references below this node
-          {
-            getDataItems(filterSet, "*//DataItem", n);
-            getDataItems(filterSet, "*//Reference", n);
-            getDataItems(filterSet, "*//DataItemRef", n);
-            getDataItems(filterSet, "*//ComponentRef", n);
-          }
-        }
-      }
-
+    if (objs)
       xmlXPathFreeObject(objs);
+
+    if (xpathCtx)
       xmlXPathFreeContext(xpathCtx);
-    }
-    catch (...)
-    {
-      if (objs)
-        xmlXPathFreeObject(objs);
 
-      if (xpathCtx)
-        xmlXPathFreeContext(xpathCtx);
-
-      LOG(warning) << "getDataItems: Could not parse path: " << inputPath;
-    }
+    LOG(warning) << "getDataItems: Could not parse path: " << inputPath;
   }
+}
 }  // namespace mtconnect

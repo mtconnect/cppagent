@@ -29,109 +29,108 @@ extern "C"
   using xmlTextWriterPtr = xmlTextWriter *;
 }
 
-namespace mtconnect
+namespace mtconnect {
+class SensorConfiguration;
+class XmlWriter;
+
+class XmlPrinter : public Printer
 {
-  class SensorConfiguration;
-  class XmlWriter;
+public:
+  XmlPrinter(const std::string version = "", bool pretty = false);
+  ~XmlPrinter() override = default;
 
-  class XmlPrinter : public Printer
-  {
-  public:
-    XmlPrinter(const std::string version = "", bool pretty = false);
-    ~XmlPrinter() override = default;
+  std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+                          const uint64_t nextSeq, const ProtoErrorList &list) const override;
 
-    std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
-                            const uint64_t nextSeq, const ProtoErrorList &list) const override;
+  std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
+                         const uint64_t nextSeq, const unsigned int assetBufferSize,
+                         const unsigned int assetCount, const std::list<DevicePtr> &devices,
+                         const std::map<std::string, size_t> *count = nullptr) const override;
 
-    std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
-                           const uint64_t nextSeq, const unsigned int assetBufferSize,
-                           const unsigned int assetCount, const std::list<DevicePtr> &devices,
-                           const std::map<std::string, size_t> *count = nullptr) const override;
+  std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
+                          const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
+                          observation::ObservationList &results) const override;
+  std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
+                          const unsigned int assetCount,
+                          const asset::AssetList &asset) const override;
+  std::string mimeType() const override { return "text/xml"; }
 
-    std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
-                            const uint64_t nextSeq, const uint64_t firstSeq, const uint64_t lastSeq,
-                            observation::ObservationList &results) const override;
-    std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
-                            const unsigned int assetCount,
-                            const asset::AssetList &asset) const override;
-    std::string mimeType() const override { return "text/xml"; }
-
-    void addDevicesNamespace(const std::string &urn, const std::string &location,
-                             const std::string &prefix);
-    void addErrorNamespace(const std::string &urn, const std::string &location,
+  void addDevicesNamespace(const std::string &urn, const std::string &location,
                            const std::string &prefix);
-    void addStreamsNamespace(const std::string &urn, const std::string &location,
-                             const std::string &prefix);
-    void addAssetsNamespace(const std::string &urn, const std::string &location,
-                            const std::string &prefix);
+  void addErrorNamespace(const std::string &urn, const std::string &location,
+                         const std::string &prefix);
+  void addStreamsNamespace(const std::string &urn, const std::string &location,
+                           const std::string &prefix);
+  void addAssetsNamespace(const std::string &urn, const std::string &location,
+                          const std::string &prefix);
 
-    void setSchemaVersion(const std::string &version);
-    const std::string &getSchemaVersion();
+  void setSchemaVersion(const std::string &version);
+  const std::string &getSchemaVersion();
 
-    void setDevicesStyle(const std::string &style);
-    void setStreamStyle(const std::string &style);
-    void setAssetsStyle(const std::string &style);
-    void setErrorStyle(const std::string &style);
+  void setDevicesStyle(const std::string &style);
+  void setStreamStyle(const std::string &style);
+  void setAssetsStyle(const std::string &style);
+  void setErrorStyle(const std::string &style);
 
-    // For testing
-    void clearDevicesNamespaces();
-    void clearErrorNamespaces();
-    void clearStreamsNamespaces();
-    void clearAssetsNamespaces();
+  // For testing
+  void clearDevicesNamespaces();
+  void clearErrorNamespaces();
+  void clearStreamsNamespaces();
+  void clearAssetsNamespaces();
 
-    std::string getDevicesUrn(const std::string &prefix);
-    std::string getErrorUrn(const std::string &prefix);
-    std::string getStreamsUrn(const std::string &prefix);
-    std::string getAssetsUrn(const std::string &prefix);
+  std::string getDevicesUrn(const std::string &prefix);
+  std::string getErrorUrn(const std::string &prefix);
+  std::string getStreamsUrn(const std::string &prefix);
+  std::string getAssetsUrn(const std::string &prefix);
 
-    std::string getDevicesLocation(const std::string &prefix);
-    std::string getErrorLocation(const std::string &prefix);
-    std::string getStreamsLocation(const std::string &prefix);
-    std::string getAssetsLocation(const std::string &prefix);
+  std::string getDevicesLocation(const std::string &prefix);
+  std::string getErrorLocation(const std::string &prefix);
+  std::string getStreamsLocation(const std::string &prefix);
+  std::string getAssetsLocation(const std::string &prefix);
 
-  protected:
-    enum EDocumentType
-    {
-      eERROR,
-      eSTREAMS,
-      eDEVICES,
-      eASSETS
-    };
-
-    struct SchemaNamespace
-    {
-      std::string mUrn;
-      std::string mSchemaLocation;
-    };
-
-    // Initiate all documents
-    void initXmlDoc(xmlTextWriterPtr writer, EDocumentType docType, const unsigned int instanceId,
-                    const unsigned int bufferSize, const unsigned int assetBufferSize,
-                    const unsigned int assetCount, const uint64_t nextSeq,
-                    const uint64_t firstSeq = 0, const uint64_t lastSeq = 0,
-                    const std::map<std::string, size_t> *counts = nullptr) const;
-
-    // Helper to print individual components and details
-    void printProbeHelper(xmlTextWriterPtr writer, device_model::ComponentPtr component,
-                          const char *name) const;
-    void printDataItem(xmlTextWriterPtr writer, DataItemPtr dataItem) const;
-    void addObservation(xmlTextWriterPtr writer, observation::ObservationPtr result) const;
-
-  protected:
-    std::map<std::string, SchemaNamespace> m_devicesNamespaces;
-    std::map<std::string, SchemaNamespace> m_streamsNamespaces;
-    std::map<std::string, SchemaNamespace> m_errorNamespaces;
-    std::map<std::string, SchemaNamespace> m_assetNamespaces;
-
-    std::unordered_set<std::string> m_deviceNsSet;
-    std::unordered_set<std::string> m_streamsNsSet;
-    std::unordered_set<std::string> m_errorNsSet;
-    std::unordered_set<std::string> m_assetNsSet;
-
-    std::string m_schemaVersion;
-    std::string m_streamsStyle;
-    std::string m_devicesStyle;
-    std::string m_errorStyle;
-    std::string m_assetStyle;
+protected:
+  enum EDocumentType
+  {
+    eERROR,
+    eSTREAMS,
+    eDEVICES,
+    eASSETS
   };
+
+  struct SchemaNamespace
+  {
+    std::string mUrn;
+    std::string mSchemaLocation;
+  };
+
+  // Initiate all documents
+  void initXmlDoc(xmlTextWriterPtr writer, EDocumentType docType, const unsigned int instanceId,
+                  const unsigned int bufferSize, const unsigned int assetBufferSize,
+                  const unsigned int assetCount, const uint64_t nextSeq,
+                  const uint64_t firstSeq = 0, const uint64_t lastSeq = 0,
+                  const std::map<std::string, size_t> *counts = nullptr) const;
+
+  // Helper to print individual components and details
+  void printProbeHelper(xmlTextWriterPtr writer, device_model::ComponentPtr component,
+                        const char *name) const;
+  void printDataItem(xmlTextWriterPtr writer, DataItemPtr dataItem) const;
+  void addObservation(xmlTextWriterPtr writer, observation::ObservationPtr result) const;
+
+protected:
+  std::map<std::string, SchemaNamespace> m_devicesNamespaces;
+  std::map<std::string, SchemaNamespace> m_streamsNamespaces;
+  std::map<std::string, SchemaNamespace> m_errorNamespaces;
+  std::map<std::string, SchemaNamespace> m_assetNamespaces;
+
+  std::unordered_set<std::string> m_deviceNsSet;
+  std::unordered_set<std::string> m_streamsNsSet;
+  std::unordered_set<std::string> m_errorNsSet;
+  std::unordered_set<std::string> m_assetNsSet;
+
+  std::string m_schemaVersion;
+  std::string m_streamsStyle;
+  std::string m_devicesStyle;
+  std::string m_errorStyle;
+  std::string m_assetStyle;
+};
 }  // namespace mtconnect
