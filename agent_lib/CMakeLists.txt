@@ -55,6 +55,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/convert_sample.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/topic_mapper.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/upcase_value.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/message_mapper.hpp"
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.hpp"
@@ -215,6 +216,7 @@ target_compile_definitions(
     MQTT_STD_VARIANT
     MQTT_STD_OPTIONAL
     MQTT_STD_STRING_VIEW
+    MQTT_USE_LOG
     )
 
 # set_property(SOURCE ${AGENT_SOURCES} PROPERTY COMPILE_FLAGS_DEBUG "${COVERAGE_FLAGS}")

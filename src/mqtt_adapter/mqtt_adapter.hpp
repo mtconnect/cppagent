@@ -24,8 +24,23 @@ namespace mtconnect
 {
   namespace source
   {
-    class MqttAdapterImpl;
-    
+    class MqttAdapterImpl : public std::enable_shared_from_this<MqttAdapterImpl>
+    {
+    public:
+      MqttAdapterImpl(boost::asio::io_context &ioc) : m_ioContext(ioc) {}
+      virtual ~MqttAdapterImpl() = default;
+      const auto &getIdentity() const { return m_identity; }
+      const auto &getUrl() const { return m_url; }
+      
+      virtual bool start() = 0;
+      virtual void stop() = 0;
+
+    protected:
+      boost::asio::io_context &m_ioContext;
+      std::string m_url;
+      std::string m_identity;      
+    };
+
     class MqttPipeline : public pipeline::Pipeline
     {
     public:
@@ -44,17 +59,29 @@ namespace mtconnect
     public:
       MqttAdapter(boost::asio::io_context &context, const ConfigOptions &options,
                   std::unique_ptr<MqttPipeline> &pipeline);
-      ~MqttAdapter() override;
+      ~MqttAdapter() override {}
       
-      bool start() override;
-      void stop() override;
+      const std::string &getHost() const override { return m_host; };
+      unsigned int getPort() const override { return m_port; }
+
+      
+      bool start() override
+      {
+        return m_client->start();
+      }
+      void stop() override
+      {
+        m_client->stop();
+      }
       
     protected:
       boost::asio::io_context &m_ioContext;
-      ConfigOptions m_options;
       
       // If the connector has been running
       bool m_running;
+      
+      std::string m_host;
+      unsigned int m_port;
       
       std::unique_ptr<MqttPipeline> m_pipeline;
       std::shared_ptr<MqttAdapterImpl> m_client;

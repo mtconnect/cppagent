@@ -141,7 +141,9 @@ namespace mtconnect
         using spirit::ascii::char_;
 
         m_name %= lexeme[+(char_ - (space | char_("=\\{}") | eol))];
-        m_value %= *blank > no_skip[+(char_ - (char_("}#") | eol))];
+        m_line %= no_skip[+(char_ - (char_("}#") | eol))];
+        m_string %= omit[char_("\"'")[_a = _1]] >> no_skip[*(char_ - char_(_a))] >> lit(_a);
+        m_value %= *blank > (m_string | m_line);
         m_property = (m_name >> "=" > m_value > (eol | &char_("}#")))[property(_val, _1, _2)];
         m_tree = (m_name >> *eol >> "{" >> *m_node > "}")[tree(_val, _1, _2)];
         m_blank = eol;
@@ -167,6 +169,8 @@ namespace mtconnect
 
     protected:
       qi::rule<It, string(), Skipper> m_name;
+      qi::rule<It, string(), Skipper> m_line;
+      qi::rule<It, string(), Skipper, qi::locals<char>> m_string;
       qi::rule<It, string(), Skipper> m_value;
       qi::rule<It, pair<std::string, std::string>(), Skipper> m_property;
       qi::rule<It, pair<std::string, pt::ptree>(), Skipper> m_tree;

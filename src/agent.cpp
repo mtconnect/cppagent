@@ -468,7 +468,8 @@ namespace mtconnect
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_removed");
-        m_loopback->receive(d, oldUuid);
+        if (d)
+          m_loopback->receive(d, oldUuid);
       }
       m_deviceUuidMap.erase(oldUuid);
       m_deviceUuidMap[uuid] = device;
@@ -487,12 +488,14 @@ namespace mtconnect
       if (device->getUuid() != oldUuid)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_added");
-        m_loopback->receive(d, uuid);
+        if (d)
+          m_loopback->receive(d, uuid);
       }
       else
       {
         auto d = m_agentDevice->getDeviceDataItem("device_changed");
-        m_loopback->receive(d, uuid);
+        if (d)
+          m_loopback->receive(d, uuid);
       }
     }
   }
@@ -567,16 +570,12 @@ namespace mtconnect
 
     if (m_agentDevice)
     {
-      auto adapter = dynamic_cast<adapter::Adapter *>(source.get());
-      if (adapter)
+      m_agentDevice->addAdapter(source);
+      initializeDataItems(m_agentDevice);
+      // Reload the document for path resolution
+      if (m_initialized)
       {
-        m_agentDevice->addAdapter(adapter);
-        initializeDataItems(m_agentDevice);
-        // Reload the document for path resolution
-        if (m_initialized)
-        {
-          loadCachedProbe();
-        }
+        loadCachedProbe();
       }
     }
   }
@@ -645,7 +644,8 @@ namespace mtconnect
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      m_loopback->receive(di, "LISTENING");
+      if (di)
+        m_loopback->receive(di, "LISTENING");
     }
   }
 
@@ -658,7 +658,8 @@ namespace mtconnect
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      m_loopback->receive(di, "CLOSED");
+      if (di)
+        m_loopback->receive(di, "CLOSED");
     }
 
     for (auto &name : devices)
@@ -704,7 +705,8 @@ namespace mtconnect
     if (m_agentDevice)
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
-      m_loopback->receive(di, "ESTABLISHED");
+      if (di)
+        m_loopback->receive(di, "ESTABLISHED");
     }
 
     if (!autoAvailable)

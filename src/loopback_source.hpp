@@ -41,10 +41,13 @@ namespace mtconnect
   public:
     LoopbackSource(const std::string &name, pipeline::PipelineContextPtr context,
                    boost::asio::io_context::strand &st, const ConfigOptions &options)
-      : Source(name), m_pipeline(context), m_strand(st)
+      : Source(name, options), m_pipeline(context), m_strand(st)
     {
       m_pipeline.build(options);
     }
+    
+    const std::string &getHost() const override { return m_host; }
+
 
     bool start() override
     {
@@ -76,9 +79,10 @@ namespace mtconnect
                                  const std::optional<std::string> &type,
                                  const std::optional<std::string> &time, entity::ErrorList &errors);
     void removeAsset(const std::optional<std::string> device, const std::string &id);
-
+    
   protected:
     LoopbackPipeline m_pipeline;
     boost::asio::io_context::strand m_strand;
+    std::string m_host;
   };
 }  // namespace mtconnect

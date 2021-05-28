@@ -28,6 +28,7 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <mqtt_adapter/mqtt_adapter.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/regex.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -769,6 +770,33 @@ namespace mtconnect
 
       loadTypes(config, cache);
     }
+    
+    void parseUrl(ConfigOptions &options)
+    {
+      string host, protocol, path;
+      auto url = *GetOption<string>(options, configuration::Url);
+      
+      boost::regex pat("^([^:]+)://([^:/]+)(:[0-9]+)?(/?.+)");
+      boost::match_results<string::const_iterator> match;
+      if (boost::regex_match(url, match, pat))
+      {
+        if (match[1].matched)
+          options[configuration::Protocol] = string(match[1].first, match[1].second);
+        if (match[2].matched)
+          options[configuration::Host] = string(match[2].first, match[2].second);
+        if (match[3].matched)
+        {
+          try {
+            options[configuration::Port] = boost::lexical_cast<int>(string(match[3].first + 1, match[3].second).c_str());
+          } catch (boost::bad_lexical_cast &e) {
+            LOG(error) << "Cannot intrepret the port for " << match[3] << ": " << e.what();
+          }
+        }
+        if (match[4].matched)
+          options[configuration::Topics] = StringList{string(match[4].first, match[4].second)};
+      }
+
+    }
 
     void AgentConfiguration::loadAdapters(const pt::ptree &config, const ConfigOptions &options)
     {
@@ -790,17 +818,16 @@ namespace mtconnect
                      {{configuration::UUID, string()},
                       {configuration::Manufacturer, string()},
                       {configuration::Station, string()},
-                      {configuration::Url, string()}
+                      {configuration::Url, string()},
+            {configuration::Host, string()},
+            {configuration::Port, 0},
+            {configuration::Protocol, string()}
           });
 
           AddDefaultedOptions(block.second, adapterOptions,
-                              {
-                                  {configuration::Host, "localhost"s},
-                                  {configuration::Port, 7878},
-                                  {configuration::AutoAvailable, false},
+                              {   {configuration::AutoAvailable, false},
                                   {configuration::RealTime, false},
-                                  {configuration::RelativeTime, false},
-            {configuration::Protocol, "shdr"}
+                                  {configuration::RelativeTime, false}
                               });
 
           auto deviceName =
@@ -821,7 +848,7 @@ namespace mtconnect
           }
           else
           {
-            adapterOptions[configuration::Device] = *device->getComponentName();
+            adapterOptions[configuration::Device] = *device->getUuid();
           }
           if (!device)
           {
@@ -848,32 +875,52 @@ namespace mtconnect
 
             adapterOptions[configuration::AdditionalDevices] = deviceList;
           }
+          
+          string host, protocol, path;
+          int port{-1};
+          if (HasOption(adapterOptions, configuration::Url))
+          {
+            parseUrl(adapterOptions);
+          }
+                    
+          if (HasOption(adapterOptions, configuration::Protocol))
+            protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
+          else
+            protocol = "shdr";
+          if (HasOption(adapterOptions, configuration::Host))
+            host = get<string>(adapterOptions[configuration::Host]);
+          else
+            adapterOptions[configuration::Host] = host = "localhost";
 
-          LOG(info) << "Adding adapter for " << deviceName << " on "
-                    << get<string>(adapterOptions[configuration::Host]) << ":"
-                    << get<string>(adapterOptions[configuration::Host]);
-
-          string protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
           if (protocol == "shdr")
           {
+            if (HasOption(adapterOptions, configuration::Port))
+              port = get<int>(adapterOptions[configuration::Port]);
+            else
+              port = 7878;
             auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-            auto adp = make_shared<Adapter>(
-                                            m_context, get<string>(adapterOptions[configuration::Host]),
-                                            get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
+            auto adp = make_shared<Adapter>(m_context, host, port, adapterOptions, pipeline);
             m_agent->addSource(adp, false);
           }
           else if (protocol == "mqtt")
           {
+            loadTopics(block.second, adapterOptions);
+            if (!HasOption(adapterOptions, configuration::Port))
+              adapterOptions[configuration::Port] = 1883;
             auto pipeline = make_unique<source::MqttPipeline>(m_pipelineContext);
             auto adp = make_shared<source::MqttAdapter>(
                                             m_context, adapterOptions, pipeline);
             m_agent->addSource(adp, false);
+            port = adp->getPort();
           }
           else
           {
             LOG(error) << "Unknown protocol: " << protocol << ", stopping";
             exit(1);
           }
+          
+          LOG(info) << protocol << ": Adding adapter for " << deviceName << " on "
+            << host << ":" << port;
         }
       }
       else if ((device = defaultDevice()))
@@ -1044,11 +1091,16 @@ namespace mtconnect
       if (topics)
       {
         StringList list;
-        for (auto &f : *topics)
-        {
-          list.emplace_back(f.first + ":" + f.second.data());
+        if (topics->size() == 0)        {
+          list.emplace_back(":" + topics->get_value<string>());
         }
-
+        else
+        {
+          for (auto &f : *topics)
+          {
+            list.emplace_back(f.first + ":" + f.second.data());
+          }
+        }
         options[configuration::Topics] = list;
       }
     }

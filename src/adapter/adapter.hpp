@@ -92,8 +92,8 @@ namespace mtconnect
       }
 
       // Agent Device methods
-      const std::string &getUrl() const { return m_url; }
-      const std::string &getIdentity() const { return m_identity; }
+      const std::string &getHost() const override { return m_server; }
+      unsigned int getPort() const override { return m_port; }
 
       // Start and Stop
       void stop() override;
@@ -108,7 +108,6 @@ namespace mtconnect
           return false;
       }
 
-      const ConfigOptions &getOptions() const { return m_options; }
       void setOptions(const ConfigOptions &options)
       {
         for (auto &o : options)
@@ -122,17 +121,11 @@ namespace mtconnect
       std::unique_ptr<Handler> m_handler;
       std::unique_ptr<AdapterPipeline> m_pipeline;
 
-      // Name of device associated with adapter
-      std::string m_url;
-      std::string m_identity;
-
       // If the connector has been running
       bool m_running;
 
       std::optional<std::string> m_terminator;
       std::stringstream m_body;
-
-      ConfigOptions m_options;
     };
   }  // namespace adapter
 }  // namespace mtconnect

@@ -18,6 +18,7 @@
 
 #include <chrono>
 #include <regex>
+#include <unordered_map>
 
 #include <boost/algorithm/string.hpp>
 
@@ -68,60 +69,85 @@ namespace mtconnect
         m_guard = TypeGuard<Message>(RUN);
       }
       
-      const EntityPtr operator()(const EntityPtr entity) override
+      auto resolve(const std::string &topic)
       {
         using namespace std;
         namespace algo = boost::algorithm;
         using namespace boost;
         
-        auto &body = entity->getValue<std::string>();
         DataItemPtr dataItem;
-        DevicePtr dev;
-        entity::Properties props{entity->getProperties()};
-        if (auto topic = entity->maybeGet<std::string>("topic"))
-        {
-          string name, device;
+        DevicePtr device;
 
-          std::vector<string> path;
-          boost::split(path, *topic, algo::is_any_of("/"));
-          if (path.size() > 1)
+        string name, deviceName;
+        
+        std::vector<string> path;
+        boost::split(path, topic, algo::is_any_of("/"));
+        if (path.size() > 1)
+        {
+          deviceName = path[0];
+          name = path[1];
+          dataItem = m_context->m_contract->findDataItem(deviceName, name);
+        }
+        
+        if (!dataItem)
+        {
+          deviceName = m_defaultDevice.value_or("");
+          name = topic;
+          dataItem = m_context->m_contract->findDataItem(deviceName, name);
+        }
+        
+        if (!dataItem && path.size() > 1)
+        {
+          name = path.back();
+          dataItem = m_context->m_contract->findDataItem(deviceName, name);
+        }
+        
+        if (!dataItem)
+        {
+          for (auto &tok : path)
           {
-            device = path[0];
-            name = path[1];
-            dataItem = m_context->m_contract->findDataItem(device, name);
+            device = m_context->m_contract->findDevice(tok);
+            if (device)
+              break;
           }
           
-          if (!dataItem)
-          {
-            device = m_defaultDevice.value_or("");
-            name = *topic;
-            dataItem = m_context->m_contract->findDataItem(device, name);
-          }
-          
-          if (!dataItem && path.size() > 1)
-          {
-            name = path.back();
-            dataItem = m_context->m_contract->findDataItem(device, name);
-          }
-          
-          if (!dataItem)
+          if (device)
           {
             for (auto &tok : path)
             {
-              dev = m_context->m_contract->findDevice(tok);
-              if (dev)
+              dataItem = device->getDeviceDataItem(tok);
+              if (dataItem)
                 break;
             }
-            
-            if (dev)
-            {
-              for (auto &tok : path)
-              {
-                dataItem = dev->getDeviceDataItem(tok);
-                if (dataItem)
-                  break;
-              }
-            }
+          }
+        }
+        
+        // Note even if null so we don't have to try again
+        m_resolved[topic] = dataItem;
+        m_devices[topic] = device;
+        
+        return std::make_tuple(device, dataItem);
+      }
+      
+      const EntityPtr operator()(const EntityPtr entity) override
+      {
+        auto &body = entity->getValue<std::string>();
+        DataItemPtr dataItem;
+        DevicePtr device;
+        entity::Properties props{entity->getProperties()};
+        if (auto topic = entity->maybeGet<std::string>("topic"))
+        {
+          if (auto it = m_devices.find(*topic); it != m_devices.end())
+          {
+            device = it->second;
+          }
+          if (auto it = m_resolved.find(*topic); it != m_resolved.end())
+          {
+            dataItem = it->second;
+          }
+          if (!dataItem && !device)
+          {
+            std::tie(device, dataItem) = resolve(*topic);
           }
         }
         
@@ -136,7 +162,7 @@ namespace mtconnect
           result = std::make_shared<DataMessage>("DataMessage", props);
         }
         result->m_dataItem = dataItem;
-        result->m_device = dev;
+        result->m_device = device;
 
         
         return next(result);
@@ -145,7 +171,8 @@ namespace mtconnect
     protected:
       PipelineContextPtr m_context;
       std::optional<std::string> m_defaultDevice;
-
-    };    
+      std::unordered_map<std::string, DataItemPtr> m_resolved;
+      std::unordered_map<std::string, DevicePtr> m_devices;
+    };
   }  // namespace pipeline
 }  // namespace mtconnect

@@ -68,7 +68,7 @@ namespace mtconnect
       return getDeviceDataItem(adapter + "_connection_status");
     }
 
-    void AgentDevice::addAdapter(const adapter::Adapter *adapter)
+    void AgentDevice::addAdapter(const SourcePtr adapter)
     {
       using namespace entity;
       using namespace device_model::data_item;
@@ -77,14 +77,14 @@ namespace mtconnect
       auto id = adapter->getIdentity();
 
       stringstream name;
-      name << adapter->getServer() << ':' << adapter->getPort();
+      name << adapter->getHost() << ':' << adapter->getPort();
 
       ErrorList errors;
       Properties attrs {{"id", id}};
       if (!suppress)
       {
         stringstream name;
-        name << adapter->getServer() << ':' << adapter->getPort();
+        name << adapter->getHost() << ':' << adapter->getPort();
         attrs["name"] = name.str();
       }
       else

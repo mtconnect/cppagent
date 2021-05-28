@@ -42,10 +42,9 @@ namespace mtconnect
                      const unsigned int port, const ConfigOptions &options,
                      std::unique_ptr<AdapterPipeline> &pipeline)
       : Connector(context, server, port, 60s),
-        Source("Adapter"),
+        Source("Adapter", options),
         m_pipeline(std::move(pipeline)),
-        m_running(true),
-        m_options(options)
+        m_running(true)
     {
       auto timeout = options.find(configuration::LegacyTimeout);
       if (timeout != options.end())

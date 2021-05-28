@@ -17,6 +17,7 @@
 
 #include <boost/uuid/name_generator_sha1.hpp>
 #include <mqtt/async_client.hpp>
+#include <mqtt/log.hpp>
 
 #include "mqtt_adapter.hpp"
 #include "configuration/config_options.hpp"
@@ -30,6 +31,7 @@
 #include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/upcase_value.hpp"
 #include "pipeline/topic_mapper.hpp"
+#include "pipeline/message_mapper.hpp"
 #include "device_model/device.hpp"
 
 using namespace std;
@@ -44,29 +46,31 @@ namespace mtconnect
 
   namespace source
   {
-    class MqttAdapterImpl : public enable_shared_from_this<MqttAdapterImpl>
+    template<typename... Ts>
+    using mqtt_client_ptr =  decltype(mqtt::make_async_client(std::declval<Ts>()...));
+    template<typename... Ts>
+    using mqtt_tls_client_ptr =  decltype(mqtt::make_tls_async_client(std::declval<Ts>()...));
+    using mqtt_client = mqtt_client_ptr<boost::asio::io_context&, std::string, std::uint16_t, mqtt::protocol_version>;
+    using mqtt_tls_client = mqtt_tls_client_ptr<boost::asio::io_context&, std::string, std::uint16_t, mqtt::protocol_version>;
+
+    template<class Client>
+    class MqttAdapterClient : public MqttAdapterImpl
     {
     public:
-      template<typename... Ts>
-      using mqtt_client_ptr =  decltype(mqtt::make_async_client(std::declval<Ts>()...));
-      template<typename... Ts>
-      using mqtt_tls_client_ptr =  decltype(mqtt::make_tls_async_client(std::declval<Ts>()...));
-
-      
-      MqttAdapterImpl(boost::asio::io_context &ioContext,
+      MqttAdapterClient(boost::asio::io_context &ioContext,
                       const ConfigOptions &options,
                       MqttPipeline *pipeline) :
-      m_ioContext(ioContext), m_options(options),
-      m_server(*GetOption<std::string>(options, configuration::Host)),
+      MqttAdapterImpl(ioContext), m_options(options),
+      m_host(*GetOption<std::string>(options, configuration::Host)),
       m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
-      m_pipeline(pipeline)
+      m_pipeline(pipeline), m_reconnectTimer(ioContext)
       {
         std::stringstream url;
-        url << "mqtt://" << m_server << ':' << m_port;
+        url << "mqtt://" << m_host << ':' << m_port;
         m_url = url.str();
 
         std::stringstream identity;
-        identity << '_' << m_server << '_' << m_port;
+        identity << '_' << m_host << '_' << m_port;
         
         boost::uuids::detail::sha1 sha1;
         sha1.process_bytes(identity.str().c_str(), identity.str().length());
@@ -78,17 +82,16 @@ namespace mtconnect
         m_identity = std::string("_") + (identity.str()).substr(0, 10);
       }
       
-      ~MqttAdapterImpl()
+      ~MqttAdapterClient()
       {
         stop();
       }
-      
-      const auto &getIdentity() { return m_identity; }
-      const auto &getUrl() { return m_url; }
-      
-      bool start()
+                  
+      bool start() override
       {
-        m_client = mqtt::make_async_client(m_ioContext, m_server, m_port);
+        NAMED_SCOPE("MqttAdapterClient::start");
+        
+        m_client = mqtt::make_async_client(m_ioContext, m_host, m_port);
         m_client->set_client_id(m_identity);
         m_client->clean_session();
         m_client->set_keep_alive_sec(10);
@@ -101,6 +104,10 @@ namespace mtconnect
 
             subscribe();
           }
+          else
+          {
+            reconnect();
+          }
           return true;
         });
         
@@ -110,6 +117,7 @@ namespace mtconnect
           auto entity = make_shared<Entity>("ConnectionStatus",
                                             Properties {{"VALUE", "DISCONNECTED"s}, {"source", m_identity}});
           m_pipeline->run(entity);
+          reconnect();
         });
         
         m_client->set_suback_handler([this](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results){
@@ -123,7 +131,12 @@ namespace mtconnect
           return true;
         });
         
-        
+        m_client->set_error_handler([this](mqtt::error_code ec){
+          LOG(error) << "error: " << ec.message();
+          reconnect();
+        });
+
+                
         m_client->set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
                                               mqtt::publish_options pubopts,
                                               mqtt::buffer topic_name,
@@ -138,15 +151,14 @@ namespace mtconnect
           return true;
         });
         
-        m_client->async_connect();
+        connect();
         
         return true;
       }
 
-      void stop()
+      void stop() override
       {
         m_client.reset();
-        m_tlsClient.reset();
       }
       
     protected:
@@ -163,15 +175,15 @@ namespace mtconnect
             if (loc != string::npos)
             {
               topicList.emplace_back(make_tuple(
-                topic.substr(0, loc),
-                mqtt::qos::at_most_once));
+                topic.substr(loc + 1),
+                mqtt::qos::at_least_once));
             }
           }
         }
         else
         {
           LOG(warning) << "No topics specified, subscribing to '#'";
-          topicList.emplace_back(make_tuple("#"s, mqtt::qos::at_most_once));
+          topicList.emplace_back(make_tuple("#"s, mqtt::qos::at_least_once));
         }
         
         m_subPid = m_client->acquire_unique_packet_id();
@@ -186,11 +198,11 @@ namespace mtconnect
       
       void connect()
       {
-        {
-          auto entity = make_shared<Entity>("ConnectionStatus",
-                                            Properties {{"VALUE", "CONNECTING"s}, {"source", m_identity}});
-          m_pipeline->run(entity);
-        }
+        auto entity = make_shared<Entity>("ConnectionStatus",
+                                          Properties {{"VALUE", "CONNECTING"s}, {"source", m_identity}});
+        m_pipeline->run(entity);
+        
+        m_client->async_connect();
       }
       
       void receive(mqtt::buffer &topic, mqtt::buffer &contents)
@@ -198,50 +210,63 @@ namespace mtconnect
         auto entity = make_shared<pipeline::Message>("Topic", Properties {{"VALUE", string(contents)}, {"topic", string(topic)}, {"source", m_identity}});
         m_pipeline->run(entity);
       }
+      
+      void reconnect()
+      {
+        NAMED_SCOPE("MqttAdapterClient::reconnect");
+        
+        LOG(info) << "Start reconnect timer";
+
+        // Set an expiry time relative to now.
+        m_reconnectTimer.expires_after(std::chrono::seconds(5));
+
+        m_reconnectTimer.async_wait([this](const boost::system::error_code& error) {
+            if (error != boost::asio::error::operation_aborted) {
+              LOG(info) << "Reconnect now !!";
+
+                // Connect
+                m_client->async_connect(
+                    [this](mqtt::error_code ec){
+                        LOG(info)  << "async_connect callback: " << ec.message();
+                        if (ec && ec != boost::asio::error::operation_aborted) {
+                            reconnect();
+                        }
+                    }
+                );
+            }
+        });
+      }
 
     protected:
-      boost::asio::io_context &m_ioContext;
       ConfigOptions m_options;
       
-      std::string m_server;
+      std::string m_host;
       unsigned int m_port;
-      
-      std::string m_url;
-      std::string m_identity;
       
       std::uint16_t m_subPid{0};
       bool m_running;
       
       MqttPipeline *m_pipeline;
 
-      mqtt_client_ptr<boost::asio::io_context&, std::string, std::uint16_t, mqtt::protocol_version> m_client;
-      mqtt_tls_client_ptr<boost::asio::io_context&, std::string, std::uint16_t, mqtt::protocol_version> m_tlsClient;
+      Client m_client;
+      boost::asio::steady_timer m_reconnectTimer;
     };
 
     MqttAdapter::MqttAdapter(boost::asio::io_context &context,
                              const ConfigOptions &options,
                              std::unique_ptr<MqttPipeline> &pipeline)
-    : Source("MQTT"), m_ioContext(context), m_options(options),
+    : Source("MQTT", options), m_ioContext(context),
+    m_host(*GetOption<std::string>(options, configuration::Host)),
+    m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
     m_pipeline(std::move(pipeline))
     {
-      m_client = make_shared<MqttAdapterImpl>(m_ioContext, options, m_pipeline.get());
+      m_client = make_shared<MqttAdapterClient<mqtt_client>>(m_ioContext, options, m_pipeline.get());
       m_name = m_client->getIdentity();
       m_options[configuration::AdapterIdentity] = m_name;
       m_pipeline->build(m_options);
-    }
-    
-    MqttAdapter::~MqttAdapter()
-    {
-    }
-    
-    bool MqttAdapter::start()
-    {
-      return m_client->start();
-    }
-        
-    void MqttAdapter::stop()
-    {
-      m_client->stop();
+      
+      m_identity = m_client->getIdentity();
+      m_url = m_client->getUrl();
     }
     
     void MqttPipeline::build(const ConfigOptions &options)
@@ -270,33 +295,24 @@ namespace mtconnect
       bind(make_shared<DeliverConnectionStatus>(
           m_context, devices, IsOptionSet(options, configuration::AutoAvailable)));
       bind(make_shared<DeliverCommand>(m_context, device));
+      
+      next = bind(make_shared<TopicMapper>(m_context, GetOption<string>(m_options, configuration::Device).value_or("")));
 
-      // Optional type based transforms
-      if (IsOptionSet(m_options, configuration::IgnoreTimestamps))
-        next = next->bind(make_shared<IgnoreTimestamp>());
-      else
-      {
-        auto extract =
-            make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
-        next = next->bind(extract);
-      }
+      auto map1 = next->bind(make_shared<JsonMapper>(m_context));
+      auto map2 = next->bind(make_shared<DataMapper>(m_context));
 
-      // Token mapping to data items and asset
-      auto mapper = make_shared<ShdrTokenMapper>(
-          m_context, GetOption<string>(m_options, configuration::Device).value_or(""),
-          GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
-      next = next->bind(mapper);
-
-      // Handle the observations and send to nowhere
-      mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
-
+      next = make_shared<NullTransform>(TypeGuard<Observation, asset::Asset>(SKIP));
+      
+      map1->bind(next);
+      map2->bind(next);
+      
       // Go directly to asset delivery
       std::optional<string> assetMetrics;
       if (identity)
         assetMetrics = *identity + "_asset_update_rate";
 
-      mapper->bind(make_shared<DeliverAsset>(m_context, assetMetrics));
-      mapper->bind(make_shared<DeliverAssetCommand>(m_context));
+      next->bind(make_shared<DeliverAsset>(m_context, assetMetrics));
+      next->bind(make_shared<DeliverAssetCommand>(m_context));
 
       // Uppercase Events
       if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
