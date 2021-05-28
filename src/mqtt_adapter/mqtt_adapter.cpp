@@ -18,9 +18,10 @@
 #include "mqtt_adapter.hpp"
 
 #include <boost/uuid/name_generator_sha1.hpp>
+#include <boost/log/trivial.hpp>
 
 #include <mqtt/async_client.hpp>
-#include <mqtt/log.hpp>
+#include <mqtt/setup_log.hpp>
 
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
@@ -92,6 +93,11 @@ namespace mtconnect
       bool start() override
       {
         NAMED_SCOPE("MqttAdapterClient::start");
+#ifndef NDEBUG
+        mqtt::setup_log(mqtt::severity_level::debug);
+#else
+        mqtt::setup_log();
+#endif
 
         m_client = mqtt::make_async_client(m_ioContext, m_host, m_port);
         m_client->set_client_id(m_identity);
