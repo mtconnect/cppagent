@@ -824,12 +824,14 @@ namespace mtconnect
                       {configuration::Station, string()},
                       {configuration::Url, string()},
                       {configuration::Host, string()},
+                      {configuration::MqttCaCert, string()},
                       {configuration::Port, 0},
                       {configuration::Protocol, string()}});
 
           AddDefaultedOptions(block.second, adapterOptions,
                               {{configuration::AutoAvailable, false},
                                {configuration::RealTime, false},
+                               {configuration::MqttTls, false},
                                {configuration::RelativeTime, false}});
 
           auto deviceName =

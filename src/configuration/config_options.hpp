@@ -72,6 +72,9 @@ namespace mtconnect
     DECLARE_CONFIGURATION(SuppressIPAddress);
     DECLARE_CONFIGURATION(Topics);
     DECLARE_CONFIGURATION(Protocol);
+    DECLARE_CONFIGURATION(MqttCaCert);
     DECLARE_CONFIGURATION(Url);
+    DECLARE_CONFIGURATION(Path);
+    DECLARE_CONFIGURATION(MqttTls);
   }  // namespace configuration
 }  // namespace mtconnect
