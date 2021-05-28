@@ -30,12 +30,15 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/option.hpp"
 
 
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_adapter.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/connector.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/connector.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/adapter_pipeline.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/adapter_pipeline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.cpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline_context.hpp"
@@ -145,11 +148,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"
-  
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt_adapter/mqtt_adapter.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt_adapter/mqtt_adapter.cpp"
-  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"  
 )
 
 ## configure a header file to pass some of the CMake settings to the source code

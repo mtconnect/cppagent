@@ -568,9 +568,10 @@ namespace mtconnect
     if (start)
       source->start();
 
-    if (m_agentDevice)
+    auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
+    if (m_agentDevice && adapter)
     {
-      m_agentDevice->addAdapter(source);
+      m_agentDevice->addAdapter(adapter);
       initializeDataItems(m_agentDevice);
       // Reload the document for path resolution
       if (m_initialized)

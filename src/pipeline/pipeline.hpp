@@ -37,7 +37,6 @@ namespace mtconnect
   namespace adapter
   {
     class Adapter;
-    struct Handler;
   }  // namespace adapter
   namespace pipeline
   {

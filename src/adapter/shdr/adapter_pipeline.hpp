@@ -31,16 +31,21 @@ namespace mtconnect
 
   namespace adapter
   {
-    class AdapterPipeline : public pipeline::Pipeline
+    namespace shdr
     {
-    public:
-      AdapterPipeline(pipeline::PipelineContextPtr context) : Pipeline(context) {}
+      struct Handler;
+      
+      class AdapterPipeline : public pipeline::Pipeline
+      {
+      public:
+        AdapterPipeline(pipeline::PipelineContextPtr context) : Pipeline(context) {}
 
-      void build(const ConfigOptions &options) override;
-      std::unique_ptr<adapter::Handler> makeHandler();
+        void build(const ConfigOptions &options) override;
+        std::unique_ptr<shdr::Handler> makeHandler();
 
-    protected:
-      ConfigOptions m_options;
-    };
-  }  // namespace adapter
+      protected:
+        ConfigOptions m_options;
+      };
+    }  // namespace shdr
+  }    // namespace adapter
 }  // namespace mtconnect

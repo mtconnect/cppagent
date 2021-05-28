@@ -24,9 +24,7 @@ namespace mtconnect
   class Source
   {
   public:
-    Source(const std::string &name, const ConfigOptions &options) : m_name(name), m_options(options)
-    {
-    }
+    Source(const std::string &name) : m_name(name) {}
     virtual ~Source() {}
 
     virtual bool start() = 0;
@@ -34,17 +32,8 @@ namespace mtconnect
 
     const auto &getName() { return m_name; }
 
-    virtual const std::string &getHost() const = 0;
-    virtual const std::string &getUrl() const { return m_url; }
-    virtual const std::string &getIdentity() const { return m_identity; }
-    virtual unsigned int getPort() const { return 0; }
-    virtual const ConfigOptions &getOptions() const { return m_options; }
-
   protected:
     std::string m_name;
-    std::string m_identity;
-    std::string m_url;
-    ConfigOptions m_options;
   };
 
   using SourcePtr = std::shared_ptr<Source>;

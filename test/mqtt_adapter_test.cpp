@@ -27,42 +27,31 @@
 
 #include <boost/asio.hpp>
 
-#include "adapter/shdr/shdr_adapter.hpp"
+#include "adapter/mqtt/mqtt_adapter.hpp"
 #include "pipeline/pipeline_context.hpp"
 
 
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
-using namespace mtconnect::adapter::shdr;
+using namespace mtconnect::adapter::mqtt_adapter;
 namespace asio = boost::asio;
 
-TEST(AdapterTest, MultilineData)
+class MqttAdapterTest : public testing::Test
 {
-  asio::io_context ioc;
-  pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
-  auto pipeline = make_unique<AdapterPipeline>(context);
-  auto adapter = make_unique<ShdrAdapter>(ioc, "localhost", 7878, ConfigOptions{}, pipeline);
+protected:
+ void SetUp() override
+ {
+ }
   
-  auto handler = make_unique<Handler>();
-  string data;
-  handler->m_processData = [&](const string &d, const string &s) { data = d; };
-  adapter->setHandler(handler);
+  void TearDown() override
+  {
+    
+  }
+};
+
+TEST_F(MqttAdapterTest, test_parsing_of_simple_data)
+{
   
-  adapter->processData("Simple Pass Through");
-  EXPECT_EQ("Simple Pass Through", data);
-  
-  EXPECT_FALSE(adapter->getTerminator());
-  adapter->processData("A multiline message: --multiline--ABC1234");
-  EXPECT_TRUE(adapter->getTerminator());
-  EXPECT_EQ("--multiline--ABC1234", *adapter->getTerminator());
-  adapter->processData("Another Line...");
-  adapter->processData("--multiline--ABC---");
-  adapter->processData("--multiline--ABC1234");
-  
-  const auto exp = R"DOC(A multiline message: 
-Another Line...
---multiline--ABC---)DOC";
-  EXPECT_EQ(exp, data);
 }
 

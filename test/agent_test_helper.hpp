@@ -22,7 +22,7 @@
 #include "rest_sink/server.hpp"
 #include "rest_sink/response.hpp"
 #include "rest_sink/routing.hpp"
-#include "adapter/adapter.hpp"
+#include "adapter/shdr/shdr_adapter.hpp"
 #include "pipeline/pipeline.hpp"
 #include "configuration/agent_config.hpp"
 #include "agent.hpp"
@@ -209,8 +209,8 @@ class AgentTestHelper
     {
       options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
     }
-    auto pipeline = std::make_unique<AdapterPipeline>(m_context);
-    m_adapter = std::make_shared<adpt::Adapter>(m_ioContext, host, port, options, pipeline);
+    auto pipeline = std::make_unique<shdr::AdapterPipeline>(m_context);
+    m_adapter = std::make_shared<shdr::ShdrAdapter>(m_ioContext, host, port, options, pipeline);
     m_agent->addSource(m_adapter);
 
     return m_adapter;
@@ -247,7 +247,7 @@ class AgentTestHelper
 
   mhttp::Server *m_server{nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
-  std::shared_ptr<adpt::Adapter> m_adapter;
+  std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::rest_sink::RestService> m_restService;
   std::shared_ptr<mtconnect::LoopbackSource> m_loopback;
   

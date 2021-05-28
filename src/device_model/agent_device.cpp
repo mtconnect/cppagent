@@ -68,7 +68,7 @@ namespace mtconnect
       return getDeviceDataItem(adapter + "_connection_status");
     }
 
-    void AgentDevice::addAdapter(const SourcePtr adapter)
+    void AgentDevice::addAdapter(const adapter::AdapterPtr adapter)
     {
       using namespace entity;
       using namespace device_model::data_item;

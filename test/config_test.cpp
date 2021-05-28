@@ -24,7 +24,7 @@
 #include "configuration/config_options.hpp"
 #include "xml_printer.hpp"
 #include "rest_sink/rest_service.hpp"
-#include "adapter/adapter.hpp"
+#include "adapter/shdr/shdr_adapter.hpp"
 
 #include <chrono>
 #include <string>
@@ -130,7 +130,7 @@ namespace
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto source = agent->getSources().front();
-    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
+    const auto adapter = dynamic_pointer_cast<adapter::shdr::ShdrAdapter>(source);
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
@@ -313,7 +313,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     const auto source = agent->getSources().front();
-    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
+    const auto adapter = dynamic_pointer_cast<adapter::shdr::ShdrAdapter>(source);
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }

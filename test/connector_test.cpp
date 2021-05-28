@@ -24,7 +24,7 @@ namespace date
 };
 using namespace date;
 
-#include "adapter/connector.hpp"
+#include "adapter/shdr/connector.hpp"
 
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
@@ -40,6 +40,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
+using namespace mtconnect::adapter::shdr;
 
 namespace asio = boost::asio;
 using tcp = boost::asio::ip::tcp;
