@@ -16,23 +16,23 @@
 
 #pragma once
 
+#include <boost/algorithm/string.hpp>
+
 #include <chrono>
 #include <regex>
 #include <unordered_map>
 
-#include <boost/algorithm/string.hpp>
-
+#include "device_model/device.hpp"
 #include "entity/entity.hpp"
 #include "observation/observation.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
 #include "transform.hpp"
-#include "device_model/device.hpp"
 
 namespace mtconnect
 {
   class Device;
-  
+
   namespace pipeline
   {
     class Message : public Entity
@@ -40,12 +40,12 @@ namespace mtconnect
     public:
       using Entity::Entity;
       ~Message() = default;
-      
+
       DataItemPtr m_dataItem;
       DevicePtr m_device;
     };
     using MessagePtr = std::shared_ptr<Message>;
-    
+
     class JsonMessage : public Message
     {
     public:
@@ -56,7 +56,6 @@ namespace mtconnect
     public:
       using Message::Message;
     };
-    
 
     class TopicMapper : public Transform
     {
@@ -64,22 +63,22 @@ namespace mtconnect
       TopicMapper(const TopicMapper &) = default;
       TopicMapper(PipelineContextPtr context,
                   const std::optional<std::string> &device = std::nullopt)
-      : Transform("TopicMapper"), m_context(context), m_defaultDevice(device)
+        : Transform("TopicMapper"), m_context(context), m_defaultDevice(device)
       {
         m_guard = TypeGuard<Message>(RUN);
       }
-      
+
       auto resolve(const std::string &topic)
       {
         using namespace std;
         namespace algo = boost::algorithm;
         using namespace boost;
-        
+
         DataItemPtr dataItem;
         DevicePtr device;
 
         string name, deviceName;
-        
+
         std::vector<string> path;
         boost::split(path, topic, algo::is_any_of("/"));
         if (path.size() > 1)
@@ -88,20 +87,20 @@ namespace mtconnect
           name = path[1];
           dataItem = m_context->m_contract->findDataItem(deviceName, name);
         }
-        
+
         if (!dataItem)
         {
           deviceName = m_defaultDevice.value_or("");
           name = topic;
           dataItem = m_context->m_contract->findDataItem(deviceName, name);
         }
-        
+
         if (!dataItem && path.size() > 1)
         {
           name = path.back();
           dataItem = m_context->m_contract->findDataItem(deviceName, name);
         }
-        
+
         if (!dataItem)
         {
           for (auto &tok : path)
@@ -110,7 +109,7 @@ namespace mtconnect
             if (device)
               break;
           }
-          
+
           if (device)
           {
             for (auto &tok : path)
@@ -121,20 +120,20 @@ namespace mtconnect
             }
           }
         }
-        
+
         // Note even if null so we don't have to try again
         m_resolved[topic] = dataItem;
         m_devices[topic] = device;
-        
+
         return std::make_tuple(device, dataItem);
       }
-      
+
       const EntityPtr operator()(const EntityPtr entity) override
       {
         auto &body = entity->getValue<std::string>();
         DataItemPtr dataItem;
         DevicePtr device;
-        entity::Properties props{entity->getProperties()};
+        entity::Properties props {entity->getProperties()};
         if (auto topic = entity->maybeGet<std::string>("topic"))
         {
           if (auto it = m_devices.find(*topic); it != m_devices.end())
@@ -150,7 +149,7 @@ namespace mtconnect
             std::tie(device, dataItem) = resolve(*topic);
           }
         }
-        
+
         MessagePtr result;
         // Check for JSON Message
         if (body[0] == '{')
@@ -164,10 +163,9 @@ namespace mtconnect
         result->m_dataItem = dataItem;
         result->m_device = device;
 
-        
         return next(result);
       }
-      
+
     protected:
       PipelineContextPtr m_context;
       std::optional<std::string> m_defaultDevice;

@@ -17,6 +17,7 @@
 
 #include "agent_config.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
@@ -26,9 +27,9 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
-#include <mqtt_adapter/mqtt_adapter.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
+
+#include <mqtt_adapter/mqtt_adapter.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -770,12 +771,12 @@ namespace mtconnect
 
       loadTypes(config, cache);
     }
-    
+
     void parseUrl(ConfigOptions &options)
     {
       string host, protocol, path;
       auto url = *GetOption<string>(options, configuration::Url);
-      
+
       boost::regex pat("^([^:]+)://([^:/]+)(:[0-9]+)?(/?.+)");
       boost::match_results<string::const_iterator> match;
       if (boost::regex_match(url, match, pat))
@@ -786,16 +787,19 @@ namespace mtconnect
           options[configuration::Host] = string(match[2].first, match[2].second);
         if (match[3].matched)
         {
-          try {
-            options[configuration::Port] = boost::lexical_cast<int>(string(match[3].first + 1, match[3].second).c_str());
-          } catch (boost::bad_lexical_cast &e) {
+          try
+          {
+            options[configuration::Port] =
+                boost::lexical_cast<int>(string(match[3].first + 1, match[3].second).c_str());
+          }
+          catch (boost::bad_lexical_cast &e)
+          {
             LOG(error) << "Cannot intrepret the port for " << match[3] << ": " << e.what();
           }
         }
         if (match[4].matched)
-          options[configuration::Topics] = StringList{string(match[4].first, match[4].second)};
+          options[configuration::Topics] = StringList {string(match[4].first, match[4].second)};
       }
-
     }
 
     void AgentConfiguration::loadAdapters(const pt::ptree &config, const ConfigOptions &options)
@@ -819,16 +823,14 @@ namespace mtconnect
                       {configuration::Manufacturer, string()},
                       {configuration::Station, string()},
                       {configuration::Url, string()},
-            {configuration::Host, string()},
-            {configuration::Port, 0},
-            {configuration::Protocol, string()}
-          });
+                      {configuration::Host, string()},
+                      {configuration::Port, 0},
+                      {configuration::Protocol, string()}});
 
           AddDefaultedOptions(block.second, adapterOptions,
-                              {   {configuration::AutoAvailable, false},
-                                  {configuration::RealTime, false},
-                                  {configuration::RelativeTime, false}
-                              });
+                              {{configuration::AutoAvailable, false},
+                               {configuration::RealTime, false},
+                               {configuration::RelativeTime, false}});
 
           auto deviceName =
               block.second.get_optional<string>(configuration::Device).value_or(block.first);
@@ -875,14 +877,14 @@ namespace mtconnect
 
             adapterOptions[configuration::AdditionalDevices] = deviceList;
           }
-          
+
           string host, protocol, path;
-          int port{-1};
+          int port {-1};
           if (HasOption(adapterOptions, configuration::Url))
           {
             parseUrl(adapterOptions);
           }
-                    
+
           if (HasOption(adapterOptions, configuration::Protocol))
             protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
           else
@@ -908,8 +910,7 @@ namespace mtconnect
             if (!HasOption(adapterOptions, configuration::Port))
               adapterOptions[configuration::Port] = 1883;
             auto pipeline = make_unique<source::MqttPipeline>(m_pipelineContext);
-            auto adp = make_shared<source::MqttAdapter>(
-                                            m_context, adapterOptions, pipeline);
+            auto adp = make_shared<source::MqttAdapter>(m_context, adapterOptions, pipeline);
             m_agent->addSource(adp, false);
             port = adp->getPort();
           }
@@ -918,9 +919,9 @@ namespace mtconnect
             LOG(error) << "Unknown protocol: " << protocol << ", stopping";
             exit(1);
           }
-          
-          LOG(info) << protocol << ": Adding adapter for " << deviceName << " on "
-            << host << ":" << port;
+
+          LOG(info) << protocol << ": Adding adapter for " << deviceName << " on " << host << ":"
+                    << port;
         }
       }
       else if ((device = defaultDevice()))
@@ -1084,14 +1085,15 @@ namespace mtconnect
         options[configuration::HttpHeaders] = fields;
       }
     }
-    
+
     void AgentConfiguration::loadTopics(const ptree &tree, ConfigOptions &options)
     {
       auto topics = tree.get_child_optional(configuration::Topics);
       if (topics)
       {
         StringList list;
-        if (topics->size() == 0)        {
+        if (topics->size() == 0)
+        {
           list.emplace_back(":" + topics->get_value<string>());
         }
         else
@@ -1104,7 +1106,6 @@ namespace mtconnect
         options[configuration::Topics] = list;
       }
     }
-
 
     void AgentConfiguration::loadStyle(const ptree &tree, const char *styleName,
                                        rest_sink::FileCache *cache, XmlPrinter *xmlPrinter,

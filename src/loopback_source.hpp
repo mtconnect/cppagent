@@ -45,9 +45,8 @@ namespace mtconnect
     {
       m_pipeline.build(options);
     }
-    
-    const std::string &getHost() const override { return m_host; }
 
+    const std::string &getHost() const override { return m_host; }
 
     bool start() override
     {
@@ -79,7 +78,7 @@ namespace mtconnect
                                  const std::optional<std::string> &type,
                                  const std::optional<std::string> &time, entity::ErrorList &errors);
     void removeAsset(const std::optional<std::string> device, const std::string &id);
-    
+
   protected:
     LoopbackPipeline m_pipeline;
     boost::asio::io_context::strand m_strand;

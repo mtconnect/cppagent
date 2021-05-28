@@ -218,7 +218,7 @@ namespace mtconnect
           return;
         }
       }
-      
+
       m_request = make_shared<Request>();
       m_request->m_verb = msg.method();
       m_request->m_path = parseUrl(string(msg.target()), m_request->m_query);
@@ -241,8 +241,9 @@ namespace mtconnect
       if (auto a = msg.find(http::field::connection); a != msg.end())
         m_close = a->value() == "close";
 
-      LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port() << "]: " << msg.method()  << " " << msg.target();
-      
+      LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port()
+                << "]: " << msg.method() << " " << msg.target();
+
       if (!m_dispatch(shared_ptr(), m_request))
       {
         ostringstream txt;
@@ -456,7 +457,7 @@ namespace mtconnect
     void TlsDector::detected(boost::beast::error_code ec, bool isTls)
     {
       NAMED_SCOPE("TlsDector::detected");
-      
+
       if (ec)
       {
         fail(ec, "Failed to detect TLS Connection");

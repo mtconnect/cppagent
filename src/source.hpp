@@ -24,7 +24,9 @@ namespace mtconnect
   class Source
   {
   public:
-    Source(const std::string &name, const ConfigOptions &options) : m_name(name), m_options(options) {}
+    Source(const std::string &name, const ConfigOptions &options) : m_name(name), m_options(options)
+    {
+    }
     virtual ~Source() {}
 
     virtual bool start() = 0;

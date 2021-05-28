@@ -16,45 +16,44 @@
 
 #pragma once
 
+#include <boost/algorithm/string.hpp>
+
 #include <chrono>
 #include <regex>
 #include <unordered_map>
 
-#include <boost/algorithm/string.hpp>
+#include <nlohmann/json.hpp>
 
-
+#include "device_model/device.hpp"
 #include "entity/entity.hpp"
 #include "observation/observation.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
-#include "transform.hpp"
-#include "device_model/device.hpp"
 #include "topic_mapper.hpp"
-#include <nlohmann/json.hpp>
+#include "transform.hpp"
 
 namespace mtconnect
 {
   class Device;
-  
+
   namespace pipeline
   {
     class JsonMapper : public Transform
     {
     public:
       JsonMapper(const JsonMapper &) = default;
-      JsonMapper(PipelineContextPtr context)
-      : Transform("JsonMapper"), m_context(context)
+      JsonMapper(PipelineContextPtr context) : Transform("JsonMapper"), m_context(context)
       {
         m_guard = TypeGuard<JsonMessage>(RUN);
       }
-      
+
       const EntityPtr operator()(const EntityPtr entity) override
       {
         auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
-        
+
         return nullptr;
       }
-      
+
     protected:
       PipelineContextPtr m_context;
     };
@@ -63,22 +62,22 @@ namespace mtconnect
     {
     public:
       DataMapper(const DataMapper &) = default;
-      DataMapper(PipelineContextPtr context)
-      : Transform("DataMapper"), m_context(context)
+      DataMapper(PipelineContextPtr context) : Transform("DataMapper"), m_context(context)
       {
         m_guard = TypeGuard<DataMessage>(RUN);
       }
-      
+
       const EntityPtr operator()(const EntityPtr entity) override
       {
         auto data = std::dynamic_pointer_cast<DataMessage>(entity);
         if (data->m_dataItem)
         {
-          entity::Properties props{{"VALUE", data->getValue()}};
+          entity::Properties props {{"VALUE", data->getValue()}};
           entity::ErrorList errors;
           try
           {
-            auto obs = observation::Observation::make(data->m_dataItem, props, std::chrono::system_clock::now(), errors);
+            auto obs = observation::Observation::make(data->m_dataItem, props,
+                                                      std::chrono::system_clock::now(), errors);
             if (errors.empty())
               return next(obs);
           }
@@ -100,12 +99,12 @@ namespace mtconnect
             msg = *topic;
           else
             msg = "unknown topic";
-          LOG(error) << "Cannot find data item for topic: " << msg << " and data: " <<
-            data->getValue<std::string>();
+          LOG(error) << "Cannot find data item for topic: " << msg
+                     << " and data: " << data->getValue<std::string>();
           return nullptr;
         }
       }
-      
+
     protected:
       PipelineContextPtr m_context;
     };
