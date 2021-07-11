@@ -65,6 +65,7 @@ public:
 
   virtual uint64_t publish(observation::ObservationPtr &observation) = 0;
   virtual bool publish(asset::AssetPtr asset) = 0;
+  virtual bool publish(device_model::DevicePtr device) { return false; }
 
   const auto &getName() const { return m_name; }
 

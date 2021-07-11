@@ -70,10 +70,11 @@ Agent::Agent(boost::asio::io_context &context, const string &configXmlPath,
   FileAsset::registerAsset();
 
   m_assetStorage = make_unique<AssetBuffer>(
-      GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024)),
+                            GetOption<int>(options,
+                                           mtconnect::configuration::MaxAssets).value_or(1024));
 
   // Create the Printers
-      m_printers["xml"] = make_unique<XmlPrinter>(m_version, m_pretty);
+  m_printers["xml"] = make_unique<XmlPrinter>(m_version, m_pretty);
   m_printers["json"] = make_unique<JsonPrinter>(m_version, m_pretty);
 }
 
@@ -108,12 +109,15 @@ void Agent::start()
   NAMED_SCOPE("Agent::start");
   try
   {
+    for (auto sink : m_sinks)
+      sink->start();
+    
+    for (auto device : m_devices)
+      initializeDataItems(device);
+    
     // Start all the sources
     for (auto source : m_sources)
       source->start();
-
-    for (auto sink : m_sinks)
-      sink->start();
   }
   catch (std::runtime_error &e)
   {
@@ -134,6 +138,8 @@ void Agent::stop()
   LOG(info) << "Shutting down sinks";
   for (auto sink : m_sinks)
     sink->stop();
+  
+  m_started = false;
 
   LOG(info) << "Shutting down completed";
 }
@@ -441,7 +447,9 @@ void Agent::addDevice(DevicePtr device)
       // TODO: Redo Resolve Reference  with entity
       // device->resolveReferences();
       verifyDevice(device);
-      initializeDataItems(device);
+      
+      if (m_started)
+        initializeDataItems(device);
 
       // Check for single valued constrained data items.
       if (m_agentDevice && device != m_agentDevice)
@@ -569,7 +577,10 @@ void Agent::addSource(SourcePtr source, bool start)
   if (m_agentDevice && adapter)
   {
     m_agentDevice->addAdapter(adapter);
-    initializeDataItems(m_agentDevice);
+    
+    if (m_started)
+      initializeDataItems(m_agentDevice);
+    
     // Reload the document for path resolution
     if (m_initialized)
     {

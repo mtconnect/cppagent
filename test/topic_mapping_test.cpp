@@ -78,16 +78,19 @@ protected:
   
   DataItemPtr makeDataItem(const std::string &device, const Properties &props)
   {
+    auto dev = m_devices.find(device);
+    if (dev == m_devices.end())
+    {
+      EXPECT_TRUE(false) << "Cannot find device: " << device;
+      return nullptr;
+    }
+    
     Properties ps(props);
     ErrorList errors;
     auto di = DataItem::make(ps, errors);
     m_dataItems.emplace(di->getId(), di);
     
-    auto dev = m_devices.find(device);
-    if (dev != m_devices.end())
-    {
-      dev->second->addDataItem(di, errors);
-    }
+    dev->second->addDataItem(di, errors);
     
     return di;
   }
@@ -114,7 +117,7 @@ inline DataSetEntry operator"" _E(const char *c, std::size_t)
   return DataSetEntry(c);
 }
 
-TEST_F(TopicMappingTest, SimpleEvent)
+TEST_F(TopicMappingTest, should_find_data_item_for_topic)
 {
   Properties props{{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
   auto di = makeDataItem("device", props);
