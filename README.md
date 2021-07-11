@@ -1247,17 +1247,14 @@ Install brew and xcode command line tools
 
 ### As Root
 
-	apk add g++
-    apk add python3
-	apk add cmake
-	apk add git
-	apk add linux-headers
+	apk add g++ python3 cmake git linux-headers make perl
 	
 	python3 -m ensurepip
 	python3 -m pip install --upgrade pip
 
 ### As the user
 	
+	export PATH=~/.local/bin:$PATH
 	pip3 install conan	
 	git clone git@github.com:/mtconnect/cppagent_dev.git	
 
@@ -1268,7 +1265,7 @@ Install brew and xcode command line tools
 
 ### Install packages
 
-    conan install . -if build -pr conan/profiles/gcc --build=missing
+         conan install . -if build -pr conan/profiles/gcc --build=missing
 	
 ## Build the agent
 

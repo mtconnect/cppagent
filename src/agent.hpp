@@ -66,8 +66,9 @@ public:
   // Virtual destructor
   ~Agent();
 
-  // Make loopback pipeline
+  // Initialize models and pipeline
   void initialize(pipeline::PipelineContextPtr context);
+  void initialDataItemObservations();
 
   // Start and stop
   void start();
@@ -216,7 +217,7 @@ protected:
 
   // Unique id based on the time of creation
   bool m_initialized {false};
-  bool m_started {false};
+  bool m_observationsInitialized {false};
 
   // Sources and Sinks
   SourceList m_sources;

@@ -198,7 +198,6 @@ TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
   addAdapter(true);
   {
     PARSE_XML_RESPONSE("/Agent/probe");
-    m_agentTestHelper->printResponse();
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "LinuxCNC");
@@ -215,11 +214,14 @@ TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 
 TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 {
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
+  }
   addAdapter();
   
   {
     PARSE_XML_RESPONSE("/Agent/current");
-    
+
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_STREAM "/*", 2);
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_DEVICE_STREAM "/*", 1);
 
