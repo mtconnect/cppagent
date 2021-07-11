@@ -217,7 +217,7 @@ protected:
 
   // Unique id based on the time of creation
   bool m_initialized {false};
-  bool m_started {false};
+  bool m_observationsInitialized {false};
 
   // Sources and Sinks
   SourceList m_sources;

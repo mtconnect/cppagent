@@ -100,8 +100,25 @@ void Agent::initialize(pipeline::PipelineContextPtr context)
   
 void Agent::initialDataItemObservations()
 {
-  for (auto device : m_devices)
-    initializeDataItems(device);
+  NAMED_SCOPE("Agent::initialDataItemObservations");
+
+  if (!m_observationsInitialized)
+  {
+    for (auto device : m_devices)
+      initializeDataItems(device);
+    
+    if (m_agentDevice)
+    {
+      for (auto device : m_devices)
+      {
+        auto d = m_agentDevice->getDeviceDataItem("device_added");
+        string uuid = *device->getUuid();
+        m_loopback->receive(d, uuid);
+      }
+    }
+    
+    m_observationsInitialized = true;
+  }
 }
 
 Agent::~Agent()
@@ -144,8 +161,6 @@ void Agent::stop()
   for (auto sink : m_sinks)
     sink->stop();
   
-  m_started = false;
-
   LOG(info) << "Shutting down completed";
 }
 
@@ -453,14 +468,16 @@ void Agent::addDevice(DevicePtr device)
       // device->resolveReferences();
       verifyDevice(device);
       
-      if (m_started)
+      if (m_observationsInitialized)
+      {
         initializeDataItems(device);
 
-      // Check for single valued constrained data items.
-      if (m_agentDevice && device != m_agentDevice)
-      {
-        auto d = m_agentDevice->getDeviceDataItem("device_added");
-        m_loopback->receive(d, uuid);
+        // Check for single valued constrained data items.
+        if (m_agentDevice && device != m_agentDevice)
+        {
+          auto d = m_agentDevice->getDeviceDataItem("device_added");
+          m_loopback->receive(d, uuid);
+        }
       }
     }
     else
@@ -583,7 +600,7 @@ void Agent::addSource(SourcePtr source, bool start)
   {
     m_agentDevice->addAdapter(adapter);
     
-    if (m_started)
+    if (m_observationsInitialized)
       initializeDataItems(m_agentDevice);
     
     // Reload the document for path resolution
