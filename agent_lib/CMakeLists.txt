@@ -147,8 +147,6 @@ set(AGENT_SOURCES
 )
 
 ## configure a header file to pass some of the CMake settings to the source code
-add_custom_target(UPDATE_VERSION ALL
-  COMMAND ${CMAKE_COMMAND} -E touch_nocreate "${CMAKE_CURRENT_SOURCE_DIR}/../src/version.cpp")
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../src/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/version.h")
 
 set(AGENT_LIB_HEADERS ${AGENT_SOURCES})
@@ -176,7 +174,6 @@ endif()
 
 
 add_library(agent_lib STATIC ${AGENT_SOURCES})
-add_dependencies(agent_lib UPDATE_VERSION)
 target_include_directories(
   agent_lib
   PUBLIC
