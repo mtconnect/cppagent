@@ -97,6 +97,12 @@ void Agent::initialize(pipeline::PipelineContextPtr context)
 
   m_initialized = true;
 }
+  
+void Agent::initialDataItemObservations()
+{
+  for (auto device : m_devices)
+    initializeDataItems(device);
+}
 
 Agent::~Agent()
 {
@@ -112,8 +118,7 @@ void Agent::start()
     for (auto sink : m_sinks)
       sink->start();
     
-    for (auto device : m_devices)
-      initializeDataItems(device);
+    initialDataItemObservations();
     
     // Start all the sources
     for (auto source : m_sources)

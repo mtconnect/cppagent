@@ -66,8 +66,9 @@ public:
   // Virtual destructor
   ~Agent();
 
-  // Make loopback pipeline
+  // Initialize models and pipeline
   void initialize(pipeline::PipelineContextPtr context);
+  void initialDataItemObservations();
 
   // Start and stop
   void start();

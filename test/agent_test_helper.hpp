@@ -191,6 +191,7 @@ class AgentTestHelper
     m_restService->makeLoopbackSource(m_context);
     m_agent->addSink(m_restService);    
     m_agent->initialize(m_context);
+    m_agent->initialDataItemObservations();
 
     m_server = m_restService->getServer();
     
