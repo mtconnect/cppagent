@@ -28,6 +28,7 @@
 #include "pipeline/period_filter.hpp"
 #include "pipeline/timestamp_extractor.hpp"
 #include "pipeline/upcase_value.hpp"
+#include "pipeline/topic_mapper.hpp"
 
 using namespace std;
 using namespace std::literals;
@@ -64,8 +65,8 @@ std::unique_ptr<Handler> AdapterPipeline::makeHandler()
   };
   handler->m_processMessage = [this](const std::string &topic, const std::string &data,
                                      const std::string &source) {
-    auto entity = make_shared<Entity>(
-        "Data", Properties {{"VALUE", data}, {"topic", topic}, {"source", source}});
+    auto entity = make_shared<MessageWithTopic>(
+        "Message", Properties {{"VALUE", data}, {"topic", topic}, {"source", source}});
     run(entity);
   };
   handler->m_command = [this](const std::string &data, const std::string &source) {
