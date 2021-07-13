@@ -63,6 +63,11 @@ endif()
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
+find_package(Python3 COMPONENTS Interpreter Development Development.Embed)
+message("Include dirs of Python: " ${Python3_INCLUDE_DIRS} )
+message("Libs of Python: " ${Python3_LIBRARIES} )
+
+
 include(cmake/msvc_use_static_runtime.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)

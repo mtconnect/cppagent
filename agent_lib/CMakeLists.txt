@@ -151,6 +151,9 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"  
+
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.hpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.cpp"  
 )
 
 ## configure a header file to pass some of the CMake settings to the source code
@@ -195,7 +198,8 @@ set_property(TARGET agent_lib PROPERTY
 target_link_libraries(
   agent_lib
   PUBLIC
-  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl 
+  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl
+  Python3::Python
   
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
