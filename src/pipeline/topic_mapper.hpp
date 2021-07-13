@@ -33,26 +33,26 @@ namespace mtconnect {
 class Device;
 
 namespace pipeline {
-class MessageWithTopic : public Entity
+class PipelineMessage : public Entity
 {
 public:
   using Entity::Entity;
-  ~MessageWithTopic() = default;
+  ~PipelineMessage() = default;
 
   DataItemPtr m_dataItem;
   DevicePtr m_device;
 };
-using MessageWithTopicPtr = std::shared_ptr<MessageWithTopic>;
+using PipelineMessagePtr = std::shared_ptr<PipelineMessage>;
 
-class JsonMessage : public MessageWithTopic
+class JsonMessage : public PipelineMessage
 {
 public:
-  using MessageWithTopic::MessageWithTopic;
+  using PipelineMessage::PipelineMessage;
 };
-class DataMessage : public MessageWithTopic
+class DataMessage : public PipelineMessage
 {
 public:
-  using MessageWithTopic::MessageWithTopic;
+  using PipelineMessage::PipelineMessage;
 };
 
 class TopicMapper : public Transform
@@ -62,7 +62,7 @@ public:
   TopicMapper(PipelineContextPtr context, const std::optional<std::string> &device = std::nullopt)
     : Transform("TopicMapper"), m_context(context), m_defaultDevice(device)
   {
-    m_guard = TypeGuard<MessageWithTopic>(RUN);
+    m_guard = TypeGuard<PipelineMessage>(RUN);
   }
 
   auto resolve(const std::string &topic)
@@ -147,7 +147,7 @@ public:
       }
     }
 
-    MessageWithTopicPtr result;
+    PipelineMessagePtr result;
     // Check for JSON Message
     if (body[0] == '{')
     {

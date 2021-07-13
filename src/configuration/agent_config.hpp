@@ -41,6 +41,9 @@ class Agent;
 namespace device_model {
 class Device;
 }
+namespace python {
+class Embedded;
+}
 
 class XmlPrinter;
 namespace configuration {
@@ -83,6 +86,8 @@ protected:
   void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
   void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
   void loadTopics(const ptree &tree, ConfigOptions &options);
+  
+  void configurePython(const ptree &tree, ConfigOptions &options);
 
   std::optional<std::filesystem::path> checkPath(const std::string &name);
 
@@ -94,6 +99,7 @@ protected:
   boost::asio::io_context m_context;
   std::list<std::thread> m_workers;
   std::unique_ptr<Agent> m_agent;
+  std::unique_ptr<python::Embedded> m_python;
 
   pipeline::PipelineContextPtr m_pipelineContext;
   std::unique_ptr<adapter::Handler> m_adapterHandler;

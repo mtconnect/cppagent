@@ -65,7 +65,7 @@ std::unique_ptr<Handler> AdapterPipeline::makeHandler()
   };
   handler->m_processMessage = [this](const std::string &topic, const std::string &data,
                                      const std::string &source) {
-    auto entity = make_shared<MessageWithTopic>(
+    auto entity = make_shared<PipelineMessage>(
         "Message", Properties {{"VALUE", data}, {"topic", topic}, {"source", source}});
     run(entity);
   };

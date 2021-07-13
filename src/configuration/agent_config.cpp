@@ -57,6 +57,7 @@
 #include "rest_sink/rest_service.hpp"
 #include "version.h"
 #include "xml_printer.hpp"
+#include "python/embedded.hpp"
 
 // If Windows XP
 #if defined(_WINDOWS)
@@ -763,6 +764,8 @@ void AgentConfiguration::loadConfig(const std::string &file)
   loadStyle(config, "ErrorStyle", cache, xmlPrinter, &XmlPrinter::setErrorStyle);
 
   loadTypes(config, cache);
+  
+  configurePython(config, options);
 }
 
 void parseUrl(ConfigOptions &options)
@@ -1137,6 +1140,11 @@ void AgentConfiguration::loadTypes(const ptree &tree, rest_sink::FileCache *cach
       cache->addMimeType(type.first, type.second.data());
     }
   }
+}
+  
+void AgentConfiguration::configurePython(const ptree &tree, ConfigOptions &options)
+{
+  m_python = make_unique<python::Embedded>(m_agent.get());
 }
 }  // namespace configuration
 }  // namespace mtconnect

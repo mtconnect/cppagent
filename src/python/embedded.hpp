@@ -15,14 +15,29 @@
 //    limitations under the License.
 //
 
+#include <string>
+#include <boost/python.hpp>
+
 namespace mtconnect {
+class Agent;
+  
 namespace python {
-class PythonInterpreter
+class Embedded
 {
 public:
-  PythonInterpreter();
-  ~PythonInterpreter();
+  Embedded(Agent *agent);
+  ~Embedded();
   
+public:
+  boost::python::object getDevice(const std::string name);
+  boost::python::object getDataItem(const std::string device, const std::string name);
+  boost::python::object getDataItem(boost::python::object device, const std::string name);
+  boost::python::object getDataItem(const std::string id);
+  
+  boost::python::object getAdapter(const std::string url);
+
+protected:
+  Agent *m_agent;
 };
 }
 }

@@ -55,6 +55,8 @@ public:
   Transform(const std::string &name) : m_name(name) {}
   virtual ~Transform() = default;
 
+  auto &getName() const { return m_name; }
+  
   virtual void stop()
   {
     for (auto &t : m_next)
