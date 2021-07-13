@@ -15,7 +15,7 @@ class CppAgentConan(ConanFile):
     build_policy = "missing"
     default_options = {
         "run_tests": True,
-        
+
         "boost:shared": False,
         "boost:bzip2": False,
         "boost:lzma": False,
@@ -25,7 +25,8 @@ class CppAgentConan(ConanFile):
         "boost:without_mpi": True,
         "boost:without_stacktrace": True,
         "boost:extra_b2_flags": "-j 2 -d +1 cxxstd=17 ",
-        "boost:i18n_backend": 'icu',
+        "boost:i18n_backend_iconv": 'off',
+        "boost:i18n_backend_icu": True,
 
         "libxml2:shared": False,
         "libxml2:include_utils": False,
@@ -43,7 +44,7 @@ class CppAgentConan(ConanFile):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
-            self.options['boost'].i18n_backend = 'winapi'
+            self.options['boost'].i18n_backend_icu = False
             self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + \
                 " boost.locale.icu=off boost.locale.iconv=off boost.locale.winapi=on asmflags=/safeseh "
             if self.settings.build_type and self.settings.build_type == 'Debug':
