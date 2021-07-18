@@ -28,164 +28,167 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-namespace rest_sink {
-struct AsyncSampleResponse;
-struct AsyncCurrentResponse;
+  namespace rest_sink {
+    struct AsyncSampleResponse;
+    struct AsyncCurrentResponse;
 
-class RestService : public Sink
-{
-public:
-  RestService(boost::asio::io_context &context, SinkContractPtr &&contract,
-              const ConfigOptions &options);
+    class RestService : public Sink
+    {
+    public:
+      RestService(boost::asio::io_context &context, SinkContractPtr &&contract,
+                  const ConfigOptions &options);
 
-  ~RestService() = default;
+      ~RestService() = default;
 
-  auto makeLoopbackSource(pipeline::PipelineContextPtr context)
-  {
-    m_loopback = std::make_shared<LoopbackSource>("RestSource", context, m_strand, m_options);
-    return m_loopback;
-  }
+      auto makeLoopbackSource(pipeline::PipelineContextPtr context)
+      {
+        m_loopback = std::make_shared<LoopbackSource>("RestSource", context, m_strand, m_options);
+        return m_loopback;
+      }
 
-  // Sink Methods
-  void start() override;
-  void stop() override;
+      // Sink Methods
+      void start() override;
+      void stop() override;
 
-  uint64_t publish(observation::ObservationPtr &observation) override;
-  bool publish(asset::AssetPtr asset) override { return false; }
+      uint64_t publish(observation::ObservationPtr &observation) override;
+      bool publish(asset::AssetPtr asset) override { return false; }
 
-  auto getServer() { return m_server.get(); }
-  auto getFileCache() { return &m_fileCache; }
+      auto getServer() { return m_server.get(); }
+      auto getFileCache() { return &m_fileCache; }
 
-  // Observation management
-  observation::ObservationPtr getFromBuffer(uint64_t seq) const
-  {
-    return m_circularBuffer.getFromBuffer(seq);
-  }
-  SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
-  unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
+      // Observation management
+      observation::ObservationPtr getFromBuffer(uint64_t seq) const
+      {
+        return m_circularBuffer.getFromBuffer(seq);
+      }
+      SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
+      unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
 
-  SequenceNumber_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
+      SequenceNumber_t getFirstSequence() const { return m_circularBuffer.getFirstSequence(); }
 
-  // For testing...
-  void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
+      // For testing...
+      void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
 
-  // MTConnect Requests
-  Response probeRequest(const Printer *, const std::optional<std::string> &device = std::nullopt);
-  Response currentRequest(const Printer *, const std::optional<std::string> &device = std::nullopt,
-                          const std::optional<SequenceNumber_t> &at = std::nullopt,
-                          const std::optional<std::string> &path = std::nullopt);
-  Response sampleRequest(const Printer *, const int count = 100,
-                         const std::optional<std::string> &device = std::nullopt,
-                         const std::optional<SequenceNumber_t> &from = std::nullopt,
-                         const std::optional<SequenceNumber_t> &to = std::nullopt,
-                         const std::optional<std::string> &path = std::nullopt);
-  void streamSampleRequest(SessionPtr session, const Printer *, const int interval,
-                           const int heartbeat, const int count = 100,
-                           const std::optional<std::string> &device = std::nullopt,
-                           const std::optional<SequenceNumber_t> &from = std::nullopt,
-                           const std::optional<std::string> &path = std::nullopt);
+      // MTConnect Requests
+      Response probeRequest(const Printer *,
+                            const std::optional<std::string> &device = std::nullopt);
+      Response currentRequest(const Printer *,
+                              const std::optional<std::string> &device = std::nullopt,
+                              const std::optional<SequenceNumber_t> &at = std::nullopt,
+                              const std::optional<std::string> &path = std::nullopt);
+      Response sampleRequest(const Printer *, const int count = 100,
+                             const std::optional<std::string> &device = std::nullopt,
+                             const std::optional<SequenceNumber_t> &from = std::nullopt,
+                             const std::optional<SequenceNumber_t> &to = std::nullopt,
+                             const std::optional<std::string> &path = std::nullopt);
+      void streamSampleRequest(SessionPtr session, const Printer *, const int interval,
+                               const int heartbeat, const int count = 100,
+                               const std::optional<std::string> &device = std::nullopt,
+                               const std::optional<SequenceNumber_t> &from = std::nullopt,
+                               const std::optional<std::string> &path = std::nullopt);
 
-  // Async stream method
-  void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
-  void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
+      // Async stream method
+      void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
+      void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
+                                 boost::system::error_code ec);
+
+      void streamCurrentRequest(SessionPtr session, const Printer *, const int interval,
+                                const std::optional<std::string> &device = std::nullopt,
+                                const std::optional<std::string> &path = std::nullopt);
+
+      void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
                              boost::system::error_code ec);
 
-  void streamCurrentRequest(SessionPtr session, const Printer *, const int interval,
-                            const std::optional<std::string> &device = std::nullopt,
-                            const std::optional<std::string> &path = std::nullopt);
+      // Asset requests
+      Response assetRequest(const Printer *, const int32_t count, const bool removed,
+                            const std::optional<std::string> &type = std::nullopt,
+                            const std::optional<std::string> &device = std::nullopt);
+      Response assetIdsRequest(const Printer *, const std::list<std::string> &ids);
+      Response putAssetRequest(const Printer *, const std::string &asset,
+                               const std::optional<std::string> &type,
+                               const std::optional<std::string> &device = std::nullopt,
+                               const std::optional<std::string> &uuid = std::nullopt);
+      Response deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
+      Response deleteAllAssetsRequest(const Printer *,
+                                      const std::optional<std::string> &device = std::nullopt,
+                                      const std::optional<std::string> &type = std::nullopt);
+      Response putObservationRequest(const Printer *, const std::string &device,
+                                     const QueryMap observations,
+                                     const std::optional<std::string> &time = std::nullopt);
 
-  void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
-                         boost::system::error_code ec);
+      // For debugging
+      void setLogStreamData(bool log) { m_logStreamData = log; }
 
-  // Asset requests
-  Response assetRequest(const Printer *, const int32_t count, const bool removed,
-                        const std::optional<std::string> &type = std::nullopt,
-                        const std::optional<std::string> &device = std::nullopt);
-  Response assetIdsRequest(const Printer *, const std::list<std::string> &ids);
-  Response putAssetRequest(const Printer *, const std::string &asset,
-                           const std::optional<std::string> &type,
-                           const std::optional<std::string> &device = std::nullopt,
-                           const std::optional<std::string> &uuid = std::nullopt);
-  Response deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
-  Response deleteAllAssetsRequest(const Printer *,
-                                  const std::optional<std::string> &device = std::nullopt,
-                                  const std::optional<std::string> &type = std::nullopt);
-  Response putObservationRequest(const Printer *, const std::string &device,
-                                 const QueryMap observations,
-                                 const std::optional<std::string> &time = std::nullopt);
-
-  // For debugging
-  void setLogStreamData(bool log) { m_logStreamData = log; }
-
-  // Get the printer for a type
-  const std::string acceptFormat(const std::string &accepts) const
-  {
-    std::stringstream list(accepts);
-    std::string accept;
-    while (std::getline(list, accept, ','))
-    {
-      for (const auto &p : m_sinkContract->getPrinters())
+      // Get the printer for a type
+      const std::string acceptFormat(const std::string &accepts) const
       {
-        if (ends_with(accept, p.first))
-          return p.first;
+        std::stringstream list(accepts);
+        std::string accept;
+        while (std::getline(list, accept, ','))
+        {
+          for (const auto &p : m_sinkContract->getPrinters())
+          {
+            if (ends_with(accept, p.first))
+              return p.first;
+          }
+        }
+
+        return "xml";
       }
-    }
 
-    return "xml";
-  }
+      const Printer *printerForAccepts(const std::string &accepts) const
+      {
+        return m_sinkContract->getPrinter(acceptFormat(accepts));
+      }
 
-  const Printer *printerForAccepts(const std::string &accepts) const
-  {
-    return m_sinkContract->getPrinter(acceptFormat(accepts));
-  }
+      // Output an XML Error
+      std::string printError(const Printer *printer, const std::string &errorCode,
+                             const std::string &text) const;
 
-  // Output an XML Error
-  std::string printError(const Printer *printer, const std::string &errorCode,
-                         const std::string &text) const;
+    protected:
+      // HTTP Routings
+      void createPutObservationRoutings();
+      void createFileRoutings();
+      void createProbeRoutings();
+      void createSampleRoutings();
+      void createCurrentRoutings();
+      void createAssetRoutings();
 
-protected:
-  // HTTP Routings
-  void createPutObservationRoutings();
-  void createFileRoutings();
-  void createProbeRoutings();
-  void createSampleRoutings();
-  void createCurrentRoutings();
-  void createAssetRoutings();
+      // Current Data Collection
+      std::string fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
+                                   const std::optional<SequenceNumber_t> &at);
 
-  // Current Data Collection
-  std::string fetchCurrentData(const Printer *printer, const FilterSetOpt &filterSet,
-                               const std::optional<SequenceNumber_t> &at);
+      // Sample data collection
+      std::string fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
+                                  const std::optional<SequenceNumber_t> &from,
+                                  const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
+                                  bool &endOfBuffer,
+                                  observation::ChangeObserver *observer = nullptr);
 
-  // Sample data collection
-  std::string fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet, int count,
-                              const std::optional<SequenceNumber_t> &from,
-                              const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                              bool &endOfBuffer, observation::ChangeObserver *observer = nullptr);
+      // Verification methods
+      template <typename T>
+      void checkRange(const Printer *printer, const T value, const T min, const T max,
+                      const std::string &param, bool notZero = false) const;
+      void checkPath(const Printer *printer, const std::optional<std::string> &path,
+                     const DevicePtr device, FilterSet &filter) const;
+      DevicePtr checkDevice(const Printer *printer, const std::string &uuid) const;
 
-  // Verification methods
-  template <typename T>
-  void checkRange(const Printer *printer, const T value, const T min, const T max,
-                  const std::string &param, bool notZero = false) const;
-  void checkPath(const Printer *printer, const std::optional<std::string> &path,
-                 const DevicePtr device, FilterSet &filter) const;
-  DevicePtr checkDevice(const Printer *printer, const std::string &uuid) const;
+    protected:
+      // Loopback
+      boost::asio::io_context &m_context;
+      boost::asio::io_context::strand m_strand;
 
-protected:
-  // Loopback
-  boost::asio::io_context &m_context;
-  boost::asio::io_context::strand m_strand;
+      ConfigOptions m_options;
+      std::shared_ptr<LoopbackSource> m_loopback;
 
-  ConfigOptions m_options;
-  std::shared_ptr<LoopbackSource> m_loopback;
+      uint64_t m_instanceId;
+      std::unique_ptr<Server> m_server;
 
-  uint64_t m_instanceId;
-  std::unique_ptr<Server> m_server;
+      // Buffers
+      FileCache m_fileCache;
+      CircularBuffer m_circularBuffer;
 
-  // Buffers
-  FileCache m_fileCache;
-  CircularBuffer m_circularBuffer;
-
-  bool m_logStreamData {false};
-};
-}  // namespace rest_sink
+      bool m_logStreamData {false};
+    };
+  }  // namespace rest_sink
 }  // namespace mtconnect

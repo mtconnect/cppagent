@@ -20,33 +20,35 @@
 using namespace std;
 
 namespace mtconnect {
-using namespace entity;
-namespace device_model {
-namespace configuration {
-FactoryPtr CoordinateSystems::getFactory()
-{
-  static FactoryPtr coordinateSystems;
-  if (!coordinateSystems)
-  {
-    auto transformation = make_shared<Factory>(Requirements {
-        Requirement("Translation", VECTOR, 3, false), Requirement("Rotation", VECTOR, 3, false)});
+  using namespace entity;
+  namespace device_model {
+    namespace configuration {
+      FactoryPtr CoordinateSystems::getFactory()
+      {
+        static FactoryPtr coordinateSystems;
+        if (!coordinateSystems)
+        {
+          auto transformation =
+              make_shared<Factory>(Requirements {Requirement("Translation", VECTOR, 3, false),
+                                                 Requirement("Rotation", VECTOR, 3, false)});
 
-    auto coordinateSystem = make_shared<Factory>(Requirements {
-        Requirement("id", true), Requirement("name", false), Requirement("nativeName", false),
-        Requirement("parentIdRef", false),
-        Requirement("type",
-                    ControlledVocab {"WORLD", "BASE", "OBJECT", "TASK", "MECHANICAL_INTERFACE",
-                                     "TOOL", "MOBILE_PLATFORM", "MACHINE", "CAMERA"},
-                    true),
-        Requirement("Origin", VECTOR, 3, false),
-        Requirement("Transformation", ENTITY, transformation, false)});
+          auto coordinateSystem = make_shared<Factory>(Requirements {
+              Requirement("id", true), Requirement("name", false), Requirement("nativeName", false),
+              Requirement("parentIdRef", false),
+              Requirement(
+                  "type",
+                  ControlledVocab {"WORLD", "BASE", "OBJECT", "TASK", "MECHANICAL_INTERFACE",
+                                   "TOOL", "MOBILE_PLATFORM", "MACHINE", "CAMERA"},
+                  true),
+              Requirement("Origin", VECTOR, 3, false),
+              Requirement("Transformation", ENTITY, transformation, false)});
 
-    coordinateSystems = make_shared<Factory>(Requirements {
-        Requirement("CoordinateSystem", ENTITY, coordinateSystem, 1, Requirement::Infinite)});
-  }
+          coordinateSystems = make_shared<Factory>(Requirements {
+              Requirement("CoordinateSystem", ENTITY, coordinateSystem, 1, Requirement::Infinite)});
+        }
 
-  return coordinateSystems;
-}
-}  // namespace configuration
-}  // namespace device_model
+        return coordinateSystems;
+      }
+    }  // namespace configuration
+  }    // namespace device_model
 }  // namespace mtconnect

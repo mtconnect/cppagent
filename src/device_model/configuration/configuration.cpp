@@ -28,29 +28,29 @@
 using namespace std;
 
 namespace mtconnect {
-using namespace entity;
-namespace device_model {
-namespace configuration {
-FactoryPtr Configuration::getFactory()
-{
-  static auto configuration = make_shared<Factory>(
-      Requirements {{"SensorConfiguration", ENTITY, SensorConfiguration::getFactory(), false},
-                    {"Relationships", ENTITY_LIST, Relationships::getFactory(), false},
-                    {"SolidModel", ENTITY, SolidModel::getFactory(), false},
-                    {"Motion", ENTITY, Motion::getFactory(), false},
-                    {"CoordinateSystems", ENTITY_LIST, CoordinateSystems::getFactory(), false},
-                    {"Specifications", ENTITY_LIST, Specifications::getFactory(), false}});
+  using namespace entity;
+  namespace device_model {
+    namespace configuration {
+      FactoryPtr Configuration::getFactory()
+      {
+        static auto configuration = make_shared<Factory>(Requirements {
+            {"SensorConfiguration", ENTITY, SensorConfiguration::getFactory(), false},
+            {"Relationships", ENTITY_LIST, Relationships::getFactory(), false},
+            {"SolidModel", ENTITY, SolidModel::getFactory(), false},
+            {"Motion", ENTITY, Motion::getFactory(), false},
+            {"CoordinateSystems", ENTITY_LIST, CoordinateSystems::getFactory(), false},
+            {"Specifications", ENTITY_LIST, Specifications::getFactory(), false}});
 
-  return configuration;
-}
+        return configuration;
+      }
 
-FactoryPtr Configuration::getRoot()
-{
-  static auto root = make_shared<Factory>(
-      Requirements {{"Configuration", ENTITY, Configuration::getFactory(), false}});
+      FactoryPtr Configuration::getRoot()
+      {
+        static auto root = make_shared<Factory>(
+            Requirements {{"Configuration", ENTITY, Configuration::getFactory(), false}});
 
-  return root;
-}
-}  // namespace configuration
-}  // namespace device_model
+        return root;
+      }
+    }  // namespace configuration
+  }    // namespace device_model
 }  // namespace mtconnect

@@ -22,81 +22,81 @@
 #include "entity.hpp"
 
 namespace mtconnect {
-namespace device_model {
-namespace data_item {
-class DataItem;
-class Relationship : public entity::Entity
-{
-public:
-  using entity::Entity::Entity;
-  ~Relationship() override = default;
+  namespace device_model {
+    namespace data_item {
+      class DataItem;
+      class Relationship : public entity::Entity
+      {
+      public:
+        using entity::Entity::Entity;
+        ~Relationship() override = default;
 
-  static entity::FactoryPtr getDataItemFactory()
-  {
-    using namespace mtconnect::entity;
-    using namespace std;
+        static entity::FactoryPtr getDataItemFactory()
+        {
+          using namespace mtconnect::entity;
+          using namespace std;
 
-    static FactoryPtr factory;
-    if (!factory)
-    {
-      factory = make_shared<Factory>(Requirements {
-          {"type", ControlledVocab {"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"},
-           true},
-          {"name", false},
-          {"idRef", true}});
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return std::make_shared<Relationship>(name, props);
-      });
-    }
-    return factory;
-  }
+          static FactoryPtr factory;
+          if (!factory)
+          {
+            factory = make_shared<Factory>(Requirements {
+                {"type",
+                 ControlledVocab {"ATTACHMENT", "COORDINATE_SYSTEM", "LIMIT", "OBSERVATION"}, true},
+                {"name", false},
+                {"idRef", true}});
+            factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+              return std::make_shared<Relationship>(name, props);
+            });
+          }
+          return factory;
+        }
 
-  static entity::FactoryPtr getSpecificationFactory()
-  {
-    using namespace mtconnect::entity;
-    using namespace std;
+        static entity::FactoryPtr getSpecificationFactory()
+        {
+          using namespace mtconnect::entity;
+          using namespace std;
 
-    static FactoryPtr factory;
-    if (!factory)
-    {
-      factory = make_shared<Factory>(Requirements {
-          {"type", ControlledVocab {"LIMIT"}, true}, {"name", false}, {"idRef", true}});
-      factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return std::make_shared<Relationship>(name, props);
-      });
-    }
-    return factory;
-  }
+          static FactoryPtr factory;
+          if (!factory)
+          {
+            factory = make_shared<Factory>(Requirements {
+                {"type", ControlledVocab {"LIMIT"}, true}, {"name", false}, {"idRef", true}});
+            factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+              return std::make_shared<Relationship>(name, props);
+            });
+          }
+          return factory;
+        }
 
-  std::weak_ptr<DataItem> m_target;
-};
+        std::weak_ptr<DataItem> m_target;
+      };
 
-class Relationships : public entity::Entity
-{
-public:
-  using entity::Entity::Entity;
-  ~Relationships() override = default;
+      class Relationships : public entity::Entity
+      {
+      public:
+        using entity::Entity::Entity;
+        ~Relationships() override = default;
 
-  static entity::FactoryPtr getFactory()
-  {
-    using namespace mtconnect::entity;
-    using namespace std;
-    static FactoryPtr relationships;
-    if (!relationships)
-    {
-      auto di = Relationship::getDataItemFactory();
-      auto spec = Relationship::getSpecificationFactory();
-      relationships = make_shared<Factory>(
-          Requirements {{"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
-                        {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}});
-      relationships->setMinListSize(1);
-      relationships->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-        return std::make_shared<Relationships>(name, props);
-      });
-    }
-    return relationships;
-  }
-};
-}  // namespace data_item
-}  // namespace device_model
+        static entity::FactoryPtr getFactory()
+        {
+          using namespace mtconnect::entity;
+          using namespace std;
+          static FactoryPtr relationships;
+          if (!relationships)
+          {
+            auto di = Relationship::getDataItemFactory();
+            auto spec = Relationship::getSpecificationFactory();
+            relationships = make_shared<Factory>(
+                Requirements {{"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
+                              {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}});
+            relationships->setMinListSize(1);
+            relationships->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+              return std::make_shared<Relationships>(name, props);
+            });
+          }
+          return relationships;
+        }
+      };
+    }  // namespace data_item
+  }    // namespace device_model
 }  // namespace mtconnect

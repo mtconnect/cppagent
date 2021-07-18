@@ -26,80 +26,80 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-namespace observation {
-class ChangeSignaler;
-class ChangeObserver
-{
-public:
-  ChangeObserver(boost::asio::io_context &context) : m_timer(context) {}
-
-  virtual ~ChangeObserver();
-
-  bool wait(std::chrono::milliseconds duration,
-            std::function<void(boost::system::error_code)> handler)
-  {
-    std::unique_lock<std::recursive_mutex> lock(m_mutex);
-
-    if (m_sequence != UINT64_MAX)
+  namespace observation {
+    class ChangeSignaler;
+    class ChangeObserver
     {
-      handler({});
-    }
-    else
+    public:
+      ChangeObserver(boost::asio::io_context &context) : m_timer(context) {}
+
+      virtual ~ChangeObserver();
+
+      bool wait(std::chrono::milliseconds duration,
+                std::function<void(boost::system::error_code)> handler)
+      {
+        std::unique_lock<std::recursive_mutex> lock(m_mutex);
+
+        if (m_sequence != UINT64_MAX)
+        {
+          handler({});
+        }
+        else
+        {
+          m_timer.expires_from_now(duration);
+          m_timer.async_wait(handler);
+        }
+        return true;
+      }
+
+      void signal(uint64_t sequence)
+      {
+        std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
+
+        if (m_sequence > sequence && sequence)
+          m_sequence = sequence;
+
+        m_timer.cancel();
+      }
+
+      uint64_t getSequence() const { return m_sequence; }
+
+      bool wasSignaled() const { return m_sequence != UINT64_MAX; }
+
+      void reset()
+      {
+        std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
+        m_sequence = UINT64_MAX;
+      }
+
+    private:
+      mutable std::recursive_mutex m_mutex;
+      boost::asio::steady_timer m_timer;
+
+      std::list<ChangeSignaler *> m_signalers;
+      volatile uint64_t m_sequence = UINT64_MAX;
+
+    protected:
+      friend class ChangeSignaler;
+      void addSignaler(ChangeSignaler *sig);
+      bool removeSignaler(ChangeSignaler *sig);
+    };
+
+    class ChangeSignaler
     {
-      m_timer.expires_from_now(duration);
-      m_timer.async_wait(handler);
-    }
-    return true;
-  }
+    public:
+      // Observer Management
+      void addObserver(ChangeObserver *observer);
+      bool removeObserver(ChangeObserver *observer);
+      bool hasObserver(ChangeObserver *observer) const;
+      void signalObservers(uint64_t sequence) const;
 
-  void signal(uint64_t sequence)
-  {
-    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
+      virtual ~ChangeSignaler();
 
-    if (m_sequence > sequence && sequence)
-      m_sequence = sequence;
-
-    m_timer.cancel();
-  }
-
-  uint64_t getSequence() const { return m_sequence; }
-
-  bool wasSignaled() const { return m_sequence != UINT64_MAX; }
-
-  void reset()
-  {
-    std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
-    m_sequence = UINT64_MAX;
-  }
-
-private:
-  mutable std::recursive_mutex m_mutex;
-  boost::asio::steady_timer m_timer;
-
-  std::list<ChangeSignaler *> m_signalers;
-  volatile uint64_t m_sequence = UINT64_MAX;
-
-protected:
-  friend class ChangeSignaler;
-  void addSignaler(ChangeSignaler *sig);
-  bool removeSignaler(ChangeSignaler *sig);
-};
-
-class ChangeSignaler
-{
-public:
-  // Observer Management
-  void addObserver(ChangeObserver *observer);
-  bool removeObserver(ChangeObserver *observer);
-  bool hasObserver(ChangeObserver *observer) const;
-  void signalObservers(uint64_t sequence) const;
-
-  virtual ~ChangeSignaler();
-
-protected:
-  // Observer Lists
-  mutable std::recursive_mutex m_observerMutex;
-  std::list<ChangeObserver *> m_observers;
-};
-}  // namespace observation
+    protected:
+      // Observer Lists
+      mutable std::recursive_mutex m_observerMutex;
+      std::list<ChangeObserver *> m_observers;
+    };
+  }  // namespace observation
 }  // namespace mtconnect

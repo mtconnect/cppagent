@@ -25,100 +25,100 @@ using namespace std;
 using json = nlohmann::json;
 
 namespace mtconnect {
-namespace entity {
-inline static json toJson(const observation::DataSet &set)
-{
-  using namespace observation;
-  json value;
-  for (auto &e : set)
-  {
-    if (e.m_removed)
+  namespace entity {
+    inline static json toJson(const observation::DataSet &set)
     {
-      value[e.m_key] = json::object({{"removed", true}});
+      using namespace observation;
+      json value;
+      for (auto &e : set)
+      {
+        if (e.m_removed)
+        {
+          value[e.m_key] = json::object({{"removed", true}});
+        }
+        else
+        {
+          visit(overloaded {[&value, &e](const std::string &st) { value[e.m_key] = st; },
+                            [&value, &e](const int64_t &i) { value[e.m_key] = i; },
+                            [&value, &e](const double &d) { value[e.m_key] = d; },
+                            [&value, &e](const DataSet &arg) {
+                              auto row = json::object();
+                              for (auto &c : arg)
+                              {
+                                visit(overloaded {
+                                          [&row, &c](const std::string &st) { row[c.m_key] = st; },
+                                          [&row, &c](const int64_t &i) { row[c.m_key] = i; },
+                                          [&row, &c](const double &d) { row[c.m_key] = d; },
+                                          [](auto &a) {
+                                            LOG(error) << "Invalid  variant type for table cell";
+                                          }},
+                                      c.m_value);
+                              }
+                              value[e.m_key] = row;
+                            }},
+                e.m_value);
+        }
+      }
+
+      return value;
     }
-    else
+
+    inline static json toJson(const Timestamp &t) { return format(t); }
+
+    inline static json getValue(const Value &value)
     {
-      visit(overloaded {[&value, &e](const std::string &st) { value[e.m_key] = st; },
-                        [&value, &e](const int64_t &i) { value[e.m_key] = i; },
-                        [&value, &e](const double &d) { value[e.m_key] = d; },
-                        [&value, &e](const DataSet &arg) {
-                          auto row = json::object();
-                          for (auto &c : arg)
-                          {
-                            visit(overloaded {
-                                      [&row, &c](const std::string &st) { row[c.m_key] = st; },
-                                      [&row, &c](const int64_t &i) { row[c.m_key] = i; },
-                                      [&row, &c](const double &d) { row[c.m_key] = d; },
-                                      [](auto &a) {
-                                        LOG(error) << "Invalid  variant type for table cell";
-                                      }},
-                                  c.m_value);
-                          }
-                          value[e.m_key] = row;
-                        }},
-            e.m_value);
+      return visit(overloaded {[](const EntityPtr &) -> json { return nullptr; },
+                               [](const std::monostate &) -> json { return nullptr; },
+                               [](const EntityList &) -> json { return nullptr; },
+                               [](const observation::DataSet &v) -> json { return toJson(v); },
+                               [](const Timestamp &v) -> json { return toJson(v); },
+                               [](const auto &arg) -> json { return arg; }},
+                   value);
     }
-  }
 
-  return value;
-}
+    json JsonPrinter::printEntity(const EntityPtr entity) const
+    {
+      NAMED_SCOPE("entity.json_printer");
+      json jsonObj;
 
-inline static json toJson(const Timestamp &t) { return format(t); }
+      for (auto &e : entity->getProperties())
+      {
+        visit(overloaded {[&](const EntityPtr &arg) {
+                            json j = printEntity(arg);
+                            jsonObj[e.first] = j;
+                          },
+                          [&](const EntityList &arg) {
+                            auto array = json::array();
 
-inline static json getValue(const Value &value)
-{
-  return visit(overloaded {[](const EntityPtr &) -> json { return nullptr; },
-                           [](const std::monostate &) -> json { return nullptr; },
-                           [](const EntityList &) -> json { return nullptr; },
-                           [](const observation::DataSet &v) -> json { return toJson(v); },
-                           [](const Timestamp &v) -> json { return toJson(v); },
-                           [](const auto &arg) -> json { return arg; }},
-               value);
-}
+                            bool isPropertyList = e.first != "LIST";
+                            for (auto &ei : arg)
+                            {
+                              json obj;
+                              if (isPropertyList)
+                                obj = printEntity(ei);
+                              else
+                                obj = json::object({{ei->getName(), printEntity(ei)}});
+                              array.emplace_back(obj);
+                            }
 
-json JsonPrinter::printEntity(const EntityPtr entity) const
-{
-  NAMED_SCOPE("entity.json_printer");
-  json jsonObj;
+                            if (entity->hasListWithAttribute())
+                              jsonObj["list"] = array;
+                            else if (isPropertyList)
+                              jsonObj[e.first] = array;
+                            else
+                              jsonObj = array;
+                          },
+                          [&](const auto &arg) {
+                            if (e.first == "VALUE" || e.first == "RAW")
+                              jsonObj["value"] = getValue(arg);
+                            else
+                              jsonObj[e.first] = getValue(arg);
+                          }},
+              e.second);
+      }
 
-  for (auto &e : entity->getProperties())
-  {
-    visit(overloaded {[&](const EntityPtr &arg) {
-                        json j = printEntity(arg);
-                        jsonObj[e.first] = j;
-                      },
-                      [&](const EntityList &arg) {
-                        auto array = json::array();
-
-                        bool isPropertyList = e.first != "LIST";
-                        for (auto &ei : arg)
-                        {
-                          json obj;
-                          if (isPropertyList)
-                            obj = printEntity(ei);
-                          else
-                            obj = json::object({{ei->getName(), printEntity(ei)}});
-                          array.emplace_back(obj);
-                        }
-
-                        if (entity->hasListWithAttribute())
-                          jsonObj["list"] = array;
-                        else if (isPropertyList)
-                          jsonObj[e.first] = array;
-                        else
-                          jsonObj = array;
-                      },
-                      [&](const auto &arg) {
-                        if (e.first == "VALUE" || e.first == "RAW")
-                          jsonObj["value"] = getValue(arg);
-                        else
-                          jsonObj[e.first] = getValue(arg);
-                      }},
-          e.second);
-  }
-
-  // cout << "---------------" << endl << std::setw(2) << jsonObj << endl;
-  return jsonObj;
-}
-}  // namespace entity
+      // cout << "---------------" << endl << std::setw(2) << jsonObj << endl;
+      return jsonObj;
+    }
+  }  // namespace entity
 }  // namespace mtconnect

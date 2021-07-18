@@ -22,50 +22,50 @@
 #include "entity.hpp"
 
 namespace mtconnect {
-namespace device_model {
-namespace data_item {
-class Definition : public entity::Entity
-{
-public:
-  static entity::FactoryPtr getFactory()
-  {
-    using namespace mtconnect::entity;
-    using namespace std;
-    static FactoryPtr definition;
-    if (!definition)
-    {
-      auto cell = make_shared<Factory>(Requirements {{"Description", false},
-                                                     {"key", false},
-                                                     {"keyType", false},
-                                                     {"type", false},
-                                                     {"subType", false},
-                                                     {"units", false}});
+  namespace device_model {
+    namespace data_item {
+      class Definition : public entity::Entity
+      {
+      public:
+        static entity::FactoryPtr getFactory()
+        {
+          using namespace mtconnect::entity;
+          using namespace std;
+          static FactoryPtr definition;
+          if (!definition)
+          {
+            auto cell = make_shared<Factory>(Requirements {{"Description", false},
+                                                           {"key", false},
+                                                           {"keyType", false},
+                                                           {"type", false},
+                                                           {"subType", false},
+                                                           {"units", false}});
 
-      auto cells = make_shared<Factory>(
-          Requirements {{"CellDefinition", ENTITY, cell, 1, Requirement::Infinite}});
+            auto cells = make_shared<Factory>(
+                Requirements {{"CellDefinition", ENTITY, cell, 1, Requirement::Infinite}});
 
-      auto entry =
-          make_shared<Factory>(Requirements {{"Description", false},
-                                             {"key", false},
-                                             {"keyType", false},
-                                             {"type", false},
-                                             {"subType", false},
-                                             {"units", false},
-                                             {"CellDefinitions", ENTITY_LIST, cells, false}});
-      entry->setOrder({"Description", "CellDefinitions"});
+            auto entry =
+                make_shared<Factory>(Requirements {{"Description", false},
+                                                   {"key", false},
+                                                   {"keyType", false},
+                                                   {"type", false},
+                                                   {"subType", false},
+                                                   {"units", false},
+                                                   {"CellDefinitions", ENTITY_LIST, cells, false}});
+            entry->setOrder({"Description", "CellDefinitions"});
 
-      auto entries = make_shared<Factory>(
-          Requirements {{"EntryDefinition", ENTITY, entry, 1, Requirement::Infinite}});
-      definition =
-          make_shared<Factory>(Requirements {{"Description", false},
-                                             {"EntryDefinitions", ENTITY_LIST, entries, false},
-                                             {"CellDefinitions", ENTITY_LIST, cells, false}});
-      definition->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
-    }
+            auto entries = make_shared<Factory>(
+                Requirements {{"EntryDefinition", ENTITY, entry, 1, Requirement::Infinite}});
+            definition = make_shared<Factory>(
+                Requirements {{"Description", false},
+                              {"EntryDefinitions", ENTITY_LIST, entries, false},
+                              {"CellDefinitions", ENTITY_LIST, cells, false}});
+            definition->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
+          }
 
-    return definition;
-  }
-};
-}  // namespace data_item
-}  // namespace device_model
+          return definition;
+        }
+      };
+    }  // namespace data_item
+  }    // namespace device_model
 }  // namespace mtconnect

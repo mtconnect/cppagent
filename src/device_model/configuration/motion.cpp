@@ -20,25 +20,27 @@
 using namespace std;
 
 namespace mtconnect {
-using namespace entity;
-namespace device_model {
-namespace configuration {
-FactoryPtr Motion::getFactory()
-{
-  static auto transformation = make_shared<Factory>(Requirements {
-      Requirement("Translation", VECTOR, 3, false), Requirement("Rotation", VECTOR, 3, false)});
+  using namespace entity;
+  namespace device_model {
+    namespace configuration {
+      FactoryPtr Motion::getFactory()
+      {
+        static auto transformation =
+            make_shared<Factory>(Requirements {Requirement("Translation", VECTOR, 3, false),
+                                               Requirement("Rotation", VECTOR, 3, false)});
 
-  static auto motion = make_shared<Factory>(Requirements {
-      Requirement("id", true), Requirement("parentIdRef", false),
-      Requirement("coordinateSystemIdRef", true),
-      Requirement("type", ControlledVocab {"REVOLUTE", "CONTINUOUS", "PRISMATIC", "FIXED"}, true),
-      Requirement("actuation", ControlledVocab {"DIRECT", "VIRTUAL", "NONE"}, true),
-      Requirement("Description", false), Requirement("Axis", VECTOR, 3, true),
-      Requirement("Origin", VECTOR, 3, false),
-      Requirement("Transformation", ENTITY, transformation, false)});
+        static auto motion = make_shared<Factory>(Requirements {
+            Requirement("id", true), Requirement("parentIdRef", false),
+            Requirement("coordinateSystemIdRef", true),
+            Requirement("type", ControlledVocab {"REVOLUTE", "CONTINUOUS", "PRISMATIC", "FIXED"},
+                        true),
+            Requirement("actuation", ControlledVocab {"DIRECT", "VIRTUAL", "NONE"}, true),
+            Requirement("Description", false), Requirement("Axis", VECTOR, 3, true),
+            Requirement("Origin", VECTOR, 3, false),
+            Requirement("Transformation", ENTITY, transformation, false)});
 
-  return motion;
-}
-}  // namespace configuration
-}  // namespace device_model
+        return motion;
+      }
+    }  // namespace configuration
+  }    // namespace device_model
 }  // namespace mtconnect

@@ -24,90 +24,90 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-namespace adapter {
-class Adapter;
-}
-
-namespace device_model {
-class Device : public Component
-{
-public:
-  // Constructor that sets variables from an attribute map
-  Device(const std::string &name, entity::Properties &props);
-  ~Device() override = default;
-
-  auto getptr() const { return std::dynamic_pointer_cast<Device>(Entity::getptr()); }
-
-  void initialize() override
-  {
-    Component::initialize();
-    buildDeviceMaps(getptr());
-    resolveReferences(getptr());
+  namespace adapter {
+    class Adapter;
   }
 
-  static entity::FactoryPtr getFactory();
-  static entity::FactoryPtr getRoot();
+  namespace device_model {
+    class Device : public Component
+    {
+    public:
+      // Constructor that sets variables from an attribute map
+      Device(const std::string &name, entity::Properties &props);
+      ~Device() override = default;
 
-  void setOptions(const ConfigOptions &options);
+      auto getptr() const { return std::dynamic_pointer_cast<Device>(Entity::getptr()); }
 
-  // Add/get items to/from the device name to data item mapping
-  void addDeviceDataItem(DataItemPtr dataItem);
-  DataItemPtr getDeviceDataItem(const std::string &name) const;
+      void initialize() override
+      {
+        Component::initialize();
+        buildDeviceMaps(getptr());
+        resolveReferences(getptr());
+      }
 
-  void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
-  ComponentPtr getComponentById(const std::string &aId) const
-  {
-    auto comp = m_componentsById.find(aId);
-    if (comp != m_componentsById.end())
-      return comp->second.lock();
-    else
-      return nullptr;
-  }
-  void addComponent(ComponentPtr aComponent)
-  {
-    m_componentsById.insert(make_pair(aComponent->getId(), aComponent));
-  }
+      static entity::FactoryPtr getFactory();
+      static entity::FactoryPtr getRoot();
 
-  DevicePtr getDevice() const override { return getptr(); }
+      void setOptions(const ConfigOptions &options);
 
-  // Return the mapping of Device to data items
-  const auto &getDeviceDataItems() const { return m_deviceDataItemsById; }
+      // Add/get items to/from the device name to data item mapping
+      void addDeviceDataItem(DataItemPtr dataItem);
+      DataItemPtr getDeviceDataItem(const std::string &name) const;
 
-  void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors) override;
+      void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
+      ComponentPtr getComponentById(const std::string &aId) const
+      {
+        auto comp = m_componentsById.find(aId);
+        if (comp != m_componentsById.end())
+          return comp->second.lock();
+        else
+          return nullptr;
+      }
+      void addComponent(ComponentPtr aComponent)
+      {
+        m_componentsById.insert(make_pair(aComponent->getId(), aComponent));
+      }
 
-  std::vector<adapter::Adapter *> m_adapters;
+      DevicePtr getDevice() const override { return getptr(); }
 
-  auto getMTConnectVersion() const { maybeGet<std::string>("mtconnectVersion"); }
+      // Return the mapping of Device to data items
+      const auto &getDeviceDataItems() const { return m_deviceDataItemsById; }
 
-  // Cached data items
-  DataItemPtr getAvailability() const { return m_availability; }
-  DataItemPtr getAssetChanged() const { return m_assetChanged; }
-  DataItemPtr getAssetRemoved() const { return m_assetRemoved; }
+      void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors) override;
 
-  void setPreserveUuid(bool v) { m_preserveUuid = v; }
-  bool preserveUuid() const { return m_preserveUuid; }
+      std::vector<adapter::Adapter *> m_adapters;
 
-  void registerDataItem(DataItemPtr di);
-  void registerComponent(ComponentPtr c) { m_componentsById[c->getId()] = c; }
+      auto getMTConnectVersion() const { maybeGet<std::string>("mtconnectVersion"); }
 
-protected:
-  void cachePointers(DataItemPtr dataItem);
+      // Cached data items
+      DataItemPtr getAvailability() const { return m_availability; }
+      DataItemPtr getAssetChanged() const { return m_assetChanged; }
+      DataItemPtr getAssetRemoved() const { return m_assetRemoved; }
 
-protected:
-  bool m_preserveUuid {false};
+      void setPreserveUuid(bool v) { m_preserveUuid = v; }
+      bool preserveUuid() const { return m_preserveUuid; }
 
-  DataItemPtr m_availability;
-  DataItemPtr m_assetChanged;
-  DataItemPtr m_assetRemoved;
+      void registerDataItem(DataItemPtr di);
+      void registerComponent(ComponentPtr c) { m_componentsById[c->getId()] = c; }
 
-  // Mapping of device names to data items
-  std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsByName;
-  std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsById;
-  std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsBySource;
-  std::unordered_map<std::string, std::weak_ptr<Component>> m_componentsById;
-};
+    protected:
+      void cachePointers(DataItemPtr dataItem);
 
-using DevicePtr = std::shared_ptr<Device>;
-}  // namespace device_model
-using DevicePtr = std::shared_ptr<device_model::Device>;
+    protected:
+      bool m_preserveUuid {false};
+
+      DataItemPtr m_availability;
+      DataItemPtr m_assetChanged;
+      DataItemPtr m_assetRemoved;
+
+      // Mapping of device names to data items
+      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsByName;
+      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsById;
+      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsBySource;
+      std::unordered_map<std::string, std::weak_ptr<Component>> m_componentsById;
+    };
+
+    using DevicePtr = std::shared_ptr<Device>;
+  }  // namespace device_model
+  using DevicePtr = std::shared_ptr<device_model::Device>;
 }  // namespace mtconnect

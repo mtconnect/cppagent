@@ -20,32 +20,33 @@
 using namespace std;
 
 namespace mtconnect {
-using namespace entity;
-namespace device_model {
-namespace configuration {
-FactoryPtr SolidModel::getFactory()
-{
-  static FactoryPtr solidModel;
-  if (!solidModel)
-  {
-    auto transformation = make_shared<Factory>(Requirements {
-        Requirement("Translation", VECTOR, 3, false), Requirement("Rotation", VECTOR, 3, false)});
+  using namespace entity;
+  namespace device_model {
+    namespace configuration {
+      FactoryPtr SolidModel::getFactory()
+      {
+        static FactoryPtr solidModel;
+        if (!solidModel)
+        {
+          auto transformation =
+              make_shared<Factory>(Requirements {Requirement("Translation", VECTOR, 3, false),
+                                                 Requirement("Rotation", VECTOR, 3, false)});
 
-    solidModel = make_shared<Factory>(Requirements {
-        Requirement("id", true), Requirement("solidModelIdRef", false), Requirement("href", false),
-        Requirement("itemRef", false),
-        Requirement(
-            "mediaType",
-            ControlledVocab {"STEP", "STL", "GDML", "OBJ", "COLLADA", "IGES", "3DS", "ACIS", "X_T"},
-            true),
-        Requirement("coordinateSystemIdRef", false),
-        Requirement("Transformation", ENTITY, transformation, false),
-        Requirement("Scale", VECTOR, 3, false)});
+          solidModel = make_shared<Factory>(
+              Requirements {Requirement("id", true), Requirement("solidModelIdRef", false),
+                            Requirement("href", false), Requirement("itemRef", false),
+                            Requirement("mediaType",
+                                        ControlledVocab {"STEP", "STL", "GDML", "OBJ", "COLLADA",
+                                                         "IGES", "3DS", "ACIS", "X_T"},
+                                        true),
+                            Requirement("coordinateSystemIdRef", false),
+                            Requirement("Transformation", ENTITY, transformation, false),
+                            Requirement("Scale", VECTOR, 3, false)});
 
-    solidModel->registerMatchers();
-  }
-  return solidModel;
-}
-}  // namespace configuration
-}  // namespace device_model
+          solidModel->registerMatchers();
+        }
+        return solidModel;
+      }
+    }  // namespace configuration
+  }    // namespace device_model
 }  // namespace mtconnect

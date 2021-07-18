@@ -15,29 +15,24 @@
 //    limitations under the License.
 //
 
-#include <string>
 #include <boost/python.hpp>
 
-namespace mtconnect {
-class Agent;
-  
-namespace python {
-class Embedded
-{
-public:
-  Embedded(Agent *agent);
-  ~Embedded();
-  
-public:
-  boost::python::object getDevice(const std::string name);
-  boost::python::object getDataItem(const std::string device, const std::string name);
-  boost::python::object getDataItem(boost::python::object device, const std::string name);
-  boost::python::object getDataItem(const std::string id);
-  
-  boost::python::object getAdapter(const std::string url);
+#include <string>
 
-protected:
-  Agent *m_agent;
-};
-}
-}
+namespace mtconnect {
+  class Agent;
+
+  namespace python {
+    struct Context;
+    class Embedded
+    {
+    public:
+      Embedded(Agent *agent);
+      ~Embedded();
+
+    protected:
+      Agent *m_agent;
+      Context *m_context;
+    };
+  }  // namespace python
+}  // namespace mtconnect

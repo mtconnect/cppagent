@@ -25,19 +25,19 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-namespace asset {
-class CuttingToolArchetype : public Asset
-{
-public:
-  static entity::FactoryPtr getFactory();
-  static void registerAsset();
-};
+  namespace asset {
+    class CuttingToolArchetype : public Asset
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
 
-class CuttingTool : public Asset
-{
-public:
-  static entity::FactoryPtr getFactory();
-  static void registerAsset();
-};
-}  // namespace asset
+    class CuttingTool : public Asset
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
+  }  // namespace asset
 }  // namespace mtconnect

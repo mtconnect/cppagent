@@ -26,19 +26,19 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-namespace asset {
-class FileArchetypeAsset : public entity::Entity
-{
-public:
-  static entity::FactoryPtr getFactory();
-  static void registerAsset();
-};
+  namespace asset {
+    class FileArchetypeAsset : public entity::Entity
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
 
-class FileAsset : public FileArchetypeAsset
-{
-public:
-  static entity::FactoryPtr getFactory();
-  static void registerAsset();
-};
-}  // namespace asset
+    class FileAsset : public FileArchetypeAsset
+    {
+    public:
+      static entity::FactoryPtr getFactory();
+      static void registerAsset();
+    };
+  }  // namespace asset
 }  // namespace mtconnect

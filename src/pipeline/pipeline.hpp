@@ -22,71 +22,72 @@
 #include "transform.hpp"
 
 namespace mtconnect {
-class Agent;
-namespace device_model {
-class Device;
-}
-namespace asset {
-class Asset;
-using AssetPtr = std::shared_ptr<Asset>;
-}  // namespace asset
-
-namespace adapter {
-class Adapter;
-}  // namespace adapter
-namespace pipeline {
-class Pipeline
-{
-public:
-  Pipeline(PipelineContextPtr context) : m_start(std::make_shared<Start>()), m_context(context) {}
-  virtual ~Pipeline() { m_start->stop(); }
-  virtual void build(const ConfigOptions &options) = 0;
-  bool started() const { return m_started; }
-  void clear()
-  {
-    m_start->stop();
-    m_started = false;
-    m_start = std::make_shared<Start>();
+  class Agent;
+  namespace device_model {
+    class Device;
   }
-  virtual void start(boost::asio::io_context::strand &st)
-  {
-    if (m_start)
+  namespace asset {
+    class Asset;
+    using AssetPtr = std::shared_ptr<Asset>;
+  }  // namespace asset
+
+  namespace adapter {
+    class Adapter;
+  }  // namespace adapter
+  namespace pipeline {
+    class Pipeline
     {
-      m_start->start(st);
-      m_started = true;
-    }
-  }
+    public:
+      Pipeline(PipelineContextPtr context) : m_start(std::make_shared<Start>()), m_context(context)
+      {}
+      virtual ~Pipeline() { m_start->stop(); }
+      virtual void build(const ConfigOptions &options) = 0;
+      bool started() const { return m_started; }
+      void clear()
+      {
+        m_start->stop();
+        m_started = false;
+        m_start = std::make_shared<Start>();
+      }
+      virtual void start(boost::asio::io_context::strand &st)
+      {
+        if (m_start)
+        {
+          m_start->start(st);
+          m_started = true;
+        }
+      }
 
-  const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
+      const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
 
-  TransformPtr bind(TransformPtr transform)
-  {
-    m_start->bind(transform);
-    return transform;
-  }
+      TransformPtr bind(TransformPtr transform)
+      {
+        m_start->bind(transform);
+        return transform;
+      }
 
-  bool hasContext() const { return bool(m_context); }
-  bool hasContract() const { return bool(m_context) && bool(m_context->m_contract); }
+      bool hasContext() const { return bool(m_context); }
+      bool hasContract() const { return bool(m_context) && bool(m_context->m_contract); }
 
-protected:
-  class Start : public Transform
-  {
-  public:
-    Start() : Transform("Start")
-    {
-      m_guard = [](const entity::EntityPtr entity) { return SKIP; };
-    }
-    ~Start() override = default;
+    protected:
+      class Start : public Transform
+      {
+      public:
+        Start() : Transform("Start")
+        {
+          m_guard = [](const entity::EntityPtr entity) { return SKIP; };
+        }
+        ~Start() override = default;
 
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-    {
-      return entity::EntityPtr();
-    }
-  };
+        const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+        {
+          return entity::EntityPtr();
+        }
+      };
 
-  bool m_started {false};
-  TransformPtr m_start;
-  PipelineContextPtr m_context;
-};
-}  // namespace pipeline
+      bool m_started {false};
+      TransformPtr m_start;
+      PipelineContextPtr m_context;
+    };
+  }  // namespace pipeline
 }  // namespace mtconnect

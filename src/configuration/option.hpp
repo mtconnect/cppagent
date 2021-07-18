@@ -22,123 +22,123 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-//-- Forward class declarations.
-namespace configuration {
-class Option
-{
-public:
-  enum EType
-  {
-    eBoolean,
-    eCharacter,
-    eInteger,
-    eList
-  };
+  //-- Forward class declarations.
+  namespace configuration {
+    class Option
+    {
+    public:
+      enum EType
+      {
+        eBoolean,
+        eCharacter,
+        eInteger,
+        eList
+      };
 
-  //---- Constructors
-  // For arguments which have no switch char but appear in a special order.
-  Option(int order, const char *&charPtr, const char *usage, const char *argDesc,
-         bool required = true);
+      //---- Constructors
+      // For arguments which have no switch char but appear in a special order.
+      Option(int order, const char *&charPtr, const char *usage, const char *argDesc,
+             bool required = true);
 
-  // For arguments which have no switch char but appear in a special order.
-  Option(int order, int &intRef, const char *usage, const char *argDesc, bool required = true);
+      // For arguments which have no switch char but appear in a special order.
+      Option(int order, int &intRef, const char *usage, const char *argDesc, bool required = true);
 
-  // For the rest of the argumets as in a file list.
-  Option(std::list<std::string> &list, const char *usage, const char *argDesc, bool required = true,
-         bool expand = false);
+      // For the rest of the argumets as in a file list.
+      Option(std::list<std::string> &list, const char *usage, const char *argDesc,
+             bool required = true, bool expand = false);
 
-  // Given an agument with a switch char ('-') <name>
-  Option(const char *name, const char *&charPtr, const char *usage, const char *argDesc,
-         bool required = false, bool ignoreCase = false);
+      // Given an agument with a switch char ('-') <name>
+      Option(const char *name, const char *&charPtr, const char *usage, const char *argDesc,
+             bool required = false, bool ignoreCase = false);
 
-  // Given an agument with a switch char ('-') <name>
-  Option(const char *name, bool &boolRef, const char *usage, bool aArgument = false,
-         const char *argDesc = nullptr, bool required = false, bool ignoreCase = false);
+      // Given an agument with a switch char ('-') <name>
+      Option(const char *name, bool &boolRef, const char *usage, bool aArgument = false,
+             const char *argDesc = nullptr, bool required = false, bool ignoreCase = false);
 
-  // Given an agument with a switch char ('-') <name>
-  Option(const char *name, int &intRef, const char *usage, const char *argDesc,
-         bool required = false, bool ignoreCase = false);
+      // Given an agument with a switch char ('-') <name>
+      Option(const char *name, int &intRef, const char *usage, const char *argDesc,
+             bool required = false, bool ignoreCase = false);
 
-  // Given an agument with a switch char ('-') <name>
-  Option(const char *name, std::list<std::string> &list, const char *usage, const char *argDesc,
-         bool required = false, bool expand = false, bool ignoreCase = false);
+      // Given an agument with a switch char ('-') <name>
+      Option(const char *name, std::list<std::string> &list, const char *usage, const char *argDesc,
+             bool required = false, bool expand = false, bool ignoreCase = false);
 
-  // Accept member-wise copy
-  // Option(const Option &aOption);
+      // Accept member-wise copy
+      // Option(const Option &aOption);
 
-  //---- Destructor
-  ~Option();
+      //---- Destructor
+      ~Option();
 
-  EType getType() const { return type_; }
-  const char *getName() const { return name_; }
-  const char *getUsage() const { return usage_; }
-  const char *getArgDesc() const { return argDesc_; }
-  int getOrder() const { return order_; }
-  bool ignoreCase() const { return ignoreCase_; }
-  bool hasArgument() const { return argument_; }
-  bool hasSwitch() const { return switch_; }
-  bool isRequired() const { return required_; }
-  bool isSet() const { return isSet_; }
+      EType getType() const { return type_; }
+      const char *getName() const { return name_; }
+      const char *getUsage() const { return usage_; }
+      const char *getArgDesc() const { return argDesc_; }
+      int getOrder() const { return order_; }
+      bool ignoreCase() const { return ignoreCase_; }
+      bool hasArgument() const { return argument_; }
+      bool hasSwitch() const { return switch_; }
+      bool isRequired() const { return required_; }
+      bool isSet() const { return isSet_; }
 
-  const char *getCharPtr() const { return charPtrPtr_ ? *charPtrPtr_ : nullptr; }
-  bool getBool() const { return boolPtr_ ? *boolPtr_ : false; }
-  int getInt() const { return intPtr_ ? *intPtr_ : -1; }
-  const std::list<std::string> &getList() const { return *list_; }
-  bool operator<(const Option &another) const;
+      const char *getCharPtr() const { return charPtrPtr_ ? *charPtrPtr_ : nullptr; }
+      bool getBool() const { return boolPtr_ ? *boolPtr_ : false; }
+      int getInt() const { return intPtr_ ? *intPtr_ : -1; }
+      const std::list<std::string> &getList() const { return *list_; }
+      bool operator<(const Option &another) const;
 
-  bool setValue(const char *aCp);
+      bool setValue(const char *aCp);
 
-protected:
-  void expandFiles(const char *fileName);
+    protected:
+      void expandFiles(const char *fileName);
 
-protected:
-  const char *name_;
-  const char **charPtrPtr_;
-  bool *boolPtr_;
-  int *intPtr_;
-  std::list<std::string> *list_;
-  EType type_;
-  int order_;
-  bool required_;
-  bool argument_;
-  bool ignoreCase_;
-  bool switch_;
-  const char *usage_;
-  bool isSet_;
-  bool expand_;
-  const char *argDesc_;
+    protected:
+      const char *name_;
+      const char **charPtrPtr_;
+      bool *boolPtr_;
+      int *intPtr_;
+      std::list<std::string> *list_;
+      EType type_;
+      int order_;
+      bool required_;
+      bool argument_;
+      bool ignoreCase_;
+      bool switch_;
+      const char *usage_;
+      bool isSet_;
+      bool expand_;
+      const char *argDesc_;
 
-  friend class OptionsList;
-};
+      friend class OptionsList;
+    };
 
-class OptionsList : public std::list<Option>
-{
-public:
-  //---- Constructors
-  OptionsList();
-  OptionsList(Option *optionList[]);
+    class OptionsList : public std::list<Option>
+    {
+    public:
+      //---- Constructors
+      OptionsList();
+      OptionsList(Option *optionList[]);
 
-  //---- Destructor
-  virtual ~OptionsList();
+      //---- Destructor
+      virtual ~OptionsList();
 
-  void addOption(Option &option);
+      void addOption(Option &option);
 
-  int parse(int &argc, const char **argv);
-  void usage();
-  void setOwnsOptions(bool flag = true) { ownsOptions_ = flag; }
-  void append(Option *option) { emplace_back(*option); }
+      int parse(int &argc, const char **argv);
+      void usage();
+      void setOwnsOptions(bool flag = true) { ownsOptions_ = flag; }
+      void append(Option *option) { emplace_back(*option); }
 
-protected:
-  void getArg(const char **&argv, int &argc, Option *option, const char *aAt);
-  bool find(const char *optName, Option *&option);
-  bool find(int order, Option *&option);
+    protected:
+      void getArg(const char **&argv, int &argc, Option *option, const char *aAt);
+      bool find(const char *optName, Option *&option);
+      bool find(int order, Option *&option);
 
-protected:
-  const char *program_;
-  int unswitched_;
-  bool ownsOptions_;
-};
-}  // namespace configuration
-// ------------------------ Inline Methods ------------------------------
-// #include <Options.inl>
+    protected:
+      const char *program_;
+      int unswitched_;
+      bool ownsOptions_;
+    };
+  }  // namespace configuration
+  // ------------------------ Inline Methods ------------------------------
+  // #include <Options.inl>
 }  // namespace mtconnect

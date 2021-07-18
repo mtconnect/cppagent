@@ -22,34 +22,34 @@
 using namespace std;
 
 namespace mtconnect {
-namespace entity {
-bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
-                       ErrorList &errors)
-{
-  if (!hasProperty(name))
-  {
-    entity::EntityList list {entity};
-    auto entities = factory->create(name, list, errors);
-    if (errors.empty())
-      setProperty(name, entities);
-    else
-      return false;
-  }
-  else
-  {
-    auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
-    if (entities)
+  namespace entity {
+    bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
+                           ErrorList &errors)
     {
-      std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
-    }
-    else
-    {
-      errors.emplace_back(new EntityError("Cannont find list for: " + name));
-      return false;
-    }
-  }
+      if (!hasProperty(name))
+      {
+        entity::EntityList list {entity};
+        auto entities = factory->create(name, list, errors);
+        if (errors.empty())
+          setProperty(name, entities);
+        else
+          return false;
+      }
+      else
+      {
+        auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
+        if (entities)
+        {
+          std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
+        }
+        else
+        {
+          errors.emplace_back(new EntityError("Cannont find list for: " + name));
+          return false;
+        }
+      }
 
-  return true;
-}
-}  // namespace entity
+      return true;
+    }
+  }  // namespace entity
 }  // namespace mtconnect

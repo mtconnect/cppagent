@@ -25,41 +25,44 @@
 #include "cached_file.hpp"
 
 namespace mtconnect {
-namespace rest_sink {
-using XmlNamespace = std::pair<std::string, std::string>;
-using XmlNamespaceList = std::list<XmlNamespace>;
-class FileCache
-{
-public:
-  FileCache();
+  namespace rest_sink {
+    using XmlNamespace = std::pair<std::string, std::string>;
+    using XmlNamespaceList = std::list<XmlNamespace>;
+    class FileCache
+    {
+    public:
+      FileCache();
 
-  XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
-                                 const std::string &version);
-  XmlNamespaceList registerDirectory(const std::string &uri, const std::string &path,
+      XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
                                      const std::string &version);
-  std::optional<XmlNamespace> registerFile(const std::string &uri, const std::string &pathName,
-                                           const std::string &version)
-  {
-    std::filesystem::path path(pathName);
-    return registerFile(uri, path, version);
-  }
-  std::optional<XmlNamespace> registerFile(const std::string &uri,
-                                           const std::filesystem::path &path,
-                                           const std::string &version);
-  CachedFilePtr getFile(const std::string &name);
-  bool hasFile(const std::string &name) const { return (m_fileMap.find(name) != m_fileMap.end()); }
-  void addMimeType(const std::string &ext, const std::string &type)
-  {
-    std::string s(ext);
-    if (s[0] != '.')
-      s.insert(0, ".");
-    m_mimeTypes[s] = type;
-  }
+      XmlNamespaceList registerDirectory(const std::string &uri, const std::string &path,
+                                         const std::string &version);
+      std::optional<XmlNamespace> registerFile(const std::string &uri, const std::string &pathName,
+                                               const std::string &version)
+      {
+        std::filesystem::path path(pathName);
+        return registerFile(uri, path, version);
+      }
+      std::optional<XmlNamespace> registerFile(const std::string &uri,
+                                               const std::filesystem::path &path,
+                                               const std::string &version);
+      CachedFilePtr getFile(const std::string &name);
+      bool hasFile(const std::string &name) const
+      {
+        return (m_fileMap.find(name) != m_fileMap.end());
+      }
+      void addMimeType(const std::string &ext, const std::string &type)
+      {
+        std::string s(ext);
+        if (s[0] != '.')
+          s.insert(0, ".");
+        m_mimeTypes[s] = type;
+      }
 
-protected:
-  std::map<std::string, std::filesystem::path> m_fileMap;
-  std::map<std::string, CachedFilePtr> m_fileCache;
-  std::map<std::string, std::string> m_mimeTypes;
-};
-}  // namespace rest_sink
+    protected:
+      std::map<std::string, std::filesystem::path> m_fileMap;
+      std::map<std::string, CachedFilePtr> m_fileCache;
+      std::map<std::string, std::string> m_mimeTypes;
+    };
+  }  // namespace rest_sink
 }  // namespace mtconnect

@@ -25,59 +25,60 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-class LoopbackPipeline : public pipeline::Pipeline
-{
-public:
-  LoopbackPipeline(pipeline::PipelineContextPtr context) : pipeline::Pipeline(context) {}
-  void build(const ConfigOptions &options) override;
-
-protected:
-  ConfigOptions m_options;
-};
-
-class LoopbackSource : public Source
-{
-public:
-  LoopbackSource(const std::string &name, pipeline::PipelineContextPtr context,
-                 boost::asio::io_context::strand &st, const ConfigOptions &options)
-    : Source(name), m_pipeline(context), m_strand(st)
+  class LoopbackPipeline : public pipeline::Pipeline
   {
-    m_pipeline.build(options);
-  }
+  public:
+    LoopbackPipeline(pipeline::PipelineContextPtr context) : pipeline::Pipeline(context) {}
+    void build(const ConfigOptions &options) override;
 
-  bool start() override
-  {
-    m_pipeline.start(m_strand);
-    return true;
-  }
-  void stop() override {}
+  protected:
+    ConfigOptions m_options;
+  };
 
-  SequenceNumber_t receive(observation::ObservationPtr observation)
+  class LoopbackSource : public Source
   {
-    auto res = m_pipeline.run(observation);
-    if (auto obs = std::dynamic_pointer_cast<observation::Observation>(res))
+  public:
+    LoopbackSource(const std::string &name, pipeline::PipelineContextPtr context,
+                   boost::asio::io_context::strand &st, const ConfigOptions &options)
+      : Source(name), m_pipeline(context), m_strand(st)
     {
-      return obs->getSequence();
+      m_pipeline.build(options);
     }
-    else
+
+    bool start() override
     {
-      return 0;
+      m_pipeline.start(m_strand);
+      return true;
     }
-  }
-  SequenceNumber_t receive(DataItemPtr dataItem, entity::Properties props,
-                           std::optional<Timestamp> timestamp = std::nullopt);
-  SequenceNumber_t receive(DataItemPtr dataItem, const std::string &value,
-                           std::optional<Timestamp> timestamp = std::nullopt);
+    void stop() override {}
+    pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
 
-  void receive(asset::AssetPtr asset) { m_pipeline.run(asset); }
-  asset::AssetPtr receiveAsset(DevicePtr device, const std::string &document,
-                               const std::optional<std::string> &id,
-                               const std::optional<std::string> &type,
-                               const std::optional<std::string> &time, entity::ErrorList &errors);
-  void removeAsset(const std::optional<std::string> device, const std::string &id);
+    SequenceNumber_t receive(observation::ObservationPtr observation)
+    {
+      auto res = m_pipeline.run(observation);
+      if (auto obs = std::dynamic_pointer_cast<observation::Observation>(res))
+      {
+        return obs->getSequence();
+      }
+      else
+      {
+        return 0;
+      }
+    }
+    SequenceNumber_t receive(DataItemPtr dataItem, entity::Properties props,
+                             std::optional<Timestamp> timestamp = std::nullopt);
+    SequenceNumber_t receive(DataItemPtr dataItem, const std::string &value,
+                             std::optional<Timestamp> timestamp = std::nullopt);
 
-protected:
-  LoopbackPipeline m_pipeline;
-  boost::asio::io_context::strand m_strand;
-};
+    void receive(asset::AssetPtr asset) { m_pipeline.run(asset); }
+    asset::AssetPtr receiveAsset(DevicePtr device, const std::string &document,
+                                 const std::optional<std::string> &id,
+                                 const std::optional<std::string> &type,
+                                 const std::optional<std::string> &time, entity::ErrorList &errors);
+    void removeAsset(const std::optional<std::string> device, const std::string &id);
+
+  protected:
+    LoopbackPipeline m_pipeline;
+    boost::asio::io_context::strand m_strand;
+  };
 }  // namespace mtconnect

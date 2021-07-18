@@ -30,144 +30,145 @@
 #include "transform.hpp"
 
 namespace mtconnect {
-class Device;
+  class Device;
 
-namespace pipeline {
-class PipelineMessage : public Entity
-{
-public:
-  using Entity::Entity;
-  ~PipelineMessage() = default;
-
-  DataItemPtr m_dataItem;
-  DevicePtr m_device;
-};
-using PipelineMessagePtr = std::shared_ptr<PipelineMessage>;
-
-class JsonMessage : public PipelineMessage
-{
-public:
-  using PipelineMessage::PipelineMessage;
-};
-class DataMessage : public PipelineMessage
-{
-public:
-  using PipelineMessage::PipelineMessage;
-};
-
-class TopicMapper : public Transform
-{
-public:
-  TopicMapper(const TopicMapper &) = default;
-  TopicMapper(PipelineContextPtr context, const std::optional<std::string> &device = std::nullopt)
-    : Transform("TopicMapper"), m_context(context), m_defaultDevice(device)
-  {
-    m_guard = TypeGuard<PipelineMessage>(RUN);
-  }
-
-  auto resolve(const std::string &topic)
-  {
-    using namespace std;
-    namespace algo = boost::algorithm;
-    using namespace boost;
-
-    DataItemPtr dataItem;
-    DevicePtr device;
-
-    string name, deviceName;
-
-    std::vector<string> path;
-    boost::split(path, topic, algo::is_any_of("/"));
-    if (path.size() > 1)
+  namespace pipeline {
+    class PipelineMessage : public Entity
     {
-      deviceName = path[0];
-      name = path[1];
-      dataItem = m_context->m_contract->findDataItem(deviceName, name);
-    }
+    public:
+      using Entity::Entity;
+      ~PipelineMessage() = default;
 
-    if (!dataItem)
-    {
-      deviceName = m_defaultDevice.value_or("");
-      name = topic;
-      dataItem = m_context->m_contract->findDataItem(deviceName, name);
-    }
+      DataItemPtr m_dataItem;
+      DevicePtr m_device;
+    };
+    using PipelineMessagePtr = std::shared_ptr<PipelineMessage>;
 
-    if (!dataItem && path.size() > 1)
+    class JsonMessage : public PipelineMessage
     {
-      name = path.back();
-      dataItem = m_context->m_contract->findDataItem(deviceName, name);
-    }
+    public:
+      using PipelineMessage::PipelineMessage;
+    };
+    class DataMessage : public PipelineMessage
+    {
+    public:
+      using PipelineMessage::PipelineMessage;
+    };
 
-    if (!dataItem)
+    class TopicMapper : public Transform
     {
-      for (auto &tok : path)
+    public:
+      TopicMapper(const TopicMapper &) = default;
+      TopicMapper(PipelineContextPtr context,
+                  const std::optional<std::string> &device = std::nullopt)
+        : Transform("TopicMapper"), m_context(context), m_defaultDevice(device)
       {
-        device = m_context->m_contract->findDevice(tok);
-        if (device)
-          break;
+        m_guard = TypeGuard<PipelineMessage>(RUN);
       }
 
-      if (device)
+      auto resolve(const std::string &topic)
       {
-        for (auto &tok : path)
+        using namespace std;
+        namespace algo = boost::algorithm;
+        using namespace boost;
+
+        DataItemPtr dataItem;
+        DevicePtr device;
+
+        string name, deviceName;
+
+        std::vector<string> path;
+        boost::split(path, topic, algo::is_any_of("/"));
+        if (path.size() > 1)
         {
-          dataItem = device->getDeviceDataItem(tok);
-          if (dataItem)
-            break;
+          deviceName = path[0];
+          name = path[1];
+          dataItem = m_context->m_contract->findDataItem(deviceName, name);
         }
+
+        if (!dataItem)
+        {
+          deviceName = m_defaultDevice.value_or("");
+          name = topic;
+          dataItem = m_context->m_contract->findDataItem(deviceName, name);
+        }
+
+        if (!dataItem && path.size() > 1)
+        {
+          name = path.back();
+          dataItem = m_context->m_contract->findDataItem(deviceName, name);
+        }
+
+        if (!dataItem)
+        {
+          for (auto &tok : path)
+          {
+            device = m_context->m_contract->findDevice(tok);
+            if (device)
+              break;
+          }
+
+          if (device)
+          {
+            for (auto &tok : path)
+            {
+              dataItem = device->getDeviceDataItem(tok);
+              if (dataItem)
+                break;
+            }
+          }
+        }
+
+        // Note even if null so we don't have to try again
+        m_resolved[topic] = dataItem;
+        m_devices[topic] = device;
+
+        return std::make_tuple(device, dataItem);
       }
-    }
 
-    // Note even if null so we don't have to try again
-    m_resolved[topic] = dataItem;
-    m_devices[topic] = device;
-
-    return std::make_tuple(device, dataItem);
-  }
-
-  const EntityPtr operator()(const EntityPtr entity) override
-  {
-    auto &body = entity->getValue<std::string>();
-    DataItemPtr dataItem;
-    DevicePtr device;
-    entity::Properties props {entity->getProperties()};
-    if (auto topic = entity->maybeGet<std::string>("topic"))
-    {
-      if (auto it = m_devices.find(*topic); it != m_devices.end())
+      const EntityPtr operator()(const EntityPtr entity) override
       {
-        device = it->second;
-      }
-      if (auto it = m_resolved.find(*topic); it != m_resolved.end())
-      {
-        dataItem = it->second;
-      }
-      if (!dataItem && !device)
-      {
-        std::tie(device, dataItem) = resolve(*topic);
-      }
-    }
+        auto &body = entity->getValue<std::string>();
+        DataItemPtr dataItem;
+        DevicePtr device;
+        entity::Properties props {entity->getProperties()};
+        if (auto topic = entity->maybeGet<std::string>("topic"))
+        {
+          if (auto it = m_devices.find(*topic); it != m_devices.end())
+          {
+            device = it->second;
+          }
+          if (auto it = m_resolved.find(*topic); it != m_resolved.end())
+          {
+            dataItem = it->second;
+          }
+          if (!dataItem && !device)
+          {
+            std::tie(device, dataItem) = resolve(*topic);
+          }
+        }
 
-    PipelineMessagePtr result;
-    // Check for JSON Message
-    if (body[0] == '{')
-    {
-      result = std::make_shared<JsonMessage>("JsonMessage", props);
-    }
-    else
-    {
-      result = std::make_shared<DataMessage>("DataMessage", props);
-    }
-    result->m_dataItem = dataItem;
-    result->m_device = device;
+        PipelineMessagePtr result;
+        // Check for JSON Message
+        if (body[0] == '{')
+        {
+          result = std::make_shared<JsonMessage>("JsonMessage", props);
+        }
+        else
+        {
+          result = std::make_shared<DataMessage>("DataMessage", props);
+        }
+        result->m_dataItem = dataItem;
+        result->m_device = device;
 
-    return next(result);
-  }
+        return next(result);
+      }
 
-protected:
-  PipelineContextPtr m_context;
-  std::optional<std::string> m_defaultDevice;
-  std::unordered_map<std::string, DataItemPtr> m_resolved;
-  std::unordered_map<std::string, DevicePtr> m_devices;
-};
-}  // namespace pipeline
+    protected:
+      PipelineContextPtr m_context;
+      std::optional<std::string> m_defaultDevice;
+      std::unordered_map<std::string, DataItemPtr> m_resolved;
+      std::unordered_map<std::string, DevicePtr> m_devices;
+    };
+  }  // namespace pipeline
 }  // namespace mtconnect
