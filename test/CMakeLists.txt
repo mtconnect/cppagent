@@ -99,6 +99,7 @@ add_agent_test(data_item_mapping FALSE pipeline)
 add_agent_test(duplicate_filter FALSE pipeline)
 add_agent_test(pipeline_deliver TRUE pipeline)
 add_agent_test(topic_mapping TRUE pipeline)
+add_agent_test(pipeline_edit TRUE pipeline)
 
 add_agent_test(agent TRUE core)
 add_agent_test(asset_buffer TRUE core)

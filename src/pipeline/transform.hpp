@@ -115,6 +115,47 @@ namespace mtconnect {
       }
       const Guard &getGuard() const { return m_guard; }
       void setGuard(const Guard &guard) { m_guard = guard; }
+      
+      using TransformPair = std::pair<TransformPtr,TransformPtr>;
+      using ListOfTransforms = std::list<TransformPair>;
+      void find(const std::string &target,
+                ListOfTransforms &xforms)
+      {
+        for (auto &t : m_next)
+        {
+          if (t->getName() == target)
+          {
+            xforms.push_back(TransformPair{getptr(), t});
+          }
+          t->find(target, xforms);
+        }
+      }
+      void spliceBefore(TransformPtr old, TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            xform->bind(old);
+            *it = xform;
+            return;
+          }
+        }
+      }
+      void spliceAfter(TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          xform->bind(*it);
+        }
+        m_next.clear();
+        bind(xform);
+        return;
+      }
+      void firstAfter(TransformPtr xform)
+      {
+        m_next.emplace_front(xform);
+      }
 
     protected:
       std::string m_name;

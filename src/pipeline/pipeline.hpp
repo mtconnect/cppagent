@@ -57,6 +57,63 @@ namespace mtconnect {
           m_started = true;
         }
       }
+      bool spliceBefore(const std::string &target, TransformPtr transform)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+        
+        for (auto &pair : xforms)
+        {
+          pair.first->spliceBefore(pair.second, transform);
+        }
+        
+        return true;
+      }
+      bool spliceAfter(const std::string &target, TransformPtr transform)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+        
+        for (auto &pair : xforms)
+        {
+          pair.second->spliceAfter(transform);
+        }
+        
+        return true;
+      }
+      bool firstAfter(const std::string &target, TransformPtr transform)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+        
+        for (auto &pair : xforms)
+        {
+          pair.second->firstAfter(transform);
+        }
+        
+        return true;
+      }
+      bool lastAfter(const std::string &target, TransformPtr transform)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+        
+        for (auto &pair : xforms)
+        {
+          pair.second->bind(transform);
+        }
+        
+        return true;
+      }
+
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
 
