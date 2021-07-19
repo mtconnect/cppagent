@@ -1151,7 +1151,7 @@ namespace mtconnect {
 
     void AgentConfiguration::configurePython(const ptree &tree, ConfigOptions &options)
     {
-      m_python = make_unique<python::Embedded>(m_agent.get());
+      m_python = make_unique<python::Embedded>(m_agent.get(), options);
     }
   }  // namespace configuration
 }  // namespace mtconnect

@@ -99,7 +99,7 @@ add_agent_test(data_item_mapping FALSE pipeline)
 add_agent_test(duplicate_filter FALSE pipeline)
 add_agent_test(pipeline_deliver TRUE pipeline)
 add_agent_test(topic_mapping TRUE pipeline)
-add_agent_test(pipeline_edit TRUE pipeline)
+add_agent_test(pipeline_edit FALSE pipeline)
 
 add_agent_test(agent TRUE core)
 add_agent_test(asset_buffer TRUE core)
@@ -114,6 +114,8 @@ add_agent_test(checkpoint FALSE core)
 add_agent_test(observation TRUE observation)
 add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)
+
+add_agent_test(python_transform TRUE python)
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(

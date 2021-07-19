@@ -19,6 +19,8 @@
 
 #include <string>
 
+#include "utilities.hpp"
+
 namespace mtconnect {
   class Agent;
 
@@ -27,12 +29,13 @@ namespace mtconnect {
     class Embedded
     {
     public:
-      Embedded(Agent *agent);
+      Embedded(Agent *agent, const ConfigOptions &options);
       ~Embedded();
 
     protected:
       Agent *m_agent;
       Context *m_context;
+      ConfigOptions m_options;
     };
   }  // namespace python
 }  // namespace mtconnect

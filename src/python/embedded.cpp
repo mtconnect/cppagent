@@ -41,6 +41,8 @@ namespace mtconnect {
     namespace py = boost::python;
     using namespace entity;
 
+#define None object(detail::borrowed_reference(Py_None))
+    
     struct Context
     {
       object m_source;
@@ -115,7 +117,7 @@ namespace mtconnect {
       object getDevice(const std::string name)
       {
         if (m_agent == nullptr)
-          return object(detail::borrowed_reference(Py_None));
+          return None;
         else
         {
           auto dev = m_agent->getDeviceByName(name);
@@ -126,7 +128,7 @@ namespace mtconnect {
           }
           else
           {
-            return object(detail::borrowed_reference(Py_None));
+            return None;
           }
         }
       }
@@ -150,20 +152,37 @@ namespace mtconnect {
         return sources;
       }
 
-      object getAdapter() { return object(detail::borrowed_reference(Py_None)); }
+      object getSource(const std::string name)
+      {
+        if (m_agent != nullptr)
+        {
+          for (auto source : m_agent->getSources())
+          {
+            if (source->getName() == name)
+            {
+              auto src = m_context->m_source();
+              SourceWrapper &wrap = extract<SourceWrapper &>(src);
+              wrap.m_source = source;
+              wrap.m_context = m_context;
+              
+              return src;
+            }
+          }
+        }
+        
+        return None;
+      }
 
 #if 0
     object getDataItem(const std::string device, const std::string name);
     object getDataItem(boost::python::object device, const std::string name);
     object getDataItem(const std::string id);
-    
-    object getAdapter(const std::string url);
 #endif
 
       Agent *m_agent {nullptr};
     };
 
-    Embedded::Embedded(Agent *agent) : m_agent(agent), m_context(new Context())
+    Embedded::Embedded(Agent *agent, const ConfigOptions &options) : m_agent(agent), m_context(new Context()), m_options(options)
     {
       try
       {
@@ -194,6 +213,7 @@ namespace mtconnect {
 
         auto agentClass = class_<AgentWrapper>("Agent", init<>())
                               .def("get_device", &AgentWrapper::getDevice)
+                              .def("get_source", &AgentWrapper::getSource)
                               .def("get_sources", &AgentWrapper::getSources);
         main_namespace["Agent"] = agentClass;
         auto pyagent = agentClass();
@@ -203,7 +223,7 @@ namespace mtconnect {
 
         main_namespace["agent"] = pyagent;
 
-        Py_RunMain();
+        //Py_RunMain();
       }
 
       catch (error_already_set const &)
