@@ -26,6 +26,9 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
+#include <boost/dll.hpp>
+#include <boost/dll/import.hpp>
+#include <boost/function.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -73,6 +76,9 @@ using namespace std;
 namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
 namespace b_logger = boost::log;
+namespace dll = boost::dll;
+namespace asio = boost::asio;
+
 BOOST_LOG_ATTRIBUTE_KEYWORD(named_scope, "Scope", b_logger::attributes::named_scope::value_type);
 BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp",
                             b_logger::attributes::utc_clock::value_type);
@@ -732,6 +738,52 @@ namespace mtconnect
       auto cache = server->getFileCache();
 
       m_agent->addSink(server);
+
+      NAMED_SCOPE("config.sinks");
+
+      DevicePtr device;
+      auto sinks = config.get_child_optional("Sinks");
+      if (sinks)
+      {
+          boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
+          for (const auto &sink : *sinks)
+          {
+              ConfigOptions sinkOptions = options;
+
+              string sinkId = sink.first;
+
+              // collect all options for this sink,
+              // Override if exists already
+              const ptree &tree = sink.second;
+              for (auto &child : tree) {
+                  const string value = child.second.get_value<std::string>();
+                  const ConfigOption def = value;
+
+                  sinkOptions[child.first] = Convert(value, def);
+              }
+
+              // expect the dynamic library's location is same as the executable
+              // the library's name is sink's id
+              auto dllPath = shared_library_path / sinkId;
+              typedef shared_ptr<mtconnect::Sink> (pluginapi_create_t)(asio::io_context &context, SinkContractPtr &&contract,
+                                                                       const ConfigOptions &options);
+              boost::function<pluginapi_create_t> creator;
+              try {
+                  creator = boost::dll::import_alias<pluginapi_create_t>(
+                      dllPath,                                              // path to library
+                      "create_plugin",
+                      dll::load_mode::append_decorations                    // do append extensions and prefixes
+                  );
+              } catch(exception &e) {
+                  LOG(error) << "Cannot load plugin " << sinkId << " from " << shared_library_path << " Reason: " << e.what();
+                  continue;
+              }
+
+              sinkContract = m_agent->makeSinkContract();
+              shared_ptr<mtconnect::Sink> sink_server = creator(m_context, move(sinkContract), sinkOptions);
+              m_agent->addSink(sink_server);
+          }
+      }
 
       // Make the PipelineContext
       m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
