@@ -3,7 +3,7 @@ from conans import ConanFile, tools
 
 class MqttcppConan(ConanFile):
     name = "mqtt_cpp"
-    version = "9.0.0"
+    version = "11.0.0"
     license = "Boost Software License, Version 1.0"
     author = "Takatoshi Kondo redboltz@gmail.com"
     url = "https://github.com/redboltz/mqtt_cpp"
