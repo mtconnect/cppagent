@@ -466,4 +466,39 @@ namespace
     ASSERT_EQ("Access-Control-Allow-Origin", first.first);
     ASSERT_EQ(" *", first.second);
   }
+
+  TEST_F(ConfigTest, dynamic_load_sinks_bad)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str("Sinks {\n"
+                    "TestBADService {\n"
+                    "}\n"
+               "}\n");
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto sink = agent->findSink("TestBADService");
+    ASSERT_TRUE(sink == nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_sinks_good)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+
+    string str("Sinks {\n"
+                    "TestSinkService {\n"
+                    "}\n"
+               "}\n");
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto sink = agent->findSink("TestSinkService");
+    ASSERT_TRUE(sink != nullptr);
+  }
 }  // namespace

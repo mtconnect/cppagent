@@ -1,6 +1,15 @@
 
 include(GoogleTest)
 
+add_library(TestSinkService SHARED testsink_service.cpp)
+target_include_directories(
+  TestSinkService
+  PUBLIC
+    "${CONAN_INCLUDE_DIRS}"
+    "${PROJECT_BINARY_DIR}/agent_lib"
+    "${CMAKE_CURRENT_LIST_DIR}/../src"
+    )
+
 set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
 add_library(agent_test_lib STATIC ${AGENT_TEST_LIB_SOURCES})
 target_include_directories(
@@ -119,3 +128,8 @@ add_custom_command(
   "${CMAKE_CURRENT_SOURCE_DIR}/probe.xml"
   "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
   COMMENT "Copying to output directory")
+
+add_custom_command(TARGET TestSinkService POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${PROJECT_BINARY_DIR}/lib/*TestSinkService*"
+        "$<TARGET_FILE_DIR:config_test>/../Resources")

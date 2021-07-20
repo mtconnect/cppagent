@@ -775,8 +775,22 @@ namespace mtconnect
                       dll::load_mode::append_decorations                    // do append extensions and prefixes
                   );
               } catch(exception &e) {
-                  LOG(error) << "Cannot load plugin " << sinkId << " from " << shared_library_path << " Reason: " << e.what();
-                  continue;
+                  LOG(info) << "Cannot load plugin " << sinkId << " from " << shared_library_path << " Reason: " << e.what();
+              }
+
+              if (creator.empty()) {
+                  // try current working directory
+                  auto dllPath = boost::filesystem::current_path() / sinkId;
+                  try {
+                      creator = boost::dll::import_alias<pluginapi_create_t>(
+                          dllPath,
+                          "create_plugin",
+                          dll::load_mode::append_decorations                    // do append extensions and prefixes
+                      );
+                  } catch(exception &e) {
+                      LOG(error) << "Cannot load plugin " << sinkId << " from " << shared_library_path << " Reason: " << e.what();
+                      continue;
+                  }
               }
 
               sinkContract = m_agent->makeSinkContract();
