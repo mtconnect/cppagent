@@ -11,7 +11,12 @@ target_include_directories(
     )
 target_compile_definitions(TestSinkService
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:TestSinkService>/../Resources\"")
+    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:TestSinkService>/../Resources\""
+    $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
+    $<$<PLATFORM_ID:Windows>:NOMINMAX>
+    $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
+    $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
+  
 target_compile_features(TestSinkService PUBLIC ${CXX_COMPILE_FEATURES})
 set_property(TARGET TestSinkService PROPERTY
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
