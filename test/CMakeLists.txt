@@ -9,6 +9,13 @@ target_include_directories(
     "${PROJECT_BINARY_DIR}/agent_lib"
     "${CMAKE_CURRENT_LIST_DIR}/../src"
     )
+target_compile_definitions(TestSinkService
+    PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
+    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:TestSinkService>/../Resources\"")
+target_compile_features(TestSinkService PUBLIC ${CXX_COMPILE_FEATURES})
+set_property(TARGET TestSinkService PROPERTY
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
+  
 
 set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
 add_library(agent_test_lib STATIC ${AGENT_TEST_LIB_SOURCES})
