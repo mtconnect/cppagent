@@ -29,6 +29,7 @@
 #include <boost/dll.hpp>
 #include <boost/dll/import.hpp>
 #include <boost/function.hpp>
+#include <boost/algorithm/string.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -750,22 +751,28 @@ namespace mtconnect
           {
               ConfigOptions sinkOptions = options;
 
-              string sinkId = sink.first;
+              vector<string> sinkHeader;
+                  boost::split(sinkHeader, sink.first, boost::is_any_of(":"));
+
+              string sinkDLLName = sinkHeader[0];
+              string sinkId = sinkHeader.size() > 1 ? sinkHeader[1] : sinkDLLName;
 
               // collect all options for this sink,
               // Override if exists already
               const ptree &tree = sink.second;
               for (auto &child : tree) {
-                  const string value = child.second.get_value<std::string>();
-                  const ConfigOption def = value;
 
-                  sinkOptions[child.first] = Convert(value, def);
+                  const string value = child.second.get_value<std::string>();
+
+                  auto iter = sinkOptions.find(child.first);
+                  sinkOptions[child.first] =
+                              Convert(value, iter != sinkOptions.end() ? iter->second : value);
               }
 
               // expect the dynamic library's location is same as the executable
               // the library's name is sink's id
-              auto dllPath = shared_library_path / sinkId;
-              typedef shared_ptr<mtconnect::Sink> (pluginapi_create_t)(asio::io_context &context, SinkContractPtr &&contract,
+              auto dllPath = shared_library_path / sinkDLLName;
+              typedef shared_ptr<mtconnect::Sink> (pluginapi_create_t)(const string &name, asio::io_context &context, SinkContractPtr &&contract,
                                                                        const ConfigOptions &options);
               boost::function<pluginapi_create_t> creator;
               try {
@@ -780,7 +787,7 @@ namespace mtconnect
 
               if (creator.empty()) {
                   // try current working directory
-                  auto dllPath = boost::filesystem::current_path() / sinkId;
+                  auto dllPath = boost::filesystem::current_path() / sinkDLLName;
                   try {
                       creator = boost::dll::import_alias<pluginapi_create_t>(
                           dllPath,
@@ -794,7 +801,7 @@ namespace mtconnect
               }
 
               sinkContract = m_agent->makeSinkContract();
-              shared_ptr<mtconnect::Sink> sink_server = creator(m_context, move(sinkContract), sinkOptions);
+              shared_ptr<mtconnect::Sink> sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
               m_agent->addSink(sink_server);
           }
       }

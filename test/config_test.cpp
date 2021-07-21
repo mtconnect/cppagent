@@ -484,7 +484,7 @@ namespace
     ASSERT_TRUE(sink == nullptr);
   }
 
-  TEST_F(ConfigTest, dynamic_load_sinks_good)
+  TEST_F(ConfigTest, dynamic_load_sinks_simple)
   {
     chdir(TEST_BIN_ROOT_DIR);
 
@@ -500,5 +500,26 @@ namespace
     ASSERT_TRUE(agent);
     const auto sink = agent->findSink("TestSinkService");
     ASSERT_TRUE(sink != nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_sinks_assigned_name)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+
+    string str("Sinks {\n"
+                    "TestSinkService:Sink1 {\n"
+                    "}\n"
+               "}\n");
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto sink1 = agent->findSink("TestSinkService");
+    ASSERT_TRUE(sink1 == nullptr);
+
+    const auto sink2 = agent->findSink("Sink1");
+    ASSERT_TRUE(sink2 != nullptr);
   }
 }  // namespace

@@ -27,9 +27,9 @@ namespace mtconnect
     class TestSinkService : public Sink
     {
     public:
-      TestSinkService(boost::asio::io_context &context, SinkContractPtr &&contract,
+      TestSinkService(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
                   const ConfigOptions &config)
-          : Sink("TestSinkService", move(contract))
+          : Sink(name, move(contract))
       {
       }
 
@@ -43,10 +43,10 @@ namespace mtconnect
       bool publish(asset::AssetPtr asset) override { return false; }
 
       // Factory method
-      static boost::shared_ptr<TestSinkService> create(boost::asio::io_context &context, SinkContractPtr &&contract,
+      static boost::shared_ptr<TestSinkService> create(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
                                                     const ConfigOptions &config) {
         return boost::shared_ptr<TestSinkService>(
-                    new TestSinkService(context, move(contract), config) );
+                    new TestSinkService(name, context, move(contract), config) );
       }
     };
 
