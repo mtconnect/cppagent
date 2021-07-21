@@ -485,7 +485,7 @@ namespace
     ASSERT_TRUE(sink == nullptr);
   }
 
-  TEST_F(ConfigTest, dynamic_load_sinks_good)
+  TEST_F(ConfigTest, dynamic_load_sinks_simple)
   {
     chdir(TEST_BIN_ROOT_DIR);
 
