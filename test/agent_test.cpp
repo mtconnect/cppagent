@@ -1011,7 +1011,7 @@ TEST_F(AgentTest, InitialTimeSeriesValues)
 
 TEST_F(AgentTest, DynamicCalibration)
 {
-  addAdapter();
+  addAdapter(ConfigOptions{{configuration::ConversionRequired, true}});
   auto agent = m_agentTestHelper->getAgent();
   
   // Add a 10.111000 seconds
