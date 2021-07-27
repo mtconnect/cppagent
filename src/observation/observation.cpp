@@ -161,14 +161,6 @@ namespace mtconnect
 
       if (unavailable)
         obs->makeUnavailable();
-      else if (dataItem->isSample())
-      {
-        if (dataItem->conversionRequired())
-        {
-          auto &value = obs->m_properties["VALUE"];
-          dataItem->convertValue(value);
-        }
-      }
       if (!dataItem->isCondition())
         obs->setEntityName();
       else if (!unavailable)
