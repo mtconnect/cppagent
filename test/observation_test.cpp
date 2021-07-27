@@ -133,6 +133,44 @@ TEST_F(ObservationTest, Getters)
   ASSERT_EQ(1.1231, m_compEventB->getValue<double>());
 }
 
+TEST_F(ObservationTest, ConditionEventChaining)
+{
+  DataItem dataItem({{"id", "c1"}, {"category", "CONDITION"},
+    {"type","TEMPERATURE"}
+  });
+  
+  ErrorList errors;
+  ConditionPtr event1 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
+  ConditionPtr event2 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
+  ConditionPtr event3 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
+
+  ASSERT_TRUE(event1 == event1->getFirst());
+
+  event1->appendTo(event2);
+  ASSERT_TRUE(event1->getFirst() == event2);
+
+  event2->appendTo(event3);
+  ASSERT_TRUE(event1->getFirst() == event3);
+
+  ASSERT_EQ(1, event1.use_count());
+  ASSERT_EQ(2, event2.use_count());
+  ASSERT_EQ(2, event3.use_count());
+
+  ConditionList list;
+  event1->getConditionList(list);
+  ASSERT_EQ(3, list.size());
+  ASSERT_TRUE(list.front() == event3);
+  ASSERT_TRUE(list.back() == event1);
+
+  ConditionList list2;
+  event2->getConditionList(list2);
+  ASSERT_EQ(2, list2.size());
+  ASSERT_TRUE(list2.front() == event3);
+  ASSERT_TRUE(list2.back() == event2);
+}
+
+#if 0
+
 TEST_F(ObservationTest, ConvertValue)
 {
   std::map<string, string> attributes;
@@ -173,43 +211,6 @@ TEST_F(ObservationTest, ConvertSimpleUnits)
   TEST_VALUE(attributes, "PERCENT", 2.0f, 2.0);
 }
 
-TEST_F(ObservationTest, ConditionEventChaining)
-{
-  DataItem dataItem({{"id", "c1"}, {"category", "CONDITION"},
-    {"type","TEMPERATURE"}
-  });
-  
-  ErrorList errors;
-  ConditionPtr event1 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
-  ConditionPtr event2 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
-  ConditionPtr event3 = Cond(Observation::make(&dataItem, {{"level", "FAULT"s}}, m_time, errors));
-
-  ASSERT_TRUE(event1 == event1->getFirst());
-
-  event1->appendTo(event2);
-  ASSERT_TRUE(event1->getFirst() == event2);
-
-  event2->appendTo(event3);
-  ASSERT_TRUE(event1->getFirst() == event3);
-
-  ASSERT_EQ(1, event1.use_count());
-  ASSERT_EQ(2, event2.use_count());
-  ASSERT_EQ(2, event3.use_count());
-
-  ConditionList list;
-  event1->getConditionList(list);
-  ASSERT_EQ(3, list.size());
-  ASSERT_TRUE(list.front() == event3);
-  ASSERT_TRUE(list.back() == event1);
-
-  ConditionList list2;
-  event2->getConditionList(list2);
-  ASSERT_EQ(2, list2.size());
-  ASSERT_TRUE(list2.front() == event3);
-  ASSERT_TRUE(list2.back() == event2);
-}
-
-#if 0
 TEST_F(ObservationTest, Condition)
 {
   DataItem d({{"id", "c1"}, {"category", "CONDITION"},
