@@ -21,8 +21,7 @@
 
 #include "adapter/adapter.hpp"
 #include "device_model/data_item.hpp"
-
-#include <dlib/misc_api.h>
+#include "test_utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -71,7 +70,22 @@ class DataItemTest : public testing::Test
   std::unique_ptr<DataItem> m_dataItemA;
   std::unique_ptr<DataItem> m_dataItemB;
   std::unique_ptr<DataItem> m_dataItemC;
+
+  
+  // Helper to test values
+  void testValueHelper(std::map<std::string, std::string> &attributes,
+                       const std::string &nativeUnits, float expected, const double value,
+                       const char *file, int line)
+  {
+    attributes["nativeUnits"] = nativeUnits;
+    DataItem dataItem(attributes);
+    dataItem.setConversionRequired(true);
+    auto convertedValue = dataItem.convertValue(value);
+  }
 };
+
+#define TEST_VALUE(attributes, nativeUnits, expected, value) \
+  testValueHelper(attributes, nativeUnits, expected, value, __FILE__, __LINE__)
 
 TEST_F(DataItemTest, Getters)
 {
@@ -193,7 +207,7 @@ TEST_F(DataItemTest, Conversion)
     EXPECT_NEAR(50.8, vec[1], 0.0001);
     EXPECT_NEAR(76.2, vec[2], 0.0001);
   }
-  
+
   std::map<string, string> attributes2;
   attributes2["id"] = "p";
   attributes2["name"] = "position";
@@ -213,7 +227,7 @@ TEST_F(DataItemTest, Conversion)
     EXPECT_NEAR(114.5916, vec[1], 0.0001);
     EXPECT_NEAR(171.8873, vec[2], 0.0001);
   }
-  
+
   std::map<string, string> attributes3;
   attributes3["id"] = "p";
   attributes3["name"] = "position";
@@ -247,6 +261,36 @@ TEST_F(DataItemTest, Conversion)
   ASSERT_TRUE(!item5.conversionRequired());
 
   EXPECT_DOUBLE_EQ(0.13, item5.convertValue(0.13));
+}
+
+TEST_F(DataItemTest, ConvertSimpleUnits)
+{
+  std::map<string, string> attributes;
+  attributes["id"] = "1";
+  attributes["name"] = "DataItemTest";
+  attributes["type"] = "ACCELERATION";
+  attributes["category"] = "SAMPLE";
+
+  TEST_VALUE(attributes, "INCH", 2.0f * 25.4f, 2.0);
+  TEST_VALUE(attributes, "FOOT", 2.0f * 304.8f, 2.0);
+  TEST_VALUE(attributes, "CENTIMETER", 2.0f * 10.0f, 2.0);
+  TEST_VALUE(attributes, "DECIMETER", 2.0f * 100.0f, 2.0);
+  TEST_VALUE(attributes, "METER", 2.0f * 1000.0f, 2.0);
+  TEST_VALUE(attributes, "FAHRENHEIT", (2.0f - 32.0f) * (5.0f / 9.0f), 2.0);
+  TEST_VALUE(attributes, "POUND", 2.0f * 0.45359237f, 2.0);
+  TEST_VALUE(attributes, "GRAM", 2.0f / 1000.0f, 2.0);
+  TEST_VALUE(attributes, "RADIAN", 2.0f * 57.2957795f, 2.0);
+  TEST_VALUE(attributes, "MINUTE", 2.0f * 60.0f, 2.0);
+  TEST_VALUE(attributes, "HOUR", 2.0f * 3600.0f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER", 2.0f, 2.0);
+  TEST_VALUE(attributes, "PERCENT", 2.0f, 2.0);
+  TEST_VALUE(attributes, "REVOLUTION/MINUTE", 2.0f, 2.0);
+  TEST_VALUE(attributes, "REVOLUTION/SECOND", 2.0f * 60.0f, 2.0);
+  TEST_VALUE(attributes, "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, 2.0);
+  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f), 2.0);
+
+  attributes["nativeScale"] = "0.5";
+  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), 2.0);
 }
 
 TEST_F(DataItemTest, Condition)
