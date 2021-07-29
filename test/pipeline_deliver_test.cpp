@@ -114,3 +114,30 @@ TEST_F(PipelineDeliverTest, filter_upcase)
   ASSERT_EQ(101.0, obs2->getValue<double>());
 }
 
+TEST_F(PipelineDeliverTest, extract_duration) 
+{
+  m_agentTestHelper->addAdapter();
+  auto seq = m_agentTestHelper->m_agent->getSequence();
+  m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z@200.1232|Xpos|100.0");
+  ASSERT_EQ(seq + 1, m_agentTestHelper->m_agent->getSequence());
+  auto obs = m_agentTestHelper->m_agent->getFromBuffer(seq);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Xpos", obs->getDataItem()->getName());
+  ASSERT_EQ(100.0, obs->getValue<double>());
+  ASSERT_EQ("2021-01-22T12:33:45.123Z", format(obs->getTimestamp()));
+  ASSERT_EQ(200.1232, obs->get<double>("duration"));
+}
+
+TEST_F(PipelineDeliverTest, unit_conversion)
+{
+  m_agentTestHelper->addAdapter(ConfigOptions{{configuration::ConversionRequired, true}});
+  auto seq = m_agentTestHelper->m_agent->getSequence();
+  m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:48.123Z|amp|10.1");
+  ASSERT_EQ(seq + 1, m_agentTestHelper->m_agent->getSequence());
+  auto obs = m_agentTestHelper->m_agent->getFromBuffer(seq);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("amp", obs->getDataItem()->getName());
+  ASSERT_EQ("KILOAMPERE", obs->getDataItem()->getNativeUnits());
+  std::cout << obs->get<double>("VALUE");
+  ASSERT_EQ(10100.0, obs->getValue<double>());
+}
