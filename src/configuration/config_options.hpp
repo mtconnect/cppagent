@@ -20,7 +20,10 @@
 namespace mtconnect {
   namespace configuration {
 #define DECLARE_CONFIGURATION(name) inline const char *name = #name;
-
+    // Global
+    DECLARE_CONFIGURATION(ExecDirectory);
+    DECLARE_CONFIGURATION(WorkingDirectory);
+    
     // Agent Configuration
     DECLARE_CONFIGURATION(Port);
     DECLARE_CONFIGURATION(ServerIp);

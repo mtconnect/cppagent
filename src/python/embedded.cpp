@@ -32,6 +32,7 @@
 #include "device_model/device.hpp"
 #include "entity.hpp"
 #include "pipeline/transform.hpp"
+#include "pipeline/guard.hpp"
 
 using namespace std;
 
@@ -53,45 +54,233 @@ namespace mtconnect {
       object m_pipeline;
     };
     using ContextPtr = Context *;
-
+    
     struct Wrapper
     {
+      virtual ~Wrapper() {}
       ContextPtr m_context;
     };
+    
+    static object wrap(EntityPtr entity, ContextPtr context);
+
+    struct EntityWrapper : Wrapper
+    {
+      EntityWrapper() {}
+      
+      string name() { return m_entity->getName(); }
+      
+      object property(string name)
+      {
+        auto prop = m_entity->getProperty(name);
+        object res = None;
+        visit(overloaded {
+          [&res](const std::string &s) {
+            if (!s.empty())
+              res = object(s);
+          },
+          [&res](const int64_t v) {
+            res = object(v);
+          },
+          [&res](const bool v) {
+            res = object(v);
+          },
+          [&res](const double v) {
+            res = object(v);
+          },
+          [&res](const Timestamp &v) {
+            res = object(v);
+          },
+          [&res](const Vector &v) {
+            py::list l;
+            for (auto &i : v)
+              l.append(i);
+            res = l;
+          },
+          [&res, this](EntityPtr ent)
+          {
+            res = wrap(ent, m_context);
+          },
+          [&res, this](EntityList &entities)
+          {
+            py::list l;
+            for (auto &i : entities)
+              l.append(wrap(i, m_context));
+            res = l;
+          },
+
+          [](const auto &) {}
+        }, prop);
+        
+        return res;
+      }
+      
+      object value()
+      {
+        return property("VALUE");
+      }
+      
+      object get_list(string name)
+      {
+        auto entities = m_entity->getList(name);
+        if (!entities)
+          return None;
+        else
+        {
+          py::list l;
+          for (auto &i : *entities)
+            l.append(wrap(i, m_context));
+          return object(l);
+        }
+      }
+
+      EntityPtr m_entity;
+    };
+    
+    static object wrap(EntityPtr entity, ContextPtr context)
+    {
+      auto e = context->m_entity();
+      EntityWrapper &wrap = extract<EntityWrapper&>(e);
+      wrap.m_entity = entity;
+      wrap.m_context = context;
+      
+      return e;
+    }
+
+    BOOST_PYTHON_MODULE(entity)
+    {
+      class_<EntityWrapper>("Entity", init<>())
+        .def("name", &EntityWrapper::name)
+        .def("property", &EntityWrapper::property)
+        .def("value", &EntityWrapper::value)
+        .def("get_list", &EntityWrapper::get_list);
+    }
+    
+    using TransformFun = function<const entity::EntityPtr(const entity::EntityPtr)>;
 
     class PythonTransform : public pipeline::Transform
     {
     public:
       using pipeline::Transform::Transform;
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
-
+      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+      {
+        if (m_function)
+          return m_function(entity);
+        else
+          return entity;
+      }
+      
       string name() { return m_name; }
+      TransformFun m_function;
+    };
+    
+    using PythonTransformPtr = shared_ptr<PythonTransform>;
+    
+    struct TransformWrapper : Wrapper, py::wrapper<TransformWrapper>
+    {
+      TransformWrapper() {}
+      TransformWrapper(std::string name)
+      {
+        m_transform = shared_ptr<PythonTransform>(new PythonTransform(name));
+        m_transform->m_function = [this](const EntityPtr entity) {
+          object ent = wrap(entity, m_context);
+          auto res = run(ent);
+          EntityWrapper& wrap = extract<EntityWrapper&>(res);
+          return wrap.m_entity;
+        };
+        m_transform->setGuard([this](const EntityPtr entity) {
+          object obj = wrap(entity, m_context);
+          return guard(obj);
+        });
+      }
+            
+      object next(object entity)
+      {
+        EntityWrapper &e = extract<EntityWrapper&>(entity);
+        auto res = m_transform->next(e.m_entity);
+        return wrap(res, m_context);
+      }
+      
+      virtual object run(object entity)
+      {
+        if (override f = get_override("run"))
+        {
+          return f(entity);
+        }
+        else
+        {
+          EntityWrapper &e = extract<EntityWrapper&>(entity);
+          auto res = (*m_transform)(e.m_entity);
+          return wrap(res, m_context);
+        }
+      }
+      
+      virtual pipeline::GuardAction guard(object entity)
+      {
+        if (override f = get_override("guard"))
+        {
+          pipeline::GuardAction action = f(entity);
+          return action;
+        }
+        else
+        {
+          EntityWrapper &e = extract<EntityWrapper&>(entity);
+          auto res = m_transform->check(e.m_entity);
+          return res;
+        }
+      }
+      
+      string name()
+      {
+        return m_transform->name();
+      }
+      
+      PythonTransformPtr m_transform;
     };
 
     struct PipelineWrapper : Wrapper
     {
       PipelineWrapper() : m_pipeline(nullptr) {}
-
+      
+      bool splice_before(std::string target, object transform)
+      {
+        TransformWrapper &xform = extract<TransformWrapper&>(transform);
+        return m_pipeline->spliceBefore(target, xform.m_transform);
+      }
+      
+      bool splice_after(std::string target, object transform)
+      {
+        TransformWrapper &xform = extract<TransformWrapper&>(transform);
+        return m_pipeline->spliceAfter(target, xform.m_transform);
+      }
+      
       pipeline::Pipeline *m_pipeline;
     };
 
-    BOOST_PYTHON_MODULE(pipeline) { class_<PipelineWrapper>("Pipeline", init<>()); }
-
-    struct EntityWrapper : Wrapper
+    BOOST_PYTHON_MODULE(pipeline)
     {
-      EntityWrapper() {}
+      class_<PipelineWrapper>("Pipeline", init<>())
+        .def("splice_before", &PipelineWrapper::splice_before)
+        .def("splice_after", &PipelineWrapper::splice_after);
+      
+      class_<TransformWrapper>("Transform", init<>())
+        .def(init<std::string>())
+        .def("run", &TransformWrapper::run)
+        .def("guard", &TransformWrapper::guard)
+        .def("next", &TransformWrapper::next);
+      
+      enum_<pipeline::GuardAction>("GuardAction")
+        .value("run", pipeline::GuardAction::RUN)
+        .value("continue", pipeline::GuardAction::CONTINUE)
+        .value("skip", pipeline::GuardAction::SKIP);
+    }
 
-      EntityPtr m_entity;
-    };
-
-    BOOST_PYTHON_MODULE(entity) { class_<EntityWrapper>("Entity", init<>()); }
 
     struct SourceWrapper : Wrapper
     {
       SourceWrapper() {}
 
-      object getName() { return object(m_source->getName()); }
-      object getPipeline()
+      object get_name() { return object(m_source->getName()); }
+      object get_pipeline()
       {
         auto pipe = m_context->m_pipeline();
         PipelineWrapper &wrap = extract<PipelineWrapper &>(pipe);
@@ -107,14 +296,14 @@ namespace mtconnect {
     BOOST_PYTHON_MODULE(source)
     {
       class_<SourceWrapper>("Source", init<>())
-          .def("get_name", &SourceWrapper::getName)
-          .def("get_pipeline", &SourceWrapper::getPipeline);
+          .def("get_name", &SourceWrapper::get_name)
+          .def("get_pipeline", &SourceWrapper::get_pipeline);
     }
 
     struct AgentWrapper : Wrapper
     {
       AgentWrapper() {}
-      object getDevice(const std::string name)
+      object get_device(const std::string name)
       {
         if (m_agent == nullptr)
           return None;
@@ -123,8 +312,7 @@ namespace mtconnect {
           auto dev = m_agent->getDeviceByName(name);
           if (dev)
           {
-            auto uuid = dev->getUuid();
-            return object(*uuid);
+            return wrap(dev, m_context);
           }
           else
           {
@@ -133,7 +321,7 @@ namespace mtconnect {
         }
       }
 
-      py::list getSources()
+      py::list get_sources()
       {
         auto sources = py::list();
         if (m_agent == nullptr)
@@ -152,7 +340,7 @@ namespace mtconnect {
         return sources;
       }
 
-      object getSource(const std::string name)
+      object get_source(const std::string name)
       {
         if (m_agent != nullptr)
         {
@@ -210,11 +398,13 @@ namespace mtconnect {
 
         m_context->m_source = source.attr("__dict__")["Source"];
         m_context->m_pipeline = pipe.attr("__dict__")["Pipeline"];
+        m_context->m_transform = pipe.attr("__dict__")["Transform"];
+        m_context->m_entity = entity.attr("__dict__")["Entity"];
 
         auto agentClass = class_<AgentWrapper>("Agent", init<>())
-                              .def("get_device", &AgentWrapper::getDevice)
-                              .def("get_source", &AgentWrapper::getSource)
-                              .def("get_sources", &AgentWrapper::getSources);
+                              .def("get_device", &AgentWrapper::get_device)
+                              .def("get_source", &AgentWrapper::get_source)
+                              .def("get_sources", &AgentWrapper::get_sources);
         main_namespace["Agent"] = agentClass;
         auto pyagent = agentClass();
         AgentWrapper &wrapper = extract<AgentWrapper &>(pyagent);

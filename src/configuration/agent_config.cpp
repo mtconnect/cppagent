@@ -649,7 +649,8 @@ namespace mtconnect {
       ConfigOptions options;
       GetOptions(config, options,
                  {{configuration::PreserveUUID, true},
-                  {configuration::Port, 5000},
+                  {configuration::WorkingDirectory, m_working},
+                  {configuration::ExecDirectory, m_exePath},
                   {configuration::ServerIp, "0.0.0.0"s},
                   {configuration::BufferSize, int(DEFAULT_SLIDING_BUFFER_EXP)},
                   {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
