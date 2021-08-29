@@ -49,7 +49,7 @@ namespace mtconnect
           [this](SessionPtr session, rest_sink::status st, const string &msg) {
             auto printer = m_sinkContract->getPrinter("xml");
             auto doc = printError(printer, "INVALID_REQUEST", msg);
-            session->writeResponse({st, doc, printer->mimeType()});
+            session->writeFailureResponse({st, doc, printer->mimeType()});
           });
 
       createProbeRoutings();
@@ -404,7 +404,7 @@ namespace mtconnect
     struct AsyncSampleResponse
     {
       AsyncSampleResponse(rest_sink::SessionPtr &session, boost::asio::io_context::strand &strand)
-        : m_session(session), m_observer(strand), m_last(chrono::system_clock::now())
+        : m_session(session), m_observer(strand), m_last(chrono::system_clock::now()), m_timer(strand.context())
       {
       }
 
@@ -420,6 +420,7 @@ namespace mtconnect
       FilterSet m_filter;
       ChangeObserver m_observer;
       chrono::system_clock::time_point m_last;
+      boost::asio::steady_timer m_timer;
     };
 
     void RestService::streamSampleRequest(rest_sink::SessionPtr session, const Printer *printer,
@@ -484,6 +485,8 @@ namespace mtconnect
     {
       NAMED_SCOPE("RestService::streamSampleWriteComplete");
 
+      asyncResponse->m_last = chrono::system_clock::now();
+      
       if (asyncResponse->m_endOfBuffer)
       {
         using boost::placeholders::_1;
@@ -511,6 +514,8 @@ namespace mtconnect
       {
         LOG(warning) << "Unexpected error streamNextSampleChunk, aborting";
         LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
+        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error, "Unexpected error streamNextSampleChunk, aborting");
+
         return;
       }
       
@@ -535,6 +540,19 @@ namespace mtconnect
         }
         else
         {
+          // The observer can be signaled before the interval has expired. If this occurs, then
+          // Wait the remaining duration of the interval.
+          auto delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() -
+                                                                   asyncResponse->m_last);
+          if (delta < asyncResponse->m_interval)
+          {
+            asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval - delta);
+            asyncResponse->m_timer.async_wait(
+                asio::bind_executor(m_strand, boost::bind(&RestService::streamNextSampleChunk, this,
+                                                          asyncResponse, _1)));
+            return;
+          }
+          
           // Get the sequence # signaled in the observer when the earliest event arrived.
           // This will allow the next set of data to be pulled. Any later events will have
           // greater sequence numbers, so this should not cause a problem. Also, signaled
@@ -555,6 +573,7 @@ namespace mtconnect
         if (asyncResponse->m_sequence < getFirstSequence())
         {
           LOG(warning) << "Client fell too far behind, disconnecting";
+          asyncResponse->m_session->fail(boost::beast::http::status::not_found, "Client fell too far behind, disconnecting");
           return;
         }
 
@@ -579,6 +598,7 @@ namespace mtconnect
         
         if (m_logStreamData)
           asyncResponse->m_log << content << endl;
+        
         asyncResponse->m_session->writeChunk(
             content,
             asio::bind_executor(m_strand, boost::bind(&RestService::streamSampleWriteComplete, this,

@@ -45,7 +45,7 @@ namespace mtconnect
 
         if (m_sequence != UINT64_MAX)
         {
-          boost::asio::post(boost::asio::bind_executor(m_strand, boost::bind(handler, boost::system::error_code{})));
+          boost::asio::post(boost::bind(handler, boost::system::error_code{}));
         }
         else
         {
