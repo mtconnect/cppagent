@@ -486,7 +486,6 @@ namespace mtconnect {
       NAMED_SCOPE("RestService::streamSampleWriteComplete");
 
       asyncResponse->m_last = chrono::system_clock::now();
-
       if (asyncResponse->m_endOfBuffer)
       {
         using boost::placeholders::_1;
@@ -516,7 +515,6 @@ namespace mtconnect {
         LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
         asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
                                        "Unexpected error streamNextSampleChunk, aborting");
-
         return;
       }
 
