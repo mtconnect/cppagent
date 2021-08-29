@@ -32,6 +32,9 @@ namespace mtconnect
   using namespace observation;
   class ChangeObserverTest : public testing::Test
   {
+  public:
+    ChangeObserverTest() : m_strand(m_context) {}
+    
    protected:
     void SetUp() override
     {
@@ -44,12 +47,13 @@ namespace mtconnect
     }
 
     boost::asio::io_context m_context;
+    boost::asio::io_context::strand m_strand;
     std::unique_ptr<mtconnect::ChangeSignaler> m_signaler;
   };
 
   TEST_F(ChangeObserverTest, AddObserver)
   {
-    mtconnect::ChangeObserver changeObserver(m_context);
+    mtconnect::ChangeObserver changeObserver(m_strand);
 
     ASSERT_FALSE(m_signaler->hasObserver(&changeObserver));
     m_signaler->addObserver(&changeObserver);
@@ -58,7 +62,7 @@ namespace mtconnect
 
   TEST_F(ChangeObserverTest, SignalObserver)
   {
-    mtconnect::ChangeObserver changeObserver(m_context);
+    mtconnect::ChangeObserver changeObserver(m_strand);
 
     auto const expectedExeTime = 500ms;
     auto const expectedSeq = uint64_t{100};
@@ -121,7 +125,7 @@ namespace mtconnect
     mtconnect::ChangeObserver *changeObserver = nullptr;
 
     {
-      changeObserver = new mtconnect::ChangeObserver(m_context);
+      changeObserver = new mtconnect::ChangeObserver(m_strand);
       m_signaler->addObserver(changeObserver);
       ASSERT_TRUE(m_signaler->hasObserver(changeObserver));
       delete changeObserver;  // Not setting to nullptr so we can test observer was removed
@@ -132,7 +136,7 @@ namespace mtconnect
 
   TEST_F(ChangeObserverTest, ChangeSequence)
   {
-    mtconnect::ChangeObserver changeObserver(m_context);
+    mtconnect::ChangeObserver changeObserver(m_strand);
 
     m_signaler->addObserver(&changeObserver);
     ASSERT_FALSE(changeObserver.wasSignaled());
@@ -163,7 +167,7 @@ namespace mtconnect
   TEST_F(ChangeObserverTest, ChangeSequence2)
   {
     using namespace std::chrono_literals;
-    mtconnect::ChangeObserver changeObserver(m_context);
+    mtconnect::ChangeObserver changeObserver(m_strand);
 
     m_signaler->addObserver(&changeObserver);
 
