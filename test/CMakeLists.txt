@@ -1,36 +1,37 @@
 
 include(GoogleTest)
 
-add_library(TestSinkService SHARED testsink_service.cpp)
+add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
-  TestSinkService
+  sink_plugin_test
   PUBLIC
     "${CONAN_INCLUDE_DIRS}"
     "${PROJECT_BINARY_DIR}/agent_lib"
     "${CMAKE_CURRENT_LIST_DIR}/../src"
     )
-target_compile_definitions(TestSinkService
+target_compile_definitions(sink_plugin_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:TestSinkService>/../Resources\""
+    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
     $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
     $<$<PLATFORM_ID:Windows>:NOMINMAX>
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
-
-target_compile_features(TestSinkService PUBLIC ${CXX_COMPILE_FEATURES})
-set_property(TARGET TestSinkService PROPERTY
+    
+target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
+set_property(TARGET sink_plugin_test PROPERTY
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
 
 target_link_libraries(
-  TestSinkService
+  sink_plugin_test
   PRIVATE
   agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
-set_target_properties(TestSinkService PROPERTIES FOLDER "test/sink")
+
+set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
 
 if (APPLE)
-  set_target_properties(TestSinkService PROPERTIES
+  set_target_properties(sink_plugin_test PROPERTIES
     FRAMEWORK TRUE
     FRAMEWORK_VERSION A
     MACOSX_FRAMEWORK_IDENTIFIER adapter_plugin_test
@@ -41,6 +42,8 @@ endif()
 
 #########
 add_library(adapter_plugin_test SHARED testadapter_service.cpp testadapter_service.hpp)
+
+#########
 target_include_directories(
   adapter_plugin_test
   PUBLIC
@@ -75,6 +78,7 @@ target_link_libraries(
   agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
+
 set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
 
 set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
@@ -201,7 +205,14 @@ add_custom_command(
   "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
   COMMENT "Copying to output directory")
 
-add_custom_command(TARGET TestSinkService POST_BUILD
+if(NOT MSVC)
+add_custom_command(TARGET sink_plugin_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        "${PROJECT_BINARY_DIR}/lib/*TestSinkService*"
-        "$<TARGET_FILE_DIR:config_test>/../Resources")
+        "${PROJECT_BINARY_DIR}/lib/*sink_plugin_test*"
+        "$<TARGET_FILE_DIR:config_test>")
+
+add_custom_command(TARGET adapter_plugin_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${PROJECT_BINARY_DIR}/lib/*adapter_plugin_test*"
+        "$<TARGET_FILE_DIR:config_test>")
+endif()
