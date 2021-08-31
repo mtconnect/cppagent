@@ -491,14 +491,14 @@ namespace
     m_config->updateWorkingDirectory();
 
     string str("Sinks {\n"
-                    "TestSinkService {\n"
+                    "sink_plugin_test {\n"
                     "}\n"
                "}\n");
     m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto sink = agent->findSink("TestSinkService");
+    const auto sink = agent->findSink("sink_plugin_test");
     ASSERT_TRUE(sink != nullptr);
   }
 
@@ -509,17 +509,58 @@ namespace
     m_config->updateWorkingDirectory();
 
     string str("Sinks {\n"
-                    "TestSinkService:Sink1 {\n"
+                    "sink_plugin_test:Sink1 {\n"
                     "}\n"
                "}\n");
     m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto sink1 = agent->findSink("TestSinkService");
+    const auto sink1 = agent->findSink("sink_plugin_test");
     ASSERT_TRUE(sink1 == nullptr);
 
     const auto sink2 = agent->findSink("Sink1");
     ASSERT_TRUE(sink2 != nullptr);
+  }
+
+  //
+  TEST_F(ConfigTest, dynamic_load_adapter_bad)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str("Adapters {\n"
+                    "BadAdapter:Test {\n"
+                     "Host=Host1 \n"
+                     "Port=7878 \n"
+                    "}\n"
+               "}\n");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto adapter = agent->findSource("_Host1_7878");
+    ASSERT_TRUE(adapter == nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_adapter_simple)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str("Adapters {\n"
+                  "adapter_plugin_test:Test {\n"
+                     "Host=Host1 \n"
+                     "Port=7878 \n"
+                  "}\n"
+             "}\n");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto adapter = agent->findSource("_Host1_7878");
+    ASSERT_TRUE(adapter != nullptr);
   }
 }  // namespace
