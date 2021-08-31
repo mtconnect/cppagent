@@ -25,16 +25,16 @@ using namespace mtconnect::adapter;
 
 namespace mtconnect
 {
-    class TestAdapterService : public Adapter
+    class adapter_plugin_test : public Adapter
     {
     public:
-      TestAdapterService(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
+      adapter_plugin_test(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
                          const mtconnect::ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline)
           :Adapter(context, server, port, options, pipeline)
       {
       }
 
-      ~TestAdapterService() = default;
+      ~adapter_plugin_test() = default;
 
       bool start() override { return true; }
       void stop() override {}
@@ -43,15 +43,15 @@ namespace mtconnect
       void protocolCommand(const std::string &data) override {}
 
       // Factory method
-      static boost::shared_ptr<TestAdapterService> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
+      static boost::shared_ptr<adapter_plugin_test> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
                                                           const mtconnect::ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline) {
-          return boost::shared_ptr<TestAdapterService>(
-                      new TestAdapterService(name, context, server, port, options, pipeline) );
+          return boost::shared_ptr<adapter_plugin_test>(
+                      new adapter_plugin_test(name, context, server, port, options, pipeline) );
       }
     };
 
     BOOST_DLL_ALIAS(
-          TestAdapterService::create,
+          adapter_plugin_test::create,
           create_adapter_plugin                               // <-- ...this alias name
           )
 }  // namespace mtconnect
