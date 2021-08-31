@@ -24,16 +24,16 @@ using namespace std;
 
 namespace mtconnect
 {
-    class TestSinkService : public Sink
+    class sink_plugin_test : public Sink
     {
     public:
-      TestSinkService(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
+      sink_plugin_test(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
                   const ConfigOptions &config)
           : Sink(name, move(contract))
       {
       }
 
-      ~TestSinkService() = default;
+      ~sink_plugin_test() = default;
 
       // Sink Methods
       void start() override {}
@@ -43,15 +43,15 @@ namespace mtconnect
       bool publish(asset::AssetPtr asset) override { return false; }
 
       // Factory method
-      static boost::shared_ptr<TestSinkService> create(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
+      static boost::shared_ptr<sink_plugin_test> create(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
                                                     const ConfigOptions &config) {
-        return boost::shared_ptr<TestSinkService>(
-                    new TestSinkService(name, context, move(contract), config) );
+        return boost::shared_ptr<sink_plugin_test>(
+                    new sink_plugin_test(name, context, move(contract), config) );
       }
     };
 
     BOOST_DLL_ALIAS(
-        TestSinkService::create,
+        sink_plugin_test::create,
         create_plugin
     )
 
