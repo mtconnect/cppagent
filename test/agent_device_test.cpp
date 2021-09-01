@@ -263,6 +263,7 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
   
   startServer();
   runUntil(10s, [this](){ return m_connected; });
+  m_agentTestHelper->m_ioContext.run_for(10ms);
 
   {
     PARSE_XML_RESPONSE("/Agent/current");

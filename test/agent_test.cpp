@@ -2596,7 +2596,7 @@ TEST_F(AgentTest, StreamDataObserver)
       m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|" + to_string(i));
     }
     m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
-    m_agentTestHelper->m_ioContext.run_one_for(120ms);
+    m_agentTestHelper->m_ioContext.run_for(200ms);
 
     PARSE_XML_CHUNK();
     ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
