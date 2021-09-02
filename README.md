@@ -1193,8 +1193,8 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 
 ### Setup the build
 
-    sudo apt-get install build-essential python3.9 git
-	pip3 install conan
+    sudo apt-get install build-essential python3.9 python3-pip git cmake
+	python3.9 -m pip install conan
 
 ### Download the source
 

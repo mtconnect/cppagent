@@ -64,6 +64,17 @@ namespace mtconnect
         if (complete)
           complete();
       }
+      void writeFailureResponse(const Response &response, Complete complete = nullptr) override
+      {
+        if (m_streaming)
+        {
+          writeChunk(response.m_body, complete);
+        }
+        else
+        {
+          writeResponse(response, complete);
+        }
+      }
       void beginStreaming(const std::string &mimeType, Complete complete) override
       {
         m_mimeType = mimeType;

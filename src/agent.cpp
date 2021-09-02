@@ -796,7 +796,7 @@ string Agent::devicesAndPath(const std::optional<string> &path, const DevicePtr 
   }
   else
   {
-    dataPath = path ? *path : "//Devices/Device";
+    dataPath = path ? *path : "//Devices/Device|//Devices/Agent";
   }
 
   return dataPath;
