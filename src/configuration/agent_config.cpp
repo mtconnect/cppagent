@@ -244,7 +244,8 @@ namespace mtconnect
     AgentConfiguration::~AgentConfiguration()
     {
       b_logger::core::get()->remove_all_sinks();
-      m_sink.reset();
+      if (m_sink)
+        m_sink.reset();
     }
 
 #ifdef _WINDOWS
@@ -782,6 +783,11 @@ namespace mtconnect
               typedef shared_ptr<mtconnect::Sink> (pluginapi_create_t)(const string &name, asio::io_context &context, SinkContractPtr &&contract,
                                                                        const ConfigOptions &options);
               boost::function<pluginapi_create_t> creator;
+
+              // keep the list of dynamic sink references
+              // the objects created by DLL cannot be deleted in Windows for some reason
+              static std::list< shared_ptr<mtconnect::Sink> > dynamic_sink_list;
+
               try {
                   creator = boost::dll::import_alias<pluginapi_create_t>(
                       dllPath,                                              // path to library
@@ -808,6 +814,8 @@ namespace mtconnect
               sinkContract = m_agent->makeSinkContract();
               shared_ptr<mtconnect::Sink> sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
               m_agent->addSink(sink_server);
+              dynamic_sink_list.push_back(sink_server);
+
               LOG(info) << "Loaded sink plugin " << dllPath << " for " << sinkId;
 
           }
@@ -956,6 +964,12 @@ namespace mtconnect
                                                                const ConfigOptions &options,
                                                                std::unique_ptr<AdapterPipeline> &pipeline);
               boost::function<adapter_pluginapi_create_t> creator;
+
+
+              // keep the list of dynamic adapter references
+              // the objects created by DLL cannot be deleted in Windows for some reason
+              static std::list< shared_ptr<Adapter> > dynamic_adapter_list;
+
               try {
                   creator = boost::dll::import_alias<adapter_pluginapi_create_t>(
                       dllPath,                                              // path to library
@@ -985,6 +999,8 @@ namespace mtconnect
               shared_ptr<Adapter> adp = creator(deviceName, m_context, host,
                       port, adapterOptions, pipeline);
               m_agent->addSource(adp, false);
+              dynamic_adapter_list.push_back(adp);
+
               LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName << " on " << host << ":" << port;
           }
           else {
