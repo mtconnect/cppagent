@@ -784,9 +784,9 @@ namespace mtconnect
                                                                        const ConfigOptions &options);
               boost::function<pluginapi_create_t> creator;
 
-              // keep the list of dynamic sink references
-              // the objects created by DLL cannot be deleted in Windows for some reason
-              static std::list< shared_ptr<mtconnect::Sink> > dynamic_sink_list;
+              // keep the list of dynamic sink creators
+              // the share library will be unloaded if they are out of scope
+              static std::list< boost::function<pluginapi_create_t> > dynamic_sink_creators;
 
               try {
                   creator = boost::dll::import_alias<pluginapi_create_t>(
@@ -814,7 +814,7 @@ namespace mtconnect
               sinkContract = m_agent->makeSinkContract();
               shared_ptr<mtconnect::Sink> sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
               m_agent->addSink(sink_server);
-              dynamic_sink_list.push_back(sink_server);
+              dynamic_sink_creators.push_back(creator);
 
               LOG(info) << "Loaded sink plugin " << dllPath << " for " << sinkId;
 
@@ -966,9 +966,9 @@ namespace mtconnect
               boost::function<adapter_pluginapi_create_t> creator;
 
 
-              // keep the list of dynamic adapter references
-              // the objects created by DLL cannot be deleted in Windows for some reason
-              static std::list< shared_ptr<Adapter> > dynamic_adapter_list;
+              // keep the list of dynamic adapter creator
+              // shared library will be unloaded if they are out of scope
+              static std::list<  boost::function<adapter_pluginapi_create_t> > dynamic_adapter_creators;
 
               try {
                   creator = boost::dll::import_alias<adapter_pluginapi_create_t>(
@@ -999,7 +999,7 @@ namespace mtconnect
               shared_ptr<Adapter> adp = creator(deviceName, m_context, host,
                       port, adapterOptions, pipeline);
               m_agent->addSource(adp, false);
-              dynamic_adapter_list.push_back(adp);
+              dynamic_adapter_creators.push_back(creator);
 
               LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName << " on " << host << ":" << port;
           }
