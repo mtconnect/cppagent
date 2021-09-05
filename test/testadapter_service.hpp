@@ -43,10 +43,9 @@ namespace mtconnect
       void protocolCommand(const std::string &data) override {}
 
       // Factory method
-      static boost::shared_ptr<adapter_plugin_test> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
+      static std::shared_ptr<adapter_plugin_test> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
                                                           const mtconnect::ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline) {
-          return boost::shared_ptr<adapter_plugin_test>(
-                      new adapter_plugin_test(name, context, server, port, options, pipeline) );
+          return std::make_shared<adapter_plugin_test>(name, context, server, port, options, pipeline);
       }
     };
 

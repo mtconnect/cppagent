@@ -780,7 +780,7 @@ namespace mtconnect
 
               dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
 
-              typedef shared_ptr<mtconnect::Sink> (pluginapi_create_t)(const string &name, asio::io_context &context, SinkContractPtr &&contract,
+              typedef std::shared_ptr<mtconnect::Sink> (pluginapi_create_t)(const string &name, asio::io_context &context, SinkContractPtr &&contract,
                                                                        const ConfigOptions &options);
               boost::function<pluginapi_create_t> creator;
 
@@ -812,7 +812,7 @@ namespace mtconnect
               }
 
               sinkContract = m_agent->makeSinkContract();
-              shared_ptr<mtconnect::Sink> sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
+              auto sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
               m_agent->addSink(sink_server);
               dynamic_sink_creators.push_back(creator);
 
@@ -959,7 +959,7 @@ namespace mtconnect
 
               dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
 
-              typedef shared_ptr<Adapter> (adapter_pluginapi_create_t)(const string &name, asio::io_context &context,
+              typedef std::shared_ptr<Adapter> (adapter_pluginapi_create_t)(const string &name, asio::io_context &context,
                                                                const std::string &server, const unsigned int port,
                                                                const ConfigOptions &options,
                                                                std::unique_ptr<AdapterPipeline> &pipeline);
@@ -996,7 +996,7 @@ namespace mtconnect
               auto host = get<string>(adapterOptions[configuration::Host]);
               auto port = get<int>(adapterOptions[configuration::Port]);
 
-              shared_ptr<Adapter> adp = creator(deviceName, m_context, host,
+              auto adp = creator(deviceName, m_context, host,
                       port, adapterOptions, pipeline);
               m_agent->addSource(adp, false);
               dynamic_adapter_creators.push_back(creator);
