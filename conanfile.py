@@ -11,7 +11,7 @@ class CppAgentConan(ConanFile):
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.75.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
-    	        "mqtt_cpp/9.0.0", "openssl/1.1.1k"]
+    	        "mqtt_cpp/11.0.0", "openssl/1.1.1k"]
     build_policy = "missing"
     default_options = {
         "run_tests": True,
@@ -21,7 +21,7 @@ class CppAgentConan(ConanFile):
         "boost:lzma": False,
         "boost:without_wave": True,
         "boost:without_test": True,
-        "boost:without_json": True,
+        "boost:without_json": False,
         "boost:without_mpi": True,
         "boost:without_stacktrace": True,
         "boost:extra_b2_flags": "-j 2 -d +1 cxxstd=17 ",

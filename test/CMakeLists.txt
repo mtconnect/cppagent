@@ -1,6 +1,62 @@
 
 include(GoogleTest)
 
+add_library(sink_plugin_test SHARED testsink_service.cpp)
+target_include_directories(
+  sink_plugin_test
+  PUBLIC
+    "${CONAN_INCLUDE_DIRS}"
+    "${PROJECT_BINARY_DIR}/agent_lib"
+    "${CMAKE_CURRENT_LIST_DIR}/../src"
+    )
+target_compile_definitions(sink_plugin_test
+    PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
+    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
+    $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
+    $<$<PLATFORM_ID:Windows>:NOMINMAX>
+    $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
+    $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
+  
+target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
+set_property(TARGET sink_plugin_test PROPERTY
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
+
+target_link_libraries(
+  sink_plugin_test
+  PRIVATE
+  agent_lib
+  $<$<PLATFORM_ID:Windows>:shlwapi>
+  )
+
+#########
+add_library(adapter_plugin_test SHARED testadapter_service.cpp)
+target_include_directories(
+  adapter_plugin_test
+  PUBLIC
+    "${CONAN_INCLUDE_DIRS}"
+    "${PROJECT_BINARY_DIR}/agent_lib"
+    "${CMAKE_CURRENT_LIST_DIR}/../src"
+    )
+target_compile_definitions(adapter_plugin_test
+    PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
+    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
+    $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
+    $<$<PLATFORM_ID:Windows>:NOMINMAX>
+    $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
+    $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
+
+target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
+set_property(TARGET adapter_plugin_test PROPERTY
+    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
+
+target_link_libraries(
+  adapter_plugin_test
+  PRIVATE
+  agent_lib
+  $<$<PLATFORM_ID:Windows>:shlwapi>
+  )
+
+
 set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
 add_library(agent_test_lib STATIC ${AGENT_TEST_LIB_SOURCES})
 target_include_directories(
@@ -119,3 +175,15 @@ add_custom_command(
   "${CMAKE_CURRENT_SOURCE_DIR}/probe.xml"
   "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
   COMMENT "Copying to output directory")
+
+if(NOT MSVC)
+add_custom_command(TARGET sink_plugin_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${PROJECT_BINARY_DIR}/lib/*sink_plugin_test*"
+        "$<TARGET_FILE_DIR:config_test>")
+
+add_custom_command(TARGET adapter_plugin_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "${PROJECT_BINARY_DIR}/lib/*adapter_plugin_test*"
+        "$<TARGET_FILE_DIR:config_test>")
+endif()
