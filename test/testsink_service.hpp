@@ -43,10 +43,9 @@ namespace mtconnect
       bool publish(asset::AssetPtr asset) override { return false; }
 
       // Factory method
-      static boost::shared_ptr<sink_plugin_test> create(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
+      static std::shared_ptr<sink_plugin_test> create(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
                                                     const ConfigOptions &config) {
-        return boost::shared_ptr<sink_plugin_test>(
-                    new sink_plugin_test(name, context, move(contract), config) );
+        return std::make_shared<sink_plugin_test>(name, context, move(contract), config);
       }
     };
 
