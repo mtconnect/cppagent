@@ -7,7 +7,7 @@ class CppAgentConan(ConanFile):
     url = "https://github.com/mtconnect/cppagent_dev.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
-    options = { "run_tests": [True, False] }
+    options = { "run_tests": [True, False], "build_tests": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.75.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
@@ -15,6 +15,7 @@ class CppAgentConan(ConanFile):
     build_policy = "missing"
     default_options = {
         "run_tests": True,
+        "build_tests": True,
 
         "boost:shared": False,
         "boost:bzip2": False,
@@ -57,6 +58,12 @@ class CppAgentConan(ConanFile):
             raise Exception("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")
         
         self.settings.compiler.cppstd = 17
+
+        if self.windows_xp:
+            self.options.build_tests = False
+
+        if not self.options.build_tests:
+            self.options.run_tests = False
         
         if self.windows_xp:
             self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0501 "
@@ -70,15 +77,15 @@ class CppAgentConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.verbose = True
-        if self.windows_xp:
+        if not self.options.build_tests:
             cmake.definitions['AGENT_ENABLE_UNITTESTS'] = 'OFF'
+            
+        if self.windows_xp:
             cmake.definitions['WINVER'] = '0x0501'
-        else:
-            flags = False
 
         cmake.configure()
         cmake.build()
-        if not self.windows_xp and self.options.run_tests:
+        if self.options.run_tests:
             cmake.test()
 
     def imports(self):
