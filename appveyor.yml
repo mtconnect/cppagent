@@ -41,7 +41,6 @@ before_build:
       set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
       pip install conan
       conan export conan/mqtt_cpp
-      conan export conan/boost/all boost/1.75.0@
       conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False
   - sh: |-
       export PATH=$HOME/venv3.9/bin:$PATH
