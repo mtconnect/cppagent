@@ -50,6 +50,7 @@ namespace mtconnect {
 
       void run() override;
       void writeResponse(const Response &response, Complete complete = nullptr) override;
+      void writeFailureResponse(const Response &response, Complete complete = nullptr) override;
       void beginStreaming(const std::string &mimeType, Complete complete) override;
       void writeChunk(const std::string &chunk, Complete complete) override;
       void closeStream() override;

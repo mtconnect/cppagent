@@ -1156,8 +1156,7 @@ Clone the agent to another directory:
 Make a build subdirectory of `cppagent_dev`
 
     cd cppagent_dev
-	conan export conan/mqtt_cpp
-	conan export conan/boost/all boost/1.75.0@
+	conan export conan\mqtt_cpp
 	
 ####  To build for 64 bit Windows
 	
@@ -1193,8 +1192,8 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 
 ### Setup the build
 
-    sudo apt-get install build-essential python3.9 git
-	pip3 install conan
+    sudo apt-get install build-essential python3.9 python3-pip git cmake
+	python3.9 -m pip install conan
 
 ### Download the source
 

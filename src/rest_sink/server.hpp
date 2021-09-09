@@ -69,7 +69,7 @@ namespace mtconnect {
 
         m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
           Response response(st, msg, "text/plain");
-          session->writeResponse(response);
+          session->writeFailureResponse(response);
           return true;
         };
 
