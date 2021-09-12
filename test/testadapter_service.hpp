@@ -30,7 +30,7 @@ namespace mtconnect
     public:
       adapter_plugin_test(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
                          const mtconnect::ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline)
-          :Adapter(context, server, port, options, pipeline)
+          : Adapter(name, options)
       {
       }
 
@@ -38,9 +38,6 @@ namespace mtconnect
 
       bool start() override { return true; }
       void stop() override {}
-
-      void processData(const std::string &data) override {}
-      void protocolCommand(const std::string &data) override {}
 
       // Factory method
       static std::shared_ptr<adapter_plugin_test> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,

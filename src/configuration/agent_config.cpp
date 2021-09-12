@@ -1019,9 +1019,7 @@ namespace mtconnect {
 
           LOG(info) << protocol << ": Adding adapter for " << deviceName << " on " << host << ":"
                     << port;
-	  
-          auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-
+          
           vector<string> deviceHeader;
                 boost::split(deviceHeader, block.first, boost::is_any_of(":"));
 
@@ -1082,6 +1080,7 @@ namespace mtconnect {
               auto host = get<string>(adapterOptions[configuration::Host]);
               auto port = get<int>(adapterOptions[configuration::Port]);
 
+              auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
               auto adp = creator(deviceName, m_context, host,
                       port, adapterOptions, pipeline);
               m_agent->addSource(adp, false);
@@ -1090,11 +1089,12 @@ namespace mtconnect {
               LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName << " on " << host << ":" << port;
           }
           else {
-              LOG(info) << "Adding adapter for " << deviceName << " on "
+            LOG(info) << "Adding adapter for " << deviceName << " on "
                         << get<string>(adapterOptions[configuration::Host]) << ":"
                         << get<int>(adapterOptions[configuration::Port]);
 
-              auto adp = make_shared<Adapter>(
+            auto pipeline = make_unique<shdr::ShdrPipeline>(m_pipelineContext);
+            auto adp = make_shared<shdr::ShdrAdapter>(
                   m_context, get<string>(adapterOptions[configuration::Host]),
                   get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
               m_agent->addSource(adp, false);

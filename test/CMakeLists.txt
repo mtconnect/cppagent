@@ -16,7 +16,7 @@ target_compile_definitions(sink_plugin_test
     $<$<PLATFORM_ID:Windows>:NOMINMAX>
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
-  
+
 target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
 set_property(TARGET sink_plugin_test PROPERTY
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
@@ -27,6 +27,7 @@ target_link_libraries(
   agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
+set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
 
 #########
 add_library(adapter_plugin_test SHARED testadapter_service.cpp)
@@ -55,6 +56,7 @@ target_link_libraries(
   agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
+set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
 
 
 set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
@@ -132,10 +134,10 @@ add_agent_test(json_parser TRUE entity)
 add_agent_test(json_printer TRUE entity)
 add_agent_test(qname FALSE entity)
 
-add_agent_test(file_cache FALSE rest_sink)
-add_agent_test(http_server FALSE rest_sink)
-add_agent_test(tls_http_server FALSE rest_sink)
-add_agent_test(routing FALSE rest_sink)
+add_agent_test(file_cache FALSE sink/rest_sink)
+add_agent_test(http_server FALSE sink/rest_sink)
+add_agent_test(tls_http_server FALSE sink/rest_sink)
+add_agent_test(routing FALSE sink/rest_sink)
 
 add_agent_test(json_printer_asset TRUE json)
 add_agent_test(json_printer_error TRUE json)

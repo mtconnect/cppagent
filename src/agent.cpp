@@ -595,7 +595,7 @@ void Agent::addSource(SourcePtr source, bool start)
   if (start)
     source->start();
 
-  auto adapter = dynamic_cast<adapter::Adapter*>(source.get());
+  auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
   if (m_agentDevice && adapter)
   {
     m_agentDevice->addAdapter(adapter);
