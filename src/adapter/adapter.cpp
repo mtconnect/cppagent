@@ -110,7 +110,10 @@ namespace mtconnect
 
 
 
-    inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }
+    inline bool is_true(const std::string &value) {
+      auto v = tolower(value);
+      return v == "yes" || v == "true";
+    }
 
     void Adapter::protocolCommand(const std::string &data)
     {
@@ -119,12 +122,13 @@ namespace mtconnect
 
       if (std::regex_match(data, match, pattern))
       {
-        auto command = match[1].str();
+        auto command = tolower(match[1].str());
         auto value = match[2].str();
+        
+        g_logger << dlib::LDEBUG << "Received command: " << command << " with value " << value;
 
         ConfigOptions options;
 
-        toLowerCase(command);
         if (command == "conversionrequired")
           options[configuration::ConversionRequired] = is_true(value);
         else if (command == "relativetime")
@@ -134,11 +138,14 @@ namespace mtconnect
         else if (command == "device")
           options[configuration::Device] = value;
         else if (command == "shdrversion")
-          options[configuration::ShdrVersion] = value;
+          options[configuration::ShdrVersion] = stringToInt(value, 1);
 
 
         if (options.size() > 0)
+        {
+          g_logger << dlib::LDEBUG << "  setting adapter options and restarting pipeline";
           setOptions(options);
+        }
         else if (m_handler && m_handler->m_command)
           m_handler->m_command(data, getIdentity());
       }
