@@ -170,6 +170,16 @@ namespace mtconnect
     return text;
   }
 
+  // Convert a string to the same string with all upper case letters
+  inline std::string toLowerCase(std::string &text)
+  {
+    std::transform(text.begin(), text.end(), text.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
+
+    return text;
+  }
+
+  
   // Check if each char in a string is a positive integer
   inline bool isNonNegativeInteger(const std::string &s)
   {
