@@ -1730,6 +1730,16 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "1.7");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceMetaDataChangeTime", printer->getMetaChangeTime().c_str());;
   }
+  
+  // Test updating device change time
+  string old = printer->getMetaChangeTime();
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: another-uuid\n");
+  ASSERT_GT(printer->getMetaChangeTime(), old);
+  
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceMetaDataChangeTime", printer->getMetaChangeTime().c_str());;
+  }
 
   // Test Case insensitivity
   
