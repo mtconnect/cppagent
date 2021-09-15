@@ -720,7 +720,7 @@ namespace mtconnect
       auto command = match[1].str();
       auto param = match[2].str();
       auto source = entity->maybeGet<string>("source");
-
+      toLowerCase(command);
 
       if (!device || !source)
       {
@@ -1628,9 +1628,9 @@ namespace mtconnect
       } },
       { "manufacturer", mem_fn(&Device::setManufacturer) },
       { "station", mem_fn(&Device::setStation) },
-      { "serialNumber", mem_fn(&Device::setSerialNumber) },
+      { "serialnumber", mem_fn(&Device::setSerialNumber) },
       { "description", mem_fn(&Device::setDescription) },
-      { "nativeName", mem_fn(&Device::setNativeName) },
+      { "nativename", mem_fn(&Device::setNativeName) },
       { "calibration", [](Device *device, const string &value)
         {
           istringstream line(value);
@@ -1655,8 +1655,8 @@ namespace mtconnect
     };
     
     static std::unordered_map<string,string> adapterDataItems {
-      { "adapterVersion", "_adapter_software_version" },
-      { "mtconnectVersion", "_mtconnect_version" },
+      { "adapterversion", "_adapter_software_version" },
+      { "mtconnectversion", "_mtconnect_version" },
     };
 
     auto action = deviceCommands.find(command);
