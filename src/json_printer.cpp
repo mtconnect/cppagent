@@ -120,7 +120,8 @@ namespace mtconnect
   static inline void addText(json &doc, const std::string &text) { add(doc, "text", trim(text)); }
 
   inline json header(const string &version, const string &hostname, const unsigned int instanceId,
-                     const unsigned int bufferSize, const string &schemaVersion)
+                     const unsigned int bufferSize, const string &schemaVersion,
+                     const string metaChangeTime)
   {
     json doc = json::object({{"version", version},
                              {"creationTime", getCurrentTime(GMT)},
@@ -128,6 +129,12 @@ namespace mtconnect
                              {"instanceId", instanceId},
                              {"sender", hostname},
                              {"schemaVersion", schemaVersion}});
+    
+    if (schemaVersion >= "1.7")
+    {
+      doc["deviceMetaDataChangeTime"] = metaChangeTime;
+    }
+      
     if (bufferSize > 0)
       doc["bufferSize"] = bufferSize;
     return doc;
@@ -136,9 +143,9 @@ namespace mtconnect
   inline json probeAssetHeader(const string &version, const string &hostname,
                                const unsigned int instanceId, const unsigned int bufferSize,
                                const unsigned int assetBufferSize, const unsigned int assetCount,
-                               const string &schemaVersion)
+                               const string &schemaVersion, const string metaChangeTime)
   {
-    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion);
+    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion, metaChangeTime);
     doc["assetBufferSize"] = assetBufferSize;
     doc["assetCount"] = assetCount;
 
@@ -148,9 +155,10 @@ namespace mtconnect
   inline json streamHeader(const string &version, const string &hostname,
                            const unsigned int instanceId, const unsigned int bufferSize,
                            const uint64_t nextSequence, const uint64_t firstSequence,
-                           const uint64_t lastSequence, const string &schemaVersion)
+                           const uint64_t lastSequence, const string &schemaVersion,
+                           const string metaChangeTime)
   {
-    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion);
+    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion, metaChangeTime);
     doc["nextSequence"] = nextSequence;
     doc["lastSequence"] = lastSequence;
     doc["firstSequence"] = firstSequence;
@@ -193,7 +201,7 @@ namespace mtconnect
 
     json doc = json::object(
         {{"MTConnectError",
-          {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion)},
+          {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion, m_metaChangeTime)},
            {"Errors", errors}}}});
 
     return print(doc, m_pretty);
@@ -623,7 +631,8 @@ namespace mtconnect
     json doc =
         json::object({{"MTConnectDevices",
                        {{"Header", probeAssetHeader(m_version, hostname(), instanceId, bufferSize,
-                                                    assetBufferSize, assetCount, m_schemaVersion)},
+                                                    assetBufferSize, assetCount, m_schemaVersion,
+                                                    m_metaChangeTime)},
                         {"Devices", devicesDoc}}}});
 
     return print(doc, m_pretty);
@@ -809,7 +818,8 @@ namespace mtconnect
     json doc =
         json::object({{"MTConnectStreams",
                        {{"Header", streamHeader(m_version, hostname(), instanceId, bufferSize,
-                                                nextSeq, firstSeq, lastSeq, m_schemaVersion)},
+                                                nextSeq, firstSeq, lastSeq, m_schemaVersion,
+                                                m_metaChangeTime)},
                         {"Streams", streams}}}});
 
     return print(doc, m_pretty);
@@ -829,7 +839,8 @@ namespace mtconnect
     json doc =
         json::object({{"MTConnectAssets",
                        {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0,
-                                                    bufferSize, assetCount, m_schemaVersion)},
+                                                    bufferSize, assetCount, m_schemaVersion,
+                                                    m_metaChangeTime)},
                         {"Assets", assetDoc}}}});
 
     return print(doc, m_pretty);

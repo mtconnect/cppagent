@@ -112,6 +112,7 @@ TEST_F(XmlPrinterTest, PrintProbe)
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "1024");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "10");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceMetaDataChangeTime", 0);
 
   // Check Description
   ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "NIST");
@@ -658,7 +659,7 @@ TEST_F(XmlPrinterTest, ChangeVersion)
 {
   // Devices
   m_printer->clearDevicesNamespaces();
-
+  
   {
     PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
     ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation",
@@ -759,6 +760,24 @@ TEST_F(XmlPrinterTest, LegacyReferences)
   ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@dataItemId", "c4");
   ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@name", "chuck");
 }
+
+TEST_F(XmlPrinterTest, CheckDeviceChangeTime)
+{
+  m_printer = new XmlPrinter("1.7", true);
+  m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", m_printer);
+  m_printer->setMetaChangeTime(getCurrentTime(GMT_UV_SEC));
+  ASSERT_FALSE(m_printer->getMetaChangeTime().empty());
+
+  {
+    PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
+    ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation",
+                          "urn:mtconnect.org:MTConnectDevices:1.7 "
+                          "http://schemas.mtconnect.org/schemas/"
+                          "MTConnectDevices_1.7.xsd");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceMetaDataChangeTime", m_printer->getMetaChangeTime().c_str());
+  }
+}
+
 
 TEST_F(XmlPrinterTest, SourceReferences)
 {

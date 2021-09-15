@@ -47,8 +47,12 @@ namespace mtconnect
                                     const unsigned int assetCount,
                                     AssetList const &assets) const = 0;
     virtual std::string mimeType() const = 0;
+    
+    void setMetaChangeTime(const std::string &t) { m_metaChangeTime = t; }
+    const std::string &getMetaChangeTime() { return m_metaChangeTime;}
 
   protected:
     bool m_pretty;
+    std::string m_metaChangeTime;
   };
 }  // namespace mtconnect

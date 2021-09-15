@@ -1712,6 +1712,9 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
                                  8, 4, "1.7", 25);  
   addAdapter();
   
+  auto printer = m_agentTestHelper->m_agent->getPrinter("xml");
+  ASSERT_FALSE(printer->getMetaChangeTime().empty());
+  
   {
     PARSE_XML_RESPONSE("/Agent/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "UNAVAILABLE");
@@ -1725,6 +1728,7 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
     PARSE_XML_RESPONSE("/Agent/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "2.10");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "1.7");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceMetaDataChangeTime", printer->getMetaChangeTime().c_str());;
   }
 
 }
