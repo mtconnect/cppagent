@@ -167,6 +167,27 @@ TEST_F(DataItemMappingTest, TwoSimpleEvents)
   }
 }
 
+TEST_F(DataItemMappingTest, AssetChangedEvent) 
+{
+  auto di = makeDataItem({{"id", "a"}, {"type", "ASSET_CHANGED"}, {"category", "EVENT"}});
+  auto ts = makeTimestamped({"a", "CuttingTool", "123"});
+
+  auto observations = (*m_mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
+
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(1, oblist.size());
+  auto obs = oblist.front();
+  auto event = dynamic_pointer_cast<Event>(obs);
+  ASSERT_TRUE(event);
+
+  ASSERT_EQ(di, event->getDataItem());
+  ASSERT_EQ("CuttingTool", event->get<string>("assetType"));
+  ASSERT_TRUE(event->hasProperty("VALUE"));
+  ASSERT_EQ("123", event->getValue<string>());
+}
+
 TEST_F(DataItemMappingTest, Message)
 {
   auto di = makeDataItem({{"id", "a"}, {"type", "MESSAGE"}, {"category", "EVENT"}});
