@@ -124,15 +124,16 @@ namespace mtconnect
 
         ConfigOptions options;
 
-        if (command == "conversionRequired")
+        toLowerCase(command);
+        if (command == "conversionrequired")
           options[configuration::ConversionRequired] = is_true(value);
-        else if (command == "relativeTime")
+        else if (command == "relativetime")
           options[configuration::RelativeTime] = is_true(value);
-        else if (command == "realTime")
+        else if (command == "realtime")
           options[configuration::RealTime] = is_true(value);
         else if (command == "device")
           options[configuration::Device] = value;
-        else if (command == "shdrVersion")
+        else if (command == "shdrversion")
           options[configuration::ShdrVersion] = value;
 
 
