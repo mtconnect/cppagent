@@ -1,4 +1,4 @@
-MTConnect Schema Files Versions 1.0 - 1.3
+MTConnect Schema Files Versions 1.0 - 1.5
 ===
 
 Files are named with respect to the section of the standard they apply. 
@@ -7,47 +7,14 @@ Files are named with respect to the section of the standard they apply.
     
 The files included in this directory are as follows:
 
-Version 1.0
----
+* Version 1.0
+* Version 1.1
+* Version 1.2
+* Version 1.3 (With XSD 1.0 compatible files)
+* Version 1.4 (With XSD 1.0 compatible files)
+* Version 1.5 (With XSD 1.0 compatible files)
 
-```
-  MTConnectDevices_1.0.xsd
-  MTConnectStreams_1.0.xsd
-  MTConnectError_1.0.xsd
-```
-
-Version 1.1
----
-
-```
-  MTConnectDevices_1.1.xsd
-  MTConnectStreams_1.1.xsd
-  MTConnectError_1.1.xsd
-```
-
-Version 1.2
----
-
-```
-  MTConnectAssets_1.2.xsd
-  MTConnectDevices_1.2.xsd
-  MTConnectStreams_1.2.xsd
-  MTConnectError_1.2.xsd
-```
-
-Version 1.3 (With XSD 1.0 compatible files)
----
-
-```
-  MTConnectAssets_1.3.xsd
-  MTConnectAssets_1.3_1.0.xsd
-  MTConnectDevices_1.3.xsd
-  MTConnectDevices_1.3_1.0.xsd
-  MTConnectStreams_1.3.xsd
-  MTConnectStreams_1.3_1.0.xsd
-  MTConnectError_1.3.xsd
-  MTConnectError_1.3_1.0.xsd
-```
+The schemas are replicated to http://schemas.mtconnect.org
 
 Microsoft XML an many legacy XML parsers are not current on the XML Schema 1.1 standard accepted in 2012 by the w3c. The MTConnect standard takes advantage of the latest advances in extensibility to add additional properties in a regulated manor using the xs:any tag and specifying they tags must be from another namespace.
 
