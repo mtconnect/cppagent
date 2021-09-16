@@ -66,7 +66,7 @@ namespace mtconnect
 
     void setSchemaVersion(const std::string &version);
     const std::string &getSchemaVersion();
-
+    
     void setDevicesStyle(const std::string &style);
     void setStreamStyle(const std::string &style);
     void setAssetsStyle(const std::string &style);

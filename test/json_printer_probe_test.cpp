@@ -332,10 +332,13 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
 
   m_agentTestHelper->createAgent("/samples/relationship_test.xml",
                                  8, 4, "1.7", 25);
-  m_printer = std::make_unique<JsonPrinter>("1.7", true);
+  auto printer = m_agentTestHelper->m_agent->getPrinter("json");
   m_devices = m_agentTestHelper->m_agent->getDevices();
-  auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
+  auto doc = printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
+  
+  ASSERT_FALSE(printer->getMetaChangeTime().empty());
+  ASSERT_EQ(printer->getMetaChangeTime(), jdoc.at("/MTConnectDevices/Header/deviceMetaDataChangeTime"_json_pointer).get<string>());
 
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
   auto linear = devices.at(1).at("/Device/Components/0/Axes/Components/0/Linear"_json_pointer);
