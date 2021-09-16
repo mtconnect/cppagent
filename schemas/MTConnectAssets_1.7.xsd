@@ -303,7 +303,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z][a-z]+:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z][a-z]*:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemEnumEnum'>
@@ -1783,7 +1783,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z][a-z]+:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z][a-z]*:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemSubEnumEnum'>
@@ -2512,7 +2512,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z][a-z]+:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z][a-z]*:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemStatisticsEnum'>
@@ -2611,7 +2611,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z][a-z]+:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z][a-z]*:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='UnitsEnum'>
@@ -2969,7 +2969,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z][a-z]+:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z][a-z]*:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='NativeUnitsEnum'>
@@ -3603,7 +3603,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z][a-z]+:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z][a-z]*:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='DataItemResetValueEnum'>
@@ -13506,7 +13506,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z][a-z]+:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z][a-z]*:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='ApplicationCategoryEnum'>
@@ -13589,7 +13589,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:restriction base='xs:string'>
-      <xs:pattern value='[a-ln-z][a-z]+:[A-Z_0-9]+'/>
+      <xs:pattern value='[a-ln-z][a-z]*:[A-Z_0-9]+'/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name='ApplicationTypeEnum'>

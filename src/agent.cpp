@@ -333,7 +333,7 @@ namespace mtconnect
     }
     
     for (auto &printer : m_printers)
-      printer.second->setMetaChangeTime(getCurrentTime(GMT_UV_SEC));
+      printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
   }
 
   void Agent::deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName)
@@ -360,7 +360,7 @@ namespace mtconnect
     if (m_agentDevice)
     {
       for (auto &printer : m_printers)
-        printer.second->setMetaChangeTime(getCurrentTime(GMT_UV_SEC));
+        printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
 
       if (device->getUuid() != oldUuid)
       {

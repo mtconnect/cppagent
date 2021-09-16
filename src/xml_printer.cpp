@@ -1086,7 +1086,7 @@ namespace mtconnect
     
     if (m_schemaVersion >= "1.7")
     {
-      addAttribute(writer, "deviceMetaDataChangeTime", m_metaChangeTime);
+      addAttribute(writer, "deviceModelChangeTime", m_ModelChangeTime);
     }
 
     if (aType == eASSETS || aType == eDEVICES)
