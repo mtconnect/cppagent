@@ -97,9 +97,9 @@ protected:
 
   DevicePtr makeDevice(const std::string &name, const Properties &props)
   {
-    Properties ps(props);
     ErrorList errors;
-    auto d = dynamic_pointer_cast<device_model::Device>(device_model::Device::make(name, ps, errors));
+    Properties ps(props);
+    DevicePtr d = dynamic_pointer_cast<device_model::Device>(device_model::Device::getFactory()->make("Device", ps, errors));
     m_devices.emplace(d->getId(), d);
     
     return d;
@@ -119,6 +119,7 @@ inline DataSetEntry operator"" _E(const char *c, std::size_t)
 
 TEST_F(TopicMappingTest, should_find_data_item_for_topic)
 {
+  makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   Properties props{{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
   auto di = makeDataItem("device", props);
 }

@@ -35,6 +35,7 @@ namespace mtconnect
           : Source(name), m_pipeline(std::move(pipeline)), m_strand(context)
       
       {
+        m_pipeline->build(options);
       }
 
       ~adapter_plugin_test() = default;
@@ -43,7 +44,9 @@ namespace mtconnect
         m_pipeline->start(m_strand);
         return true;
       }
-      void stop() override {}
+      void stop() override {
+        m_pipeline->clear();
+      }
 
       // Factory method
       static std::shared_ptr<adapter_plugin_test> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,

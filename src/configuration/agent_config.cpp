@@ -676,6 +676,7 @@ namespace mtconnect {
                   {configuration::MinimumConfigReloadAge, 15},
                   {configuration::Pretty, false},
                   {configuration::PidFile, "agent.pid"s},
+                  {configuration::Port, 5000},
                   {configuration::ServiceName, "MTConnect Agent"s},
                   {configuration::SchemaVersion,
                    to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},
@@ -1045,7 +1046,7 @@ namespace mtconnect {
 
             dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
 
-            typedef std::shared_ptr<Adapter>(adapter_pluginapi_create_t)(
+            typedef std::shared_ptr<Source>(adapter_pluginapi_create_t)(
                 const string &name, asio::io_context &context, const std::string &server,
                 const unsigned int port, const ConfigOptions &options,
                 std::unique_ptr<AdapterPipeline> &pipeline);
