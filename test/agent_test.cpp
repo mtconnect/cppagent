@@ -1722,6 +1722,10 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
                                  8, 4, "1.7", 25);  
   addAdapter();
   
+  auto printer = m_agentTestHelper->m_agent->getPrinter("xml");
+  ASSERT_FALSE(printer->getModelChangeTime().empty());
+  
+  
   {
     PARSE_XML_RESPONSE("/Agent/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "UNAVAILABLE");
@@ -1735,7 +1739,30 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
     PARSE_XML_RESPONSE("/Agent/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "2.10");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "1.7");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime", printer->getModelChangeTime().c_str());;
   }
+
+  // Test updating device change time
+  string old = printer->getModelChangeTime();
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: another-uuid\n");
+  ASSERT_GT(printer->getModelChangeTime(), old);
+  
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime", printer->getModelChangeTime().c_str());;
+  }
+
+  // Test Case insensitivity
+  
+  m_agentTestHelper->m_adapter->parseBuffer("* adapterversion: 3.10\n");
+  m_agentTestHelper->m_adapter->parseBuffer("* mtconnectversion: 1.6\n");
+
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "3.10");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "1.6");
+  }
+
 
 }
 

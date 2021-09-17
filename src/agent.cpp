@@ -26,6 +26,8 @@
 #include <sys/stat.h>
 #include <thread>
 
+#include <boost/algorithm/string.hpp>
+
 #include "asset/asset.hpp"
 #include "asset/cutting_tool.hpp"
 #include "asset/file_asset.hpp"
@@ -483,6 +485,9 @@ void Agent::addDevice(DevicePtr device)
     else
       LOG(warning) << "Adding device " << uuid << " after initialialization not supported yet";
   }
+  
+  for (auto &printer : m_printers)
+    printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
 }
 
 void Agent::deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName)
@@ -512,6 +517,9 @@ void Agent::deviceChanged(DevicePtr device, const std::string &oldUuid, const st
 
   if (m_agentDevice)
   {
+    for (auto &printer : m_printers)
+      printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
+
     if (device->getUuid() != oldUuid)
     {
       auto d = m_agentDevice->getDeviceDataItem("device_added");
@@ -650,7 +658,7 @@ void AgentPipelineContract::deliverCommand(entity::EntityPtr entity)
   if (std::regex_match(value, match, pattern))
   {
     auto device = entity->maybeGet<string>("device");
-    auto command = match[1].str();
+    auto command = boost::algorithm::to_lower_copy(match[1].str());
     auto param = match[2].str();
     auto source = entity->maybeGet<string>("source");
 
@@ -848,9 +856,9 @@ void Agent::receiveCommand(const std::string &deviceName, const std::string &com
        }},
       {"manufacturer", mem_fn(&Device::setManufacturer)},
       {"station", mem_fn(&Device::setStation)},
-      {"serialNumber", mem_fn(&Device::setSerialNumber)},
+      {"serialnumber", mem_fn(&Device::setSerialNumber)},
       {"description", mem_fn(&Device::setDescriptionValue)},
-      {"nativeName",
+      {"nativename",
        [](DevicePtr device, const string &name) { device->setProperty("nativeName", name); }},
       {"calibration",
        [](DevicePtr device, const string &value) {
@@ -878,8 +886,8 @@ void Agent::receiveCommand(const std::string &deviceName, const std::string &com
   };
 
   static std::unordered_map<string, string> adapterDataItems {
-      {"adapterVersion", "_adapter_software_version"},
-      {"mtconnectVersion", "_mtconnect_version"},
+      {"adapterversion", "_adapter_software_version"},
+      {"mtconnectversion", "_mtconnect_version"},
   };
 
   auto action = deviceCommands.find(command);

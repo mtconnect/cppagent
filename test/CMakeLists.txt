@@ -1,7 +1,7 @@
 
 include(GoogleTest)
 
-add_library(sink_plugin_test SHARED testsink_service.cpp)
+add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp) 
 target_include_directories(
   sink_plugin_test
   PUBLIC
@@ -30,7 +30,7 @@ target_link_libraries(
 set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
 
 #########
-add_library(adapter_plugin_test SHARED testadapter_service.cpp)
+add_library(adapter_plugin_test SHARED testadapter_service.cpp testadapter_service.hpp)
 target_include_directories(
   adapter_plugin_test
   PUBLIC

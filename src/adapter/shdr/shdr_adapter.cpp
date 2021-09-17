@@ -19,6 +19,7 @@
 #include "shdr_adapter.hpp"
 
 #include <boost/uuid/name_generator_sha1.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -121,24 +122,26 @@ namespace mtconnect {
       {
         static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
         smatch match;
+        
+        using namespace boost::algorithm;
 
         if (std::regex_match(data, match, pattern))
         {
-          auto command = match[1].str();
+          auto command = to_lower_copy(match[1].str());
           auto value = match[2].str();
 
           ConfigOptions options;
 
-          if (command == "conversionRequired")
+          if (command == "conversionrequired")
             options[configuration::ConversionRequired] = is_true(value);
-          else if (command == "relativeTime")
+          else if (command == "relativetime")
             options[configuration::RelativeTime] = is_true(value);
-          else if (command == "realTime")
+          else if (command == "realtime")
             options[configuration::RealTime] = is_true(value);
           else if (command == "device")
             options[configuration::Device] = value;
-          else if (command == "shdrVersion")
-            options[configuration::ShdrVersion] = value;
+          else if (command == "shdrversion")
+            options[configuration::ShdrVersion] = stringToInt(value, 1);
 
           if (options.size() > 0)
             setOptions(options);
