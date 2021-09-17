@@ -18,8 +18,8 @@
 #define __STDC_LIMIT_MACROS 1
 #include "shdr_adapter.hpp"
 
-#include <boost/uuid/name_generator_sha1.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/uuid/name_generator_sha1.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -122,7 +122,7 @@ namespace mtconnect {
       {
         static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
         smatch match;
-        
+
         using namespace boost::algorithm;
 
         if (std::regex_match(data, match, pattern))

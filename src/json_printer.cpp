@@ -87,12 +87,12 @@ namespace mtconnect {
                              {"instanceId", instanceId},
                              {"sender", hostname},
                              {"schemaVersion", schemaVersion}});
-    
+
     if (schemaVersion >= "1.7")
     {
       doc["deviceModelChangeTime"] = modelChangeTime;
     }
-      
+
     if (bufferSize > 0)
       doc["bufferSize"] = bufferSize;
     return doc;
@@ -101,8 +101,7 @@ namespace mtconnect {
   inline json probeAssetHeader(const string &version, const string &hostname,
                                const unsigned int instanceId, const unsigned int bufferSize,
                                const unsigned int assetBufferSize, const unsigned int assetCount,
-                               const string &schemaVersion,
-                               const string modelChangeTime)
+                               const string &schemaVersion, const string modelChangeTime)
   {
     json doc = header(version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime);
     doc["assetBufferSize"] = assetBufferSize;
@@ -136,10 +135,10 @@ namespace mtconnect {
       }});
     }
 
-    json doc = json::object(
-        {{"MTConnectError",
-          {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion, m_modelChangeTime)},
-           {"Errors", errors}}}});
+    json doc = json::object({{"MTConnectError",
+                              {{"Header", header(m_version, hostname(), instanceId, bufferSize,
+                                                 m_schemaVersion, m_modelChangeTime)},
+                               {"Errors", errors}}}});
 
     return print(doc, m_pretty);
   }
@@ -170,11 +169,11 @@ namespace mtconnect {
     for (const auto &device : devices)
       devicesDoc.emplace_back(printer.print(device));
 
-    json doc =
-        json::object({{"MTConnectDevices",
-                       {{"Header", probeAssetHeader(m_version, hostname(), instanceId, bufferSize,
-                                                    assetBufferSize, assetCount, m_schemaVersion, m_modelChangeTime)},
-                        {"Devices", devicesDoc}}}});
+    json doc = json::object({{"MTConnectDevices",
+                              {{"Header", probeAssetHeader(m_version, hostname(), instanceId,
+                                                           bufferSize, assetBufferSize, assetCount,
+                                                           m_schemaVersion, m_modelChangeTime)},
+                               {"Devices", devicesDoc}}}});
 
     return print(doc, m_pretty);
   }
@@ -355,11 +354,11 @@ namespace mtconnect {
         streams.emplace_back(ref.toJson());
     }
 
-    json doc =
-        json::object({{"MTConnectStreams",
-                       {{"Header", streamHeader(m_version, hostname(), instanceId, bufferSize,
-                                                nextSeq, firstSeq, lastSeq, m_schemaVersion, m_modelChangeTime)},
-                        {"Streams", streams}}}});
+    json doc = json::object(
+        {{"MTConnectStreams",
+          {{"Header", streamHeader(m_version, hostname(), instanceId, bufferSize, nextSeq, firstSeq,
+                                   lastSeq, m_schemaVersion, m_modelChangeTime)},
+           {"Streams", streams}}}});
 
     return print(doc, m_pretty);
 
@@ -376,11 +375,11 @@ namespace mtconnect {
     for (const auto &asset : asset)
       assetDoc.emplace_back(printer.print(asset));
 
-    json doc =
-        json::object({{"MTConnectAssets",
-                       {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0,
-                                                    bufferSize, assetCount, m_schemaVersion, m_modelChangeTime)},
-                        {"Assets", assetDoc}}}});
+    json doc = json::object(
+        {{"MTConnectAssets",
+          {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize, assetCount,
+                                       m_schemaVersion, m_modelChangeTime)},
+           {"Assets", assetDoc}}}});
 
     return print(doc, m_pretty);
   }

@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include <boost/bind.hpp>
 #include <boost/asio.hpp>
+#include <boost/bind.hpp>
 
 #include <condition_variable>
 #include <mutex>
@@ -32,7 +32,9 @@ namespace mtconnect {
     class ChangeObserver
     {
     public:
-      ChangeObserver(boost::asio::io_context::strand &strand) : m_strand(strand), m_timer(strand.context()) {}
+      ChangeObserver(boost::asio::io_context::strand &strand)
+        : m_strand(strand), m_timer(strand.context())
+      {}
 
       virtual ~ChangeObserver();
 
@@ -43,7 +45,8 @@ namespace mtconnect {
 
         if (m_sequence != UINT64_MAX)
         {
-          boost::asio::post(boost::asio::bind_executor(m_strand, boost::bind(handler, boost::system::error_code{})));
+          boost::asio::post(boost::asio::bind_executor(
+              m_strand, boost::bind(handler, boost::system::error_code {})));
         }
         else
         {

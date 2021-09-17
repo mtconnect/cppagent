@@ -23,15 +23,13 @@
 namespace asio = boost::asio;
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace configuration;
   using namespace observation;
   using namespace asset;
   using namespace device_model;
 
-  namespace rest_sink
-  {
+  namespace rest_sink {
     RestService::RestService(asio::io_context &context, SinkContractPtr &&contract,
                              const ConfigOptions &options)
       : Sink("RestService", move(contract)),
@@ -404,9 +402,11 @@ namespace mtconnect
     struct AsyncSampleResponse
     {
       AsyncSampleResponse(rest_sink::SessionPtr &session, boost::asio::io_context::strand &strand)
-        : m_session(session), m_observer(strand), m_last(chrono::system_clock::now()), m_timer(strand.context())
-      {
-      }
+        : m_session(session),
+          m_observer(strand),
+          m_last(chrono::system_clock::now()),
+          m_timer(strand.context())
+      {}
 
       rest_sink::SessionPtr m_session;
       ofstream m_log;
@@ -471,7 +471,7 @@ namespace mtconnect
         asyncResponse->m_sequence = *from;
 
       asyncResponse->m_endOfBuffer = from >= m_circularBuffer.getSequence();
-      
+
       asyncResponse->m_interval = chrono::milliseconds(interval);
       asyncResponse->m_logStreamData = m_logStreamData;
 
@@ -486,7 +486,7 @@ namespace mtconnect
       NAMED_SCOPE("RestService::streamSampleWriteComplete");
 
       asyncResponse->m_last = chrono::system_clock::now();
-      
+
       if (asyncResponse->m_endOfBuffer)
       {
         using boost::placeholders::_1;
@@ -514,11 +514,12 @@ namespace mtconnect
       {
         LOG(warning) << "Unexpected error streamNextSampleChunk, aborting";
         LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
-        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error, "Unexpected error streamNextSampleChunk, aborting");
+        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                       "Unexpected error streamNextSampleChunk, aborting");
 
         return;
       }
-      
+
       {
         std::lock_guard<CircularBuffer> lock(m_circularBuffer);
 
@@ -547,12 +548,12 @@ namespace mtconnect
           if (delta < asyncResponse->m_interval)
           {
             asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval - delta);
-            asyncResponse->m_timer.async_wait(
-                asio::bind_executor(m_strand, boost::bind(&RestService::streamNextSampleChunk, this,
-                                                          asyncResponse, _1)));
+            asyncResponse->m_timer.async_wait(asio::bind_executor(
+                m_strand,
+                boost::bind(&RestService::streamNextSampleChunk, this, asyncResponse, _1)));
             return;
           }
-          
+
           // Get the sequence # signaled in the observer when the earliest event arrived.
           // This will allow the next set of data to be pulled. Any later events will have
           // greater sequence numbers, so this should not cause a problem. Also, signaled
@@ -567,13 +568,14 @@ namespace mtconnect
         uint64_t end(0ull);
         string content;
         asyncResponse->m_endOfBuffer = true;
-        
+
         // Check if we're falling too far behind. If we are, generate an
         // MTConnectError and return.
         if (asyncResponse->m_sequence < getFirstSequence())
         {
           LOG(warning) << "Client fell too far behind, disconnecting";
-          asyncResponse->m_session->fail(boost::beast::http::status::not_found, "Client fell too far behind, disconnecting");
+          asyncResponse->m_session->fail(boost::beast::http::status::not_found,
+                                         "Client fell too far behind, disconnecting");
           return;
         }
 
@@ -595,10 +597,10 @@ namespace mtconnect
           // begin filtering from where we left off.
           asyncResponse->m_sequence = end;
         }
-        
+
         if (m_logStreamData)
           asyncResponse->m_log << content << endl;
-        
+
         asyncResponse->m_session->writeChunk(
             content,
             asio::bind_executor(m_strand, boost::bind(&RestService::streamSampleWriteComplete, this,
@@ -610,8 +612,7 @@ namespace mtconnect
     {
       AsyncCurrentResponse(rest_sink::SessionPtr session, asio::io_context &context)
         : m_session(session), m_timer(context)
-      {
-      }
+      {}
 
       rest_sink::SessionPtr m_session;
       chrono::milliseconds m_interval;

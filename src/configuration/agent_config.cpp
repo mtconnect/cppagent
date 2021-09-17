@@ -18,6 +18,9 @@
 #include "agent_config.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/dll.hpp>
+#include <boost/dll/import.hpp>
+#include <boost/function.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/expressions.hpp>
@@ -27,12 +30,7 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
-
 #include <boost/regex.hpp>
-#include <boost/dll.hpp>
-#include <boost/dll/import.hpp>
-#include <boost/function.hpp>
-#include <boost/algorithm/string.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -183,7 +181,7 @@ namespace mtconnect {
 #endif
 
       m_working = fs::current_path();
-      cout << "Configuration search path: " << m_working; 
+      cout << "Configuration search path: " << m_working;
       if (success)
       {
         fs::path ep(execPath);
@@ -756,74 +754,78 @@ namespace mtconnect {
       auto sinks = config.get_child_optional("Sinks");
       if (sinks)
       {
-          boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
-          for (const auto &sink : *sinks)
+        boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
+        for (const auto &sink : *sinks)
+        {
+          ConfigOptions sinkOptions = options;
+
+          vector<string> sinkHeader;
+          boost::split(sinkHeader, sink.first, boost::is_any_of(":"));
+
+          string sinkDLLName = sinkHeader[0];
+          string sinkId = sinkHeader.size() > 1 ? sinkHeader[1] : sinkDLLName;
+
+          // collect all options for this sink,
+          // Override if exists already
+          const ptree &tree = sink.second;
+          for (auto &child : tree)
           {
-              ConfigOptions sinkOptions = options;
+            const string value = child.second.get_value<std::string>();
 
-              vector<string> sinkHeader;
-                  boost::split(sinkHeader, sink.first, boost::is_any_of(":"));
-
-              string sinkDLLName = sinkHeader[0];
-              string sinkId = sinkHeader.size() > 1 ? sinkHeader[1] : sinkDLLName;
-
-              // collect all options for this sink,
-              // Override if exists already
-              const ptree &tree = sink.second;
-              for (auto &child : tree) {
-
-                  const string value = child.second.get_value<std::string>();
-
-                  auto iter = sinkOptions.find(child.first);
-                  sinkOptions[child.first] =
-                              Convert(value, iter != sinkOptions.end() ? iter->second : value);
-              }
-
-              // expect the dynamic library's location is same as the executable
-              // the library's name is sink's id
-              auto dllPath = shared_library_path / sinkDLLName;
-
-              dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
-
-              typedef std::shared_ptr<mtconnect::Sink> (pluginapi_create_t)(const string &name, asio::io_context &context, SinkContractPtr &&contract,
-                                                                       const ConfigOptions &options);
-              boost::function<pluginapi_create_t> creator;
-
-              // keep the list of dynamic sink creators
-              // the share library will be unloaded if they are out of scope
-              static std::list< boost::function<pluginapi_create_t> > dynamic_sink_creators;
-
-              try {
-                  creator = boost::dll::import_alias<pluginapi_create_t>(
-                      dllPath,                                              // path to library
-                      "create_plugin"
-                  );
-              } catch(exception &e) {
-                  LOG(info) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path << " Reason: " << e.what();
-              }
-
-              if (creator.empty()) {
-                  // try current working directory
-                  auto dllPath = boost::filesystem::current_path() / sinkDLLName;
-                  try {
-                      creator = boost::dll::import_alias<pluginapi_create_t>(
-                          dllPath,
-                          "create_plugin"
-                      );
-                  } catch(exception &e) {
-                      LOG(error) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path << " Reason: " << e.what();
-                      continue;
-                  }
-              }
-
-              sinkContract = m_agent->makeSinkContract();
-              auto sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
-              m_agent->addSink(sink_server);
-              dynamic_sink_creators.push_back(creator);
-
-              LOG(info) << "Loaded sink plugin " << dllPath << " for " << sinkId;
-
+            auto iter = sinkOptions.find(child.first);
+            sinkOptions[child.first] =
+                Convert(value, iter != sinkOptions.end() ? iter->second : value);
           }
+
+          // expect the dynamic library's location is same as the executable
+          // the library's name is sink's id
+          auto dllPath = shared_library_path / sinkDLLName;
+
+          dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
+
+          typedef std::shared_ptr<mtconnect::Sink>(pluginapi_create_t)(
+              const string &name, asio::io_context &context, SinkContractPtr &&contract,
+              const ConfigOptions &options);
+          boost::function<pluginapi_create_t> creator;
+
+          // keep the list of dynamic sink creators
+          // the share library will be unloaded if they are out of scope
+          static std::list<boost::function<pluginapi_create_t>> dynamic_sink_creators;
+
+          try
+          {
+            creator = boost::dll::import_alias<pluginapi_create_t>(dllPath,  // path to library
+                                                                   "create_plugin");
+          }
+          catch (exception &e)
+          {
+            LOG(info) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
+                      << " Reason: " << e.what();
+          }
+
+          if (creator.empty())
+          {
+            // try current working directory
+            auto dllPath = boost::filesystem::current_path() / sinkDLLName;
+            try
+            {
+              creator = boost::dll::import_alias<pluginapi_create_t>(dllPath, "create_plugin");
+            }
+            catch (exception &e)
+            {
+              LOG(error) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
+                         << " Reason: " << e.what();
+              continue;
+            }
+          }
+
+          sinkContract = m_agent->makeSinkContract();
+          auto sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
+          m_agent->addSink(sink_server);
+          dynamic_sink_creators.push_back(creator);
+
+          LOG(info) << "Loaded sink plugin " << dllPath << " for " << sinkId;
+        }
       }
 
       // Make the PipelineContext
@@ -1019,85 +1021,91 @@ namespace mtconnect {
 
           LOG(info) << protocol << ": Adding adapter for " << deviceName << " on " << host << ":"
                     << port;
-          
+
           vector<string> deviceHeader;
-                boost::split(deviceHeader, block.first, boost::is_any_of(":"));
+          boost::split(deviceHeader, block.first, boost::is_any_of(":"));
 
           string deviceDLLName = deviceHeader[0];
-          if (deviceHeader.size() > 1) {
-              // collect all options for this adapter,
-              // Override if exists already
-              const ptree &tree = block.second;
-              for (auto &child : tree) {
+          if (deviceHeader.size() > 1)
+          {
+            // collect all options for this adapter,
+            // Override if exists already
+            const ptree &tree = block.second;
+            for (auto &child : tree)
+            {
+              const string value = child.second.get_value<std::string>();
 
-                  const string value = child.second.get_value<std::string>();
+              auto iter = adapterOptions.find(child.first);
+              adapterOptions[child.first] =
+                  Convert(value, iter != adapterOptions.end() ? iter->second : value);
+            }
 
-                  auto iter = adapterOptions.find(child.first);
-                  adapterOptions[child.first] =
-                              Convert(value, iter != adapterOptions.end() ? iter->second : value);
+            deviceName = deviceHeader[1];
+            auto dllPath = shared_library_path / deviceDLLName;
+
+            dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
+
+            typedef std::shared_ptr<Adapter>(adapter_pluginapi_create_t)(
+                const string &name, asio::io_context &context, const std::string &server,
+                const unsigned int port, const ConfigOptions &options,
+                std::unique_ptr<AdapterPipeline> &pipeline);
+            boost::function<adapter_pluginapi_create_t> creator;
+
+            // keep the list of dynamic adapter creator
+            // shared library will be unloaded if they are out of scope
+            static std::list<boost::function<adapter_pluginapi_create_t>> dynamic_adapter_creators;
+
+            try
+            {
+              creator =
+                  boost::dll::import_alias<adapter_pluginapi_create_t>(dllPath,  // path to library
+                                                                       "create_adapter_plugin");
+            }
+            catch (exception &e)
+            {
+              LOG(info) << "Cannot load adapter plugin " << deviceName << " from "
+                        << shared_library_path << " Reason: " << e.what();
+            }
+
+            if (creator.empty())
+            {
+              // try current working directory
+              auto dllPath = boost::filesystem::current_path() / deviceDLLName;
+              try
+              {
+                creator = boost::dll::import_alias<adapter_pluginapi_create_t>(
+                    dllPath, "create_adapter_plugin");
               }
-
-
-              deviceName = deviceHeader[1];
-              auto dllPath = shared_library_path / deviceDLLName;
-
-              dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
-
-              typedef std::shared_ptr<Adapter> (adapter_pluginapi_create_t)(const string &name, asio::io_context &context,
-                                                               const std::string &server, const unsigned int port,
-                                                               const ConfigOptions &options,
-                                                               std::unique_ptr<AdapterPipeline> &pipeline);
-              boost::function<adapter_pluginapi_create_t> creator;
-
-
-              // keep the list of dynamic adapter creator
-              // shared library will be unloaded if they are out of scope
-              static std::list<  boost::function<adapter_pluginapi_create_t> > dynamic_adapter_creators;
-
-              try {
-                  creator = boost::dll::import_alias<adapter_pluginapi_create_t>(
-                      dllPath,                                              // path to library
-                      "create_adapter_plugin"
-                  );
-              } catch(exception &e) {
-                  LOG(info) << "Cannot load adapter plugin " << deviceName << " from " << shared_library_path << " Reason: " << e.what();
+              catch (exception &e)
+              {
+                LOG(error) << "Cannot load adapter plugin " << deviceName << " from "
+                           << shared_library_path << " Reason: " << e.what();
+                continue;
               }
+            }
 
-              if (creator.empty()) {
-                  // try current working directory
-                  auto dllPath = boost::filesystem::current_path() / deviceDLLName;
-                  try {
-                      creator = boost::dll::import_alias<adapter_pluginapi_create_t>(
-                          dllPath,
-                          "create_adapter_plugin"
-                      );
-                  } catch(exception &e) {
-                      LOG(error) << "Cannot load adapter plugin " << deviceName << " from " << shared_library_path << " Reason: " << e.what();
-                      continue;
-                  }
-              }
+            auto host = get<string>(adapterOptions[configuration::Host]);
+            auto port = get<int>(adapterOptions[configuration::Port]);
 
-              auto host = get<string>(adapterOptions[configuration::Host]);
-              auto port = get<int>(adapterOptions[configuration::Port]);
+            auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
+            auto adp = creator(deviceName, m_context, host, port, adapterOptions, pipeline);
+            m_agent->addSource(adp, false);
+            dynamic_adapter_creators.push_back(creator);
 
-              auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-              auto adp = creator(deviceName, m_context, host,
-                      port, adapterOptions, pipeline);
-              m_agent->addSource(adp, false);
-              dynamic_adapter_creators.push_back(creator);
-
-              LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName << " on " << host << ":" << port;
+            LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName << " on "
+                      << host << ":" << port;
           }
-          else {
+          else
+          {
             LOG(info) << "Adding adapter for " << deviceName << " on "
-                        << get<string>(adapterOptions[configuration::Host]) << ":"
-                        << get<int>(adapterOptions[configuration::Port]);
+                      << get<string>(adapterOptions[configuration::Host]) << ":"
+                      << get<int>(adapterOptions[configuration::Port]);
 
             auto pipeline = make_unique<shdr::ShdrPipeline>(m_pipelineContext);
             auto adp = make_shared<shdr::ShdrAdapter>(
-                  m_context, get<string>(adapterOptions[configuration::Host]),
-                  get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
-              m_agent->addSource(adp, false);
+                m_context, get<string>(adapterOptions[configuration::Host]),
+                get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
+            m_agent->addSource(adp, false);
           }
         }
       }

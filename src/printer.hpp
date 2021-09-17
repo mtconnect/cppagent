@@ -70,7 +70,7 @@ namespace mtconnect {
 
     void setModelChangeTime(const std::string &t) { m_modelChangeTime = t; }
     const std::string &getModelChangeTime() { return m_modelChangeTime; }
-    
+
   protected:
     bool m_pretty;
     std::string m_modelChangeTime;

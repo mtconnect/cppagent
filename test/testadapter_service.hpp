@@ -17,33 +17,46 @@
 
 #pragma once
 
+#include "source.hpp"
+#include "pipeline/pipeline.hpp"
 #include "adapter/adapter.hpp"
 #include <boost/dll/alias.hpp>
 
 using namespace std;
-using namespace mtconnect::adapter;
 
 namespace mtconnect
 {
-    class adapter_plugin_test : public Adapter
+  using namespace pipeline;
+    class adapter_plugin_test : public Source
     {
     public:
       adapter_plugin_test(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
-                         const mtconnect::ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline)
-          : Adapter(name, options)
+                         const mtconnect::ConfigOptions &options, std::unique_ptr<Pipeline> &pipeline)
+          : Source(name), m_pipeline(std::move(pipeline)), m_strand(context)
+      
       {
       }
 
       ~adapter_plugin_test() = default;
 
-      bool start() override { return true; }
+      bool start() override {
+        m_pipeline->start(m_strand);
+        return true;
+      }
       void stop() override {}
 
       // Factory method
       static std::shared_ptr<adapter_plugin_test> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
-                                                          const mtconnect::ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline) {
+                                                          const mtconnect::ConfigOptions &options, std::unique_ptr<Pipeline> &pipeline) {
           return std::make_shared<adapter_plugin_test>(name, context, server, port, options, pipeline);
       }
+      
+      Pipeline *getPipeline() override { return m_pipeline.get(); }
+
+    protected:
+      std::unique_ptr<Pipeline> m_pipeline;
+      boost::asio::io_context::strand m_strand;
+
     };
 
     BOOST_DLL_ALIAS(

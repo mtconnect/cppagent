@@ -370,15 +370,13 @@ namespace mtconnect {
       async_write(derived().stream(), *res,
                   beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
-    
+
     template <class Derived>
     void SessionImpl<Derived>::writeFailureResponse(const Response &response, Complete complete)
     {
       if (m_streaming)
       {
-        writeChunk(response.m_body, [this] {
-          closeStream();
-        });
+        writeChunk(response.m_body, [this] { closeStream(); });
       }
       else
       {
