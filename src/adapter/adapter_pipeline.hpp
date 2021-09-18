@@ -41,7 +41,9 @@ namespace mtconnect {
     class AdapterPipeline : public pipeline::Pipeline
     {
     public:
-      AdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st) : Pipeline(context, st) {}
+      AdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
+        : Pipeline(context, st)
+      {}
 
       void build(const ConfigOptions &options) override;
       virtual std::unique_ptr<Handler> makeHandler();

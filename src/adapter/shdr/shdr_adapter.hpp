@@ -44,7 +44,8 @@ namespace mtconnect {
       {
       public:
         // Associate adapter with a device & connect to the server & port
-        ShdrAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block);
+        ShdrAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
+                    const ConfigOptions &options, const boost::property_tree::ptree &block);
         ShdrAdapter(const ShdrAdapter &) = delete;
 
         // Virtual destructor

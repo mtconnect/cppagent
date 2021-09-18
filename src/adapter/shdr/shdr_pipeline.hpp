@@ -25,7 +25,9 @@ namespace mtconnect {
       class ShdrPipeline : public AdapterPipeline
       {
       public:
-        ShdrPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st) : AdapterPipeline(context, st) {}
+        ShdrPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
+          : AdapterPipeline(context, st)
+        {}
 
         void build(const ConfigOptions &options) override;
       };

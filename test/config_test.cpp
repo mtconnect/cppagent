@@ -49,6 +49,7 @@ namespace
     void SetUp() override
     {
       m_config = std::make_unique<AgentConfiguration>();
+      m_config->setDebug(true);
       m_cwd = std::filesystem::current_path();
     }
 

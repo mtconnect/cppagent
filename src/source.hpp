@@ -29,7 +29,9 @@ namespace mtconnect {
     Source(boost::asio::io_context &io) : m_strand(io) {}
     Source(boost::asio::io_context::strand &io) : m_strand(io) {}
     Source(const std::string &name, boost::asio::io_context &io) : m_name(name), m_strand(io) {}
-    Source(const std::string &name, boost::asio::io_context::strand &io) : m_name(name), m_strand(io) {}
+    Source(const std::string &name, boost::asio::io_context::strand &io)
+      : m_name(name), m_strand(io)
+    {}
     virtual ~Source() {}
 
     virtual bool start() = 0;
@@ -39,7 +41,7 @@ namespace mtconnect {
 
     const auto &getName() { return m_name; }
     boost::asio::io_context::strand &getStrand();
-    
+
   protected:
     std::string m_name;
     boost::asio::io_context::strand m_strand;

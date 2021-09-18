@@ -28,7 +28,9 @@ namespace mtconnect {
   class LoopbackPipeline : public pipeline::Pipeline
   {
   public:
-    LoopbackPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st) : pipeline::Pipeline(context, st) {}
+    LoopbackPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
+      : pipeline::Pipeline(context, st)
+    {}
     void build(const ConfigOptions &options) override;
 
   protected:
@@ -38,7 +40,8 @@ namespace mtconnect {
   class LoopbackSource : public Source
   {
   public:
-    LoopbackSource(const std::string &name, boost::asio::io_context::strand &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options)
+    LoopbackSource(const std::string &name, boost::asio::io_context::strand &io,
+                   pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options)
       : Source(name, io), m_pipeline(pipelineContext, Source::m_strand)
     {
       m_pipeline.build(options);

@@ -519,7 +519,7 @@ namespace mtconnect {
         if (!log_directory.is_absolute())
           log_directory = fs::absolute(fs::current_path() / log_directory);
 
-        log_directory /= name + ".%N";
+        log_directory /= name;
 
         boost::shared_ptr<b_logger::core> core = b_logger::core::get();
 
@@ -687,7 +687,7 @@ namespace mtconnect {
       m_agent->addSink(server);
 
       NAMED_SCOPE("config.sinks");
-      
+
       auto sinks = config.get_child_optional("Sinks");
       if (sinks)
       {
@@ -778,14 +778,12 @@ namespace mtconnect {
           ConfigOptions adapterOptions = options;
 
           GetOptions(block.second, adapterOptions, options);
-          AddOptions(block.second, adapterOptions,
-                     {{configuration::Url, string()}});
-          AddDefaultedOptions(block.second, adapterOptions,
-                              {{configuration::Protocol, "shdr"s}});
-          
+          AddOptions(block.second, adapterOptions, {{configuration::Url, string()}});
+          AddDefaultedOptions(block.second, adapterOptions, {{configuration::Protocol, "shdr"s}});
+
           auto deviceName =
               block.second.get_optional<string>(configuration::Device).value_or(block.first);
-          
+
           optional<string> dllName;
           if (deviceName.find(':') != string::npos)
           {
@@ -846,20 +844,22 @@ namespace mtconnect {
 
           if (HasOption(adapterOptions, configuration::Protocol))
             protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
-          
+
           if (dllName)
           {
             name = loadSourcePlugin(deviceName, *dllName, block.second, adapterOptions);
           }
           else if (protocol == "shdr")
           {
-            auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, m_pipelineContext, adapterOptions, block.second);
+            auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, m_pipelineContext,
+                                                               adapterOptions, block.second);
             m_agent->addSource(adp, false);
             name = adp->getName();
           }
           else if (protocol == "mqtt")
           {
-            auto adp = make_shared<adapter::mqtt_adapter::MqttAdapter>(m_context, m_pipelineContext, adapterOptions, block.second);
+            auto adp = make_shared<adapter::mqtt_adapter::MqttAdapter>(
+                m_context, m_pipelineContext, adapterOptions, block.second);
             m_agent->addSource(adp, false);
             name = adp->getName();
           }
@@ -870,7 +870,6 @@ namespace mtconnect {
           }
 
           LOG(info) << protocol << ": Adding adapter for " << deviceName << ": " << name;
-
         }
       }
       else if ((device = defaultDevice()))
@@ -880,7 +879,8 @@ namespace mtconnect {
         auto deviceName = *device->getComponentName();
         adapterOptions[configuration::Device] = deviceName;
         LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
-        auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, m_pipelineContext, adapterOptions, config);
+        auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, m_pipelineContext,
+                                                           adapterOptions, config);
         m_agent->addSource(adp, false);
       }
       else
@@ -888,23 +888,28 @@ namespace mtconnect {
         throw runtime_error("Adapters must be defined if more than one device is present");
       }
     }
-      
-    string AgentConfiguration::loadSourcePlugin(const std::string &deviceName, const std::string &dllName, const ptree &tree, ConfigOptions &options)
+
+    string AgentConfiguration::loadSourcePlugin(const std::string &deviceName,
+                                                const std::string &dllName, const ptree &tree,
+                                                ConfigOptions &options)
     {
       boost::filesystem::path sharedLibPath = boost::dll::program_location().parent_path();
-            
+
       auto dllPath = sharedLibPath / dllName;
-      
+
       dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
-      
-      using PluginCreateFn = std::shared_ptr<Source>(const std::string &name, boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block);
-      
+
+      using PluginCreateFn = std::shared_ptr<Source>(
+          const std::string &name, boost::asio::io_context &io,
+          pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options,
+          const boost::property_tree::ptree &block);
+
       boost::function<PluginCreateFn> creator;
-      
+
       // keep the list of dynamic adapter creator
       // shared library will be unloaded if they are out of scope
       static std::list<boost::function<PluginCreateFn>> dynamicSourceCreators;
-      
+
       try
       {
         creator = boost::dll::import_alias<PluginCreateFn>(dllPath,  // path to library
@@ -912,35 +917,34 @@ namespace mtconnect {
       }
       catch (exception &e)
       {
-        LOG(info) << "Cannot load adapter plugin " << deviceName << " from "
-        << sharedLibPath << " Reason: " << e.what();
+        LOG(info) << "Cannot load adapter plugin " << deviceName << " from " << sharedLibPath
+                  << " Reason: " << e.what();
       }
-      
+
       if (creator.empty())
       {
         // try current working directory
         auto dllPath = boost::filesystem::current_path() / dllName;
         try
         {
-          creator = boost::dll::import_alias<PluginCreateFn>(
-                                                                         dllPath, "create_adapter_plugin");
+          creator = boost::dll::import_alias<PluginCreateFn>(dllPath, "create_adapter_plugin");
         }
         catch (exception &e)
         {
-          LOG(error) << "Cannot load adapter plugin " << dllName << " from "
-          << sharedLibPath << " Reason: " << e.what();
+          LOG(error) << "Cannot load adapter plugin " << dllName << " from " << sharedLibPath
+                     << " Reason: " << e.what();
           return "Not Loaded";
         }
       }
-      
+
       auto adp = creator(deviceName, m_context, m_pipelineContext, options, tree);
       m_agent->addSource(adp, false);
       dynamicSourceCreators.push_back(creator);
-      
+
       LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName;
       return adp->getName();
     }
-  
+
     void AgentConfiguration::loadAllowPut(rest_sink::Server *server, ConfigOptions &options)
     {
       namespace asio = boost::asio;
@@ -1125,48 +1129,49 @@ namespace mtconnect {
     {
       m_python = make_unique<python::Embedded>(m_agent.get(), options);
     }
-    
+
     void AgentConfiguration::loadSinkPlugins(const boost::property_tree::ptree &sinks,
-                         ConfigOptions &options)
+                                             ConfigOptions &options)
     {
       boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
       for (const auto &sink : sinks)
       {
         ConfigOptions sinkOptions = options;
-        
+
         vector<string> sinkHeader;
         boost::split(sinkHeader, sink.first, boost::is_any_of(":"));
-        
+
         string sinkDLLName = sinkHeader[0];
         string sinkId = sinkHeader.size() > 1 ? sinkHeader[1] : sinkDLLName;
-        
+
         GetOptions(sink.second, sinkOptions, options);
-        
+
         // expect the dynamic library's location is same as the executable
         // the library's name is sink's id
         auto dllPath = shared_library_path / sinkDLLName;
-        
+
         dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
-        
-        using PluginCreateFn = std::shared_ptr<mtconnect::Sink>(const string &name, asio::io_context &context, SinkContractPtr &&contract,
-                                                                    const ConfigOptions &options);
+
+        using PluginCreateFn = std::shared_ptr<mtconnect::Sink>(
+            const string &name, asio::io_context &context, SinkContractPtr &&contract,
+            const ConfigOptions &options);
         boost::function<PluginCreateFn> creator;
-        
+
         // keep the list of dynamic sink creators
         // the share library will be unloaded if they are out of scope
         static std::list<boost::function<PluginCreateFn>> dynamic_sink_creators;
-        
+
         try
         {
           creator = boost::dll::import_alias<PluginCreateFn>(dllPath,  // path to library
-                                                                 "create_plugin");
+                                                             "create_plugin");
         }
         catch (exception &e)
         {
           LOG(info) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
-          << " Reason: " << e.what();
+                    << " Reason: " << e.what();
         }
-        
+
         if (creator.empty())
         {
           // try current working directory
@@ -1178,16 +1183,16 @@ namespace mtconnect {
           catch (exception &e)
           {
             LOG(error) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
-            << " Reason: " << e.what();
+                       << " Reason: " << e.what();
             continue;
           }
         }
-        
+
         auto sinkContract = m_agent->makeSinkContract();
         auto sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
         m_agent->addSink(sink_server);
         dynamic_sink_creators.push_back(creator);
-        
+
         LOG(info) << "Loaded sink plugin " << dllPath << " for " << sinkId;
       }
     }

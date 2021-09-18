@@ -38,7 +38,10 @@ namespace mtconnect {
   namespace adapter {
     namespace shdr {
       // Adapter public methods
-      ShdrAdapter::ShdrAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block)
+      ShdrAdapter::ShdrAdapter(boost::asio::io_context &io,
+                               pipeline::PipelineContextPtr pipelineContext,
+                               const ConfigOptions &options,
+                               const boost::property_tree::ptree &block)
         : Adapter("ShdrAdapter", io, options),
           Connector(Source::m_strand, "", 0, 60s),
           m_pipeline(pipelineContext, Source::m_strand),
@@ -46,22 +49,23 @@ namespace mtconnect {
       {
         GetOptions(block, m_options, options);
         AddOptions(block, m_options,
-                   {{configuration::UUID, string()},
-                    {configuration::Manufacturer, string()},
-                    {configuration::Station, string()},
-                    {configuration::Url, string()},
+                   {
+                       {configuration::UUID, string()},
+                       {configuration::Manufacturer, string()},
+                       {configuration::Station, string()},
+                       {configuration::Url, string()},
                    });
 
         AddDefaultedOptions(block, m_options,
-                            { {configuration::Host, "localhost"},
-                              {configuration::Port, 7878},
-                              {configuration::AutoAvailable, false},
-                              {configuration::RealTime, false},
-                              {configuration::RelativeTime, false}});
-          
+                            {{configuration::Host, "localhost"},
+                             {configuration::Port, 7878},
+                             {configuration::AutoAvailable, false},
+                             {configuration::RealTime, false},
+                             {configuration::RelativeTime, false}});
+
         m_server = get<string>(m_options[configuration::Host]);
         m_port = get<int>(m_options[configuration::Port]);
-        
+
         auto timeout = m_options.find(configuration::LegacyTimeout);
         if (timeout != m_options.end())
           m_legacyTimeout = get<Seconds>(timeout->second);

@@ -377,7 +377,7 @@ namespace mtconnect {
     auto v = options.find(name);
     return v != options.end();
   }
-  
+
   inline auto ConvertOption(const std::string &s, const ConfigOption &def)
   {
     ConfigOption option;
@@ -398,7 +398,7 @@ namespace mtconnect {
   }
 
   inline void AddOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
-                                const ConfigOptions &entries)
+                         const ConfigOptions &entries)
   {
     for (auto &e : entries)
     {
@@ -413,7 +413,7 @@ namespace mtconnect {
   }
 
   inline void AddDefaultedOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
-                                         const ConfigOptions &entries)
+                                  const ConfigOptions &entries)
   {
     for (auto &e : entries)
     {
@@ -434,14 +434,14 @@ namespace mtconnect {
   {
     for (auto &e : entries)
     {
-      if (!std::holds_alternative<std::string>(e.second) || !std::get<std::string>(e.second).empty())
+      if (!std::holds_alternative<std::string>(e.second) ||
+          !std::get<std::string>(e.second).empty())
       {
         options.emplace(e.first, e.second);
       }
     }
     AddOptions(tree, options, entries);
   }
-
 
   inline std::string format(const Timestamp &ts)
   {

@@ -43,7 +43,9 @@ namespace mtconnect {
       class MqttPipeline : public adapter::AdapterPipeline
       {
       public:
-        MqttPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &strand) : AdapterPipeline(context, strand) {}
+        MqttPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &strand)
+          : AdapterPipeline(context, strand)
+        {}
 
         const auto &getContract() { return m_context->m_contract; }
 
@@ -56,7 +58,8 @@ namespace mtconnect {
       class MqttAdapter : public Adapter
       {
       public:
-        MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block);
+        MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
+                    const ConfigOptions &options, const boost::property_tree::ptree &block);
         ~MqttAdapter() override {}
 
         const std::string &getHost() const override { return m_host; };
@@ -70,7 +73,7 @@ namespace mtconnect {
         void stop() override { m_client->stop(); }
 
         pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
-        
+
       protected:
         void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
 
