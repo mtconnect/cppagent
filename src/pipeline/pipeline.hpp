@@ -38,22 +38,23 @@ namespace mtconnect {
     class Pipeline
     {
     public:
-      Pipeline(PipelineContextPtr context) : m_start(std::make_shared<Start>()), m_context(context)
+      Pipeline(PipelineContextPtr context, boost::asio::io_context::strand &st) : m_start(std::make_shared<Start>()), m_context(context), m_strand(st)
       {}
       virtual ~Pipeline() { m_start->stop(); }
       virtual void build(const ConfigOptions &options) = 0;
       bool started() const { return m_started; }
+      boost::asio::io_context::strand &getStrand() { return m_strand; }
       void clear()
       {
         m_start->stop();
         m_started = false;
         m_start = std::make_shared<Start>();
       }
-      virtual void start(boost::asio::io_context::strand &st)
+      virtual void start()
       {
         if (m_start)
         {
-          m_start->start(st);
+          m_start->start(m_strand);
           m_started = true;
         }
       }
@@ -144,6 +145,7 @@ namespace mtconnect {
       bool m_started {false};
       TransformPtr m_start;
       PipelineContextPtr m_context;
+      boost::asio::io_context::strand m_strand;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

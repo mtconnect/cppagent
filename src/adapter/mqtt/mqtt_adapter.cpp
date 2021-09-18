@@ -333,29 +333,66 @@ namespace mtconnect {
       //      using base::base;
       //    };
 
-      MqttAdapter::MqttAdapter(boost::asio::io_context &context, const ConfigOptions &options,
-                               std::unique_ptr<MqttPipeline> &pipeline)
-        : Adapter("MQTT", options),
-          m_ioContext(context),
-          m_strand(context),
-          m_host(*GetOption<std::string>(options, configuration::Host)),
-          m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
-          m_pipeline(std::move(pipeline))
-      {
-        m_handler = m_pipeline->makeHandler();
-        if (IsOptionSet(options, configuration::MqttTls))
-          m_client = make_shared<MqttAdapterTlsClient>(m_ioContext, options, m_pipeline.get(),
+      MqttAdapter::MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block)
+        : Adapter("MQTT", io, options),
+          m_ioContext(io),
+          m_strand(Source::m_strand),
+          m_pipeline(pipelineContext, Source::m_strand)
+      {                
+        GetOptions(block, m_options, options);
+        AddOptions(block, m_options,
+                   {{configuration::UUID, string()},
+                    {configuration::Manufacturer, string()},
+                    {configuration::Station, string()},
+                    {configuration::Url, string()},
+                    {configuration::MqttCaCert, string()}
+                   });
+
+        AddDefaultedOptions(block, m_options,
+                            { {configuration::Host, "localhost"},
+                              {configuration::Port, 1883},
+                              {configuration::MqttTls, false},
+                              {configuration::AutoAvailable, false},
+                              {configuration::RealTime, false},
+                              {configuration::RelativeTime, false}});
+        loadTopics(block, m_options);
+        
+        m_handler = m_pipeline.makeHandler();
+        if (IsOptionSet(m_options, configuration::MqttTls))
+          m_client = make_shared<MqttAdapterTlsClient>(m_ioContext, m_options, &m_pipeline,
                                                        m_handler.get());
         else
-          m_client = make_shared<MqttAdapterClient>(m_ioContext, options, m_pipeline.get(),
+          m_client = make_shared<MqttAdapterClient>(m_ioContext, m_options, &m_pipeline,
                                                     m_handler.get());
         m_name = m_client->getIdentity();
         m_options[configuration::AdapterIdentity] = m_name;
-        m_pipeline->build(m_options);
+        m_pipeline.build(m_options);
 
         m_identity = m_client->getIdentity();
         m_url = m_client->getUrl();
       }
+      
+      void MqttAdapter::loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options)
+      {
+        auto topics = tree.get_child_optional(configuration::Topics);
+        if (topics)
+        {
+          StringList list;
+          if (topics->size() == 0)
+          {
+            list.emplace_back(":" + topics->get_value<string>());
+          }
+          else
+          {
+            for (auto &f : *topics)
+            {
+              list.emplace_back(f.first + ":" + f.second.data());
+            }
+          }
+          options[configuration::Topics] = list;
+        }
+      }
+
 
       void MqttPipeline::build(const ConfigOptions &options)
       {
@@ -378,6 +415,8 @@ namespace mtconnect {
         buildAssetDelivery(next);
         buildObservationDelivery(next);
       }
+      
+      
     }  // namespace mqtt_adapter
   }    // namespace adapter
 }  // namespace mtconnect

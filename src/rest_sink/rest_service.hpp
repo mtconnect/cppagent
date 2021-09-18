@@ -42,7 +42,7 @@ namespace mtconnect {
 
       auto makeLoopbackSource(pipeline::PipelineContextPtr context)
       {
-        m_loopback = std::make_shared<LoopbackSource>("RestSource", context, m_strand, m_options);
+        m_loopback = std::make_shared<LoopbackSource>("RestSource", m_strand, context, m_options);
         return m_loopback;
       }
 

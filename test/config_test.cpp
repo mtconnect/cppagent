@@ -560,7 +560,7 @@ namespace
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto adapter = agent->findSource("_Host1_7878");
+    const auto adapter = agent->findSource("Simplest");
     ASSERT_TRUE(adapter != nullptr);
   }
 }  // namespace

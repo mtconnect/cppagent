@@ -25,9 +25,11 @@ namespace mtconnect {
     class Adapter : public Source
     {
     public:
-      Adapter(const std::string &name, const ConfigOptions &options)
-        : Source(name), m_options(options)
-      {}
+      Adapter(const std::string &name, boost::asio::io_context &io, const ConfigOptions &options)
+        : Source(io), m_options(options)
+      {
+        m_name = name;
+      }
       virtual ~Adapter() {}
 
       virtual const std::string &getHost() const = 0;

@@ -43,17 +43,17 @@ namespace mtconnect {
   namespace adapter {
     namespace shdr {
       // Connector public methods
-      Connector::Connector(asio::io_context &context, string server, unsigned int port,
+      Connector::Connector(asio::io_context::strand &strand, string server, unsigned int port,
                            seconds legacyTimeout, seconds reconnectInterval)
         : m_server(std::move(server)),
-          m_strand(context),
-          m_socket(context),
+          m_strand(strand),
+          m_socket(strand.context()),
           m_port(port),
           m_localPort(0),
           m_incoming(1024 * 1024),
-          m_timer(context),
-          m_heartbeatTimer(context),
-          m_receiveTimeout(context),
+          m_timer(strand.context()),
+          m_heartbeatTimer(strand.context()),
+          m_receiveTimeout(strand.context()),
           m_connected(false),
           m_realTime(false),
           m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),

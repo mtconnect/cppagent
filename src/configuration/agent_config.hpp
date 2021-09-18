@@ -85,9 +85,10 @@ namespace mtconnect {
                      XmlPrinter *printer, StyleFunction styleFunction);
       void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
       void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
-      void loadTopics(const ptree &tree, ConfigOptions &options);
 
       void configurePython(const ptree &tree, ConfigOptions &options);
+      
+      std::string loadSourcePlugin(const std::string &device, const std::string &dll, const ptree &tree, ConfigOptions &options);
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 

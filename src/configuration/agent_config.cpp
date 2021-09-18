@@ -90,69 +90,6 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp",
 
 namespace mtconnect {
   namespace configuration {
-    static inline auto Convert(const std::string &s, const ConfigOption &def)
-    {
-      ConfigOption option;
-      visit(overloaded {[&option, &s](const std::string &) {
-                          if (s.empty())
-                            option = std::monostate();
-                          else
-                            option = s;
-                        },
-                        [&option, &s](const int &) { option = stoi(s); },
-                        [&option, &s](const Milliseconds &) { option = Milliseconds {stoi(s)}; },
-                        [&option, &s](const Seconds &) { option = Seconds {stoi(s)}; },
-                        [&option, &s](const double &) { option = stod(s); },
-                        [&option, &s](const bool &) { option = s == "yes" || s == "true"; },
-                        [](const auto &) {}},
-            def);
-      return option;
-    }
-
-    static inline void AddOptions(const pt::ptree &tree, ConfigOptions &options,
-                                  const ConfigOptions &entries)
-    {
-      for (auto &e : entries)
-      {
-        auto val = tree.get_optional<string>(e.first);
-        if (val)
-        {
-          auto v = Convert(*val, e.second);
-          if (v.index() != 0)
-            options.insert_or_assign(e.first, v);
-        }
-      }
-    }
-
-    static inline void AddDefaultedOptions(const pt::ptree &tree, ConfigOptions &options,
-                                           const ConfigOptions &entries)
-    {
-      for (auto &e : entries)
-      {
-        auto val = tree.get_optional<string>(e.first);
-        if (val)
-        {
-          auto v = Convert(*val, e.second);
-          if (v.index() != 0)
-            options.insert_or_assign(e.first, v);
-        }
-        else
-          options.insert_or_assign(e.first, e.second);
-      }
-    }
-
-    static inline void GetOptions(const pt::ptree &tree, ConfigOptions &options,
-                                  const ConfigOptions &entries)
-    {
-      for (auto &e : entries)
-      {
-        if (!holds_alternative<string>(e.second) || !get<string>(e.second).empty())
-        {
-          options.emplace(e.first, e.second);
-        }
-      }
-      AddOptions(tree, options, entries);
-    }
 
     AgentConfiguration::AgentConfiguration()
     {
@@ -775,7 +712,7 @@ namespace mtconnect {
 
             auto iter = sinkOptions.find(child.first);
             sinkOptions[child.first] =
-                Convert(value, iter != sinkOptions.end() ? iter->second : value);
+                ConvertOption(value, iter != sinkOptions.end() ? iter->second : value);
           }
 
           // expect the dynamic library's location is same as the executable
@@ -907,31 +844,27 @@ namespace mtconnect {
       auto adapters = config.get_child_optional("Adapters");
       if (adapters)
       {
-        boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
-
         for (const auto &block : *adapters)
         {
           ConfigOptions adapterOptions = options;
 
           GetOptions(block.second, adapterOptions, options);
           AddOptions(block.second, adapterOptions,
-                     {{configuration::UUID, string()},
-                      {configuration::Manufacturer, string()},
-                      {configuration::Station, string()},
-                      {configuration::Url, string()},
-                      {configuration::Host, string()},
-                      {configuration::MqttCaCert, string()},
-                      {configuration::Port, 0},
-                      {configuration::Protocol, string()}});
-
+                     {{configuration::Url, string()}});
           AddDefaultedOptions(block.second, adapterOptions,
-                              {{configuration::AutoAvailable, false},
-                               {configuration::RealTime, false},
-                               {configuration::MqttTls, false},
-                               {configuration::RelativeTime, false}});
-
+                              {{configuration::Protocol, "shdr"s}});
+          
           auto deviceName =
               block.second.get_optional<string>(configuration::Device).value_or(block.first);
+          
+          optional<string> dllName;
+          if (deviceName.find(':') != string::npos)
+          {
+            vector<string> deviceHeader;
+            boost::split(deviceHeader, block.first, boost::is_any_of(":"));
+            dllName = deviceHeader[0];
+            deviceName = deviceHeader[1];
+          }
 
           device = m_agent->getDeviceByName(deviceName);
 
@@ -976,8 +909,7 @@ namespace mtconnect {
             adapterOptions[configuration::AdditionalDevices] = deviceList;
           }
 
-          string host, protocol, path;
-          int port {-1};
+          string protocol, name;
           if (HasOption(adapterOptions, configuration::Url))
           {
             parseUrl(adapterOptions);
@@ -985,34 +917,22 @@ namespace mtconnect {
 
           if (HasOption(adapterOptions, configuration::Protocol))
             protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
-          else
-            protocol = "shdr";
-          if (HasOption(adapterOptions, configuration::Host))
-            host = get<string>(adapterOptions[configuration::Host]);
-          else
-            adapterOptions[configuration::Host] = host = "localhost";
-
-          if (protocol == "shdr")
+          
+          if (dllName)
           {
-            if (HasOption(adapterOptions, configuration::Port))
-              port = get<int>(adapterOptions[configuration::Port]);
-            else
-              port = 7878;
-            auto pipeline = make_unique<adapter::shdr::ShdrPipeline>(m_pipelineContext);
-            auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, host, port,
-                                                               adapterOptions, pipeline);
+            loadSourcePlugin(deviceName, *dllName, block.second, adapterOptions);
+          }
+          else if (protocol == "shdr")
+          {
+            auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, m_pipelineContext, adapterOptions, block.second);
             m_agent->addSource(adp, false);
+            name = adp->getName();
           }
           else if (protocol == "mqtt")
           {
-            loadTopics(block.second, adapterOptions);
-            if (!HasOption(adapterOptions, configuration::Port))
-              adapterOptions[configuration::Port] = 1883;
-            auto pipeline = make_unique<adapter::mqtt_adapter::MqttPipeline>(m_pipelineContext);
-            auto adp = make_shared<adapter::mqtt_adapter::MqttAdapter>(m_context, adapterOptions,
-                                                                       pipeline);
+            auto adp = make_shared<adapter::mqtt_adapter::MqttAdapter>(m_context, m_pipelineContext, adapterOptions, block.second);
             m_agent->addSource(adp, false);
-            port = adp->getPort();
+            name = adp->getName();
           }
           else
           {
@@ -1020,94 +940,8 @@ namespace mtconnect {
             exit(1);
           }
 
-          LOG(info) << protocol << ": Adding adapter for " << deviceName << " on " << host << ":"
-                    << port;
+          LOG(info) << protocol << ": Adding adapter for " << deviceName << ": " << name;
 
-          vector<string> deviceHeader;
-          boost::split(deviceHeader, block.first, boost::is_any_of(":"));
-
-          string deviceDLLName = deviceHeader[0];
-          if (deviceHeader.size() > 1)
-          {
-            // collect all options for this adapter,
-            // Override if exists already
-            const ptree &tree = block.second;
-            for (auto &child : tree)
-            {
-              const string value = child.second.get_value<std::string>();
-
-              auto iter = adapterOptions.find(child.first);
-              adapterOptions[child.first] =
-                  Convert(value, iter != adapterOptions.end() ? iter->second : value);
-            }
-
-            deviceName = deviceHeader[1];
-            auto dllPath = shared_library_path / deviceDLLName;
-
-            dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
-
-            typedef std::shared_ptr<Source>(adapter_pluginapi_create_t)(
-                const string &name, asio::io_context &context, const std::string &server,
-                const unsigned int port, const ConfigOptions &options,
-                std::unique_ptr<AdapterPipeline> &pipeline);
-            boost::function<adapter_pluginapi_create_t> creator;
-
-            // keep the list of dynamic adapter creator
-            // shared library will be unloaded if they are out of scope
-            static std::list<boost::function<adapter_pluginapi_create_t>> dynamic_adapter_creators;
-
-            try
-            {
-              creator =
-                  boost::dll::import_alias<adapter_pluginapi_create_t>(dllPath,  // path to library
-                                                                       "create_adapter_plugin");
-            }
-            catch (exception &e)
-            {
-              LOG(info) << "Cannot load adapter plugin " << deviceName << " from "
-                        << shared_library_path << " Reason: " << e.what();
-            }
-
-            if (creator.empty())
-            {
-              // try current working directory
-              auto dllPath = boost::filesystem::current_path() / deviceDLLName;
-              try
-              {
-                creator = boost::dll::import_alias<adapter_pluginapi_create_t>(
-                    dllPath, "create_adapter_plugin");
-              }
-              catch (exception &e)
-              {
-                LOG(error) << "Cannot load adapter plugin " << deviceName << " from "
-                           << shared_library_path << " Reason: " << e.what();
-                continue;
-              }
-            }
-
-            auto host = get<string>(adapterOptions[configuration::Host]);
-            auto port = get<int>(adapterOptions[configuration::Port]);
-
-            auto pipeline = make_unique<adapter::AdapterPipeline>(m_pipelineContext);
-            auto adp = creator(deviceName, m_context, host, port, adapterOptions, pipeline);
-            m_agent->addSource(adp, false);
-            dynamic_adapter_creators.push_back(creator);
-
-            LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName << " on "
-                      << host << ":" << port;
-          }
-          else
-          {
-            LOG(info) << "Adding adapter for " << deviceName << " on "
-                      << get<string>(adapterOptions[configuration::Host]) << ":"
-                      << get<int>(adapterOptions[configuration::Port]);
-
-            auto pipeline = make_unique<shdr::ShdrPipeline>(m_pipelineContext);
-            auto adp = make_shared<shdr::ShdrAdapter>(
-                m_context, get<string>(adapterOptions[configuration::Host]),
-                get<int>(adapterOptions[configuration::Port]), adapterOptions, pipeline);
-            m_agent->addSource(adp, false);
-          }
         }
       }
       else if ((device = defaultDevice()))
@@ -1117,10 +951,7 @@ namespace mtconnect {
         auto deviceName = *device->getComponentName();
         adapterOptions[configuration::Device] = deviceName;
         LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
-
-        auto pipeline = make_unique<adapter::shdr::ShdrPipeline>(m_pipelineContext);
-        auto adp =
-            make_shared<shdr::ShdrAdapter>(m_context, "localhost", 7878, adapterOptions, pipeline);
+        auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, m_pipelineContext, adapterOptions, config);
         m_agent->addSource(adp, false);
       }
       else
@@ -1128,7 +959,59 @@ namespace mtconnect {
         throw runtime_error("Adapters must be defined if more than one device is present");
       }
     }
-
+      
+    string AgentConfiguration::loadSourcePlugin(const std::string &deviceName, const std::string &dllName, const ptree &tree, ConfigOptions &options)
+    {
+      boost::filesystem::path sharedLibPath = boost::dll::program_location().parent_path();
+            
+      auto dllPath = sharedLibPath / dllName;
+      
+      dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
+      
+      using PluginCreateFn = std::shared_ptr<Source>(const std::string &name, boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block);
+      
+      boost::function<PluginCreateFn> creator;
+      
+      // keep the list of dynamic adapter creator
+      // shared library will be unloaded if they are out of scope
+      static std::list<boost::function<PluginCreateFn>> dynamicSourceCreators;
+      
+      try
+      {
+        creator = boost::dll::import_alias<PluginCreateFn>(dllPath,  // path to library
+                                                           "create_adapter_plugin");
+      }
+      catch (exception &e)
+      {
+        LOG(info) << "Cannot load adapter plugin " << deviceName << " from "
+        << sharedLibPath << " Reason: " << e.what();
+      }
+      
+      if (creator.empty())
+      {
+        // try current working directory
+        auto dllPath = boost::filesystem::current_path() / dllName;
+        try
+        {
+          creator = boost::dll::import_alias<PluginCreateFn>(
+                                                                         dllPath, "create_adapter_plugin");
+        }
+        catch (exception &e)
+        {
+          LOG(error) << "Cannot load adapter plugin " << dllName << " from "
+          << sharedLibPath << " Reason: " << e.what();
+          return "Not Loaded";
+        }
+      }
+      
+      auto adp = creator(deviceName, m_context, m_pipelineContext, options, tree);
+      m_agent->addSource(adp, false);
+      dynamicSourceCreators.push_back(creator);
+      
+      LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName;
+      return adp->getName();
+    }
+  
     void AgentConfiguration::loadAllowPut(rest_sink::Server *server, ConfigOptions &options)
     {
       namespace asio = boost::asio;
@@ -1270,27 +1153,6 @@ namespace mtconnect {
         }
 
         options[configuration::HttpHeaders] = fields;
-      }
-    }
-
-    void AgentConfiguration::loadTopics(const ptree &tree, ConfigOptions &options)
-    {
-      auto topics = tree.get_child_optional(configuration::Topics);
-      if (topics)
-      {
-        StringList list;
-        if (topics->size() == 0)
-        {
-          list.emplace_back(":" + topics->get_value<string>());
-        }
-        else
-        {
-          for (auto &f : *topics)
-          {
-            list.emplace_back(f.first + ":" + f.second.data());
-          }
-        }
-        options[configuration::Topics] = list;
       }
     }
 

@@ -40,13 +40,11 @@ namespace mtconnect {
 
   namespace adapter {
     namespace shdr {
-      class ShdrAdapter : public Connector, public adapter::Adapter
+      class ShdrAdapter : public adapter::Adapter, public Connector
       {
       public:
         // Associate adapter with a device & connect to the server & port
-        ShdrAdapter(boost::asio::io_context &context, const std::string &server,
-                    const unsigned int port, const ConfigOptions &options,
-                    std::unique_ptr<ShdrPipeline> &pipeline);
+        ShdrAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block);
         ShdrAdapter(const ShdrAdapter &) = delete;
 
         // Virtual destructor
@@ -79,7 +77,7 @@ namespace mtconnect {
         // Agent Device methods
         const std::string &getHost() const override { return m_server; }
         unsigned int getPort() const override { return m_port; }
-        pipeline::Pipeline *getPipeline() override { return m_pipeline.get(); }
+        pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
 
         // Start and Stop
         void stop() override;
@@ -87,7 +85,7 @@ namespace mtconnect {
         {
           if (Connector::start())
           {
-            m_pipeline->start(m_strand);
+            m_pipeline.start();
             return true;
           }
           else
@@ -98,13 +96,13 @@ namespace mtconnect {
         {
           for (auto &o : options)
             m_options.insert_or_assign(o.first, o.second);
-          m_pipeline->build(m_options);
-          if (m_pipeline->started())
-            m_pipeline->start(m_strand);
+          m_pipeline.build(m_options);
+          if (m_pipeline.started())
+            m_pipeline.start();
         }
 
       protected:
-        std::unique_ptr<ShdrPipeline> m_pipeline;
+        ShdrPipeline m_pipeline;
 
         // If the connector has been running
         bool m_running;

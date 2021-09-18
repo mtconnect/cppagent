@@ -84,7 +84,7 @@ namespace mtconnect {
   {
     NAMED_SCOPE("Agent::initialize");
 
-    m_loopback = std::make_unique<LoopbackSource>("AgentSource", context, m_strand, m_options);
+    m_loopback = std::make_unique<LoopbackSource>("AgentSource", m_strand, context, m_options);
 
     int major, minor;
     char c;

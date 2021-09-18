@@ -38,24 +38,40 @@ namespace mtconnect {
   namespace adapter {
     namespace shdr {
       // Adapter public methods
-      ShdrAdapter::ShdrAdapter(boost::asio::io_context &context, const string &server,
-                               const unsigned int port, const ConfigOptions &options,
-                               std::unique_ptr<ShdrPipeline> &pipeline)
-        : Connector(context, server, port, 60s),
-          Adapter("Adapter", options),
-          m_pipeline(std::move(pipeline)),
+      ShdrAdapter::ShdrAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block)
+        : Adapter("ShdrAdapter", io, options),
+          Connector(Source::m_strand, "", 0, 60s),
+          m_pipeline(pipelineContext, Source::m_strand),
           m_running(true)
       {
-        auto timeout = options.find(configuration::LegacyTimeout);
-        if (timeout != options.end())
+        GetOptions(block, m_options, options);
+        AddOptions(block, m_options,
+                   {{configuration::UUID, string()},
+                    {configuration::Manufacturer, string()},
+                    {configuration::Station, string()},
+                    {configuration::Url, string()},
+                   });
+
+        AddDefaultedOptions(block, m_options,
+                            { {configuration::Host, "localhost"},
+                              {configuration::Port, 7878},
+                              {configuration::AutoAvailable, false},
+                              {configuration::RealTime, false},
+                              {configuration::RelativeTime, false}});
+          
+        m_server = get<string>(m_options[configuration::Host]);
+        m_port = get<int>(m_options[configuration::Port]);
+        
+        auto timeout = m_options.find(configuration::LegacyTimeout);
+        if (timeout != m_options.end())
           m_legacyTimeout = get<Seconds>(timeout->second);
 
         stringstream url;
-        url << "shdr://" << server << ':' << port;
+        url << "shdr://" << m_server << ':' << m_port;
         m_url = url.str();
 
         stringstream identity;
-        identity << '_' << server << '_' << port;
+        identity << '_' << m_server << '_' << m_port;
         m_name = identity.str();
         boost::uuids::detail::sha1 sha1;
         sha1.process_bytes(identity.str().c_str(), identity.str().length());
@@ -67,9 +83,9 @@ namespace mtconnect {
         m_identity = string("_") + (identity.str()).substr(0, 10);
 
         m_options[configuration::AdapterIdentity] = m_identity;
-        m_handler = m_pipeline->makeHandler();
-        if (m_pipeline->hasContract())
-          m_pipeline->build(m_options);
+        m_handler = m_pipeline.makeHandler();
+        if (m_pipeline.hasContract())
+          m_pipeline.build(m_options);
         auto intv = GetOption<Milliseconds>(options, configuration::ReconnectInterval);
         if (intv)
           m_reconnectInterval = *intv;

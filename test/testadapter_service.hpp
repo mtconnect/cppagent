@@ -17,10 +17,12 @@
 
 #pragma once
 
-#include "source.hpp"
 #include "pipeline/pipeline.hpp"
 #include "adapter/adapter.hpp"
+#include "adapter/adapter_pipeline.hpp"
 #include <boost/dll/alias.hpp>
+
+#include "source.hpp"
 
 using namespace std;
 
@@ -30,36 +32,32 @@ namespace mtconnect
     class adapter_plugin_test : public Source
     {
     public:
-      adapter_plugin_test(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
-                         const mtconnect::ConfigOptions &options, std::unique_ptr<Pipeline> &pipeline)
-          : Source(name), m_pipeline(std::move(pipeline)), m_strand(context)
+      adapter_plugin_test(const std::string &name, boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block)
+      : Source(name, io), m_pipeline(pipelineContext, m_strand)
       
       {
-        m_pipeline->build(options);
+        m_pipeline.build(options);
       }
 
       ~adapter_plugin_test() = default;
 
       bool start() override {
-        m_pipeline->start(m_strand);
+        m_pipeline.start();
         return true;
       }
       void stop() override {
-        m_pipeline->clear();
+        m_pipeline.clear();
       }
 
       // Factory method
-      static std::shared_ptr<adapter_plugin_test> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
-                                                          const mtconnect::ConfigOptions &options, std::unique_ptr<Pipeline> &pipeline) {
-          return std::make_shared<adapter_plugin_test>(name, context, server, port, options, pipeline);
+      static std::shared_ptr<adapter_plugin_test> create(const std::string &name, boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block) {
+          return std::make_shared<adapter_plugin_test>(name, io, pipelineContext, options, block);
       }
       
-      Pipeline *getPipeline() override { return m_pipeline.get(); }
+      Pipeline *getPipeline() override { return &m_pipeline; }
 
     protected:
-      std::unique_ptr<Pipeline> m_pipeline;
-      boost::asio::io_context::strand m_strand;
-
+      adapter::AdapterPipeline m_pipeline;
     };
 
     BOOST_DLL_ALIAS(

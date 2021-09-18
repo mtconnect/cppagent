@@ -35,7 +35,7 @@ namespace mtconnect {
       {
       public:
         // Instantiate the server by assigning it a server and port/
-        Connector(boost::asio::io_context &context, std::string server, unsigned int port,
+        Connector(boost::asio::io_context::strand &strand, std::string server, unsigned int port,
                   std::chrono::seconds legacyTimout = std::chrono::seconds {600},
                   std::chrono::seconds reconnectInterval = std::chrono::seconds {10});
 
