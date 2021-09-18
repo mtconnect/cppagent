@@ -89,6 +89,7 @@ namespace mtconnect {
       void configurePython(const ptree &tree, ConfigOptions &options);
       
       std::string loadSourcePlugin(const std::string &device, const std::string &dll, const ptree &tree, ConfigOptions &options);
+      void loadSinkPlugins(const ptree &sinks, ConfigOptions &options);
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 

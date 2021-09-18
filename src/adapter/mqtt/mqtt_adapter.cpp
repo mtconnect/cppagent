@@ -139,7 +139,7 @@ namespace mtconnect {
           });
 
           client->set_suback_handler(
-              [this](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
+              [](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
                 LOG(debug) << "suback received. packet_id: " << packet_id;
                 for (auto const &e : results)
                 {

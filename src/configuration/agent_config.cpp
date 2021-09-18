@@ -687,83 +687,11 @@ namespace mtconnect {
       m_agent->addSink(server);
 
       NAMED_SCOPE("config.sinks");
-
-      DevicePtr device;
+      
       auto sinks = config.get_child_optional("Sinks");
       if (sinks)
       {
-        boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
-        for (const auto &sink : *sinks)
-        {
-          ConfigOptions sinkOptions = options;
-
-          vector<string> sinkHeader;
-          boost::split(sinkHeader, sink.first, boost::is_any_of(":"));
-
-          string sinkDLLName = sinkHeader[0];
-          string sinkId = sinkHeader.size() > 1 ? sinkHeader[1] : sinkDLLName;
-
-          // collect all options for this sink,
-          // Override if exists already
-          const ptree &tree = sink.second;
-          for (auto &child : tree)
-          {
-            const string value = child.second.get_value<std::string>();
-
-            auto iter = sinkOptions.find(child.first);
-            sinkOptions[child.first] =
-                ConvertOption(value, iter != sinkOptions.end() ? iter->second : value);
-          }
-
-          // expect the dynamic library's location is same as the executable
-          // the library's name is sink's id
-          auto dllPath = shared_library_path / sinkDLLName;
-
-          dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
-
-          typedef std::shared_ptr<mtconnect::Sink>(pluginapi_create_t)(
-              const string &name, asio::io_context &context, SinkContractPtr &&contract,
-              const ConfigOptions &options);
-          boost::function<pluginapi_create_t> creator;
-
-          // keep the list of dynamic sink creators
-          // the share library will be unloaded if they are out of scope
-          static std::list<boost::function<pluginapi_create_t>> dynamic_sink_creators;
-
-          try
-          {
-            creator = boost::dll::import_alias<pluginapi_create_t>(dllPath,  // path to library
-                                                                   "create_plugin");
-          }
-          catch (exception &e)
-          {
-            LOG(info) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
-                      << " Reason: " << e.what();
-          }
-
-          if (creator.empty())
-          {
-            // try current working directory
-            auto dllPath = boost::filesystem::current_path() / sinkDLLName;
-            try
-            {
-              creator = boost::dll::import_alias<pluginapi_create_t>(dllPath, "create_plugin");
-            }
-            catch (exception &e)
-            {
-              LOG(error) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
-                         << " Reason: " << e.what();
-              continue;
-            }
-          }
-
-          sinkContract = m_agent->makeSinkContract();
-          auto sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
-          m_agent->addSink(sink_server);
-          dynamic_sink_creators.push_back(creator);
-
-          LOG(info) << "Loaded sink plugin " << dllPath << " for " << sinkId;
-        }
+        loadSinkPlugins(*sinks, options);
       }
 
       // Make the PipelineContext
@@ -773,6 +701,7 @@ namespace mtconnect {
 
       m_agent->initialize(m_pipelineContext);
 
+      DevicePtr device;
       if (get<bool>(options[configuration::PreserveUUID]))
       {
         for (auto device : m_agent->getDevices())
@@ -920,7 +849,7 @@ namespace mtconnect {
           
           if (dllName)
           {
-            loadSourcePlugin(deviceName, *dllName, block.second, adapterOptions);
+            name = loadSourcePlugin(deviceName, *dllName, block.second, adapterOptions);
           }
           else if (protocol == "shdr")
           {
@@ -1195,6 +1124,72 @@ namespace mtconnect {
     void AgentConfiguration::configurePython(const ptree &tree, ConfigOptions &options)
     {
       m_python = make_unique<python::Embedded>(m_agent.get(), options);
+    }
+    
+    void AgentConfiguration::loadSinkPlugins(const boost::property_tree::ptree &sinks,
+                         ConfigOptions &options)
+    {
+      boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
+      for (const auto &sink : sinks)
+      {
+        ConfigOptions sinkOptions = options;
+        
+        vector<string> sinkHeader;
+        boost::split(sinkHeader, sink.first, boost::is_any_of(":"));
+        
+        string sinkDLLName = sinkHeader[0];
+        string sinkId = sinkHeader.size() > 1 ? sinkHeader[1] : sinkDLLName;
+        
+        GetOptions(sink.second, sinkOptions, options);
+        
+        // expect the dynamic library's location is same as the executable
+        // the library's name is sink's id
+        auto dllPath = shared_library_path / sinkDLLName;
+        
+        dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
+        
+        using PluginCreateFn = std::shared_ptr<mtconnect::Sink>(const string &name, asio::io_context &context, SinkContractPtr &&contract,
+                                                                    const ConfigOptions &options);
+        boost::function<PluginCreateFn> creator;
+        
+        // keep the list of dynamic sink creators
+        // the share library will be unloaded if they are out of scope
+        static std::list<boost::function<PluginCreateFn>> dynamic_sink_creators;
+        
+        try
+        {
+          creator = boost::dll::import_alias<PluginCreateFn>(dllPath,  // path to library
+                                                                 "create_plugin");
+        }
+        catch (exception &e)
+        {
+          LOG(info) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
+          << " Reason: " << e.what();
+        }
+        
+        if (creator.empty())
+        {
+          // try current working directory
+          auto dllPath = boost::filesystem::current_path() / sinkDLLName;
+          try
+          {
+            creator = boost::dll::import_alias<PluginCreateFn>(dllPath, "create_plugin");
+          }
+          catch (exception &e)
+          {
+            LOG(error) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
+            << " Reason: " << e.what();
+            continue;
+          }
+        }
+        
+        auto sinkContract = m_agent->makeSinkContract();
+        auto sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
+        m_agent->addSink(sink_server);
+        dynamic_sink_creators.push_back(creator);
+        
+        LOG(info) << "Loaded sink plugin " << dllPath << " for " << sinkId;
+      }
     }
   }  // namespace configuration
 }  // namespace mtconnect

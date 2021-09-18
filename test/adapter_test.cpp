@@ -29,6 +29,7 @@
 
 #include "adapter/shdr/shdr_adapter.hpp"
 #include "pipeline/pipeline_context.hpp"
+#include "configuration/config_options.hpp"
 
 
 using namespace std;
@@ -36,13 +37,19 @@ using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace mtconnect::adapter::shdr;
 namespace asio = boost::asio;
+using namespace std::literals;
 
 TEST(AdapterTest, MultilineData)
 {
   asio::io_context ioc;
+  asio::io_context::strand strand(ioc);
+  ConfigOptions options{
+    {configuration::Host, "localhost"s},
+    {configuration::Port, 7878}
+  };
+  boost::property_tree::ptree tree;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
-  auto pipeline = make_unique<ShdrPipeline>(context);
-  auto adapter = make_unique<ShdrAdapter>(ioc, "localhost", 7878, ConfigOptions{}, pipeline);
+  auto adapter = make_unique<ShdrAdapter>(ioc, context, options, tree);
   
   auto handler = make_unique<Handler>();
   string data;

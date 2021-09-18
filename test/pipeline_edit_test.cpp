@@ -91,7 +91,8 @@ class PipelineEditTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_pipeline = make_unique<TestPipeline>(m_context);
+    boost::asio::io_context::strand strand(m_ioContext);
+    m_pipeline = make_unique<TestPipeline>(m_context, strand);
     
     TestTransformPtr ta = make_shared<TestTransform>("A", EntityNameGuard("X", RUN));
     ta->m_function = [ta](const EntityPtr entity) {
@@ -126,6 +127,7 @@ class PipelineEditTest : public testing::Test
     m_context.reset();
   }
 
+  boost::asio::io_context m_ioContext;
   PipelineContextPtr m_context;
   std::unique_ptr<TestPipeline> m_pipeline;
 };

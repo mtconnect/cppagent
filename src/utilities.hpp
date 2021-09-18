@@ -424,7 +424,7 @@ namespace mtconnect {
         if (v.index() != 0)
           options.insert_or_assign(e.first, v);
       }
-      else
+      else if (options.find(e.first) == options.end())
         options.insert_or_assign(e.first, e.second);
     }
   }
@@ -434,7 +434,7 @@ namespace mtconnect {
   {
     for (auto &e : entries)
     {
-      if (!std::holds_alternative<std::string>(e.second) || !get<std::string>(e.second).empty())
+      if (!std::holds_alternative<std::string>(e.second) || !std::get<std::string>(e.second).empty())
       {
         options.emplace(e.first, e.second);
       }
