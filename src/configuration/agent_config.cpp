@@ -686,8 +686,6 @@ namespace mtconnect {
 
       m_agent->addSink(server);
 
-      NAMED_SCOPE("config.sinks");
-
       auto sinks = config.get_child_optional("Sinks");
       if (sinks)
       {
@@ -767,7 +765,7 @@ namespace mtconnect {
       using namespace adapter;
       using namespace pipeline;
 
-      NAMED_SCOPE("config.adapters");
+      NAMED_SCOPE("AgentConfiguration::loadAdapters");
 
       DevicePtr device;
       auto adapters = config.get_child_optional("Adapters");
@@ -893,6 +891,8 @@ namespace mtconnect {
                                                 const std::string &dllName, const ptree &tree,
                                                 ConfigOptions &options)
     {
+      NAMED_SCOPE("AgentConfiguration::loadSourcePlugin");
+      
       boost::filesystem::path sharedLibPath = boost::dll::program_location().parent_path();
 
       auto dllPath = sharedLibPath / dllName;
@@ -1133,6 +1133,8 @@ namespace mtconnect {
     void AgentConfiguration::loadSinkPlugins(const boost::property_tree::ptree &sinks,
                                              ConfigOptions &options)
     {
+      NAMED_SCOPE("AgentConfiguration::loadSinkPlugins");
+      
       boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
       for (const auto &sink : sinks)
       {
