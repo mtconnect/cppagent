@@ -24,6 +24,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_COMPILE_FEATURES cxx_std_17)
+set(WITHOUT_PYTHON ON CACHE STRING "Without Python Support")
 
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
@@ -68,11 +69,13 @@ endif()
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
-set(Python_USE_STATIC_LIBS ON)
+if(NOT WITHOUT_PYTHON)
+  set(Python_USE_STATIC_LIBS ON)
 
-find_package(Python3 COMPONENTS Interpreter Development Development.Embed)
-message("Include dirs of Python: " ${Python3_INCLUDE_DIRS} )
-message("Libs of Python: " ${Python3_LIBRARIES} )
+  find_package(Python3 COMPONENTS Interpreter Development Development.Embed)
+  message("Include dirs of Python: " ${Python3_INCLUDE_DIRS} )
+  message("Libs of Python: " ${Python3_LIBRARIES} )
+endif()
 
 
 include(cmake/msvc_use_static_runtime.cmake)

@@ -1,6 +1,14 @@
 
 include(GoogleTest)
 
+if (APPLE)
+  set(LIB_PREFIX "lib")
+  set(LIB_SUFFIX ".dylib")
+else()
+  set(LIB_PREFIX "")
+  set(LIB_SUFFIX "")
+endif()
+
 add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
   sink_plugin_test
@@ -34,16 +42,15 @@ if (APPLE)
   set_target_properties(sink_plugin_test PROPERTIES
     FRAMEWORK TRUE
     FRAMEWORK_VERSION A
-    MACOSX_FRAMEWORK_IDENTIFIER adapter_plugin_test
+    MACOSX_FRAMEWORK_IDENTIFIER sink_plugin_test
     VERSION 16.4.0
     SOVERSION 1.0.0)
 endif()
 
-
 #########
+
 add_library(adapter_plugin_test SHARED testadapter_service.cpp testadapter_service.hpp)
 
-#########
 target_include_directories(
   adapter_plugin_test
   PUBLIC
@@ -80,6 +87,8 @@ target_link_libraries(
   )
 
 set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
+
+###########
 
 set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
 add_library(agent_test_lib STATIC ${AGENT_TEST_LIB_SOURCES})
@@ -195,7 +204,9 @@ add_agent_test(observation TRUE observation)
 add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)
 
-add_agent_test(python_transform TRUE python)
+if(NOT WITHOUT_PYTHON)
+  add_agent_test(python_transform TRUE python)
+endif()
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
@@ -205,14 +216,19 @@ add_custom_command(
   "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
   COMMENT "Copying to output directory")
 
-if(NOT MSVC)
-add_custom_command(TARGET sink_plugin_test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        "${PROJECT_BINARY_DIR}/lib/*sink_plugin_test*"
-        "$<TARGET_FILE_DIR:config_test>")
+add_dependencies(config_test adapter_plugin_test sink_plugin_test)
 
-add_custom_command(TARGET adapter_plugin_test POST_BUILD
+if(NOT MSVC)
+  add_custom_command(TARGET config_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        "${PROJECT_BINARY_DIR}/lib/*adapter_plugin_test*"
-        "$<TARGET_FILE_DIR:config_test>")
+        "$<TARGET_FILE:adapter_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/${LIB_PREFIX}$<TARGET_FILE_BASE_NAME:adapter_plugin_test>${LIB_SUFFIX}"
+	)
+      
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "$<TARGET_FILE:sink_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/${LIB_PREFIX}$<TARGET_FILE_BASE_NAME:sink_plugin_test>${LIB_SUFFIX}")
+
 endif()
+

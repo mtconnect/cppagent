@@ -57,10 +57,13 @@
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
 #include "option.hpp"
-#include "python/embedded.hpp"
 #include "rest_sink/rest_service.hpp"
 #include "version.h"
 #include "xml_printer.hpp"
+
+#ifdef WITH_PYTHON
+#include "python/embedded.hpp"
+#endif
 
 // If Windows XP
 #if defined(_WINDOWS)
@@ -727,7 +730,9 @@ namespace mtconnect {
 
       loadTypes(config, cache);
 
+#ifdef WITH_PYTHON
       configurePython(config, options);
+#endif
     }
 
     void parseUrl(ConfigOptions &options)
@@ -1125,11 +1130,13 @@ namespace mtconnect {
       }
     }
 
+#ifdef WITH_PYTHON
     void AgentConfiguration::configurePython(const ptree &tree, ConfigOptions &options)
     {
       m_python = make_unique<python::Embedded>(m_agent.get(), options);
     }
-
+#endif
+    
     void AgentConfiguration::loadSinkPlugins(const boost::property_tree::ptree &sinks,
                                              ConfigOptions &options)
     {

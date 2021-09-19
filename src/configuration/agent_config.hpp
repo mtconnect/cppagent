@@ -41,10 +41,13 @@ namespace mtconnect {
   namespace device_model {
     class Device;
   }
+
+#ifdef WITH_PYTHON
   namespace python {
     class Embedded;
   }
-
+#endif
+  
   class XmlPrinter;
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;
@@ -86,8 +89,9 @@ namespace mtconnect {
       void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
       void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
 
+#ifdef WITH_PYTHON
       void configurePython(const ptree &tree, ConfigOptions &options);
-
+#endif
       std::string loadSourcePlugin(const std::string &device, const std::string &dll,
                                    const ptree &tree, ConfigOptions &options);
       void loadSinkPlugins(const ptree &sinks, ConfigOptions &options);
@@ -102,8 +106,9 @@ namespace mtconnect {
       boost::asio::io_context m_context;
       std::list<std::thread> m_workers;
       std::unique_ptr<Agent> m_agent;
+#ifdef WITH_PYTHON
       std::unique_ptr<python::Embedded> m_python;
-
+#endif
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
       boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>
