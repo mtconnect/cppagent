@@ -29,6 +29,16 @@ target_link_libraries(
   )
 set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
 
+if (APPLE)
+  set_target_properties(sink_plugin_test PROPERTIES
+    FRAMEWORK TRUE
+    FRAMEWORK_VERSION A
+    MACOSX_FRAMEWORK_IDENTIFIER adapter_plugin_test
+    VERSION 16.4.0
+    SOVERSION 1.0.0)
+endif()
+
+
 #########
 add_library(adapter_plugin_test SHARED testadapter_service.cpp testadapter_service.hpp)
 target_include_directories(
@@ -46,6 +56,15 @@ target_compile_definitions(adapter_plugin_test
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
 
+if (APPLE)
+  set_target_properties(adapter_plugin_test PROPERTIES
+    FRAMEWORK TRUE
+    FRAMEWORK_VERSION A
+    MACOSX_FRAMEWORK_IDENTIFIER adapter_plugin_test
+    VERSION 16.4.0
+    SOVERSION 1.0.0)
+endif()
+  
 target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
 set_property(TARGET adapter_plugin_test PROPERTY
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
