@@ -94,24 +94,24 @@ class PipelineEditTest : public testing::Test
     boost::asio::io_context::strand strand(m_ioContext);
     m_pipeline = make_unique<TestPipeline>(m_context, strand);
     
-    TestTransformPtr ta = make_shared<TestTransform>("A", EntityNameGuard("X", RUN));
+    TestTransformPtr ta = make_shared<TestTransform>("A"s, EntityNameGuard("X", RUN));
     ta->m_function = [ta](const EntityPtr entity) {
       EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
-      ret->setValue(ret->getValue<string>() + "A");
+      ret->setValue(ret->getValue<string>() + "A"s);
       return ta->next(ret);
     };
     
-    TestTransformPtr tb = make_shared<TestTransform>("B", EntityNameGuard("X", RUN));
+    TestTransformPtr tb = make_shared<TestTransform>("B"s, EntityNameGuard("X", RUN));
     tb->m_function = [tb](const EntityPtr entity) {
       EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
-      ret->setValue(ret->getValue<string>() + "B");
+      ret->setValue(ret->getValue<string>() + "B"s);
       return tb->next(ret);
     };
 
-    TestTransformPtr tc = make_shared<TestTransform>("C", EntityNameGuard("X", RUN));
+    TestTransformPtr tc = make_shared<TestTransform>("C"s, EntityNameGuard("X", RUN));
     tc->m_function = [](const EntityPtr entity) {
       EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
-      ret->setValue(ret->getValue<string>() + "C");
+      ret->setValue(ret->getValue<string>() + "C"s);
       return ret;
     };
 
@@ -134,7 +134,7 @@ class PipelineEditTest : public testing::Test
 
 TEST_F(PipelineEditTest, run_three_transforms)
 {
-  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"}}));
+  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"s}}));
   auto result = m_pipeline->run(entity);
   
   ASSERT_EQ("SABC", result->getValue<string>());
@@ -142,16 +142,16 @@ TEST_F(PipelineEditTest, run_three_transforms)
 
 TEST_F(PipelineEditTest, insert_R_before_B)
 {
-  TestTransformPtr tr = make_shared<TestTransform>("R", EntityNameGuard("X", RUN));
+  TestTransformPtr tr = make_shared<TestTransform>("R"s, EntityNameGuard("X", RUN));
   tr->m_function = [&tr](const EntityPtr entity) {
     EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
-    ret->setValue(ret->getValue<string>() + "R");
+    ret->setValue(ret->getValue<string>() + "R"s);
     return tr->next(ret);
   };
 
   ASSERT_TRUE(m_pipeline->spliceBefore("B", tr));
   
-  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"}}));
+  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"s}}));
   auto result = m_pipeline->run(entity);
   
   ASSERT_EQ("SARBC", result->getValue<string>());
@@ -159,16 +159,16 @@ TEST_F(PipelineEditTest, insert_R_before_B)
 
 TEST_F(PipelineEditTest, insert_R_after_B)
 {
-  TestTransformPtr tr = make_shared<TestTransform>("R", EntityNameGuard("X", RUN));
+  TestTransformPtr tr = make_shared<TestTransform>("R"s, EntityNameGuard("X", RUN));
   tr->m_function = [&tr](const EntityPtr entity) {
     EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
-    ret->setValue(ret->getValue<string>() + "R");
+    ret->setValue(ret->getValue<string>() + "R"s);
     return tr->next(ret);
   };
 
   ASSERT_TRUE(m_pipeline->spliceAfter("B", tr));
   
-  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"}}));
+  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"s}}));
   auto result = m_pipeline->run(entity);
   
   ASSERT_EQ("SABRC", result->getValue<string>());
@@ -177,16 +177,16 @@ TEST_F(PipelineEditTest, insert_R_after_B)
 TEST_F(PipelineEditTest, append_R_first_after_B)
 {
   
-  TestTransformPtr tr = make_shared<TestTransform>("R", EntityNameGuard("X", RUN));
+  TestTransformPtr tr = make_shared<TestTransform>("R"s, EntityNameGuard("X", RUN));
   tr->m_function = [](const EntityPtr entity) {
     EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
-    ret->setValue(ret->getValue<string>() + "R");
+    ret->setValue(ret->getValue<string>() + "R"s);
     return ret;
   };
 
   ASSERT_TRUE(m_pipeline->firstAfter("B", tr));
   
-  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"}}));
+  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"s}}));
   auto result = m_pipeline->run(entity);
   
   ASSERT_EQ("SABR", result->getValue<string>());
@@ -195,16 +195,16 @@ TEST_F(PipelineEditTest, append_R_first_after_B)
 TEST_F(PipelineEditTest, append_R_last_after_B)
 {
   
-  TestTransformPtr tr = make_shared<TestTransform>("R", EntityNameGuard("X", RUN));
+  TestTransformPtr tr = make_shared<TestTransform>("R"s, EntityNameGuard("X", RUN));
   tr->m_function = [](const EntityPtr entity) {
     EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
-    ret->setValue(ret->getValue<string>() + "R");
+    ret->setValue(ret->getValue<string>() + "R"s);
     return ret;
   };
 
-  ASSERT_TRUE(m_pipeline->lastAfter("B", tr));
+  ASSERT_TRUE(m_pipeline->lastAfter("B"s, tr));
   
-  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"}}));
+  auto entity = shared_ptr<Entity>(new Entity("X", Properties{{"VALUE", "S"s}}));
   auto result = m_pipeline->run(entity);
   
   ASSERT_EQ("SABC", result->getValue<string>());
