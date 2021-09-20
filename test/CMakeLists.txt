@@ -225,12 +225,12 @@ elseif(UNIX)
   add_custom_command(TARGET config_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         "$<TARGET_FILE:adapter_plugin_test>"
-        "$<TARGET_FILE_DIR:config_test>/$<TARGET_FILE_NAME:adapter_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/"
 	)
       
   add_custom_command(TARGET config_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         "$<TARGET_FILE:sink_plugin_test>"
-        "$<TARGET_FILE_DIR:config_test>/$<TARGET_FILE_NAME:sink_plugin_test>")
+        "$<TARGET_FILE_DIR:config_test>/")
 endif()
 
