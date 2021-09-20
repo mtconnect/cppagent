@@ -351,7 +351,7 @@ namespace mtconnect {
                     {configuration::MqttCaCert, string()}});
 
         AddDefaultedOptions(block, m_options,
-                            {{configuration::Host, "localhost"},
+                            {{configuration::Host, "localhost"s},
                              {configuration::Port, 1883},
                              {configuration::MqttTls, false},
                              {configuration::AutoAvailable, false},

@@ -600,8 +600,8 @@ namespace mtconnect {
       ConfigOptions options;
       GetOptions(config, options,
                  {{configuration::PreserveUUID, true},
-                  {configuration::WorkingDirectory, m_working},
-                  {configuration::ExecDirectory, m_exePath},
+                  {configuration::WorkingDirectory, m_working.string()},
+                  {configuration::ExecDirectory, m_exePath.string()},
                   {configuration::ServerIp, "0.0.0.0"s},
                   {configuration::BufferSize, int(DEFAULT_SLIDING_BUFFER_EXP)},
                   {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
@@ -897,7 +897,7 @@ namespace mtconnect {
                                                 ConfigOptions &options)
     {
       NAMED_SCOPE("AgentConfiguration::loadSourcePlugin");
-      
+
       boost::filesystem::path sharedLibPath = boost::dll::program_location().parent_path();
 
       auto dllPath = sharedLibPath / dllName;
@@ -1136,12 +1136,12 @@ namespace mtconnect {
       m_python = make_unique<python::Embedded>(m_agent.get(), options);
     }
 #endif
-    
+
     void AgentConfiguration::loadSinkPlugins(const boost::property_tree::ptree &sinks,
                                              ConfigOptions &options)
     {
       NAMED_SCOPE("AgentConfiguration::loadSinkPlugins");
-      
+
       boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
       for (const auto &sink : sinks)
       {

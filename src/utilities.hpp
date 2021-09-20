@@ -429,8 +429,8 @@ namespace mtconnect {
     }
   }
 
-  static inline void GetOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
-                                const ConfigOptions &entries)
+  inline void GetOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
+                         const ConfigOptions &entries)
   {
     for (auto &e : entries)
     {

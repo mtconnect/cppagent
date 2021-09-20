@@ -183,7 +183,11 @@ if(MSVC)
 	PROPERTY COMPILE_FLAGS "/Ob1")
     endif()
   endif()
-  set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
+
+  # The modules including Beast required the /bigobj option in Windows
+  set_property(SOURCE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.cpp"
     PROPERTY COMPILE_FLAGS "/bigobj")
 endif()
 

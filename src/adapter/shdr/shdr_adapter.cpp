@@ -57,7 +57,7 @@ namespace mtconnect {
                    });
 
         AddDefaultedOptions(block, m_options,
-                            {{configuration::Host, "localhost"},
+                            {{configuration::Host, "localhost"s},
                              {configuration::Port, 7878},
                              {configuration::AutoAvailable, false},
                              {configuration::RealTime, false},
