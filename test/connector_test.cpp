@@ -24,7 +24,7 @@ namespace date
 };
 using namespace date;
 
-#include "adapter/connector.hpp"
+#include "adapter/shdr/connector.hpp"
 
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
@@ -40,6 +40,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
+using namespace mtconnect::adapter::shdr;
 
 namespace asio = boost::asio;
 using tcp = boost::asio::ip::tcp;
@@ -49,10 +50,10 @@ namespace sys = boost::system;
 class TestConnector : public Connector
 {
  public:
-  TestConnector(boost::asio::io_context &context, const std::string &server, unsigned int port,
+  TestConnector(boost::asio::io_context::strand &strand, const std::string &server, unsigned int port,
                 std::chrono::seconds legacyTimeout = std::chrono::seconds{5})
-      : Connector(context, server, port, legacyTimeout), m_disconnected(false),
-        m_context(context)
+      : Connector(strand, server, port, legacyTimeout), m_disconnected(false),
+        m_strand(strand)
   {
   }
   
@@ -104,7 +105,7 @@ class TestConnector : public Connector
   std::string m_command;
   bool m_disconnected;
   
-  boost::asio::io_context &m_context;
+  boost::asio::io_context::strand &m_strand;
 };
 
 class ConnectorTest : public testing::Test
@@ -112,7 +113,8 @@ class ConnectorTest : public testing::Test
  protected:
   void SetUp() override
   {
-    m_connector = std::make_unique<TestConnector>(m_context, "127.0.0.1", m_port);
+    boost::asio::io_context::strand strand(m_context);
+    m_connector = std::make_unique<TestConnector>(strand, "127.0.0.1", m_port);
     m_connector->m_disconnected = true;
     m_connected = false;
   }
@@ -199,7 +201,7 @@ class ConnectorTest : public testing::Test
   std::unique_ptr<TestConnector> m_connector;
   unsigned short m_port{0};
   boost::asio::io_context m_context;
-  
+
   std::unique_ptr<asio::ip::tcp::socket> m_server;
   std::unique_ptr<tcp::acceptor> m_acceptor;
   bool m_connected;
@@ -519,7 +521,8 @@ TEST_F(ConnectorTest, IPV6Connection)
   m_connector.reset();
 
   startServer("::1");
-  m_connector = std::make_unique<TestConnector>(m_context, "::1", m_port);
+  boost::asio::io_context::strand strand(m_context);
+  m_connector = std::make_unique<TestConnector>(strand, "::1", m_port);
 
   m_connector->start(m_port);
   runUntil(2s, [this]() -> bool {

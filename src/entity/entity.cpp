@@ -21,10 +21,8 @@
 
 using namespace std;
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
                            ErrorList &errors)
     {

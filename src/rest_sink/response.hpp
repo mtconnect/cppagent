@@ -25,12 +25,10 @@
 #include "request.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class Printer;
 
-  namespace rest_sink
-  {
+  namespace rest_sink {
     using status = boost::beast::http::status;
 
     struct Response
@@ -38,11 +36,9 @@ namespace mtconnect
       Response(status status = status::ok, const std::string &body = "",
                const std::string &mimeType = "text/xml")
         : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
-      {
-      }
+      {}
       Response(RequestError &e) : m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
-      {
-      }
+      {}
 
       status m_status;
       std::string m_body;

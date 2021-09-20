@@ -33,16 +33,12 @@
 #undef PASCAL
 #endif
 
-namespace mtconnect
-{
-  namespace adapter
-  {
+namespace mtconnect {
+  namespace adapter {
     class Adapter;
   }
-  namespace device_model
-  {
-    namespace data_item
-    {
+  namespace device_model {
+    namespace data_item {
       class DataItem : public entity::Entity, public observation::ChangeSignaler
       {
       public:

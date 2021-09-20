@@ -32,10 +32,8 @@
 #include "request.hpp"
 #include "session.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     class Session;
     using SessionPtr = std::shared_ptr<Session>;
 
@@ -63,8 +61,7 @@ namespace mtconnect
       }
       Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function)
         : m_verb(verb), m_pattern(pattern), m_function(function)
-      {
-      }
+      {}
 
       const ParameterList &getPathParameters() const { return m_pathParameters; }
       const QuerySet &getQueryParameters() const { return m_queryParameters; }

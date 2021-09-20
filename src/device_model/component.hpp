@@ -29,12 +29,9 @@
 #include "entity/factory.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace device_model
-  {
-    namespace data_item
-    {
+namespace mtconnect {
+  namespace device_model {
+    namespace data_item {
       class DataItem;
     }
 

@@ -27,10 +27,8 @@
 using namespace std;
 using namespace mtconnect::observation;
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     inline string stripUndeclaredNamespace(const QName &qname,
                                            const unordered_set<string> &namespaces)
     {

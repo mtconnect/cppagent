@@ -33,10 +33,8 @@ using namespace std;
 #define strncasecmp _strnicmp
 #endif
 
-namespace mtconnect
-{
-  namespace configuration
-  {
+namespace mtconnect {
+  namespace configuration {
     // For arguments which have no switch char but appear in a special order.
     Option::Option(int order, const char *&charPtr, const char *usage, const char *argDesc,
                    bool required)
@@ -55,8 +53,7 @@ namespace mtconnect
         isSet_(false),
         expand_(false),
         argDesc_(argDesc)
-    {
-    }
+    {}
 
     // For arguments which have no switch char but appear in a special order.
     Option::Option(int order, int &intRef, const char *usage, const char *argDesc, bool required)
@@ -75,8 +72,7 @@ namespace mtconnect
         isSet_(false),
         expand_(false),
         argDesc_(argDesc)
-    {
-    }
+    {}
 
     // For the rest of the argumets as in a file list.
     Option::Option(list<string> &list, const char *usage, const char *argDesc, bool required,
@@ -96,8 +92,7 @@ namespace mtconnect
         isSet_(false),
         expand_(expand),
         argDesc_(argDesc)
-    {
-    }
+    {}
 
     // Given an agument with a switch char ('-') <name>
     Option::Option(const char *name, const char *&charPtr, const char *usage, const char *argDesc,
@@ -117,8 +112,7 @@ namespace mtconnect
         isSet_(false),
         expand_(false),
         argDesc_(argDesc)
-    {
-    }
+    {}
 
     // Given an agument with a switch char ('-') <name>
     Option::Option(const char *name, bool &boolRef, const char *usage, bool aArgument,
@@ -138,8 +132,7 @@ namespace mtconnect
         isSet_(false),
         expand_(false),
         argDesc_(argDesc)
-    {
-    }
+    {}
 
     // Given an agument with a switch char ('-') <name>
     Option::Option(const char *name, int &intRef, const char *usage, const char *argDesc,
@@ -159,8 +152,7 @@ namespace mtconnect
         isSet_(false),
         expand_(false),
         argDesc_(argDesc)
-    {
-    }
+    {}
 
     // Given an agument with a switch char ('-') <name>
     Option::Option(const char *name, list<string> &list, const char *usage, const char *argDesc,
@@ -180,8 +172,7 @@ namespace mtconnect
         isSet_(false),
         expand_(expand),
         argDesc_(argDesc)
-    {
-    }
+    {}
 
     bool Option::setValue(const char *aCp)
     {

@@ -21,10 +21,8 @@
 #include <string>
 #include <string_view>
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class QName : public std::string
     {
     public:

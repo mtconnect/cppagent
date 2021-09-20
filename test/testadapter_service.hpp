@@ -17,36 +17,47 @@
 
 #pragma once
 
+#include "pipeline/pipeline.hpp"
 #include "adapter/adapter.hpp"
+#include "adapter/adapter_pipeline.hpp"
 #include <boost/dll/alias.hpp>
 
+#include "source.hpp"
+
 using namespace std;
-using namespace mtconnect::adapter;
 
 namespace mtconnect
 {
-    class adapter_plugin_test : public Adapter
+  using namespace pipeline;
+    class adapter_plugin_test : public Source
     {
     public:
-      adapter_plugin_test(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
-                         const mtconnect::ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline)
-          :Adapter(context, server, port, options, pipeline)
+      adapter_plugin_test(const std::string &name, boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block)
+      : Source(name, io), m_pipeline(pipelineContext, m_strand)
+      
       {
+        m_pipeline.build(options);
       }
 
       ~adapter_plugin_test() = default;
 
-      bool start() override { return true; }
-      void stop() override {}
-
-      void processData(const std::string &data) override {}
-      void protocolCommand(const std::string &data) override {}
+      bool start() override {
+        m_pipeline.start();
+        return true;
+      }
+      void stop() override {
+        m_pipeline.clear();
+      }
 
       // Factory method
-      static std::shared_ptr<adapter_plugin_test> create(const string &name, boost::asio::io_context &context, const std::string &server, const unsigned int port,
-                                                          const mtconnect::ConfigOptions &options, std::unique_ptr<AdapterPipeline> &pipeline) {
-          return std::make_shared<adapter_plugin_test>(name, context, server, port, options, pipeline);
+      static std::shared_ptr<adapter_plugin_test> create(const std::string &name, boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block) {
+          return std::make_shared<adapter_plugin_test>(name, io, pipelineContext, options, block);
       }
+      
+      Pipeline *getPipeline() override { return &m_pipeline; }
+
+    protected:
+      adapter::AdapterPipeline m_pipeline;
     };
 
     BOOST_DLL_ALIAS(

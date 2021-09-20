@@ -21,10 +21,8 @@
 
 #include <filesystem>
 
-namespace mtconnect
-{
-  namespace configuration
-  {
+namespace mtconnect {
+  namespace configuration {
     class ParseError : public std::runtime_error
     {
     public:

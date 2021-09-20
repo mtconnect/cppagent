@@ -27,10 +27,8 @@ extern "C"
   using xmlTextWriterPtr = xmlTextWriter *;
 }
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class XmlPrinter
     {
     public:

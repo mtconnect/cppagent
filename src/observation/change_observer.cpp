@@ -20,10 +20,8 @@
 #include <algorithm>
 #include <thread>
 
-namespace mtconnect
-{
-  namespace observation
-  {
+namespace mtconnect {
+  namespace observation {
     ChangeObserver::~ChangeObserver()
     {
       for (const auto signaler : m_signalers)

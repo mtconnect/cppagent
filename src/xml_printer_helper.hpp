@@ -21,8 +21,7 @@
 
 #include "xml_helper.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class XmlWriter
   {
   public:

@@ -28,12 +28,10 @@
 #include "session.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class Printer;
 
-  namespace rest_sink
-  {
+  namespace rest_sink {
     template <class Derived>
     class SessionImpl : public Session
     {
@@ -41,8 +39,7 @@ namespace mtconnect
       SessionImpl(boost::beast::flat_buffer &&buffer, const FieldList &list, Dispatch dispatch,
                   ErrorFunction error)
         : Session(dispatch, error), m_fields(list), m_buffer(std::move(buffer))
-      {
-      }
+      {}
       SessionImpl(const SessionImpl &) = delete;
       virtual ~SessionImpl() {}
       std::shared_ptr<SessionImpl> shared_ptr()

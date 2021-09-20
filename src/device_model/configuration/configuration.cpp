@@ -27,13 +27,10 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
-  namespace device_model
-  {
-    namespace configuration
-    {
+  namespace device_model {
+    namespace configuration {
       FactoryPtr Configuration::getFactory()
       {
         static auto configuration = make_shared<Factory>(Requirements {

@@ -21,10 +21,8 @@
 
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace configuration
-  {
+namespace mtconnect {
+  namespace configuration {
     class MTConnectService
     {
     public:

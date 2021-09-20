@@ -69,6 +69,8 @@ typedef unsigned __int64 uint64_t;
 #include <unistd.h>
 #endif
 
+#include <boost/property_tree/ptree.hpp>
+
 //####### CONSTANTS #######
 
 // Port number to put server on
@@ -81,8 +83,7 @@ const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 const unsigned int DEFAULT_MAX_ASSETS = 1024;
 
-namespace mtconnect
-{
+namespace mtconnect {
   // Message for when enumerations do not exist in an array/enumeration
   const int ENUM_MISS = -1;
 
@@ -319,7 +320,7 @@ namespace mtconnect
            });
   }
 
-  typedef std::map<std::string, std::string> Attributes;
+  using Attributes = std::map<std::string, std::string>;
 
   template <class... Ts>
   struct overloaded : Ts...
@@ -375,6 +376,71 @@ namespace mtconnect
   {
     auto v = options.find(name);
     return v != options.end();
+  }
+
+  inline auto ConvertOption(const std::string &s, const ConfigOption &def)
+  {
+    ConfigOption option;
+    visit(overloaded {[&option, &s](const std::string &) {
+                        if (s.empty())
+                          option = std::monostate();
+                        else
+                          option = s;
+                      },
+                      [&option, &s](const int &) { option = stoi(s); },
+                      [&option, &s](const Milliseconds &) { option = Milliseconds {stoi(s)}; },
+                      [&option, &s](const Seconds &) { option = Seconds {stoi(s)}; },
+                      [&option, &s](const double &) { option = stod(s); },
+                      [&option, &s](const bool &) { option = s == "yes" || s == "true"; },
+                      [](const auto &) {}},
+          def);
+    return option;
+  }
+
+  inline void AddOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
+                         const ConfigOptions &entries)
+  {
+    for (auto &e : entries)
+    {
+      auto val = tree.get_optional<std::string>(e.first);
+      if (val)
+      {
+        auto v = ConvertOption(*val, e.second);
+        if (v.index() != 0)
+          options.insert_or_assign(e.first, v);
+      }
+    }
+  }
+
+  inline void AddDefaultedOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
+                                  const ConfigOptions &entries)
+  {
+    for (auto &e : entries)
+    {
+      auto val = tree.get_optional<std::string>(e.first);
+      if (val)
+      {
+        auto v = ConvertOption(*val, e.second);
+        if (v.index() != 0)
+          options.insert_or_assign(e.first, v);
+      }
+      else if (options.find(e.first) == options.end())
+        options.insert_or_assign(e.first, e.second);
+    }
+  }
+
+  inline void GetOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
+                         const ConfigOptions &entries)
+  {
+    for (auto &e : entries)
+    {
+      if (!std::holds_alternative<std::string>(e.second) ||
+          !std::get<std::string>(e.second).empty())
+      {
+        options.emplace(e.first, e.second);
+      }
+    }
+    AddOptions(tree, options, entries);
   }
 
   inline std::string format(const Timestamp &ts)

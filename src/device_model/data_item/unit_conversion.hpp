@@ -24,19 +24,15 @@
 
 #include "entity/requirement.hpp"
 
-namespace mtconnect
-{
-  namespace device_model
-  {
-    namespace data_item
-    {
+namespace mtconnect {
+  namespace device_model {
+    namespace data_item {
       class UnitConversion
       {
       public:
         UnitConversion(double factor = 1.0, double offset = 0.0)
           : m_factor(factor), m_offset(offset)
-        {
-        }
+        {}
         UnitConversion(const UnitConversion &) = default;
         ~UnitConversion() = default;
 

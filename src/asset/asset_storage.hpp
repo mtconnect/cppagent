@@ -27,10 +27,8 @@
 #include "entity.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace asset
-  {
+namespace mtconnect {
+  namespace asset {
     class AssetStorage
     {
     public:

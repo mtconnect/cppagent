@@ -28,13 +28,10 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
-  namespace device_model
-  {
-    namespace data_item
-    {
+  namespace device_model {
+    namespace data_item {
       // -----------------------------
 
       FactoryPtr DataItem::getFactory()

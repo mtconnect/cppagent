@@ -22,10 +22,8 @@
 #include <set>
 #include <variant>
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     class ParameterError : public std::logic_error
     {
       using std::logic_error::logic_error;
@@ -52,8 +50,7 @@ namespace mtconnect
       Parameter() = default;
       Parameter(const std::string &n, ParameterType t = STRING, UrlPart p = PATH)
         : m_name(n), m_type(t), m_part(p)
-      {
-      }
+      {}
       Parameter(const Parameter &o) = default;
 
       std::string m_name;

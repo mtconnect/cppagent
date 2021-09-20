@@ -21,11 +21,9 @@
 
 #include "utilities.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   //-- Forward class declarations.
-  namespace configuration
-  {
+  namespace configuration {
     class Option
     {
     public:

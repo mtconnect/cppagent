@@ -30,11 +30,9 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace observation;
-  namespace entity
-  {
+  namespace entity {
     Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, bool required)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {

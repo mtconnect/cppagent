@@ -19,13 +19,10 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
-  namespace device_model
-  {
-    namespace configuration
-    {
+  namespace device_model {
+    namespace configuration {
       FactoryPtr Specifications::getFactory()
       {
         static FactoryPtr specifications;

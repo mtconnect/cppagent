@@ -27,10 +27,8 @@
 #include "asset_storage.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace asset
-  {
+namespace mtconnect {
+  namespace asset {
     class AssetBuffer : public AssetStorage
     {
     public:

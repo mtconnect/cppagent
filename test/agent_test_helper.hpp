@@ -22,7 +22,7 @@
 #include "rest_sink/server.hpp"
 #include "rest_sink/response.hpp"
 #include "rest_sink/routing.hpp"
-#include "adapter/adapter.hpp"
+#include "adapter/shdr/shdr_adapter.hpp"
 #include "pipeline/pipeline.hpp"
 #include "configuration/agent_config.hpp"
 #include "agent.hpp"
@@ -120,7 +120,8 @@ class AgentTestHelper
  public:
   AgentTestHelper()
   : m_incomingIp("127.0.0.1"),
-    m_socket(m_ioContext)
+    m_strand(m_ioContext),
+  m_socket(m_ioContext)
   {
   }
   
@@ -193,8 +194,7 @@ class AgentTestHelper
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
     
-    boost::asio::io_context::strand strand(m_ioContext);
-    m_loopback = std::make_shared<LoopbackSource>("TestSource", m_context, strand,                                                  options);
+    m_loopback = std::make_shared<LoopbackSource>("TestSource", m_strand, m_context, options);
     m_agent->addSource(m_loopback);
     
     auto sinkContract = m_agent->makeSinkContract();
@@ -223,8 +223,10 @@ class AgentTestHelper
     {
       options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
     }
-    auto pipeline = std::make_unique<AdapterPipeline>(m_context);
-    m_adapter = std::make_shared<adpt::Adapter>(m_ioContext, host, port, options, pipeline);
+    options[configuration::Host] = host;
+    options[configuration::Port] = port;
+    boost::property_tree::ptree tree;
+    m_adapter = std::make_shared<shdr::ShdrAdapter>(m_ioContext, m_context, options, tree);
     m_agent->addSource(m_adapter);
 
     return m_adapter;
@@ -261,7 +263,7 @@ class AgentTestHelper
 
   mhttp::Server *m_server{nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
-  std::shared_ptr<adpt::Adapter> m_adapter;
+  std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::rest_sink::RestService> m_restService;
   std::shared_ptr<mtconnect::LoopbackSource> m_loopback;
   
@@ -272,6 +274,7 @@ class AgentTestHelper
   std::stringstream m_out;
   mtconnect::rest_sink::RequestPtr m_request;
   boost::asio::io_context m_ioContext;
+  boost::asio::io_context::strand m_strand;
   boost::asio::ip::tcp::socket m_socket;
   mtconnect::rest_sink::Response m_response;
   std::shared_ptr<mtconnect::rest_sink::TestSession> m_session;

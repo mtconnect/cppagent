@@ -23,10 +23,8 @@
 
 #include "entity.hpp"
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     using Requirements = std::list<Requirement>;
 
     class Factory : public Matcher, public std::enable_shared_from_this<Factory>

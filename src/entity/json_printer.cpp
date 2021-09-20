@@ -24,10 +24,8 @@
 using namespace std;
 using json = nlohmann::json;
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     inline static json toJson(const observation::DataSet &set)
     {
       using namespace observation;

@@ -6,7 +6,6 @@ if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Au
 del build_win32/*.* /s /q
 
 conan export conan/mqtt_cpp
-conan export conan/boost/all boost/1.75.0@
 conan install . -if build_win32 --build=missing -pr conan/profiles/vs32
 conan build . -bf build_win32
 

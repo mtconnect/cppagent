@@ -23,11 +23,9 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
-  namespace asset
-  {
+  namespace asset {
     FactoryPtr CuttingToolArchetype::getFactory()
     {
       static FactoryPtr tool;

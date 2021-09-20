@@ -35,10 +35,8 @@
 #include "response.hpp"
 #include "tls_dector.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     namespace beast = boost::beast;  // from <boost/beast.hpp>
     namespace http = beast::http;    // from <boost/beast/http.hpp>
     namespace asio = boost::asio;
@@ -218,7 +216,7 @@ namespace mtconnect
           return;
         }
       }
-      
+
       m_request = make_shared<Request>();
       m_request->m_verb = msg.method();
       m_request->m_path = parseUrl(string(msg.target()), m_request->m_query);
@@ -241,8 +239,9 @@ namespace mtconnect
       if (auto a = msg.find(http::field::connection); a != msg.end())
         m_close = a->value() == "close";
 
-      LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port() << "]: " << msg.method()  << " " << msg.target();
-      
+      LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port()
+                << "]: " << msg.method() << " " << msg.target();
+
       if (!m_dispatch(shared_ptr(), m_request))
       {
         ostringstream txt;
@@ -371,15 +370,13 @@ namespace mtconnect
       async_write(derived().stream(), *res,
                   beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
-    
+
     template <class Derived>
     void SessionImpl<Derived>::writeFailureResponse(const Response &response, Complete complete)
     {
       if (m_streaming)
       {
-        writeChunk(response.m_body, [this] {
-          closeStream();
-        });
+        writeChunk(response.m_body, [this] { closeStream(); });
       }
       else
       {
@@ -471,7 +468,7 @@ namespace mtconnect
     void TlsDector::detected(boost::beast::error_code ec, bool isTls)
     {
       NAMED_SCOPE("TlsDector::detected");
-      
+
       if (ec)
       {
         fail(ec, "Failed to detect TLS Connection");

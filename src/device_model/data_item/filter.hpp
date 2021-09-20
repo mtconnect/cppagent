@@ -19,12 +19,9 @@
 
 #include "entity.hpp"
 
-namespace mtconnect
-{
-  namespace device_model
-  {
-    namespace data_item
-    {
+namespace mtconnect {
+  namespace device_model {
+    namespace data_item {
       class Filter : public entity::Entity
       {
       public:

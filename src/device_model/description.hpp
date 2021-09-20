@@ -26,10 +26,8 @@
 #include "entity.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace device_model
-  {
+namespace mtconnect {
+  namespace device_model {
     struct Description
     {
       static entity::FactoryPtr getFactory();

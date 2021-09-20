@@ -1,7 +1,7 @@
 
 include(GoogleTest)
 
-add_library(sink_plugin_test SHARED testsink_service.cpp)
+add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
   sink_plugin_test
   PUBLIC
@@ -16,7 +16,7 @@ target_compile_definitions(sink_plugin_test
     $<$<PLATFORM_ID:Windows>:NOMINMAX>
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
-  
+    
 target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
 set_property(TARGET sink_plugin_test PROPERTY
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
@@ -28,8 +28,21 @@ target_link_libraries(
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
 
+set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
+
+if (APPLE)
+  set_target_properties(sink_plugin_test PROPERTIES
+    FRAMEWORK TRUE
+    FRAMEWORK_VERSION A
+    MACOSX_FRAMEWORK_IDENTIFIER sink_plugin_test
+    VERSION 16.4.0
+    SOVERSION 1.0.0)
+endif()
+
 #########
-add_library(adapter_plugin_test SHARED testadapter_service.cpp)
+
+add_library(adapter_plugin_test SHARED testadapter_service.cpp testadapter_service.hpp)
+
 target_include_directories(
   adapter_plugin_test
   PUBLIC
@@ -45,6 +58,15 @@ target_compile_definitions(adapter_plugin_test
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
 
+if (APPLE)
+  set_target_properties(adapter_plugin_test PROPERTIES
+    FRAMEWORK TRUE
+    FRAMEWORK_VERSION A
+    MACOSX_FRAMEWORK_IDENTIFIER adapter_plugin_test
+    VERSION 16.4.0
+    SOVERSION 1.0.0)
+endif()
+  
 target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
 set_property(TARGET adapter_plugin_test PROPERTY
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
@@ -56,6 +78,9 @@ target_link_libraries(
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
 
+set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
+
+###########
 
 set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
 add_library(agent_test_lib STATIC ${AGENT_TEST_LIB_SOURCES})
@@ -132,10 +157,10 @@ add_agent_test(json_parser TRUE entity)
 add_agent_test(json_printer TRUE entity)
 add_agent_test(qname FALSE entity)
 
-add_agent_test(file_cache FALSE rest_sink)
-add_agent_test(http_server FALSE rest_sink)
-add_agent_test(tls_http_server FALSE rest_sink)
-add_agent_test(routing FALSE rest_sink)
+add_agent_test(file_cache FALSE sink/rest_sink)
+add_agent_test(http_server FALSE sink/rest_sink)
+add_agent_test(tls_http_server FALSE sink/rest_sink)
+add_agent_test(routing FALSE sink/rest_sink)
 
 add_agent_test(json_printer_asset TRUE json)
 add_agent_test(json_printer_error TRUE json)
@@ -147,12 +172,15 @@ add_agent_test(xml_printer TRUE xml)
 
 add_agent_test(adapter FALSE adapter)
 add_agent_test(connector FALSE adapter)
+add_agent_test(mqtt_adapter FALSE adapter)
 
 add_agent_test(shdr_tokenizer FALSE pipeline)
 add_agent_test(timestamp_extractor FALSE pipeline)
 add_agent_test(data_item_mapping FALSE pipeline)
 add_agent_test(duplicate_filter FALSE pipeline)
 add_agent_test(pipeline_deliver TRUE pipeline)
+add_agent_test(topic_mapping TRUE pipeline)
+add_agent_test(pipeline_edit FALSE pipeline)
 
 add_agent_test(agent TRUE core)
 add_agent_test(asset_buffer TRUE core)
@@ -168,6 +196,10 @@ add_agent_test(observation TRUE observation)
 add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)
 
+if(NOT WITHOUT_PYTHON)
+  add_agent_test(python_transform TRUE python)
+endif()
+
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
 add_custom_command(
   TARGET adapter_test POST_BUILD
@@ -176,14 +208,29 @@ add_custom_command(
   "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
   COMMENT "Copying to output directory")
 
-if(NOT MSVC)
-add_custom_command(TARGET sink_plugin_test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-        "${PROJECT_BINARY_DIR}/lib/*sink_plugin_test*"
-        "$<TARGET_FILE_DIR:config_test>")
+add_dependencies(config_test adapter_plugin_test sink_plugin_test)
 
-add_custom_command(TARGET adapter_plugin_test POST_BUILD
+if(APPLE)
+  add_custom_command(TARGET config_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
-        "${PROJECT_BINARY_DIR}/lib/*adapter_plugin_test*"
-        "$<TARGET_FILE_DIR:config_test>")
+        "$<TARGET_FILE:adapter_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/lib$<TARGET_FILE_BASE_NAME:adapter_plugin_test>.dylib"
+	)
+      
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "$<TARGET_FILE:sink_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/lib$<TARGET_FILE_BASE_NAME:sink_plugin_test>.dylib")
+elseif(UNIX)
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "$<TARGET_FILE:adapter_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/"
+	)
+      
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "$<TARGET_FILE:sink_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/")
 endif()
+

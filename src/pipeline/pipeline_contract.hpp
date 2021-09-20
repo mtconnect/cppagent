@@ -21,18 +21,14 @@
 #include <list>
 #include <string>
 
-namespace mtconnect
-{
-  namespace device_model
-  {
-    namespace data_item
-    {
+namespace mtconnect {
+  namespace device_model {
+    namespace data_item {
       class DataItem;
     }
     class Device;
   }  // namespace device_model
-  namespace asset
-  {
+  namespace asset {
     class Asset;
     using AssetPtr = std::shared_ptr<Asset>;
   }  // namespace asset
@@ -40,19 +36,16 @@ namespace mtconnect
   using DevicePtr = std::shared_ptr<device_model::Device>;
   using StringList = std::list<std::string>;
 
-  namespace observation
-  {
+  namespace observation {
     class Observation;
     using ObservationPtr = std::shared_ptr<Observation>;
   }  // namespace observation
-  namespace entity
-  {
+  namespace entity {
     class Entity;
     using EntityPtr = std::shared_ptr<Entity>;
   }  // namespace entity
 
-  namespace pipeline
-  {
+  namespace pipeline {
     class PipelineContract
     {
     public:

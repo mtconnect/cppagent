@@ -29,8 +29,7 @@ extern "C"
   using xmlTextWriterPtr = xmlTextWriter *;
 }
 
-namespace mtconnect
-{
+namespace mtconnect {
   class SensorConfiguration;
   class XmlWriter;
 

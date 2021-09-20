@@ -21,11 +21,9 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace observation;
-  namespace rest_sink
-  {
+  namespace rest_sink {
     Checkpoint::Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
     {
       FilterSetOpt filter;

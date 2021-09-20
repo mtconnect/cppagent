@@ -27,11 +27,9 @@ using namespace std;
 using namespace std::literals;
 namespace config = mtconnect::configuration;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
-  namespace device_model
-  {
+  namespace device_model {
     entity::FactoryPtr AgentDevice::getFactory()
     {
       static FactoryPtr factory;
@@ -68,7 +66,7 @@ namespace mtconnect
       return getDeviceDataItem(adapter + "_connection_status");
     }
 
-    void AgentDevice::addAdapter(const adapter::Adapter *adapter)
+    void AgentDevice::addAdapter(const adapter::AdapterPtr adapter)
     {
       using namespace entity;
       using namespace device_model::data_item;
@@ -77,14 +75,14 @@ namespace mtconnect
       auto id = adapter->getIdentity();
 
       stringstream name;
-      name << adapter->getServer() << ':' << adapter->getPort();
+      name << adapter->getHost() << ':' << adapter->getPort();
 
       ErrorList errors;
       Properties attrs {{"id", id}};
       if (!suppress)
       {
         stringstream name;
-        name << adapter->getServer() << ':' << adapter->getPort();
+        name << adapter->getHost() << ':' << adapter->getPort();
         attrs["name"] = name.str();
       }
       else

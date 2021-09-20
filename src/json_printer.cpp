@@ -36,8 +36,7 @@
 using namespace std;
 using json = nlohmann::json;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace observation;
   using namespace device_model;
 
@@ -79,7 +78,8 @@ namespace mtconnect
   }
 
   inline json header(const string &version, const string &hostname, const unsigned int instanceId,
-                     const unsigned int bufferSize, const string &schemaVersion)
+                     const unsigned int bufferSize, const string &schemaVersion,
+                     const string modelChangeTime)
   {
     json doc = json::object({{"version", version},
                              {"creationTime", getCurrentTime(GMT)},
@@ -87,6 +87,12 @@ namespace mtconnect
                              {"instanceId", instanceId},
                              {"sender", hostname},
                              {"schemaVersion", schemaVersion}});
+
+    if (schemaVersion >= "1.7")
+    {
+      doc["deviceModelChangeTime"] = modelChangeTime;
+    }
+
     if (bufferSize > 0)
       doc["bufferSize"] = bufferSize;
     return doc;
@@ -95,9 +101,9 @@ namespace mtconnect
   inline json probeAssetHeader(const string &version, const string &hostname,
                                const unsigned int instanceId, const unsigned int bufferSize,
                                const unsigned int assetBufferSize, const unsigned int assetCount,
-                               const string &schemaVersion)
+                               const string &schemaVersion, const string modelChangeTime)
   {
-    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion);
+    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime);
     doc["assetBufferSize"] = assetBufferSize;
     doc["assetCount"] = assetCount;
 
@@ -107,9 +113,10 @@ namespace mtconnect
   inline json streamHeader(const string &version, const string &hostname,
                            const unsigned int instanceId, const unsigned int bufferSize,
                            const uint64_t nextSequence, const uint64_t firstSequence,
-                           const uint64_t lastSequence, const string &schemaVersion)
+                           const uint64_t lastSequence, const string &schemaVersion,
+                           const string modelChangeTime)
   {
-    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion);
+    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime);
     doc["nextSequence"] = nextSequence;
     doc["lastSequence"] = lastSequence;
     doc["firstSequence"] = firstSequence;
@@ -128,10 +135,10 @@ namespace mtconnect
       }});
     }
 
-    json doc = json::object(
-        {{"MTConnectError",
-          {{"Header", header(m_version, hostname(), instanceId, bufferSize, m_schemaVersion)},
-           {"Errors", errors}}}});
+    json doc = json::object({{"MTConnectError",
+                              {{"Header", header(m_version, hostname(), instanceId, bufferSize,
+                                                 m_schemaVersion, m_modelChangeTime)},
+                               {"Errors", errors}}}});
 
     return print(doc, m_pretty);
   }
@@ -162,11 +169,11 @@ namespace mtconnect
     for (const auto &device : devices)
       devicesDoc.emplace_back(printer.print(device));
 
-    json doc =
-        json::object({{"MTConnectDevices",
-                       {{"Header", probeAssetHeader(m_version, hostname(), instanceId, bufferSize,
-                                                    assetBufferSize, assetCount, m_schemaVersion)},
-                        {"Devices", devicesDoc}}}});
+    json doc = json::object({{"MTConnectDevices",
+                              {{"Header", probeAssetHeader(m_version, hostname(), instanceId,
+                                                           bufferSize, assetBufferSize, assetCount,
+                                                           m_schemaVersion, m_modelChangeTime)},
+                               {"Devices", devicesDoc}}}});
 
     return print(doc, m_pretty);
   }
@@ -216,8 +223,7 @@ namespace mtconnect
     ComponentRef(const ComponentPtr component) : m_component(component), m_categoryRef(nullptr) {}
     ComponentRef(const ComponentRef &other)
       : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
-    {
-    }
+    {}
 
     bool isComponent(const ComponentPtr &component) { return m_component == component; }
 
@@ -273,8 +279,7 @@ namespace mtconnect
   public:
     DeviceRef(const DevicePtr device) : m_device(device), m_componentRef(nullptr) {}
     DeviceRef(const DeviceRef &other) : m_device(other.m_device), m_components(other.m_components)
-    {
-    }
+    {}
 
     bool isDevice(const DevicePtr device) { return device == m_device; }
 
@@ -349,11 +354,11 @@ namespace mtconnect
         streams.emplace_back(ref.toJson());
     }
 
-    json doc =
-        json::object({{"MTConnectStreams",
-                       {{"Header", streamHeader(m_version, hostname(), instanceId, bufferSize,
-                                                nextSeq, firstSeq, lastSeq, m_schemaVersion)},
-                        {"Streams", streams}}}});
+    json doc = json::object(
+        {{"MTConnectStreams",
+          {{"Header", streamHeader(m_version, hostname(), instanceId, bufferSize, nextSeq, firstSeq,
+                                   lastSeq, m_schemaVersion, m_modelChangeTime)},
+           {"Streams", streams}}}});
 
     return print(doc, m_pretty);
 
@@ -370,11 +375,11 @@ namespace mtconnect
     for (const auto &asset : asset)
       assetDoc.emplace_back(printer.print(asset));
 
-    json doc =
-        json::object({{"MTConnectAssets",
-                       {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0,
-                                                    bufferSize, assetCount, m_schemaVersion)},
-                        {"Assets", assetDoc}}}});
+    json doc = json::object(
+        {{"MTConnectAssets",
+          {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize, assetCount,
+                                       m_schemaVersion, m_modelChangeTime)},
+           {"Assets", assetDoc}}}});
 
     return print(doc, m_pretty);
   }

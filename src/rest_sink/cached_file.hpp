@@ -24,10 +24,8 @@
 
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     struct CachedFile;
     using CachedFilePtr = std::shared_ptr<CachedFile>;
     struct CachedFile : public std::enable_shared_from_this<CachedFile>

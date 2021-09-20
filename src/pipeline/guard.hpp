@@ -19,10 +19,8 @@
 
 #include "entity/entity.hpp"
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace pipeline {
     enum GuardAction
     {
       CONTINUE,

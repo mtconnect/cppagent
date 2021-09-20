@@ -25,10 +25,8 @@
 #include "observation/observation.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace pipeline {
     struct ComputeMetrics
     {
       ComputeMetrics(boost::asio::io_context::strand &st, PipelineContract *contract,
@@ -38,8 +36,7 @@ namespace mtconnect
           m_dataItem(dataItem),
           m_strand(st),
           m_timer(st.context())
-      {
-      }
+      {}
 
       void compute(boost::system::error_code ec);
 
@@ -68,8 +65,7 @@ namespace mtconnect
           m_contract(context->m_contract.get()),
           m_count(std::make_shared<size_t>(0)),
           m_dataItem(metricsDataItem)
-      {
-      }
+      {}
 
       ~MeteredTransform() override
       {

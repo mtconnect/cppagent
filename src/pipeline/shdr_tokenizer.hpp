@@ -23,12 +23,10 @@
 #include "entity/entity.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class Agent;
 
-  namespace pipeline
-  {
+  namespace pipeline {
     using TokenList = std::list<std::string>;
     class Tokens : public entity::Entity
     {

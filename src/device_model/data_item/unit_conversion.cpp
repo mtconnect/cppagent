@@ -19,12 +19,9 @@
 
 using namespace std;
 
-namespace mtconnect
-{
-  namespace device_model
-  {
-    namespace data_item
-    {
+namespace mtconnect {
+  namespace device_model {
+    namespace data_item {
       std::unordered_map<string, UnitConversion> UnitConversion::m_conversions(
           {{"INCH-MILLIMETER", 25.4},
            {"FOOT-MILLIMETER", 304.8},

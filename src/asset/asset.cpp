@@ -22,11 +22,9 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
-  namespace asset
-  {
+  namespace asset {
     FactoryPtr Asset::getFactory()
     {
       static auto asset = make_shared<Factory>(

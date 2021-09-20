@@ -7,7 +7,7 @@ class CppAgentConan(ConanFile):
     url = "https://github.com/mtconnect/cppagent_dev.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
-    options = { "run_tests": [True, False], "build_tests": [True, False] }
+    options = { "run_tests": [True, False], "build_tests": [True, False], "without_python": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.75.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
@@ -16,10 +16,14 @@ class CppAgentConan(ConanFile):
     default_options = {
         "run_tests": True,
         "build_tests": True,
+        "without_python": True,
 
+        "boost:python_version": "3.9",
+        "boost:python_executable": "python3",
         "boost:shared": False,
         "boost:bzip2": False,
         "boost:lzma": False,
+        "boost:without_python": True,
         "boost:without_wave": True,
         "boost:without_test": True,
         "boost:without_json": False,
@@ -42,6 +46,9 @@ class CppAgentConan(ConanFile):
         }
 
     def configure(self):
+        if not self.options.without_python:
+            self.options["boost"].without_python = False
+            
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
@@ -79,6 +86,11 @@ class CppAgentConan(ConanFile):
         cmake.verbose = True
         if not self.options.build_tests:
             cmake.definitions['AGENT_ENABLE_UNITTESTS'] = 'OFF'
+
+        if self.options.without_python:
+            cmake.definitions['WITHOUT_PYTHON'] = 'ON'
+        else:
+            cmake.definitions['WITHOUT_PYTHON'] = 'OFF'
             
         if self.windows_xp:
             cmake.definitions['WINVER'] = '0x0501'

@@ -24,18 +24,14 @@
 #include "guard.hpp"
 #include "pipeline_context.hpp"
 
-namespace mtconnect
-{
-  namespace device_model
-  {
-    namespace data_item
-    {
+namespace mtconnect {
+  namespace device_model {
+    namespace data_item {
       class DataItem;
     }
   }  // namespace device_model
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
-  namespace pipeline
-  {
+  namespace pipeline {
     // A transform takes an entity and transforms it to another
     // entity. The transform is an object with the overloaded
     // operation () takes the object type and performs produces an
@@ -58,6 +54,8 @@ namespace mtconnect
       Transform(const Transform &) = default;
       Transform(const std::string &name) : m_name(name) {}
       virtual ~Transform() = default;
+
+      auto &getName() const { return m_name; }
 
       virtual void stop()
       {
@@ -117,6 +115,43 @@ namespace mtconnect
       }
       const Guard &getGuard() const { return m_guard; }
       void setGuard(const Guard &guard) { m_guard = guard; }
+
+      using TransformPair = std::pair<TransformPtr, TransformPtr>;
+      using ListOfTransforms = std::list<TransformPair>;
+      void find(const std::string &target, ListOfTransforms &xforms)
+      {
+        for (auto &t : m_next)
+        {
+          if (t->getName() == target)
+          {
+            xforms.push_back(TransformPair {getptr(), t});
+          }
+          t->find(target, xforms);
+        }
+      }
+      void spliceBefore(TransformPtr old, TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            xform->bind(old);
+            *it = xform;
+            return;
+          }
+        }
+      }
+      void spliceAfter(TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          xform->bind(*it);
+        }
+        m_next.clear();
+        bind(xform);
+        return;
+      }
+      void firstAfter(TransformPtr xform) { m_next.emplace_front(xform); }
 
     protected:
       std::string m_name;

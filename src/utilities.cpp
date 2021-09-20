@@ -44,8 +44,7 @@
 using namespace std;
 using namespace std::chrono;
 
-namespace mtconnect
-{
+namespace mtconnect {
   void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
 
   uint64_t parseTimeMicro(const std::string &aTime)

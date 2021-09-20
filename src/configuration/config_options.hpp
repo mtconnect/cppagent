@@ -17,11 +17,12 @@
 
 #pragma once
 
-namespace mtconnect
-{
-  namespace configuration
-  {
+namespace mtconnect {
+  namespace configuration {
 #define DECLARE_CONFIGURATION(name) inline const char *name = #name;
+    // Global
+    DECLARE_CONFIGURATION(ExecDirectory);
+    DECLARE_CONFIGURATION(WorkingDirectory);
 
     // Agent Configuration
     DECLARE_CONFIGURATION(Port);
@@ -70,5 +71,11 @@ namespace mtconnect
     DECLARE_CONFIGURATION(AdditionalDevices);
     DECLARE_CONFIGURATION(AdapterIdentity);
     DECLARE_CONFIGURATION(SuppressIPAddress);
+    DECLARE_CONFIGURATION(Topics);
+    DECLARE_CONFIGURATION(Protocol);
+    DECLARE_CONFIGURATION(MqttCaCert);
+    DECLARE_CONFIGURATION(Url);
+    DECLARE_CONFIGURATION(Path);
+    DECLARE_CONFIGURATION(MqttTls);
   }  // namespace configuration
 }  // namespace mtconnect

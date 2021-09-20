@@ -24,10 +24,8 @@
 #include "entity.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace asset
-  {
+namespace mtconnect {
+  namespace asset {
     class Asset;
     using AssetPtr = std::shared_ptr<Asset>;
     using AssetList = std::list<AssetPtr>;

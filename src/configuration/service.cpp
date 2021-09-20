@@ -38,10 +38,8 @@
 #include <unistd.h>
 #endif
 
-namespace mtconnect
-{
-  namespace configuration
-  {
+namespace mtconnect {
+  namespace configuration {
     MTConnectService::MTConnectService() = default;
 
     void MTConnectService::initialize(int argc, const char *argv[]) { NAMED_SCOPE("init.service"); }
@@ -71,10 +69,8 @@ namespace mtconnect
 #define SVC_WARNING ((DWORD)0x90000001L)
 #define SVC_INFO ((DWORD)0x50000001L)
 
-namespace mtconnect
-{
-  namespace configuration
-  {
+namespace mtconnect {
+  namespace configuration {
     SERVICE_STATUS g_svcStatus;
     SERVICE_STATUS_HANDLE g_svcStatusHandle;
     HANDLE g_hSvcStopEvent = nullptr;
@@ -646,10 +642,8 @@ namespace mtconnect
 #include "fcntl.h"
 #include "sys/stat.h"
 
-namespace mtconnect
-{
-  namespace configuration
-  {
+namespace mtconnect {
+  namespace configuration {
     static void signal_handler(int sig)
     {
       switch (sig)

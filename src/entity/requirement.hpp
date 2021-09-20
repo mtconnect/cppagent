@@ -39,10 +39,8 @@
 #include "observation/data_set.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class Entity;
     using EntityPtr = std::shared_ptr<Entity>;
     using EntityList = std::list<std::shared_ptr<Entity>>;
@@ -81,13 +79,11 @@ namespace mtconnect
     public:
       explicit EntityError(const std::string &s, const std::string &e = "")
         : std::logic_error(s), m_entity(e)
-      {
-      }
+      {}
 
       explicit EntityError(const char *s, const std::string &e = "")
         : std::logic_error(s), m_entity(e)
-      {
-      }
+      {}
 
       EntityError(const EntityError &o) noexcept : std::logic_error(o), m_entity(o.m_entity) {}
       ~EntityError() override = default;
@@ -119,13 +115,11 @@ namespace mtconnect
       explicit PropertyError(const std::string &s, const std::string &p = "",
                              const std::string &e = "")
         : EntityError(s, e), m_property(p)
-      {
-      }
+      {}
 
       explicit PropertyError(const char *s, const std::string &p = "", const std::string &e = "")
         : EntityError(s, e), m_property(p)
-      {
-      }
+      {}
 
       PropertyError(const PropertyError &o) noexcept : EntityError(o), m_property(o.m_property) {}
       ~PropertyError() override = default;
@@ -169,24 +163,20 @@ namespace mtconnect
     public:
       Requirement(const std::string &name, ValueType type, bool required = true)
         : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
-      {
-      }
+      {}
       Requirement(const std::string &name, bool required, ValueType type = STRING)
         : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
-      {
-      }
+      {}
       Requirement(const std::string &name, ValueType type, int lower, int upper)
         : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
-      {
-      }
+      {}
       Requirement(const std::string &name, ValueType type, int size, bool required = true)
         : m_name(name),
           m_upperMultiplicity(1),
           m_lowerMultiplicity(required ? 1 : 0),
           m_size(size),
           m_type(type)
-      {
-      }
+      {}
       Requirement(const std::string &name, ValueType type, FactoryPtr o, bool required = true);
       Requirement(const std::string &name, ValueType type, FactoryPtr o, int lower, int upper);
       Requirement(const std::string &name, const ControlledVocab &vocab, bool required = true)
@@ -205,8 +195,7 @@ namespace mtconnect
           m_lowerMultiplicity(required ? 1 : 0),
           m_type(STRING),
           m_pattern(pattern)
-      {
-      }
+      {}
 
       Requirement() = default;
       Requirement(const Requirement &o) = default;

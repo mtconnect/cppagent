@@ -23,10 +23,8 @@
 #include "qname.hpp"
 #include "requirement.hpp"
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     struct PropertyKey : public std::string
     {
       using std::string::string;
@@ -63,8 +61,7 @@ namespace mtconnect
 
       Entity() {}
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
-      {
-      }
+      {}
       Entity(const Entity &entity) = default;
       virtual ~Entity() {}
 

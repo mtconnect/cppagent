@@ -17,10 +17,8 @@
 
 #include "asset/file_asset.hpp"
 
-namespace mtconnect
-{
-  namespace asset
-  {
+namespace mtconnect {
+  namespace asset {
     using namespace entity;
     using namespace std;
 

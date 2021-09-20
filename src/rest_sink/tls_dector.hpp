@@ -22,10 +22,8 @@
 #include "session.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     class TlsDector : public std::enable_shared_from_this<TlsDector>
     {
     public:
@@ -41,8 +39,7 @@ namespace mtconnect
           m_fields(list),
           m_dispatch(dispatch),
           m_errorFunction(error)
-      {
-      }
+      {}
 
       ~TlsDector() {}
 

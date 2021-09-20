@@ -22,10 +22,8 @@
 
 using namespace std;
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     FileCache::FileCache()
       : m_mimeTypes({{{".xsl", "text/xsl"},
                       {".xml", "text/xml"},

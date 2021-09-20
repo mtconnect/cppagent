@@ -26,10 +26,8 @@
 #include "observation/observation.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     class Checkpoint
     {
     public:

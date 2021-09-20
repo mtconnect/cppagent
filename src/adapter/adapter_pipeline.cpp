@@ -17,6 +17,7 @@
 
 #include "adapter_pipeline.hpp"
 
+#include "adapter.hpp"
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
@@ -25,25 +26,22 @@
 #include "pipeline/delta_filter.hpp"
 #include "pipeline/duplicate_filter.hpp"
 #include "pipeline/period_filter.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
-#include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/timestamp_extractor.hpp"
+#include "pipeline/topic_mapper.hpp"
+#include "pipeline/upcase_value.hpp"
 
 using namespace std;
 using namespace std::literals;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace observation;
-  using namespace entity;
   using namespace entity;
   using namespace pipeline;
 
-  namespace adapter
-  {
-    std::unique_ptr<adapter::Handler> AdapterPipeline::makeHandler()
+  namespace adapter {
+    std::unique_ptr<Handler> AdapterPipeline::makeHandler()
     {
-      auto handler = make_unique<adapter::Handler>();
+      auto handler = make_unique<Handler>();
 
       // Build the pipeline for an adapter
       handler->m_connecting = [this](const std::string &id) {
@@ -65,6 +63,12 @@ namespace mtconnect
         auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", source}});
         run(entity);
       };
+      handler->m_processMessage = [this](const std::string &topic, const std::string &data,
+                                         const std::string &source) {
+        auto entity = make_shared<PipelineMessage>(
+            "Message", Properties {{"VALUE", data}, {"topic", topic}, {"source", source}});
+        run(entity);
+      };
       handler->m_command = [this](const std::string &data, const std::string &source) {
         auto entity =
             make_shared<Entity>("Command", Properties {{"VALUE", data}, {"source", source}});
@@ -79,55 +83,47 @@ namespace mtconnect
       clear();
       m_options = options;
 
-      TransformPtr next = bind(make_shared<ShdrTokenizer>());
-      auto identity = GetOption<string>(options, configuration::AdapterIdentity);
+      m_identity = GetOption<string>(m_options, configuration::AdapterIdentity).value_or("unknown");
+    }
 
-      StringList devices;
-      auto list = GetOption<StringList>(options, configuration::AdditionalDevices);
+    void AdapterPipeline::buildDeviceList()
+    {
+      m_identity = *GetOption<string>(m_options, configuration::AdapterIdentity);
+
+      auto list = GetOption<StringList>(m_options, configuration::AdditionalDevices);
       if (list)
-        devices = *list;
-      auto device = GetOption<string>(options, configuration::Device);
-      if (device)
+        m_devices = *list;
+      m_device = GetOption<string>(m_options, configuration::Device);
+      if (m_device)
       {
-        devices.emplace_front(*device);
-        auto dp = m_context->m_contract->findDevice(*device);
+        m_devices.emplace_front(*m_device);
+        auto dp = m_context->m_contract->findDevice(*m_device);
         if (dp)
         {
-          dp->setOptions(options);
+          dp->setOptions(m_options);
         }
       }
+    }
 
+    void AdapterPipeline::buildCommandAndStatusDelivery()
+    {
       bind(make_shared<DeliverConnectionStatus>(
-          m_context, devices, IsOptionSet(options, configuration::AutoAvailable)));
-      bind(make_shared<DeliverCommand>(m_context, device));
+          m_context, m_devices, IsOptionSet(m_options, configuration::AutoAvailable)));
+      bind(make_shared<DeliverCommand>(m_context, m_device));
+    }
 
-      // Optional type based transforms
-      if (IsOptionSet(m_options, configuration::IgnoreTimestamps))
-        next = next->bind(make_shared<IgnoreTimestamp>());
-      else
-      {
-        auto extract =
-            make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
-        next = next->bind(extract);
-      }
-
-      // Token mapping to data items and asset
-      auto mapper = make_shared<ShdrTokenMapper>(
-          m_context, GetOption<string>(m_options, configuration::Device).value_or(""),
-          GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
-      next = next->bind(mapper);
-
-      // Handle the observations and send to nowhere
-      mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
-
+    void AdapterPipeline::buildAssetDelivery(pipeline::TransformPtr next)
+    {
       // Go directly to asset delivery
       std::optional<string> assetMetrics;
-      if (identity)
-        assetMetrics = *identity + "_asset_update_rate";
+      assetMetrics = m_identity + "_asset_update_rate";
 
-      mapper->bind(make_shared<DeliverAsset>(m_context, assetMetrics));
-      mapper->bind(make_shared<DeliverAssetCommand>(m_context));
+      next->bind(make_shared<DeliverAsset>(m_context, assetMetrics));
+      next->bind(make_shared<DeliverAssetCommand>(m_context));
+    }
 
+    void AdapterPipeline::buildObservationDelivery(pipeline::TransformPtr next)
+    {
       // Uppercase Events
       if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
         next = next->bind(make_shared<UpcaseValue>());
@@ -143,8 +139,7 @@ namespace mtconnect
 
       // Deliver
       std::optional<string> obsMetrics;
-      if (identity)
-        obsMetrics = *identity + "_observation_update_rate";
+      obsMetrics = m_identity + "_observation_update_rate";
       next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
     }
   }  // namespace adapter

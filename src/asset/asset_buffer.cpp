@@ -19,10 +19,8 @@
 
 using namespace std;
 
-namespace mtconnect
-{
-  namespace asset
-  {
+namespace mtconnect {
+  namespace asset {
     inline void AssetBuffer::adjustCount(AssetPtr asset, int delta)
     {
       m_removedAssets += delta;

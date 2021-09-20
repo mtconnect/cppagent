@@ -28,10 +28,8 @@
 #include "logging.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace observation
-  {
+namespace mtconnect {
+  namespace observation {
     struct DataSetEntry;
 
     class DataSet : public std::set<DataSetEntry>
@@ -69,16 +67,13 @@ namespace mtconnect
     {
       DataSetEntry(std::string key, std::string &value, bool removed = false)
         : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-      {
-      }
+      {}
       DataSetEntry(std::string key, DataSet &value, bool removed = false)
         : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-      {
-      }
+      {}
       DataSetEntry(std::string key, DataSetValue value, bool removed = false)
         : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
-      {
-      }
+      {}
       DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
       DataSetEntry(const DataSetEntry &other) = default;
 

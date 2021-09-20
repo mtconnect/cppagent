@@ -23,15 +23,12 @@
 #include "data_item/data_item.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace adapter
-  {
+namespace mtconnect {
+  namespace adapter {
     class Adapter;
   }
 
-  namespace device_model
-  {
+  namespace device_model {
     class Device : public Component
     {
     public:

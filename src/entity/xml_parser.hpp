@@ -27,10 +27,8 @@
 #include "utilities.hpp"
 
 struct _xmlNode;
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class XmlParser
     {
     public:

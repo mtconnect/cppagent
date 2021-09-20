@@ -24,10 +24,8 @@
 
 using namespace std;
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace pipeline {
     inline optional<double> getDuration(std::string &timestamp)
     {
       optional<double> duration;

@@ -32,12 +32,10 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
 
-  namespace observation
-  {
+  namespace observation {
     FactoryPtr Observation::getFactory()
     {
       static FactoryPtr factory;

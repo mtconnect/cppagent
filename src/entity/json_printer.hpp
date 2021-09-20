@@ -23,10 +23,8 @@
 
 using json = nlohmann::json;
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class JsonPrinter
     {
     public:

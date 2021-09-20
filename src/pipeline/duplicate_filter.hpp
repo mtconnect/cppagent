@@ -19,10 +19,8 @@
 
 #include "transform.hpp"
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace pipeline {
     class DuplicateFilter : public Transform
     {
     public:

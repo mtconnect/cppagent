@@ -19,12 +19,9 @@
 
 #include "entity.hpp"
 
-namespace mtconnect
-{
-  namespace device_model
-  {
-    namespace configuration
-    {
+namespace mtconnect {
+  namespace device_model {
+    namespace configuration {
       struct Configuration
       {
         static entity::FactoryPtr getFactory();

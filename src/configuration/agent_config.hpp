@@ -25,29 +25,32 @@
 
 #include <chrono>
 #include <string>
+#include <thread>
 
 #include "adapter/adapter.hpp"
-#include "adapter/adapter_pipeline.hpp"
+#include "adapter/shdr/shdr_pipeline.hpp"
 #include "parser.hpp"
 #include "rest_sink/file_cache.hpp"
 #include "service.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     class Server;
   }
   class Agent;
-  namespace device_model
-  {
+  namespace device_model {
     class Device;
   }
 
+#ifdef WITH_PYTHON
+  namespace python {
+    class Embedded;
+  }
+#endif
+
   class XmlPrinter;
-  namespace configuration
-  {
+  namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;
 
     using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
@@ -87,6 +90,13 @@ namespace mtconnect
       void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
       void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
 
+#ifdef WITH_PYTHON
+      void configurePython(const ptree &tree, ConfigOptions &options);
+#endif
+      std::string loadSourcePlugin(const std::string &device, const std::string &dll,
+                                   const ptree &tree, ConfigOptions &options);
+      void loadSinkPlugins(const ptree &sinks, ConfigOptions &options);
+
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 
       void boost_set_log_level(const boost::log::trivial::severity_level level);
@@ -97,7 +107,9 @@ namespace mtconnect
       boost::asio::io_context m_context;
       std::list<std::thread> m_workers;
       std::unique_ptr<Agent> m_agent;
-
+#ifdef WITH_PYTHON
+      std::unique_ptr<python::Embedded> m_python;
+#endif
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
       boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>

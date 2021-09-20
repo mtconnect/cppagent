@@ -26,10 +26,8 @@
 
 #include "routing.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     struct Response;
     class Session;
     using SessionPtr = std::shared_ptr<Session>;
@@ -44,8 +42,7 @@ namespace mtconnect
     {
     public:
       Session(Dispatch dispatch, ErrorFunction func) : m_dispatch(dispatch), m_errorFunction(func)
-      {
-      }
+      {}
       virtual ~Session() {}
 
       virtual void run() = 0;

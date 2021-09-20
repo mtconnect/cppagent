@@ -20,11 +20,9 @@
 #include "observation/observation.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class Agent;
-  namespace pipeline
-  {
+  namespace pipeline {
     class PeriodFilter : public Transform
     {
     public:

@@ -28,12 +28,10 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
 
-  namespace device_model
-  {
+  namespace device_model {
     FactoryPtr Description::getFactory()
     {
       static auto description = make_shared<Factory>(

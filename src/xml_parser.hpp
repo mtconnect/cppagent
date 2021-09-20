@@ -29,8 +29,7 @@
 #include "rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class XmlPrinter;
 
   class XmlParser

@@ -23,13 +23,11 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
   using namespace configuration;
 
-  namespace device_model
-  {
+  namespace device_model {
     entity::FactoryPtr Device::getFactory()
     {
       static FactoryPtr factory;

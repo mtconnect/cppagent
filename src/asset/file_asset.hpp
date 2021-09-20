@@ -25,10 +25,8 @@
 #include "entity.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace asset
-  {
+namespace mtconnect {
+  namespace asset {
     class FileArchetypeAsset : public entity::Entity
     {
     public:

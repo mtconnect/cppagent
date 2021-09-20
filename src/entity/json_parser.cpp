@@ -24,10 +24,8 @@
 using namespace std;
 using json = nlohmann::json;
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     static EntityPtr parseJson(FactoryPtr factory, string entity_name, json jNode,
                                ErrorList& errors)
     {

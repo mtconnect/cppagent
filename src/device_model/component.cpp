@@ -30,11 +30,9 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
-  namespace device_model
-  {
+  namespace device_model {
     using namespace data_item;
 
     // Component public methods

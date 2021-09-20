@@ -27,10 +27,8 @@
 #include "observation/observation.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     using SequenceNumber_t = uint64_t;
 
     class CircularBuffer
@@ -44,8 +42,7 @@ namespace mtconnect
           m_checkpointFreq(checkpointFreq),
           m_checkpointCount(m_slidingBufferSize / checkpointFreq),
           m_checkpoints(m_checkpointCount)
-      {
-      }
+      {}
 
       ~CircularBuffer() { m_checkpoints.clear(); }
 

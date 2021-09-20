@@ -24,10 +24,8 @@
 
 #include "parameter.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     class RequestError : public std::logic_error
     {
     public:
@@ -35,8 +33,7 @@ namespace mtconnect
       RequestError(const char *w, const std::string &body, const std::string &type,
                    boost::beast::http::status code)
         : std::logic_error::logic_error(w), m_contentType(type), m_body(body), m_code(code)
-      {
-      }
+      {}
       RequestError(const RequestError &) = default;
       ~RequestError() override = default;
 

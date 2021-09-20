@@ -29,8 +29,7 @@
     throw XmlError("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
   }
 
-namespace mtconnect
-{
+namespace mtconnect {
   class XmlError : public std::logic_error
   {
   public:

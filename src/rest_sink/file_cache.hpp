@@ -24,10 +24,8 @@
 
 #include "cached_file.hpp"
 
-namespace mtconnect
-{
-  namespace rest_sink
-  {
+namespace mtconnect {
+  namespace rest_sink {
     using XmlNamespace = std::pair<std::string, std::string>;
     using XmlNamespaceList = std::list<XmlNamespace>;
     class FileCache

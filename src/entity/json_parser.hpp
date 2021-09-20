@@ -26,10 +26,8 @@
 #include "requirement.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class JsonParser
     {
     public:

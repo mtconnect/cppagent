@@ -27,8 +27,7 @@
 #include "observation/observation.hpp"
 #include "printer.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class Printer;
   using PrinterMap = std::map<std::string, std::unique_ptr<Printer>>;
   class SinkContract
@@ -58,8 +57,7 @@ namespace mtconnect
   public:
     Sink(const std::string &name, SinkContractPtr &&contract)
       : m_sinkContract(std::move(contract)), m_name(name)
-    {
-    }
+    {}
     virtual ~Sink() = default;
 
     virtual void start() = 0;
@@ -67,6 +65,7 @@ namespace mtconnect
 
     virtual uint64_t publish(observation::ObservationPtr &observation) = 0;
     virtual bool publish(asset::AssetPtr asset) = 0;
+    virtual bool publish(device_model::DevicePtr device) { return false; }
 
     const auto &getName() const { return m_name; }
 

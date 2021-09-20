@@ -23,10 +23,8 @@
 
 using namespace std;
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     void Factory::_dupFactory(FactoryPtr &factory, FactoryMap &factories)
     {
       auto old = factories.find(factory);

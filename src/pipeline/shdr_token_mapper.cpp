@@ -23,14 +23,13 @@
 #include "entity/xml_parser.hpp"
 #include "logging.hpp"
 #include "observation/observation.hpp"
+#include "upcase_value.hpp"
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace observation;
-  namespace pipeline
-  {
+  namespace pipeline {
     inline bool unavailable(const string &str)
     {
       const static string unavailable("UNAVAILABLE");

@@ -26,14 +26,11 @@
 #include "observation/observation.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace device_model
-  {
+namespace mtconnect {
+  namespace device_model {
     class Device;
   }
-  namespace asset
-  {
+  namespace asset {
     class Asset;
     class CuttingTool;
   }  // namespace asset
@@ -71,7 +68,11 @@ namespace mtconnect
                                     asset::AssetList const &asset) const = 0;
     virtual std::string mimeType() const = 0;
 
+    void setModelChangeTime(const std::string &t) { m_modelChangeTime = t; }
+    const std::string &getModelChangeTime() { return m_modelChangeTime; }
+
   protected:
     bool m_pretty;
+    std::string m_modelChangeTime;
   };
 }  // namespace mtconnect

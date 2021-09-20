@@ -23,10 +23,8 @@
 
 #include "pipeline_contract.hpp"
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace pipeline {
     struct TransformState
     {
       // For mutex locking

@@ -31,10 +31,8 @@
 #include "entity/entity.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
-  namespace observation
-  {
+namespace mtconnect {
+  namespace observation {
     // Types of Observations:
     // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
     // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent

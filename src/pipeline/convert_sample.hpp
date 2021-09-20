@@ -21,10 +21,8 @@
 #include "observation/observation.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace pipeline {
     class ConvertSample : public Transform
     {
     public:

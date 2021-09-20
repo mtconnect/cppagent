@@ -30,12 +30,17 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/option.hpp"
 
 
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/connector.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_adapter.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/connector.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/connector.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_pipeline.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_pipeline.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.cpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline_context.hpp"
@@ -53,6 +58,9 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/deliver.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/guard.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/convert_sample.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/topic_mapper.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/upcase_value.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/message_mapper.hpp"
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.hpp"
@@ -142,8 +150,16 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"
-)
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"  
+  )
+
+if(NOT WITHOUT_PYTHON)
+  set(AGENT_SOURCES ${AGENT_SOURCES}
+    
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.cpp"  
+    )
+endif()
 
 ## configure a header file to pass some of the CMake settings to the source code
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../src/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/version.h")
@@ -167,7 +183,11 @@ if(MSVC)
 	PROPERTY COMPILE_FLAGS "/Ob1")
     endif()
   endif()
-  set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
+
+  # The modules including Beast required the /bigobj option in Windows
+  set_property(SOURCE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.cpp"
     PROPERTY COMPILE_FLAGS "/bigobj")
 endif()
 
@@ -191,7 +211,14 @@ target_link_libraries(
   
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
-)
+  )
+
+if(NOT WITHOUT_PYTHON)
+  target_link_libraries(
+    agent_lib
+    PUBLIC
+    Python3::Python)
+endif()
 
 target_compile_definitions(
   agent_lib
@@ -200,8 +227,22 @@ target_compile_definitions(
     $<$<PLATFORM_ID:Windows>:NOMINMAX>
     $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
     $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>
+    MQTT_USE_TLS=ON
+    MQTT_USE_WS=ON
+    MQTT_USE_STR_CHECK=ON
+    MQTT_STD_VARIANT
+    MQTT_STD_OPTIONAL
+    MQTT_STD_STRING_VIEW
+    MQTT_USE_LOG
     )
 
+if(NOT WITHOUT_PYTHON)
+target_compile_definitions(
+  agent_lib
+  PUBLIC
+  WITH_PYTHON )
+endif()  
+  
 # set_property(SOURCE ${AGENT_SOURCES} PROPERTY COMPILE_FLAGS_DEBUG "${COVERAGE_FLAGS}")
 target_compile_features(agent_lib PUBLIC ${CXX_COMPILE_FEATURES})
 target_clangformat_setup(agent_lib)

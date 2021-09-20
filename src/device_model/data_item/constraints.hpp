@@ -20,12 +20,9 @@
 #include "entity.hpp"
 #include "filter.hpp"
 
-namespace mtconnect
-{
-  namespace device_model
-  {
-    namespace data_item
-    {
+namespace mtconnect {
+  namespace device_model {
+    namespace data_item {
       class Constraints : public entity::Entity
       {
       public:

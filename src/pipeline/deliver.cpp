@@ -30,13 +30,11 @@
 
 using namespace std::literals::chrono_literals;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace observation;
   using namespace entity;
 
-  namespace pipeline
-  {
+  namespace pipeline {
     const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
     {
       using namespace observation;
