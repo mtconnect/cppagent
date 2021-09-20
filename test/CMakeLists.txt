@@ -1,14 +1,6 @@
 
 include(GoogleTest)
 
-if (APPLE)
-  set(LIB_PREFIX "lib")
-  set(LIB_SUFFIX ".dylib")
-else()
-  set(LIB_PREFIX "")
-  set(LIB_SUFFIX "")
-endif()
-
 add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
   sink_plugin_test
@@ -218,17 +210,27 @@ add_custom_command(
 
 add_dependencies(config_test adapter_plugin_test sink_plugin_test)
 
-if(NOT MSVC)
+if(APPLE)
   add_custom_command(TARGET config_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         "$<TARGET_FILE:adapter_plugin_test>"
-        "$<TARGET_FILE_DIR:config_test>/${LIB_PREFIX}$<TARGET_FILE_BASE_NAME:adapter_plugin_test>${LIB_SUFFIX}"
+        "$<TARGET_FILE_DIR:config_test>/lib$<TARGET_FILE_BASE_NAME:adapter_plugin_test>.dylib"
 	)
       
   add_custom_command(TARGET config_test POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy
         "$<TARGET_FILE:sink_plugin_test>"
-        "$<TARGET_FILE_DIR:config_test>/${LIB_PREFIX}$<TARGET_FILE_BASE_NAME:sink_plugin_test>${LIB_SUFFIX}")
-
+        "$<TARGET_FILE_DIR:config_test>/lib$<TARGET_FILE_BASE_NAME:sink_plugin_test>.dylib")
+elseif(UNIX)
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "$<TARGET_FILE:adapter_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/$<TARGET_FILE_NAME:adapter_plugin_test>"
+	)
+      
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+        "$<TARGET_FILE:sink_plugin_test>"
+        "$<TARGET_FILE_DIR:config_test>/$<TARGET_FILE_NAME:sink_plugin_test>")
 endif()
 
