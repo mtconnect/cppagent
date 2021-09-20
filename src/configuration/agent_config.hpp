@@ -25,6 +25,7 @@
 
 #include <chrono>
 #include <string>
+#include <thread>
 
 #include "adapter/adapter.hpp"
 #include "adapter/shdr/shdr_pipeline.hpp"
@@ -47,7 +48,7 @@ namespace mtconnect {
     class Embedded;
   }
 #endif
-  
+
   class XmlPrinter;
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;

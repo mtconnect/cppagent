@@ -23,7 +23,7 @@ class CppAgentConan(ConanFile):
         "boost:shared": False,
         "boost:bzip2": False,
         "boost:lzma": False,
-        "boost:without_python": False,
+        "boost:without_python": True,
         "boost:without_wave": True,
         "boost:without_test": True,
         "boost:without_json": False,
@@ -46,8 +46,8 @@ class CppAgentConan(ConanFile):
         }
 
     def configure(self):
-        if self.options.without_python:
-            self.options["boost"].without_python = True
+        if not self.options.without_python:
+            self.options["boost"].without_python = False
             
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')

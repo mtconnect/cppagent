@@ -50,7 +50,6 @@
 #include <stdexcept>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <thread>
 #include <vector>
 
 #include "agent.hpp"
