@@ -7661,7 +7661,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:restriction base='xs:NMTOKEN'/>
   </xs:simpleType>
-  <xs:simpleType name='CoordinateSystemIdType'>
+  <xs:simpleType name='CoordinateSystemIdRefType'>
     <xs:annotation>
       <xs:documentation>
         The id reference for the coordinate system associated with this data
@@ -8026,7 +8026,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
-    <xs:attribute name='coordinateSystemId' type='CoordinateSystemIdType' use='optional'>
+    <xs:attribute name='coordinateSystemIdRef' type='CoordinateSystemIdRefType' use='optional'>
       <xs:annotation>
         <xs:documentation>
           The coordinate system reference to a particular coordinate system
