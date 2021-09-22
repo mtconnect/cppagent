@@ -4550,7 +4550,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:extension base='ResourceType'/>
     </xs:complexContent>
   </xs:complexType>
-  <xs:element name='Material' type='MaterialType' substitutionGroup='Resource'>
+  <xs:element name='Materials' type='MaterialType' substitutionGroup='Resource'>
     <xs:annotation>
       <xs:documentation>
         {{block(Materials)}} provides information about materials or other items
