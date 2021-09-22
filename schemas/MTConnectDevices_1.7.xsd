@@ -3754,6 +3754,40 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:maxExclusive value='4294967295'/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:complexType name='AssetCountsType'>
+    <xs:annotation>
+      <xs:documentation>
+        The total number of mtconnect asset in anagent.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name='AssetCount' type='AssetCountType' minOccurs='1' maxOccurs='unbounded'>
+        <xs:annotation>
+          <xs:documentation>
+            The total number of mtconnect asset in anagent.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name='AssetCountType'>
+    <xs:annotation>
+      <xs:documentation>
+        The total number of mtconnect asset in anagent.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base='AssetCountValueType'>
+        <xs:attribute name='assetType' type='AssetAttrTypeType' use='required'>
+          <xs:annotation>
+            <xs:documentation>
+              The type of asset that was updated.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:attribute>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
   <xs:complexType name='HeaderType'>
     <xs:annotation>
       <xs:documentation>
@@ -3761,32 +3795,37 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         {{term(Document)}}.
       </xs:documentation>
     </xs:annotation>
-    <xs:simpleContent>
-      <xs:extension base='xs:string'>
-        <xs:attributeGroup ref='HeaderAttributesType'/>
-        <xs:attribute name='bufferSize' type='BufferSizeType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              The size of the agent&apos;s buffer.
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name='assetBufferSize' type='AssetBufferSizeType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              The maximum number of assets
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name='assetCount' type='AssetCountAttrType' use='required'>
-          <xs:annotation>
-            <xs:documentation>
-              The number of assets we have
-            </xs:documentation>
-          </xs:annotation>
-        </xs:attribute>
-      </xs:extension>
-    </xs:simpleContent>
+	<xs:sequence>
+      <xs:element name='AssetCounts' type='AssetCountsType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The total number of mtconnect asset in anagent.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+	<xs:attributeGroup ref='HeaderAttributesType'/>
+	<xs:attribute name='bufferSize' type='BufferSizeType' use='required'>
+	  <xs:annotation>
+		<xs:documentation>
+		  The size of the agent&apos;s buffer.
+		</xs:documentation>
+	  </xs:annotation>
+	</xs:attribute>
+	<xs:attribute name='assetBufferSize' type='AssetBufferSizeType' use='required'>
+	  <xs:annotation>
+		<xs:documentation>
+		  The maximum number of assets
+		</xs:documentation>
+	  </xs:annotation>
+	</xs:attribute>
+	<xs:attribute name='assetCount' type='AssetCountAttrType' use='required'>
+	  <xs:annotation>
+		<xs:documentation>
+		  The number of assets we have
+		</xs:documentation>
+	  </xs:annotation>
+	</xs:attribute>
   </xs:complexType>
   <xs:complexType name='MTConnectDevicesType'>
     <xs:annotation>
@@ -4756,7 +4795,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       <xs:extension base='MaterialType'/>
     </xs:complexContent>
   </xs:complexType>
-  <xs:element name='Stock' type='StockType' substitutionGroup='Material'>
+  <xs:element name='Stock' type='StockType' substitutionGroup='Materials'>
     <xs:annotation>
       <xs:documentation>
         {{block(Stock)}} represents the information for the material that is
@@ -6960,14 +6999,6 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
   </xs:element>
-  <xs:simpleType name='CoordinateSystemIdRefType'>
-    <xs:annotation>
-      <xs:documentation>
-        The reference to the coordinate system
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base='xs:IDREF'/>
-  </xs:simpleType>
   <xs:simpleType name='CoordinateSystemTypeEnumType'>
     <xs:annotation>
       <xs:documentation>
