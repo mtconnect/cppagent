@@ -145,3 +145,17 @@ TEST_F(ObservationTest, ConditionEventChaining)
   ASSERT_TRUE(list2.front() == event3);
   ASSERT_TRUE(list2.back() == event2);
 }
+
+TEST_F(ObservationTest, subType_prefix_should_be_passed_through)
+{
+  DataItem dataItem({{"id", "c1"}, {"category", "EVENT"},
+    {"type","TOOL_SUFFIX"}, {"subType", "x:AUTO"}
+  });
+
+  ErrorList errors;
+  auto event = Observation::make(&dataItem, {{ "VALUE", "Test"s }}, m_time, errors);
+  ASSERT_EQ(0, errors.size());
+  
+  ASSERT_EQ("x:AUTO", dataItem.getSubType());
+  ASSERT_EQ("x:AUTO", event->get<string>("subType"));
+}
