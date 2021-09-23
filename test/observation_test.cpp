@@ -216,7 +216,7 @@ TEST_F(ObservationTest, subType_prefix_should_be_passed_through)
 {
   ErrorList errors;
   auto dataItem = DataItem::make({{"id", "c1"s}, {"category", "EVENT"s},
-    {"type","TOOL_SUFFIX"s}, {"subType", "x:AUTO"s}
+    {"type","TOOL_SUFFIX"s}, {"subType", "x:auto"s}
   }, errors);
 
   auto event = Observation::make(dataItem, {{ "VALUE", "Test"s }}, m_time, errors);

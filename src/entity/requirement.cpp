@@ -223,8 +223,8 @@ namespace mtconnect {
           auto pos = r.find_first_of(':');
           if (pos != string::npos)
           {
-            std::transform(r.begin() + pos, r.end(), r.begin(),
-                           [](int c) -> int { return std::toupper(c); });
+            for (auto c = r.begin() + pos; c != r.end(); c++)
+              *c = std::toupper(*c);
           }
           else
           {

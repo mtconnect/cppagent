@@ -49,7 +49,7 @@ namespace mtconnect {
               {"id", true},
               {"name", false},
               {"type", true},
-              {"subType", false},
+              {"subType", QSTRING, false},
               {"category", ControlledVocab {"EVENT", "SAMPLE", "CONDITION"}, true},
               {"discrete", BOOL, false},
               {"representation",
