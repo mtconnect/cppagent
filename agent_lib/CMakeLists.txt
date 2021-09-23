@@ -17,7 +17,9 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer_helper.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink.hpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/source.hpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/source.cpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/config_options.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/parser.hpp"

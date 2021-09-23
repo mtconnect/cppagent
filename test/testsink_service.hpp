@@ -41,17 +41,25 @@ namespace mtconnect
 
       uint64_t publish(observation::ObservationPtr &observation) override { return 0; }
       bool publish(asset::AssetPtr asset) override { return false; }
-
-      // Factory method
-      static std::shared_ptr<sink_plugin_test> create(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
-                                                    const ConfigOptions &config) {
-        return std::make_shared<sink_plugin_test>(name, context, move(contract), config);
+      
+      static SinkPtr create(const std::string &name,
+                               boost::asio::io_context &io,
+                               SinkContractPtr &&contract,
+                               const ConfigOptions &options,
+                               const boost::property_tree::ptree &block)
+      {
+        return std::make_shared<sink_plugin_test>(name, io, std::move(contract), options);
+      }
+      
+      static void register_factory(const boost::property_tree::ptree &block)
+      {
+        Sink::registerFactory("sink_plugin_test", &sink_plugin_test::create);
       }
     };
 
     BOOST_DLL_ALIAS(
-        sink_plugin_test::create,
-        create_plugin
+        sink_plugin_test::register_factory,
+                    register_factory
     )
 
 }  // namespace mtconnect

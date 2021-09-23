@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include <boost/function.hpp>
+#include <boost/functional/factory.hpp>
+
 #include <list>
 #include <map>
 #include <memory>
@@ -29,7 +32,12 @@
 
 namespace mtconnect {
   class Printer;
+  class Source;
   using PrinterMap = std::map<std::string, std::unique_ptr<Printer>>;
+  namespace pipeline {
+    class PipelineContext;
+  }
+
   class SinkContract
   {
   public:
@@ -45,12 +53,20 @@ namespace mtconnect {
     virtual DataItemPtr getDataItemById(const std::string &id) const = 0;
     virtual void getDataItemsForPath(const DevicePtr device, const std::optional<std::string> &path,
                                      FilterSet &filter) const = 0;
+    virtual void addSource(std::shared_ptr<Source> source) = 0;
 
     // Asset information
     virtual const asset::AssetStorage *getAssetStorage() = 0;
+
+    std::shared_ptr<pipeline::PipelineContext> m_pipelineContext;
   };
 
   using SinkContractPtr = std::unique_ptr<SinkContract>;
+  class Sink;
+  using SinkPtr = std::shared_ptr<Sink>;
+  using SinkFactory = boost::function<SinkPtr(
+      const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
+      const ConfigOptions &options, const boost::property_tree::ptree &block)>;
 
   class Sink
   {
@@ -69,11 +85,22 @@ namespace mtconnect {
 
     const auto &getName() const { return m_name; }
 
+    static void registerFactory(const std::string &name, SinkFactory function)
+    {
+      m_factories.insert_or_assign(name, function);
+    }
+
+    static bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
+
+    static SinkPtr make(const std::string &factoryName, const std::string &sinkName,
+                        boost::asio::io_context &io, SinkContractPtr &&contract,
+                        const ConfigOptions &options, const boost::property_tree::ptree &block);
+
   protected:
     std::unique_ptr<SinkContract> m_sinkContract;
     std::string m_name;
+    static std::map<std::string, SinkFactory> m_factories;
   };
 
-  using SinkPtr = std::shared_ptr<Sink>;
   using SinkList = std::list<SinkPtr>;
 }  // namespace mtconnect

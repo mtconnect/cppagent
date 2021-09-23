@@ -99,6 +99,10 @@ namespace mtconnect {
 
       bool success = false;
 
+      rest_sink::RestService::registerFactory();
+      adapter::shdr::ShdrAdapter::registerFactory();
+      adapter::mqtt_adapter::MqttAdapter::registerFactory();
+
 #if _WINDOWS
       char execPath[MAX_PATH];
       memset(execPath, 0, MAX_PATH);
@@ -585,7 +589,7 @@ namespace mtconnect {
 
     void AgentConfiguration::loadConfig(const std::string &file)
     {
-      NAMED_SCOPE("config.load");
+      NAMED_SCOPE("AgentConfiguration::loadConfig");
 
       // Now get our configuration
       auto config = Parser::parse(file);
@@ -668,8 +672,11 @@ namespace mtconnect {
 
       m_name = get<string>(options[configuration::ServiceName]);
 
-      // Get the HTTP Headers
-      loadHttpHeaders(config, options);
+      auto plugins = config.get_child_optional("Plugins");
+      if (plugins)
+      {
+        loadPlugins(*plugins);
+      }
 
       // Check for schema version
       m_version = get<string>(options[configuration::SchemaVersion]);
@@ -678,26 +685,12 @@ namespace mtconnect {
 
       // Make the Agent
       m_agent = make_unique<Agent>(m_context, m_devicesFile, options);
-      XmlPrinter *xmlPrinter = dynamic_cast<XmlPrinter *>(m_agent->getPrinter("xml"));
-
-      auto sinkContract = m_agent->makeSinkContract();
-      auto server = make_shared<rest_sink::RestService>(m_context, move(sinkContract), options);
-
-      loadAllowPut(server->getServer(), options);
-      auto cache = server->getFileCache();
-
-      m_agent->addSink(server);
-
-      auto sinks = config.get_child_optional("Sinks");
-      if (sinks)
-      {
-        loadSinkPlugins(*sinks, options);
-      }
 
       // Make the PipelineContext
       m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
       m_pipelineContext->m_contract = m_agent->makePipelineContract();
-      auto loopback = server->makeLoopbackSource(m_pipelineContext);
+
+      loadSinks(config, options);
 
       m_agent->initialize(m_pipelineContext);
 
@@ -709,25 +702,6 @@ namespace mtconnect {
       }
 
       loadAdapters(config, options);
-
-      // Files served by the Agent... allows schema files to be served by
-      // agent.
-      loadFiles(xmlPrinter, config, cache);
-
-      // Load namespaces, allow for local file system serving as well.
-      loadNamespace(config, "DevicesNamespaces", cache, xmlPrinter,
-                    &XmlPrinter::addDevicesNamespace);
-      loadNamespace(config, "StreamsNamespaces", cache, xmlPrinter,
-                    &XmlPrinter::addStreamsNamespace);
-      loadNamespace(config, "AssetsNamespaces", cache, xmlPrinter, &XmlPrinter::addAssetsNamespace);
-      loadNamespace(config, "ErrorNamespaces", cache, xmlPrinter, &XmlPrinter::addErrorNamespace);
-
-      loadStyle(config, "DevicesStyle", cache, xmlPrinter, &XmlPrinter::setDevicesStyle);
-      loadStyle(config, "StreamsStyle", cache, xmlPrinter, &XmlPrinter::setStreamStyle);
-      loadStyle(config, "AssetsStyle", cache, xmlPrinter, &XmlPrinter::setAssetsStyle);
-      loadStyle(config, "ErrorStyle", cache, xmlPrinter, &XmlPrinter::setErrorStyle);
-
-      loadTypes(config, cache);
 
 #ifdef WITH_PYTHON
       configurePython(config, options);
@@ -780,21 +754,19 @@ namespace mtconnect {
           ConfigOptions adapterOptions = options;
 
           GetOptions(block.second, adapterOptions, options);
-          AddOptions(block.second, adapterOptions, {{configuration::Url, string()}});
-          AddDefaultedOptions(block.second, adapterOptions, {{configuration::Protocol, "shdr"s}});
+          AddOptions(block.second, adapterOptions,
+                     {{configuration::Url, string()}, {configuration::Device, string()}});
 
-          auto deviceName =
-              block.second.get_optional<string>(configuration::Device).value_or(block.first);
-
-          optional<string> dllName;
-          if (deviceName.find(':') != string::npos)
+          auto name = block.first;
+          string factory;
+          auto pos = name.find(':');
+          if (pos != string::npos)
           {
-            vector<string> deviceHeader;
-            boost::split(deviceHeader, block.first, boost::is_any_of(":"));
-            dllName = deviceHeader[0];
-            deviceName = deviceHeader[1];
+            factory = name.substr(0, pos);
+            name.erase(0, pos + 1);
           }
 
+          auto deviceName = GetOption<string>(adapterOptions, configuration::Device).value_or(name);
           device = m_agent->getDeviceByName(deviceName);
 
           if (!device)
@@ -838,40 +810,31 @@ namespace mtconnect {
             adapterOptions[configuration::AdditionalDevices] = deviceList;
           }
 
-          string protocol, name;
+          // Get protocol, hosts, and topics from URL
           if (HasOption(adapterOptions, configuration::Url))
           {
             parseUrl(adapterOptions);
           }
 
-          if (HasOption(adapterOptions, configuration::Protocol))
-            protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
+          // Override if protocol if not specified
+          string protocol;
+          AddDefaultedOptions(block.second, adapterOptions, {{configuration::Protocol, "shdr"s}});
+          protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
 
-          if (dllName)
-          {
-            name = loadSourcePlugin(deviceName, *dllName, block.second, adapterOptions);
-          }
-          else if (protocol == "shdr")
-          {
-            auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, m_pipelineContext,
-                                                               adapterOptions, block.second);
-            m_agent->addSource(adp, false);
-            name = adp->getName();
-          }
-          else if (protocol == "mqtt")
-          {
-            auto adp = make_shared<adapter::mqtt_adapter::MqttAdapter>(
-                m_context, m_pipelineContext, adapterOptions, block.second);
-            m_agent->addSource(adp, false);
-            name = adp->getName();
-          }
-          else
-          {
-            LOG(error) << "Unknown protocol: " << protocol << ", stopping";
-            exit(1);
-          }
+          if (factory.empty())
+            factory = protocol;
 
-          LOG(info) << protocol << ": Adding adapter for " << deviceName << ": " << name;
+          if (!Source::hasFactory(factory) && !loadPlugin(factory, block.second))
+            continue;
+
+          auto source = Source::make(factory, name, m_context, m_pipelineContext, adapterOptions,
+                                     block.second);
+
+          if (source)
+          {
+            m_agent->addSource(source, false);
+            LOG(info) << protocol << ": Adding adapter for " << deviceName << ": " << block.first;
+          }
         }
       }
       else if ((device = defaultDevice()))
@@ -881,251 +844,14 @@ namespace mtconnect {
         auto deviceName = *device->getComponentName();
         adapterOptions[configuration::Device] = deviceName;
         LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
-        auto adp = make_shared<adapter::shdr::ShdrAdapter>(m_context, m_pipelineContext,
-                                                           adapterOptions, config);
-        m_agent->addSource(adp, false);
+
+        auto source =
+            Source::make("shdr", "default", m_context, m_pipelineContext, adapterOptions, ptree {});
+        m_agent->addSource(source, false);
       }
       else
       {
         throw runtime_error("Adapters must be defined if more than one device is present");
-      }
-    }
-
-    string AgentConfiguration::loadSourcePlugin(const std::string &deviceName,
-                                                const std::string &dllName, const ptree &tree,
-                                                ConfigOptions &options)
-    {
-      NAMED_SCOPE("AgentConfiguration::loadSourcePlugin");
-
-      boost::filesystem::path sharedLibPath = boost::dll::program_location().parent_path();
-
-      auto dllPath = sharedLibPath / dllName;
-
-      dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
-
-      using PluginCreateFn = std::shared_ptr<Source>(
-          const std::string &name, boost::asio::io_context &io,
-          pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options,
-          const boost::property_tree::ptree &block);
-
-      boost::function<PluginCreateFn> creator;
-
-      // keep the list of dynamic adapter creator
-      // shared library will be unloaded if they are out of scope
-      static std::list<boost::function<PluginCreateFn>> dynamicSourceCreators;
-
-      try
-      {
-        creator = boost::dll::import_alias<PluginCreateFn>(dllPath,  // path to library
-                                                           "create_adapter_plugin");
-      }
-      catch (exception &e)
-      {
-        LOG(info) << "Cannot load adapter plugin " << deviceName << " from " << sharedLibPath
-                  << " Reason: " << e.what();
-      }
-
-      if (creator.empty())
-      {
-        // try current working directory
-        auto dllPath = boost::filesystem::current_path() / dllName;
-        try
-        {
-          creator = boost::dll::import_alias<PluginCreateFn>(dllPath, "create_adapter_plugin");
-        }
-        catch (exception &e)
-        {
-          LOG(error) << "Cannot load adapter plugin " << dllName << " from " << sharedLibPath
-                     << " Reason: " << e.what();
-          return "Not Loaded";
-        }
-      }
-
-      auto adp = creator(deviceName, m_context, m_pipelineContext, options, tree);
-      m_agent->addSource(adp, false);
-      dynamicSourceCreators.push_back(creator);
-
-      LOG(info) << "Loaded adapter plugin " << dllPath << " for " << deviceName;
-      return adp->getName();
-    }
-
-    void AgentConfiguration::loadAllowPut(rest_sink::Server *server, ConfigOptions &options)
-    {
-      namespace asio = boost::asio;
-      namespace ip = asio::ip;
-
-      server->allowPuts(get<bool>(options[configuration::AllowPut]));
-      auto hosts = GetOption<string>(options, configuration::AllowPutFrom);
-      if (hosts && !hosts->empty())
-      {
-        istringstream line(*hosts);
-        do
-        {
-          string host;
-          getline(line, host, ',');
-          host = trim(host);
-          if (!host.empty())
-          {
-            // Check if it is a simple numeric address
-            using br = ip::resolver_base;
-            boost::system::error_code ec;
-            auto addr = ip::make_address(host, ec);
-            if (ec)
-            {
-              ip::tcp::resolver resolver(m_context);
-              ip::tcp::resolver::query query(host, "0", br::v4_mapped);
-
-              auto it = resolver.resolve(query, ec);
-              if (ec)
-              {
-                cout << "Failed to resolve " << host << ": " << ec.message() << endl;
-              }
-              else
-              {
-                ip::tcp::resolver::iterator end;
-                for (; it != end; it++)
-                {
-                  const auto &addr = it->endpoint().address();
-                  if (!addr.is_multicast() && !addr.is_unspecified())
-                  {
-                    server->allowPutFrom(addr.to_string());
-                  }
-                }
-              }
-            }
-            else
-            {
-              server->allowPutFrom(addr.to_string());
-            }
-          }
-        } while (!line.eof());
-      }
-    }
-
-    void AgentConfiguration::loadNamespace(const ptree &tree, const char *namespaceType,
-                                           rest_sink::FileCache *cache, XmlPrinter *xmlPrinter,
-                                           NamespaceFunction callback)
-    {
-      // Load namespaces, allow for local file system serving as well.
-      auto ns = tree.get_child_optional(namespaceType);
-      if (ns)
-      {
-        for (const auto &block : *ns)
-        {
-          auto urn = block.second.get_optional<string>("Urn");
-          if (block.first != "m" && !urn)
-          {
-            LOG(error) << "Name space must have a Urn: " << block.first;
-          }
-          else
-          {
-            auto location = block.second.get_optional<string>("Location").value_or("");
-            (xmlPrinter->*callback)(urn.value_or(""), location, block.first);
-            auto path = block.second.get_optional<string>("Path");
-            if (path && !location.empty())
-            {
-              auto xns = cache->registerFile(location, *path, m_version);
-              if (!xns)
-              {
-                LOG(debug) << "Cannot register " << urn << " at " << location << " and path "
-                           << *path;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    void AgentConfiguration::loadFiles(XmlPrinter *xmlPrinter, const ptree &tree,
-                                       rest_sink::FileCache *cache)
-    {
-      auto files = tree.get_child_optional("Files");
-      if (files)
-      {
-        for (const auto &file : *files)
-        {
-          auto location = file.second.get_optional<string>("Location");
-          auto path = file.second.get_optional<string>("Path");
-          if (!location || !path)
-          {
-            LOG(error) << "Name space must have a Location (uri) or Directory and Path: "
-                       << file.first;
-          }
-          else
-          {
-            auto namespaces = cache->registerFiles(*location, *path, m_version);
-            for (auto &ns : namespaces)
-            {
-              if (ns.first.find(configuration::Devices) != string::npos)
-              {
-                xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Streams") != string::npos)
-              {
-                xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Assets") != string::npos)
-              {
-                xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Error") != string::npos)
-              {
-                xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
-              }
-            }
-          }
-        }
-      }
-    }
-
-    void AgentConfiguration::loadHttpHeaders(const ptree &tree, ConfigOptions &options)
-    {
-      auto headers = tree.get_child_optional(configuration::HttpHeaders);
-      if (headers)
-      {
-        StringList fields;
-        for (auto &f : *headers)
-        {
-          fields.emplace_back(f.first + ": " + f.second.data());
-        }
-
-        options[configuration::HttpHeaders] = fields;
-      }
-    }
-
-    void AgentConfiguration::loadStyle(const ptree &tree, const char *styleName,
-                                       rest_sink::FileCache *cache, XmlPrinter *xmlPrinter,
-                                       StyleFunction styleFunction)
-    {
-      auto style = tree.get_child_optional(styleName);
-      if (style)
-      {
-        auto location = style->get_optional<string>("Location");
-        if (!location)
-        {
-          LOG(error) << "A style must have a Location: " << styleName;
-        }
-        else
-        {
-          (xmlPrinter->*styleFunction)(*location);
-          auto path = style->get_optional<string>("Path");
-          if (path)
-          {
-            cache->registerFile(*location, *path, m_version);
-          }
-        }
-      }
-    }
-
-    void AgentConfiguration::loadTypes(const ptree &tree, rest_sink::FileCache *cache)
-    {
-      auto types = tree.get_child_optional("MimeTypes");
-      if (types)
-      {
-        for (const auto &type : *types)
-        {
-          cache->addMimeType(type.first, type.second.data());
-        }
       }
     }
 
@@ -1136,73 +862,117 @@ namespace mtconnect {
     }
 #endif
 
-    void AgentConfiguration::loadSinkPlugins(const boost::property_tree::ptree &sinks,
-                                             ConfigOptions &options)
+    void AgentConfiguration::loadSinks(const ptree &config, ConfigOptions &options)
     {
-      NAMED_SCOPE("AgentConfiguration::loadSinkPlugins");
+      NAMED_SCOPE("AgentConfiguration::loadSinks");
 
-      boost::filesystem::path shared_library_path = boost::dll::program_location().parent_path();
-      for (const auto &sink : sinks)
+      auto sinks = config.get_child_optional("Sinks");
+      if (sinks)
       {
-        ConfigOptions sinkOptions = options;
+        for (const auto &sinkBlock : *sinks)
+        {
+          if (!Sink::hasFactory(sinkBlock.first))
+          {
+            if (!loadPlugin(sinkBlock.first, sinkBlock.second))
+              continue;
+          }
 
-        vector<string> sinkHeader;
-        boost::split(sinkHeader, sink.first, boost::is_any_of(":"));
+          ConfigOptions sinkOptions = options;
+          GetOptions(sinkBlock.second, sinkOptions, options);
+          AddOptions(sinkBlock.second, sinkOptions, {{"Name", string()}});
 
-        string sinkDLLName = sinkHeader[0];
-        string sinkId = sinkHeader.size() > 1 ? sinkHeader[1] : sinkDLLName;
+          auto name = GetOption<string>(sinkOptions, "Name").value_or(sinkBlock.first);
+          auto sinkContract = m_agent->makeSinkContract();
+          sinkContract->m_pipelineContext = m_pipelineContext;
 
-        GetOptions(sink.second, sinkOptions, options);
+          auto sink = Sink::make(sinkBlock.first, name, m_context, std::move(sinkContract), options,
+                                 sinkBlock.second);
+          if (sink)
+          {
+            m_agent->addSink(sink);
+            LOG(info) << "Loaded sink plugin " << sinkBlock.first;
+          }
+        }
+      }
 
-        // expect the dynamic library's location is same as the executable
-        // the library's name is sink's id
-        auto dllPath = shared_library_path / sinkDLLName;
+      // Make sure we have a rest sink
+      auto rest = m_agent->findSink("RestService");
+      if (!rest)
+      {
+        auto sinkContract = m_agent->makeSinkContract();
+        sinkContract->m_pipelineContext = m_pipelineContext;
 
-        dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
+        auto sink = Sink::make("RestService", "RestService", m_context, std::move(sinkContract),
+                               options, config);
+        m_agent->addSink(sink);
+      }
+    }
 
-        using PluginCreateFn = std::shared_ptr<mtconnect::Sink>(
-            const string &name, asio::io_context &context, SinkContractPtr &&contract,
-            const ConfigOptions &options);
-        boost::function<PluginCreateFn> creator;
+    void AgentConfiguration::loadPlugins(const ptree &plugins)
+    {
+      NAMED_SCOPE("AgentConfiguration::loadPlugins");
 
-        // keep the list of dynamic sink creators
-        // the share library will be unloaded if they are out of scope
-        static std::list<boost::function<PluginCreateFn>> dynamic_sink_creators;
+      for (const auto &plugin : plugins)
+      {
+        loadPlugin(plugin.first, plugin.second);
+      }
+    }
 
+    bool AgentConfiguration::loadPlugin(const std::string &name, const ptree &plugin)
+    {
+      NAMED_SCOPE("AgentConfiguration::loadPlugin");
+
+      boost::filesystem::path sharedLibPath = boost::dll::program_location().parent_path();
+      using RegistrationFunction = void(const ptree &block);
+      using RegistrationFactory = boost::function<RegistrationFunction>;
+
+      static map<string, RegistrationFactory> factories;
+
+      // Check if already loaded
+      if (factories.count(name) > 0)
+        return true;
+
+      // expect the dynamic library's location is same as the executable
+      // the library's name is sink's id
+      auto dllPath = sharedLibPath / name;
+      dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
+
+      // keep the list of dynamic sink creators
+      // the share library will be unloaded if they are out of scope
+      RegistrationFactory registration;
+      try
+      {
+        registration = boost::dll::import_alias<RegistrationFunction>(dllPath,  // path to library
+                                                                      "register_factory");
+      }
+      catch (exception &e)
+      {
+        LOG(info) << "Cannot load plugin " << name << " from " << sharedLibPath
+                  << " Reason: " << e.what();
+      }
+
+      if (registration.empty())
+      {
+        // try current working directory
+        auto dllPath = boost::filesystem::current_path() / name;
         try
         {
-          creator = boost::dll::import_alias<PluginCreateFn>(dllPath,  // path to library
-                                                             "create_plugin");
+          registration = boost::dll::import_alias<RegistrationFunction>(dllPath,  // path to library
+                                                                        "register_factory");
         }
         catch (exception &e)
         {
-          LOG(info) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
-                    << " Reason: " << e.what();
+          LOG(error) << "Cannot load plugin " << name << " from " << sharedLibPath
+                     << " Reason: " << e.what();
+          return false;
         }
-
-        if (creator.empty())
-        {
-          // try current working directory
-          auto dllPath = boost::filesystem::current_path() / sinkDLLName;
-          try
-          {
-            creator = boost::dll::import_alias<PluginCreateFn>(dllPath, "create_plugin");
-          }
-          catch (exception &e)
-          {
-            LOG(error) << "Cannot load sink plugin " << sinkId << " from " << shared_library_path
-                       << " Reason: " << e.what();
-            continue;
-          }
-        }
-
-        auto sinkContract = m_agent->makeSinkContract();
-        auto sink_server = creator(sinkId, m_context, move(sinkContract), sinkOptions);
-        m_agent->addSink(sink_server);
-        dynamic_sink_creators.push_back(creator);
-
-        LOG(info) << "Loaded sink plugin " << dllPath << " for " << sinkId;
       }
+
+      factories.insert_or_assign(name, registration);
+
+      // Register the plugin
+      registration(plugin);
+      return true;
     }
   }  // namespace configuration
 }  // namespace mtconnect

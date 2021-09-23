@@ -50,8 +50,14 @@ namespace mtconnect
       }
 
       // Factory method
-      static std::shared_ptr<adapter_plugin_test> create(const std::string &name, boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block) {
+      static SourcePtr create(const std::string &name, boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options, const boost::property_tree::ptree &block)
+      {
           return std::make_shared<adapter_plugin_test>(name, io, pipelineContext, options, block);
+      }
+      
+      static void register_factory(const boost::property_tree::ptree &block)
+      {
+        Source::registerFactory("adapter_plugin_test", &adapter_plugin_test::create);
       }
       
       Pipeline *getPipeline() override { return &m_pipeline; }
@@ -61,8 +67,8 @@ namespace mtconnect
     };
 
     BOOST_DLL_ALIAS(
-          adapter_plugin_test::create,
-          create_adapter_plugin                               // <-- ...this alias name
+          adapter_plugin_test::register_factory,
+                    register_factory                               // <-- ...this alias name
           )
 }  // namespace mtconnect
 

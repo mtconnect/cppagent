@@ -138,6 +138,12 @@ namespace mtconnect {
         sink->start();
 
       initialDataItemObservations();
+      
+      if (m_agentDevice)
+      {
+        auto d = m_agentDevice->getDeviceDataItem("agent_avail");
+        m_loopback->receive(d, "AVAILABLE"s);
+      }
 
       // Start all the sources
       for (auto source : m_sources)

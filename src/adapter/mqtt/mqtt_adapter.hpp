@@ -61,6 +61,18 @@ namespace mtconnect {
         MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
                     const ConfigOptions &options, const boost::property_tree::ptree &block);
         ~MqttAdapter() override {}
+        
+        static void registerFactory()
+        {
+          Source::registerFactory(
+              "mqtt",
+              [](const std::string &name, boost::asio::io_context &io,
+                 pipeline::PipelineContextPtr context, const ConfigOptions &options,
+                 const boost::property_tree::ptree &block) -> SourcePtr {
+                auto source = std::make_shared<MqttAdapter>(io, context, options, block);
+                return source;
+              });
+        }
 
         const std::string &getHost() const override { return m_host; };
         unsigned int getPort() const override { return m_port; }

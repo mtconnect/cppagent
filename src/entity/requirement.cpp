@@ -17,14 +17,14 @@
 
 #include "requirement.hpp"
 
+#include <boost/algorithm/string.hpp>
+
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <date/date.h>
 #include <string_view>
-
-#include <boost/algorithm/string.hpp>
 
 #include "entity.hpp"
 #include "factory.hpp"

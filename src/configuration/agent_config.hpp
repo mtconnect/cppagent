@@ -53,10 +53,6 @@ namespace mtconnect {
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;
 
-    using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
-                                                   const std::string &);
-    using StyleFunction = void (XmlPrinter::*)(const std::string &);
-
     class AgentConfiguration : public MTConnectService
     {
     public:
@@ -81,21 +77,14 @@ namespace mtconnect {
     protected:
       DevicePtr defaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
-      void loadAllowPut(rest_sink::Server *server, ConfigOptions &options);
-      void loadNamespace(const ptree &tree, const char *namespaceType, rest_sink::FileCache *cache,
-                         XmlPrinter *printer, NamespaceFunction callback);
-      void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, rest_sink::FileCache *cache);
-      void loadStyle(const ptree &tree, const char *styleName, rest_sink::FileCache *cache,
-                     XmlPrinter *printer, StyleFunction styleFunction);
-      void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
-      void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
+      void loadSinks(const ptree &sinks, ConfigOptions &options);
 
 #ifdef WITH_PYTHON
       void configurePython(const ptree &tree, ConfigOptions &options);
 #endif
-      std::string loadSourcePlugin(const std::string &device, const std::string &dll,
-                                   const ptree &tree, ConfigOptions &options);
-      void loadSinkPlugins(const ptree &sinks, ConfigOptions &options);
+
+      void loadPlugins(const ptree &tree);
+      bool loadPlugin(const std::string &name, const ptree &tree);
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 

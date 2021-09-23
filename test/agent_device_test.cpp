@@ -222,6 +222,9 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
   {
     PARSE_XML_RESPONSE("/Agent/current");
 
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_DEVICE_STREAM "/m:Events/m:Availability",
+                          "AVAILABLE");
+    
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_STREAM "/*", 2);
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_DEVICE_STREAM "/*", 1);
 
