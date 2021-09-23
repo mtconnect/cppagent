@@ -212,6 +212,21 @@ TEST_F(ObservationTest, ConditionEventChaining)
   ASSERT_TRUE(list2.back() == event2);
 }
 
+TEST_F(ObservationTest, subType_prefix_should_be_passed_through)
+{
+  ErrorList errors;
+  auto dataItem = DataItem::make({{"id", "c1"s}, {"category", "EVENT"s},
+    {"type","TOOL_SUFFIX"s}, {"subType", "x:AUTO"s}
+  }, errors);
+
+  auto event = Observation::make(dataItem, {{ "VALUE", "Test"s }}, m_time, errors);
+  ASSERT_EQ(0, errors.size());
+  
+  ASSERT_EQ("x:AUTO", dataItem->get<string>("subType"));
+  ASSERT_EQ("x:AUTO", event->get<string>("subType"));
+}
+
+
 // TODO: Make sure these tests are covered someplace else. Refactoring
 //       Moved this functionality outside the observation.
 

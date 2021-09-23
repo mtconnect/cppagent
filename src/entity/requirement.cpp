@@ -24,6 +24,8 @@
 #include <date/date.h>
 #include <string_view>
 
+#include <boost/algorithm/string.hpp>
+
 #include "entity.hpp"
 #include "factory.hpp"
 #include "logging.hpp"
@@ -216,6 +218,19 @@ namespace mtconnect {
         r = arg;
         if (m_type == USTRING)
           toUpperCase(r);
+        else if (m_type == QSTRING)
+        {
+          auto pos = r.find_first_of(':');
+          if (pos != string::npos)
+          {
+            std::transform(r.begin() + pos, r.end(), r.begin(),
+                           [](int c) -> int { return std::toupper(c); });
+          }
+          else
+          {
+            toUpperCase(r);
+          }
+        }
       }
 
       // ----------------- double
@@ -315,6 +330,7 @@ namespace mtconnect {
       Value out;
       switch (type)
       {
+        case QSTRING:
         case USTRING:
         case STRING:
           out.emplace<STRING>();

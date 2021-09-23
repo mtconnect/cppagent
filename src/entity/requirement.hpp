@@ -69,6 +69,7 @@ namespace mtconnect {
       TIMESTAMP = 0x9,
       NULL_VALUE = 0xA,
       USTRING = 0x10 | STRING,
+      QSTRING = 0x20 | STRING,
       TABLE = 0x10 | DATA_SET
     };
 
