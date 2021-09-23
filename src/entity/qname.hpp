@@ -115,6 +115,17 @@ namespace mtconnect {
         else
           return std::string_view(c_str(), m_nsLen);
       }
+      const std::pair<std::string, std::string> getPair() const
+      {
+        if (m_nsLen > 0)
+        {
+          return {std::string(getNs()), std::string(getName())};
+        }
+        else
+        {
+          return {std::string(), *this};
+        }
+      }
 
       std::string &str() { return *this; }
       const std::string &str() const { return *this; }

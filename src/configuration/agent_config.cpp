@@ -737,7 +737,7 @@ namespace mtconnect {
           options[configuration::Topics] = StringList {string(match[4].first, match[4].second)};
       }
     }
-
+    
     void AgentConfiguration::loadAdapters(const pt::ptree &config, const ConfigOptions &options)
     {
       using namespace adapter;
@@ -756,15 +756,9 @@ namespace mtconnect {
           GetOptions(block.second, adapterOptions, options);
           AddOptions(block.second, adapterOptions,
                      {{configuration::Url, string()}, {configuration::Device, string()}});
-
-          auto name = block.first;
-          string factory;
-          auto pos = name.find(':');
-          if (pos != string::npos)
-          {
-            factory = name.substr(0, pos);
-            name.erase(0, pos + 1);
-          }
+          
+          auto qname = entity::QName(block.first);
+          auto [factory, name] = qname.getPair();
 
           auto deviceName = GetOption<string>(adapterOptions, configuration::Device).value_or(name);
           device = m_agent->getDeviceByName(deviceName);
@@ -871,21 +865,27 @@ namespace mtconnect {
       {
         for (const auto &sinkBlock : *sinks)
         {
-          if (!Sink::hasFactory(sinkBlock.first))
+          auto qname = entity::QName(sinkBlock.first);
+          auto [factory, name] = qname.getPair();
+
+          if (factory.empty())
+            factory = name;
+
+          if (!Sink::hasFactory(factory))
           {
-            if (!loadPlugin(sinkBlock.first, sinkBlock.second))
+            if (!loadPlugin(factory, sinkBlock.second))
               continue;
           }
-
+          
           ConfigOptions sinkOptions = options;
           GetOptions(sinkBlock.second, sinkOptions, options);
           AddOptions(sinkBlock.second, sinkOptions, {{"Name", string()}});
 
-          auto name = GetOption<string>(sinkOptions, "Name").value_or(sinkBlock.first);
+          auto sinkName = GetOption<string>(sinkOptions, "Name").value_or(name);
           auto sinkContract = m_agent->makeSinkContract();
           sinkContract->m_pipelineContext = m_pipelineContext;
-
-          auto sink = Sink::make(sinkBlock.first, name, m_context, std::move(sinkContract), options,
+          
+          auto sink = Sink::make(factory, sinkName, m_context, std::move(sinkContract), options,
                                  sinkBlock.second);
           if (sink)
           {

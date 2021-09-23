@@ -541,8 +541,34 @@ Sinks {
     const auto sink = agent->findSink("sink_plugin_test");
     ASSERT_TRUE(sink != nullptr);
   }
-
+  
   TEST_F(ConfigTest, dynamic_load_sinks_assigned_name)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+    
+    
+    string str(R"(
+Sinks {
+      sink_plugin_test:Sink1 {
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto sink1 = agent->findSink("sink_plugin_test");
+    ASSERT_TRUE(sink1 == nullptr);
+
+    const auto sink2 = agent->findSink("Sink1");
+    ASSERT_TRUE(sink2 != nullptr);
+  }
+
+
+  TEST_F(ConfigTest, dynamic_load_sinks_assigned_name_tag)
   {
     chdir(TEST_BIN_ROOT_DIR);
 
