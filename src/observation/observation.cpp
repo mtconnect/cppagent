@@ -49,7 +49,7 @@ namespace mtconnect
         factory = make_shared<Factory>(Requirements({{"dataItemId", true},
                                                      {"timestamp", TIMESTAMP, true},
                                                      {"sequence", false},
-                                                     {"subType", USTRING, false},
+                                                     {"subType", false},
                                                      {"name", false},
                                                      {"compositionId", false}}),
                                        [](const std::string &name, Properties &props) -> EntityPtr {

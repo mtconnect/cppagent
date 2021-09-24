@@ -684,7 +684,11 @@ namespace mtconnect
     {
       m_agentDevice->addAdapter(adapter);
       initializeDataItems(m_agentDevice);
+      
       // Reload the document for path resolution
+      auto d = m_agentDevice->getDeviceDataItem("agent_avail");
+      addToBuffer(d, "AVAILABLE"s);
+      
       if (m_initialized)
       {
         loadCachedProbe();

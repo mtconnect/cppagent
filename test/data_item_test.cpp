@@ -363,3 +363,23 @@ TEST_F(DataItemTest, SampleRate)
   ASSERT_EQ(string("42000"), d->getSampleRate());
   d.reset();
 }
+
+TEST_F(DataItemTest, subType_should_be_given_verbatum)
+{
+  std::map<string, string> attributes1;
+
+  attributes1["id"] = "1";
+  attributes1["name"] = "DataItemTest1";
+  attributes1["type"] = "TOOL_SUFFIX";
+  attributes1["subType"] = "x:AUTO";
+  attributes1["category"] = "SAMPLE";
+  attributes1["units"] = "EVENT";
+  auto d = make_unique<DataItem>(attributes1);
+
+  ASSERT_EQ(string("x:AUTO"), d->getSubType());
+  
+  auto attrs = d->getAttributes();
+  ASSERT_EQ(string("x:AUTO"), attrs["subType"]);
+  
+  d.reset();
+}
