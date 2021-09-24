@@ -922,57 +922,54 @@ namespace mtconnect {
     {
       NAMED_SCOPE("AgentConfiguration::loadPlugin");
 
-      boost::filesystem::path sharedLibPath = boost::dll::program_location().parent_path();
-      using RegistrationFunction = void(const ptree &block);
-      using RegistrationFactory = boost::function<RegistrationFunction>;
+      namespace dll = boost::dll;
+      namespace fs = boost::filesystem;
 
-      static map<string, RegistrationFactory> factories;
+      auto sharedLibPath = dll::program_location().parent_path();
+      using InitializationFn = void(const ptree &block);
+      using InitializationFunction = boost::function<InitializationFn>;
+
+      // Cache the initializers to avoid reload and keep a reference to the
+      // dll so it does not get unloaded.
+      static map<string, InitializationFunction> initializers;
 
       // Check if already loaded
-      if (factories.count(name) > 0)
+      if (initializers.count(name) > 0)
         return true;
 
-      // expect the dynamic library's location is same as the executable
-      // the library's name is sink's id
-      auto dllPath = sharedLibPath / name;
-      dllPath = boost::dll::detail::shared_library_impl::decorate(dllPath);
-
-      // keep the list of dynamic sink creators
-      // the share library will be unloaded if they are out of scope
-      RegistrationFactory registration;
-      try
+      // Try to find the plugin in the path or the application or
+      // current working directory.
+      list<fs::path> paths{
+        dll::detail::shared_library_impl::decorate(sharedLibPath / name),
+        fs::current_path() / name
+      };
+      
+      for (auto path : paths)
       {
-        registration = boost::dll::import_alias<RegistrationFunction>(dllPath,  // path to library
-                                                                      "initialize_plugin");
-      }
-      catch (exception &e)
-      {
-        LOG(info) << "Cannot load plugin " << name << " from " << sharedLibPath
-                  << " Reason: " << e.what();
-      }
-
-      if (registration.empty())
-      {
-        // try current working directory
-        auto dllPath = boost::filesystem::current_path() / name;
+        // keep the list of dynamic sink creators
+        // the share library will be unloaded if they are out of scope
+        InitializationFunction init;
         try
         {
-          registration = boost::dll::import_alias<RegistrationFunction>(dllPath,  // path to library
-                                                                        "initialize_plugin");
+          init = dll::import_alias<InitializationFn>(path,  // path to library
+                                                            "initialize_plugin");
+
+          
+          initializers.insert_or_assign(name, init);
+            
+          // Register the plugin
+          init(plugin);
+          return true;
         }
         catch (exception &e)
         {
-          LOG(error) << "Cannot load plugin " << name << " from " << sharedLibPath
-                     << " Reason: " << e.what();
-          return false;
+          LOG(info) << "Cannot load plugin " << name << " from " << path
+                    << " Reason: " << e.what();
         }
       }
-
-      factories.insert_or_assign(name, registration);
-
-      // Register the plugin
-      registration(plugin);
-      return true;
+      
+      // If the paths did not match, return false.
+      return false;
     }
   }  // namespace configuration
 }  // namespace mtconnect
