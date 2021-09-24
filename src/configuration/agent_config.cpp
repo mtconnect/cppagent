@@ -946,15 +946,12 @@ namespace mtconnect {
       
       for (auto path : paths)
       {
-        // keep the list of dynamic sink creators
-        // the share library will be unloaded if they are out of scope
-        InitializationFunction init;
         try
         {
-          init = dll::import_alias<InitializationFn>(path,  // path to library
+          InitializationFunction init = dll::import_alias<InitializationFn>(path,  // path to library
                                                             "initialize_plugin");
 
-          
+          // Remember this initializer so it does not get unloaded.
           initializers.insert_or_assign(name, init);
             
           // Register the plugin
