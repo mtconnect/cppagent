@@ -59,7 +59,7 @@ namespace mtconnect
 
     BOOST_DLL_ALIAS(
         sink_plugin_test::register_factory,
-                    register_factory
+                    initialize_plugin
     )
 
 }  // namespace mtconnect

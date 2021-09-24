@@ -943,7 +943,7 @@ namespace mtconnect {
       try
       {
         registration = boost::dll::import_alias<RegistrationFunction>(dllPath,  // path to library
-                                                                      "register_factory");
+                                                                      "initialize_plugin");
       }
       catch (exception &e)
       {
@@ -958,7 +958,7 @@ namespace mtconnect {
         try
         {
           registration = boost::dll::import_alias<RegistrationFunction>(dllPath,  // path to library
-                                                                        "register_factory");
+                                                                        "initialize_plugin");
         }
         catch (exception &e)
         {

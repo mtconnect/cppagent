@@ -68,7 +68,7 @@ namespace mtconnect
 
     BOOST_DLL_ALIAS(
           adapter_plugin_test::register_factory,
-                    register_factory                               // <-- ...this alias name
+                    initialize_plugin                               // <-- ...this alias name
           )
 }  // namespace mtconnect
 
