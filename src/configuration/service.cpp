@@ -47,7 +47,8 @@ namespace mtconnect {
     {
       printf(
 R"(Usage: agent [help|daemonize|debug|run] [config-file]
-       help           Prints this message
+       help           Prints this message and exits
+       version        Prints the agent version and exits
 )"
 #ifndef _WINDOWS
 R"(       daemonize      Run this process as a background daemon.
@@ -96,7 +97,7 @@ R"(       debug          Runs the agent on the command line with verbose logging
       {
         usage();
       }
-      else if (options.count("version"))
+      else if (options.count("version") > 0 || (command && *command == "version"))
       {
         exit(0);
       }
