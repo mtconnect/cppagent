@@ -169,13 +169,13 @@ namespace mtconnect {
         LOG(fatal) << "Agent failed to load: Cannot find configuration file: '" << configFile;
         cerr << "Agent failed to load: Cannot find configuration file: '" << configFile
              << std::endl;
-        usage();
+        usage(1);
       }
       catch (std::exception &e)
       {
         LOG(fatal) << "Agent failed to load: " << e.what() << " from " << m_configFile;
         cerr << "Agent failed to load: " << e.what() << " from " << m_configFile << std::endl;
-        usage();
+        usage(1);
       }
     }
 

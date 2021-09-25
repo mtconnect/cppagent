@@ -18,6 +18,7 @@
 #pragma once
 
 #include <boost/program_options/variables_map.hpp>
+#include <boost/optional.hpp>
 
 #include <string>
 #include <filesystem>
@@ -41,7 +42,12 @@ namespace mtconnect {
       std::string const &name() const { return m_name; }
       void setDebug(bool debug) { m_isDebug = debug; }
       
-      virtual void usage();
+      virtual void usage(int ec = 0);
+      
+    protected:
+      boost::program_options::variables_map parseOptions(int argc, const char *argv[],
+                                     boost::optional<std::string> &command,
+                                     boost::optional<std::string> &config);
 
     protected:
       std::string m_name;

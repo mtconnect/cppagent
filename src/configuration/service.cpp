@@ -40,6 +40,73 @@
 #include <unistd.h>
 #endif
 
+
+namespace mtconnect {
+  namespace configuration {
+    void MTConnectService::usage(int ec)
+    {
+      printf(
+R"(Usage: agent [help|daemonize|debug|run] [config-file]
+       help           Prints this message
+)"
+#ifndef _WINDOWS
+R"(       daemonize      Run this process as a background daemon.
+                      daemonize with -h will display additional options
+)"
+#endif
+R"(       debug          Runs the agent on the command line with verbose logging
+       run            Runs the agent on the command line
+       config-file    The configuration file to load
+                      Default: agent.cfg in current directory
+)");
+      exit(ec);
+    }
+    
+    boost::program_options::variables_map MTConnectService::parseOptions(int argc, const char *argv[],
+                                   boost::optional<std::string> &command,
+                                   boost::optional<std::string> &config)
+    {
+      namespace po = boost::program_options;
+      using namespace std;
+      
+      po::options_description desc("Options");
+      desc.add_options()("help,h", "Show this help message")
+                        ("version", "Show the current agent version");
+      
+      po::options_description hidden("Hidden");
+      hidden.add_options()("command", po::value(&command), "The command")
+          ("config-file", po::value(&config), "The configuration file");
+
+      po::positional_options_description pos;
+      pos.add("command", 1);
+      pos.add("config-file", 1);
+      
+      po::options_description all("All Options");
+      all.add(desc).add(hidden);
+      
+      po::options_description visible("Visible Options");
+      visible.add(desc);
+      
+      po::variables_map options;
+      po::store(po::command_line_parser(argc, argv).options(all).positional(pos).run(),
+                options);
+      po::notify(options);
+      
+      if (options.count("help") > 0 || (command && *command == "help"))
+      {
+        usage();
+      }
+      else if (options.count("version"))
+      {
+        exit(0);
+      }
+
+      return options;
+    }
+
+  }
+}
+
 #ifdef _WINDOWS
 
 // Don't include WinSock.h when processing <windows.h>
@@ -99,50 +166,52 @@ namespace mtconnect {
       std::set_terminate(agent_termination_handler);
       PrintMTConnectAgentVersion();
 
+      using namespace std;
+      
+      boost::optional<string> command;
+      boost::optional<string> config;
+
+      auto options = parseOptions(argc, argv, command, config);
+
       try
       {
         // If command-line parameter is "install", install the service. If debug or run
         // is specified than just run it as a command line process.
         // Otherwise, the service is probably being started by the SCM.
-        if (argc > 1)
+        using namespace std;
+        
+        boost::optional<string> command;
+        boost::optional<string> config;
+
+        auto options = parseOptions(argc, argv, command, config);
+        
+        if (command)
         {
-          if (!stricmp(argv[1], "help") || !strncmp(argv[1], "-h", 2u))
+          if (*command == "install")
           {
-            printf(
-                "Usage: agent [help|install|debug|run] [configuration_file]\n"
-                "       help           Prints this message\n"
-                "       install        Installs the service\n"
-                "                      install with -h will display additional options\n"
-                "       remove         Remove the service\n"
-                "       debug          Runs the agent on the command line with verbose logging\n"
-                "       run            Runs the agent on the command line\n"
-                "       config_file    The configuration file to load\n"
-                "                      Default: agent.cfg in current directory\n\n"
-                "When the agent is started without any arguments it is assumed it will be running\n"
-                "as a service and will begin the service initialization sequence\n");
-            exit(0);
-          }
-          else if (!stricmp(argv[1], "install"))
-          {
-            initialize(argc - 2, argv + 2);
+            initialize(options);
             install();
             return 0;
           }
-          else if (!stricmp(argv[1], "remove"))
+          else if (*command ==  "remove")
           {
-            initialize(argc - 2, argv + 2);
+            initialize(options);
             remove();
             return 0;
           }
-          else if (!stricmp(argv[1], "debug") || !stricmp(argv[1], "run"))
+          else if (*command == "debug" || *command == "run")
           {
-            if (!stricmp(argv[1], "debug"))
+            if (*command ==  "debug")
               m_isDebug = true;
 
-            initialize(argc - 2, argv + 2);
+            initialize(options);
             start();
             std::thread cmd(commandLine);
             return 0;
+          }
+          else
+          {
+            usage(1);
           }
         }
 
@@ -629,7 +698,9 @@ namespace mtconnect {
     }
   }  // namespace configuration
 }  // namespace mtconnect
+
 #else
+
 #include <csignal>
 #include <iostream>
 
@@ -711,69 +782,20 @@ namespace mtconnect {
       signal(SIGTERM, signal_handler);  // catch kill signal
     }
     
-    void MTConnectService::usage()
-    {
-      printf(
-R"(Usage: agent [help|daemonize|debug|run] [config-file]
-       help           Prints this message
-       daemonize      Run this process as a background daemon.
-                      daemonize with -h will display additional options
-       debug          Runs the agent on the command line with verbose logging
-       run            Runs the agent on the command line
-       config-file    The configuration file to load
-                      Default: agent.cfg in current directory
-)");
-      exit(0);
-    }
-
     int MTConnectService::main(int argc, const char *argv[])
     {
       PrintMTConnectAgentVersion();
       
-      namespace po = boost::program_options;
       using namespace std;
-      
-      po::options_description desc("Options");
-      desc.add_options()("help,h", "Show this help message")
-                        ("version", "Show the current agent version");
       
       boost::optional<string> command;
       boost::optional<string> config;
-      po::options_description hidden("Hidden");
-      hidden.add_options()("command", po::value(&command), "The command")
-          ("config-file", po::value(&config), "The configuration file");
 
-      po::positional_options_description pos;
-      pos.add("command", 1);
-      pos.add("config-file", 1);
-      
-      po::options_description all("All Options");
-      all.add(desc).add(hidden);
-      
-      po::options_description visible("Visible Options");
-      visible.add(desc);
-      
-      po::variables_map options;
-      po::store(po::command_line_parser(argc, argv).options(all).positional(pos).run(),
-                options);
-      po::notify(options);
-      
-      if (options.count("help") > 0)
-      {
-        usage();
-      }
-      else if (options.count("version"))
-      {
-        exit(0);
-      }
+      auto options = parseOptions(argc, argv, command, config);
       
       if (command)
       {
-        if (*command == "help")
-        {
-          usage();
-        }
-        else if (*command == "daemonize")
+        if (*command == "daemonize")
         {
           m_isService = true;
           m_pidFile = "agent.pid";
@@ -792,7 +814,7 @@ R"(Usage: agent [help|daemonize|debug|run] [config-file]
         }
         else
         {
-          usage();
+          usage(1);
         }
       }
 
