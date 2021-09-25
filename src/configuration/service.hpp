@@ -17,7 +17,10 @@
 
 #pragma once
 
+#include <boost/program_options/variables_map.hpp>
+
 #include <string>
+#include <filesystem>
 
 #include "utilities.hpp"
 
@@ -26,21 +29,23 @@ namespace mtconnect {
     class MTConnectService
     {
     public:
-      MTConnectService();
+      MTConnectService() = default;
       virtual ~MTConnectService() = default;
 
       virtual int main(int argc, char const *argv[]);
-      virtual void initialize(int argc, char const *argv[]) = 0;
+      virtual void initialize(const boost::program_options::variables_map &options) = 0;
       virtual void stop() = 0;
       virtual void start() = 0;
 
       void setName(std::string const &name) { m_name = name; }
       std::string const &name() const { return m_name; }
       void setDebug(bool debug) { m_isDebug = debug; }
+      
+      virtual void usage();
 
     protected:
       std::string m_name;
-      std::string m_configFile;
+      std::filesystem::path m_configFile;
       std::string m_pidFile;
       bool m_isService = false;
       bool m_isDebug = false;

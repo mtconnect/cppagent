@@ -28,9 +28,6 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/agent_config.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/service.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/service.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/option.cpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/option.hpp"
-
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/adapter_pipeline.cpp"

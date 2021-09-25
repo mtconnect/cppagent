@@ -36,8 +36,6 @@
 #include <mach-o/dyld.h>
 #endif
 
-#include <adapter/mqtt/mqtt_adapter.hpp>
-#include <adapter/shdr/shdr_adapter.hpp>
 #include <algorithm>
 #include <chrono>
 #include <date/date.h>
@@ -52,10 +50,11 @@
 #include <sys/stat.h>
 #include <vector>
 
+#include "adapter/mqtt/mqtt_adapter.hpp"
+#include "adapter/shdr/shdr_adapter.hpp"
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
-#include "option.hpp"
 #include "rest_sink/rest_service.hpp"
 #include "version.h"
 #include "xml_printer.hpp"
@@ -128,61 +127,55 @@ namespace mtconnect {
       if (success)
       {
         fs::path ep(execPath);
-        m_exePath = ep.root_path().parent_path();
+        m_exePath = ep.parent_path();
         cout << " and " << m_exePath;
       }
       cout << endl;
     }
 
-    void AgentConfiguration::initialize(int argc, const char *argv[])
+    void AgentConfiguration::initialize(const boost::program_options::variables_map &options)
     {
       NAMED_SCOPE("AgentConfiguration::initialize");
-
-      MTConnectService::initialize(argc, argv);
-
-      const char *configFile = "agent.cfg";
-
-      OptionsList optionList;
-      optionList.append(new Option(0, configFile, "The configuration file", "file", false));
-      optionList.parse(argc, (const char **)argv);
-
-      m_configFile = configFile;
-
+      
+      string configFile = options.count("config-file") > 0 ? options["config-file"].as<string>() : "agent.cfg";
+      
       try
       {
-        struct stat buf = {0};
-
-        // Check first if the file is in the current working directory...
-        if (stat(m_configFile.c_str(), &buf))
+        list<fs::path> paths{m_working / configFile, m_exePath / configFile };
+        for (auto path : paths)
         {
-          if (!m_exePath.empty())
+          // Check first if the file is in the current working directory...
+          if (fs::exists(path))
           {
-            LOG(info) << "Cannot find " << m_configFile
-                      << " in current directory, searching exe path: " << m_exePath;
-            cerr << "Cannot find " << m_configFile
-                 << " in current directory, searching exe path: " << m_exePath << endl;
-            m_configFile = (m_exePath / m_configFile).string();
+            LOG(info) << "Loading configuration from: " << path;
+            cerr << "Loading configuration from:" << path;
+
+            m_configFile = path;
+            ifstream file(m_configFile.c_str());
+            std::stringstream buffer;
+            buffer << file.rdbuf();
+
+            loadConfig(buffer.str());
+            
+            return;
           }
           else
           {
-            LOG(fatal) << "Agent failed to load: Cannot find configuration file: '" << m_configFile;
-            cerr << "Agent failed to load: Cannot find configuration file: '" << m_configFile
-                 << std::endl;
-            optionList.usage();
+            LOG(info) << "Cannot find config file:" << path << ", keep searching";
+            cerr << "Cannot find config file:" << path << ", keep searching";
           }
         }
-
-        ifstream file(m_configFile.c_str());
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-
-        loadConfig(buffer.str());
+        
+        LOG(fatal) << "Agent failed to load: Cannot find configuration file: '" << configFile;
+        cerr << "Agent failed to load: Cannot find configuration file: '" << configFile
+             << std::endl;
+        usage();
       }
       catch (std::exception &e)
       {
-        LOG(fatal) << "Agent failed to load: " << e.what();
-        cerr << "Agent failed to load: " << e.what() << std::endl;
-        optionList.usage();
+        LOG(fatal) << "Agent failed to load: " << e.what() << " from " << m_configFile;
+        cerr << "Agent failed to load: " << e.what() << " from " << m_configFile << std::endl;
+        usage();
       }
     }
 
@@ -309,8 +302,11 @@ namespace mtconnect {
         LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
 
         // Re initialize
-        const char *argv[] = {m_configFile.c_str()};
-        initialize(1, argv);
+        boost::program_options::variables_map options;
+        boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
+                                                     false);        
+        options.insert(make_pair("config-file"s, value));
+        initialize(options);
       }
       LOG(debug) << "Monitor thread is exiting";
     }
@@ -666,7 +662,7 @@ namespace mtconnect {
                                       "file probe.xml or Devices.xml is in the current "
                                       "directory or specify the correct file "
                                       "in the configuration file " +
-                             m_configFile + " using Devices = <file>")
+                             m_configFile.string() + " using Devices = <file>")
                                 .c_str());
       }
 

@@ -21,6 +21,8 @@
 #endif
 /* keep this file first */
 
+#include <boost/program_options.hpp>
+
 #include <cstring>
 #include <fstream>
 #include <thread>
@@ -37,14 +39,6 @@
 #define strncpy_s strncpy
 #include <unistd.h>
 #endif
-
-namespace mtconnect {
-  namespace configuration {
-    MTConnectService::MTConnectService() = default;
-
-    void MTConnectService::initialize(int argc, const char *argv[]) { NAMED_SCOPE("init.service"); }
-  }  // namespace configuration
-}  // namespace mtconnect
 
 #ifdef _WINDOWS
 
@@ -716,52 +710,90 @@ namespace mtconnect {
       signal(SIGHUP, signal_handler);   // catch hangup signal
       signal(SIGTERM, signal_handler);  // catch kill signal
     }
+    
+    void MTConnectService::usage()
+    {
+      printf(
+R"(Usage: agent [help|daemonize|debug|run] [config-file]
+       help           Prints this message
+       daemonize      Run this process as a background daemon.
+                      daemonize with -h will display additional options
+       debug          Runs the agent on the command line with verbose logging
+       run            Runs the agent on the command line
+       config-file    The configuration file to load
+                      Default: agent.cfg in current directory
+)");
+      exit(0);
+    }
 
     int MTConnectService::main(int argc, const char *argv[])
     {
       PrintMTConnectAgentVersion();
+      
+      namespace po = boost::program_options;
+      using namespace std;
+      
+      po::options_description desc("Options");
+      desc.add_options()("help,h", "Show this help message")
+                        ("version", "Show the current agent version");
+      
+      boost::optional<string> command;
+      boost::optional<string> config;
+      po::options_description hidden("Hidden");
+      hidden.add_options()("command", po::value(&command), "The command")
+          ("config-file", po::value(&config), "The configuration file");
 
-      if (argc > 1)
+      po::positional_options_description pos;
+      pos.add("command", 1);
+      pos.add("config-file", 1);
+      
+      po::options_description all("All Options");
+      all.add(desc).add(hidden);
+      
+      po::options_description visible("Visible Options");
+      visible.add(desc);
+      
+      po::variables_map options;
+      po::store(po::command_line_parser(argc, argv).options(all).positional(pos).run(),
+                options);
+      po::notify(options);
+      
+      if (options.count("help") > 0)
       {
-        if (!strcasecmp(argv[1], "help") || !strncmp(argv[1], "-h", 2))
+        usage();
+      }
+      else if (options.count("version"))
+      {
+        exit(0);
+      }
+      
+      if (command)
+      {
+        if (*command == "help")
         {
-          printf(
-              "Usage: agent [help|daemonize|debug|run] [configuration_file]\n"
-              "       help           Prints this message\n"
-              "       daemonize      Run this process as a background daemon.\n"
-              "                      daemonize with -h will display additional options\n"
-              "       debug          Runs the agent on the command line with verbose logging\n"
-              "       run            Runs the agent on the command line\n"
-              "       config_file    The configuration file to load\n"
-              "                      Default: agent.cfg in current directory\n\n"
-              "When the agent is started without any arguments it will default to run\n");
-          exit(0);
+          usage();
         }
-        else if (!strcasecmp(argv[1], "daemonize"))
+        else if (*command == "daemonize")
         {
           m_isService = true;
           m_pidFile = "agent.pid";
-          initialize(argc - 2, argv + 2);
+          initialize(options);
           daemonize();
           LOG(info) << "Starting daemon";
         }
-        else if (!strcasecmp(argv[1], "debug"))
+        else if (*command == "debug")
         {
           m_isDebug = true;
-          initialize(argc - 2, argv + 2);
+          initialize(options);
         }
-        else if (!strcasecmp(argv[1], "run"))
+        else if (* command == "run")
         {
-          initialize(argc - 2, argv + 2);
+          initialize(options);
         }
         else
         {
-          initialize(argc - 1, argv + 1);
+          usage();
         }
-      }
-      else
-      {
-        initialize(0, argv);
       }
 
       start();

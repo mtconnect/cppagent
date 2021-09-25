@@ -64,7 +64,7 @@ namespace mtconnect {
       // For MTConnectService
       void stop() override;
       void start() override;
-      void initialize(int argc, const char *argv[]) override;
+      void initialize(const boost::program_options::variables_map &options) override;
 
       void configureLogger(const ptree &config);
       void loadConfig(const std::string &file);
