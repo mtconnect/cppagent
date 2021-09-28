@@ -61,7 +61,7 @@ namespace mtconnect {
               {"nativeScale", DOUBLE, false},
               {"coordinateSystem", ControlledVocab {"MACHINE", "WORK"}, false},
               {"compositionId", false},
-              {"coordinateSystemId", false},
+              {"coordinateSystemIdRef", false},
               {"significantDigits", INTEGER, false},
               // Elements
               {"Source", ENTITY, source, false},
