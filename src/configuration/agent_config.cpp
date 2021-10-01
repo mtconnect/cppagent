@@ -136,12 +136,13 @@ namespace mtconnect {
     void AgentConfiguration::initialize(const boost::program_options::variables_map &options)
     {
       NAMED_SCOPE("AgentConfiguration::initialize");
-      
-      string configFile = options.count("config-file") > 0 ? options["config-file"].as<string>() : "agent.cfg";
-      
+
+      string configFile =
+          options.count("config-file") > 0 ? options["config-file"].as<string>() : "agent.cfg";
+
       try
       {
-        list<fs::path> paths{m_working / configFile, m_exePath / configFile };
+        list<fs::path> paths {m_working / configFile, m_exePath / configFile};
         for (auto path : paths)
         {
           // Check first if the file is in the current working directory...
@@ -150,13 +151,13 @@ namespace mtconnect {
             LOG(info) << "Loading configuration from: " << path;
             cerr << "Loading configuration from:" << path;
 
-            m_configFile = path;
+            m_configFile = fs::absolute(path);
             ifstream file(m_configFile.c_str());
             std::stringstream buffer;
             buffer << file.rdbuf();
 
             loadConfig(buffer.str());
-            
+
             return;
           }
           else
@@ -165,7 +166,7 @@ namespace mtconnect {
             cerr << "Cannot find config file:" << path << ", keep searching";
           }
         }
-        
+
         LOG(fatal) << "Agent failed to load: Cannot find configuration file: '" << configFile;
         cerr << "Agent failed to load: Cannot find configuration file: '" << configFile
              << std::endl;
@@ -233,7 +234,7 @@ namespace mtconnect {
       LOG(debug) << "Monitoring files: " << m_configFile << " and " << m_devicesFile
                  << ", will warm start if they change.";
 
-      if ((cfg_at_start = GetFileModificationTime(m_configFile)) == 0)
+      if ((cfg_at_start = GetFileModificationTime(m_configFile.string())) == 0)
       {
         LOG(warning) << "Cannot stat config file: " << m_configFile << ", exiting monitor";
         return;
@@ -257,7 +258,7 @@ namespace mtconnect {
         time_t devices = 0, cfg = 0;
         bool check = true;
 
-        if ((cfg = GetFileModificationTime(m_configFile)) == 0)
+        if ((cfg = GetFileModificationTime(m_configFile.string())) == 0)
         {
           LOG(warning) << "Cannot stat config file: " << m_configFile << ", retrying in 10 seconds";
           check = false;
@@ -304,7 +305,7 @@ namespace mtconnect {
         // Re initialize
         boost::program_options::variables_map options;
         boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
-                                                     false);        
+                                                     false);
         options.insert(make_pair("config-file"s, value));
         initialize(options);
       }
@@ -733,7 +734,7 @@ namespace mtconnect {
           options[configuration::Topics] = StringList {string(match[4].first, match[4].second)};
       }
     }
-    
+
     void AgentConfiguration::loadAdapters(const pt::ptree &config, const ConfigOptions &options)
     {
       using namespace adapter;
@@ -752,7 +753,7 @@ namespace mtconnect {
           GetOptions(block.second, adapterOptions, options);
           AddOptions(block.second, adapterOptions,
                      {{configuration::Url, string()}, {configuration::Device, string()}});
-          
+
           auto qname = entity::QName(block.first);
           auto [factory, name] = qname.getPair();
 
@@ -872,7 +873,7 @@ namespace mtconnect {
             if (!loadPlugin(factory, sinkBlock.second))
               continue;
           }
-          
+
           ConfigOptions sinkOptions = options;
           GetOptions(sinkBlock.second, sinkOptions, options);
           AddOptions(sinkBlock.second, sinkOptions, {{"Name", string()}});
@@ -880,7 +881,7 @@ namespace mtconnect {
           auto sinkName = GetOption<string>(sinkOptions, "Name").value_or(name);
           auto sinkContract = m_agent->makeSinkContract();
           sinkContract->m_pipelineContext = m_pipelineContext;
-          
+
           auto sink = Sink::make(factory, sinkName, m_context, std::move(sinkContract), options,
                                  sinkBlock.second);
           if (sink)
@@ -935,32 +936,30 @@ namespace mtconnect {
 
       // Try to find the plugin in the path or the application or
       // current working directory.
-      list<fs::path> paths{
-        dll::detail::shared_library_impl::decorate(sharedLibPath / name),
-        fs::current_path() / name
-      };
-      
+      list<fs::path> paths {dll::detail::shared_library_impl::decorate(sharedLibPath / name),
+                            fs::current_path() / name};
+
       for (auto path : paths)
       {
         try
         {
-          InitializationFunction init = dll::import_alias<InitializationFn>(path,  // path to library
-                                                            "initialize_plugin");
+          InitializationFunction init =
+              dll::import_alias<InitializationFn>(path,  // path to library
+                                                  "initialize_plugin");
 
           // Remember this initializer so it does not get unloaded.
           initializers.insert_or_assign(name, init);
-            
+
           // Register the plugin
           init(plugin);
           return true;
         }
         catch (exception &e)
         {
-          LOG(info) << "Cannot load plugin " << name << " from " << path
-                    << " Reason: " << e.what();
+          LOG(info) << "Cannot load plugin " << name << " from " << path << " Reason: " << e.what();
         }
       }
-      
+
       // If the paths did not match, return false.
       return false;
     }
