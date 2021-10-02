@@ -20,9 +20,7 @@
 #include "logging.hpp"
 
 namespace mtconnect {
-  std::map<std::string, SinkFactory> Sink::m_factories;
-
-  SinkPtr Sink::make(const std::string &factoryName, const std::string &sinkName,
+  SinkPtr SinkFactory::make(const std::string &factoryName, const std::string &sinkName,
                      boost::asio::io_context &io, SinkContractPtr &&contract,
                      const ConfigOptions &options, const boost::property_tree::ptree &block)
   {

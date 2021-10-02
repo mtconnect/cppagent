@@ -23,6 +23,7 @@
 #include <boost/dll/alias.hpp>
 
 #include "source.hpp"
+#include "configuration/agent_config.hpp"
 
 using namespace std;
 
@@ -55,9 +56,9 @@ namespace mtconnect
           return std::make_shared<adapter_plugin_test>(name, io, pipelineContext, options, block);
       }
       
-      static void register_factory(const boost::property_tree::ptree &block)
+      static void register_factory(const boost::property_tree::ptree &block, configuration::AgentConfiguration &config)
       {
-        Source::registerFactory("adapter_plugin_test", &adapter_plugin_test::create);
+        config.getSourceFactory().registerFactory("adapter_plugin_test", &adapter_plugin_test::create);
       }
       
       Pipeline *getPipeline() override { return &m_pipeline; }

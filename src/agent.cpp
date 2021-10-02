@@ -126,6 +126,8 @@ namespace mtconnect {
   Agent::~Agent()
   {
     m_xmlParser.reset();
+    m_sinks.clear();
+    m_sources.clear();
     m_agentDevice = nullptr;
   }
 

@@ -30,7 +30,7 @@ namespace mtconnect {
 
   class Source;
   using SourcePtr = std::shared_ptr<Source>;
-  using SourceFactory = boost::function<std::shared_ptr<Source>(
+  using SourceFactoryFn = boost::function<std::shared_ptr<Source>(
       const std::string &name, boost::asio::io_context &io,
       std::shared_ptr<pipeline::PipelineContext> pipelineContext, const ConfigOptions &options,
       const boost::property_tree::ptree &block)>;
@@ -54,23 +54,31 @@ namespace mtconnect {
     const auto &getName() { return m_name; }
     boost::asio::io_context::strand &getStrand();
 
-    static SourcePtr make(const std::string &factoryName, const std::string &sinkName,
+  protected:
+    std::string m_name;
+    boost::asio::io_context::strand m_strand;
+  };
+  
+  class SourceFactory
+  {
+  public:
+    SourcePtr make(const std::string &factoryName, const std::string &sinkName,
                           boost::asio::io_context &io,
                           std::shared_ptr<pipeline::PipelineContext> context,
                           const ConfigOptions &options, const boost::property_tree::ptree &block);
 
-    static void registerFactory(const std::string &name, SourceFactory function)
+    void registerFactory(const std::string &name, SourceFactoryFn function)
     {
       m_factories.insert_or_assign(name, function);
     }
+    
+    void clear() { m_factories.clear(); }
 
-    static bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
+    bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
 
-  protected:
-    std::string m_name;
-    boost::asio::io_context::strand m_strand;
+  private:
+    std::map<std::string, SourceFactoryFn> m_factories;
 
-    static std::map<std::string, SourceFactory> m_factories;
   };
 
   using SourceList = std::list<SourcePtr>;

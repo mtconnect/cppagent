@@ -64,7 +64,7 @@ namespace mtconnect {
   using SinkContractPtr = std::unique_ptr<SinkContract>;
   class Sink;
   using SinkPtr = std::shared_ptr<Sink>;
-  using SinkFactory = boost::function<SinkPtr(
+  using SinkFactoryFn = boost::function<SinkPtr(
       const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
       const ConfigOptions &options, const boost::property_tree::ptree &block)>;
 
@@ -85,21 +85,30 @@ namespace mtconnect {
 
     const auto &getName() const { return m_name; }
 
-    static void registerFactory(const std::string &name, SinkFactory function)
-    {
-      m_factories.insert_or_assign(name, function);
-    }
-
-    static bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
-
-    static SinkPtr make(const std::string &factoryName, const std::string &sinkName,
-                        boost::asio::io_context &io, SinkContractPtr &&contract,
-                        const ConfigOptions &options, const boost::property_tree::ptree &block);
-
   protected:
     std::unique_ptr<SinkContract> m_sinkContract;
     std::string m_name;
-    static std::map<std::string, SinkFactory> m_factories;
+  };
+  
+  class SinkFactory
+  {
+  public:
+    void registerFactory(const std::string &name, SinkFactoryFn function)
+    {
+      m_factories.insert_or_assign(name, function);
+    }
+    
+    void clear() { m_factories.clear(); }
+
+    bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
+
+    SinkPtr make(const std::string &factoryName, const std::string &sinkName,
+                        boost::asio::io_context &io, SinkContractPtr &&contract,
+                        const ConfigOptions &options, const boost::property_tree::ptree &block);
+
+    
+  protected:
+    std::map<std::string, SinkFactoryFn> m_factories;
   };
 
   using SinkList = std::list<SinkPtr>;

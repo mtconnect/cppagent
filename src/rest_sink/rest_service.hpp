@@ -47,9 +47,9 @@ namespace mtconnect {
       ~RestService() = default;
 
       // Register the service with the sink factory
-      static void registerFactory()
+      static void registerFactory(SinkFactory &factory)
       {
-        Sink::registerFactory(
+        factory.registerFactory(
             "RestService",
             [](const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
                const ConfigOptions &options, const boost::property_tree::ptree &block) -> SinkPtr {

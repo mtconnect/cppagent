@@ -98,9 +98,9 @@ namespace mtconnect {
 
       bool success = false;
 
-      rest_sink::RestService::registerFactory();
-      adapter::shdr::ShdrAdapter::registerFactory();
-      adapter::mqtt_adapter::MqttAdapter::registerFactory();
+      rest_sink::RestService::registerFactory(m_sinkFactory);
+      adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
+      adapter::mqtt_adapter::MqttAdapter::registerFactory(m_sourceFactory);
 
 #if _WINDOWS
       char execPath[MAX_PATH];
@@ -183,6 +183,14 @@ namespace mtconnect {
     AgentConfiguration::~AgentConfiguration()
     {
       b_logger::core::get()->remove_all_sinks();
+      m_pipelineContext.reset();
+      m_adapterHandler.reset();
+      m_agent.reset();
+      
+      m_sinkFactory.clear();
+      m_sourceFactory.clear();
+      m_initializers.clear();
+      
       if (m_sink)
         m_sink.reset();
     }
@@ -815,10 +823,10 @@ namespace mtconnect {
           if (factory.empty())
             factory = protocol;
 
-          if (!Source::hasFactory(factory) && !loadPlugin(factory, block.second))
+          if (!m_sourceFactory.hasFactory(factory) && !loadPlugin(factory, block.second))
             continue;
 
-          auto source = Source::make(factory, name, m_context, m_pipelineContext, adapterOptions,
+          auto source = m_sourceFactory.make(factory, name, m_context, m_pipelineContext, adapterOptions,
                                      block.second);
 
           if (source)
@@ -837,7 +845,7 @@ namespace mtconnect {
         LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
 
         auto source =
-            Source::make("shdr", "default", m_context, m_pipelineContext, adapterOptions, ptree {});
+        m_sourceFactory.make("shdr", "default", m_context, m_pipelineContext, adapterOptions, ptree {});
         m_agent->addSource(source, false);
       }
       else
@@ -868,7 +876,7 @@ namespace mtconnect {
           if (factory.empty())
             factory = name;
 
-          if (!Sink::hasFactory(factory))
+          if (!m_sinkFactory.hasFactory(factory))
           {
             if (!loadPlugin(factory, sinkBlock.second))
               continue;
@@ -882,7 +890,7 @@ namespace mtconnect {
           auto sinkContract = m_agent->makeSinkContract();
           sinkContract->m_pipelineContext = m_pipelineContext;
 
-          auto sink = Sink::make(factory, sinkName, m_context, std::move(sinkContract), options,
+          auto sink = m_sinkFactory.make(factory, sinkName, m_context, std::move(sinkContract), options,
                                  sinkBlock.second);
           if (sink)
           {
@@ -899,7 +907,7 @@ namespace mtconnect {
         auto sinkContract = m_agent->makeSinkContract();
         sinkContract->m_pipelineContext = m_pipelineContext;
 
-        auto sink = Sink::make("RestService", "RestService", m_context, std::move(sinkContract),
+        auto sink = m_sinkFactory.make("RestService", "RestService", m_context, std::move(sinkContract),
                                options, config);
         m_agent->addSink(sink);
       }
@@ -923,15 +931,11 @@ namespace mtconnect {
       namespace fs = boost::filesystem;
 
       auto sharedLibPath = dll::program_location().parent_path();
-      using InitializationFn = void(const ptree &block);
-      using InitializationFunction = boost::function<InitializationFn>;
 
       // Cache the initializers to avoid reload and keep a reference to the
       // dll so it does not get unloaded.
-      static map<string, InitializationFunction> initializers;
-
       // Check if already loaded
-      if (initializers.count(name) > 0)
+      if (m_initializers.count(name) > 0)
         return true;
 
       // Try to find the plugin in the path or the application or
@@ -948,10 +952,10 @@ namespace mtconnect {
                                                   "initialize_plugin");
 
           // Remember this initializer so it does not get unloaded.
-          initializers.insert_or_assign(name, init);
+          m_initializers.insert_or_assign(name, init);
 
           // Register the plugin
-          init(plugin);
+          init(plugin, *this);
           return true;
         }
         catch (exception &e)

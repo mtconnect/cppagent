@@ -62,9 +62,9 @@ namespace mtconnect {
                     const ConfigOptions &options, const boost::property_tree::ptree &block);
         ~MqttAdapter() override {}
         
-        static void registerFactory()
+        static void registerFactory(SourceFactory &factory)
         {
-          Source::registerFactory(
+          factory.registerFactory(
               "mqtt",
               [](const std::string &name, boost::asio::io_context &io,
                  pipeline::PipelineContextPtr context, const ConfigOptions &options,

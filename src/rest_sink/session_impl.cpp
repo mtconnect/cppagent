@@ -319,7 +319,7 @@ namespace mtconnect {
           << m_mimeType
           << "\r\n"
              "Content-length: "
-          << to_string(body.length()) << ";\r\n\r\n"
+          << to_string(body.length()) << "\r\n\r\n"
           << body;
 
       async_write(derived().stream(), http::make_chunk(m_streamBuffer->data()),

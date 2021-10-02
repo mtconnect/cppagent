@@ -180,9 +180,11 @@ class AgentTestHelper
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
     using ptree = boost::property_tree::ptree;
+    
+    
 
-    rest_sink::RestService::registerFactory();
-    adapter::shdr::ShdrAdapter::registerFactory();
+    rest_sink::RestService::registerFactory(m_sinkFactory);
+    adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
     ConfigOptions options{{configuration::BufferSize, bufferSize},
       {configuration::MaxAssets, maxAssets},
@@ -202,7 +204,7 @@ class AgentTestHelper
     
     auto sinkContract = m_agent->makeSinkContract();
     sinkContract->m_pipelineContext = m_context;
-    auto sink = Sink::make("RestService", "RestService",
+    auto sink = m_sinkFactory.make("RestService", "RestService",
                            m_ioContext, move(sinkContract), options, ptree{});
     m_restService = std::dynamic_pointer_cast<rest_sink::RestService>(sink);
     m_agent->addSink(m_restService);
@@ -292,6 +294,9 @@ class AgentTestHelper
   boost::asio::ip::tcp::socket m_socket;
   mtconnect::rest_sink::Response m_response;
   std::shared_ptr<mtconnect::rest_sink::TestSession> m_session;
+  
+  mtconnect::SinkFactory m_sinkFactory;
+  mtconnect::SourceFactory m_sourceFactory;
 };
 
 struct XmlDocFreer {

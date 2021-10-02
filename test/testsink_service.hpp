@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include "sink.hpp"
 #include <boost/dll/alias.hpp>
+
+#include "configuration/agent_config.hpp"
 
 using namespace std;
 
@@ -51,9 +52,9 @@ namespace mtconnect
         return std::make_shared<sink_plugin_test>(name, io, std::move(contract), options);
       }
       
-      static void register_factory(const boost::property_tree::ptree &block)
+      static void register_factory(const boost::property_tree::ptree &block, configuration::AgentConfiguration &config)
       {
-        Sink::registerFactory("sink_plugin_test", &sink_plugin_test::create);
+        config.getSinkFactory().registerFactory("sink_plugin_test", &sink_plugin_test::create);
       }
     };
 
