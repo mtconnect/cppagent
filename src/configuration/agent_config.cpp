@@ -186,11 +186,11 @@ namespace mtconnect {
       m_pipelineContext.reset();
       m_adapterHandler.reset();
       m_agent.reset();
-      
+
       m_sinkFactory.clear();
       m_sourceFactory.clear();
       m_initializers.clear();
-      
+
       if (m_sink)
         m_sink.reset();
     }
@@ -826,8 +826,8 @@ namespace mtconnect {
           if (!m_sourceFactory.hasFactory(factory) && !loadPlugin(factory, block.second))
             continue;
 
-          auto source = m_sourceFactory.make(factory, name, m_context, m_pipelineContext, adapterOptions,
-                                     block.second);
+          auto source = m_sourceFactory.make(factory, name, m_context, m_pipelineContext,
+                                             adapterOptions, block.second);
 
           if (source)
           {
@@ -844,8 +844,8 @@ namespace mtconnect {
         adapterOptions[configuration::Device] = deviceName;
         LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
 
-        auto source =
-        m_sourceFactory.make("shdr", "default", m_context, m_pipelineContext, adapterOptions, ptree {});
+        auto source = m_sourceFactory.make("shdr", "default", m_context, m_pipelineContext,
+                                           adapterOptions, ptree {});
         m_agent->addSource(source, false);
       }
       else
@@ -890,8 +890,8 @@ namespace mtconnect {
           auto sinkContract = m_agent->makeSinkContract();
           sinkContract->m_pipelineContext = m_pipelineContext;
 
-          auto sink = m_sinkFactory.make(factory, sinkName, m_context, std::move(sinkContract), options,
-                                 sinkBlock.second);
+          auto sink = m_sinkFactory.make(factory, sinkName, m_context, std::move(sinkContract),
+                                         options, sinkBlock.second);
           if (sink)
           {
             m_agent->addSink(sink);
@@ -907,8 +907,8 @@ namespace mtconnect {
         auto sinkContract = m_agent->makeSinkContract();
         sinkContract->m_pipelineContext = m_pipelineContext;
 
-        auto sink = m_sinkFactory.make("RestService", "RestService", m_context, std::move(sinkContract),
-                               options, config);
+        auto sink = m_sinkFactory.make("RestService", "RestService", m_context,
+                                       std::move(sinkContract), options, config);
         m_agent->addSink(sink);
       }
     }

@@ -178,7 +178,7 @@ namespace mtconnect {
 
       auto changed = DataItem::make(
           {{"type", "DEVICE_CHANGED"s}, {"id", "device_changed"s}, {"category", "EVENT"s}}, errors);
-      addDataItem(changed, errors);            
+      addDataItem(changed, errors);
     }
   }  // namespace device_model
 }  // namespace mtconnect

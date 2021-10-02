@@ -140,7 +140,7 @@ namespace mtconnect {
         sink->start();
 
       initialDataItemObservations();
-      
+
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("agent_avail");

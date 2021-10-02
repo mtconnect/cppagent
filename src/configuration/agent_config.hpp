@@ -27,15 +27,15 @@
 #include <string>
 #include <thread>
 
-#include "agent.hpp"
 #include "adapter/adapter.hpp"
 #include "adapter/shdr/shdr_pipeline.hpp"
+#include "agent.hpp"
 #include "parser.hpp"
 #include "rest_sink/file_cache.hpp"
 #include "service.hpp"
-#include "utilities.hpp"
 #include "sink.hpp"
 #include "source.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect {
   namespace rest_sink {
@@ -78,7 +78,7 @@ namespace mtconnect {
       const Agent *getAgent() const { return m_agent.get(); }
 
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
-      
+
       auto &getSinkFactory() { return m_sinkFactory; }
       auto &getSourceFactory() { return m_sourceFactory; }
 
@@ -99,7 +99,7 @@ namespace mtconnect {
       void boost_set_log_level(const boost::log::trivial::severity_level level);
 
       void monitorThread();
-      
+
     protected:
       boost::asio::io_context m_context;
       std::list<std::thread> m_workers;
@@ -118,7 +118,7 @@ namespace mtconnect {
       bool m_restart = false;
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
-      
+
       SinkFactory m_sinkFactory;
       SourceFactory m_sourceFactory;
       std::map<std::string, InitializationFunction> m_initializers;

@@ -89,7 +89,7 @@ namespace mtconnect {
     std::unique_ptr<SinkContract> m_sinkContract;
     std::string m_name;
   };
-  
+
   class SinkFactory
   {
   public:
@@ -97,16 +97,15 @@ namespace mtconnect {
     {
       m_factories.insert_or_assign(name, function);
     }
-    
+
     void clear() { m_factories.clear(); }
 
     bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
 
     SinkPtr make(const std::string &factoryName, const std::string &sinkName,
-                        boost::asio::io_context &io, SinkContractPtr &&contract,
-                        const ConfigOptions &options, const boost::property_tree::ptree &block);
+                 boost::asio::io_context &io, SinkContractPtr &&contract,
+                 const ConfigOptions &options, const boost::property_tree::ptree &block);
 
-    
   protected:
     std::map<std::string, SinkFactoryFn> m_factories;
   };

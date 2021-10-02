@@ -58,27 +58,25 @@ namespace mtconnect {
     std::string m_name;
     boost::asio::io_context::strand m_strand;
   };
-  
+
   class SourceFactory
   {
   public:
     SourcePtr make(const std::string &factoryName, const std::string &sinkName,
-                          boost::asio::io_context &io,
-                          std::shared_ptr<pipeline::PipelineContext> context,
-                          const ConfigOptions &options, const boost::property_tree::ptree &block);
+                   boost::asio::io_context &io, std::shared_ptr<pipeline::PipelineContext> context,
+                   const ConfigOptions &options, const boost::property_tree::ptree &block);
 
     void registerFactory(const std::string &name, SourceFactoryFn function)
     {
       m_factories.insert_or_assign(name, function);
     }
-    
+
     void clear() { m_factories.clear(); }
 
     bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
 
   private:
     std::map<std::string, SourceFactoryFn> m_factories;
-
   };
 
   using SourceList = std::list<SourcePtr>;
