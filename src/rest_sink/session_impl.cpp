@@ -319,8 +319,8 @@ namespace mtconnect {
           << m_mimeType
           << "\r\n"
              "Content-length: "
-          << to_string(body.length()) << ";\r\n\r\n"
-          << body;
+          << to_string(body.length()) << "\r\n\r\n"
+          << body << "\r\n";
 
       async_write(derived().stream(), http::make_chunk(m_streamBuffer->data()),
                   beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));

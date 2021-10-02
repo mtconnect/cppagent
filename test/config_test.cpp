@@ -96,7 +96,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto source = agent->getSources().front();
+    const auto source = agent->getSources().back();
     const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
 
     auto deviceName = GetOption<string>(adapter->getOptions(), configuration::Device);
@@ -130,7 +130,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto source = agent->getSources().front();
+    const auto source = agent->getSources().back();
     const auto adapter = dynamic_pointer_cast<adapter::shdr::ShdrAdapter>(source);
 
     ASSERT_EQ(23, (int)adapter->getPort());
@@ -313,7 +313,7 @@ namespace
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
-    const auto source = agent->getSources().front();
+    const auto source = agent->getSources().back();
     const auto adapter = dynamic_pointer_cast<adapter::shdr::ShdrAdapter>(source);
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
@@ -327,7 +327,7 @@ namespace
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
-    const auto source = agent->getSources().front();
+    const auto source = agent->getSources().back();
     const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
 
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
@@ -345,7 +345,7 @@ namespace
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto source = agent->getSources().front();
+    const auto source = agent->getSources().back();
     const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
 
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
@@ -473,11 +473,18 @@ namespace
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
 
-    string str("Sinks {\n"
-                    "TestBADService {\n"
-                    "}\n"
-               "}\n");
-    m_config->loadConfig(str);
+    string str(R"(
+Plugins {
+    TestBADService {
+    }
+}
+Sinks {
+    TestBADService {
+    }
+}
+)");
+    
+    m_config->loadConfig(str);    
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
@@ -491,10 +498,14 @@ namespace
 
     m_config->updateWorkingDirectory();
 
-    string str("Sinks {\n"
-                    "sink_plugin_test {\n"
-                    "}\n"
-               "}\n");
+    
+    string str(R"(
+Sinks {
+      sink_plugin_test {
+    }
+}
+)");
+
     m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
@@ -504,16 +515,74 @@ namespace
     ASSERT_TRUE(sink != nullptr);
   }
 
-  TEST_F(ConfigTest, dynamic_load_sinks_assigned_name)
+  TEST_F(ConfigTest, dynamic_load_sinks_with_plugin_block)
   {
     chdir(TEST_BIN_ROOT_DIR);
 
     m_config->updateWorkingDirectory();
 
-    string str("Sinks {\n"
-                    "sink_plugin_test:Sink1 {\n"
-                    "}\n"
-               "}\n");
+    
+    string str(R"(
+Plugins {
+   sink_plugin_test {
+   }
+}
+Sinks {
+      sink_plugin_test {
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+
+    const auto sink = agent->findSink("sink_plugin_test");
+    ASSERT_TRUE(sink != nullptr);
+  }
+  
+  TEST_F(ConfigTest, dynamic_load_sinks_assigned_name)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+    
+    
+    string str(R"(
+Sinks {
+      sink_plugin_test:Sink1 {
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto sink1 = agent->findSink("sink_plugin_test");
+    ASSERT_TRUE(sink1 == nullptr);
+
+    const auto sink2 = agent->findSink("Sink1");
+    ASSERT_TRUE(sink2 != nullptr);
+  }
+
+
+  TEST_F(ConfigTest, dynamic_load_sinks_assigned_name_tag)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+    
+    
+    string str(R"(
+Sinks {
+      sink_plugin_test {
+        Name = Sink1
+    }
+}
+)");
+
     m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
@@ -531,12 +600,14 @@ namespace
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
 
-    string str("Adapters {\n"
-                    "BadAdapter:Test {\n"
-                     "Host=Host1 \n"
-                     "Port=7878 \n"
-                    "}\n"
-               "}\n");
+    string str(R"(
+Adapters {
+  BadAdapter:Test {
+    Host=Host1
+    Port=7878
+  }
+}
+)");
 
     m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
@@ -551,18 +622,48 @@ namespace
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
 
-    string str("Adapters {\n"
-                  "adapter_plugin_test:Test {\n"
-                     "Host=Host1 \n"
-                     "Port=7878 \n"
-                  "}\n"
-             "}\n");
+    string str(R"(
+Adapters {
+    adapter_plugin_test:Test {
+    Host=Host1
+    Port=7878
+  }
+}
+)");
 
     m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto adapter = agent->findSource("Simplest");
+    const auto adapter = agent->findSource("Test");
     ASSERT_TRUE(adapter != nullptr);
   }
+
+  TEST_F(ConfigTest, dynamic_load_adapter_with_plugin_block)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Plugins {
+    adapter_plugin_test {
+    }
+}
+Adapters {
+  Test {
+    Host=Host1
+    Port=7878
+    Protocol = adapter_plugin_test
+  }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto adapter = agent->findSource("Test");
+    ASSERT_TRUE(adapter != nullptr);
+  }
+
 }  // namespace

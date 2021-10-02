@@ -29,16 +29,18 @@
 
 #include "adapter/adapter.hpp"
 #include "adapter/shdr/shdr_pipeline.hpp"
+#include "agent.hpp"
 #include "parser.hpp"
 #include "rest_sink/file_cache.hpp"
 #include "service.hpp"
+#include "sink.hpp"
+#include "source.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect {
   namespace rest_sink {
     class Server;
   }
-  class Agent;
   namespace device_model {
     class Device;
   }
@@ -53,13 +55,12 @@ namespace mtconnect {
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;
 
-    using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
-                                                   const std::string &);
-    using StyleFunction = void (XmlPrinter::*)(const std::string &);
-
     class AgentConfiguration : public MTConnectService
     {
     public:
+      using InitializationFn = void(const boost::property_tree::ptree &, AgentConfiguration &);
+      using InitializationFunction = boost::function<InitializationFn>;
+
       using ptree = boost::property_tree::ptree;
 
       AgentConfiguration();
@@ -68,7 +69,7 @@ namespace mtconnect {
       // For MTConnectService
       void stop() override;
       void start() override;
-      void initialize(int argc, const char *argv[]) override;
+      void initialize(const boost::program_options::variables_map &options) override;
 
       void configureLogger(const ptree &config);
       void loadConfig(const std::string &file);
@@ -78,24 +79,20 @@ namespace mtconnect {
 
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
+      auto &getSinkFactory() { return m_sinkFactory; }
+      auto &getSourceFactory() { return m_sourceFactory; }
+
     protected:
       DevicePtr defaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
-      void loadAllowPut(rest_sink::Server *server, ConfigOptions &options);
-      void loadNamespace(const ptree &tree, const char *namespaceType, rest_sink::FileCache *cache,
-                         XmlPrinter *printer, NamespaceFunction callback);
-      void loadFiles(XmlPrinter *xmlPrinter, const ptree &tree, rest_sink::FileCache *cache);
-      void loadStyle(const ptree &tree, const char *styleName, rest_sink::FileCache *cache,
-                     XmlPrinter *printer, StyleFunction styleFunction);
-      void loadTypes(const ptree &tree, rest_sink::FileCache *cache);
-      void loadHttpHeaders(const ptree &tree, ConfigOptions &options);
+      void loadSinks(const ptree &sinks, ConfigOptions &options);
 
 #ifdef WITH_PYTHON
       void configurePython(const ptree &tree, ConfigOptions &options);
 #endif
-      std::string loadSourcePlugin(const std::string &device, const std::string &dll,
-                                   const ptree &tree, ConfigOptions &options);
-      void loadSinkPlugins(const ptree &sinks, ConfigOptions &options);
+
+      void loadPlugins(const ptree &tree);
+      bool loadPlugin(const std::string &name, const ptree &tree);
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 
@@ -121,6 +118,10 @@ namespace mtconnect {
       bool m_restart = false;
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
+
+      SinkFactory m_sinkFactory;
+      SourceFactory m_sourceFactory;
+      std::map<std::string, InitializationFunction> m_initializers;
 
       int m_workerThreadCount {1};
     };

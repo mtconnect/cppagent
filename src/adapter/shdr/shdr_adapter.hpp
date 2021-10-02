@@ -48,6 +48,18 @@ namespace mtconnect {
                     const ConfigOptions &options, const boost::property_tree::ptree &block);
         ShdrAdapter(const ShdrAdapter &) = delete;
 
+        static void registerFactory(SourceFactory &factory)
+        {
+          factory.registerFactory(
+              "shdr",
+              [](const std::string &name, boost::asio::io_context &io,
+                 pipeline::PipelineContextPtr context, const ConfigOptions &options,
+                 const boost::property_tree::ptree &block) -> SourcePtr {
+                auto source = std::make_shared<ShdrAdapter>(io, context, options, block);
+                return source;
+              });
+        }
+
         // Virtual destructor
         ~ShdrAdapter() override { stop(); }
 

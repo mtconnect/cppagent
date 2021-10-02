@@ -56,6 +56,9 @@ namespace mtconnect {
                        {configuration::Url, string()},
                    });
 
+        m_options.erase(configuration::Host);
+        m_options.erase(configuration::Port);
+
         AddDefaultedOptions(block, m_options,
                             {{configuration::Host, "localhost"s},
                              {configuration::Port, 7878},

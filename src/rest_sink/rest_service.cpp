@@ -17,32 +17,41 @@
 
 #include "rest_service.hpp"
 
+#include "configuration/config_options.hpp"
 #include "entity/xml_parser.hpp"
 #include "server.hpp"
+#include "xml_printer.hpp"
 
 namespace asio = boost::asio;
 using namespace std;
+namespace config = ::mtconnect::configuration;
+
+using ptree = boost::property_tree::ptree;
 
 namespace mtconnect {
-  using namespace configuration;
   using namespace observation;
   using namespace asset;
   using namespace device_model;
 
   namespace rest_sink {
     RestService::RestService(asio::io_context &context, SinkContractPtr &&contract,
-                             const ConfigOptions &options)
+                             const ConfigOptions &options, const ptree &config)
       : Sink("RestService", move(contract)),
         m_context(context),
         m_strand(context),
+        m_version(GetOption<string>(options, config::SchemaVersion).value_or("x.y")),
         m_options(options),
-        m_circularBuffer(GetOption<int>(options, BufferSize).value_or(17),
-                         GetOption<int>(options, CheckpointFrequency).value_or(1000)),
-        m_logStreamData(GetOption<bool>(options, LogStreams).value_or(false))
+        m_circularBuffer(GetOption<int>(options, config::BufferSize).value_or(17),
+                         GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
+        m_logStreamData(GetOption<bool>(options, config::LogStreams).value_or(false))
     {
       // Unique id number for agent instance
       m_instanceId = getCurrentTimeInSec();
-      m_server = make_unique<Server>(context, options);
+
+      // Get the HTTP Headers
+      loadHttpHeaders(config);
+
+      m_server = make_unique<Server>(context, m_options);
       m_server->setErrorFunction(
           [this](SessionPtr session, rest_sink::status st, const string &msg) {
             auto printer = m_sinkContract->getPrinter("xml");
@@ -50,17 +59,217 @@ namespace mtconnect {
             session->writeFailureResponse({st, doc, printer->mimeType()});
           });
 
+      auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_sinkContract->getPrinter("xml"));
+
+      // Files served by the Agent... allows schema files to be served by
+      // agent.
+      loadFiles(xmlPrinter, config);
+
+      // Load namespaces, allow for local file system serving as well.
+      loadNamespace(config, "DevicesNamespaces", xmlPrinter, &XmlPrinter::addDevicesNamespace);
+      loadNamespace(config, "StreamsNamespaces", xmlPrinter, &XmlPrinter::addStreamsNamespace);
+      loadNamespace(config, "AssetsNamespaces", xmlPrinter, &XmlPrinter::addAssetsNamespace);
+      loadNamespace(config, "ErrorNamespaces", xmlPrinter, &XmlPrinter::addErrorNamespace);
+
+      loadStyle(config, "DevicesStyle", xmlPrinter, &XmlPrinter::setDevicesStyle);
+      loadStyle(config, "StreamsStyle", xmlPrinter, &XmlPrinter::setStreamStyle);
+      loadStyle(config, "AssetsStyle", xmlPrinter, &XmlPrinter::setAssetsStyle);
+      loadStyle(config, "ErrorStyle", xmlPrinter, &XmlPrinter::setErrorStyle);
+
+      loadTypes(config);
+      loadAllowPut();
+
       createProbeRoutings();
       createCurrentRoutings();
       createSampleRoutings();
       createAssetRoutings();
       createPutObservationRoutings();
       createFileRoutings();
+
+      makeLoopbackSource(m_sinkContract->m_pipelineContext);
     }
 
     void RestService::start() { m_server->start(); }
 
     void RestService::stop() { m_server->stop(); }
+
+    // Configuration
+    void RestService::loadNamespace(const ptree &tree, const char *namespaceType,
+                                    XmlPrinter *xmlPrinter, NamespaceFunction callback)
+    {
+      // Load namespaces, allow for local file system serving as well.
+      auto ns = tree.get_child_optional(namespaceType);
+      if (ns)
+      {
+        for (const auto &block : *ns)
+        {
+          auto urn = block.second.get_optional<string>("Urn");
+          if (block.first != "m" && !urn)
+          {
+            LOG(error) << "Name space must have a Urn: " << block.first;
+          }
+          else
+          {
+            auto location = block.second.get_optional<string>("Location").value_or("");
+            (xmlPrinter->*callback)(urn.value_or(""), location, block.first);
+            auto path = block.second.get_optional<string>("Path");
+            if (path && !location.empty())
+            {
+              auto xns = m_fileCache.registerFile(location, *path, m_version);
+              if (!xns)
+              {
+                LOG(debug) << "Cannot register " << urn << " at " << location << " and path "
+                           << *path;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    void RestService::loadFiles(XmlPrinter *xmlPrinter, const ptree &tree)
+    {
+      auto files = tree.get_child_optional("Files");
+      if (files)
+      {
+        for (const auto &file : *files)
+        {
+          auto location = file.second.get_optional<string>("Location");
+          auto path = file.second.get_optional<string>("Path");
+          if (!location || !path)
+          {
+            LOG(error) << "Name space must have a Location (uri) or Directory and Path: "
+                       << file.first;
+          }
+          else
+          {
+            auto namespaces = m_fileCache.registerFiles(*location, *path, m_version);
+            for (auto &ns : namespaces)
+            {
+              if (ns.first.find(::config::Devices) != string::npos)
+              {
+                xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
+              }
+              else if (ns.first.find("Streams") != string::npos)
+              {
+                xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
+              }
+              else if (ns.first.find("Assets") != string::npos)
+              {
+                xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
+              }
+              else if (ns.first.find("Error") != string::npos)
+              {
+                xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
+              }
+            }
+          }
+        }
+      }
+    }
+
+    void RestService::loadHttpHeaders(const ptree &tree)
+    {
+      auto headers = tree.get_child_optional(config::HttpHeaders);
+      if (headers)
+      {
+        StringList fields;
+        for (auto &f : *headers)
+        {
+          fields.emplace_back(f.first + ": " + f.second.data());
+        }
+
+        m_options[config::HttpHeaders] = fields;
+      }
+    }
+
+    void RestService::loadStyle(const ptree &tree, const char *styleName, XmlPrinter *xmlPrinter,
+                                StyleFunction styleFunction)
+    {
+      auto style = tree.get_child_optional(styleName);
+      if (style)
+      {
+        auto location = style->get_optional<string>("Location");
+        if (!location)
+        {
+          LOG(error) << "A style must have a Location: " << styleName;
+        }
+        else
+        {
+          (xmlPrinter->*styleFunction)(*location);
+          auto path = style->get_optional<string>("Path");
+          if (path)
+          {
+            m_fileCache.registerFile(*location, *path, m_version);
+          }
+        }
+      }
+    }
+
+    void RestService::loadTypes(const ptree &tree)
+    {
+      auto types = tree.get_child_optional("MimeTypes");
+      if (types)
+      {
+        for (const auto &type : *types)
+        {
+          m_fileCache.addMimeType(type.first, type.second.data());
+        }
+      }
+    }
+
+    void RestService::loadAllowPut()
+    {
+      namespace asio = boost::asio;
+      namespace ip = asio::ip;
+
+      m_server->allowPuts(get<bool>(m_options[config::AllowPut]));
+      auto hosts = GetOption<string>(m_options, config::AllowPutFrom);
+      if (hosts && !hosts->empty())
+      {
+        istringstream line(*hosts);
+        do
+        {
+          string host;
+          getline(line, host, ',');
+          host = trim(host);
+          if (!host.empty())
+          {
+            // Check if it is a simple numeric address
+            using br = ip::resolver_base;
+            boost::system::error_code ec;
+            auto addr = ip::make_address(host, ec);
+            if (ec)
+            {
+              ip::tcp::resolver resolver(m_context);
+              ip::tcp::resolver::query query(host, "0", br::v4_mapped);
+
+              auto it = resolver.resolve(query, ec);
+              if (ec)
+              {
+                cout << "Failed to resolve " << host << ": " << ec.message() << endl;
+              }
+              else
+              {
+                ip::tcp::resolver::iterator end;
+                for (; it != end; it++)
+                {
+                  const auto &addr = it->endpoint().address();
+                  if (!addr.is_multicast() && !addr.is_unspecified())
+                  {
+                    m_server->allowPutFrom(addr.to_string());
+                  }
+                }
+              }
+            }
+            else
+            {
+              m_server->allowPutFrom(addr.to_string());
+            }
+          }
+        } while (!line.eof());
+      }
+    }
 
     // -----------------------------------------------------------
     // Request Routing

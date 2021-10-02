@@ -28,21 +28,40 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
+  class XmlPrinter;
+
   namespace rest_sink {
     struct AsyncSampleResponse;
     struct AsyncCurrentResponse;
+
+    using NamespaceFunction = void (XmlPrinter::*)(const std::string &, const std::string &,
+                                                   const std::string &);
+    using StyleFunction = void (XmlPrinter::*)(const std::string &);
 
     class RestService : public Sink
     {
     public:
       RestService(boost::asio::io_context &context, SinkContractPtr &&contract,
-                  const ConfigOptions &options);
+                  const ConfigOptions &options, const boost::property_tree::ptree &config);
 
       ~RestService() = default;
+
+      // Register the service with the sink factory
+      static void registerFactory(SinkFactory &factory)
+      {
+        factory.registerFactory(
+            "RestService",
+            [](const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
+               const ConfigOptions &options, const boost::property_tree::ptree &block) -> SinkPtr {
+              auto sink = std::make_shared<RestService>(io, std::move(contract), options, block);
+              return sink;
+            });
+      }
 
       auto makeLoopbackSource(pipeline::PipelineContextPtr context)
       {
         m_loopback = std::make_shared<LoopbackSource>("RestSource", m_strand, context, m_options);
+        m_sinkContract->addSource(m_loopback);
         return m_loopback;
       }
 
@@ -146,6 +165,16 @@ namespace mtconnect {
                              const std::string &text) const;
 
     protected:
+      // Configuration
+      void loadNamespace(const boost::property_tree::ptree &tree, const char *namespaceType,
+                         XmlPrinter *xmlPrinter, NamespaceFunction callback);
+      void loadFiles(XmlPrinter *xmlPrinter, const boost::property_tree::ptree &tree);
+      void loadHttpHeaders(const boost::property_tree::ptree &tree);
+      void loadStyle(const boost::property_tree::ptree &tree, const char *styleName,
+                     XmlPrinter *xmlPrinter, StyleFunction styleFunction);
+      void loadTypes(const boost::property_tree::ptree &tree);
+      void loadAllowPut();
+
       // HTTP Routings
       void createPutObservationRoutings();
       void createFileRoutings();
@@ -177,6 +206,7 @@ namespace mtconnect {
       // Loopback
       boost::asio::io_context &m_context;
       boost::asio::io_context::strand m_strand;
+      std::string m_version;
 
       ConfigOptions m_options;
       std::shared_ptr<LoopbackSource> m_loopback;

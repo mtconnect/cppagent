@@ -316,6 +316,7 @@ namespace mtconnect {
     {
       return m_agent->getDataItemById(id);
     }
+    void addSource(std::shared_ptr<Source> source) override { m_agent->addSource(source); }
 
     // Asset information
     asset::AssetStorage *getAssetStorage() override { return m_agent->getAssetStorage(); }

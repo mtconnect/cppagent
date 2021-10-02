@@ -17,6 +17,8 @@
 
 #include "requirement.hpp"
 
+#include <boost/algorithm/string.hpp>
+
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
@@ -216,6 +218,19 @@ namespace mtconnect {
         r = arg;
         if (m_type == USTRING)
           toUpperCase(r);
+        else if (m_type == QSTRING)
+        {
+          auto pos = r.find_first_of(':');
+          if (pos != string::npos)
+          {
+            for (auto c = r.begin() + pos; c != r.end(); c++)
+              *c = std::toupper(*c);
+          }
+          else
+          {
+            toUpperCase(r);
+          }
+        }
       }
 
       // ----------------- double
@@ -315,6 +330,7 @@ namespace mtconnect {
       Value out;
       switch (type)
       {
+        case QSTRING:
         case USTRING:
         case STRING:
           out.emplace<STRING>();

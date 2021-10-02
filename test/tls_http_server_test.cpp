@@ -24,6 +24,7 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/beast/ssl.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "rest_sink/server.hpp"
 #include "logging.hpp"
@@ -183,7 +184,7 @@ public:
       
       auto body = [this](std::uint64_t remain,
                       boost::string_view body,
-                      boost::system::error_code& ev)
+                      boost::system::error_code& ev) -> unsigned long
       {
         //cout << "Reading body" << endl;
         m_count++;
@@ -192,17 +193,26 @@ public:
           fail(ev, "Failed in chunked body");
         
         string b(body.cbegin(), body.cend());
-        string buf;
-        stringstream is(b);
-        getline(is, buf);
-        buf.erase(std::find_if(buf.rbegin(), buf.rend(), [](int ch) { return ch != '\r'; }).base(),
-                  buf.end());
+        auto le = b.find("\r\n");
+        if (le == string::npos)
+          return 0;
+        auto boundary = b.substr(0, le);
         
-        EXPECT_EQ("--" + m_boundary, buf);
+        EXPECT_EQ("--" + m_boundary, boundary);
+
+        le += 2;
+        auto he = b.find("\r\n\r\n", le);
+        if (he == string::npos)
+          return 0;
+        auto header = b.substr(le, he - le);
         
-        while (getline(is, buf) && !buf.empty())
-          ;
-        m_result = string(buf);
+        he += 4;
+        auto be = b.find("\r\n", he);
+        if (be == string::npos)
+          return 0;
+        auto bd = b.substr(he, be - he);
+        
+        m_result = bd;
         m_done = true;
         cout << "Read " << m_count << ": " << m_result << endl;
         return body.size();

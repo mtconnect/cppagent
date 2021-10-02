@@ -179,8 +179,13 @@ class AgentTestHelper
   {
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
+    using ptree = boost::property_tree::ptree;
+    
+    
 
-    auto cache = std::make_unique<mhttp::FileCache>();
+    rest_sink::RestService::registerFactory(m_sinkFactory);
+    adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
+
     ConfigOptions options{{configuration::BufferSize, bufferSize},
       {configuration::MaxAssets, maxAssets},
       {configuration::CheckpointFrequency, checkpoint},
@@ -198,13 +203,24 @@ class AgentTestHelper
     m_agent->addSource(m_loopback);
     
     auto sinkContract = m_agent->makeSinkContract();
-    m_restService = std::make_shared<rest_sink::RestService>(m_ioContext, move(sinkContract), options);
-    m_restService->makeLoopbackSource(m_context);
-    m_agent->addSink(m_restService);    
+    sinkContract->m_pipelineContext = m_context;
+    auto sink = m_sinkFactory.make("RestService", "RestService",
+                           m_ioContext, move(sinkContract), options, ptree{});
+    m_restService = std::dynamic_pointer_cast<rest_sink::RestService>(sink);
+    m_agent->addSink(m_restService);
     m_agent->initialize(m_context);
     
     if (observe)
+    {
       m_agent->initialDataItemObservations();
+      auto ad = m_agent->getAgentDevice();
+      if (ad)
+      {
+        auto d = ad->getDeviceDataItem("agent_avail");
+        if (d)
+          addToBuffer(d, {{"VALUE", std::string("AVAILABLE")}}, std::chrono::system_clock::now());
+      }
+    }
 
     m_server = m_restService->getServer();
     
@@ -223,9 +239,9 @@ class AgentTestHelper
     {
       options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
     }
-    options[configuration::Host] = host;
-    options[configuration::Port] = port;
     boost::property_tree::ptree tree;
+    tree.put(configuration::Host, host);
+    tree.put(configuration::Port, port);
     m_adapter = std::make_shared<shdr::ShdrAdapter>(m_ioContext, m_context, options, tree);
     m_agent->addSource(m_adapter);
 
@@ -278,6 +294,9 @@ class AgentTestHelper
   boost::asio::ip::tcp::socket m_socket;
   mtconnect::rest_sink::Response m_response;
   std::shared_ptr<mtconnect::rest_sink::TestSession> m_session;
+  
+  mtconnect::SinkFactory m_sinkFactory;
+  mtconnect::SourceFactory m_sourceFactory;
 };
 
 struct XmlDocFreer {

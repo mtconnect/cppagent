@@ -17,12 +17,24 @@
 
 #pragma once
 
+#include <boost/asio.hpp>
+#include <boost/function.hpp>
+
 #include "utilities.hpp"
 
 namespace mtconnect {
   namespace pipeline {
     class Pipeline;
-  }
+    class PipelineContext;
+  }  // namespace pipeline
+
+  class Source;
+  using SourcePtr = std::shared_ptr<Source>;
+  using SourceFactoryFn = boost::function<std::shared_ptr<Source>(
+      const std::string &name, boost::asio::io_context &io,
+      std::shared_ptr<pipeline::PipelineContext> pipelineContext, const ConfigOptions &options,
+      const boost::property_tree::ptree &block)>;
+
   class Source
   {
   public:
@@ -47,6 +59,25 @@ namespace mtconnect {
     boost::asio::io_context::strand m_strand;
   };
 
-  using SourcePtr = std::shared_ptr<Source>;
+  class SourceFactory
+  {
+  public:
+    SourcePtr make(const std::string &factoryName, const std::string &sinkName,
+                   boost::asio::io_context &io, std::shared_ptr<pipeline::PipelineContext> context,
+                   const ConfigOptions &options, const boost::property_tree::ptree &block);
+
+    void registerFactory(const std::string &name, SourceFactoryFn function)
+    {
+      m_factories.insert_or_assign(name, function);
+    }
+
+    void clear() { m_factories.clear(); }
+
+    bool hasFactory(const std::string &name) { return m_factories.count(name) > 0; }
+
+  private:
+    std::map<std::string, SourceFactoryFn> m_factories;
+  };
+
   using SourceList = std::list<SourcePtr>;
 }  // namespace mtconnect
