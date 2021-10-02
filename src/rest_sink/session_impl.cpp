@@ -290,7 +290,7 @@ namespace mtconnect {
       res->chunked(true);
       res->set(field::server, "MTConnectAgent");
       res->set(field::connection, "close");
-      res->set(field::content_type, "multipart/x-mixed-replace;boundary=" + m_boundary);
+      res->set(field::content_type, "multipart/mixed;boundary=" + m_boundary);
       res->set(field::expires, "-1");
       res->set(field::cache_control, "private, max-age=0");
       for (const auto &f : m_fields)
@@ -309,16 +309,16 @@ namespace mtconnect {
     {
       NAMED_SCOPE("SessionImpl::writeChunk");
 
+      using namespace http;
+
       m_complete = complete;
       m_streamBuffer.emplace();
       ostream str(&m_streamBuffer.value());
 
       str << "--" + m_boundary
-          << "\r\n"
-             "Content-type: "
-          << m_mimeType
-          << "\r\n"
-             "Content-length: "
+          << "\r\n" << to_string(field::content_length) << ": "
+          << m_mimeType << "\r\n"
+          << to_string(field::content_type) << ": "
           << to_string(body.length()) << "\r\n\r\n"
           << body << "\r\n";
 
