@@ -24,6 +24,7 @@
 #include <boost/beast/version.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/beast/ssl.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "rest_sink/server.hpp"
 #include "logging.hpp"
@@ -195,14 +196,18 @@ public:
         string buf;
         stringstream is(b);
         getline(is, buf);
-        buf.erase(std::find_if(buf.rbegin(), buf.rend(), [](int ch) { return ch != '\r'; }).base(),
-                  buf.end());
+        boost::algorithm::trim(buf);
         
         EXPECT_EQ("--" + m_boundary, buf);
         
+        string res;
         while (getline(is, buf) && !buf.empty())
-          ;
-        m_result = string(buf);
+        {
+          res = buf;
+          cout << buf << endl;
+        }
+        boost::algorithm::trim(res);
+        m_result = res;
         m_done = true;
         cout << "Read " << m_count << ": " << m_result << endl;
         return body.size();
