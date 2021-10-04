@@ -277,7 +277,7 @@ namespace mtconnect
                              }
                            }}});
 
-    if (geometry.m_location.index() != 0 || geometry.m_scale)
+    if (geometry.m_location.index() != 0 || geometry.m_scale || geometry.m_axis)
       return make_optional(geometry);
     else
       return nullopt;

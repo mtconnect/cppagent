@@ -165,6 +165,11 @@ namespace mtconnect
     const auto coordinateSystemPos = attributes.find("coordinateSystem");
     if (coordinateSystemPos != attributes.end())
       m_coordinateSystem = coordinateSystemPos->second;
+    
+    const auto coordinateSystemIdPos = attributes.find("coordinateSystemIdRef");
+    if (coordinateSystemIdPos != attributes.end())
+      m_coordinateSystemIdRef = coordinateSystemIdPos->second;
+
 
     const auto compositionIdPos = attributes.find("compositionId");
     if (compositionIdPos != attributes.end())
@@ -237,6 +242,9 @@ namespace mtconnect
     if (!m_coordinateSystem.empty())
       attributes["coordinateSystem"] = m_coordinateSystem;
 
+    if (!m_coordinateSystemIdRef.empty())
+      attributes["coordinateSystemIdRef"] = m_coordinateSystemIdRef;
+    
     if (!m_compositionId.empty())
       attributes["compositionId"] = m_compositionId;
 

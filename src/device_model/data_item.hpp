@@ -314,6 +314,7 @@ namespace mtconnect
 
     // Coordinate system of data item
     std::string m_coordinateSystem;
+    std::string m_coordinateSystemIdRef;
 
     // Extra source information of data item
     std::string m_source;

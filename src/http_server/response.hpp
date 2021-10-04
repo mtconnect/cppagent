@@ -113,8 +113,8 @@ namespace mtconnect
                    "Server: MTConnectAgent\r\n"
                    "Expires: -1\r\n"
                    "Connection: close\r\n"
-                   "Cache-Control: private, max-age=0\r\n"
-                   "Content-Type: multipart/x-mixed-replace;boundary="
+                   "Cache-Control: no-cache, private, max-age=0\r\n"
+                   "Content-Type: multipart/mixed;boundary="
                 << m_boundary<< "\r\n"
                   "Transfer-Encoding: chunked\r\n";
           for (auto &f : m_fields)
