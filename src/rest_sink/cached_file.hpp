@@ -43,7 +43,7 @@ namespace mtconnect {
 
       CachedFile(const CachedFile &file, const std::string &mime)
         : m_size(file.m_size), m_mimeType(mime), m_path(file.m_path),
-          m_cached(file.m_cached)
+          m_cached(file.m_cached), m_lastWrite(file.m_lastWrite)
       {
         if (m_cached)
         {
@@ -69,13 +69,16 @@ namespace mtconnect {
       {
         if (size == 0)
           size = std::filesystem::file_size(path);
+        else
+          m_size = size;
         if (cached)
         {
-          allocate(size + 1);
+          allocate(size);
           auto file = std::fopen(path.string().c_str(), "r");
           std::fread(m_buffer, 1, size, file);
           m_buffer[size] = '\0';
         }
+        m_lastWrite = std::filesystem::last_write_time(m_path);
       }
 
       CachedFile &operator=(const CachedFile &file)
@@ -95,7 +98,7 @@ namespace mtconnect {
       void allocate(size_t size)
       {
         m_size = size;
-        m_buffer = static_cast<char *>(malloc(m_size));
+        m_buffer = static_cast<char *>(malloc(m_size + 1));
       }
 
       char *m_buffer;
@@ -103,6 +106,7 @@ namespace mtconnect {
       std::string m_mimeType;
       std::filesystem::path m_path;
       bool m_cached { true };
+      std::filesystem::file_time_type m_lastWrite;
     };
   }  // namespace rest_sink
 }  // namespace mtconnect

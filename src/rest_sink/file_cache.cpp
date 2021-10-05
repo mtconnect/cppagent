@@ -172,7 +172,7 @@ namespace mtconnect {
             auto file = make_shared<CachedFile>(path, getMimeType(ext),
                                            size <= m_maxCachedFileSize,
                                            size);
-            m_fileCache.emplace(name, file);
+            m_fileCache.insert_or_assign(name, file);
             return file;
           }
           else
@@ -192,22 +192,28 @@ namespace mtconnect {
         auto file = m_fileCache.find(name);
         if (file != m_fileCache.end())
         {
-          return file->second;
+          auto fp = file->second;
+          if (!fp->m_cached)
+            return fp;
+          else
+          {
+            auto lastWrite = std::filesystem::last_write_time(fp->m_path);
+            if (lastWrite == fp->m_lastWrite)
+              return fp;
+          }
+        }
+
+        auto path = m_fileMap.find(name);
+        if (path != m_fileMap.end())
+        {
+          auto ext = path->second.extension().string();
+          auto file = make_shared<CachedFile>(path->second, getMimeType(ext));
+          m_fileCache.insert_or_assign(name, file);
+          return file;
         }
         else
         {
-          auto path = m_fileMap.find(name);
-          if (path != m_fileMap.end())
-          {
-            auto ext = path->second.extension().string();
-            auto file = make_shared<CachedFile>(path->second, getMimeType(ext));
-            m_fileCache.emplace(name, file);
-            return file;
-          }
-          else
-          {
-            return findFileInDirectories(name);
-          }
+          return findFileInDirectories(name);
         }
       }
       catch (fs::filesystem_error e)
