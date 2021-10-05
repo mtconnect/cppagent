@@ -389,12 +389,18 @@ namespace mtconnect {
       }
       else
       {
-        auto res = make_shared<http::response<http::string_body>>(response.m_status, 11);
+        auto res = make_shared<http::response<http::buffer_body>>(response.m_status, 11);
         if (response.m_file)
-          res->body() = response.m_file->m_buffer;
+        {
+          res->body().data = response.m_file->m_buffer;
+          res->body().size = response.m_file->m_size;
+        }
         else
-          res->body() = response.m_body;
-        
+        {
+          res->body().data = (void*) response.m_body.c_str();
+          res->body().size = response.m_body.size();
+        }
+        res->body().more = false;
         res->set(http::field::server, "MTConnectAgent");
         if (response.m_close || m_close)
           res->set(http::field::connection, "close");
