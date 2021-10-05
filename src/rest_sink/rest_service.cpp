@@ -45,6 +45,30 @@ namespace mtconnect {
                          GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
         m_logStreamData(GetOption<bool>(options, config::LogStreams).value_or(false))
     {
+      auto maxSize = GetOption<string>(options, mtconnect::configuration::MaxCachedFileSize);
+      if (maxSize)
+      {
+        const std::regex sizeReg("([0-9]+)([KkMmGg])?");
+        std::smatch match;
+        if (std::regex_match(*maxSize, match, sizeReg) && match.size() >= 1)
+        {
+          size_t maxCached = stoll(match[1]);
+          if (match[2].matched) {
+            auto v = match[2];
+            switch (v.str()[0])
+            {
+              case 'G': case 'g':
+                maxCached *= 1024;
+              case 'M': case 'm':
+                maxCached *= 1024;
+              case 'K': case 'k':
+                maxCached *= 1024;
+            }
+          }
+          m_fileCache.setMaxCachedFileSize(maxCached);
+        }
+      }
+      
       // Unique id number for agent instance
       m_instanceId = getCurrentTimeInSec();
 

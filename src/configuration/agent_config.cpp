@@ -625,6 +625,7 @@ namespace mtconnect {
                   {configuration::Pretty, false},
                   {configuration::PidFile, "agent.pid"s},
                   {configuration::Port, 5000},
+                  {configuration::MaxCachedFileSize, "20k"},
                   {configuration::ServiceName, "MTConnect Agent"s},
                   {configuration::SchemaVersion,
                    to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},

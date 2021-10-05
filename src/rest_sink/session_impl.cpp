@@ -381,7 +381,6 @@ namespace mtconnect {
         res->set(http::field::content_type, response.m_mimeType);
         res->content_length(body.size());
         addHeaders(response, res);
-        res->content_length(response.m_file->m_size);
 
         m_response = res;
 

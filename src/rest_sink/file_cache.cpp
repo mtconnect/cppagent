@@ -157,7 +157,6 @@ namespace mtconnect {
     
     CachedFilePtr FileCache::findFileInDirectories(const std::string &name)
     {
-      CachedFilePtr file;
       namespace fs = std::filesystem;
       
       for (const auto &dir : m_directories)
@@ -170,10 +169,11 @@ namespace mtconnect {
           {
             auto ext = path.extension().string();
             auto size = fs::file_size(path);
-            file = make_shared<CachedFile>(path, getMimeType(ext),
+            auto file = make_shared<CachedFile>(path, getMimeType(ext),
                                            size <= m_maxCachedFileSize,
                                            size);
-            m_fileMap.emplace(name, path);
+            m_fileCache.emplace(name, file);
+            return file;
           }
           else
           {
@@ -182,7 +182,7 @@ namespace mtconnect {
         }
       }
       
-      return file;
+      return nullptr;
     }
 
     CachedFilePtr FileCache::getFile(const std::string &name)
@@ -223,7 +223,7 @@ namespace mtconnect {
       fs::path path(pathName);
       if (fs::exists(path))
       {
-        m_directories.emplace(uri, path);
+        m_directories.emplace(uri, fs::canonical(path));
       }
       else
       {

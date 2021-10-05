@@ -60,6 +60,8 @@ namespace mtconnect {
       }
       void addDirectory(const std::string &uri, const std::string &path);
       
+      void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
+      
     protected:
       CachedFilePtr findFileInDirectories(const std::string &name);
       const std::string &getMimeType(std::string ext)
