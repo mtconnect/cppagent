@@ -166,6 +166,25 @@ namespace mtconnect {
           }
         }
       }
+      
+      auto dirs = tree.get_child_optional("Directories");
+      if (dirs)
+      {
+        for (const auto &dir : *dirs)
+        {
+          auto location = dir.second.get_optional<string>("Location");
+          auto path = dir.second.get_optional<string>("Path");
+          if (!location || !path)
+          {
+            LOG(error) << "Name space must have a Location (uri) or Directory and Path: "
+                       << dir.first;
+          }
+          else
+          {
+            m_fileCache.addDirectory(*location, *path);
+          }
+        }
+      }
     }
 
     void RestService::loadHttpHeaders(const ptree &tree)
@@ -287,7 +306,7 @@ namespace mtconnect {
         auto f = m_fileCache.getFile(request->m_path);
         if (f)
         {
-          Response response(rest_sink::status::ok, f->m_buffer, f->m_mimeType);
+          Response response(rest_sink::status::ok, f);
           session->writeResponse(response);
         }
         return bool(f);

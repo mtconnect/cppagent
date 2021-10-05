@@ -21,9 +21,11 @@
 #include <boost/beast/http/status.hpp>
 
 #include <unordered_map>
+#include <filesystem>
 
 #include "request.hpp"
 #include "utilities.hpp"
+#include "cached_file.hpp"
 
 namespace mtconnect {
   class Printer;
@@ -37,7 +39,11 @@ namespace mtconnect {
                const std::string &mimeType = "text/xml")
         : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
       {}
-      Response(RequestError &e) : m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
+      Response(status status, CachedFilePtr file)
+        : m_status(status), m_mimeType(file->m_mimeType), m_expires(0),
+          m_file(file)
+      {}
+      Response(RequestError &e) :  m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
       {}
 
       status m_status;
@@ -45,6 +51,8 @@ namespace mtconnect {
       std::string m_mimeType;
       std::chrono::seconds m_expires;
       bool m_close {false};
+
+      CachedFilePtr m_file;
     };
   }  // namespace rest_sink
 }  // namespace mtconnect
