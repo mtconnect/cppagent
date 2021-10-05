@@ -277,6 +277,8 @@ namespace mtconnect {
     {
       NAMED_SCOPE("SessionImpl::beginStreaming");
 
+      beast::get_lowest_layer(derived().stream()).expires_after(30s);
+
       using namespace http;
       using namespace boost::uuids;
       random_generator gen;
@@ -310,6 +312,8 @@ namespace mtconnect {
       NAMED_SCOPE("SessionImpl::writeChunk");
 
       using namespace http;
+      
+      beast::get_lowest_layer(derived().stream()).expires_after(30s);
 
       m_complete = complete;
       m_streamBuffer.emplace();
@@ -372,8 +376,8 @@ namespace mtconnect {
                   beast::file_mode::scan, ec);
 
         // Handle the case where the file doesn't exist
-        //if(ec == beast::errc::no_such_file_or_directory)
-        //    return send(not_found(req.target()));
+        if(ec == beast::errc::no_such_file_or_directory)
+          return fail(boost::beast::http::status::not_found, "File Not Found", ec);
 
         auto res = make_shared<http::response<http::file_body>>(std::piecewise_construct,
                                                                 std::make_tuple(std::move(body)),
