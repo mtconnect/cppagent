@@ -356,6 +356,10 @@ namespace mtconnect {
       {
         res->set(f.first, f.second);
       }
+      if (response.m_location)
+      {
+        res->set(http::field::location, *response.m_location);
+      }
     }
 
     template <class Derived>
@@ -404,22 +408,10 @@ namespace mtconnect {
           res->body().data = (void*) response.m_body.c_str();
           res->body().size = response.m_body.size();
         }
+        
         res->body().more = false;
-        res->set(http::field::server, "MTConnectAgent");
-        if (response.m_close || m_close)
-          res->set(http::field::connection, "close");
-        if (response.m_expires == 0s)
-        {
-          res->set(http::field::expires, "-1");
-          res->set(http::field::cache_control, "no-store, max-age=0");
-        }
-        res->set(http::field::content_type, response.m_mimeType);
-        for (const auto &f : m_fields)
-        {
-          res->set(f.first, f.second);
-        }
         addHeaders(response, res);
-
+        
         res->content_length(response.m_body.size());
         res->prepare_payload();
 

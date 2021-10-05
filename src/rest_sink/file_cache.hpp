@@ -58,7 +58,8 @@ namespace mtconnect {
           s.insert(0, ".");
         m_mimeTypes[s] = type;
       }
-      void addDirectory(const std::string &uri, const std::string &path);
+      void addDirectory(const std::string &uri, const std::string &path,
+                        const std::string &index);
       
       void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
       
@@ -75,7 +76,7 @@ namespace mtconnect {
       }
       
     protected:
-      std::map<std::string, std::filesystem::path> m_directories;
+      std::map<std::string, std::pair<std::filesystem::path, std::string>> m_directories;
       std::map<std::string, std::filesystem::path> m_fileMap;
       std::map<std::string, CachedFilePtr> m_fileCache;
       std::map<std::string, std::string> m_mimeTypes;

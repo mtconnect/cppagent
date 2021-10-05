@@ -164,7 +164,32 @@ namespace mtconnect {
         if (boost::starts_with(name, dir.first))
         {
           auto fileName = boost::erase_first_copy(name, dir.first);
-          fs::path path = dir.second / fileName;
+          if (fileName.empty())
+          {
+            static const char *body = R"(<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>MTConnect Agent</center>
+</body>
+</html>
+)";
+            
+            auto file = make_shared<CachedFile>(body, strlen(body), "text/html"s);
+            file->m_redirect = dir.first + "/" + dir.second.second;
+            m_fileCache.insert_or_assign(name, file);
+            return file;
+          }
+          
+          if (fileName[0] == '/')
+            fileName.erase(0, 1);
+          
+          if (fileName.empty())
+          {
+            fileName = dir.second.second;
+          }
+          
+          fs::path path = dir.second.first / fileName;
           if (fs::exists(path))
           {
             auto ext = path.extension().string();
@@ -224,12 +249,18 @@ namespace mtconnect {
       return nullptr;
     }
     
-    void FileCache::addDirectory(const std::string &uri, const std::string &pathName)
+    void FileCache::addDirectory(const std::string &uri, const std::string &pathName,
+                                 const std::string &index)
     {
       fs::path path(pathName);
       if (fs::exists(path))
       {
-        m_directories.emplace(uri, fs::canonical(path));
+        string root(uri);
+        if (boost::ends_with(root, "/"))
+        {
+          boost::erase_last(root, "/");
+        }
+        m_directories.emplace(root, make_pair(fs::canonical(path), index));
       }
       else
       {

@@ -52,7 +52,9 @@ namespace mtconnect {
         }
       }
 
-      CachedFile(char *buffer, size_t size) : m_buffer(nullptr), m_size(size)
+      CachedFile(const char *buffer, size_t size,
+                 const std::string &mime)
+        : m_buffer(nullptr), m_size(size), m_mimeType(mime)
       {
         m_buffer = static_cast<char *>(malloc(m_size));
         std::memcpy(m_buffer, buffer, size);
@@ -107,6 +109,7 @@ namespace mtconnect {
       std::filesystem::path m_path;
       bool m_cached { true };
       std::filesystem::file_time_type m_lastWrite;
+      std::optional<std::string> m_redirect;
     };
   }  // namespace rest_sink
 }  // namespace mtconnect

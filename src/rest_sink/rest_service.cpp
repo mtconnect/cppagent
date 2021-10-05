@@ -198,6 +198,7 @@ namespace mtconnect {
         {
           auto location = dir.second.get_optional<string>("Location");
           auto path = dir.second.get_optional<string>("Path");
+          auto index = dir.second.get_optional<string>("Default");
           if (!location || !path)
           {
             LOG(error) << "Name space must have a Location (uri) or Directory and Path: "
@@ -205,7 +206,8 @@ namespace mtconnect {
           }
           else
           {
-            m_fileCache.addDirectory(*location, *path);
+            string ind { index ? *index : "index.html" };
+            m_fileCache.addDirectory(*location, *path, ind);
           }
         }
       }
@@ -327,13 +329,23 @@ namespace mtconnect {
     {
       using namespace rest_sink;
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto f = m_fileCache.getFile(request->m_path);
-        if (f)
+        auto file = m_fileCache.getFile(request->m_path);
+        if (file)
         {
-          Response response(rest_sink::status::ok, f);
-          session->writeResponse(response);
+          if (file->m_redirect)
+          {
+            Response response(rest_sink::status::permanent_redirect, file->m_buffer,
+                              file->m_mimeType);
+            response.m_location = *file->m_redirect;
+            session->writeResponse(response);
+          }
+          else
+          {
+            Response response(rest_sink::status::ok, file);
+            session->writeResponse(response);
+          }
         }
-        return bool(f);
+        return bool(file);
       };
       m_server->addRouting({boost::beast::http::verb::get, regex("/.+"), handler});
     }

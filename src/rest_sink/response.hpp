@@ -49,6 +49,7 @@ namespace mtconnect {
       status m_status;
       std::string m_body;
       std::string m_mimeType;
+      std::optional<std::string> m_location;
       std::chrono::seconds m_expires;
       bool m_close {false};
 
