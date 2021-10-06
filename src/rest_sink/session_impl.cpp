@@ -340,8 +340,8 @@ namespace mtconnect {
     }
     
     template<class Derived>
-    template<typename T>
-    void SessionImpl<Derived>::addHeaders(const Response &response, T &res)
+    template<typename Message>
+    void SessionImpl<Derived>::addHeaders(const Response &response, Message &res)
     {
       res->set(http::field::server, "MTConnectAgent");
       if (response.m_close || m_close)
