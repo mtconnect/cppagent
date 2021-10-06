@@ -49,7 +49,8 @@ namespace mtconnect {
       CachedFilePtr getFile(const std::string &name);
       bool hasFile(const std::string &name) const
       {
-        return (m_fileMap.find(name) != m_fileMap.end());
+        return (m_fileCache.count(name) > 0) ||
+                        (m_fileMap.count(name) > 0);
       }
       void addMimeType(const std::string &ext, const std::string &type)
       {
@@ -62,6 +63,7 @@ namespace mtconnect {
                         const std::string &index);
       
       void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
+      auto getMaxCachedFileSize() const { return m_maxCachedFileSize; }
       
     protected:
       CachedFilePtr findFileInDirectories(const std::string &name);
