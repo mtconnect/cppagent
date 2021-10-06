@@ -412,8 +412,8 @@ namespace mtconnect {
         res->body().more = false;
         addHeaders(response, res);
         
+        res->chunked(false);
         res->content_length(response.m_body.size());
-        res->prepare_payload();
 
         m_response = res;
         
