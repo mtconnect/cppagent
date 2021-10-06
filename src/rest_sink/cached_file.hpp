@@ -100,7 +100,7 @@ namespace mtconnect {
           free(m_buffer);
         m_size = size;
         m_buffer = static_cast<char *>(malloc(m_size + 1));
-        memset(m_buffer, 0, size + 1);
+        memset(m_buffer, 0, m_size + 1);
       }
 
       char *m_buffer;
