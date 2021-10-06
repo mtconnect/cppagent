@@ -376,7 +376,7 @@ namespace mtconnect {
       {
         beast::error_code ec;
         http::file_body::value_type body;
-        body.open(response.m_file->m_path.c_str(),
+        body.open(response.m_file->m_path.string().c_str(),
                   beast::file_mode::scan, ec);
 
         // Handle the case where the file doesn't exist
@@ -397,23 +397,26 @@ namespace mtconnect {
       }
       else
       {
-        auto res = make_shared<http::response<http::buffer_body>>(response.m_status, 11);
+        const char *bp;
+        size_t size;
         if (response.m_file)
         {
-          res->body().data = response.m_file->m_buffer;
-          res->body().size = response.m_file->m_size;
+          bp = response.m_file->m_buffer;
+          size = response.m_file->m_size;
         }
         else
         {
-          res->body().data = (void*) response.m_body.c_str();
-          res->body().size = response.m_body.size();
+          bp = response.m_body.c_str();
+          size = response.m_body.size();
         }
-        
-        res->body().more = false;
+
+        auto res = make_shared<http::response<http::span_body<const char>>>(std::piecewise_construct,
+                                                                       std::make_tuple(bp, size),
+                                                                       std::make_tuple(response.m_status, 11));
+
         addHeaders(response, res);
-        
         res->chunked(false);
-        res->content_length(response.m_body.size());
+        res->content_length(size);
 
         m_response = res;
         
