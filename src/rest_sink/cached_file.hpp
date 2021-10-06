@@ -98,9 +98,11 @@ namespace mtconnect {
 
       void allocate(size_t size)
       {
+        if (m_buffer != nullptr)
+          free(m_buffer);
         m_size = size;
         m_buffer = static_cast<char *>(malloc(m_size + 1));
-        memset(m_buffer, 0, size);
+        memset(m_buffer, 0, size + 1);
       }
 
       char *m_buffer;
