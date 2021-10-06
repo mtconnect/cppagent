@@ -78,7 +78,6 @@ namespace mtconnect {
           allocate(size);
           auto file = std::fopen(path.string().c_str(), "r");
           m_size = std::fread(m_buffer, 1, size, file);
-          m_buffer[size] = '\0';
         }
         m_lastWrite = std::filesystem::last_write_time(m_path);
       }
@@ -101,6 +100,7 @@ namespace mtconnect {
       {
         m_size = size;
         m_buffer = static_cast<char *>(malloc(m_size + 1));
+        memset(m_buffer, 0, size);
       }
 
       char *m_buffer;
