@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#include <boost/algorithm/string.hpp>
+
 #include "file_cache.hpp"
 
 #include "cached_file.hpp"
@@ -24,16 +26,21 @@ using namespace std;
 
 namespace mtconnect {
   namespace rest_sink {
-    FileCache::FileCache()
+    FileCache::FileCache(size_t max)
       : m_mimeTypes({{{".xsl", "text/xsl"},
                       {".xml", "text/xml"},
                       {".json", "application/json"},
+                      {".js", "text/javascript"},
+                      {".obj", "model/obj"},
+                      {".stl", "model/stl"},
                       {".css", "text/css"},
                       {".xsd", "text/xml"},
                       {".jpg", "image/jpeg"},
                       {".jpeg", "image/jpeg"},
                       {".png", "image/png"},
-                      {".ico", "image/x-icon"}}})
+                      {".html", "text/html"},
+                      {".ico", "image/x-icon"}}}),
+        m_maxCachedFileSize(max)
     {
       NAMED_SCOPE("file_cache");
     }
@@ -147,6 +154,61 @@ namespace mtconnect {
 
       return ns;
     }
+    
+    CachedFilePtr FileCache::findFileInDirectories(const std::string &name)
+    {
+      namespace fs = std::filesystem;
+      
+      for (const auto &dir : m_directories)
+      {
+        if (boost::starts_with(name, dir.first))
+        {
+          auto fileName = boost::erase_first_copy(name, dir.first);
+          if (fileName.empty())
+          {
+            static const char *body = R"(<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>MTConnect Agent</center>
+</body>
+</html>
+)";
+            
+            auto file = make_shared<CachedFile>(body, strlen(body), "text/html"s);
+            file->m_redirect = dir.first + "/" + dir.second.second;
+            m_fileCache.insert_or_assign(name, file);
+            return file;
+          }
+          
+          if (fileName[0] == '/')
+            fileName.erase(0, 1);
+          
+          if (fileName.empty())
+          {
+            fileName = dir.second.second;
+          }
+          
+          fs::path path = dir.second.first / fileName;
+          if (fs::exists(path))
+          {
+            auto ext = path.extension().string();
+            auto size = fs::file_size(path);
+            auto file = make_shared<CachedFile>(path, getMimeType(ext),
+                                           size <= m_maxCachedFileSize,
+                                           size);
+            m_fileCache.insert_or_assign(name, file);
+            return file;
+          }
+          else
+          {
+            LOG(warning) << "Cannot find file: " << path;
+          }        
+        }
+      }
+      
+      return nullptr;
+    }
 
     CachedFilePtr FileCache::getFile(const std::string &name)
     {
@@ -155,24 +217,28 @@ namespace mtconnect {
         auto file = m_fileCache.find(name);
         if (file != m_fileCache.end())
         {
-          return file->second;
+          auto fp = file->second;
+          if (!fp->m_cached)
+            return fp;
+          else
+          {
+            auto lastWrite = std::filesystem::last_write_time(fp->m_path);
+            if (lastWrite == fp->m_lastWrite)
+              return fp;
+          }
+        }
+
+        auto path = m_fileMap.find(name);
+        if (path != m_fileMap.end())
+        {
+          auto ext = path->second.extension().string();
+          auto file = make_shared<CachedFile>(path->second, getMimeType(ext));
+          m_fileCache.insert_or_assign(name, file);
+          return file;
         }
         else
         {
-          auto path = m_fileMap.find(name);
-          if (path != m_fileMap.end())
-          {
-            auto ext = path->second.extension().string();
-            string mime;
-            auto mt = m_mimeTypes.find(ext);
-            if (mt != m_mimeTypes.end())
-              mime = mt->second;
-            else
-              mime = "application/octet-stream";
-            auto file = make_shared<CachedFile>(path->second, mime);
-            m_fileCache.emplace(name, file);
-            return file;
-          }
+          return findFileInDirectories(name);
         }
       }
       catch (fs::filesystem_error e)
@@ -181,6 +247,26 @@ namespace mtconnect {
       }
 
       return nullptr;
+    }
+    
+    void FileCache::addDirectory(const std::string &uri, const std::string &pathName,
+                                 const std::string &index)
+    {
+      fs::path path(pathName);
+      if (fs::exists(path))
+      {
+        string root(uri);
+        if (boost::ends_with(root, "/"))
+        {
+          boost::erase_last(root, "/");
+        }
+        m_directories.emplace(root, make_pair(fs::canonical(path), index));
+      }
+      else
+      {
+        LOG(warning) << "Cannot find path " << pathName << " for " << uri;
+
+      }
     }
   }  // namespace rest_sink
 }  // namespace mtconnect

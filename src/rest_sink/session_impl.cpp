@@ -277,6 +277,8 @@ namespace mtconnect {
     {
       NAMED_SCOPE("SessionImpl::beginStreaming");
 
+      beast::get_lowest_layer(derived().stream()).expires_after(30s);
+
       using namespace http;
       using namespace boost::uuids;
       random_generator gen;
@@ -290,9 +292,9 @@ namespace mtconnect {
       res->chunked(true);
       res->set(field::server, "MTConnectAgent");
       res->set(field::connection, "close");
-      res->set(field::content_type, "multipart/x-mixed-replace;boundary=" + m_boundary);
+      res->set(field::content_type, "multipart/mixed;boundary=" + m_boundary);
       res->set(field::expires, "-1");
-      res->set(field::cache_control, "private, max-age=0");
+      res->set(field::cache_control, "no-cache, no-store, max-age=0");
       for (const auto &f : m_fields)
       {
         res->set(f.first, f.second);
@@ -309,17 +311,17 @@ namespace mtconnect {
     {
       NAMED_SCOPE("SessionImpl::writeChunk");
 
+      using namespace http;
+      
+      beast::get_lowest_layer(derived().stream()).expires_after(30s);
+
       m_complete = complete;
       m_streamBuffer.emplace();
       ostream str(&m_streamBuffer.value());
 
-      str << "--" + m_boundary
-          << "\r\n"
-             "Content-type: "
-          << m_mimeType
-          << "\r\n"
-             "Content-length: "
-          << to_string(body.length()) << "\r\n\r\n"
+      str << "--" + m_boundary << "\r\n"
+          << to_string(field::content_type) << ": " << m_mimeType << "\r\n"
+          << to_string(field::content_length) << ": " << to_string(body.length()) << "\r\n\r\n"
           << body << "\r\n";
 
       async_write(derived().stream(), http::make_chunk(m_streamBuffer->data()),
@@ -336,6 +338,29 @@ namespace mtconnect {
       async_write(derived().stream(), http::make_chunk_last(trailer),
                   beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
+    
+    template<class Derived>
+    template<typename Message>
+    void SessionImpl<Derived>::addHeaders(const Response &response, Message &res)
+    {
+      res->set(http::field::server, "MTConnectAgent");
+      if (response.m_close || m_close)
+        res->set(http::field::connection, "close");
+      if (response.m_expires == 0s)
+      {
+        res->set(http::field::expires, "-1");
+        res->set(http::field::cache_control, "no-store, max-age=0");
+      }
+      res->set(http::field::content_type, response.m_mimeType);
+      for (const auto &f : m_fields)
+      {
+        res->set(f.first, f.second);
+      }
+      if (response.m_location)
+      {
+        res->set(http::field::location, *response.m_location);
+      }
+    }
 
     template <class Derived>
     void SessionImpl<Derived>::writeResponse(const Response &response, Complete complete)
@@ -346,29 +371,58 @@ namespace mtconnect {
       using namespace http;
 
       m_complete = complete;
-      auto res = make_shared<http::response<http::string_body>>(response.m_status, 11);
-      res->body() = response.m_body;
-      res->set(http::field::server, "MTConnectAgent");
-      if (response.m_close || m_close)
-        res->set(http::field::connection, "close");
-      if (response.m_expires == 0s)
+      
+      if (response.m_file && !response.m_file->m_cached)
       {
-        res->set(http::field::expires, "-1");
-        res->set(http::field::cache_control, "private, max-age=0");
+        beast::error_code ec;
+        http::file_body::value_type body;
+        body.open(response.m_file->m_path.string().c_str(),
+                  beast::file_mode::scan, ec);
+
+        // Handle the case where the file doesn't exist
+        if(ec == beast::errc::no_such_file_or_directory)
+          return fail(boost::beast::http::status::not_found, "File Not Found", ec);
+
+        auto res = make_shared<http::response<http::file_body>>(std::piecewise_construct,
+                                                                std::make_tuple(std::move(body)),
+                                                                std::make_tuple(response.m_status, 11));
+        res->set(http::field::content_type, response.m_mimeType);
+        res->content_length(body.size());
+        addHeaders(response, res);
+
+        m_response = res;
+
+        async_write(derived().stream(), *res,
+                    beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
       }
-      res->set(http::field::content_type, response.m_mimeType);
-      for (const auto &f : m_fields)
+      else
       {
-        res->set(f.first, f.second);
+        const char *bp;
+        size_t size;
+        if (response.m_file)
+        {
+          bp = response.m_file->m_buffer;
+          size = response.m_file->m_size;
+        }
+        else
+        {
+          bp = response.m_body.c_str();
+          size = response.m_body.size();
+        }
+
+        auto res = make_shared<http::response<http::span_body<const char>>>(std::piecewise_construct,
+                                                                       std::make_tuple(bp, size),
+                                                                       std::make_tuple(response.m_status, 11));
+
+        addHeaders(response, res);
+        res->chunked(false);
+        res->content_length(size);
+
+        m_response = res;
+        
+        async_write(derived().stream(), *res,
+                    beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
       }
-
-      res->content_length(response.m_body.size());
-      res->prepare_payload();
-
-      m_response = res;
-
-      async_write(derived().stream(), *res,
-                  beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
 
     template <class Derived>

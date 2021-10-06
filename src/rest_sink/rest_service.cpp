@@ -45,6 +45,30 @@ namespace mtconnect {
                          GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
         m_logStreamData(GetOption<bool>(options, config::LogStreams).value_or(false))
     {
+      auto maxSize = GetOption<string>(options, mtconnect::configuration::MaxCachedFileSize);
+      if (maxSize)
+      {
+        const std::regex sizeReg("([0-9]+)([KkMmGg])?");
+        std::smatch match;
+        if (std::regex_match(*maxSize, match, sizeReg) && match.size() >= 1)
+        {
+          size_t maxCached = stoll(match[1]);
+          if (match[2].matched) {
+            auto v = match[2];
+            switch (v.str()[0])
+            {
+              case 'G': case 'g':
+                maxCached *= 1024;
+              case 'M': case 'm':
+                maxCached *= 1024;
+              case 'K': case 'k':
+                maxCached *= 1024;
+            }
+          }
+          m_fileCache.setMaxCachedFileSize(maxCached);
+        }
+      }
+      
       // Unique id number for agent instance
       m_instanceId = getCurrentTimeInSec();
 
@@ -166,6 +190,27 @@ namespace mtconnect {
           }
         }
       }
+      
+      auto dirs = tree.get_child_optional("Directories");
+      if (dirs)
+      {
+        for (const auto &dir : *dirs)
+        {
+          auto location = dir.second.get_optional<string>("Location");
+          auto path = dir.second.get_optional<string>("Path");
+          auto index = dir.second.get_optional<string>("Default");
+          if (!location || !path)
+          {
+            LOG(error) << "Name space must have a Location (uri) or Directory and Path: "
+                       << dir.first;
+          }
+          else
+          {
+            string ind { index ? *index : "index.html" };
+            m_fileCache.addDirectory(*location, *path, ind);
+          }
+        }
+      }
     }
 
     void RestService::loadHttpHeaders(const ptree &tree)
@@ -284,13 +329,23 @@ namespace mtconnect {
     {
       using namespace rest_sink;
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto f = m_fileCache.getFile(request->m_path);
-        if (f)
+        auto file = m_fileCache.getFile(request->m_path);
+        if (file)
         {
-          Response response(rest_sink::status::ok, f->m_buffer, f->m_mimeType);
-          session->writeResponse(response);
+          if (file->m_redirect)
+          {
+            Response response(rest_sink::status::permanent_redirect, file->m_buffer,
+                              file->m_mimeType);
+            response.m_location = *file->m_redirect;
+            session->writeResponse(response);
+          }
+          else
+          {
+            Response response(rest_sink::status::ok, file);
+            session->writeResponse(response);
+          }
         }
-        return bool(f);
+        return bool(file);
       };
       m_server->addRouting({boost::beast::http::verb::get, regex("/.+"), handler});
     }

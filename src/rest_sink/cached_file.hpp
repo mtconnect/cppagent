@@ -42,13 +42,19 @@ namespace mtconnect {
       CachedFilePtr getptr() { return shared_from_this(); }
 
       CachedFile(const CachedFile &file, const std::string &mime)
-        : m_size(file.m_size), m_mimeType(mime)
+        : m_size(file.m_size), m_mimeType(mime), m_path(file.m_path),
+          m_cached(file.m_cached), m_lastWrite(file.m_lastWrite)
       {
-        m_buffer = static_cast<char *>(malloc(file.m_size));
-        std::memcpy(m_buffer, file.m_buffer, file.m_size);
+        if (m_cached)
+        {
+          m_buffer = static_cast<char *>(malloc(file.m_size));
+          std::memcpy(m_buffer, file.m_buffer, file.m_size);
+        }
       }
 
-      CachedFile(char *buffer, size_t size) : m_buffer(nullptr), m_size(size)
+      CachedFile(const char *buffer, size_t size,
+                 const std::string &mime)
+        : m_buffer(nullptr), m_size(size), m_mimeType(mime)
       {
         m_buffer = static_cast<char *>(malloc(m_size));
         std::memcpy(m_buffer, buffer, size);
@@ -59,36 +65,51 @@ namespace mtconnect {
         m_buffer = static_cast<char *>(malloc(m_size));
       }
 
-      CachedFile(const std::filesystem::path &path, const std::string &mime)
-        : m_buffer(nullptr), m_mimeType(mime)
+      CachedFile(const std::filesystem::path &path, const std::string &mime,
+                 bool cached = true, size_t size = 0)
+        : m_buffer(nullptr), m_mimeType(mime), m_path(path), m_cached(cached)
       {
-        auto size = std::filesystem::file_size(path);
-        m_size = size + 1;
-        m_buffer = static_cast<char *>(malloc(m_size));
-        auto file = std::fopen(path.string().c_str(), "r");
-        std::fread(m_buffer, 1, size, file);
-        m_buffer[size] = '\0';
+        if (size == 0)
+          size = std::filesystem::file_size(path);
+        else
+          m_size = size;
+        if (cached)
+        {
+          allocate(size);
+          auto file = std::fopen(path.string().c_str(), "r");
+          std::fread(m_buffer, 1, size, file);
+          m_buffer[size] = '\0';
+        }
+        m_lastWrite = std::filesystem::last_write_time(m_path);
       }
 
       CachedFile &operator=(const CachedFile &file)
       {
         if (m_buffer != nullptr)
           free(m_buffer);
-        m_size = file.m_size;
-        m_buffer = static_cast<char *>(malloc(m_size));
-        std::memcpy(m_buffer, file.m_buffer, m_size);
+        m_cached = file.m_cached;
+        m_path = file.m_path;
+        if (m_cached)
+        {
+          allocate(file.m_size);
+          std::memcpy(m_buffer, file.m_buffer, m_size);
+        }
         return *this;
       }
 
       void allocate(size_t size)
       {
         m_size = size;
-        m_buffer = static_cast<char *>(malloc(m_size));
+        m_buffer = static_cast<char *>(malloc(m_size + 1));
       }
 
       char *m_buffer;
-      size_t m_size = 0;
+      size_t m_size { 0 };
       std::string m_mimeType;
+      std::filesystem::path m_path;
+      bool m_cached { true };
+      std::filesystem::file_time_type m_lastWrite;
+      std::optional<std::string> m_redirect;
     };
   }  // namespace rest_sink
 }  // namespace mtconnect

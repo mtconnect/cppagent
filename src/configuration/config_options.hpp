@@ -49,6 +49,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(TlsOnly);
     DECLARE_CONFIGURATION(TlsVerifyClientCertificate);
     DECLARE_CONFIGURATION(TlsClientCAs);
+    DECLARE_CONFIGURATION(MaxCachedFileSize);
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);

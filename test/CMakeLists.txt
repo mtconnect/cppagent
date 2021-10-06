@@ -128,6 +128,14 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   set_target_properties(${AGENT_TEST_NAME}_test PROPERTIES FOLDER "test/${SUB_FOLDER}")
 
   gtest_discover_tests(${AGENT_TEST_NAME}_test DISCOVERY_MODE PRE_TEST)
+
+  if(MSVC AND ${ARGC} GREATER 3)
+    message(info ": Setting /bigobj for ${_sources}")
+    set_property(SOURCE
+      ${_sources}
+      PROPERTY COMPILE_FLAGS "/bigobj")    
+  endif()
+
 endmacro()
 
 add_agent_test(asset TRUE asset)
@@ -158,8 +166,8 @@ add_agent_test(json_printer TRUE entity)
 add_agent_test(qname FALSE entity)
 
 add_agent_test(file_cache FALSE sink/rest_sink)
-add_agent_test(http_server FALSE sink/rest_sink)
-add_agent_test(tls_http_server FALSE sink/rest_sink)
+add_agent_test(http_server FALSE sink/rest_sink TRUE)
+add_agent_test(tls_http_server FALSE sink/rest_sink TRUE)
 add_agent_test(routing FALSE sink/rest_sink)
 
 add_agent_test(json_printer_asset TRUE json)

@@ -59,7 +59,10 @@ namespace mtconnect
       void writeResponse(const Response &response, Complete complete = nullptr) override
       {
         m_code = response.m_status;
-        m_body = response.m_body;
+        if (response.m_file)
+          m_body = response.m_file->m_buffer;
+        else
+          m_body = response.m_body;
         m_mimeType = response.m_mimeType;
         if (complete)
           complete();

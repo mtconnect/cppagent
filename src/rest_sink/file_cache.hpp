@@ -31,7 +31,7 @@ namespace mtconnect {
     class FileCache
     {
     public:
-      FileCache();
+      FileCache(size_t max = 20 * 1024);
 
       XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
                                      const std::string &version);
@@ -58,11 +58,29 @@ namespace mtconnect {
           s.insert(0, ".");
         m_mimeTypes[s] = type;
       }
-
+      void addDirectory(const std::string &uri, const std::string &path,
+                        const std::string &index);
+      
+      void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
+      
     protected:
+      CachedFilePtr findFileInDirectories(const std::string &name);
+      const std::string &getMimeType(std::string ext)
+      {
+        static std::string octStream("application/octet-stream");
+        auto mt = m_mimeTypes.find(ext);
+        if (mt != m_mimeTypes.end())
+          return mt->second;
+        else
+          return octStream;
+      }
+      
+    protected:
+      std::map<std::string, std::pair<std::filesystem::path, std::string>> m_directories;
       std::map<std::string, std::filesystem::path> m_fileMap;
       std::map<std::string, CachedFilePtr> m_fileCache;
       std::map<std::string, std::string> m_mimeTypes;
+      size_t m_maxCachedFileSize;
     };
   }  // namespace rest_sink
 }  // namespace mtconnect
