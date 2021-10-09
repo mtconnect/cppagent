@@ -47,7 +47,7 @@ namespace mtconnect {
       {
         if (m_cached)
         {
-          m_buffer = static_cast<char *>(malloc(file.m_size));
+          allocate(file.m_size);
           std::memcpy(m_buffer, file.m_buffer, file.m_size);
         }
       }
@@ -56,13 +56,13 @@ namespace mtconnect {
                  const std::string &mime)
         : m_buffer(nullptr), m_size(size), m_mimeType(mime)
       {
-        m_buffer = static_cast<char *>(malloc(m_size));
-        std::memcpy(m_buffer, buffer, size);
+        allocate(m_size);
+        std::memcpy(m_buffer, buffer, m_size);
       }
 
       CachedFile(size_t size) : m_buffer(nullptr), m_size(size)
       {
-        m_buffer = static_cast<char *>(malloc(m_size));
+        allocate(m_size);
       }
 
       CachedFile(const std::filesystem::path &path, const std::string &mime,
@@ -70,23 +70,20 @@ namespace mtconnect {
         : m_buffer(nullptr), m_mimeType(mime), m_path(path), m_cached(cached)
       {
         if (size == 0)
-          size = std::filesystem::file_size(path);
+          m_size = std::filesystem::file_size(path);
         else
           m_size = size;
         if (cached)
         {
-          allocate(size);
+          allocate(m_size);
           auto file = std::fopen(path.string().c_str(), "r");
-          std::fread(m_buffer, 1, size, file);
-          m_buffer[size] = '\0';
+          m_size = std::fread(m_buffer, 1, m_size, file);
         }
         m_lastWrite = std::filesystem::last_write_time(m_path);
       }
 
       CachedFile &operator=(const CachedFile &file)
       {
-        if (m_buffer != nullptr)
-          free(m_buffer);
         m_cached = file.m_cached;
         m_path = file.m_path;
         if (m_cached)
@@ -99,8 +96,11 @@ namespace mtconnect {
 
       void allocate(size_t size)
       {
+        if (m_buffer != nullptr)
+          free(m_buffer);
         m_size = size;
         m_buffer = static_cast<char *>(malloc(m_size + 1));
+        memset(m_buffer, 0, m_size + 1);
       }
 
       char *m_buffer;

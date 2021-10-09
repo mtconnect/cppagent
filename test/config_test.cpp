@@ -665,5 +665,107 @@ Adapters {
     const auto adapter = agent->findSource("Test");
     ASSERT_TRUE(adapter != nullptr);
   }
+  
+  TEST_F(ConfigTest, max_cache_size_in_no_units)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2000
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+    
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2000, cache->getMaxCachedFileSize());
+  }
+  
+  TEST_F(ConfigTest, max_cache_size_in_kb)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2k
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+    
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2048, cache->getMaxCachedFileSize());
+  }
+  
+  TEST_F(ConfigTest, max_cache_size_in_Kb_in_uppercase)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2K
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+    
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2048, cache->getMaxCachedFileSize());
+  }
+
+
+  TEST_F(ConfigTest, max_cache_size_in_mb)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2m
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+    
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2 * 1024 * 1024, cache->getMaxCachedFileSize());
+  }
+
+  TEST_F(ConfigTest, max_cache_size_in_gb)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2g
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+    
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2ull * 1024 * 1024 * 1024, cache->getMaxCachedFileSize());
+  }
+
 
 }  // namespace
