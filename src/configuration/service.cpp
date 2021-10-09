@@ -167,11 +167,6 @@ namespace mtconnect {
 
       using namespace std;
 
-      boost::optional<string> command;
-      boost::optional<string> config;
-
-      auto options = parseOptions(argc, argv, command, config);
-
       try
       {
         // If command-line parameter is "install", install the service. If debug or run
