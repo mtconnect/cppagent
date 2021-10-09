@@ -137,8 +137,13 @@ namespace mtconnect {
     {
       NAMED_SCOPE("AgentConfiguration::initialize");
 
-      string configFile =
-          options.count("config-file") > 0 ? options["config-file"].as<string>() : "agent.cfg";
+      string configFile = "agent.cfg";
+      if (options.count("config-file") > 0)
+      {
+        auto cfg = options["config-file"].as<boost::optional<string>>();
+        if (cfg)
+          configFile = *cfg;
+      }
 
       try
       {
