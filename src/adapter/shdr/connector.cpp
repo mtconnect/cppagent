@@ -74,6 +74,8 @@ namespace mtconnect {
 
       bool Connector::resolve()
       {
+        NAMED_SCOPE("Connector::resolve");
+
         boost::system::error_code ec;
 
         ip::tcp::resolver resolve(m_strand.context());
@@ -90,7 +92,7 @@ namespace mtconnect {
 
       bool Connector::connect()
       {
-        NAMED_SCOPE("input.connector");
+        NAMED_SCOPE("Connector::connect");
 
         m_connected = false;
         connecting();
@@ -109,6 +111,8 @@ namespace mtconnect {
 
       inline void Connector::asyncTryConnect()
       {
+        NAMED_SCOPE("Connector::asyncTryConnect");
+
         m_timer.expires_from_now(m_reconnectInterval);
         m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
           if (ec != boost::asio::error::operation_aborted)
@@ -121,6 +125,8 @@ namespace mtconnect {
 
       void Connector::reconnect()
       {
+        NAMED_SCOPE("Connector::reconnect");
+
         LOG(info) << "reconnect: retry connection in " << m_reconnectInterval.count() << "ms";
         close();
         asyncTryConnect();
@@ -128,6 +134,8 @@ namespace mtconnect {
 
       void Connector::connected(const boost::system::error_code &ec, ip::tcp::resolver::iterator it)
       {
+        NAMED_SCOPE("Connector::connected");
+
         if (ec)
         {
           LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
@@ -155,12 +163,14 @@ namespace mtconnect {
 
       void Connector::reader(sys::error_code ec, size_t len)
       {
+        NAMED_SCOPE("Connector::reader");
+
         if (!m_connected)
           return;
 
         if (ec)
         {
-          LOG(error) << "reader: " << ec.category().message(ec.value()) << ": " << ec.message();
+          LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
           reconnect();
         }
         else
@@ -174,7 +184,7 @@ namespace mtconnect {
                   asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
                     if (ec != boost::asio::error::operation_aborted)
                     {
-                      LOG(warning) << "reader: operation timed out after "
+                      LOG(warning) << "operation timed out after "
                                    << m_receiveTimeLimit.count() << "ms";
                       reconnect();
                     }
@@ -194,9 +204,11 @@ namespace mtconnect {
 
       void Connector::writer(sys::error_code ec, size_t lenght)
       {
+        NAMED_SCOPE("Connector::writer");
+
         if (ec)
         {
-          LOG(error) << "writer: " << ec.category().message(ec.value()) << ": " << ec.message();
+          LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
           close();
         }
       }
@@ -211,6 +223,8 @@ namespace mtconnect {
 
       inline void Connector::setReceiveTimeout()
       {
+        NAMED_SCOPE("Connector::setReceiveTimeout");
+
         m_receiveTimeout.expires_from_now(m_receiveTimeLimit);
         m_receiveTimeout.async_wait([this](sys::error_code ec) {
           if (!ec)
@@ -230,6 +244,8 @@ namespace mtconnect {
 
       void Connector::parseSocketBuffer()
       {
+        NAMED_SCOPE("Connector::parseSocketBuffer");
+
         // Cancel receive time limit
         setReceiveTimeout();
 
@@ -268,6 +284,8 @@ namespace mtconnect {
 
       void Connector::sendCommand(const string &command)
       {
+        NAMED_SCOPE("Connector::sendCommand");
+
         if (m_connected)
         {
           LOG(debug) << "(Port:" << m_localPort << ") "
@@ -282,6 +300,8 @@ namespace mtconnect {
 
       void Connector::heartbeat(boost::system::error_code ec)
       {
+        NAMED_SCOPE("Connector::heartbeat");
+
         if (!ec)
         {
           LOG(debug) << "Sending heartbeat";
@@ -298,6 +318,8 @@ namespace mtconnect {
 
       void Connector::startHeartbeats(const string &arg)
       {
+        NAMED_SCOPE("Connector::startHeartbeats");
+
         size_t pos;
         if (arg.length() > 7 && arg[6] == ' ' &&
             (pos = arg.find_first_of("0123456789", 7)) != string::npos)
@@ -333,15 +355,26 @@ namespace mtconnect {
 
       void Connector::close()
       {
+        NAMED_SCOPE("Connector::close");
+        LOG(error) << "Closing " << m_server << ":" << m_port << " (Local Port:" << m_localPort << ")";
+
         m_heartbeatTimer.cancel();
         m_receiveTimeout.cancel();
         m_timer.cancel();
-
+          
         if (m_connected)
         {
-          if (m_socket.is_open())
-            m_socket.close();
+          try {
+            if (m_socket.is_open())
+              m_socket.close();
+          } catch (exception &e) {
+            LOG(error) << "(Port:" << m_localPort << ")"
+            << "unexpected exception during close: "
+            << e.what();
+          }
+          
           m_connected = false;
+          m_heartbeats = false;
           disconnected();
         }
       }
