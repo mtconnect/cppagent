@@ -401,6 +401,7 @@ namespace mtconnect {
       RegCloseKey(agent);
 
       LOG(info) << "Service installed successfully.";
+      std::cerr << "Service installed successfully.";
     }
 
     void MTConnectService::remove()
