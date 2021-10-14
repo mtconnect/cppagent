@@ -445,7 +445,7 @@ namespace mtconnect {
       }
       else
       {
-        string name("agent.log");
+        string name("agent_%3N.log");
         int max_size = 10;               // in MB
         int rotation_size = 2;           // in MB
         int rotation_time_interval = 0;  // in hr
@@ -535,15 +535,13 @@ namespace mtconnect {
         if (!log_directory.is_absolute())
           log_directory = fs::absolute(fs::current_path() / log_directory);
 
-        log_directory /= name;
-
         boost::shared_ptr<b_logger::core> core = b_logger::core::get();
 
         // Create a text file sink
         typedef b_logger::sinks::synchronous_sink<b_logger::sinks::text_file_backend> text_sink;
         boost::shared_ptr<text_sink> m_sink = boost::make_shared<text_sink>();
-        m_sink->locked_backend()->set_file_name_pattern(name);
-        m_sink->locked_backend()->set_target_file_name_pattern(log_directory);
+        m_sink->locked_backend()->set_file_name_pattern("agent.log");
+        m_sink->locked_backend()->set_target_file_name_pattern(name);
         m_sink->locked_backend()->auto_flush(true);
         m_sink->locked_backend()->set_open_mode(ios_base::out | ios_base::app);
         m_sink->locked_backend()->set_rotation_size(rotation_size * 1024 * 1024);
@@ -692,7 +690,7 @@ namespace mtconnect {
       // Check for schema version
       m_version = get<string>(options[configuration::SchemaVersion]);
       auto port = get<int>(options[configuration::Port]);
-      LOG(info) << "Starting agent on port " << port;
+      LOG(info) << "Starting agent on port " << int(port);
 
       // Make the Agent
       m_agent = make_unique<Agent>(m_context, m_devicesFile, options);
