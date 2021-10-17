@@ -86,8 +86,7 @@ namespace dll = boost::dll;
 namespace asio = boost::asio;
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(named_scope, "Scope", blog::attributes::named_scope::value_type);
-BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp",
-                            blog::attributes::utc_clock::value_type);
+BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", blog::attributes::utc_clock::value_type);
 
 namespace mtconnect {
   namespace configuration {
@@ -398,8 +397,9 @@ namespace mtconnect {
 
       return severity_level::info;
     }
-    
-    static inline int convertFileSize(const AgentConfiguration::ptree &config, const string &name, int &size)
+
+    static inline int convertFileSize(const AgentConfiguration::ptree &config, const string &name,
+                                      int &size)
     {
       static const regex pat("([0-9]+)([GgMmKkBb]*)");
       if (auto opt = config.get_optional<string>(name))
@@ -415,7 +415,7 @@ namespace mtconnect {
               case 'G':
               case 'g':
                 size *= 1024;
-                
+
               case 'M':
               case 'm':
                 size *= 1024;
@@ -431,7 +431,7 @@ namespace mtconnect {
           cerr << "Invalid value for " << name << ": " << *opt << endl;
         }
       }
-      
+
       return size;
     }
 
@@ -444,26 +444,26 @@ namespace mtconnect {
       //// Add the commonly used attributes; includes TimeStamp, ProcessID and ThreadID and others
       blog::add_common_attributes();
       blog::core::get()->add_global_attribute("Scope", blog::attributes::named_scope());
-      blog::core::get()->add_global_attribute(
-          blog::aux::default_attribute_names::thread_id(),
-          blog::attributes::current_thread_id());
+      blog::core::get()->add_global_attribute(blog::aux::default_attribute_names::thread_id(),
+                                              blog::attributes::current_thread_id());
       blog::core::get()->add_global_attribute("Timestamp", blog::attributes::utc_clock());
-      
+
       auto logger = config.get_child_optional("logger_config");
 
       if (m_isDebug)
       {
         blog::add_console_log(
-            std::cout, blog::keywords::format =
-                           (blog::expressions::stream
-                            << blog::expressions::format_date_time<boost::posix_time::ptime>(
-                                   "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
-                            << "("
-                            << blog::expressions::attr<
-                                   blog::attributes::current_thread_id::value_type>("ThreadID")
-                            << ") "
-                            << "[" << blog::trivial::severity << "] " << named_scope << ": "
-                            << blog::expressions::smessage));
+            std::cout,
+            blog::keywords::format =
+                (blog::expressions::stream
+                 << blog::expressions::format_date_time<boost::posix_time::ptime>(
+                        "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
+                 << "("
+                 << blog::expressions::attr<blog::attributes::current_thread_id::value_type>(
+                        "ThreadID")
+                 << ") "
+                 << "[" << blog::trivial::severity << "] " << named_scope << ": "
+                 << blog::expressions::smessage));
         if (logger)
         {
           if (logger->get_optional<string>("logging_level"))
@@ -482,9 +482,9 @@ namespace mtconnect {
       else
       {
         string name, activeName;
-        int max_size = 10 * 1024 * 1024;               // in MB
-        int rotation_size = 2  * 1024 * 1024;           // in MB
-        int rotation_time_interval = 0;  // in hr
+        int max_size = 10 * 1024 * 1024;      // in MB
+        int rotation_size = 2 * 1024 * 1024;  // in MB
+        int rotation_time_interval = 0;       // in hr
         int max_index = 9;
 
         if (logger)
@@ -506,8 +506,8 @@ namespace mtconnect {
                        << blog::expressions::format_date_time<boost::posix_time::ptime>(
                               "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
                        << "("
-                       << blog::expressions::attr<
-                              blog::attributes::current_thread_id::value_type>("ThreadID")
+                       << blog::expressions::attr<blog::attributes::current_thread_id::value_type>(
+                              "ThreadID")
                        << ") "
                        << "[" << blog::trivial::severity << "] " << named_scope << ": "
                        << blog::expressions::smessage));
@@ -522,8 +522,8 @@ namespace mtconnect {
                        << blog::expressions::format_date_time<boost::posix_time::ptime>(
                               "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
                        << "("
-                       << blog::expressions::attr<
-                              blog::attributes::current_thread_id::value_type>("ThreadID")
+                       << blog::expressions::attr<blog::attributes::current_thread_id::value_type>(
+                              "ThreadID")
                        << ") "
                        << "[" << blog::trivial::severity << "] " << named_scope << ": "
                        << blog::expressions::smessage));
@@ -550,10 +550,12 @@ namespace mtconnect {
 
           if (auto opt = logger->get_optional<string>("max_index"))
           {
-            try {
+            try
+            {
               max_index = boost::lexical_cast<int>(*opt);
             }
-            catch (boost::bad_lexical_cast &) {
+            catch (boost::bad_lexical_cast &)
+            {
               cerr << "Bad value for logger max_index: " << *opt << endl;
             }
           }
@@ -569,18 +571,18 @@ namespace mtconnect {
               LOG(error) << "Invalid schedule value.";
           }
         }
-        
+
         const auto default_log_target = "agent_%Y-%m-%d_%H-%M-%S_%N.log";
-        
+
         fs::path log_path(name);
         if (name.empty())
           log_path = fs::current_path() / default_log_target;
         else if (!log_path.has_filename())
           log_path = log_path / default_log_target;
-        
+
         if (log_path.is_relative())
           log_path = fs::current_path() / log_path;
-                        
+
         fs::path log_directory(log_path.parent_path());
 
         if (activeName.empty())
@@ -588,23 +590,20 @@ namespace mtconnect {
         fs::path active_name(activeName);
         if (!active_name.has_parent_path())
           active_name = log_directory / active_name;
-        
+
         boost::shared_ptr<blog::core> core = blog::core::get();
 
         // Create a text file sink
         namespace kw = boost::log::keywords;
         using text_sink = blog::sinks::synchronous_sink<blog::sinks::text_file_backend>;
-        auto m_sink = boost::make_shared<text_sink>(kw::file_name = active_name,
-                                                    kw::target_file_name = log_path.filename(),
-                                                    kw::auto_flush = true,
-                                                    kw::rotation_size = rotation_size,
-                                                    kw::open_mode = ios_base::out | ios_base::app);
+        auto m_sink = boost::make_shared<text_sink>(
+            kw::file_name = active_name, kw::target_file_name = log_path.filename(),
+            kw::auto_flush = true, kw::rotation_size = rotation_size,
+            kw::open_mode = ios_base::out | ios_base::app);
 
         // Set up where the rotated files will be stored
         m_sink->locked_backend()->set_file_collector(blog::sinks::file::make_collector(
-            kw::target = log_directory,
-            kw::max_size = max_size,
-            kw::max_files = max_index));
+            kw::target = log_directory, kw::max_size = max_size, kw::max_files = max_index));
 
         if (rotation_time_interval > 0)
           m_sink->locked_backend()->set_time_based_rotation(
@@ -620,8 +619,7 @@ namespace mtconnect {
             << blog::expressions::format_date_time<boost::posix_time::ptime>(
                    "Timestamp", "%Y-%m-%dT%H:%M:%S.%fZ ")
             << "("
-            << blog::expressions::attr<blog::attributes::current_thread_id::value_type>(
-                   "ThreadID")
+            << blog::expressions::attr<blog::attributes::current_thread_id::value_type>("ThreadID")
             << ") "
             << "[" << boost::log::trivial::severity << "] " << named_scope << ": "
             << blog::expressions::smessage);

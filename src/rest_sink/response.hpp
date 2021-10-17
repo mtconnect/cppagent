@@ -20,12 +20,12 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/http/status.hpp>
 
-#include <unordered_map>
 #include <filesystem>
+#include <unordered_map>
 
+#include "cached_file.hpp"
 #include "request.hpp"
 #include "utilities.hpp"
-#include "cached_file.hpp"
 
 namespace mtconnect {
   class Printer;
@@ -40,10 +40,9 @@ namespace mtconnect {
         : m_status(status), m_body(body), m_mimeType(mimeType), m_expires(0)
       {}
       Response(status status, CachedFilePtr file)
-        : m_status(status), m_mimeType(file->m_mimeType), m_expires(0),
-          m_file(file)
+        : m_status(status), m_mimeType(file->m_mimeType), m_expires(0), m_file(file)
       {}
-      Response(RequestError &e) :  m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
+      Response(RequestError &e) : m_status(e.m_code), m_body(e.m_body), m_mimeType(e.m_contentType)
       {}
 
       status m_status;

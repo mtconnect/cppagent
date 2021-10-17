@@ -53,22 +53,26 @@ namespace mtconnect {
         if (std::regex_match(*maxSize, match, sizeReg) && match.size() >= 1)
         {
           size_t maxCached = stoll(match[1]);
-          if (match[2].matched) {
+          if (match[2].matched)
+          {
             auto v = match[2];
             switch (v.str()[0])
             {
-              case 'G': case 'g':
+              case 'G':
+              case 'g':
                 maxCached *= 1024;
-              case 'M': case 'm':
+              case 'M':
+              case 'm':
                 maxCached *= 1024;
-              case 'K': case 'k':
+              case 'K':
+              case 'k':
                 maxCached *= 1024;
             }
           }
           m_fileCache.setMaxCachedFileSize(maxCached);
         }
       }
-      
+
       // Unique id number for agent instance
       m_instanceId = getCurrentTimeInSec();
 
@@ -190,7 +194,7 @@ namespace mtconnect {
           }
         }
       }
-      
+
       auto dirs = tree.get_child_optional("Directories");
       if (dirs)
       {
@@ -206,7 +210,7 @@ namespace mtconnect {
           }
           else
           {
-            string ind { index ? *index : "index.html" };
+            string ind {index ? *index : "index.html"};
             m_fileCache.addDirectory(*location, *path, ind);
           }
         }

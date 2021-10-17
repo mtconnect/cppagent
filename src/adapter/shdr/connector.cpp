@@ -184,8 +184,8 @@ namespace mtconnect {
                   asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
                     if (ec != boost::asio::error::operation_aborted)
                     {
-                      LOG(warning) << "operation timed out after "
-                                   << m_receiveTimeLimit.count() << "ms";
+                      LOG(warning)
+                          << "operation timed out after " << m_receiveTimeLimit.count() << "ms";
                       reconnect();
                     }
                   }));
@@ -356,23 +356,26 @@ namespace mtconnect {
       void Connector::close()
       {
         NAMED_SCOPE("Connector::close");
-        LOG(error) << "Closing " << m_server << ":" << m_port << " (Local Port:" << m_localPort << ")";
+        LOG(error) << "Closing " << m_server << ":" << m_port << " (Local Port:" << m_localPort
+                   << ")";
 
         m_heartbeatTimer.cancel();
         m_receiveTimeout.cancel();
         m_timer.cancel();
-          
+
         if (m_connected)
         {
-          try {
+          try
+          {
             if (m_socket.is_open())
               m_socket.close();
-          } catch (exception &e) {
-            LOG(error) << "(Port:" << m_localPort << ")"
-            << "unexpected exception during close: "
-            << e.what();
           }
-          
+          catch (exception &e)
+          {
+            LOG(error) << "(Port:" << m_localPort << ")"
+                       << "unexpected exception during close: " << e.what();
+          }
+
           m_connected = false;
           m_heartbeats = false;
           disconnected();
