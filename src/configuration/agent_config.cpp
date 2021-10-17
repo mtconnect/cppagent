@@ -481,8 +481,7 @@ namespace mtconnect {
       }
       else
       {
-        string activeName("agent.log");
-        string name("agent_%Y-%m-%d_%H-%M-%S_%N.log");
+        string name, activeName;
         int max_size = 10 * 1024 * 1024;               // in MB
         int rotation_size = 2  * 1024 * 1024;           // in MB
         int rotation_time_interval = 0;  // in hr
@@ -571,14 +570,21 @@ namespace mtconnect {
           }
         }
         
+        const auto default_log_target = "agent_%Y-%m-%d_%H-%M-%S_%N.log";
+        
         fs::path log_path(name);
+        if (name.empty())
+          log_path = fs::current_path() / default_log_target;
+        else if (!log_path.has_filename())
+          log_path = log_path / default_log_target;
+        
         if (log_path.is_relative())
           log_path = fs::current_path() / log_path;
-        
-        name = log_path.filename();
-                
+                        
         fs::path log_directory(log_path.parent_path());
-        
+
+        if (activeName.empty())
+          activeName = "agent.log";
         fs::path active_name(activeName);
         if (!active_name.has_parent_path())
           active_name = log_directory / active_name;
@@ -589,7 +595,7 @@ namespace mtconnect {
         namespace kw = boost::log::keywords;
         using text_sink = blog::sinks::synchronous_sink<blog::sinks::text_file_backend>;
         auto m_sink = boost::make_shared<text_sink>(kw::file_name = active_name,
-                                                    kw::target_file_name = name,
+                                                    kw::target_file_name = log_path.filename(),
                                                     kw::auto_flush = true,
                                                     kw::rotation_size = rotation_size,
                                                     kw::open_mode = ios_base::out | ios_base::app);
