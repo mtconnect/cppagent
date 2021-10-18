@@ -45,13 +45,22 @@ namespace mtconnect {
     void MTConnectService::usage(int ec)
     {
       printf(
-          R"(Usage: agent [help|daemonize|debug|run] [config-file]
-       help           Prints this message and exits
+#ifndef _WINDOWS
+          "Usage: agent [help|daemonize|debug|run] [config-file]"
+#else
+             "Usage: agent [help|install|remove|debug|run] [config-file]"
+#endif
+          R"(       help           Prints this message and exits
        version        Prints the agent version and exits
 )"
 #ifndef _WINDOWS
           R"(       daemonize      Run this process as a background daemon.
                       daemonize with -h will display additional options
+)"
+#else
+          R"(       install        Install the agent as a service.
+       remove            Removes the agent service.
+
 )"
 #endif
           R"(       debug          Runs the agent on the command line with verbose logging
@@ -307,7 +316,7 @@ namespace mtconnect {
                                   nullptr))           // display name: no change
         {
           LOG(error) << "ChangeServiceConfig failed (" << GetLastError() << ")";
-          std::cerr << "ChangeServiceConfig failed (" << GetLastError() << ")" << std::endl;
+          std::cerr << std::endl << "ChangeServiceConfig failed (" << GetLastError() << ")" << std::endl;
           CloseServiceHandle(service);
           CloseServiceHandle(manager);
           return;
@@ -333,7 +342,7 @@ namespace mtconnect {
         if (!service)
         {
           LOG(error) << "CreateService failed (" << GetLastError() << ")";
-          std::cerr << "CreateService failed (" << GetLastError() << ")" << std::endl;
+          std::cerr << std::endl << "CreateService failed (" << GetLastError() << ")" << std::endl;
           CloseServiceHandle(manager);
           return;
         }
@@ -361,7 +370,7 @@ namespace mtconnect {
       if (res != ERROR_SUCCESS)
       {
         LOG(error) << "Could not open software key (" << res << ")";
-        std::cerr << "Could not open software key (" << res << ")" << std::endl;
+        std::cerr << std::endl << "Could not open software key (" << res << ")" << std::endl;
         return;
       }
 
@@ -374,7 +383,7 @@ namespace mtconnect {
         if (res != ERROR_SUCCESS)
         {
           LOG(error) << "Could not create MTConnect (" << res << ")";
-          std::cerr << "Could not create MTConnect key (" << res << ")" << std::endl;
+          std::cerr << std::endl << "Could not create MTConnect key (" << res << ")" << std::endl;
           return;
         }
       }
@@ -390,7 +399,7 @@ namespace mtconnect {
         {
           RegCloseKey(mtc);
           LOG(error) << "Could not create " << m_name << " (" << res << ")";
-          std::cerr << "Could not create " << m_name << " (" << res << ")" << std::endl;
+          std::cerr << std::endl << "Could not create " << m_name << " (" << res << ")" << std::endl;
           return;
         }
       }
@@ -401,7 +410,7 @@ namespace mtconnect {
       RegCloseKey(agent);
 
       LOG(info) << "Service installed successfully.";
-      std::cerr << "Service installed successfully.";
+      std::cerr << std::endl << std::endl << "Service installed successfully." << std::endl << std::endl;
     }
 
     void MTConnectService::remove()
@@ -441,9 +450,15 @@ namespace mtconnect {
       }
 
       if (!::DeleteService(service))
-        LOG(error) << "Could delete service " << m_name;
+      {
+        LOG(error) << "Could remove service " << m_name;
+        std::cerr << std::endl << std::endl << "Could remove service " << m_name << std::endl << std::endl;
+      }
       else
+      {
         LOG(info) << "Successfully removed service " << m_name;
+        std::cerr << std::endl << std::endl << "Service removed successfully." << std::endl << std::endl;
+      }
 
       ::CloseServiceHandle(service);
     }
