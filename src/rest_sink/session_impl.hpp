@@ -56,7 +56,8 @@ namespace mtconnect {
       void closeStream() override;
 
     protected:
-      template<typename T> void addHeaders(const Response &response, T &res);
+      template <typename T>
+      void addHeaders(const Response &response, T &res);
 
       void requested(boost::system::error_code ec, size_t len);
       void sent(boost::system::error_code ec, size_t len);

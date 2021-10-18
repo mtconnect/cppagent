@@ -42,8 +42,11 @@ namespace mtconnect {
       CachedFilePtr getptr() { return shared_from_this(); }
 
       CachedFile(const CachedFile &file, const std::string &mime)
-        : m_size(file.m_size), m_mimeType(mime), m_path(file.m_path),
-          m_cached(file.m_cached), m_lastWrite(file.m_lastWrite)
+        : m_size(file.m_size),
+          m_mimeType(mime),
+          m_path(file.m_path),
+          m_cached(file.m_cached),
+          m_lastWrite(file.m_lastWrite)
       {
         if (m_cached)
         {
@@ -52,21 +55,17 @@ namespace mtconnect {
         }
       }
 
-      CachedFile(const char *buffer, size_t size,
-                 const std::string &mime)
+      CachedFile(const char *buffer, size_t size, const std::string &mime)
         : m_buffer(nullptr), m_size(size), m_mimeType(mime)
       {
         allocate(m_size);
         std::memcpy(m_buffer, buffer, m_size);
       }
 
-      CachedFile(size_t size) : m_buffer(nullptr), m_size(size)
-      {
-        allocate(m_size);
-      }
+      CachedFile(size_t size) : m_buffer(nullptr), m_size(size) { allocate(m_size); }
 
-      CachedFile(const std::filesystem::path &path, const std::string &mime,
-                 bool cached = true, size_t size = 0)
+      CachedFile(const std::filesystem::path &path, const std::string &mime, bool cached = true,
+                 size_t size = 0)
         : m_buffer(nullptr), m_mimeType(mime), m_path(path), m_cached(cached)
       {
         if (size == 0)
@@ -104,10 +103,10 @@ namespace mtconnect {
       }
 
       char *m_buffer;
-      size_t m_size { 0 };
+      size_t m_size {0};
       std::string m_mimeType;
       std::filesystem::path m_path;
-      bool m_cached { true };
+      bool m_cached {true};
       std::filesystem::file_time_type m_lastWrite;
       std::optional<std::string> m_redirect;
     };

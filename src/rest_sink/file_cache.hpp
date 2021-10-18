@@ -49,8 +49,7 @@ namespace mtconnect {
       CachedFilePtr getFile(const std::string &name);
       bool hasFile(const std::string &name) const
       {
-        return (m_fileCache.count(name) > 0) ||
-                        (m_fileMap.count(name) > 0);
+        return (m_fileCache.count(name) > 0) || (m_fileMap.count(name) > 0);
       }
       void addMimeType(const std::string &ext, const std::string &type)
       {
@@ -59,12 +58,11 @@ namespace mtconnect {
           s.insert(0, ".");
         m_mimeTypes[s] = type;
       }
-      void addDirectory(const std::string &uri, const std::string &path,
-                        const std::string &index);
-      
+      void addDirectory(const std::string &uri, const std::string &path, const std::string &index);
+
       void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
       auto getMaxCachedFileSize() const { return m_maxCachedFileSize; }
-      
+
     protected:
       CachedFilePtr findFileInDirectories(const std::string &name);
       const std::string &getMimeType(std::string ext)
@@ -76,7 +74,7 @@ namespace mtconnect {
         else
           return octStream;
       }
-      
+
     protected:
       std::map<std::string, std::pair<std::filesystem::path, std::string>> m_directories;
       std::map<std::string, std::filesystem::path> m_fileMap;

@@ -312,7 +312,7 @@ namespace mtconnect {
       NAMED_SCOPE("SessionImpl::writeChunk");
 
       using namespace http;
-      
+
       beast::get_lowest_layer(derived().stream()).expires_after(30s);
 
       m_complete = complete;
@@ -338,9 +338,9 @@ namespace mtconnect {
       async_write(derived().stream(), http::make_chunk_last(trailer),
                   beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
     }
-    
-    template<class Derived>
-    template<typename Message>
+
+    template <class Derived>
+    template <typename Message>
     void SessionImpl<Derived>::addHeaders(const Response &response, Message &res)
     {
       res->set(http::field::server, "MTConnectAgent");
@@ -371,21 +371,20 @@ namespace mtconnect {
       using namespace http;
 
       m_complete = complete;
-      
+
       if (response.m_file && !response.m_file->m_cached)
       {
         beast::error_code ec;
         http::file_body::value_type body;
-        body.open(response.m_file->m_path.string().c_str(),
-                  beast::file_mode::scan, ec);
+        body.open(response.m_file->m_path.string().c_str(), beast::file_mode::scan, ec);
 
         // Handle the case where the file doesn't exist
-        if(ec == beast::errc::no_such_file_or_directory)
+        if (ec == beast::errc::no_such_file_or_directory)
           return fail(boost::beast::http::status::not_found, "File Not Found", ec);
 
-        auto res = make_shared<http::response<http::file_body>>(std::piecewise_construct,
-                                                                std::make_tuple(std::move(body)),
-                                                                std::make_tuple(response.m_status, 11));
+        auto res = make_shared<http::response<http::file_body>>(
+            std::piecewise_construct, std::make_tuple(std::move(body)),
+            std::make_tuple(response.m_status, 11));
         res->set(http::field::content_type, response.m_mimeType);
         res->content_length(body.size());
         addHeaders(response, res);
@@ -410,16 +409,16 @@ namespace mtconnect {
           size = response.m_body.size();
         }
 
-        auto res = make_shared<http::response<http::span_body<const char>>>(std::piecewise_construct,
-                                                                       std::make_tuple(bp, size),
-                                                                       std::make_tuple(response.m_status, 11));
+        auto res = make_shared<http::response<http::span_body<const char>>>(
+            std::piecewise_construct, std::make_tuple(bp, size),
+            std::make_tuple(response.m_status, 11));
 
         addHeaders(response, res);
         res->chunked(false);
         res->content_length(size);
 
         m_response = res;
-        
+
         async_write(derived().stream(), *res,
                     beast::bind_front_handler(&SessionImpl::sent, shared_ptr()));
       }

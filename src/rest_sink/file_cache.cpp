@@ -15,9 +15,9 @@
 //    limitations under the License.
 //
 
-#include <boost/algorithm/string.hpp>
-
 #include "file_cache.hpp"
+
+#include <boost/algorithm/string.hpp>
 
 #include "cached_file.hpp"
 #include "logging.hpp"
@@ -154,11 +154,11 @@ namespace mtconnect {
 
       return ns;
     }
-    
+
     CachedFilePtr FileCache::findFileInDirectories(const std::string &name)
     {
       namespace fs = std::filesystem;
-      
+
       for (const auto &dir : m_directories)
       {
         if (boost::starts_with(name, dir.first))
@@ -174,39 +174,38 @@ namespace mtconnect {
 </body>
 </html>
 )";
-            
+
             auto file = make_shared<CachedFile>(body, strlen(body), "text/html"s);
             file->m_redirect = dir.first + "/" + dir.second.second;
             m_fileCache.insert_or_assign(name, file);
             return file;
           }
-          
+
           if (fileName[0] == '/')
             fileName.erase(0, 1);
-          
+
           if (fileName.empty())
           {
             fileName = dir.second.second;
           }
-          
+
           fs::path path = dir.second.first / fileName;
           if (fs::exists(path))
           {
             auto ext = path.extension().string();
             auto size = fs::file_size(path);
-            auto file = make_shared<CachedFile>(path, getMimeType(ext),
-                                           size <= m_maxCachedFileSize,
-                                           size);
+            auto file =
+                make_shared<CachedFile>(path, getMimeType(ext), size <= m_maxCachedFileSize, size);
             m_fileCache.insert_or_assign(name, file);
             return file;
           }
           else
           {
             LOG(warning) << "Cannot find file: " << path;
-          }        
+          }
         }
       }
-      
+
       return nullptr;
     }
 
@@ -248,7 +247,7 @@ namespace mtconnect {
 
       return nullptr;
     }
-    
+
     void FileCache::addDirectory(const std::string &uri, const std::string &pathName,
                                  const std::string &index)
     {
@@ -265,7 +264,6 @@ namespace mtconnect {
       else
       {
         LOG(warning) << "Cannot find path " << pathName << " for " << uri;
-
       }
     }
   }  // namespace rest_sink
