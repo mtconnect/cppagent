@@ -571,6 +571,10 @@ namespace mtconnect {
               LOG(error) << "Invalid schedule value.";
           }
         }
+        else
+        {
+          boost_set_log_level(boost_string_to_log_level("info"));
+        }
 
         const auto default_log_target = "agent_%Y-%m-%d_%H-%M-%S_%N.log";
 
