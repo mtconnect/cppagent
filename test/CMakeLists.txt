@@ -192,17 +192,16 @@ add_agent_test(pipeline_edit FALSE pipeline)
 
 add_agent_test(agent TRUE core)
 add_agent_test(asset_buffer TRUE core)
-add_agent_test(config FALSE core)
 add_agent_test(change_observer FALSE core)
 add_agent_test(globals FALSE core)
 
 add_agent_test(config_parser FALSE configuration)
-
-add_agent_test(checkpoint FALSE core)
+add_agent_test(config FALSE configuration)
 
 add_agent_test(observation TRUE observation)
 add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)
+add_agent_test(checkpoint FALSE observation)
 
 if(NOT WITHOUT_PYTHON)
   add_agent_test(python_transform TRUE python)

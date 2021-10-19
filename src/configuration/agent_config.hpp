@@ -82,6 +82,18 @@ namespace mtconnect {
       auto &getSinkFactory() { return m_sinkFactory; }
       auto &getSourceFactory() { return m_sourceFactory; }
 
+      const auto &getLoggerSink() const { return m_sink; }
+      const auto &getLogDirectory() const { return m_logDirectory; }
+      const auto &getLogFileName() const { return m_logFileName; }
+      const auto &getLogArchivePattern() const { return m_logArchivePattern; }
+      auto getMaxLogFileSize() const { return m_maxLogFileSize; }
+      auto getLogRotationSize() const { return m_logRotationSize; }
+      auto getRotationLogInterval() const { return m_rotationLogInterval; }
+      auto getLogLevel() const { return m_logLevel; }
+
+      void setLoggingLevel(const boost::log::trivial::severity_level level);
+      boost::log::trivial::severity_level setLoggingLevel(const std::string &level);
+
     protected:
       DevicePtr defaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
@@ -96,11 +108,11 @@ namespace mtconnect {
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 
-      void boost_set_log_level(const boost::log::trivial::severity_level level);
-
       void monitorThread();
 
     protected:
+      using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
+
       boost::asio::io_context m_context;
       std::list<std::thread> m_workers;
       std::unique_ptr<Agent> m_agent;
@@ -109,8 +121,7 @@ namespace mtconnect {
 #endif
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
-      boost::shared_ptr<boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>>
-          m_sink;
+      boost::shared_ptr<text_sink> m_sink;
       std::string m_version;
       bool m_monitorFiles = false;
       int m_minimumConfigReloadAge = 15;
@@ -119,6 +130,18 @@ namespace mtconnect {
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
 
+      // Logging info for testing
+      std::filesystem::path m_logDirectory;
+      std::filesystem::path m_logFileName;
+      std::filesystem::path m_logArchivePattern;
+
+      boost::log::trivial::severity_level m_logLevel {boost::log::trivial::severity_level::info};
+
+      int64_t m_maxLogFileSize {0};
+      int64_t m_logRotationSize {0};
+      int64_t m_rotationLogInterval {0};
+
+      // Factories
       SinkFactory m_sinkFactory;
       SourceFactory m_sourceFactory;
       std::map<std::string, InitializationFunction> m_initializers;

@@ -48,7 +48,7 @@ namespace mtconnect {
 #ifndef _WINDOWS
           "Usage: agent [help|daemonize|debug|run] [config-file]"
 #else
-             "Usage: agent [help|install|remove|debug|run] [config-file]"
+          "Usage: agent [help|install|remove|debug|run] [config-file]"
 #endif
           R"(       help           Prints this message and exits
        version        Prints the agent version and exits
@@ -316,7 +316,8 @@ namespace mtconnect {
                                   nullptr))           // display name: no change
         {
           LOG(error) << "ChangeServiceConfig failed (" << GetLastError() << ")";
-          std::cerr << std::endl << "ChangeServiceConfig failed (" << GetLastError() << ")" << std::endl;
+          std::cerr << std::endl
+                    << "ChangeServiceConfig failed (" << GetLastError() << ")" << std::endl;
           CloseServiceHandle(service);
           CloseServiceHandle(manager);
           return;
@@ -399,7 +400,8 @@ namespace mtconnect {
         {
           RegCloseKey(mtc);
           LOG(error) << "Could not create " << m_name << " (" << res << ")";
-          std::cerr << std::endl << "Could not create " << m_name << " (" << res << ")" << std::endl;
+          std::cerr << std::endl
+                    << "Could not create " << m_name << " (" << res << ")" << std::endl;
           return;
         }
       }
@@ -410,7 +412,10 @@ namespace mtconnect {
       RegCloseKey(agent);
 
       LOG(info) << "Service installed successfully.";
-      std::cerr << std::endl << std::endl << "Service installed successfully." << std::endl << std::endl;
+      std::cerr << std::endl
+                << std::endl
+                << "Service installed successfully." << std::endl
+                << std::endl;
     }
 
     void MTConnectService::remove()
@@ -452,12 +457,18 @@ namespace mtconnect {
       if (!::DeleteService(service))
       {
         LOG(error) << "Could remove service " << m_name;
-        std::cerr << std::endl << std::endl << "Could remove service " << m_name << std::endl << std::endl;
+        std::cerr << std::endl
+                  << std::endl
+                  << "Could remove service " << m_name << std::endl
+                  << std::endl;
       }
       else
       {
         LOG(info) << "Successfully removed service " << m_name;
-        std::cerr << std::endl << std::endl << "Service removed successfully." << std::endl << std::endl;
+        std::cerr << std::endl
+                  << std::endl
+                  << "Service removed successfully." << std::endl
+                  << std::endl;
       }
 
       ::CloseServiceHandle(service);
