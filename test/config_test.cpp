@@ -767,6 +767,9 @@ MaxCachedFileSize = 2g
     ASSERT_EQ(2ull * 1024 * 1024 * 1024, cache->getMaxCachedFileSize());
   }
 
+  #define EXPECT_PATH_EQ(p1, p2) \
+    EXPECT_EQ(std::filesystem::weakly_canonical(p1), std::filesystem::weakly_canonical(p2))
+
   TEST_F(ConfigTest, log_output_should_set_archive_file_pattern)
   {
     chdir(TEST_BIN_ROOT_DIR);
@@ -786,7 +789,7 @@ logger_config {
     
     EXPECT_EQ("agent_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("agent.log", m_config->getLogFileName().filename());
-    EXPECT_EQ(std::filesystem::canonical(TEST_BIN_ROOT_DIR), m_config->getLogDirectory());
+    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
   
   TEST_F(ConfigTest, log_output_should_configure_file_name)
@@ -808,7 +811,7 @@ logger_config {
     
     EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
-    EXPECT_EQ(std::filesystem::canonical(TEST_BIN_ROOT_DIR), m_config->getLogDirectory());
+    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
 
   TEST_F(ConfigTest, log_should_configure_file_name)
@@ -831,7 +834,7 @@ logger_config {
     
     EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
-    EXPECT_EQ(std::filesystem::canonical(TEST_BIN_ROOT_DIR), m_config->getLogDirectory());
+    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
   
   TEST_F(ConfigTest, log_should_specify_relative_directory)
@@ -854,9 +857,9 @@ logger_config {
     
     fs::path path { std::filesystem::canonical(TEST_BIN_ROOT_DIR) / "logs" };
     
-    EXPECT_EQ(path / "logging_%N.log", m_config->getLogArchivePattern());
-    EXPECT_EQ(path / "logging.log", m_config->getLogFileName());
-    EXPECT_EQ(path, m_config->getLogDirectory());
+    EXPECT_PATH_EQ(path / "logging_%N.log", m_config->getLogArchivePattern());
+    EXPECT_PATH_EQ(path / "logging.log", m_config->getLogFileName());
+    EXPECT_PATH_EQ(path, m_config->getLogDirectory());
   }
   
   TEST_F(ConfigTest, log_should_specify_relative_directory_with_active_in_parent)
@@ -879,9 +882,9 @@ logger_config {
     
     fs::path path { std::filesystem::canonical(TEST_BIN_ROOT_DIR) };
     
-    EXPECT_EQ(path / "logs" / "logging_%N.log", m_config->getLogArchivePattern());
-    EXPECT_EQ(path / "." / "logging.log", m_config->getLogFileName());
-    EXPECT_EQ(path / "logs", m_config->getLogDirectory());
+    EXPECT_PATH_EQ(path / "logs" / "logging_%N.log", m_config->getLogArchivePattern());
+    EXPECT_PATH_EQ(path / "logging.log", m_config->getLogFileName());
+    EXPECT_PATH_EQ(path / "logs", m_config->getLogDirectory());
   }
 
   TEST_F(ConfigTest, log_should_specify_max_file_and_rotation_size)
