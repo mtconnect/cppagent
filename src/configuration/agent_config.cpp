@@ -81,12 +81,12 @@
 using namespace std;
 namespace fs = std::filesystem;
 namespace pt = boost::property_tree;
-namespace log = boost::log;
+namespace logr = boost::log;
 namespace dll = boost::dll;
 namespace asio = boost::asio;
 
-BOOST_LOG_ATTRIBUTE_KEYWORD(named_scope, "Scope", log::attributes::named_scope::value_type);
-BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", log::attributes::utc_clock::value_type);
+BOOST_LOG_ATTRIBUTE_KEYWORD(named_scope, "Scope", logr::attributes::named_scope::value_type);
+BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", logr::attributes::utc_clock::value_type);
 
 namespace mtconnect {
   namespace configuration {
@@ -186,7 +186,7 @@ namespace mtconnect {
 
     AgentConfiguration::~AgentConfiguration()
     {
-      log::core::get()->remove_all_sinks();
+      logr::core::get()->remove_all_sinks();
       m_pipelineContext.reset();
       m_adapterHandler.reset();
       m_agent.reset();
@@ -369,16 +369,16 @@ namespace mtconnect {
 
     DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
 
-    void AgentConfiguration::setLoggingLevel(const log::trivial::severity_level level)
+    void AgentConfiguration::setLoggingLevel(const logr::trivial::severity_level level)
     {
-      using namespace log::trivial;
+      using namespace logr::trivial;
       m_logLevel = level;
-      log::core::get()->set_filter(severity >= level);
+      logr::core::get()->set_filter(severity >= level);
     }
 
-    static log::trivial::severity_level StringToLogLevel(const std::string &level)
+    static logr::trivial::severity_level StringToLogLevel(const std::string &level)
     {
-      using namespace log::trivial;
+      using namespace logr::trivial;
       string_view lev(level.c_str());
       if (lev[0] == 'L' || lev[0] == 'l')
         lev.remove_prefix(1);
@@ -404,15 +404,16 @@ namespace mtconnect {
       else
         return res->second;
     }
-    
-    log::trivial::severity_level AgentConfiguration::setLoggingLevel(const string &level)
+
+    logr::trivial::severity_level AgentConfiguration::setLoggingLevel(const string &level)
     {
-      log::trivial::severity_level l = StringToLogLevel(level);
+      logr::trivial::severity_level l = StringToLogLevel(level);
       setLoggingLevel(l);
       return l;
     }
 
-    static inline int ConvertFileSize(const ConfigOptions &options, const string &name, int64_t &size)
+    static inline int ConvertFileSize(const ConfigOptions &options, const string &name,
+                                      int64_t &size)
     {
       static const regex pat("([0-9]+)([GgMmKkBb]*)");
       auto value = *GetOption<string>(options, name);
@@ -448,18 +449,18 @@ namespace mtconnect {
 
     void AgentConfiguration::configureLogger(const ptree &config)
     {
-      using namespace log::trivial;
+      using namespace logr::trivial;
       namespace kw = boost::log::keywords;
-      namespace expr = log::expressions;
+      namespace expr = logr::expressions;
 
       m_sink.reset();
 
       //// Add the commonly used attributes; includes TimeStamp, ProcessID and ThreadID and others
-      log::add_common_attributes();
-      log::core::get()->add_global_attribute("Scope", log::attributes::named_scope());
-      log::core::get()->add_global_attribute(log::aux::default_attribute_names::thread_id(),
-                                             log::attributes::current_thread_id());
-      log::core::get()->add_global_attribute("Timestamp", log::attributes::utc_clock());
+      logr::add_common_attributes();
+      logr::core::get()->add_global_attribute("Scope", logr::attributes::named_scope());
+      logr::core::get()->add_global_attribute(logr::aux::default_attribute_names::thread_id(),
+                                              logr::attributes::current_thread_id());
+      logr::core::get()->add_global_attribute("Timestamp", logr::attributes::utc_clock());
 
       ptree empty;
       auto logger = config.get_child_optional("logger_config").value_or(empty);
@@ -485,7 +486,7 @@ namespace mtconnect {
                        << expr::format_date_time<boost::posix_time::ptime>("Timestamp",
                                                                            "%Y-%m-%dT%H:%M:%S.%fZ ")
                        << "("
-                       << expr::attr<log::attributes::current_thread_id::value_type>("ThreadID")
+                       << expr::attr<logr::attributes::current_thread_id::value_type>("ThreadID")
                        << ") "
                        << "[" << severity << "] " << named_scope << ": " << expr::smessage;
 
@@ -497,7 +498,7 @@ namespace mtconnect {
         else
           out = &std::cout;
 
-        log::add_console_log(*out, kw::format = formatter);
+        logr::add_console_log(*out, kw::format = formatter);
 
         if (m_isDebug && level >= severity_level::debug)
           setLoggingLevel(severity_level::debug);
@@ -557,7 +558,7 @@ namespace mtconnect {
       else if (m_logFileName.is_relative())
         m_logFileName = fs::current_path() / m_logFileName;
 
-      boost::shared_ptr<log::core> core = log::core::get();
+      boost::shared_ptr<logr::core> core = logr::core::get();
 
       // Create a text file sink
       m_sink = boost::make_shared<text_sink>(
@@ -566,13 +567,14 @@ namespace mtconnect {
           kw::open_mode = ios_base::out | ios_base::app, kw::format = formatter);
 
       // Set up where the rotated files will be stored
-      m_sink->locked_backend()->set_file_collector(log::sinks::file::make_collector(
+      m_sink->locked_backend()->set_file_collector(logr::sinks::file::make_collector(
           kw::target = m_logDirectory, kw::max_size = m_maxLogFileSize, kw::max_files = max_index));
 
       if (m_rotationLogInterval > 0)
       {
-        m_sink->locked_backend()->set_time_based_rotation(log::sinks::file::rotation_at_time_interval(
-            boost::posix_time::hours(m_rotationLogInterval)));
+        m_sink->locked_backend()->set_time_based_rotation(
+            logr::sinks::file::rotation_at_time_interval(
+                boost::posix_time::hours(m_rotationLogInterval)));
       }
 
       // Upon restart, scan the target directory for files matching the file_name pattern

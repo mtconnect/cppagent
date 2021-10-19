@@ -81,7 +81,7 @@ namespace mtconnect {
 
       auto &getSinkFactory() { return m_sinkFactory; }
       auto &getSourceFactory() { return m_sourceFactory; }
-      
+
       const auto &getLoggerSink() const { return m_sink; }
       const auto &getLogDirectory() const { return m_logDirectory; }
       const auto &getLogFileName() const { return m_logFileName; }
@@ -129,17 +129,17 @@ namespace mtconnect {
       bool m_restart = false;
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
-      
+
       // Logging info for testing
       std::filesystem::path m_logDirectory;
       std::filesystem::path m_logFileName;
       std::filesystem::path m_logArchivePattern;
-      
-      boost::log::trivial::severity_level m_logLevel { boost::log::trivial::severity_level::info };
-      
-      int64_t m_maxLogFileSize { 0 };
-      int64_t m_logRotationSize { 0 };
-      int64_t m_rotationLogInterval { 0 };
+
+      boost::log::trivial::severity_level m_logLevel {boost::log::trivial::severity_level::info};
+
+      int64_t m_maxLogFileSize {0};
+      int64_t m_logRotationSize {0};
+      int64_t m_rotationLogInterval {0};
 
       // Factories
       SinkFactory m_sinkFactory;
