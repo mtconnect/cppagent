@@ -19,6 +19,7 @@
 
 #include <list>
 #include <set>
+#include <shared_mutex>
 
 #include <libxml/tree.h>
 
@@ -52,5 +53,6 @@ namespace mtconnect {
   protected:
     // LibXML XML Doc
     xmlDocPtr m_doc = nullptr;
+    mutable std::shared_mutex m_mutex;
   };
 }  // namespace mtconnect
