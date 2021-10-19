@@ -767,5 +767,211 @@ MaxCachedFileSize = 2g
     ASSERT_EQ(2ull * 1024 * 1024 * 1024, cache->getMaxCachedFileSize());
   }
 
+  TEST_F(ConfigTest, log_output_should_set_archive_file_pattern)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    
+    string str(R"(
+logger_config {
+  output = file agent_%N.log
+}
+)");
+
+    m_config->loadConfig(str);
+    
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+    
+    EXPECT_EQ("agent_%N.log", m_config->getLogArchivePattern().filename());
+    EXPECT_EQ("agent.log", m_config->getLogFileName().filename());
+    EXPECT_EQ(std::filesystem::canonical(TEST_BIN_ROOT_DIR), m_config->getLogDirectory());
+  }
+  
+  TEST_F(ConfigTest, log_output_should_configure_file_name)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    
+    string str(R"(
+logger_config {
+  output = file logging_%N.log logging.log
+}
+)");
+
+    m_config->loadConfig(str);
+    
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+    
+    EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
+    EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
+    EXPECT_EQ(std::filesystem::canonical(TEST_BIN_ROOT_DIR), m_config->getLogDirectory());
+  }
+
+  TEST_F(ConfigTest, log_should_configure_file_name)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    
+    string str(R"(
+logger_config {
+  file_name = logging.log
+  archive_pattern = logging_%N.log
+}
+)");
+
+    m_config->loadConfig(str);
+    
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+    
+    EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
+    EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
+    EXPECT_EQ(std::filesystem::canonical(TEST_BIN_ROOT_DIR), m_config->getLogDirectory());
+  }
+  
+  TEST_F(ConfigTest, log_should_specify_relative_directory)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    
+    string str(R"(
+logger_config {
+  file_name = logging.log
+  archive_pattern = logs/logging_%N.log
+}
+)");
+
+    m_config->loadConfig(str);
+    
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+    
+    fs::path path { std::filesystem::canonical(TEST_BIN_ROOT_DIR) / "logs" };
+    
+    EXPECT_EQ(path / "logging_%N.log", m_config->getLogArchivePattern());
+    EXPECT_EQ(path / "logging.log", m_config->getLogFileName());
+    EXPECT_EQ(path, m_config->getLogDirectory());
+  }
+  
+  TEST_F(ConfigTest, log_should_specify_relative_directory_with_active_in_parent)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    
+    string str(R"(
+logger_config {
+  file_name = ./logging.log
+  archive_pattern = logs/logging_%N.log
+}
+)");
+
+    m_config->loadConfig(str);
+    
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+    
+    fs::path path { std::filesystem::canonical(TEST_BIN_ROOT_DIR) };
+    
+    EXPECT_EQ(path / "logs" / "logging_%N.log", m_config->getLogArchivePattern());
+    EXPECT_EQ(path / "." / "logging.log", m_config->getLogFileName());
+    EXPECT_EQ(path / "logs", m_config->getLogDirectory());
+  }
+
+  TEST_F(ConfigTest, log_should_specify_max_file_and_rotation_size)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    using namespace boost::log::trivial;
+
+    string str(R"(
+logger_config {
+  max_size = 1gb
+  rotation_size = 20gb
+}
+)");
+
+    m_config->loadConfig(str);
+    
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+    
+    EXPECT_EQ(severity_level::info, m_config->getLogLevel());
+    EXPECT_EQ(1ll * 1024 * 1024 * 1024, m_config->getMaxLogFileSize());
+    EXPECT_EQ(20ll * 1024 * 1024 * 1024, m_config->getLogRotationSize());
+  }
+
+  TEST_F(ConfigTest, log_should_configure_logging_level)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    
+    using namespace boost::log::trivial;
+    
+    string str(R"(
+logger_config {
+   level = fatal
+}
+)");
+
+    m_config->loadConfig(str);
+    
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+    
+    m_config->setLoggingLevel("all");
+    EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
+    m_config->setLoggingLevel("none");
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+    m_config->setLoggingLevel("trace");
+    EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
+    m_config->setLoggingLevel("debug");
+    EXPECT_EQ(severity_level::debug, m_config->getLogLevel());
+    m_config->setLoggingLevel("info");
+    EXPECT_EQ(severity_level::info, m_config->getLogLevel());
+    m_config->setLoggingLevel("lwarn");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "lwarn";
+    m_config->setLoggingLevel("lwarning");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "lwarning";
+    m_config->setLoggingLevel("warning");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "warning";
+    m_config->setLoggingLevel("error");
+    EXPECT_EQ(severity_level::error, m_config->getLogLevel());
+    m_config->setLoggingLevel("fatal");
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+
+    m_config->setLoggingLevel("ALL");
+    EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
+    m_config->setLoggingLevel("NONE");
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+    m_config->setLoggingLevel("TRACE");
+    EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
+    m_config->setLoggingLevel("DEBUG");
+    EXPECT_EQ(severity_level::debug, m_config->getLogLevel());
+    m_config->setLoggingLevel("INFO");
+    EXPECT_EQ(severity_level::info, m_config->getLogLevel());
+    m_config->setLoggingLevel("LWARN");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "LWARN";
+    m_config->setLoggingLevel("LWARNING");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "LWARNING";
+    m_config->setLoggingLevel("WARNING");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "WARNING";
+    m_config->setLoggingLevel("ERROR");
+    EXPECT_EQ(severity_level::error, m_config->getLogLevel());
+    m_config->setLoggingLevel("FATAL");
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+
+  }
+
 
 }  // namespace
