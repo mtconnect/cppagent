@@ -487,8 +487,7 @@ namespace mtconnect {
                                                                            "%Y-%m-%dT%H:%M:%S.%fZ ")
                        << "("
                        << expr::attr<logr::attributes::current_thread_id::value_type>("ThreadID")
-                       << ") "
-                       << "[" << severity << "] " << named_scope << ": " << expr::smessage;
+                       << ") [" << severity << "] " << named_scope << ": " << expr::smessage;
 
       if (m_isDebug || (output && (*output == "cout" || *output == "cerr")))
       {
@@ -579,6 +578,7 @@ namespace mtconnect {
 
       // Upon restart, scan the target directory for files matching the file_name pattern
       m_sink->locked_backend()->scan_for_files();
+      m_sink->set_formatter(formatter);
 
       // Formatter for the logger
       core->add_sink(m_sink);

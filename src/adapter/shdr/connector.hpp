@@ -128,6 +128,7 @@ namespace mtconnect {
 
         // The connected state of this connector
         bool m_connected;
+        bool m_disconnecting;
 
         // Priority boost
         bool m_realTime;

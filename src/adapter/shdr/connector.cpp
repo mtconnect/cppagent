@@ -55,6 +55,7 @@ namespace mtconnect {
           m_heartbeatTimer(strand.context()),
           m_receiveTimeout(strand.context()),
           m_connected(false),
+          m_disconnecting(false),
           m_realTime(false),
           m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
           m_reconnectInterval(duration_cast<milliseconds>(reconnectInterval)),
@@ -126,9 +127,22 @@ namespace mtconnect {
       void Connector::reconnect()
       {
         NAMED_SCOPE("Connector::reconnect");
-
-        LOG(info) << "reconnect: retry connection in " << m_reconnectInterval.count() << "ms";
+        
+        static mutex s_reconnectLock;
+        
+        {
+          lock_guard<mutex> guard(s_reconnectLock);
+          if (m_disconnecting || !m_connected)
+          {
+            LOG(warning) << "Already disconnecting. returning";
+            return;
+          }
+          m_disconnecting = true;
+        }
+        
         close();
+        
+        LOG(info) << "reconnect: retry connection in " << m_reconnectInterval.count() << "ms";
         asyncTryConnect();
       }
 
@@ -209,7 +223,7 @@ namespace mtconnect {
         if (ec)
         {
           LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
-          close();
+          reconnect();
         }
       }
 
@@ -226,20 +240,20 @@ namespace mtconnect {
         NAMED_SCOPE("Connector::setReceiveTimeout");
 
         m_receiveTimeout.expires_from_now(m_receiveTimeLimit);
-        m_receiveTimeout.async_wait([this](sys::error_code ec) {
+        m_receiveTimeout.async_wait(asio::bind_executor(m_strand, [this](sys::error_code ec) {
           if (!ec)
           {
             LOG(error) << "(Port:" << m_localPort << ")"
                        << " connect: Did not receive data for over: " << m_receiveTimeLimit.count()
                        << " ms";
-            close();
+            reconnect();
           }
           else if (ec != boost::asio::error::operation_aborted)
           {
             LOG(error) << "Receive timeout: " << ec.category().message(ec.value()) << ": "
                        << ec.message();
           }
-        });
+        }));
       }
 
       void Connector::parseSocketBuffer()
@@ -380,6 +394,7 @@ namespace mtconnect {
           m_heartbeats = false;
           disconnected();
         }
+        m_disconnecting = false;
       }
     }  // namespace shdr
   }    // namespace adapter
