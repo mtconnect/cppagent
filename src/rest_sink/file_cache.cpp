@@ -217,8 +217,10 @@ namespace mtconnect {
         if (file != m_fileCache.end())
         {
           auto fp = file->second;
-          if (!fp->m_cached)
+          if (!fp->m_cached || fp->m_redirect)
+          {
             return fp;
+          }
           else
           {
             auto lastWrite = std::filesystem::last_write_time(fp->m_path);
