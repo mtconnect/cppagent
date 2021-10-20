@@ -1913,7 +1913,7 @@ TEST_F(AgentTest, AssetBuffer)
 
   // Test multiple asset get
   {
-    PARSE_XML_RESPONSE("/asset");
+    PARSE_XML_RESPONSE("/assets");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 2");
@@ -1933,7 +1933,7 @@ TEST_F(AgentTest, AssetBuffer)
 
   queries["count"] = "2";
   {
-    PARSE_XML_RESPONSE_QUERY("/asset", queries);
+    PARSE_XML_RESPONSE_QUERY("/assets", queries);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[1]", "TEST 1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[2]", "TEST 2");
