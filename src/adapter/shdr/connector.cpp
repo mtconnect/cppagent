@@ -127,9 +127,9 @@ namespace mtconnect {
       void Connector::reconnect()
       {
         NAMED_SCOPE("Connector::reconnect");
-        
+
         static mutex s_reconnectLock;
-        
+
         {
           lock_guard<mutex> guard(s_reconnectLock);
           if (m_disconnecting || !m_connected)
@@ -139,9 +139,9 @@ namespace mtconnect {
           }
           m_disconnecting = true;
         }
-        
+
         close();
-        
+
         LOG(info) << "reconnect: retry connection in " << m_reconnectInterval.count() << "ms";
         asyncTryConnect();
       }

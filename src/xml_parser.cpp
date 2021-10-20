@@ -237,7 +237,7 @@ namespace mtconnect {
   XmlParser::~XmlParser()
   {
     std::unique_lock lock(m_mutex);
-    
+
     if (m_doc)
     {
       xmlFreeDoc(m_doc);
@@ -248,7 +248,7 @@ namespace mtconnect {
   void XmlParser::loadDocument(const std::string &doc)
   {
     std::unique_lock lock(m_mutex);
-    
+
     if (m_doc)
     {
       xmlFreeDoc(m_doc);
