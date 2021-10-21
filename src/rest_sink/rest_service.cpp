@@ -414,12 +414,11 @@ namespace mtconnect {
 
       string qp("type={string}&removed={string:false}&count={integer:100}&device={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler});
+      m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler});
       m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler});
-
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler});
       m_server->addRouting({boost::beast::http::verb::get, "/asset/{asset}", idHandler});
-      m_server->addRouting({boost::beast::http::verb::get, "/asset/{asset}", idHandler});
+      m_server->addRouting({boost::beast::http::verb::get, "/assets/{asset}", idHandler});
 
       if (m_server->arePutsAllowed())
       {
