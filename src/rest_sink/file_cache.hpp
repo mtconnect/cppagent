@@ -63,6 +63,11 @@ namespace mtconnect {
 
       void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
       auto getMaxCachedFileSize() const { return m_maxCachedFileSize; }
+      
+      // For testing
+      void clear() {
+        m_fileCache.clear();
+      }
 
     protected:
       CachedFilePtr findFileInDirectories(const std::string &name,

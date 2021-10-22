@@ -38,6 +38,7 @@ namespace mtconnect {
                       {".jpg", "image/jpeg"},
                       {".jpeg", "image/jpeg"},
                       {".png", "image/png"},
+                      {".txt", "text/plain"},
                       {".html", "text/html"},
                       {".ico", "image/x-icon"}}}),
         m_maxCachedFileSize(max)
