@@ -150,6 +150,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"  
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.cpp"
   )
 
 if(NOT WITHOUT_PYTHON)

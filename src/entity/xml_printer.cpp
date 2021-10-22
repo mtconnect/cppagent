@@ -90,7 +90,10 @@ namespace mtconnect {
         {
           attrs["removed"] = "true";
         }
-        visit(overloaded {[&writer, &attrs](const string &st) {
+        visit(overloaded {[](const monostate &st) {
+                            // Monostates are empty
+                          },
+                          [&writer, &attrs](const string &st) {
                             addSimpleElement(writer, "Entry", st, attrs);
                           },
                           [&writer, &attrs](const int64_t &i) {

@@ -46,7 +46,7 @@ namespace mtconnect {
       void parse(const std::string &s, bool table);
     };
 
-    using DataSetValue = std::variant<DataSet, std::string, int64_t, double>;
+    using DataSetValue = std::variant<std::monostate, DataSet, std::string, int64_t, double>;
 
     struct DataSetValueSame
     {
@@ -244,3 +244,4 @@ namespace mtconnect {
     }
   }  // namespace observation
 }  // namespace mtconnect
+

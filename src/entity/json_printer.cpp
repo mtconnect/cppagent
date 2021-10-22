@@ -38,7 +38,8 @@ namespace mtconnect {
         }
         else
         {
-          visit(overloaded {[&value, &e](const std::string &st) { value[e.m_key] = st; },
+          visit(overloaded {[](const monostate &) {},
+                            [&value, &e](const std::string &st) { value[e.m_key] = st; },
                             [&value, &e](const int64_t &i) { value[e.m_key] = i; },
                             [&value, &e](const double &d) { value[e.m_key] = d; },
                             [&value, &e](const DataSet &arg) {
