@@ -109,6 +109,7 @@ namespace mtconnect {
       bool m_cached {true};
       std::filesystem::file_time_type m_lastWrite;
       std::optional<std::string> m_redirect;
+      std::optional<std::string> m_contentEncoding;
     };
   }  // namespace rest_sink
 }  // namespace mtconnect

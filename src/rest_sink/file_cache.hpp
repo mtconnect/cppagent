@@ -46,7 +46,8 @@ namespace mtconnect {
       std::optional<XmlNamespace> registerFile(const std::string &uri,
                                                const std::filesystem::path &path,
                                                const std::string &version);
-      CachedFilePtr getFile(const std::string &name);
+      CachedFilePtr getFile(const std::string &name,
+                            const std::optional<std::string> acceptEncoding = std::nullopt);
       bool hasFile(const std::string &name) const
       {
         return (m_fileCache.count(name) > 0) || (m_fileMap.count(name) > 0);
@@ -64,7 +65,8 @@ namespace mtconnect {
       auto getMaxCachedFileSize() const { return m_maxCachedFileSize; }
 
     protected:
-      CachedFilePtr findFileInDirectories(const std::string &name);
+      CachedFilePtr findFileInDirectories(const std::string &name,
+                                          const std::optional<std::string> acceptEncoding = std::nullopt);
       const std::string &getMimeType(std::string ext)
       {
         static std::string octStream("application/octet-stream");

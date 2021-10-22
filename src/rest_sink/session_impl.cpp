@@ -225,6 +225,8 @@ namespace mtconnect {
         m_request->m_accepts = string(a->value());
       if (auto a = msg.find(http::field::content_type); a != msg.end())
         m_request->m_contentType = string(a->value());
+      if (auto a = msg.find(http::field::accept_encoding); a != msg.end())
+        m_request->m_acceptsEncoding = string(a->value());
       m_request->m_body = msg.body();
 
       if (auto f = msg.find(http::field::content_type);
@@ -386,6 +388,8 @@ namespace mtconnect {
             std::piecewise_construct, std::make_tuple(std::move(body)),
             std::make_tuple(response.m_status, 11));
         res->set(http::field::content_type, response.m_mimeType);
+        if (response.m_file->m_contentEncoding)
+          res->set(http::field::content_encoding, *response.m_file->m_contentEncoding);
         res->content_length(body.size());
         addHeaders(response, res);
 
