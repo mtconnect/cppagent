@@ -50,6 +50,7 @@ namespace mtconnect {
       boost::beast::http::verb m_verb;
       std::string m_body;
       std::string m_accepts;
+      std::string m_acceptsEncoding;
       std::string m_contentType;
       std::string m_path;
       std::string m_foreignIp;

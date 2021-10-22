@@ -94,3 +94,23 @@ TEST_F(FileCacheTest, base_directory_should_redirect)
   ASSERT_TRUE(boost::starts_with(std::string(file->m_buffer), "<html>"));
 }
 
+TEST_F(FileCacheTest, file_cache_should_find_zipped_file)
+{
+  m_cache->addDirectory("/resources", PROJECT_ROOT_DIR "/test/resources", "none.txt");
+  auto file = m_cache->getFile("/resources/zipped_file.txt");
+  
+  ASSERT_TRUE(file);
+  EXPECT_EQ("text/plain", file->m_mimeType);
+  EXPECT_TRUE(file->m_cached);
+  EXPECT_FALSE(file->m_contentEncoding);
+
+  m_cache->clear();
+  
+  auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  
+  ASSERT_TRUE(gzFile);
+  EXPECT_EQ("text/plain", gzFile->m_mimeType);
+  EXPECT_TRUE(gzFile->m_cached);
+  EXPECT_TRUE(gzFile->m_contentEncoding);
+  EXPECT_EQ("gzip", gzFile->m_contentEncoding);
+}

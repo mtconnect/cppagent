@@ -38,6 +38,7 @@ namespace mtconnect {
                       {".jpg", "image/jpeg"},
                       {".jpeg", "image/jpeg"},
                       {".png", "image/png"},
+                      {".txt", "text/plain"},
                       {".html", "text/html"},
                       {".ico", "image/x-icon"}}}),
         m_maxCachedFileSize(max)
@@ -155,7 +156,8 @@ namespace mtconnect {
       return ns;
     }
 
-    CachedFilePtr FileCache::findFileInDirectories(const std::string &name)
+    CachedFilePtr FileCache::findFileInDirectories(const std::string &name,
+                                                   const std::optional<std::string> acceptEncoding)
     {
       namespace fs = std::filesystem;
 
@@ -189,13 +191,29 @@ namespace mtconnect {
             fileName = dir.second.second;
           }
 
-          fs::path path = dir.second.first / fileName;
+          optional<string> contentEncoding;
+          fs::path path;
+          if (acceptEncoding && acceptEncoding->find("gzip") != string::npos)
+          {
+            fs::path zipped = dir.second.first / (fileName + ".gz");
+            if (fs::exists(zipped))
+            {
+              path = zipped;
+              contentEncoding.emplace("gzip");
+            }
+          }
+
+          if (path.empty())
+          {
+            path = dir.second.first / fileName;
+          }
           if (fs::exists(path))
           {
-            auto ext = path.extension().string();
+            auto ext = fs::path(fileName).extension().string();
             auto size = fs::file_size(path);
             auto file =
                 make_shared<CachedFile>(path, getMimeType(ext), size <= m_maxCachedFileSize, size);
+            file->m_contentEncoding = contentEncoding;
             m_fileCache.insert_or_assign(name, file);
             return file;
           }
@@ -209,7 +227,7 @@ namespace mtconnect {
       return nullptr;
     }
 
-    CachedFilePtr FileCache::getFile(const std::string &name)
+    CachedFilePtr FileCache::getFile(const std::string &name, const std::optional<std::string> acceptEncoding)
     {
       try
       {
@@ -239,7 +257,7 @@ namespace mtconnect {
         }
         else
         {
-          return findFileInDirectories(name);
+          return findFileInDirectories(name, acceptEncoding);
         }
       }
       catch (fs::filesystem_error e)

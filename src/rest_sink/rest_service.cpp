@@ -333,7 +333,7 @@ namespace mtconnect {
     {
       using namespace rest_sink;
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto file = m_fileCache.getFile(request->m_path);
+        auto file = m_fileCache.getFile(request->m_path, request->m_acceptsEncoding);
         if (file)
         {
           if (file->m_redirect)
