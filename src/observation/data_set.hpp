@@ -76,6 +76,7 @@ namespace mtconnect {
       {}
       DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
       DataSetEntry(const DataSetEntry &other) = default;
+      DataSetEntry() : m_removed(false) {}
 
       std::string m_key;
       DataSetValue m_value;
@@ -125,122 +126,6 @@ namespace mtconnect {
       }
 
       return true;
-    }
-
-    inline DataSetValue dataSetValue(const std::string &value)
-    {
-      using namespace std;
-      constexpr const char *int_reg = "[+-]?[0-9]+";
-      constexpr const char *float_reg = "[+-]?[0-9]*\\.[0-9]+([eE][+-]?[0-9]+)?";
-
-      static const regex int_regex(int_reg);
-      static const regex float_regex(float_reg);
-
-      if (regex_match(value, float_regex))
-        return DataSetValue(stod(value));
-      else if (regex_match(value, int_regex))
-        return DataSetValue((int64_t)stoll(value));
-      else
-        return DataSetValue(value);
-    }
-
-    // Split the data set entries by space delimiters and account for the
-    // use of single and double quotes as well as curly braces
-    inline void DataSet::parse(const std::string &s, bool table)
-    {
-      using namespace std;
-      constexpr const char *reg =
-          "[ \t]*"                      // Whitespace
-          "([^ \t=]+)"                  // Key
-          "(=("                         // equals
-          "\"([^\\\\\"]+(\\\\\")?)+\""  // Double quotes
-          "|"
-          "'([^\\\\']+(\\\\')?)+'"  // Single Quotes
-          "|"
-          "\\{([^\\}\\\\]+(\\\\\\})?)+\\}"  // Curly braces
-          "|"
-          "[^ \t]+"  // Value
-          ")?)?";    // Close
-      static const regex tokenizer(reg);
-
-      smatch m;
-      string rest(s);
-
-      try
-      {
-        // Search for key value pairs. Handle quoted text.
-        while (regex_search(rest, m, tokenizer))
-        {
-          string key, value;
-          bool removed = false;
-          if (!m[3].matched)
-          {
-            key = m[1];
-            if (!m[2].matched)
-              removed = true;
-            else
-              value.clear();
-          }
-          else
-          {
-            key = m[1];
-            string v = m[3];
-
-            // Check for invalid termination of string
-            if ((v.front() == '"' && v.back() != '"') || (v.front() == '\'' && v.back() != '\'') ||
-                (v.front() == '{' && v.back() != '}'))
-            {
-              // consider the rest of the set invalid, issue warning.
-              break;
-            }
-
-            if (v.front() == '"' || v.front() == '\'' || v.front() == '{')
-              value = v.substr(1, v.size() - 2);
-            else
-              value = v;
-
-            // character remove escape
-
-            size_t pos = 0;
-            do
-            {
-              pos = value.find('\\', pos);
-              if (pos != string::npos)
-              {
-                value.erase(pos, 1);
-                pos++;
-              }
-            } while (pos != string::npos && pos < value.size());
-          }
-
-          // Map the value.
-          if (table)
-          {
-            DataSet set;
-            set.parse(value, false);
-            emplace(key, set, removed);
-          }
-          else
-          {
-            emplace(key, dataSetValue(value), removed);
-          }
-
-          // Parse the rest of the string...
-          rest = m.suffix();
-        }
-      }
-
-      catch (regex_error &e)
-      {
-        LOG(warning) << "Error parsing \"" << rest << "\", \nReason: " << e.what();
-      }
-
-      // If there is leftover text, the text was invalid.
-      // Warn that it is being discarded
-      if (!rest.empty())
-      {
-        LOG(warning) << "Cannot parse complete string, malformed data set: '" << rest << "'";
-      }
     }
   }  // namespace observation
 }  // namespace mtconnect

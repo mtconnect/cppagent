@@ -113,6 +113,35 @@ TEST_F(DataSetTest, InitialSet)
   ASSERT_EQ(4, get<int64_t>(ds2.find("d"_E)->m_value));
 }
 
+TEST_F(DataSetTest, parser_format_tests)
+{
+  DataSet s1;
+  s1.parse("a=10 b=2.0 c=\"abcd\" d= e", false);
+  
+  ASSERT_EQ(5, s1.size());
+  ASSERT_EQ(10, get<int64_t>(s1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(s1.find("b"_E)->m_value));
+  ASSERT_EQ("abcd", get<string>(s1.find("c"_E)->m_value));
+  ASSERT_TRUE(s1.find("d"_E)->m_removed);
+  ASSERT_TRUE(s1.find("e"_E)->m_removed);
+  
+  DataSet s2;
+  s2.parse("abc={ abc 123 }", false);
+  ASSERT_EQ(1, s2.size());
+  ASSERT_EQ(" abc 123 ", get<string>(s2.find("abc"_E)->m_value));
+
+  DataSet s3;
+  s3.parse("abc={ abc \\} 123 }", false);
+  ASSERT_EQ(1, s3.size());
+  ASSERT_EQ(" abc } 123 ", get<string>(s3.find("abc"_E)->m_value));
+
+  DataSet s4;
+  s4.parse("abc=' abc \\' 123 '", false);
+  ASSERT_EQ(1, s4.size());
+  ASSERT_EQ(" abc ' 123 ", get<string>(s4.find("abc"_E)->m_value));
+
+}
+
 TEST_F(DataSetTest, UpdateOneElement)
 {
   ErrorList errors;
