@@ -43,7 +43,7 @@ namespace mtconnect {
       template <typename T>
       const std::optional<T> maybeGet(const std::string &key) const;
 
-      void parse(const std::string &s, bool table);
+      bool parse(const std::string &s, bool table);
     };
 
     using DataSetValue = std::variant<std::monostate, DataSet, std::string, int64_t, double>;

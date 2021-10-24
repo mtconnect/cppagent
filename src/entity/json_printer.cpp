@@ -38,7 +38,7 @@ namespace mtconnect {
         }
         else
         {
-          visit(overloaded {[](const monostate &) {},
+          visit(overloaded {[](const monostate &) { },
                             [&value, &e](const std::string &st) { value[e.m_key] = st; },
                             [&value, &e](const int64_t &i) { value[e.m_key] = i; },
                             [&value, &e](const double &d) { value[e.m_key] = d; },

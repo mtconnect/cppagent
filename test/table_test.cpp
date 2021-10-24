@@ -87,6 +87,106 @@ TEST_F(TableTest, DataItem)
   ASSERT_EQ((string) "WorkpieceOffsetTable", m_dataItem1->getObservationName());
 }
 
+TEST_F(TableTest, test_simple_table_formats)
+{
+  DataSet s1;
+  s1.parse("abc={a=1 b=2.0 c='abc'}", true);
+  
+  ASSERT_EQ(1, s1.size());
+  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  ASSERT_EQ(3, abc1.size());
+  ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(abc1.find("c"_E)->m_value));
+}
+
+TEST_F(TableTest, test_simple_table_formats_with_whitespace)
+{
+  DataSet s1;
+  s1.parse("abc={ a=1 b=2.0 c='abc' }", true);
+  
+  ASSERT_EQ(1, s1.size());
+  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  ASSERT_EQ(3, abc1.size());
+  ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(abc1.find("c"_E)->m_value));
+}
+
+TEST_F(TableTest, test_simple_table_formats_with_quotes)
+{
+  DataSet s1;
+  s1.parse("abc=' a=1 b=2.0 c='abc''", true);
+  
+  ASSERT_EQ(1, s1.size());
+  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  ASSERT_EQ(3, abc1.size());
+  ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(abc1.find("c"_E)->m_value));
+}
+
+TEST_F(TableTest, test_simple_table_formats_with_double_quotes)
+{
+  DataSet s1;
+  s1.parse("abc=\" a=1 b=2.0 c='abc'\"", true);
+  
+  ASSERT_EQ(1, s1.size());
+  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  ASSERT_EQ(3, abc1.size());
+  ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(abc1.find("c"_E)->m_value));
+}
+
+TEST_F(TableTest, test_simple_table_formats_with_nested_braces)
+{
+  DataSet s1;
+  s1.parse("abc={ a=1 b=2.0 c={abc}}", true);
+  
+  ASSERT_EQ(1, s1.size());
+  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  ASSERT_EQ(3, abc1.size());
+  ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(abc1.find("c"_E)->m_value));
+}
+
+TEST_F(TableTest, test_simple_table_formats_with_removed_key)
+{
+  DataSet s1;
+  s1.parse("abc={ a=1 b=2.0 c={abc} d= e}", true);
+  
+  ASSERT_EQ(1, s1.size());
+  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  ASSERT_EQ(5, abc1.size());
+  ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(abc1.find("c"_E)->m_value));
+  ASSERT_TRUE(abc1.find("d"_E)->m_removed);
+  ASSERT_TRUE(abc1.find("e"_E)->m_removed);
+}
+
+TEST_F(TableTest, test_mulitple_entries)
+{
+  DataSet s1;
+  s1.parse("abc={ a=1 b=2.0 c={abc} d= e} def={x=1.0 y=2.0}", true);
+  ASSERT_EQ(2, s1.size());
+
+  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
+  ASSERT_EQ(5, abc1.size());
+  ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(abc1.find("c"_E)->m_value));
+  ASSERT_TRUE(abc1.find("d"_E)->m_removed);
+  ASSERT_TRUE(abc1.find("e"_E)->m_removed);
+  
+  const DataSet &def = get<DataSet>(s1.find("def"_E)->m_value);
+  ASSERT_EQ(2, def.size());
+  ASSERT_EQ(1.0, get<double>(def.find("x"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(def.find("y"_E)->m_value));
+}
+
 TEST_F(TableTest, InitialSet)
 {
   string value("G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
