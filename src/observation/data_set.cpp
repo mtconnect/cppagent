@@ -16,6 +16,7 @@
 //
 
 #include "data_set.hpp"
+
 #include "utilities.hpp"
 
 #define BOOST_SPIRIT_DEBUG 1
@@ -38,32 +39,32 @@ namespace ascii = boost::spirit::ascii;
 namespace spirit = boost::spirit;
 namespace l = boost::lambda;
 
-
 namespace std {
-  static inline ostream &operator<<(ostream &s,
-                                    const mtconnect::observation::DataSetValue &t)
+  static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetValue &t)
   {
+    using namespace mtconnect::observation;
     visit(mtconnect::overloaded {[&s](const monostate &) { s << "NULL"; },
-      [&s](const std::string &st) {s << "string(" << st << ")"; },
-      [&s](const int64_t &i) { s << "int(" << i << ")"; },
-      [&s](const double &d) { s << "double("  << d << ")"; },
-      [&s](const mtconnect::observation::DataSet &arg) {
-        s << "{";
-        for (const auto &v : arg) {
-          s << v.m_key << "='" << v.m_value << "' " << v.m_removed << ", ";
-        }
-        s << "}";
-      }}, t);
+                                 [&s](const std::string &st) { s << "string(" << st << ")"; },
+                                 [&s](const int64_t &i) { s << "int(" << i << ")"; },
+                                 [&s](const double &d) { s << "double(" << d << ")"; },
+                                 [&s](const DataSet &arg) {
+                                   s << "{";
+                                   for (const auto &v : arg)
+                                   {
+                                     s << v.m_key << "='" << v.m_value << "' " << v.m_removed
+                                       << ", ";
+                                   }
+                                   s << "}";
+                                 }},
+          t);
     return s;
   }
-  
-  static inline ostream &operator<<(ostream &s,
-                                    const mtconnect::observation::DataSetEntry &t)
+
+  static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetEntry &t)
   {
     s << t.m_key << "='" << t.m_value << "' " << t.m_removed;
     return s;
   }
-
 
 }  // namespace std
 
@@ -73,10 +74,7 @@ namespace mtconnect {
   namespace observation {
     struct data_set
     {
-      inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry)
-      {
-        ds.emplace(entry);
-      }
+      inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
       inline static void add_value_entry_f(DataSetValue &ds, const DataSetEntry &entry)
       {
         if (holds_alternative<monostate>(ds))
@@ -92,7 +90,8 @@ namespace mtconnect {
           LOG(error) << "Incorrect type for data set entry of table";
         }
       }
-      static void make_entry_f(DataSetEntry &entry, const string &key, const boost::optional<DataSetValue> &v)
+      static void make_entry_f(DataSetEntry &entry, const string &key,
+                               const boost::optional<DataSetValue> &v)
       {
         entry.m_key = key;
         if (v && !holds_alternative<monostate>(*v))
@@ -100,7 +99,8 @@ namespace mtconnect {
         else
           entry.m_removed = true;
       }
-      static void make_entry_f(DataSetEntry &entry, const string &key, const boost::optional<DataSet> &v)
+      static void make_entry_f(DataSetEntry &entry, const string &key,
+                               const boost::optional<DataSet> &v)
       {
         entry.m_key = key;
         if (v)
@@ -118,10 +118,28 @@ namespace mtconnect {
     BOOST_PHOENIX_ADAPT_FUNCTION(void, add_value_entry, data_set::add_value_entry_f, 2);
     BOOST_PHOENIX_ADAPT_FUNCTION(void, make_entry, data_set::make_entry_f, 3);
     BOOST_PHOENIX_ADAPT_FUNCTION(size_t, pos, data_set::pos_f, 1);
-    
+
     template <typename It>
     class DataSetParser : public qi::grammar<It, DataSet()>
     {
+    protected:
+      template<typename P, typename O, typename R>
+      void logError(P &params, O &obj, R& result)
+      {
+        using namespace boost::fusion;
+
+        auto &start = at_c<0>(params);
+        auto &end = at_c<1>(params);
+        //auto &what = at_c<2>(params);
+        auto &expected = at_c<3>(params);
+        
+        std::string text(start, end);
+        
+        LOG(error) << "Error when parsing DataSet, expecting '" << expected << "' when parsing '"
+                  << text << '\'';
+
+      }
+      
     public:
       DataSetParser(bool table) : DataSetParser::base_type(m_start)
       {
@@ -130,34 +148,36 @@ namespace mtconnect {
         using phx::val;
         using qi::_1;
         using qi::_2;
-        using qi::lexeme;
+        using qi::as_string;
         using qi::double_;
+        using qi::lexeme;
         using qi::long_long;
         using qi::on_error;
         using spirit::ascii::char_;
-        using qi::as_string;
-        
+
         // Data set parser
         m_key %= lexeme[+(char_ - (space | char_("=|{}'\"")))];
-        m_value %= (m_real | long_long | m_quoted | m_simple | m_braced);
+        m_number %= (m_real | long_long) >> &(space | char_("}'\"") | eoi);
+        m_value %= (m_number | m_quoted | m_braced | m_simple);
         m_simple %= lexeme[+(char_ - (char_("\"'{") | space))];
 
-        m_quoted %= omit[char_("\"'")[_a = _1]] >>
-                    as_string[(*(char_ - (lit(_a) | '\\') | (lit('\\') > char_)))] >>
-                    lit(_a);
-        
-        m_braced %= lit('{') >> as_string[(*(char_ - (lit('}') | '{' | '\\') | (lit('\\') > char_)))]
-          >> lit('}');
-                        
+        m_quoted %= (omit[char_("\"'")[_a = _1]] >>
+                    as_string[*((lit('\\') >> (char_(_a))) | char_ - lit(_a))]) > lit(_a);
+
+        m_braced %= (lit('{') >>
+                    as_string[*((lit('\\') >> char_('}')) | char_ - lit('}'))]) >
+                    lit('}');
+
         m_entry = (m_key >> -("=" >> -m_value))[make_entry(_val, _1, _2)];
 
         // Table support with quoted and braced content
-        m_quotedDataSet = char_("\"'")[_a = _1] >> *space >> *(m_entry[add_entry(_val, _1)] >> *space) >>
-        lit(_a);
-        m_bracedDataSet = lit('{') >> *space >> *(m_entry[add_entry(_val, _1)] >> *space) >> lit('}');
+        m_quotedDataSet =
+            (char_("\"'")[_a = _1] >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit(_a);
+        m_bracedDataSet =
+            (lit('{') >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit('}');
         m_tableValue %= (m_quotedDataSet | m_bracedDataSet);
         m_tableEntry = (m_key >> -("=" >> -m_tableValue))[make_entry(_val, _1, _2)];
-        
+
         if (table)
         {
           m_start = *space >> *(m_tableEntry[add_entry(_val, _1)] >> *space) >> eoi;
@@ -166,10 +186,10 @@ namespace mtconnect {
         {
           m_start = *space >> *(m_entry[add_entry(_val, _1)] >> *space) >> eoi;
         }
-        
-        BOOST_SPIRIT_DEBUG_NODES((m_start)(m_quoted)(m_braced)(m_key)(m_value)(m_entry)(m_simple)
-                                 (m_quoted)(m_tableValue)(m_quotedDataSet)(m_bracedDataSet)(m_tableEntry));
-        
+
+        BOOST_SPIRIT_DEBUG_NODES((m_start)(m_quoted)(m_braced)(m_key)(m_value)(m_entry)(m_simple)(
+            m_quoted)(m_tableValue)(m_quotedDataSet)(m_bracedDataSet)(m_tableEntry));
+
         m_start.name("top");
         m_simple.name("simple");
         m_quoted.name("quoted");
@@ -183,38 +203,42 @@ namespace mtconnect {
         m_bracedDataSet.name("braced data set");
         m_tableEntry.name("table entry");
 
+        using namespace boost::fusion;
 
-        on_error<fail>(m_braced, [&](const auto &it, const auto &what, const auto &params) {
-          LOG(error) << "Error occurred when parsing data set at " << pos(it);
+//        on_error<rethrow>(m_value, [&](auto &params, auto &obj, auto &result) {
+//          //logError(params, obj, result);
+//        });
+        on_error<fail>(m_entry, [&](auto &params, auto &obj, auto &result) {
+          logError(params, obj, result);
         });
-        on_error<fail>(m_entry, [&](const auto &it, const auto &what, const auto &params) {
-          LOG(error) << "Error occurred when parsing data set at " << pos(it);
+//        on_error<rethrow>(m_tableValue, [&](auto &params, auto &obj, auto &result) {
+//          //logError(params, obj, result);
+//        });
+        on_error<fail>(m_tableEntry, [&](auto &params, auto &obj, auto &result) {
+          logError(params, obj, result);
         });
-        on_error<fail>(m_tableEntry, [&](const auto &it, const auto &what, const auto &params) {
-          LOG(error) << "Error occurred when parsing data set at " << pos(it);
-        });
-        on_error<fail>(m_start, [&](const auto &it, const auto &what, const auto &params) {
-          LOG(error) << "Error occurred when parsing data set at " << pos(it);
+        on_error<fail>(m_start, [&](auto &params, auto &obj, auto &result) {
+          logError(params, obj, result);
         });
       }
-      
+
     protected:
       qi::rule<It, DataSet()> m_start;
-      qi::real_parser<double, qi::strict_real_policies<double> > m_real;
+      qi::real_parser<double, qi::strict_real_policies<double>> m_real;
+      qi::rule<It, DataSetValue()> m_number;
       qi::rule<It, DataSetValue(), qi::locals<char>> m_quoted;
       qi::rule<It, DataSetValue()> m_braced;
       qi::rule<It, string()> m_key;
       qi::rule<It, string()> m_simple;
       qi::rule<It, DataSetValue()> m_value;
       qi::rule<It, DataSetEntry()> m_entry;
-      
-      
+
       qi::rule<It, DataSet(), qi::locals<char>> m_quotedDataSet;
       qi::rule<It, DataSet()> m_bracedDataSet;
       qi::rule<It, DataSet()> m_tableValue;
       qi::rule<It, DataSetEntry()> m_tableEntry;
     };
-    
+
     // Split the data set entries by space delimiters and account for the
     // use of single and double quotes as well as curly braces
     bool DataSet::parse(const std::string &text, bool table)
@@ -223,7 +247,7 @@ namespace mtconnect {
 
       using Iterator = std::string::const_iterator;
       DataSetParser<Iterator> parser(table);
-      
+
       auto s = text.begin();
       auto e = text.end();
 
@@ -239,5 +263,5 @@ namespace mtconnect {
         return false;
       }
     }
-  }
-}
+  }  // namespace observation
+}  // namespace mtconnect

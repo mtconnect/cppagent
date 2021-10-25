@@ -91,7 +91,7 @@ namespace mtconnect {
           attrs["removed"] = "true";
         }
         visit(overloaded {[&writer, &attrs](const monostate &st) {
-                             addSimpleElement(writer, "Entry", "", attrs);
+                            addSimpleElement(writer, "Entry", "", attrs);
                           },
                           [&writer, &attrs](const string &st) {
                             addSimpleElement(writer, "Entry", st, attrs);
@@ -124,7 +124,8 @@ namespace mtconnect {
                                         }},
                                     c.m_value);
                             }
-                          }},
+                          }
+        },
               e.m_value);
       }
     }

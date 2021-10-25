@@ -129,4 +129,3 @@ namespace mtconnect {
     }
   }  // namespace observation
 }  // namespace mtconnect
-
