@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.1">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.1"/>
+  <Devices>
+    <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
+      <Description manufacturer="NIST" serialNumber=""/>
+			<Components>
+        <Power name="power" id="power">
+					<Configuration>
+						<Specifications>
+							<Specification type="VOLTAGE_AC" units="VOLT" name="voltage">
+								<Maximum>10000</Maximum>
+								<Minimum>100</Minimum>
+								<Nominal>1000</Nominal>
+							</Specification>
+						</Specifications>
+					</Configuration>
+        </Power>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>
