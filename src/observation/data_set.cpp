@@ -159,7 +159,7 @@ namespace mtconnect {
         m_key %= lexeme[+(char_ - (space | char_("=|{}'\"")))];
         m_number %= (m_real | long_long) >> &(space | char_("}'\"") | eoi);
         m_value %= (m_number | m_quoted | m_braced | m_simple);
-        m_simple %= lexeme[+(char_ - (char_("\"'{") | space))];
+        m_simple %= lexeme[+(char_ - (char_("\"'{}") | space))];
 
         m_quoted %= (omit[char_("\"'")[_a = _1]] >>
                     as_string[*((lit('\\') >> (char_(_a))) | char_ - lit(_a))]) > lit(_a);
@@ -205,15 +205,9 @@ namespace mtconnect {
 
         using namespace boost::fusion;
 
-//        on_error<rethrow>(m_value, [&](auto &params, auto &obj, auto &result) {
-//          //logError(params, obj, result);
-//        });
         on_error<fail>(m_entry, [&](auto &params, auto &obj, auto &result) {
           logError(params, obj, result);
         });
-//        on_error<rethrow>(m_tableValue, [&](auto &params, auto &obj, auto &result) {
-//          //logError(params, obj, result);
-//        });
         on_error<fail>(m_tableEntry, [&](auto &params, auto &obj, auto &result) {
           logError(params, obj, result);
         });
