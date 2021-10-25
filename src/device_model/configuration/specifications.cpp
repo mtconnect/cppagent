@@ -29,7 +29,7 @@ namespace mtconnect {
         if (!specifications)
         {
           auto abstractSpecification = make_shared<Factory>(Requirements {
-              Requirement("id", true),
+              Requirement("id", false),
               Requirement("type", true),
               Requirement("originator", ControlledVocab {"MANUFACTURER", "USER"}, false),
               Requirement("subType", false),
