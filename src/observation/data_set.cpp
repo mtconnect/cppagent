@@ -152,13 +152,12 @@ namespace mtconnect {
         using qi::as_string;
         using qi::double_;
         using qi::lexeme;
-        using qi::int_parser;
         using qi::on_error;
         using spirit::ascii::char_;
 
         // Data set parser
         m_key %= lexeme[+(char_ - (space | char_("=|{}'\"")))];
-        m_number %= (m_real | int_parser<int64_t, 10>()) >> &(space | char_("}'\"") | eoi);
+        m_number %= (m_real | m_long) >> &(space | char_("}'\"") | eoi);
         m_value %= (m_number | m_quoted | m_braced | m_simple);
         m_simple %= lexeme[+(char_ - (char_("\"'{}") | space))];
 
@@ -219,6 +218,7 @@ namespace mtconnect {
 
     protected:
       qi::rule<It, DataSet()> m_start;
+      qi::int_parser<int64_t, 10> m_long;
       qi::real_parser<double, qi::strict_real_policies<double>> m_real;
       qi::rule<It, DataSetValue()> m_number;
       qi::rule<It, DataSetValue(), qi::locals<char>> m_quoted;
