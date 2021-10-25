@@ -90,7 +90,7 @@ TEST_F(TableTest, DataItem)
 TEST_F(TableTest, test_simple_table_formats)
 {
   DataSet s1;
-  s1.parse("abc={a=1 b=2.0 c='abc'}", true);
+  ASSERT_TRUE(s1.parse("abc={a=1 b=2.0 c='abc'}", true));
   
   ASSERT_EQ(1, s1.size());
   const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
@@ -103,7 +103,7 @@ TEST_F(TableTest, test_simple_table_formats)
 TEST_F(TableTest, test_simple_table_formats_with_whitespace)
 {
   DataSet s1;
-  s1.parse("abc={ a=1 b=2.0 c='abc' }", true);
+  ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c='abc' }", true));
   
   ASSERT_EQ(1, s1.size());
   const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
@@ -116,7 +116,7 @@ TEST_F(TableTest, test_simple_table_formats_with_whitespace)
 TEST_F(TableTest, test_simple_table_formats_with_quotes)
 {
   DataSet s1;
-  s1.parse("abc=' a=1 b=2.0 c='abc''", true);
+  ASSERT_TRUE(s1.parse("abc=' a=1 b=2.0 c='abc''", true));
   
   ASSERT_EQ(1, s1.size());
   const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
@@ -129,7 +129,7 @@ TEST_F(TableTest, test_simple_table_formats_with_quotes)
 TEST_F(TableTest, test_simple_table_formats_with_double_quotes)
 {
   DataSet s1;
-  s1.parse("abc=\" a=1 b=2.0 c='abc'\"", true);
+  ASSERT_TRUE(s1.parse("abc=\" a=1 b=2.0 c='abc'\"", true));
   
   ASSERT_EQ(1, s1.size());
   const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
@@ -142,7 +142,7 @@ TEST_F(TableTest, test_simple_table_formats_with_double_quotes)
 TEST_F(TableTest, test_simple_table_formats_with_nested_braces)
 {
   DataSet s1;
-  s1.parse("abc={ a=1 b=2.0 c={abc}}", true);
+  ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c={abc}}", true));
   
   ASSERT_EQ(1, s1.size());
   const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
@@ -170,21 +170,48 @@ TEST_F(TableTest, test_simple_table_formats_with_removed_key)
 TEST_F(TableTest, test_mulitple_entries)
 {
   DataSet s1;
-  s1.parse("abc={ a=1 b=2.0 c={abc} d= e} def={x=1.0 y=2.0}", true);
+  ASSERT_TRUE(s1.parse("abc={ a=1 b=2.0 c={abc} d= e} def={x=1.0 y=2.0}", true));
   ASSERT_EQ(2, s1.size());
 
-  const DataSet &abc1 = get<DataSet>(s1.find("abc"_E)->m_value);
-  ASSERT_EQ(5, abc1.size());
-  ASSERT_EQ(1, get<int64_t>(abc1.find("a"_E)->m_value));
-  ASSERT_EQ(2.0, get<double>(abc1.find("b"_E)->m_value));
-  ASSERT_EQ("abc", get<string>(abc1.find("c"_E)->m_value));
-  ASSERT_TRUE(abc1.find("d"_E)->m_removed);
-  ASSERT_TRUE(abc1.find("e"_E)->m_removed);
+  const DataSet &abc = get<DataSet>(s1.find("abc"_E)->m_value);
+  ASSERT_EQ(5, abc.size());
+  ASSERT_EQ(1, get<int64_t>(abc.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(abc.find("b"_E)->m_value));
+  ASSERT_EQ("abc", get<string>(abc.find("c"_E)->m_value));
+  ASSERT_TRUE(abc.find("d"_E)->m_removed);
+  ASSERT_TRUE(abc.find("e"_E)->m_removed);
   
   const DataSet &def = get<DataSet>(s1.find("def"_E)->m_value);
   ASSERT_EQ(2, def.size());
   ASSERT_EQ(1.0, get<double>(def.find("x"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(def.find("y"_E)->m_value));
+}
+
+TEST_F(TableTest, test_removed_table_entry)
+{
+  DataSet set;
+  ASSERT_TRUE(set.parse("abc={ a=1 b=2.0 c={abc d= e}} xxx= yyy def={x=1.0 y=2.0}", true));
+  ASSERT_EQ(4, set.size());
+  ASSERT_TRUE(set.find("xxx"_E)->m_removed);
+  ASSERT_TRUE(set.find("yyy"_E)->m_removed);
+}
+
+
+TEST_F(TableTest, test_malformed_entry)
+{
+  DataSet set;
+  ASSERT_FALSE(set.parse("abc={ a=1 b=2.0 c={abc d= e} def={x=1.0 y=2.0}", true));
+  ASSERT_EQ(0, set.size());
+
+  ASSERT_FALSE(set.parse("abc={ a=1 b=2.0 c={abc} d= e} def={x=1.0 y=2.0", true));
+  ASSERT_EQ(1, set.size());
+}
+
+TEST_F(TableTest, test_non_table_entry_should_fail)
+{
+  DataSet set;
+  ASSERT_FALSE(set.parse("abc={a=1} xx=123 def={x=1.0}", true));
+  ASSERT_EQ(1, set.size());
 }
 
 TEST_F(TableTest, InitialSet)

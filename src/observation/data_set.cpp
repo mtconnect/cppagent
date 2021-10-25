@@ -19,7 +19,7 @@
 
 #include "utilities.hpp"
 
-#define BOOST_SPIRIT_DEBUG 1
+//#define BOOST_SPIRIT_DEBUG 1
 
 #include <ostream>
 
@@ -40,6 +40,8 @@ namespace spirit = boost::spirit;
 namespace l = boost::lambda;
 
 namespace std {
+  static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetEntry &t);
+  
   static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetValue &t)
   {
     using namespace mtconnect::observation;
@@ -51,8 +53,7 @@ namespace std {
                                    s << "{";
                                    for (const auto &v : arg)
                                    {
-                                     s << v.m_key << "='" << v.m_value << "' " << v.m_removed
-                                       << ", ";
+                                     s << v << ", ";
                                    }
                                    s << "}";
                                  }},
@@ -62,7 +63,7 @@ namespace std {
 
   static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetEntry &t)
   {
-    s << t.m_key << "='" << t.m_value << "' " << t.m_removed;
+    s << t.m_key << "=" << t.m_value << (t.m_removed ? ":removed" : "");
     return s;
   }
 
@@ -176,7 +177,7 @@ namespace mtconnect {
         m_bracedDataSet =
             (lit('{') >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit('}');
         m_tableValue %= (m_quotedDataSet | m_bracedDataSet);
-        m_tableEntry = (m_key >> -("=" >> -m_tableValue))[make_entry(_val, _1, _2)];
+        m_tableEntry = (m_key >> -("=" > &(space | lit('{') | '\'' | '"' ) >> -m_tableValue))[make_entry(_val, _1, _2)];
 
         if (table)
         {
