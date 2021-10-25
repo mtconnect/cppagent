@@ -73,7 +73,7 @@ using namespace std;
 
 namespace mtconnect {
   namespace observation {
-    struct data_set
+    struct DataSetParserActions
     {
       inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
       inline static void add_value_entry_f(DataSetValue &ds, const DataSetEntry &entry)
@@ -115,10 +115,10 @@ namespace mtconnect {
         return it.position();
       }
     };
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, add_entry, data_set::add_entry_f, 2);
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, add_value_entry, data_set::add_value_entry_f, 2);
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, make_entry, data_set::make_entry_f, 3);
-    BOOST_PHOENIX_ADAPT_FUNCTION(size_t, pos, data_set::pos_f, 1);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, add_entry, DataSetParserActions::add_entry_f, 2);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, add_value_entry, DataSetParserActions::add_value_entry_f, 2);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, make_entry, DataSetParserActions::make_entry_f, 3);
+    BOOST_PHOENIX_ADAPT_FUNCTION(size_t, pos, DataSetParserActions::pos_f, 1);
 
     template <typename It>
     class DataSetParser : public qi::grammar<It, DataSet()>
@@ -152,13 +152,13 @@ namespace mtconnect {
         using qi::as_string;
         using qi::double_;
         using qi::lexeme;
-        using qi::long_long;
+        using qi::int_parser;
         using qi::on_error;
         using spirit::ascii::char_;
 
         // Data set parser
         m_key %= lexeme[+(char_ - (space | char_("=|{}'\"")))];
-        m_number %= (m_real | long_long) >> &(space | char_("}'\"") | eoi);
+        m_number %= (m_real | int_parser<int64_t, 10>()) >> &(space | char_("}'\"") | eoi);
         m_value %= (m_number | m_quoted | m_braced | m_simple);
         m_simple %= lexeme[+(char_ - (char_("\"'{}") | space))];
 
