@@ -943,19 +943,12 @@ namespace mtconnect {
           uuid = d->getUuid();
       }
 
-      if (m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type) == 0)
-      {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
-                printer->mimeType()};
-      }
-      else
-      {
-        return {
-            status::ok,
-            printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                                 m_sinkContract->getAssetStorage()->getCount(), list),
-            printer->mimeType()};
-      }
+      m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type);
+      return {
+        status::ok,
+        printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
+                             m_sinkContract->getAssetStorage()->getCount(), list),
+        printer->mimeType()};
     }
 
     Response RestService::assetIdsRequest(const Printer *printer, const std::list<std::string> &ids)
