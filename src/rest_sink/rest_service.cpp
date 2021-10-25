@@ -413,12 +413,12 @@ namespace mtconnect {
       };
 
       string qp("type={string}&removed={string:false}&count={integer:100}&device={string}");
-      m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler});
       m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler});
+      m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler});
       m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/asset/{asset}", idHandler});
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler});
       m_server->addRouting({boost::beast::http::verb::get, "/assets/{asset}", idHandler});
+      m_server->addRouting({boost::beast::http::verb::get, "/asset/{asset}", idHandler});
 
       if (m_server->arePutsAllowed())
       {
@@ -943,19 +943,12 @@ namespace mtconnect {
           uuid = d->getUuid();
       }
 
-      if (m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type) == 0)
-      {
-        return {status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
-                printer->mimeType()};
-      }
-      else
-      {
-        return {
-            status::ok,
-            printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                                 m_sinkContract->getAssetStorage()->getCount(), list),
-            printer->mimeType()};
-      }
+      m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type);
+      return {
+        status::ok,
+        printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
+                             m_sinkContract->getAssetStorage()->getCount(), list),
+        printer->mimeType()};
     }
 
     Response RestService::assetIdsRequest(const Printer *printer, const std::list<std::string> &ids)
