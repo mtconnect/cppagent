@@ -78,13 +78,14 @@ using namespace std;
 namespace mtconnect {
   namespace configuration {
     namespace ConfigurationParserActions {
-      inline static void property(pair<std::string, std::string> &t, const std::string &f, const std::string &s)
+      inline static void property(pair<std::string, std::string> &t, const std::string &f,
+                                  const std::string &s)
       {
         t = make_pair(f, trim(s));
       }
-      
+
       inline static void tree(pair<std::string, pt::ptree> &t, const std::string &f,
-                    const vector<pair<std::string, pt::ptree>> &s)
+                              const vector<pair<std::string, pt::ptree>> &s)
       {
         t.first = f;
         for (const auto &a : s)
@@ -93,7 +94,7 @@ namespace mtconnect {
             t.second.push_back(a);
         }
       }
-      
+
       inline static void start(pt::ptree &t, const vector<pair<std::string, pt::ptree>> &s)
       {
         for (const auto &a : s)
@@ -102,13 +103,13 @@ namespace mtconnect {
             t.push_back(a);
         }
       }
-      
+
       template <typename Iterator>
       inline static size_t pos(Iterator it)
       {
         return it.position();
       }
-    }
+    }  // namespace ConfigurationParserActions
     BOOST_PHOENIX_ADAPT_FUNCTION(void, property, ConfigurationParserActions::property, 3);
     BOOST_PHOENIX_ADAPT_FUNCTION(void, tree, ConfigurationParserActions::tree, 3);
     BOOST_PHOENIX_ADAPT_FUNCTION(void, start, ConfigurationParserActions::start, 2);

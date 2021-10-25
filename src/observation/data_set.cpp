@@ -42,7 +42,7 @@ namespace l = boost::lambda;
 #ifdef BOOST_SPIRIT_DEBUG
 namespace std {
   static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetEntry &t);
-  
+
   static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetValue &t)
   {
     using namespace mtconnect::observation;
@@ -75,11 +75,10 @@ using namespace std;
 
 namespace mtconnect {
   namespace observation {
-    namespace DataSetParserActions
-    {
+    namespace DataSetParserActions {
       inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
       inline static void make_entry_f(DataSetEntry &entry, const string &key,
-                               const boost::optional<DataSetValue> &v)
+                                      const boost::optional<DataSetValue> &v)
       {
         entry.m_key = key;
         if (v && !holds_alternative<monostate>(*v))
@@ -88,7 +87,7 @@ namespace mtconnect {
           entry.m_removed = true;
       }
       inline static void make_entry_f(DataSetEntry &entry, const string &key,
-                               const boost::optional<DataSet> &v)
+                                      const boost::optional<DataSet> &v)
       {
         entry.m_key = key;
         if (v)
@@ -96,7 +95,7 @@ namespace mtconnect {
         else
           entry.m_removed = true;
       }
-    };
+    };  // namespace DataSetParserActions
     BOOST_PHOENIX_ADAPT_FUNCTION(void, add_entry, DataSetParserActions::add_entry_f, 2);
     BOOST_PHOENIX_ADAPT_FUNCTION(void, make_entry, DataSetParserActions::make_entry_f, 3);
 
@@ -104,23 +103,22 @@ namespace mtconnect {
     class DataSetParser : public qi::grammar<It, DataSet()>
     {
     protected:
-      template<typename P, typename O, typename R>
-      void logError(P &params, O &obj, R& result)
+      template <typename P, typename O, typename R>
+      void logError(P &params, O &obj, R &result)
       {
         using namespace boost::fusion;
 
         auto &start = at_c<0>(params);
         auto &end = at_c<1>(params);
-        //auto &what = at_c<2>(params);
+        // auto &what = at_c<2>(params);
         auto &expected = at_c<3>(params);
-        
-        std::string text(start, end);
-        
-        LOG(error) << "Error when parsing DataSet, expecting '" << expected << "' when parsing '"
-                  << text << '\'';
 
+        std::string text(start, end);
+
+        LOG(error) << "Error when parsing DataSet, expecting '" << expected << "' when parsing '"
+                   << text << '\'';
       }
-      
+
     public:
       DataSetParser(bool table) : DataSetParser::base_type(m_start)
       {
@@ -142,21 +140,21 @@ namespace mtconnect {
         m_simple %= lexeme[+(char_ - (char_("\"'{}") | space))];
 
         m_quoted %= (omit[char_("\"'")[_a = _1]] >>
-                    as_string[*((lit('\\') >> (char_(_a))) | char_ - lit(_a))]) > lit(_a);
+                     as_string[*((lit('\\') >> (char_(_a))) | char_ - lit(_a))]) > lit(_a);
 
-        m_braced %= (lit('{') >>
-                    as_string[*((lit('\\') >> char_('}')) | char_ - lit('}'))]) >
-                    lit('}');
+        m_braced %=
+            (lit('{') >> as_string[*((lit('\\') >> char_('}')) | char_ - lit('}'))]) > lit('}');
 
         m_entry = (m_key >> -("=" >> -m_value))[make_entry(_val, _1, _2)];
 
         // Table support with quoted and braced content
-        m_quotedDataSet =
-            (char_("\"'")[_a = _1] >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit(_a);
+        m_quotedDataSet = (char_("\"'")[_a = _1] >> *space >>
+                           *(m_entry[add_entry(_val, _1)] >> *space)) > lit(_a);
         m_bracedDataSet =
             (lit('{') >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit('}');
         m_tableValue %= (m_quotedDataSet | m_bracedDataSet);
-        m_tableEntry = (m_key >> -("=" > &(space | lit('{') | '\'' | '"' ) >> -m_tableValue))[make_entry(_val, _1, _2)];
+        m_tableEntry = (m_key >> -("=" > &(space | lit('{') | '\'' | '"') >>
+                                   -m_tableValue))[make_entry(_val, _1, _2)];
 
         if (table)
         {
@@ -185,15 +183,13 @@ namespace mtconnect {
 
         using namespace boost::fusion;
 
-        on_error<fail>(m_entry, [&](auto &params, auto &obj, auto &result) {
-          logError(params, obj, result);
-        });
+        on_error<fail>(
+            m_entry, [&](auto &params, auto &obj, auto &result) { logError(params, obj, result); });
         on_error<fail>(m_tableEntry, [&](auto &params, auto &obj, auto &result) {
           logError(params, obj, result);
         });
-        on_error<fail>(m_start, [&](auto &params, auto &obj, auto &result) {
-          logError(params, obj, result);
-        });
+        on_error<fail>(
+            m_start, [&](auto &params, auto &obj, auto &result) { logError(params, obj, result); });
       }
 
     protected:

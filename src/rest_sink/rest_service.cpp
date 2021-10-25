@@ -944,11 +944,10 @@ namespace mtconnect {
       }
 
       m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type);
-      return {
-        status::ok,
-        printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                             m_sinkContract->getAssetStorage()->getCount(), list),
-        printer->mimeType()};
+      return {status::ok,
+              printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
+                                   m_sinkContract->getAssetStorage()->getCount(), list),
+              printer->mimeType()};
     }
 
     Response RestService::assetIdsRequest(const Printer *printer, const std::list<std::string> &ids)

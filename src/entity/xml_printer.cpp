@@ -124,8 +124,7 @@ namespace mtconnect {
                                         }},
                                     c.m_value);
                             }
-                          }
-        },
+                          }},
               e.m_value);
       }
     }
