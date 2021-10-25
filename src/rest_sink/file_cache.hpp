@@ -63,15 +63,13 @@ namespace mtconnect {
 
       void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
       auto getMaxCachedFileSize() const { return m_maxCachedFileSize; }
-      
+
       // For testing
-      void clear() {
-        m_fileCache.clear();
-      }
+      void clear() { m_fileCache.clear(); }
 
     protected:
-      CachedFilePtr findFileInDirectories(const std::string &name,
-                                          const std::optional<std::string> acceptEncoding = std::nullopt);
+      CachedFilePtr findFileInDirectories(
+          const std::string &name, const std::optional<std::string> acceptEncoding = std::nullopt);
       const std::string &getMimeType(std::string ext)
       {
         static std::string octStream("application/octet-stream");

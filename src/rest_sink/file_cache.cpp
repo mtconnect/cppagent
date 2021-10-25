@@ -227,7 +227,8 @@ namespace mtconnect {
       return nullptr;
     }
 
-    CachedFilePtr FileCache::getFile(const std::string &name, const std::optional<std::string> acceptEncoding)
+    CachedFilePtr FileCache::getFile(const std::string &name,
+                                     const std::optional<std::string> acceptEncoding)
     {
       try
       {

@@ -113,6 +113,90 @@ TEST_F(DataSetTest, InitialSet)
   ASSERT_EQ(4, get<int64_t>(ds2.find("d"_E)->m_value));
 }
 
+TEST_F(DataSetTest, parser_simple_formats)
+{
+  DataSet s1;
+  ASSERT_TRUE(s1.parse("a=10 b=2.0 c=\"abcd\" d= e", false));
+  
+  ASSERT_EQ(5, s1.size());
+  ASSERT_EQ(10, get<int64_t>(s1.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(s1.find("b"_E)->m_value));
+  ASSERT_EQ("abcd", get<string>(s1.find("c"_E)->m_value));
+  ASSERT_TRUE(s1.find("d"_E)->m_removed);
+  ASSERT_TRUE(s1.find("e"_E)->m_removed);
+}
+  
+TEST_F(DataSetTest, parser_test_with_braces)
+{
+  DataSet s2;
+  ASSERT_TRUE(s2.parse("abc={ abc 123 }", false));
+  ASSERT_EQ(1, s2.size());
+  ASSERT_EQ(" abc 123 ", get<string>(s2.find("abc"_E)->m_value));
+}
+
+TEST_F(DataSetTest, parser_test_with_escaped_brace)
+{
+  DataSet s3;
+  ASSERT_TRUE(s3.parse("abc={ abc \\} 123 }", false));
+  ASSERT_EQ(1, s3.size());
+  ASSERT_EQ(" abc } 123 ", get<string>(s3.find("abc"_E)->m_value));
+}
+
+TEST_F(DataSetTest, parser_test_with_escaped_quote)
+{
+  DataSet s4;
+  ASSERT_TRUE(s4.parse("abc=' abc \\' 123 '", false));
+  ASSERT_EQ(1, s4.size());
+  ASSERT_EQ(" abc ' 123 ", get<string>(s4.find("abc"_E)->m_value));
+
+}
+
+TEST_F(DataSetTest, parser_with_bad_data)
+{
+  DataSet set;
+  ASSERT_FALSE(set.parse("a=1 b=2.0 c={horses and dogs d=xxx", false));
+  ASSERT_EQ(2, set.size());
+  ASSERT_EQ(1, get<int64_t>(set.find("a"_E)->m_value));
+  ASSERT_EQ(2.0, get<double>(set.find("b"_E)->m_value));
+}
+
+TEST_F(DataSetTest, parser_with_big_data_set)
+{
+  using namespace std::chrono;
+  
+  using namespace std::filesystem;
+  path p(PROJECT_ROOT_DIR "/test/resources/big_data_set.txt");
+  auto size = std::filesystem::file_size(p);
+  char *buffer = (char*) malloc(size);
+  auto file = std::fopen(p.string().c_str(), "r");
+  size = std::fread(buffer, 1, size, file);
+  buffer[size] = '\0';
+  
+  
+  DataSet set;
+  auto start = high_resolution_clock::now();
+  ASSERT_TRUE(set.parse(buffer, false));
+  auto now = high_resolution_clock::now();
+  auto delta = floor<microseconds>(now) - floor<microseconds>(start);
+  
+  cout << "Parse duration " << (delta.count() / 1000.0) << "ms" << endl;;
+  
+  ASSERT_EQ(116, set.size());
+  
+  free(buffer);
+}
+
+TEST_F(DataSetTest, parser_with_partial_number)
+{
+  DataSet set;
+  ASSERT_TRUE(set.parse("a=1Bch b=2.x c=123 d=4.56", false));
+  ASSERT_EQ(4, set.size());
+  ASSERT_EQ("1Bch", get<string>(set.find("a"_E)->m_value));
+  ASSERT_EQ("2.x" , get<string>(set.find("b"_E)->m_value));
+  ASSERT_EQ(123 , get<int64_t>(set.find("c"_E)->m_value));
+  ASSERT_EQ(4.56 , get<double>(set.find("d"_E)->m_value));
+}
+
 TEST_F(DataSetTest, UpdateOneElement)
 {
   ErrorList errors;
