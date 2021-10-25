@@ -72,6 +72,28 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ(1000.0, get<double>((*it)->getProperty("Nominal")));
 }
 
+TEST_F(SpecificationTest, test_1_6_specification_without_id)
+{
+  m_agentTestHelper = make_unique<AgentTestHelper>();
+  m_agentTestHelper->createAgent("/samples/configuration1.6.xml",
+                                 8, 4, "1.6", 25);
+  auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
+  m_component = device->getComponentById("power");
+  
+  auto &ent = m_component->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(ent);
+
+  const auto &specs = ent->getList("Specifications");
+  ASSERT_TRUE(specs);
+  ASSERT_EQ(1, specs->size());
+  
+  auto it = specs->begin();
+
+  EXPECT_EQ("VOLTAGE_AC", (*it)->get<string>("type"));
+  EXPECT_EQ("VOLT", (*it)->get<string>("units"));
+  EXPECT_EQ("voltage", (*it)->get<string>("name"));
+}
+
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
 
