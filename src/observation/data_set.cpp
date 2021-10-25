@@ -39,6 +39,7 @@ namespace ascii = boost::spirit::ascii;
 namespace spirit = boost::spirit;
 namespace l = boost::lambda;
 
+#ifdef BOOST_SPIRIT_DEBUG
 namespace std {
   static inline ostream &operator<<(ostream &s, const mtconnect::observation::DataSetEntry &t);
   
@@ -68,30 +69,16 @@ namespace std {
   }
 
 }  // namespace std
+#endif
 
 using namespace std;
 
 namespace mtconnect {
   namespace observation {
-    struct DataSetParserActions
+    namespace DataSetParserActions
     {
       inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
-      inline static void add_value_entry_f(DataSetValue &ds, const DataSetEntry &entry)
-      {
-        if (holds_alternative<monostate>(ds))
-        {
-          ds = DataSet();
-        }
-        if (holds_alternative<DataSet>(ds))
-        {
-          get<DataSet>(ds).emplace(entry);
-        }
-        else
-        {
-          LOG(error) << "Incorrect type for data set entry of table";
-        }
-      }
-      static void make_entry_f(DataSetEntry &entry, const string &key,
+      inline static void make_entry_f(DataSetEntry &entry, const string &key,
                                const boost::optional<DataSetValue> &v)
       {
         entry.m_key = key;
@@ -100,7 +87,7 @@ namespace mtconnect {
         else
           entry.m_removed = true;
       }
-      static void make_entry_f(DataSetEntry &entry, const string &key,
+      inline static void make_entry_f(DataSetEntry &entry, const string &key,
                                const boost::optional<DataSet> &v)
       {
         entry.m_key = key;
@@ -109,16 +96,9 @@ namespace mtconnect {
         else
           entry.m_removed = true;
       }
-      template <typename Iterator>
-      static size_t pos_f(Iterator it)
-      {
-        return it.position();
-      }
     };
     BOOST_PHOENIX_ADAPT_FUNCTION(void, add_entry, DataSetParserActions::add_entry_f, 2);
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, add_value_entry, DataSetParserActions::add_value_entry_f, 2);
     BOOST_PHOENIX_ADAPT_FUNCTION(void, make_entry, DataSetParserActions::make_entry_f, 3);
-    BOOST_PHOENIX_ADAPT_FUNCTION(size_t, pos, DataSetParserActions::pos_f, 1);
 
     template <typename It>
     class DataSetParser : public qi::grammar<It, DataSet()>

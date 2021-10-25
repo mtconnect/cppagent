@@ -23,6 +23,7 @@
 #include "utilities.hpp"
 
 //#define BOOST_SPIRIT_DEBUG 1
+#ifdef BOOST_SPIRIT_DEBUG
 namespace std {
   static ostream &operator<<(ostream &s, const boost::property_tree::ptree &t);
   static inline ostream &operator<<(ostream &s,
@@ -54,6 +55,7 @@ namespace std {
     return s;
   }
 }  // namespace std
+#endif
 
 #include <boost/config/warning_disable.hpp>
 #include <boost/lambda/lambda.hpp>
@@ -75,18 +77,13 @@ using namespace std;
 
 namespace mtconnect {
   namespace configuration {
-    struct config_property
-    {
-      static void f(pair<std::string, std::string> &t, const std::string &f, const std::string &s)
+    namespace ConfigurationParserActions {
+      inline static void property(pair<std::string, std::string> &t, const std::string &f, const std::string &s)
       {
         t = make_pair(f, trim(s));
       }
-    };
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, property, config_property::f, 3);
-
-    struct config_tree
-    {
-      static void f(pair<std::string, pt::ptree> &t, const std::string &f,
+      
+      inline static void tree(pair<std::string, pt::ptree> &t, const std::string &f,
                     const vector<pair<std::string, pt::ptree>> &s)
       {
         t.first = f;
@@ -96,12 +93,8 @@ namespace mtconnect {
             t.second.push_back(a);
         }
       }
-    };
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, tree, config_tree::f, 3);
-
-    struct top
-    {
-      static void f(pt::ptree &t, const vector<pair<std::string, pt::ptree>> &s)
+      
+      inline static void start(pt::ptree &t, const vector<pair<std::string, pt::ptree>> &s)
       {
         for (const auto &a : s)
         {
@@ -109,18 +102,17 @@ namespace mtconnect {
             t.push_back(a);
         }
       }
-    };
-    BOOST_PHOENIX_ADAPT_FUNCTION(void, start, top::f, 2);
-
-    struct position
-    {
+      
       template <typename Iterator>
-      static size_t f(Iterator it)
+      inline static size_t pos(Iterator it)
       {
         return it.position();
       }
-    };
-    BOOST_PHOENIX_ADAPT_FUNCTION(size_t, pos, position::f, 1);
+    }
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, property, ConfigurationParserActions::property, 3);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, tree, ConfigurationParserActions::tree, 3);
+    BOOST_PHOENIX_ADAPT_FUNCTION(void, start, ConfigurationParserActions::start, 2);
+    BOOST_PHOENIX_ADAPT_FUNCTION(size_t, pos, ConfigurationParserActions::pos, 1);
 
     template <typename It, typename Skipper = ascii::space_type>
     class ConfigParser : public qi::grammar<It, pt::ptree(), Skipper>
