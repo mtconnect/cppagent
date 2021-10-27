@@ -109,6 +109,13 @@ namespace mtconnect {
           }
         }
 
+        if (node->nsDef)
+        {
+          auto def = node->nsDef;
+          string name {string("xmlns:") + (const char *)def->prefix};
+          properties.insert({name, string((const char *)def->href)});
+        }
+
         if (ef->hasRaw())
         {
           auto value = parseRawNode(node);

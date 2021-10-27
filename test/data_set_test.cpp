@@ -175,11 +175,12 @@ TEST_F(DataSetTest, parser_with_big_data_set)
   
   DataSet set;
   auto start = high_resolution_clock::now();
-  ASSERT_TRUE(set.parse(buffer, false));
+  for (int i = 0; i < 1000; i++)
+    ASSERT_TRUE(set.parse(buffer, false));
   auto now = high_resolution_clock::now();
   auto delta = floor<microseconds>(now) - floor<microseconds>(start);
   
-  cout << "Parse duration " << (delta.count() / 1000.0) << "ms" << endl;;
+  cout << endl << "Parse duration " << (delta.count() / 1000.0) << "ms" << endl << endl;;
   
   ASSERT_EQ(116, set.size());
   

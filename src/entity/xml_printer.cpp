@@ -174,19 +174,36 @@ namespace mtconnect {
                            const std::unordered_set<std::string> &namespaces)
     {
       NAMED_SCOPE("entity.xml_printer");
-      string qname = stripUndeclaredNamespace(entity->getName(), namespaces);
+      const auto &properties = entity->getProperties();
+      const auto order = entity->getOrder();
+      const auto *localNamespaces = &namespaces;
+
+      // If this element has a namespace and there is a xmlns delcaration, create a new set of
+      // namespaces with this one added
+      std::unique_ptr<std::unordered_set<std::string>> entityNamespaces;
+      if (entity->getName().hasNs())
+      {
+        string ns(entity->getName().getNs());
+        auto attr = properties.find(string("xmlns:") + ns);
+        if (namespaces.count(ns) == 0 && attr != properties.end())
+        {
+          entityNamespaces = make_unique<unordered_set<string>>(namespaces);
+          entityNamespaces->emplace(ns);
+          localNamespaces = entityNamespaces.get();
+        }
+      }
+
+      string qname = stripUndeclaredNamespace(entity->getName(), *localNamespaces);
       AutoElement element(writer, qname);
 
       list<Property> attributes;
       list<Property> elements;
-      auto &properties = entity->getProperties();
-      const auto order = entity->getOrder();
 
       // Partition the properties
       for (const auto &prop : properties)
       {
         auto &key = prop.first;
-        if (key != "VALUE" && key != "LIST" && islower(key[0]))
+        if (islower(key.getName()[0]))
           attributes.emplace_back(prop);
         else
           elements.emplace_back(prop);
@@ -217,16 +234,16 @@ namespace mtconnect {
 
       for (auto &e : elements)
       {
-        visit(overloaded {[&writer, &namespaces, this](const EntityPtr &v) {
-                            print(writer, v, namespaces);
+        visit(overloaded {[&writer, localNamespaces, this](const EntityPtr &v) {
+                            print(writer, v, *localNamespaces);
                           },
-                          [&writer, &namespaces, this](const EntityList &list) {
+                          [&writer, localNamespaces, this](const EntityList &list) {
                             for (auto &en : list)
-                              print(writer, en, namespaces);
+                              print(writer, en, *localNamespaces);
                           },
                           [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
-                          [&writer, &e, &namespaces](const auto &v) {
-                            printProperty(writer, e, namespaces);
+                          [&writer, &e, localNamespaces](const auto &v) {
+                            printProperty(writer, e, *localNamespaces);
                           }},
               e.second);
       }
