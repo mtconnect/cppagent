@@ -970,6 +970,7 @@ namespace mtconnect {
           m_initializers.insert_or_assign(name, init);
 
           // Register the plugin
+          NAMED_SCOPE("initialize_plugin");
           init(plugin, *this);
           return true;
         }
