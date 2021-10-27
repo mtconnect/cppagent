@@ -177,10 +177,14 @@ namespace mtconnect {
       {
         std::list<string> extra;
         for (auto &p : properties)
+        {
+          // Check that all properties are expected and if they are not, allow
+          // xml attributes through if the namespace portion starts with xml.
           if (!p.first.m_mark && (!p.first.hasNs() || p.first.getNs().find_first_of("xml") != 0))
           {
             extra.emplace_back(p.first);
           }
+        }
         
         // Check for additional properties
         if (!extra.empty())
