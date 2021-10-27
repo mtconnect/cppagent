@@ -177,8 +177,10 @@ namespace mtconnect {
       {
         std::list<string> extra;
         for (auto &p : properties)
-          if (!p.first.m_mark)
+          if (!p.first.m_mark && (!p.first.hasNs() || p.first.getNs().find_first_of("xml") != 0))
+          {
             extra.emplace_back(p.first);
+          }
         
         // Check for additional properties
         if (!extra.empty())
