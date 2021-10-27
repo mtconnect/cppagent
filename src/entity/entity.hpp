@@ -25,13 +25,13 @@
 
 namespace mtconnect {
   namespace entity {
-    struct PropertyKey : public std::string
+    struct PropertyKey : public QName
     {
-      using std::string::string;
-      PropertyKey(const PropertyKey &s) : std::string(s) {}
-      PropertyKey(const std::string &s) : std::string(s) {}
-      PropertyKey(const std::string &&s) : std::string(s) {}
-      PropertyKey(const char *s) : std::string(s) {}
+      using QName::QName;
+      PropertyKey(const PropertyKey &s) : QName(s) {}
+      PropertyKey(const std::string &s) : QName(s) {}
+      PropertyKey(const std::string &&s) : QName(s) {}
+      PropertyKey(const char *s) : QName(s) {}
 
       void clearMark() const { const_cast<PropertyKey *>(this)->m_mark = false; }
       void setMark() const { const_cast<PropertyKey *>(this)->m_mark = true; }

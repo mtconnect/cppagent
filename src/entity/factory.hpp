@@ -73,6 +73,8 @@ namespace mtconnect {
       bool isList() const { return m_isList; }
       void setHasRaw(bool raw) { m_hasRaw = raw; }
       bool hasRaw() const { return m_hasRaw; }
+      bool isAny() const { return m_any; }
+      void setAny(bool any) { m_any = any; }
       void setMinListSize(size_t size)
       {
         m_minListSize = size;
@@ -282,9 +284,12 @@ namespace mtconnect {
 
       StringFactory m_stringFactory;
       MatchFactory m_matchFactory;
+      
       bool m_isList {false};
       size_t m_minListSize {0};
       bool m_hasRaw {false};
+      bool m_any{false};
+
       std::set<std::string> m_propertySets;
       std::set<std::string> m_simpleProperties;
     };

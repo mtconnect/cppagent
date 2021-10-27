@@ -35,8 +35,8 @@ namespace mtconnect {
       else
       {
         auto ptr = make_shared<Factory>(*factory);
-        ptr->_deepCopy(factories);
         factories.emplace(factory, ptr);
+        ptr->_deepCopy(factories);
         factory = ptr;
       }
     }
@@ -173,20 +173,23 @@ namespace mtconnect {
         }
       }
 
-      std::list<string> extra;
-      for (auto &p : properties)
-        if (!p.first.m_mark)
-          extra.emplace_back(p.first);
-
-      // Check for additional properties
-      if (!m_isList && !extra.empty())
+      if (!m_any && !m_isList)
       {
-        std::stringstream os;
-        os << "The following keys were present and not expected: ";
-        for (auto &k : extra)
-          os << k << ",";
-        errors.emplace_back(new PropertyError(os.str()));
-        success = false;
+        std::list<string> extra;
+        for (auto &p : properties)
+          if (!p.first.m_mark)
+            extra.emplace_back(p.first);
+        
+        // Check for additional properties
+        if (!extra.empty())
+        {
+          std::stringstream os;
+          os << "The following keys were present and not expected: ";
+          for (auto &k : extra)
+            os << k << ",";
+          errors.emplace_back(new PropertyError(os.str()));
+          success = false;
+        }
       }
 
       return success;

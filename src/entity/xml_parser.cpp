@@ -108,6 +108,14 @@ namespace mtconnect {
                 {(const char *)attr->name, string((const char *)attr->children->content)});
           }
         }
+        
+        if (node->nsDef)
+        {
+          auto def = node->nsDef;
+          string name{string("xmlns:") + (const char*) def->prefix};
+          properties.insert(
+              {name, string((const char *) def->href)});
+        }
 
         if (ef->hasRaw())
         {
