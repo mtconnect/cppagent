@@ -82,7 +82,7 @@ set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
 
 ###########
 
-set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp)
+set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp json_helper.hpp)
 add_library(agent_test_lib STATIC ${AGENT_TEST_LIB_SOURCES})
 target_include_directories(
   agent_test_lib

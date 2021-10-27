@@ -11,6 +11,7 @@
 #include "entity.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
+#include "entity/json_printer.hpp"
 #include "xml_printer.hpp"
 
 #include <cstdio>
@@ -544,6 +545,80 @@ R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
 
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
+  
+  entity::JsonPrinter jsonPrinter;
+  auto json = jsonPrinter.print(entity);
+  
+  stringstream buffer;
+  buffer << std::setw(2);
+  buffer << json;
+  
+  EXPECT_EQ(R"({
+  "CuttingTool": {
+    "CuttingToolLifeCycle": {
+      "CutterStatus": [
+        {
+          "Status": {
+            "value": "AVAILABLE"
+          }
+        }
+      ],
+      "CuttingItems": {
+        "count": 12,
+        "list": [
+          {
+            "CuttingItem": {
+              "ItemLife": [
+                {
+                  "countDirection": "UP",
+                  "initial": 0.0,
+                  "limit": 0.0,
+                  "type": "PART_COUNT",
+                  "value": 0.0
+                },
+                {
+                  "countDirection": "UP",
+                  "initial": 0.0,
+                  "limit": 0.0,
+                  "type": "MINUTES",
+                  "value": 0.0
+                },
+                {
+                  "countDirection": "UP",
+                  "initial": 0.0,
+                  "limit": 0.0,
+                  "type": "WEAR",
+                  "value": 0.0
+                }
+              ],
+              "indices": "1",
+              "x:ItemCutterStatus": {
+                "Status": {
+                  "value": "AVAILABLE"
+                },
+                "xmlns:x": "okuma.com:OkumaToolAssets"
+              },
+              "x:ItemProgramToolGroup": {
+                "value": "0",
+                "xmlns:x": "okuma.com:OkumaToolAssets"
+              }
+            }
+          }
+        ]
+      },
+      "Location": {
+        "negativeOverlap": 0,
+        "positiveOverlap": 0,
+        "type": "POT",
+        "value": "13"
+      },
+      "ProgramToolNumber": "10"
+    },
+    "assetId": "123456.10",
+    "serialNumber": "10",
+    "toolId": "123456"
+  }
+})", buffer.str());
 }
 
 
