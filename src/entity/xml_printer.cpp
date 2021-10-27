@@ -177,7 +177,7 @@ namespace mtconnect {
       const auto &properties = entity->getProperties();
       const auto order = entity->getOrder();
       const auto *localNamespaces = &namespaces;
-      
+
       // If this element has a namespace and there is a xmlns delcaration, create a new set of
       // namespaces with this one added
       std::unique_ptr<std::unordered_set<std::string>> entityNamespaces;

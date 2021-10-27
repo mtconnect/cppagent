@@ -185,7 +185,7 @@ namespace mtconnect {
             extra.emplace_back(p.first);
           }
         }
-        
+
         // Check for additional properties
         if (!extra.empty())
         {
