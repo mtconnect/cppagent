@@ -543,7 +543,6 @@ R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
   printer.print(*m_writer, entity, {});
 
   string content = m_writer->getContent();
-  cout << content << endl;
   ASSERT_EQ(content, doc);
 }
 
