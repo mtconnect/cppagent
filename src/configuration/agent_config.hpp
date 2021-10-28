@@ -44,7 +44,7 @@ namespace mtconnect {
   namespace device_model {
     class Device;
   }
-
+  
 #ifdef WITH_PYTHON
   namespace python {
     class Embedded;
@@ -93,6 +93,8 @@ namespace mtconnect {
 
       void setLoggingLevel(const boost::log::trivial::severity_level level);
       boost::log::trivial::severity_level setLoggingLevel(const std::string &level);
+      
+      boost::log::trivial::logger_type *getLogger() { return m_logger; }
 
     protected:
       DevicePtr defaultDevice();
@@ -147,6 +149,9 @@ namespace mtconnect {
       std::map<std::string, InitializationFunction> m_initializers;
 
       int m_workerThreadCount {1};
+      
+      // Reference to the global logger
+      boost::log::trivial::logger_type *m_logger { nullptr };
     };
   }  // namespace configuration
 }  // namespace mtconnect

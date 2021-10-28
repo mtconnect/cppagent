@@ -58,6 +58,8 @@ namespace mtconnect
       
       static void register_factory(const boost::property_tree::ptree &block, configuration::AgentConfiguration &config)
       {
+        mtconnect::configuration::gAgentLogger = config.getLogger();
+        PLUGIN_LOG(debug) << "Registering adapter factory for adapter_plugin_test";
         config.getSourceFactory().registerFactory("adapter_plugin_test", &adapter_plugin_test::create);
       }
       
