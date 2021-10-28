@@ -36,9 +36,11 @@ namespace mtconnect {
       ~XmlParser() = default;
       using xmlNodePtr = _xmlNode *;
 
-      static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors);
+      static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors,
+                                    bool parseNamespaces = true);
       static EntityPtr parse(FactoryPtr factory, const std::string &document,
-                             const std::string &version, ErrorList &errors);
+                             const std::string &version, ErrorList &errors,
+                             bool parseNamespaces = true);
     };
   }  // namespace entity
 }  // namespace mtconnect

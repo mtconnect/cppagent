@@ -184,12 +184,15 @@ namespace mtconnect {
       if (entity->getName().hasNs())
       {
         string ns(entity->getName().getNs());
-        auto attr = properties.find(string("xmlns:") + ns);
-        if (namespaces.count(ns) == 0 && attr != properties.end())
+        if (namespaces.count(ns) == 0)
         {
-          entityNamespaces = make_unique<unordered_set<string>>(namespaces);
-          entityNamespaces->emplace(ns);
-          localNamespaces = entityNamespaces.get();
+          auto attr = properties.find(string("xmlns:") + ns);
+          if (namespaces.count(ns) == 0 && attr != properties.end())
+          {
+            entityNamespaces = make_unique<unordered_set<string>>(namespaces);
+            entityNamespaces->emplace(ns);
+            localNamespaces = entityNamespaces.get();
+          }
         }
       }
 
@@ -228,8 +231,13 @@ namespace mtconnect {
       for (auto &a : attributes)
       {
         string t;
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST a.first.c_str(),
-                                                        BAD_CAST toCharPtr(a.second, t)));
+        QName name(a.first);
+        bool isNsDecl = name.hasNs() && name.getNs() == "xmlns";
+        if (!isNsDecl || namespaces.count(string(name.getName())) == 0)
+        {
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST a.first.c_str(),
+                                                          BAD_CAST toCharPtr(a.second, t)));
+        }
       }
 
       for (auto &e : elements)
