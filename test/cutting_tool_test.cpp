@@ -621,4 +621,61 @@ R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
 })", buffer.str());
 }
 
+TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
+{
+  const auto doc =
+R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>AVAILABLE</Status>
+    </CutterStatus>
+    <ProgramToolNumber>10</ProgramToolNumber>
+    <Location negativeOverlap="0" positiveOverlap="0" type="POT">13</Location>
+    <CuttingItems count="12">
+      <CuttingItem indices="1">
+        <ItemLife countDirection="UP" initial="0" limit="0" type="PART_COUNT">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="MINUTES">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="WEAR">0</ItemLife>
+        <x:ItemCutterStatus xmlns:x="okuma.com:OkumaToolAssets">
+          <Status>AVAILABLE</Status>
+        </x:ItemCutterStatus>
+        <x:ItemProgramToolGroup xmlns:x="okuma.com:OkumaToolAssets">0</x:ItemProgramToolGroup>
+      </CuttingItem>
+    </CuttingItems>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  // Round trip test
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity, {"x"});
+  string content = m_writer->getContent();
 
+  ASSERT_EQ(content, R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>AVAILABLE</Status>
+    </CutterStatus>
+    <ProgramToolNumber>10</ProgramToolNumber>
+    <Location negativeOverlap="0" positiveOverlap="0" type="POT">13</Location>
+    <CuttingItems count="12">
+      <CuttingItem indices="1">
+        <ItemLife countDirection="UP" initial="0" limit="0" type="PART_COUNT">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="MINUTES">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="WEAR">0</ItemLife>
+        <x:ItemCutterStatus>
+          <Status>AVAILABLE</Status>
+        </x:ItemCutterStatus>
+        <x:ItemProgramToolGroup>0</x:ItemProgramToolGroup>
+      </CuttingItem>
+    </CuttingItems>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC");
+}

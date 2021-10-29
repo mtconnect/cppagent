@@ -87,7 +87,8 @@ namespace mtconnect {
       return content;
     }
 
-    EntityPtr XmlParser::parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors)
+    EntityPtr XmlParser::parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors,
+                                      bool parseNamespaces)
     {
       auto qname = nodeQName(node);
       auto ef = factory->factoryFor(qname);
@@ -109,7 +110,7 @@ namespace mtconnect {
           }
         }
 
-        if (node->nsDef)
+        if (parseNamespaces && node->nsDef)
         {
           auto def = node->nsDef;
           string name {string("xmlns:") + (const char *)def->prefix};
@@ -192,7 +193,7 @@ namespace mtconnect {
     }
 
     EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, const string &version,
-                               ErrorList &errors)
+                               ErrorList &errors, bool parseNamespaces)
     {
       NAMED_SCOPE("entity.xml_parser");
       EntityPtr entity;
@@ -208,7 +209,7 @@ namespace mtconnect {
             [](xmlDocPtr d) { xmlFreeDoc(d); });
         xmlNodePtr root = xmlDocGetRootElement(doc.get());
         if (root != nullptr)
-          entity = parseXmlNode(factory, root, errors);
+          entity = parseXmlNode(factory, root, errors, parseNamespaces);
         else
           errors.emplace_back(new EntityError("Cannot parse asset"));
       }
