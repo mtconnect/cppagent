@@ -18,6 +18,12 @@
 #include "file_cache.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/asio.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/filter/zlib.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/device/file.hpp>
+#include <boost/iostreams/copy.hpp>
 
 #include "cached_file.hpp"
 #include "logging.hpp"
@@ -156,8 +162,26 @@ namespace mtconnect {
       return ns;
     }
 
+    void FileCache::compressFile(std::filesystem::path &path,
+                                 boost::asio::io_context *context)
+    {
+      namespace fs = std::filesystem;
+      namespace io = boost::iostreams;
+      
+      fs::path pathGz(path.string() + ".gz");
+      
+      ifstream input(path, ios_base::in | ios_base::binary);
+      
+      io::filtering_ostream output;
+      output.push(io::gzip_compressor(io::gzip_params(io::gzip::best_compression)));
+      output.push(io::file_sink(pathGz, ios_base::out | ios_base::binary));
+      
+      io::copy(input, output);
+    }
+
     CachedFilePtr FileCache::findFileInDirectories(const std::string &name,
-                                                   const std::optional<std::string> acceptEncoding)
+                                                   const std::optional<std::string> acceptEncoding,
+                                                   boost::asio::io_context *context)
     {
       namespace fs = std::filesystem;
 
@@ -211,6 +235,11 @@ namespace mtconnect {
           {
             auto ext = fs::path(fileName).extension().string();
             auto size = fs::file_size(path);
+            if (size >= m_minCompressedFileSize && !contentEncoding && acceptEncoding && acceptEncoding->find("gzip") != string::npos)
+            {
+              compressFile(path, context);
+              contentEncoding.emplace("gzip");
+            }
             auto file =
                 make_shared<CachedFile>(path, getMimeType(ext), size <= m_maxCachedFileSize, size);
             file->m_contentEncoding = contentEncoding;
@@ -226,9 +255,10 @@ namespace mtconnect {
 
       return nullptr;
     }
-
+    
     CachedFilePtr FileCache::getFile(const std::string &name,
-                                     const std::optional<std::string> acceptEncoding)
+                                     const std::optional<std::string> acceptEncoding,
+                                     boost::asio::io_context *context)
     {
       try
       {

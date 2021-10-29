@@ -70,6 +70,8 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
 
 //####### CONSTANTS #######
 
@@ -396,6 +398,52 @@ namespace mtconnect {
           def);
     return option;
   }
+  
+  inline int64_t ConvertFileSize(const ConfigOptions &options, const std::string &name,
+                                    int64_t size)
+  {
+    using namespace std;
+    using boost::regex;
+    using boost::smatch;
+    
+    auto value = GetOption<string>(options, name);
+    if (value)
+    {
+      static const regex pat("([0-9]+)([GgMmKkBb]*)");
+      smatch match;
+      if (regex_match(*value, match, pat))
+      {
+        size = boost::lexical_cast<int64_t>(match[1]);
+        if (match[2].matched && match[2].first[0] != '\0')
+        {
+          switch (match[2].first[0])
+          {
+            case 'G':
+            case 'g':
+              size *= 1024;
+              
+            case 'M':
+            case 'm':
+              size *= 1024;
+              
+            case 'K':
+            case 'k':
+              size *= 1024;
+          }
+        }
+      }
+      else
+      {
+        std::stringstream msg;
+        msg << "Invalid value for " << name << ": " << *value << endl;
+        throw std::runtime_error(msg.str());
+      }
+    }
+    
+    return size;
+  }
+
+
 
   inline void AddOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
                          const ConfigOptions &entries)

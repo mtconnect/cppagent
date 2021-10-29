@@ -30,7 +30,6 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
-#include <boost/regex.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -413,41 +412,6 @@ namespace mtconnect {
       return l;
     }
 
-    static inline int ConvertFileSize(const ConfigOptions &options, const string &name,
-                                      int64_t &size)
-    {
-      static const regex pat("([0-9]+)([GgMmKkBb]*)");
-      auto value = *GetOption<string>(options, name);
-      smatch match;
-      if (regex_match(value, match, pat))
-      {
-        size = boost::lexical_cast<int64_t>(match[1]);
-        if (match[2].matched && match[2].first[0] != '\0')
-        {
-          switch (match[2].first[0])
-          {
-            case 'G':
-            case 'g':
-              size *= 1024;
-
-            case 'M':
-            case 'm':
-              size *= 1024;
-
-            case 'K':
-            case 'k':
-              size *= 1024;
-          }
-        }
-      }
-      else
-      {
-        cerr << "Invalid value for " << name << ": " << value << endl;
-      }
-
-      return size;
-    }
-
     void AgentConfiguration::configureLogger(const ptree &config)
     {
       using namespace logr::trivial;
@@ -523,7 +487,7 @@ namespace mtconnect {
             options["file_name"] = parts[2];
         }
       }
-
+      
       ConvertFileSize(options, "max_size", m_maxLogFileSize);
       ConvertFileSize(options, "rotation_size", m_logRotationSize);
       int max_index = *GetOption<int>(options, "max_index");
@@ -640,6 +604,7 @@ namespace mtconnect {
                   {configuration::PidFile, "agent.pid"s},
                   {configuration::Port, 5000},
                   {configuration::MaxCachedFileSize, "20k"s},
+                  {configuration::MinCompressFileSize, "100k"s},
                   {configuration::ServiceName, "MTConnect Agent"s},
                   {configuration::SchemaVersion,
                    to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},
