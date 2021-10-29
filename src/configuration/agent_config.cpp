@@ -89,7 +89,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", logr::attributes::utc_cl
 
 namespace mtconnect {
   namespace configuration {
-    boost::log::trivial::logger_type *gAgentLogger = nullptr;    
+    boost::log::trivial::logger_type *gAgentLogger = nullptr;
 
     AgentConfiguration::AgentConfiguration()
     {
@@ -446,7 +446,7 @@ namespace mtconnect {
 
       auto output = GetOption<string>(options, "output");
       auto level = setLoggingLevel(*GetOption<string>(options, "level"));
-      
+
       gAgentLogger = m_logger = &::boost::log::trivial::logger::get();
 
       auto formatter = expr::stream

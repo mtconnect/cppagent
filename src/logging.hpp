@@ -30,9 +30,8 @@ namespace mtconnect {
   namespace configuration {
     extern boost::log::trivial::logger_type *gAgentLogger;
   }
-}
+}  // namespace mtconnect
 
-#define PLUGIN_LOG(lvl) \
-    BOOST_LOG_STREAM_WITH_PARAMS(*mtconnect::configuration::gAgentLogger,\
-        (::boost::log::keywords::severity = ::boost::log::trivial::lvl))
-
+#define PLUGIN_LOG(lvl)                                                 \
+  BOOST_LOG_STREAM_WITH_PARAMS(*mtconnect::configuration::gAgentLogger, \
+                               (::boost::log::keywords::severity = ::boost::log::trivial::lvl))
