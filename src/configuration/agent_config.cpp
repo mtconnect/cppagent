@@ -920,7 +920,7 @@ namespace mtconnect {
 
       // Try to find the plugin in the path or the application or
       // current working directory.
-      list<fs::path> paths {dll::detail::shared_library_impl::decorate(sharedLibPath / name),
+      list<fs::path> paths {sharedLibPath / name,
                             fs::current_path() / name};
 
       for (auto path : paths)
@@ -928,7 +928,7 @@ namespace mtconnect {
         try
         {
           InitializationFunction init =
-              dll::import_alias<InitializationFn>(path,  // path to library
+              dll::import_alias<InitializationFn>(dll::detail::shared_library_impl::decorate(path),  
                                                   "initialize_plugin");
 
           // Remember this initializer so it does not get unloaded.
