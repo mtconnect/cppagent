@@ -305,6 +305,8 @@ namespace mtconnect {
                                      const std::optional<std::string> acceptEncoding,
                                      boost::asio::io_context *context)
     {
+      namespace fs = std::filesystem;
+
       try
       {
         CachedFilePtr file;
@@ -319,9 +321,13 @@ namespace mtconnect {
           }
           else
           {
+            // Cleanup files if they have changed since last cached
+            // Also remove any gzipped content as well
             auto lastWrite = std::filesystem::last_write_time(fp->m_path);
             if (lastWrite == fp->m_lastWrite)
               file = fp;
+            else if (file->m_pathGz && fs::exists(*file->m_pathGz))
+              fs::remove(*file->m_pathGz);
           }
         }
 
