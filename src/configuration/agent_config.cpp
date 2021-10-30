@@ -487,9 +487,9 @@ namespace mtconnect {
             options["file_name"] = parts[2];
         }
       }
-      
-      ConvertFileSize(options, "max_size", m_maxLogFileSize);
-      ConvertFileSize(options, "rotation_size", m_logRotationSize);
+
+      m_maxLogFileSize = ConvertFileSize(options, "max_size", m_maxLogFileSize);
+      m_logRotationSize = ConvertFileSize(options, "rotation_size", m_logRotationSize);
       int max_index = *GetOption<int>(options, "max_index");
 
       if (auto sched = GetOption<string>(options, "schedule"))

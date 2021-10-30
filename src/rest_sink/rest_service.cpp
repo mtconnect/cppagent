@@ -45,9 +45,11 @@ namespace mtconnect {
                          GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
         m_logStreamData(GetOption<bool>(options, config::LogStreams).value_or(false))
     {
-      auto maxSize = ConvertFileSize(options, mtconnect::configuration::MaxCachedFileSize, 20 * 1024);
-      auto compressSize = ConvertFileSize(options, mtconnect::configuration::MinCompressFileSize, 100 * 1024);
-      
+      auto maxSize =
+          ConvertFileSize(options, mtconnect::configuration::MaxCachedFileSize, 20 * 1024);
+      auto compressSize =
+          ConvertFileSize(options, mtconnect::configuration::MinCompressFileSize, 100 * 1024);
+
       m_fileCache.setMaxCachedFileSize(maxSize);
       m_fileCache.setMinCompressedFileSize(compressSize);
 
@@ -311,8 +313,7 @@ namespace mtconnect {
     {
       using namespace rest_sink;
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto file = m_fileCache.getFile(request->m_path, request->m_acceptsEncoding,
-                                        &m_context);
+        auto file = m_fileCache.getFile(request->m_path, request->m_acceptsEncoding, &m_context);
         if (file)
         {
           if (file->m_redirect)

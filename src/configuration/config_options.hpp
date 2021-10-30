@@ -79,6 +79,6 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(Url);
     DECLARE_CONFIGURATION(Path);
     DECLARE_CONFIGURATION(MqttTls);
-    
+
   }  // namespace configuration
 }  // namespace mtconnect

@@ -28,7 +28,7 @@ namespace boost {
   namespace asio {
     class io_context;
   }
-}
+}  // namespace boost
 
 namespace mtconnect {
   namespace rest_sink {
@@ -37,6 +37,8 @@ namespace mtconnect {
     class FileCache
     {
     public:
+      using Directory = std::pair<std::string, std::pair<std::filesystem::path, std::string>>;
+
       FileCache(size_t max = 20 * 1024);
 
       XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
@@ -73,13 +75,12 @@ namespace mtconnect {
 
       void setMinCompressedFileSize(size_t s) { m_minCompressedFileSize = s; }
       auto getMinCompressedFileSize() const { return m_minCompressedFileSize; }
-      
+
       // For testing
       void clear() { m_fileCache.clear(); }
 
     protected:
-      CachedFilePtr findFileInDirectories(
-          const std::string &name, const std::optional<std::string> acceptEncoding = std::nullopt, boost::asio::io_context *context = nullptr);
+      CachedFilePtr findFileInDirectories(const std::string &name);
       const std::string &getMimeType(std::string ext)
       {
         static std::string octStream("application/octet-stream");
@@ -89,9 +90,9 @@ namespace mtconnect {
         else
           return octStream;
       }
-      
-      void compressFile(std::filesystem::path &path,
-                        boost::asio::io_context *context);
+
+      CachedFilePtr redirect(const std::string &name, const Directory &directory);
+      void compressFile(CachedFilePtr file, boost::asio::io_context *context);
 
     protected:
       std::map<std::string, std::pair<std::filesystem::path, std::string>> m_directories;

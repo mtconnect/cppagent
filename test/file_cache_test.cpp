@@ -3,6 +3,7 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include <boost/algorithm/string.hpp>
+#include <boost/asio.hpp>
 
 #include "rest_sink/file_cache.hpp"
 
@@ -94,23 +95,81 @@ TEST_F(FileCacheTest, base_directory_should_redirect)
   ASSERT_TRUE(boost::starts_with(std::string(file->m_buffer), "<html>"));
 }
 
-TEST_F(FileCacheTest, file_cache_should_find_zipped_file)
+TEST_F(FileCacheTest, file_cache_should_compress_file)
 {
+  namespace fs = std::filesystem;
+  
+  // Cleanup
+  fs::path zipped(PROJECT_ROOT_DIR "/test/resources");
+  zipped /= "zipped_file.txt.gz";
+  if (fs::exists(zipped))
+  {
+    fs::remove(zipped);
+  }
+  
   m_cache->addDirectory("/resources", PROJECT_ROOT_DIR "/test/resources", "none.txt");
+  m_cache->setMinCompressedFileSize(1024);
   auto file = m_cache->getFile("/resources/zipped_file.txt");
   
   ASSERT_TRUE(file);
   EXPECT_EQ("text/plain", file->m_mimeType);
   EXPECT_TRUE(file->m_cached);
-  EXPECT_FALSE(file->m_contentEncoding);
-
-  m_cache->clear();
+  EXPECT_FALSE(file->m_pathGz);
   
   auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
   
   ASSERT_TRUE(gzFile);
   EXPECT_EQ("text/plain", gzFile->m_mimeType);
   EXPECT_TRUE(gzFile->m_cached);
-  EXPECT_TRUE(gzFile->m_contentEncoding);
-  EXPECT_EQ("gzip", gzFile->m_contentEncoding);
+  EXPECT_TRUE(gzFile->m_pathGz);
+
+  // Cleanup
+  if (fs::exists(zipped))
+  {
+    fs::remove(zipped);
+  }
 }
+
+TEST_F(FileCacheTest, file_cache_should_compress_file_async)
+{
+  namespace fs = std::filesystem;
+  
+  // Cleanup
+  fs::path zipped(PROJECT_ROOT_DIR "/test/resources");
+  zipped /= "zipped_file.txt.gz";
+  if (fs::exists(zipped))
+  {
+    fs::remove(zipped);
+  }
+  
+  m_cache->addDirectory("/resources", PROJECT_ROOT_DIR "/test/resources", "none.txt");
+  m_cache->setMinCompressedFileSize(1024);
+
+  boost::asio::io_context context;
+  
+  boost::asio::post(context, [&context, this]() {
+    auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s, &context);
+    
+    ASSERT_TRUE(gzFile);
+    EXPECT_EQ("text/plain", gzFile->m_mimeType);
+    EXPECT_TRUE(gzFile->m_cached);
+    EXPECT_TRUE(gzFile->m_pathGz);
+    
+    context.stop();
+  });
+  
+  bool ran { false };
+  context.post([&ran] {
+    ran = true;
+  });
+
+  context.run();
+  //EXPECT_TRUE(ran);
+
+  // Cleanup
+  if (fs::exists(zipped))
+  {
+    fs::remove(zipped);
+  }
+}
+

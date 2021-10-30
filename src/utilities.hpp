@@ -69,8 +69,8 @@ typedef unsigned __int64 uint64_t;
 #include <unistd.h>
 #endif
 
-#include <boost/property_tree/ptree.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
 
 //####### CONSTANTS #######
@@ -398,14 +398,14 @@ namespace mtconnect {
           def);
     return option;
   }
-  
+
   inline int64_t ConvertFileSize(const ConfigOptions &options, const std::string &name,
-                                    int64_t size)
+                                 int64_t size = 0)
   {
     using namespace std;
     using boost::regex;
     using boost::smatch;
-    
+
     auto value = GetOption<string>(options, name);
     if (value)
     {
@@ -421,11 +421,11 @@ namespace mtconnect {
             case 'G':
             case 'g':
               size *= 1024;
-              
+
             case 'M':
             case 'm':
               size *= 1024;
-              
+
             case 'K':
             case 'k':
               size *= 1024;
@@ -439,11 +439,9 @@ namespace mtconnect {
         throw std::runtime_error(msg.str());
       }
     }
-    
+
     return size;
   }
-
-
 
   inline void AddOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
                          const ConfigOptions &entries)

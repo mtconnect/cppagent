@@ -19,11 +19,16 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/device/file.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <boost/iostreams/filtering_stream.hpp>
-#include <boost/iostreams/device/file.hpp>
-#include <boost/iostreams/copy.hpp>
+#include <boost/system/error_code.hpp>
+
+#include <chrono>
+#include <future>
+#include <thread>
 
 #include "cached_file.hpp"
 #include "logging.hpp"
@@ -162,26 +167,97 @@ namespace mtconnect {
       return ns;
     }
 
-    void FileCache::compressFile(std::filesystem::path &path,
-                                 boost::asio::io_context *context)
+    CachedFilePtr FileCache::redirect(const std::string &name, const Directory &dir)
     {
-      namespace fs = std::filesystem;
-      namespace io = boost::iostreams;
-      
-      fs::path pathGz(path.string() + ".gz");
-      
-      ifstream input(path, ios_base::in | ios_base::binary);
-      
-      io::filtering_ostream output;
-      output.push(io::gzip_compressor(io::gzip_params(io::gzip::best_compression)));
-      output.push(io::file_sink(pathGz, ios_base::out | ios_base::binary));
-      
-      io::copy(input, output);
+      static const char *body = R"(<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>MTConnect Agent</center>
+</body>
+</html>
+)";
+
+      auto file = make_shared<CachedFile>(body, strlen(body), "text/html"s);
+      file->m_redirect = dir.first + "/" + dir.second.second;
+      m_fileCache.insert_or_assign(name, file);
+      return file;
     }
 
-    CachedFilePtr FileCache::findFileInDirectories(const std::string &name,
-                                                   const std::optional<std::string> acceptEncoding,
-                                                   boost::asio::io_context *context)
+    void FileCache::compressFile(CachedFilePtr file, boost::asio::io_context *context)
+    {
+      NAMED_SCOPE("FileCache::compressFile")
+
+      namespace fs = std::filesystem;
+      namespace io = boost::iostreams;
+      using namespace std::chrono_literals;
+
+      fs::path zipped(file->m_path.string() + ".gz");
+
+      if (!fs::exists(zipped))
+      {
+        promise<bool> promise;
+        auto future = promise.get_future();
+
+        thread work([file, &zipped, &promise, context] {
+          try
+          {
+            NAMED_SCOPE("work");
+            LOG(debug) << "gzipping " << file->m_path << " to " << zipped;
+
+            ifstream input(file->m_path, ios_base::in | ios_base::binary);
+
+            io::filtering_ostream output;
+            output.push(io::gzip_compressor(io::gzip_params(io::gzip::best_compression)));
+            output.push(io::file_sink(zipped, ios_base::out | ios_base::binary));
+
+            io::copy(input, output);
+
+            promise.set_value(true);
+
+            LOG(debug) << "done";
+          }
+          catch (...)
+          {
+            LOG(error) << "Error occurred compressing file " << file->m_path;
+            promise.set_exception(std::current_exception());
+          }
+
+          if (context != nullptr)
+          {
+            boost::asio::post(*context, [] {});
+          }
+        });
+
+        if (context)
+        {
+          while (future.wait_for(1ms) == std::future_status::timeout)
+            context->run_one_for(1s);
+        }
+
+        try
+        {
+          if (future.get())
+            file->m_pathGz.emplace(zipped);
+        }
+        catch (std::runtime_error &e)
+        {
+          LOG(error) << "Error occurred compressing: " << e.what();
+        }
+        catch (...)
+        {
+          LOG(error) << "Error occurred gettting future for " << file->m_path;
+        }
+
+        work.join();
+      }
+      else if (!file->m_pathGz)
+      {
+        file->m_pathGz.emplace(zipped);
+      }
+    }
+
+    CachedFilePtr FileCache::findFileInDirectories(const std::string &name)
     {
       namespace fs = std::filesystem;
 
@@ -192,19 +268,7 @@ namespace mtconnect {
           auto fileName = boost::erase_first_copy(name, dir.first);
           if (fileName.empty())
           {
-            static const char *body = R"(<html>
-<head><title>301 Moved Permanently</title></head>
-<body>
-<center><h1>301 Moved Permanently</h1></center>
-<hr><center>MTConnect Agent</center>
-</body>
-</html>
-)";
-
-            auto file = make_shared<CachedFile>(body, strlen(body), "text/html"s);
-            file->m_redirect = dir.first + "/" + dir.second.second;
-            m_fileCache.insert_or_assign(name, file);
-            return file;
+            return redirect(name, dir);
           }
 
           if (fileName[0] == '/')
@@ -216,80 +280,82 @@ namespace mtconnect {
           }
 
           optional<string> contentEncoding;
-          fs::path path;
-          if (acceptEncoding && acceptEncoding->find("gzip") != string::npos)
-          {
-            fs::path zipped = dir.second.first / (fileName + ".gz");
-            if (fs::exists(zipped))
-            {
-              path = zipped;
-              contentEncoding.emplace("gzip");
-            }
-          }
+          fs::path path {dir.second.first / fileName};
 
-          if (path.empty())
-          {
-            path = dir.second.first / fileName;
-          }
           if (fs::exists(path))
           {
-            auto ext = fs::path(fileName).extension().string();
             auto size = fs::file_size(path);
-            if (size >= m_minCompressedFileSize && !contentEncoding && acceptEncoding && acceptEncoding->find("gzip") != string::npos)
-            {
-              compressFile(path, context);
-              contentEncoding.emplace("gzip");
-            }
+            auto ext = path.extension().string();
+
             auto file =
                 make_shared<CachedFile>(path, getMimeType(ext), size <= m_maxCachedFileSize, size);
-            file->m_contentEncoding = contentEncoding;
+
             m_fileCache.insert_or_assign(name, file);
             return file;
-          }
-          else
-          {
-            LOG(warning) << "Cannot find file: " << path;
           }
         }
       }
 
+      LOG(warning) << "Cannot find file: " << name;
+
       return nullptr;
     }
-    
+
     CachedFilePtr FileCache::getFile(const std::string &name,
                                      const std::optional<std::string> acceptEncoding,
                                      boost::asio::io_context *context)
     {
       try
       {
-        auto file = m_fileCache.find(name);
-        if (file != m_fileCache.end())
+        CachedFilePtr file;
+
+        auto cached = m_fileCache.find(name);
+        if (cached != m_fileCache.end())
         {
-          auto fp = file->second;
+          auto fp = cached->second;
           if (!fp->m_cached || fp->m_redirect)
           {
-            return fp;
+            file = fp;
           }
           else
           {
             auto lastWrite = std::filesystem::last_write_time(fp->m_path);
             if (lastWrite == fp->m_lastWrite)
-              return fp;
+              file = fp;
           }
         }
 
-        auto path = m_fileMap.find(name);
-        if (path != m_fileMap.end())
+        if (!file)
         {
-          auto ext = path->second.extension().string();
-          auto file = make_shared<CachedFile>(path->second, getMimeType(ext));
-          m_fileCache.insert_or_assign(name, file);
-          return file;
+          auto path = m_fileMap.find(name);
+          if (path != m_fileMap.end())
+          {
+            auto ext = path->second.extension().string();
+            auto size = fs::file_size(path->second);
+            file = make_shared<CachedFile>(path->second, getMimeType(ext),
+                                           size <= m_maxCachedFileSize, size);
+            m_fileCache.insert_or_assign(name, file);
+          }
+          else
+          {
+            file = findFileInDirectories(name);
+          }
+        }
+
+        if (file)
+        {
+          if (acceptEncoding && acceptEncoding->find("gzip") != string::npos &&
+              file->m_size >= m_minCompressedFileSize)
+          {
+            compressFile(file, context);
+          }
         }
         else
         {
-          return findFileInDirectories(name, acceptEncoding);
+          LOG(warning) << "Cannot find file: " << name;
         }
+
+        return file;
       }
       catch (fs::filesystem_error e)
       {
