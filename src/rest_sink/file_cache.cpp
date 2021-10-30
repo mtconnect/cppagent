@@ -131,7 +131,7 @@ namespace mtconnect {
       // Make sure the uri is using /
       string gen;
       gen.resize(uri.size());
-      replace_copy(uri.begin(), uri.end(), gen.begin(), L'\\', L'/');
+      replace_copy(uri.begin(), uri.end(), gen.begin(), '\\', '/');
 
       m_fileMap.emplace(gen, fs::absolute(path));
       string name = path.filename().string();
