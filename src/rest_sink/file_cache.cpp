@@ -209,7 +209,7 @@ namespace mtconnect {
 
             io::filtering_ostream output;
             output.push(io::gzip_compressor(io::gzip_params(io::gzip::best_compression)));
-            output.push(io::file_sink(zipped, ios_base::out | ios_base::binary));
+            output.push(io::file_sink(zipped.string(), ios_base::out | ios_base::binary));
 
             io::copy(input, output);
 
