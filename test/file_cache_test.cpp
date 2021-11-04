@@ -173,3 +173,67 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_async)
   }
 }
 
+TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
+{
+  namespace fs = std::filesystem;
+  namespace ch = std::chrono;
+  
+  // Cleanup
+  fs::path zipped(PROJECT_ROOT_DIR "/test/resources");
+  zipped /= "zipped_file.txt.gz";
+  if (fs::exists(zipped))
+  {
+    fs::remove(zipped);
+  }
+  
+  m_cache->addDirectory("/resources", PROJECT_ROOT_DIR "/test/resources", "none.txt");
+  m_cache->setMinCompressedFileSize(1024);
+  auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  
+  ASSERT_TRUE(gzFile);
+  EXPECT_EQ("text/plain", gzFile->m_mimeType);
+  EXPECT_TRUE(gzFile->m_cached);
+  EXPECT_TRUE(gzFile->m_pathGz);
+  
+  ASSERT_TRUE(fs::exists(*gzFile->m_pathGz));
+  
+  auto zipTime = fs::last_write_time(*gzFile->m_pathGz);
+  auto fileTime = fs::last_write_time(gzFile->m_path);
+  ASSERT_GT(zipTime, fileTime);
+  
+  std::this_thread::sleep_for(1s);
+  auto now = ch::system_clock::to_time_t(ch::system_clock::now());
+  auto fsnow2 = fs::file_time_type::clock::from_time_t(now);
+  fs::last_write_time(gzFile->m_path, fsnow2);
+  auto gzFile2 = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  ASSERT_TRUE(gzFile2);
+
+  auto zipTime2 = fs::last_write_time(*gzFile->m_pathGz);
+  ASSERT_GT(zipTime2, zipTime);
+  
+  auto fileTime2 = fs::last_write_time(gzFile->m_path);
+  ASSERT_GT(zipTime2, fileTime2);
+  
+  m_cache->clear();
+  
+  std::this_thread::sleep_for(1s);
+  
+  now = ch::system_clock::to_time_t(ch::system_clock::now());
+  auto fsnow3 = fs::file_time_type::clock::from_time_t(now);
+  fs::last_write_time(gzFile->m_path, fsnow3);
+  auto gzFile3 = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
+  ASSERT_TRUE(gzFile3);
+
+  auto zipTime3 = fs::last_write_time(*gzFile->m_pathGz);
+  ASSERT_GT(zipTime3, zipTime2);
+  
+  auto fileTime3 = fs::last_write_time(gzFile->m_path);
+  ASSERT_GT(zipTime3, fileTime3);
+
+  // Cleanup
+  if (fs::exists(zipped))
+  {
+    fs::remove(zipped);
+  }
+
+}

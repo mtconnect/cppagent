@@ -251,9 +251,17 @@ namespace mtconnect {
 
         work.join();
       }
-      else if (!file->m_pathGz)
+      else
       {
-        file->m_pathGz.emplace(zipped);
+        if (fs::last_write_time(file->m_path) > fs::last_write_time(zipped))
+        {
+          fs::remove(zipped);
+          compressFile(file, context);
+        }
+        else if (!file->m_pathGz)
+        {
+          file->m_pathGz.emplace(zipped);
+        }
       }
     }
 
@@ -326,8 +334,8 @@ namespace mtconnect {
             auto lastWrite = std::filesystem::last_write_time(fp->m_path);
             if (lastWrite == fp->m_lastWrite)
               file = fp;
-            else if (file->m_pathGz && fs::exists(*file->m_pathGz))
-              fs::remove(*file->m_pathGz);
+            else if (fp->m_pathGz && fs::exists(*fp->m_pathGz))
+              fs::remove(*fp->m_pathGz);
           }
         }
 
