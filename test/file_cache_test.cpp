@@ -222,6 +222,7 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
   
   std::this_thread::sleep_for(1s);
   fs::last_write_time(gzFile->m_path, fileTimeNow());
+  std::this_thread::sleep_for(1s);
   auto gzFile2 = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
   ASSERT_TRUE(gzFile2);
 
@@ -234,8 +235,8 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
   m_cache->clear();
   
   std::this_thread::sleep_for(1s);
-  
   fs::last_write_time(gzFile->m_path, fileTimeNow());
+  std::this_thread::sleep_for(1s);
   auto gzFile3 = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
   ASSERT_TRUE(gzFile3);
 
