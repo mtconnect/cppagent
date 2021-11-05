@@ -178,7 +178,7 @@ static inline void touch(const std::filesystem::path &file)
   namespace fs = std::filesystem;
   namespace ch = std::chrono;
 
-#ifdef _WINDOWS
+#ifndef __APPLE__
   auto now = fs::file_time_type::clock::now();
 #else
   auto scnow = ch::system_clock::to_time_t(ch::system_clock::now());
