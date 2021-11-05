@@ -265,6 +265,15 @@ namespace mtconnect {
         }
         else
           res = EntityPtr();
+        
+        if (!errors.empty())
+        {
+          LOG(debug) << "Could not parse asset: " << body;
+          for (auto &e : errors)
+          {
+            LOG(debug) << "    Message: " << e->what();
+          }
+        }
       }
       else
       {
