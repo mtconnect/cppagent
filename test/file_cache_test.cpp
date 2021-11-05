@@ -14,7 +14,9 @@
 #include <sstream>
 #include <string>
 
+#ifndef _WINDOWS
 #include <sys/time.h>
+#endif
 
 using namespace std;
 using namespace mtconnect;
