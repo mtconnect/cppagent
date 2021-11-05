@@ -173,6 +173,25 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_async)
   }
 }
 
+#ifdef _WINDOWS
+static inline std::chrono::time_point<std::filesystem::file_time_type::clock> fileTimeNow()
+{
+  namespace fs = std::filesystem;
+  namespace ch = std::chrono;
+
+  return fs::file_time_type::clock::now();
+}
+#else
+static inline std::chrono::time_point<std::filesystem::file_time_type::clock> fileTimeNow()
+{
+  namespace fs = std::filesystem;
+  namespace ch = std::chrono;
+
+  auto now = ch::system_clock::to_time_t(ch::system_clock::now());
+  return fs::file_time_type::clock::from_time_t(now);
+}
+#endif
+
 TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
 {
   namespace fs = std::filesystem;
@@ -202,9 +221,7 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
   ASSERT_GT(zipTime, fileTime);
   
   std::this_thread::sleep_for(1s);
-  auto now = ch::system_clock::to_time_t(ch::system_clock::now());
-  auto fsnow2 = fs::file_time_type::clock::from_time_t(now);
-  fs::last_write_time(gzFile->m_path, fsnow2);
+  fs::last_write_time(gzFile->m_path, fileTimeNow());
   auto gzFile2 = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
   ASSERT_TRUE(gzFile2);
 
@@ -218,9 +235,7 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
   
   std::this_thread::sleep_for(1s);
   
-  now = ch::system_clock::to_time_t(ch::system_clock::now());
-  auto fsnow3 = fs::file_time_type::clock::from_time_t(now);
-  fs::last_write_time(gzFile->m_path, fsnow3);
+  fs::last_write_time(gzFile->m_path, fileTimeNow());
   auto gzFile3 = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
   ASSERT_TRUE(gzFile3);
 
