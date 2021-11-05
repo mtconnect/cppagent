@@ -106,10 +106,10 @@ namespace mtconnect {
       size_t m_size {0};
       std::string m_mimeType;
       std::filesystem::path m_path;
+      std::optional<std::filesystem::path> m_pathGz;
       bool m_cached {true};
       std::filesystem::file_time_type m_lastWrite;
       std::optional<std::string> m_redirect;
-      std::optional<std::string> m_contentEncoding;
     };
   }  // namespace rest_sink
 }  // namespace mtconnect

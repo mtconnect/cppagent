@@ -45,33 +45,13 @@ namespace mtconnect {
                          GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
         m_logStreamData(GetOption<bool>(options, config::LogStreams).value_or(false))
     {
-      auto maxSize = GetOption<string>(options, mtconnect::configuration::MaxCachedFileSize);
-      if (maxSize)
-      {
-        const std::regex sizeReg("([0-9]+)([KkMmGg])?");
-        std::smatch match;
-        if (std::regex_match(*maxSize, match, sizeReg) && match.size() >= 1)
-        {
-          size_t maxCached = stoll(match[1]);
-          if (match[2].matched)
-          {
-            auto v = match[2];
-            switch (v.str()[0])
-            {
-              case 'G':
-              case 'g':
-                maxCached *= 1024;
-              case 'M':
-              case 'm':
-                maxCached *= 1024;
-              case 'K':
-              case 'k':
-                maxCached *= 1024;
-            }
-          }
-          m_fileCache.setMaxCachedFileSize(maxCached);
-        }
-      }
+      auto maxSize =
+          ConvertFileSize(options, mtconnect::configuration::MaxCachedFileSize, 20 * 1024);
+      auto compressSize =
+          ConvertFileSize(options, mtconnect::configuration::MinCompressFileSize, 100 * 1024);
+
+      m_fileCache.setMaxCachedFileSize(maxSize);
+      m_fileCache.setMinCompressedFileSize(compressSize);
 
       // Unique id number for agent instance
       m_instanceId = getCurrentTimeInSec();
@@ -333,7 +313,7 @@ namespace mtconnect {
     {
       using namespace rest_sink;
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto file = m_fileCache.getFile(request->m_path, request->m_acceptsEncoding);
+        auto file = m_fileCache.getFile(request->m_path, request->m_acceptsEncoding, &m_context);
         if (file)
         {
           if (file->m_redirect)

@@ -50,6 +50,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(TlsVerifyClientCertificate);
     DECLARE_CONFIGURATION(TlsClientCAs);
     DECLARE_CONFIGURATION(MaxCachedFileSize);
+    DECLARE_CONFIGURATION(MinCompressFileSize);
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);
@@ -78,5 +79,6 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(Url);
     DECLARE_CONFIGURATION(Path);
     DECLARE_CONFIGURATION(MqttTls);
+
   }  // namespace configuration
 }  // namespace mtconnect

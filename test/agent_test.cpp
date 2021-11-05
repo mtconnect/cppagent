@@ -388,6 +388,7 @@ TEST_F(AgentTest, FileDownload)
 
   // Register a file with the agent.
   auto rest = m_agentTestHelper->getRestService();
+  rest->getFileCache()->setMaxCachedFileSize(100 * 1024);
   rest->getFileCache()->registerFile(uri, string(PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd"), "1.1");
 
   // Reqyest the file...

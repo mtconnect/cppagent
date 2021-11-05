@@ -371,6 +371,7 @@ namespace mtconnect {
 
       using namespace std;
       using namespace http;
+      namespace fs = std::filesystem;
 
       m_complete = complete;
 
@@ -378,7 +379,19 @@ namespace mtconnect {
       {
         beast::error_code ec;
         http::file_body::value_type body;
-        body.open(response.m_file->m_path.string().c_str(), beast::file_mode::scan, ec);
+        fs::path path;
+        optional<string> encoding;
+        if (m_request->m_acceptsEncoding.find("gzip") != string::npos && response.m_file->m_pathGz)
+        {
+          encoding.emplace("gzip");
+          path = *response.m_file->m_pathGz;
+        }
+        else
+        {
+          path = response.m_file->m_path;
+        }
+
+        body.open(path.string().c_str(), beast::file_mode::scan, ec);
 
         // Handle the case where the file doesn't exist
         if (ec == beast::errc::no_such_file_or_directory)
@@ -388,9 +401,9 @@ namespace mtconnect {
             std::piecewise_construct, std::make_tuple(std::move(body)),
             std::make_tuple(response.m_status, 11));
         res->set(http::field::content_type, response.m_mimeType);
-        if (response.m_file->m_contentEncoding)
-          res->set(http::field::content_encoding, *response.m_file->m_contentEncoding);
         res->content_length(body.size());
+        if (encoding)
+          res->set(http::field::content_encoding, "gzip");
         addHeaders(response, res);
 
         m_response = res;

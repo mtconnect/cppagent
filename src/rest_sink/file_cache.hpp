@@ -24,6 +24,12 @@
 
 #include "cached_file.hpp"
 
+namespace boost {
+  namespace asio {
+    class io_context;
+  }
+}  // namespace boost
+
 namespace mtconnect {
   namespace rest_sink {
     using XmlNamespace = std::pair<std::string, std::string>;
@@ -31,6 +37,8 @@ namespace mtconnect {
     class FileCache
     {
     public:
+      using Directory = std::pair<std::string, std::pair<std::filesystem::path, std::string>>;
+
       FileCache(size_t max = 20 * 1024);
 
       XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
@@ -47,7 +55,8 @@ namespace mtconnect {
                                                const std::filesystem::path &path,
                                                const std::string &version);
       CachedFilePtr getFile(const std::string &name,
-                            const std::optional<std::string> acceptEncoding = std::nullopt);
+                            const std::optional<std::string> acceptEncoding = std::nullopt,
+                            boost::asio::io_context *context = nullptr);
       bool hasFile(const std::string &name) const
       {
         return (m_fileCache.count(name) > 0) || (m_fileMap.count(name) > 0);
@@ -64,12 +73,14 @@ namespace mtconnect {
       void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
       auto getMaxCachedFileSize() const { return m_maxCachedFileSize; }
 
+      void setMinCompressedFileSize(size_t s) { m_minCompressedFileSize = s; }
+      auto getMinCompressedFileSize() const { return m_minCompressedFileSize; }
+
       // For testing
       void clear() { m_fileCache.clear(); }
 
     protected:
-      CachedFilePtr findFileInDirectories(
-          const std::string &name, const std::optional<std::string> acceptEncoding = std::nullopt);
+      CachedFilePtr findFileInDirectories(const std::string &name);
       const std::string &getMimeType(std::string ext)
       {
         static std::string octStream("application/octet-stream");
@@ -80,12 +91,16 @@ namespace mtconnect {
           return octStream;
       }
 
+      CachedFilePtr redirect(const std::string &name, const Directory &directory);
+      void compressFile(CachedFilePtr file, boost::asio::io_context *context);
+
     protected:
       std::map<std::string, std::pair<std::filesystem::path, std::string>> m_directories;
       std::map<std::string, std::filesystem::path> m_fileMap;
       std::map<std::string, CachedFilePtr> m_fileCache;
       std::map<std::string, std::string> m_mimeTypes;
       size_t m_maxCachedFileSize;
+      size_t m_minCompressedFileSize;
     };
   }  // namespace rest_sink
 }  // namespace mtconnect
