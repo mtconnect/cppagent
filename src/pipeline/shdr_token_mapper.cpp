@@ -268,10 +268,10 @@ namespace mtconnect {
         
         if (!errors.empty())
         {
-          LOG(debug) << "Could not parse asset: " << body;
+          LOG(warning) << "Could not parse asset: " << body;
           for (auto &e : errors)
           {
-            LOG(debug) << "    Message: " << e->what();
+            LOG(warning) << "    Message: " << e->what();
           }
         }
       }
