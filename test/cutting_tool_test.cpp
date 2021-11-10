@@ -472,3 +472,134 @@ TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
     ASSERT_XML_PATH_EQUAL(doc, "//m:CuttingItem[@indices='4']/m:ItemLife@limit", "0");
   }
 }
+
+TEST_F(CuttingToolTest, test_extended_cutting_item)
+{
+  const auto doc =
+R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>AVAILABLE</Status>
+    </CutterStatus>
+    <ProgramToolNumber>10</ProgramToolNumber>
+    <Location negativeOverlap="0" positiveOverlap="0" type="POT">13</Location>
+    <CuttingItems count="12">
+      <CuttingItem indices="1">
+        <ItemLife countDirection="UP" initial="0" limit="0" type="PART_COUNT">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="MINUTES">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="WEAR">0</ItemLife>
+        <x:ItemCutterStatus xmlns:x="okuma.com:OkumaToolAssets">
+          <Status>AVAILABLE</Status>
+        </x:ItemCutterStatus>
+        <x:ItemProgramToolGroup xmlns:x="okuma.com:OkumaToolAssets">0</x:ItemProgramToolGroup>
+      </CuttingItem>
+    </CuttingItems>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  auto asset = dynamic_cast<Asset*>(entity.get());
+  ASSERT_NE(nullptr, asset);
+
+  ASSERT_EQ("123456", get<string>(entity->getProperty("toolId")));
+  ASSERT_EQ("123456.10", asset->getAssetId());
+    
+  auto lifeCycle = get<EntityPtr>(asset->getProperty("CuttingToolLifeCycle"));
+  ASSERT_TRUE(lifeCycle);
+  
+  ASSERT_EQ("10", get<string>(lifeCycle->getProperty("ProgramToolNumber")));
+
+  auto itemList = lifeCycle->getList("CuttingItems");
+  ASSERT_EQ(1, itemList->size());
+
+  auto &item = *itemList->begin();
+  ASSERT_EQ("1", get<string>(item->getProperty("indices")));
+
+  auto life = get<EntityList>(item->getProperty("ItemLife"));
+  ASSERT_EQ(3, life.size());
+  
+  auto cutterStatus = get<EntityPtr>(item->getProperty("x:ItemCutterStatus"));
+  ASSERT_TRUE(cutterStatus);
+  ASSERT_EQ("okuma.com:OkumaToolAssets", get<string>(cutterStatus->getProperty("xmlns:x")));
+
+  auto status = get<EntityPtr>(cutterStatus->getProperty("Status"));
+  ASSERT_EQ("AVAILABLE", status->getValue<string>());
+  
+  auto toolGroup = get<EntityPtr>(item->getProperty("x:ItemProgramToolGroup"));
+  ASSERT_TRUE(toolGroup);
+  ASSERT_EQ("okuma.com:OkumaToolAssets", get<string>(toolGroup->getProperty("xmlns:x")));
+
+  ASSERT_EQ("0", toolGroup->getValue<string>());
+
+  // Round trip test
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity, {});
+
+  string content = m_writer->getContent();
+  ASSERT_EQ(content, doc);  
+}
+
+TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
+{
+  const auto doc =
+R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>AVAILABLE</Status>
+    </CutterStatus>
+    <ProgramToolNumber>10</ProgramToolNumber>
+    <Location negativeOverlap="0" positiveOverlap="0" type="POT">13</Location>
+    <CuttingItems count="12">
+      <CuttingItem indices="1">
+        <ItemLife countDirection="UP" initial="0" limit="0" type="PART_COUNT">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="MINUTES">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="WEAR">0</ItemLife>
+        <x:ItemCutterStatus xmlns:x="okuma.com:OkumaToolAssets">
+          <Status>AVAILABLE</Status>
+        </x:ItemCutterStatus>
+        <x:ItemProgramToolGroup xmlns:x="okuma.com:OkumaToolAssets">0</x:ItemProgramToolGroup>
+      </CuttingItem>
+    </CuttingItems>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC";
+  
+  ErrorList errors;
+  entity::XmlParser parser;
+  
+  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+  
+  // Round trip test
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity, {"x"});
+  string content = m_writer->getContent();
+
+  ASSERT_EQ(content, R"DOC(<CuttingTool assetId="123456.10" serialNumber="10" toolId="123456">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>AVAILABLE</Status>
+    </CutterStatus>
+    <ProgramToolNumber>10</ProgramToolNumber>
+    <Location negativeOverlap="0" positiveOverlap="0" type="POT">13</Location>
+    <CuttingItems count="12">
+      <CuttingItem indices="1">
+        <ItemLife countDirection="UP" initial="0" limit="0" type="PART_COUNT">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="MINUTES">0</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="WEAR">0</ItemLife>
+        <x:ItemCutterStatus>
+          <Status>AVAILABLE</Status>
+        </x:ItemCutterStatus>
+        <x:ItemProgramToolGroup>0</x:ItemProgramToolGroup>
+      </CuttingItem>
+    </CuttingItems>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC");
+}

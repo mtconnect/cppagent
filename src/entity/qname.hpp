@@ -17,10 +17,12 @@
 
 #pragma once
 
-namespace mtconnect
-{
-  namespace entity
-  {
+#include <optional>
+#include <string>
+#include <string_view>
+
+namespace mtconnect {
+  namespace entity {
     class QName : public std::string
     {
     public:
@@ -31,33 +33,38 @@ namespace mtconnect
         m_nsLen = ns.length();
       }
 
-      QName(const std::string &qname)
+      QName(const std::string &qname) { setQName(qname); }
+
+      void setQName(const std::string &qname, const std::optional<std::string> &ns = std::nullopt)
       {
-        setQName(qname);
-      }
-      
-      void setQName(const std::string &qname)
-      {
-        assign(qname);
-        if (auto pos = find(':'); pos != npos)
+        if (ns)
         {
-          m_nsLen = pos;
+          assign(*ns + ":" + qname);
+          m_nsLen = ns->length();
         }
         else
         {
-          m_nsLen = 0;
+          assign(qname);
+          if (auto pos = find(':'); pos != npos)
+          {
+            m_nsLen = pos;
+          }
+          else
+          {
+            m_nsLen = 0;
+          }
         }
       }
-      
+
       QName(const QName &other) = default;
       ~QName() = default;
-      
+
       QName &operator=(const std::string &name)
       {
         setQName(name);
         return *this;
       }
-      
+
       void setName(const std::string &name)
       {
         if (m_nsLen == 0)
@@ -70,7 +77,7 @@ namespace mtconnect
           assign(ns + ':' + name);
         }
       }
-      
+
       bool hasNs() const { return m_nsLen > 0; }
 
       void setNs(const std::string &ns)
@@ -92,7 +99,7 @@ namespace mtconnect
         std::string::clear();
         m_nsLen = 0;
       }
-      
+
       const auto &getQName() const { return *this; }
       const std::string_view getName() const
       {
@@ -108,9 +115,23 @@ namespace mtconnect
         else
           return std::string_view(c_str(), m_nsLen);
       }
-      
+      const std::pair<std::string, std::string> getPair() const
+      {
+        if (m_nsLen > 0)
+        {
+          return {std::string(getNs()), std::string(getName())};
+        }
+        else
+        {
+          return {std::string(), *this};
+        }
+      }
+
+      std::string &str() { return *this; }
+      const std::string &str() const { return *this; }
+
     protected:
       size_t m_nsLen;
     };
-  }
-}
+  }  // namespace entity
+}  // namespace mtconnect

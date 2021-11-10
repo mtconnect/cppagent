@@ -17,19 +17,17 @@
 
 #pragma once
 
+#include <map>
+#include <utility>
+#include <vector>
+
 #include "entity.hpp"
 #include "factory.hpp"
 #include "requirement.hpp"
 #include "utilities.hpp"
 
-#include <map>
-#include <utility>
-#include <vector>
-
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class JsonParser
     {
     public:

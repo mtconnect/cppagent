@@ -15,27 +15,41 @@
 //    limitations under the License.
 //
 
-#pragma once
-
 #include <unordered_set>
 
-#include "entity.hpp"
+#include "factory.hpp"
 
-extern "C"
-{
-  using xmlTextWriter = struct _xmlTextWriter;
-  using xmlTextWriterPtr = xmlTextWriter *;
-}
+using namespace std;
 
 namespace mtconnect {
   namespace entity {
-    class XmlPrinter
+    bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
+                           ErrorList &errors)
     {
-    public:
-      XmlPrinter() = default;
+      if (!hasProperty(name))
+      {
+        entity::EntityList list {entity};
+        auto entities = factory->create(name, list, errors);
+        if (errors.empty())
+          setProperty(name, entities);
+        else
+          return false;
+      }
+      else
+      {
+        auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
+        if (entities)
+        {
+          std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
+        }
+        else
+        {
+          errors.emplace_back(new EntityError("Cannont find list for: " + name));
+          return false;
+        }
+      }
 
-      void print(xmlTextWriterPtr writer, const EntityPtr entity,
-                 const std::unordered_set<std::string> &namespaces);
-    };
+      return true;
+    }
   }  // namespace entity
 }  // namespace mtconnect

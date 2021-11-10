@@ -58,8 +58,10 @@ namespace mtconnect
           {Requirement("Measurement", ENTITY, measurement, 1, Requirement::Infinite)}));
       measurements->registerMatchers();
       measurements->registerFactory(regex(".+"), measurement);
-
+      
       static auto ext = make_shared<Factory>();
+      ext->registerFactory(regex(".+"), ext);
+      ext->setAny(true);
 
       static auto item =
           make_shared<Factory>(Requirements{{"indices", true},
@@ -72,6 +74,8 @@ namespace mtconnect
                                             {"ProgramToolGroup", false},
                                             {"Measurements", ENTITY_LIST, measurements, false}});
       item->registerFactory(regex(".+"), ext);
+      item->setAny(true);
+
       measurements->registerMatchers();
       item->setOrder({"Description", "Locus", "ItemLife", "ProgramToolGroup", "Measurements"});
 
@@ -88,6 +92,8 @@ namespace mtconnect
            Requirement("Measurements", ENTITY_LIST, measurements, false),
            Requirement("CuttingItems", ENTITY_LIST, items, false)}));
       lifeCycle->registerFactory(regex(".+"), ext);
+      lifeCycle->setAny(true);
+
       measurements->registerMatchers();
       lifeCycle->setOrder({"ReconditionCount", "ToolLife", "ProgramToolGroup", "ProgramToolNumber",
                            "ProcessSpindleSpeed", "ProcessFeedRate", "ConnectionCodeMachineSide",

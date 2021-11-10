@@ -46,14 +46,14 @@ namespace mtconnect
       g_logger << dlib::LERROR << "XML: " << buffer;
     }
 
-    string nodeQName(xmlNodePtr node)
+    inline QName nodeQName(xmlNodePtr node)
     {
-      string qname((const char *)node->name);
+      QName qname((const char *)node->name);
 
       if (node->ns && node->ns->prefix &&
           strncmp((const char *)node->ns->href, "urn:mtconnect.org:MTConnectDevices", 34u))
       {
-        qname.insert(0, (const char *)node->ns->prefix);
+        qname.setNs((const char *)node->ns->prefix);
       }
 
       return qname;
@@ -86,20 +86,21 @@ namespace mtconnect
         }
         xmlBufferFree(buf);
       }
-      Value content{nullptr};
+      Value content {nullptr};
       if (str.tellp() > 0)
         content = str.str();
       return content;
     }
 
-    EntityPtr XmlParser::parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors)
+    EntityPtr XmlParser::parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors,
+                                      bool parseNamespaces)
     {
       auto qname = nodeQName(node);
       auto ef = factory->factoryFor(qname);
       if (ef)
       {
         Properties properties;
-        EntityList *l{nullptr};
+        EntityList *l {nullptr};
         if (ef->isList())
         {
           l = &properties["LIST"].emplace<EntityList>();
@@ -112,6 +113,13 @@ namespace mtconnect
             properties.insert(
                 {(const char *)attr->name, string((const char *)attr->children->content)});
           }
+        }
+
+        if (parseNamespaces && node->nsDef)
+        {
+          auto def = node->nsDef;
+          string name {string("xmlns:") + (const char *)def->prefix};
+          properties.insert({name, string((const char *)def->href)});
         }
 
         if (ef->hasRaw())
@@ -148,7 +156,7 @@ namespace mtconnect
                   }
                   else if (ef->isPropertySet(ent->getName()))
                   {
-                    auto res = properties.try_emplace(ent->getName(), EntityList{});
+                    auto res = properties.try_emplace(ent->getName(), EntityList {});
                     get<EntityList>(res.first->second).emplace_back(ent);
                   }
                   else
@@ -190,7 +198,7 @@ namespace mtconnect
     }
 
     EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, const string &version,
-                               ErrorList &errors)
+                               ErrorList &errors, bool parseNamespaces)
     {
       EntityPtr entity;
       try
@@ -205,7 +213,7 @@ namespace mtconnect
             [](xmlDocPtr d) { xmlFreeDoc(d); });
         xmlNodePtr root = xmlDocGetRootElement(doc.get());
         if (root != nullptr)
-          entity = parseXmlNode(factory, root, errors);
+          entity = parseXmlNode(factory, root, errors, parseNamespaces);
         else
           errors.emplace_back(new EntityError("Cannot parse asset"));
       }

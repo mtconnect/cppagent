@@ -93,39 +93,42 @@ namespace mtconnect
         {
           attrs["removed"] = "true";
         }
-        visit(overloaded{[&writer, &attrs](const string &st) {
-                           addSimpleElement(writer, "Entry", st, attrs);
-                         },
-                         [&writer, &attrs](const int64_t &i) {
-                           addSimpleElement(writer, "Entry", to_string(i), attrs);
-                         },
-                         [&writer, &attrs](const double &d) {
-                           addSimpleElement(writer, "Entry", format(d), attrs);
-                         },
-                         [&writer, &attrs](const DataSet &row) {
-                           // Table
-                           AutoElement ele(writer, "Entry");
-                           addAttributes(writer, attrs);
-                           for (auto &c : row)
-                           {
-                             map<string, string> attrs = {{"key", c.m_key}};
-                             visit(overloaded{[&writer, &attrs](const string &s) {
-                                                addSimpleElement(writer, "Cell", s, attrs);
-                                              },
-                                              [&writer, &attrs](const int64_t &i) {
-                                                addSimpleElement(writer, "Cell", to_string(i),
-                                                                 attrs);
-                                              },
-                                              [&writer, &attrs](const double &d) {
-                                                addSimpleElement(writer, "Cell", format(d), attrs);
-                                              },
-                                              [](auto &a) {
+        visit(overloaded {[&writer, &attrs](const monostate &st) {
+                            addSimpleElement(writer, "Entry", "", attrs);
+                          },
+                          [&writer, &attrs](const string &st) {
+                            addSimpleElement(writer, "Entry", st, attrs);
+                          },
+                          [&writer, &attrs](const int64_t &i) {
+                            addSimpleElement(writer, "Entry", to_string(i), attrs);
+                          },
+                          [&writer, &attrs](const double &d) {
+                            addSimpleElement(writer, "Entry", format(d), attrs);
+                          },
+                          [&writer, &attrs](const DataSet &row) {
+                            // Table
+                            AutoElement ele(writer, "Entry");
+                            addAttributes(writer, attrs);
+                            for (auto &c : row)
+                            {
+                              map<string, string> attrs = {{"key", c.m_key}};
+                              visit(overloaded {
+                                        [&writer, &attrs](const string &s) {
+                                          addSimpleElement(writer, "Cell", s, attrs);
+                                        },
+                                        [&writer, &attrs](const int64_t &i) {
+                                          addSimpleElement(writer, "Cell", to_string(i), attrs);
+                                        },
+                                        [&writer, &attrs](const double &d) {
+                                          addSimpleElement(writer, "Cell", format(d), attrs);
+                                        },
+                                        [](auto &a) {
                                                 g_logger << dlib::LERROR
                                                          << "Invalid type for DataSetVariant cell";
-                                              }},
-                                   c.m_value);
-                           }
-                         }},
+                                        }},
+                                    c.m_value);
+                            }
+                          }},
               e.m_value);
       }
     }
@@ -151,7 +154,6 @@ namespace mtconnect
     void printProperty(xmlTextWriterPtr writer, const Property &p,
                        const unordered_set<string> &namespaces)
     {
-
       string t;
       const char *s = toCharPtr(p.second, t);
       if (p.first == "VALUE")
@@ -175,19 +177,39 @@ namespace mtconnect
     void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity,
                            const std::unordered_set<std::string> &namespaces)
     {
-      string qname = stripUndeclaredNamespace(entity->getName(), namespaces);
+      const auto &properties = entity->getProperties();
+      const auto order = entity->getOrder();
+      const auto *localNamespaces = &namespaces;
+
+      // If this element has a namespace and there is a xmlns delcaration, create a new set of
+      // namespaces with this one added
+      std::unique_ptr<std::unordered_set<std::string>> entityNamespaces;
+      if (entity->getName().hasNs())
+      {
+        string ns(entity->getName().getNs());
+        if (namespaces.count(ns) == 0)
+        {
+          auto attr = properties.find(string("xmlns:") + ns);
+          if (namespaces.count(ns) == 0 && attr != properties.end())
+          {
+            entityNamespaces = make_unique<unordered_set<string>>(namespaces);
+            entityNamespaces->emplace(ns);
+            localNamespaces = entityNamespaces.get();
+          }
+        }
+      }
+
+      string qname = stripUndeclaredNamespace(entity->getName(), *localNamespaces);
       AutoElement element(writer, qname);
 
       list<Property> attributes;
       list<Property> elements;
-      auto &properties = entity->getProperties();
-      const auto order = entity->getOrder();
 
       // Partition the properties
       for (const auto &prop : properties)
       {
         auto &key = prop.first;
-        if (key != "VALUE" && key != "LIST" && islower(key[0]))
+        if (islower(key.getName()[0]))
           attributes.emplace_back(prop);
         else
           elements.emplace_back(prop);
@@ -212,19 +234,28 @@ namespace mtconnect
       for (auto &a : attributes)
       {
         string t;
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST a.first.c_str(),
-                                                        BAD_CAST toCharPtr(a.second, t)));
+        QName name(a.first);
+        bool isNsDecl = name.hasNs() && name.getNs() == "xmlns";
+        if (!isNsDecl || namespaces.count(string(name.getName())) == 0)
+        {
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteAttribute(writer, BAD_CAST a.first.c_str(),
+                                                          BAD_CAST toCharPtr(a.second, t)));
+        }
       }
 
       for (auto &e : elements)
       {
-        visit(overloaded{[&writer, &namespaces, this](const EntityPtr &v) { print(writer, v, namespaces); },
-                         [&writer, &namespaces, this](const EntityList &list) {
-                           for (auto &en : list)
-                             print(writer, en, namespaces);
-                         },
-                         [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
-                         [&writer, &e, &namespaces](const auto &v) { printProperty(writer, e, namespaces); }},
+        visit(overloaded {[&writer, localNamespaces, this](const EntityPtr &v) {
+                            print(writer, v, *localNamespaces);
+                          },
+                          [&writer, localNamespaces, this](const EntityList &list) {
+                            for (auto &en : list)
+                              print(writer, en, *localNamespaces);
+                          },
+                          [&writer, &e](const DataSet &v) { printDataSet(writer, e.first, v); },
+                          [&writer, &e, localNamespaces](const auto &v) {
+                            printProperty(writer, e, *localNamespaces);
+                          }},
               e.second);
       }
     }

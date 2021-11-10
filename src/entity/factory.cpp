@@ -23,10 +23,8 @@
 
 using namespace std;
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     static dlib::logger g_logger("EntityFactory");
 
     void Factory::_dupFactory(FactoryPtr &factory, FactoryMap &factories)
@@ -39,8 +37,8 @@ namespace mtconnect
       else
       {
         auto ptr = make_shared<Factory>(*factory);
-        ptr->_deepCopy(factories);
         factories.emplace(factory, ptr);
+        ptr->_deepCopy(factories);
         factory = ptr;
       }
     }
@@ -108,7 +106,7 @@ namespace mtconnect
 
     bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
     {
-      bool success{true};
+      bool success {true};
       for (auto &p : properties)
         p.first.clearMark();
 
@@ -127,14 +125,12 @@ namespace mtconnect
           if (list.size() < m_minListSize)
           {
             errors.emplace_back(new PropertyError("The list must have at least " +
-                                                  to_string(m_minListSize) +
-                                                  " entries"));
+                                                  to_string(m_minListSize) + " entries"));
             success = false;
-
           }
         }
       }
-      
+
       for (const auto &r : m_requirements)
       {
         Properties::const_iterator p;
@@ -147,7 +143,7 @@ namespace mtconnect
           if (r.isRequired())
           {
             errors.emplace_back(new PropertyError(
-                                                  "Property " + r.getName() + " is required and not provided", r.getName()));
+                "Property " + r.getName() + " is required and not provided", r.getName()));
             success = false;
           }
         }
@@ -178,21 +174,30 @@ namespace mtconnect
           }
         }
       }
-      
-      std::list<string> extra;
-      for (auto &p : properties)
-        if (!p.first.m_mark)
-          extra.emplace_back(p.first);
 
-      // Check for additional properties
-      if (!m_isList && !extra.empty())
+      if (!m_any && !m_isList)
       {
-        std::stringstream os;
-        os << "The following keys were present and not expected: ";
-        for (auto &k : extra)
-          os << k << ",";
-        errors.emplace_back(new PropertyError(os.str()));
-        success = false;
+        std::list<string> extra;
+        for (auto &p : properties)
+        {
+          // Check that all properties are expected and if they are not, allow
+          // xml attributes through if the namespace portion starts with xml.
+          if (!p.first.m_mark && (!p.first.hasNs() || p.first.getNs().find_first_of("xml") != 0))
+          {
+            extra.emplace_back(p.first);
+          }
+        }
+
+        // Check for additional properties
+        if (!extra.empty())
+        {
+          std::stringstream os;
+          os << "The following keys were present and not expected: ";
+          for (auto &k : extra)
+            os << k << ",";
+          errors.emplace_back(new PropertyError(os.str()));
+          success = false;
+        }
       }
 
       return success;

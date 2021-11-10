@@ -17,27 +17,25 @@
 
 #pragma once
 
-#include "observation/data_set.hpp"
-#include "requirement.hpp"
-#include "qname.hpp"
-
 #include <unordered_map>
 
-namespace mtconnect
-{
-  namespace entity
-  {
-    struct PropertyKey : public std::string
+#include "observation/data_set.hpp"
+#include "qname.hpp"
+#include "requirement.hpp"
+
+namespace mtconnect {
+  namespace entity {
+    struct PropertyKey : public QName
     {
-      using std::string::string;
-      PropertyKey(const PropertyKey &s) : std::string(s) {}
-      PropertyKey(const std::string &s) : std::string(s) {}
-      PropertyKey(const std::string &&s) : std::string(s) {}
-      PropertyKey(const char *s) : std::string(s) {}
+      using QName::QName;
+      PropertyKey(const PropertyKey &s) : QName(s) {}
+      PropertyKey(const std::string &s) : QName(s) {}
+      PropertyKey(const std::string &&s) : QName(s) {}
+      PropertyKey(const char *s) : QName(s) {}
 
       void clearMark() const { const_cast<PropertyKey *>(this)->m_mark = false; }
       void setMark() const { const_cast<PropertyKey *>(this)->m_mark = true; }
-      bool m_mark{false};
+      bool m_mark {false};
     };
 
     using Properties = std::map<PropertyKey, Value>;
@@ -55,7 +53,7 @@ namespace mtconnect
       else
         return std::nullopt;
     }
-    
+
     class Entity : public std::enable_shared_from_this<Entity>
     {
     public:
@@ -63,12 +61,11 @@ namespace mtconnect
 
       Entity() {}
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
-      {
-      }
+      {}
       Entity(const Entity &entity) = default;
       virtual ~Entity() {}
 
-      EntityPtr getptr() { return shared_from_this(); }
+      EntityPtr getptr() const { return const_cast<Entity *>(this)->shared_from_this(); }
 
       bool hasListWithAttribute() const
       {
@@ -78,7 +75,7 @@ namespace mtconnect
       const Properties &getProperties() const { return m_properties; }
       const Value &getProperty(const std::string &n) const
       {
-        static Value noValue{std::monostate()};
+        static Value noValue {std::monostate()};
         auto it = m_properties.find(n);
         if (it == m_properties.end())
           return noValue;
@@ -129,6 +126,10 @@ namespace mtconnect
 
         return std::nullopt;
       }
+
+      bool addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
+                     ErrorList &errors);
+
       void setValue(const Value &v) { setProperty("VALUE", v); }
       void erase(const std::string &name) { m_properties.erase(name); }
 
@@ -161,6 +162,17 @@ namespace mtconnect
       auto erase(Properties::iterator &it) { return m_properties.erase(it); }
 
       // Entity Factory
+    protected:
+      Value &getProperty_(const std::string &name)
+      {
+        static Value noValue {std::monostate()};
+        auto it = m_properties.find(name);
+        if (it == m_properties.end())
+          return noValue;
+        else
+          return it->second;
+      }
+
     protected:
       QName m_name;
       Properties m_properties;
