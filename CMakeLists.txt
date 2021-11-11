@@ -63,8 +63,8 @@ endif()
 
 if (UNIX)
   add_compile_options(-fPIC)
-endif()
-
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden -fvisibility=hidden")
+ENDIF()
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
