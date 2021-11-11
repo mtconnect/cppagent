@@ -17,16 +17,14 @@
 
 #pragma once
 
-#include "entity.hpp"
-
 #include <nlohmann/json.hpp>
+
+#include "entity.hpp"
 
 using json = nlohmann::json;
 
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class JsonPrinter
     {
     public:

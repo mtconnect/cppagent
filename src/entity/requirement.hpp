@@ -17,9 +17,6 @@
 
 #pragma once
 
-#include "observation/data_set.hpp"
-#include "utilities.hpp"
-
 #include <atomic>
 #include <cmath>
 #include <functional>
@@ -34,14 +31,16 @@
 #include <string>
 #include <tuple>
 #include <typeindex>
+#include <unordered_set>
 #include <utility>
 #include <variant>
 #include <vector>
 
-namespace mtconnect
-{
-  namespace entity
-  {
+#include "observation/data_set.hpp"
+#include "utilities.hpp"
+
+namespace mtconnect {
+  namespace entity {
     class Entity;
     using EntityPtr = std::shared_ptr<Entity>;
     using EntityList = std::list<std::shared_ptr<Entity>>;
@@ -54,6 +53,7 @@ namespace mtconnect
     using FactoryPtr = std::shared_ptr<Factory>;
     using ControlledVocab = std::list<std::string>;
     using Pattern = std::optional<std::regex>;
+    using VocabSet = std::optional<std::unordered_set<std::string>>;
 
     enum ValueType : int16_t
     {
@@ -69,6 +69,7 @@ namespace mtconnect
       TIMESTAMP = 0x9,
       NULL_VALUE = 0xA,
       USTRING = 0x10 | STRING,
+      QSTRING = 0x20 | STRING,
       TABLE = 0x10 | DATA_SET
     };
 
@@ -79,13 +80,11 @@ namespace mtconnect
     public:
       explicit EntityError(const std::string &s, const std::string &e = "")
         : std::logic_error(s), m_entity(e)
-      {
-      }
+      {}
 
       explicit EntityError(const char *s, const std::string &e = "")
         : std::logic_error(s), m_entity(e)
-      {
-      }
+      {}
 
       EntityError(const EntityError &o) noexcept : std::logic_error(o), m_entity(o.m_entity) {}
       ~EntityError() override = default;
@@ -117,13 +116,11 @@ namespace mtconnect
       explicit PropertyError(const std::string &s, const std::string &p = "",
                              const std::string &e = "")
         : EntityError(s, e), m_property(p)
-      {
-      }
+      {}
 
       explicit PropertyError(const char *s, const std::string &p = "", const std::string &e = "")
         : EntityError(s, e), m_property(p)
-      {
-      }
+      {}
 
       PropertyError(const PropertyError &o) noexcept : EntityError(o), m_property(o.m_property) {}
       ~PropertyError() override = default;
@@ -162,42 +159,36 @@ namespace mtconnect
     class Requirement
     {
     public:
-      const static auto Infinite{std::numeric_limits<int>::max()};
+      const static auto Infinite {std::numeric_limits<int>::max()};
 
     public:
       Requirement(const std::string &name, ValueType type, bool required = true)
         : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
-      {
-      }
+      {}
       Requirement(const std::string &name, bool required, ValueType type = STRING)
         : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
-      {
-      }
+      {}
       Requirement(const std::string &name, ValueType type, int lower, int upper)
         : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
-      {
-      }
+      {}
       Requirement(const std::string &name, ValueType type, int size, bool required = true)
         : m_name(name),
           m_upperMultiplicity(1),
           m_lowerMultiplicity(required ? 1 : 0),
           m_size(size),
           m_type(type)
-      {
-      }
-      Requirement(const std::string &name, ValueType type, FactoryPtr &o, bool required = true);
-      Requirement(const std::string &name, ValueType type, FactoryPtr &o, int lower, int upper);
+      {}
+      Requirement(const std::string &name, ValueType type, FactoryPtr o, bool required = true);
+      Requirement(const std::string &name, ValueType type, FactoryPtr o, int lower, int upper);
       Requirement(const std::string &name, const ControlledVocab &vocab, bool required = true)
         : m_name(name),
           m_upperMultiplicity(1),
           m_lowerMultiplicity(required ? 1 : 0),
           m_type(STRING)
       {
-        std::stringstream str;
+        m_vocabulary.emplace();
         for (auto &s : vocab)
-          str << s << "|";
-        str.seekp(-1, std::ios_base::end);
-        m_pattern = std::make_optional<std::regex>(str.str());
+          m_vocabulary->emplace(s);
       }
       Requirement(const std::string &name, const std::regex &pattern, bool required = true)
         : m_name(name),
@@ -205,8 +196,7 @@ namespace mtconnect
           m_lowerMultiplicity(required ? 1 : 0),
           m_type(STRING),
           m_pattern(pattern)
-      {
-      }
+      {}
 
       Requirement() = default;
       Requirement(const Requirement &o) = default;
@@ -277,6 +267,7 @@ namespace mtconnect
       MatcherPtr m_matcher;
       FactoryPtr m_factory;
       Pattern m_pattern;
+      VocabSet m_vocabulary;
     };
 
     // Inlines

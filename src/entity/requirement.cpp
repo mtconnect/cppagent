@@ -32,14 +32,13 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace observation;
   namespace entity
   {
     static dlib::logger g_logger("EntityRequirement");
 
-    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f, bool required)
+    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, bool required)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
       if (type == ENTITY_LIST)
@@ -49,7 +48,7 @@ namespace mtconnect
       m_factory = f;
     }
 
-    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr &f, int lower,
+    Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, int lower,
                              int upper)
       : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
     {
@@ -94,11 +93,10 @@ namespace mtconnect
             if (m_upperMultiplicity != Infinite)
               upper = " and no more than " + to_string(m_upperMultiplicity);
             throw PropertyError("Entity list requirement " + m_name + " must have at least " +
-                                to_string(m_lowerMultiplicity) + upper + " entries, " +
-                                to_string(l.size()) + " found",
+                                    to_string(m_lowerMultiplicity) + upper + " entries, " +
+                                    to_string(l.size()) + " found",
                                 m_name);
           }
-
         }
         else
         {
@@ -116,6 +114,11 @@ namespace mtconnect
         {
           auto &v = std::get<std::string>(value);
           if (m_pattern && !std::regex_match(v, *m_pattern))
+          {
+            throw PropertyError("Invalid value for '" + m_name + "': '" + v + "' is not allowed",
+                                m_name);
+          }
+          else if (m_vocabulary && m_vocabulary->count(v) == 0)
           {
             throw PropertyError("Invalid value for '" + m_name + "': '" + v + "' is not allowed",
                                 m_name);
@@ -216,6 +219,19 @@ namespace mtconnect
         r = arg;
         if (m_type == USTRING)
           toUpperCase(r);
+        else if (m_type == QSTRING)
+        {
+          auto pos = r.find_first_of(':');
+          if (pos != string::npos)
+          {
+            for (auto c = r.begin() + pos; c != r.end(); c++)
+              *c = std::toupper(*c);
+          }
+          else
+          {
+            toUpperCase(r);
+          }
+        }
       }
 
       // ----------------- double
@@ -315,6 +331,7 @@ namespace mtconnect
       Value out;
       switch (type)
       {
+        case QSTRING:
         case USTRING:
         case STRING:
           out.emplace<STRING>();

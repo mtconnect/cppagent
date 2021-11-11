@@ -17,30 +17,30 @@
 
 #pragma once
 
+#include <map>
+#include <utility>
+#include <vector>
+
 #include "entity.hpp"
 #include "factory.hpp"
 #include "requirement.hpp"
 #include "utilities.hpp"
 
-#include <map>
-#include <utility>
-#include <vector>
-
 struct _xmlNode;
-namespace mtconnect
-{
-  namespace entity
-  {
+namespace mtconnect {
+  namespace entity {
     class XmlParser
     {
     public:
       XmlParser() = default;
       ~XmlParser() = default;
-      using xmlNodePtr = _xmlNode*;
+      using xmlNodePtr = _xmlNode *;
 
-      static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors);
-      static EntityPtr parse(FactoryPtr factory, const std::string &document, const std::string &version,
-                      ErrorList &errors);
+      static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors,
+                                    bool parseNamespaces = true);
+      static EntityPtr parse(FactoryPtr factory, const std::string &document,
+                             const std::string &version, ErrorList &errors,
+                             bool parseNamespaces = true);
     };
   }  // namespace entity
 }  // namespace mtconnect

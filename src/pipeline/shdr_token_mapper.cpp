@@ -265,6 +265,16 @@ namespace mtconnect
         }
         else
           res = EntityPtr();
+        
+        if (!errors.empty())
+        {
+          g_logger << dlib::LWARN << "Could not parse asset: " << body;
+          for (auto &e : errors)
+          {
+            g_logger << dlib::LWARN << "    Message: " << e->what();
+          }
+        }
+
       }
       else
       {

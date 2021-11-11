@@ -17,23 +17,20 @@
 
 #pragma once
 
-#include "entity.hpp"
-#include <unordered_map>
-
 #include <map>
 #include <set>
+#include <unordered_map>
 
-namespace mtconnect
-{
-  namespace entity
-  {
+#include "entity.hpp"
+
+namespace mtconnect {
+  namespace entity {
     using Requirements = std::list<Requirement>;
 
     class Factory : public Matcher, public std::enable_shared_from_this<Factory>
     {
     public:
-      using Function =
-          std::function<std::shared_ptr<Entity>(const std::string &name, Properties &)>;
+      using Function = std::function<EntityPtr(const std::string &name, Properties &)>;
       using Matcher = std::function<bool(const std::string &)>;
       using MatchPair = std::pair<Matcher, FactoryPtr>;
       using StringFactory = std::unordered_map<std::string, FactoryPtr>;
@@ -76,7 +73,13 @@ namespace mtconnect
       bool isList() const { return m_isList; }
       void setHasRaw(bool raw) { m_hasRaw = raw; }
       bool hasRaw() const { return m_hasRaw; }
-      void setMinListSize(size_t size) { m_minListSize = size; m_isList = true; }
+      bool isAny() const { return m_any; }
+      void setAny(bool any) { m_any = any; }
+      void setMinListSize(size_t size)
+      {
+        m_minListSize = size;
+        m_isList = true;
+      }
 
       bool isPropertySet(const std::string &name) const { return m_propertySets.count(name) > 0; }
       bool isSimpleProperty(const std::string &name) const
@@ -197,7 +200,7 @@ namespace mtconnect
         auto factory = factoryFor(name);
         if (factory)
         {
-          Properties p{{"LIST", a}};
+          Properties p {{"LIST", a}};
           return factory->make(name, p, errors);
         }
         else
@@ -281,9 +284,12 @@ namespace mtconnect
 
       StringFactory m_stringFactory;
       MatchFactory m_matchFactory;
-      bool m_isList{false};
-      size_t m_minListSize{0};
-      bool m_hasRaw{false};
+
+      bool m_isList {false};
+      size_t m_minListSize {0};
+      bool m_hasRaw {false};
+      bool m_any {false};
+
       std::set<std::string> m_propertySets;
       std::set<std::string> m_simpleProperties;
     };

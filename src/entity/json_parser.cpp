@@ -38,7 +38,7 @@ namespace mtconnect
       if (ef)
       {
         Properties properties;
-        EntityList* l{nullptr};
+        EntityList* l {nullptr};
 
         if (ef->isList() && jNode.size() > 0)
         {
@@ -56,7 +56,7 @@ namespace mtconnect
 
           if (value.is_string())
           {
-            properties.insert({property_key, string{value}});
+            properties.insert({property_key, string {value}});
           }
           else if (value.is_number())
           {
@@ -73,7 +73,7 @@ namespace mtconnect
 
         if (ef->hasRaw())
         {
-          properties.insert({"RAW", string{jNode["value"]}});
+          properties.insert({"RAW", string {jNode["value"]}});
         }
         else
         {
@@ -86,7 +86,7 @@ namespace mtconnect
               {
                 if (ef->isPropertySet(ent->getName()))
                 {
-                  auto res = properties.try_emplace(ent->getName(), EntityList{});
+                  auto res = properties.try_emplace(ent->getName(), EntityList {});
                   get<EntityList>(res.first->second).emplace_back(ent);
                 }
                 else
