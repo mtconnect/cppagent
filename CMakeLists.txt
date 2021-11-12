@@ -62,9 +62,8 @@ if(MSVC)
 endif()
 
 if (UNIX)
-  add_compile_options(-fPIC -Wno-psabi)
-endif()
-
+  add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
+ENDIF()
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)

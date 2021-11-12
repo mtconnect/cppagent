@@ -832,6 +832,10 @@ namespace mtconnect {
           usage(1);
         }
       }
+      else
+      {
+        usage(1);
+      }
 
       start();
       return 0;
