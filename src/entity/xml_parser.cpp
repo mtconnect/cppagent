@@ -41,7 +41,7 @@ namespace mtconnect {
       LOG(error) << "XML: " << buffer;
     }
 
-    entity::QName nodeQName(xmlNodePtr node)
+    inline entity::QName nodeQName(xmlNodePtr node)
     {
       entity::QName qname((const char *)node->name);
 

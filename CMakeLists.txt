@@ -62,7 +62,7 @@ if(MSVC)
 endif()
 
 if (UNIX)
-  add_compile_options(-fPIC)
+  add_compile_options(-fPIC -Wno-psabi)
 endif()
 
 
