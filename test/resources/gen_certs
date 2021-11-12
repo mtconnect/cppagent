@@ -1,0 +1,43 @@
+#!/bin/sh
+
+echo "Creating Root Signing Authority"
+
+openssl req -x509 -nodes -sha256 -days 3650 -newkey rsa:3072 -keyout rootca.key -out rootca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=serverca.org"
+
+echo "Creating user keys"
+
+openssl genrsa -out user.key 3072
+openssl req -new -sha256 -key user.key -out user.csr -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=user.org"
+openssl x509 -req -in user.csr -CA rootca.crt -CAkey rootca.key -CAcreateserial -out user.crt -days 3650
+
+# Skipping because takes a very long time. Uncomment next lines if you want to regenerate dh params
+# echo "Creating dh params"
+# openssl dhparam -out dh2048.pem 3072
+
+echo "Verify"
+openssl verify -CAfile rootca.crt rootca.crt
+openssl verify -CAfile rootca.crt user.crt
+
+echo "Creating client Signing Authority"
+openssl req -x509 -nodes -sha256 -days 3650 -newkey rsa:3072 -keyout clientca.key -out clientca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=clientca.org"
+
+echo "Creating user keys"
+openssl genrsa -out client.key 3072
+openssl req -new -key client.key -out client.csr -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=client.org"
+
+cat > client.cnf <<EOF
+basicConstraints = CA:FALSE
+nsCertType = client, email
+nsComment = "OpenSSL Generated Client Certificate"
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth, emailProtection
+EOF
+
+openssl x509 -req -in client.csr -CA clientca.crt -CAkey clientca.key -out client.crt -CAcreateserial -days 3650 -sha256 -extfile client.cnf
+
+echo "Verify"
+
+openssl verify -CAfile clientca.crt clientca.crt
+openssl verify -CAfile clientca.crt client.crt

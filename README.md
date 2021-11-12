@@ -1270,57 +1270,51 @@ Install brew and xcode command line tools
 
 	conan build . -bf build
 
-# Creating Test Certifications
+# Creating Test Certifications (see resources gen_certs shell script)
 
 This section assumes you have installed openssl and can use the command line. The subject of the certificate is only for testing and should not be used in production. This section is provided to support testing and verification of the functionality. A certificate provided by a real certificate authority should be used in a production process.
 
+NOTE: The certificates must be generated with OpenSSL version 1.1.1 or later. LibreSSL 2.8.3 is not compatible with 
+      more recent version of SSL on raspian (Debian).
+
 ## Server Creating self-signed certificate chain
 
-### Create Signing authority key
+### Create Signing authority key and certificate
 
-    openssl genrsa -out rootca.key 2048
-
-### Create password protected rsa key
-
-    openssl req -x509 -new -nodes -key rootca.key -days 20000 -out rootca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=serverca.org"
+	openssl req -x509 -nodes -sha256 -days 3650 -newkey rsa:3072 -keyout rootca.key -out rootca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=serverca.org"
 
 ### User Key
 
-    openssl genrsa -out user.key 2048
+    openssl genrsa -out user.key 3072
 
-### Signing Request
+#### Signing Request
 
-    openssl req -new -key user.key -out user.csr
+    openssl req -new -sha256 -key user.key -out user.csr -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=user.org"
 
-### User Cert
+#### User Certificate using root signing certificate
 
-    openssl x509 -req -in user.csr -CA rootca.crt -CAkey rootca.key -CAcreateserial -out user.crt -days 20000 -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=server.org"
+    openssl x509 -req -in user.csr -CA rootca.crt -CAkey rootca.key -CAcreateserial -out user.crt -days 3650
 
-### DH Parameters
+### Create DH Parameters
 
-    openssl dhparam -out dh2048.pem 2048
+    openssl dhparam -out dh2048.pem 3072
 
 ### Verify
 
     openssl verify -CAfile rootca.crt rootca.crt
     openssl verify -CAfile rootca.crt user.crt
-    openssl verify -CAfile user.crt user.crt
 
 ## Client Certificate
 
 ### Create Signing authority key
 
-    openssl genrsa -out clientca.key 2048
+    openssl req -x509 -nodes -sha256 -days 3650 -newkey rsa:3072 -keyout clientca.key -out clientca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=clientca.org"
 
-### Create password protected rsa key
+### Create client key
 
-    openssl req -x509 -new -nodes -key clientca.key -days 20000 -out clientca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=clientca.org"
+    openssl genrsa -out client.key 3072
 
-### Create Signing authority key
-
-    openssl genrsa -out client.key 2048
-
-### Create Signing Request
+### Create client signing request
 
     openssl req -new -key client.key -out client.csr -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=client.org"
 
@@ -1338,10 +1332,9 @@ For client.cnf
 
 ### Create the cert
 
-    openssl x509 -req -in client.csr -CA clientca.crt -CAkey clientca.key -out client.crt -CAcreateserial -days 20000 -sha256 -extfile client.cnf
+    openssl x509 -req -in client.csr -CA clientca.crt -CAkey clientca.key -out client.crt -CAcreateserial -days 3650 -sha256 -extfile client.cnf
 
 ### Verify
 
-    openssl rsa -noout -text -in client.key
-    openssl req -noout -text -in client.csr
-    openssl x509 -noout -text -in client.crt
+    openssl verify -CAfile clientca.crt clientca.crt
+    openssl verify -CAfile clientca.crt client.crt
