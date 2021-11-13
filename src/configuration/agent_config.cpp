@@ -471,7 +471,7 @@ namespace mtconnect {
 
         return;
       }
-      
+
       auto archiveFileName = [](fs::path fileName) -> string {
         return fileName.stem().string() + "_%Y-%m-%d_%H-%M-%S_%N" + fileName.extension().string();
       };
@@ -517,9 +517,10 @@ namespace mtconnect {
       m_logArchivePattern = fs::path(archive_pattern);
       if (!m_logArchivePattern.has_filename())
       {
-        m_logArchivePattern = m_logArchivePattern / archiveFileName(get<string>(options["file_name"]));
+        m_logArchivePattern =
+            m_logArchivePattern / archiveFileName(get<string>(options["file_name"]));
       }
-      
+
       if (m_logArchivePattern.is_relative())
         m_logArchivePattern = fs::current_path() / m_logArchivePattern;
 
@@ -930,16 +931,14 @@ namespace mtconnect {
 
       // Try to find the plugin in the path or the application or
       // current working directory.
-      list<fs::path> paths {sharedLibPath / name,
-                            fs::current_path() / name};
+      list<fs::path> paths {sharedLibPath / name, fs::current_path() / name};
 
       for (auto path : paths)
       {
         try
         {
-          InitializationFunction init =
-              dll::import_alias<InitializationFn>(dll::detail::shared_library_impl::decorate(path),  
-                                                  "initialize_plugin");
+          InitializationFunction init = dll::import_alias<InitializationFn>(
+              dll::detail::shared_library_impl::decorate(path), "initialize_plugin");
 
           // Remember this initializer so it does not get unloaded.
           m_initializers.insert_or_assign(name, init);
