@@ -472,7 +472,7 @@ namespace mtconnect {
         return;
       }
       
-      auto archiveFn = [](fs::path fileName) -> string {
+      auto archiveFileName = [](fs::path fileName) -> string {
         return fileName.stem().string() + "_%Y-%m-%d_%H-%M-%S_%N" + fileName.extension().string();
       };
 
@@ -491,7 +491,7 @@ namespace mtconnect {
             options["archive_pattern"] = parts[2];
           else
           {
-            options["archive_pattern"] = archiveFn(get<string>(options["file_name"]));
+            options["archive_pattern"] = archiveFileName(get<string>(options["file_name"]));
           }
         }
       }
@@ -517,7 +517,7 @@ namespace mtconnect {
       m_logArchivePattern = fs::path(archive_pattern);
       if (!m_logArchivePattern.has_filename())
       {
-        m_logArchivePattern = m_logArchivePattern / archiveFn(get<string>(options["file_name"]));
+        m_logArchivePattern = m_logArchivePattern / archiveFileName(get<string>(options["file_name"]));
       }
       
       if (m_logArchivePattern.is_relative())
