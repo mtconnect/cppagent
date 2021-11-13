@@ -41,6 +41,7 @@ namespace mtconnect {
       void setName(std::string const &name) { m_name = name; }
       std::string const &name() const { return m_name; }
       void setDebug(bool debug) { m_isDebug = debug; }
+      bool getDebug() { return m_isDebug; }
 
       virtual void usage(int ec = 0);
 
