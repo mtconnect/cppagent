@@ -62,8 +62,7 @@ if(MSVC)
 endif()
 
 if (UNIX)
-  add_compile_options(-fPIC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility-inlines-hidden -fvisibility=hidden")
+  add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
 ENDIF()
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
