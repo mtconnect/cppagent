@@ -806,8 +806,15 @@ namespace mtconnect {
           if (!m_sourceFactory.hasFactory(factory) && !loadPlugin(factory, block.second))
             continue;
 
+          auto blockOptions = block.second;
+          if (!blockOptions.get_child_optional("logger_config")) {
+            auto logger = config.get_child_optional("logger_config");
+            if (logger)
+              blockOptions.add_child("logger_config", *logger);
+          }
+
           auto source = m_sourceFactory.make(factory, name, m_context, m_pipelineContext,
-                                             adapterOptions, block.second);
+                                             adapterOptions, blockOptions);
 
           if (source)
           {
@@ -863,15 +870,23 @@ namespace mtconnect {
           }
 
           ConfigOptions sinkOptions = options;
+
           GetOptions(sinkBlock.second, sinkOptions, options);
           AddOptions(sinkBlock.second, sinkOptions, {{"Name", string()}});
+
+          ptree sinkBlockOptions = sinkBlock.second;
+          if (!sinkBlockOptions.get_child_optional("logger_config")) {
+            auto logger = config.get_child_optional("logger_config");
+            if (logger)
+              sinkBlockOptions.add_child("logger_config", *logger);
+          }
 
           auto sinkName = GetOption<string>(sinkOptions, "Name").value_or(name);
           auto sinkContract = m_agent->makeSinkContract();
           sinkContract->m_pipelineContext = m_pipelineContext;
 
           auto sink = m_sinkFactory.make(factory, sinkName, m_context, std::move(sinkContract),
-                                         options, sinkBlock.second);
+                                         options, sinkBlockOptions);
           if (sink)
           {
             m_agent->addSink(sink);

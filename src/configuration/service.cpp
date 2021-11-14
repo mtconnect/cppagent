@@ -42,6 +42,7 @@
 
 namespace mtconnect {
   namespace configuration {
+
     void MTConnectService::usage(int ec)
     {
       printf(
