@@ -29,7 +29,7 @@ class CppAgentConan(ConanFile):
         "boost:without_json": False,
         "boost:without_mpi": True,
         "boost:without_stacktrace": True,
-        "boost:extra_b2_flags": "-j 2 -d +1 cxxstd=17 ",
+        "boost:extra_b2_flags": "-j 2 -d +1 cxxstd=17 cxxflags=-fvisibility=hidden ",
         "boost:i18n_backend_iconv": 'off',
         "boost:i18n_backend_icu": True,
 
