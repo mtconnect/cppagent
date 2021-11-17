@@ -256,6 +256,11 @@ namespace mtconnect {
     void SessionImpl<Derived>::sent(boost::system::error_code ec, size_t len)
     {
       NAMED_SCOPE("SessionImpl::sent");
+      
+      if (m_body)
+      {
+        m_body.reset();
+      }
 
       if (ec)
       {
@@ -422,8 +427,9 @@ namespace mtconnect {
         }
         else
         {
-          bp = response.m_body.c_str();
-          size = response.m_body.size();
+          m_body.emplace(response.m_body);
+          bp = m_body->c_str();
+          size = m_body->size();
         }
 
         auto res = make_shared<http::response<http::span_body<const char>>>(

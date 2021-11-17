@@ -85,6 +85,7 @@ namespace mtconnect {
       std::optional<RequestParser> m_parser;
       std::shared_ptr<void> m_response;
       std::shared_ptr<void> m_serializer;
+      std::optional<std::string> m_body;
     };
 
     class HttpSession : public SessionImpl<HttpSession>
