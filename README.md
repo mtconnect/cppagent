@@ -1203,7 +1203,7 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 	
 	cd cppagent_dev
 	conan export conan/mqtt_cpp
-	conan install . -if build --build=missing -pr conan/profile/gcc
+	conan install . -if build --build=missing -pr conan/profiles/gcc
 	
 ### Build the agent
 	
