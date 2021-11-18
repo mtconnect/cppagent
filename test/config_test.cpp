@@ -778,7 +778,7 @@ MaxCachedFileSize = 2g
     
     string str(R"(
 logger_config {
-  output = file agent_%N.log
+  output = file agent.log
 }
 )");
 
@@ -787,7 +787,7 @@ logger_config {
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
     
-    EXPECT_EQ("agent_%N.log", m_config->getLogArchivePattern().filename());
+    EXPECT_EQ("agent_%Y-%m-%d_%H-%M-%S_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("agent.log", m_config->getLogFileName().filename());
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
@@ -800,7 +800,7 @@ logger_config {
     
     string str(R"(
 logger_config {
-  output = file logging_%N.log logging.log
+  output = file logging.log logging_%N.log
 }
 )");
 
