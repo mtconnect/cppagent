@@ -49,8 +49,8 @@ namespace mtconnect {
       Derived &derived() { return static_cast<Derived &>(*this); }
 
       void run() override;
-      void writeResponse(const Response &response, Complete complete = nullptr) override;
-      void writeFailureResponse(const Response &response, Complete complete = nullptr) override;
+      void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override;
+      void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override;
       void beginStreaming(const std::string &mimeType, Complete complete) override;
       void writeChunk(const std::string &chunk, Complete complete) override;
       void closeStream() override;
@@ -85,6 +85,7 @@ namespace mtconnect {
       std::optional<RequestParser> m_parser;
       std::shared_ptr<void> m_response;
       std::shared_ptr<void> m_serializer;
+      ResponsePtr m_outgoing;
     };
 
     class HttpSession : public SessionImpl<HttpSession>

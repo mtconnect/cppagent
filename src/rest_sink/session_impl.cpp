@@ -256,6 +256,11 @@ namespace mtconnect {
     void SessionImpl<Derived>::sent(boost::system::error_code ec, size_t len)
     {
       NAMED_SCOPE("SessionImpl::sent");
+      
+      if (m_outgoing)
+      {
+        m_outgoing.reset();
+      }
 
       if (ec)
       {
@@ -365,7 +370,7 @@ namespace mtconnect {
     }
 
     template <class Derived>
-    void SessionImpl<Derived>::writeResponse(const Response &response, Complete complete)
+    void SessionImpl<Derived>::writeResponse(ResponsePtr &&responsePtr, Complete complete)
     {
       NAMED_SCOPE("SessionImpl::writeResponse");
 
@@ -374,21 +379,22 @@ namespace mtconnect {
       namespace fs = std::filesystem;
 
       m_complete = complete;
+      m_outgoing = move(responsePtr);
 
-      if (response.m_file && !response.m_file->m_cached)
+      if (m_outgoing->m_file && !m_outgoing->m_file->m_cached)
       {
         beast::error_code ec;
         http::file_body::value_type body;
         fs::path path;
         optional<string> encoding;
-        if (m_request->m_acceptsEncoding.find("gzip") != string::npos && response.m_file->m_pathGz)
+        if (m_request->m_acceptsEncoding.find("gzip") != string::npos && m_outgoing->m_file->m_pathGz)
         {
           encoding.emplace("gzip");
-          path = *response.m_file->m_pathGz;
+          path = *m_outgoing->m_file->m_pathGz;
         }
         else
         {
-          path = response.m_file->m_path;
+          path = m_outgoing->m_file->m_path;
         }
 
         body.open(path.string().c_str(), beast::file_mode::scan, ec);
@@ -399,12 +405,12 @@ namespace mtconnect {
 
         auto res = make_shared<http::response<http::file_body>>(
             std::piecewise_construct, std::make_tuple(std::move(body)),
-            std::make_tuple(response.m_status, 11));
-        res->set(http::field::content_type, response.m_mimeType);
+            std::make_tuple(m_outgoing->m_status, 11));
+        res->set(http::field::content_type, m_outgoing->m_mimeType);
         res->content_length(body.size());
         if (encoding)
           res->set(http::field::content_encoding, "gzip");
-        addHeaders(response, res);
+        addHeaders(*m_outgoing, res);
 
         m_response = res;
 
@@ -415,22 +421,22 @@ namespace mtconnect {
       {
         const char *bp;
         size_t size;
-        if (response.m_file)
+        if (m_outgoing->m_file)
         {
-          bp = response.m_file->m_buffer;
-          size = response.m_file->m_size;
+          bp = m_outgoing->m_file->m_buffer;
+          size = m_outgoing->m_file->m_size;
         }
         else
         {
-          bp = response.m_body.c_str();
-          size = response.m_body.size();
+          bp = m_outgoing->m_body.c_str();
+          size = m_outgoing->m_body.size();
         }
 
         auto res = make_shared<http::response<http::span_body<const char>>>(
             std::piecewise_construct, std::make_tuple(bp, size),
-            std::make_tuple(response.m_status, 11));
+            std::make_tuple(m_outgoing->m_status, 11));
 
-        addHeaders(response, res);
+        addHeaders(*m_outgoing, res);
         res->chunked(false);
         res->content_length(size);
 
@@ -442,15 +448,16 @@ namespace mtconnect {
     }
 
     template <class Derived>
-    void SessionImpl<Derived>::writeFailureResponse(const Response &response, Complete complete)
+    void SessionImpl<Derived>::writeFailureResponse(ResponsePtr &&response, Complete complete)
     {
       if (m_streaming)
       {
-        writeChunk(response.m_body, [this] { closeStream(); });
+        m_outgoing = move(response);
+        writeChunk(m_outgoing->m_body, [this] { closeStream(); });
       }
       else
       {
-        writeResponse(response);
+        writeResponse(move(response));
       }
     }
 

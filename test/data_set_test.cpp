@@ -167,7 +167,7 @@ TEST_F(DataSetTest, parser_with_big_data_set)
   using namespace std::filesystem;
   path p(PROJECT_ROOT_DIR "/test/resources/big_data_set.txt");
   auto size = std::filesystem::file_size(p);
-  char *buffer = (char*) malloc(size);
+  char *buffer = (char*) malloc(size + 1);
   auto file = std::fopen(p.string().c_str(), "r");
   size = std::fread(buffer, 1, size, file);
   buffer[size] = '\0';
@@ -175,7 +175,7 @@ TEST_F(DataSetTest, parser_with_big_data_set)
   
   DataSet set;
   auto start = high_resolution_clock::now();
-  for (int i = 0; i < 1000; i++)
+  for (int i = 0; i < 100; i++)
     ASSERT_TRUE(set.parse(buffer, false));
   auto now = high_resolution_clock::now();
   auto delta = floor<microseconds>(now) - floor<microseconds>(start);
