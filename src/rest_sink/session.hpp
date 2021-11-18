@@ -29,6 +29,7 @@
 namespace mtconnect {
   namespace rest_sink {
     struct Response;
+    using ResponsePtr = std::unique_ptr<Response>;
     class Session;
     using SessionPtr = std::shared_ptr<Session>;
     using ErrorFunction =
@@ -46,8 +47,8 @@ namespace mtconnect {
       virtual ~Session() {}
 
       virtual void run() = 0;
-      virtual void writeResponse(const Response &response, Complete complete = nullptr) = 0;
-      virtual void writeFailureResponse(const Response &response, Complete complete = nullptr) = 0;
+      virtual void writeResponse(ResponsePtr &&response, Complete complete = nullptr) = 0;
+      virtual void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) = 0;
       virtual void beginStreaming(const std::string &mimeType, Complete complete) = 0;
       virtual void writeChunk(const std::string &chunk, Complete complete) = 0;
       virtual void close() = 0;

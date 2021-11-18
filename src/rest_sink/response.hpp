@@ -54,5 +54,7 @@ namespace mtconnect {
 
       CachedFilePtr m_file;
     };
+    
+    using ResponsePtr = std::unique_ptr<Response>;
   }  // namespace rest_sink
 }  // namespace mtconnect

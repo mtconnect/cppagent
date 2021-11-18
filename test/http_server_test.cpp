@@ -347,12 +347,12 @@ TEST_F(RestServiceTest, simple_request_response)
   
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
-    Response resp(status::ok);
+    ResponsePtr resp = make_unique<Response>(status::ok);
     if (request->m_parameters.count("device") > 0)
-      resp.m_body = string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
+      resp->m_body = string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
     else
-      resp.m_body = "All Devices";
-    session->writeResponse(resp, [](){
+      resp->m_body = "All Devices";
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
     return true;
@@ -389,9 +389,9 @@ TEST_F(RestServiceTest, request_response_with_query_parameters)
     EXPECT_EQ(1000, get<int>(request->m_parameters["count"]));
     EXPECT_EQ(10000, get<int>(request->m_parameters["heartbeat"]));
 
-    Response resp(status::ok);
-    resp.m_body = "Done";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok);
+    resp->m_body = "Done";
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
     return true;
@@ -439,9 +439,8 @@ TEST_F(RestServiceTest, request_put_when_put_allowed)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
-    Response resp(status::ok);
-    resp.m_body = "Put ok";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok, "Put ok");
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
       return true;
     });
@@ -488,9 +487,8 @@ TEST_F(RestServiceTest, request_put_when_put_allowed_from_ip_address)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
-    Response resp(status::ok);
-    resp.m_body = "Put ok";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok, "Put ok");
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
       return true;
     });
@@ -516,9 +514,8 @@ TEST_F(RestServiceTest, request_with_connect_close)
 
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
-    Response resp(status::ok);
-    resp.m_body = "Probe";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok, "Probe");
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
       return true;
     });
@@ -549,8 +546,8 @@ TEST_F(RestServiceTest, put_content_to_server)
     EXPECT_EQ("Body Content", request->m_body);
     body = request->m_body;
     
-    Response resp(status::ok);
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok);
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
     return true;
@@ -577,8 +574,8 @@ TEST_F(RestServiceTest, put_content_with_put_values)
     body = request->m_body;
     ct = request->m_contentType;
     
-    Response resp(status::ok);
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok);
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
     return true;
@@ -685,9 +682,8 @@ TEST_F(RestServiceTest, additional_header_fields)
   m_server->setHttpHeaders({"Access-Control-Allow-Origin:*", "Origin:https://foo.example"});
   
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    Response resp(status::ok);
-    resp.m_body = "Done";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok, "Done");
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
 
@@ -730,9 +726,8 @@ TEST_F(RestServiceTest, failure_when_tls_only)
   createServer(options);
   
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    Response resp(status::ok);
-    resp.m_body = "Done";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok, "Done");
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
 

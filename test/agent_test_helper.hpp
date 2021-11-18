@@ -56,26 +56,26 @@ namespace mtconnect
       {
         
       }
-      void writeResponse(const Response &response, Complete complete = nullptr) override
+      void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
       {
-        m_code = response.m_status;
-        if (response.m_file)
-          m_body = response.m_file->m_buffer;
+        m_code = response->m_status;
+        if (response->m_file)
+          m_body = response->m_file->m_buffer;
         else
-          m_body = response.m_body;
-        m_mimeType = response.m_mimeType;
+          m_body = response->m_body;
+        m_mimeType = response->m_mimeType;
         if (complete)
           complete();
       }
-      void writeFailureResponse(const Response &response, Complete complete = nullptr) override
+      void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override
       {
         if (m_streaming)
         {
-          writeChunk(response.m_body, complete);
+          writeChunk(response->m_body, complete);
         }
         else
         {
-          writeResponse(response, complete);
+          writeResponse(move(response), complete);
         }
       }
       void beginStreaming(const std::string &mimeType, Complete complete) override

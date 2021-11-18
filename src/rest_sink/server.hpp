@@ -68,8 +68,8 @@ namespace mtconnect {
           setHttpHeaders(*fields);
 
         m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
-          Response response(st, msg, "text/plain");
-          session->writeFailureResponse(response);
+          ResponsePtr response = std::make_unique<Response>(st, msg, "text/plain");
+          session->writeFailureResponse(move(response));
           return true;
         };
 
@@ -129,8 +129,8 @@ namespace mtconnect {
         {
           LOG(error) << session->getRemote().address()
                      << ": Error processing request: " << re.what();
-          Response resp(re);
-          session->writeResponse(resp);
+          ResponsePtr resp = std::make_unique<Response>(re);
+          session->writeResponse(move(resp));
         }
         catch (ParameterError &pe)
         {

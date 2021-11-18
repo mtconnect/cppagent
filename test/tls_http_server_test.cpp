@@ -409,12 +409,12 @@ TEST_F(TlsRestServiceTest, create_server_and_load_certificates)
   
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
-    Response resp(status::ok);
+    ResponsePtr resp = make_unique<Response>(status::ok);
     if (request->m_parameters.count("device") > 0)
-      resp.m_body = string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
+      resp->m_body = string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
     else
-      resp.m_body = "All Devices";
-    session->writeResponse(resp, [](){
+      resp->m_body = "All Devices";
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
     return true;
@@ -538,9 +538,9 @@ TEST_F(TlsRestServiceTest, check_failed_client_certificate)
   createServer(options);
   
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    Response resp(status::ok);
-    resp.m_body = "Done";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok);
+    resp->m_body = "Done";
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
 
@@ -571,9 +571,9 @@ TEST_F(TlsRestServiceTest, check_valid_client_certificate)
   createServer(options);
   
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    Response resp(status::ok);
-    resp.m_body = "Done";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok);
+    resp->m_body = "Done";
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
 
@@ -604,9 +604,9 @@ TEST_F(TlsRestServiceTest, check_valid_client_certificate_without_server_ca)
   createServer(options);
   
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
-    Response resp(status::ok);
-    resp.m_body = "Done";
-    session->writeResponse(resp, [](){
+    ResponsePtr resp = make_unique<Response>(status::ok);
+    resp->m_body = "Done";
+    session->writeResponse(move(resp), [](){
       cout << "Written" << endl;
     });
 

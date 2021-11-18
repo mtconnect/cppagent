@@ -89,13 +89,13 @@ namespace mtconnect {
       void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
 
       // MTConnect Requests
-      Response probeRequest(const Printer *,
+      ResponsePtr probeRequest(const Printer *,
                             const std::optional<std::string> &device = std::nullopt);
-      Response currentRequest(const Printer *,
+      ResponsePtr currentRequest(const Printer *,
                               const std::optional<std::string> &device = std::nullopt,
                               const std::optional<SequenceNumber_t> &at = std::nullopt,
                               const std::optional<std::string> &path = std::nullopt);
-      Response sampleRequest(const Printer *, const int count = 100,
+      ResponsePtr sampleRequest(const Printer *, const int count = 100,
                              const std::optional<std::string> &device = std::nullopt,
                              const std::optional<SequenceNumber_t> &from = std::nullopt,
                              const std::optional<SequenceNumber_t> &to = std::nullopt,
@@ -119,19 +119,19 @@ namespace mtconnect {
                              boost::system::error_code ec);
 
       // Asset requests
-      Response assetRequest(const Printer *, const int32_t count, const bool removed,
+      ResponsePtr assetRequest(const Printer *, const int32_t count, const bool removed,
                             const std::optional<std::string> &type = std::nullopt,
                             const std::optional<std::string> &device = std::nullopt);
-      Response assetIdsRequest(const Printer *, const std::list<std::string> &ids);
-      Response putAssetRequest(const Printer *, const std::string &asset,
+      ResponsePtr assetIdsRequest(const Printer *, const std::list<std::string> &ids);
+      ResponsePtr putAssetRequest(const Printer *, const std::string &asset,
                                const std::optional<std::string> &type,
                                const std::optional<std::string> &device = std::nullopt,
                                const std::optional<std::string> &uuid = std::nullopt);
-      Response deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
-      Response deleteAllAssetsRequest(const Printer *,
+      ResponsePtr deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
+      ResponsePtr deleteAllAssetsRequest(const Printer *,
                                       const std::optional<std::string> &device = std::nullopt,
                                       const std::optional<std::string> &type = std::nullopt);
-      Response putObservationRequest(const Printer *, const std::string &device,
+      ResponsePtr putObservationRequest(const Printer *, const std::string &device,
                                      const QueryMap observations,
                                      const std::optional<std::string> &time = std::nullopt);
 
