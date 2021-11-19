@@ -237,11 +237,18 @@ target_compile_definitions(
     )
 
 if(NOT WITHOUT_PYTHON)
-target_compile_definitions(
-  agent_lib
-  PUBLIC
-  WITH_PYTHON )
-endif()  
+  target_compile_definitions(
+    agent_lib
+    PUBLIC
+    WITH_PYTHON )
+endif()
+
+if(AGENT_WITHOUT_IPV6)
+  target_compile_definitions(
+    agent_lib
+    PUBLIC
+    AGENT_WITHOUT_IPV6 )
+endif()
   
 # set_property(SOURCE ${AGENT_SOURCES} PROPERTY COMPILE_FLAGS_DEBUG "${COVERAGE_FLAGS}")
 target_compile_features(agent_lib PUBLIC ${CXX_COMPILE_FEATURES})

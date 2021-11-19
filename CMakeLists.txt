@@ -76,7 +76,6 @@ if(NOT WITHOUT_PYTHON)
   message("Libs of Python: " ${Python3_LIBRARIES} )
 endif()
 
-
 include(cmake/msvc_use_static_runtime.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
