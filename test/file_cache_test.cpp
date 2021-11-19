@@ -7,6 +7,7 @@
 
 #include "rest_sink/file_cache.hpp"
 
+#include <thread>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
