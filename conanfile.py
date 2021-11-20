@@ -7,7 +7,7 @@ class CppAgentConan(ConanFile):
     url = "https://github.com/mtconnect/cppagent_dev.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
-    options = { "run_tests": [True, False], "build_tests": [True, False], "without_python": [True, False] }
+    options = { "run_tests": [True, False], "build_tests": [True, False], "without_python": [True, False], "without_ipv6": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.77.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
@@ -17,6 +17,7 @@ class CppAgentConan(ConanFile):
         "run_tests": True,
         "build_tests": True,
         "without_python": True,
+        "without_ipv6": False,
 
         "boost:python_version": "3.9",
         "boost:python_executable": "python3",
@@ -86,6 +87,9 @@ class CppAgentConan(ConanFile):
         cmake.verbose = True
         if not self.options.build_tests:
             cmake.definitions['AGENT_ENABLE_UNITTESTS'] = 'OFF'
+
+        if self.options.without_ipv6:
+            cmake.definitions['AGENT_WITHOUT_IPV6'] = 'ON'
 
         if self.options.without_python:
             cmake.definitions['WITHOUT_PYTHON'] = 'ON'

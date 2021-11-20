@@ -517,7 +517,7 @@ TEST_F(ConnectorTest, SendCommand)
 TEST_F(ConnectorTest, IPV6Connection)
 {
 // TODO: Need to port to Windows > VISTA
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(AGENT_WITHOUT_IPV6)
   m_connector.reset();
 
   startServer("::1");
