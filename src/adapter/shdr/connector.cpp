@@ -319,7 +319,7 @@ namespace mtconnect {
         if (!ec)
         {
           LOG(debug) << "Sending heartbeat";
-          sendCommand("* PING");
+          sendCommand("PING");
           m_heartbeatTimer.expires_from_now(m_heartbeatFrequency);
           m_heartbeatTimer.async_wait(
               asio::bind_executor(m_strand, boost::bind(&Connector::heartbeat, this, _1)));
