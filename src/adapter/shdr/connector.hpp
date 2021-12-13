@@ -96,7 +96,7 @@ namespace mtconnect {
                        boost::asio::ip::tcp::resolver::iterator it);
         void writer(boost::system::error_code ec, std::size_t length);
         void reader(boost::system::error_code ec, std::size_t length);
-        void parseSocketBuffer();
+        bool parseSocketBuffer();
         void startHeartbeats(const std::string &buf);
         void heartbeat(boost::system::error_code ec);
         void setReceiveTimeout();

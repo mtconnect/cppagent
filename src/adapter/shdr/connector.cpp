@@ -207,7 +207,8 @@ namespace mtconnect {
                   m_socket, m_incoming, '\n',
                   asio::bind_executor(m_strand, boost::bind(&Connector::reader, this, _1, _2)));
               m_timer.cancel();
-              parseSocketBuffer();
+              while (parseSocketBuffer())
+                ;
             }
             reconnect();
           }
@@ -231,8 +232,8 @@ namespace mtconnect {
       {
         std::ostream os(&m_incoming);
         os << buffer;
-        while (m_incoming.size() > 0)
-          parseSocketBuffer();
+        while (parseSocketBuffer())
+          ;
       }
 
       inline void Connector::setReceiveTimeout()
@@ -256,25 +257,52 @@ namespace mtconnect {
         }));
       }
 
-      void Connector::parseSocketBuffer()
+      bool Connector::parseSocketBuffer()
       {
         NAMED_SCOPE("Connector::parseSocketBuffer");
 
         // Cancel receive time limit
         setReceiveTimeout();
 
-        // Treat any data as a heartbeat.
-        istream is(&m_incoming);
-        string line;
-        getline(is, line);
-
-        if (line.empty())
-          return;
+        if (m_incoming.size() == 0)
+          return false;
+        
+        // Grab the beginning of the data buffer.
+        auto start = static_cast<const char*>(m_incoming.data().data());
+        auto cp = start;
+        auto len = m_incoming.data().size();
+        
+        // Scan forward in the buffer for a \n
+        const char *eol = nullptr;
+        while (len-- > 0 && eol == nullptr)
+        {
+          if (*cp == '\n')
+            eol = cp;
+          else
+            cp++;
+        }
+        
+        // If there is no end of line, wait for more data.
+        if (eol == nullptr)
+          return false;
+        else if (eol == start)
+        {
+          // Handle blank line
+          m_incoming.consume(1);
+          return false;
+        }
+        
+        size_t count = eol - start;
+        string line(start, count);
+        m_incoming.consume(count + 1);
 
         auto end = line.find_last_not_of(" \t\n\r");
         if (end != string::npos)
           line.erase(end + 1);
-
+        
+        if (line.empty())
+          return false;
+          
         // Check for heartbeats
         if (line[0] == '*')
         {
@@ -294,6 +322,8 @@ namespace mtconnect {
         {
           processData(line);
         }
+        
+        return m_incoming.size() > 0;
       }
 
       void Connector::sendCommand(const string &command)
