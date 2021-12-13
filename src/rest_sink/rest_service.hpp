@@ -90,16 +90,16 @@ namespace mtconnect {
 
       // MTConnect Requests
       ResponsePtr probeRequest(const Printer *,
-                            const std::optional<std::string> &device = std::nullopt);
+                               const std::optional<std::string> &device = std::nullopt);
       ResponsePtr currentRequest(const Printer *,
-                              const std::optional<std::string> &device = std::nullopt,
-                              const std::optional<SequenceNumber_t> &at = std::nullopt,
-                              const std::optional<std::string> &path = std::nullopt);
+                                 const std::optional<std::string> &device = std::nullopt,
+                                 const std::optional<SequenceNumber_t> &at = std::nullopt,
+                                 const std::optional<std::string> &path = std::nullopt);
       ResponsePtr sampleRequest(const Printer *, const int count = 100,
-                             const std::optional<std::string> &device = std::nullopt,
-                             const std::optional<SequenceNumber_t> &from = std::nullopt,
-                             const std::optional<SequenceNumber_t> &to = std::nullopt,
-                             const std::optional<std::string> &path = std::nullopt);
+                                const std::optional<std::string> &device = std::nullopt,
+                                const std::optional<SequenceNumber_t> &from = std::nullopt,
+                                const std::optional<SequenceNumber_t> &to = std::nullopt,
+                                const std::optional<std::string> &path = std::nullopt);
       void streamSampleRequest(SessionPtr session, const Printer *, const int interval,
                                const int heartbeat, const int count = 100,
                                const std::optional<std::string> &device = std::nullopt,
@@ -120,20 +120,20 @@ namespace mtconnect {
 
       // Asset requests
       ResponsePtr assetRequest(const Printer *, const int32_t count, const bool removed,
-                            const std::optional<std::string> &type = std::nullopt,
-                            const std::optional<std::string> &device = std::nullopt);
+                               const std::optional<std::string> &type = std::nullopt,
+                               const std::optional<std::string> &device = std::nullopt);
       ResponsePtr assetIdsRequest(const Printer *, const std::list<std::string> &ids);
       ResponsePtr putAssetRequest(const Printer *, const std::string &asset,
-                               const std::optional<std::string> &type,
-                               const std::optional<std::string> &device = std::nullopt,
-                               const std::optional<std::string> &uuid = std::nullopt);
+                                  const std::optional<std::string> &type,
+                                  const std::optional<std::string> &device = std::nullopt,
+                                  const std::optional<std::string> &uuid = std::nullopt);
       ResponsePtr deleteAssetRequest(const Printer *, const std::list<std::string> &ids);
       ResponsePtr deleteAllAssetsRequest(const Printer *,
-                                      const std::optional<std::string> &device = std::nullopt,
-                                      const std::optional<std::string> &type = std::nullopt);
+                                         const std::optional<std::string> &device = std::nullopt,
+                                         const std::optional<std::string> &type = std::nullopt);
       ResponsePtr putObservationRequest(const Printer *, const std::string &device,
-                                     const QueryMap observations,
-                                     const std::optional<std::string> &time = std::nullopt);
+                                        const QueryMap observations,
+                                        const std::optional<std::string> &time = std::nullopt);
 
       // For debugging
       void setLogStreamData(bool log) { m_logStreamData = log; }

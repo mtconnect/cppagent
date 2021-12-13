@@ -149,7 +149,8 @@ namespace mtconnect {
         }
         catch (entity::PropertyError &e)
         {
-          LOG(warning) << "Cannot convert value for data item id '" << dataItem->getId() << "': " << *token << " - " << e.what();
+          LOG(warning) << "Cannot convert value for data item id '" << dataItem->getId()
+                       << "': " << *token << " - " << e.what();
         }
       }
 

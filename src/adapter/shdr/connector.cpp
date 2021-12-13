@@ -17,6 +17,7 @@
 
 #include "connector.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/connect.hpp>
@@ -266,12 +267,15 @@ namespace mtconnect {
 
         if (m_incoming.size() == 0)
           return false;
-        
+
         // Grab the beginning of the data buffer.
-        auto start = static_cast<const char*>(m_incoming.data().data());
+        auto start = static_cast<const char *>(m_incoming.data().data());
         auto cp = start;
         auto len = m_incoming.data().size();
-        
+
+        LOG(trace) << "(" << m_server << ":" << m_port << ") " << len
+                   << " characters in incomming buffer";
+
         // Scan forward in the buffer for a \n
         const char *eol = nullptr;
         while (len-- > 0 && eol == nullptr)
@@ -281,48 +285,70 @@ namespace mtconnect {
           else
             cp++;
         }
-        
-        // If there is no end of line, wait for more data.
-        if (eol == nullptr)
-          return false;
-        else if (eol == start)
-        {
-          // Handle blank line
-          m_incoming.consume(1);
-          return false;
-        }
-        
-        size_t count = eol - start;
-        string line(start, count);
-        m_incoming.consume(count + 1);
 
-        auto end = line.find_last_not_of(" \t\n\r");
-        if (end != string::npos)
-          line.erase(end + 1);
-        
-        if (line.empty())
-          return false;
-          
-        // Check for heartbeats
-        if (line[0] == '*')
+        // If there is no end of line, wait for more data.
+        size_t consumed;
+        if (eol == nullptr)
         {
-          if (!line.compare(0, 6, "* PONG"))
-          {
-            LOG(debug) << "(Port:" << m_localPort << ")"
-                       << " Received a PONG for " << m_server << " on port " << m_port;
-            if (!m_heartbeats)
-              startHeartbeats(line);
-          }
-          else
-          {
-            protocolCommand(line);
-          }
+          LOG(trace) << "(" << m_server << ":" << m_port
+                     << ") no eol found, waiting for more characters";
+          return false;
         }
         else
         {
-          processData(line);
+          // Consume all the characters to the end of line
+          consumed = eol - start + 1;
+
+          size_t size;
+          // Check for the condition when the line is blank
+          if (consumed == 1)
+          {
+            size = 0;
+          }
+          else
+          {
+            // This is a manual trim right using char* to skip additional work in string
+            cp = eol - 1;
+            while (cp > start && isspace(*cp))
+              cp--;
+            size = cp - start;
+          }
+
+          // Check for a blank line, just consume and carry on
+          if (size == 0)
+          {
+            LOG(trace) << "(" << m_server << ":" << m_port << ") blank line after trimming";
+          }
+          else
+          {
+            // We have a line
+            string line(start, size + 1);
+
+            LOG(trace) << "(" << m_server << ":" << m_port << ") Received line: " << line;
+
+            // Check for heartbeats
+            if (line[0] == '*')
+            {
+              if (!line.compare(0, 6, "* PONG"))
+              {
+                LOG(debug) << "(Port:" << m_localPort << ") Received a PONG for " << m_server
+                           << " on port " << m_port;
+                if (!m_heartbeats)
+                  startHeartbeats(line);
+              }
+              else
+              {
+                protocolCommand(line);
+              }
+            }
+            else
+            {
+              processData(line);
+            }
+          }
         }
-        
+
+        m_incoming.consume(consumed);
         return m_incoming.size() > 0;
       }
 

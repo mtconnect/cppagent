@@ -256,7 +256,7 @@ namespace mtconnect {
     void SessionImpl<Derived>::sent(boost::system::error_code ec, size_t len)
     {
       NAMED_SCOPE("SessionImpl::sent");
-      
+
       if (m_outgoing)
       {
         m_outgoing.reset();
@@ -387,7 +387,8 @@ namespace mtconnect {
         http::file_body::value_type body;
         fs::path path;
         optional<string> encoding;
-        if (m_request->m_acceptsEncoding.find("gzip") != string::npos && m_outgoing->m_file->m_pathGz)
+        if (m_request->m_acceptsEncoding.find("gzip") != string::npos &&
+            m_outgoing->m_file->m_pathGz)
         {
           encoding.emplace("gzip");
           path = *m_outgoing->m_file->m_pathGz;

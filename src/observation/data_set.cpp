@@ -165,8 +165,8 @@ namespace mtconnect {
           m_start = *space >> *(m_entry[add_entry(_val, _1)] >> *space) >> eoi;
         }
 
-        BOOST_SPIRIT_DEBUG_NODES((m_start)(m_quoted)(m_braced)(m_key)(m_value)(m_entry)(m_simple)(
-            m_quoted)(m_tableValue)(m_quotedDataSet)(m_bracedDataSet)(m_tableEntry));
+        BOOST_SPIRIT_DEBUG_NODES((
+            m_start)(m_quoted)(m_braced)(m_key)(m_value)(m_entry)(m_simple)(m_quoted)(m_tableValue)(m_quotedDataSet)(m_bracedDataSet)(m_tableEntry));
 
         m_start.name("top");
         m_simple.name("simple");
