@@ -122,7 +122,7 @@ namespace mtconnect {
                                         TokenList::const_iterator &token,
                                         const TokenList::const_iterator &end, ErrorList &errors)
     {
-      bool unavail {false};
+      NAMED_SCOPE("zipProperties");
       Properties props;
       for (auto req = reqs.begin(); token != end && req != reqs.end(); token++, req++)
       {
@@ -132,7 +132,6 @@ namespace mtconnect {
         {
           if (unavailable(tok))
           {
-            unavail = true;
             continue;
           }
         }
@@ -150,8 +149,7 @@ namespace mtconnect {
         }
         catch (entity::PropertyError &e)
         {
-          LOG(warning) << "Cannot convert value for: " << *token << " - " << e.what();
-          throw;
+          LOG(warning) << "Cannot convert value for data item id '" << dataItem->getId() << "': " << *token << " - " << e.what();
         }
       }
 
@@ -164,7 +162,7 @@ namespace mtconnect {
                                                    const TokenList::const_iterator &end,
                                                    ErrorList &errors)
     {
-      NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.toDataItem");
+      NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.mapTokensToDataItem");
       auto dataItemKey = splitKey(*token++);
       string device = dataItemKey.second.value_or(m_defaultDevice.value_or(""));
       auto dataItem = m_contract->findDataItem(device, dataItemKey.first);
