@@ -17,6 +17,7 @@
 
 #include "connector.hpp"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/connect.hpp>
@@ -207,7 +208,8 @@ namespace mtconnect {
                   m_socket, m_incoming, '\n',
                   asio::bind_executor(m_strand, boost::bind(&Connector::reader, this, _1, _2)));
               m_timer.cancel();
-              parseSocketBuffer();
+              while (parseSocketBuffer())
+                ;
             }
             reconnect();
           }
@@ -231,8 +233,8 @@ namespace mtconnect {
       {
         std::ostream os(&m_incoming);
         os << buffer;
-        while (m_incoming.size() > 0)
-          parseSocketBuffer();
+        while (parseSocketBuffer())
+          ;
       }
 
       inline void Connector::setReceiveTimeout()
@@ -256,32 +258,19 @@ namespace mtconnect {
         }));
       }
 
-      void Connector::parseSocketBuffer()
+      inline void Connector::processLine(const std::string &line)
       {
-        NAMED_SCOPE("Connector::parseSocketBuffer");
+        NAMED_SCOPE("Connector::processLine");
 
-        // Cancel receive time limit
-        setReceiveTimeout();
-
-        // Treat any data as a heartbeat.
-        istream is(&m_incoming);
-        string line;
-        getline(is, line);
-
-        if (line.empty())
-          return;
-
-        auto end = line.find_last_not_of(" \t\n\r");
-        if (end != string::npos)
-          line.erase(end + 1);
+        LOG(trace) << "(" << m_server << ":" << m_port << ") Received line: " << line;
 
         // Check for heartbeats
         if (line[0] == '*')
         {
           if (!line.compare(0, 6, "* PONG"))
           {
-            LOG(debug) << "(Port:" << m_localPort << ")"
-                       << " Received a PONG for " << m_server << " on port " << m_port;
+            LOG(debug) << "(Port:" << m_localPort << ") Received a PONG for " << m_server
+                       << " on port " << m_port;
             if (!m_heartbeats)
               startHeartbeats(line);
           }
@@ -294,6 +283,63 @@ namespace mtconnect {
         {
           processData(line);
         }
+      }
+
+      inline size_t rightTrimmedSize(const char *cp, const char *start)
+      {
+        while (cp > start && isspace(*cp))
+          cp--;
+        return isspace(*cp) ? 0 : cp - start + 1;
+      }
+
+      bool Connector::parseSocketBuffer()
+      {
+        NAMED_SCOPE("Connector::parseSocketBuffer");
+
+        // Cancel receive time limit
+        setReceiveTimeout();
+
+        if (m_incoming.size() == 0)
+          return false;
+
+        // Grab the beginning of the data buffer.
+        auto start = static_cast<const char *>(m_incoming.data().data());
+        auto len = m_incoming.data().size();
+
+        LOG(trace) << "(" << m_server << ":" << m_port << ") " << len
+                   << " characters in incomming buffer";
+
+        // Scan forward in the buffer for a \n
+        const char *eol = static_cast<const char *>(memchr(start, '\n', len));
+        size_t consumed = (eol == nullptr) ? 0 : eol - start + 1;
+
+        // If there is no end of line, wait for more data.
+        if (consumed == 0)
+        {
+          LOG(trace) << "(" << m_server << ":" << m_port
+                     << ") no eol found, waiting for more characters";
+          return false;
+        }
+        else
+        {
+          // Check for the condition when the line is blank
+          // This is a manual trim right using char* to skip additional work in string
+          size_t size = (consumed == 1) ? 0 : rightTrimmedSize(eol - 1, start);
+
+          // Check for a blank line, just consume and carry on
+          if (size == 0)
+          {
+            LOG(trace) << "(" << m_server << ":" << m_port << ") blank line after trimming";
+          }
+          else
+          {
+            // We have a line
+            processLine({start, size});
+          }
+        }
+
+        m_incoming.consume(consumed);
+        return m_incoming.size() > 0;
       }
 
       void Connector::sendCommand(const string &command)

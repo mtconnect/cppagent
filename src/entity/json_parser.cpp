@@ -100,7 +100,7 @@ namespace mtconnect {
               auto ent = parseJson(ef, it.key(), it.value(), errors);
               if (ent)
               {
-                if (ef->isList())
+                if (l != nullptr)
                 {
                   l->emplace_back(ent);
                 }

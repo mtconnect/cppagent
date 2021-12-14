@@ -319,8 +319,8 @@ namespace mtconnect {
         {
           if (file->m_redirect)
           {
-            ResponsePtr response = make_unique<Response>(rest_sink::status::permanent_redirect, file->m_buffer,
-                              file->m_mimeType);
+            ResponsePtr response = make_unique<Response>(rest_sink::status::permanent_redirect,
+                                                         file->m_buffer, file->m_mimeType);
             response->m_location = *file->m_redirect;
             session->writeResponse(move(response));
           }
@@ -388,7 +388,8 @@ namespace mtconnect {
         {
           auto printer = printerForAccepts(request->m_accepts);
           auto error = printError(printer, "INVALID_REQUEST", "No asset given");
-          respond(session, make_unique<Response>(rest_sink::status::bad_request, error, printer->mimeType()));
+          respond(session, make_unique<Response>(rest_sink::status::bad_request, error,
+                                                 printer->mimeType()));
         }
         return true;
       };
@@ -572,7 +573,7 @@ namespace mtconnect {
     // -------------------------------------------
 
     ResponsePtr RestService::probeRequest(const Printer *printer,
-                                                  const std::optional<std::string> &device)
+                                          const std::optional<std::string> &device)
     {
       NAMED_SCOPE("RestService::probeRequest");
 
@@ -589,19 +590,20 @@ namespace mtconnect {
       }
 
       auto counts = m_sinkContract->getAssetStorage()->getCountsByType();
-      
-      return make_unique<Response>(rest_sink::status::ok,
-              printer->printProbe(
-                  m_instanceId, m_circularBuffer.getBufferSize(), m_circularBuffer.getSequence(),
-                  m_sinkContract->getAssetStorage()->getMaxAssets(),
-                  m_sinkContract->getAssetStorage()->getCount(), deviceList, &counts),
-              printer->mimeType());
+
+      return make_unique<Response>(
+          rest_sink::status::ok,
+          printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(),
+                              m_circularBuffer.getSequence(),
+                              m_sinkContract->getAssetStorage()->getMaxAssets(),
+                              m_sinkContract->getAssetStorage()->getCount(), deviceList, &counts),
+          printer->mimeType());
     }
 
     ResponsePtr RestService::currentRequest(const Printer *printer,
-                                                    const std::optional<std::string> &device,
-                                                    const std::optional<SequenceNumber_t> &at,
-                                                    const std::optional<std::string> &path)
+                                            const std::optional<std::string> &device,
+                                            const std::optional<SequenceNumber_t> &at,
+                                            const std::optional<std::string> &path)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -617,14 +619,15 @@ namespace mtconnect {
       }
 
       // Check if there is a frequency to stream data or not
-      return make_unique<Response>(rest_sink::status::ok, fetchCurrentData(printer, filter, at), printer->mimeType());
+      return make_unique<Response>(rest_sink::status::ok, fetchCurrentData(printer, filter, at),
+                                   printer->mimeType());
     }
 
     ResponsePtr RestService::sampleRequest(const Printer *printer, const int count,
-                                                   const std::optional<std::string> &device,
-                                                   const std::optional<SequenceNumber_t> &from,
-                                                   const std::optional<SequenceNumber_t> &to,
-                                                   const std::optional<std::string> &path)
+                                           const std::optional<std::string> &device,
+                                           const std::optional<SequenceNumber_t> &from,
+                                           const std::optional<SequenceNumber_t> &to,
+                                           const std::optional<std::string> &path)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -643,9 +646,9 @@ namespace mtconnect {
       SequenceNumber_t end;
       bool endOfBuffer;
 
-      return make_unique<Response>(rest_sink::status::ok,
-              fetchSampleData(printer, filter, count, from, to, end, endOfBuffer),
-              printer->mimeType());
+      return make_unique<Response>(
+          rest_sink::status::ok,
+          fetchSampleData(printer, filter, count, from, to, end, endOfBuffer), printer->mimeType());
     }
 
     struct AsyncSampleResponse
@@ -910,9 +913,9 @@ namespace mtconnect {
     }
 
     ResponsePtr RestService::assetRequest(const Printer *printer, const int32_t count,
-                                                  const bool removed,
-                                                  const std::optional<std::string> &type,
-                                                  const std::optional<std::string> &device)
+                                          const bool removed,
+                                          const std::optional<std::string> &type,
+                                          const std::optional<std::string> &device)
     {
       using namespace rest_sink;
 
@@ -926,13 +929,15 @@ namespace mtconnect {
       }
 
       m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type);
-      return make_unique<Response>(status::ok,
-              printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                                   m_sinkContract->getAssetStorage()->getCount(), list),
-              printer->mimeType());
+      return make_unique<Response>(
+          status::ok,
+          printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
+                               m_sinkContract->getAssetStorage()->getCount(), list),
+          printer->mimeType());
     }
 
-    ResponsePtr RestService::assetIdsRequest(const Printer *printer, const std::list<std::string> &ids)
+    ResponsePtr RestService::assetIdsRequest(const Printer *printer,
+                                             const std::list<std::string> &ids)
     {
       using namespace rest_sink;
 
@@ -945,8 +950,9 @@ namespace mtconnect {
           str << id << ", ";
 
         auto message = str.str().substr(0, str.str().size() - 2);
-        return make_unique<Response>(status::not_found, printError(printer, "ASSET_NOT_FOUND", message),
-                printer->mimeType());
+        return make_unique<Response>(status::not_found,
+                                     printError(printer, "ASSET_NOT_FOUND", message),
+                                     printer->mimeType());
       }
       else
       {
@@ -959,9 +965,9 @@ namespace mtconnect {
     }
 
     ResponsePtr RestService::putAssetRequest(const Printer *printer, const std::string &asset,
-                                          const std::optional<std::string> &type,
-                                          const std::optional<std::string> &device,
-                                          const std::optional<std::string> &uuid)
+                                             const std::optional<std::string> &type,
+                                             const std::optional<std::string> &device,
+                                             const std::optional<std::string> &uuid)
     {
       using namespace rest_sink;
 
@@ -979,21 +985,23 @@ namespace mtconnect {
         {
           errorResp.emplace_back("INVALID_REQUEST", e->what());
         }
-        return make_unique<Response>(status::bad_request,
-                printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
-                                     m_circularBuffer.getSequence(), errorResp),
-                printer->mimeType());
+        return make_unique<Response>(
+            status::bad_request,
+            printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
+                                 m_circularBuffer.getSequence(), errorResp),
+            printer->mimeType());
       }
 
       AssetList list {ap};
-      return make_unique<Response>(status::ok,
-              printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                                   m_sinkContract->getAssetStorage()->getCount(), list),
-              printer->mimeType());
+      return make_unique<Response>(
+          status::ok,
+          printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
+                               m_sinkContract->getAssetStorage()->getCount(), list),
+          printer->mimeType());
     }
 
     ResponsePtr RestService::deleteAssetRequest(const Printer *printer,
-                                                        const std::list<std::string> &ids)
+                                                const std::list<std::string> &ids)
     {
       using namespace rest_sink;
       AssetList list;
@@ -1012,21 +1020,23 @@ namespace mtconnect {
       }
       else
       {
-        return make_unique<Response>(status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
-                printer->mimeType());
+        return make_unique<Response>(status::not_found,
+                                     printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
+                                     printer->mimeType());
       }
     }
 
-    ResponsePtr RestService::deleteAllAssetsRequest(
-        const Printer *printer, const std::optional<std::string> &device,
-        const std::optional<std::string> &type)
+    ResponsePtr RestService::deleteAllAssetsRequest(const Printer *printer,
+                                                    const std::optional<std::string> &device,
+                                                    const std::optional<std::string> &type)
     {
       AssetList list;
       if (m_sinkContract->getAssetStorage()->getAssets(list, std::numeric_limits<size_t>().max(),
                                                        false, device, type) == 0)
       {
-        return make_unique<Response>(status::not_found, printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
-                printer->mimeType());
+        return make_unique<Response>(status::not_found,
+                                     printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),
+                                     printer->mimeType());
       }
       else
       {
@@ -1042,9 +1052,9 @@ namespace mtconnect {
     }
 
     ResponsePtr RestService::putObservationRequest(const Printer *printer,
-                                                           const std::string &device,
-                                                           const rest_sink::QueryMap observations,
-                                                           const std::optional<std::string> &time)
+                                                   const std::string &device,
+                                                   const rest_sink::QueryMap observations,
+                                                   const std::optional<std::string> &time)
     {
       using namespace rest_sink;
 
@@ -1085,10 +1095,11 @@ namespace mtconnect {
       }
       else
       {
-        return make_unique<Response>(status::not_found,
-                printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
-                                     m_circularBuffer.getSequence(), errorResp),
-                printer->mimeType());
+        return make_unique<Response>(
+            status::not_found,
+            printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
+                                 m_circularBuffer.getSequence(), errorResp),
+            printer->mimeType());
       }
     }
 

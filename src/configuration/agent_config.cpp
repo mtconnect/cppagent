@@ -818,7 +818,8 @@ namespace mtconnect {
             continue;
 
           auto blockOptions = block.second;
-          if (!blockOptions.get_child_optional("logger_config")) {
+          if (!blockOptions.get_child_optional("logger_config"))
+          {
             auto logger = config.get_child_optional("logger_config");
             if (logger)
               blockOptions.add_child("logger_config", *logger);
@@ -886,7 +887,8 @@ namespace mtconnect {
           AddOptions(sinkBlock.second, sinkOptions, {{"Name", string()}});
 
           ptree sinkBlockOptions = sinkBlock.second;
-          if (!sinkBlockOptions.get_child_optional("logger_config")) {
+          if (!sinkBlockOptions.get_child_optional("logger_config"))
+          {
             auto logger = config.get_child_optional("logger_config");
             if (logger)
               sinkBlockOptions.add_child("logger_config", *logger);

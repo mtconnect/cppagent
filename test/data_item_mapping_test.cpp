@@ -224,8 +224,9 @@ TEST_F(DataItemMappingTest, SampleTestFormatIssue)
   auto &r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
   auto oblist = observations->getValue<EntityList>();
-  ASSERT_EQ(0, oblist.size());
-  // entity::EntityError
+  ASSERT_EQ(1, oblist.size());
+  auto sample = dynamic_pointer_cast<Sample>(oblist.front());
+  ASSERT_TRUE(sample->isUnavailable());
 }
 
 TEST_F(DataItemMappingTest, SampleTimeseries)
@@ -500,4 +501,43 @@ TEST_F(DataItemMappingTest, legacy_token_mapping_behavior)
   auto event = dynamic_pointer_cast<Event>(*it++);
   ASSERT_TRUE(event);
   ASSERT_EQ("value1", event->getValue<string>());
+}
+
+TEST_F(DataItemMappingTest, continue_after_conversion_error)
+{  
+  auto ppos = makeDataItem({{"id", "a"s}, {"type", "PATH_POSITION"s}, {"category", "SAMPLE"s},
+    {"units", "MILLIMETER_3D"s}
+  });
+  auto pos = makeDataItem({{"id", "b"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
+    {"units", "MILLIMETER"s}
+  });
+  auto prog = makeDataItem({{"id", "c"s}, {"type", "PROGRAM"s}, {"category", "EVENT"s}});
+
+  auto ts = makeTimestamped({"a", "test"s, "b", "1.23"s, "c", "program"s});
+  auto observations = (*m_mapper)(ts);
+  auto &r = *observations;
+  ASSERT_EQ(typeid(Observations), typeid(r));
+    
+  auto oblist = observations->getValue<EntityList>();
+  ASSERT_EQ(3, oblist.size());
+
+  auto it = oblist.begin();
+  
+  auto sample = dynamic_pointer_cast<ThreeSpaceSample>(*it++);
+  ASSERT_TRUE(sample);
+  ASSERT_EQ(ppos, sample->getDataItem());
+  ASSERT_TRUE(ppos->isSample());
+  ASSERT_TRUE(sample->isUnavailable());
+
+  auto position = dynamic_pointer_cast<Sample>(*it++);
+  ASSERT_TRUE(position);
+  ASSERT_EQ(pos, position->getDataItem());
+  ASSERT_TRUE(pos->isSample());
+  ASSERT_EQ(1.23, position->getValue<double>());
+
+  auto program = dynamic_pointer_cast<Event>(*it++);
+  ASSERT_TRUE(program);
+  ASSERT_EQ(prog, program->getDataItem());
+  ASSERT_TRUE(prog->isEvent());
+  ASSERT_EQ("program", program->getValue<string>());
 }
