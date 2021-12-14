@@ -404,11 +404,12 @@ namespace mtconnect {
         if (ec == beast::errc::no_such_file_or_directory)
           return fail(boost::beast::http::status::not_found, "File Not Found", ec);
 
+        auto size = body.size();
         auto res = make_shared<http::response<http::file_body>>(
             std::piecewise_construct, std::make_tuple(std::move(body)),
             std::make_tuple(m_outgoing->m_status, 11));
         res->set(http::field::content_type, m_outgoing->m_mimeType);
-        res->content_length(body.size());
+        res->content_length(size);
         if (encoding)
           res->set(http::field::content_encoding, "gzip");
         addHeaders(*m_outgoing, res);

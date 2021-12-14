@@ -145,7 +145,7 @@ namespace mtconnect {
                 auto ent = parseXmlNode(ef, child, errors);
                 if (ent)
                 {
-                  if (ef->isList())
+                  if (l != nullptr)
                   {
                     l->emplace_back(ent);
                   }
