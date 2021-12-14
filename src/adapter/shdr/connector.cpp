@@ -334,8 +334,7 @@ namespace mtconnect {
           else
           {
             // We have a line
-            string line(start, size);
-            processLine(line);
+            processLine({start, size});
           }
         }
 
