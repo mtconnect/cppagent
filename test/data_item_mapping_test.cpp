@@ -506,10 +506,10 @@ TEST_F(DataItemMappingTest, legacy_token_mapping_behavior)
 TEST_F(DataItemMappingTest, continue_after_conversion_error)
 {  
   auto ppos = makeDataItem({{"id", "a"s}, {"type", "PATH_POSITION"s}, {"category", "SAMPLE"s},
-    {"units", "MILLIMETER_3D"}
+    {"units", "MILLIMETER_3D"s}
   });
   auto pos = makeDataItem({{"id", "b"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
-    {"units", "MILLIMETER"}
+    {"units", "MILLIMETER"s}
   });
   auto prog = makeDataItem({{"id", "c"s}, {"type", "PROGRAM"s}, {"category", "EVENT"s}});
 
