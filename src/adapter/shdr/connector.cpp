@@ -322,17 +322,9 @@ namespace mtconnect {
         }
         else
         {
-          size_t size;
           // Check for the condition when the line is blank
-          if (consumed == 1)
-          {
-            size = 0;
-          }
-          else
-          {
-            // This is a manual trim right using char* to skip additional work in string
-            size = rightTrimmedSize(eol - 1, start);
-          }
+          // This is a manual trim right using char* to skip additional work in string
+          size_t size = (consumed == 1) ? 0 : rightTrimmedSize(eol - 1, start);
 
           // Check for a blank line, just consume and carry on
           if (size == 0)
