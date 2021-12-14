@@ -513,7 +513,7 @@ TEST_F(DataItemMappingTest, continue_after_conversion_error)
   });
   auto prog = makeDataItem({{"id", "c"s}, {"type", "PROGRAM"s}, {"category", "EVENT"s}});
 
-  auto ts = makeTimestamped({"a", "test", "b", "1.23", "c", "program"});
+  auto ts = makeTimestamped({"a", "test"s, "b", "1.23"s, "c", "program"s});
   auto observations = (*m_mapper)(ts);
   auto &r = *observations;
   ASSERT_EQ(typeid(Observations), typeid(r));
