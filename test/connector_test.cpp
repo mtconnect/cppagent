@@ -31,8 +31,27 @@ using namespace date;
 #include <chrono>
 #include <memory>
 #include <sstream>
+#include <iomanip>
+#include <iostream>
+#include <numeric>
 #include <thread>
 
+
+namespace std::chrono 
+{  
+  template< 
+    class CharT, 
+    class Traits = std::char_traits<CharT>
+    >
+  inline std::basic_ostream<CharT, Traits> &operator<<(std::basic_ostream<CharT, Traits> &s,
+						       const duration<long int, std::ratio<1, 1000> > &d)
+  {
+    s << d.count();
+    return s;
+  }
+}
+
+ 
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
