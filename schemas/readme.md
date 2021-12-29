@@ -1,4 +1,4 @@
-MTConnect Schema Files Versions 1.0 - 1.5
+MTConnect Schema Files Versions 1.0 - 1.8
 ===
 
 Files are named with respect to the section of the standard they apply. 
@@ -13,6 +13,9 @@ The files included in this directory are as follows:
 * Version 1.3 (With XSD 1.0 compatible files)
 * Version 1.4 (With XSD 1.0 compatible files)
 * Version 1.5 (With XSD 1.0 compatible files)
+* Version 1.6 (With XSD 1.0 compatible files)
+* Version 1.7 (With XSD 1.0 compatible files)
+* Version 1.8 (With XSD 1.0 compatible files)
 
 The schemas are replicated to http://schemas.mtconnect.org
 
