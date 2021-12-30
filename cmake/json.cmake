@@ -5,7 +5,7 @@
 # This automatically sets all required information such as include directories, definitions etc.   #
 ####################################################################################################
 
-set(agent_json_lib_version_tag "v3.7.3")
+set(agent_json_lib_version_tag "v3.9.1")
 
 if(NOT TARGET json)
   message(STATUS "Make JSON library (${agent_json_lib_version_tag}) available.")
