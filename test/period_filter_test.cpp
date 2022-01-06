@@ -103,10 +103,10 @@ protected:
     return (*m_mapper)(ts);
   }
 
-  void createDataItem(double rate)
+  void createDataItem()
   {
     ErrorList errors;
-    auto f = Filter::getFactory()->create("Filter", {{"type", "PERIOD"s}, {"VALUE", rate}}, errors);
+    auto f = Filter::getFactory()->create("Filter", {{"type", "PERIOD"s}, {"VALUE", 1.0}}, errors);
     EntityList list {f};
     auto filters = DataItem::getFactory()->factoryFor("DataItem")->create("Filters", list, errors);
 
@@ -142,7 +142,7 @@ protected:
 
 TEST_F(PeriodFilterTest, test_simple_time_series)
 {
-  createDataItem(10.0);
+  createDataItem();
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
@@ -154,28 +154,32 @@ TEST_F(PeriodFilterTest, test_simple_time_series)
     ASSERT_EQ(1, observations().size());
   }
   {
-    auto os = observe({"a", "1.5"}, now + 2s);
+    auto os = observe({"a", "1.5"}, now + 200ms);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
   }
   {
-    auto os = observe({"a", "1.5"}, now + 5s);
+    auto os = observe({"a", "1.5"}, now + 500ms);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
   }
   {
-    auto os = observe({"a", "1.5"}, now + 11s);
+    auto os = observe({"a", "1.5"}, now + 1100ms);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(2, observations().size());
   }
+  
+  m_ioContext.run_for(1s);
+
+  ASSERT_EQ(2, observations().size());
 }
 
 TEST_F(PeriodFilterTest, delayed_delivery)
 {
-  createDataItem(1.0);
+  createDataItem();
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
@@ -203,7 +207,7 @@ TEST_F(PeriodFilterTest, delayed_delivery)
 
 TEST_F(PeriodFilterTest, delayed_delivery_with_replace)
 {
-  createDataItem(1.0);
+  createDataItem();
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
@@ -237,7 +241,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_replace)
 
 TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
 {
-  createDataItem(1.0);
+  createDataItem();
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
