@@ -38,7 +38,6 @@ macro(create_clangformat_target)
   endif()
 
   if(NOT ("${CLANGFORMAT_EXECUTABLE}" STREQUAL "NotFound"))
-    message(INFO ": ClangFormat ${clangformat_files}")
     add_custom_target(clangformat
         COMMAND
         ${CLANGFORMAT_EXECUTABLE}
