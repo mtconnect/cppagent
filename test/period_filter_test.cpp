@@ -322,4 +322,27 @@ TEST_F(PeriodFilterTest, deliver_after_delayed_delivery)
     auto end = obs.back();
     ASSERT_EQ(3.0, end->getValue<double>());
   }
+  
+  {
+    auto os = observe({"a", "4"}, now + 2600ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(3, observations().size());
+  }
+  {
+    auto os = observe({"a", "5"}, now + 3200ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(4, observations().size());
+  }
+
+  m_ioContext.run_for(750s);
+
+  {
+    ASSERT_EQ(4, obs.size());
+    auto end = obs.back();
+    ASSERT_EQ(5.0, end->getValue<double>());
+  }
+  
+
 }
