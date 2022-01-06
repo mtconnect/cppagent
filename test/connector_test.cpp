@@ -19,9 +19,6 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-namespace date {};
-using namespace date;
-
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
 
@@ -32,6 +29,9 @@ using namespace date;
 #include <thread>
 
 #include "adapter/shdr/connector.hpp"
+
+namespace date {};
+using namespace date;
 
 using namespace std;
 using namespace std::chrono;
