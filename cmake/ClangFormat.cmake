@@ -48,5 +48,7 @@ macro(create_clangformat_target)
 	COMMENT
 	"Formating with ${CLANGFORMAT_EXECUTABLE} ..."
       )
-  endif()  
+  endif()
+
+  # set_property(TARGET clangformat PROPERTY SOURCES ${clangformat_files})
 endmacro()
