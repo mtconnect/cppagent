@@ -231,7 +231,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_replace)
     ASSERT_EQ(1, observations().size());
   }
 
-  m_ioContext.run_for(500ms);
+  m_ioContext.run_for(750ms);
 
   auto obs = observations();
   ASSERT_EQ(2, obs.size());
@@ -271,7 +271,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
     ASSERT_EQ(2, observations().size());
   }
 
-  m_ioContext.run_for(500ms);
+  m_ioContext.run_for(750ms);
 
   auto obs = observations();
   ASSERT_EQ(2, obs.size());
