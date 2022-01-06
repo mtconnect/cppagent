@@ -188,6 +188,7 @@ add_agent_test(data_item_mapping FALSE pipeline)
 add_agent_test(duplicate_filter FALSE pipeline)
 add_agent_test(pipeline_deliver TRUE pipeline)
 add_agent_test(topic_mapping TRUE pipeline)
+add_agent_test(period_filter TRUE pipeline)
 add_agent_test(pipeline_edit FALSE pipeline)
 
 add_agent_test(agent TRUE core)

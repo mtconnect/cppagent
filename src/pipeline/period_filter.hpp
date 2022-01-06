@@ -26,15 +26,35 @@ namespace mtconnect {
     class PeriodFilter : public Transform
     {
     public:
+      struct LastObservation {
+        LastObservation(std::chrono::milliseconds p,
+                        boost::asio::io_context::strand &st)
+        : m_timer(st.context()), m_period(p)
+        {}
+        ~LastObservation()
+        {
+          m_timer.cancel();
+        }
+        
+        Timestamp m_timestamp;
+        observation::ObservationPtr m_observation;
+        boost::asio::steady_timer m_timer;
+        std::chrono::milliseconds m_period;
+      };
+      
+      using LastObservationMap = std::unordered_map<std::string, LastObservation>;
+      using LastObservationIterator = LastObservationMap::iterator;
+      
       struct State : TransformState
       {
-        std::unordered_map<std::string, Timestamp> m_lastTimeOffset;
+        LastObservationMap m_lastObservation;
       };
 
-      PeriodFilter(PipelineContextPtr context)
+      PeriodFilter(PipelineContextPtr context, boost::asio::io_context::strand &st)
         : Transform("PeriodFilter"),
           m_state(context->getSharedState<State>(m_name)),
-          m_contract(context->m_contract.get())
+          m_contract(context->m_contract.get()),
+          m_strand(st)
       {
         using namespace observation;
         constexpr static auto lambda = [](const Observation &s) {
@@ -51,53 +71,112 @@ namespace mtconnect {
         using namespace observation;
         using namespace entity;
 
-        std::lock_guard<TransformState> guard(*m_state);
-
-        auto o = std::dynamic_pointer_cast<Observation>(entity);
-        auto di = o->getDataItem();
-        auto &id = di->getId();
-
-        if (o->isUnavailable())
         {
-          m_state->m_lastTimeOffset.erase(id);
-          return next(entity);
+          std::lock_guard<TransformState> guard(*m_state);
+          
+          auto o = std::dynamic_pointer_cast<Observation>(entity);
+          auto di = o->getDataItem();
+          auto &id = di->getId();
+          
+          if (o->isUnavailable())
+          {
+            m_state->m_lastObservation.erase(id);
+          }
+          else
+          {
+            auto ts = o->getTimestamp();
+
+            auto last = m_state->m_lastObservation.find(id);
+            if (last == m_state->m_lastObservation.end())
+            {
+              auto period = chrono::milliseconds(static_cast<int64_t>(*di->getMinimumPeriod() * 1000.0));
+              auto res = m_state->m_lastObservation.try_emplace(id, period, m_strand);
+              if (res.second)
+                last = res.first;
+              else
+              {
+                LOG(error) << "PeriodFilter cannot create last observation";
+                return EntityPtr();
+              }
+            }
+            
+            if (filterPeriod(last->second, id, o, ts))
+              return EntityPtr();
+          }
         }
-
-        auto minDuration = chrono::duration<double>(*di->getMinimumPeriod());
-        auto ts = o->getTimestamp();
-        if (filterPeriod(id, ts, minDuration))
-          return EntityPtr();
-
+        
         return next(entity);
       }
 
     protected:
-      bool filterPeriod(const std::string &id, const Timestamp &ts,
-                        const std::chrono::duration<double> md)
+      bool filterPeriod(LastObservation &last,
+                        const std::string &id,
+                        observation::ObservationPtr observation,
+                        const Timestamp &ts)
       {
         using namespace std;
-
-        auto last = m_state->m_lastTimeOffset.find(id);
-        if (last != m_state->m_lastTimeOffset.end())
+        
+        auto lv = last.m_timestamp;
+        auto delta = ts - lv;
+        if (delta.count() > 0 && delta < last.m_period)
         {
-          auto lv = last->second;
-          if (ts < (lv + md))
+          bool observed = bool(last.m_observation);
+          last.m_observation = observation;
+          
+          // If we have not already observed something for this data item,
+          // set a timer, otherwise the current observation will replace the last
+          // and be triggered when the timer expires.
+          if (!observed)
           {
-            return true;
+            // Set timer for duration seconds to send the latest obsrvation
+            using boost::placeholders::_1;
+            
+            // Set the timer to expire in the remaining time left in the period
+            last.m_timer.expires_from_now(last.m_period - delta);
+            last.m_timer.async_wait(boost::asio::bind_executor(m_strand, boost::bind(&PeriodFilter::sendObservation, this, id, _1)));
           }
-          last->second = ts;
+          
+          return true;
         }
         else
         {
-          m_state->m_lastTimeOffset[id] = ts;
-        }
+          if (last.m_observation)
+          {
+            last.m_timer.cancel();
+            last.m_observation.reset();
+          }
+          last.m_timestamp = ts;
 
-        return false;
+          return false;
+        }
+      }
+      
+      void sendObservation(const std::string id, boost::system::error_code ec)
+      {
+        using namespace std;
+        using namespace observation;
+        
+        ObservationPtr obs;
+        {
+          std::lock_guard<TransformState> guard(*m_state);
+          
+          auto filtered = m_state->m_lastObservation.find(id);
+          if (filtered != m_state->m_lastObservation.end() && filtered->second.m_observation)
+          {
+            filtered->second.m_observation.swap(obs);
+          }
+        }
+        
+        if (obs)
+        {
+          next(obs);
+        }
       }
 
     protected:
       std::shared_ptr<State> m_state;
       PipelineContract *m_contract;
+      boost::asio::io_context::strand &m_strand;
     };
   }  // namespace pipeline
 }  // namespace mtconnect
