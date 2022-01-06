@@ -3,7 +3,25 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-function(clangformat_setup target)
+set_property(GLOBAL PROPERTY CLANGFORMAT_FILES "")
+
+macro(target_clangformat_setup target)
+  set(sources "")
+  get_target_property(target_sources ${target} SOURCES)
+  foreach(clangformat_source ${target_sources})
+    if (${clangformat_source} MATCHES "\.?pp$")
+      get_filename_component(clangformat_source ${clangformat_source} ABSOLUTE)
+      list(APPEND sources ${clangformat_source})
+    endif()
+  endforeach()
+  
+  get_property(clangformat_files GLOBAL PROPERTY CLANGFORMAT_FILES)
+  set_property(GLOBAL PROPERTY CLANGFORMAT_FILES "${clangformat_files};${sources}")
+endmacro()
+
+macro(create_clangformat_target)
+  get_property(clangformat_files GLOBAL PROPERTY CLANGFORMAT_FILES)
+
   if(NOT CLANGFORMAT_EXECUTABLE)
     set(CLANGFORMAT_EXECUTABLE clang-format)
   endif()
@@ -15,39 +33,20 @@ function(clangformat_setup target)
       unset(clangformat_executable_tmp)
     else()
       set(CLANGFORMAT_EXECUTABLE "NotFound")
-      message(INFO "ClangFormat executable not found, skipping code format targets.")
+      message(INFO ": ClangFormat executable not found, skipping code format targets.")
     endif()
   endif()
 
-  foreach(clangformat_source ${ARGV})
-    if (${clangformat_source} MATCHES "\.?pp$")
-      get_filename_component(clangformat_source ${clangformat_source} ABSOLUTE)
-      list(APPEND clangformat_sources ${clangformat_source})
-    endif()
-  endforeach()
-
   if(NOT ("${CLANGFORMAT_EXECUTABLE}" STREQUAL "NotFound"))
-    add_custom_target(${target}_clangformat
+    message(INFO ": ClangFormat ${clangformat_files}")
+    add_custom_target(clangformat
         COMMAND
         ${CLANGFORMAT_EXECUTABLE}
         -style=file
         -i
-        ${clangformat_sources}
+        ${clangformat_files}
 	COMMENT
 	"Formating with ${CLANGFORMAT_EXECUTABLE} ..."
       )
-
-      set_target_properties(${target}_clangformat PROPERTIES FOLDER "clangformat")
-    
-    if(TARGET clangformat)
-      add_dependencies(clangformat ${target}_clangformat)
-    else()
-      add_custom_target(clangformat DEPENDS ${target}_clangformat)
-    endif()
-  endif()
-endfunction()
-
-function(target_clangformat_setup target)
-  get_target_property(target_sources ${target} SOURCES)
-  clangformat_setup(${target} ${target_sources})
-endfunction()
+  endif()  
+endmacro()

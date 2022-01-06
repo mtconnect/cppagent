@@ -91,6 +91,8 @@ endif()
 
 include(cmake/ide_integration.cmake)
 
+create_clangformat_target()
+
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
 # We will set this to the agent_test project.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT agent_test)
