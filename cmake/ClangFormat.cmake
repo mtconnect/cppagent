@@ -36,6 +36,8 @@ function(clangformat_setup target)
 	COMMENT
 	"Formating with ${CLANGFORMAT_EXECUTABLE} ..."
       )
+
+      set_target_properties(${target}_clangformat PROPERTIES FOLDER "clangformat")
     
     if(TARGET clangformat)
       add_dependencies(clangformat ${target}_clangformat)

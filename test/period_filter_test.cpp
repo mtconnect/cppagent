@@ -171,7 +171,7 @@ TEST_F(PeriodFilterTest, test_simple_time_series)
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(2, observations().size());
   }
-  
+
   m_ioContext.run_for(1s);
 
   ASSERT_EQ(2, observations().size());
