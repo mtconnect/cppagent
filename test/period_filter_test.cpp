@@ -128,7 +128,7 @@ protected:
     return rate;
   }
 
-  auto observations()
+  auto &observations()
   {
     return static_cast<MockPipelineContract *>(m_context->m_contract.get())->m_observations;
   }
@@ -277,4 +277,49 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
   ASSERT_EQ(2, obs.size());
   auto end = obs.back();
   ASSERT_EQ(4.0, end->getValue<double>());
+}
+
+TEST_F(PeriodFilterTest, deliver_after_delayed_delivery)
+{
+  createDataItem();
+  makeFilter();
+
+  Timestamp now = chrono::system_clock::now();
+
+  {
+    auto os = observe({"a", "1"}, now);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(1, observations().size());
+  }
+  {
+    auto os = observe({"a", "2"}, now + 500ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(1, observations().size());
+  }
+
+  m_ioContext.run_for(750ms);
+  m_ioContext.restart();
+  auto &obs = observations();
+
+  {
+    ASSERT_EQ(2, obs.size());
+    auto end = obs.back();
+    ASSERT_EQ(2.0, end->getValue<double>());
+  }
+  {
+    auto os = observe({"a", "3"}, now + 1600ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(2, observations().size());
+  }
+
+  m_ioContext.run_for(750s);
+
+  {
+    ASSERT_EQ(3, obs.size());
+    auto end = obs.back();
+    ASSERT_EQ(3.0, end->getValue<double>());
+  }
 }

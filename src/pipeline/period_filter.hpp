@@ -37,6 +37,7 @@ namespace mtconnect {
         observation::ObservationPtr m_observation;
         boost::asio::steady_timer m_timer;
         std::chrono::milliseconds m_period;
+        std::chrono::microseconds m_delta;
       };
 
       using LastObservationMap = std::unordered_map<std::string, LastObservation>;
@@ -120,6 +121,7 @@ namespace mtconnect {
         {
           bool observed = bool(last.m_observation);
           last.m_observation = observation;
+          last.m_delta = last.m_period - delta;
 
           // If we have not already observed something for this data item,
           // set a timer, otherwise the current observation will replace the last
@@ -130,7 +132,7 @@ namespace mtconnect {
             using boost::placeholders::_1;
 
             // Set the timer to expire in the remaining time left in the period
-            last.m_timer.expires_from_now(last.m_period - delta);
+            last.m_timer.expires_after(last.m_delta);
             last.m_timer.async_wait(boost::asio::bind_executor(
                 m_strand, boost::bind(&PeriodFilter::sendObservation, this, id, _1)));
           }
@@ -156,25 +158,29 @@ namespace mtconnect {
 
       void sendObservation(const std::string id, boost::system::error_code ec)
       {
-        using namespace std;
-        using namespace observation;
-
-        ObservationPtr obs;
+        if (!ec)
         {
-          std::lock_guard<TransformState> guard(*m_state);
-
-          // Find the entry for this data item and make sure there is an observation
-          auto last = m_state->m_lastObservation.find(id);
-          if (last != m_state->m_lastObservation.end() && last->second.m_observation)
+          using namespace std;
+          using namespace observation;
+          
+          ObservationPtr obs;
           {
-            last->second.m_observation.swap(obs);
+            std::lock_guard<TransformState> guard(*m_state);
+            
+            // Find the entry for this data item and make sure there is an observation
+            auto last = m_state->m_lastObservation.find(id);
+            if (last != m_state->m_lastObservation.end() && last->second.m_observation)
+            {
+              last->second.m_observation.swap(obs);
+              last->second.m_timestamp = obs->getTimestamp() + last->second.m_delta;
+            }
           }
-        }
-
-        // Send the observation onward
-        if (obs)
-        {
-          next(obs);
+          
+          // Send the observation onward
+          if (obs)
+          {
+            next(obs);
+          }
         }
       }
 
