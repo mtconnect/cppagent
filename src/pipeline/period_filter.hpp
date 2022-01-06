@@ -37,7 +37,7 @@ namespace mtconnect {
         observation::ObservationPtr m_observation;
         boost::asio::steady_timer m_timer;
         std::chrono::milliseconds m_period;
-        std::chrono::microseconds m_delta;
+        std::chrono::milliseconds m_delta;
       };
 
       using LastObservationMap = std::unordered_map<std::string, LastObservation>;
@@ -114,11 +114,13 @@ namespace mtconnect {
                     observation::ObservationPtr observation, const Timestamp &ts)
       {
         using namespace std;
+        using namespace chrono;
 
         auto lv = last.m_timestamp;
-        auto delta = ts - lv;
+        auto delta = duration_cast<milliseconds>(ts - lv);
         if (delta.count() > 0 && delta < last.m_period)
         {
+          
           bool observed = bool(last.m_observation);
           last.m_observation = observation;
           last.m_delta = last.m_period - delta;
