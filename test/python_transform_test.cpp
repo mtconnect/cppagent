@@ -25,15 +25,16 @@
 #include <boost/python/str.hpp>
 #include <boost/python/tuple.hpp>
 
-#include "agent_test_helper.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
-#include "pipeline/duplicate_filter.hpp"
-#include "pipeline/delta_filter.hpp"
-#include "pipeline/deliver.hpp"
-#include "pipeline/pipeline.hpp"
-#include "observation/observation.hpp"
-#include "adapter/adapter.hpp"
 #include <chrono>
+
+#include "adapter/adapter.hpp"
+#include "agent_test_helper.hpp"
+#include "observation/observation.hpp"
+#include "pipeline/deliver.hpp"
+#include "pipeline/delta_filter.hpp"
+#include "pipeline/duplicate_filter.hpp"
+#include "pipeline/pipeline.hpp"
+#include "pipeline/shdr_token_mapper.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::adapter;
@@ -46,28 +47,20 @@ using namespace mtconnect::rest_sink;
 
 class PythonTransformTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml",
-                                   8, 4, "1.7", 25);
+    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml", 8, 4, "1.7", 25);
     m_agentId = to_string(getCurrentTimeInSec());
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
-  void TearDown() override
-  {
-    m_agentTestHelper.reset();
-  }
+  void TearDown() override { m_agentTestHelper.reset(); }
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   std::string m_agentId;
-  DevicePtr m_device{nullptr};
+  DevicePtr m_device {nullptr};
 };
 
-TEST_F(PythonTransformTest, add_python_transform_to_adapter_pipeline)
-{
-}
-
-
+TEST_F(PythonTransformTest, add_python_transform_to_adapter_pipeline) {}

@@ -19,21 +19,21 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "rest_sink/checkpoint.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "device_model/device.hpp"
-#include "utilities.hpp"
-#include "json_helper.hpp"
-#include "json_printer.hpp"
-#include "observation/observation.hpp"
-
-#include <nlohmann/json.hpp>
-
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include <nlohmann/json.hpp>
+
+#include "device_model/data_item/data_item.hpp"
+#include "device_model/device.hpp"
+#include "json_helper.hpp"
+#include "json_printer.hpp"
+#include "observation/observation.hpp"
+#include "rest_sink/checkpoint.hpp"
+#include "utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -41,11 +41,8 @@ using json = nlohmann::json;
 
 class JsonPrinterErrorTest : public testing::Test
 {
- protected:
-  void SetUp() override
-  {
-    m_printer = std::make_unique<JsonPrinter>("1.5", true);
-  }
+protected:
+  void SetUp() override { m_printer = std::make_unique<JsonPrinter>("1.5", true); }
 
   std::unique_ptr<JsonPrinter> m_printer;
 };

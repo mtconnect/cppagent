@@ -19,13 +19,14 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "test_utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
-#include "device_model/reference.hpp"
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+
+#include "device_model/reference.hpp"
+#include "test_utilities.hpp"
+#include "xml_parser.hpp"
+#include "xml_printer.hpp"
 
 using namespace std;
 using namespace std::literals;
@@ -36,7 +37,7 @@ using namespace data_item;
 
 class XmlParserTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     m_xmlParser = nullptr;
@@ -63,8 +64,8 @@ class XmlParserTest : public testing::Test
     }
   }
 
-  XmlParser *m_xmlParser{nullptr};
-  std::list<DevicePtr > m_devices;
+  XmlParser *m_xmlParser {nullptr};
+  std::list<DevicePtr> m_devices;
 };
 
 TEST_F(XmlParserTest, Constructor)
@@ -341,7 +342,7 @@ TEST_F(XmlParserTest, FilteredDataItem)
 TEST_F(XmlParserTest, References)
 {
   using namespace device_model;
-  
+
   if (m_xmlParser)
   {
     delete m_xmlParser;
@@ -374,7 +375,7 @@ TEST_F(XmlParserTest, References)
   auto r = dynamic_pointer_cast<Reference>(*ref);
   ASSERT_TRUE(r);
   ASSERT_TRUE(r->getDataItem().lock()) << "DataItem was not resolved.";
-  
+
   ref++;
   ASSERT_EQ((string) "d2", (*ref)->get<string>("idRef"));
   ASSERT_EQ((string) "door", (*ref)->get<string>("name"));
@@ -443,45 +444,39 @@ TEST_F(XmlParserTest, DataItemRelationships)
 
   unique_ptr<XmlPrinter> printer(new XmlPrinter());
   m_xmlParser = new XmlParser();
-  m_devices = m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", printer.get());
-  
+  m_devices =
+      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", printer.get());
+
   const auto &device = m_devices.front();
   auto &dataItemsMap = device->getDeviceDataItems();
-  
+
   const auto item1 = dataItemsMap.at("xlc").lock();
   ASSERT_TRUE(item1 != nullptr);
-    
+
   const auto &relations = item1->getList("Relationships");
   ASSERT_TRUE(relations);
-  
-  ASSERT_EQ((size_t) 2, relations->size());
+
+  ASSERT_EQ((size_t)2, relations->size());
 
   auto rel = relations->begin();
-  ASSERT_EQ(string("DataItemRelationship"),
-	    (*rel)->getName());
-  ASSERT_EQ(string("LIMIT"),
-            (*rel)->get<string>("type"));
-  ASSERT_EQ(string("archie"),
-            (*rel)->get<string>("name"));
-  ASSERT_EQ(string("xlcpl"),
-            (*rel)->get<string>("idRef"));
-  
+  ASSERT_EQ(string("DataItemRelationship"), (*rel)->getName());
+  ASSERT_EQ(string("LIMIT"), (*rel)->get<string>("type"));
+  ASSERT_EQ(string("archie"), (*rel)->get<string>("name"));
+  ASSERT_EQ(string("xlcpl"), (*rel)->get<string>("idRef"));
+
   rel++;
-  ASSERT_EQ(string("SpecificationRelationship"),
-            (*rel)->getName());
-  ASSERT_EQ(string("LIMIT"),
-            (*rel)->get<string>("type"));
+  ASSERT_EQ(string("SpecificationRelationship"), (*rel)->getName());
+  ASSERT_EQ(string("LIMIT"), (*rel)->get<string>("type"));
   ASSERT_FALSE((*rel)->maybeGet<string>("name"));
-  ASSERT_EQ(string("spec1"),
-            (*rel)->get<string>("idRef"));
-  
+  ASSERT_EQ(string("spec1"), (*rel)->get<string>("idRef"));
+
   const auto item2 = dataItemsMap.at("xlcpl").lock();
   ASSERT_TRUE(item2 != nullptr);
-  
+
   const auto &relations2 = item2->getList("Relationships");
 
-  ASSERT_EQ((size_t) 1, relations2->size());
-  
+  ASSERT_EQ((size_t)1, relations2->size());
+
   auto rel2 = relations2->begin();
   ASSERT_EQ(string("DataItemRelationship"), (*rel2)->getName());
   ASSERT_EQ(string("OBSERVATION"), (*rel2)->get<string>("type"));

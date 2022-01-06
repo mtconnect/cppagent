@@ -2,19 +2,19 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
-#include "agent_test_helper.hpp"
-#include "json_helper.hpp"
-#include "device_model/composition.hpp"
-
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
-#include <set>
+
+#include "adapter/adapter.hpp"
+#include "agent.hpp"
+#include "agent_test_helper.hpp"
+#include "device_model/composition.hpp"
+#include "json_helper.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -24,21 +24,17 @@ using namespace entity;
 
 class CompositionTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/configuration.xml",
-                                   8, 4, "1.5", 25);
+    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "1.5", 25);
 
     auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("power");
   }
 
-  void TearDown() override
-  {
-    m_agentTestHelper.reset();
-  }
+  void TearDown() override { m_agentTestHelper.reset(); }
 
   ComponentPtr m_component;
 
@@ -49,7 +45,7 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
 {
   using namespace mtconnect::entity;
   ASSERT_NE(nullptr, m_component);
-  
+
   const auto &compositions = m_component->getList("Compositions");
   ASSERT_TRUE(compositions);
 
@@ -58,20 +54,19 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
 
   EXPECT_EQ("Composition", (*composition)->getName());
 
-  EXPECT_EQ("zmotor", get<string>((*composition)->getProperty("id")));  
+  EXPECT_EQ("zmotor", get<string>((*composition)->getProperty("id")));
   EXPECT_EQ("MOTOR", get<string>((*composition)->getProperty("type")));
   EXPECT_EQ("12345", get<string>((*composition)->getProperty("uuid")));
   EXPECT_EQ("motor_name", get<string>((*composition)->getProperty("name")));
-  
+
   auto description = (*composition)->get<entity::EntityPtr>("Description");
 
   EXPECT_EQ("open", get<string>(description->getProperty("manufacturer")));
   EXPECT_EQ("vroom", get<string>(description->getProperty("model")));
   EXPECT_EQ("12356", get<string>(description->getProperty("serialNumber")));
-  EXPECT_EQ("A", get<string>(description-> getProperty("station")));
+  EXPECT_EQ("A", get<string>(description->getProperty("station")));
   EXPECT_EQ("Hello There", get<string>(description->getValue()));
 
- 
   const auto &configuration = (*composition)->get<EntityPtr>("Configuration");
 
   auto specs = configuration->getList("Specifications");
@@ -89,10 +84,9 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ(10000.0, get<double>((*it)->getProperty("Maximum")));
   EXPECT_EQ(100.0, get<double>((*it)->getProperty("Minimum")));
   EXPECT_EQ(1000.0, get<double>((*it)->getProperty("Nominal")));
- 
 }
 
-#define COMPOSITION_PATH  "//m:Power[@id='power']/m:Compositions/m:Composition[@id='zmotor']"
+#define COMPOSITION_PATH "//m:Power[@id='power']/m:Compositions/m:Composition[@id='zmotor']"
 #define CONFIGURATION_PATH COMPOSITION_PATH "/m:Configuration"
 #define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
 
@@ -100,20 +94,20 @@ TEST_F(CompositionTest, XmlPrinting)
 {
   {
     PARSE_XML_RESPONSE("/probe");
-    
-    ASSERT_XML_PATH_COUNT(doc, COMPOSITION_PATH , 1);
 
-    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH , 1);
-    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*" , 1);
+    ASSERT_XML_PATH_COUNT(doc, COMPOSITION_PATH, 1);
 
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@type" , "VOLTAGE_AC");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@units" , "VOLT");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@name" , "voltage");
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH, 1);
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*", 1);
+
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@type", "VOLTAGE_AC");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@units", "VOLT");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification@name", "voltage");
 
     ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/m:Specification/*", 3);
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Maximum" , "10000");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Minimum" , "100");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Nominal" , "1000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Maximum", "10000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Minimum", "100");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification/m:Nominal", "1000");
   }
 }
 
@@ -121,7 +115,7 @@ TEST_F(CompositionTest, JsonPrinting)
 {
   {
     PARSE_JSON_RESPONSE("/probe");
-    
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
 
@@ -135,7 +129,7 @@ TEST_F(CompositionTest, JsonPrinting)
     EXPECT_EQ("VOLTAGE_AC", cfields["type"]);
     EXPECT_EQ("VOLT", cfields["units"]);
     EXPECT_EQ("voltage", cfields["name"]);
-    
+
     EXPECT_EQ(10000.0, cfields["Maximum"]);
     EXPECT_EQ(100.0, cfields["Minimum"]);
     EXPECT_EQ(1000.0, cfields["Nominal"]);

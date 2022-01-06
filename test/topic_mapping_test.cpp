@@ -19,11 +19,12 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "pipeline/topic_mapper.hpp"
-#include "pipeline/pipeline_context.hpp"
-#include "observation/observation.hpp"
-#include "device_model/device.hpp"
 #include <chrono>
+
+#include "device_model/device.hpp"
+#include "observation/observation.hpp"
+#include "pipeline/pipeline_context.hpp"
+#include "pipeline/topic_mapper.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -36,27 +37,23 @@ using namespace std;
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string,DataItemPtr> &items,
-                       std::map<string,DevicePtr> &devices)
-  : m_dataItems(items), m_devices(devices)
-  {
-  }
-  DevicePtr findDevice(const std::string &name) override {
-    return m_devices[name];
-  }
+  MockPipelineContract(std::map<string, DataItemPtr> &items, std::map<string, DevicePtr> &devices)
+    : m_dataItems(items), m_devices(devices)
+  {}
+  DevicePtr findDevice(const std::string &name) override { return m_devices[name]; }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
     return m_dataItems[name];
   }
   void eachDataItem(EachDataItem fun) override {}
   void deliverObservation(observation::ObservationPtr obs) override {}
-  void deliverAsset(AssetPtr )override {}
-  void deliverAssetCommand(entity::EntityPtr ) override {}
-  void deliverCommand(entity::EntityPtr )override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool )override {}
-  
-  std::map<string,DataItemPtr> &m_dataItems;
-  std::map<string,DevicePtr> &m_devices;
+  void deliverAsset(AssetPtr) override {}
+  void deliverAssetCommand(entity::EntityPtr) override {}
+  void deliverCommand(entity::EntityPtr) override {}
+  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
+
+  std::map<string, DataItemPtr> &m_dataItems;
+  std::map<string, DevicePtr> &m_devices;
 };
 
 class TopicMappingTest : public testing::Test
@@ -75,7 +72,7 @@ protected:
     m_dataItems.clear();
     m_devices.clear();
   }
-  
+
   DataItemPtr makeDataItem(const std::string &device, const Properties &props)
   {
     auto dev = m_devices.find(device);
@@ -84,14 +81,14 @@ protected:
       EXPECT_TRUE(false) << "Cannot find device: " << device;
       return nullptr;
     }
-    
+
     Properties ps(props);
     ErrorList errors;
     auto di = DataItem::make(ps, errors);
     m_dataItems.emplace(di->getId(), di);
-    
+
     dev->second->addDataItem(di, errors);
-    
+
     return di;
   }
 
@@ -99,27 +96,24 @@ protected:
   {
     ErrorList errors;
     Properties ps(props);
-    DevicePtr d = dynamic_pointer_cast<device_model::Device>(device_model::Device::getFactory()->make("Device", ps, errors));
+    DevicePtr d = dynamic_pointer_cast<device_model::Device>(
+        device_model::Device::getFactory()->make("Device", ps, errors));
     m_devices.emplace(d->getId(), d);
-    
+
     return d;
   }
 
-  
   shared_ptr<PipelineContext> m_context;
   shared_ptr<TopicMapper> m_mapper;
-  std::map<string,DataItemPtr> m_dataItems;
-  std::map<string,DevicePtr> m_devices;
+  std::map<string, DataItemPtr> m_dataItems;
+  std::map<string, DevicePtr> m_devices;
 };
 
-inline DataSetEntry operator"" _E(const char *c, std::size_t)
-{
-  return DataSetEntry(c);
-}
+inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
 
 TEST_F(TopicMappingTest, should_find_data_item_for_topic)
 {
   makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
-  Properties props{{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
+  Properties props {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
   auto di = makeDataItem("device", props);
 }

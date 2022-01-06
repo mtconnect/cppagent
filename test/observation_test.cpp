@@ -19,12 +19,12 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <list>
+
 #include "device_model/data_item/data_item.hpp"
 #include "observation/observation.hpp"
-#include "test_utilities.hpp"
 #include "pipeline/convert_sample.hpp"
-
-#include <list>
+#include "test_utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -38,26 +38,30 @@ using namespace date::literals;
 
 class ObservationTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     std::map<string, string> attributes1, attributes2;
 
     ErrorList errors;
-    m_dataItem1 = DataItem::make({{"id", "1"s}, {"name", "DataItemTest1"s},
-      {"type", "PROGRAM"s}, {"category", "EVENT"s}
-    }, errors);
-    m_dataItem2 = DataItem::make({{"id", "3"s}, {"name", "DataItemTest2"s},
-      {"type", "POSITION"s}, {"category", "SAMPLE"s}, {"subType", "ACTUAL"s},
-      {"units", "MILLIMETER"s}, {"nativeUnits", "MILLIMETER"s}
-    }, errors);
+    m_dataItem1 = DataItem::make(
+        {{"id", "1"s}, {"name", "DataItemTest1"s}, {"type", "PROGRAM"s}, {"category", "EVENT"s}},
+        errors);
+    m_dataItem2 = DataItem::make({{"id", "3"s},
+                                  {"name", "DataItemTest2"s},
+                                  {"type", "POSITION"s},
+                                  {"category", "SAMPLE"s},
+                                  {"subType", "ACTUAL"s},
+                                  {"units", "MILLIMETER"s},
+                                  {"nativeUnits", "MILLIMETER"s}},
+                                 errors);
 
     m_time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
-    
-    m_compEventA = Observation::make(m_dataItem1, {{ "VALUE", "Test"s }}, m_time, errors);
+
+    m_compEventA = Observation::make(m_dataItem1, {{"VALUE", "Test"s}}, m_time, errors);
     m_compEventA->setSequence(2);
-    
-    m_compEventB = Observation::make(m_dataItem2, {{ "VALUE", 1.1231 }}, m_time + 10min, errors);
+
+    m_compEventB = Observation::make(m_dataItem2, {{"VALUE", 1.1231}}, m_time + 10min, errors);
     m_compEventB->setSequence(4);
   }
 
@@ -91,21 +95,18 @@ class ObservationTest : public testing::Test
     auto dataItem = DataItem::make(ps, errors);
     ObservationPtr sample = Observation::make(dataItem, {{"VALUE", value}}, m_time, errors);
     auto converted = m_converter(sample);
-    
+
     stringstream message;
     double diff = abs(expected - converted->getValue<double>());
     message << "Unit conversion for " << nativeUnits << " failed, expected: " << expected
-            << " and actual " << sample->getValue<double>() << " differ (" << diff << ") by more than 0.001";
+            << " and actual " << sample->getValue<double>() << " differ (" << diff
+            << ") by more than 0.001";
 
     failIf(diff > 0.001, message.str(), __FILE__, __LINE__);
   }
-
 };
 
-inline ConditionPtr Cond(ObservationPtr ptr)
-{
-  return dynamic_pointer_cast<Condition>(ptr);
-}
+inline ConditionPtr Cond(ObservationPtr ptr) { return dynamic_pointer_cast<Condition>(ptr); }
 
 #define TEST_VALUE(attributes, units, nativeUnits, expected, value) \
   testValueHelper(attributes, units, nativeUnits, expected, value, __FILE__, __LINE__)
@@ -147,10 +148,12 @@ TEST_F(ObservationTest, ConvertValue)
   TEST_VALUE(attributes, "REVOLUTION/MINUTE", "REVOLUTION/MINUTE", 2.0f, 2.0);
   TEST_VALUE(attributes, "REVOLUTION/MINUTE", "REVOLUTION/SECOND", 2.0f * 60.0f, 2.0);
   TEST_VALUE(attributes, "KILOGRAM/MILLIMETER", "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, 2.0);
-  TEST_VALUE(attributes, "MILLIMETER/SECOND^3", "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f), 2.0);
+  TEST_VALUE(attributes, "MILLIMETER/SECOND^3", "MILLIMETER/MINUTE^3",
+             (2.0f) / (60.0f * 60.0f * 60.0f), 2.0);
 
   attributes["nativeScale"] = "0.5";
-  TEST_VALUE(attributes, "MILLIMETER/SECOND^3", "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), 2.0);
+  TEST_VALUE(attributes, "MILLIMETER/SECOND^3", "MILLIMETER/MINUTE^3",
+             (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), 2.0);
 }
 
 TEST_F(ObservationTest, ConvertSimpleUnits)
@@ -179,10 +182,9 @@ TEST_F(ObservationTest, ConvertSimpleUnits)
 TEST_F(ObservationTest, ConditionEventChaining)
 {
   ErrorList errors;
-  auto dataItem = DataItem::make({{"id", "c1"s}, {"category", "CONDITION"s},
-    {"type","TEMPERATURE"s}
-  }, errors);
-  
+  auto dataItem =
+      DataItem::make({{"id", "c1"s}, {"category", "CONDITION"s}, {"type", "TEMPERATURE"s}}, errors);
+
   ConditionPtr event1 = Cond(Observation::make(dataItem, {{"level", "FAULT"s}}, m_time, errors));
   ConditionPtr event2 = Cond(Observation::make(dataItem, {{"level", "FAULT"s}}, m_time, errors));
   ConditionPtr event3 = Cond(Observation::make(dataItem, {{"level", "FAULT"s}}, m_time, errors));
@@ -215,17 +217,16 @@ TEST_F(ObservationTest, ConditionEventChaining)
 TEST_F(ObservationTest, subType_prefix_should_be_passed_through)
 {
   ErrorList errors;
-  auto dataItem = DataItem::make({{"id", "c1"s}, {"category", "EVENT"s},
-    {"type","TOOL_SUFFIX"s}, {"subType", "x:auto"s}
-  }, errors);
+  auto dataItem = DataItem::make(
+      {{"id", "c1"s}, {"category", "EVENT"s}, {"type", "TOOL_SUFFIX"s}, {"subType", "x:auto"s}},
+      errors);
 
-  auto event = Observation::make(dataItem, {{ "VALUE", "Test"s }}, m_time, errors);
+  auto event = Observation::make(dataItem, {{"VALUE", "Test"s}}, m_time, errors);
   ASSERT_EQ(0, errors.size());
-  
+
   ASSERT_EQ("x:AUTO", dataItem->get<string>("subType"));
   ASSERT_EQ("x:AUTO", event->get<string>("subType"));
 }
-
 
 // TODO: Make sure these tests are covered someplace else. Refactoring
 //       Moved this functionality outside the observation.

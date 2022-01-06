@@ -19,12 +19,12 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <cstdio>
+
 #include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-
-#include <cstdio>
 
 using json = nlohmann::json;
 using namespace std;
@@ -36,12 +36,11 @@ using namespace mtconnect::rest_sink;
 
 class DataSetTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/data_set.xml",
-                                   8, 4, "1.5", 25);
+    m_agentTestHelper->createAgent("/samples/data_set.xml", 8, 4, "1.5", 25);
     m_agentId = to_string(getCurrentTimeInSec());
 
     m_checkpoint = nullptr;
@@ -49,7 +48,7 @@ class DataSetTest : public testing::Test
     m_checkpoint = make_unique<Checkpoint>();
 
     auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
-    m_dataItem1 = device->getDeviceDataItem("v1");    
+    m_dataItem1 = device->getDeviceDataItem("v1");
   }
 
   void TearDown() override
@@ -70,10 +69,7 @@ using namespace std::literals;
 using namespace chrono_literals;
 using namespace date::literals;
 
-inline DataSetEntry operator"" _E(const char *c, std::size_t)
-{
-  return DataSetEntry(c);
-}
+inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
 
 TEST_F(DataSetTest, DataItem)
 {
@@ -87,15 +83,15 @@ TEST_F(DataSetTest, InitialSet)
 {
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
-                              time, errors);
+  auto ce =
+      Observation::make(m_dataItem1, Properties {{"VALUE", "a=1 b=2 c=3 d=4"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
-  
+
   auto ds = ce->getValue<DataSet>();
-  
+
   ASSERT_EQ(4, ds.size());
   ASSERT_EQ(4, ce->get<int64_t>("count"));
-  
+
   ASSERT_EQ(1, get<int64_t>(ds.find("a"_E)->m_value));
   ASSERT_EQ(2, get<int64_t>(ds.find("b"_E)->m_value));
   ASSERT_EQ(3, get<int64_t>(ds.find("c"_E)->m_value));
@@ -117,7 +113,7 @@ TEST_F(DataSetTest, parser_simple_formats)
 {
   DataSet s1;
   ASSERT_TRUE(s1.parse("a=10 b=2.0 c=\"abcd\" d= e", false));
-  
+
   ASSERT_EQ(5, s1.size());
   ASSERT_EQ(10, get<int64_t>(s1.find("a"_E)->m_value));
   ASSERT_EQ(2.0, get<double>(s1.find("b"_E)->m_value));
@@ -125,7 +121,7 @@ TEST_F(DataSetTest, parser_simple_formats)
   ASSERT_TRUE(s1.find("d"_E)->m_removed);
   ASSERT_TRUE(s1.find("e"_E)->m_removed);
 }
-  
+
 TEST_F(DataSetTest, parser_test_with_braces)
 {
   DataSet s2;
@@ -148,7 +144,6 @@ TEST_F(DataSetTest, parser_test_with_escaped_quote)
   ASSERT_TRUE(s4.parse("abc=' abc \\' 123 '", false));
   ASSERT_EQ(1, s4.size());
   ASSERT_EQ(" abc ' 123 ", get<string>(s4.find("abc"_E)->m_value));
-
 }
 
 TEST_F(DataSetTest, parser_with_bad_data)
@@ -163,27 +158,27 @@ TEST_F(DataSetTest, parser_with_bad_data)
 TEST_F(DataSetTest, parser_with_big_data_set)
 {
   using namespace std::chrono;
-  
+
   using namespace std::filesystem;
   path p(PROJECT_ROOT_DIR "/test/resources/big_data_set.txt");
   auto size = std::filesystem::file_size(p);
-  char *buffer = (char*) malloc(size + 1);
+  char *buffer = (char *)malloc(size + 1);
   auto file = std::fopen(p.string().c_str(), "r");
   size = std::fread(buffer, 1, size, file);
   buffer[size] = '\0';
-  
-  
+
   DataSet set;
   auto start = high_resolution_clock::now();
   for (int i = 0; i < 100; i++)
     ASSERT_TRUE(set.parse(buffer, false));
   auto now = high_resolution_clock::now();
   auto delta = floor<microseconds>(now) - floor<microseconds>(start);
-  
-  cout << endl << "Parse duration " << (delta.count() / 1000.0) << "ms" << endl << endl;;
-  
+
+  cout << endl << "Parse duration " << (delta.count() / 1000.0) << "ms" << endl << endl;
+  ;
+
   ASSERT_EQ(116, set.size());
-  
+
   free(buffer);
 }
 
@@ -193,9 +188,9 @@ TEST_F(DataSetTest, parser_with_partial_number)
   ASSERT_TRUE(set.parse("a=1Bch b=2.x c=123 d=4.56", false));
   ASSERT_EQ(4, set.size());
   ASSERT_EQ("1Bch", get<string>(set.find("a"_E)->m_value));
-  ASSERT_EQ("2.x" , get<string>(set.find("b"_E)->m_value));
-  ASSERT_EQ(123 , get<int64_t>(set.find("c"_E)->m_value));
-  ASSERT_EQ(4.56 , get<double>(set.find("d"_E)->m_value));
+  ASSERT_EQ("2.x", get<string>(set.find("b"_E)->m_value));
+  ASSERT_EQ(123, get<int64_t>(set.find("c"_E)->m_value));
+  ASSERT_EQ(4.56, get<double>(set.find("d"_E)->m_value));
 }
 
 TEST_F(DataSetTest, UpdateOneElement)
@@ -204,16 +199,15 @@ TEST_F(DataSetTest, UpdateOneElement)
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
   string value("a=1 b=2 c=3 d=4");
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
-                              time, errors);
+  auto ce =
+      Observation::make(m_dataItem1, Properties {{"VALUE", "a=1 b=2 c=3 d=4"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
   auto cecp = m_checkpoint->getEventPtr("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5"s}},
-                              time, errors);
+  auto ce2 = Observation::make(m_dataItem1, Properties {{"VALUE", "c=5"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
@@ -226,8 +220,7 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
 
-  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "e=6"s}},
-                              time, errors);
+  auto ce4 = Observation::make(m_dataItem1, Properties {{"VALUE", "e=6"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
@@ -247,17 +240,15 @@ TEST_F(DataSetTest, UpdateMany)
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
-                              time, errors);
+  auto ce =
+      Observation::make(m_dataItem1, Properties {{"VALUE", "a=1 b=2 c=3 d=4"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
   auto cecp = m_checkpoint->getEventPtr("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5 e=6"s}},
-                              time, errors);
+  auto ce2 = Observation::make(m_dataItem1, Properties {{"VALUE", "c=5 e=6"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
@@ -271,9 +262,8 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
-  
-  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "e=7 a=8 f=9"s}},
-                              time, errors);
+
+  auto ce4 = Observation::make(m_dataItem1, Properties {{"VALUE", "e=7 a=8 f=9"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
@@ -295,19 +285,16 @@ TEST_F(DataSetTest, Reset)
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
-                              time, errors);
+  auto ce =
+      Observation::make(m_dataItem1, Properties {{"VALUE", "a=1 b=2 c=3 d=4"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
-
 
   auto cecp = m_checkpoint->getEventPtr("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c=5 e=6"s},
-    {"resetTriggered", "MANUAL"}
-  },
-                              time, errors);
+  auto ce2 = Observation::make(
+      m_dataItem1, Properties {{"VALUE", "c=5 e=6"s}, {"resetTriggered", "MANUAL"}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
@@ -318,8 +305,7 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ(5, get<int64_t>(map1.find("c"_E)->m_value));
   ASSERT_EQ(6, get<int64_t>(map1.find("e"_E)->m_value));
 
-  auto ce4 = Observation::make(m_dataItem1, Properties{{"VALUE", "x=pop y=hop"s}},
-                              time, errors);
+  auto ce4 = Observation::make(m_dataItem1, Properties {{"VALUE", "x=pop y=hop"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
@@ -336,18 +322,17 @@ TEST_F(DataSetTest, BadData)
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "12356"s}},
-                              time, errors);
+  auto ce = Observation::make(m_dataItem1, Properties {{"VALUE", "12356"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
   ASSERT_EQ(1, ce->getValue<DataSet>().size());
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "  a=2      b3=xxx"s}},
-                              time, errors);
+  auto ce2 =
+      Observation::make(m_dataItem1, Properties {{"VALUE", "  a=2      b3=xxx"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
-  
+
   ASSERT_EQ(2, ce2->getValue<DataSet>().size());
 
   auto map1 = ce2->getValue<DataSet>();
@@ -484,7 +469,7 @@ TEST_F(DataSetTest, CurrentAt)
 {
   using namespace mtconnect::rest_sink;
   m_agentTestHelper->addAdapter();
-  
+
   auto rest = m_agentTestHelper->getRestService();
   auto seq = rest->getSequence();
 
@@ -567,16 +552,15 @@ TEST_F(DataSetTest, DeleteKey)
   ErrorList errors;
   auto time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
-  auto ce = Observation::make(m_dataItem1, Properties{{"VALUE", "a=1 b=2 c=3 d=4"s}},
-                              time, errors);
+  auto ce =
+      Observation::make(m_dataItem1, Properties {{"VALUE", "a=1 b=2 c=3 d=4"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
   auto cecp = m_checkpoint->getEventPtr("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
-  auto ce2 = Observation::make(m_dataItem1, Properties{{"VALUE", "c e=6 a"s}},
-                              time, errors);
+  auto ce2 = Observation::make(m_dataItem1, Properties {{"VALUE", "c e=6 a"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
@@ -587,7 +571,6 @@ TEST_F(DataSetTest, DeleteKey)
   auto ce3 = m_checkpoint->getEventPtr("v1");
   auto &map1 = ce3->getValue<DataSet>();
   ASSERT_EQ(3, map1.size());
-  
 
   ASSERT_EQ(2, get<int64_t>(map1.find("b"_E)->m_value));
   ASSERT_EQ(4, get<int64_t>(map1.find("d"_E)->m_value));
@@ -776,44 +759,46 @@ TEST_F(DataSetTest, JsonCurrent)
   m_agentTestHelper->addAdapter();
 
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3 d=cow");
-  
+
   {
     PARSE_JSON_RESPONSE("/current");
-    
+
     auto streams = doc.at("/MTConnectStreams/Streams/0/DeviceStream/ComponentStreams"_json_pointer);
     ASSERT_EQ(4_S, streams.size());
-    
+
     json stream;
-    for (auto &s : streams) {
+    for (auto &s : streams)
+    {
       auto id = s.at("/ComponentStream/componentId"_json_pointer);
       ASSERT_TRUE(id.is_string());
-      if (id.get<string>() == "path1") {
+      if (id.get<string>() == "path1")
+      {
         stream = s;
         break;
       }
     }
     ASSERT_TRUE(stream.is_object());
-    
+
     auto events = stream.at("/ComponentStream/Events"_json_pointer);
     ASSERT_TRUE(events.is_array());
     json offsets;
-    for (auto &o : events) {
+    for (auto &o : events)
+    {
       ASSERT_TRUE(o.is_object());
       auto v = o.begin().key();
-      if (v == "VariableDataSet") {
+      if (v == "VariableDataSet")
+      {
         offsets = o;
         break;
       }
     }
     ASSERT_TRUE(offsets.is_object());
-    
-    
+
     ASSERT_EQ(4, offsets.at("/VariableDataSet/count"_json_pointer).get<int>());
 
     ASSERT_EQ(1, offsets.at("/VariableDataSet/value/a"_json_pointer).get<int>());
     ASSERT_EQ(2, offsets.at("/VariableDataSet/value/b"_json_pointer).get<int>());
     ASSERT_EQ(3, offsets.at("/VariableDataSet/value/c"_json_pointer).get<int>());
     ASSERT_EQ(string("cow"), offsets.at("/VariableDataSet/value/d"_json_pointer).get<string>());
-
   }
 }

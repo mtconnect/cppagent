@@ -19,14 +19,15 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <chrono>
+
+#include "observation/observation.hpp"
+#include "pipeline/deliver.hpp"
+#include "pipeline/delta_filter.hpp"
+#include "pipeline/duplicate_filter.hpp"
+#include "pipeline/period_filter.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/shdr_token_mapper.hpp"
-#include "pipeline/duplicate_filter.hpp"
-#include "pipeline/delta_filter.hpp"
-#include "pipeline/period_filter.hpp"
-#include "pipeline/deliver.hpp"
-#include "observation/observation.hpp"
-#include <chrono>
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -41,24 +42,24 @@ using namespace std::chrono_literals;
 
 struct MockPipelineContract : public PipelineContract
 {
-  MockPipelineContract(std::map<string,DataItemPtr> &items)
-  : m_dataItems(items)
-  {
-  }
-  DevicePtr findDevice(const std::string &device ) override { return nullptr; }
+  MockPipelineContract(std::map<string, DataItemPtr> &items) : m_dataItems(items) {}
+  DevicePtr findDevice(const std::string &device) override { return nullptr; }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
     return m_dataItems[name];
   }
   void eachDataItem(EachDataItem fun) override {}
-  void deliverObservation(observation::ObservationPtr obs) override { m_observations.push_back(obs); }
-  void deliverAsset(AssetPtr )override {}
-  void deliverAssetCommand(entity::EntityPtr ) override {}
-  void deliverCommand(entity::EntityPtr )override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList&, bool )override {}
-  
-  std::map<string,DataItemPtr> &m_dataItems;
-  
+  void deliverObservation(observation::ObservationPtr obs) override
+  {
+    m_observations.push_back(obs);
+  }
+  void deliverAsset(AssetPtr) override {}
+  void deliverAssetCommand(entity::EntityPtr) override {}
+  void deliverCommand(entity::EntityPtr) override {}
+  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
+
+  std::map<string, DataItemPtr> &m_dataItems;
+
   std::vector<ObservationPtr> m_observations;
 };
 
@@ -66,7 +67,7 @@ class PeriodFilterTest : public testing::Test
 {
 public:
   PeriodFilterTest() : m_strand(m_ioContext) {}
-  
+
 protected:
   void SetUp() override
   {
@@ -76,24 +77,22 @@ protected:
     m_mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
   }
 
-
   void TearDown() override
   {
     m_dataItems.clear();
     m_context.reset();
     m_mapper.reset();
   }
-  
+
   DataItemPtr makeDataItem(Properties attributes)
   {
     ErrorList errors;
     auto di = DataItem::make(attributes, errors);
     m_dataItems.emplace(di->getId(), di);
-    
+
     return di;
   }
-  
-  
+
   const EntityPtr observe(TokenList tokens, Timestamp now = chrono::system_clock::now())
   {
     auto ts = make_shared<Timestamped>();
@@ -103,37 +102,39 @@ protected:
 
     return (*m_mapper)(ts);
   }
-  
+
   void createDataItem(double rate)
   {
     ErrorList errors;
     auto f = Filter::getFactory()->create("Filter", {{"type", "PERIOD"s}, {"VALUE", rate}}, errors);
-    EntityList list{f};
+    EntityList list {f};
     auto filters = DataItem::getFactory()->factoryFor("DataItem")->create("Filters", list, errors);
 
-    makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s},
-      {"units", "MILLIMETER"s}, {"Filters", filters}
-    });
+    makeDataItem({{"id", "a"s},
+                  {"type", "POSITION"s},
+                  {"category", "SAMPLE"s},
+                  {"units", "MILLIMETER"s},
+                  {"Filters", filters}});
   }
-  
+
   auto makeFilter()
   {
     auto rate = make_shared<PeriodFilter>(m_context, m_strand);
     m_mapper->bind(rate);
-    
+
     auto delivery = make_shared<DeliverObservation>(m_context);
     rate->bind(delivery);
-    
+
     return rate;
   }
-  
+
   auto observations()
   {
-    return static_cast<MockPipelineContract*>(m_context->m_contract.get())->m_observations;
+    return static_cast<MockPipelineContract *>(m_context->m_contract.get())->m_observations;
   }
- 
+
   shared_ptr<ShdrTokenMapper> m_mapper;
-  std::map<string,DataItemPtr> m_dataItems;
+  std::map<string, DataItemPtr> m_dataItems;
   shared_ptr<PipelineContext> m_context;
   boost::asio::io_context m_ioContext;
   boost::asio::io_context::strand m_strand;
@@ -143,7 +144,7 @@ TEST_F(PeriodFilterTest, test_simple_time_series)
 {
   createDataItem(10.0);
   makeFilter();
-  
+
   Timestamp now = chrono::system_clock::now();
 
   {
@@ -176,9 +177,9 @@ TEST_F(PeriodFilterTest, delayed_delivery)
 {
   createDataItem(1.0);
   makeFilter();
-  
+
   Timestamp now = chrono::system_clock::now();
-  
+
   {
     auto os = observe({"a", "1"}, now);
     auto list = os->getValue<EntityList>();
@@ -191,9 +192,9 @@ TEST_F(PeriodFilterTest, delayed_delivery)
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
   }
-  
+
   m_ioContext.run_for(750ms);
-  
+
   auto obs = observations();
   ASSERT_EQ(2, obs.size());
   auto end = obs.back();
@@ -204,9 +205,9 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_replace)
 {
   createDataItem(1.0);
   makeFilter();
-  
+
   Timestamp now = chrono::system_clock::now();
-  
+
   {
     auto os = observe({"a", "1"}, now);
     auto list = os->getValue<EntityList>();
@@ -227,7 +228,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_replace)
   }
 
   m_ioContext.run_for(500ms);
-  
+
   auto obs = observations();
   ASSERT_EQ(2, obs.size());
   auto end = obs.back();
@@ -238,9 +239,9 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
 {
   createDataItem(1.0);
   makeFilter();
-  
+
   Timestamp now = chrono::system_clock::now();
-  
+
   {
     auto os = observe({"a", "1"}, now);
     auto list = os->getValue<EntityList>();
@@ -267,7 +268,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
   }
 
   m_ioContext.run_for(500ms);
-  
+
   auto obs = observations();
   ASSERT_EQ(2, obs.size());
   auto end = obs.back();

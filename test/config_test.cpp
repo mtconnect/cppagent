@@ -19,16 +19,16 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <chrono>
+#include <filesystem>
+#include <string>
+
+#include "adapter/shdr/shdr_adapter.hpp"
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
-#include "xml_printer.hpp"
 #include "rest_sink/rest_service.hpp"
-#include "adapter/shdr/shdr_adapter.hpp"
-
-#include <chrono>
-#include <string>
-#include <filesystem>
+#include "xml_printer.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -41,11 +41,10 @@ using namespace mtconnect;
 using namespace mtconnect::configuration;
 namespace fs = std::filesystem;
 
-namespace
-{
+namespace {
   class ConfigTest : public testing::Test
   {
-   protected:
+  protected:
     void SetUp() override
     {
       m_config = std::make_unique<AgentConfiguration>();
@@ -106,7 +105,7 @@ namespace
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
-    
+
     auto device = agent->findDeviceByUUIDorName(*deviceName);
     ASSERT_TRUE(device->preserveUuid());
   }
@@ -116,16 +115,16 @@ namespace
     using namespace std::chrono_literals;
 
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "Adapters { LinuxCNC { \n"
-                           "Port = 23\n"
-                           "Host = 10.211.55.1\n"
-                           "FilterDuplicates = true\n"
-                           "AutoAvailable = true\n"
-                           "IgnoreTimestamps = true\n"
-                           "PreserveUUID = true\n"
-                           "LegacyTimeout = 2000\n"
-                           "} }\n");
+               "/samples/test_config.xml\n"
+               "Adapters { LinuxCNC { \n"
+               "Port = 23\n"
+               "Host = 10.211.55.1\n"
+               "FilterDuplicates = true\n"
+               "AutoAvailable = true\n"
+               "IgnoreTimestamps = true\n"
+               "PreserveUUID = true\n"
+               "LegacyTimeout = 2000\n"
+               "} }\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -138,18 +137,18 @@ namespace
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
-    
+
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
-    
+
     // TODO: Need to link to device to the adapter.
-    //ASSERT_TRUE(device->m_preserveUuid);
+    // ASSERT_TRUE(device->m_preserveUuid);
   }
 
   TEST_F(ConfigTest, DefaultPreserveUUID)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "PreserveUUID = true\n");
+               "/samples/test_config.xml\n"
+               "PreserveUUID = true\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -162,11 +161,11 @@ namespace
   TEST_F(ConfigTest, DefaultPreserveOverride)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "PreserveUUID = true\n"
-                           "Adapters { LinuxCNC { \n"
-                           "PreserveUUID = false\n"
-                           "} }\n");
+               "/samples/test_config.xml\n"
+               "PreserveUUID = true\n"
+               "Adapters { LinuxCNC { \n"
+               "PreserveUUID = false\n"
+               "} }\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -179,8 +178,8 @@ namespace
   TEST_F(ConfigTest, DisablePut)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "AllowPut = true\n");
+               "/samples/test_config.xml\n"
+               "AllowPut = true\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -195,8 +194,8 @@ namespace
   TEST_F(ConfigTest, LimitPut)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "AllowPutFrom = localhost\n");
+               "/samples/test_config.xml\n"
+               "AllowPutFrom = localhost\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -213,8 +212,8 @@ namespace
   TEST_F(ConfigTest, LimitPutFromHosts)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "AllowPutFrom = localhost, 192.168.0.1\n");
+               "/samples/test_config.xml\n"
+               "AllowPutFrom = localhost, 192.168.0.1\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -308,8 +307,8 @@ namespace
     using namespace std::chrono_literals;
 
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "LegacyTimeout = 2000\n");
+               "/samples/test_config.xml\n"
+               "LegacyTimeout = 2000\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -322,8 +321,8 @@ namespace
   TEST_F(ConfigTest, IgnoreTimestamps)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "IgnoreTimestamps = true\n");
+               "/samples/test_config.xml\n"
+               "IgnoreTimestamps = true\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -336,11 +335,11 @@ namespace
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "IgnoreTimestamps = true\n"
-                           "Adapters { LinuxCNC { \n"
-                           "IgnoreTimestamps = false\n"
-                           "} }\n");
+               "/samples/test_config.xml\n"
+               "IgnoreTimestamps = true\n"
+               "Adapters { LinuxCNC { \n"
+               "IgnoreTimestamps = false\n"
+               "} }\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -444,10 +443,11 @@ namespace
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
 
-    string str("HttpHeaders {\n"
-                           "  Access-Control-Allow-Origin = *\n"
-                           "\n"
-                           "}\n");
+    string str(
+        "HttpHeaders {\n"
+        "  Access-Control-Allow-Origin = *\n"
+        "\n"
+        "}\n");
     m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
@@ -458,10 +458,10 @@ namespace
     const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
     ASSERT_TRUE(rest);
     const auto server = rest->getServer();
-    
+
     // TODO: Get headers working again
     const auto &headers = server->getHttpHeaders();
-    
+
     ASSERT_EQ(1, headers.size());
     const auto &first = headers.front();
     ASSERT_EQ("Access-Control-Allow-Origin", first.first);
@@ -483,8 +483,8 @@ Sinks {
     }
 }
 )");
-    
-    m_config->loadConfig(str);    
+
+    m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
@@ -498,7 +498,6 @@ Sinks {
 
     m_config->updateWorkingDirectory();
 
-    
     string str(R"(
 Sinks {
       sink_plugin_test {
@@ -521,7 +520,6 @@ Sinks {
 
     m_config->updateWorkingDirectory();
 
-    
     string str(R"(
 Plugins {
    sink_plugin_test {
@@ -541,14 +539,13 @@ Sinks {
     const auto sink = agent->findSink("sink_plugin_test");
     ASSERT_TRUE(sink != nullptr);
   }
-  
+
   TEST_F(ConfigTest, dynamic_load_sinks_assigned_name)
   {
     chdir(TEST_BIN_ROOT_DIR);
 
     m_config->updateWorkingDirectory();
-    
-    
+
     string str(R"(
 Sinks {
       sink_plugin_test:Sink1 {
@@ -567,14 +564,12 @@ Sinks {
     ASSERT_TRUE(sink2 != nullptr);
   }
 
-
   TEST_F(ConfigTest, dynamic_load_sinks_assigned_name_tag)
   {
     chdir(TEST_BIN_ROOT_DIR);
 
     m_config->updateWorkingDirectory();
-    
-    
+
     string str(R"(
 Sinks {
       sink_plugin_test {
@@ -665,7 +660,7 @@ Adapters {
     const auto adapter = agent->findSource("Test");
     ASSERT_TRUE(adapter != nullptr);
   }
-  
+
   TEST_F(ConfigTest, max_cache_size_in_no_units)
   {
     chdir(TEST_BIN_ROOT_DIR);
@@ -681,11 +676,11 @@ MaxCachedFileSize = 2000
     ASSERT_TRUE(agent);
     const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
-    
+
     auto cache = rest->getFileCache();
     ASSERT_EQ(2000, cache->getMaxCachedFileSize());
   }
-  
+
   TEST_F(ConfigTest, max_cache_size_in_kb)
   {
     chdir(TEST_BIN_ROOT_DIR);
@@ -701,11 +696,11 @@ MaxCachedFileSize = 2k
     ASSERT_TRUE(agent);
     const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
-    
+
     auto cache = rest->getFileCache();
     ASSERT_EQ(2048, cache->getMaxCachedFileSize());
   }
-  
+
   TEST_F(ConfigTest, max_cache_size_in_Kb_in_uppercase)
   {
     chdir(TEST_BIN_ROOT_DIR);
@@ -721,11 +716,10 @@ MaxCachedFileSize = 2K
     ASSERT_TRUE(agent);
     const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
-    
+
     auto cache = rest->getFileCache();
     ASSERT_EQ(2048, cache->getMaxCachedFileSize());
   }
-
 
   TEST_F(ConfigTest, max_cache_size_in_mb)
   {
@@ -742,7 +736,7 @@ MaxCachedFileSize = 2m
     ASSERT_TRUE(agent);
     const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
-    
+
     auto cache = rest->getFileCache();
     ASSERT_EQ(2 * 1024 * 1024, cache->getMaxCachedFileSize());
   }
@@ -762,20 +756,20 @@ MaxCachedFileSize = 2g
     ASSERT_TRUE(agent);
     const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
-    
+
     auto cache = rest->getFileCache();
     ASSERT_EQ(2ull * 1024 * 1024 * 1024, cache->getMaxCachedFileSize());
   }
 
-  #define EXPECT_PATH_EQ(p1, p2) \
-    EXPECT_EQ(std::filesystem::weakly_canonical(p1), std::filesystem::weakly_canonical(p2))
+#define EXPECT_PATH_EQ(p1, p2) \
+  EXPECT_EQ(std::filesystem::weakly_canonical(p1), std::filesystem::weakly_canonical(p2))
 
   TEST_F(ConfigTest, log_output_should_set_archive_file_pattern)
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
     m_config->setDebug(false);
-    
+
     string str(R"(
 logger_config {
   output = file agent.log
@@ -783,21 +777,21 @@ logger_config {
 )");
 
     m_config->loadConfig(str);
-    
+
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
-    
+
     EXPECT_EQ("agent_%Y-%m-%d_%H-%M-%S_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("agent.log", m_config->getLogFileName().filename());
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
-  
+
   TEST_F(ConfigTest, log_output_should_configure_file_name)
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
     m_config->setDebug(false);
-    
+
     string str(R"(
 logger_config {
   output = file logging.log logging_%N.log
@@ -805,10 +799,10 @@ logger_config {
 )");
 
     m_config->loadConfig(str);
-    
+
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
-    
+
     EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
@@ -819,7 +813,7 @@ logger_config {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
     m_config->setDebug(false);
-    
+
     string str(R"(
 logger_config {
   file_name = logging.log
@@ -828,21 +822,21 @@ logger_config {
 )");
 
     m_config->loadConfig(str);
-    
+
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
-    
+
     EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
     EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
-  
+
   TEST_F(ConfigTest, log_should_specify_relative_directory)
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
     m_config->setDebug(false);
-    
+
     string str(R"(
 logger_config {
   file_name = logging.log
@@ -851,23 +845,23 @@ logger_config {
 )");
 
     m_config->loadConfig(str);
-    
+
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
-    
-    fs::path path { std::filesystem::canonical(TEST_BIN_ROOT_DIR) / "logs" };
-    
+
+    fs::path path {std::filesystem::canonical(TEST_BIN_ROOT_DIR) / "logs"};
+
     EXPECT_PATH_EQ(path / "logging_%N.log", m_config->getLogArchivePattern());
     EXPECT_PATH_EQ(path / "logging.log", m_config->getLogFileName());
     EXPECT_PATH_EQ(path, m_config->getLogDirectory());
   }
-  
+
   TEST_F(ConfigTest, log_should_specify_relative_directory_with_active_in_parent)
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
     m_config->setDebug(false);
-    
+
     string str(R"(
 logger_config {
   file_name = ./logging.log
@@ -876,12 +870,12 @@ logger_config {
 )");
 
     m_config->loadConfig(str);
-    
+
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
-    
-    fs::path path { std::filesystem::canonical(TEST_BIN_ROOT_DIR) };
-    
+
+    fs::path path {std::filesystem::canonical(TEST_BIN_ROOT_DIR)};
+
     EXPECT_PATH_EQ(path / "logs" / "logging_%N.log", m_config->getLogArchivePattern());
     EXPECT_PATH_EQ(path / "logging.log", m_config->getLogFileName());
     EXPECT_PATH_EQ(path / "logs", m_config->getLogDirectory());
@@ -902,10 +896,10 @@ logger_config {
 )");
 
     m_config->loadConfig(str);
-    
+
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
-    
+
     EXPECT_EQ(severity_level::info, m_config->getLogLevel());
     EXPECT_EQ(1ll * 1024 * 1024 * 1024, m_config->getMaxLogFileSize());
     EXPECT_EQ(20ll * 1024 * 1024 * 1024, m_config->getLogRotationSize());
@@ -916,9 +910,9 @@ logger_config {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
     m_config->setDebug(false);
-    
+
     using namespace boost::log::trivial;
-    
+
     string str(R"(
 logger_config {
    level = fatal
@@ -926,12 +920,12 @@ logger_config {
 )");
 
     m_config->loadConfig(str);
-    
+
     auto sink = m_config->getLoggerSink();
     ASSERT_TRUE(sink);
 
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
-    
+
     m_config->setLoggingLevel("all");
     EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
     m_config->setLoggingLevel("none");
@@ -973,8 +967,6 @@ logger_config {
     EXPECT_EQ(severity_level::error, m_config->getLogLevel());
     m_config->setLoggingLevel("FATAL");
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
-
   }
-
 
 }  // namespace

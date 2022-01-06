@@ -30,48 +30,39 @@ using namespace mtconnect::device_model::data_item;
 
 class DataItemTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     {
-      Properties props{
-        {"id", "1"s},
-        {"name", "DataItemTest1"s},
-        {"type", "ACCELERATION"s},
-        {"category", "SAMPLE"s},
-        {"units", "PERCENT"s},
-        {"nativeUnits", "PERCENT"s}
-      };
+      Properties props {{"id", "1"s},
+                        {"name", "DataItemTest1"s},
+                        {"type", "ACCELERATION"s},
+                        {"category", "SAMPLE"s},
+                        {"units", "PERCENT"s},
+                        {"nativeUnits", "PERCENT"s}};
       ErrorList errors;
       m_dataItemA = DataItem::make(props, errors);
       EXPECT_EQ(0, errors.size());
     }
 
     {
-      Properties props{
-        {"id", "3"s},
-        {"name", "DataItemTest2"s},
-        {"type", "ACCELERATION"s},
-        {"subType", "ACTUAL"s},
-        {"category", "SAMPLE"s},
-        {"units", "REVOLUTION/MINUTE"s},
-        {"nativeScale", "1.0"s},
-        {"significantDigits", "1"s},
-        {"coordinateSystem", "WORK"s}
-      };
+      Properties props {{"id", "3"s},
+                        {"name", "DataItemTest2"s},
+                        {"type", "ACCELERATION"s},
+                        {"subType", "ACTUAL"s},
+                        {"category", "SAMPLE"s},
+                        {"units", "REVOLUTION/MINUTE"s},
+                        {"nativeScale", "1.0"s},
+                        {"significantDigits", "1"s},
+                        {"coordinateSystem", "WORK"s}};
       ErrorList errors;
       m_dataItemB = DataItem::make(props, errors);
       EXPECT_EQ(0, errors.size());
-
     }
-    
+
     {
-      Properties props{
-        {"id", "4"s},
-        {"name", "DataItemTest1"s},
-        {"type", "LOAD"s},
-        {"category", "CONDITION"s}
-      };
+      Properties props {
+          {"id", "4"s}, {"name", "DataItemTest1"s}, {"type", "LOAD"s}, {"category", "CONDITION"s}};
       ErrorList errors;
       m_dataItemC = DataItem::make(props, errors);
       EXPECT_EQ(0, errors.size());
@@ -112,7 +103,7 @@ TEST_F(DataItemTest, Getters)
 TEST_F(DataItemTest, HasNameAndSource)
 {
   namespace di = mtconnect::device_model::data_item;
-  
+
   ASSERT_TRUE(m_dataItemA->hasName("DataItemTest1"));
   ASSERT_TRUE(m_dataItemB->hasName("DataItemTest2"));
 
@@ -121,21 +112,19 @@ TEST_F(DataItemTest, HasNameAndSource)
 
   ASSERT_FALSE(m_dataItemB->hasName("DataItemTest2Source"));
   ASSERT_EQ("DataItemTest2", m_dataItemB->getSourceOrName());
-  
-  Properties sp{{"VALUE", "DataItemTest2Source"s}};
+
+  Properties sp {{"VALUE", "DataItemTest2Source"s}};
   ErrorList errors;
   auto source = di::Source::getFactory()->make("Source", sp, errors);
   ASSERT_TRUE(errors.empty());
-  
-  Properties props{
-    {"id", "1"s},
-    {"name", "DataItemTest1"s},
-    {"type", "ACCELERATION"s},
-    {"category", "SAMPLE"s},
-    {"units", "PERCENT"s},
-    {"nativeUnits", "PERCENT"s},
-    {"Source", source}
-  };
+
+  Properties props {{"id", "1"s},
+                    {"name", "DataItemTest1"s},
+                    {"type", "ACCELERATION"s},
+                    {"category", "SAMPLE"s},
+                    {"units", "PERCENT"s},
+                    {"nativeUnits", "PERCENT"s},
+                    {"Source", source}};
   auto dataItem = DataItem::make(props, errors);
   ASSERT_TRUE(errors.empty());
 
@@ -172,81 +161,69 @@ TEST_F(DataItemTest, GetCamel)
   ASSERT_EQ((string) "x", *prefix);
 }
 
-TEST_F(DataItemTest, Condition)
-{
-  ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory());
-}
+TEST_F(DataItemTest, Condition) { ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory()); }
 
 TEST_F(DataItemTest, TimeSeries)
 {
   {
-    Properties props{
-      {"id", "1"s},
-      {"name", "DataItemTest1"s},
-      {"type", "POSITION"s},
-      {"category", "SAMPLE"s},
-      {"units", "MILLIMETER"s},
-      {"nativeUnits", "MILLIMETER"s},
-      {"representation", "TIME_SERIES"s}
-    };
+    Properties props {{"id", "1"s},
+                      {"name", "DataItemTest1"s},
+                      {"type", "POSITION"s},
+                      {"category", "SAMPLE"s},
+                      {"units", "MILLIMETER"s},
+                      {"nativeUnits", "MILLIMETER"s},
+                      {"representation", "TIME_SERIES"s}};
     ErrorList errors;
     auto d = DataItem::make(props, errors);
     EXPECT_EQ(0, errors.size());
-    
+
     ASSERT_EQ(string("PositionTimeSeries"), d->getObservationName());
   }
 
   {
-    Properties props{
-      {"id", "1"s},
-      {"name", "DataItemTest1"s},
-      {"type", "POSITION"s},
-      {"category", "SAMPLE"s},
-      {"units", "MILLIMETER"s},
-      {"nativeUnits", "MILLIMETER"s},
-      {"representation", "VALUE"s}
-    };
+    Properties props {{"id", "1"s},
+                      {"name", "DataItemTest1"s},
+                      {"type", "POSITION"s},
+                      {"category", "SAMPLE"s},
+                      {"units", "MILLIMETER"s},
+                      {"nativeUnits", "MILLIMETER"s},
+                      {"representation", "VALUE"s}};
     ErrorList errors;
     auto d = DataItem::make(props, errors);
     EXPECT_EQ(0, errors.size());
-    
+
     ASSERT_EQ(string("Position"), d->getObservationName());
   }
 }
 
 TEST_F(DataItemTest, Statistic)
 {
-  Properties props{
-    {"id", "1"s},
-    {"name", "DataItemTest1"s},
-    {"type", "POSITION"s},
-    {"category", "SAMPLE"s},
-    {"units", "MILLIMETER"s},
-    {"nativeUnits", "MILLIMETER"s},
-    {"statistic", "AVERAGE"s}
-  };
+  Properties props {{"id", "1"s},
+                    {"name", "DataItemTest1"s},
+                    {"type", "POSITION"s},
+                    {"category", "SAMPLE"s},
+                    {"units", "MILLIMETER"s},
+                    {"nativeUnits", "MILLIMETER"s},
+                    {"statistic", "AVERAGE"s}};
   ErrorList errors;
   auto d = DataItem::make(props, errors);
   EXPECT_EQ(0, errors.size());
-  
+
   ASSERT_EQ("AVERAGE", d->get<string>("statistic"));
 }
 
 TEST_F(DataItemTest, SampleRate)
 {
-  Properties props{
-    {"id", "1"s},
-    {"name", "DataItemTest1"s},
-    {"type", "POSITION"s},
-    {"category", "SAMPLE"s},
-    {"units", "MILLIMETER"s},
-    {"nativeUnits", "MILLIMETER"s},
-    {"sampleRate", "42000"s}
-  };
+  Properties props {{"id", "1"s},
+                    {"name", "DataItemTest1"s},
+                    {"type", "POSITION"s},
+                    {"category", "SAMPLE"s},
+                    {"units", "MILLIMETER"s},
+                    {"nativeUnits", "MILLIMETER"s},
+                    {"sampleRate", "42000"s}};
   ErrorList errors;
   auto d = DataItem::make(props, errors);
   EXPECT_EQ(0, errors.size());
-  
+
   ASSERT_EQ(42000, d->get<double>("sampleRate"));
 }
-

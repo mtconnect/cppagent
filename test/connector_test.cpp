@@ -19,22 +19,19 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-namespace date
-{
-};
+namespace date {};
 using namespace date;
-
-#include "adapter/shdr/connector.hpp"
 
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
 
-#include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
-
 #include <chrono>
+#include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
 #include <memory>
 #include <sstream>
 #include <thread>
+
+#include "adapter/shdr/connector.hpp"
 
 using namespace std;
 using namespace std::chrono;
@@ -49,14 +46,12 @@ namespace sys = boost::system;
 
 class TestConnector : public Connector
 {
- public:
-  TestConnector(boost::asio::io_context::strand &strand, const std::string &server, unsigned int port,
-                std::chrono::seconds legacyTimeout = std::chrono::seconds{5})
-      : Connector(strand, server, port, legacyTimeout), m_disconnected(false),
-        m_strand(strand)
-  {
-  }
-  
+public:
+  TestConnector(boost::asio::io_context::strand &strand, const std::string &server,
+                unsigned int port, std::chrono::seconds legacyTimeout = std::chrono::seconds {5})
+    : Connector(strand, server, port, legacyTimeout), m_disconnected(false), m_strand(strand)
+  {}
+
   bool start(unsigned short port)
   {
     m_port = port;
@@ -69,48 +64,30 @@ class TestConnector : public Connector
     m_list.emplace_back(m_data);
   }
 
-  void protocolCommand(const std::string &data) override
-  {
-    m_command = data;
-  }
+  void protocolCommand(const std::string &data) override { m_command = data; }
 
   void connecting() override {}
-  
-  void disconnected() override
-  {
-    m_disconnected = true;
-  }
-  void connected() override
-  {
-    m_disconnected = false;
-  }
-  bool heartbeats()
-  {
-    return m_heartbeats;
-  }
 
-  void startHeartbeats(std::string &aString)
-  {
-    Connector::startHeartbeats(aString);
-  }
-  
-  void resetHeartbeats()
-  {
-    m_heartbeats = false;
-  }
+  void disconnected() override { m_disconnected = true; }
+  void connected() override { m_disconnected = false; }
+  bool heartbeats() { return m_heartbeats; }
 
- public:
+  void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
+
+  void resetHeartbeats() { m_heartbeats = false; }
+
+public:
   std::vector<std::string> m_list;
   std::string m_data;
   std::string m_command;
   bool m_disconnected;
-  
+
   boost::asio::io_context::strand &m_strand;
 };
 
 class ConnectorTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     boost::asio::io_context::strand strand(m_context);
@@ -128,7 +105,7 @@ class ConnectorTest : public testing::Test
     m_server.reset();
     m_acceptor.reset();
   }
-  
+
   void startServer(const std::string addr = "127.0.0.1")
   {
     tcp::endpoint sp(ip::make_address(addr), 0);
@@ -138,7 +115,7 @@ class ConnectorTest : public testing::Test
     tcp::endpoint ep = m_acceptor->local_endpoint();
     m_port = ep.port();
 
-    m_acceptor->async_accept([this](sys::error_code ec, tcp::socket socket){
+    m_acceptor->async_accept([this](sys::error_code ec, tcp::socket socket) {
       if (ec)
         cout << ec.category().message(ec.value()) << ": " << ec.message() << endl;
       ASSERT_FALSE(ec);
@@ -147,8 +124,8 @@ class ConnectorTest : public testing::Test
       m_server = make_unique<tcp::socket>(std::move(socket));
     });
   }
-  
-  template<typename Rep, typename Period>
+
+  template <typename Rep, typename Period>
   void runUntil(chrono::duration<Rep, Period> to, function<bool()> pred)
   {
     for (int runs = 0; runs < 10 && !pred(); runs++)
@@ -156,30 +133,30 @@ class ConnectorTest : public testing::Test
       if (m_context.run_one_for(to) == 0)
         break;
     }
-    
+
     EXPECT_TRUE(pred());
   }
-  
+
   void send(const std::string &s)
   {
     ASSERT_TRUE(m_server);
-    
+
     asio::streambuf outoging;
     std::ostream os(&outoging);
     os << s;
-    
+
     sys::error_code ec;
     asio::write(*m_server, outoging, ec);
     ASSERT_FALSE(ec);
   }
-  
-  template<typename Rep, typename Period>
+
+  template <typename Rep, typename Period>
   string read(chrono::duration<Rep, Period> dur)
   {
     m_line.clear();
-    
+
     asio::streambuf data;
-    asio::async_read_until(*m_server, data, '\n', [this, &data](sys::error_code ec, size_t len){
+    asio::async_read_until(*m_server, data, '\n', [this, &data](sys::error_code ec, size_t len) {
       EXPECT_FALSE(ec);
       if (ec)
       {
@@ -192,14 +169,14 @@ class ConnectorTest : public testing::Test
         getline(is, m_line);
       }
     });
-    
-    runUntil(dur, [this](){ return !m_line.empty(); });
-    
+
+    runUntil(dur, [this]() { return !m_line.empty(); });
+
     return m_line;
   }
 
   std::unique_ptr<TestConnector> m_connector;
-  unsigned short m_port{0};
+  unsigned short m_port {0};
   boost::asio::io_context m_context;
 
   std::unique_ptr<asio::ip::tcp::socket> m_server;
@@ -211,15 +188,13 @@ class ConnectorTest : public testing::Test
 TEST_F(ConnectorTest, Connection)
 {
   ASSERT_TRUE(m_connector->m_disconnected);
-  
+
   startServer();
-  
+
   m_connector->start(m_port);
 
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
-  
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
+
   EXPECT_FALSE(m_connector->m_disconnected);
   auto line = read(1s);
   ASSERT_EQ("* PING", line);
@@ -229,19 +204,15 @@ TEST_F(ConnectorTest, DataCapture)
 {
   // Start the accept thread
   ASSERT_TRUE(m_connector->m_disconnected);
-  
+
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   send("Hello Connector\n");
-  
-  runUntil(1s, [this]() -> bool {
-    return !m_connector->m_data.empty();
-  });
+
+  runUntil(1s, [this]() -> bool { return !m_connector->m_data.empty(); });
 
   ASSERT_EQ("Hello Connector", m_connector->m_data);
 }
@@ -250,20 +221,16 @@ TEST_F(ConnectorTest, Disconnect)
 {
   // Start the accept thread
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
-  
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
+
   ASSERT_FALSE(m_connector->m_disconnected);
 
   m_server->close();
-  
-  runUntil(2s, [this]() -> bool {
-    return m_connector->m_disconnected;
-  });
-  
+
+  runUntil(2s, [this]() -> bool { return m_connector->m_disconnected; });
+
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
@@ -271,17 +238,13 @@ TEST_F(ConnectorTest, ProtocolCommand)
 {
   // Start the accept thread
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   send("* Hello Connector\n");
-  
-  runUntil(1s, [this]() -> bool {
-    return !m_connector->m_command.empty();
-  });
+
+  runUntil(1s, [this]() -> bool { return !m_connector->m_command.empty(); });
 
   ASSERT_EQ("* Hello Connector", m_connector->m_command);
 }
@@ -290,24 +253,20 @@ TEST_F(ConnectorTest, Heartbeat)
 {
   // Start the accept thread
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
-  
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
+
   auto line = read(1s);
   ASSERT_EQ("* PING", line);
 
   send("* PONG 1000\n");
 
-  runUntil(2s, [this]() -> bool {
-    return m_connector->heartbeats();
-  });
+  runUntil(2s, [this]() -> bool { return m_connector->heartbeats(); });
 
   // Respond to the heartbeat of 1 second
   ASSERT_TRUE(m_connector->heartbeats());
-  ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
+  ASSERT_EQ(std::chrono::milliseconds {1000}, m_connector->heartbeatFrequency());
 }
 
 TEST_F(ConnectorTest, HeartbeatPong)
@@ -315,23 +274,19 @@ TEST_F(ConnectorTest, HeartbeatPong)
   // TODO Copy&Paste from Heartbeat
   // Start the accept thread
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   auto line = read(1s);
   ASSERT_EQ("* PING", line);
-  
+
   send("* PONG 1000\n");
-  runUntil(2s, [this]() -> bool {
-    return m_connector->heartbeats();
-  });
+  runUntil(2s, [this]() -> bool { return m_connector->heartbeats(); });
 
   // Respond to the heartbeat of 1 second
   ASSERT_TRUE(m_connector->heartbeats());
-  ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
+  ASSERT_EQ(std::chrono::milliseconds {1000}, m_connector->heartbeatFrequency());
 
   auto last_heartbeat = system_clock::now();
 
@@ -344,9 +299,8 @@ TEST_F(ConnectorTest, HeartbeatPong)
     ASSERT_TRUE(now - last_heartbeat < 2000ms);
     last_heartbeat = now;
 
-    
     // Respond to the heartbeat of 1 second
-    send("* PONG 1000\n");    
+    send("* PONG 1000\n");
     ASSERT_FALSE(m_connector->m_disconnected);
   }
 }
@@ -354,23 +308,19 @@ TEST_F(ConnectorTest, HeartbeatPong)
 TEST_F(ConnectorTest, HeartbeatDataKeepAlive)
 {
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   auto line = read(1s);
   ASSERT_EQ("* PING", line);
-  
+
   send("* PONG 1000\n");
-  runUntil(2s, [this]() -> bool {
-    return m_connector->heartbeats();
-  });
+  runUntil(2s, [this]() -> bool { return m_connector->heartbeats(); });
 
   // Respond to the heartbeat of 1 second
   ASSERT_TRUE(m_connector->heartbeats());
-  ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
+  ASSERT_EQ(std::chrono::milliseconds {1000}, m_connector->heartbeatFrequency());
 
   auto last_heartbeat = system_clock::now();
 
@@ -383,7 +333,6 @@ TEST_F(ConnectorTest, HeartbeatDataKeepAlive)
     ASSERT_TRUE(now - last_heartbeat < 2000ms);
     last_heartbeat = now;
 
-    
     // Respond to the heartbeat of 1 second
     send("Some Data\n");
     ASSERT_FALSE(m_connector->m_disconnected);
@@ -393,39 +342,32 @@ TEST_F(ConnectorTest, HeartbeatDataKeepAlive)
 TEST_F(ConnectorTest, HeartbeatTimeout)
 {
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   auto line = read(1s);
   ASSERT_EQ("* PING", line);
-  
+
   send("* PONG 1000\n");
-  runUntil(2s, [this]() -> bool {
-    return m_connector->heartbeats();
-  });
+  runUntil(2s, [this]() -> bool { return m_connector->heartbeats(); });
 
   // Respond to the heartbeat of 1 second
   ASSERT_TRUE(m_connector->heartbeats());
-  ASSERT_EQ(std::chrono::milliseconds{1000}, m_connector->heartbeatFrequency());
+  ASSERT_EQ(std::chrono::milliseconds {1000}, m_connector->heartbeatFrequency());
 
   // Respond to the heartbeat of 1 second
   m_context.run_for(2200ms);
-  
+
   ASSERT_TRUE(m_connector->m_disconnected);
 }
-
 
 TEST_F(ConnectorTest, LegacyTimeout)
 {
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   auto line = read(1s);
   ASSERT_EQ("* PING", line);
@@ -436,18 +378,16 @@ TEST_F(ConnectorTest, LegacyTimeout)
   // No pings, but timeout after 5 seconds of silence
   // Respond to the heartbeat of 1 second
   m_context.run_for(5200ms);
-  
+
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
 TEST_F(ConnectorTest, ParseBuffer)
 {
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   // Test data fragmentation
   send("Hello");
@@ -455,7 +395,7 @@ TEST_F(ConnectorTest, ParseBuffer)
   m_context.run_for(2ms);
 
   send(" There\n");
-  runUntil(1s, [this]() { return !m_connector->m_data.empty(); } );
+  runUntil(1s, [this]() { return !m_connector->m_data.empty(); });
   ASSERT_EQ((string) "Hello There", m_connector->m_data);
   m_connector->m_data.clear();
 
@@ -464,23 +404,21 @@ TEST_F(ConnectorTest, ParseBuffer)
   ASSERT_EQ((string) "", m_connector->m_data);
 
   send(" There\nAnd ");
-  runUntil(1s, [this]() { return !m_connector->m_data.empty(); } );
+  runUntil(1s, [this]() { return !m_connector->m_data.empty(); });
   ASSERT_EQ((string) "Hello There", m_connector->m_data);
   m_connector->m_data.clear();
-  
+
   send("Again\nXXX");
-  runUntil(1s, [this]() { return !m_connector->m_data.empty(); } );
+  runUntil(1s, [this]() { return !m_connector->m_data.empty(); });
   ASSERT_EQ((string) "And Again", m_connector->m_data);
 }
 
 TEST_F(ConnectorTest, ParseBufferFraming)
 {
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   m_connector->m_list.clear();
   send("first\nseco");
@@ -497,12 +435,9 @@ TEST_F(ConnectorTest, ParseBufferFraming)
 TEST_F(ConnectorTest, SendCommand)
 {
   startServer();
-  
-  m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
 
+  m_connector->start(m_port);
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   auto line = read(1s);
   ASSERT_EQ("* PING", line);
@@ -525,9 +460,7 @@ TEST_F(ConnectorTest, IPV6Connection)
   m_connector = std::make_unique<TestConnector>(strand, "::1", m_port);
 
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   ASSERT_FALSE(m_connector->m_disconnected);
 #endif
@@ -561,7 +494,7 @@ TEST_F(ConnectorTest, StartHeartbeats)
   m_connector->startHeartbeats(line);
 
   ASSERT_TRUE(m_connector->heartbeats());
-  ASSERT_EQ(std::chrono::milliseconds{123}, m_connector->heartbeatFrequency());
+  ASSERT_EQ(std::chrono::milliseconds {123}, m_connector->heartbeatFrequency());
 
   m_connector->resetHeartbeats();
 
@@ -569,23 +502,21 @@ TEST_F(ConnectorTest, StartHeartbeats)
   m_connector->startHeartbeats(line);
 
   ASSERT_TRUE(m_connector->heartbeats());
-  ASSERT_EQ(std::chrono::milliseconds{456}, m_connector->heartbeatFrequency());
+  ASSERT_EQ(std::chrono::milliseconds {456}, m_connector->heartbeatFrequency());
 
   line = "* PONG 323";
   m_connector->startHeartbeats(line);
 
   ASSERT_TRUE(m_connector->heartbeats());
-  ASSERT_EQ(std::chrono::milliseconds{323}, m_connector->heartbeatFrequency());
+  ASSERT_EQ(std::chrono::milliseconds {323}, m_connector->heartbeatFrequency());
 }
 
 TEST_F(ConnectorTest, test_trimming_trailing_white_space)
 {
   startServer();
-  
+
   m_connector->start(m_port);
-  runUntil(2s, [this]() -> bool {
-    return m_connected && m_connector->isConnected();
-  });
+  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   m_connector->m_list.clear();
   send("first    \r\nseco");

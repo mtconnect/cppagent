@@ -2,17 +2,17 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
-#include "agent_test_helper.hpp"
-#include "json_helper.hpp"
-
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include "adapter/adapter.hpp"
+#include "agent.hpp"
+#include "agent_test_helper.hpp"
+#include "json_helper.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -33,9 +33,9 @@ protected:
 
   void TearDown() override { m_agentTestHelper.reset(); }
 
-  Adapter *m_adapter{nullptr};
+  Adapter *m_adapter {nullptr};
   std::string m_agentId;
-  DevicePtr m_device{nullptr};
+  DevicePtr m_device {nullptr};
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
@@ -50,6 +50,5 @@ TEST_F(SensorConfigurationTest, ParseSensorConfiguration)
   auto channels = config->getList("Channels");
   auto channel = channels->front();
 
-  EXPECT_EQ("A/D:1", get<string>(channel->getProperty("name")));  
+  EXPECT_EQ("A/D:1", get<string>(channel->getProperty("name")));
 }
-

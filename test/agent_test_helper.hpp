@@ -17,19 +17,6 @@
 
 #pragma once
 
-#include "test_utilities.hpp"
-#include "rest_sink/session.hpp"
-#include "rest_sink/server.hpp"
-#include "rest_sink/response.hpp"
-#include "rest_sink/routing.hpp"
-#include "adapter/shdr/shdr_adapter.hpp"
-#include "pipeline/pipeline.hpp"
-#include "configuration/agent_config.hpp"
-#include "agent.hpp"
-#include "configuration/config_options.hpp"
-#include "rest_sink/rest_service.hpp"
-#include "loopback_source.hpp"
-
 #include <chrono>
 #include <iosfwd>
 #include <map>
@@ -37,25 +24,34 @@
 
 #include <nlohmann/json.hpp>
 
-namespace mtconnect
-{
+#include "adapter/shdr/shdr_adapter.hpp"
+#include "agent.hpp"
+#include "configuration/agent_config.hpp"
+#include "configuration/config_options.hpp"
+#include "loopback_source.hpp"
+#include "pipeline/pipeline.hpp"
+#include "rest_sink/response.hpp"
+#include "rest_sink/rest_service.hpp"
+#include "rest_sink/routing.hpp"
+#include "rest_sink/server.hpp"
+#include "rest_sink/session.hpp"
+#include "test_utilities.hpp"
+
+namespace mtconnect {
   class Agent;
-  
-  namespace rest_sink
-  {
+
+  namespace rest_sink {
     class TestSession : public Session
     {
     public:
       using Session::Session;
       ~TestSession() {}
-      std::shared_ptr<TestSession> shared_ptr() {
+      std::shared_ptr<TestSession> shared_ptr()
+      {
         return std::dynamic_pointer_cast<TestSession>(shared_from_this());
       }
-      
-      void run() override
-      {
-        
-      }
+
+      void run() override {}
       void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
       {
         m_code = response->m_status;
@@ -92,27 +88,21 @@ namespace mtconnect
         else
           std::cout << "Streaming done" << std::endl;
       }
-      void close() override
-      {
-        m_streaming = false;
-      }
-      void closeStream() override
-      {
-        m_streaming = false;
-      }
+      void close() override { m_streaming = false; }
+      void closeStream() override { m_streaming = false; }
 
       std::string m_body;
       std::string m_mimeType;
       boost::beast::http::status m_code;
       std::chrono::seconds m_expires;
-      
+
       std::string m_chunkBody;
       std::string m_chunkMimeType;
-      bool m_streaming{false};
+      bool m_streaming {false};
     };
 
-  }
-}
+  }  // namespace rest_sink
+}  // namespace mtconnect
 
 namespace mhttp = mtconnect::rest_sink;
 namespace adpt = mtconnect::adapter;
@@ -120,52 +110,42 @@ namespace observe = mtconnect::observation;
 
 class AgentTestHelper
 {
- public:
-  AgentTestHelper()
-  : m_incomingIp("127.0.0.1"),
-    m_strand(m_ioContext),
-  m_socket(m_ioContext)
-  {
-  }
-  
+public:
+  AgentTestHelper() : m_incomingIp("127.0.0.1"), m_strand(m_ioContext), m_socket(m_ioContext) {}
+
   ~AgentTestHelper()
   {
-    m_restService.reset();    
+    m_restService.reset();
     m_adapter.reset();
     if (m_agent)
       m_agent->stop();
     m_agent.reset();
   }
-  
+
   auto session() { return m_session; }
-    
+
   // Helper method to test expected string, given optional query, & run tests
-  void responseHelper(const char *file, int line,
-                      const mtconnect::rest_sink::QueryMap &aQueries,
-                      xmlDocPtr *doc, const char *path,
-                      const char *accepts = "text/xml");
+  void responseHelper(const char *file, int line, const mtconnect::rest_sink::QueryMap &aQueries,
+                      xmlDocPtr *doc, const char *path, const char *accepts = "text/xml");
   void responseStreamHelper(const char *file, int line,
-                            const mtconnect::rest_sink::QueryMap &aQueries,
-                            const char *path,
+                            const mtconnect::rest_sink::QueryMap &aQueries, const char *path,
                             const char *accepts = "text/xml");
-  void responseHelper(const char *file, int line,
-                      const mtconnect::rest_sink::QueryMap& aQueries, nlohmann::json &doc, const char *path,
+  void responseHelper(const char *file, int line, const mtconnect::rest_sink::QueryMap &aQueries,
+                      nlohmann::json &doc, const char *path,
                       const char *accepts = "application/json");
   void putResponseHelper(const char *file, int line, const std::string &body,
-                         const mtconnect::rest_sink::QueryMap &aQueries,
-                         xmlDocPtr *doc, const char *path,
-                         const char *accepts = "text/xml");
-  void deleteResponseHelper(const char *file, int line, 
-                            const mtconnect::rest_sink::QueryMap &aQueries, xmlDocPtr *doc, const char *path,
-                            const char *accepts = "text/xml");
-  
+                         const mtconnect::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
+                         const char *path, const char *accepts = "text/xml");
+  void deleteResponseHelper(const char *file, int line,
+                            const mtconnect::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
+                            const char *path, const char *accepts = "text/xml");
+
   void chunkStreamHelper(const char *file, int line, xmlDocPtr *doc);
 
   void makeRequest(const char *file, int line, boost::beast::http::verb verb,
-                   const std::string &body,
-                   const mtconnect::rest_sink::QueryMap &aQueries,
+                   const std::string &body, const mtconnect::rest_sink::QueryMap &aQueries,
                    const char *path, const char *accepts);
-  
+
   auto getAgent() { return m_agent.get(); }
   std::shared_ptr<mtconnect::rest_sink::RestService> getRestService()
   {
@@ -175,44 +155,37 @@ class AgentTestHelper
     std::shared_ptr<RestService> rest = std::dynamic_pointer_cast<RestService>(sink);
     return rest;
   }
-    
+
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
-                   const std::string &version = "1.7", int checkpoint = 25,
-                   bool put = false, bool observe = true)
+                   const std::string &version = "1.7", int checkpoint = 25, bool put = false,
+                   bool observe = true)
   {
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
     using ptree = boost::property_tree::ptree;
-    
-    
 
     rest_sink::RestService::registerFactory(m_sinkFactory);
     adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
-    ConfigOptions options{{configuration::BufferSize, bufferSize},
-      {configuration::MaxAssets, maxAssets},
-      {configuration::CheckpointFrequency, checkpoint},
-      {configuration::AllowPut, put},
-      {configuration::SchemaVersion, version},
-      {configuration::Pretty, true}
-    };
-    m_agent = std::make_unique<mtconnect::Agent>(m_ioContext,
-                                                 PROJECT_ROOT_DIR + file,
-                                                 options);
+    ConfigOptions options {
+        {configuration::BufferSize, bufferSize},          {configuration::MaxAssets, maxAssets},
+        {configuration::CheckpointFrequency, checkpoint}, {configuration::AllowPut, put},
+        {configuration::SchemaVersion, version},          {configuration::Pretty, true}};
+    m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, PROJECT_ROOT_DIR + file, options);
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
-    
+
     m_loopback = std::make_shared<LoopbackSource>("TestSource", m_strand, m_context, options);
     m_agent->addSource(m_loopback);
-    
+
     auto sinkContract = m_agent->makeSinkContract();
     sinkContract->m_pipelineContext = m_context;
-    auto sink = m_sinkFactory.make("RestService", "RestService",
-                           m_ioContext, move(sinkContract), options, ptree{});
+    auto sink = m_sinkFactory.make("RestService", "RestService", m_ioContext, move(sinkContract),
+                                   options, ptree {});
     m_restService = std::dynamic_pointer_cast<rest_sink::RestService>(sink);
     m_agent->addSink(m_restService);
     m_agent->initialize(m_context);
-    
+
     if (observe)
     {
       m_agent->initialDataItemObservations();
@@ -226,18 +199,18 @@ class AgentTestHelper
     }
 
     m_server = m_restService->getServer();
-    
-    m_session = std::make_shared<mhttp::TestSession>([](mhttp::SessionPtr, mhttp::RequestPtr) { return true; }, m_server->getErrorFunction());
+
+    m_session = std::make_shared<mhttp::TestSession>(
+        [](mhttp::SessionPtr, mhttp::RequestPtr) { return true; }, m_server->getErrorFunction());
     return m_agent.get();
   }
-  
-  auto addAdapter(mtconnect::ConfigOptions options = {},
-                  const std::string &host = "localhost", uint16_t port = 7878,
-                  const std::string &device = "")
+
+  auto addAdapter(mtconnect::ConfigOptions options = {}, const std::string &host = "localhost",
+                  uint16_t port = 7878, const std::string &device = "")
   {
     using namespace mtconnect;
     using namespace mtconnect::adapter;
-    
+
     if (!IsOptionSet(options, configuration::Device))
     {
       options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
@@ -250,7 +223,7 @@ class AgentTestHelper
 
     return m_adapter;
   }
-  
+
   uint64_t addToBuffer(mtconnect::DataItemPtr di, const mtconnect::entity::Properties &shdr,
                        const mtconnect::Timestamp &time)
   {
@@ -265,30 +238,30 @@ class AgentTestHelper
     }
     return 0;
   }
-  
+
   void printResponse()
   {
     std::cout << "Status " << m_session->m_code << " " << std::endl
-              << m_session->m_body << std::endl << "------------------------"
-              << std::endl;
+              << m_session->m_body << std::endl
+              << "------------------------" << std::endl;
   }
 
   void printResponseStream()
   {
     std::cout << "Status " << m_response.m_status << " " << std::endl
-              << m_out.str() << std::endl << "------------------------"
-              << std::endl;
+              << m_out.str() << std::endl
+              << "------------------------" << std::endl;
   }
 
-  mhttp::Server *m_server{nullptr};
+  mhttp::Server *m_server {nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::rest_sink::RestService> m_restService;
   std::shared_ptr<mtconnect::LoopbackSource> m_loopback;
-  
-  bool m_dispatched { false };
+
+  bool m_dispatched {false};
   std::string m_incomingIp;
-  
+
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::stringstream m_out;
   mtconnect::rest_sink::RequestPtr m_request;
@@ -297,63 +270,59 @@ class AgentTestHelper
   boost::asio::ip::tcp::socket m_socket;
   mtconnect::rest_sink::Response m_response;
   std::shared_ptr<mtconnect::rest_sink::TestSession> m_session;
-  
+
   mtconnect::SinkFactory m_sinkFactory;
   mtconnect::SourceFactory m_sourceFactory;
 };
 
-struct XmlDocFreer {
+struct XmlDocFreer
+{
   XmlDocFreer(xmlDocPtr doc) : m_doc(doc) {}
-  ~XmlDocFreer() {
+  ~XmlDocFreer()
+  {
     if (m_doc)
       xmlFreeDoc(m_doc);
   }
   xmlDocPtr m_doc;
 };
 
-
-#define PARSE_XML_RESPONSE(path)                                                           \
-  xmlDocPtr doc = nullptr;                                                                   \
+#define PARSE_XML_RESPONSE(path)                                         \
+  xmlDocPtr doc = nullptr;                                               \
   m_agentTestHelper->responseHelper(__FILE__, __LINE__, {}, &doc, path); \
-  ASSERT_TRUE(doc); \
+  ASSERT_TRUE(doc);                                                      \
   XmlDocFreer cleanup(doc)
 
-#define PARSE_TEXT_RESPONSE(path)                                                           \
-  xmlDocPtr doc = nullptr;                                                                   \
+#define PARSE_TEXT_RESPONSE(path)                                        \
+  xmlDocPtr doc = nullptr;                                               \
   m_agentTestHelper->responseHelper(__FILE__, __LINE__, {}, &doc, path); \
   XmlDocFreer cleanup(doc)
-
-
 
 #define PARSE_XML_RESPONSE_QUERY(path, queries)                               \
-  xmlDocPtr doc = nullptr;                                              \
+  xmlDocPtr doc = nullptr;                                                    \
   m_agentTestHelper->responseHelper(__FILE__, __LINE__, queries, &doc, path); \
-  ASSERT_TRUE(doc); \
+  ASSERT_TRUE(doc);                                                           \
   XmlDocFreer cleanup(doc)
 
+#define PARSE_XML_STREAM_QUERY(path, queries) \
+  m_agentTestHelper->responseStreamHelper(__FILE__, __LINE__, queries, path);
 
-#define PARSE_XML_STREAM_QUERY(path, queries)                               \
-  m_agentTestHelper->responseStreamHelper(__FILE__, __LINE__, queries, path); \
-
-#define PARSE_XML_CHUNK()                               \
-  xmlDocPtr doc = nullptr;                                              \
+#define PARSE_XML_CHUNK()                                         \
+  xmlDocPtr doc = nullptr;                                        \
   m_agentTestHelper->chunkStreamHelper(__FILE__, __LINE__, &doc); \
-  ASSERT_TRUE(doc); \
+  ASSERT_TRUE(doc);                                               \
   XmlDocFreer cleanup(doc)
-
 
 #define PARSE_XML_RESPONSE_PUT(path, body, queries)                                    \
-  xmlDocPtr doc = nullptr;                                                       \
+  xmlDocPtr doc = nullptr;                                                             \
   m_agentTestHelper->putResponseHelper(__FILE__, __LINE__, body, queries, &doc, path); \
   ASSERT_TRUE(doc)
 
-#define PARSE_XML_RESPONSE_DELETE(path)                                    \
-  xmlDocPtr doc = nullptr;                                                       \
+#define PARSE_XML_RESPONSE_DELETE(path)                                        \
+  xmlDocPtr doc = nullptr;                                                     \
   m_agentTestHelper->deleteResponseHelper(__FILE__, __LINE__, {}, &doc, path); \
-  ASSERT_TRUE(doc); \
+  ASSERT_TRUE(doc);                                                            \
   XmlDocFreer cleanup(doc)
 
 #define PARSE_JSON_RESPONSE(path) \
-  nlohmann::json doc; \
+  nlohmann::json doc;             \
   m_agentTestHelper->responseHelper(__FILE__, __LINE__, {}, doc, path)
-
