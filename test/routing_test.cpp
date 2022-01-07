@@ -2,15 +2,15 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "rest_sink/routing.hpp"
-#include "rest_sink/response.hpp"
-
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include "rest_sink/response.hpp"
+#include "rest_sink/routing.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -19,33 +19,26 @@ using verb = boost::beast::http::verb;
 
 class RoutingTest : public testing::Test
 {
- protected:
-  void SetUp() override
-  {
-    m_socket = make_unique<boost::asio::ip::tcp::socket>(m_context);
-  }
+protected:
+  void SetUp() override { m_socket = make_unique<boost::asio::ip::tcp::socket>(m_context); }
 
-  void TearDown() override
-  {
-    m_socket.reset();
-  }
+  void TearDown() override { m_socket.reset(); }
 
   std::unique_ptr<boost::asio::ip::tcp::socket> m_socket;
   boost::asio::io_context m_context;
-  
-  const Routing::Function m_func { [](SessionPtr, const RequestPtr ) { return true; } };
 
+  const Routing::Function m_func {[](SessionPtr, const RequestPtr) { return true; }};
 };
 
 TEST_F(RoutingTest, TestSimplePattern)
 {
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
-  
+
   Routing probe(verb::get, "/probe", m_func);
   EXPECT_EQ(0, probe.getPathParameters().size());
   EXPECT_EQ(0, probe.getQueryParameters().size());
-  
+
   request->m_path = "/probe";
   ASSERT_TRUE(probe.matches(0, request));
   request->m_path = "/probe";
@@ -57,7 +50,7 @@ TEST_F(RoutingTest, TestSimplePattern)
   ASSERT_EQ(1, probeWithDevice.getPathParameters().size());
   EXPECT_EQ(0, probe.getQueryParameters().size());
   EXPECT_EQ("device", probeWithDevice.getPathParameters().front().m_name);
-  
+
   request->m_verb = verb::get;
   request->m_path = "/ABC123/probe";
   ASSERT_TRUE(probeWithDevice.matches(0, request));
@@ -85,7 +78,7 @@ TEST_F(RoutingTest, TestCurrentAtQueryParameter)
   Routing r(verb::get, "/{device}/current?at={unsigned_integer}", m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
   ASSERT_EQ(1, r.getQueryParameters().size());
-  
+
   auto pp = r.getPathParameters().front();
   EXPECT_EQ("device", pp.m_name);
   EXPECT_EQ(PATH, pp.m_part);
@@ -99,12 +92,14 @@ TEST_F(RoutingTest, TestCurrentAtQueryParameter)
 
 TEST_F(RoutingTest, TestSampleQueryParameters)
 {
-  Routing r(verb::get, "/{device}/sample?from={unsigned_integer}&"
+  Routing r(verb::get,
+            "/{device}/sample?from={unsigned_integer}&"
             "interval={double}&count={integer:100}&"
-            "heartbeat={double:10000}", m_func);
+            "heartbeat={double:10000}",
+            m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
   ASSERT_EQ(4, r.getQueryParameters().size());
-  
+
   auto pp = r.getPathParameters().front();
   EXPECT_EQ("device", pp.m_name);
   EXPECT_EQ(PATH, pp.m_part);
@@ -122,7 +117,7 @@ TEST_F(RoutingTest, TestSampleQueryParameters)
   EXPECT_EQ(QUERY, qp->m_part);
   EXPECT_TRUE(holds_alternative<monostate>(qp->m_default));
   qp++;
-  
+
   EXPECT_EQ("heartbeat", qp->m_name);
   EXPECT_EQ(DOUBLE, qp->m_type);
   EXPECT_EQ(QUERY, qp->m_part);
@@ -141,9 +136,11 @@ TEST_F(RoutingTest, TestQueryParameterMatch)
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
 
-  Routing r(verb::get, "/{device}/sample?from={unsigned_integer}&"
+  Routing r(verb::get,
+            "/{device}/sample?from={unsigned_integer}&"
             "interval={double}&count={integer:100}&"
-            "heartbeat={double:10000}", m_func);
+            "heartbeat={double:10000}",
+            m_func);
   ASSERT_EQ(1, r.getPathParameters().size());
   ASSERT_EQ(4, r.getQueryParameters().size());
 
@@ -154,15 +151,14 @@ TEST_F(RoutingTest, TestQueryParameterMatch)
   ASSERT_EQ(10000.0, get<double>(request->m_parameters["heartbeat"]));
 
   request->m_path = "/ABC123/sample";
-  request->m_query = {{ "count", "1000"}, {"from", "12345"}};
+  request->m_query = {{"count", "1000"}, {"from", "12345"}};
   ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("ABC123", get<string>(request->m_parameters["device"]));
   ASSERT_EQ(1000, get<int32_t>(request->m_parameters["count"]));
   ASSERT_EQ(12345, get<uint64_t>(request->m_parameters["from"]));
   ASSERT_EQ(10000.0, get<double>(request->m_parameters["heartbeat"]));
 
-  request->m_query = {{ "count", "1000"}, {"from", "12345"}, { "dummy" , "1" }
-  };
+  request->m_query = {{"count", "1000"}, {"from", "12345"}, {"dummy", "1"}};
   ASSERT_TRUE(r.matches(0, request));
   ASSERT_EQ("ABC123", get<string>(request->m_parameters["device"]));
   ASSERT_EQ(1000, get<int32_t>(request->m_parameters["count"]));
@@ -173,15 +169,16 @@ TEST_F(RoutingTest, TestQueryParameterMatch)
 
 TEST_F(RoutingTest, TestQueryParameterError)
 {
-  Routing r(verb::get, "/{device}/sample?from={unsigned_integer}&"
+  Routing r(verb::get,
+            "/{device}/sample?from={unsigned_integer}&"
             "interval={double}&count={integer:100}&"
-            "heartbeat={double:10000}", m_func);
+            "heartbeat={double:10000}",
+            m_func);
   RequestPtr request = make_shared<Request>();
   request->m_verb = verb::get;
   request->m_path = "/ABC123/sample";
-  request->m_query = {{ "count", "xxx"} };
-  ASSERT_THROW(r.matches(0, request),
-               ParameterError);
+  request->m_query = {{"count", "xxx"}};
+  ASSERT_THROW(r.matches(0, request), ParameterError);
 }
 
 TEST_F(RoutingTest, RegexPatterns)

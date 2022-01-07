@@ -27,6 +27,7 @@ target_link_libraries(
   agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
+target_clangformat_setup(sink_plugin_test)
 
 set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
 
@@ -80,6 +81,8 @@ target_link_libraries(
 
 set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
 
+target_clangformat_setup(adapter_plugin_test)
+
 ###########
 
 set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp json_helper.hpp)
@@ -104,6 +107,7 @@ target_compile_definitions(agent_test_lib
     "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
   )
 target_clangtidy_setup(agent_test_lib)
+target_clangformat_setup(agent_test_lib)
 set_target_properties(agent_test_lib PROPERTIES FOLDER "test")
 
 # Define test cases
@@ -120,7 +124,6 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
     "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:${AGENT_TEST_NAME}_test>/../Resources\"")
-  target_clangtidy_setup(agent_lib)
   add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
   target_compile_features(${AGENT_TEST_NAME}_test PUBLIC ${CXX_COMPILE_FEATURES})
 
@@ -136,6 +139,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
       PROPERTY COMPILE_FLAGS "/bigobj")    
   endif()
 
+  target_clangformat_setup(${AGENT_TEST_NAME}_test)  
 endmacro()
 
 add_agent_test(asset TRUE asset)
@@ -188,6 +192,7 @@ add_agent_test(data_item_mapping FALSE pipeline)
 add_agent_test(duplicate_filter FALSE pipeline)
 add_agent_test(pipeline_deliver TRUE pipeline)
 add_agent_test(topic_mapping TRUE pipeline)
+add_agent_test(period_filter TRUE pipeline)
 add_agent_test(pipeline_edit FALSE pipeline)
 
 add_agent_test(agent TRUE core)

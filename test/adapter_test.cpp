@@ -19,18 +19,17 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <boost/asio.hpp>
+
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <memory>
-
-#include <boost/asio.hpp>
 
 #include "adapter/shdr/shdr_adapter.hpp"
-#include "pipeline/pipeline_context.hpp"
 #include "configuration/config_options.hpp"
-
+#include "pipeline/pipeline_context.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -43,22 +42,19 @@ TEST(AdapterTest, MultilineData)
 {
   asio::io_context ioc;
   asio::io_context::strand strand(ioc);
-  ConfigOptions options{
-    {configuration::Host, "localhost"s},
-    {configuration::Port, 7878}
-  };
+  ConfigOptions options {{configuration::Host, "localhost"s}, {configuration::Port, 7878}};
   boost::property_tree::ptree tree;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
   auto adapter = make_unique<ShdrAdapter>(ioc, context, options, tree);
-  
+
   auto handler = make_unique<Handler>();
   string data;
   handler->m_processData = [&](const string &d, const string &s) { data = d; };
   adapter->setHandler(handler);
-  
+
   adapter->processData("Simple Pass Through");
   EXPECT_EQ("Simple Pass Through", data);
-  
+
   EXPECT_FALSE(adapter->getTerminator());
   adapter->processData("A multiline message: --multiline--ABC1234");
   EXPECT_TRUE(adapter->getTerminator());
@@ -66,10 +62,9 @@ TEST(AdapterTest, MultilineData)
   adapter->processData("Another Line...");
   adapter->processData("--multiline--ABC---");
   adapter->processData("--multiline--ABC1234");
-  
+
   const auto exp = R"DOC(A multiline message: 
 Another Line...
 --multiline--ABC---)DOC";
   EXPECT_EQ(exp, data);
 }
-

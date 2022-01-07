@@ -16,4 +16,3 @@
 //
 
 #include "testsink_service.hpp"
-

@@ -28,27 +28,27 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "rest_sink/checkpoint.hpp"
-#include "asset/cutting_tool.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "device_model/device.hpp"
-#include "utilities.hpp"
-#include "json_helper.hpp"
-#include "json_printer.hpp"
-#include "observation/observation.hpp"
-#include "test_utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
-#include "entity/xml_parser.hpp"
-#include "asset/file_asset.hpp"
-
-#include <nlohmann/json.hpp>
-
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include <nlohmann/json.hpp>
+
+#include "asset/cutting_tool.hpp"
+#include "asset/file_asset.hpp"
+#include "device_model/data_item/data_item.hpp"
+#include "device_model/device.hpp"
+#include "entity/xml_parser.hpp"
+#include "json_helper.hpp"
+#include "json_printer.hpp"
+#include "observation/observation.hpp"
+#include "rest_sink/checkpoint.hpp"
+#include "test_utilities.hpp"
+#include "utilities.hpp"
+#include "xml_parser.hpp"
+#include "xml_printer.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -58,7 +58,7 @@ using namespace mtconnect::asset;
 
 class JsonPrinterAssetTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     CuttingToolArchetype::registerAsset();
@@ -88,7 +88,7 @@ class JsonPrinterAssetTest : public testing::Test
       asset = dynamic_pointer_cast<Asset>(entity);
     return asset;
   }
-  
+
   std::unique_ptr<JsonPrinter> m_printer;
   std::unique_ptr<entity::XmlParser> m_parser;
 };
@@ -112,9 +112,9 @@ TEST_F(JsonPrinterAssetTest, CuttingTool)
   entity::ErrorList errors;
   AssetPtr a = parseAsset(xml, errors);
   ASSERT_TRUE(a);
-  AssetList assetList{a};
+  AssetList assetList {a};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
-  
+
   auto jdoc = json::parse(doc);
 
   auto asset = jdoc.at("/MTConnectAssets/Assets"_json_pointer);
@@ -141,10 +141,10 @@ TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
   entity::ErrorList errors;
   AssetPtr a = parseAsset(xml, errors);
   ASSERT_TRUE(a);
-  AssetList assetList{a};
+  AssetList assetList {a};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
-  
+
   auto asset = jdoc.at("/MTConnectAssets/Assets"_json_pointer);
   ASSERT_TRUE(asset.is_array());
   ASSERT_EQ(1_S, asset.size());
@@ -180,7 +180,7 @@ TEST_F(JsonPrinterAssetTest, CuttingMeasurements)
   entity::ErrorList errors;
   AssetPtr asset = parseAsset(xml, errors);
   ASSERT_TRUE(asset);
-  AssetList assetList{asset};
+  AssetList assetList {asset};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
 
@@ -212,12 +212,12 @@ TEST_F(JsonPrinterAssetTest, CuttingItem)
   entity::ErrorList errors;
   AssetPtr asset = parseAsset(xml, errors);
   ASSERT_TRUE(asset);
-  AssetList assetList{asset};
+  AssetList assetList {asset};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
-  
+
   cout << doc;
-  
+
   auto cuttingItems = jdoc.at(
       "/MTConnectAssets/Assets/0/"
       "CuttingTool/CuttingToolLifeCycle/"
@@ -252,10 +252,10 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
   entity::ErrorList errors;
   AssetPtr asset = parseAsset(xml, errors);
   ASSERT_TRUE(asset);
-  AssetList assetList{asset};
+  AssetList assetList {asset};
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
-  
+
   auto tool = jdoc.at(
       "/MTConnectAssets/Assets/0/"
       "CuttingToolArchetype"_json_pointer);

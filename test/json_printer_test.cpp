@@ -19,25 +19,26 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "configuration/config_options.hpp"
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
-#include "xml_printer_helper.hpp"
-#include "entity.hpp"
-#include "entity/xml_parser.hpp"
-#include "entity/xml_printer.hpp"
-#include "entity/json_printer.hpp"
-#include "entity/json_printer.cpp"
-#include <nlohmann/json.hpp>
-
-#include <libxml/xmlwriter.h>
-
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include <libxml/xmlwriter.h>
+
+#include <nlohmann/json.hpp>
+
+#include "adapter/adapter.hpp"
+#include "agent.hpp"
+#include "configuration/config_options.hpp"
+#include "entity.hpp"
+#include "entity/json_printer.cpp"
+#include "entity/json_printer.hpp"
+#include "entity/xml_parser.hpp"
+#include "entity/xml_printer.hpp"
+#include "xml_printer_helper.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -46,37 +47,25 @@ using namespace mtconnect::entity;
 
 class JsonPrinterTest : public testing::Test
 {
- protected:
-  void SetUp() override
-  {
-  }
+protected:
+  void SetUp() override {}
 
-  void TearDown() override
-  {
-  }
+  void TearDown() override {}
   FactoryPtr createFileArchetypeFactory()
   {
-    
-    auto header = make_shared<Factory>(Requirements{
-        Requirement("creationTime", true),
-        Requirement("version", true),
-        Requirement("testIndicator", false),
-        Requirement("instanceId", INTEGER, true),
-        Requirement("sender", true),
-        Requirement("bufferSize", INTEGER, true),
-        Requirement("assetBufferSize", INTEGER, true),
-        Requirement("assetCount", INTEGER, true),
-        Requirement("deviceModelChangeTime", true)
-        });
+    auto header = make_shared<Factory>(Requirements {
+        Requirement("creationTime", true), Requirement("version", true),
+        Requirement("testIndicator", false), Requirement("instanceId", INTEGER, true),
+        Requirement("sender", true), Requirement("bufferSize", INTEGER, true),
+        Requirement("assetBufferSize", INTEGER, true), Requirement("assetCount", INTEGER, true),
+        Requirement("deviceModelChangeTime", true)});
 
-    auto description = make_shared<Factory>(Requirements{
-        Requirement("manufacturer", false),
-        Requirement("model", false),
-        Requirement("serialNumber", false),
-        Requirement("station", false),
-        Requirement("VALUE", false)});
-    
-    auto dataitem = make_shared<Factory>(Requirements{
+    auto description = make_shared<Factory>(
+        Requirements {Requirement("manufacturer", false), Requirement("model", false),
+                      Requirement("serialNumber", false), Requirement("station", false),
+                      Requirement("VALUE", false)});
+
+    auto dataitem = make_shared<Factory>(Requirements {
         Requirement("name", false),
         Requirement("id", true),
         Requirement("type", true),
@@ -92,12 +81,12 @@ class JsonPrinterTest : public testing::Test
         Requirement("representation", false),
         Requirement("significantDigits", false),
         Requirement("discrete", false),
-        });
+    });
 
-    auto dataitems = make_shared<Factory>(Requirements{
-        Requirement("DataItem", ENTITY, dataitem, 1, Requirement::Infinite)});
+    auto dataitems = make_shared<Factory>(
+        Requirements {Requirement("DataItem", ENTITY, dataitem, 1, Requirement::Infinite)});
 
-    auto component = make_shared<Factory>(Requirements{
+    auto component = make_shared<Factory>(Requirements {
         Requirement("id", true),
         Requirement("name", false),
         Requirement("uuid", false),
@@ -113,28 +102,29 @@ class JsonPrinterTest : public testing::Test
     component->addRequirements({Requirement("DataItems", ENTITY_LIST, dataitems, false)});
 
     auto device = make_shared<Factory>(*component);
-    device->addRequirements(Requirements{
+    device->addRequirements(Requirements {
         Requirement("name", true),
         Requirement("uuid", true),
     });
 
     auto devices = make_shared<Factory>(
-        Requirements{Requirement("Device", ENTITY, device, 1, Requirement::Infinite)});
+        Requirements {Requirement("Device", ENTITY, device, 1, Requirement::Infinite)});
     devices->registerMatchers();
 
-    auto mtconnectDevices = make_shared<Factory>(Requirements{
+    auto mtconnectDevices = make_shared<Factory>(Requirements {
         Requirement("Header", ENTITY, header, true),
         Requirement("Devices", ENTITY_LIST, devices, true),
     });
-    
-    auto root = make_shared<Factory>(Requirements{Requirement("MTConnectDevices", ENTITY, mtconnectDevices)});
+
+    auto root = make_shared<Factory>(
+        Requirements {Requirement("MTConnectDevices", ENTITY, mtconnectDevices)});
 
     return root;
   }
 
-  auto deviceModel() 
+  auto deviceModel()
   {
-    auto doc = string{
+    auto doc = string {
         "<MTConnectDevices>\n"
         "  <Header creationTime=\"2021-01-07T18:34:15Z\" sender=\"DMZ-MTCNCT\" "
         "instanceId=\"1609418103\" version=\"1.6.0.6\" assetBufferSize=\"8096\" assetCount=\"60\" "
@@ -178,9 +168,9 @@ TEST_F(JsonPrinterTest, Header)
 
   json jdoc;
   jdoc = jprinter.print(entity);
-  
+
   auto header = jdoc.at("/MTConnectDevices/Header"_json_pointer);
-  
+
   ASSERT_EQ("DMZ-MTCNCT", header.at("/sender"_json_pointer).get<string>());
   ASSERT_EQ(8096, header.at("/assetBufferSize"_json_pointer).get<int64_t>());
 }
@@ -201,7 +191,7 @@ TEST_F(JsonPrinterTest, Devices)
 
   json jdoc;
   jdoc = jprinter.print(entity);
-  
+
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
 
   ASSERT_EQ(1, devices.size());
@@ -230,12 +220,12 @@ TEST_F(JsonPrinterTest, Components)
   ASSERT_EQ(1, components.size());
 
   auto systems = components.at("/0/Systems"_json_pointer);
-  
+
   ASSERT_EQ("s1", systems.at("/id"_json_pointer).get<string>());
-  
+
   ASSERT_EQ("abc", systems.at("/Description/model"_json_pointer).get<string>());
   ASSERT_EQ("Hey Will", systems.at("/Description/value"_json_pointer).get<string>());
-  
+
   ASSERT_EQ(2, systems.at("/Components"_json_pointer).size());
   ASSERT_EQ("h1", systems.at("/Components/1/Heating/id"_json_pointer).get<string>());
 }
@@ -265,19 +255,14 @@ TEST_F(JsonPrinterTest, TopLevelDataItems)
 
 TEST_F(JsonPrinterTest, ElementListWithProperty)
 {
-  auto item =
-      make_shared<Factory>(Requirements{{"itemId", true}});
-  
-  auto items = make_shared<Factory>(Requirements{
-     {"count", INTEGER, true},
-    {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
+  auto item = make_shared<Factory>(Requirements {{"itemId", true}});
 
-  auto lifeCycle = make_shared<Factory>(Requirements{
-    {"CuttingItems", ENTITY_LIST, items, true }});
+  auto items = make_shared<Factory>(Requirements {
+      {"count", INTEGER, true}, {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
 
-  auto root = make_shared<Factory>(Requirements{
-    {"Root", ENTITY, lifeCycle, true}
-  });
+  auto lifeCycle = make_shared<Factory>(Requirements {{"CuttingItems", ENTITY_LIST, items, true}});
+
+  auto root = make_shared<Factory>(Requirements {{"Root", ENTITY, lifeCycle, true}});
 
   string doc = R"DOC(
 <Root>
@@ -287,7 +272,7 @@ TEST_F(JsonPrinterTest, ElementListWithProperty)
   </CuttingItems>
 </Root>
 )DOC";
- 
+
   ErrorList errors;
   entity::XmlParser parser;
 
@@ -298,8 +283,10 @@ TEST_F(JsonPrinterTest, ElementListWithProperty)
 
   json jdoc;
   jdoc = jprinter.print(entity);
-    
+
   ASSERT_EQ(2, jdoc.at("/Root/CuttingItems/count"_json_pointer).get<int>());
-  ASSERT_EQ("1", jdoc.at("/Root/CuttingItems/list/0/CuttingItem/itemId"_json_pointer).get<string>());
-  ASSERT_EQ("2", jdoc.at("/Root/CuttingItems/list/1/CuttingItem/itemId"_json_pointer).get<string>());
+  ASSERT_EQ("1",
+            jdoc.at("/Root/CuttingItems/list/0/CuttingItem/itemId"_json_pointer).get<string>());
+  ASSERT_EQ("2",
+            jdoc.at("/Root/CuttingItems/list/1/CuttingItem/itemId"_json_pointer).get<string>());
 }

@@ -23,47 +23,40 @@
 
 using namespace std;
 
-namespace mtconnect
-{
-    class sink_plugin_test : public Sink
+namespace mtconnect {
+  class sink_plugin_test : public Sink
+  {
+  public:
+    sink_plugin_test(const string &name, boost::asio::io_context &context,
+                     SinkContractPtr &&contract, const ConfigOptions &config)
+      : Sink(name, move(contract))
+    {}
+
+    ~sink_plugin_test() = default;
+
+    // Sink Methods
+    void start() override {}
+    void stop() override {}
+
+    uint64_t publish(observation::ObservationPtr &observation) override { return 0; }
+    bool publish(asset::AssetPtr asset) override { return false; }
+
+    static SinkPtr create(const std::string &name, boost::asio::io_context &io,
+                          SinkContractPtr &&contract, const ConfigOptions &options,
+                          const boost::property_tree::ptree &block)
     {
-    public:
-      sink_plugin_test(const string &name, boost::asio::io_context &context, SinkContractPtr &&contract,
-                  const ConfigOptions &config)
-          : Sink(name, move(contract))
-      {
-      }
+      return std::make_shared<sink_plugin_test>(name, io, std::move(contract), options);
+    }
 
-      ~sink_plugin_test() = default;
+    static void register_factory(const boost::property_tree::ptree &block,
+                                 configuration::AgentConfiguration &config)
+    {
+      mtconnect::configuration::gAgentLogger = config.getLogger();
+      PLUGIN_LOG(debug) << "Registering sink factory for sink_plugin_test";
+      config.getSinkFactory().registerFactory("sink_plugin_test", &sink_plugin_test::create);
+    }
+  };
 
-      // Sink Methods
-      void start() override {}
-      void stop() override {}
-
-      uint64_t publish(observation::ObservationPtr &observation) override { return 0; }
-      bool publish(asset::AssetPtr asset) override { return false; }
-      
-      static SinkPtr create(const std::string &name,
-                               boost::asio::io_context &io,
-                               SinkContractPtr &&contract,
-                               const ConfigOptions &options,
-                               const boost::property_tree::ptree &block)
-      {
-        return std::make_shared<sink_plugin_test>(name, io, std::move(contract), options);
-      }
-      
-      static void register_factory(const boost::property_tree::ptree &block, configuration::AgentConfiguration &config)
-      {
-        mtconnect::configuration::gAgentLogger = config.getLogger();
-        PLUGIN_LOG(debug) << "Registering sink factory for sink_plugin_test";
-        config.getSinkFactory().registerFactory("sink_plugin_test", &sink_plugin_test::create);
-      }
-    };
-
-    BOOST_DLL_ALIAS(
-        sink_plugin_test::register_factory,
-                    initialize_plugin
-    )
+  BOOST_DLL_ALIAS(sink_plugin_test::register_factory, initialize_plugin)
 
 }  // namespace mtconnect
-

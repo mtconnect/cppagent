@@ -19,26 +19,26 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "rest_sink/checkpoint.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "device_model/device.hpp"
-#include "utilities.hpp"
-#include "json_helper.hpp"
-#include "json_printer.hpp"
-#include "observation/observation.hpp"
-#include "test_utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
-#include "agent.hpp"
-#include "agent_test_helper.hpp"
-
-#include <nlohmann/json.hpp>
-
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include <nlohmann/json.hpp>
+
+#include "agent.hpp"
+#include "agent_test_helper.hpp"
+#include "device_model/data_item/data_item.hpp"
+#include "device_model/device.hpp"
+#include "json_helper.hpp"
+#include "json_printer.hpp"
+#include "observation/observation.hpp"
+#include "rest_sink/checkpoint.hpp"
+#include "test_utilities.hpp"
+#include "utilities.hpp"
+#include "xml_parser.hpp"
+#include "xml_printer.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -46,16 +46,14 @@ using json = nlohmann::json;
 
 class JsonPrinterProbeTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
     m_printer = std::make_unique<JsonPrinter>("1.5", true);
 
-    
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml",
-                                   8, 4, "1.5", 25);
+    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml", 8, 4, "1.5", 25);
 
     // Asset types are registered in the agent.
     m_devices = m_agentTestHelper->m_agent->getDevices();
@@ -72,7 +70,7 @@ class JsonPrinterProbeTest : public testing::Test
   std::unique_ptr<JsonPrinter> m_printer;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
-  std::list<DevicePtr > m_devices;
+  std::list<DevicePtr> m_devices;
 
   std::unique_ptr<XmlPrinter> m_xmlPrinter;
 };
@@ -82,7 +80,7 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
-    
+
   ASSERT_EQ(string("MTConnectDevices"), it.key());
   ASSERT_EQ(123, jdoc.at("/MTConnectDevices/Header/instanceId"_json_pointer).get<int32_t>());
   ASSERT_EQ(9999, jdoc.at("/MTConnectDevices/Header/bufferSize"_json_pointer).get<int32_t>());
@@ -279,7 +277,7 @@ TEST_F(JsonPrinterProbeTest, Composition)
 
   auto coolant = devices.at(0).at("/Device/Components/2/Systems/Components/1/Coolant"_json_pointer);
   ASSERT_TRUE(coolant.is_object());
-  
+
   auto comp1 = coolant.at("/Compositions/0/Composition"_json_pointer);
   ASSERT_EQ(string("main"), comp1.at("/name"_json_pointer).get<string>());
   ASSERT_EQ(string("TANK"), comp1.at("/type"_json_pointer).get<string>());
@@ -321,7 +319,6 @@ TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
   auto device = devices.at(0).at("/Device"_json_pointer);
 
   ASSERT_EQ(string("1.7"), device.at("/mtconnectVersion"_json_pointer).get<string>());
-
 }
 
 TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
@@ -329,8 +326,7 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   auto server = std::make_unique<rest_sink::Server>(m_agentTestHelper->m_ioContext);
   auto cache = std::make_unique<rest_sink::FileCache>();
 
-  m_agentTestHelper->createAgent("/samples/relationship_test.xml",
-                                 8, 4, "1.7", 25);
+  m_agentTestHelper->createAgent("/samples/relationship_test.xml", 8, 4, "1.7", 25);
   auto printer = m_agentTestHelper->m_agent->getPrinter("json");
   m_devices = m_agentTestHelper->m_agent->getDevices();
   auto doc = printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -339,14 +335,15 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
   auto linear = devices.at(1).at("/Device/Components/0/Axes/Components/0/Linear"_json_pointer);
   ASSERT_TRUE(linear.is_object());
-  
+
   ASSERT_FALSE(printer->getModelChangeTime().empty());
-  ASSERT_EQ(printer->getModelChangeTime(), jdoc.at("/MTConnectDevices/Header/deviceModelChangeTime"_json_pointer).get<string>());
-  
+  ASSERT_EQ(printer->getModelChangeTime(),
+            jdoc.at("/MTConnectDevices/Header/deviceModelChangeTime"_json_pointer).get<string>());
+
   auto load = linear.at("/DataItems/4/DataItem"_json_pointer);
   ASSERT_TRUE(load.is_object());
   ASSERT_EQ(string("xlc"), load["id"].get<string>());
-  
+
   auto dir1 = load.at("/Relationships/0"_json_pointer);
   ASSERT_TRUE(dir1.is_object());
   ASSERT_EQ(string("archie"), dir1.at("/DataItemRelationship/name"_json_pointer));
@@ -367,6 +364,4 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   ASSERT_EQ(string("bob"), dir3.at("/DataItemRelationship/name"_json_pointer));
   ASSERT_EQ(string("OBSERVATION"), dir3.at("/DataItemRelationship/type"_json_pointer));
   ASSERT_EQ(string("xlc"), dir3.at("/DataItemRelationship/idRef"_json_pointer));
-
 }
-

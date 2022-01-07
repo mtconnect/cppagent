@@ -19,11 +19,10 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "utilities.hpp"
-
 #include <date/date.h>
-
 #include <thread>
+
+#include "utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -170,7 +169,7 @@ TEST(GlobalsTest, GetCurrentTime2)
 TEST(GlobalsTest, ParseTimeMicro)
 {
   // This time is 123456 microseconds after the epoch
-  ASSERT_EQ(uint64_t{123456}, parseTimeMicro("1970-01-01T00:00:00.123456Z"));
+  ASSERT_EQ(uint64_t {123456}, parseTimeMicro("1970-01-01T00:00:00.123456Z"));
 }
 
 TEST(GlobalsTest, AddNamespace)
@@ -206,7 +205,4 @@ TEST(GlobalsTest, ParseTimeMilli)
   ASSERT_TRUE(1353414802123000LL == time);
 }
 
-TEST(GlobalsTest, Int64ToString)
-{
-  ASSERT_EQ((string) "8805345009", to_string(8805345009ULL));
-}
+TEST(GlobalsTest, Int64ToString) { ASSERT_EQ((string) "8805345009", to_string(8805345009ULL)); }

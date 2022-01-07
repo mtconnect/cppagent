@@ -19,17 +19,16 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "test_utilities.hpp"
+#include <iostream>
 
 #include <libxml/tree.h>
 #include <libxml/xpathInternals.h>
 
-#include <iostream>
+#include "test_utilities.hpp"
 
 using namespace std;
 
-namespace
-{
+namespace {
   template <typename T>
   std::string toString(T value)
   {
@@ -281,7 +280,7 @@ void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected, const std::s
   string message = (string) "Incorrect count of elements for path " + xpath;
 
   int actual = obj->nodesetval->nodeNr;
-  
+
   xmlXPathFreeObject(obj);
   xmlXPathFreeContext(xpathCtx);
 

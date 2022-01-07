@@ -31,7 +31,7 @@ TEST(ConfigParserTest, parse_simple_properties)
 dog = cat
 mellon = water
 )DOC";
-  
+
   auto tree = Parser::parse(cfg);
   ASSERT_EQ(2, tree.size());
   ASSERT_EQ("cat", tree.get<string>("dog"));
@@ -47,7 +47,7 @@ animals {
   cows = bench
 }
 )DOC";
-  
+
   auto tree = Parser::parse(cfg);
 
   ASSERT_EQ(2, tree.size());
@@ -69,7 +69,7 @@ animals {
 # so is this
 }
 )DOC";
-  
+
   auto tree = Parser::parse(cfg);
 
   ASSERT_EQ(2, tree.size());
@@ -78,7 +78,6 @@ animals {
   ASSERT_EQ(2, animals->second.size());
   ASSERT_EQ("row", animals->second.get<string>("ducks"));
   ASSERT_EQ("bench", animals->second.get<string>("cows"));
-
 }
 
 TEST(ConfigParserTest, invalid_config)
@@ -87,7 +86,7 @@ TEST(ConfigParserTest, invalid_config)
 a = b
   }}}
 )DOC";
-  
+
   ASSERT_THROW(Parser::parse(cfg), ParseError);
 }
 
@@ -97,7 +96,7 @@ TEST(ConfigParserTest, no_closing_curly)
 r = 2
 a { dog=cat
 )DOC";
-  
+
   ASSERT_THROW(Parser::parse(cfg), ParseError);
 }
 
@@ -107,7 +106,7 @@ TEST(ConfigParserTest, missing_value)
 r =
 cow = bull
 )DOC";
-  
+
   ASSERT_THROW(Parser::parse(cfg), ParseError);
 }
 
@@ -120,7 +119,7 @@ animals {
   ducks = row # This comment comes at the end
   cows = bench}
 )DOC";
-  
+
   auto tree = Parser::parse(cfg);
 
   ASSERT_EQ(2, tree.size());
@@ -134,7 +133,7 @@ animals {
 TEST(ConfigParserTest, single_line_block)
 {
   string cfg = "parents { mother = father }";
-  
+
   auto tree = Parser::parse(cfg);
 
   ASSERT_EQ(1, tree.size());
