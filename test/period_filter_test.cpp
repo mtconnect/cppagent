@@ -469,3 +469,36 @@ TEST_F(PeriodFilterTest, time_moving_backward)
   ASSERT_EQ(2.0, obs[1]->getValue<double>());
   ASSERT_EQ(4.0, obs[2]->getValue<double>());
 }
+
+TEST_F(PeriodFilterTest, exact_period_spacing)
+{
+  createDataItem();
+  makeFilter();
+
+  Timestamp now = chrono::system_clock::now();
+  auto &obs = observations();
+
+  {
+    auto os = observe({"a", "1"}, now + 0ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(1, observations().size());
+  }
+  {
+    auto os = observe({"a", "2"}, now + 1000ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(2, observations().size());
+  }
+  {
+    auto os = observe({"a", "3"}, now + 2000ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(3, observations().size());
+  }
+  
+  ASSERT_EQ(3, obs.size());
+  ASSERT_EQ(1.0, obs[0]->getValue<double>());
+  ASSERT_EQ(2.0, obs[1]->getValue<double>());
+  ASSERT_EQ(3.0, obs[2]->getValue<double>());
+}
