@@ -413,20 +413,29 @@ TEST_F(PeriodFilterTest, streaming_observations_closely_packed)
     ASSERT_EQ(2, observations().size());
   }
   {
-    auto os = observe({"a", "6"}, now + 2300ms);
+    auto os = observe({"a", "6"}, now + 3100ms);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
-    ASSERT_EQ(3, observations().size());
+    ASSERT_EQ(4, observations().size());
     ASSERT_EQ(5.0, obs[2]->getValue<double>());
+    ASSERT_EQ(6.0, obs[3]->getValue<double>());
   }
+  {
+    auto os = observe({"a", "7"}, now + 4500ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(5, observations().size());
+  }
+
 
   m_ioContext.run_for(1s);
 
-  ASSERT_EQ(4, obs.size());
+  ASSERT_EQ(5, obs.size());
   ASSERT_EQ(1.0, obs[0]->getValue<double>());
   ASSERT_EQ(3.0, obs[1]->getValue<double>());
   ASSERT_EQ(5.0, obs[2]->getValue<double>());
   ASSERT_EQ(6.0, obs[3]->getValue<double>());
+  ASSERT_EQ(7.0, obs[4]->getValue<double>());
 }
 
 TEST_F(PeriodFilterTest, time_moving_backward)

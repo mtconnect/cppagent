@@ -153,6 +153,7 @@ namespace mtconnect {
           if (last.m_observation)
           {
             last.m_timer.cancel();
+            next(last.m_observation);
             last.m_observation.reset();
           }
 
