@@ -176,12 +176,9 @@ TEST_F(PeriodFilterTest, test_simple_time_series)
 
   auto &obs = observations();
   ASSERT_EQ(3, obs.size());
-  auto it = obs.begin();
-  ASSERT_EQ(1.0, (*it)->getValue<double>());
-  it++;
-  ASSERT_EQ(3.0, (*it)->getValue<double>());
-  it++;
-  ASSERT_EQ(4.0, (*it)->getValue<double>());
+  ASSERT_EQ(1.0, obs[0]->getValue<double>());
+  ASSERT_EQ(3.0, obs[1]->getValue<double>());
+   ASSERT_EQ(4.0, obs[2]->getValue<double>());
 }
 
 TEST_F(PeriodFilterTest, delayed_delivery)
