@@ -379,7 +379,8 @@ TEST_F(PeriodFilterTest, streaming_observations_closely_packed)
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
-  
+  auto &obs = observations();
+
   {
     auto os = observe({"a", "1"}, now + 100ms);
     auto list = os->getValue<EntityList>();
@@ -403,21 +404,29 @@ TEST_F(PeriodFilterTest, streaming_observations_closely_packed)
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(2, observations().size());
+    ASSERT_EQ(3.0, obs[1]->getValue<double>());
   }
   {
-    auto os = observe({"a", "5"}, now + 2200ms);
+    auto os = observe({"a", "5"}, now + 1900ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(2, observations().size());
+  }
+  {
+    auto os = observe({"a", "6"}, now + 2300ms);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(3, observations().size());
+    ASSERT_EQ(5.0, obs[2]->getValue<double>());
   }
 
-  m_ioContext.run_for(750ms);
+  m_ioContext.run_for(1s);
 
-  auto &obs = observations();
-  ASSERT_EQ(3, obs.size());
+  ASSERT_EQ(4, obs.size());
   ASSERT_EQ(1.0, obs[0]->getValue<double>());
   ASSERT_EQ(3.0, obs[1]->getValue<double>());
   ASSERT_EQ(5.0, obs[2]->getValue<double>());
+  ASSERT_EQ(6.0, obs[3]->getValue<double>());
 }
 
 TEST_F(PeriodFilterTest, time_moving_backward)

@@ -119,7 +119,7 @@ namespace mtconnect {
 
         auto lv = last.m_timestamp;
         auto delta = duration_cast<milliseconds>(ts - lv);
-        if (delta.count() > 0 && delta < last.m_period)
+        if (delta.count() >= 0 && delta < last.m_period)
         {
           bool observed = bool(last.m_observation);
           last.m_observation = obs;
@@ -129,20 +129,18 @@ namespace mtconnect {
           // set a timer, otherwise the current observation will replace the last
           // and be triggered when the timer expires.
           if (!observed)
-          {
             delayDelivery(last, id);
-          }
 
           return true;
         }
-        else if (last.m_observation && delta > last.m_period && delta < last.m_period * 2)
+        else if (last.m_observation && delta >= last.m_period && delta < last.m_period * 2)
         {
-          last.m_timer.cancel();
           last.m_observation.swap(obs);
           
+          last.m_timestamp = obs->getTimestamp() + last.m_delta;
+
           // Compute the distance to the next period.
           last.m_delta = last.m_period * 2 - delta;
-          last.m_timestamp = ts;
           
           delayDelivery(last, id);
 
@@ -171,6 +169,7 @@ namespace mtconnect {
         using boost::placeholders::_1;
           
           // Set the timer to expire in the remaining time left in the period
+        last.m_timer.cancel();
         last.m_timer.expires_after(last.m_delta);
         last.m_timer.async_wait(boost::asio::bind_executor(
                                                            m_strand, boost::bind(&PeriodFilter::sendObservation, this, id, _1)));
