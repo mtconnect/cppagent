@@ -275,7 +275,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
     ASSERT_EQ(2, observations().size());
   }
 
-  m_ioContext.run_for(750ms);
+  m_ioContext.run_for(1s);
 
   auto &obs = observations();
   ASSERT_EQ(3, obs.size());
