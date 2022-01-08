@@ -511,3 +511,92 @@ TEST_F(PeriodFilterTest, exact_period_spacing)
   ASSERT_EQ(2.0, obs[1]->getValue<double>());
   ASSERT_EQ(3.0, obs[2]->getValue<double>());
 }
+
+TEST_F(PeriodFilterTest, streaming_observations_spaced_temporally)
+{
+  createDataItem();
+  makeFilter();
+
+  Timestamp now = chrono::system_clock::now();
+  auto &obs = observations();
+
+  {
+    auto os = observe({"a", "1"}, now + 100ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(1, observations().size());
+  }
+  
+  m_ioContext.run_for(400ms);
+  m_ioContext.reset();
+
+  {
+    auto os = observe({"a", "2"}, now + 400ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(1, observations().size());
+  }
+  
+  m_ioContext.run_for(200ms);
+  m_ioContext.reset();
+
+  {
+    auto os = observe({"a", "3"}, now + 600ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(1, observations().size());
+  }
+  
+  m_ioContext.run_for(600ms);
+  m_ioContext.reset();
+
+  {
+    auto os = observe({"a", "4"}, now + 1200ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(2, observations().size());
+    ASSERT_EQ(3.0, obs[1]->getValue<double>());
+  }
+  
+  m_ioContext.run_for(700ms);
+  m_ioContext.reset();
+  
+  {
+    auto os = observe({"a", "5"}, now + 1900ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(2, observations().size());
+  }
+  
+  m_ioContext.run_for(1200ms);
+  m_ioContext.reset();
+
+  {
+    auto os = observe({"a", "6"}, now + 3100ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(4, observations().size());
+    ASSERT_EQ(5.0, obs[2]->getValue<double>());
+    ASSERT_EQ(6.0, obs[3]->getValue<double>());
+  }
+  
+  m_ioContext.run_for(1400ms);
+  m_ioContext.reset();
+
+  {
+    auto os = observe({"a", "7"}, now + 4500ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(5, observations().size());
+  }
+
+
+  m_ioContext.run_for(1s);
+
+  ASSERT_EQ(5, obs.size());
+  ASSERT_EQ(1.0, obs[0]->getValue<double>());
+  ASSERT_EQ(3.0, obs[1]->getValue<double>());
+  ASSERT_EQ(5.0, obs[2]->getValue<double>());
+  ASSERT_EQ(6.0, obs[3]->getValue<double>());
+  ASSERT_EQ(7.0, obs[4]->getValue<double>());
+}
