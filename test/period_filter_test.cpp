@@ -596,3 +596,47 @@ TEST_F(PeriodFilterTest, streaming_observations_spaced_temporally)
   ASSERT_EQ(6.0, obs[3]->getValue<double>());
   ASSERT_EQ(7.0, obs[4]->getValue<double>());
 }
+
+
+TEST_F(PeriodFilterTest, unavailable_behavior)
+{
+  createDataItem();
+  makeFilter();
+
+  Timestamp now = chrono::system_clock::now();
+  
+  auto &obs = observations();
+
+  {
+    auto os = observe({"a", "UNAVAILABLE"}, now + 100ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(1, observations().size());
+  }
+  {
+    auto os = observe({"a", "1.0"}, now + 200ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(2, observations().size());
+  }
+  {
+    auto os = observe({"a", "UNAVAILABLE"}, now + 300ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(3, observations().size());
+  }
+  {
+    auto os = observe({"a", "2.0"}, now + 400ms);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(4, observations().size());
+  }
+
+  m_ioContext.run_for(1s);
+
+  ASSERT_EQ(4, obs.size());
+  ASSERT_TRUE(obs[0]->isUnavailable());
+  ASSERT_EQ(1.0, obs[1]->getValue<double>());
+  ASSERT_TRUE(obs[2]->isUnavailable());
+  ASSERT_EQ(2.0, obs[3]->getValue<double>());
+}
