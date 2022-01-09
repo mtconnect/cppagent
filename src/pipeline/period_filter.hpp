@@ -31,12 +31,24 @@ namespace mtconnect {
         LastObservation(std::chrono::milliseconds p, boost::asio::io_context::strand &st)
           : m_timer(st.context()), m_period(p)
         {}
+
+        // Make sure the timer is canceled.
         ~LastObservation() { m_timer.cancel(); }
 
+        // The timestamp o the last observation or timestamp of the adjusted timestamp to
+        // the end of the last scheduled send time.
         Timestamp m_timestamp;
+
+        // The delayed observation.
         observation::ObservationPtr m_observation;
+
+        // A timer for delayed sends.
         boost::asio::steady_timer m_timer;
+
+        // Store the data item period here.
         std::chrono::milliseconds m_period;
+
+        // Time from the current obervation to the end of the period.
         std::chrono::milliseconds m_delta;
       };
 
@@ -69,20 +81,20 @@ namespace mtconnect {
         using namespace observation;
         using namespace entity;
 
+        auto obs = std::dynamic_pointer_cast<Observation>(entity);
         {
           std::lock_guard<TransformState> guard(*m_state);
 
-          auto o = std::dynamic_pointer_cast<Observation>(entity);
-          auto di = o->getDataItem();
+          auto di = obs->getDataItem();
           auto &id = di->getId();
 
-          if (o->isUnavailable())
+          if (obs->isUnavailable())
           {
             m_state->m_lastObservation.erase(id);
           }
           else
           {
-            auto ts = o->getTimestamp();
+            auto ts = obs->getTimestamp();
 
             auto last = m_state->m_lastObservation.find(id);
             if (last == m_state->m_lastObservation.end())
@@ -100,62 +112,88 @@ namespace mtconnect {
             }
 
             // If filtered, return an empty entity.
-            if (filtered(last->second, id, o, ts))
+            if (filtered(last->second, id, obs, ts))
               return EntityPtr();
           }
         }
 
-        return next(entity);
+        return next(obs);
       }
 
     protected:
       // Returns true if the observation is filtered.
-      bool filtered(LastObservation &last, const std::string &id,
-                    observation::ObservationPtr observation, const Timestamp &ts)
+      bool filtered(LastObservation &last, const std::string &id, observation::ObservationPtr &obs,
+                    const Timestamp &ts)
       {
         using namespace std;
         using namespace chrono;
+        using namespace observation;
 
-        auto lv = last.m_timestamp;
-        auto delta = duration_cast<milliseconds>(ts - lv);
-        if (delta.count() > 0 && delta < last.m_period)
+        auto delta = duration_cast<milliseconds>(ts - last.m_timestamp);
+        if (delta.count() >= 0 && delta < last.m_period)
         {
-          
           bool observed = bool(last.m_observation);
-          last.m_observation = observation;
+          last.m_observation = obs;
           last.m_delta = last.m_period - delta;
 
-          // If we have not already observed something for this data item,
+          // If we have not already observed something for this period,
           // set a timer, otherwise the current observation will replace the last
-          // and be triggered when the timer expires.
+          // and be triggered when the timer expires. The end of the period is still the
+          // same, so keep the timer as is.
           if (!observed)
-          {
-            // Set timer for duration seconds to send the latest obsrvation
-            using boost::placeholders::_1;
+            delayDelivery(last, id);
 
-            // Set the timer to expire in the remaining time left in the period
-            last.m_timer.expires_after(last.m_delta);
-            last.m_timer.async_wait(boost::asio::bind_executor(
-                m_strand, boost::bind(&PeriodFilter::sendObservation, this, id, _1)));
-          }
-
+          // Filter this observation.
           return true;
+        }
+        else if (last.m_observation && delta >= last.m_period && delta < last.m_period * 2)
+        {
+          last.m_observation.swap(obs);
+
+          // Similar to the delayed send, the last timestamp is computed as the end
+          // of the previous period.
+          last.m_timestamp = obs->getTimestamp() + last.m_delta;
+
+          // Compute the distance to the next period and delay delivery of this observation.
+          last.m_delta = last.m_period * 2 - delta;
+
+          delayDelivery(last, id);
+
+          // The observations will be swapped, so send the last onward.
+          return false;
         }
         else
         {
-          // Check if there was an observation queued for the timer. Clear the
-          // observation and cancel the timer.
+          // If this observation is after the period has expired and there
+          // is an existing obsrvation, then we send the last observation.
           if (last.m_observation)
           {
             last.m_timer.cancel();
+            next(last.m_observation);
             last.m_observation.reset();
           }
 
           // Set the timestamp of the last observation.
           last.m_timestamp = ts;
 
+          // Send this observation. This may send two observations.
           return false;
         }
+      }
+
+      void delayDelivery(LastObservation &last, const std::string &id)
+      {
+        using boost::placeholders::_1;
+
+        // Set the timer to expire in the remaining time left in the period given
+        // in last.m_delta
+        last.m_timer.cancel();
+        last.m_timer.expires_after(last.m_delta);
+
+        // Bind the strand so we do not have races. Use the data item id so there are
+        // no race conditions due to LastObservation lifecycle.
+        last.m_timer.async_wait(boost::asio::bind_executor(
+            m_strand, boost::bind(&PeriodFilter::sendObservation, this, id, _1)));
       }
 
       void sendObservation(const std::string id, boost::system::error_code ec)
@@ -164,11 +202,11 @@ namespace mtconnect {
         {
           using namespace std;
           using namespace observation;
-          
+
           ObservationPtr obs;
           {
             std::lock_guard<TransformState> guard(*m_state);
-            
+
             // Find the entry for this data item and make sure there is an observation
             auto last = m_state->m_lastObservation.find(id);
             if (last != m_state->m_lastObservation.end() && last->second.m_observation)
@@ -177,7 +215,7 @@ namespace mtconnect {
               last->second.m_timestamp = obs->getTimestamp() + last->second.m_delta;
             }
           }
-          
+
           // Send the observation onward
           if (obs)
           {
