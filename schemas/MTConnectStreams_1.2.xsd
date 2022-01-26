@@ -3298,7 +3298,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='EventType'>
-        <xs:attribute name='assetType' type='AssetAttrType' use='required'/>
+        <xs:attribute name='assetType' type='AssetAttrType' use='optional'/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>

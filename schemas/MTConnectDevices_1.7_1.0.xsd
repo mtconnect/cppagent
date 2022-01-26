@@ -7186,7 +7186,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
       </xs:documentation>
     </xs:annotation>
     <xs:all>
-      <xs:element name='Translaton' type='ThreeSpaceValueType'>
+      <xs:element name='Translation' type='ThreeSpaceValueType'>
         <xs:annotation>
           <xs:documentation>
             An offset applied first
