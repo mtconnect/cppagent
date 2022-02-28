@@ -161,6 +161,14 @@ if(NOT WITHOUT_PYTHON)
     )
 endif()
 
+if(NOT WITHOUT_RUBY)
+  set(AGENT_SOURCES ${AGENT_SOURCES}
+    
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.cpp"  
+    )
+endif()
+
 ## configure a header file to pass some of the CMake settings to the source code
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../src/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/version.h")
 
@@ -207,7 +215,7 @@ set_property(TARGET agent_lib PROPERTY
 target_link_libraries(
   agent_lib
   PUBLIC
-  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl
+  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl 
   
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
@@ -218,6 +226,13 @@ if(NOT WITHOUT_PYTHON)
     agent_lib
     PUBLIC
     Python3::Python)
+endif()
+
+if(NOT WITHOUT_RUBY)
+  target_link_libraries(
+    agent_lib
+    PUBLIC
+    CONAN_PKG::ruby_rice)
 endif()
 
 target_compile_definitions(
@@ -241,6 +256,13 @@ if(NOT WITHOUT_PYTHON)
     agent_lib
     PUBLIC
     WITH_PYTHON )
+endif()
+
+if(NOT WITHOUT_PYTHON)
+  target_compile_definitions(
+    agent_lib
+    PUBLIC
+    WITH_RUBY )
 endif()
 
 if(AGENT_WITHOUT_IPV6)
