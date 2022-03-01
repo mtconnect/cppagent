@@ -17,16 +17,20 @@
 
 #include "utilities.hpp"
 
-
+#include <boost/asio.hpp>
 
 namespace mtconnect {
   class Agent;
   namespace ruby {
+    
+    
     class Embedded
     {
     public:
       Embedded(Agent *agent, const ConfigOptions &options);
-      ~Embedded();
+      ~Embedded() {}
+      
+      void start(boost::asio::io_context &context, int threads);
       
     protected:
       Agent *m_agent;

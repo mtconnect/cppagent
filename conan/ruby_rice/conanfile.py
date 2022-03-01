@@ -57,4 +57,15 @@ class RubyRiceConan(ConanFile):
 
         defines = [x[2:] for x in config['CPPFLAGS'].split() if x.startswith('-D') and x != '-DNDEBUG']
         self.cpp_info.defines = defines
+
+        libflags = [x for x in config['LIBRUBYARG_STATIC'].split() if not x.startswith('-lruby')]
+        try:
+            ind = libflags.index('-framework')
+            fw = libflags.pop(ind+1)
+            libflags[ind] = "{} {}".format(libflags[ind], fw)
+            
+        except:
+            pass
         
+        self.cpp_info.exelinkflags = config['LDFLAGS'].split() + libflags
+

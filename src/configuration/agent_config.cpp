@@ -62,6 +62,10 @@
 #include "python/embedded.hpp"
 #endif
 
+#ifdef WITH_RUBY
+#include "ruby/embedded.hpp"
+#endif
+
 // If Windows XP
 #if defined(_WINDOWS)
 #if WINVER < 0x0600
@@ -339,6 +343,9 @@ namespace mtconnect {
 
         m_agent->start();
 
+#ifdef WITH_RUBY
+        m_ruby->start(m_context, m_workerThreadCount);
+#else
         for (int i = 0; i < m_workerThreadCount; i++)
         {
           m_workers.emplace_back(std::thread([this]() { m_context.run(); }));
@@ -347,6 +354,7 @@ namespace mtconnect {
         {
           w.join();
         }
+#endif
 
         if (m_restart && m_monitorFiles)
         {
@@ -702,6 +710,9 @@ namespace mtconnect {
 #ifdef WITH_PYTHON
       configurePython(config, options);
 #endif
+#ifdef WITH_RUBY
+      configureRuby(config, options);
+#endif
     }
 
     void parseUrl(ConfigOptions &options)
@@ -857,6 +868,13 @@ namespace mtconnect {
     void AgentConfiguration::configurePython(const ptree &tree, ConfigOptions &options)
     {
       m_python = make_unique<python::Embedded>(m_agent.get(), options);
+    }
+#endif
+
+#ifdef WITH_RUBY
+    void AgentConfiguration::configureRuby(const ptree &tree, ConfigOptions &options)
+    {
+      m_ruby = make_unique<ruby::Embedded>(m_agent.get(), options);
     }
 #endif
 

@@ -50,6 +50,12 @@ namespace mtconnect {
     class Embedded;
   }
 #endif
+#ifdef WITH_RUBY
+  namespace ruby {
+    class Embedded;
+  }
+#endif
+
 
   class XmlPrinter;
   namespace configuration {
@@ -104,6 +110,9 @@ namespace mtconnect {
 #ifdef WITH_PYTHON
       void configurePython(const ptree &tree, ConfigOptions &options);
 #endif
+#ifdef WITH_RUBY
+      void configureRuby(const ptree &tree, ConfigOptions &options);
+#endif
 
       void loadPlugins(const ptree &tree);
       bool loadPlugin(const std::string &name, const ptree &tree);
@@ -116,11 +125,17 @@ namespace mtconnect {
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
 
       boost::asio::io_context m_context;
-      std::list<std::thread> m_workers;
       std::unique_ptr<Agent> m_agent;
 #ifdef WITH_PYTHON
       std::unique_ptr<python::Embedded> m_python;
 #endif
+#ifdef WITH_RUBY
+      std::unique_ptr<ruby::Embedded> m_ruby;
+      std::list<void*> m_workers;
+#else
+      std::list<std::thread> m_workers;
+#endif
+
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
       boost::shared_ptr<text_sink> m_sink;

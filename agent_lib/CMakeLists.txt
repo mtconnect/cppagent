@@ -162,8 +162,7 @@ if(NOT WITHOUT_PYTHON)
 endif()
 
 if(NOT WITHOUT_RUBY)
-  set(AGENT_SOURCES ${AGENT_SOURCES}
-    
+  set(AGENT_SOURCES ${AGENT_SOURCES}    
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.cpp"  
     )
@@ -258,7 +257,7 @@ if(NOT WITHOUT_PYTHON)
     WITH_PYTHON )
 endif()
 
-if(NOT WITHOUT_PYTHON)
+if(NOT WITHOUT_RUBY)
   target_compile_definitions(
     agent_lib
     PUBLIC

@@ -126,6 +126,7 @@ namespace mtconnect {
 
       bool hasContext() const { return bool(m_context); }
       bool hasContract() const { return bool(m_context) && bool(m_context->m_contract); }
+      PipelineContextPtr getContext() { return m_context; }
 
     protected:
       class Start : public Transform
