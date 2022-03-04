@@ -18,6 +18,11 @@
 #include "utilities.hpp"
 
 #include <boost/asio.hpp>
+#include <memory>
+
+namespace Rice {
+  class Module;
+}
 
 namespace mtconnect {
   class Agent;
@@ -28,13 +33,14 @@ namespace mtconnect {
     {
     public:
       Embedded(Agent *agent, const ConfigOptions &options);
-      ~Embedded() {}
+      ~Embedded();
       
       void start(boost::asio::io_context &context, int threads);
       
     protected:
       Agent *m_agent;
       ConfigOptions m_options;
+      std::unique_ptr<Rice::Module> m_module;
     };
   }
 }

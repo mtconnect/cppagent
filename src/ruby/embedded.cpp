@@ -148,7 +148,7 @@ namespace mtconnect::ruby {
   public:
     RubyTransform(const std::string &name,
                   Rice::Module &module,
-                  const Rice::Identifier function,
+                  const std::string &function,
                   pipeline::PipelineContextPtr context)
     : Transform(name), m_contract(context->m_contract.get()),
       m_module(module), m_function(function)
@@ -206,39 +206,34 @@ namespace mtconnect::ruby {
     ruby_init();
     ruby_init_loadpath();
         
-    static Module mtc = define_module("MTConnect");
+    m_module = make_unique<Module>(define_module("MTConnect"));
     
-    static Class entity = define_class_under<entity::Entity>(mtc, "Entity").
+    define_class_under<entity::Entity>(*m_module, "Entity").
       define_method("value", [](entity::Entity &entity) { return entity.getValue(); }).
       define_method("property", [](entity::Entity &entity, std::string name) {
         return entity.getProperty(name);
       }, Arg("name"));
     
-    static Class observation = define_class_under<observation::Observation, entity::Entity>(mtc, "Observation");
+    define_class_under<observation::Observation, entity::Entity>(*m_module, "Observation");
 
-    static Class dataItem = define_class_under<device_model::data_item::DataItem, entity::Entity>(mtc, "DataItem");
+    define_class_under<device_model::data_item::DataItem, entity::Entity>(*m_module, "DataItem");
 
-    mtc.instance_eval("def transform(obs); p obs.value; end");
-    mtc.instance_eval("p $:");
-    mtc.instance_eval("p constants");
-    rb_eval_string("p Object.constants.sort");
-
-    auto dev = agent->getDeviceByName("Mazak");
-    auto di = dev->getDeviceDataItem("Ypos");
-    Timestamp time = date::sys_days(2021_y / jan / 19_d) + 10h + 1min;
-
-    ErrorList errors;
-    auto obs = Observation::make(di, {{"VALUE", 1.23}}, time, errors);
-
-    mtc.call(Identifier("transform"), obs);
+    m_module->instance_eval("def transform(obs); p obs.value; end");
     
+    rb_eval_string("p $:; require 'irb'; IRB.start");
+
     for (auto &adp : agent->getSources()) {
       auto pipeline = adp->getPipeline();
-      auto trans = make_shared<RubyTransform>("test", mtc, Identifier("transform"),
+      auto trans = make_shared<RubyTransform>("test", *m_module, "transform",
                                              pipeline->getContext());
       pipeline->spliceAfter("DuplicateFilter", trans);
     }
   }
+  
+  Embedded::~Embedded()
+  {
+  }
+
   
   void *runWithoutGil(void *context)
   {

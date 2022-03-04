@@ -30,7 +30,12 @@ class RubyRiceConan(ConanFile):
         
     def build(self):
         self._autotools = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
-        conf_args = ["--with-static-linked-ext", "--enable-install-static-library", '--without-rdoc']
+        conf_args = ["--with-static-linked-ext", "--enable-install-static-library", '--without-rdoc',
+                     "--enable-load-relative"]
+        if self.settings.build_type =='Debug':
+            conf_args.append('optflags=-O3')            
+            conf_args.append('--enable-debug-env')
+        
         build = None
         
         self._autotools.configure(args=conf_args, configure_dir=self._ruby_source, build=build)
@@ -68,4 +73,5 @@ class RubyRiceConan(ConanFile):
             pass
         
         self.cpp_info.exelinkflags = config['LDFLAGS'].split() + libflags
+        self.user_info.RUBY_LIBRARIES = self.package_folder + "/lib"
 

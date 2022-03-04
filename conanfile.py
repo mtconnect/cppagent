@@ -2,7 +2,7 @@ from conans import ConanFile, CMake, tools
 
 class CppAgentConan(ConanFile):
     name = "mtconnect_cppagent"
-    version = "1.7"
+    version = "2.0"
     generators = "cmake"
     url = "https://github.com/mtconnect/cppagent_dev.git"
     license = "Apache License 2.0"
