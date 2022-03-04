@@ -2,18 +2,18 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
-#include "agent_test_helper.hpp"
-#include "json_helper.hpp"
-
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
-#include <set>
+
+#include "adapter/adapter.hpp"
+#include "agent.hpp"
+#include "agent_test_helper.hpp"
+#include "json_helper.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -23,12 +23,11 @@ using namespace device_model;
 
 class SpecificationTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/configuration.xml",
-                                   8, 4, "1.7", 25);
+    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "1.7", 25);
     auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("c");
   }
@@ -39,7 +38,7 @@ class SpecificationTest : public testing::Test
     m_component.reset();
   }
 
-  adapter::Adapter *m_adapter{nullptr};
+  adapter::Adapter *m_adapter {nullptr};
   ComponentPtr m_component;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -54,7 +53,7 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
   const auto &specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
-  
+
   auto it = specs->begin();
 
   EXPECT_EQ("spec", (*it)->get<string>("id"));
@@ -75,18 +74,17 @@ TEST_F(SpecificationTest, ParseDeviceAndComponentRelationships)
 TEST_F(SpecificationTest, test_1_6_specification_without_id)
 {
   m_agentTestHelper = make_unique<AgentTestHelper>();
-  m_agentTestHelper->createAgent("/samples/configuration1.6.xml",
-                                 8, 4, "1.6", 25);
+  m_agentTestHelper->createAgent("/samples/configuration1.6.xml", 8, 4, "1.6", 25);
   auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   m_component = device->getComponentById("power");
-  
+
   auto &ent = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
 
   const auto &specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(1, specs->size());
-  
+
   auto it = specs->begin();
 
   EXPECT_EQ("VOLTAGE_AC", (*it)->get<string>("type"));
@@ -101,21 +99,32 @@ TEST_F(SpecificationTest, XmlPrinting)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
-    
-    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH , 1);
-    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*" , 3);
 
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@type" , "ROTARY_VELOCITY");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@subType" , "ACTUAL");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@units" , "REVOLUTION/MINUTE");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@compositionIdRef" , "cmotor");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@coordinateSystemIdRef" , "machine");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@dataItemIdRef" , "c1");
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH, 1);
+    ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/*", 3);
+
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@type",
+                          "ROTARY_VELOCITY");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@subType",
+                          "ACTUAL");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@units",
+                          "REVOLUTION/MINUTE");
+    ASSERT_XML_PATH_EQUAL(
+        doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@compositionIdRef",
+        "cmotor");
+    ASSERT_XML_PATH_EQUAL(
+        doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@coordinateSystemIdRef",
+        "machine");
+    ASSERT_XML_PATH_EQUAL(
+        doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']@dataItemIdRef", "c1");
 
     ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/*", 3);
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Maximum" , "10000");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Minimum" , "100");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Nominal" , "1000");
+    ASSERT_XML_PATH_EQUAL(
+        doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Maximum", "10000");
+    ASSERT_XML_PATH_EQUAL(
+        doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Minimum", "100");
+    ASSERT_XML_PATH_EQUAL(
+        doc, SPECIFICATIONS_PATH "/m:Specification[@name='speed_limit']/m:Nominal", "1000");
   }
 }
 
@@ -123,30 +132,39 @@ TEST_F(SpecificationTest, XmlPrintingForLoadSpec)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
-    
+
     // Load spec
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@type" , "LOAD");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@units" , "PERCENT");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@name" , "loadspec");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@originator" , "MANUFACTURER");
-    
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@type", "LOAD");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@units",
+                          "PERCENT");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@name",
+                          "loadspec");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']@originator",
+                          "MANUFACTURER");
+
     ASSERT_XML_PATH_COUNT(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/*", 7);
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:Maximum" , "1000");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:Minimum" , "-1000");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:Nominal" , "100");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:UpperLimit" , "500");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:LowerLimit" , "-500");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:UpperWarning" , "200");
-    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:LowerWarning" , "-200");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:Maximum",
+                          "1000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:Minimum",
+                          "-1000");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:Nominal",
+                          "100");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:UpperLimit",
+                          "500");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:LowerLimit",
+                          "-500");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:UpperWarning",
+                          "200");
+    ASSERT_XML_PATH_EQUAL(doc, SPECIFICATIONS_PATH "/m:Specification[@id='spec1']/m:LowerWarning",
+                          "-200");
   }
 }
-
 
 TEST_F(SpecificationTest, JsonPrinting)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
-    
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
 
@@ -164,7 +182,7 @@ TEST_F(SpecificationTest, JsonPrinting)
     EXPECT_EQ("cmotor", cfields["compositionIdRef"]);
     EXPECT_EQ("machine", cfields["coordinateSystemIdRef"]);
     EXPECT_EQ("c1", cfields["dataItemIdRef"]);
-    
+
     EXPECT_EQ(10000.0, cfields["Maximum"]);
     EXPECT_EQ(100.0, cfields["Minimum"]);
     EXPECT_EQ(1000.0, cfields["Nominal"]);
@@ -175,15 +193,15 @@ TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
-    
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
-    
+
     auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
     auto specifications = rotary.at("/Configuration/Specifications"_json_pointer);
     ASSERT_TRUE(specifications.is_array());
     ASSERT_EQ(3_S, specifications.size());
-    
+
     auto crel = specifications.at(1);
     auto cfields = crel.at("/Specification"_json_pointer);
     EXPECT_EQ("spec1", cfields["id"]);
@@ -202,11 +220,10 @@ TEST_F(SpecificationTest, JsonPrintingForLoadSpec)
   }
 }
 
-
 TEST_F(SpecificationTest, Parse17SpecificationValues)
 {
   ASSERT_NE(nullptr, m_component);
-  
+
   auto &ent = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
 
@@ -214,9 +231,9 @@ TEST_F(SpecificationTest, Parse17SpecificationValues)
   const auto &specs = ent->getList("Specifications");
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
-  
+
   auto si = specs->begin();
-  
+
   // Advance to second specificaiton
   si++;
 
@@ -227,7 +244,7 @@ TEST_F(SpecificationTest, Parse17SpecificationValues)
   EXPECT_EQ("PERCENT", (*si)->get<string>("units"));
   EXPECT_EQ("loadspec", (*si)->get<string>("name"));
   EXPECT_EQ("MANUFACTURER", (*si)->get<string>("originator"));
-  
+
   EXPECT_EQ(1000.0, (*si)->get<double>("Maximum"));
   EXPECT_EQ(-1000.0, (*si)->get<double>("Minimum"));
   EXPECT_EQ(100.0, (*si)->get<double>("Nominal"));
@@ -240,7 +257,7 @@ TEST_F(SpecificationTest, Parse17SpecificationValues)
 TEST_F(SpecificationTest, ParseProcessSpecificationValues)
 {
   ASSERT_NE(nullptr, m_component);
-  
+
   auto &ent = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(ent);
 
@@ -248,11 +265,12 @@ TEST_F(SpecificationTest, ParseProcessSpecificationValues)
   ASSERT_TRUE(specs);
   ASSERT_EQ(3, specs->size());
   auto si = specs->begin();
-  
+
   // Advance to third specificaiton
-  si++; si++;
+  si++;
+  si++;
   EXPECT_EQ("ProcessSpecification", (*si)->getName());
-  
+
   EXPECT_EQ("pspec1", (*si)->get<string>("id"));
   EXPECT_EQ("LOAD", (*si)->get<string>("type"));
   EXPECT_EQ("PERCENT", (*si)->get<string>("units"));
@@ -264,7 +282,7 @@ TEST_F(SpecificationTest, ParseProcessSpecificationValues)
   EXPECT_EQ(500.0, specLimits->get<double>("UpperLimit"));
   EXPECT_EQ(50.0, specLimits->get<double>("Nominal"));
   EXPECT_EQ(-500.0, specLimits->get<double>("LowerLimit"));
-  
+
   auto control = (*si)->get<EntityPtr>("ControlLimits");
   ASSERT_TRUE(control);
 
@@ -276,7 +294,7 @@ TEST_F(SpecificationTest, ParseProcessSpecificationValues)
 
   auto alarm = (*si)->get<EntityPtr>("AlarmLimits");
   EXPECT_TRUE(alarm);
-  
+
   EXPECT_EQ(500.0, alarm->get<double>("UpperLimit"));
   EXPECT_EQ(200.0, alarm->get<double>("UpperWarning"));
   EXPECT_EQ(-200.0, alarm->get<double>("LowerWarning"));
@@ -286,35 +304,34 @@ TEST_F(SpecificationTest, ParseProcessSpecificationValues)
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
 #define PROCESS_PATH CONFIGURATION_PATH "/m:Specifications/m:ProcessSpecification"
 
-
 TEST_F(SpecificationTest, XmlPrintingForProcessSpecification)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
-    
-    ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/*" , 3);
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@id" , "pspec1");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@type" , "LOAD");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@units" , "PERCENT");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@originator" , "USER");
 
-    ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/m:SpecificationLimits/*" , 3);
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:SpecificationLimits/m:UpperLimit" , "500");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:SpecificationLimits/m:LowerLimit" , "-500");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:SpecificationLimits/m:Nominal" , "50");
+    ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/*", 3);
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@id", "pspec1");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@type", "LOAD");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@units", "PERCENT");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "@originator", "USER");
 
-    ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/m:ControlLimits/*" , 5);
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:UpperLimit" , "500");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:LowerLimit" , "-500");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:UpperWarning" , "200");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:LowerWarning" , "-200");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:Nominal" , "10");
+    ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/m:SpecificationLimits/*", 3);
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:SpecificationLimits/m:UpperLimit", "500");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:SpecificationLimits/m:LowerLimit", "-500");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:SpecificationLimits/m:Nominal", "50");
 
-    ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/m:AlarmLimits/*" , 4);
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:AlarmLimits/m:UpperLimit" , "500");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:AlarmLimits/m:LowerLimit" , "-500");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:AlarmLimits/m:UpperWarning" , "200");
-    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:AlarmLimits/m:LowerWarning" , "-200");
+    ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/m:ControlLimits/*", 5);
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:UpperLimit", "500");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:LowerLimit", "-500");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:UpperWarning", "200");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:LowerWarning", "-200");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:ControlLimits/m:Nominal", "10");
+
+    ASSERT_XML_PATH_COUNT(doc, PROCESS_PATH "/m:AlarmLimits/*", 4);
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:AlarmLimits/m:UpperLimit", "500");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:AlarmLimits/m:LowerLimit", "-500");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:AlarmLimits/m:UpperWarning", "200");
+    ASSERT_XML_PATH_EQUAL(doc, PROCESS_PATH "/m:AlarmLimits/m:LowerWarning", "-200");
   }
 }
 
@@ -322,15 +339,15 @@ TEST_F(SpecificationTest, JsonPrintingForProcessSpecification)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
-    
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
-    
+
     auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
     auto specifications = rotary.at("/Configuration/Specifications"_json_pointer);
     ASSERT_TRUE(specifications.is_array());
     ASSERT_EQ(3_S, specifications.size());
-    
+
     auto crel = specifications.at(2);
     auto cfields = crel.at("/ProcessSpecification"_json_pointer);
     EXPECT_EQ("pspec1", cfields["id"]);
@@ -338,7 +355,7 @@ TEST_F(SpecificationTest, JsonPrintingForProcessSpecification)
     EXPECT_EQ("PERCENT", cfields["units"]);
     EXPECT_EQ("procspec", cfields["name"]);
     EXPECT_EQ("USER", cfields["originator"]);
-    
+
     auto specs = cfields["SpecificationLimits"];
     EXPECT_EQ(500.0, specs["UpperLimit"]);
     EXPECT_EQ(50.0, specs["Nominal"]);
@@ -350,7 +367,7 @@ TEST_F(SpecificationTest, JsonPrintingForProcessSpecification)
     EXPECT_EQ(-500.0, control["LowerLimit"]);
     EXPECT_EQ(200.0, control["UpperWarning"]);
     EXPECT_EQ(-200.0, control["LowerWarning"]);
-    
+
     auto alarm = cfields["AlarmLimits"];
     EXPECT_EQ(500.0, alarm["UpperLimit"]);
     EXPECT_EQ(-500.0, alarm["LowerLimit"]);

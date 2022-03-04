@@ -19,17 +19,16 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <boost/asio.hpp>
+
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <memory>
-
-#include <boost/asio.hpp>
 
 #include "adapter/mqtt/mqtt_adapter.hpp"
 #include "pipeline/pipeline_context.hpp"
-
 
 using namespace std;
 using namespace mtconnect;
@@ -40,18 +39,9 @@ namespace asio = boost::asio;
 class MqttAdapterTest : public testing::Test
 {
 protected:
- void SetUp() override
- {
- }
-  
-  void TearDown() override
-  {
-    
-  }
+  void SetUp() override {}
+
+  void TearDown() override {}
 };
 
-TEST_F(MqttAdapterTest, should_find_data_item_from_topic)
-{
-  
-}
-
+TEST_F(MqttAdapterTest, should_find_data_item_from_topic) {}

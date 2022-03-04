@@ -2,17 +2,17 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
-#include "agent_test_helper.hpp"
-#include "json_helper.hpp"
-
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+
+#include "adapter/adapter.hpp"
+#include "agent.hpp"
+#include "agent_test_helper.hpp"
+#include "json_helper.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -22,24 +22,20 @@ using namespace entity;
 
 class CoordinateSystemTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/configuration.xml",
-                                   8, 4, "1.6", 25);
+    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "1.6", 25);
     m_agentId = to_string(getCurrentTimeInSec());
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
-  void TearDown() override
-  {
-    m_agentTestHelper.reset();
-  }
+  void TearDown() override { m_agentTestHelper.reset(); }
 
-  Adapter *m_adapter{nullptr};
+  Adapter *m_adapter {nullptr};
   std::string m_agentId;
-  DevicePtr m_device{nullptr};
+  DevicePtr m_device {nullptr};
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
@@ -55,7 +51,7 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
   ASSERT_EQ(2, cds->size());
 
   auto it = cds->begin();
-  
+
   EXPECT_EQ("world", (*it)->get<string>("id"));
   EXPECT_EQ("WORLD", (*it)->get<string>("type"));
   EXPECT_EQ("worldy", (*it)->get<string>("name"));
@@ -86,7 +82,6 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
   ASSERT_EQ(90, get<std::vector<double>>(rotation).at(0));
   ASSERT_EQ(0, get<std::vector<double>>(rotation).at(1));
   ASSERT_EQ(90, get<std::vector<double>>(rotation).at(2));
-
 }
 
 #define CONFIGURATION_PATH "//m:Device/m:Configuration"
@@ -96,23 +91,37 @@ TEST_F(CoordinateSystemTest, XmlPrinting)
 {
   {
     PARSE_XML_RESPONSE("/probe");
-    
-    ASSERT_XML_PATH_COUNT(doc, COORDINATE_SYSTEMS_PATH , 1);
-    ASSERT_XML_PATH_COUNT(doc, COORDINATE_SYSTEMS_PATH "/*" , 2);
 
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@type" , "WORLD");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@name" , "worldy");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']/m:Origin" , "101 102 103");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@nativeName" , nullptr);
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@parentIdRef" , nullptr);
+    ASSERT_XML_PATH_COUNT(doc, COORDINATE_SYSTEMS_PATH, 1);
+    ASSERT_XML_PATH_COUNT(doc, COORDINATE_SYSTEMS_PATH "/*", 2);
 
-    
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@type" , "MACHINE");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@name" , "machiney");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@nativeName" , "xxx");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@parentIdRef" , "world");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']/m:Transformation/m:Translation" , "10 10 10");
-    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']/m:Transformation/m:Rotation" , "90 0 90");
+    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@type",
+                          "WORLD");
+    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@name",
+                          "worldy");
+    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']/m:Origin",
+                          "101 102 103");
+    ASSERT_XML_PATH_EQUAL(
+        doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@nativeName", nullptr);
+    ASSERT_XML_PATH_EQUAL(
+        doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='world']@parentIdRef", nullptr);
+
+    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@type",
+                          "MACHINE");
+    ASSERT_XML_PATH_EQUAL(doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@name",
+                          "machiney");
+    ASSERT_XML_PATH_EQUAL(
+        doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@nativeName", "xxx");
+    ASSERT_XML_PATH_EQUAL(
+        doc, COORDINATE_SYSTEMS_PATH "/m:CoordinateSystem[@id='machine']@parentIdRef", "world");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          COORDINATE_SYSTEMS_PATH
+                          "/m:CoordinateSystem[@id='machine']/m:Transformation/m:Translation",
+                          "10 10 10");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          COORDINATE_SYSTEMS_PATH
+                          "/m:CoordinateSystem[@id='machine']/m:Transformation/m:Rotation",
+                          "90 0 90");
   }
 }
 
@@ -120,16 +129,15 @@ TEST_F(CoordinateSystemTest, JsonPrinting)
 {
   {
     PARSE_JSON_RESPONSE("/probe");
-        
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
 
     auto systems = device.at("/Configuration/CoordinateSystems"_json_pointer);
     ASSERT_TRUE(systems.is_array());
     ASSERT_EQ(2_S, systems.size());
-    
 
-    auto world = systems.at(0);    
+    auto world = systems.at(0);
     auto wfields = world.at("/CoordinateSystem"_json_pointer);
     ASSERT_EQ(4, wfields.size());
     EXPECT_EQ("WORLD", wfields["type"]);
@@ -140,7 +148,7 @@ TEST_F(CoordinateSystemTest, JsonPrinting)
     EXPECT_EQ(101.0, origin[0]);
     EXPECT_EQ(102.0, origin[1]);
     EXPECT_EQ(103.0, origin[2]);
-    
+
     auto machine = systems.at(1);
     auto mfields = machine.at("/CoordinateSystem"_json_pointer);
     ASSERT_EQ(6, mfields.size());
@@ -149,13 +157,13 @@ TEST_F(CoordinateSystemTest, JsonPrinting)
     EXPECT_EQ("machine", mfields["id"]);
     EXPECT_EQ("xxx", mfields["nativeName"]);
     EXPECT_EQ("world", mfields["parentIdRef"]);
-    
+
     json trans = mfields["Transformation"]["Translation"];
     ASSERT_TRUE(trans.is_array());
     EXPECT_EQ(10.0, trans[0]);
     EXPECT_EQ(10.0, trans[1]);
     EXPECT_EQ(10.0, trans[2]);
-    
+
     json rot = mfields["Transformation"]["Rotation"];
     ASSERT_TRUE(rot.is_array());
     EXPECT_EQ(90.0, rot[0]);

@@ -30,19 +30,24 @@ using namespace entity;
 
 class ComponentTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     ErrorList errors;
-    
-    m_compA = Component::make("Axes", {{"id", "1"s}, {"name", "ComponentTest1"s},
-      {"nativeName", "NativeName"s}, {"uuid", "UnivUniqId1"s}
-    }, errors);
 
-    m_compB = Component::make("Controller", {{"id", "3"s}, {"name", "ComponentTest2"s},
-      {"uuid", "UnivUniqId2"s},
-      {"sampleRate", "123.4"s}
-    }, errors);
+    m_compA = Component::make("Axes",
+                              {{"id", "1"s},
+                               {"name", "ComponentTest1"s},
+                               {"nativeName", "NativeName"s},
+                               {"uuid", "UnivUniqId1"s}},
+                              errors);
+
+    m_compB = Component::make("Controller",
+                              {{"id", "3"s},
+                               {"name", "ComponentTest2"s},
+                               {"uuid", "UnivUniqId2"s},
+                               {"sampleRate", "123.4"s}},
+                              errors);
   }
 
   void TearDown() override
@@ -80,7 +85,7 @@ TEST_F(ComponentTest, Description)
   m_compA->setManufacturer("MANUFACTURER");
   m_compA->setSerialNumber("SERIAL_NUMBER");
   m_compA->setDescriptionValue("Machine 1");
-  
+
   auto d1 = m_compA->getDescription();
 
   ASSERT_EQ((string) "MANUFACTURER", d1->get<string>("manufacturer"));
@@ -103,14 +108,14 @@ TEST_F(ComponentTest, Relationships)
 {
   // Test get/set parents
   ErrorList errors;
-  
+
   auto linear = Component::make("Linear", {{"id", "x"s}}, errors);
   ASSERT_TRUE(errors.empty());
   linear->addChild(m_compA, errors);
   ASSERT_TRUE(errors.empty());
   ASSERT_EQ(linear, m_compA->getParent());
 
-  Properties dps{{"id", "d"s}, {"name", "d"s}, {"uuid", "d"s}};
+  Properties dps {{"id", "d"s}, {"name", "d"s}, {"uuid", "d"s}};
   auto device = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", dps, errors));
   ASSERT_TRUE(errors.empty());
   ASSERT_TRUE(device);
@@ -124,7 +129,7 @@ TEST_F(ComponentTest, Relationships)
 
   // Test add/get children
   ASSERT_FALSE(m_compA->getChildren());
-  
+
   ASSERT_EQ(1, device.use_count());
   ASSERT_EQ(2, linear.use_count());
   ASSERT_EQ(2, m_compA.use_count());

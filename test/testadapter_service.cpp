@@ -17,4 +17,3 @@
 //
 
 #include "testadapter_service.hpp"
-

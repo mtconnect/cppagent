@@ -28,7 +28,7 @@ using namespace mtconnect::entity;
 TEST(UnitConversionTest, check_inch_3d)
 {
   auto conv = UnitConversion::make("INCH_3D", "MILLIMETER_3D");
-  Value value{Vector{1.0, 2.0, 3.0}};
+  Value value {Vector {1.0, 2.0, 3.0}};
   conv->convertValue(value);
   auto vec = get<Vector>(value);
   EXPECT_NEAR(25.4, vec[0], 0.0001);
@@ -38,13 +38,13 @@ TEST(UnitConversionTest, check_inch_3d)
 
 TEST(UnitConversionTest, check_radian_3d)
 {
-    auto conv = UnitConversion::make("RADIAN_3D", "DEGREE_3D");
-    Value value{Vector{1.0, 2.0, 3.0}};
-    conv->convertValue(value);
-    auto vec = get<Vector>(value);
-    EXPECT_NEAR(57.29578, vec[0], 0.0001);
-    EXPECT_NEAR(114.5916, vec[1], 0.0001);
-    EXPECT_NEAR(171.8873, vec[2], 0.0001);
+  auto conv = UnitConversion::make("RADIAN_3D", "DEGREE_3D");
+  Value value {Vector {1.0, 2.0, 3.0}};
+  conv->convertValue(value);
+  auto vec = get<Vector>(value);
+  EXPECT_NEAR(57.29578, vec[0], 0.0001);
+  EXPECT_NEAR(114.5916, vec[1], 0.0001);
+  EXPECT_NEAR(171.8873, vec[2], 0.0001);
 }
 
 TEST(UnitConversionTest, check_kilo_prefix)
@@ -52,15 +52,15 @@ TEST(UnitConversionTest, check_kilo_prefix)
   auto conv = UnitConversion::make("KILOAMPERE", "AMPERE");
   EXPECT_NEAR(130.0, conv->convert(0.13), 0.0001);
 }
-  
-  // Test cubic inch to millimeter
+
+// Test cubic inch to millimeter
 TEST(UnitConversionTest, check_cubic_conversion)
 {
   auto conv = UnitConversion::make("CUBIC_INCH", "CUBIC_MILLIMETER");
   EXPECT_NEAR(114709.44799, conv->convert(7.0), 0.0001);
 }
 
-  // Test temperature
+// Test temperature
 TEST(UnitConversionTest, check_temperature_conversions_with_offset)
 {
   auto conv = UnitConversion::make("FAHRENHEIT", "CELSIUS");

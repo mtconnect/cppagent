@@ -28,22 +28,16 @@ using namespace data_item;
 
 class DeviceTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     ErrorList errors;
-    Properties d1{{"id", "1"s},
-      {"name", "DeviceTest1"s},
-      {"uuid", "UnivUniqId1"s},
-      {"iso841Class", "4"s}
-    };
+    Properties d1 {
+        {"id", "1"s}, {"name", "DeviceTest1"s}, {"uuid", "UnivUniqId1"s}, {"iso841Class", "4"s}};
     m_devA = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", d1, errors));
 
-    Properties d2{{"id", "3"s},
-      {"name", "DeviceTest2"s},
-      {"uuid", "UnivUniqId2"s},
-      {"iso841Class", "6"s}
-    };
+    Properties d2 {
+        {"id", "3"s}, {"name", "DeviceTest2"s}, {"uuid", "UnivUniqId2"s}, {"iso841Class", "6"s}};
     m_devB = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", d2, errors));
   }
 
@@ -72,19 +66,24 @@ TEST_F(DeviceTest, Getters)
 TEST_F(DeviceTest, Description)
 {
   ErrorList errors;
-  Properties psA{{"manufacturer", "MANUFACTURER"s}, {"serialNumber", "SERIAL_NUMBER"s}, {"VALUE", "Machine 1"s}};
+  Properties psA {{"manufacturer", "MANUFACTURER"s},
+                  {"serialNumber", "SERIAL_NUMBER"s},
+                  {"VALUE", "Machine 1"s}};
   auto descriptionA = Device::getFactory()->create("Description", psA, errors);
   ASSERT_TRUE(errors.empty());
 
   m_devA->setProperty("Description", descriptionA);
   auto descA = m_devA->get<EntityPtr>("Description");
-  
+
   ASSERT_EQ((string) "MANUFACTURER", descA->get<string>("manufacturer"));
   ASSERT_EQ((string) "SERIAL_NUMBER", descA->get<string>("serialNumber"));
   ASSERT_FALSE(descA->hasProperty("station"));
   ASSERT_EQ((string) "Machine 1", descA->getValue<string>());
-  
-  Properties psB{{"manufacturer", "MANUFACTURER"s}, {"serialNumber", "SERIAL_NUMBER"s}, {"VALUE", "Machine 2"s}, {"station", "STATION"s}};
+
+  Properties psB {{"manufacturer", "MANUFACTURER"s},
+                  {"serialNumber", "SERIAL_NUMBER"s},
+                  {"VALUE", "Machine 2"s},
+                  {"station", "STATION"s}};
   auto descriptionB = Device::getFactory()->create("Description", psB, errors);
   ASSERT_TRUE(errors.empty());
 
@@ -106,13 +105,13 @@ TEST_F(DeviceTest, DataItems)
   ASSERT_TRUE(errors.empty());
   auto data2 = DataItem::make({{"id", "b"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
-  
+
   m_devA->addDataItem(data1, errors);
   m_devA->addDataItem(data2, errors);
 
   const auto &items = m_devA->getDataItems();
   ASSERT_EQ(2, items->size());
-  
+
   ASSERT_TRUE(data1 == items->front());
   ASSERT_TRUE(data2 == items->back());
 }
@@ -122,11 +121,13 @@ TEST_F(DeviceTest, DeviceDataItem)
   ASSERT_FALSE(m_devA->getDataItems());
   ASSERT_FALSE(m_devA->getDeviceDataItem("DataItemTest1"));
   ASSERT_FALSE(m_devA->getDeviceDataItem("DataItemTest2"));
-  
+
   ErrorList errors;
-  auto data1 = DataItem::make({{"id", "DataItemTest1"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  auto data1 =
+      DataItem::make({{"id", "DataItemTest1"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
-  auto data2 = DataItem::make({{"id", "DataItemTest2"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
+  auto data2 =
+      DataItem::make({{"id", "DataItemTest2"s}, {"type", "A"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
 
   m_devA->addDataItem(data1, errors);
@@ -140,21 +141,35 @@ TEST_F(DeviceTest, DeviceDataItem)
 TEST_F(DeviceTest, GetDataItem)
 {
   ErrorList errors;
-  Properties sp1{{"VALUE", "by_source"s}};
+  Properties sp1 {{"VALUE", "by_source"s}};
   auto source1 = Source::getFactory()->make("Source", sp1, errors);
-  auto data1 = DataItem::make({{"id", "by_id"s}, {"type", "A"s}, {"category", "EVENT"s}, {"name", "by_name"s}, {"Source", source1}}, errors);
+  auto data1 = DataItem::make({{"id", "by_id"s},
+                               {"type", "A"s},
+                               {"category", "EVENT"s},
+                               {"name", "by_name"s},
+                               {"Source", source1}},
+                              errors);
   ASSERT_TRUE(errors.empty());
   m_devA->addDataItem(data1, errors);
 
-  Properties sp2{{"VALUE", "by_source2"s}};
+  Properties sp2 {{"VALUE", "by_source2"s}};
   auto source2 = Source::getFactory()->make("Source", sp2, errors);
-  auto data2 = DataItem::make({{"id", "by_id2"s}, {"type", "A"s}, {"name", "by_name2"s}, {"category", "EVENT"s}, {"Source", source2}}, errors);
+  auto data2 = DataItem::make({{"id", "by_id2"s},
+                               {"type", "A"s},
+                               {"name", "by_name2"s},
+                               {"category", "EVENT"s},
+                               {"Source", source2}},
+                              errors);
   ASSERT_TRUE(errors.empty());
   m_devA->addDataItem(data2, errors);
 
-  Properties sp{{"VALUE", "by_source3"s}};
+  Properties sp {{"VALUE", "by_source3"s}};
   auto source = Source::getFactory()->make("Source", sp, errors);
-  Properties p3({{"id", "by_id3"s}, {"type", "A"s}, {"name", "by_name3"s}, {"category", "EVENT"s}, {"Source", source}});
+  Properties p3({{"id", "by_id3"s},
+                 {"type", "A"s},
+                 {"name", "by_name3"s},
+                 {"category", "EVENT"s},
+                 {"Source", source}});
   auto data3 = DataItem::make(p3, errors);
   ASSERT_TRUE(errors.empty());
 

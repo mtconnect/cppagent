@@ -20,15 +20,14 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "asset/asset.hpp"
-#include "rest_sink/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
-#include "utilities.hpp"
 #include "observation/observation.hpp"
+#include "rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
+#include "utilities.hpp"
 #include "xml_parser.hpp"
 #include "xml_printer.hpp"
-#include "rest_sink/checkpoint.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -36,14 +35,14 @@ using namespace mtconnect::rest_sink;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 
-Properties operator "" _value(const char *value, size_t s)
+Properties operator"" _value(const char *value, size_t s)
 {
-  return Properties{{ "VALUE", string(value) }};
+  return Properties {{"VALUE", string(value)}};
 }
 
 class XmlPrinterTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
     m_config = new XmlParser();
@@ -60,13 +59,13 @@ class XmlPrinterTest : public testing::Test
     m_printer = nullptr;
   }
 
-  mtconnect::XmlParser *m_config{nullptr};
-  mtconnect::XmlPrinter *m_printer{nullptr};
-  std::list<mtconnect::DevicePtr > m_devices;
+  mtconnect::XmlParser *m_config {nullptr};
+  mtconnect::XmlPrinter *m_printer {nullptr};
+  std::list<mtconnect::DevicePtr> m_devices;
 
   // Construct a component event and set it as the data item's latest event
-  ObservationPtr addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
-                                      uint64_t sequence, const Properties &props);
+  ObservationPtr addEventToCheckpoint(Checkpoint &checkpoint, const char *name, uint64_t sequence,
+                                      const Properties &props);
 
   ObservationPtr newEvent(const char *name, uint64_t sequence, const Properties &props);
 };
@@ -88,7 +87,7 @@ ObservationPtr XmlPrinterTest::newEvent(const char *name, uint64_t sequence,
 }
 
 ObservationPtr XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, const char *name,
-                                                  uint64_t sequence, const Properties &props)
+                                                    uint64_t sequence, const Properties &props)
 {
   auto event = newEvent(name, sequence, props);
   checkpoint.addObservation(event);
@@ -262,7 +261,7 @@ TEST_F(XmlPrinterTest, ChangeDevicesNamespace)
 
   {
     XmlParser ext;
-    std::list<DevicePtr > extdevs =
+    std::list<DevicePtr> extdevs =
         ext.parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", m_printer);
     PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, extdevs));
 
@@ -457,28 +456,27 @@ TEST_F(XmlPrinterTest, Condition)
   addEventToCheckpoint(checkpoint, "program", 12, "/home/mtconnect/simulator/spiral.ngc"_value);
   addEventToCheckpoint(checkpoint, "execution", 10254795, "READY"_value);
   addEventToCheckpoint(checkpoint, "power", 1, "ON"_value);
-  
-  addEventToCheckpoint(checkpoint, "ctmp", 18, Properties{{
-    {"level", "WARNING"s },
-    {"nativeCode", "OTEMP"s},
-    {"nativeSeverity", "1"s},
-    {"qualifier", "HIGH"s},
-    {"VALUE", "Spindle Overtemp"s}
-  }});
-  addEventToCheckpoint(checkpoint, "cmp", 18, Properties{{
-    {"level", "NORMAL"s },
-  }});
-  addEventToCheckpoint(checkpoint, "lp", 18, Properties{{
-    {"level", "FAULT"s },
-    {"nativeCode", "LOGIC"s},
-    {"nativeSeverity", "2"s},
-    {"VALUE", "PLC Error"s}
-  }});
+
+  addEventToCheckpoint(checkpoint, "ctmp", 18,
+                       Properties {{{"level", "WARNING"s},
+                                    {"nativeCode", "OTEMP"s},
+                                    {"nativeSeverity", "1"s},
+                                    {"qualifier", "HIGH"s},
+                                    {"VALUE", "Spindle Overtemp"s}}});
+  addEventToCheckpoint(checkpoint, "cmp", 18,
+                       Properties {{
+                           {"level", "NORMAL"s},
+                       }});
+  addEventToCheckpoint(checkpoint, "lp", 18,
+                       Properties {{{"level", "FAULT"s},
+                                    {"nativeCode", "LOGIC"s},
+                                    {"nativeSeverity", "2"s},
+                                    {"VALUE", "PLC Error"s}}});
 
   ObservationList list;
   checkpoint.getObservations(list);
   PARSE_XML(m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list));
-  
+
   ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning",
                         "Spindle Overtemp");
   ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@name='C']/m:Condition/m:Warning@type",
@@ -540,9 +538,12 @@ TEST_F(XmlPrinterTest, ChangeDeviceAttributes)
   string v = "Some_Crazy_Uuid";
   device->setUuid(v);
   ErrorList errors;
-  auto description = mtconnect::device_model::Device::getFactory()->create("Description", {{"manufacturer", "Big Tool MFG"s},
-    {"serialNumber", "111999333444"s}, {"station", "99999999"s}
-  }, errors);
+  auto description =
+      mtconnect::device_model::Device::getFactory()->create("Description",
+                                                            {{"manufacturer", "Big Tool MFG"s},
+                                                             {"serialNumber", "111999333444"s},
+                                                             {"station", "99999999"s}},
+                                                            errors);
   ASSERT_TRUE(errors.empty());
   device->setProperty("Description", description);
 
@@ -569,9 +570,8 @@ TEST_F(XmlPrinterTest, TimeSeries)
   ObservationPtr ptr;
   {
     ObservationList events;
-    ptr = newEvent("Xts", 10843512, Properties{
-      {"sampleCount", int64_t(6)},
-      {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"s}});
+    ptr = newEvent("Xts", 10843512,
+                   Properties {{"sampleCount", int64_t(6)}, {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"s}});
     events.push_back(ptr);
 
     PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
@@ -585,10 +585,10 @@ TEST_F(XmlPrinterTest, TimeSeries)
   }
   {
     ObservationList events;
-    ptr = newEvent("Xts", 10843512, Properties{
-      {"sampleCount", int64_t(6)},
-      {"sampleRate", 46200.0},
-      {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"s}});
+    ptr = newEvent("Xts", 10843512,
+                   Properties {{"sampleCount", int64_t(6)},
+                               {"sampleRate", 46200.0},
+                               {"VALUE", "1.1 2.2 3.3 4.4 5.5 6.6"s}});
 
     events.push_back(ptr);
 
@@ -605,11 +605,9 @@ TEST_F(XmlPrinterTest, TimeSeries)
 TEST_F(XmlPrinterTest, NonPrintableCharacters)
 {
   ObservationList events;
-  ObservationPtr ptr = newEvent("zlc", 10843512, Properties{{
-    {"level", "fault"s },
-    {"nativeCode", "500"s},
-    {"VALUE", "OVER TRAVEL : +Z? "s}
-  }});
+  ObservationPtr ptr = newEvent(
+      "zlc", 10843512,
+      Properties {{{"level", "fault"s}, {"nativeCode", "500"s}, {"VALUE", "OVER TRAVEL : +Z? "s}}});
 
   events.push_back(ptr);
   PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
@@ -620,11 +618,10 @@ TEST_F(XmlPrinterTest, NonPrintableCharacters)
 TEST_F(XmlPrinterTest, EscapedXMLCharacters)
 {
   ObservationList events;
-  ObservationPtr ptr = newEvent("zlc", 10843512, Properties{{
-    {"level", "fault"s },
-    {"nativeCode", "500"s},
-    {"VALUE", "A duck > a foul & < cat '"s}
-  }});
+  ObservationPtr ptr = newEvent(
+      "zlc", 10843512,
+      Properties {
+          {{"level", "fault"s}, {"nativeCode", "500"s}, {"VALUE", "A duck > a foul & < cat '"s}}});
 
   events.push_back(ptr);
   PARSE_XML(m_printer->printSample(123, 131072, 10974584, 10843512, 10123800, events));
@@ -647,7 +644,7 @@ TEST_F(XmlPrinterTest, PrintAssetProbe)
 TEST_F(XmlPrinterTest, Configuration)
 {
   PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
-  
+
   ASSERT_XML_PATH_EQUAL(doc, "//m:Power/m:Configuration/m:SensorConfiguration/m:CalibrationDate",
                         "2011-08-10");
   ASSERT_XML_PATH_EQUAL(doc, "//m:SensorConfiguration/m:Channels/m:Channel@number", "1");
@@ -713,7 +710,8 @@ TEST_F(XmlPrinterTest, ProbeWithFilter13)
 
   // TODO: Should we auto-upgrade?
   ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter", "5");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter@type", "MINIMUM_DELTA");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@name='load']/m:Constraints/m:Filter@type",
+                        "MINIMUM_DELTA");
 }
 
 TEST_F(XmlPrinterTest, ProbeWithFilter)
@@ -759,9 +757,9 @@ TEST_F(XmlPrinterTest, LegacyReferences)
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
-  //TODO: LegacyReferences with entities
-  //ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@dataItemId", "c4");
-  //ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@name", "chuck");
+  // TODO: LegacyReferences with entities
+  // ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@dataItemId", "c4");
+  // ASSERT_XML_PATH_EQUAL(doc, "//m:BarFeederInterface/m:References/m:Reference@name", "chuck");
 }
 
 TEST_F(XmlPrinterTest, CheckDeviceChangeTime)
@@ -777,7 +775,8 @@ TEST_F(XmlPrinterTest, CheckDeviceChangeTime)
                           "urn:mtconnect.org:MTConnectDevices:1.7 "
                           "http://schemas.mtconnect.org/schemas/"
                           "MTConnectDevices_1.7.xsd");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime", m_printer->getModelChangeTime().c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime",
+                          m_printer->getModelChangeTime().c_str());
   }
 }
 
@@ -848,7 +847,7 @@ TEST_F(XmlPrinterTest, ErrorStyle)
 TEST_F(XmlPrinterTest, PrintDeviceMTConnectVersion)
 {
   PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
-  
+
   ASSERT_XML_PATH_EQUAL(doc, "//m:Device@mtconnectVersion", "1.7");
 }
 
@@ -856,23 +855,30 @@ TEST_F(XmlPrinterTest, PrintDataItemRelationships)
 {
   delete m_config;
   m_config = nullptr;
-  
+
   m_config = new XmlParser();
   m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", m_printer);
-  
+
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@name", "archie");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@type", "LIMIT");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@idRef", "xlcpl");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@name",
+                        "archie");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@type",
+                        "LIMIT");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:DataItemRelationship@idRef",
+                        "xlcpl");
 
+  ASSERT_XML_PATH_EQUAL(
+      doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@name", nullptr);
+  ASSERT_XML_PATH_EQUAL(
+      doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@type", "LIMIT");
+  ASSERT_XML_PATH_EQUAL(
+      doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@idRef", "spec1");
 
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@name", nullptr);
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@type", "LIMIT");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlc']/m:Relationships/m:SpecificationRelationship@idRef", "spec1");
-
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@name", "bob");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@type", "OBSERVATION");
-  ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@idRef", "xlc");
-
+  ASSERT_XML_PATH_EQUAL(
+      doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@name", "bob");
+  ASSERT_XML_PATH_EQUAL(
+      doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@type", "OBSERVATION");
+  ASSERT_XML_PATH_EQUAL(
+      doc, "//m:DataItem[@id='xlcpl']/m:Relationships/m:DataItemRelationship@idRef", "xlc");
 }

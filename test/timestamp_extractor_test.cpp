@@ -19,10 +19,10 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <chrono>
+
 #include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/timestamp_extractor.hpp"
-
-#include <chrono>
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -35,7 +35,7 @@ using namespace date::literals;
 TEST(TimestampExtractorTest, TestTimeExtraction)
 {
   auto tokens = make_shared<Tokens>("Tokens", Properties());
-  tokens->m_tokens = { "2021-01-19T12:00:00.12345Z", "hello" };
+  tokens->m_tokens = {"2021-01-19T12:00:00.12345Z", "hello"};
 
   auto extractor = make_shared<ExtractTimestamp>(false);
   extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
@@ -52,7 +52,7 @@ TEST(TimestampExtractorTest, TestTimeExtraction)
 TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
 {
   auto tokens = make_shared<Tokens>("Tokens", Properties());
-  tokens->m_tokens = { "2021-01-19T12:00:00.12345Z@100.0", "hello" };
+  tokens->m_tokens = {"2021-01-19T12:00:00.12345Z@100.0", "hello"};
 
   auto extractor = make_shared<ExtractTimestamp>(false);
   extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
@@ -70,7 +70,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionWithDuration)
 TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
 {
   auto tokens = make_shared<Tokens>("Tokens", Properties());
-  tokens->m_tokens = { "1000.0", "hello" };
+  tokens->m_tokens = {"1000.0", "hello"};
 
   auto extractor = make_shared<ExtractTimestamp>(true);
   extractor->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
@@ -78,17 +78,17 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
     // 2021-01-19T10:00:00Z
     return std::chrono::system_clock::from_time_t(1611050400);
   };
-  
+
   auto out = (*extractor)(tokens);
   auto timestamped = dynamic_pointer_cast<Timestamped>(out);
   ASSERT_TRUE(timestamped);
-  
+
   ASSERT_EQ(1, out->getProperties().size());
   ASSERT_EQ("hello", timestamped->m_tokens.front());
   ASSERT_EQ("2021-01-19T10:00:00Z", format(timestamped->m_timestamp));
 
-  tokens = make_shared<Tokens>("Tokens", Properties{});
-  tokens->m_tokens = { "2000.0", "hello" };
+  tokens = make_shared<Tokens>("Tokens", Properties {});
+  tokens->m_tokens = {"2000.0", "hello"};
 
   out = (*extractor)(tokens);
   timestamped = dynamic_pointer_cast<Timestamped>(out);
@@ -99,7 +99,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTimeOffset)
 
 TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
 {
-  auto tokens = make_shared<Tokens>("Tokens", Properties{});
+  auto tokens = make_shared<Tokens>("Tokens", Properties {});
   tokens->m_tokens = {"2021-01-19T10:01:00Z", "hello"};
 
   auto extractor = make_shared<ExtractTimestamp>(true);
@@ -108,7 +108,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
     // 2021-01-19T10:00:00Z
     return std::chrono::system_clock::from_time_t(1611050400);
   };
-  
+
   auto out = (*extractor)(tokens);
   auto timestamped = dynamic_pointer_cast<Timestamped>(out);
   ASSERT_TRUE(timestamped);
@@ -117,7 +117,7 @@ TEST(TimestampExtractorTest, TestTimeExtractionRelativeTime)
   ASSERT_EQ("hello", timestamped->m_tokens.front());
   ASSERT_EQ("2021-01-19T10:00:00Z", format(timestamped->m_timestamp));
 
-  tokens = make_shared<Tokens>("Tokens", Properties{});
+  tokens = make_shared<Tokens>("Tokens", Properties {});
   tokens->m_tokens = {"2021-01-19T10:01:10Z", "hello"};
   out = (*extractor)(tokens);
   timestamped = dynamic_pointer_cast<Timestamped>(out);

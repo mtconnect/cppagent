@@ -48,7 +48,7 @@ namespace mtconnect {
     // Filter dups, by delta, and by period
     next = next->bind(make_shared<DuplicateFilter>(m_context));
     next = next->bind(make_shared<DeltaFilter>(m_context));
-    next = next->bind(make_shared<PeriodFilter>(m_context));
+    next = next->bind(make_shared<PeriodFilter>(m_context, m_strand));
 
     // Convert values
     if (IsOptionSet(m_options, configuration::ConversionRequired))
