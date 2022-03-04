@@ -24,12 +24,23 @@
 
 #include <cstring>
 
+#include "ruby.h"
+
 using namespace std;
 using namespace mtconnect;
 
 int main(int aArgc, const char *aArgv[])
 {
   NAMED_SCOPE("MAIN");
+  
+  int argc = 0;
+  char* argv = nullptr;
+  char** pArgv = &argv;
+
+  ruby_sysinit(&argc, &pArgv);
+  RUBY_INIT_STACK;
+  ruby_init();
+  ruby_init_loadpath();
 
   configuration::AgentConfiguration config;
 

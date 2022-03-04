@@ -3,6 +3,7 @@ import os
 import io
 import re
 import itertools as it
+import glob
 
 class RubyRiceConan(ConanFile):
     name = "ruby_rice"
@@ -14,7 +15,7 @@ class RubyRiceConan(ConanFile):
     description = "Ruby for embedded integration using C++ Rice"
     topics = "ruby", "binding", "conan"
     settings = "os", "compiler", "build_type", "arch"
-    requires = ""
+    requires = "readline/8.1.2", "libffi/3.4.2"
 
     _autotools = None
     _ruby_source = "ruby_source"
@@ -45,6 +46,11 @@ class RubyRiceConan(ConanFile):
         self._autotools.install()
         self.copy("*", src=os.path.join(self._rice_source, "include"), dst=os.path.join("include", self._ruby_version_dir))
         
+        self.copy("*.a", src="enc", dst=os.path.join("lib-s", 'enc'))
+        self.copy("encinit.o", src="enc", dst=os.path.join("lib-s", 'enc'))
+        self.copy("*.a", src="ext", dst=os.path.join("lib-s", 'ext'))
+        self.copy("extinit.o", src="ext", dst=os.path.join("lib-s", 'ext'))
+        
     def package_info(self):
         ruby = os.path.join(self.package_folder, "bin", "ruby")
         buf = io.StringIO()
@@ -60,6 +66,10 @@ class RubyRiceConan(ConanFile):
         lib = "libruby.{}.{}-static.a".format(self._major, self._minor)
         self.cpp_info.libs = [os.path.join(self.package_folder, "lib", lib)]
 
+        [self.cpp_info.libs.append(l) for l in glob.glob(os.path.join(self.package_folder, "lib-s", "**", "*.a"), recursive=True)]
+        self.cpp_info.libs.append(os.path.join(self.package_folder, "lib-s", "ext", "extinit.o"))
+        self.cpp_info.libs.append(os.path.join(self.package_folder, "lib-s", "enc", "encinit.o"))
+
         defines = [x[2:] for x in config['CPPFLAGS'].split() if x.startswith('-D') and x != '-DNDEBUG']
         self.cpp_info.defines = defines
 
@@ -73,5 +83,5 @@ class RubyRiceConan(ConanFile):
             pass
         
         self.cpp_info.exelinkflags = config['LDFLAGS'].split() + libflags
-        self.user_info.RUBY_LIBRARIES = self.package_folder + "/lib"
+        self.user_info.RUBY_LIBRARIES = os.path.join(self.package_folder, "lib")
 

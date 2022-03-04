@@ -31,6 +31,10 @@
 #include <rice/stl.hpp>
 #include <ruby/thread.h>
 
+extern "C" {
+  void Init_date_core();
+}
+
 using namespace std;
 using namespace mtconnect::pipeline;
 
@@ -189,6 +193,12 @@ namespace mtconnect::ruby {
     Rice::Module &m_module;
     Rice::Identifier m_function;
   };
+  
+  static VALUE load(VALUE arg)
+  {
+    rb_require("time");
+    return Qnil;
+  }
  
   Embedded::Embedded(Agent *agent, const ConfigOptions &options)
   {
@@ -197,14 +207,18 @@ namespace mtconnect::ruby {
     using namespace std::literals;
     using namespace date::literals;
     using namespace observation;
+    
+    Init_date_core();
 
-    int argc = 0;
-    char* argv = nullptr;
-    char** pArgv = &argv;
+//    int argc = 0;
+//    char* argv = nullptr;
+//    char** pArgv = &argv;
 
-    ruby_sysinit(&argc, &pArgv);
-    ruby_init();
-    ruby_init_loadpath();
+
+//    ruby_sysinit(&argc, &pArgv);
+//    RUBY_INIT_STACK;
+//    ruby_init();
+//    ruby_init_loadpath();
         
     m_module = make_unique<Module>(define_module("MTConnect"));
     
@@ -219,9 +233,11 @@ namespace mtconnect::ruby {
     define_class_under<device_model::data_item::DataItem, entity::Entity>(*m_module, "DataItem");
 
     m_module->instance_eval("def transform(obs); p obs.value; end");
-    
-    rb_eval_string("p $:; require 'irb'; IRB.start");
 
+    int state = 0;
+    rb_protect(&load, Qnil, &state);
+    rb_eval_string_protect("p $!", &state);
+    
     for (auto &adp : agent->getSources()) {
       auto pipeline = adp->getPipeline();
       auto trans = make_shared<RubyTransform>("test", *m_module, "transform",
