@@ -51,7 +51,7 @@ namespace mtconnect {
 
     virtual pipeline::Pipeline *getPipeline() = 0;
 
-    const auto &getName() { return m_name; }
+    const auto &getName() const { return m_name; }
     boost::asio::io_context::strand &getStrand();
 
   protected:

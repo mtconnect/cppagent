@@ -874,7 +874,16 @@ namespace mtconnect {
 #ifdef WITH_RUBY
     void AgentConfiguration::configureRuby(const ptree &tree, ConfigOptions &options)
     {
-      m_ruby = make_unique<ruby::Embedded>(m_agent.get(), options);
+      ConfigOptions rubyOptions = options;
+
+      auto ruby = tree.get_child_optional("Ruby");
+      if (ruby)
+      {
+        GetOptions(*ruby, rubyOptions, options);
+        AddOptions(*ruby, rubyOptions,
+                   {{"module", string()}, {"initialization", string()}});
+      }
+      m_ruby = make_unique<ruby::Embedded>(m_agent.get(), rubyOptions);
     }
 #endif
 

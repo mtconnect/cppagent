@@ -26,9 +26,8 @@ namespace mtconnect {
     {
     public:
       Adapter(const std::string &name, boost::asio::io_context &io, const ConfigOptions &options)
-        : Source(io), m_options(options)
+        : Source(name, io), m_options(options)
       {
-        m_name = name;
       }
       virtual ~Adapter() {}
 
@@ -39,7 +38,6 @@ namespace mtconnect {
       virtual const ConfigOptions &getOptions() const { return m_options; }
 
     protected:
-      std::string m_name;
       std::string m_identity;
       std::string m_url;
       std::unique_ptr<Handler> m_handler;

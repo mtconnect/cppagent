@@ -22,6 +22,7 @@
 
 namespace Rice {
   class Module;
+  class Class;
 }
 
 namespace mtconnect {
@@ -38,9 +39,16 @@ namespace mtconnect {
       void start(boost::asio::io_context &context, int threads);
       
     protected:
+      void createModule();
+      void createPipeline();
+      void createComponent();
+      void createDataItem();
+      
+    protected:
       Agent *m_agent;
       ConfigOptions m_options;
       std::unique_ptr<Rice::Module> m_module;
+      std::unique_ptr<Rice::Class> m_ragent;
     };
   }
 }
