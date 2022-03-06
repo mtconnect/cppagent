@@ -163,6 +163,12 @@ endif()
 
 if(NOT WITHOUT_RUBY)
   set(AGENT_SOURCES ${AGENT_SOURCES}    
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_agent.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_entity.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_pipeline.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_observation.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_type.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_transform.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.cpp"  
     )

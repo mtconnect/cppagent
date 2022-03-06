@@ -40,15 +40,11 @@ namespace mtconnect {
       
     protected:
       void createModule();
-      void createPipeline();
-      void createComponent();
-      void createDataItem();
       
     protected:
       Agent *m_agent;
       ConfigOptions m_options;
       std::unique_ptr<Rice::Module> m_module;
-      std::unique_ptr<Rice::Class> m_ragent;
     };
   }
 }
