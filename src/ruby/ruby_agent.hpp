@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include "agent.hpp"
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>

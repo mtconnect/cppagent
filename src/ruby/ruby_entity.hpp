@@ -15,9 +15,12 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include "entity/entity.hpp"
 #include "device_model/device.hpp"
 #include "device_model/data_item/data_item.hpp"
+#include "ruby_type.hpp"
 
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
@@ -36,6 +39,7 @@ namespace mtconnect::ruby {
     void create(Rice::Module &module)
     {
       m_entity = make_unique<Class>(define_class_under<Entity>(module, "Entity"));
+      c_Entity = m_entity->value();
       m_component = make_unique<Class>(define_class_under<Component, Entity>(module, "Component"));
       m_device = make_unique<Class>(define_class_under<device_model::Device, device_model::Component>(module, "Device"));
       m_dataItem = make_unique<Class>(define_class_under<data_item::DataItem, entity::Entity>(module, "DataItem"));

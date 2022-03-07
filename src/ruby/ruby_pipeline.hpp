@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include "entity/entity.hpp"
 #include "device_model/device.hpp"
 #include "device_model/data_item/data_item.hpp"

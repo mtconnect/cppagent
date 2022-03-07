@@ -15,12 +15,20 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
 #include <ruby/thread.h>
+#include <ruby/internal/intern/time.h>
 
 using namespace std;
 using namespace mtconnect::pipeline;
+
+namespace mtconnect::ruby {
+  static VALUE c_Entity;
+  static VALUE c_Observation;
+}
 
 namespace Rice::detail {
   using namespace mtconnect::entity;
@@ -37,20 +45,27 @@ namespace Rice::detail {
   {
     VALUE convert(const Timestamp &ts)
     {
-      return To_Ruby<string>().convert(format(ts));
+      using namespace std::chrono;
+      
+      auto secs = time_point_cast<seconds>(ts);
+      auto ns = time_point_cast<nanoseconds>(ts) -
+                 time_point_cast<nanoseconds>(secs);
+      
+      return rb_time_nano_new(secs.time_since_epoch().count(), ns.count());
     }
   };
   
   template<>
   struct From_Ruby<Timestamp>
   {
-    Timestamp convert(VALUE str)
+    Timestamp convert(VALUE time)
     {
-      Timestamp ts;
-      istringstream in(From_Ruby<string>().convert(str));
-      in >> std::setw(6) >> date::parse("%FT%T", ts);
-
-      return ts;
+      using namespace std::chrono;
+            
+      auto rts = protect(rb_time_timespec, time);
+      auto dur = duration_cast<nanoseconds>(seconds{rts.tv_sec}
+          + nanoseconds{rts.tv_nsec});
+      return  time_point<system_clock>{duration_cast<system_clock::duration>(dur)};
     }
   };
   
@@ -74,21 +89,118 @@ namespace Rice::detail {
       return ary;
     }
   };
+
+  template<>
+  struct From_Ruby<EntityList>
+  {
+    EntityList convert(VALUE list)
+    {
+      EntityList ary;
+      Rice::Array vary(list);
+      for (const auto &ent : vary)
+      {
+        if (Rice::protect(rb_obj_is_kind_of, ent.value(), mtconnect::ruby::c_Entity))
+        {
+          Data_Object<Entity> entity(ent.value());
+          ary.emplace_back(entity->getptr());
+        }
+      }
+      
+      return ary;
+    }
+  };
   
+  template<>
+  struct Type<observation::DataSetValue>
+  {
+    static bool verify() { return true; }
+  };
+  
+  template<>
+  struct To_Ruby<observation::DataSetValue>
+  {
+    VALUE convert(const observation::DataSetValue &value)
+    {
+      VALUE rv;
+      
+      rv = visit(overloaded {
+        [](const std::monostate &v) -> VALUE { return Qnil; },
+        [](const std::string &v) -> VALUE { return To_Ruby<string>().convert(v); },
+        [](const observation::DataSet &v) -> VALUE {
+          return Qnil;
+        },
+        [](const int64_t v) -> VALUE { return To_Ruby<int64_t>().convert(v); },
+        [](const double v) -> VALUE { return To_Ruby<double>().convert(v); },
+
+      }, value);
+      
+      return rv;
+    }
+  };
+  
+  template<>
+  struct From_Ruby<observation::DataSetValue>
+  {
+    observation::DataSetValue convert(VALUE value)
+    {
+      observation::DataSetValue res;
+      
+      switch (TYPE(value))
+      {
+        case RUBY_T_STRING:
+          res.emplace<string>(From_Ruby<string>().convert(value));
+          break;
+          
+        case RUBY_T_BIGNUM:
+        case RUBY_T_FIXNUM:
+          res.emplace<int64_t>(From_Ruby<int64_t>().convert(value));
+          break;
+
+        case RUBY_T_FLOAT:
+          res.emplace<double>(From_Ruby<double>().convert(value));
+          break;
+          
+        case RUBY_T_HASH:
+          break;
+          
+        default:
+          break;
+      }
+      return res;
+    }
+  };
+  
+  template<>
+  struct Type<Entity>
+  {
+    static bool verify() { return true; }
+  };
+  
+  template<>
+  struct To_Ruby<Entity>
+  {
+    VALUE convert(const EntityPtr &e)
+    {
+      Data_Object<Entity> entity(e.get());
+      return entity.value();
+    }
+  };
+  
+  template<>
+  struct From_Ruby<Entity>
+  {
+    EntityPtr convert(VALUE e)
+    {
+      Data_Object<Entity> entity(e);
+      return entity->getptr();
+    }
+  };
+
   template<>
   struct Type<Value>
   {
     static bool verify() { return true; }
   };
-  
-  static VALUE convertEntity(EntityPtr e)
-  {
-    using namespace Rice;
-    using namespace Rice::detail;
-
-    Rice::Data_Object<Entity> ent(e.get());
-    return ent;
-  }
   
   template<>
   struct To_Ruby<Value>
@@ -102,7 +214,9 @@ namespace Rice::detail {
         [](const std::nullptr_t &) -> VALUE { return Qnil; },
 
         // Not handled yet
-        [](const EntityPtr &entity) -> VALUE { return convertEntity(entity); },
+        [](const EntityPtr &entity) -> VALUE {
+          return To_Ruby<Entity>().convert(entity);
+        },
         [](const EntityList &list) -> VALUE {
           Rice::Array ary;
           for (const auto &ent : list)
@@ -112,7 +226,9 @@ namespace Rice::detail {
           
           return ary;
         },
-        [](const observation::DataSet &v) -> VALUE { return Qnil; },
+        [](const observation::DataSet &v) -> VALUE {
+          return Qnil;
+        },
                 
         // Handled types
         [](const Vector &v) -> VALUE {
@@ -120,9 +236,7 @@ namespace Rice::detail {
           return array;
         },
         [](const Timestamp &v) -> VALUE {
-          Value out = v;
-          ConvertValueToType(out, STRING);
-          return To_Ruby<string>().convert(get<string>(out));
+          return To_Ruby<Timestamp>().convert(v);
         },
         [](const string &arg) -> VALUE { return To_Ruby<string>().convert(arg); },
         [](const bool arg) -> VALUE { return To_Ruby<bool>().convert(arg); },
@@ -139,9 +253,12 @@ namespace Rice::detail {
   {
     Value convert(VALUE value)
     {
+      using namespace mtconnect::ruby;
+      using namespace mtconnect::observation;
+
       Value res;
       
-      switch (rb_type(value))
+      switch (TYPE(value))
       {
         case RUBY_T_NIL:
         case RUBY_T_UNDEF:
@@ -169,6 +286,9 @@ namespace Rice::detail {
           res.emplace<bool>(false);
           break;
           
+        case RUBY_T_HASH:
+          break;
+          
         case RUBY_T_ARRAY:
         {
           res.emplace<Vector>();
@@ -184,6 +304,20 @@ namespace Rice::detail {
           break;
         }
           
+        case RUBY_T_OBJECT:
+          if (protect(rb_obj_is_kind_of, value, rb_cTime))
+          {
+            res = From_Ruby<Timestamp>().convert(value);
+          }
+          else if (protect(rb_obj_is_kind_of, value, c_Entity))
+          {
+            res = From_Ruby<Entity>().convert(value);
+          }
+          {
+            res.emplace<std::monostate>();
+          }
+          break;
+          
         default:
           res.emplace<std::monostate>();
           break;
@@ -192,4 +326,46 @@ namespace Rice::detail {
       return res;
     }
   };
+  
+  template<>
+  struct Type<Properties>
+  {
+    static bool verify() { return true; }
+  };
+  
+  template<>
+  struct To_Ruby<Properties>
+  {
+    VALUE convert(const Properties &props)
+    {
+      Rice::Hash res;
+            
+      for (const auto& [key, value] : props)
+      {
+        String kc(key);
+        res[kc] = To_Ruby<Value>().convert(value);
+      }
+      
+      return res;
+    }
+  };
+    
+  template<>
+  struct From_Ruby<Properties>
+  {
+    Properties convert(VALUE props)
+    {
+      Properties res;
+      Rice::Hash rp(props);
+      
+      for (const auto& entry : rp)
+      {
+        res.emplace(String(entry.key).str(),
+                    From_Ruby<Value>().convert(entry.value.value()));
+      }
+      
+      return res;
+    }
+  };
+
 }

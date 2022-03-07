@@ -42,7 +42,7 @@ namespace mtconnect {
     using OrderList = std::list<std::string>;
     using OrderMap = std::unordered_map<std::string, int>;
     using OrderMapPtr = std::shared_ptr<OrderMap>;
-    using Property = std::pair<std::string, Value>;
+    using Property = std::pair<PropertyKey, Value>;
 
     template <typename T>
     inline std::optional<T> OptionallyGet(const std::string &key, const Properties &props)

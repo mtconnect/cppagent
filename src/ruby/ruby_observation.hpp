@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include "observation/observation.hpp"
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
@@ -30,6 +32,9 @@ namespace mtconnect::ruby {
     void create(Rice::Module &module)
     {
       m_observation = make_unique<Class>(define_class_under<Observation, entity::Entity>(module, "Observation"));
+      c_Observation = m_observation->value();
+      m_dataSet = make_unique<Class>(define_class_under<DataSet>(module, "DataSet"));
+      m_dataSetEntry = make_unique<Class>(define_class_under<DataSet>(module, "DataSetEntry"));
     }
     
     void methods()
@@ -46,8 +51,17 @@ namespace mtconnect::ruby {
           auto obs = Observation::make(dataItem, incompingProps, ts, errors);
           return obs;
         }, Return().takeOwnership(), Arg("dataItem"), Arg("properties"), Arg("timestamp") = nullptr);
+      
+      Data_Type<DataSetEntry> *dsep = dynamic_cast<Data_Type<DataSetEntry>*>(m_dataSetEntry.get());
+      dsep->define_attr("key", &DataSetEntry::m_key);
+      dsep->define_attr("value", &DataSetEntry::m_value);
+      dsep->define_attr("removed", &DataSetEntry::m_removed);
+      
+      
     }
     
     std::unique_ptr<Rice::Class> m_observation;
+    std::unique_ptr<Rice::Class> m_dataSetEntry;
+    std::unique_ptr<Rice::Class> m_dataSet;
   };
 }

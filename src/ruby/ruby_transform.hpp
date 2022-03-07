@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
 #include <ruby/thread.h>
@@ -30,18 +32,13 @@ namespace mtconnect::ruby {
   using namespace date::literals;
   using namespace observation;
 
-  class RubyTransform : public pipeline::Transform
+  class RubyTransform : public pipeline::Transform, public Director
   {
   public:
-    RubyTransform(const std::string &name,
-                  Rice::Module &module,
-                  const std::string &function,
-                  pipeline::PipelineContextPtr context)
-    : Transform(name), m_contract(context->m_contract.get()),
-      m_module(module), m_function(function)
+    RubyTransform(Object self, const std::string &name)
+    : Transform(name), Director(self)
 
     {
-      m_guard = TypeGuard<observation::Observation>(RUN);
     }
     
     using calldata = pair<RubyTransform*, observation::ObservationPtr>;
@@ -52,7 +49,6 @@ namespace mtconnect::ruby {
       using namespace observation;
       
       calldata *obs = static_cast<calldata*>(data);
-      obs->first->m_module.call(obs->first->m_function, obs->second);
       
       return nullptr;
     }
@@ -71,10 +67,7 @@ namespace mtconnect::ruby {
     }
     
   protected:
-    std::string m_expression;
     PipelineContract *m_contract;
-    Rice::Module &m_module;
-    Rice::Identifier m_function;
   };
 }
 

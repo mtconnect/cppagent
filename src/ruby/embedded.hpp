@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include "utilities.hpp"
 
 #include <boost/asio.hpp>
@@ -28,8 +30,6 @@ namespace Rice {
 namespace mtconnect {
   class Agent;
   namespace ruby {
-    
-    
     class Embedded
     {
     public:
