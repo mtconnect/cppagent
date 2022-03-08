@@ -141,10 +141,15 @@ namespace Rice::detail {
             key = From_Ruby<string>().convert(p.first);
           else
             key = From_Ruby<string>().convert(p.first.call(Identifier("to_s")));
-          Value value { From_Ruby<Value>().convert(p.second.value()) };
+          Value val { From_Ruby<Value>().convert(p.second.value()) };
           
-          m_converted.emplace(key, value);
+          m_converted.emplace(key, val);
         }
+      }
+      else
+      {
+        Value val { From_Ruby<Value>().convert(value) };
+        m_converted.emplace("VALUE", val);
       }
       return m_converted;
     }
@@ -156,9 +161,15 @@ namespace Rice::detail {
   template<>
   struct To_Ruby<Properties>
   {
-    auto convert(const Properties &value)
+    VALUE convert(const Properties &props)
     {
-      return Qnil;
+      Rice::Hash hash;
+      for (const auto &[key, value] : props)
+      {
+        hash[key.str()] = To_Ruby<Value>().convert(value);
+      }
+      
+      return hash;
     }
   };
 
