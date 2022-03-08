@@ -38,28 +38,30 @@ namespace mtconnect::ruby {
   struct RubyEntity {
     void create(Rice::Module &module)
     {
-      m_entity = make_unique<Class>(define_class_under<Entity>(module, "Entity"));
-      c_Entity = m_entity->value();
-      m_component = make_unique<Class>(define_class_under<Component, Entity>(module, "Component"));
-      m_device = make_unique<Class>(define_class_under<device_model::Device, device_model::Component>(module, "Device"));
-      m_dataItem = make_unique<Class>(define_class_under<data_item::DataItem, entity::Entity>(module, "DataItem"));
+      m_properties = define_class_under<Properties>(module, "Properties");
+      m_propertyKey = define_class_under<PropertyKey>(module, "PropertyKey");
+      m_entity = define_class_under<Entity>(module, "Entity");
+      c_Entity = m_entity.value();
+      m_component = define_class_under<Component, Entity>(module, "Component");
+      m_device = define_class_under<device_model::Device, device_model::Component>(module, "Device");
+      m_dataItem = define_class_under<data_item::DataItem, entity::Entity>(module, "DataItem");
     }
     
     void methods()
     {
-      m_entity->define_method("value", [](entity::EntityPtr entity) { return entity->getValue(); }).
+      m_entity.define_method("value", [](entity::EntityPtr entity) { return entity->getValue(); }).
         define_method("property", [](entity::EntityPtr entity, std::string name) {
           return entity->getProperty(name);
         }, Arg("name"));
 
       
-      m_dataItem->define_method("name", [](data_item::DataItem *di) { return di->getName(); }).
+      m_dataItem.define_method("name", [](data_item::DataItem *di) { return di->getName(); }).
         define_method("observation_name", [](data_item::DataItem *di) { return di->getObservationName().str(); }).
         define_method("id", [](data_item::DataItem *di) { return di->getId(); }).
         define_method("type", [](data_item::DataItem *di) { return di->getType(); }).
         define_method("sub_type", [](data_item::DataItem *di) { return di->getSubType(); });
       
-      m_component->define_method("component_name", [](Component *c) { return c->getComponentName(); }).
+      m_component.define_method("component_name", [](Component *c) { return c->getComponentName(); }).
         define_method("uuid", [](Component *c) { return c->getUuid(); }).
         define_method("id", [](Component *c) { return c->getId(); }).
         define_method("children", [](Component *c) {
@@ -88,11 +90,76 @@ namespace mtconnect::ruby {
           }
           return ary;
         });
+      
+      m_propertyKey.define_constructor(Constructor<PropertyKey, const string>(), Arg("key")).
+        define_method("to_s", [](PropertyKey *key) { return key->str(); }).
+        define_method("ns?", [](PropertyKey *key) { return key->hasNs(); });
+      
+      
     }
     
-    std::unique_ptr<Rice::Class> m_entity;
-    std::unique_ptr<Rice::Class> m_component;
-    std::unique_ptr<Rice::Class> m_device;
-    std::unique_ptr<Rice::Class> m_dataItem;    
+    Data_Type<Properties> m_properties;
+    Data_Type<PropertyKey> m_propertyKey;
+    Data_Type<Entity> m_entity;
+    Data_Type<Component> m_component;
+    Data_Type<Device> m_device;
+    Data_Type<DataItem> m_dataItem;
   };
+}
+
+namespace Rice::detail {
+  template<>
+  struct Type<Properties>
+  {
+    static bool verify()
+    {
+      return true;
+    }
+  };
+  
+  template<>
+  struct From_Ruby<Properties>
+  {
+    From_Ruby() = default;
+
+    explicit From_Ruby(Arg * arg) : m_arg(arg)
+    {
+    }
+
+    auto &convert(VALUE value)
+    {
+      if (TYPE(value) == RUBY_T_HASH)
+      {
+        Rice::Hash hash(value);
+        for (const auto &p : hash)
+        {
+          PropertyKey key;
+          auto pt = TYPE(p.first.value());
+          if (pt == RUBY_T_SYMBOL)
+            key = Symbol(p.first.value()).str();
+          else if (pt == RUBY_T_STRING)
+            key = From_Ruby<string>().convert(p.first);
+          else
+            key = From_Ruby<string>().convert(p.first.call(Identifier("to_s")));
+          Value value { From_Ruby<Value>().convert(p.second.value()) };
+          
+          m_converted.emplace(key, value);
+        }
+      }
+      return m_converted;
+    }
+    
+    Arg* m_arg = nullptr;
+    Properties m_converted;
+  };
+
+  template<>
+  struct To_Ruby<Properties>
+  {
+    auto convert(const Properties &value)
+    {
+      return Qnil;
+    }
+  };
+
 }

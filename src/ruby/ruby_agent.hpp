@@ -31,15 +31,14 @@ namespace mtconnect::ruby {
   struct RubyAgent {
     void create(Rice::Module &module)
     {
-      m_agent = make_unique<Class>(define_class_under<Agent>(module, "Agent"));
-      m_source = make_unique<Class>(define_class_under<mtconnect::Source>(module, "Source"));
-      m_sink = make_unique<Class>(define_class_under<mtconnect::Sink>(module, "Sink"));      
+      m_agent = define_class_under<Agent>(module, "Agent");
+      m_source = define_class_under<mtconnect::Source>(module, "Source");
+      m_sink = define_class_under<mtconnect::Sink>(module, "Sink");
     }
     
     void methods()
     {
-      
-      m_agent->define_method("sources", [](Agent *agent) {
+      m_agent.define_method("sources", [](Agent *agent) {
           Rice::Array ary;
           for (auto &s : agent->getSources())
             ary.push(s.get());
@@ -58,16 +57,16 @@ namespace mtconnect::ruby {
           return ary;
         });
 
-      m_source->define_method("name", [](mtconnect::Source *s) -> string {
+    m_source.define_method("name", [](mtconnect::Source *s) -> string {
           return s->getName();
         }).
-	define_method("pipeline", [](mtconnect::Source *s) { return s->getPipeline(); });
+      define_method("pipeline", [](mtconnect::Source *s) { return s->getPipeline(); });
 
 
     }
     
-    std::unique_ptr<Rice::Class> m_agent;
-    std::unique_ptr<Rice::Class> m_source;
-    std::unique_ptr<Rice::Class> m_sink;
+    Data_Type<Agent> m_agent;
+    Data_Type<Source> m_source;
+    Data_Type<Sink> m_sink;
   };
 }

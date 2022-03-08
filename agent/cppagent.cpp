@@ -24,37 +24,12 @@
 
 #include <cstring>
 
-#ifdef WITH_RUBY
-#include "ruby.h"
-extern "C" void Init_ext(void);
-extern "C" void Init_enc(void);
-#endif
-
 using namespace std;
 using namespace mtconnect;
 
 int main(int aArgc, const char *aArgv[])
 {
   NAMED_SCOPE("MAIN");
-
-#ifdef WITH_RUBY
-  int argc = 3;
-  char *a1 = (char*) "agent";
-  char *a2 = (char*) "-e";
-  char *a3 = (char*) "puts 'starting ruby'";
-
-  char* pargv[] = {a1, a2, a3};
-
-  RUBY_INIT_STACK;
-  
-  ruby_sysinit(&argc, (char***) &pargv);
-  ruby_init();
-
-  Init_ext();
-
-  ruby_script("agent");
-  ruby_options(argc, pargv);
-#endif
   
   configuration::AgentConfiguration config;
 

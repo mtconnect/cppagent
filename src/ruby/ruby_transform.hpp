@@ -32,12 +32,11 @@ namespace mtconnect::ruby {
   using namespace date::literals;
   using namespace observation;
 
-  class RubyTransform : public pipeline::Transform, public Director
+  class RubyTransform : public pipeline::Transform
   {
   public:
-    RubyTransform(Object self, const std::string &name)
-    : Transform(name), Director(self)
-
+    RubyTransform(const std::string &name)
+    : Transform(name), m_self(Data_Object<RubyTransform>(this)), m_method("transform")
     {
     }
     
@@ -49,6 +48,10 @@ namespace mtconnect::ruby {
       using namespace observation;
       
       calldata *obs = static_cast<calldata*>(data);
+      RubyTransform &_trans = *(obs->first);
+      auto res = _trans.m_self.call(_trans.m_method, obs->second);
+      Observation *o = detail::From_Ruby<Observation*>().convert(res);
+      obs->second.reset(o);
       
       return nullptr;
     }
@@ -66,8 +69,14 @@ namespace mtconnect::ruby {
       return obs;
     }
     
+    auto &object() { return m_self; }
+    
   protected:
     PipelineContract *m_contract;
+    Object           m_self;
+    Rice::Identifier m_method;
   };
+  
+  
 }
 

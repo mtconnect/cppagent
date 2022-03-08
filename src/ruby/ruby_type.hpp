@@ -325,47 +325,5 @@ namespace Rice::detail {
             
       return res;
     }
-  };
-  
-  template<>
-  struct Type<Properties>
-  {
-    static bool verify() { return true; }
-  };
-  
-  template<>
-  struct To_Ruby<Properties>
-  {
-    VALUE convert(const Properties &props)
-    {
-      Rice::Hash res;
-            
-      for (const auto& [key, value] : props)
-      {
-        String kc(key);
-        res[kc] = To_Ruby<Value>().convert(value);
-      }
-      
-      return res;
-    }
-  };
-    
-  template<>
-  struct From_Ruby<Properties>
-  {
-    Properties convert(VALUE props)
-    {
-      Properties res;
-      Rice::Hash rp(props);
-      
-      for (const auto& entry : rp)
-      {
-        res.emplace(String(entry.key).str(),
-                    From_Ruby<Value>().convert(entry.value.value()));
-      }
-      
-      return res;
-    }
-  };
-
+  };  
 }

@@ -20,6 +20,7 @@
 #include <iostream>
 #include <string>
 #include <date/date.h>
+#include <filesystem>
 
 #include "adapter/adapter.hpp"
 #include "agent.hpp"
@@ -40,6 +41,8 @@
 #include "ruby_observation.hpp"
 #include "ruby_transform.hpp"
 
+extern "C" void Init_ext(void);
+
 namespace mtconnect::ruby {
   using namespace mtconnect::pipeline;
   using namespace Rice;
@@ -49,35 +52,79 @@ namespace mtconnect::ruby {
   using namespace observation;
 
   // These are static wrapper classes that add types to the Ruby instance
-  static RubyAgent s_RubyAgent;
-  static RubyEntity s_RubyEntity;
-  static RubyPipeline s_RubyPipeline;
-  static RubyObservation s_RubyObservation;
+  static optional<RubyAgent> s_RubyAgent;
+  static optional<RubyEntity> s_RubyEntity;
+  static optional<RubyPipeline> s_RubyPipeline;
+  static optional<RubyObservation> s_RubyObservation;
   
   void Embedded::createModule()
   {
     m_module = make_unique<Module>(define_module("MTConnect"));
+    s_RubyAgent.emplace();
+    s_RubyEntity.emplace();
+    s_RubyPipeline.emplace();
+    s_RubyObservation.emplace();
   }
     
   Embedded::Embedded(Agent *agent, const ConfigOptions &options)
     : m_agent(agent), m_options(options)
   {
+    using namespace std::filesystem;
+    
     NAMED_SCOPE("Ruby::Embedded::Embedded");
+    
+    // Load the ruby module in the configuration
+    auto module = GetOption<string>(m_options, "module");
+    auto initialization = GetOption<string>(m_options, "initialization");
+    
+    char **pargv = new char*[3];
+    int argc = 0;
+    pargv[argc++] = strdup("agent");
+
+    if (module)
+    {
+      LOG(info) << "Finding module: " << *module;
+      path mod(*module);
+      std::error_code ec;
+      path file = canonical(mod, ec);
+      if (ec)
+      {
+        LOG(error) << "Cannot open file: " << ec.message();
+      }
+      else
+      {
+        LOG(info) << "Found module: " << file;
+        pargv[argc++] = strdup(file.string().c_str());
+      }
+    }
+    
+    if (argc == 1)
+    {
+      pargv[argc++]  = strdup("-e");
+      pargv[argc++]  = strdup("puts 'starting ruby'");
+    }
+
+    RUBY_INIT_STACK;
+    
+    ruby_sysinit(&argc, (char***) &pargv);
+    ruby_init();
+
+    Init_ext();
 
     using namespace device_model;
     
     // Create the module and all the ruby wrapper classes
     createModule();
-    s_RubyAgent.create(*m_module);
-    s_RubyEntity.create(*m_module);
-    s_RubyPipeline.create(*m_module);
-    s_RubyObservation.create(*m_module);
+    s_RubyAgent->create(*m_module);
+    s_RubyEntity->create(*m_module);
+    s_RubyPipeline->create(*m_module);
+    s_RubyObservation->create(*m_module);
     
     // Add the methods to the wrapper classes
-    s_RubyAgent.methods();
-    s_RubyEntity.methods();
-    s_RubyPipeline.methods();
-    s_RubyObservation.methods();
+    s_RubyAgent->methods();
+    s_RubyEntity->methods();
+    s_RubyPipeline->methods();
+    s_RubyObservation->methods();
     
     // Singleton methods to retrieve the agent from the MTConnect module
     m_module->define_singleton_method("agent", [this](Object self) {
@@ -105,22 +152,17 @@ namespace mtconnect::ruby {
         LOG(fatal) << message;
       }, Arg("message"));
 
-    // Load the ruby module in the configuration
-    auto module = GetOption<string>(m_options, "module");
-    auto initialization = GetOption<string>(m_options, "initialization");
-    
     int state;
-    if (module)
-    {
-      LOG(info) << "Ruby – Loading file: " << *module;
+    ruby_exec_node(ruby_options(argc, pargv));
 
-      Rice::String file(*module);
-      rb_load_protect(file, false, &state);
-    }
     if (initialization)
     {
       rb_eval_string_protect(initialization->c_str(), &state);
     }
+    
+    for (int i = 0; i < argc; i++)
+      free(pargv[i]);
+    delete[] pargv;
   }
   
   Embedded::~Embedded()

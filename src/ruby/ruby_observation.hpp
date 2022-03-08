@@ -31,16 +31,16 @@ namespace mtconnect::ruby {
   struct RubyObservation {
     void create(Rice::Module &module)
     {
-      m_observation = make_unique<Class>(define_class_under<Observation, entity::Entity>(module, "Observation"));
-      c_Observation = m_observation->value();
-      m_dataSet = make_unique<Class>(define_class_under<DataSet>(module, "DataSet"));
-      m_dataSetEntry = make_unique<Class>(define_class_under<DataSet>(module, "DataSetEntry"));
+      m_observation = define_class_under<Observation, entity::Entity>(module, "Observation");
+      c_Observation = m_observation.value();
+      m_dataSet = define_class_under<DataSet>(module, "DataSet");
+      m_dataSetEntry = define_class_under<DataSet>(module, "DataSetEntry");
     }
     
     void methods()
     {           
-      m_observation->define_singleton_method("make", [](const DataItemPtr dataItem,
-                                                        const Properties &incompingProps,
+      m_observation.define_singleton_function("make", [](const DataItemPtr dataItem,
+                                                         Properties props,
                                                         const Timestamp *timestamp) {
           ErrorList errors;
           Timestamp ts;
@@ -48,20 +48,30 @@ namespace mtconnect::ruby {
             ts = std::chrono::system_clock::now();
           else
             ts = *timestamp;
-          auto obs = Observation::make(dataItem, incompingProps, ts, errors);
+          
+          auto obs = Observation::make(dataItem, props, ts, errors);
           return obs;
-        }, Return().takeOwnership(), Arg("dataItem"), Arg("properties"), Arg("timestamp") = nullptr);
+        }, Return(), Arg("dataItem"), Arg("properties"), Arg("timestamp") = nullptr);
       
-      Data_Type<DataSetEntry> *dsep = dynamic_cast<Data_Type<DataSetEntry>*>(m_dataSetEntry.get());
-      dsep->define_attr("key", &DataSetEntry::m_key);
-      dsep->define_attr("value", &DataSetEntry::m_value);
-      dsep->define_attr("removed", &DataSetEntry::m_removed);
+      m_dataSetEntry.define_attr("key", &DataSetEntry::m_key);
+      m_dataSetEntry.define_attr("value", &DataSetEntry::m_value);
+      m_dataSetEntry.define_attr("removed", &DataSetEntry::m_removed);
       
-      
+      m_dataSet.define_constructor(Constructor<DataSet>()).
+        define_method("get", [](DataSet &set, const string &key) {
+          auto v = set.find(key);
+          if (v == set.end())
+            return Qnil;
+          else
+            return detail::To_Ruby<DataSetValue>().convert(v->m_value);
+        }, Arg("key")).
+        define_method("insert", [](DataSet &set, DataSetEntry &entry){ set.insert(entry); }, Arg("entry")).
+        define_method("count", [](DataSet &set) { return set.size(); }).
+        define_method("empty?", [](DataSet &set) { return set.size() == 0; });
     }
     
-    std::unique_ptr<Rice::Class> m_observation;
-    std::unique_ptr<Rice::Class> m_dataSetEntry;
-    std::unique_ptr<Rice::Class> m_dataSet;
+    Data_Type<Observation> m_observation;
+    Data_Type<DataSetEntry> m_dataSetEntry;
+    Data_Type<DataSet> m_dataSet;
   };
 }

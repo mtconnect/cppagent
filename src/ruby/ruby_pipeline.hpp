@@ -24,7 +24,7 @@
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
 #include <ruby/thread.h>
-
+#include "ruby_transform.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect;
@@ -35,14 +35,15 @@ namespace mtconnect::ruby {
   struct RubyPipeline {
     void create(Rice::Module &module)
     {
-      m_transform =  make_unique<Class>(define_class_under<pipeline::Transform>(module, "Transform"));
-      m_pipelineContext =  make_unique<Class>(define_class_under<pipeline::PipelineContext>(module, "PipelineContext"));
-      m_pipeline = make_unique<Class>(define_class_under<pipeline::Pipeline>(module, "Pipeline"));
+      m_transform =  define_class_under<Transform>(module, "Transform");
+      m_rubyTransform =  define_class_under<RubyTransform, Transform>(module, "RubyTransform");
+      m_pipelineContext =  define_class_under<pipeline::PipelineContext>(module, "PipelineContext");
+      m_pipeline = define_class_under<pipeline::Pipeline>(module, "Pipeline");
     }
     
     void methods()
     {
-      m_pipeline->define_method("splice_before", [](pipeline::Pipeline *p, const std::string name, pipeline::TransformPtr trans) {
+      m_pipeline.define_method("splice_before", [](pipeline::Pipeline *p, const std::string name, pipeline::TransformPtr trans) {
           p->spliceBefore(name, trans);
         }, Arg("name"), Arg("transform")).
       define_method("splice_after", [](pipeline::Pipeline *p, const std::string name, pipeline::TransformPtr trans) {
@@ -56,10 +57,15 @@ namespace mtconnect::ruby {
         }, Arg("name"), Arg("transform")).
       define_method("run", [](pipeline::Pipeline *p, entity::EntityPtr entity) { p->run(entity); }, Arg("entity")).
       define_method("context", [](pipeline::Pipeline *p) { return p->getContext(); });
+      
+      m_transform.define_method("name", [](RubyTransform* t) {
+        return t->getName(); });
+      m_rubyTransform.define_constructor(Constructor<RubyTransform, const string>(), Arg("name"));
     }
     
-    std::unique_ptr<Rice::Class> m_transform;
-    std::unique_ptr<Rice::Class> m_pipeline;
-    std::unique_ptr<Rice::Class> m_pipelineContext;
+    Data_Type<Transform> m_transform;
+    Data_Type<RubyTransform> m_rubyTransform;
+    Data_Type<Pipeline> m_pipeline;
+    Data_Type<PipelineContext> m_pipelineContext;
   };
 }
