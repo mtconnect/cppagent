@@ -57,6 +57,7 @@ namespace mtconnect::ruby {
   static optional<RubyAgent> s_RubyAgent;
   static optional<RubyEntity> s_RubyEntity;
   static optional<RubyPipeline> s_RubyPipeline;
+  static optional<RubyTransformClass> s_RubyTransformClass;
   static optional<RubyObservation> s_RubyObservation;
   
   void Embedded::createModule()
@@ -65,7 +66,32 @@ namespace mtconnect::ruby {
     s_RubyAgent.emplace();
     s_RubyEntity.emplace();
     s_RubyPipeline.emplace();
+    s_RubyTransformClass.emplace();
     s_RubyObservation.emplace();
+  }
+  
+  void defineLogger(Rice::Module &module)
+  {
+    // Create a module with logging methods for each severity level
+    define_module_under(module, "Logger").
+      define_singleton_method("debug", [](Object self, const string message) {
+        LOG(debug) << message;
+      }, Arg("message")).
+      define_singleton_method("trace", [](Object self, const string message) {
+        LOG(trace) << message;
+      }, Arg("message")).
+      define_singleton_method("info", [](Object self, const string message) {
+        LOG(info) << message;
+      }, Arg("message")).
+      define_singleton_method("warning", [](Object self, const string message) {
+        LOG(warning) << message;
+      }, Arg("message")).
+      define_singleton_method("error", [](Object self, const string message) {
+        LOG(error) << message;
+      }, Arg("message")).
+      define_singleton_method("fatal", [](Object self, const string message) {
+        LOG(fatal) << message;
+      }, Arg("message"));
   }
     
   Embedded::Embedded(Agent *agent, const ConfigOptions &options)
@@ -73,7 +99,7 @@ namespace mtconnect::ruby {
   {
     using namespace std::filesystem;
     
-    NAMED_SCOPE("Ruby::Embedded::Embedded");
+    NAMED_SCOPE("Ruby::Embedded");
     
     // Load the ruby module in the configuration
     auto module = GetOption<string>(m_options, "module");
@@ -120,12 +146,14 @@ namespace mtconnect::ruby {
     s_RubyAgent->create(*m_module);
     s_RubyEntity->create(*m_module);
     s_RubyPipeline->create(*m_module);
+    s_RubyTransformClass->create(*m_module);
     s_RubyObservation->create(*m_module);
     
     // Add the methods to the wrapper classes
     s_RubyAgent->methods();
     s_RubyEntity->methods();
     s_RubyPipeline->methods();
+    s_RubyTransformClass->methods();
     s_RubyObservation->methods();
     
     // Singleton methods to retrieve the agent from the MTConnect module
@@ -133,27 +161,8 @@ namespace mtconnect::ruby {
       return m_agent;
     });
     
-    // Create a module with logging methods for each severity level
-    define_module_under(*m_module, "Logger").
-      define_singleton_method("debug", [](Object self, const string &message) {
-        LOG(debug) << message;
-      }, Arg("message")).
-      define_singleton_method("trace", [](Object self, const string &message) {
-        LOG(trace) << message;
-      }, Arg("message")).
-      define_singleton_method("info", [](Object self, const string &message) {
-        LOG(info) << message;
-      }, Arg("message")).
-      define_singleton_method("warning", [](Object self, const string &message) {
-        LOG(warning) << message;
-      }, Arg("message")).
-      define_singleton_method("error", [](Object self, const string &message) {
-        LOG(error) << message;
-      }, Arg("message")).
-      define_singleton_method("fatal", [](Object self, const string &message) {
-        LOG(fatal) << message;
-      }, Arg("message"));
-
+    defineLogger(*m_module);
+    
     int state;
     ruby_exec_node(ruby_options(argc, pargv));
 

@@ -28,8 +28,7 @@
 #include "logging.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect {
-  namespace observation {
+namespace mtconnect::entity {
     struct DataSetEntry;
 
     class DataSet : public std::set<DataSetEntry>
@@ -127,5 +126,4 @@ namespace mtconnect {
 
       return true;
     }
-  }  // namespace observation
 }  // namespace mtconnect

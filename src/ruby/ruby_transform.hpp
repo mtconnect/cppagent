@@ -27,6 +27,7 @@
 
 #include "ruby_entity.hpp"
 #include "ruby_observation.hpp"
+#include "ruby_pipeline.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect::pipeline;
@@ -108,6 +109,20 @@ namespace mtconnect::ruby {
     Rice::Symbol m_method;
   };
   
-  
+  struct RubyTransformClass {
+    void create(Rice::Module &module)
+    {
+      m_rubyTransform =  define_class_under<RubyTransform, Transform>(module, "RubyTransform");
+    }
+    
+    void methods()
+    {
+      m_rubyTransform.define_constructor(smart_ptr::Constructor<RubyTransform, Object, const string, const Symbol>(),
+                                         Arg("name"), Arg("guard")).
+        define_method("method=", &RubyTransform::setMethod, Arg("method"));
+    }
+    
+    Data_Type<RubyTransform> m_rubyTransform;
+  };
 }
 

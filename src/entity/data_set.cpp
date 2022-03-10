@@ -73,8 +73,7 @@ namespace std {
 
 using namespace std;
 
-namespace mtconnect {
-  namespace observation {
+namespace mtconnect::entity {
     namespace DataSetParserActions {
       inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
       inline static void make_entry_f(DataSetEntry &entry, const string &key,
@@ -234,5 +233,4 @@ namespace mtconnect {
         return false;
       }
     }
-  }  // namespace observation
 }  // namespace mtconnect

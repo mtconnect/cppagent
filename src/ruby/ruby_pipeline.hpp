@@ -38,7 +38,6 @@ namespace mtconnect::ruby {
     void create(Rice::Module &module)
     {
       m_transform =  define_class_under<Transform>(module, "Transform");
-      m_rubyTransform =  define_class_under<RubyTransform, Transform>(module, "RubyTransform");
       m_pipelineContext =  define_class_under<pipeline::PipelineContext>(module, "PipelineContext");
       m_pipeline = define_class_under<pipeline::Pipeline>(module, "Pipeline");
       m_adapterPipeline = define_class_under<adapter::AdapterPipeline, pipeline::Pipeline>(module, "AdapterPipeline");
@@ -64,14 +63,9 @@ namespace mtconnect::ruby {
       m_transform.const_set("CONTINUE", CONTINUE);
       m_transform.const_set("RUN", RUN);
       m_transform.const_set("SKIP", SKIP);
-
-      m_rubyTransform.define_constructor(smart_ptr::Constructor<RubyTransform, Object, const string, const Symbol>(),
-                                         Arg("name"), Arg("guard")).
-        define_method("method=", &RubyTransform::setMethod, Arg("method"));
     }
     
     Data_Type<Transform> m_transform;
-    Data_Type<RubyTransform> m_rubyTransform;
     Data_Type<Pipeline> m_pipeline;
     Data_Type<adapter::AdapterPipeline> m_adapterPipeline;
     Data_Type<PipelineContext> m_pipelineContext;

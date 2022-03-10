@@ -121,6 +121,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_parser.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_printer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_printer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/data_set.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/data_set.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.hpp"
@@ -149,8 +151,6 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"  
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.cpp"
   )
 
 if(NOT WITHOUT_PYTHON)

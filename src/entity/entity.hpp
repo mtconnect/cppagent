@@ -19,7 +19,7 @@
 
 #include <unordered_map>
 
-#include "observation/data_set.hpp"
+#include "data_set.hpp"
 #include "qname.hpp"
 #include "requirement.hpp"
 
