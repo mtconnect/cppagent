@@ -123,7 +123,8 @@ namespace Rice::detail {
       Rice::Hash h(value);
       for (const auto &e : h)
       {
-        DataSetEntry entry(From_Ruby<std::string>().convert(e.first), From_Ruby<DataSetValue>().convert(e.value.value()));
+        DataSetEntry entry(From_Ruby<std::string>().convert(e.first),
+                           From_Ruby<DataSetValue>().convert(e.value.value()));
         set.insert(entry);
       }
     }
@@ -336,6 +337,7 @@ namespace Rice::detail {
         break;
         
       case RUBY_T_HASH:
+        res.emplace<DataSet>(From_Ruby<DataSet>().convert(value));
         break;
         
       case RUBY_T_ARRAY:

@@ -33,8 +33,6 @@ namespace mtconnect::ruby {
     {
       m_observation = define_class_under<Observation, entity::Entity>(module, "Observation");
       c_Observation = m_observation.value();
-      m_dataSet = define_class_under<DataSet>(module, "DataSet");
-      m_dataSetEntry = define_class_under<DataSetEntry>(module, "DataSetEntry");
     }
     
     void methods()
@@ -55,27 +53,9 @@ namespace mtconnect::ruby {
         define_method("data_item", &Observation::getDataItem).
         define_method("copy", [](Observation *o) { return o->copy(); }).
         define_method("timestamp", &Observation::getTimestamp);
-
-      m_dataSetEntry.define_attr("key", &DataSetEntry::m_key);
-      m_dataSetEntry.define_attr("value", &DataSetEntry::m_value);
-      m_dataSetEntry.define_attr("removed", &DataSetEntry::m_removed);
-      
-      m_dataSet.define_constructor(Constructor<DataSet>()).
-        define_method("get", [](DataSet &set, const string &key) {
-          auto v = set.find(key);
-          if (v == set.end())
-            return Qnil;
-          else
-            return detail::To_Ruby<DataSetValue>().convert(v->m_value);
-        }, Arg("key")).
-        define_method("insert", [](DataSet &set, DataSetEntry &entry){ set.insert(entry); }, Arg("entry")).
-        define_method("count", &DataSet::size).
-        define_method("empty?", [](DataSet &set) { return set.size() == 0; });
     }
     
     Data_Type<Observation> m_observation;
-    Data_Type<DataSetEntry> m_dataSetEntry;
-    Data_Type<DataSet> m_dataSet;
   };
 }
 
