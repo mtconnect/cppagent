@@ -87,9 +87,30 @@ namespace Rice::detail {
   {
     static bool verify() { return true; }
   };
-  
+
+  template<>
+  struct Type<Timestamp&>
+  {
+    static bool verify() { return true; }
+  };
+
   template<>
   struct To_Ruby<Timestamp>
+  {
+    VALUE convert(const Timestamp &ts)
+    {
+      using namespace std::chrono;
+      
+      auto secs = time_point_cast<seconds>(ts);
+      auto ns = time_point_cast<nanoseconds>(ts) -
+                 time_point_cast<nanoseconds>(secs);
+      
+      return rb_time_nano_new(secs.time_since_epoch().count(), ns.count());
+    }
+  };
+
+  template<>
+  struct To_Ruby<Timestamp&>
   {
     VALUE convert(const Timestamp &ts)
     {
@@ -116,7 +137,21 @@ namespace Rice::detail {
       return  time_point<system_clock>{duration_cast<system_clock::duration>(dur)};
     }
   };
-  
+
+  template<>
+  struct From_Ruby<Timestamp&>
+  {
+    Timestamp convert(VALUE time)
+    {
+      using namespace std::chrono;
+            
+      auto rts = protect(rb_time_timespec, time);
+      auto dur = duration_cast<nanoseconds>(seconds{rts.tv_sec}
+          + nanoseconds{rts.tv_nsec});
+      return  time_point<system_clock>{duration_cast<system_clock::duration>(dur)};
+    }
+  };
+
   template<>
   struct Type<EntityList>
   {
