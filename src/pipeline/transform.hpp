@@ -150,6 +150,36 @@ namespace mtconnect {
         return;
       }
       void firstAfter(TransformPtr xform) { m_next.emplace_front(xform); }
+      void replace(TransformPtr old, TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            *it = xform;
+            for (auto nxt = old->m_next.begin(); it != old->m_next.end(); it++)
+            {
+              xform->bind(*nxt);
+            }
+          }
+        }
+      }
+
+      void remove(TransformPtr old)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            m_next.erase(it);
+            for (auto nxt = old->m_next.begin(); it != old->m_next.end(); it++)
+            {
+              bind(*nxt);
+            }
+            break;
+          }
+        }
+      }
 
     protected:
       std::string m_name;

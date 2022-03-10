@@ -35,6 +35,54 @@ namespace Rice::detail {
   using namespace mtconnect;
   
   template<>
+  struct Type<QName>
+  {
+    static bool verify() { return true; }
+  };
+
+  template<>
+  struct Type<QName&>
+  {
+    static bool verify() { return true; }
+  };
+
+  template<>
+  struct To_Ruby<QName>
+  {
+    VALUE convert(const QName &q)
+    {
+      return To_Ruby<std::string>().convert(q.str());
+    }
+  };
+
+  template<>
+  struct To_Ruby<QName&>
+  {
+    VALUE convert(QName &q)
+    {
+      return To_Ruby<std::string>().convert(q.str());
+    }
+  };
+
+  template<>
+  struct From_Ruby<QName>
+  {
+    QName convert(VALUE q)
+    {
+      return From_Ruby<std::string>().convert(q);
+    }
+  };
+
+  template<>
+  struct From_Ruby<QName&>
+  {
+    QName convert(VALUE q)
+    {
+      return From_Ruby<std::string>().convert(q);
+    }
+  };
+
+  template<>
   struct Type<Timestamp>
   {
     static bool verify() { return true; }
@@ -201,129 +249,173 @@ namespace Rice::detail {
   {
     static bool verify() { return true; }
   };
+
+  template<>
+  struct Type<Value&>
+  {
+    static bool verify() { return true; }
+  };
   
+  inline VALUE ConvertValueToRuby(const Value &value)
+  {
+    VALUE rv;
+    
+    rv = visit(overloaded {
+      [](const std::monostate &) -> VALUE { return Qnil; },
+      [](const std::nullptr_t &) -> VALUE { return Qnil; },
+
+      // Not handled yet
+      [](const EntityPtr &entity) -> VALUE {
+        return To_Ruby<Entity>().convert(entity);
+      },
+      [](const EntityList &list) -> VALUE {
+        Rice::Array ary;
+        for (const auto &ent : list)
+        {
+          ary.push(ent.get());
+        }
+        
+        return ary;
+      },
+      [](const observation::DataSet &v) -> VALUE {
+        return Qnil;
+      },
+              
+      // Handled types
+      [](const Vector &v) -> VALUE {
+        Rice::Array array(v.begin(), v.end());
+        return array;
+      },
+      [](const Timestamp &v) -> VALUE {
+        return To_Ruby<Timestamp>().convert(v);
+      },
+      [](const string &arg) -> VALUE { return To_Ruby<string>().convert(arg); },
+      [](const bool arg) -> VALUE { return To_Ruby<bool>().convert(arg); },
+      [](const double arg) -> VALUE { return To_Ruby<double>().convert(arg); },
+      [](const int64_t arg) -> VALUE { return To_Ruby<int64_t>().convert(arg); }
+    }, value);
+    
+    return rv;
+  }
+
   template<>
   struct To_Ruby<Value>
   {
+    VALUE convert(Value &value)
+    {
+      return ConvertValueToRuby(value);
+    }
+
     VALUE convert(const Value &value)
     {
-      VALUE rv;
-      
-      rv = visit(overloaded {
-        [](const std::monostate &) -> VALUE { return Qnil; },
-        [](const std::nullptr_t &) -> VALUE { return Qnil; },
-
-        // Not handled yet
-        [](const EntityPtr &entity) -> VALUE {
-          return To_Ruby<Entity>().convert(entity);
-        },
-        [](const EntityList &list) -> VALUE {
-          Rice::Array ary;
-          for (const auto &ent : list)
-          {
-            ary.push(ent.get());
-          }
-          
-          return ary;
-        },
-        [](const observation::DataSet &v) -> VALUE {
-          return Qnil;
-        },
-                
-        // Handled types
-        [](const Vector &v) -> VALUE {
-          Rice::Array array(v.begin(), v.end());
-          return array;
-        },
-        [](const Timestamp &v) -> VALUE {
-          return To_Ruby<Timestamp>().convert(v);
-        },
-        [](const string &arg) -> VALUE { return To_Ruby<string>().convert(arg); },
-        [](const bool arg) -> VALUE { return To_Ruby<bool>().convert(arg); },
-        [](const double arg) -> VALUE { return To_Ruby<double>().convert(arg); },
-        [](const int64_t arg) -> VALUE { return To_Ruby<int64_t>().convert(arg); }
-      }, value);
-      
-      return rv;
+      return ConvertValueToRuby(value);
     }
   };
-  
+
+  template<>
+  struct To_Ruby<Value&>
+  {
+    VALUE convert(Value &value)
+    {
+      return ConvertValueToRuby(value);
+    }
+
+    VALUE convert(const Value &value)
+    {
+      return ConvertValueToRuby(value);
+    }
+  };
+
+  inline Value ConvertRubyToValue(VALUE value)
+  {
+    using namespace mtconnect::ruby;
+    using namespace mtconnect::observation;
+
+    Value res;
+    
+    switch (TYPE(value))
+    {
+      case RUBY_T_NIL:
+      case RUBY_T_UNDEF:
+        res.emplace<std::nullptr_t>();
+        break;
+        
+      case RUBY_T_STRING:
+        res.emplace<string>(From_Ruby<string>().convert(value));
+        break;
+        
+      case RUBY_T_BIGNUM:
+      case RUBY_T_FIXNUM:
+        res.emplace<int64_t>(From_Ruby<int64_t>().convert(value));
+        break;
+
+      case RUBY_T_FLOAT:
+        res.emplace<double>(From_Ruby<double>().convert(value));
+        break;
+        
+      case RUBY_T_TRUE:
+        res.emplace<bool>(true);
+        break;
+
+      case RUBY_T_FALSE:
+        res.emplace<bool>(false);
+        break;
+        
+      case RUBY_T_HASH:
+        break;
+        
+      case RUBY_T_ARRAY:
+      {
+        res.emplace<Vector>();
+        Vector &out = get<Vector>(res);
+        const Rice::Array ary(value);
+        for (const auto &v : ary) {
+          auto t = rb_type(v);
+          if (t == RUBY_T_FIXNUM || t == RUBY_T_BIGNUM || t == RUBY_T_FLOAT)
+          {
+            out.emplace_back(From_Ruby<double>().convert(v));
+          }
+        }
+        break;
+      }
+        
+      case RUBY_T_OBJECT:
+        if (protect(rb_obj_is_kind_of, value, rb_cTime))
+        {
+          res = From_Ruby<Timestamp>().convert(value);
+        }
+        else if (protect(rb_obj_is_kind_of, value, c_Entity))
+        {
+          res = From_Ruby<Entity>().convert(value);
+        }
+        {
+          res.emplace<std::monostate>();
+        }
+        break;
+        
+      default:
+        res.emplace<std::monostate>();
+        break;
+    }
+          
+    return res;
+  }
+
   template<>
   struct From_Ruby<Value>
   {
     Value convert(VALUE value)
     {
-      using namespace mtconnect::ruby;
-      using namespace mtconnect::observation;
-
-      Value res;
-      
-      switch (TYPE(value))
-      {
-        case RUBY_T_NIL:
-        case RUBY_T_UNDEF:
-          res.emplace<std::nullptr_t>();
-          break;
-          
-        case RUBY_T_STRING:
-          res.emplace<string>(From_Ruby<string>().convert(value));
-          break;
-          
-        case RUBY_T_BIGNUM:
-        case RUBY_T_FIXNUM:
-          res.emplace<int64_t>(From_Ruby<int64_t>().convert(value));
-          break;
-
-        case RUBY_T_FLOAT:
-          res.emplace<double>(From_Ruby<double>().convert(value));
-          break;
-          
-        case RUBY_T_TRUE:
-          res.emplace<bool>(true);
-          break;
-
-        case RUBY_T_FALSE:
-          res.emplace<bool>(false);
-          break;
-          
-        case RUBY_T_HASH:
-          break;
-          
-        case RUBY_T_ARRAY:
-        {
-          res.emplace<Vector>();
-          Vector &out = get<Vector>(res);
-          const Rice::Array ary(value);
-          for (const auto &v : ary) {
-            auto t = rb_type(v);
-            if (t == RUBY_T_FIXNUM || t == RUBY_T_BIGNUM || t == RUBY_T_FLOAT)
-            {
-              out.emplace_back(From_Ruby<double>().convert(v));
-            }
-          }
-          break;
-        }
-          
-        case RUBY_T_OBJECT:
-          if (protect(rb_obj_is_kind_of, value, rb_cTime))
-          {
-            res = From_Ruby<Timestamp>().convert(value);
-          }
-          else if (protect(rb_obj_is_kind_of, value, c_Entity))
-          {
-            res = From_Ruby<Entity>().convert(value);
-          }
-          {
-            res.emplace<std::monostate>();
-          }
-          break;
-          
-        default:
-          res.emplace<std::monostate>();
-          break;
-      }
-            
-      return res;
+      return ConvertRubyToValue(value);
     }
-  };  
+  };
+
+  template<>
+  struct From_Ruby<Value&>
+  {
+    Value convert(VALUE value)
+    {
+      return ConvertRubyToValue(value);
+    }
+  };
 }

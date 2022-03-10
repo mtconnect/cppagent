@@ -51,8 +51,11 @@ namespace mtconnect::ruby {
           
           auto obs = Observation::make(dataItem, props, ts, errors);
           return obs;
-        }, Return(), Arg("dataItem"), Arg("properties"), Arg("timestamp") = nullptr);
-      
+        }, Return(), Arg("dataItem"), Arg("properties"), Arg("timestamp") = nullptr).
+        define_method("data_item", &Observation::getDataItem).
+        define_method("copy", [](Observation *o) { return o->copy(); }).
+        define_method("timestamp", &Observation::getTimestamp);
+
       m_dataSetEntry.define_attr("key", &DataSetEntry::m_key);
       m_dataSetEntry.define_attr("value", &DataSetEntry::m_value);
       m_dataSetEntry.define_attr("removed", &DataSetEntry::m_removed);
@@ -66,7 +69,7 @@ namespace mtconnect::ruby {
             return detail::To_Ruby<DataSetValue>().convert(v->m_value);
         }, Arg("key")).
         define_method("insert", [](DataSet &set, DataSetEntry &entry){ set.insert(entry); }, Arg("entry")).
-        define_method("count", [](DataSet &set) { return set.size(); }).
+        define_method("count", &DataSet::size).
         define_method("empty?", [](DataSet &set) { return set.size() == 0; });
     }
     
@@ -74,4 +77,28 @@ namespace mtconnect::ruby {
     Data_Type<DataSetEntry> m_dataSetEntry;
     Data_Type<DataSet> m_dataSet;
   };
+}
+
+namespace Rice::detail {
+  template <>
+  class From_Ruby<observation::ObservationPtr>
+  {
+  public:
+    observation::ObservationPtr convert(VALUE value)
+    {
+      Wrapper* wrapper = detail::getWrapper(value, Data_Type<observation::Observation>::rb_type());
+
+      using Wrapper_T = WrapperSmartPointer<std::shared_ptr, observation::Observation>;
+      Wrapper_T* smartWrapper = static_cast<Wrapper_T*>(wrapper);
+      std::shared_ptr<observation::Observation> ptr = dynamic_pointer_cast<observation::Observation>(smartWrapper->data());
+      
+      if (!ptr)
+      {
+        std::string message = "Invalid smart pointer wrapper";
+          throw std::runtime_error(message.c_str());
+      }
+      return ptr;
+    }
+  };
+
 }

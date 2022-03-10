@@ -47,8 +47,6 @@ namespace mtconnect {
           : AdapterPipeline(context, strand)
         {}
 
-        const auto &getContract() { return m_context->m_contract; }
-
         void build(const ConfigOptions &options) override;
 
       protected:

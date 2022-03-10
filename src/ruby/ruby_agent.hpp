@@ -57,12 +57,8 @@ namespace mtconnect::ruby {
           return ary;
         });
 
-    m_source.define_method("name", [](mtconnect::Source *s) -> string {
-          return s->getName();
-        }).
-      define_method("pipeline", [](mtconnect::Source *s) { return s->getPipeline(); });
-
-
+      m_source.define_method("name", &mtconnect::Source::getName).
+        define_method("pipeline", &mtconnect::Source::getPipeline);
     }
     
     Data_Type<Agent> m_agent;

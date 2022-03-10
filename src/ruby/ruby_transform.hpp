@@ -23,6 +23,10 @@
 
 #include "pipeline/guard.hpp"
 #include "pipeline/transform.hpp"
+#include "pipeline/topic_mapper.hpp"
+
+#include "ruby_entity.hpp"
+#include "ruby_observation.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect::pipeline;
@@ -30,28 +34,56 @@ namespace mtconnect::ruby {
   using namespace Rice::detail;
   using namespace std::literals;
   using namespace date::literals;
+  using namespace entity;
   using namespace observation;
 
   class RubyTransform : public pipeline::Transform
   {
   public:
-    RubyTransform(const std::string &name)
-    : Transform(name), m_self(Data_Object<RubyTransform>(this)), m_method("transform")
+    RubyTransform(Object self, const std::string &name, const Symbol guard)
+    : Transform(name), m_self(self), m_method("transform")
     {
+      if (guard.value() != Qnil)
+        setGuard(guard);
+      else
+        m_guard = TypeGuard<Entity>(RUN);
     }
     
-    using calldata = pair<RubyTransform*, observation::ObservationPtr>;
+    void setMethod(const Symbol &sym)
+    {
+      m_method = sym;
+    }
+    
+    void setGuard(const Symbol &guard)
+    {
+      auto gv = guard.str();
+      if (gv == "Observation")
+        m_guard = TypeGuard<Observation>(RUN) || TypeGuard<Entity>(SKIP);
+      else if (gv == "Sample")
+        m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Entity>(SKIP);
+      else if (gv == "Event")
+        m_guard = TypeGuard<Event>(RUN) || TypeGuard<Entity>(SKIP);
+      else if (gv == "Message")
+        m_guard = TypeGuard<PipelineMessage>(RUN) || TypeGuard<Entity>(SKIP);
+      else
+        m_guard = TypeGuard<Entity>(RUN);
+    }
+    
+    using calldata = pair<RubyTransform*, EntityPtr>;
     
     static void *gvlCall(void *data)
     {
       using namespace Rice;
       using namespace observation;
       
-      calldata *obs = static_cast<calldata*>(data);
-      RubyTransform &_trans = *(obs->first);
-      auto res = _trans.m_self.call(_trans.m_method, obs->second);
-      Observation *o = detail::From_Ruby<Observation*>().convert(res);
-      obs->second.reset(o);
+      calldata *cd = static_cast<calldata*>(data);
+      RubyTransform &_trans = *(cd->first);
+      Object res;
+      if (ObservationPtr obs = dynamic_pointer_cast<Observation>(cd->second))
+        res = _trans.m_self.call(_trans.m_method, obs);
+      else
+        res = _trans.m_self.call(_trans.m_method, cd->second);
+      cd->second = detail::From_Ruby<EntityPtr>().convert(res.value());
       
       return nullptr;
     }
@@ -61,20 +93,19 @@ namespace mtconnect::ruby {
       
       using namespace observation;
       
-      ObservationPtr obs = dynamic_pointer_cast<Observation>(entity)->copy();
-      calldata data(this, obs);
-
+      calldata data(this, entity);
       rb_thread_call_with_gvl(&gvlCall, &data);
       
-      return obs;
+      return data.second;
     }
     
     auto &object() { return m_self; }
+    void setObject(Object &obj) { m_self = obj; }
     
   protected:
     PipelineContract *m_contract;
     Object           m_self;
-    Rice::Identifier m_method;
+    Rice::Symbol m_method;
   };
   
   

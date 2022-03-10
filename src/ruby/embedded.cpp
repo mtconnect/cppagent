@@ -17,6 +17,8 @@
 
 #include "embedded.hpp"
 
+#include <boost/algorithm/string.hpp>
+
 #include <iostream>
 #include <string>
 #include <date/date.h>

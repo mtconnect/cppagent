@@ -21,7 +21,7 @@
 #include "device_model/device.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "ruby_type.hpp"
-
+#include "ruby_smart_ptr.hpp"
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
 #include <ruby/thread.h>
@@ -49,10 +49,12 @@ namespace mtconnect::ruby {
     
     void methods()
     {
-      m_entity.define_method("value", [](entity::EntityPtr entity) { return entity->getValue(); }).
-        define_method("property", [](entity::EntityPtr entity, std::string name) {
-          return entity->getProperty(name);
-        }, Arg("name"));
+      m_entity.define_constructor(smart_ptr::Constructor<Entity, const std::string , const Properties &>(), Arg("name"),
+                                  Arg("properties")).
+        define_method("value", [](Entity *e) { return e->getValue(); }).
+        define_method("value=", [](Entity *e, const Value value) { return e->setValue(value); }, Arg("value")).
+        define_method("name", [](Entity *e) { return e->getName().str(); }).
+        define_method("property", &Entity::getProperty, Arg("name"));
 
       
       m_dataItem.define_method("name", [](data_item::DataItem *di) { return di->getName(); }).
@@ -62,8 +64,8 @@ namespace mtconnect::ruby {
         define_method("sub_type", [](data_item::DataItem *di) { return di->getSubType(); });
       
       m_component.define_method("component_name", [](Component *c) { return c->getComponentName(); }).
-        define_method("uuid", [](Component *c) { return c->getUuid(); }).
-        define_method("id", [](Component *c) { return c->getId(); }).
+        define_method("uuid", &Component::getUuid).
+        define_method("id", &Component::getId).
         define_method("children", [](Component *c) {
           Rice::Array ary;
           const auto &list = c->getChildren();
@@ -96,6 +98,15 @@ namespace mtconnect::ruby {
         define_method("ns?", [](PropertyKey *key) { return key->hasNs(); });
       
       
+      m_device.define_method("device_data_items", [](DevicePtr device) {
+        Rice::Array ary;
+        for (auto const &[k, wdi] : device->getDeviceDataItems())
+        {
+          const auto &di = wdi.lock();
+          ary.push(di.get());
+        }
+        return ary;
+      });
     }
     
     Data_Type<Properties> m_properties;
@@ -170,6 +181,27 @@ namespace Rice::detail {
       }
       
       return hash;
+    }
+  };
+
+  template <>
+  class From_Ruby<EntityPtr>
+  {
+  public:
+    EntityPtr convert(VALUE value)
+    {
+      Wrapper* wrapper = detail::getWrapper(value, Data_Type<Entity>::rb_type());
+
+      using Wrapper_T = WrapperSmartPointer<std::shared_ptr, Entity>;
+      Wrapper_T* smartWrapper = static_cast<Wrapper_T*>(wrapper);
+      std::shared_ptr<Entity> ptr = dynamic_pointer_cast<Entity>(smartWrapper->data());
+      
+      if (!ptr)
+      {
+        std::string message = "Invalid smart pointer wrapper";
+          throw std::runtime_error(message.c_str());
+      }
+      return ptr;
     }
   };
 
