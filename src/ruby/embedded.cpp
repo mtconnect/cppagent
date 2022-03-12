@@ -53,46 +53,77 @@ namespace mtconnect::ruby {
   using namespace date::literals;
   using namespace observation;
 
-  // These are static wrapper classes that add types to the Ruby instance
-  static optional<RubyAgent> s_RubyAgent;
-  static optional<RubyEntity> s_RubyEntity;
-  static optional<RubyPipeline> s_RubyPipeline;
-  static optional<RubyTransformClass> s_RubyTransformClass;
-  static optional<RubyObservation> s_RubyObservation;
-  
-  void Embedded::createModule()
+  struct RubyVM
   {
-    m_module = make_unique<Module>(define_module("MTConnect"));
-    s_RubyAgent.emplace();
-    s_RubyEntity.emplace();
-    s_RubyPipeline.emplace();
-    s_RubyTransformClass.emplace();
-    s_RubyObservation.emplace();
-  }
+    RubyVM() {}
+    ~RubyVM();
+    void createModule();
+    
+    optional<RubyAgent> m_RubyAgent;
+    optional<RubyEntity> m_RubyEntity;
+    optional<RubyPipeline> m_RubyPipeline;
+    optional<RubyTransformClass> m_RubyTransformClass;
+    optional<RubyObservation> m_RubyObservation;
+    optional<Rice::Module> m_Module;
+    
+    Agent *m_agent = nullptr;
+  };
+  
+  // These are static wrapper classes that add types to the Ruby instance
+  static optional<RubyVM> s_RubyVM;
   
   void defineLogger(Rice::Module &module)
   {
     // Create a module with logging methods for each severity level
     define_module_under(module, "Logger").
-      define_singleton_method("debug", [](Object self, const string message) {
-        LOG(debug) << message;
-      }, Arg("message")).
-      define_singleton_method("trace", [](Object self, const string message) {
-        LOG(trace) << message;
-      }, Arg("message")).
-      define_singleton_method("info", [](Object self, const string message) {
-        LOG(info) << message;
-      }, Arg("message")).
-      define_singleton_method("warning", [](Object self, const string message) {
-        LOG(warning) << message;
-      }, Arg("message")).
-      define_singleton_method("error", [](Object self, const string message) {
-        LOG(error) << message;
-      }, Arg("message")).
-      define_singleton_method("fatal", [](Object self, const string message) {
-        LOG(fatal) << message;
-      }, Arg("message"));
+      define_singleton_function("debug", [](const string message) {
+          LOG(debug) << message;
+        }, Arg("message")).
+      define_singleton_function("trace", [](const string message) {
+          LOG(trace) << message;
+        }, Arg("message")).
+      define_singleton_function("info", [](const string message) {
+          LOG(info) << message;
+        }, Arg("message")).
+      define_singleton_function("warning", [](const string message) {
+          LOG(warning) << message;
+        }, Arg("message")).
+      define_singleton_function("error", [](const string message) {
+          LOG(error) << message;
+        }, Arg("message")).
+      define_singleton_function("fatal", [](const string message) {
+          LOG(fatal) << message;
+        }, Arg("message"));
   }
+  
+  void RubyVM::createModule()
+  {
+    m_Module.emplace(define_module("MTConnect"));
+    m_RubyAgent.emplace();
+    m_RubyEntity.emplace();
+    m_RubyPipeline.emplace();
+    m_RubyTransformClass.emplace();
+    m_RubyObservation.emplace();
+    
+    m_RubyAgent->create(*m_Module);
+    m_RubyEntity->create(*m_Module);
+    m_RubyPipeline->create(*m_Module);
+    m_RubyTransformClass->create(*m_Module);
+    m_RubyObservation->create(*m_Module);
+
+    m_RubyAgent->methods();
+    m_RubyEntity->methods();
+    m_RubyPipeline->methods();
+    m_RubyTransformClass->methods();
+    m_RubyObservation->methods();
+    
+    m_Module->define_singleton_method("agent", [this](Object self) {
+      return m_agent;
+    });
+    
+    defineLogger(*s_RubyVM->m_Module);
+  }
+
     
   Embedded::Embedded(Agent *agent, const ConfigOptions &options)
     : m_agent(agent), m_options(options)
@@ -101,79 +132,70 @@ namespace mtconnect::ruby {
     
     NAMED_SCOPE("Ruby::Embedded");
     
-    // Load the ruby module in the configuration
-    auto module = GetOption<string>(m_options, "module");
-    auto initialization = GetOption<string>(m_options, "initialization");
-    
-    char **pargv = new char*[3];
-    int argc = 0;
-    pargv[argc++] = strdup("agent");
-
-    if (module)
+    if (!s_RubyVM)
     {
-      LOG(info) << "Finding module: " << *module;
-      path mod(*module);
-      std::error_code ec;
-      path file = canonical(mod, ec);
-      if (ec)
+      s_RubyVM.emplace();
+      s_RubyVM->m_agent = agent;
+      
+      // Load the ruby module in the configuration
+      auto module = GetOption<string>(m_options, "module");
+      auto initialization = GetOption<string>(m_options, "initialization");
+      
+      char **pargv = new char*[3];
+      int argc = 0;
+      pargv[argc++] = strdup("agent");
+      
+      if (module)
       {
-        LOG(error) << "Cannot open file: " << ec.message();
+        LOG(info) << "Finding module: " << *module;
+        path mod(*module);
+        std::error_code ec;
+        path file = canonical(mod, ec);
+        if (ec)
+        {
+          LOG(error) << "Cannot open file: " << ec.message();
+        }
+        else
+        {
+          LOG(info) << "Found module: " << file;
+          pargv[argc++] = strdup(file.string().c_str());
+        }
       }
-      else
+      
+      if (argc == 1)
       {
-        LOG(info) << "Found module: " << file;
-        pargv[argc++] = strdup(file.string().c_str());
+        pargv[argc++]  = strdup("-e");
+        pargv[argc++]  = strdup("puts 'starting ruby'");
       }
+      
+      RUBY_INIT_STACK;
+      
+      ruby_sysinit(&argc, (char***) &pargv);
+      ruby_init();
+      
+      Init_ext();
+      
+      using namespace device_model;
+      
+      // Create the module and all the ruby wrapper classes
+      s_RubyVM->createModule();
+      
+      int state;
+      ruby_exec_node(ruby_options(argc, pargv));
+      
+      if (initialization)
+      {
+        rb_eval_string_protect(initialization->c_str(), &state);
+      }
+      
+      for (int i = 0; i < argc; i++)
+        free(pargv[i]);
+      delete[] pargv;
     }
-    
-    if (argc == 1)
+    else
     {
-      pargv[argc++]  = strdup("-e");
-      pargv[argc++]  = strdup("puts 'starting ruby'");
+      s_RubyVM->m_agent = agent;
     }
-
-    RUBY_INIT_STACK;
-    
-    ruby_sysinit(&argc, (char***) &pargv);
-    ruby_init();
-
-    Init_ext();
-
-    using namespace device_model;
-    
-    // Create the module and all the ruby wrapper classes
-    createModule();
-    s_RubyAgent->create(*m_module);
-    s_RubyEntity->create(*m_module);
-    s_RubyPipeline->create(*m_module);
-    s_RubyTransformClass->create(*m_module);
-    s_RubyObservation->create(*m_module);
-    
-    // Add the methods to the wrapper classes
-    s_RubyAgent->methods();
-    s_RubyEntity->methods();
-    s_RubyPipeline->methods();
-    s_RubyTransformClass->methods();
-    s_RubyObservation->methods();
-    
-    // Singleton methods to retrieve the agent from the MTConnect module
-    m_module->define_singleton_method("agent", [this](Object self) {
-      return m_agent;
-    });
-    
-    defineLogger(*m_module);
-    
-    int state;
-    ruby_exec_node(ruby_options(argc, pargv));
-
-    if (initialization)
-    {
-      rb_eval_string_protect(initialization->c_str(), &state);
-    }
-    
-    for (int i = 0; i < argc; i++)
-      free(pargv[i]);
-    delete[] pargv;
   }
   
   Embedded::~Embedded()
@@ -197,6 +219,8 @@ namespace mtconnect::ruby {
   
   void Embedded::start(boost::asio::io_context &context, int count)
   {
+    m_context = &context;
+    
     std::list<VALUE> threads;
     for (int i = 0; i < count; i++)
     {
@@ -210,4 +234,26 @@ namespace mtconnect::ruby {
       rb_funcall(v, rb_intern("join"), 0);
     }
   }
+  
+  void Embedded::stop()
+  {
+    if (m_context != nullptr)
+    {
+      m_context->stop();
+      m_context = nullptr;
+    }
+  }
+  
+  RubyVM::~RubyVM()
+  {
+    m_RubyAgent.reset();
+    m_RubyEntity.reset();
+    m_RubyPipeline.reset();
+    m_RubyTransformClass.reset();
+    m_RubyObservation.reset();
+    m_Module.reset();
+
+    ruby_finalize();
+  }
+  
 }

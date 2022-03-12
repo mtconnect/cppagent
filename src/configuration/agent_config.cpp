@@ -190,6 +190,8 @@ namespace mtconnect {
 
     AgentConfiguration::~AgentConfiguration()
     {
+      stop();
+      
       logr::core::get()->remove_all_sinks();
       m_pipelineContext.reset();
       m_adapterHandler.reset();
@@ -373,6 +375,10 @@ namespace mtconnect {
       m_agent->stop();
       m_context.stop();
       LOG(info) << "Agent Configuration stopped";
+      
+#ifdef WITH_RUBY
+      m_ruby->stop();
+#endif
     }
 
     DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }

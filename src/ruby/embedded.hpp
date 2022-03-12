@@ -37,14 +37,12 @@ namespace mtconnect {
       ~Embedded();
       
       void start(boost::asio::io_context &context, int threads);
-      
-    protected:
-      void createModule();
+      void stop();
       
     protected:
       Agent *m_agent;
       ConfigOptions m_options;
-      std::unique_ptr<Rice::Module> m_module;
+      boost::asio::io_context *m_context = nullptr;
     };
   }
 }
