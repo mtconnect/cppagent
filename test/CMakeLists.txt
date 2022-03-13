@@ -207,6 +207,10 @@ add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)
 add_agent_test(checkpoint FALSE observation)
 
+if (NOT WITHOUT_RUBY)
+  add_agent_test(embedded_ruby TRUE ruby)
+endif()
+
 if(NOT WITHOUT_PYTHON)
   add_agent_test(python_transform TRUE python)
 endif()
