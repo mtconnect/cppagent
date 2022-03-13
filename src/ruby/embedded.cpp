@@ -43,8 +43,6 @@
 #include "ruby_observation.hpp"
 #include "ruby_transform.hpp"
 
-extern "C" void Init_ext(void);
-
 namespace mtconnect::ruby {
   using namespace mtconnect::pipeline;
   using namespace Rice;
@@ -132,15 +130,15 @@ namespace mtconnect::ruby {
     
     NAMED_SCOPE("Ruby::Embedded");
     
+    // Load the ruby module in the configuration
+    auto module = GetOption<string>(m_options, "module");
+    auto initialization = GetOption<string>(m_options, "initialization");
+    
     if (!s_RubyVM)
     {
       s_RubyVM.emplace();
       s_RubyVM->m_agent = agent;
-      
-      // Load the ruby module in the configuration
-      auto module = GetOption<string>(m_options, "module");
-      auto initialization = GetOption<string>(m_options, "initialization");
-      
+            
       char **pargv = new char*[3];
       int argc = 0;
       pargv[argc++] = strdup("agent");
@@ -172,9 +170,7 @@ namespace mtconnect::ruby {
       
       ruby_sysinit(&argc, (char***) &pargv);
       ruby_init();
-      
-      Init_ext();
-      
+            
       using namespace device_model;
       
       // Create the module and all the ruby wrapper classes
@@ -195,6 +191,29 @@ namespace mtconnect::ruby {
     else
     {
       s_RubyVM->m_agent = agent;
+      int state;
+
+      if (module)
+      {
+        LOG(info) << "Finding module: " << *module;
+        path mod(*module);
+        std::error_code ec;
+        path file = canonical(mod, ec);
+        if (ec)
+        {
+          LOG(error) << "Cannot open file: " << ec.message();
+        }
+        else
+        {
+          LOG(info) << "Found module: " << file;
+          rb_load_file(file.string().c_str());
+        }
+      }
+
+      if (initialization)
+      {
+        rb_eval_string_protect(initialization->c_str(), &state);
+      }
     }
   }
   

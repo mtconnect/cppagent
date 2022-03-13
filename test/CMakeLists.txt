@@ -1,90 +1,86 @@
 
 include(GoogleTest)
 
-if (WITHOUT_RUBY)
-  add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
-  target_include_directories(
-    sink_plugin_test
-    PUBLIC
-    "${CONAN_INCLUDE_DIRS}"
-    "${PROJECT_BINARY_DIR}/agent_lib"
-    "${CMAKE_CURRENT_LIST_DIR}/../src"
-    )
-  target_compile_definitions(sink_plugin_test
-    PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
-    $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
-    $<$<PLATFORM_ID:Windows>:NOMINMAX>
-    $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
-    $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
-  
-  target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
-  set_property(TARGET sink_plugin_test PROPERTY
-    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
-  
-  target_link_libraries(
-    sink_plugin_test
-    PRIVATE
-    agent_lib
-    $<$<PLATFORM_ID:Windows>:shlwapi>
-    )
-  target_clangformat_setup(sink_plugin_test)
-  
-  set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
-  
-  if (APPLE)
-    set_target_properties(sink_plugin_test PROPERTIES
-      FRAMEWORK TRUE
-      FRAMEWORK_VERSION A
-      MACOSX_FRAMEWORK_IDENTIFIER sink_plugin_test
-      VERSION 16.4.0
-      SOVERSION 1.0.0)
-  endif()
+add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
+target_include_directories(
+  sink_plugin_test
+  PUBLIC
+  "${CONAN_INCLUDE_DIRS}"
+  "${PROJECT_BINARY_DIR}/agent_lib"
+  "${CMAKE_CURRENT_LIST_DIR}/../src"
+  )
+target_compile_definitions(sink_plugin_test
+  PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
+  "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
+  $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
+  $<$<PLATFORM_ID:Windows>:NOMINMAX>
+  $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
+  $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
+
+target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
+set_property(TARGET sink_plugin_test PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
+
+target_link_libraries(
+  sink_plugin_test
+  PRIVATE
+  agent_lib
+  $<$<PLATFORM_ID:Windows>:shlwapi>
+  )
+target_clangformat_setup(sink_plugin_test)
+
+set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
+
+if (APPLE)
+  set_target_properties(sink_plugin_test PROPERTIES
+    FRAMEWORK TRUE
+    FRAMEWORK_VERSION A
+    MACOSX_FRAMEWORK_IDENTIFIER sink_plugin_test
+    VERSION 16.4.0
+    SOVERSION 1.0.0)
 endif()
 #########
 
-if (WITHOUT_RUBY)
-  add_library(adapter_plugin_test SHARED testadapter_service.cpp testadapter_service.hpp)
-  
-  target_include_directories(
-    adapter_plugin_test
-    PUBLIC
-    "${CONAN_INCLUDE_DIRS}"
-    "${PROJECT_BINARY_DIR}/agent_lib"
-    "${CMAKE_CURRENT_LIST_DIR}/../src"
-    )
-  target_compile_definitions(adapter_plugin_test
-    PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-    "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
-    $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
-    $<$<PLATFORM_ID:Windows>:NOMINMAX>
-    $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
-    $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
+add_library(adapter_plugin_test SHARED testadapter_service.cpp testadapter_service.hpp)
 
-  if (APPLE)
-    set_target_properties(adapter_plugin_test PROPERTIES
-      FRAMEWORK TRUE
-      FRAMEWORK_VERSION A
-      MACOSX_FRAMEWORK_IDENTIFIER adapter_plugin_test
-      VERSION 16.4.0
-      SOVERSION 1.0.0)
-  endif()
-  
-  target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
-  set_property(TARGET adapter_plugin_test PROPERTY
-    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
-  
-  target_link_libraries(
-    adapter_plugin_test
-    PRIVATE
-    agent_lib
-    $<$<PLATFORM_ID:Windows>:shlwapi>
-    )
+target_include_directories(
+  adapter_plugin_test
+  PUBLIC
+  "${CONAN_INCLUDE_DIRS}"
+  "${PROJECT_BINARY_DIR}/agent_lib"
+  "${CMAKE_CURRENT_LIST_DIR}/../src"
+  )
+target_compile_definitions(adapter_plugin_test
+  PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
+  "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
+  $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
+  $<$<PLATFORM_ID:Windows>:NOMINMAX>
+  $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
+  $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
 
-  set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
-
-  target_clangformat_setup(adapter_plugin_test)
+if (APPLE)
+  set_target_properties(adapter_plugin_test PROPERTIES
+    FRAMEWORK TRUE
+    FRAMEWORK_VERSION A
+    MACOSX_FRAMEWORK_IDENTIFIER adapter_plugin_test
+    VERSION 16.4.0
+    SOVERSION 1.0.0)
 endif()
+
+target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
+set_property(TARGET adapter_plugin_test PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
+
+target_link_libraries(
+  adapter_plugin_test
+  PRIVATE
+  agent_lib
+  $<$<PLATFORM_ID:Windows>:shlwapi>
+  )
+
+set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
+
+target_clangformat_setup(adapter_plugin_test)
 
 ###########
 
@@ -216,37 +212,35 @@ if(NOT WITHOUT_PYTHON)
 endif()
 
 # TODO Reorganize data. Do not copy files around. Unit test could be run only with sources in place.
-if (WITHOUT_RUBY)
-  add_custom_command(
-    TARGET adapter_test POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E copy
-    "${CMAKE_CURRENT_SOURCE_DIR}/probe.xml"
-    "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
-    COMMENT "Copying to output directory")
+add_custom_command(
+  TARGET adapter_test POST_BUILD
+  COMMAND "${CMAKE_COMMAND}" -E copy
+  "${CMAKE_CURRENT_SOURCE_DIR}/probe.xml"
+  "$<TARGET_FILE_DIR:adapter_test>/../Resources/probe.xml"
+  COMMENT "Copying to output directory")
+
+add_dependencies(config_test adapter_plugin_test sink_plugin_test)
+
+if(APPLE)
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    "$<TARGET_FILE:adapter_plugin_test>"
+    "$<TARGET_FILE_DIR:config_test>/lib$<TARGET_FILE_BASE_NAME:adapter_plugin_test>.dylib"
+    )
   
-  add_dependencies(config_test adapter_plugin_test sink_plugin_test)
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    "$<TARGET_FILE:sink_plugin_test>"
+    "$<TARGET_FILE_DIR:config_test>/lib$<TARGET_FILE_BASE_NAME:sink_plugin_test>.dylib")
+elseif(UNIX)
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    "$<TARGET_FILE:adapter_plugin_test>"
+    "$<TARGET_FILE_DIR:config_test>/"
+    )
   
-  if(APPLE)
-    add_custom_command(TARGET config_test POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy
-      "$<TARGET_FILE:adapter_plugin_test>"
-      "$<TARGET_FILE_DIR:config_test>/lib$<TARGET_FILE_BASE_NAME:adapter_plugin_test>.dylib"
-      )
-    
-    add_custom_command(TARGET config_test POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy
-      "$<TARGET_FILE:sink_plugin_test>"
-      "$<TARGET_FILE_DIR:config_test>/lib$<TARGET_FILE_BASE_NAME:sink_plugin_test>.dylib")
-  elseif(UNIX)
-    add_custom_command(TARGET config_test POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy
-      "$<TARGET_FILE:adapter_plugin_test>"
-      "$<TARGET_FILE_DIR:config_test>/"
-      )
-    
-    add_custom_command(TARGET config_test POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy
-      "$<TARGET_FILE:sink_plugin_test>"
-      "$<TARGET_FILE_DIR:config_test>/")
-  endif()
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    "$<TARGET_FILE:sink_plugin_test>"
+    "$<TARGET_FILE_DIR:config_test>/")
 endif()

@@ -17,6 +17,12 @@ class RubyRiceConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     requires = "readline/8.1.2", "libffi/3.4.2"
 
+    options = { "shared": [True, False] }
+
+    default_options = {
+        "shared": True
+        }
+
     _autotools = None
     _ruby_source = "ruby_source"
     _rice_source = "rice_source"
@@ -31,11 +37,14 @@ class RubyRiceConan(ConanFile):
         
     def build(self):
         self._autotools = AutoToolsBuildEnvironment(self, win_bash=tools.os_info.is_windows)
-        conf_args = ["--with-static-linked-ext", "--enable-install-static-library", '--without-rdoc',
-                     "--enable-load-relative"]
+        conf_args = ['--without-rdoc', "--enable-load-relative"]
+        if not self.options.shared:
+            conf_args.extend(["--with-static-linked-ext", "--enable-install-static-library"])
+        else:
+            conf_args.extend(['--enable-shared', '--enable-shared-libs'])
+            
         if self.settings.build_type =='Debug':
-            conf_args.append('optflags=-O3')            
-            conf_args.append('--enable-debug-env')
+            conf_args.extend(['optflags=-O3', '--enable-debug-env'])
         
         build = None
         
@@ -63,25 +72,29 @@ class RubyRiceConan(ConanFile):
         
         self.cpp_info.includedirs = [os.path.join("include", self._ruby_version_dir),
                                      os.path.join("include", self._ruby_version_dir, config['arch'])]
-        lib = "libruby.{}.{}-static.a".format(self._major, self._minor)
-        self.cpp_info.libs = [os.path.join(self.package_folder, "lib", lib)]
-
-        [self.cpp_info.libs.append(l) for l in glob.glob(os.path.join(self.package_folder, "lib-s", "**", "*.a"), recursive=True)]
-        self.cpp_info.libs.append(os.path.join(self.package_folder, "lib-s", "ext", "extinit.o"))
-        self.cpp_info.libs.append(os.path.join(self.package_folder, "lib-s", "enc", "encinit.o"))
+        
+        self.cpp_info.libs = [os.path.join(self.package_folder, "lib", config['LIBRUBY'])]
+        if not self.options.shared:
+            [self.cpp_info.libs.append(l) for l in glob.glob(os.path.join(self.package_folder, "lib-s", "**", "*.a"), recursive=True)]
+            self.cpp_info.libs.append(os.path.join(self.package_folder, "lib-s", "ext", "extinit.o"))
+            self.cpp_info.libs.append(os.path.join(self.package_folder, "lib-s", "enc", "encinit.o"))
 
         defines = [x[2:] for x in config['CPPFLAGS'].split() if x.startswith('-D') and x != '-DNDEBUG']
         self.cpp_info.defines = defines
 
-        libflags = [x for x in config['LIBRUBYARG_STATIC'].split() if not x.startswith('-lruby')]
-        try:
-            ind = libflags.index('-framework')
-            fw = libflags.pop(ind+1)
-            libflags[ind] = "{} {}".format(libflags[ind], fw)
+        if not self.options.shared:
+            libflags = [x for x in config['LIBRUBYARG_STATIC'].split() if not x.startswith('-lruby')]
             
-        except:
-            pass
+            try:
+                ind = libflags.index('-framework')
+                fw = libflags.pop(ind+1)
+                libflags[ind] = "{} {}".format(libflags[ind], fw)
+                
+            except:
+                pass
+        else:
+            libflags = [config['LIBRUBYARG_SHARED']]
         
-        self.cpp_info.exelinkflags = config['LDFLAGS'].split() + libflags
         self.user_info.RUBY_LIBRARIES = os.path.join(self.package_folder, "lib")
+        self.cpp_info.exelinkflags = config['LDFLAGS'].split() + libflags
 
