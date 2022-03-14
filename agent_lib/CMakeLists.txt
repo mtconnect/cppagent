@@ -239,6 +239,10 @@ if(NOT WITHOUT_RUBY)
     agent_lib
     PUBLIC
     CONAN_PKG::ruby_rice)
+  target_link_directories(
+    agent_lib
+    PUBLIC
+    ${CONAN_LIB_DIRS_RUBY_RICE})
 endif()
 
 target_compile_definitions(

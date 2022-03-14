@@ -73,12 +73,11 @@ class RubyRiceConan(ConanFile):
         self.cpp_info.includedirs = [os.path.join("include", self._ruby_version_dir),
                                      os.path.join("include", self._ruby_version_dir, config['arch'])]
         
-        self.cpp_info.libs = [os.path.join(self.package_folder, "lib", config['LIBRUBY'])]
         if not self.options.shared:
             [self.cpp_info.libs.append(l) for l in glob.glob(os.path.join(self.package_folder, "lib-s", "**", "*.a"), recursive=True)]
             self.cpp_info.libs.append(os.path.join(self.package_folder, "lib-s", "ext", "extinit.o"))
             self.cpp_info.libs.append(os.path.join(self.package_folder, "lib-s", "enc", "encinit.o"))
-
+            
         defines = [x[2:] for x in config['CPPFLAGS'].split() if x.startswith('-D') and x != '-DNDEBUG']
         self.cpp_info.defines = defines
 
@@ -92,9 +91,10 @@ class RubyRiceConan(ConanFile):
                 
             except:
                 pass
-        #else:
-        #    libflags = [config['LIBRUBYARG_SHARED']]
-        
+        else:
+            libflags = [config['LIBRUBYARG_SHARED']]
+
         self.user_info.RUBY_LIBRARIES = os.path.join(self.package_folder, "lib")
-        self.cpp_info.exelinkflags = config['LDFLAGS'].split() # + libflags
+        self.cpp_info.exelinkflags = config['LDFLAGS'].split() + libflags
+        self.cpp_info.sharedlinkflags = config['LDFLAGS'].split() + libflags
 
