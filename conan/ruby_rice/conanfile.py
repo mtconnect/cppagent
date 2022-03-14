@@ -92,9 +92,9 @@ class RubyRiceConan(ConanFile):
                 
             except:
                 pass
-        else:
-            libflags = [config['LIBRUBYARG_SHARED']]
+        #else:
+        #    libflags = [config['LIBRUBYARG_SHARED']]
         
         self.user_info.RUBY_LIBRARIES = os.path.join(self.package_folder, "lib")
-        self.cpp_info.exelinkflags = config['LDFLAGS'].split() + libflags
+        self.cpp_info.exelinkflags = config['LDFLAGS'].split() # + libflags
 

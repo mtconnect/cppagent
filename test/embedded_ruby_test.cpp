@@ -83,7 +83,7 @@ namespace {
     
     ErrorList errors;
     Timestamp now { std::chrono::system_clock::now() };
-    ObservationPtr obser = Observation::make(exec, {{"VALUE", "1"}}, now, errors);
+    ObservationPtr obser = Observation::make(exec, {{"VALUE", "1"s}}, now, errors);
     
     ASSERT_TRUE(obser);
     ASSERT_EQ(0, errors.size());
