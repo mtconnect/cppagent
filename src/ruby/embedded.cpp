@@ -206,7 +206,13 @@ namespace mtconnect::ruby {
         else
         {
           LOG(info) << "Found module: " << file;
-          rb_load_file(file.string().c_str());
+          int state;
+          VALUE script = rb_str_new_cstr(file.c_str());
+          rb_load_protect(script, 0, &state);
+          if (state != 0)
+          {
+            LOG(error) << "Cannot load: " << file;
+          }
         }
       }
 

@@ -419,7 +419,7 @@ namespace mtconnect::ruby {
     
     void methods()
     {
-      m_entity.define_constructor(smart_ptr::Constructor<Entity, const std::string , const Properties &>(), Arg("name"),
+      m_entity.define_constructor(smart_ptr::Constructor<Entity, const std::string , const Properties>(), Arg("name"),
                                   Arg("properties")).
         define_method("value", [](Entity *e) { return e->getValue(); }).
         define_method("value=", [](Entity *e, const Value value) { return e->setValue(value); }, Arg("value")).
@@ -506,8 +506,10 @@ namespace Rice::detail {
     {
     }
 
-    auto &convert(VALUE value)
+    auto convert(VALUE value)
     {
+      Properties converted;
+
       if (TYPE(value) == RUBY_T_HASH)
       {
         Rice::Hash hash(value);
@@ -523,19 +525,18 @@ namespace Rice::detail {
             key = From_Ruby<string>().convert(p.first.call(Identifier("to_s")));
           Value val { From_Ruby<Value>().convert(p.second.value()) };
           
-          m_converted.emplace(key, val);
+          converted.emplace(key, val);
         }
       }
       else
       {
         Value val { From_Ruby<Value>().convert(value) };
-        m_converted.emplace("VALUE", val);
+        converted.emplace("VALUE", val);
       }
-      return m_converted;
+      return converted;
     }
     
     Arg* m_arg = nullptr;
-    Properties m_converted;
   };
 
   template<>

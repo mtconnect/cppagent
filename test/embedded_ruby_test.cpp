@@ -22,6 +22,12 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
+#include <boost/algorithm/string.hpp>
+
+#include <iostream>
+#include <string>
+#include <date/date.h>
+#include <filesystem>
 
 #include "adapter/shdr/shdr_adapter.hpp"
 #include "agent.hpp"
@@ -29,6 +35,7 @@
 #include "configuration/config_options.hpp"
 #include "rest_sink/rest_service.hpp"
 #include "xml_printer.hpp"
+#include "device_model/data_item/data_item.hpp"
 
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
@@ -40,15 +47,17 @@
 #define chdir _chdir
 #endif
 
-using namespace std;
-using namespace mtconnect;
-using namespace configuration;
-using namespace observation;
-using namespace device_model;
-using namespace entity;
-namespace fs = std::filesystem;
-
 namespace {
+  using namespace std;
+  using namespace mtconnect;
+  using namespace configuration;
+  using namespace observation;
+  using namespace device_model;
+  using namespace entity;
+  using namespace data_item;
+  using namespace Rice;
+  namespace fs = std::filesystem;
+
   class EmbeddedRubyTest : public testing::Test
   {
   protected:
@@ -94,5 +103,36 @@ namespace {
 
     ASSERT_EQ("READY", out->getValue<string>());
   }
+  
+  template<typename T>
+  T EntityValue(VALUE value, const string name)
+  {
+    Rice::Data_Object<Entity> ent(value);
+    EntityPtr ptr(ent.get()->getptr());
+    EXPECT_TRUE(ptr);
+    EXPECT_EQ(name, ptr->getName());
+    
+    T v = ptr->getValue<T>();
+    return v;
+  }
+  
+  TEST_F(EmbeddedRubyTest, should_convert_values_from_ruby)
+  {
+    string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n"
+               "Ruby {\n"
+               "  module = " PROJECT_ROOT_DIR "/test/resources/ruby/should_convert_values.rb\n"
+               "}\n");
+    m_config->loadConfig(str);
+    
+    VALUE e1 = Rice::protect(rb_eval_string, "ConvertValuesFromRuby.create_entity_1");
+    ASSERT_EQ(10, EntityValue<int64_t>(e1, "TestEntity1"));
+    
+    VALUE e2 = Rice::protect(rb_eval_string, "ConvertValuesFromRuby.create_entity_2");
+    ASSERT_EQ("Hello"s, EntityValue<string>(e2,  "TestEntity2"));
+
+    VALUE e3 = Rice::protect(rb_eval_string, "ConvertValuesFromRuby.create_entity_3");
+    ASSERT_EQ(123.5, EntityValue<double>(e3,  "TestEntity3"));
+  }
+
 
 }

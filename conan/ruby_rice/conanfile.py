@@ -95,6 +95,8 @@ class RubyRiceConan(ConanFile):
             libflags = [config['LIBRUBYARG_SHARED']]
 
         self.user_info.RUBY_LIBRARIES = os.path.join(self.package_folder, "lib")
-        self.cpp_info.exelinkflags = config['LDFLAGS'].split() + libflags
-        self.cpp_info.sharedlinkflags = config['LDFLAGS'].split() + libflags
+
+        linkflags = config['LDFLAGS'].split() + libflags
+        self.cpp_info.exelinkflags = linkflags
+        self.cpp_info.sharedlinkflags = linkflags
 

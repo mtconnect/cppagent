@@ -52,7 +52,7 @@ namespace mtconnect {
       }
 
       std::unique_ptr<PipelineContract> m_contract;
-
+      
     protected:
       using SharedState = std::unordered_map<std::string, TransformStatePtr>;
       SharedState m_sharedState;
