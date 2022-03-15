@@ -17,14 +17,16 @@
 
 #pragma once
 
+#include <rice/rice.hpp>
+#include <rice/stl.hpp>
+#include <ruby/thread.h>
+
+#include "entity/data_set.hpp"
 #include "entity/entity.hpp"
 #include "device_model/device.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "ruby_type.hpp"
 #include "ruby_smart_ptr.hpp"
-#include <rice/rice.hpp>
-#include <rice/stl.hpp>
-#include <ruby/thread.h>
 
 namespace Rice::detail {
   template<>
@@ -136,7 +138,7 @@ namespace Rice::detail {
     Rice::Hash h;
     for (const auto &entry : set)
     {
-      auto value = To_Ruby<DataSetValue>().convert(entry.m_value);
+      auto value = To_Ruby<entity::DataSetValue>().convert(entry.m_value);
       h[entry.m_key] = value;
     }
     return h.value();
@@ -153,15 +155,15 @@ namespace Rice::detail {
   }
   
   template<>
-  struct Type<EntityList>
+  struct Type<entity::EntityList>
   {
     static bool verify() { return true; }
   };
   
   template<>
-  struct To_Ruby<EntityList>
+  struct To_Ruby<entity::EntityList>
   {
-    VALUE convert(const EntityList &list)
+    VALUE convert(const entity::EntityList &list)
     {
       Rice::Array ary;
       for (const auto &ent : list)
@@ -174,17 +176,17 @@ namespace Rice::detail {
   };
 
   template<>
-  struct From_Ruby<EntityList>
+  struct From_Ruby<entity::EntityList>
   {
-    EntityList convert(VALUE list)
+    entity::EntityList convert(VALUE list)
     {
-      EntityList ary;
+      entity::EntityList ary;
       Rice::Array vary(list);
       for (const auto &ent : vary)
       {
         if (Rice::protect(rb_obj_is_kind_of, ent.value(), mtconnect::ruby::c_Entity))
         {
-          Data_Object<Entity> entity(ent.value());
+          Data_Object<entity::Entity> entity(ent.value());
           ary.emplace_back(entity->getptr());
         }
       }
@@ -257,7 +259,7 @@ namespace Rice::detail {
       },
               
       // Handled types
-      [](const Vector &v) -> VALUE {
+       [](const entity::Vector &v) -> VALUE {
         Rice::Array array(v.begin(), v.end());
         return array;
       },
@@ -274,34 +276,34 @@ namespace Rice::detail {
   }
 
   template<>
-  struct To_Ruby<Value>
+  struct To_Ruby<entity::Value>
   {
-    VALUE convert(Value &value)
+    VALUE convert(entity::Value &value)
     {
       return ConvertValueToRuby(value);
     }
 
-    VALUE convert(const Value &value)
+    VALUE convert(const entity::Value &value)
     {
       return ConvertValueToRuby(value);
     }
   };
 
   template<>
-  struct To_Ruby<Value&>
+  struct To_Ruby<entity::Value &>
   {
-    VALUE convert(Value &value)
+    VALUE convert(entity::Value &value)
     {
       return ConvertValueToRuby(value);
     }
 
-    VALUE convert(const Value &value)
+    VALUE convert(const entity::Value &value)
     {
       return ConvertValueToRuby(value);
     }
   };
 
-  inline Value ConvertRubyToValue(VALUE value)
+  inline entity::Value ConvertRubyToValue(VALUE value)
   {
     using namespace mtconnect::ruby;
     using namespace mtconnect::observation;
@@ -378,18 +380,18 @@ namespace Rice::detail {
   }
 
   template<>
-  struct From_Ruby<Value>
+  struct From_Ruby<entity::Value>
   {
-    Value convert(VALUE value)
+    entity::Value convert(VALUE value)
     {
       return ConvertRubyToValue(value);
     }
   };
 
   template<>
-  struct From_Ruby<Value&>
+  struct From_Ruby<entity::Value &>
   {
-    Value convert(VALUE value)
+    entity::Value convert(VALUE value)
     {
       return ConvertRubyToValue(value);
     }
@@ -489,7 +491,7 @@ namespace mtconnect::ruby {
 
 namespace Rice::detail {
   template<>
-  struct Type<Properties>
+  struct Type<entity::Properties>
   {
     static bool verify()
     {
@@ -498,7 +500,7 @@ namespace Rice::detail {
   };
   
   template<>
-  struct From_Ruby<Properties>
+  struct From_Ruby<entity::Properties>
   {
     From_Ruby() = default;
 
@@ -509,13 +511,13 @@ namespace Rice::detail {
     auto convert(VALUE value)
     {
       Properties converted;
-
+      
       if (TYPE(value) == RUBY_T_HASH)
       {
         Rice::Hash hash(value);
         for (const auto &p : hash)
         {
-          PropertyKey key;
+          entity::PropertyKey key;
           auto pt = TYPE(p.first.value());
           if (pt == RUBY_T_SYMBOL)
             key = Symbol(p.first.value()).str();

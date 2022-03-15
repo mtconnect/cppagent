@@ -15,22 +15,27 @@
 //    limitations under the License.
 //
 
-#include "embedded.hpp"
-
-#include <boost/algorithm/string.hpp>
+#include "utilities.hpp"
 
 #include <iostream>
 #include <string>
 #include <date/date.h>
 #include <filesystem>
 
-#include "adapter/adapter.hpp"
+#include <boost/algorithm/string.hpp>
+
 #include "agent.hpp"
-#include "device_model/device.hpp"
-#include "entity.hpp"
-#include "pipeline/guard.hpp"
-#include "pipeline/transform.hpp"
+#include "pipeline/pipeline.hpp"
+#include "entity/entity.hpp"
+#include "entity/data_set.hpp"
+#include "embedded.hpp"
 #include "logging.hpp"
+
+#if defined(_WIN32) || defined(_WIN64)
+#undef timezone
+#undef WSAPPI
+#define WSAAPI 
+#endif
 
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
@@ -209,6 +214,7 @@ namespace mtconnect::ruby {
           int state;
           VALUE script = rb_str_new_cstr(file.c_str());
           rb_load_protect(script, 0, &state);
+          
           if (state != 0)
           {
             LOG(error) << "Cannot load: " << file;

@@ -22,6 +22,8 @@
 #include <ruby/thread.h>
 #include <ruby/internal/intern/time.h>
 
+#include "pipeline/pipeline.hpp"
+
 using namespace std;
 using namespace mtconnect::pipeline;
 

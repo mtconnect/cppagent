@@ -17,11 +17,13 @@
 
 #pragma once
 
-#include "agent.hpp"
 #include <rice/rice.hpp>
 #include <rice/stl.hpp>
 #include <ruby/thread.h>
 
+#include "agent.hpp"
+#include "source.hpp"
+#include "sink.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect::device_model;

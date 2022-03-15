@@ -8,7 +8,7 @@ module ConvertValuesFromRuby
   rescue
     puts $!
     puts $!.backtrace.join("\n")
-    Qnil
+    nil
   end
 
   def self.create_entity_2
@@ -17,7 +17,7 @@ module ConvertValuesFromRuby
   rescue
     puts $!
     puts $!.backtrace.join("\n")
-    Qnil
+    nil
   end
 
   def self.create_entity_3
@@ -26,7 +26,7 @@ module ConvertValuesFromRuby
   rescue
     puts $!
     puts $!.backtrace.join("\n")
-    Qnil
+    nil
   end
 
 end
