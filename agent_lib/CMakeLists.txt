@@ -189,6 +189,10 @@ source_group("Source Files")
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Header Files" FILES ${AGENT_LIB_HEADERS})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Source Files" FILES ${AGENT_LIB_SOURCES})
 
+#file(GLOB_RECURSE MRICE_FILES FOLLOW_SYMLINKS "${CMAKE_CURRENT_SOURCE_DIR}/../mrice/include/mrice/*.[hi]pp" )
+#source_group("MRice Files")
+#source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../mrice/include/mrice" PREFIX "MRice Files" FILES ${MRICE_FILES})
+
 if(MSVC)
   if(CMAKE_GENERATOR_TOOLSET)
     if(${CMAKE_GENERATOR_TOOLSET} MATCHES "v14[01]_xp")
@@ -206,7 +210,7 @@ if(MSVC)
 endif()
 
 
-add_library(agent_lib STATIC ${AGENT_SOURCES})
+add_library(agent_lib STATIC ${AGENT_SOURCES} ${MRICE_FILES})
 target_include_directories(
   agent_lib
   PUBLIC
@@ -238,11 +242,15 @@ if(NOT WITHOUT_RUBY)
   target_link_libraries(
     agent_lib
     PUBLIC
-    CONAN_PKG::ruby_rice)
+    CONAN_PKG::mruby)
   target_link_directories(
     agent_lib
     PUBLIC
-    ${CONAN_LIB_DIRS_RUBY_RICE})
+    ${CONAN_LIB_DIRS_MRUBY})
+#  target_include_directories(
+#    agent_lib
+#    PUBLIC
+#    "${CMAKE_CURRENT_SOURCE_DIR}/../mrice/include")
 endif()
 
 target_compile_definitions(

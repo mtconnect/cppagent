@@ -93,14 +93,6 @@ include(cmake/ide_integration.cmake)
 
 create_clangformat_target()
 
-if(NOT WITHOUT_RUBY)
-  file(GLOB_RECURSE files RELATIVE ${CONAN_USER_RUBY_RICE_RUBY_LIBRARIES} "${CONAN_USER_RUBY_RICE_RUBY_LIBRARIES}/*")
-  foreach(file ${files})
-    get_filename_component(dir ${file} DIRECTORY)
-    file(COPY "${CONAN_USER_RUBY_RICE_RUBY_LIBRARIES}/${file}" DESTINATION "${CMAKE_BINARY_DIR}/lib/${dir}")
-  endforeach()
-endif()
-
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
 # We will set this to the agent_test project.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT agent_test)

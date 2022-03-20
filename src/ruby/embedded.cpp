@@ -37,97 +37,121 @@
 #define WSAAPI 
 #endif
 
-#include <rice/rice.hpp>
-#include <rice/stl.hpp>
-#include <ruby/thread.h>
+#include <mruby.h>
+#include <mruby/data.h>
+#include <mruby/array.h>
+#include <mruby/compile.h>
+#include <mruby/dump.h>
+#include <mruby/variable.h>
+#include <mruby/proc.h>
+#include <mruby/class.h>
+#include <mruby/numeric.h>
+#include <mruby/string.h>
+#include <mruby/presym.h>
+#include <mruby/error.h>
 
-#include "ruby_type.hpp"
-#include "ruby_agent.hpp"
-#include "ruby_entity.hpp"
-#include "ruby_pipeline.hpp"
-#include "ruby_observation.hpp"
-#include "ruby_transform.hpp"
+using namespace std;
 
 namespace mtconnect::ruby {
   using namespace mtconnect::pipeline;
-  using namespace Rice;
-  using namespace Rice::detail;
   using namespace std::literals;
   using namespace date::literals;
   using namespace observation;
 
+  static mrb_sym s_AgentIvar;
+
   struct RubyVM
   {
-    RubyVM() {}
-    ~RubyVM();
-    void createModule();
+    RubyVM(Agent *agent)
+    {
+      m_agentPtr = agent;
+      mrb = mrb_open();
+      if (!mrb)
+      {
+        /* handle error */
+        throw std::runtime_error("Cannot start mrb");
+      }
+      // mrb_load_string(mrb, str) to load from NULL terminated strings
+      // mrb_load_nstring(mrb, str, len) for strings without null terminator or with known length
+    }
     
-    optional<RubyAgent> m_RubyAgent;
-    optional<RubyEntity> m_RubyEntity;
-    optional<RubyPipeline> m_RubyPipeline;
-    optional<RubyTransformClass> m_RubyTransformClass;
-    optional<RubyObservation> m_RubyObservation;
-    optional<Rice::Module> m_Module;
+    ~RubyVM()
+    {
+      if (mrb)
+      {
+        mrb_close(mrb);
+      }
+    }
+
+    std::mutex m_mutex;
     
-    Agent *m_agent = nullptr;
+    Agent *m_agentPtr;
+    RClass *m_module  = nullptr;
+    RClass *m_agentClass = nullptr;
+    mrb_value m_agent;
+    mrb_state *mrb = nullptr;
+
+    void createModule()
+    {
+      static mrb_data_type agentType { "Agent", nullptr };
+      
+      m_module = mrb_define_module(mrb, "MTConnect");
+      m_agentClass = mrb_define_class_under(mrb, m_module, "Agent", mrb->object_class);
+      MRB_SET_INSTANCE_TT(m_agentClass, MRB_TT_DATA);
+
+      auto wrapper = mrb_data_object_alloc(mrb, m_agentClass, m_agentPtr, &agentType);
+      m_agent = mrb_obj_value(wrapper);
+      auto mod = mrb_obj_value(m_module);
+      s_AgentIvar = mrb_intern_cstr(mrb, "@agent");
+      mrb_iv_set(mrb, mod, s_AgentIvar, m_agent);
+
+      mrb_define_class_method(mrb, m_module, "agent",
+        [](mrb_state *mrb, mrb_value self) {
+          return mrb_iv_get(mrb, self, s_AgentIvar);
+        }, MRB_ARGS_NONE());
+    }
+
+    template<typename L>
+    static inline void log(L level, mrb_state *mrb)
+    {
+      mrb_value msg;
+      mrb_get_args(mrb, "S", &msg);
+      BOOST_LOG_STREAM_WITH_PARAMS(::boost::log::trivial::logger::get(),
+                                   (::boost::log::keywords::severity = level)) << mrb_str_to_cstr(mrb, msg);
+    }
+    
+    void defineLogger()
+    {
+      // Create a module with logging methods for each severity level
+      auto logger = mrb_define_module_under(mrb, m_module, "Logger");
+      mrb_define_class_method(mrb, logger, "debug", [](mrb_state *mrb, mrb_value self) {
+        log(::boost::log::trivial::debug, mrb);
+        return mrb_nil_value();
+      }, MRB_ARGS_REQ(1));
+      mrb_define_class_method(mrb, logger, "trace", [](mrb_state *mrb, mrb_value self) {
+        log(::boost::log::trivial::trace, mrb);
+        return mrb_nil_value();
+      }, MRB_ARGS_REQ(1));
+      mrb_define_class_method(mrb, logger, "info", [](mrb_state *mrb, mrb_value self) {
+        log(::boost::log::trivial::info, mrb);
+        return mrb_nil_value();
+      }, MRB_ARGS_REQ(1));
+      mrb_define_class_method(mrb, logger, "warning", [](mrb_state *mrb, mrb_value self) {
+        log(::boost::log::trivial::warning, mrb);
+        return mrb_nil_value();
+      }, MRB_ARGS_REQ(1));
+      mrb_define_class_method(mrb, logger, "error", [](mrb_state *mrb, mrb_value self) {
+        log(::boost::log::trivial::error, mrb);
+        return mrb_nil_value();
+      }, MRB_ARGS_REQ(1));
+      mrb_define_class_method(mrb, logger, "fatal", [](mrb_state *mrb, mrb_value self) {
+        log(::boost::log::trivial::fatal, mrb);
+        return mrb_nil_value();
+      }, MRB_ARGS_REQ(1));
+    }
   };
   
   // These are static wrapper classes that add types to the Ruby instance
-  static optional<RubyVM> s_RubyVM;
-  
-  void defineLogger(Rice::Module &module)
-  {
-    // Create a module with logging methods for each severity level
-    define_module_under(module, "Logger").
-      define_singleton_function("debug", [](const string message) {
-          LOG(debug) << message;
-        }, Arg("message")).
-      define_singleton_function("trace", [](const string message) {
-          LOG(trace) << message;
-        }, Arg("message")).
-      define_singleton_function("info", [](const string message) {
-          LOG(info) << message;
-        }, Arg("message")).
-      define_singleton_function("warning", [](const string message) {
-          LOG(warning) << message;
-        }, Arg("message")).
-      define_singleton_function("error", [](const string message) {
-          LOG(error) << message;
-        }, Arg("message")).
-      define_singleton_function("fatal", [](const string message) {
-          LOG(fatal) << message;
-        }, Arg("message"));
-  }
-  
-  void RubyVM::createModule()
-  {
-    m_Module.emplace(define_module("MTConnect"));
-    m_RubyAgent.emplace();
-    m_RubyEntity.emplace();
-    m_RubyPipeline.emplace();
-    m_RubyTransformClass.emplace();
-    m_RubyObservation.emplace();
-    
-    m_RubyAgent->create(*m_Module);
-    m_RubyEntity->create(*m_Module);
-    m_RubyPipeline->create(*m_Module);
-    m_RubyTransformClass->create(*m_Module);
-    m_RubyObservation->create(*m_Module);
-
-    m_RubyAgent->methods();
-    m_RubyEntity->methods();
-    m_RubyPipeline->methods();
-    m_RubyTransformClass->methods();
-    m_RubyObservation->methods();
-    
-    m_Module->define_singleton_method("agent", [this](Object self) {
-      return m_agent;
-    });
-    
-    defineLogger(*s_RubyVM->m_Module);
-  }
-
-    
   Embedded::Embedded(Agent *agent, const ConfigOptions &options)
     : m_agent(agent), m_options(options)
   {
@@ -139,68 +163,18 @@ namespace mtconnect::ruby {
     auto module = GetOption<string>(m_options, "module");
     auto initialization = GetOption<string>(m_options, "initialization");
     
-    if (!s_RubyVM)
+    if (!m_rubyVM.has_value())
     {
-      s_RubyVM.emplace();
-      s_RubyVM->m_agent = agent;
-            
-      char **pargv = new char*[3];
-      int argc = 0;
-      pargv[argc++] = strdup("agent");
+      auto vm = new RubyVM(agent);
+      m_rubyVM = vm;
+      
+      vm->createModule();
+      vm->defineLogger();
       
       if (module)
       {
         LOG(info) << "Finding module: " << *module;
-        path mod(*module);
-        std::error_code ec;
-        path file = canonical(mod, ec);
-        if (ec)
-        {
-          LOG(error) << "Cannot open file: " << ec.message();
-        }
-        else
-        {
-          LOG(info) << "Found module: " << file;
-          pargv[argc++] = strdup(file.string().c_str());
-        }
-      }
-      
-      if (argc == 1)
-      {
-        pargv[argc++]  = strdup("-e");
-        pargv[argc++]  = strdup("puts 'starting ruby'");
-      }
-      
-      RUBY_INIT_STACK;
-      
-      ruby_sysinit(&argc, (char***) &pargv);
-      ruby_init();
-            
-      using namespace device_model;
-      
-      // Create the module and all the ruby wrapper classes
-      s_RubyVM->createModule();
-      
-      int state;
-      ruby_exec_node(ruby_options(argc, pargv));
-      
-      if (initialization)
-      {
-        rb_eval_string_protect(initialization->c_str(), &state);
-      }
-      
-      for (int i = 0; i < argc; i++)
-        free(pargv[i]);
-      delete[] pargv;
-    }
-    else
-    {
-      s_RubyVM->m_agent = agent;
-      int state;
 
-      if (module)
-      {
-        LOG(info) << "Finding module: " << *module;
         path mod(*module);
         std::error_code ec;
         path file = canonical(mod, ec);
@@ -211,80 +185,28 @@ namespace mtconnect::ruby {
         else
         {
           LOG(info) << "Found module: " << file;
-          int state;
-          VALUE script = rb_str_new_cstr(file.c_str());
-          rb_load_protect(script, 0, &state);
-          
-          if (state != 0)
+          FILE *fp = nullptr;
+          try {
+            FILE *fp = fopen(mod.c_str(), "r");
+            mrb_load_file(vm->mrb, fp);
+          } catch (std::exception ex) {
+            LOG(error) << "Failed to load module: " << mod << ": " << ex.what();
+          }
+          catch (...)
           {
-            LOG(error) << "Cannot load: " << file;
+            LOG(error) << "Failed to load module: " << mod;
+          }
+          if (fp != nullptr)
+          {
+            fclose(fp);
           }
         }
-      }
-
-      if (initialization)
-      {
-        rb_eval_string_protect(initialization->c_str(), &state);
       }
     }
   }
   
   Embedded::~Embedded()
   {
-  }
-
-  
-  void *runWithoutGil(void *context)
-  {
-    boost::asio::io_context *ctx = static_cast<boost::asio::io_context*>(context);
-    ctx->run();
-    return nullptr;
-  }
-  
-  VALUE boostThread(void *context)
-  {
-    rb_thread_call_without_gvl(&runWithoutGil, context,
-                               NULL, NULL);
-    return Qnil;
-  }
-  
-  void Embedded::start(boost::asio::io_context &context, int count)
-  {
-    m_context = &context;
     
-    std::list<VALUE> threads;
-    for (int i = 0; i < count; i++)
-    {
-      VALUE thread = rb_thread_create(&boostThread, &context);
-      threads.push_back(thread);
-      rb_thread_run(thread);
-    }
-    
-    for (auto &v : threads)
-    {
-      rb_funcall(v, rb_intern("join"), 0);
-    }
   }
-  
-  void Embedded::stop()
-  {
-    if (m_context != nullptr)
-    {
-      m_context->stop();
-      m_context = nullptr;
-    }
-  }
-  
-  RubyVM::~RubyVM()
-  {
-    m_RubyAgent.reset();
-    m_RubyEntity.reset();
-    m_RubyPipeline.reset();
-    m_RubyTransformClass.reset();
-    m_RubyObservation.reset();
-    m_Module.reset();
-
-    ruby_finalize();
-  }
-  
 }

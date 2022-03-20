@@ -345,9 +345,6 @@ namespace mtconnect {
 
         m_agent->start();
 
-#ifdef WITH_RUBY
-        m_ruby->start(m_context, m_workerThreadCount);
-#else
         for (int i = 0; i < m_workerThreadCount; i++)
         {
           m_workers.emplace_back(std::thread([this]() { m_context.run(); }));
@@ -356,7 +353,6 @@ namespace mtconnect {
         {
           w.join();
         }
-#endif
 
         if (m_restart && m_monitorFiles)
         {
@@ -375,10 +371,6 @@ namespace mtconnect {
       m_agent->stop();
       m_context.stop();
       LOG(info) << "Agent Configuration stopped";
-      
-#ifdef WITH_RUBY
-      m_ruby->stop();
-#endif
     }
 
     DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }

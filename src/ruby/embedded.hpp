@@ -35,14 +35,12 @@ namespace mtconnect {
     public:
       Embedded(Agent *agent, const ConfigOptions &options);
       ~Embedded();
-      
-      void start(boost::asio::io_context &context, int threads);
-      void stop();
-      
+            
     protected:
       Agent *m_agent;
       ConfigOptions m_options;
       boost::asio::io_context *m_context = nullptr;
+      std::any m_rubyVM;
     };
   }
 }

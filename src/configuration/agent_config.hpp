@@ -131,10 +131,8 @@ namespace mtconnect {
 #endif
 #ifdef WITH_RUBY
       std::unique_ptr<ruby::Embedded> m_ruby;
-      std::list<void*> m_workers;
-#else
-      std::list<std::thread> m_workers;
 #endif
+      std::list<std::thread> m_workers;
 
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<adapter::Handler> m_adapterHandler;
