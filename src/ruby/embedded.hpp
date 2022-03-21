@@ -30,6 +30,7 @@ namespace Rice {
 namespace mtconnect {
   class Agent;
   namespace ruby {
+    class RubyVM;
     class Embedded
     {
     public:
@@ -40,7 +41,7 @@ namespace mtconnect {
       Agent *m_agent;
       ConfigOptions m_options;
       boost::asio::io_context *m_context = nullptr;
-      std::any m_rubyVM;
+      std::unique_ptr<RubyVM> m_rubyVM;
     };
   }
 }

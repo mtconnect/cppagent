@@ -17,51 +17,33 @@
 
 #pragma once
 
-#include <rice/rice.hpp>
-#include <rice/stl.hpp>
-#include <ruby/thread.h>
-
-namespace mtconnect::ruby::smart_ptr {
-  using namespace Rice;
-  
-  template <typename T>
-  inline void replace(VALUE value, rb_data_type_t* rb_type, std::shared_ptr<T> data, bool isOwner)
-  {
-    using WrapperType = detail::WrapperSmartPointer<std::shared_ptr, T>;
-    
-    WrapperType* wrapper = nullptr;
-    TypedData_Get_Struct(value, WrapperType, rb_type, wrapper);
-    delete wrapper;
-
-    wrapper = new WrapperType(data);
-    RTYPEDDATA_DATA(value) = wrapper;
-  }
-
-  template<typename T, typename...Arg_Ts>
-  class Constructor
+namespace mtconnect::ruby {
+  template<typename T>
+  class MRubySharedPtr
   {
   public:
-    using SharedType = shared_ptr<T>;
-    
-    static void construct(VALUE value, Arg_Ts...args)
+    using SharedPtr = std::shared_ptr<T>;
+
+    MRubySharedPtr(mrb_state *mrb, const char *name, SharedPtr obj)
     {
-      SharedType data = make_shared<T>(args...);
-      replace<T>(value, Data_Type<T>::rb_type(), data, true);
-    }
-  };
-
-  //! Special-case Constructor used when defining Directors.
-  template<typename T, typename...Arg_Ts>
-  class Constructor<T, Object, Arg_Ts...>
-  {
-    public:
-      using SharedType = shared_ptr<T>;
-
-      static void construct(Object self, Arg_Ts...args)
+      static mrb_data_type s_type { nullptr, nullptr};
+      if (s_type.struct_name == nullptr)
       {
-        SharedType data = make_shared<T>(self, args...);
-        replace<T>(self.value(), Data_Type<T>::rb_type(), data, true);
+        s_type.struct_name = name;
+        s_type.dfree = [](mrb_state *mrb, void *p) {
+          auto sp = static_cast<SharedPtr*>(p);
+          delete sp;
+        };
       }
-  };
-  
+      
+      auto mod = mrb_module_get(mrb, "MTConnect");
+      auto klass = mrb_class_get_under(mrb, mod, s_type.struct_name);
+      auto ptr = new SharedPtr(obj);
+
+      auto wrapper = mrb_data_object_alloc(mrb, klass, ptr, &s_type);
+      m_obj = mrb_obj_value(wrapper);
+    }
+        
+    mrb_value m_obj;
+  };  
 }

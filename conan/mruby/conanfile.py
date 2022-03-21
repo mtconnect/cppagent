@@ -38,6 +38,7 @@ MRuby::Build.new do |conf|
 
   # include the default GEMs
   conf.gembox 'default'
+#  conf.gembox 'full-core'
 
   # C compiler settings
   conf.compilers.each do |c|
@@ -47,7 +48,6 @@ MRuby::Build.new do |conf|
   end
   conf.enable_cxx_abi
   conf.enable_test  
-#  conf.gembox 'full-core'
 ''')
             if self.settings.build_type == 'Debug':
                 f.write('''

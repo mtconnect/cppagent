@@ -22,10 +22,6 @@
 #include "device_model/data_item/data_item.hpp"
 #include "adapter/adapter_pipeline.hpp"
 
-#include <rice/rice.hpp>
-#include <rice/stl.hpp>
-#include <ruby/thread.h>
-#include "ruby_transform.hpp"
 #include "ruby_smart_ptr.hpp"
 
 namespace mtconnect::ruby {
@@ -35,6 +31,12 @@ namespace mtconnect::ruby {
   using namespace Rice;
   
   struct RubyPipeline {
+    static void initialize(mrb_state *mrb, RClass *module)
+    {
+      
+    }
+    
+#if 0
     void create(Rice::Module &module)
     {
       m_transform =  define_class_under<Transform>(module, "Transform");
@@ -93,6 +95,6 @@ namespace Rice::detail
       }
       return ptr;
     }
+#endif
   };
-
 }

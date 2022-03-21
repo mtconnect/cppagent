@@ -50,6 +50,8 @@
 #include <mruby/presym.h>
 #include <mruby/error.h>
 
+#include "ruby/ruby_vm.hpp"
+
 #ifdef _WIN32
 #include <direct.h>
 #define getcwd _getcwd
@@ -64,6 +66,7 @@ namespace {
   using namespace device_model;
   using namespace entity;
   using namespace data_item;
+  using namespace ruby;
   namespace fs = std::filesystem;
 
   class EmbeddedRubyTest : public testing::Test
@@ -86,7 +89,7 @@ namespace {
     std::filesystem::path m_cwd;
   };
   
-  TEST_F(EmbeddedRubyTest, create_transform)
+  TEST_F(EmbeddedRubyTest, verify_initialization)
   {
     string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n"
                "Ruby {\n"
@@ -94,24 +97,7 @@ namespace {
                "}\n");
     m_config->loadConfig(str);
     
-    const Agent *agent = m_config->getAgent();
-    DataItemPtr exec = agent->getDataItemForDevice("LinuxCNC", "execution");
-    ASSERT_TRUE(exec);
-    
-    
-    
-//    ErrorList errors;
-//    Timestamp now { std::chrono::system_clock::now() };
-//    ObservationPtr obser = Observation::make(exec, {{"VALUE", "1"s}}, now, errors);
-//    
-//    ASSERT_TRUE(obser);
-//    ASSERT_EQ(0, errors.size());
-    
-//    Rice::Object trans = Rice::protect(rb_eval_string, "FixExecution.new");
-//    Rice::Data_Object<Entity> out = trans.call("transform", obser);
-//    ASSERT_TRUE(out);
-//
-//    ASSERT_EQ("READY", out->getValue<string>());
+    ASSERT_NE(nullptr, RubyVM::rubyVM()->state());
   }
 #if 0
   template<typename T>

@@ -170,6 +170,7 @@ if(NOT WITHOUT_RUBY)
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_observation.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_type.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_transform.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_vm.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.cpp"  
     )

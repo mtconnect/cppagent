@@ -17,13 +17,11 @@
 
 #pragma once
 
-#include <rice/rice.hpp>
-#include <rice/stl.hpp>
-#include <ruby/thread.h>
-
 #include "agent.hpp"
 #include "source.hpp"
 #include "sink.hpp"
+
+#include "ruby_smart_ptr.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect::device_model;
@@ -31,40 +29,115 @@ namespace mtconnect::ruby {
   using namespace Rice;
 
   struct RubyAgent {
-    void create(Rice::Module &module)
+    static void initialize(mrb_state *mrb, RClass *module, Agent *agent)
     {
-      m_agent = define_class_under<Agent>(module, "Agent");
-      m_source = define_class_under<mtconnect::Source>(module, "Source");
-      m_sink = define_class_under<mtconnect::Sink>(module, "Sink");
-    }
-    
-    void methods()
-    {
-      m_agent.define_method("sources", [](Agent *agent) {
-          Rice::Array ary;
-          for (auto &s : agent->getSources())
-            ary.push(s.get());
-          return ary;
-        }).
-        define_method("data_item_for_device", [](Agent *agent, const string device, const string name) {
-          return agent->getDataItemForDevice(device, name);
-        }, Arg("device"), Arg("name")).
-        define_method("device", [](Agent *agent, const string device) {
-          return agent->findDeviceByUUIDorName(device);
-        }, Arg("name")).
-        define_method("devices", [](Agent *agent) {
-          Rice::Array ary;
-          for (auto &d : agent->getDevices())
-            ary.push(d.get());
-          return ary;
-        });
+      static mrb_data_type agentType { "Agent", nullptr };
+      static mrb_data_type pipelineType { "Pipeline", nullptr };
 
-      m_source.define_method("name", &mtconnect::Source::getName).
-        define_method("pipeline", &mtconnect::Source::getPipeline);
+      auto agentClass = mrb_define_class_under(mrb, module, "Agent", mrb->object_class);
+      MRB_SET_INSTANCE_TT(agentClass, MRB_TT_DATA);
+
+      auto wrapper = mrb_data_object_alloc(mrb, agentClass, agent, &agentType);
+      auto agentValue = mrb_obj_value(wrapper);
+      auto mod = mrb_obj_value(module);
+      auto ivar = mrb_intern_cstr(mrb, "@agent");
+      mrb_iv_set(mrb, mod, ivar, agentValue);
+
+      mrb_define_class_method(mrb, module, "agent",
+        [](mrb_state *mrb, mrb_value self) {
+          auto ivar = mrb_intern_cstr(mrb, "@agent");
+          return mrb_iv_get(mrb, self, ivar);
+        }, MRB_ARGS_NONE());
+
+      auto sinkClass = mrb_define_class_under(mrb, module, "Sink", mrb->object_class);
+      MRB_SET_INSTANCE_TT(sinkClass, MRB_TT_DATA);
+
+      auto sourceClass = mrb_define_class_under(mrb, module, "Source", mrb->object_class);
+      MRB_SET_INSTANCE_TT(sourceClass, MRB_TT_DATA);
+      
+      mrb_define_method(mrb, sourceClass, "name", [](mrb_state *mrb, mrb_value self){
+        auto source = static_cast<SourcePtr*>(DATA_PTR(self));
+        return mrb_str_new_cstr(mrb, (*source)->getName().c_str());
+      }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, sourceClass, "pipeline", [](mrb_state *mrb, mrb_value self){
+        auto source = static_cast<SourcePtr*>(DATA_PTR(self));
+        auto mod = mrb_module_get(mrb, "MTConnect");
+        auto klass = mrb_class_get_under(mrb, mod, "Pipeline");
+        auto wrapper = mrb_data_object_alloc(mrb, klass, (*source)->getPipeline(), &pipelineType);
+        return mrb_obj_value(wrapper);
+      }, MRB_ARGS_NONE());
+
+      mrb_define_method(mrb, agentClass, "sources", [](mrb_state *mrb, mrb_value self) {
+        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        auto sources = mrb_ary_new(mrb);
+        
+        for (auto &source : agent->getSources())
+        {
+          MRubySharedPtr<Source> ptr(mrb, "Source", source);
+          mrb_ary_push(mrb, sources, ptr.m_obj);
+        }
+        
+        return sources;
+      }, MRB_ARGS_NONE());
+
+      mrb_define_method(mrb, agentClass, "sinks", [](mrb_state *mrb, mrb_value self) {
+        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        auto sinks = mrb_ary_new(mrb);
+        
+        for (auto &sink : agent->getSinks())
+        {
+          MRubySharedPtr<Sink> ptr(mrb, "Sink", sink);
+          mrb_ary_push(mrb, sinks, ptr.m_obj);
+        }
+        
+        return sinks;
+      }, MRB_ARGS_NONE());
+      
+      mrb_define_method(mrb, agentClass, "devices", [](mrb_state *mrb, mrb_value self) {
+        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        auto devices = mrb_ary_new(mrb);
+        
+        for (auto &device : agent->getDevices())
+        {
+          MRubySharedPtr<Device> ptr(mrb, "Device", device);
+          mrb_ary_push(mrb, devices, ptr.m_obj);
+        }
+        
+        return devices;
+      }, MRB_ARGS_NONE());
+      
+      mrb_define_method(mrb, agentClass, "data_item_for_device", [](mrb_state *mrb, mrb_value self) {
+        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        const char *name, *device;
+        mrb_get_args(mrb, "zz", &device, &name);
+
+        auto di = agent->getDataItemForDevice(device, name);
+        if (di)
+        {
+          MRubySharedPtr<device_model::data_item::DataItem> ptr(mrb, "DataItem", di);
+          return ptr.m_obj;
+        }
+        else
+        {
+          return mrb_nil_value();
+        }
+      }, MRB_ARGS_REQ(2));
+      
+      mrb_define_method(mrb, agentClass, "device", [](mrb_state *mrb, mrb_value self) {
+        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        const char *name;
+        mrb_get_args(mrb, "z", &name);
+        auto device = agent->findDeviceByUUIDorName(name);
+        if (device)
+        {
+          MRubySharedPtr<Device> ptr(mrb, "Device", device);
+          return ptr.m_obj;
+        }
+        else
+        {
+          return mrb_nil_value();
+        }
+      }, MRB_ARGS_REQ(1));
     }
-    
-    Data_Type<Agent> m_agent;
-    Data_Type<Source> m_source;
-    Data_Type<Sink> m_sink;
   };
 }
