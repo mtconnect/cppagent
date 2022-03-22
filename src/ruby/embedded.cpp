@@ -31,12 +31,6 @@
 #include "embedded.hpp"
 #include "logging.hpp"
 
-#if defined(_WIN32) || defined(_WIN64)
-#undef timezone
-#undef WSAPPI
-#define WSAAPI 
-#endif
-
 #include <mruby.h>
 #include <mruby/data.h>
 #include <mruby/array.h>
@@ -104,7 +98,7 @@ namespace mtconnect::ruby {
           LOG(info) << "Found module: " << file;
           FILE *fp = nullptr;
           try {
-            FILE *fp = fopen(mod.c_str(), "r");
+            FILE *fp = fopen(mod.string().c_str(), "r");
             mrb_load_file(mrb, fp);
           } catch (std::exception ex) {
             LOG(error) << "Failed to load module: " << mod << ": " << ex.what();

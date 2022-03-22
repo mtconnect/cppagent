@@ -21,20 +21,9 @@ class CppAgentConan(ConanFile):
         "without_ruby": True,
         "without_ipv6": False,
 
-        "boost:python_version": "3.9",
-        "boost:python_executable": "python3",
         "boost:shared": False,
-        "boost:bzip2": False,
-        "boost:lzma": False,
         "boost:without_python": True,
-        "boost:without_wave": True,
         "boost:without_test": True,
-        "boost:without_json": False,
-        "boost:without_mpi": True,
-        "boost:without_stacktrace": True,
-        "boost:extra_b2_flags": "-j 2 -d +1 cxxstd=17 cxxflags=-fvisibility=hidden ",
-        "boost:i18n_backend_iconv": 'off',
-        "boost:i18n_backend_icu": True,
 
         "libxml2:shared": False,
         "libxml2:include_utils": False,
@@ -55,9 +44,6 @@ class CppAgentConan(ConanFile):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
-            self.options['boost'].i18n_backend_icu = False
-            self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + \
-                " boost.locale.icu=off boost.locale.iconv=off boost.locale.winapi=on asmflags=/safeseh "
             if self.settings.build_type and self.settings.build_type == 'Debug':
                 self.settings.compiler.runtime = 'MTd'
             else:
@@ -75,10 +61,10 @@ class CppAgentConan(ConanFile):
         if not self.options.build_tests:
             self.options.run_tests = False
         
-        if self.windows_xp:
-            self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0501 "
-        elif self.settings.os == 'Windows':
-            self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0600 "            
+ #       if self.windows_xp:
+ #           self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0501 "
+ #       elif self.settings.os == 'Windows':
+ #           self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0600 "            
 
     def requirements(self):
         if not self.windows_xp:

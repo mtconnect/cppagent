@@ -1,0 +1,26 @@
+diff --git a/mrbgems/mruby-io/src/file.c b/mrbgems/mruby-io/src/file.c
+index fe7861798..f4c4e60cb 100644
+--- a/mrbgems/mruby-io/src/file.c
++++ b/mrbgems/mruby-io/src/file.c
+@@ -88,7 +88,7 @@ flock(int fd, int operation) {
+   DWORD flags;
+   flags = ((operation & LOCK_NB) ? LOCKFILE_FAIL_IMMEDIATELY : 0)
+           | ((operation & LOCK_SH) ? LOCKFILE_EXCLUSIVE_LOCK : 0);
+-  ov = (OVERLAPPED){0};
++  ov = OVERLAPPED{0};
+   return LockFileEx(h, flags, 0, 0xffffffff, 0xffffffff, &ov) ? 0 : -1;
+ }
+ #endif
+diff --git a/src/dump.c b/src/dump.c
+index 3841e12ac..4fa2ebe34 100644
+--- a/src/dump.c
++++ b/src/dump.c
+@@ -81,7 +81,7 @@ dump_float(mrb_state *mrb, uint8_t *buf, mrb_float f)
+   union {
+     double f;
+     char s[sizeof(double)];
+-  } u = {.f = (double)f};
++  } u; u.f = (double)f;
+ 
+   if (littleendian) {
+     memcpy(buf, u.s, sizeof(double));

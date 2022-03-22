@@ -51,8 +51,8 @@ namespace mtconnect::ruby {
         const char *name;
         TransformPtr *transform;
         
-        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
-        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::mruby_type);
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
         pipeline->spliceBefore(name, *transform);
         
         return self;
@@ -62,8 +62,8 @@ namespace mtconnect::ruby {
         const char *name;
         TransformPtr *transform;
 
-        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
-        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::mruby_type);
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
         pipeline->spliceAfter(name, *transform);
         
         return self;
@@ -73,8 +73,8 @@ namespace mtconnect::ruby {
         const char *name;
         TransformPtr *transform;
         
-        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
-        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::mruby_type);
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
         pipeline->firstAfter(name, *transform);
         
         return self;
@@ -84,8 +84,8 @@ namespace mtconnect::ruby {
         const char *name;
         TransformPtr *transform;
         
-        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
-        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::mruby_type);
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
         
         pipeline->lastAfter(name, *transform);
         
@@ -95,7 +95,7 @@ namespace mtconnect::ruby {
       mrb_define_method(mrb, pipelineClass, "remove", [](mrb_state *mrb, mrb_value self) {
         const char *name;
 
-        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
         mrb_get_args(mrb, "z", &name);
         pipeline->remove(name);
         
@@ -106,9 +106,9 @@ namespace mtconnect::ruby {
         const char *name;
         TransformPtr *trans;
         
-        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
         mrb_get_args(mrb, "zd", &name,
-                     &trans, MRubySharedPtr<Transform>::mruby_type);
+                     &trans, MRubySharedPtr<Transform>::type());
         
         pipeline->replace(name, *trans);
         
@@ -118,20 +118,18 @@ namespace mtconnect::ruby {
 
       mrb_define_method(mrb, pipelineClass, "run", [](mrb_state *mrb, mrb_value self) {
         EntityPtr *entity;
-        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
-        mrb_get_args(mrb, "d", &entity, MRubySharedPtr<Entity>::mruby_type);
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+        mrb_get_args(mrb, "d", &entity, MRubySharedPtr<Entity>::type());
+        
         EntityPtr ptr = *entity;
         ptr = pipeline->run(ptr);
         
-        MRubySharedPtr<Entity> res(mrb, "Entity", ptr);
-        return res.m_obj;
+        return MRubySharedPtr<Entity>::wrap(mrb, "Entity", ptr);
       }, MRB_ARGS_REQ(1));
       
       mrb_define_method(mrb, pipelineClass, "context", [](mrb_state *mrb, mrb_value self) {
-        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
-        auto ptr = pipeline->getContext();
-        MRubySharedPtr<PipelineContext> obj(mrb, "PipelineContext", ptr);
-        return obj.m_obj;
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+        return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext", pipeline->getContext());
       }, MRB_ARGS_NONE());
 
     }

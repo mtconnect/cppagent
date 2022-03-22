@@ -16,7 +16,6 @@ class MRubyConan(ConanFile):
     description = "mruby conan recipe"
     topics = "ruby", "binding", "conan", "mruby"
     settings = "os", "compiler", "build_type", "arch"
-    requires = "readline/8.1.2"
 
     options = { "shared": [True, False] }
 
@@ -29,8 +28,12 @@ class MRubyConan(ConanFile):
     _major, _minor, _patch = version.split('.')
     _ruby_version_dir = "ruby-{}.{}.0".format(_major, _minor)
 
+    def export_sources(self):
+        self.copy("patches/*")
+
     def generate(self):
         self.build_config = os.path.join(self.build_folder, self._mruby_source, "build_config", "mtconnect.rb")
+        
         with open(self.build_config, "w") as f:
             f.write('''
 MRuby::Build.new do |conf|
@@ -50,12 +53,15 @@ MRuby::Build.new do |conf|
   conf.enable_test  
 ''')
             if self.settings.build_type == 'Debug':
-                f.write('''
-  conf.enable_debug
-  conf.compilers.each do |c|
-    c.flags << '-O0'
-  end
-''')
+                f.write("  conf.enable_debug\n")
+            if self.settings.os == 'Windows':
+                if self.settings.build_type == 'Debug':
+                    f.write("  conf.compilers.each { |c|  c.flags << '/Od' }\n")
+                f.write("  conf.compilers.each { |c| c.flags << '/std:c++17' }\n")
+                f.write("  conf.compilers.each { |c| c.flags << '/%s' }\n" % self.settings.compiler.runtime)
+            elif self.settings.build_type == 'Debug':
+                f.write("  conf.compilers.each { |c| c.flags << '-O0' }\n")
+            
             f.write("end\n")
 
     def source(self):
@@ -63,6 +69,9 @@ MRuby::Build.new do |conf|
         git.clone("https://github.com/mruby/mruby.git", "stable")
         
     def build(self):
+        if self.settings.os == "Windows":
+            tools.patch(patch_file=os.path.join(self.build_folder, "patches", "windows.patch"), fuzz=True,
+                        base_path=self._mruby_source)
         self.run("rake MRUBY_CONFIG=%s" % self.build_config,
                  cwd=self._mruby_source)
 
@@ -85,7 +94,8 @@ MRuby::Build.new do |conf|
 
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.bindirs = ["bin"]
-        self.cpp_info.libs = ["mruby"]
-        if self.settings.os != 'Windows':
-            self.cpp_info.libs.append("m")
+        if self.settings.os == 'Windows':
+            self.cpp_info.libs = ["libmruby"]
+        else:
+            self.cpp_info.libs = ["mruby", "m"]
 

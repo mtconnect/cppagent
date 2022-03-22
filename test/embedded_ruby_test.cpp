@@ -51,6 +51,7 @@
 #include <mruby/error.h>
 
 #include "ruby/ruby_vm.hpp"
+#include "ruby/ruby_smart_ptr.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -89,15 +90,32 @@ namespace {
     std::filesystem::path m_cwd;
   };
   
-  TEST_F(EmbeddedRubyTest, verify_initialization)
+  TEST_F(EmbeddedRubyTest, should_initialize)
   {
     string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n"
                "Ruby {\n"
-               "  module = " PROJECT_ROOT_DIR "/test/resources/ruby/simple_module.rb\n"
+               "  module = " PROJECT_ROOT_DIR "/test/resources/ruby/should_initialize.rb\n"
                "}\n");
     m_config->loadConfig(str);
     
-    ASSERT_NE(nullptr, RubyVM::rubyVM()->state());
+    auto mrb = RubyVM::rubyVM()->state();
+    ASSERT_NE(nullptr, mrb);
+    
+    mrb_value pipelines = mrb_gv_get(mrb, mrb_intern_cstr(mrb, "$pipelines"));
+    ASSERT_FALSE(mrb_nil_p(pipelines));
+    ASSERT_TRUE(mrb_array_p(pipelines));
+
+    auto array = mrb_ary_ptr(pipelines);
+    auto size = ARY_LEN(array);
+    ASSERT_EQ(2, size);
+    
+    auto values = ARY_PTR(array);
+    ASSERT_NE(nullptr, values);
+    for (int i = 0; i < size; i++)
+    {
+      auto pipeline = MRubyPtr<pipeline::Pipeline>::unwrap(mrb, values[i]);
+      ASSERT_NE(nullptr, dynamic_cast<pipeline::Pipeline*>(pipeline));
+    }
   }
 #if 0
   template<typename T>

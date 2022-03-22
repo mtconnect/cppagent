@@ -31,16 +31,12 @@ namespace mtconnect::ruby {
   struct RubyAgent {
     static void initialize(mrb_state *mrb, RClass *module, Agent *agent)
     {
-      static mrb_data_type agentType { "Agent", nullptr };
-      static mrb_data_type pipelineType { "Pipeline", nullptr };
-
       auto agentClass = mrb_define_class_under(mrb, module, "Agent", mrb->object_class);
       MRB_SET_INSTANCE_TT(agentClass, MRB_TT_DATA);
 
-      auto wrapper = mrb_data_object_alloc(mrb, agentClass, agent, &agentType);
-      auto agentValue = mrb_obj_value(wrapper);
-      auto mod = mrb_obj_value(module);
+      mrb_value agentValue = MRubyPtr<Agent>::wrap(mrb, agentClass, agent);
       auto ivar = mrb_intern_cstr(mrb, "@agent");
+      auto mod = mrb_obj_value(module);
       mrb_iv_set(mrb, mod, ivar, agentValue);
 
       mrb_define_class_method(mrb, module, "agent",
@@ -56,66 +52,69 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(sourceClass, MRB_TT_DATA);
       
       mrb_define_method(mrb, sourceClass, "name", [](mrb_state *mrb, mrb_value self){
-        auto source = static_cast<SourcePtr*>(DATA_PTR(self));
-        return mrb_str_new_cstr(mrb, (*source)->getName().c_str());
+        auto source = MRubySharedPtr<Source>::unwrap(mrb, self);
+        return mrb_str_new_cstr(mrb, source->getName().c_str());
       }, MRB_ARGS_NONE());
+      
       mrb_define_method(mrb, sourceClass, "pipeline", [](mrb_state *mrb, mrb_value self){
-        auto source = static_cast<SourcePtr*>(DATA_PTR(self));
-        auto mod = mrb_module_get(mrb, "MTConnect");
-        auto klass = mrb_class_get_under(mrb, mod, "Pipeline");
-        auto wrapper = mrb_data_object_alloc(mrb, klass, (*source)->getPipeline(), &pipelineType);
-        return mrb_obj_value(wrapper);
+        auto source = MRubySharedPtr<Source>::unwrap(mrb, self);
+        return MRubyPtr<pipeline::Pipeline>::wrap(mrb, "Pipeline", source->getPipeline());
       }, MRB_ARGS_NONE());
 
       mrb_define_method(mrb, agentClass, "sources", [](mrb_state *mrb, mrb_value self) {
-        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
         auto sources = mrb_ary_new(mrb);
         
         for (auto &source : agent->getSources())
         {
-          MRubySharedPtr<Source> ptr(mrb, "Source", source);
-          mrb_ary_push(mrb, sources, ptr.m_obj);
+          auto obj = MRubySharedPtr<Source>::wrap(mrb, "Source", source);
+          mrb_ary_push(mrb, sources, obj);
         }
         
         return sources;
       }, MRB_ARGS_NONE());
 
       mrb_define_method(mrb, agentClass, "sinks", [](mrb_state *mrb, mrb_value self) {
-        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
         auto sinks = mrb_ary_new(mrb);
         
         for (auto &sink : agent->getSinks())
         {
-          MRubySharedPtr<Sink> ptr(mrb, "Sink", sink);
-          mrb_ary_push(mrb, sinks, ptr.m_obj);
+          auto obj = MRubySharedPtr<Sink>::wrap(mrb, "Sink", sink);
+          mrb_ary_push(mrb, sinks, obj);
         }
         
         return sinks;
       }, MRB_ARGS_NONE());
       
       mrb_define_method(mrb, agentClass, "devices", [](mrb_state *mrb, mrb_value self) {
-        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
         auto devices = mrb_ary_new(mrb);
         
+        auto mod = mrb_module_get(mrb, "MTConnect");
+        auto klass = mrb_class_get_under(mrb, mod, "Device");
+
         for (auto &device : agent->getDevices())
         {
-          MRubySharedPtr<Device> ptr(mrb, "Device", device);
-          mrb_ary_push(mrb, devices, ptr.m_obj);
+          auto obj = MRubySharedPtr<Device>::wrap(mrb, klass, device);
+          mrb_ary_push(mrb, devices, obj);
         }
         
         return devices;
       }, MRB_ARGS_NONE());
       
       mrb_define_method(mrb, agentClass, "data_item_for_device", [](mrb_state *mrb, mrb_value self) {
-        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
         const char *name, *device;
         mrb_get_args(mrb, "zz", &device, &name);
+        
+        auto mod = mrb_module_get(mrb, "MTConnect");
+        auto klass = mrb_class_get_under(mrb, mod, "DataItem");
 
         auto di = agent->getDataItemForDevice(device, name);
         if (di)
         {
-          MRubySharedPtr<device_model::data_item::DataItem> ptr(mrb, "DataItem", di);
-          return ptr.m_obj;
+          return MRubySharedPtr<device_model::data_item::DataItem>::wrap(mrb, klass, di);
         }
         else
         {
@@ -124,14 +123,13 @@ namespace mtconnect::ruby {
       }, MRB_ARGS_REQ(2));
       
       mrb_define_method(mrb, agentClass, "device", [](mrb_state *mrb, mrb_value self) {
-        auto agent = static_cast<Agent*>(DATA_PTR(self));
+        auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
         const char *name;
         mrb_get_args(mrb, "z", &name);
         auto device = agent->findDeviceByUUIDorName(name);
         if (device)
         {
-          MRubySharedPtr<Device> ptr(mrb, "Device", device);
-          return ptr.m_obj;
+          return MRubySharedPtr<Device>::wrap(mrb, "Device", device);
         }
         else
         {
