@@ -6,7 +6,7 @@ import re
 import itertools as it
 import glob
 
-class RubyRiceConan(ConanFile):
+class MRubyConan(ConanFile):
     name = "mruby"
     version = "3.0.0"
     license = "https://github.com/mruby/mruby/blob/master/LICENSE"
@@ -73,9 +73,16 @@ MRuby::Build.new do |conf|
         
     def package_info(self):        
         self.cpp_info.includedirs = ["include"]
-        self.cpp_info.defines = "MRB_USE_DEBUG_HOOK", "MRB_WORD_BOXING", \
-          "MRB_INT64", "MRB_USE_CXX_EXCEPTION", "MRB_USE_CXX_ABI", "MRB_DEBUG", \
-          "MRB_USE_RATIONAL", "MRB_USE_COMPLEX"
+
+        if self.settings.os != 'Windows':
+            ruby = os.path.join(self.package_folder, "bin", "mruby-config")
+        else:
+            ruby = os.path.join(self.package_folder, "bin", "mruby-config.bat")
+        
+        buf = io.StringIO()
+        self.run([ruby, "--cflags"], output=buf)
+        self.cpp_info.defines = [d[2:] for d in buf.getvalue().split(' ') if d.startswith('/D') or d.startswith('-D')]
+
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.bindirs = ["bin"]
         self.cpp_info.libs = ["mruby"]

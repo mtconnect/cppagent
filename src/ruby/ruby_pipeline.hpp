@@ -21,19 +21,119 @@
 #include "device_model/device.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "adapter/adapter_pipeline.hpp"
+#include "entity/entity.hpp"
 
 #include "ruby_smart_ptr.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect;
   using namespace pipeline;
+  using namespace entity;
   using namespace std;
   using namespace Rice;
   
   struct RubyPipeline {
     static void initialize(mrb_state *mrb, RClass *module)
     {
+      auto pipelineClass = mrb_define_class_under(mrb, module, "Pipeline", mrb->object_class);
+      MRB_SET_INSTANCE_TT(pipelineClass, MRB_TT_DATA);
+
+      auto contextClass = mrb_define_class_under(mrb, module, "PipelineContext", mrb->object_class);
+      MRB_SET_INSTANCE_TT(contextClass, MRB_TT_DATA);
       
+      auto adapterPipelineClass = mrb_define_class_under(mrb, module, "AdapterPipeline", pipelineClass);
+      MRB_SET_INSTANCE_TT(adapterPipelineClass, MRB_TT_DATA);
+
+      auto loopbackPipelineClass = mrb_define_class_under(mrb, module, "LoopbackPipeline", pipelineClass);
+      MRB_SET_INSTANCE_TT(loopbackPipelineClass, MRB_TT_DATA);
+
+      mrb_define_method(mrb, pipelineClass, "spice_before", [](mrb_state *mrb, mrb_value self) {
+        const char *name;
+        TransformPtr *transform;
+        
+        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::mruby_type);
+        pipeline->spliceBefore(name, *transform);
+        
+        return self;
+      }, MRB_ARGS_REQ(2));
+
+      mrb_define_method(mrb, pipelineClass, "splice_after", [](mrb_state *mrb, mrb_value self) {
+        const char *name;
+        TransformPtr *transform;
+
+        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::mruby_type);
+        pipeline->spliceAfter(name, *transform);
+        
+        return self;
+      }, MRB_ARGS_REQ(2));
+
+      mrb_define_method(mrb, pipelineClass, "first_after", [](mrb_state *mrb, mrb_value self) {
+        const char *name;
+        TransformPtr *transform;
+        
+        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::mruby_type);
+        pipeline->firstAfter(name, *transform);
+        
+        return self;
+      }, MRB_ARGS_REQ(2));
+
+      mrb_define_method(mrb, pipelineClass, "last_after", [](mrb_state *mrb, mrb_value self) {
+        const char *name;
+        TransformPtr *transform;
+        
+        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::mruby_type);
+        
+        pipeline->lastAfter(name, *transform);
+        
+        return self;
+      }, MRB_ARGS_REQ(2));
+
+      mrb_define_method(mrb, pipelineClass, "remove", [](mrb_state *mrb, mrb_value self) {
+        const char *name;
+
+        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        mrb_get_args(mrb, "z", &name);
+        pipeline->remove(name);
+        
+        return self;
+      }, MRB_ARGS_REQ(1));
+      
+      mrb_define_method(mrb, pipelineClass, "replace", [](mrb_state *mrb, mrb_value self) {
+        const char *name;
+        TransformPtr *trans;
+        
+        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        mrb_get_args(mrb, "zd", &name,
+                     &trans, MRubySharedPtr<Transform>::mruby_type);
+        
+        pipeline->replace(name, *trans);
+        
+        return self;
+      }, MRB_ARGS_REQ(2));
+
+
+      mrb_define_method(mrb, pipelineClass, "run", [](mrb_state *mrb, mrb_value self) {
+        EntityPtr *entity;
+        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        mrb_get_args(mrb, "d", &entity, MRubySharedPtr<Entity>::mruby_type);
+        EntityPtr ptr = *entity;
+        ptr = pipeline->run(ptr);
+        
+        MRubySharedPtr<Entity> res(mrb, "Entity", ptr);
+        return res.m_obj;
+      }, MRB_ARGS_REQ(1));
+      
+      mrb_define_method(mrb, pipelineClass, "context", [](mrb_state *mrb, mrb_value self) {
+        auto pipeline = static_cast<Pipeline*>(DATA_PTR(self));
+        auto ptr = pipeline->getContext();
+        MRubySharedPtr<PipelineContext> obj(mrb, "PipelineContext", ptr);
+        return obj.m_obj;
+      }, MRB_ARGS_NONE());
+
     }
     
 #if 0
@@ -47,17 +147,6 @@ namespace mtconnect::ruby {
     
     void methods()
     {
-      m_pipeline.define_method("splice_before", &pipeline::Pipeline::spliceBefore, Arg("name"), Arg("transform")).
-        define_method("splice_after", &pipeline::Pipeline::spliceAfter, Arg("name"), Arg("transform")).
-        define_method("first_after", &pipeline::Pipeline::firstAfter, Arg("name"), Arg("transform")).
-        define_method("last_after", &pipeline::Pipeline::lastAfter, Arg("name"), Arg("transform")).
-        define_method("run", &pipeline::Pipeline::run, Arg("entity")).
-        define_method("context", [](pipeline::Pipeline *p) { return p->getContext(); }).
-        define_method("remove", &pipeline::Pipeline::remove, Arg("transform")).
-        define_method("replace", &pipeline::Pipeline::replace, Arg("old"), Arg("new"));
-
-      //m_adapterPipeline.define_constructor(Constructor<adapter::AdapterPipeline>());
-      
       m_transform.define_method("name", &RubyTransform::getName).
         define_method("guard=", [](RubyTransform* t, const Symbol &guard) { t->setGuard(guard); }, Arg("guard")).
         define_method("forward", &RubyTransform::next, Arg("entity"));
@@ -73,28 +162,6 @@ namespace mtconnect::ruby {
     Data_Type<PipelineContext> m_pipelineContext;
   };
 }
-
-namespace Rice::detail
-{
-  template <>
-  class From_Ruby<TransformPtr>
-  {
-  public:
-    TransformPtr convert(VALUE value)
-    {
-      Wrapper* wrapper = detail::getWrapper(value, Data_Type<Transform>::rb_type());
-
-      using Wrapper_T = WrapperSmartPointer<std::shared_ptr, Transform>;
-      Wrapper_T* smartWrapper = static_cast<Wrapper_T*>(wrapper);
-      std::shared_ptr<Transform> ptr = dynamic_pointer_cast<Transform>(smartWrapper->data());
-      
-      if (!ptr)
-      {
-        std::string message = "Invalid smart pointer wrapper";
-          throw std::runtime_error(message.c_str());
-      }
-      return ptr;
-    }
 #endif
   };
 }

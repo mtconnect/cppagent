@@ -29,6 +29,7 @@ namespace mtconnect::ruby {
       static mrb_data_type s_type { nullptr, nullptr};
       if (s_type.struct_name == nullptr)
       {
+        mruby_type = &s_type;
         s_type.struct_name = name;
         s_type.dfree = [](mrb_state *mrb, void *p) {
           auto sp = static_cast<SharedPtr*>(p);
@@ -45,5 +46,10 @@ namespace mtconnect::ruby {
     }
         
     mrb_value m_obj;
-  };  
+    static mrb_data_type *mruby_type;
+  };
+  
+  template<typename T>
+  mrb_data_type *MRubySharedPtr<T>::mruby_type = nullptr;
+
 }
