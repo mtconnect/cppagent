@@ -81,15 +81,15 @@ namespace mtconnect::ruby {
       case MRB_TT_STRING:
         dsv.emplace<string>(stringFromRuby(mrb, value));
         break;
-                                                                                                                                   
+        
       case MRB_TT_FIXNUM:
         dsv.emplace<int64_t>(mrb_fixnum(value));
         break;
-                                                                                                                                   
+        
       case MRB_TT_FLOAT:
         dsv.emplace<double>(mrb_to_flo(mrb, value));
         break;
-                                                                                                                                   
+        
       case MRB_TT_HASH:
       {
         DataSet inner;
@@ -120,7 +120,7 @@ namespace mtconnect::ruby {
         dataSet->emplace(k, dsv);
       
       return 0;
-    }, &value);
+    }, &dataSet);
   }
   
   inline Value valueFromRuby(mrb_state *mrb, mrb_value value)
@@ -160,8 +160,12 @@ namespace mtconnect::ruby {
         break;
         
       case MRB_TT_HASH:
-        //res.emplace<DataSet>(From_Ruby<DataSet>().convert(value));
+      {
+        DataSet ds;
+        dataSetFromRuby(mrb, value, ds);
+        res.emplace<DataSet>(ds);
         break;
+      }
         
       case MRB_TT_ARRAY:
       {
@@ -265,9 +269,8 @@ namespace mtconnect::ruby {
         
         return ary;
       },
-      [](const entity::DataSet &v) -> mrb_value {
-        //return To_Ruby<entity::DataSet>().convert(v);
-        return mrb_nil_value();
+      [mrb](const entity::DataSet &v) -> mrb_value {
+        return toRuby(mrb, v);
       },
               
       // Handled types
@@ -356,6 +359,13 @@ namespace mtconnect::ruby {
         auto entity = MRubySharedPtr<Entity>::unwrap(self);
         return toRuby(mrb, entity->getValue());
       }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, entityClass, "value=", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        mrb_value value;
+        mrb_get_args(mrb, "o", &value);
+        entity->setValue(valueFromRuby(mrb, value));
+        return value;
+      }, MRB_ARGS_REQ(1));
 
       mrb_define_method(mrb, entityClass, "properties", [](mrb_state *mrb, mrb_value self) {
         auto entity = MRubySharedPtr<Entity>::unwrap(self);
@@ -391,7 +401,7 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(componentClass, MRB_TT_DATA);
       
       mrb_define_method(mrb, componentClass, "children", [](mrb_state *mrb, mrb_value self) {
-        auto comp = MRubySharedPtr<Component>::unwrap(self);
+        auto comp = MRubySharedPtr<Entity>::unwrap<Component>(mrb, self);
         mrb_value ary = mrb_ary_new(mrb);
         const auto &list = comp->getChildren();
         if (list)
@@ -410,7 +420,7 @@ namespace mtconnect::ruby {
         return ary;
       }, MRB_ARGS_NONE());
       mrb_define_method(mrb, componentClass, "data_items", [](mrb_state *mrb, mrb_value self) {
-        auto comp = MRubySharedPtr<Component>::unwrap(self);
+        auto comp = MRubySharedPtr<Entity>::unwrap<Component>(mrb, self);
         mrb_value ary = mrb_ary_new(mrb);
         const auto &list = comp->getDataItems();
         if (list)
@@ -422,7 +432,7 @@ namespace mtconnect::ruby {
           {
             DataItemPtr di = dynamic_pointer_cast<DataItem>(c);
             if (di)
-              mrb_ary_push(mrb, ary, MRubySharedPtr<DataItem>::wrap(mrb, klass, di));
+              mrb_ary_push(mrb, ary, MRubySharedPtr<Entity>::wrap(mrb, klass, di));
           }
         }
         
@@ -434,12 +444,12 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(deviceClass, MRB_TT_DATA);
       
       mrb_define_method(mrb, componentClass, "data_item", [](mrb_state *mrb, mrb_value self) {
-        auto dev = MRubySharedPtr<Device>::unwrap(self);
+        auto dev = MRubySharedPtr<Entity>::unwrap<Device>(mrb, self);
         const char *name;
         mrb_get_args(mrb, "s", &name);
 
         auto di = dev->getDeviceDataItem(name);
-        return MRubySharedPtr<DataItem>::wrap(mrb, "DataItem", di);
+        return MRubySharedPtr<Entity>::wrap(mrb, "DataItem", di);
       }, MRB_ARGS_REQ(1));
 
 
@@ -447,30 +457,26 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(dataItemClass, MRB_TT_DATA);
 
       mrb_define_method(mrb, dataItemClass, "name", [](mrb_state *mrb, mrb_value self) {
-        auto di = MRubySharedPtr<DataItem>::unwrap(self);
+        auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
         if (di->getName())
           return mrb_str_new_cstr(mrb, (*di->getName()).c_str());
         else
           return mrb_nil_value();
       }, MRB_ARGS_NONE());
       mrb_define_method(mrb, dataItemClass, "observation_name", [](mrb_state *mrb, mrb_value self) {
-        auto entity = MRubySharedPtr<Entity>::unwrap(self);
-        auto di = dynamic_pointer_cast<DataItem>(entity);
+        auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
         return mrb_str_new_cstr(mrb, di->getObservationName().c_str());
       }, MRB_ARGS_NONE());
       mrb_define_method(mrb, dataItemClass, "id", [](mrb_state *mrb, mrb_value self) {
-        auto entity = MRubySharedPtr<Entity>::unwrap(self);
-        auto di = dynamic_pointer_cast<DataItem>(entity);
+        auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
         return mrb_str_new_cstr(mrb, di->getId().c_str());
       }, MRB_ARGS_NONE());
       mrb_define_method(mrb, dataItemClass, "type", [](mrb_state *mrb, mrb_value self) {
-        auto entity = MRubySharedPtr<Entity>::unwrap(self);
-        auto di = dynamic_pointer_cast<DataItem>(entity);
+        auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
         return mrb_str_new_cstr(mrb, di->getType().c_str());
       }, MRB_ARGS_NONE());
       mrb_define_method(mrb, dataItemClass, "sub_type", [](mrb_state *mrb, mrb_value self) {
-        auto entity = MRubySharedPtr<Entity>::unwrap(self);
-        auto di = dynamic_pointer_cast<DataItem>(entity);
+        auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
         return mrb_str_new_cstr(mrb, di->getSubType().c_str());
       }, MRB_ARGS_NONE());
 

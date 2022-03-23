@@ -82,11 +82,13 @@ namespace mtconnect {
 
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
       const Agent *getAgent() const { return m_agent.get(); }
+      auto &getContext() { return m_context; }
 
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
       auto &getSinkFactory() { return m_sinkFactory; }
       auto &getSourceFactory() { return m_sourceFactory; }
+      auto getPipelineContext() { return m_pipelineContext; }
 
       const auto &getLoggerSink() const { return m_sink; }
       const auto &getLogDirectory() const { return m_logDirectory; }

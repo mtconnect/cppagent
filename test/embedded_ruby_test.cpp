@@ -37,6 +37,7 @@
 #include "xml_printer.hpp"
 #include "device_model/data_item/data_item.hpp"
 
+
 #include <mruby.h>
 #include <mruby/data.h>
 #include <mruby/array.h>
@@ -67,8 +68,32 @@ namespace {
   using namespace device_model;
   using namespace entity;
   using namespace data_item;
+  using namespace pipeline;
+  using namespace asset;
   using namespace ruby;
   namespace fs = std::filesystem;
+  
+  class MockPipelineContract : public PipelineContract
+  {
+  public:
+    MockPipelineContract(const Agent *agent) : m_agent(agent) {}
+    DevicePtr findDevice(const std::string &device) override { return nullptr; }
+    DataItemPtr findDataItem(const std::string &device, const std::string &name) override
+    {
+      return m_agent->getDataItemForDevice(device, name);
+    }
+    void eachDataItem(EachDataItem fun) override {}
+    void deliverObservation(observation::ObservationPtr obs) override { m_observation = obs; }
+    void deliverAsset(AssetPtr a) override { m_asset = a; }
+    void deliverAssetCommand(entity::EntityPtr c) override { m_command = c; }
+    void deliverCommand(entity::EntityPtr c) override { m_command = c; }
+    void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
+
+    const Agent *m_agent;
+    ObservationPtr m_observation;
+    entity::EntityPtr m_command;
+    AssetPtr m_asset;
+  };
 
   class EmbeddedRubyTest : public testing::Test
   {
@@ -78,6 +103,9 @@ namespace {
       m_config = std::make_unique<AgentConfiguration>();
       m_config->setDebug(true);
       m_cwd = std::filesystem::current_path();
+      
+      m_context = make_shared<PipelineContext>();
+      m_context->m_contract = make_unique<MockPipelineContract>(m_config->getAgent());
     }
     
     void load(const char *file)
@@ -97,6 +125,7 @@ namespace {
       chdir(m_cwd.string().c_str());
     }
 
+    shared_ptr<PipelineContext> m_context;
     std::unique_ptr<AgentConfiguration> m_config;
     std::filesystem::path m_cwd;
   };
@@ -105,7 +134,7 @@ namespace {
   {
     load("should_initialize.rb");
     
-    auto mrb = RubyVM::rubyVM()->state();
+    auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
     
     mrb_value pipelines = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$pipelines"));
@@ -132,7 +161,7 @@ namespace {
     
     load("should_support_entities.rb");
     
-    auto mrb = RubyVM::rubyVM()->state();
+    auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
 
     mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent1"));
@@ -158,37 +187,96 @@ namespace {
     Timestamp ts = cent2->get<Timestamp>("time");
     ASSERT_EQ(1577836800s, ts.time_since_epoch());
   }
-  
-#if 0
-  template<typename T>
-  T EntityValue(VALUE value, const string name)
-  {
-    Rice::Data_Object<Entity> ent(value);
-    EntityPtr ptr(ent.get()->getptr());
-    EXPECT_TRUE(ptr);
-    EXPECT_EQ(name, ptr->getName());
-    
-    T v = ptr->getValue<T>();
-    return v;
-  }
-  
-  TEST_F(EmbeddedRubyTest, should_convert_values_from_ruby)
-  {
-    string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n"
-               "Ruby {\n"
-               "  module = " PROJECT_ROOT_DIR "/test/resources/ruby/should_convert_values.rb\n"
-               "}\n");
-    m_config->loadConfig(str);
-    
-    VALUE e1 = Rice::protect(rb_eval_string, "ConvertValuesFromRuby.create_entity_1");
-    ASSERT_EQ(10, EntityValue<int64_t>(e1, "TestEntity1"));
-    
-    VALUE e2 = Rice::protect(rb_eval_string, "ConvertValuesFromRuby.create_entity_2");
-    ASSERT_EQ("Hello"s, EntityValue<string>(e2,  "TestEntity2"));
 
-    VALUE e3 = Rice::protect(rb_eval_string, "ConvertValuesFromRuby.create_entity_3");
-    ASSERT_EQ(123.5, EntityValue<double>(e3,  "TestEntity3"));
+  TEST_F(EmbeddedRubyTest, entity_should_support_data_sets)
+  {
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+    
+    load("entity_should_support_data_sets.rb");
+    
+    auto mrb = RubyVM::rubyVM().state();
+    ASSERT_NE(nullptr, mrb);
+
+    mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent1"));
+    ASSERT_FALSE(mrb_nil_p(ent1));
+    
+    auto cent1 = MRubySharedPtr<Entity>::unwrap(mrb, ent1);
+    ASSERT_TRUE(cent1);
+    
+    const DataSet &ds = cent1->getValue<DataSet>();
+    ASSERT_EQ(3, ds.size());
+    
+    ASSERT_EQ("value1", ds.get<string>("string"));
+    ASSERT_EQ(100, ds.get<int64_t>("int"));
+    ASSERT_NEAR(123.4, ds.get<double>("float"), 0.000001);
   }
 
-#endif
+  TEST_F(EmbeddedRubyTest, entity_should_support_tables)
+  {
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+    
+    load("entity_should_support_tables.rb");
+    
+    auto mrb = RubyVM::rubyVM().state();
+    ASSERT_NE(nullptr, mrb);
+
+    mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent1"));
+    ASSERT_FALSE(mrb_nil_p(ent1));
+    
+    auto cent1 = MRubySharedPtr<Entity>::unwrap(mrb, ent1);
+    ASSERT_TRUE(cent1);
+    
+    const DataSet &ds = cent1->getValue<DataSet>();
+    ASSERT_EQ(2, ds.size());
+
+    const DataSet &row1 = ds.get<DataSet>("row1");
+    ASSERT_EQ(2, row1.size());
+    
+    ASSERT_EQ("text1", row1.get<string>("string"));
+    ASSERT_NEAR(1.0, row1.get<double>("float"), 0.000001);
+
+    const DataSet &row2 = ds.get<DataSet>("row2");
+    ASSERT_EQ(2, row2.size());
+    
+    ASSERT_EQ("text2", row2.get<string>("string"));
+    ASSERT_NEAR(2.0, row2.get<double>("float"), 0.000001);
+  }
+  
+  TEST_F(EmbeddedRubyTest, should_transform)
+  {
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+    
+    load("should_transform.rb");
+    
+    auto mrb = RubyVM::rubyVM().state();
+    ASSERT_NE(nullptr, mrb);
+
+    ConfigOptions options;
+    boost::asio::io_context::strand strand(m_config->getContext());
+    auto loopback = std::make_shared<LoopbackSource>("AgentSource", strand, m_context, options);
+
+    mrb_value source = MRubySharedPtr<mtconnect::Source>::wrap(mrb, "Source", loopback);
+    mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
+    
+    mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$trans"));
+    ASSERT_FALSE(mrb_nil_p(ent1));
+
+    mrb_load_string(mrb, R"(
+p $source
+$source.pipeline.splice_after('Start', $trans)
+)");
+    
+    auto di = m_config->getAgent()->getDataItemForDevice("LinuxCNC", "execution");
+    [[maybe_unused]]
+    auto out = loopback->receive(di, "1"s);
+    
+    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
+    ASSERT_TRUE(contract->m_observation);
+    ASSERT_EQ("READY", contract->m_observation->getValue<string>());
+  }
+
+
 }

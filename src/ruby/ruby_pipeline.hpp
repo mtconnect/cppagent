@@ -39,13 +39,7 @@ namespace mtconnect::ruby {
 
       auto contextClass = mrb_define_class_under(mrb, module, "PipelineContext", mrb->object_class);
       MRB_SET_INSTANCE_TT(contextClass, MRB_TT_DATA);
-      
-      auto adapterPipelineClass = mrb_define_class_under(mrb, module, "AdapterPipeline", pipelineClass);
-      MRB_SET_INSTANCE_TT(adapterPipelineClass, MRB_TT_DATA);
-
-      auto loopbackPipelineClass = mrb_define_class_under(mrb, module, "LoopbackPipeline", pipelineClass);
-      MRB_SET_INSTANCE_TT(loopbackPipelineClass, MRB_TT_DATA);
-
+            
       mrb_define_method(mrb, pipelineClass, "spice_before", [](mrb_state *mrb, mrb_value self) {
         const char *name;
         TransformPtr *transform;
@@ -130,35 +124,19 @@ namespace mtconnect::ruby {
         auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
         return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext", pipeline->getContext());
       }, MRB_ARGS_NONE());
-
-    }
-    
-#if 0
-    void create(Rice::Module &module)
-    {
-      m_transform =  define_class_under<Transform>(module, "Transform");
-      m_pipelineContext =  define_class_under<pipeline::PipelineContext>(module, "PipelineContext");
-      m_pipeline = define_class_under<pipeline::Pipeline>(module, "Pipeline");
-      m_adapterPipeline = define_class_under<adapter::AdapterPipeline, pipeline::Pipeline>(module, "AdapterPipeline");
-    }
-    
-    void methods()
-    {
-      m_transform.define_method("name", &RubyTransform::getName).
-        define_method("guard=", [](RubyTransform* t, const Symbol &guard) { t->setGuard(guard); }, Arg("guard")).
-        define_method("forward", &RubyTransform::next, Arg("entity"));
       
-      m_transform.const_set("CONTINUE", CONTINUE);
-      m_transform.const_set("RUN", RUN);
-      m_transform.const_set("SKIP", SKIP);
-    }
-    
-    Data_Type<Transform> m_transform;
-    Data_Type<Pipeline> m_pipeline;
-    Data_Type<adapter::AdapterPipeline> m_adapterPipeline;
-    Data_Type<PipelineContext> m_pipelineContext;
-  };
-}
-#endif
+      auto adapterPipelineClass = mrb_define_class_under(mrb, module, "AdapterPipeline", pipelineClass);
+      MRB_SET_INSTANCE_TT(adapterPipelineClass, MRB_TT_DATA);
+
+      auto loopbackPipelineClass = mrb_define_class_under(mrb, module, "LoopbackPipeline", pipelineClass);
+      MRB_SET_INSTANCE_TT(loopbackPipelineClass, MRB_TT_DATA);
+      
+      mrb_define_method(mrb, pipelineClass, "context", [](mrb_state *mrb, mrb_value self) {
+        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+        return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext", pipeline->getContext());
+      }, MRB_ARGS_NONE());
+
+
+    }    
   };
 }

@@ -72,14 +72,46 @@ namespace mtconnect::ruby {
     
     static SharedPtr unwrap(mrb_state *mrb, mrb_value value)
     {
-      SharedPtr ptr(*static_cast<SharedPtr*>(mrb_data_get_ptr(mrb, value, type())));
-      return ptr;
+      void *dp = mrb_data_get_ptr(mrb, value, type());
+      if (dp != nullptr)
+        return *static_cast<SharedPtr*>(dp);
+      else
+        return nullptr;
     }
-    
+
+    template<typename U>
+    static std::shared_ptr<U> unwrap(mrb_state *mrb, mrb_value value)
+    {
+      void *dp = mrb_data_get_ptr(mrb, value, type());
+      if (dp != nullptr)
+      {
+        SharedPtr ptr(*static_cast<SharedPtr*>(dp));
+        return std::dynamic_pointer_cast<U>(ptr);
+      }
+      else
+        return nullptr;
+    }
+
     static SharedPtr unwrap(mrb_value value)
     {
-      SharedPtr ptr(*static_cast<SharedPtr*>(DATA_PTR(value)));
-      return ptr;
+      void *dp = DATA_PTR(value);
+      if (dp != nullptr)
+        return *static_cast<SharedPtr*>(dp);
+      else
+        return nullptr;
+    }
+    
+    template<typename U>
+    static SharedPtr unwrap(mrb_value value)
+    {
+      void *dp = DATA_PTR(value);
+      if (dp != nullptr)
+      {
+        std::shared_ptr<U> ptr(*static_cast<SharedPtr*>(dp));
+        return std::dynamic_pointer_cast<U>(ptr);
+      }
+      else
+        return nullptr;
     }
 
   private:

@@ -96,7 +96,7 @@ namespace mtconnect::ruby {
 
         for (auto &device : agent->getDevices())
         {
-          auto obj = MRubySharedPtr<Device>::wrap(mrb, klass, device);
+          auto obj = MRubySharedPtr<entity::Entity>::wrap(mrb, klass, device);
           mrb_ary_push(mrb, devices, obj);
         }
         
@@ -114,7 +114,7 @@ namespace mtconnect::ruby {
         auto di = agent->getDataItemForDevice(device, name);
         if (di)
         {
-          return MRubySharedPtr<device_model::data_item::DataItem>::wrap(mrb, klass, di);
+          return MRubySharedPtr<entity::Entity>::wrap(mrb, klass, di);
         }
         else
         {
@@ -129,7 +129,7 @@ namespace mtconnect::ruby {
         auto device = agent->findDeviceByUUIDorName(name);
         if (device)
         {
-          return MRubySharedPtr<Device>::wrap(mrb, "Device", device);
+          return MRubySharedPtr<entity::Entity>::wrap(mrb, "Device", device);
         }
         else
         {

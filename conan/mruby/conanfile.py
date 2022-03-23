@@ -40,8 +40,8 @@ MRuby::Build.new do |conf|
   conf.toolchain
 
   # include the default GEMs
-  conf.gembox 'default'
-#  conf.gembox 'full-core'
+  # conf.gembox 'default'
+  conf.gembox 'full-core'
 
   # C compiler settings
   conf.compilers.each do |c|
@@ -49,7 +49,8 @@ MRuby::Build.new do |conf|
     c.defines << 'MRB_WORD_BOXING'
     c.defines << 'MRB_INT64'
   end
-  conf.enable_cxx_abi
+#  conf.enable_cxx_abi
+  conf.enable_cxx_exception
   conf.enable_test  
 ''')
             if self.settings.build_type == 'Debug':
@@ -59,8 +60,9 @@ MRuby::Build.new do |conf|
                     f.write("  conf.compilers.each { |c|  c.flags << '/Od' }\n")
                 f.write("  conf.compilers.each { |c| c.flags << '/std:c++17' }\n")
                 f.write("  conf.compilers.each { |c| c.flags << '/%s' }\n" % self.settings.compiler.runtime)
-            elif self.settings.build_type == 'Debug':
-                f.write("  conf.compilers.each { |c| c.flags << '-O0' }\n")
+            else:
+                if self.settings.build_type == 'Debug':
+                    f.write("  conf.compilers.each { |c| c.flags << '-O0' }\n")
             
             f.write("end\n")
 
@@ -76,7 +78,9 @@ MRuby::Build.new do |conf|
                  cwd=self._mruby_source)
 
     def package(self):
-        self.copy("*", src=os.path.join(self._mruby_source, "build", "host"))
+        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "bin"), dst="bin")
+        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "lib"), dst="lib")
+        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "include"), dst="include")
         self.copy("*", src=os.path.join(self._mruby_source, "include"), dst="include")
         self.copy("*.h", src=os.path.join(self._mruby_source, "mrbgems"), dst="include")
         

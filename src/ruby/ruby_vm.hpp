@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 namespace mtconnect::ruby 
 {
   class RubyVM
@@ -52,7 +54,7 @@ namespace mtconnect::ruby
     void unlock() { m_mutex.unlock(); }
     void try_lock() { m_mutex.try_lock(); }
     
-    static auto rubyVM() { return m_vm; }
+    static auto &rubyVM() { return *m_vm; }
 
   protected:
     void createModule()

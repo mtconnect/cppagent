@@ -79,7 +79,7 @@ namespace mtconnect {
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
-
+        
         for (auto &pair : xforms)
         {
           pair.second->spliceAfter(transform);

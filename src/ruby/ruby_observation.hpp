@@ -19,65 +19,85 @@
 
 #include "observation/observation.hpp"
 #include "ruby_entity.hpp"
-#include <rice/rice.hpp>
-#include <rice/stl.hpp>
-#include <ruby/thread.h>
+#include "ruby_vm.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect::observation;
   using namespace std;
   using namespace Rice;
+  
+  
 
   struct RubyObservation {
-    void create(Rice::Module &module)
+    static void initialize(mrb_state *mrb, RClass *module)
     {
-      m_observation = define_class_under<Observation, entity::Entity>(module, "Observation");
-      c_Observation = m_observation.value();
-    }
-    
-    void methods()
-    {           
-      m_observation.define_singleton_function("make", [](const DataItemPtr dataItem,
-                                                         Properties props,
-                                                        const Timestamp *timestamp) {
-          ErrorList errors;
-          Timestamp ts;
-          if (timestamp == nullptr)
-            ts = std::chrono::system_clock::now();
-          else
-            ts = *timestamp;
-          
-          auto obs = Observation::make(dataItem, props, ts, errors);
-          return obs;
-        }, Return(), Arg("dataItem"), Arg("properties"), Arg("timestamp") = nullptr).
-        define_method("data_item", &Observation::getDataItem).
-        define_method("copy", [](Observation *o) { return o->copy(); }).
-        define_method("timestamp", &Observation::getTimestamp);
-    }
-    
-    Data_Type<Observation> m_observation;
-  };
-}
-
-namespace Rice::detail {
-  template <>
-  class From_Ruby<observation::ObservationPtr>
-  {
-  public:
-    observation::ObservationPtr convert(VALUE value)
-    {
-      Wrapper* wrapper = detail::getWrapper(value, Data_Type<observation::Observation>::rb_type());
-
-      using Wrapper_T = WrapperSmartPointer<std::shared_ptr, observation::Observation>;
-      Wrapper_T* smartWrapper = static_cast<Wrapper_T*>(wrapper);
-      std::shared_ptr<observation::Observation> ptr = dynamic_pointer_cast<observation::Observation>(smartWrapper->data());
+      auto entityClass = mrb_class_get_under(mrb, module, "Entity");
+      auto observationClass = mrb_define_class_under(mrb, module, "Observation", entityClass);
+      MRB_SET_INSTANCE_TT(observationClass, MRB_TT_DATA);
       
-      if (!ptr)
-      {
-        std::string message = "Invalid smart pointer wrapper";
-          throw std::runtime_error(message.c_str());
-      }
-      return ptr;
-    }
+      mrb_define_method(mrb, observationClass, "initialize", [](mrb_state *mrb, mrb_value self) {
+        DataItemPtr *di;
+        mrb_value props;
+        mrb_value ts;
+        
+        ErrorList errors;
+        Timestamp time;
+        
+        auto count = mrb_get_args(mrb, "doo", &di, MRubySharedPtr<DataItem>::type(),
+                     &props, &ts);
+        
+        if (count > 2)
+          time = std::chrono::system_clock::now();
+        else
+          time = timestampFromRuby(mrb, ts);
+
+        Properties values;
+        fromRuby(mrb, props, values);
+        ObservationPtr obs = Observation::make(*di, values, time, errors);
+        
+        if (errors.size() > 0)
+        {
+          ostringstream str;
+          for (auto &e : errors)
+          {
+            str << e->what() << ", ";
+          }
+          
+          mrb_raise(mrb, E_ARGUMENT_ERROR, str.str().c_str());
+        }
+        
+        MRubySharedPtr<Entity>::replace(mrb, self, obs);
+        
+        return self;
+      }, MRB_ARGS_ARG(2, 1));
+      
+      mrb_define_method(mrb, observationClass, "dup", [](mrb_state *mrb, mrb_value self) {
+        ObservationPtr old = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
+        RClass *klass = mrb_class(mrb, self);
+        
+        auto dup = old->copy();
+        return MRubySharedPtr<Entity>::wrap(mrb, klass, dup);
+      }, MRB_ARGS_NONE());
+      mrb_alias_method(mrb, observationClass, mrb_intern_lit(mrb, "copy"), mrb_intern_lit(mrb, "dup"));
+      mrb_define_method(mrb, observationClass, "data_item", [](mrb_state *mrb, mrb_value self) {
+        ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
+        return MRubySharedPtr<Entity>::wrap(mrb, "DataItem", obs->getDataItem());
+      }, MRB_ARGS_NONE());
+
+      mrb_define_method(mrb, observationClass, "timestamp", [](mrb_state *mrb, mrb_value self) {
+        ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
+        return toRuby(mrb, obs->getTimestamp());
+      }, MRB_ARGS_NONE());
+
+      auto eventClass = mrb_define_class_under(mrb, module, "Event", observationClass);
+      MRB_SET_INSTANCE_TT(eventClass, MRB_TT_DATA);
+      
+      auto sampleClass = mrb_define_class_under(mrb, module, "Sample", observationClass);
+      MRB_SET_INSTANCE_TT(sampleClass, MRB_TT_DATA);
+
+      auto conditionClass = mrb_define_class_under(mrb, module, "Condition", observationClass);
+      MRB_SET_INSTANCE_TT(conditionClass, MRB_TT_DATA);
+
+    }    
   };
 }

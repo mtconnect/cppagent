@@ -43,11 +43,14 @@
 #include <mruby/string.h>
 #include <mruby/presym.h>
 #include <mruby/error.h>
+#include <mruby/throw.h>
 
 #include "ruby_vm.hpp"
 #include "ruby_agent.hpp"
 #include "ruby_pipeline.hpp"
 #include "ruby_entity.hpp"
+#include "ruby_observation.hpp"
+#include "ruby_transform.hpp"
 
 
 using namespace std;
@@ -78,12 +81,16 @@ namespace mtconnect::ruby {
     {
       m_rubyVM = make_unique<RubyVM>();
       
+      lock_guard guard(*m_rubyVM);
+      
       auto mrb = m_rubyVM->state();
       
       RubyAgent::initialize(mrb, m_rubyVM->mtconnect(), agent);
       RubyPipeline::initialize(mrb, m_rubyVM->mtconnect());
       RubyEntity::initialize(mrb, m_rubyVM->mtconnect());
-      
+      RubyObservation::initialize(mrb, m_rubyVM->mtconnect());
+      RubyTransform::initialize(mrb, m_rubyVM->mtconnect());
+
       if (module)
       {
         LOG(info) << "Finding module: " << *module;
@@ -100,8 +107,17 @@ namespace mtconnect::ruby {
           LOG(info) << "Found module: " << file;
           FILE *fp = nullptr;
           try {
-            FILE *fp = fopen(mod.string().c_str(), "r");
-            mrb_load_file(mrb, fp);
+            mrb_value file = mrb_str_new_cstr(mrb, mod.string().c_str());
+            mrb_bool state;
+            mrb_value res = mrb_protect(mrb, [](mrb_state *mrb, mrb_value data) {
+              FILE *fp = fopen(mrb_str_to_cstr(mrb, data), "r");
+              return mrb_load_file(mrb, fp);
+            }, file, &state);
+            if (state)
+            {
+              LOG(error) << "Error loading file " << mod << ": " <<
+                  mrb_str_to_cstr(mrb, mrb_inspect(mrb, res));
+            }
           } catch (std::exception ex) {
             LOG(error) << "Failed to load module: " << mod << ": " << ex.what();
           }

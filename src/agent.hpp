@@ -73,9 +73,11 @@ namespace mtconnect {
     // Start and stop
     void start();
     void stop();
+    auto &getContext() { return m_context; }
 
     // Pipeline Contract
     std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
+    auto getPipelineContext() { return m_pipelineContext; }
 
     // Sink Contract
     SinkContractPtr makeSinkContract();
@@ -210,7 +212,7 @@ namespace mtconnect {
     boost::asio::io_context &m_context;
     boost::asio::io_context::strand m_strand;
 
-    std::unique_ptr<LoopbackSource> m_loopback;
+    std::shared_ptr<LoopbackSource> m_loopback;
     std::unordered_map<std::string, observation::ObservationPtr> m_latest;
 
     // Asset Management
@@ -223,6 +225,9 @@ namespace mtconnect {
     // Sources and Sinks
     SourceList m_sources;
     SinkList m_sinks;
+    
+    // Pipeline
+    pipeline::PipelineContextPtr m_pipelineContext;
 
     // Pointer to the configuration file for node access
     std::unique_ptr<XmlParser> m_xmlParser;
