@@ -17,140 +17,65 @@
 
 #pragma once
 
-#include <rice/rice.hpp>
-#include <rice/stl.hpp>
-#include <ruby/thread.h>
-#include <ruby/internal/intern/time.h>
+#include "entity/entity.hpp"
 
-#include "pipeline/pipeline.hpp"
-
-using namespace std;
-using namespace mtconnect::pipeline;
+#include <mruby/array.h>
+#include <mruby/hash.h>
+#include <mruby/value.h>
+#include <mruby-time/include/mruby/time.h>
 
 namespace mtconnect::ruby {
-  static VALUE c_Entity;
-  static VALUE c_Observation;
-}
-
-namespace Rice::detail {
-  using namespace mtconnect::entity;
   using namespace mtconnect;
+  using namespace device_model;
+  using namespace data_item;
+  using namespace entity;
+  using namespace std;
   
-  template<>
-  struct Type<QName>
+  inline string stringFromRuby(mrb_state *mrb, mrb_value value)
   {
-    static bool verify() { return true; }
-  };
-
-  template<>
-  struct Type<QName&>
-  {
-    static bool verify() { return true; }
-  };
-
-  template<>
-  struct To_Ruby<QName>
-  {
-    VALUE convert(const QName &q)
+    if (mrb_string_p(value))
+      return string(mrb_str_to_cstr(mrb, value));
+    else if (mrb_type(value) == MRB_TT_SYMBOL)
     {
-      return To_Ruby<std::string>().convert(q.str());
+      mrb_sym sym = mrb_symbol(value);
+      return string(mrb_sym_name(mrb, sym));
     }
-  };
-
-  template<>
-  struct To_Ruby<QName&>
-  {
-    VALUE convert(QName &q)
+    else
     {
-      return To_Ruby<std::string>().convert(q.str());
+      mrb_value s = mrb_any_to_s(mrb, value);
+      return string(mrb_str_to_cstr(mrb, s));
     }
-  };
-
-  template<>
-  struct From_Ruby<QName>
-  {
-    QName convert(VALUE q)
-    {
-      return From_Ruby<std::string>().convert(q);
-    }
-  };
-
-  template<>
-  struct From_Ruby<QName&>
-  {
-    QName convert(VALUE q)
-    {
-      return From_Ruby<std::string>().convert(q);
-    }
-  };
-
-  template<>
-  struct Type<Timestamp>
-  {
-    static bool verify() { return true; }
-  };
-
-  template<>
-  struct Type<Timestamp&>
-  {
-    static bool verify() { return true; }
-  };
-
-  template<>
-  struct To_Ruby<Timestamp>
-  {
-    VALUE convert(const Timestamp &ts)
-    {
-      using namespace std::chrono;
-      
-      auto secs = time_point_cast<seconds>(ts);
-      auto ns = time_point_cast<nanoseconds>(ts) -
-                 time_point_cast<nanoseconds>(secs);
-      
-      return rb_time_nano_new(secs.time_since_epoch().count(), ns.count());
-    }
-  };
-
-  template<>
-  struct To_Ruby<Timestamp&>
-  {
-    VALUE convert(const Timestamp &ts)
-    {
-      using namespace std::chrono;
-      
-      auto secs = time_point_cast<seconds>(ts);
-      auto ns = time_point_cast<nanoseconds>(ts) -
-                 time_point_cast<nanoseconds>(secs);
-      
-      return rb_time_nano_new(secs.time_since_epoch().count(), ns.count());
-    }
-  };
+  }
   
-  template<>
-  struct From_Ruby<Timestamp>
+  inline mrb_value toRuby(mrb_state *mrb, const std::string &str)
   {
-    Timestamp convert(VALUE time)
-    {
-      using namespace std::chrono;
-            
-      auto rts = protect(rb_time_timespec, time);
-      auto dur = duration_cast<nanoseconds>(seconds{rts.tv_sec}
-          + nanoseconds{rts.tv_nsec});
-      return  time_point<system_clock>{duration_cast<system_clock::duration>(dur)};
-    }
+    return mrb_str_new_cstr(mrb, str.c_str());
+  }
+
+  struct mrb_time {
+    time_t              sec;
+    time_t              usec;
+    enum mrb_timezone   timezone;
+    struct tm           datetime;
   };
 
-  template<>
-  struct From_Ruby<Timestamp&>
+  inline Timestamp timestampFromRuby(mrb_state *mrb, mrb_value value)
   {
-    Timestamp convert(VALUE time)
-    {
-      using namespace std::chrono;
-            
-      auto rts = protect(rb_time_timespec, time);
-      auto dur = duration_cast<nanoseconds>(seconds{rts.tv_sec}
-          + nanoseconds{rts.tv_nsec});
-      return  time_point<system_clock>{duration_cast<system_clock::duration>(dur)};
-    }
-  };
+    using namespace std::chrono;
+    
+    auto tm = static_cast<mrb_time*>(DATA_PTR(value));
+    auto dur = duration_cast<microseconds>(seconds{tm->sec}
+        + microseconds{tm->usec});
+    return  time_point<system_clock>{duration_cast<system_clock::duration>(dur)};
+  }
+  
+  inline mrb_value toRuby(mrb_state *mrb, const Timestamp &ts)
+  {
+    using namespace std::chrono;
+
+    auto secs = time_point_cast<seconds>(ts);
+    auto us = time_point_cast<microseconds>(ts) -
+               time_point_cast<microseconds>(secs);
+    return mrb_time_at(mrb, secs.time_since_epoch().count(), us.count(), MRB_TIMEZONE_UTC);
+  }
 }

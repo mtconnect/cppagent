@@ -17,387 +17,18 @@
 
 #pragma once
 
-#include <rice/rice.hpp>
-#include <rice/stl.hpp>
-#include <ruby/thread.h>
-
 #include "entity/data_set.hpp"
 #include "entity/entity.hpp"
 #include "device_model/device.hpp"
 #include "device_model/data_item/data_item.hpp"
+
 #include "ruby_type.hpp"
 #include "ruby_smart_ptr.hpp"
 
-namespace Rice::detail {
-  template<>
-  struct Type<entity::DataSet>
-  {
-    static bool verify() { return true; }
-  };
-
-  template <>
-  class From_Ruby<entity::DataSet>
-  {
-  public:
-    entity::DataSet convert(VALUE value);
-  };
-  
-  template <>
-  class To_Ruby<entity::DataSet>
-  {
-  public:
-    VALUE convert(const entity::DataSet &value);
-  };
-
-  template <>
-  class To_Ruby<entity::DataSet&>
-  {
-  public:
-    VALUE convert(const entity::DataSet &value);
-  };
-  
-  template<>
-  struct Type<entity::DataSetValue>
-  {
-    static bool verify() { return true; }
-  };
-  
-  template<>
-  struct To_Ruby<entity::DataSetValue>
-  {
-    VALUE convert(const entity::DataSetValue &value)
-    {
-      VALUE rv;
-      
-      rv = visit(overloaded {
-        [](const std::monostate &v) -> VALUE { return Qnil; },
-        [](const std::string &v) -> VALUE { return To_Ruby<string>().convert(v); },
-        [](const entity::DataSet &v) -> VALUE {
-          return To_Ruby<entity::DataSet>().convert(v);
-        },
-        [](const int64_t v) -> VALUE { return To_Ruby<int64_t>().convert(v); },
-        [](const double v) -> VALUE { return To_Ruby<double>().convert(v); }
-      }, value);
-      
-      return rv;
-    }
-  };
-  
-  template<>
-  struct From_Ruby<entity::DataSetValue>
-  {
-    entity::DataSetValue convert(VALUE value)
-    {
-      entity::DataSetValue res;
-      
-      switch (TYPE(value))
-      {
-        case RUBY_T_STRING:
-          res.emplace<string>(From_Ruby<string>().convert(value));
-          break;
-          
-        case RUBY_T_BIGNUM:
-        case RUBY_T_FIXNUM:
-          res.emplace<int64_t>(From_Ruby<int64_t>().convert(value));
-          break;
-
-        case RUBY_T_FLOAT:
-          res.emplace<double>(From_Ruby<double>().convert(value));
-          break;
-          
-        case RUBY_T_HASH:
-          res.emplace<entity::DataSet>(From_Ruby<entity::DataSet>().convert(value));
-          break;
-          
-        default:
-          break;
-      }
-      return res;
-    }
-  };
-
-  entity::DataSet From_Ruby<entity::DataSet>::convert(VALUE value)
-  {
-    using namespace mtconnect::entity;
-    DataSet set;
-    if (TYPE(value) == RUBY_T_HASH)
-    {
-      Rice::Hash h(value);
-      for (const auto &e : h)
-      {
-        DataSetEntry entry(From_Ruby<std::string>().convert(e.first),
-                           From_Ruby<DataSetValue>().convert(e.value.value()));
-        set.insert(entry);
-      }
-    }
-    return set;
-  }
-
-  VALUE To_Ruby<entity::DataSet>::convert(const entity::DataSet &set)
-  {
-    Rice::Hash h;
-    for (const auto &entry : set)
-    {
-      auto value = To_Ruby<entity::DataSetValue>().convert(entry.m_value);
-      h[entry.m_key] = value;
-    }
-    return h.value();
-  }
-
-  VALUE To_Ruby<entity::DataSet&>::convert(const entity::DataSet &set)
-  {
-    Rice::Hash h;
-    for (const auto &entry : set)
-    {
-      h[entry.m_key] = entry.m_value;
-    }
-    return h.value();
-  }
-  
-  template<>
-  struct Type<entity::EntityList>
-  {
-    static bool verify() { return true; }
-  };
-  
-  template<>
-  struct To_Ruby<entity::EntityList>
-  {
-    VALUE convert(const entity::EntityList &list)
-    {
-      Rice::Array ary;
-      for (const auto &ent : list)
-      {
-        ary.push(ent.get());
-      }
-      
-      return ary;
-    }
-  };
-
-  template<>
-  struct From_Ruby<entity::EntityList>
-  {
-    entity::EntityList convert(VALUE list)
-    {
-      entity::EntityList ary;
-      Rice::Array vary(list);
-      for (const auto &ent : vary)
-      {
-        if (Rice::protect(rb_obj_is_kind_of, ent.value(), mtconnect::ruby::c_Entity))
-        {
-          Data_Object<entity::Entity> entity(ent.value());
-          ary.emplace_back(entity->getptr());
-        }
-      }
-      
-      return ary;
-    }
-  };
-    
-  template<>
-  struct Type<Entity>
-  {
-    static bool verify() { return true; }
-  };
-  
-  template<>
-  struct To_Ruby<Entity>
-  {
-    VALUE convert(const EntityPtr &e)
-    {
-      Data_Object<Entity> entity(e.get());
-      return entity.value();
-    }
-  };
-  
-  template<>
-  struct From_Ruby<Entity>
-  {
-    EntityPtr convert(VALUE e)
-    {
-      Data_Object<Entity> entity(e);
-      return entity->getptr();
-    }
-  };
-
-  template<>
-  struct Type<Value>
-  {
-    static bool verify() { return true; }
-  };
-
-  template<>
-  struct Type<Value&>
-  {
-    static bool verify() { return true; }
-  };
-  
-  inline VALUE ConvertValueToRuby(const Value &value)
-  {
-    VALUE rv;
-    
-    rv = visit(overloaded {
-      [](const std::monostate &) -> VALUE { return Qnil; },
-      [](const std::nullptr_t &) -> VALUE { return Qnil; },
-
-      // Not handled yet
-      [](const EntityPtr &entity) -> VALUE {
-        return To_Ruby<Entity>().convert(entity);
-      },
-      [](const EntityList &list) -> VALUE {
-        Rice::Array ary;
-        for (const auto &ent : list)
-        {
-          ary.push(ent.get());
-        }
-        
-        return ary;
-      },
-      [](const entity::DataSet &v) -> VALUE {
-        return To_Ruby<entity::DataSet>().convert(v);
-      },
-              
-      // Handled types
-       [](const entity::Vector &v) -> VALUE {
-        Rice::Array array(v.begin(), v.end());
-        return array;
-      },
-      [](const Timestamp &v) -> VALUE {
-        return To_Ruby<Timestamp>().convert(v);
-      },
-      [](const string &arg) -> VALUE { return To_Ruby<string>().convert(arg); },
-      [](const bool arg) -> VALUE { return To_Ruby<bool>().convert(arg); },
-      [](const double arg) -> VALUE { return To_Ruby<double>().convert(arg); },
-      [](const int64_t arg) -> VALUE { return To_Ruby<int64_t>().convert(arg); }
-    }, value);
-    
-    return rv;
-  }
-
-  template<>
-  struct To_Ruby<entity::Value>
-  {
-    VALUE convert(entity::Value &value)
-    {
-      return ConvertValueToRuby(value);
-    }
-
-    VALUE convert(const entity::Value &value)
-    {
-      return ConvertValueToRuby(value);
-    }
-  };
-
-  template<>
-  struct To_Ruby<entity::Value &>
-  {
-    VALUE convert(entity::Value &value)
-    {
-      return ConvertValueToRuby(value);
-    }
-
-    VALUE convert(const entity::Value &value)
-    {
-      return ConvertValueToRuby(value);
-    }
-  };
-
-  inline entity::Value ConvertRubyToValue(VALUE value)
-  {
-    using namespace mtconnect::ruby;
-    using namespace mtconnect::observation;
-
-    Value res;
-    
-    switch (TYPE(value))
-    {
-      case RUBY_T_NIL:
-      case RUBY_T_UNDEF:
-        res.emplace<std::nullptr_t>();
-        break;
-        
-      case RUBY_T_STRING:
-        res.emplace<string>(From_Ruby<string>().convert(value));
-        break;
-        
-      case RUBY_T_BIGNUM:
-      case RUBY_T_FIXNUM:
-        res.emplace<int64_t>(From_Ruby<int64_t>().convert(value));
-        break;
-
-      case RUBY_T_FLOAT:
-        res.emplace<double>(From_Ruby<double>().convert(value));
-        break;
-        
-      case RUBY_T_TRUE:
-        res.emplace<bool>(true);
-        break;
-
-      case RUBY_T_FALSE:
-        res.emplace<bool>(false);
-        break;
-        
-      case RUBY_T_HASH:
-        res.emplace<DataSet>(From_Ruby<DataSet>().convert(value));
-        break;
-        
-      case RUBY_T_ARRAY:
-      {
-        res.emplace<Vector>();
-        Vector &out = get<Vector>(res);
-        const Rice::Array ary(value);
-        for (const auto &v : ary) {
-          auto t = rb_type(v);
-          if (t == RUBY_T_FIXNUM || t == RUBY_T_BIGNUM || t == RUBY_T_FLOAT)
-          {
-            out.emplace_back(From_Ruby<double>().convert(v));
-          }
-        }
-        break;
-      }
-        
-      case RUBY_T_OBJECT:
-        if (protect(rb_obj_is_kind_of, value, rb_cTime))
-        {
-          res = From_Ruby<Timestamp>().convert(value);
-        }
-        else if (protect(rb_obj_is_kind_of, value, c_Entity))
-        {
-          res = From_Ruby<Entity>().convert(value);
-        }
-        {
-          res.emplace<std::monostate>();
-        }
-        break;
-        
-      default:
-        res.emplace<std::monostate>();
-        break;
-    }
-          
-    return res;
-  }
-
-  template<>
-  struct From_Ruby<entity::Value>
-  {
-    entity::Value convert(VALUE value)
-    {
-      return ConvertRubyToValue(value);
-    }
-  };
-
-  template<>
-  struct From_Ruby<entity::Value &>
-  {
-    entity::Value convert(VALUE value)
-    {
-      return ConvertRubyToValue(value);
-    }
-  };
-
-}
+#include <mruby/array.h>
+#include <mruby/hash.h>
+#include <mruby/value.h>
+#include <mruby-time/include/mruby/time.h>
 
 namespace mtconnect::ruby {
   using namespace mtconnect;
@@ -405,176 +36,444 @@ namespace mtconnect::ruby {
   using namespace data_item;
   using namespace entity;
   using namespace std;
-  using namespace Rice;
+  
+  inline mrb_value toRuby(mrb_state *mrb, const DataSet &value);
+  inline mrb_value toRuby(mrb_state *mrb, const DataSetValue &value)
+  {
+    mrb_value rv;
+    
+    rv = visit(overloaded {
+      [](const std::monostate &v) -> mrb_value { return mrb_nil_value(); },
+      [mrb](const std::string &v) -> mrb_value { return mrb_str_new_cstr(mrb, v.c_str()); },
+      [mrb](const entity::DataSet &v) -> mrb_value {
+        return toRuby(mrb, v);
+      },
+      [mrb](const int64_t v) -> mrb_value { return mrb_int_value(mrb, v); },
+      [mrb](const double v) -> mrb_value { return mrb_float_value(mrb, v); }
+    }, value);
+    
+    return rv;
+  }
+  
+  inline mrb_value toRuby(mrb_state *mrb, const DataSet &set)
+  {
+    mrb_value hash = mrb_hash_new(mrb);
+    for (const auto &entry : set)
+    {
+      auto value = (entry.m_value);
+
+      mrb_sym k = mrb_intern_cstr(mrb, entry.m_key.c_str());
+      mrb_value v = toRuby(mrb, value);
+      
+      mrb_hash_set(mrb, hash, mrb_symbol_value(k), v);
+    }
+
+    return hash;
+  }
+  
+  inline void dataSetFromRuby(mrb_state *mrb, mrb_value value, DataSet &dataSet);
+  inline bool dataSetValueFromRuby(mrb_state *mrb, mrb_value value, DataSetValue &dsv)
+  {
+    bool res = true;
+    switch (mrb_type(value))
+    {
+      case MRB_TT_SYMBOL:
+      case MRB_TT_STRING:
+        dsv.emplace<string>(stringFromRuby(mrb, value));
+        break;
+                                                                                                                                   
+      case MRB_TT_FIXNUM:
+        dsv.emplace<int64_t>(mrb_fixnum(value));
+        break;
+                                                                                                                                   
+      case MRB_TT_FLOAT:
+        dsv.emplace<double>(mrb_to_flo(mrb, value));
+        break;
+                                                                                                                                   
+      case MRB_TT_HASH:
+      {
+        DataSet inner;
+        dataSetFromRuby(mrb, value, inner);
+        dsv.emplace<entity::DataSet>(inner);
+        break;
+      }
+        
+      default:
+      {
+        LOG(warning) << "DataSet cannot conver type: " <<
+          stringFromRuby(mrb, mrb_inspect(mrb, value));
+        res = false;
+        break;
+      }
+    }
+    return res;
+  }
+
+  inline void dataSetFromRuby(mrb_state *mrb, mrb_value value, DataSet &dataSet)
+  {
+    auto hash = mrb_hash_ptr(value);
+    mrb_hash_foreach(mrb, hash, [](mrb_state *mrb, mrb_value key, mrb_value val, void *data) {
+      DataSet *dataSet = static_cast<DataSet*>(data);
+      string k = stringFromRuby(mrb, key);
+      DataSetValue dsv;
+      if (dataSetValueFromRuby(mrb, val, dsv))
+        dataSet->emplace(k, dsv);
+      
+      return 0;
+    }, &value);
+  }
+  
+  inline Value valueFromRuby(mrb_state *mrb, mrb_value value)
+  {
+    Value res;
+    
+    if (mrb_nil_p(value))
+    {
+      res.emplace<std::nullptr_t>();
+      return res;
+    }
+
+    switch (mrb_type(value))
+    {
+      case MRB_TT_UNDEF:
+        res.emplace<std::monostate>();
+        break;
+        
+      case MRB_TT_STRING:
+        res.emplace<string>(mrb_str_to_cstr(mrb, value));
+        break;
+        
+      case MRB_TT_FIXNUM:
+        res.emplace<int64_t>(mrb_fixnum(value));
+        break;
+
+      case MRB_TT_FLOAT:
+        res.emplace<double>(mrb_to_flo(mrb, value));
+        break;
+        
+      case MRB_TT_TRUE:
+        res.emplace<bool>(true);
+        break;
+
+      case MRB_TT_FALSE:
+        res.emplace<bool>(false);
+        break;
+        
+      case MRB_TT_HASH:
+        //res.emplace<DataSet>(From_Ruby<DataSet>().convert(value));
+        break;
+        
+      case MRB_TT_ARRAY:
+      {
+        auto ary = mrb_ary_ptr(value);
+        auto size = ARY_LEN(ary);
+        auto values = ARY_PTR(ary);
+        
+        if (mrb_type(values[0]) == MRB_TT_FIXNUM ||
+            mrb_type(values[0]) == MRB_TT_FLOAT)
+        {
+          res.emplace<Vector>();
+          Vector &out = get<Vector>(res);
+         
+          for (int i = 0; i < size; i++)
+          {
+            mrb_value &v = values[i];
+            auto t = mrb_type(v);
+            if (t == MRB_TT_FIXNUM)
+              out.emplace_back((double)mrb_integer(v));
+            else if (t == MRB_TT_FLOAT)
+              out.emplace_back(mrb_float(v));
+            else
+            {
+              auto in = mrb_inspect(mrb, value);
+              LOG(warning) << "Invalid type for array: " << mrb_str_to_cstr(mrb, in);
+            }
+          }
+        }
+        else
+        {
+          auto mod = mrb_module_get(mrb, "MTConnect");
+          auto klass = mrb_class_get_under(mrb, mod, "Entity");
+
+          res.emplace<EntityList>();
+          EntityList &list = get<EntityList>(res);
+          for (int i = 0; i < size; i++)
+          {
+            mrb_value &v = values[i];
+            if (mrb_type(v) == MRB_TT_DATA)
+            {
+              if (mrb_obj_is_kind_of(mrb, value, klass))
+              {
+                auto ent = MRubySharedPtr<Entity>::unwrap(mrb, value);
+                list.emplace_back(ent);
+              }
+            }
+          }
+        }
+        break;
+      }
+        
+      case MRB_TT_DATA:
+      case MRB_TT_OBJECT:
+      {
+        string kn(mrb_obj_classname(mrb, value));
+        // Convert time
+        if (kn == "Time")
+        {
+          res.emplace<Timestamp>(timestampFromRuby(mrb, value));
+        }
+        else
+        {
+          auto mod = mrb_module_get(mrb, "MTConnect");
+          auto klass = mrb_class_get_under(mrb, mod, "Entity");
+          if (mrb_obj_is_kind_of(mrb, value, klass))
+          {
+            auto ent = MRubySharedPtr<Entity>::unwrap(mrb, value);
+            res.emplace<EntityPtr>(ent);
+          }
+        }
+        break;
+      }
+        
+      default:
+      {
+        auto in = mrb_inspect(mrb, value);
+        LOG(warning) << "Unhandled type for Value: " << mrb_str_to_cstr(mrb, in);
+        res.emplace<std::monostate>();
+        break;
+      }
+    }
+          
+    return res;
+  }
+  
+  inline mrb_value toRuby(mrb_state *mrb, const Value &value)
+  {
+    mrb_value res = visit(overloaded {
+      [](const std::monostate &) -> mrb_value { return mrb_nil_value(); },
+      [](const std::nullptr_t &) -> mrb_value { return mrb_nil_value(); },
+
+      // Not handled yet
+      [mrb](const EntityPtr &entity) -> mrb_value {
+        return MRubySharedPtr<Entity>::wrap(mrb, "Entity", entity);
+      },
+      [mrb](const EntityList &list) -> mrb_value {
+        mrb_value ary = mrb_ary_new_capa(mrb, list.size());
+        
+        for (auto &e : list)
+          mrb_ary_push(mrb, ary, MRubySharedPtr<Entity>::wrap(mrb, "Entity", e));
+        
+        return ary;
+      },
+      [](const entity::DataSet &v) -> mrb_value {
+        //return To_Ruby<entity::DataSet>().convert(v);
+        return mrb_nil_value();
+      },
+              
+      // Handled types
+       [mrb](const entity::Vector &v) -> mrb_value {
+         mrb_value ary = mrb_ary_new_capa(mrb, v.size());
+         for (auto &f : v)
+           mrb_ary_push(mrb, ary, mrb_float_value(mrb, f));
+        return ary;
+      },
+      [mrb](const Timestamp &v) -> mrb_value {
+        return toRuby(mrb, v);
+      },
+      [mrb](const string &arg) -> mrb_value { return mrb_str_new_cstr(mrb, arg.c_str()); },
+      [](const bool arg) -> mrb_value { return mrb_bool_value(static_cast<mrb_bool>(arg)); },
+      [mrb](const double arg) -> mrb_value { return mrb_float_value(mrb, arg); },
+      [mrb](const int64_t arg) -> mrb_value { return mrb_int_value(mrb, arg); }
+    }, value);
+
+    
+    return res;
+  }
+  
+  inline bool fromRuby(mrb_state *mrb, mrb_value value, Properties &props)
+  {
+    if (mrb_type(value) != MRB_TT_HASH)
+    {
+      Value v = valueFromRuby(mrb, value);
+      props.emplace("VALUE", v);
+    }
+    else
+    {
+      auto hash = mrb_hash_ptr(value);
+      mrb_hash_foreach(mrb, hash, [](mrb_state *mrb, mrb_value key, mrb_value val, void *data) {
+        Properties *props = static_cast<Properties*>(data);
+        string k = stringFromRuby(mrb, key);
+        auto v = valueFromRuby(mrb, val);
+        
+        props->emplace(k, v);
+        
+        return 0;
+      }, &props);
+    }
+    
+    return true;
+  }
+  
+  inline mrb_value toRuby(mrb_state *mrb, const Properties &props)
+  {
+    mrb_value hash = mrb_hash_new(mrb);
+    for (auto& [key, value] : props)
+    {
+      mrb_sym k = mrb_intern_cstr(mrb, key.c_str());
+      mrb_value v = toRuby(mrb, value);
+      
+      mrb_hash_set(mrb, hash, mrb_symbol_value(k), v);
+    }
+    
+    return hash;
+  }
   
   struct RubyEntity {
-    void create(Rice::Module &module)
+    static void initialize(mrb_state *mrb, RClass *module)
     {
-      m_properties = define_class_under<Properties>(module, "Properties");
-      m_propertyKey = define_class_under<PropertyKey>(module, "PropertyKey");
-      m_entity = define_class_under<Entity>(module, "Entity");
-      c_Entity = m_entity.value();
-      m_component = define_class_under<Component, Entity>(module, "Component");
-      m_device = define_class_under<device_model::Device, device_model::Component>(module, "Device");
-      m_dataItem = define_class_under<data_item::DataItem, entity::Entity>(module, "DataItem");
-    }
-    
-    void methods()
-    {
-      m_entity.define_constructor(smart_ptr::Constructor<Entity, const std::string , const Properties>(), Arg("name"),
-                                  Arg("properties")).
-        define_method("value", [](Entity *e) { return e->getValue(); }).
-        define_method("value=", [](Entity *e, const Value value) { return e->setValue(value); }, Arg("value")).
-        define_method("name", [](Entity *e) { return e->getName().str(); }).
-        define_method("property", &Entity::getProperty, Arg("name"));
+      auto entityClass = mrb_define_class_under(mrb, module, "Entity", mrb->object_class);
+      MRB_SET_INSTANCE_TT(entityClass, MRB_TT_DATA);
       
-      m_dataItem.define_method("name", [](data_item::DataItem *di) { return di->getName(); }).
-        define_method("observation_name", [](data_item::DataItem *di) { return di->getObservationName().str(); }).
-        define_method("id", [](data_item::DataItem *di) { return di->getId(); }).
-        define_method("type", [](data_item::DataItem *di) { return di->getType(); }).
-        define_method("sub_type", [](data_item::DataItem *di) { return di->getSubType(); });
+      mrb_define_method(mrb, entityClass, "initialize", [](mrb_state *mrb, mrb_value self) {
+        const char *name;
+        mrb_value properties;
+        mrb_get_args(mrb, "zo", &name, &properties);
+        
+        Properties props;
+        fromRuby(mrb, properties, props);
+        
+        auto entity = make_shared<Entity>(name, props);
+        MRubySharedPtr<Entity>::replace(mrb, self, entity);
+        
+        return self;
+      }, MRB_ARGS_REQ(2));
       
-      m_component.define_method("component_name", [](Component *c) { return c->getComponentName(); }).
-        define_method("uuid", &Component::getUuid).
-        define_method("id", &Component::getId).
-        define_method("children", [](Component *c) {
-          Rice::Array ary;
-          const auto &list = c->getChildren();
-          if (list)
-          {
-            for (auto const &s : *list)
-            {
-              auto cp = dynamic_cast<Component*>(s.get());
-              ary.push(cp);
-            }
-          }
-          return ary;
-        }).
-      define_method("data_items", [](Component *c) {
-          Rice::Array ary;
-          const auto &list = c->getDataItems();
-          if (list)
-          {
-            for (auto const &s : *list)
-            {
-              auto di = dynamic_cast<data_item::DataItem*>(s.get());
-              ary.push(di);
-            }
-          }
-          return ary;
-        });
+      mrb_define_method(mrb, entityClass, "name", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        return mrb_str_new_cstr(mrb, entity->getName().c_str());
+      }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, entityClass, "value", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        return toRuby(mrb, entity->getValue());
+      }, MRB_ARGS_NONE());
+
+      mrb_define_method(mrb, entityClass, "properties", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        auto props = entity->getProperties();
+        
+        return toRuby(mrb, props);
+      }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, entityClass, "[]", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        const char *key;
+        mrb_get_args(mrb, "s", &key);
+        
+        auto props = entity->getProperties();
+        auto it = props.find(key);
+        if (it != props.end())
+          return toRuby(mrb, it->second);
+        else
+          return mrb_nil_value();
+      }, MRB_ARGS_REQ(1));
+      mrb_define_method(mrb, entityClass, "[]=", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        const char *key;
+        mrb_value value;
+        mrb_get_args(mrb, "so", &key, &value);
+
+        entity->setProperty(key, valueFromRuby(mrb, value));
+        
+        return value;
+      }, MRB_ARGS_REQ(1));
+
       
-      m_propertyKey.define_constructor(Constructor<PropertyKey, const string>(), Arg("key")).
-        define_method("to_s", [](PropertyKey *key) { return key->str(); }).
-        define_method("ns?", [](PropertyKey *key) { return key->hasNs(); });
+      auto componentClass = mrb_define_class_under(mrb, module, "Component", entityClass);
+      MRB_SET_INSTANCE_TT(componentClass, MRB_TT_DATA);
       
-      
-      m_device.define_method("device_data_items", [](DevicePtr device) {
-        Rice::Array ary;
-        for (auto const &[k, wdi] : device->getDeviceDataItems())
+      mrb_define_method(mrb, componentClass, "children", [](mrb_state *mrb, mrb_value self) {
+        auto comp = MRubySharedPtr<Component>::unwrap(self);
+        mrb_value ary = mrb_ary_new(mrb);
+        const auto &list = comp->getChildren();
+        if (list)
         {
-          const auto &di = wdi.lock();
-          ary.push(di.get());
+          auto mod = mrb_module_get(mrb, "MTConnect");
+          auto klass = mrb_class_get_under(mrb, mod, "Component");
+
+          for (const auto &c : *list)
+          {
+            ComponentPtr cmp = dynamic_pointer_cast<Component>(c);
+            if (cmp)
+              mrb_ary_push(mrb, ary, MRubySharedPtr<Component>::wrap(mrb, klass, cmp));
+          }
         }
+        
         return ary;
-      });
-    }
-    
-    Data_Type<Properties> m_properties;
-    Data_Type<PropertyKey> m_propertyKey;
-    Data_Type<Entity> m_entity;
-    Data_Type<Component> m_component;
-    Data_Type<Device> m_device;
-    Data_Type<DataItem> m_dataItem;
-  };
-}
-
-namespace Rice::detail {
-  template<>
-  struct Type<entity::Properties>
-  {
-    static bool verify()
-    {
-      return true;
-    }
-  };
-  
-  template<>
-  struct From_Ruby<entity::Properties>
-  {
-    From_Ruby() = default;
-
-    explicit From_Ruby(Arg * arg) : m_arg(arg)
-    {
-    }
-
-    auto convert(VALUE value)
-    {
-      Properties converted;
-      
-      if (TYPE(value) == RUBY_T_HASH)
-      {
-        Rice::Hash hash(value);
-        for (const auto &p : hash)
+      }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, componentClass, "data_items", [](mrb_state *mrb, mrb_value self) {
+        auto comp = MRubySharedPtr<Component>::unwrap(self);
+        mrb_value ary = mrb_ary_new(mrb);
+        const auto &list = comp->getDataItems();
+        if (list)
         {
-          entity::PropertyKey key;
-          auto pt = TYPE(p.first.value());
-          if (pt == RUBY_T_SYMBOL)
-            key = Symbol(p.first.value()).str();
-          else if (pt == RUBY_T_STRING)
-            key = From_Ruby<string>().convert(p.first);
-          else
-            key = From_Ruby<string>().convert(p.first.call(Identifier("to_s")));
-          Value val { From_Ruby<Value>().convert(p.second.value()) };
+          auto mod = mrb_module_get(mrb, "MTConnect");
+          auto klass = mrb_class_get_under(mrb, mod, "DataItem");
           
-          converted.emplace(key, val);
+          for (const auto &c : *list)
+          {
+            DataItemPtr di = dynamic_pointer_cast<DataItem>(c);
+            if (di)
+              mrb_ary_push(mrb, ary, MRubySharedPtr<DataItem>::wrap(mrb, klass, di));
+          }
         }
-      }
-      else
-      {
-        Value val { From_Ruby<Value>().convert(value) };
-        converted.emplace("VALUE", val);
-      }
-      return converted;
-    }
-    
-    Arg* m_arg = nullptr;
-  };
+        
+        return ary;
+      }, MRB_ARGS_NONE());
 
-  template<>
-  struct To_Ruby<Properties>
-  {
-    VALUE convert(const Properties &props)
-    {
-      Rice::Hash hash;
-      for (const auto &[key, value] : props)
-      {
-        hash[key.str()] = To_Ruby<Value>().convert(value);
-      }
+
+      auto deviceClass = mrb_define_class_under(mrb, module, "Device", componentClass);
+      MRB_SET_INSTANCE_TT(deviceClass, MRB_TT_DATA);
       
-      return hash;
+      mrb_define_method(mrb, componentClass, "data_item", [](mrb_state *mrb, mrb_value self) {
+        auto dev = MRubySharedPtr<Device>::unwrap(self);
+        const char *name;
+        mrb_get_args(mrb, "s", &name);
+
+        auto di = dev->getDeviceDataItem(name);
+        return MRubySharedPtr<DataItem>::wrap(mrb, "DataItem", di);
+      }, MRB_ARGS_REQ(1));
+
+
+      auto dataItemClass = mrb_define_class_under(mrb, module, "DataItem", entityClass);
+      MRB_SET_INSTANCE_TT(dataItemClass, MRB_TT_DATA);
+
+      mrb_define_method(mrb, dataItemClass, "name", [](mrb_state *mrb, mrb_value self) {
+        auto di = MRubySharedPtr<DataItem>::unwrap(self);
+        if (di->getName())
+          return mrb_str_new_cstr(mrb, (*di->getName()).c_str());
+        else
+          return mrb_nil_value();
+      }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, dataItemClass, "observation_name", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        auto di = dynamic_pointer_cast<DataItem>(entity);
+        return mrb_str_new_cstr(mrb, di->getObservationName().c_str());
+      }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, dataItemClass, "id", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        auto di = dynamic_pointer_cast<DataItem>(entity);
+        return mrb_str_new_cstr(mrb, di->getId().c_str());
+      }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, dataItemClass, "type", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        auto di = dynamic_pointer_cast<DataItem>(entity);
+        return mrb_str_new_cstr(mrb, di->getType().c_str());
+      }, MRB_ARGS_NONE());
+      mrb_define_method(mrb, dataItemClass, "sub_type", [](mrb_state *mrb, mrb_value self) {
+        auto entity = MRubySharedPtr<Entity>::unwrap(self);
+        auto di = dynamic_pointer_cast<DataItem>(entity);
+        return mrb_str_new_cstr(mrb, di->getSubType().c_str());
+      }, MRB_ARGS_NONE());
+
     }
   };
-
-  template <>
-  class From_Ruby<EntityPtr>
-  {
-  public:
-    EntityPtr convert(VALUE value)
-    {
-      Wrapper* wrapper = detail::getWrapper(value, Data_Type<Entity>::rb_type());
-
-      using Wrapper_T = WrapperSmartPointer<std::shared_ptr, Entity>;
-      Wrapper_T* smartWrapper = static_cast<Wrapper_T*>(wrapper);
-      std::shared_ptr<Entity> ptr = dynamic_pointer_cast<Entity>(smartWrapper->data());
-      
-      if (!ptr)
-      {
-        std::string message = "Invalid smart pointer wrapper";
-          throw std::runtime_error(message.c_str());
-      }
-      return ptr;
-    }
-  };
-
 }

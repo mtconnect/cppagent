@@ -38,6 +38,14 @@ namespace mtconnect::ruby {
   using namespace entity;
   using namespace observation;
 
+#if 0
+  struct RubyTransformClass {
+    initialize(mrb_state *mrb, RClass *module)
+    {
+      
+    }
+
+#endif
   class RubyTransform : public pipeline::Transform
   {
   public:
@@ -109,7 +117,6 @@ namespace mtconnect::ruby {
     Rice::Symbol m_method;
   };
   
-  struct RubyTransformClass {
     void create(Rice::Module &module)
     {
       m_rubyTransform =  define_class_under<RubyTransform, Transform>(module, "RubyTransform");

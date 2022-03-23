@@ -47,6 +47,7 @@
 #include "ruby_vm.hpp"
 #include "ruby_agent.hpp"
 #include "ruby_pipeline.hpp"
+#include "ruby_entity.hpp"
 
 
 using namespace std;
@@ -81,6 +82,7 @@ namespace mtconnect::ruby {
       
       RubyAgent::initialize(mrb, m_rubyVM->mtconnect(), agent);
       RubyPipeline::initialize(mrb, m_rubyVM->mtconnect());
+      RubyEntity::initialize(mrb, m_rubyVM->mtconnect());
       
       if (module)
       {

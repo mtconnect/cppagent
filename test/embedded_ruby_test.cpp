@@ -79,6 +79,17 @@ namespace {
       m_config->setDebug(true);
       m_cwd = std::filesystem::current_path();
     }
+    
+    void load(const char *file)
+    {
+      string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n"
+                 "Ruby {\n"
+                 "  module = " PROJECT_ROOT_DIR "/test/resources/ruby/" +
+                 string(file) + "\n"
+                 "}\n");
+      m_config->loadConfig(str);
+
+    }
 
     void TearDown() override
     {
@@ -92,16 +103,12 @@ namespace {
   
   TEST_F(EmbeddedRubyTest, should_initialize)
   {
-    string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n"
-               "Ruby {\n"
-               "  module = " PROJECT_ROOT_DIR "/test/resources/ruby/should_initialize.rb\n"
-               "}\n");
-    m_config->loadConfig(str);
+    load("should_initialize.rb");
     
     auto mrb = RubyVM::rubyVM()->state();
     ASSERT_NE(nullptr, mrb);
     
-    mrb_value pipelines = mrb_gv_get(mrb, mrb_intern_cstr(mrb, "$pipelines"));
+    mrb_value pipelines = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$pipelines"));
     ASSERT_FALSE(mrb_nil_p(pipelines));
     ASSERT_TRUE(mrb_array_p(pipelines));
 
@@ -117,6 +124,41 @@ namespace {
       ASSERT_NE(nullptr, dynamic_cast<pipeline::Pipeline*>(pipeline));
     }
   }
+  
+  TEST_F(EmbeddedRubyTest, should_support_entities)
+  {
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+    
+    load("should_support_entities.rb");
+    
+    auto mrb = RubyVM::rubyVM()->state();
+    ASSERT_NE(nullptr, mrb);
+
+    mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent1"));
+    ASSERT_FALSE(mrb_nil_p(ent1));
+    
+    auto cent1 = MRubySharedPtr<Entity>::unwrap(mrb, ent1);
+    ASSERT_TRUE(cent1);
+    
+    ASSERT_EQ("TestEntity", cent1->getName());
+    ASSERT_EQ("Simple Value", cent1->getValue<string>());
+    
+    mrb_value ent2 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent2"));
+    ASSERT_FALSE(mrb_nil_p(ent2));
+    
+    auto cent2 = MRubySharedPtr<Entity>::unwrap(mrb, ent2);
+    ASSERT_TRUE(cent2);
+    
+    ASSERT_EQ("HashEntity", cent2->getName());
+    ASSERT_EQ("Simple Value", cent2->getValue<string>());
+    ASSERT_EQ(10, cent2->get<int64_t>("int"));
+    ASSERT_NEAR(123.4, cent2->get<double>("float"), 0.000001);
+    
+    Timestamp ts = cent2->get<Timestamp>("time");
+    ASSERT_EQ(1577836800s, ts.time_since_epoch());
+  }
+  
 #if 0
   template<typename T>
   T EntityValue(VALUE value, const string name)

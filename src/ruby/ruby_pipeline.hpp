@@ -20,7 +20,6 @@
 #include "entity/entity.hpp"
 #include "device_model/device.hpp"
 #include "device_model/data_item/data_item.hpp"
-#include "adapter/adapter_pipeline.hpp"
 #include "entity/entity.hpp"
 
 #include "ruby_smart_ptr.hpp"

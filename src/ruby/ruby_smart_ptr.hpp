@@ -41,6 +41,8 @@ namespace mtconnect::ruby {
     
     static mrb_value wrap(mrb_state *mrb, const char *name, SharedPtr obj)
     {
+      if (!obj) return mrb_nil_value();
+      
       auto mod = mrb_module_get(mrb, "MTConnect");
       auto klass = mrb_class_get_under(mrb, mod, name);
       auto ptr = new SharedPtr(obj);
@@ -48,12 +50,24 @@ namespace mtconnect::ruby {
       auto wrapper = mrb_data_object_alloc(mrb, klass, ptr, type());
       return mrb_obj_value(wrapper);
     }
-
+    
     static mrb_value wrap(mrb_state *mrb, RClass *klass, SharedPtr obj)
     {
+      if (!obj) return mrb_nil_value();
+
       auto ptr = new SharedPtr(obj);
       auto wrapper = mrb_data_object_alloc(mrb, klass, ptr, type());
       return mrb_obj_value(wrapper);
+    }
+    
+    static void replace(mrb_state *mrb, mrb_value self, SharedPtr obj)
+    {
+      auto selfp = static_cast<SharedPtr*>(DATA_PTR(self));
+      if (selfp)
+      {
+        delete selfp;
+      }
+      mrb_data_init(self, new SharedPtr(obj), type());
     }
     
     static SharedPtr unwrap(mrb_state *mrb, mrb_value value)
@@ -95,6 +109,8 @@ namespace mtconnect::ruby {
     
     static mrb_value wrap(mrb_state *mrb, const char *name, Ptr obj)
     {
+      if (obj == nullptr) return mrb_nil_value();
+
       auto mod = mrb_module_get(mrb, "MTConnect");
       auto klass = mrb_class_get_under(mrb, mod, name);
       
@@ -104,6 +120,8 @@ namespace mtconnect::ruby {
     
     static mrb_value wrap(mrb_state *mrb, RClass *klass, Ptr obj)
     {
+      if (obj == nullptr) return mrb_nil_value();
+
       auto wrapper = mrb_data_object_alloc(mrb, klass, obj, type());
       return mrb_obj_value(wrapper);
     }
@@ -112,6 +130,12 @@ namespace mtconnect::ruby {
     {
       return static_cast<Ptr>(mrb_data_get_ptr(mrb, value, type()));
     }
+    
+    static void replace(mrb_state *mrb, mrb_value self, Ptr obj)
+    {
+      mrb_data_init(self, obj, type());
+    }
+
     
     static Ptr unwrap(mrb_value value)
     {
@@ -148,6 +172,8 @@ namespace mtconnect::ruby {
     
     static mrb_value wrap(mrb_state *mrb, const char *name, T* obj)
     {
+      if (!obj) return mrb_nil_value();
+
       auto mod = mrb_module_get(mrb, "MTConnect");
       auto klass = mrb_class_get_under(mrb, mod, name);
       auto ptr = new UniquePtr(obj);
@@ -158,9 +184,21 @@ namespace mtconnect::ruby {
 
     static mrb_value wrap(mrb_state *mrb, RClass *klass, T* obj)
     {
+      if (!obj) return mrb_nil_value();
+
       auto ptr = new UniquePtr(obj);
       auto wrapper = mrb_data_object_alloc(mrb, klass, ptr, type());
       return mrb_obj_value(wrapper);
+    }
+    
+    static void replace(mrb_state *mrb, mrb_value self, UniquePtr obj)
+    {
+      auto selfp = static_cast<UniquePtr*>(DATA_PTR(self));
+      if (selfp)
+      {
+        delete selfp;
+      }
+      mrb_data_init(self, new UniquePtr(obj), type());
     }
     
     static T *unwrap(mrb_state *mrb, mrb_value value)
