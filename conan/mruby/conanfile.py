@@ -28,9 +28,6 @@ class MRubyConan(ConanFile):
     _major, _minor, _patch = version.split('.')
     _ruby_version_dir = "ruby-{}.{}.0".format(_major, _minor)
 
-    def export_sources(self):
-        self.copy("patches/*")
-
     def generate(self):
         self.build_config = os.path.join(self.build_folder, self._mruby_source, "build_config", "mtconnect.rb")
         
@@ -73,9 +70,6 @@ MRuby::Build.new do |conf|
         git.clone("https://github.com/mruby/mruby.git", "stable")
         
     def build(self):
-        if self.settings.os == "Windows":
-            tools.patch(patch_file=os.path.join(self.build_folder, "patches", "windows.patch"), fuzz=True,
-                        base_path=self._mruby_source)
         self.run("rake MRUBY_CONFIG=%s" % self.build_config,
                  cwd=self._mruby_source)
 

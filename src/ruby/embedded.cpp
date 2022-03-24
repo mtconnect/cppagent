@@ -31,6 +31,10 @@
 #include "embedded.hpp"
 #include "logging.hpp"
 
+#ifdef _WINDOWS
+#undef timezone
+#endif
+
 #include <mruby.h>
 #include <mruby/data.h>
 #include <mruby/array.h>

@@ -244,10 +244,6 @@ if(NOT WITHOUT_RUBY)
     agent_lib
     PUBLIC
     ${CONAN_LIB_DIRS_MRUBY})
-#  target_include_directories(
-#    agent_lib
-#    PUBLIC
-#    "${CMAKE_CURRENT_SOURCE_DIR}/../mrice/include")
 endif()
 
 target_compile_definitions(
