@@ -187,9 +187,9 @@ namespace mtconnect::ruby {
         ev = MRubySharedPtr<Entity>::wrap(mrb, klass, entity);
         mrb_value rv;
         
+        mrb_bool state = false;
         if (!mrb_nil_p(m_block))
         {
-          mrb_bool state = false;
           mrb_value values[] = { m_self, m_block, ev };
           mrb_value data = mrb_ary_new_from_values(mrb, 3, values);
           rv = mrb_protect(mrb, [](mrb_state *mrb, mrb_value data) {
@@ -198,18 +198,25 @@ namespace mtconnect::ruby {
             mrb_value ev = mrb_ary_ref(mrb, data, 2);
             return mrb_yield_with_class(mrb, block, 1, &ev, self, mrb_class(mrb, self));
           }, data, &state);
-          
-          if (state)
-          {
-            LOG(error) << "Error in transform: " <<
-                mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
-            rv = mrb_nil_value();
-          }
         }
         else
         {
-          rv = mrb_funcall_id(mrb, m_self, m_method, 1, ev);
+          mrb_value values[] = { m_self, mrb_symbol_value(m_method), ev };
+          mrb_value data = mrb_ary_new_from_values(mrb, 3, values);
+          rv = mrb_protect(mrb, [](mrb_state *mrb, mrb_value data) {
+            mrb_value self = mrb_ary_ref(mrb, data, 0);
+            mrb_sym method = mrb_symbol(mrb_ary_ref(mrb, data, 1));
+            mrb_value ev = mrb_ary_ref(mrb, data, 2);
+            return mrb_funcall_id(mrb, self, method, 1, ev);
+          }, data, &state);
         }
+        if (state)
+        {
+          LOG(error) << "Error in transform: " <<
+              mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
+          rv = mrb_nil_value();
+        }
+
         EntityPtr res;
         if (!mrb_nil_p(rv))
           res = MRubySharedPtr<Entity>::unwrap(rv);

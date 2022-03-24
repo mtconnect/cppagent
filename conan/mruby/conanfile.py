@@ -63,6 +63,8 @@ MRuby::Build.new do |conf|
             else:
                 if self.settings.build_type == 'Debug':
                     f.write("  conf.compilers.each { |c| c.flags << '-O0' }\n")
+                if self.settings.compiler == 'gcc':
+                    f.write("  conf.compilers.each { |c| c.flags << '-fPIC' }\n")                    
             
             f.write("end\n")
 
