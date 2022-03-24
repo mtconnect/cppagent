@@ -92,6 +92,8 @@ MRuby::Build.new do |conf|
         self.run([ruby, "--cflags"], output=buf)
         self.cpp_info.defines = [d[2:] for d in buf.getvalue().split(' ') if d.startswith('/D') or d.startswith('-D')]
 
+        self.user_info.mruby = 'ON'
+
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.bindirs = ["bin"]
         if self.settings.os == 'Windows':

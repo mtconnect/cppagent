@@ -153,7 +153,7 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
   )
 
-if(NOT WITHOUT_PYTHON)
+if(WITH_PYTHON)
   set(AGENT_SOURCES ${AGENT_SOURCES}
     
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.hpp"  
@@ -161,7 +161,7 @@ if(NOT WITHOUT_PYTHON)
     )
 endif()
 
-if(NOT WITHOUT_RUBY)
+if(WITH_RUBY)
   set(AGENT_SOURCES ${AGENT_SOURCES}    
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_smart_ptr.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_agent.hpp"  
@@ -228,14 +228,14 @@ target_link_libraries(
   $<$<PLATFORM_ID:Windows>:bcrypt>
   )
 
-if(NOT WITHOUT_PYTHON)
+if(WITH_PYTHON)
   target_link_libraries(
     agent_lib
     PUBLIC
     Python3::Python)
 endif()
 
-if(NOT WITHOUT_RUBY)
+if(WITH_RUBY)
   target_link_libraries(
     agent_lib
     PUBLIC
@@ -262,14 +262,14 @@ target_compile_definitions(
     MQTT_USE_LOG
     )
 
-if(NOT WITHOUT_PYTHON)
+if(WITH_PYTHON)
   target_compile_definitions(
     agent_lib
     PUBLIC
     WITH_PYTHON )
 endif()
 
-if(NOT WITHOUT_RUBY)
+if(WITH_RUBY)
   target_compile_definitions(
     agent_lib
     PUBLIC

@@ -8,7 +8,8 @@ class CppAgentConan(ConanFile):
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False], "build_tests": [True, False], "without_python": [True, False],
-               "without_ruby": [True, False], "without_ipv6": [True, False] }
+               "without_ruby": [True, False], "without_ipv6": [True, False], "with_ruby": [True, False],
+               "with_python": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.77.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
@@ -20,6 +21,8 @@ class CppAgentConan(ConanFile):
         "without_python": True,
         "without_ruby": True,
         "without_ipv6": False,
+        "with_python": False,
+        "with_ruby": False,
 
         "boost:shared": False,
         "boost:without_python": True,
@@ -60,6 +63,12 @@ class CppAgentConan(ConanFile):
 
         if not self.options.build_tests:
             self.options.run_tests = False
+
+        if not self.options.without_ruby:
+            self.options.with_ruby = True
+            
+        if not self.options.without_python:
+            self.options.with_python = True
         
  #       if self.windows_xp:
  #           self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0501 "
@@ -69,7 +78,7 @@ class CppAgentConan(ConanFile):
     def requirements(self):
         if not self.windows_xp:
             self.requires("gtest/1.10.0")
-        if not self.options.without_ruby:
+        if self.options.with_ruby:
             self.requires("mruby/3.0.0")
         
     def build(self):
@@ -81,15 +90,15 @@ class CppAgentConan(ConanFile):
         if self.options.without_ipv6:
             cmake.definitions['AGENT_WITHOUT_IPV6'] = 'ON'
 
-        if self.options.without_python:
-            cmake.definitions['WITHOUT_PYTHON'] = 'ON'
+        if self.options.with_python:
+            cmake.definitions['WITH_PYTHON'] = 'ON'
         else:
-            cmake.definitions['WITHOUT_PYTHON'] = 'OFF'
+            cmake.definitions['WITH_PYTHON'] = 'OFF'
             
-        if self.options.without_ruby:
-            cmake.definitions['WITHOUT_RUBY'] = 'ON'
+        if self.options.with_ruby:
+            cmake.definitions['WITH_RUBY'] = 'ON'
         else:
-            cmake.definitions['WITHOUT_RUBY'] = 'OFF'
+            cmake.definitions['WITH_RUBY'] = 'OFF'
             
         if self.windows_xp:
             cmake.definitions['WINVER'] = '0x0501'
