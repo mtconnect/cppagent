@@ -17,11 +17,9 @@
 
 #pragma once
 
-#include "entity/entity.hpp"
-#include "device_model/device.hpp"
 #include "device_model/data_item/data_item.hpp"
+#include "device_model/device.hpp"
 #include "entity/entity.hpp"
-
 #include "ruby_smart_ptr.hpp"
 
 namespace mtconnect::ruby {
@@ -30,8 +28,9 @@ namespace mtconnect::ruby {
   using namespace entity;
   using namespace std;
   using namespace Rice;
-  
-  struct RubyPipeline {
+
+  struct RubyPipeline
+  {
     static void initialize(mrb_state *mrb, RClass *module)
     {
       auto pipelineClass = mrb_define_class_under(mrb, module, "Pipeline", mrb->object_class);
@@ -39,104 +38,131 @@ namespace mtconnect::ruby {
 
       auto contextClass = mrb_define_class_under(mrb, module, "PipelineContext", mrb->object_class);
       MRB_SET_INSTANCE_TT(contextClass, MRB_TT_DATA);
-            
-      mrb_define_method(mrb, pipelineClass, "spice_before", [](mrb_state *mrb, mrb_value self) {
-        const char *name;
-        TransformPtr *transform;
-        
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-        pipeline->spliceBefore(name, *transform);
-        
-        return self;
-      }, MRB_ARGS_REQ(2));
 
-      mrb_define_method(mrb, pipelineClass, "splice_after", [](mrb_state *mrb, mrb_value self) {
-        const char *name;
-        TransformPtr *transform;
+      mrb_define_method(
+          mrb, pipelineClass, "spice_before",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+            TransformPtr *transform;
 
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-        pipeline->spliceAfter(name, *transform);
-        
-        return self;
-      }, MRB_ARGS_REQ(2));
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
+            pipeline->spliceBefore(name, *transform);
 
-      mrb_define_method(mrb, pipelineClass, "first_after", [](mrb_state *mrb, mrb_value self) {
-        const char *name;
-        TransformPtr *transform;
-        
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-        pipeline->firstAfter(name, *transform);
-        
-        return self;
-      }, MRB_ARGS_REQ(2));
+            return self;
+          },
+          MRB_ARGS_REQ(2));
 
-      mrb_define_method(mrb, pipelineClass, "last_after", [](mrb_state *mrb, mrb_value self) {
-        const char *name;
-        TransformPtr *transform;
-        
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-        
-        pipeline->lastAfter(name, *transform);
-        
-        return self;
-      }, MRB_ARGS_REQ(2));
+      mrb_define_method(
+          mrb, pipelineClass, "splice_after",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+            TransformPtr *transform;
 
-      mrb_define_method(mrb, pipelineClass, "remove", [](mrb_state *mrb, mrb_value self) {
-        const char *name;
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
+            pipeline->spliceAfter(name, *transform);
 
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        mrb_get_args(mrb, "z", &name);
-        pipeline->remove(name);
-        
-        return self;
-      }, MRB_ARGS_REQ(1));
-      
-      mrb_define_method(mrb, pipelineClass, "replace", [](mrb_state *mrb, mrb_value self) {
-        const char *name;
-        TransformPtr *trans;
-        
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        mrb_get_args(mrb, "zd", &name,
-                     &trans, MRubySharedPtr<Transform>::type());
-        
-        pipeline->replace(name, *trans);
-        
-        return self;
-      }, MRB_ARGS_REQ(2));
+            return self;
+          },
+          MRB_ARGS_REQ(2));
 
+      mrb_define_method(
+          mrb, pipelineClass, "first_after",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+            TransformPtr *transform;
 
-      mrb_define_method(mrb, pipelineClass, "run", [](mrb_state *mrb, mrb_value self) {
-        EntityPtr *entity;
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        mrb_get_args(mrb, "d", &entity, MRubySharedPtr<Entity>::type());
-        
-        EntityPtr ptr = *entity;
-        ptr = pipeline->run(ptr);
-        
-        return MRubySharedPtr<Entity>::wrap(mrb, "Entity", ptr);
-      }, MRB_ARGS_REQ(1));
-      
-      mrb_define_method(mrb, pipelineClass, "context", [](mrb_state *mrb, mrb_value self) {
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext", pipeline->getContext());
-      }, MRB_ARGS_NONE());
-      
-      auto adapterPipelineClass = mrb_define_class_under(mrb, module, "AdapterPipeline", pipelineClass);
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
+            pipeline->firstAfter(name, *transform);
+
+            return self;
+          },
+          MRB_ARGS_REQ(2));
+
+      mrb_define_method(
+          mrb, pipelineClass, "last_after",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+            TransformPtr *transform;
+
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
+
+            pipeline->lastAfter(name, *transform);
+
+            return self;
+          },
+          MRB_ARGS_REQ(2));
+
+      mrb_define_method(
+          mrb, pipelineClass, "remove",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            mrb_get_args(mrb, "z", &name);
+            pipeline->remove(name);
+
+            return self;
+          },
+          MRB_ARGS_REQ(1));
+
+      mrb_define_method(
+          mrb, pipelineClass, "replace",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+            TransformPtr *trans;
+
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            mrb_get_args(mrb, "zd", &name, &trans, MRubySharedPtr<Transform>::type());
+
+            pipeline->replace(name, *trans);
+
+            return self;
+          },
+          MRB_ARGS_REQ(2));
+
+      mrb_define_method(
+          mrb, pipelineClass, "run",
+          [](mrb_state *mrb, mrb_value self) {
+            EntityPtr *entity;
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            mrb_get_args(mrb, "d", &entity, MRubySharedPtr<Entity>::type());
+
+            EntityPtr ptr = *entity;
+            ptr = pipeline->run(ptr);
+
+            return MRubySharedPtr<Entity>::wrap(mrb, "Entity", ptr);
+          },
+          MRB_ARGS_REQ(1));
+
+      mrb_define_method(
+          mrb, pipelineClass, "context",
+          [](mrb_state *mrb, mrb_value self) {
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext",
+                                                         pipeline->getContext());
+          },
+          MRB_ARGS_NONE());
+
+      auto adapterPipelineClass =
+          mrb_define_class_under(mrb, module, "AdapterPipeline", pipelineClass);
       MRB_SET_INSTANCE_TT(adapterPipelineClass, MRB_TT_DATA);
 
-      auto loopbackPipelineClass = mrb_define_class_under(mrb, module, "LoopbackPipeline", pipelineClass);
+      auto loopbackPipelineClass =
+          mrb_define_class_under(mrb, module, "LoopbackPipeline", pipelineClass);
       MRB_SET_INSTANCE_TT(loopbackPipelineClass, MRB_TT_DATA);
-      
-      mrb_define_method(mrb, pipelineClass, "context", [](mrb_state *mrb, mrb_value self) {
-        auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-        return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext", pipeline->getContext());
-      }, MRB_ARGS_NONE());
 
-
-    }    
+      mrb_define_method(
+          mrb, pipelineClass, "context",
+          [](mrb_state *mrb, mrb_value self) {
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            return MRubySharedPtr<PipelineContext>::wrap(mrb, "PipelineContext",
+                                                         pipeline->getContext());
+          },
+          MRB_ARGS_NONE());
+    }
   };
-}
+}  // namespace mtconnect::ruby

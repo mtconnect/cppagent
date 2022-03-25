@@ -15,47 +15,46 @@
 //    limitations under the License.
 //
 
-#include "utilities.hpp"
-
-#include <iostream>
-#include <string>
-#include <date/date.h>
-#include <filesystem>
+#include "embedded.hpp"
 
 #include <boost/algorithm/string.hpp>
 
+#include <date/date.h>
+#include <filesystem>
+#include <iostream>
+#include <string>
+
 #include "agent.hpp"
-#include "pipeline/pipeline.hpp"
-#include "entity/entity.hpp"
 #include "entity/data_set.hpp"
-#include "embedded.hpp"
+#include "entity/entity.hpp"
 #include "logging.hpp"
+#include "pipeline/pipeline.hpp"
+#include "utilities.hpp"
 
 #ifdef _WINDOWS
 #undef timezone
 #endif
 
 #include <mruby.h>
-#include <mruby/data.h>
 #include <mruby/array.h>
-#include <mruby/compile.h>
-#include <mruby/dump.h>
-#include <mruby/variable.h>
-#include <mruby/proc.h>
 #include <mruby/class.h>
-#include <mruby/numeric.h>
-#include <mruby/string.h>
-#include <mruby/presym.h>
+#include <mruby/compile.h>
+#include <mruby/data.h>
+#include <mruby/dump.h>
 #include <mruby/error.h>
+#include <mruby/numeric.h>
+#include <mruby/presym.h>
+#include <mruby/proc.h>
+#include <mruby/string.h>
 #include <mruby/throw.h>
+#include <mruby/variable.h>
 
-#include "ruby_vm.hpp"
 #include "ruby_agent.hpp"
-#include "ruby_pipeline.hpp"
 #include "ruby_entity.hpp"
 #include "ruby_observation.hpp"
+#include "ruby_pipeline.hpp"
 #include "ruby_transform.hpp"
-
+#include "ruby_vm.hpp"
 
 using namespace std;
 
@@ -64,31 +63,30 @@ namespace mtconnect::ruby {
   using namespace std::literals;
   using namespace date::literals;
   using namespace observation;
-  
+
   std::recursive_mutex RubyVM::m_mutex;
   RubyVM *RubyVM::m_vm = nullptr;
 
-  
   // These are static wrapper classes that add types to the Ruby instance
   Embedded::Embedded(Agent *agent, const ConfigOptions &options)
     : m_agent(agent), m_options(options)
   {
     using namespace std::filesystem;
-    
+
     NAMED_SCOPE("Ruby::Embedded");
-    
+
     // Load the ruby module in the configuration
     auto module = GetOption<string>(m_options, "module");
     auto initialization = GetOption<string>(m_options, "initialization");
-    
+
     if (!m_rubyVM)
     {
       m_rubyVM = make_unique<RubyVM>();
-      
+
       lock_guard guard(*m_rubyVM);
-      
+
       auto mrb = m_rubyVM->state();
-      
+
       RubyAgent::initialize(mrb, m_rubyVM->mtconnect(), agent);
       RubyPipeline::initialize(mrb, m_rubyVM->mtconnect());
       RubyEntity::initialize(mrb, m_rubyVM->mtconnect());
@@ -110,19 +108,25 @@ namespace mtconnect::ruby {
         {
           LOG(info) << "Found module: " << file;
           FILE *fp = nullptr;
-          try {
+          try
+          {
             mrb_value file = mrb_str_new_cstr(mrb, mod.string().c_str());
             mrb_bool state;
-            mrb_value res = mrb_protect(mrb, [](mrb_state *mrb, mrb_value data) {
-              FILE *fp = fopen(mrb_str_to_cstr(mrb, data), "r");
-              return mrb_load_file(mrb, fp);
-            }, file, &state);
+            mrb_value res = mrb_protect(
+                mrb,
+                [](mrb_state *mrb, mrb_value data) {
+                  FILE *fp = fopen(mrb_str_to_cstr(mrb, data), "r");
+                  return mrb_load_file(mrb, fp);
+                },
+                file, &state);
             if (state)
             {
-              LOG(error) << "Error loading file " << mod << ": " <<
-                  mrb_str_to_cstr(mrb, mrb_inspect(mrb, res));
+              LOG(error) << "Error loading file " << mod << ": "
+                         << mrb_str_to_cstr(mrb, mrb_inspect(mrb, res));
             }
-          } catch (std::exception ex) {
+          }
+          catch (std::exception ex)
+          {
             LOG(error) << "Failed to load module: " << mod << ": " << ex.what();
           }
           catch (...)
@@ -137,9 +141,6 @@ namespace mtconnect::ruby {
       }
     }
   }
-  
-  Embedded::~Embedded()
-  {
-    m_rubyVM.reset();
-  }
-}
+
+  Embedded::~Embedded() { m_rubyVM.reset(); }
+}  // namespace mtconnect::ruby

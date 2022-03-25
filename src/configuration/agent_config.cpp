@@ -191,7 +191,7 @@ namespace mtconnect {
     AgentConfiguration::~AgentConfiguration()
     {
       stop();
-      
+
       logr::core::get()->remove_all_sinks();
       m_pipelineContext.reset();
       m_adapterHandler.reset();
@@ -878,8 +878,7 @@ namespace mtconnect {
       if (ruby)
       {
         GetOptions(*ruby, rubyOptions, options);
-        AddOptions(*ruby, rubyOptions,
-                   {{"module", string()}, {"initialization", string()}});
+        AddOptions(*ruby, rubyOptions, {{"module", string()}, {"initialization", string()}});
       }
       m_ruby = make_unique<ruby::Embedded>(m_agent.get(), rubyOptions);
     }

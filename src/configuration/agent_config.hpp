@@ -56,7 +56,6 @@ namespace mtconnect {
   }
 #endif
 
-
   class XmlPrinter;
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;

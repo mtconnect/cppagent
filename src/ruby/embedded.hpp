@@ -17,15 +17,16 @@
 
 #pragma once
 
-#include "utilities.hpp"
-
 #include <boost/asio.hpp>
+
 #include <memory>
+
+#include "utilities.hpp"
 
 namespace Rice {
   class Module;
   class Class;
-}
+}  // namespace Rice
 
 namespace mtconnect {
   class Agent;
@@ -36,12 +37,12 @@ namespace mtconnect {
     public:
       Embedded(Agent *agent, const ConfigOptions &options);
       ~Embedded();
-            
+
     protected:
       Agent *m_agent;
       ConfigOptions m_options;
       boost::asio::io_context *m_context = nullptr;
       std::unique_ptr<RubyVM> m_rubyVM;
     };
-  }
-}
+  }  // namespace ruby
+}  // namespace mtconnect

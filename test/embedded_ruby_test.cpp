@@ -19,40 +19,35 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include <chrono>
-#include <filesystem>
-#include <string>
 #include <boost/algorithm/string.hpp>
 
-#include <iostream>
-#include <string>
+#include <chrono>
 #include <date/date.h>
 #include <filesystem>
+#include <iostream>
+#include <mruby.h>
+#include <mruby/array.h>
+#include <mruby/class.h>
+#include <mruby/compile.h>
+#include <mruby/data.h>
+#include <mruby/dump.h>
+#include <mruby/error.h>
+#include <mruby/numeric.h>
+#include <mruby/presym.h>
+#include <mruby/proc.h>
+#include <mruby/string.h>
+#include <mruby/variable.h>
+#include <string>
 
 #include "adapter/shdr/shdr_adapter.hpp"
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
-#include "rest_sink/rest_service.hpp"
-#include "xml_printer.hpp"
 #include "device_model/data_item/data_item.hpp"
-
-
-#include <mruby.h>
-#include <mruby/data.h>
-#include <mruby/array.h>
-#include <mruby/compile.h>
-#include <mruby/dump.h>
-#include <mruby/variable.h>
-#include <mruby/proc.h>
-#include <mruby/class.h>
-#include <mruby/numeric.h>
-#include <mruby/string.h>
-#include <mruby/presym.h>
-#include <mruby/error.h>
-
-#include "ruby/ruby_vm.hpp"
+#include "rest_sink/rest_service.hpp"
 #include "ruby/ruby_smart_ptr.hpp"
+#include "ruby/ruby_vm.hpp"
+#include "xml_printer.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -72,7 +67,7 @@ namespace {
   using namespace asset;
   using namespace ruby;
   namespace fs = std::filesystem;
-  
+
   class MockPipelineContract : public PipelineContract
   {
   public:
@@ -103,20 +98,21 @@ namespace {
       m_config = std::make_unique<AgentConfiguration>();
       m_config->setDebug(true);
       m_cwd = std::filesystem::current_path();
-      
+
       m_context = make_shared<PipelineContext>();
       m_context->m_contract = make_unique<MockPipelineContract>(m_config->getAgent());
     }
-    
+
     void load(const char *file)
     {
-      string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n"
+      string str("Devices = " PROJECT_ROOT_DIR
+                 "/samples/test_config.xml\n"
                  "Ruby {\n"
                  "  module = " PROJECT_ROOT_DIR "/test/resources/ruby/" +
-                 string(file) + "\n"
+                 string(file) +
+                 "\n"
                  "}\n");
       m_config->loadConfig(str);
-
     }
 
     void TearDown() override
@@ -129,14 +125,14 @@ namespace {
     std::unique_ptr<AgentConfiguration> m_config;
     std::filesystem::path m_cwd;
   };
-  
+
   TEST_F(EmbeddedRubyTest, should_initialize)
   {
     load("should_initialize.rb");
-    
+
     auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
-    
+
     mrb_value pipelines = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$pipelines"));
     ASSERT_FALSE(mrb_nil_p(pipelines));
     ASSERT_TRUE(mrb_array_p(pipelines));
@@ -144,46 +140,46 @@ namespace {
     auto array = mrb_ary_ptr(pipelines);
     auto size = ARY_LEN(array);
     ASSERT_EQ(2, size);
-    
+
     auto values = ARY_PTR(array);
     ASSERT_NE(nullptr, values);
     for (int i = 0; i < size; i++)
     {
       auto pipeline = MRubyPtr<pipeline::Pipeline>::unwrap(mrb, values[i]);
-      ASSERT_NE(nullptr, dynamic_cast<pipeline::Pipeline*>(pipeline));
+      ASSERT_NE(nullptr, dynamic_cast<pipeline::Pipeline *>(pipeline));
     }
   }
-  
+
   TEST_F(EmbeddedRubyTest, should_support_entities)
   {
     using namespace std::chrono;
     using namespace std::chrono_literals;
-    
+
     load("should_support_entities.rb");
-    
+
     auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
 
     mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent1"));
     ASSERT_FALSE(mrb_nil_p(ent1));
-    
+
     auto cent1 = MRubySharedPtr<Entity>::unwrap(mrb, ent1);
     ASSERT_TRUE(cent1);
-    
+
     ASSERT_EQ("TestEntity", cent1->getName());
     ASSERT_EQ("Simple Value", cent1->getValue<string>());
-    
+
     mrb_value ent2 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent2"));
     ASSERT_FALSE(mrb_nil_p(ent2));
-    
+
     auto cent2 = MRubySharedPtr<Entity>::unwrap(mrb, ent2);
     ASSERT_TRUE(cent2);
-    
+
     ASSERT_EQ("HashEntity", cent2->getName());
     ASSERT_EQ("Simple Value", cent2->getValue<string>());
     ASSERT_EQ(10, cent2->get<int64_t>("int"));
     ASSERT_NEAR(123.4, cent2->get<double>("float"), 0.000001);
-    
+
     Timestamp ts = cent2->get<Timestamp>("time");
     ASSERT_EQ(1577836800s, ts.time_since_epoch());
   }
@@ -192,21 +188,21 @@ namespace {
   {
     using namespace std::chrono;
     using namespace std::chrono_literals;
-    
+
     load("entity_should_support_data_sets.rb");
-    
+
     auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
 
     mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent1"));
     ASSERT_FALSE(mrb_nil_p(ent1));
-    
+
     auto cent1 = MRubySharedPtr<Entity>::unwrap(mrb, ent1);
     ASSERT_TRUE(cent1);
-    
+
     const DataSet &ds = cent1->getValue<DataSet>();
     ASSERT_EQ(3, ds.size());
-    
+
     ASSERT_EQ("value1", ds.get<string>("string"));
     ASSERT_EQ(100, ds.get<int64_t>("int"));
     ASSERT_NEAR(123.4, ds.get<double>("float"), 0.000001);
@@ -216,41 +212,41 @@ namespace {
   {
     using namespace std::chrono;
     using namespace std::chrono_literals;
-    
+
     load("entity_should_support_tables.rb");
-    
+
     auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
 
     mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$ent1"));
     ASSERT_FALSE(mrb_nil_p(ent1));
-    
+
     auto cent1 = MRubySharedPtr<Entity>::unwrap(mrb, ent1);
     ASSERT_TRUE(cent1);
-    
+
     const DataSet &ds = cent1->getValue<DataSet>();
     ASSERT_EQ(2, ds.size());
 
     const DataSet &row1 = ds.get<DataSet>("row1");
     ASSERT_EQ(2, row1.size());
-    
+
     ASSERT_EQ("text1", row1.get<string>("string"));
     ASSERT_NEAR(1.0, row1.get<double>("float"), 0.000001);
 
     const DataSet &row2 = ds.get<DataSet>("row2");
     ASSERT_EQ(2, row2.size());
-    
+
     ASSERT_EQ("text2", row2.get<string>("string"));
     ASSERT_NEAR(2.0, row2.get<double>("float"), 0.000001);
   }
-  
+
   TEST_F(EmbeddedRubyTest, should_transform)
   {
     using namespace std::chrono;
     using namespace std::chrono_literals;
-    
+
     load("should_transform.rb");
-    
+
     auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
 
@@ -260,7 +256,7 @@ namespace {
 
     mrb_value source = MRubySharedPtr<mtconnect::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
-    
+
     mrb_value ent1 = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$trans"));
     ASSERT_FALSE(mrb_nil_p(ent1));
 
@@ -268,12 +264,11 @@ namespace {
 p $source
 $source.pipeline.splice_after('Start', $trans)
 )");
-    
+
     auto di = m_config->getAgent()->getDataItemForDevice("LinuxCNC", "execution");
-    [[maybe_unused]]
-    auto out = loopback->receive(di, "1"s);
-    
-    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
+    [[maybe_unused]] auto out = loopback->receive(di, "1"s);
+
+    auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ("READY", contract->m_observation->getValue<string>());
   }
@@ -282,9 +277,9 @@ $source.pipeline.splice_after('Start', $trans)
   {
     using namespace std::chrono;
     using namespace std::chrono_literals;
-    
+
     load("should_transform_with_subclass.rb");
-    
+
     auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
 
@@ -294,20 +289,18 @@ $source.pipeline.splice_after('Start', $trans)
 
     mrb_value source = MRubySharedPtr<mtconnect::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
-    
+
     mrb_load_string(mrb, R"(
 p $source
 $source.pipeline.splice_after('Start', FixExecution.new('FixExec', :Event))
 )");
-    
+
     auto di = m_config->getAgent()->getDataItemForDevice("LinuxCNC", "execution");
-    [[maybe_unused]]
-    auto out = loopback->receive(di, "1"s);
-    
-    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
+    [[maybe_unused]] auto out = loopback->receive(di, "1"s);
+
+    auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ("READY", contract->m_observation->getValue<string>());
-
   }
 
-}
+}  // namespace

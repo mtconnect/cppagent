@@ -225,7 +225,7 @@ namespace mtconnect {
     // Sources and Sinks
     SourceList m_sources;
     SinkList m_sinks;
-    
+
     // Pipeline
     pipeline::PipelineContextPtr m_pipelineContext;
 

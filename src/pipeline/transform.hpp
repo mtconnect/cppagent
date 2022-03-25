@@ -27,7 +27,7 @@
 namespace mtconnect {
   namespace device_model::data_item {
     class DataItem;
-  }  // namespace device_model
+  }  // namespace device_model::data_item
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   namespace pipeline {
     // A transform takes an entity and transforms it to another
@@ -116,7 +116,7 @@ namespace mtconnect {
 
       using TransformPair = std::pair<TransformPtr, TransformPtr>;
       using ListOfTransforms = std::list<TransformPair>;
-      
+
       void findRec(const std::string &target, ListOfTransforms &xforms)
       {
         for (auto &t : m_next)
@@ -128,17 +128,17 @@ namespace mtconnect {
           t->findRec(target, xforms);
         }
       }
-      
+
       void find(const std::string &target, ListOfTransforms &xforms)
       {
         if (m_name == target)
         {
-          xforms.push_back(TransformPair { nullptr, getptr() });
+          xforms.push_back(TransformPair {nullptr, getptr()});
         }
-        
+
         findRec(target, xforms);
       }
-      
+
       void spliceBefore(TransformPtr old, TransformPtr xform)
       {
         for (auto it = m_next.begin(); it != m_next.end(); it++)

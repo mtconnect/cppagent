@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "entity/entity.hpp"
-
+#include <mruby-time/include/mruby/time.h>
 #include <mruby/array.h>
 #include <mruby/hash.h>
 #include <mruby/value.h>
-#include <mruby-time/include/mruby/time.h>
+
+#include "entity/entity.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect;
@@ -30,7 +30,7 @@ namespace mtconnect::ruby {
   using namespace data_item;
   using namespace entity;
   using namespace std;
-  
+
   inline string stringFromRuby(mrb_state *mrb, mrb_value value)
   {
     if (mrb_string_p(value))
@@ -46,36 +46,35 @@ namespace mtconnect::ruby {
       return string(mrb_str_to_cstr(mrb, s));
     }
   }
-  
+
   inline mrb_value toRuby(mrb_state *mrb, const std::string &str)
   {
     return mrb_str_new_cstr(mrb, str.c_str());
   }
 
-  struct mrb_time {
-    time_t              sec;
-    time_t              usec;
-    enum mrb_timezone   timezone;
-    struct tm           datetime;
+  struct mrb_time
+  {
+    time_t sec;
+    time_t usec;
+    enum mrb_timezone timezone;
+    struct tm datetime;
   };
 
   inline Timestamp timestampFromRuby(mrb_state *mrb, mrb_value value)
   {
     using namespace std::chrono;
-    
-    auto tm = static_cast<mrb_time*>(DATA_PTR(value));
-    auto dur = duration_cast<microseconds>(seconds{tm->sec}
-        + microseconds{tm->usec});
-    return  time_point<system_clock>{duration_cast<system_clock::duration>(dur)};
+
+    auto tm = static_cast<mrb_time *>(DATA_PTR(value));
+    auto dur = duration_cast<microseconds>(seconds {tm->sec} + microseconds {tm->usec});
+    return time_point<system_clock> {duration_cast<system_clock::duration>(dur)};
   }
-  
+
   inline mrb_value toRuby(mrb_state *mrb, const Timestamp &ts)
   {
     using namespace std::chrono;
 
     auto secs = time_point_cast<seconds>(ts);
-    auto us = time_point_cast<microseconds>(ts) -
-               time_point_cast<microseconds>(secs);
+    auto us = time_point_cast<microseconds>(ts) - time_point_cast<microseconds>(secs);
     return mrb_time_at(mrb, secs.time_since_epoch().count(), us.count(), MRB_TIMEZONE_UTC);
   }
-}
+}  // namespace mtconnect::ruby

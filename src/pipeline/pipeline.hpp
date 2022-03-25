@@ -79,7 +79,7 @@ namespace mtconnect {
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
-        
+
         for (auto &pair : xforms)
         {
           pair.second->spliceAfter(transform);
@@ -126,10 +126,10 @@ namespace mtconnect {
         {
           pair.first->replace(pair.second, transform);
         }
-        
+
         return true;
       }
-      
+
       bool remove(const std::string &target)
       {
         Transform::ListOfTransforms xforms;
@@ -141,10 +141,9 @@ namespace mtconnect {
         {
           pair.first->remove(pair.second);
         }
-        
+
         return true;
       }
-
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
 

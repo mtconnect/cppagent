@@ -597,14 +597,13 @@ TEST_F(PeriodFilterTest, streaming_observations_spaced_temporally)
   ASSERT_EQ(7.0, obs[4]->getValue<double>());
 }
 
-
 TEST_F(PeriodFilterTest, unavailable_behavior)
 {
   createDataItem();
   makeFilter();
 
   Timestamp now = chrono::system_clock::now();
-  
+
   auto &obs = observations();
 
   {

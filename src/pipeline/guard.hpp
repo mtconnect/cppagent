@@ -48,7 +48,7 @@ namespace mtconnect {
         else
           return CONTINUE;
       }
-      
+
       auto &operator||(Guard other)
       {
         m_alternative = other;
