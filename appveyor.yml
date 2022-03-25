@@ -46,6 +46,7 @@ before_build:
       set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;%PATH%
       pip install conan
       conan export conan/mqtt_cpp
+      conan export conan/mruby
       conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False -o with_ruby=%WITH_RUBY%
   - sh: |-
       export PATH=$HOME/venv3.9/bin:$PATH
@@ -61,6 +62,7 @@ before_build:
       fi
       pip install conan
       conan export conan/mqtt_cpp
+      conan export conan/mruby
       conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
 
 build:
