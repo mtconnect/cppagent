@@ -34,10 +34,15 @@ class MRubyConan(ConanFile):
         with open(self.build_config, "w") as f:
             f.write('''
 MRuby::Build.new do |conf|
-  conf.toolchain
-
+'''
+            
+            if self.settings.os == 'Windows':
+                f.write("  conf.toolchain :visualstudio\n")
+            else:
+                f.write("  conf.toolchain\n")
+                    
+            f.write('''
   # include the default GEMs
-  # conf.gembox 'default'
   conf.gembox 'full-core'
 
   # C compiler settings
@@ -46,7 +51,7 @@ MRuby::Build.new do |conf|
     c.defines << 'MRB_WORD_BOXING'
     c.defines << 'MRB_INT64'
   end
-#  conf.enable_cxx_abi
+  
   conf.enable_cxx_exception
   conf.enable_test  
 ''')
