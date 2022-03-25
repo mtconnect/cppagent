@@ -1,10 +1,5 @@
 version: '{build}'
-branches:
-  only:
-    - master
-    - ruby_transforms
-    - /.*master.*/
-  
+
 image:
   - Visual Studio 2019
   - macOS
