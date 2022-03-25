@@ -25,11 +25,9 @@
 #include "pipeline_context.hpp"
 
 namespace mtconnect {
-  namespace device_model {
-    namespace data_item {
-      class DataItem;
-    }
-  }  // namespace device_model
+  namespace device_model::data_item {
+    class DataItem;
+  }  // namespace device_model::data_item
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   namespace pipeline {
     // A transform takes an entity and transforms it to another
@@ -118,7 +116,8 @@ namespace mtconnect {
 
       using TransformPair = std::pair<TransformPtr, TransformPtr>;
       using ListOfTransforms = std::list<TransformPair>;
-      void find(const std::string &target, ListOfTransforms &xforms)
+
+      void findRec(const std::string &target, ListOfTransforms &xforms)
       {
         for (auto &t : m_next)
         {
@@ -126,9 +125,20 @@ namespace mtconnect {
           {
             xforms.push_back(TransformPair {getptr(), t});
           }
-          t->find(target, xforms);
+          t->findRec(target, xforms);
         }
       }
+
+      void find(const std::string &target, ListOfTransforms &xforms)
+      {
+        if (m_name == target)
+        {
+          xforms.push_back(TransformPair {nullptr, getptr()});
+        }
+
+        findRec(target, xforms);
+      }
+
       void spliceBefore(TransformPtr old, TransformPtr xform)
       {
         for (auto it = m_next.begin(); it != m_next.end(); it++)
@@ -152,6 +162,36 @@ namespace mtconnect {
         return;
       }
       void firstAfter(TransformPtr xform) { m_next.emplace_front(xform); }
+      void replace(TransformPtr old, TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            *it = xform;
+            for (auto nxt = old->m_next.begin(); it != old->m_next.end(); it++)
+            {
+              xform->bind(*nxt);
+            }
+          }
+        }
+      }
+
+      void remove(TransformPtr old)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            m_next.erase(it);
+            for (auto nxt = old->m_next.begin(); it != old->m_next.end(); it++)
+            {
+              bind(*nxt);
+            }
+            break;
+          }
+        }
+      }
 
     protected:
       std::string m_name;

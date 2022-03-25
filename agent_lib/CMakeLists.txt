@@ -121,6 +121,8 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_parser.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_printer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_printer.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/data_set.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/data_set.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.cpp"  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.hpp"
@@ -149,15 +151,28 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"    
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.hpp"  
-  "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/data_set.cpp"
   )
 
-if(NOT WITHOUT_PYTHON)
+if(WITH_PYTHON)
   set(AGENT_SOURCES ${AGENT_SOURCES}
     
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.hpp"  
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.cpp"  
+    )
+endif()
+
+if(WITH_RUBY)
+  set(AGENT_SOURCES ${AGENT_SOURCES}    
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_smart_ptr.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_agent.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_entity.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_pipeline.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_observation.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_type.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_transform.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_vm.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.hpp"  
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.cpp"  
     )
 endif()
 
@@ -207,17 +222,28 @@ set_property(TARGET agent_lib PROPERTY
 target_link_libraries(
   agent_lib
   PUBLIC
-  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl
+  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl 
   
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
   )
 
-if(NOT WITHOUT_PYTHON)
+if(WITH_PYTHON)
   target_link_libraries(
     agent_lib
     PUBLIC
     Python3::Python)
+endif()
+
+if(WITH_RUBY)
+  target_link_libraries(
+    agent_lib
+    PUBLIC
+    CONAN_PKG::mruby)
+  target_link_directories(
+    agent_lib
+    PUBLIC
+    ${CONAN_LIB_DIRS_MRUBY})
 endif()
 
 target_compile_definitions(
@@ -236,11 +262,18 @@ target_compile_definitions(
     MQTT_USE_LOG
     )
 
-if(NOT WITHOUT_PYTHON)
+if(WITH_PYTHON)
   target_compile_definitions(
     agent_lib
     PUBLIC
     WITH_PYTHON )
+endif()
+
+if(WITH_RUBY)
+  target_compile_definitions(
+    agent_lib
+    PUBLIC
+    WITH_RUBY )
 endif()
 
 if(AGENT_WITHOUT_IPV6)

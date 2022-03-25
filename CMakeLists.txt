@@ -24,7 +24,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_COMPILE_FEATURES cxx_std_17)
-set(WITHOUT_PYTHON ON CACHE STRING "Without Python Support")
+
+set(WITH_PYTHON OFF CACHE STRING "With Python Support")
+set(WITH_RUBY OFF CACHE STRING "With Ruby Support")
 
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
@@ -66,9 +68,14 @@ if (UNIX)
 ENDIF()
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+if (CONAN_USER_MRUBY_mruby)
+  message(INFO ": Turning on Embedded Ruby")
+  set(WITH_RUBY ON FORCE)
+endif()
+
 conan_basic_setup(TARGETS)
 
-if(NOT WITHOUT_PYTHON)
+if(WITH_PYTHON)
   set(Python_USE_STATIC_LIBS ON)
 
   find_package(Python3 COMPONENTS Interpreter Development Development.Embed)
@@ -113,4 +120,3 @@ set(CPACK_PACKAGE_NAME "cppagent")
 set(CPACK_PACKAGE_VENDOR "MTConnect.org")
 
 include(CPack)
-

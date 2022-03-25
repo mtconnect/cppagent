@@ -25,7 +25,6 @@
 #include "xml_printer_helper.hpp"
 
 using namespace std;
-using namespace mtconnect::observation;
 
 namespace mtconnect {
   namespace entity {

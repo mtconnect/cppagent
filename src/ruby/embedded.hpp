@@ -17,32 +17,32 @@
 
 #pragma once
 
-#include "adapter_pipeline.hpp"
-#include "source.hpp"
+#include <boost/asio.hpp>
+
+#include <memory>
+
+#include "utilities.hpp"
+
+namespace Rice {
+  class Module;
+  class Class;
+}  // namespace Rice
 
 namespace mtconnect {
-  namespace adapter {
-    class Adapter : public Source
+  class Agent;
+  namespace ruby {
+    class RubyVM;
+    class Embedded
     {
     public:
-      Adapter(const std::string &name, boost::asio::io_context &io, const ConfigOptions &options)
-        : Source(name, io), m_options(options)
-      {}
-      virtual ~Adapter() {}
-
-      virtual const std::string &getHost() const = 0;
-      virtual const std::string &getUrl() const { return m_url; }
-      virtual const std::string &getIdentity() const { return m_identity; }
-      virtual unsigned int getPort() const = 0;
-      virtual const ConfigOptions &getOptions() const { return m_options; }
+      Embedded(Agent *agent, const ConfigOptions &options);
+      ~Embedded();
 
     protected:
-      std::string m_identity;
-      std::string m_url;
-      std::unique_ptr<Handler> m_handler;
+      Agent *m_agent;
       ConfigOptions m_options;
+      boost::asio::io_context *m_context = nullptr;
+      std::unique_ptr<RubyVM> m_rubyVM;
     };
-
-    using AdapterPtr = std::shared_ptr<Adapter>;
-  }  // namespace adapter
+  }  // namespace ruby
 }  // namespace mtconnect

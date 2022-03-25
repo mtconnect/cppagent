@@ -62,6 +62,10 @@
 #include "python/embedded.hpp"
 #endif
 
+#ifdef WITH_RUBY
+#include "ruby/embedded.hpp"
+#endif
+
 // If Windows XP
 #if defined(_WINDOWS)
 #if WINVER < 0x0600
@@ -186,6 +190,8 @@ namespace mtconnect {
 
     AgentConfiguration::~AgentConfiguration()
     {
+      stop();
+
       logr::core::get()->remove_all_sinks();
       m_pipelineContext.reset();
       m_adapterHandler.reset();
@@ -702,6 +708,9 @@ namespace mtconnect {
 #ifdef WITH_PYTHON
       configurePython(config, options);
 #endif
+#ifdef WITH_RUBY
+      configureRuby(config, options);
+#endif
     }
 
     void parseUrl(ConfigOptions &options)
@@ -857,6 +866,21 @@ namespace mtconnect {
     void AgentConfiguration::configurePython(const ptree &tree, ConfigOptions &options)
     {
       m_python = make_unique<python::Embedded>(m_agent.get(), options);
+    }
+#endif
+
+#ifdef WITH_RUBY
+    void AgentConfiguration::configureRuby(const ptree &tree, ConfigOptions &options)
+    {
+      ConfigOptions rubyOptions = options;
+
+      auto ruby = tree.get_child_optional("Ruby");
+      if (ruby)
+      {
+        GetOptions(*ruby, rubyOptions, options);
+        AddOptions(*ruby, rubyOptions, {{"module", string()}, {"initialization", string()}});
+      }
+      m_ruby = make_unique<ruby::Embedded>(m_agent.get(), rubyOptions);
     }
 #endif
 

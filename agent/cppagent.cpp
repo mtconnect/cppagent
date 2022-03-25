@@ -30,7 +30,7 @@ using namespace mtconnect;
 int main(int aArgc, const char *aArgv[])
 {
   NAMED_SCOPE("MAIN");
-
+  
   configuration::AgentConfiguration config;
 
   int ret = config.main(aArgc, aArgv);

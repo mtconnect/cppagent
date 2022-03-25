@@ -49,6 +49,12 @@ namespace mtconnect {
           return CONTINUE;
       }
 
+      auto &operator||(Guard other)
+      {
+        m_alternative = other;
+        return *this;
+      }
+
     protected:
       Guard m_alternative;
       GuardAction m_match;

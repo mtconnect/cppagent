@@ -115,6 +115,35 @@ namespace mtconnect {
 
         return true;
       }
+      bool replace(const std::string &target, TransformPtr transform)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+
+        for (auto &pair : xforms)
+        {
+          pair.first->replace(pair.second, transform);
+        }
+
+        return true;
+      }
+
+      bool remove(const std::string &target)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+
+        for (auto &pair : xforms)
+        {
+          pair.first->remove(pair.second);
+        }
+
+        return true;
+      }
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
 
@@ -126,6 +155,8 @@ namespace mtconnect {
 
       bool hasContext() const { return bool(m_context); }
       bool hasContract() const { return bool(m_context) && bool(m_context->m_contract); }
+      PipelineContextPtr getContext() { return m_context; }
+      const auto &getContract() { return m_context->m_contract; }
 
     protected:
       class Start : public Transform

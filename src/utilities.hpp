@@ -411,12 +411,13 @@ namespace mtconnect {
     {
       static const regex pat("([0-9]+)([GgMmKkBb]*)");
       smatch match;
-      if (regex_match(*value, match, pat))
+      string v = *value;
+      if (regex_match(v, match, pat))
       {
         size = boost::lexical_cast<int64_t>(match[1]);
-        if (match[2].matched && match[2].first[0] != '\0')
+        if (match[2].matched)
         {
-          switch (match[2].first[0])
+          switch (match[2].str()[0])
           {
             case 'G':
             case 'g':

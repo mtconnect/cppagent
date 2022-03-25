@@ -98,6 +98,7 @@ namespace mtconnect {
         bool hasName(const std::string &name) const;
 
         const auto &getType() { return get<std::string>("type"); }
+        const auto &getSubType() { return get<std::string>("subType"); }
 
         ECategory getCategory() const { return m_category; }
         ERepresentation getRepresentation() const { return m_representation; }

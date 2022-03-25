@@ -36,7 +36,7 @@
 #include <variant>
 #include <vector>
 
-#include "observation/data_set.hpp"
+#include "data_set.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect {
@@ -47,7 +47,7 @@ namespace mtconnect {
     using Vector = std::vector<double>;
 
     using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
-                               bool, Vector, observation::DataSet, Timestamp, std::nullptr_t>;
+                               bool, Vector, DataSet, Timestamp, std::nullptr_t>;
 
     class Factory;
     using FactoryPtr = std::shared_ptr<Factory>;

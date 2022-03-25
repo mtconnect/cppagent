@@ -25,7 +25,6 @@
 #include <variant>
 #include <vector>
 
-#include "data_set.hpp"
 #include "device_model/component.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "entity/entity.hpp"
@@ -292,12 +291,12 @@ namespace mtconnect {
       ~DataSetEvent() override = default;
       ObservationPtr copy() const override { return std::make_shared<DataSetEvent>(*this); }
 
-      const DataSet &getDataSet() const
+      const entity::DataSet &getDataSet() const
       {
         const entity::Value &v = getValue();
-        return std::get<DataSet>(v);
+        return std::get<entity::DataSet>(v);
       }
-      void setDataSet(const DataSet &set)
+      void setDataSet(const entity::DataSet &set)
       {
         setValue(set);
         setProperty("count", int64_t(set.size()));
