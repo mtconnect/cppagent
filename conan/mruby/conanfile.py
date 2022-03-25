@@ -32,12 +32,10 @@ class MRubyConan(ConanFile):
         self.build_config = os.path.join(self.build_folder, self._mruby_source, "build_config", "mtconnect.rb")
         
         with open(self.build_config, "w") as f:
-            f.write('''
-MRuby::Build.new do |conf|
-''')
+            f.write("MRuby::Build.new do |conf|\n")
             
             if self.settings.os == 'Windows':
-                f.write("  conf.toolchain :visualstudio\n")
+                f.write("  conf.toolchain :visualcpp\n")
             else:
                 f.write("  conf.toolchain\n")
                     
