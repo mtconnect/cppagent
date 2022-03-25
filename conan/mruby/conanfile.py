@@ -34,7 +34,7 @@ class MRubyConan(ConanFile):
         with open(self.build_config, "w") as f:
             f.write('''
 MRuby::Build.new do |conf|
-'''
+''')
             
             if self.settings.os == 'Windows':
                 f.write("  conf.toolchain :visualstudio\n")
