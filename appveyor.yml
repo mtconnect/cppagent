@@ -36,14 +36,14 @@ init:
 before_build:
   - cmd: |-
       set
-      if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat" ("C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat")
-      if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars32.bat" ("C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars32.bat")
+      "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
       if not exist C:\conan mkdir C:\conan
       set CONAN_USER_HOME=C:\conan
       set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;C:\Ruby30\bin;%PATH%
       pip install conan
       conan export conan/mqtt_cpp
       conan export conan/mruby
+      "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
       set
       conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False -o with_ruby=%WITH_RUBY%
   - sh: |-
