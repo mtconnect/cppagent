@@ -278,5 +278,36 @@ $source.pipeline.splice_after('Start', $trans)
     ASSERT_EQ("READY", contract->m_observation->getValue<string>());
   }
 
+  TEST_F(EmbeddedRubyTest, should_transform_with_subclass)
+  {
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+    
+    load("should_transform_with_subclass.rb");
+    
+    auto mrb = RubyVM::rubyVM().state();
+    ASSERT_NE(nullptr, mrb);
+
+    ConfigOptions options;
+    boost::asio::io_context::strand strand(m_config->getContext());
+    auto loopback = std::make_shared<LoopbackSource>("AgentSource", strand, m_context, options);
+
+    mrb_value source = MRubySharedPtr<mtconnect::Source>::wrap(mrb, "Source", loopback);
+    mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
+    
+    mrb_load_string(mrb, R"(
+p $source
+$source.pipeline.splice_after('Start', FixExecution.new('FixExec', :Event))
+)");
+    
+    auto di = m_config->getAgent()->getDataItemForDevice("LinuxCNC", "execution");
+    [[maybe_unused]]
+    auto out = loopback->receive(di, "1"s);
+    
+    auto contract = static_cast<MockPipelineContract*>(m_context->m_contract.get());
+    ASSERT_TRUE(contract->m_observation);
+    ASSERT_EQ("READY", contract->m_observation->getValue<string>());
+
+  }
 
 }
