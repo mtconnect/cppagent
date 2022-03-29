@@ -40,7 +40,7 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(contextClass, MRB_TT_DATA);
 
       mrb_define_method(
-          mrb, pipelineClass, "spice_before",
+          mrb, pipelineClass, "splice_before",
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
             TransformPtr *transform;
@@ -164,5 +164,6 @@ namespace mtconnect::ruby {
           },
           MRB_ARGS_NONE());
     }
+    
   };
 }  // namespace mtconnect::ruby
