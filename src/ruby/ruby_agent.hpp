@@ -119,20 +119,22 @@ namespace mtconnect::ruby {
             return devices;
           },
           MRB_ARGS_NONE());
-      
-      mrb_define_method(mrb, agentClass, "default_device",
-                        [](mrb_state *mrb, mrb_value self) {
-        auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
-        auto dev = agent->defaultDevice();
-        
-        auto mod = mrb_module_get(mrb, "MTConnect");
-        auto klass = mrb_class_get_under(mrb, mod, "Device");
 
-        if (dev)
-          return MRubySharedPtr<entity::Entity>::wrap(mrb, klass, dev);
-        else
-          return mrb_nil_value();
-      }, MRB_ARGS_NONE());
+      mrb_define_method(
+          mrb, agentClass, "default_device",
+          [](mrb_state *mrb, mrb_value self) {
+            auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
+            auto dev = agent->defaultDevice();
+
+            auto mod = mrb_module_get(mrb, "MTConnect");
+            auto klass = mrb_class_get_under(mrb, mod, "Device");
+
+            if (dev)
+              return MRubySharedPtr<entity::Entity>::wrap(mrb, klass, dev);
+            else
+              return mrb_nil_value();
+          },
+          MRB_ARGS_NONE());
 
       mrb_define_method(
           mrb, agentClass, "data_item_for_device",

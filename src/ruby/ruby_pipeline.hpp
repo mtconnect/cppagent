@@ -164,6 +164,5 @@ namespace mtconnect::ruby {
           },
           MRB_ARGS_NONE());
     }
-    
   };
 }  // namespace mtconnect::ruby

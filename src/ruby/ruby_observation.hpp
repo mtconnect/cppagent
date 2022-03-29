@@ -38,7 +38,7 @@ namespace mtconnect::ruby {
           mrb, observationClass, "initialize",
           [](mrb_state *mrb, mrb_value self) {
             using namespace device_model::data_item;
-            
+
             mrb_value di;
             mrb_value props;
             mrb_value ts;
@@ -46,9 +46,8 @@ namespace mtconnect::ruby {
             ErrorList errors;
             Timestamp time;
 
-            auto count =
-                mrb_get_args(mrb, "oo|o", &di, &props, &ts);
-            
+            auto count = mrb_get_args(mrb, "oo|o", &di, &props, &ts);
+
             auto dataItem = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, di);
 
             if (count < 3)

@@ -110,7 +110,6 @@ namespace mtconnect::ruby {
             return self;
           },
           MRB_ARGS_OPT(1) | MRB_ARGS_BLOCK());
-      
     }
 
     RubyTransform(mrb_state *mrb, mrb_value self, const std::string &name, const string &guard)
@@ -198,9 +197,9 @@ namespace mtconnect::ruby {
         Entity *ptr = entity.get();
         if (dynamic_cast<Observation *>(ptr) != nullptr)
           klass = "Observation";
-        else if (dynamic_cast<pipeline::Timestamped*>(ptr) != nullptr)
+        else if (dynamic_cast<pipeline::Timestamped *>(ptr) != nullptr)
           klass = "Timestamped";
-        else if (dynamic_cast<pipeline::Tokens*>(ptr) != nullptr)
+        else if (dynamic_cast<pipeline::Tokens *>(ptr) != nullptr)
           klass = "Tokens";
 
         ev = MRubySharedPtr<Entity>::wrap(mrb, klass, entity);

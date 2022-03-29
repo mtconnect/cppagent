@@ -44,11 +44,11 @@
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/data_item/data_item.hpp"
+#include "pipeline/shdr_tokenizer.hpp"
 #include "rest_sink/rest_service.hpp"
 #include "ruby/ruby_smart_ptr.hpp"
 #include "ruby/ruby_vm.hpp"
 #include "xml_printer.hpp"
-#include "pipeline/shdr_tokenizer.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -303,7 +303,7 @@ $source.pipeline.splice_after('Start', FixExecution.new('FixExec', :Event))
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ("READY", contract->m_observation->getValue<string>());
   }
-  
+
   TEST_F(EmbeddedRubyTest, should_create_sample)
   {
     using namespace std::chrono;
@@ -320,22 +320,22 @@ $source.pipeline.splice_after('Start', FixExecution.new('FixExec', :Event))
 
     mrb_value source = MRubySharedPtr<mtconnect::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
-    
+
     mrb_load_string(mrb, R"(
 $source.pipeline.splice_after('Start', $trans)
 )");
 
     auto tokens = make_shared<pipeline::Tokens>();
-    tokens->m_tokens = { "Xact"s, "100.0"s };
-    
+    tokens->m_tokens = {"Xact"s, "100.0"s};
+
     loopback->getPipeline()->run(tokens);
-    
+
     auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ(100.0, contract->m_observation->getValue<double>());
     ASSERT_EQ("Xact", contract->m_observation->getDataItem()->getName());
   }
-  
+
   TEST_F(EmbeddedRubyTest, should_create_event)
   {
     using namespace std::chrono;
@@ -352,21 +352,21 @@ $source.pipeline.splice_after('Start', $trans)
 
     mrb_value source = MRubySharedPtr<mtconnect::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
-    
+
     mrb_load_string(mrb, R"(
 $source.pipeline.splice_after('Start', $trans)
 )");
 
-    Properties props { {"VALUE", R"(
+    Properties props {{"VALUE", R"(
 {
   "name": "block",
   "value": "G0X100Y100"
 }
-)"s} };
+)"s}};
     auto entity = make_shared<Entity>("Data", props);
-    
+
     loopback->getPipeline()->run(entity);
-    
+
     auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
     ASSERT_EQ("G0X100Y100", contract->m_observation->getValue<string>());
@@ -389,18 +389,18 @@ $source.pipeline.splice_after('Start', $trans)
 
     mrb_value source = MRubySharedPtr<mtconnect::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
-    
+
     mrb_load_string(mrb, R"(
 $source.pipeline.splice_after('Start', $trans)
 )");
 
-    Properties props { {"VALUE", "PLC1002:MACHINE ON FIRE"s} };
+    Properties props {{"VALUE", "PLC1002:MACHINE ON FIRE"s}};
     auto entity = make_shared<Entity>("Data", props);
-    
+
     loopback->getPipeline()->run(entity);
-    
+
     auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
-        
+
     ASSERT_TRUE(contract->m_observation);
     auto cond = dynamic_pointer_cast<Condition>(contract->m_observation);
     ASSERT_TRUE(cond);
@@ -408,12 +408,12 @@ $source.pipeline.splice_after('Start', $trans)
     ASSERT_EQ("MACHINE ON FIRE", cond->getValue<string>());
     ASSERT_EQ("PLC1002", cond->getCode());
     ASSERT_EQ(Condition::FAULT, cond->getLevel());
-    
-    Properties props2 { {"VALUE", "NC155:SORRY, I DON'T WANT TO"s} };
+
+    Properties props2 {{"VALUE", "NC155:SORRY, I DON'T WANT TO"s}};
     entity = make_shared<Entity>("Data", props2);
-    
+
     loopback->getPipeline()->run(entity);
-            
+
     ASSERT_TRUE(contract->m_observation);
     cond = dynamic_pointer_cast<Condition>(contract->m_observation);
     ASSERT_TRUE(cond);
@@ -422,7 +422,5 @@ $source.pipeline.splice_after('Start', $trans)
     ASSERT_EQ("NC155", cond->getCode());
     ASSERT_EQ(Condition::FAULT, cond->getLevel());
   }
-
-  
 
 }  // namespace
