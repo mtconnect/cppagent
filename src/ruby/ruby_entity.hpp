@@ -560,7 +560,7 @@ namespace mtconnect::ruby {
           [](mrb_state *mrb, mrb_value self) {
             auto tokens = MRubySharedPtr<Entity>::unwrap<pipeline::Tokens>(mrb, self);
             mrb_value ary;
-            mrb_get_args(mrb, "o", &ary);
+            mrb_get_args(mrb, "A", &ary);
             if (mrb_array_p(ary))
             {
               tokens->m_tokens.clear();
