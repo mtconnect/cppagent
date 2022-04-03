@@ -65,7 +65,7 @@ namespace mtconnect::ruby {
             mrb_value gv, block = mrb_nil_value();
             string guard;
 
-            auto c = mrb_get_args(mrb, "zo&", &name, &gv, &block);
+            auto c = mrb_get_args(mrb, "z|o&", &name, &gv, &block);
             if (c == 1)
               guard = "Entity";
             else
@@ -133,6 +133,8 @@ namespace mtconnect::ruby {
         m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Entity>(SKIP);
       else if (m_guardString == "Event")
         m_guard = TypeGuard<Event>(RUN) || TypeGuard<Entity>(SKIP);
+      else if (m_guardString == "Tokens")
+        m_guard = TypeGuard<pipeline::Tokens>(RUN) || TypeGuard<Entity>(SKIP);
       else if (m_guardString == "Message")
         m_guard = TypeGuard<PipelineMessage>(RUN) || TypeGuard<Entity>(SKIP);
       else
@@ -192,8 +194,13 @@ namespace mtconnect::ruby {
 
         mrb_value ev;
         const char *klass = "Entity";
-        if (dynamic_cast<Observation *>(entity.get()) != nullptr)
+        Entity *ptr = entity.get();
+        if (dynamic_cast<Observation *>(ptr) != nullptr)
           klass = "Observation";
+        else if (dynamic_cast<pipeline::Timestamped *>(ptr) != nullptr)
+          klass = "Timestamped";
+        else if (dynamic_cast<pipeline::Tokens *>(ptr) != nullptr)
+          klass = "Tokens";
 
         ev = MRubySharedPtr<Entity>::wrap(mrb, klass, entity);
         mrb_value rv;

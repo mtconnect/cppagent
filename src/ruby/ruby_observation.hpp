@@ -37,24 +37,27 @@ namespace mtconnect::ruby {
       mrb_define_method(
           mrb, observationClass, "initialize",
           [](mrb_state *mrb, mrb_value self) {
-            DataItemPtr *di;
+            using namespace device_model::data_item;
+
+            mrb_value di;
             mrb_value props;
             mrb_value ts;
 
             ErrorList errors;
             Timestamp time;
 
-            auto count =
-                mrb_get_args(mrb, "doo", &di, MRubySharedPtr<DataItem>::type(), &props, &ts);
+            auto count = mrb_get_args(mrb, "oo|o", &di, &props, &ts);
 
-            if (count > 2)
+            auto dataItem = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, di);
+
+            if (count < 3)
               time = std::chrono::system_clock::now();
             else
               time = timestampFromRuby(mrb, ts);
 
             Properties values;
             fromRuby(mrb, props, values);
-            ObservationPtr obs = Observation::make(*di, values, time, errors);
+            ObservationPtr obs = Observation::make(dataItem, values, time, errors);
 
             if (errors.size() > 0)
             {
