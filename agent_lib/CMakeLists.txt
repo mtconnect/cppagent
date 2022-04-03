@@ -40,8 +40,11 @@ set(AGENT_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/shdr/shdr_pipeline.cpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.cpp"
+  
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/agent_adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/agent_adapter.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/url_parser.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/url_parser.cpp"
 
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline_context.hpp"

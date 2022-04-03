@@ -16,20 +16,34 @@
 //
 
 #include "adapter/adapter.hpp"
+#include "adapter/adapter_pipeline.hpp"
+#include "url_parser.hpp"
 
 namespace mtconnect::adapter::agent 
 {
   using namespace mtconnect;
   using namespace adapter;
   
-  class Client;
+  class Session;
 
   class AgentAdapter : public Adapter
   {
   public:
-    AgentAdapter(const std::string &name, boost::asio::io_context &io, const ConfigOptions &options)
-      : Adapter(name, io, options)
+    AgentAdapter(boost::asio::io_context &io,
+                 pipeline::PipelineContextPtr context,
+                 const ConfigOptions &options,
+                 const boost::property_tree::ptree &block);
+                                               
+    static void registerFactory(SourceFactory &factory)
     {
+      factory.registerFactory(
+          "shdr",
+          [](const std::string &name, boost::asio::io_context &io,
+             pipeline::PipelineContextPtr context, const ConfigOptions &options,
+             const boost::property_tree::ptree &block) -> SourcePtr {
+            auto source = std::make_shared<AgentAdapter>(io, context, options, block);
+            return source;
+          });
     }
     
     const std::string &getHost() const override
@@ -42,15 +56,18 @@ namespace mtconnect::adapter::agent
       return 0;      
     }
 
-    ~AgentAdapter() override {}
+    ~AgentAdapter() override;
 
     bool start() override;
     void stop() override;    
-    pipeline::Pipeline *getPipeline() override;
+    pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
+    
     
   protected:
+    AdapterPipeline m_pipeline;
+    Url m_url;
     std::string m_host;
-    std::unique_ptr<Client> m_client;
+    std::shared_ptr<Session> m_session;
   };
   
   
