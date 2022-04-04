@@ -331,10 +331,10 @@ namespace mtconnect::adapter::agent {
     }
     else
     {
-      m_url.protocol = "http";
-      m_url.host = *GetOption<string>(m_options, configuration::Host);
-      m_url.port = GetOption<int>(m_options, configuration::Port);
-      m_url.path = GetOption<string>(m_options, configuration::Device).value_or("/");
+      m_url.m_protocol = "http";
+      m_url.m_host = *GetOption<string>(m_options, configuration::Host);
+      m_url.m_port = GetOption<int>(m_options, configuration::Port);
+      m_url.m_path = GetOption<string>(m_options, configuration::Device).value_or("/");
     }
     
     

@@ -34,17 +34,17 @@ namespace mtconnect::adapter::agent {
 
   struct Url
   {
-    using host_t = std::variant<std::string, boost::asio::ip::address>;
+    using Host = std::variant<std::string, boost::asio::ip::address>;
 
-    std::string protocol; // http/https
+    std::string m_protocol; // http/https
 
-    host_t host;
-    std::string username;
-    std::string password;
-    std::optional<int> port;
-    std::string path = "/";
-    UrlQuery query;
-    std::string fragment;
+    Host m_host;
+    std::optional<std::string> m_username;
+    std::optional<std::string> m_password;
+    std::optional<int> m_port;
+    std::string m_path = "/";
+    UrlQuery m_query;
+    std::string m_fragment;
 
     std::string getHost() const ;
 

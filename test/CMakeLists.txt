@@ -184,6 +184,7 @@ add_agent_test(xml_printer TRUE xml)
 add_agent_test(adapter FALSE adapter)
 add_agent_test(connector FALSE adapter)
 add_agent_test(mqtt_adapter FALSE adapter)
+add_agent_test(url_parser FALSE adapter)
 
 add_agent_test(shdr_tokenizer FALSE pipeline)
 add_agent_test(timestamp_extractor FALSE pipeline)

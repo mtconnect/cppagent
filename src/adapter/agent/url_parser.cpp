@@ -26,14 +26,14 @@ namespace qi = boost::spirit::qi;
 
 struct UserCred
 {
-  std::string username;
-  std::string password;
+  std::string m_username;
+  std::string m_password;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
 			  UserCred,
-			  (std::string, username)
-			  (std::string, password)
+			  (std::string, m_username)
+			  (std::string, m_password)
 			  )
 
 
@@ -45,15 +45,14 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 BOOST_FUSION_ADAPT_STRUCT(
 			  mtconnect::adapter::agent::Url,
-			  (std::string, protocol)
-			  (mtconnect::adapter::agent::Url::host_t, host)
-			  (std::string, username)
-			  (std::string, password)
-			  (std::optional<int>, port)
-			  (std::string, path)
-			  (mtconnect::adapter::agent::UrlQuery, query)
-			  (std::string, fragment)
-			  (std::string, str_host)
+			  (std::string, m_protocol)
+			  (mtconnect::adapter::agent::Url::Host, m_host)
+			  (std::optional<std::string>, m_username)
+			  (std::optional<std::string>, m_password)
+			  (std::optional<int>, m_port)
+			  (std::string, m_path)
+			  (mtconnect::adapter::agent::UrlQuery, m_query)
+			  (std::string, m_fragment)
 			  )
 
 namespace mtconnect::adapter::agent {
@@ -151,8 +150,10 @@ namespace mtconnect::adapter::agent {
     [[maybe_unused]]
     bool r = boost::spirit::qi::parse(first, url.end(), grammar, ast);
     if (!grammar.has_user_name)
-      ast.username.clear();
-    //ast.str_host = gramer.str_host;
+    {
+      ast.m_username.reset();
+      ast.m_password.reset();
+    }
     return ast;
   }
 
@@ -171,14 +172,14 @@ namespace mtconnect::adapter::agent {
 
   std::string Url::getHost() const
   {
-    return std::visit(HostVisitor(), host);
+    return std::visit(HostVisitor(), m_host);
   }
 
   std::string Url::getTarget() const
   {
-    if (query.size())
-      return path + '?' + query.join();
-    return path;
+    if (m_query.size())
+      return m_path + '?' + m_query.join();
+    return m_path;
   }
 
   std::string UrlQuery::join() const
