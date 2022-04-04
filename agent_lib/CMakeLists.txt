@@ -43,6 +43,10 @@ set(AGENT_SOURCES
   
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/agent_adapter.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/agent_adapter.cpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/http_session.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/https_session.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/session.hpp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/session_impl.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/url_parser.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/agent/url_parser.cpp"
 

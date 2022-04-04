@@ -15,15 +15,16 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include "adapter/adapter.hpp"
 #include "adapter/adapter_pipeline.hpp"
+#include "session.hpp"
 #include "url_parser.hpp"
 
 namespace mtconnect::adapter::agent {
   using namespace mtconnect;
   using namespace adapter;
-
-  class Session;
 
   class AgentAdapter : public Adapter
   {
@@ -33,14 +34,14 @@ namespace mtconnect::adapter::agent {
 
     static void registerFactory(SourceFactory &factory)
     {
-      factory.registerFactory("shdr",
-                              [](const std::string &name, boost::asio::io_context &io,
-                                 pipeline::PipelineContextPtr context, const ConfigOptions &options,
-                                 const boost::property_tree::ptree &block) -> SourcePtr {
-                                auto source =
-                                    std::make_shared<AgentAdapter>(io, context, options, block);
-                                return source;
-                              });
+      auto cb = [](const std::string &name, boost::asio::io_context &io,
+                   pipeline::PipelineContextPtr context, const ConfigOptions &options,
+                   const boost::property_tree::ptree &block) -> SourcePtr {
+        auto source = std::make_shared<AgentAdapter>(io, context, options, block);
+        return source;
+      };
+      factory.registerFactory("http", cb);
+      factory.registerFactory("https", cb);
     }
 
     const std::string &getHost() const override { return m_host; }

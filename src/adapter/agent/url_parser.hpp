@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#pragma once
+
 #include <boost/asio/ip/address.hpp>
 
 #include <optional>
