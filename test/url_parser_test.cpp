@@ -31,7 +31,7 @@ using namespace mtconnect::adapter::agent;
 TEST(UrlParserTest, should_parse_url_with_port)
 {
   Url url = Url::parse("http://127.0.0.1:5000/Device");
-  
+
   EXPECT_EQ("http", url.m_protocol);
   EXPECT_TRUE(holds_alternative<boost::asio::ip::address>(url.m_host));
   EXPECT_TRUE(url.m_port);
@@ -45,13 +45,13 @@ TEST(UrlParserTest, should_parse_url_with_port)
   auto host = get<boost::asio::ip::address>(url.m_host);
   EXPECT_TRUE(host.is_v4());
   auto ipv4 = host.to_v4();
-  EXPECT_EQ(0x7F000001, ipv4.to_uint());  
+  EXPECT_EQ(0x7F000001, ipv4.to_uint());
 }
 
 TEST(UrlParserTest, should_parse_url_without_port)
 {
   Url url = Url::parse("http://127.0.0.1/Device");
-  
+
   EXPECT_EQ("http", url.m_protocol);
   EXPECT_TRUE(holds_alternative<boost::asio::ip::address>(url.m_host));
   EXPECT_FALSE(url.m_port);
@@ -70,7 +70,7 @@ TEST(UrlParserTest, should_parse_url_without_port)
 TEST(UrlParserTest, should_parse_url_with_device_name)
 {
   Url url = Url::parse("http://dev.example.com/Device");
-  
+
   EXPECT_EQ("http", url.m_protocol);
   EXPECT_TRUE(holds_alternative<string>(url.m_host));
   EXPECT_FALSE(url.m_port);
@@ -86,7 +86,7 @@ TEST(UrlParserTest, should_parse_url_with_device_name)
 TEST(UrlParserTest, should_parse_url_with_device_name_and_port)
 {
   Url url = Url::parse("http://dev.example.com:5000/Device");
-  
+
   EXPECT_EQ("http", url.m_protocol);
   EXPECT_TRUE(holds_alternative<string>(url.m_host));
   EXPECT_TRUE(url.m_port);
@@ -103,7 +103,7 @@ TEST(UrlParserTest, should_parse_url_with_device_name_and_port)
 TEST(UrlParserTest, should_parse_url_with_no_path)
 {
   Url url = Url::parse("http://dev.example.com:5000");
-  
+
   EXPECT_EQ("http", url.m_protocol);
   EXPECT_TRUE(holds_alternative<string>(url.m_host));
   EXPECT_TRUE(url.m_port);
@@ -120,27 +120,27 @@ TEST(UrlParserTest, should_parse_url_with_no_path)
 TEST(UrlParserTest, should_parse_url_with_query)
 {
   Url url = Url::parse("http://dev.example.com:5000/Device?one=1&two=2");
-  
+
   EXPECT_EQ("http", url.m_protocol);
   EXPECT_TRUE(holds_alternative<string>(url.m_host));
   EXPECT_TRUE(url.m_port);
   EXPECT_EQ(5000, url.m_port);
   EXPECT_EQ("/Device", url.m_path);
-  
+
   EXPECT_FALSE(url.m_username);
   EXPECT_FALSE(url.m_password);
 
   EXPECT_EQ("dev.example.com", get<string>(url.m_host));
-  
+
   EXPECT_EQ(2, url.m_query.size());
-  EXPECT_EQ((UrlQueryPair{"one"s, "1"s}), url.m_query[0]);
-  EXPECT_EQ((UrlQueryPair{"two"s, "2"s}), url.m_query[1]);
+  EXPECT_EQ((UrlQueryPair {"one"s, "1"s}), url.m_query[0]);
+  EXPECT_EQ((UrlQueryPair {"two"s, "2"s}), url.m_query[1]);
 }
 
 TEST(UrlParserTest, should_get_query_string)
 {
   Url url = Url::parse("http://dev.example.com:5000/Device?one=1&two=2");
- 
+
   EXPECT_EQ("one=1&two=2", url.m_query.join());
 }
 
@@ -159,14 +159,13 @@ TEST(UrlParserTest, should_get_host_name_as_string)
 TEST(UrlParserTest, should_get_target_without_query)
 {
   Url url = Url::parse("http://dev.example.com:5000/Device");
- 
+
   EXPECT_EQ("/Device", url.getTarget());
 }
 
 TEST(UrlParserTest, should_get_target_with_query)
 {
   Url url = Url::parse("http://dev.example.com:5000/Device?one=1&two=2");
- 
+
   EXPECT_EQ("/Device?one=1&two=2", url.getTarget());
 }
-

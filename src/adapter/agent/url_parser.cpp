@@ -15,12 +15,11 @@
 //    limitations under the License.
 //
 
+#include "url_parser.hpp"
 
 #include <boost/config/warning_disable.hpp>
-#include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-
-#include "url_parser.hpp"
+#include <boost/spirit/include/qi.hpp>
 
 namespace qi = boost::spirit::qi;
 
@@ -30,34 +29,22 @@ struct UserCred
   std::string m_password;
 };
 
-BOOST_FUSION_ADAPT_STRUCT(
-			  UserCred,
-			  (std::string, m_username)
-			  (std::string, m_password)
-			  )
+BOOST_FUSION_ADAPT_STRUCT(UserCred, (std::string, m_username)(std::string, m_password))
 
+BOOST_FUSION_ADAPT_STRUCT(mtconnect::adapter::agent::UrlQueryPair,
+                          (std::string, first)(std::string, second))
 
-BOOST_FUSION_ADAPT_STRUCT(
-                          mtconnect::adapter::agent::UrlQueryPair,
-			  (std::string, first)
-			  (std::string, second)
-			  )
-
-BOOST_FUSION_ADAPT_STRUCT(
-			  mtconnect::adapter::agent::Url,
-			  (std::string, m_protocol)
-			  (mtconnect::adapter::agent::Url::Host, m_host)
-			  (std::optional<std::string>, m_username)
-			  (std::optional<std::string>, m_password)
-			  (std::optional<int>, m_port)
-			  (std::string, m_path)
-			  (mtconnect::adapter::agent::UrlQuery, m_query)
-			  (std::string, m_fragment)
-			  )
+BOOST_FUSION_ADAPT_STRUCT(mtconnect::adapter::agent::Url,
+                          (std::string, m_protocol)(mtconnect::adapter::agent::Url::Host,
+                                                    m_host)(std::optional<std::string>, m_username)(
+                              std::optional<std::string>, m_password)(std::optional<int>, m_port)(
+                              std::string, m_path)(mtconnect::adapter::agent::UrlQuery,
+                                                   m_query)(std::string, m_fragment))
 
 namespace mtconnect::adapter::agent {
 
-  static boost::asio::ip::address_v4 from_four_number(unsigned char n1, unsigned char n2, unsigned char n3, unsigned char n4)
+  static boost::asio::ip::address_v4 from_four_number(unsigned char n1, unsigned char n2,
+                                                      unsigned char n3, unsigned char n4)
   {
     boost::asio::ip::address_v4::bytes_type bt;
 
@@ -85,37 +72,38 @@ namespace mtconnect::adapter::agent {
       using namespace boost::phoenix;
       using boost::phoenix::ref;
 
-      url = schema [ at_c<0>(qi::_val) = qi::_1 ]
-	>> "://" >> -( username [ at_c<2>(qi::_val) = qi::_1 ] >> -( ':' >> password  [ at_c<3>(qi::_val) = qi::_1 ] ) >> qi::lit('@')[ boost::phoenix::ref(has_user_name) = true ] )
-	>> host [ at_c<1>(qi::_val) = qi::_1 ]
-	>> -(qi::lit(':') >> qi::int_ [ at_c<4>(qi::_val) = qi::_1 ] )
-	>> -(path [ at_c<5>(qi::_val) = qi::_1 ] >> -('?' >> query[ at_c<6>(qi::_val) = qi::_1 ]))
-	>> -('#' >> fragment [ at_c<7>(qi::_val) = qi::_1 ]);
+      url = schema[at_c<0>(qi::_val) = qi::_1] >> "://" >>
+            -(username[at_c<2>(qi::_val) = qi::_1] >>
+              -(':' >> password[at_c<3>(qi::_val) = qi::_1]) >>
+              qi::lit('@')[boost::phoenix::ref(has_user_name) = true]) >>
+            host[at_c<1>(qi::_val) = qi::_1] >>
+            -(qi::lit(':') >> qi::int_[at_c<4>(qi::_val) = qi::_1]) >>
+            -(path[at_c<5>(qi::_val) = qi::_1] >> -('?' >> query[at_c<6>(qi::_val) = qi::_1])) >>
+            -('#' >> fragment[at_c<7>(qi::_val) = qi::_1]);
 
       host = ip_host | domain_host;
 
-      domain_host = qi::lexeme[ +(qi::char_("a-zA-Z0-9.\\-")) ];
-      ip_host =  ('[' >> ipv6_host >> ']') | ipv4_host;
+      domain_host = qi::lexeme[+(qi::char_("a-zA-Z0-9.\\-"))];
+      ip_host = ('[' >> ipv6_host >> ']') | ipv4_host;
 
-      ipv6_host = (+qi::char_("0123456789abcdefABCDEF:.")) [ qi::_val = v6_from_string(qi::_1)] ;
+      ipv6_host = (+qi::char_("0123456789abcdefABCDEF:."))[qi::_val = v6_from_string(qi::_1)];
 
-      ipv4_host = (
-		   qi::int_ >> '.' >> qi::int_ >> '.' >> qi::int_ >> '.' >> qi::int_
-		   ) [ qi::_val = v4_from_4number(qi::_1, qi::_2, qi::_3, qi::_4)];
+      ipv4_host = (qi::int_ >> '.' >> qi::int_ >> '.' >> qi::int_ >> '.' >>
+                   qi::int_)[qi::_val = v4_from_4number(qi::_1, qi::_2, qi::_3, qi::_4)];
 
-      username = qi::lexeme[ +(qi::char_ - ':' - '@' - '/') ];
-      password = qi::lexeme[ +(qi::char_ - '@') ];
+      username = qi::lexeme[+(qi::char_ - ':' - '@' - '/')];
+      password = qi::lexeme[+(qi::char_ - '@')];
 
-      schema = qi::lexeme[ +(qi::char_ - ':' - '/') ];
+      schema = qi::lexeme[+(qi::char_ - ':' - '/')];
 
-      path = qi::lexeme[ +(qi::char_ - '?' - '#') ];
+      path = qi::lexeme[+(qi::char_ - '?' - '#')];
 
-      query =  pair >> *((qi::lit(';') | '&') >> pair);
-      pair  =  key >> -('=' >> value);
-      key = qi::lexeme[ +(qi::char_ - '=' - '#') ];
-      value = qi::lexeme[ *(qi::char_ - '&' - '#') ];
+      query = pair >> *((qi::lit(';') | '&') >> pair);
+      pair = key >> -('=' >> value);
+      key = qi::lexeme[+(qi::char_ - '=' - '#')];
+      value = qi::lexeme[*(qi::char_ - '&' - '#')];
 
-      fragment = qi::lexeme[ +(qi::char_) ];
+      fragment = qi::lexeme[+(qi::char_)];
     };
 
     qi::rule<Iterator, Url()> url;
@@ -127,7 +115,8 @@ namespace mtconnect::adapter::agent {
     qi::rule<Iterator, boost::asio::ip::address()> ip_host;
 
     qi::rule<Iterator, boost::asio::ip::address_v4()> ipv4_host;
-    qi::rule<Iterator, boost::asio::ip::address_v6()> ipv6_host;;
+    qi::rule<Iterator, boost::asio::ip::address_v6()> ipv6_host;
+    ;
 
     qi::rule<Iterator, std::string()> username, password;
 
@@ -147,8 +136,7 @@ namespace mtconnect::adapter::agent {
 
     auto first = url.begin();
 
-    [[maybe_unused]]
-    bool r = boost::spirit::qi::parse(first, url.end(), grammar, ast);
+    [[maybe_unused]] bool r = boost::spirit::qi::parse(first, url.end(), grammar, ast);
     if (!grammar.has_user_name)
     {
       ast.m_username.reset();
@@ -159,21 +147,12 @@ namespace mtconnect::adapter::agent {
 
   struct HostVisitor
   {
-    std::string operator()(std::string v) const
-    {
-      return v;
-    }
+    std::string operator()(std::string v) const { return v; }
 
-    std::string operator()(boost::asio::ip::address v) const
-    {
-      return v.to_string();
-    }
+    std::string operator()(boost::asio::ip::address v) const { return v.to_string(); }
   };
 
-  std::string Url::getHost() const
-  {
-    return std::visit(HostVisitor(), m_host);
-  }
+  std::string Url::getHost() const { return std::visit(HostVisitor(), m_host); }
 
   std::string Url::getTarget() const
   {
@@ -188,14 +167,14 @@ namespace mtconnect::adapter::agent {
     bool has_pre = false;
 
     for (const UrlQueryPair& kv : *this)
-      {
-	if (has_pre)
-	  ss << '&';
+    {
+      if (has_pre)
+        ss << '&';
 
-	ss << kv.first << '=' << kv.second;
-	has_pre = true;
-      }
+      ss << kv.first << '=' << kv.second;
+      has_pre = true;
+    }
 
     return ss.str();
-  }  
-}
+  }
+}  // namespace mtconnect::adapter::agent

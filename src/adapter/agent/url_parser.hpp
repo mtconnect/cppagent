@@ -15,17 +15,17 @@
 //    limitations under the License.
 //
 
+#include <boost/asio/ip/address.hpp>
 
 #include <optional>
-#include <vector>
 #include <string>
 #include <string_view>
 #include <variant>
-#include <boost/asio/ip/address.hpp>
+#include <vector>
 
 namespace mtconnect::adapter::agent {
   using UrlQueryPair = std::pair<std::string, std::string>;
-  
+
   struct UrlQuery : public std::vector<UrlQueryPair>
   {
     using std::vector<UrlQueryPair>::vector;
@@ -36,7 +36,7 @@ namespace mtconnect::adapter::agent {
   {
     using Host = std::variant<std::string, boost::asio::ip::address>;
 
-    std::string m_protocol; // http/https
+    std::string m_protocol;  // http/https
 
     Host m_host;
     std::optional<std::string> m_username;
@@ -46,12 +46,12 @@ namespace mtconnect::adapter::agent {
     UrlQuery m_query;
     std::string m_fragment;
 
-    std::string getHost() const ;
+    std::string getHost() const;
 
     // the path with query and without fragment
-    std::string getTarget() const ;
+    std::string getTarget() const;
 
     static Url parse(const std::string_view& url);
   };
 
-}
+}  // namespace mtconnect::adapter::agent
