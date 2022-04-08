@@ -127,12 +127,6 @@ namespace mtconnect {
 
       boost::asio::io_context m_context;
       std::unique_ptr<Agent> m_agent;
-#ifdef WITH_PYTHON
-      std::unique_ptr<python::Embedded> m_python;
-#endif
-#ifdef WITH_RUBY
-      std::unique_ptr<ruby::Embedded> m_ruby;
-#endif
       std::list<std::thread> m_workers;
 
       pipeline::PipelineContextPtr m_pipelineContext;
@@ -166,6 +160,15 @@ namespace mtconnect {
 
       // Reference to the global logger
       boost::log::trivial::logger_type *m_logger {nullptr};
+
+#ifdef WITH_RUBY
+      std::unique_ptr<ruby::Embedded> m_ruby;
+#endif
+#ifdef WITH_PYTHON
+      std::unique_ptr<python::Embedded> m_python;
+#endif
+
+
     };
   }  // namespace configuration
 }  // namespace mtconnect
