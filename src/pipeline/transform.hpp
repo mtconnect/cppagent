@@ -192,6 +192,11 @@ namespace mtconnect {
           }
         }
       }
+      
+      void clear()
+      {
+        m_next.clear();
+      }
 
     protected:
       std::string m_name;

@@ -56,6 +56,8 @@ namespace mtconnect {
 
     // Deliver
     next->bind(make_shared<DeliverObservation>(m_context));
+    
+    applySplices();
   }
 
   SequenceNumber_t LoopbackSource::receive(DataItemPtr dataItem, entity::Properties props,

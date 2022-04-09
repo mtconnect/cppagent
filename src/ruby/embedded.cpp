@@ -110,6 +110,7 @@ namespace mtconnect::ruby {
           FILE *fp = nullptr;
           try
           {
+            int save = mrb_gc_arena_save(mrb);
             mrb_value file = mrb_str_new_cstr(mrb, mod.string().c_str());
             mrb_bool state;
             mrb_value res = mrb_protect(
@@ -119,19 +120,24 @@ namespace mtconnect::ruby {
                   return mrb_load_file(mrb, fp);
                 },
                 file, &state);
+            mrb_gc_arena_restore(mrb, save);
             if (state)
             {
-              LOG(error) << "Error loading file " << mod << ": "
+              LOG(fatal) << "Error loading file " << mod << ": "
                          << mrb_str_to_cstr(mrb, mrb_inspect(mrb, res));
+              exit(1);
             }
           }
           catch (std::exception ex)
           {
-            LOG(error) << "Failed to load module: " << mod << ": " << ex.what();
+            LOG(fatal) << "Failed to load module: " << mod << ": " << ex.what();
+            exit(1);
+
           }
           catch (...)
           {
-            LOG(error) << "Failed to load module: " << mod;
+            LOG(fatal) << "Failed to load module: " << mod;
+            exit(1);
           }
           if (fp != nullptr)
           {
