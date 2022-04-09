@@ -148,6 +148,8 @@ namespace mtconnect::ruby {
           std::lock_guard guard(RubyVM::rubyVM());
 
           auto mrb = RubyVM::rubyVM().state();
+          int save = mrb_gc_arena_save(mrb);
+
           mrb_value ev = MRubySharedPtr<Entity>::wrap(mrb, "Entity", entity);
 
           mrb_bool state = false;
@@ -162,12 +164,14 @@ namespace mtconnect::ruby {
                 return mrb_yield(mrb, block, ev);
               },
               data, &state);
-
+          
           if (state)
           {
             LOG(error) << "Error in guard: " << mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
             rv = mrb_nil_value();
           }
+
+          mrb_gc_arena_restore(mrb, save);
           if (!mrb_nil_p(rv))
           {
             return GuardAction(mrb_fixnum(rv));
@@ -184,14 +188,19 @@ namespace mtconnect::ruby {
 
     const entity::EntityPtr operator()(const entity::EntityPtr entity) override
     {
+      NAMED_SCOPE("RubyTransform::operator()");
+      
       using namespace entity;
       using namespace observation;
+      
+      EntityPtr res;
+      
       std::lock_guard guard(RubyVM::rubyVM());
+      auto mrb = RubyVM::rubyVM().state();
+      int save = mrb_gc_arena_save(mrb);
 
       try
       {
-        auto mrb = RubyVM::rubyVM().state();
-
         mrb_value ev;
         const char *klass = "Entity";
         Entity *ptr = entity.get();
@@ -240,10 +249,8 @@ namespace mtconnect::ruby {
           rv = mrb_nil_value();
         }
 
-        EntityPtr res;
         if (!mrb_nil_p(rv))
           res = MRubySharedPtr<Entity>::unwrap(rv);
-        return res;
       }
       catch (std::exception e)
       {
@@ -254,7 +261,8 @@ namespace mtconnect::ruby {
         LOG(error) << "Unknown Exception thrown in transform";
       }
 
-      return nullptr;
+      mrb_gc_arena_restore(mrb, save);
+      return res;
     }
 
     auto &object() { return m_self; }

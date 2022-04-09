@@ -47,7 +47,11 @@ namespace mtconnect::ruby {
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-            pipeline->spliceBefore(name, *transform);
+            if (!pipeline->spliceBefore(name, *transform))
+            {
+              LOG(error) << "Cannot splice " << (*transform)->getName()
+                << " before transform: " << name;
+            }
 
             return self;
           },
@@ -61,7 +65,11 @@ namespace mtconnect::ruby {
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-            pipeline->spliceAfter(name, *transform);
+            if (!pipeline->spliceAfter(name, *transform))
+            {
+              LOG(error) << "Cannot splice " << (*transform)->getName()
+                << " after transform: " << name;
+            }
 
             return self;
           },
@@ -75,7 +83,11 @@ namespace mtconnect::ruby {
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-            pipeline->firstAfter(name, *transform);
+            if (!pipeline->firstAfter(name, *transform))
+            {
+              LOG(error) << "Cannot add " << (*transform)->getName()
+                << " first after transform: " << name;
+            }
 
             return self;
           },
@@ -90,7 +102,11 @@ namespace mtconnect::ruby {
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
 
-            pipeline->lastAfter(name, *transform);
+            if (!pipeline->lastAfter(name, *transform))
+            {
+              LOG(error) << "Cannot add " << (*transform)->getName()
+                << " last after transform: " << name;
+            }
 
             return self;
           },
@@ -103,8 +119,10 @@ namespace mtconnect::ruby {
 
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "z", &name);
-            pipeline->remove(name);
-
+            if (!pipeline->remove(name))
+            {
+              LOG(error) << "Cannot remove " << name;
+            }
             return self;
           },
           MRB_ARGS_REQ(1));
@@ -118,7 +136,12 @@ namespace mtconnect::ruby {
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zd", &name, &trans, MRubySharedPtr<Transform>::type());
 
-            pipeline->replace(name, *trans);
+            if (!pipeline->replace(name, *trans))
+            {
+              LOG(error) << "Cannot replace " << name
+                << " with: " << (*trans)->getName();
+            }
+
 
             return self;
           },
