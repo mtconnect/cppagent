@@ -44,7 +44,9 @@ namespace mtconnect::adapter::agent {
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
     {
       if (ec)
-        return fail(ec, "connect");
+        fail(ec, "connect");
+      
+      connected(ec);
 
       // Set a timeout on the operation
       m_stream.expires_after(std::chrono::seconds(30));
@@ -55,7 +57,7 @@ namespace mtconnect::adapter::agent {
                             m_strand, beast::bind_front_handler(&HttpSession::onWrite, getptr())));
     }
 
-    void completeRead()
+    void disconnect()
     {
       beast::error_code ec;
 

@@ -24,7 +24,6 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
-#include <boost/lexical_cast.hpp>
 
 #include "session.hpp"
 
@@ -65,39 +64,32 @@ namespace mtconnect::adapter::agent {
         derived().lowestLayer().close();
     }
 
-    void onConnect(beast::error_code ec)
-    {
-      tcp::resolver::results_type::endpoint_type t;
-      derived().onConnect(ec, t);
-    }
-
     // Start the asynchronous operation
-    void run(const Url &url) override
+    void connect(const Url &url, Connected cb) override
     {
       m_url = url;
-
-      // Set up an HTTP GET request message
-      m_req.version(11);
-      m_req.method(http::verb::get);
-      m_req.target(url.getTarget());
-      m_req.set(http::field::host, url.getHost());
-      m_req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-
-      // Look up the domain name
-      if (holds_alternative<asio::ip::address>(url.m_host))
+      m_connected = cb;
+      
+      // If the address is an IP address, we do not need to resolve.
+      if (holds_alternative<asio::ip::address>(m_url.m_host))
       {
-        derived().lowestLayer().expires_after(std::chrono::seconds(30));
-
         asio::ip::tcp::endpoint ep(get<asio::ip::address>(m_url.m_host), m_url.m_port.value_or(80));
-
-        derived().lowestLayer().async_connect(
-            ep, asio::bind_executor(m_strand, beast::bind_front_handler(&SessionImpl::onConnect,
-                                                                        derived().getptr())));
+                
+        // Create the results type and call on resolve directly.
+        using results_type = tcp::resolver::results_type;
+        auto results = results_type::create(ep,
+                                            m_url.getHost(),
+                                            m_url.getService());
+        
+        beast::error_code ec;
+        onResolve(ec, results);
       }
       else
       {
-        m_resolver.async_resolve(
-            get<string>(url.m_host), boost::lexical_cast<string>(url.m_port.value_or(80)),
+        derived().lowestLayer().expires_after(std::chrono::seconds(30));
+
+        // Do an async resolution of the address.
+        m_resolver.async_resolve(get<string>(m_url.m_host), m_url.getService(),
             asio::bind_executor(
                 m_strand, beast::bind_front_handler(&SessionImpl::onResolve, derived().getptr())));
       }
@@ -106,7 +98,10 @@ namespace mtconnect::adapter::agent {
     void onResolve(beast::error_code ec, tcp::resolver::results_type results)
     {
       if (ec)
+      {
+        // If we can't resolve, then shut down the adapter
         return fail(ec, "resolve");
+      }
 
       // Set a timeout on the operation
       derived().lowestLayer().expires_after(std::chrono::seconds(30));
@@ -116,13 +111,66 @@ namespace mtconnect::adapter::agent {
           results, asio::bind_executor(m_strand, beast::bind_front_handler(&Derived::onConnect,
                                                                            derived().getptr())));
     }
+    
+    void connected(beast::error_code ec)
+    {
+      m_connected(ec);
+    }
+    
+    bool makeRequest(const std::string &suffix,
+                     const UrlQuery &query,
+                     bool stream,
+                     Result cb) override
+    {
+      m_result = cb;
+      string target = m_url.m_path + suffix;
+      auto uq = m_url.m_query;
+      if (!query.empty())
+        uq.merge(query);
+      if (!uq.empty())
+        target += ("?" + uq.join());
+      m_stream = stream;
+      //
+      auto request = [this, target](beast::error_code ec) {
+        // Set up an HTTP GET request message
+        m_req.version(11);
+        m_req.method(http::verb::get);
+        m_req.target(target);
+        m_req.set(http::field::host, m_url.getHost());
+        m_req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+        
+        http::async_write(derived().stream(), m_req,
+                          beast::bind_front_handler(&SessionImpl::onWrite,
+                                                    derived().getptr()));
+      };
+      
+      // Check if we are discussected.
+      if (!derived().lowestLayer().socket().is_open())
+      {
+        // Try to reconnect executiong the request on successful
+        // connection. ÷
+        connect(m_url, request);
+        return false;
+      }
+      else
+      {
+        beast::error_code ec;
+        request(ec);
+        return true;
+      }
+    }
 
     void onWrite(beast::error_code ec, std::size_t bytes_transferred)
     {
       boost::ignore_unused(bytes_transferred);
 
       if (ec)
+      {
+        m_result(ec, "");
         return fail(ec, "write");
+      }
+      
+      derived().lowestLayer().expires_after(std::chrono::seconds(30));
 
       // Receive the HTTP response
       http::async_read(derived().stream(), m_buffer, m_res,
@@ -135,12 +183,17 @@ namespace mtconnect::adapter::agent {
       boost::ignore_unused(bytes_transferred);
 
       if (ec)
-        return fail(ec, "read");
+      {
+        m_result(ec, "");
+        return fail(ec, "write");
+      }
+    
+      derived().lowestLayer().expires_after(std::chrono::seconds(30));
 
-      // Write the message to standard out
-      std::cout << m_res << std::endl;
-
-      derived().completeRead();
+      if (!derived().lowestLayer().socket().is_open())
+        derived().disconnect();
+      
+      m_result(ec, m_res.body());
     }
 
   protected:
@@ -150,6 +203,9 @@ namespace mtconnect::adapter::agent {
     http::response<http::string_body> m_res;
     asio::io_context::strand m_strand;
     Url m_url;
+    Connected m_connected;
+    Result m_result;
+    bool m_stream = false;
   };
 
 }  // namespace mtconnect::adapter::agent

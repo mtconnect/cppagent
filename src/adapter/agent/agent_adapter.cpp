@@ -90,7 +90,9 @@ namespace mtconnect::adapter::agent {
       return false;
     }
 
-    m_session->run(m_url);
+    m_session->connect(m_url, [this](boost::beast::error_code ec) {
+      
+    });
 
     return true;
   }

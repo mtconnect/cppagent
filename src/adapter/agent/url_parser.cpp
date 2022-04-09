@@ -144,37 +144,4 @@ namespace mtconnect::adapter::agent {
     }
     return ast;
   }
-
-  struct HostVisitor
-  {
-    std::string operator()(std::string v) const { return v; }
-
-    std::string operator()(boost::asio::ip::address v) const { return v.to_string(); }
-  };
-
-  std::string Url::getHost() const { return std::visit(HostVisitor(), m_host); }
-
-  std::string Url::getTarget() const
-  {
-    if (m_query.size())
-      return m_path + '?' + m_query.join();
-    return m_path;
-  }
-
-  std::string UrlQuery::join() const
-  {
-    std::stringstream ss;
-    bool has_pre = false;
-
-    for (const UrlQueryPair& kv : *this)
-    {
-      if (has_pre)
-        ss << '&';
-
-      ss << kv.first << '=' << kv.second;
-      has_pre = true;
-    }
-
-    return ss.str();
-  }
 }  // namespace mtconnect::adapter::agent

@@ -19,6 +19,8 @@
 #pragma once
 
 #include <memory>
+#include <boost/beast/core/error.hpp>
+
 #include "url_parser.hpp"
 
 namespace mtconnect::adapter::agent {
@@ -26,10 +28,19 @@ namespace mtconnect::adapter::agent {
   class Session : public std::enable_shared_from_this<Session>
   {
   public:
+    using Connected = std::function<void(boost::beast::error_code ec)>;
+    using Result = std::function<void(boost::beast::error_code ec,
+                                      const std::string &result)>;
+
     virtual ~Session() {}
-    virtual void run(const Url &url) = 0;
+    virtual void connect(const Url &url, Connected cb) = 0;
     virtual bool isOpen() const  = 0;
     virtual void stop() = 0;
+    
+    virtual bool makeRequest(const std::string &suffix,
+                             const UrlQuery &query,
+                             bool stream,
+                             Result cb) = 0;
   };
 
 }  // namespace mtconnect::adapter::agent

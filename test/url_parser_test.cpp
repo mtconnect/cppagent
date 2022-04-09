@@ -133,8 +133,8 @@ TEST(UrlParserTest, should_parse_url_with_query)
   EXPECT_EQ("dev.example.com", get<string>(url.m_host));
 
   EXPECT_EQ(2, url.m_query.size());
-  EXPECT_EQ((UrlQueryPair {"one"s, "1"s}), url.m_query[0]);
-  EXPECT_EQ((UrlQueryPair {"two"s, "2"s}), url.m_query[1]);
+  EXPECT_EQ("1"s, url.m_query["one"s]);
+  EXPECT_EQ("2"s, url.m_query["two"s]);
 }
 
 TEST(UrlParserTest, should_get_query_string)

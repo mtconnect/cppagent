@@ -45,7 +45,7 @@ namespace mtconnect::adapter::agent {
     }
 
     // Start the asynchronous operation
-    void run(const Url &url) override
+    void connect(const Url &url, Connected cb) override
     {
       if (!SSL_set_tlsext_host_name(m_stream.native_handle(), url.getHost().c_str()))
       {
@@ -54,7 +54,7 @@ namespace mtconnect::adapter::agent {
         return;
       }
 
-      super::run(url);
+      super::connect(url, cb);
     }
 
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
@@ -75,7 +75,9 @@ namespace mtconnect::adapter::agent {
     void onHandshake(beast::error_code ec)
     {
       if (ec)
-        return fail(ec, "handshake");
+        fail(ec, "handshake");
+      
+      connected(ec);
 
       // Set a timeout on the operation
       beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
@@ -86,7 +88,7 @@ namespace mtconnect::adapter::agent {
                             m_strand, beast::bind_front_handler(&HttpsSession::onWrite, getptr())));
     }
 
-    void completeRead()
+    void disconnect()
     {
       // Set a timeout on the operation
       beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));

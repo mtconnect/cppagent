@@ -18,20 +18,45 @@
 #pragma once
 
 #include <boost/asio/ip/address.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
-#include <vector>
+#include <map>
+#include <sstream>
 
 namespace mtconnect::adapter::agent {
   using UrlQueryPair = std::pair<std::string, std::string>;
 
-  struct UrlQuery : public std::vector<UrlQueryPair>
+  struct UrlQuery : public std::map<std::string, std::string>
   {
-    using std::vector<UrlQueryPair>::vector;
-    std::string join() const;
+    using std::map<std::string, std::string>::map;
+    std::string join() const
+    {
+      std::stringstream ss;
+      bool has_pre = false;
+
+      for (const auto& kv : *this)
+      {
+        if (has_pre)
+          ss << '&';
+
+        ss << kv.first << '=' << kv.second;
+        has_pre = true;
+      }
+
+      return ss.str();
+    }
+    
+    void merge(UrlQuery query)
+    {
+      for (const auto& kv : query)
+      {
+        insert_or_assign(kv.first, kv.second);
+      }
+    }
   };
 
   struct Url
@@ -47,11 +72,31 @@ namespace mtconnect::adapter::agent {
     std::string m_path = "/";
     UrlQuery m_query;
     std::string m_fragment;
+    
+    struct HostVisitor
+    {
+      std::string operator()(std::string v) const { return v; }
 
-    std::string getHost() const;
+      std::string operator()(boost::asio::ip::address v) const { return v.to_string(); }
+    };
+
+    std::string getHost() const
+    {
+      return std::visit(HostVisitor(), m_host);
+    }
+    
+    std::string getService() const
+    {
+      return boost::lexical_cast<std::string>(m_port.value_or(80));
+    }
 
     // the path with query and without fragment
-    std::string getTarget() const;
+    std::string getTarget() const
+    {
+      if (m_query.size())
+        return m_path + '?' + m_query.join();
+      return m_path;
+    }
 
     static Url parse(const std::string_view& url);
   };
