@@ -122,6 +122,20 @@ namespace mtconnect::ruby {
     {
       setGuard();
     }
+    
+    ~RubyTransform()
+    {
+      
+    }
+    
+    void stop() override
+    {
+      std::lock_guard guard(RubyVM::rubyVM());
+
+      auto mrb = RubyVM::rubyVM().state();
+      
+      //mrb_gc_unregister(mrb, m_self);
+    }
 
     void setMethod(mrb_sym sym) { m_method = sym; }
 

@@ -43,13 +43,19 @@ namespace mtconnect::ruby {
           mrb, pipelineClass, "splice_before",
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
-            TransformPtr *transform;
-
+            TransformPtr transform;
+            mrb_value trans;
+            
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-            mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-            if (!pipeline->spliceBefore(name, *transform))
+            mrb_get_args(mrb, "zo", &name, &trans);
+            transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
+            if (pipeline->spliceBefore(name, transform))
             {
-              LOG(error) << "Cannot splice " << (*transform)->getName()
+              mrb_gc_register(mrb, trans);
+            }
+            else
+            {
+              LOG(error) << "Cannot splice " << transform->getName()
                 << " before transform: " << name;
             }
 
@@ -61,13 +67,18 @@ namespace mtconnect::ruby {
           mrb, pipelineClass, "splice_after",
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
-            TransformPtr *transform;
-
+            mrb_value trans;
+            
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-            mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-            if (!pipeline->spliceAfter(name, *transform))
+            mrb_get_args(mrb, "zo", &name, &trans);
+            auto transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
+            if (pipeline->spliceAfter(name, transform))
             {
-              LOG(error) << "Cannot splice " << (*transform)->getName()
+              mrb_gc_register(mrb, trans);
+            }
+            else
+            {
+              LOG(error) << "Cannot splice " << transform->getName()
                 << " after transform: " << name;
             }
 
@@ -79,13 +90,18 @@ namespace mtconnect::ruby {
           mrb, pipelineClass, "first_after",
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
-            TransformPtr *transform;
-
+            mrb_value trans;
+            
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-            mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-            if (!pipeline->firstAfter(name, *transform))
+            mrb_get_args(mrb, "zo", &name, &trans);
+            auto transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
+            if (pipeline->firstAfter(name, transform))
             {
-              LOG(error) << "Cannot add " << (*transform)->getName()
+              mrb_gc_register(mrb, trans);
+            }
+            else
+            {
+              LOG(error) << "Cannot add " << transform->getName()
                 << " first after transform: " << name;
             }
 
@@ -97,14 +113,18 @@ namespace mtconnect::ruby {
           mrb, pipelineClass, "last_after",
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
-            TransformPtr *transform;
-
+            mrb_value trans;
+            
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-            mrb_get_args(mrb, "zd", &name, &transform, MRubySharedPtr<Transform>::type());
-
-            if (!pipeline->lastAfter(name, *transform))
+            mrb_get_args(mrb, "zo", &name, &trans);
+            auto transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
+            if (pipeline->lastAfter(name, transform))
             {
-              LOG(error) << "Cannot add " << (*transform)->getName()
+              mrb_gc_register(mrb, trans);
+            }
+            else
+            {
+              LOG(error) << "Cannot add " << transform->getName()
                 << " last after transform: " << name;
             }
 
@@ -131,17 +151,20 @@ namespace mtconnect::ruby {
           mrb, pipelineClass, "replace",
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
-            TransformPtr *trans;
-
+            mrb_value trans;
+            
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
-            mrb_get_args(mrb, "zd", &name, &trans, MRubySharedPtr<Transform>::type());
-
-            if (!pipeline->replace(name, *trans))
+            mrb_get_args(mrb, "zo", &name, &trans);
+            auto transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
+            if (pipeline->replace(name, transform))
+            {
+              mrb_gc_register(mrb, trans);
+            }
+            else
             {
               LOG(error) << "Cannot replace " << name
-                << " with: " << (*trans)->getName();
+                << " with: " << transform->getName();
             }
-
 
             return self;
           },
