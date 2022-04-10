@@ -73,7 +73,10 @@ namespace mtconnect::ruby {
 
             auto trans = make_shared<RubyTransform>(mrb, self, name, guard);
             if (mrb_block_given_p(mrb))
+            {
               trans->m_block = block;
+              mrb_gc_register(mrb, block);
+            }
             MRubySharedPtr<Transform>::replace(mrb, self, trans);
 
             return self;
@@ -104,9 +107,12 @@ namespace mtconnect::ruby {
             }
 
             if (mrb_block_given_p(mrb))
+            {
               trans->m_guardBlock = block;
+              mrb_gc_register(mrb, block);
+            }
             trans->setGuard();
-
+            
             return self;
           },
           MRB_ARGS_OPT(1) | MRB_ARGS_BLOCK());
@@ -125,18 +131,20 @@ namespace mtconnect::ruby {
     
     ~RubyTransform()
     {
-      
-    }
-    
-    void stop() override
-    {
       std::lock_guard guard(RubyVM::rubyVM());
 
       auto mrb = RubyVM::rubyVM().state();
       
-      //mrb_gc_unregister(mrb, m_self);
+      mrb_gc_unregister(mrb, m_self);
+      m_self = mrb_nil_value();
+      if (!mrb_nil_p(m_block))
+        mrb_gc_unregister(mrb, m_block);
+      if (!mrb_nil_p(m_guardBlock))
+        mrb_gc_unregister(mrb, m_guardBlock);
+      m_block = mrb_nil_value();
+      m_guardBlock = mrb_nil_value();
     }
-
+    
     void setMethod(mrb_sym sym) { m_method = sym; }
 
     void setGuard()

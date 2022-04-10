@@ -60,6 +60,7 @@ namespace mtconnect {
       {
         m_start->stop();
         m_started = false;
+        m_start->clear();
         m_start = std::make_shared<Start>();
       }
       
@@ -79,8 +80,8 @@ namespace mtconnect {
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
-
-        transform->clear();
+        
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.first->spliceBefore(pair.second, transform);
@@ -103,7 +104,7 @@ namespace mtconnect {
         if (xforms.empty())
           return false;
 
-        transform->clear();
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.second->spliceAfter(transform);
@@ -126,7 +127,7 @@ namespace mtconnect {
         if (xforms.empty())
           return false;
         
-        transform->clear();
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.second->firstAfter(transform);
@@ -148,7 +149,7 @@ namespace mtconnect {
         if (xforms.empty())
           return false;
 
-        transform->clear();
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.second->bind(transform);
@@ -170,7 +171,7 @@ namespace mtconnect {
         if (xforms.empty())
           return false;
 
-        transform->clear();
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.first->replace(pair.second, transform);
