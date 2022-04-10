@@ -60,10 +60,23 @@ namespace mtconnect {
         for (auto &t : m_next)
           t->stop();
       }
+      
       virtual void start(boost::asio::io_context::strand &st)
       {
         for (auto &t : m_next)
           t->start(st);
+      }
+      
+      virtual void clear()
+      {
+        for (auto &t : m_next)
+          t->clear();
+        unlink();
+      }
+      
+      virtual void unlink()
+      {
+        m_next.clear();
       }
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
@@ -193,11 +206,6 @@ namespace mtconnect {
         }
       }
       
-      void clear()
-      {
-        m_next.clear();
-      }
-
     protected:
       std::string m_name;
       TransformList m_next;
