@@ -133,7 +133,7 @@ namespace mtconnect::ruby {
     {
       std::lock_guard guard(RubyVM::rubyVM());
 
-      if (&RubyVM::rubyVM())
+      if (RubyVM::hasVM())
       {
         auto mrb = RubyVM::rubyVM().state();
         
@@ -171,6 +171,13 @@ namespace mtconnect::ruby {
           using namespace entity;
           using namespace observation;
           std::lock_guard guard(RubyVM::rubyVM());
+          
+          if (!RubyVM::hasVM())
+          {
+            LOG(error) << "No Ruby VM in guard callback";
+            throw std::runtime_error("No ruby VM");
+          }
+
 
           auto mrb = RubyVM::rubyVM().state();
           int save = mrb_gc_arena_save(mrb);
@@ -221,6 +228,12 @@ namespace mtconnect::ruby {
       EntityPtr res;
       
       std::lock_guard guard(RubyVM::rubyVM());
+      if (!RubyVM::hasVM())
+      {
+        LOG(error) << "No Ruby VM in guard callback";
+        throw std::runtime_error("No ruby VM");
+      }
+      
       auto mrb = RubyVM::rubyVM().state();
       int save = mrb_gc_arena_save(mrb);
 
