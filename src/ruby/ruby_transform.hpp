@@ -132,17 +132,19 @@ namespace mtconnect::ruby {
     ~RubyTransform()
     {
       std::lock_guard guard(RubyVM::rubyVM());
-
-      auto mrb = RubyVM::rubyVM().state();
-      
-      mrb_gc_unregister(mrb, m_self);
-      m_self = mrb_nil_value();
-      if (!mrb_nil_p(m_block))
-        mrb_gc_unregister(mrb, m_block);
-      if (!mrb_nil_p(m_guardBlock))
-        mrb_gc_unregister(mrb, m_guardBlock);
-      m_block = mrb_nil_value();
-      m_guardBlock = mrb_nil_value();
+      if (&RubyVM::rubyVM())
+      {
+        auto mrb = RubyVM::rubyVM().state();
+        
+        mrb_gc_unregister(mrb, m_self);
+        m_self = mrb_nil_value();
+        if (!mrb_nil_p(m_block))
+          mrb_gc_unregister(mrb, m_block);
+        if (!mrb_nil_p(m_guardBlock))
+          mrb_gc_unregister(mrb, m_guardBlock);
+        m_block = mrb_nil_value();
+        m_guardBlock = mrb_nil_value();
+      }
     }
     
     void setMethod(mrb_sym sym) { m_method = sym; }

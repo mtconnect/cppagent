@@ -30,8 +30,8 @@ namespace mtconnect::adapter::agent {
   public:
     using super = SessionImpl<HttpsSession>;
 
-    explicit HttpsSession(boost::asio::io_context::strand &ex, ssl::context &ctx)
-      : super(ex), m_stream(ex.context(), ctx)
+    explicit HttpsSession(boost::asio::io_context::strand &ex, const Url &url, ssl::context &ctx)
+      : super(ex, url), m_stream(ex.context(), ctx)
     {}
     ~HttpsSession() {}
 
@@ -45,16 +45,16 @@ namespace mtconnect::adapter::agent {
     }
 
     // Start the asynchronous operation
-    void connect(const Url &url, Connected cb) override
+    void connect() override
     {
-      if (!SSL_set_tlsext_host_name(m_stream.native_handle(), url.getHost().c_str()))
+      if (!SSL_set_tlsext_host_name(m_stream.native_handle(), m_url.getHost().c_str()))
       {
         beast::error_code ec {static_cast<int>(::ERR_get_error()), asio::error::get_ssl_category()};
         std::cerr << ec.message() << "\n";
         return;
       }
 
-      super::connect(url, cb);
+      super::connect();
     }
 
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
@@ -77,15 +77,7 @@ namespace mtconnect::adapter::agent {
       if (ec)
         fail(ec, "handshake");
       
-      connected(ec);
-
-      // Set a timeout on the operation
-      beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
-
-      // Send the HTTP request to the remote host
-      http::async_write(m_stream, m_req,
-                        asio::bind_executor(
-                            m_strand, beast::bind_front_handler(&HttpsSession::onWrite, getptr())));
+      request();
     }
 
     void disconnect()

@@ -50,8 +50,9 @@ namespace mtconnect::adapter::agent {
 
     // Objects are constructed with a strand to
     // ensure that handlers do not execute concurrently.
-    SessionImpl(boost::asio::io_context::strand &strand)
-      : m_resolver(strand.context()), m_strand(strand)
+    SessionImpl(boost::asio::io_context::strand &strand,
+                const Url &url)
+      : m_resolver(strand.context()), m_strand(strand), m_url(url)
     {}
 
     virtual ~SessionImpl() { stop(); }
@@ -65,13 +66,15 @@ namespace mtconnect::adapter::agent {
     }
 
     // Start the asynchronous operation
-    void connect(const Url &url, Connected cb) override
+    void connect() override
     {
-      m_url = url;
-      m_connected = cb;
-      
       // If the address is an IP address, we do not need to resolve.
-      if (holds_alternative<asio::ip::address>(m_url.m_host))
+      if (m_resolution)
+      {
+        beast::error_code ec;
+        onResolve(ec, *m_resolution);
+      }
+      else if (holds_alternative<asio::ip::address>(m_url.m_host))
       {
         asio::ip::tcp::endpoint ep(get<asio::ip::address>(m_url.m_host), m_url.m_port.value_or(80));
                 
@@ -102,6 +105,9 @@ namespace mtconnect::adapter::agent {
         // If we can't resolve, then shut down the adapter
         return fail(ec, "resolve");
       }
+      
+      if (!m_resolution)
+        m_resolution.emplace(results);
 
       // Set a timeout on the operation
       derived().lowestLayer().expires_after(std::chrono::seconds(30));
@@ -112,52 +118,48 @@ namespace mtconnect::adapter::agent {
                                                                            derived().getptr())));
     }
     
-    void connected(beast::error_code ec)
-    {
-      m_connected(ec);
-    }
-    
     bool makeRequest(const std::string &suffix,
                      const UrlQuery &query,
                      bool stream,
                      Result cb) override
     {
       m_result = cb;
-      string target = m_url.m_path + suffix;
+      m_target = m_url.m_path + suffix;
       auto uq = m_url.m_query;
       if (!query.empty())
         uq.merge(query);
       if (!uq.empty())
-        target += ("?" + uq.join());
-      m_stream = stream;
-      //
-      auto request = [this, target](beast::error_code ec) {
-        // Set up an HTTP GET request message
-        m_req.version(11);
-        m_req.method(http::verb::get);
-        m_req.target(target);
-        m_req.set(http::field::host, m_url.getHost());
-        m_req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-        
-        http::async_write(derived().stream(), m_req,
-                          beast::bind_front_handler(&SessionImpl::onWrite,
-                                                    derived().getptr()));
-      };
-      
+        m_target += ("?" + uq.join());
+      m_streaming = stream;
+
       // Check if we are discussected.
       if (!derived().lowestLayer().socket().is_open())
       {
         // Try to reconnect executiong the request on successful
         // connection. ÷
-        connect(m_url, request);
+        connect();
         return false;
       }
       else
       {
-        beast::error_code ec;
-        request(ec);
+        request();
         return true;
       }
+    }
+    
+    void request()
+    {
+      // Set up an HTTP GET request message
+      m_req.version(11);
+      m_req.method(http::verb::get);
+      m_req.target(m_target);
+      m_req.set(http::field::host, m_url.getHost());
+      m_req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+      
+      http::async_write(derived().stream(), m_req,
+                        beast::bind_front_handler(&SessionImpl::onWrite,
+                                                  derived().getptr()));
+
     }
 
     void onWrite(beast::error_code ec, std::size_t bytes_transferred)
@@ -198,14 +200,17 @@ namespace mtconnect::adapter::agent {
 
   protected:
     tcp::resolver m_resolver;
+    std::optional<tcp::resolver::results_type> m_resolution;
     beast::flat_buffer m_buffer;  // (Must persist between reads)
     http::request<http::empty_body> m_req;
     http::response<http::string_body> m_res;
     asio::io_context::strand m_strand;
     Url m_url;
-    Connected m_connected;
+    
+    std::string m_target;
+    
     Result m_result;
-    bool m_stream = false;
+    bool m_streaming = false;
   };
 
 }  // namespace mtconnect::adapter::agent

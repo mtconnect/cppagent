@@ -28,7 +28,7 @@ namespace mtconnect::adapter::agent {
   public:
     using super = SessionImpl<HttpSession>;
 
-    HttpSession(boost::asio::io_context::strand &ioc) : super(ioc), m_stream(ioc.context()) {}
+    HttpSession(boost::asio::io_context::strand &ioc, const Url &url) : super(ioc, url), m_stream(ioc.context()) {}
 
     ~HttpSession() override {}
 
@@ -46,15 +46,7 @@ namespace mtconnect::adapter::agent {
       if (ec)
         fail(ec, "connect");
       
-      connected(ec);
-
-      // Set a timeout on the operation
-      m_stream.expires_after(std::chrono::seconds(30));
-
-      // Send the HTTP request to the remote host
-      http::async_write(m_stream, m_req,
-                        asio::bind_executor(
-                            m_strand, beast::bind_front_handler(&HttpSession::onWrite, getptr())));
+      request();
     }
 
     void disconnect()

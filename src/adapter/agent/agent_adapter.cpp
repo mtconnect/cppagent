@@ -78,22 +78,29 @@ namespace mtconnect::adapter::agent {
       // The SSL context is required, and holds certificates
       ssl::context ctx {ssl::context::tlsv12_client};
       ctx.set_verify_mode(ssl::verify_peer);
-      m_session = make_shared<HttpsSession>(m_strand, ctx);
+      m_session = make_shared<HttpsSession>(m_strand, m_url, ctx);
     }
     else if (m_url.m_protocol == "https")
     {
-      m_session = make_shared<HttpSession>(m_strand);
+      m_session = make_shared<HttpSession>(m_strand, m_url);
     }
     else
     {
       LOG(error) << "Unknown protocol: " << m_url.m_protocol;
       return false;
     }
-
-    m_session->connect(m_url, [this](boost::beast::error_code ec) {
-      
+    
+    m_session->makeRequest("current", UrlQuery(), false,
+                           [this](boost::beast::error_code ec, const std::string &result) {
     });
 
     return true;
   }
+  
+  void AgentAdapter::stop()
+  {
+    m_session->stop();
+    m_session.reset();
+  }
+
 }  // namespace mtconnect::adapter::agent
