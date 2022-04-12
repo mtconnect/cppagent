@@ -415,6 +415,8 @@ namespace mtconnect {
 
         buildAssetDelivery(next);
         buildObservationDelivery(next);
+        
+        applySplices();
       }
 
     }  // namespace mqtt_adapter
