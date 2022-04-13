@@ -138,7 +138,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
-  unique_ptr<adapter::Handler> handler = make_unique<agent::AgentHandler>();
+  unique_ptr<adapter::Handler> handler = make_unique<AgentHandler>();
 
   bool connecting = false;
   bool connected = false;

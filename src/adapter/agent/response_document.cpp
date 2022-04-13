@@ -28,54 +28,80 @@ namespace mtconnect::adapter::agent {
   using namespace mtconnect;
   using namespace entity;
   
-  inline string attributeValue(xmlNodePtr node, const char *name)
+  inline bool eachElement(xmlNodePtr node, std::function<bool(xmlNodePtr)> cb)
   {
-    for (auto attr = node->properties; attr != nullptr; attr = attr->next)
+    for (auto child = node->children; child != nullptr; child = child->next)
     {
-      if (attr->type == XML_ATTRIBUTE_NODE && xmlStrcmp(BAD_CAST name, attr->name) == 0)
+      if (child->type == XML_ELEMENT_NODE)
       {
-        return (const char *)(attr->children->content);
+        if (!cb(child))
+          return true;
       }
     }
     
-    LOG(error) << "Cannot find attribute value for resonse doc";
+    return false;
+  }
+  
+  inline bool eachElement(xmlNodePtr node, const char *name, std::function<bool(xmlNodePtr)> cb)
+  {
+    for (auto child = node->children; child != nullptr; child = child->next)
+    {
+      if (child->type == XML_ELEMENT_NODE && xmlStrcmp(BAD_CAST name, child->name) == 0)
+      {
+        if (!cb(child))
+          return true;
+      }
+    }
     
-    throw runtime_error("Cannot find attribute value");
-    return "";
+    return false;
+  }
+
+  inline bool eachAttribute(xmlNodePtr node, std::function<bool(xmlAttrPtr)> cb)
+  {
+    for (auto attr = node->properties; attr != nullptr; attr = attr->next)
+    {
+      if (attr->type == XML_ATTRIBUTE_NODE)
+      {
+        if (!cb(attr))
+          return true;
+      }
+    }
+    
+    return false;
+  }
+  
+  inline string attributeValue(xmlNodePtr node, const char *name)
+  {
+    string res;
+    if (!eachAttribute(node, [&name, &res](xmlAttrPtr attr) {
+      if (xmlStrcmp(BAD_CAST name, attr->name))
+      {
+        res = (const char *)(attr->children->content);
+        return false;
+      }
+      return true;
+    }))
+    {
+      LOG(error) << "Cannot find attribute " << name << " in resonse doc";
+    }
+    
+    return res;
   }
   
   inline static xmlNodePtr findChild(xmlNodePtr node, const char *name)
   {
     xmlNodePtr child;
-    for (child = node->children; child != nullptr; child = child->next)
+    if (!eachElement(node, name, [&child](xmlNodePtr node) {
+      child = node;
+      return false;
+    }))
     {
-      if (xmlStrcmp(BAD_CAST name, child->name) == 0)
-      {
-        return child;
-      }
+      LOG(error) << "Cannot find " << name << " in resonse doc";
     }
     
-    LOG(error) << "Cannot find " << name << " in resonse doc";
-
     return nullptr;
   }
-  
-  inline static vector<xmlNodePtr> findChildren(xmlNodePtr node, const char *name)
-  {
-    vector<xmlNodePtr> children;
-    xmlNodePtr child;
-    for (child = node->children; child != nullptr; child = child->next)
-    {
-      if (xmlStrcmp(BAD_CAST name, child->name) == 0)
-      {
-        children.push_back(child);
-      }
-    }
     
-    return children;
-  }
-
-  
   static inline SequenceNumber_t next(xmlNodePtr root)
   {
     auto header = findChild(root, "Header");
@@ -104,127 +130,111 @@ namespace mtconnect::adapter::agent {
     return "";
   }
   
-  enum DSType {
-    FLOAT,
-    INT,
-    STRING
-  };
-  
-  inline DSType type(const string &s)
+  inline DataSetValue type(const string &s)
   {
-    DSType ret = INT;
+    using namespace boost;
+
     for (const char c : s)
     {
       if (!isdigit(c) || c != '.')
-        return STRING;
+      {
+        return s;
+      }
       else if (c == '.')
-        ret = FLOAT;
+      {
+        return lexical_cast<double>(s);
+      }
     }
     
-    return ret;
+    return lexical_cast<int64_t>(s);
   }
   
   inline void dataSet(xmlNodePtr node, bool table, DataSet &ds)
   {
-    using namespace boost;
-
-    for (auto n = node->children; n != nullptr; n = n->next)
-    {
-      if (n->type == XML_ELEMENT_NODE && xmlStrcmp(BAD_CAST "Entry", n->name) == 0)
+    eachElement(node, "Entry", [table, &ds](xmlNodePtr n) {
+      DataSetEntry entry;
+      entry.m_key = attributeValue(n, "key");
+      entry.m_removed = attributeValue(n, "removed") == "true";
+      
+      if (table)
       {
-        DataSetEntry entry;
-        entry.m_key = attributeValue(n, "key");
-        entry.m_removed = attributeValue(n, "removed") == "true";
-        if (table)
-        {
-          entry.m_value.emplace<DataSet>();
-          DataSet &row = get<DataSet>(entry.m_value);
-          for (auto c = n->children; c != nullptr; c = n->next)
-          {
-            if (c->type == XML_ELEMENT_NODE && xmlStrcmp(BAD_CAST "Cell", c->name) == 0)
-            {
-              dataSet(c, false, row);
-            }
-          }
-        }
-        else
-        {
-          auto value = text(n);
-          switch (type(value))
-          {
-            case STRING:
-              entry.m_value.emplace<string>(value);
-              break;
-              
-            case FLOAT:
-              entry.m_value.emplace<double>(lexical_cast<double>(value));
-              break;
-              
-            case INT:
-              entry.m_value.emplace<int64_t>(lexical_cast<int64_t>(value));
-              break;
-          }
-        }
+        entry.m_value.emplace<DataSet>();
+        DataSet &row = get<DataSet>(entry.m_value);
+        
+        eachElement(n, "Cell", [&row](xmlNodePtr c) {
+          dataSet(c, false, row);
+          return true;
+        });
       }
-    }
+      else
+      {
+        entry.m_value = type(text(n));
+      }
+      
+      ds.insert(entry);
+      return true;
+    });
   }
-    
+      
   inline static bool parseDataItems(ResponseDocument &out, xmlNodePtr node)
   {
     auto streams = findChild(node, "Streams");
     if (streams == nullptr)
       return false;
     
-    auto devices = findChildren(streams, "DeviceStream");
-    for (auto &dev : devices)
-    {
+    eachElement(streams, "DeviceStream", [&out](xmlNodePtr dev) {
       auto uuid = attributeValue(dev, "uuid");
-      auto components = findChildren(dev, "ComponentStream");
-      for (auto comp : components)
-      {
-        for (auto n = comp->children; n != nullptr; n = n->next)
-        {
-          if (n->type != XML_ELEMENT_NODE)
-            continue;
-          for (auto o = n->children; o != nullptr; o = o->next)
-          {
-            out.m_properties.emplace_back(Properties());
-            auto props = out.m_properties.rbegin();
-
-            props->insert({"deviceUuid"s, uuid});
-            props->insert({"timestamp"s, attributeValue(o, "timestamp")});
-            props->insert({"dataItemId"s, attributeValue(o, "dataItemId")});
-
+      eachElement(dev, "ComponentStream", [&out, &uuid](xmlNodePtr comp) {
+        eachElement(comp, [&out, &uuid](xmlNodePtr org){
+          eachElement(org, [&out, &uuid](xmlNodePtr o){
+            EntityPtr entity = make_shared<Entity>("ObservationProperties", Properties {{"deviceUuid", uuid}});
+            
+            eachAttribute(o, [entity](xmlAttrPtr attr){
+              if (xmlStrcmp(BAD_CAST "sequence", attr->name) != 0)
+              {
+                string s((const char *)attr->children->content);
+                entity->setProperty((const char*) attr->name, s);
+              }
+              
+              return true;
+            });
+              
             // Check for table or data set
             string name((const char*) o->name);
             auto val = text(o);
             if (val == "UNAVAILABLE")
             {
-              props->insert({"VALUE"s, val});
+              entity->setValue(val);
             }
             else if (ends_with(name, "Table"))
             {
-              (*props)["VALUE"] = DataSet();
-              auto dsi = props->find("VALUE");
-              auto &ds = get<DataSet>(dsi->second);
+              entity->setValue(DataSet());
+              auto &ds = get<DataSet>(entity->getValue());
               dataSet(o, true, ds);
             }
             else if (ends_with(name, "DataSet"))
             {
-              (*props)["VALUE"] = DataSet();
-              auto dsi = props->find("VALUE");
-              auto &ds = get<DataSet>(dsi->second);
+              entity->setValue(DataSet());
+              auto &ds = get<DataSet>(entity->getValue());
               dataSet(o, false, ds);
             }
             else
             {
-              props->insert({"VALUE"s, val});
-            }            
-          }
-        }
-      }
-    }
-    
+              entity->setValue(val);
+            }
+            
+            out.m_entities.emplace_back(entity);
+            return true;
+          });
+          return true;
+        });
+        
+        return true;
+      });
+      
+      return true;
+    });
+        
     return true;
   }
   

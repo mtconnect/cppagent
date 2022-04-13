@@ -36,6 +36,24 @@ using namespace std;
 using namespace mtconnect;
 
 namespace mtconnect::adapter::agent {
+  std::unique_ptr<AgentHandler> AgentAdapterPipeline::makeAgentHandler()
+  {
+    auto handler = std::make_unique<AgentHandler>();
+    
+    handler->m_processResponseDocument = [this](const ResponseDocument &data, const std::string &id) {
+      for (auto entity : data.m_entities)
+      {
+        run(entity);
+      }
+    };
+    
+    return handler;
+  }
+  
+  void AgentAdapterPipeline::build(const ConfigOptions &options)
+  {
+    
+  }
 
   AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
                              const ConfigOptions &options, const boost::property_tree::ptree &block)
@@ -56,7 +74,9 @@ namespace mtconnect::adapter::agent {
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
                          {configuration::RelativeTime, false}});
-
+    
+    m_handler = m_pipeline.makeAgentHandler();
+    
     auto urlOpt = GetOption<std::string>(m_options, configuration::Url);
     if (urlOpt)
     {

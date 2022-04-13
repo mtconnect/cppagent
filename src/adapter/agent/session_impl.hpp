@@ -136,6 +136,8 @@ namespace mtconnect::adapter::agent {
       m_contentType.clear();
       m_boundary.clear();
       m_hasHeader = false;
+      if (m_chunk.size() > 0)
+        m_chunk.consume(m_chunk.size());
       
       // Check if we are discussected.
       if (!derived().lowestLayer().socket().is_open())
@@ -159,7 +161,7 @@ namespace mtconnect::adapter::agent {
       m_req.method(http::verb::get);
       m_req.target(m_target);
       m_req.set(http::field::host, m_url.getHost());
-      m_req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+      m_req.set(http::field::user_agent, "MTConnect Agent/2.0");
 
       http::async_write(derived().stream(), m_req,
                         beast::bind_front_handler(&SessionImpl::onWrite, derived().getptr()));
@@ -220,7 +222,7 @@ namespace mtconnect::adapter::agent {
     
     void createChunkHeaderHandler()
     {
-      m_chunkHeaderHandler = [this](std::uint64_t size, boost::string_view extensions,
+      m_chunkHeaderHandler = [](std::uint64_t size, boost::string_view extensions,
                                     boost::system::error_code &ec) {
         http::chunk_extensions ce;
         ce.parse(extensions, ec);
@@ -342,12 +344,14 @@ namespace mtconnect::adapter::agent {
 
     void onHeader(beast::error_code ec, std::size_t bytes_transferred)
     {
-      if (m_parser->chunked())
+      if (m_streaming && m_parser->chunked())
       {
         onChunkedContent();
       }
       else
       {
+        derived().lowestLayer().expires_after(std::chrono::seconds(30));
+
         LOG(warning) << "Need to handle polling fallback";
         http::async_read(derived().stream(), m_buffer, m_res,
                          asio::bind_executor(m_strand, beast::bind_front_handler(

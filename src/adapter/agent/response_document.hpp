@@ -34,7 +34,7 @@ namespace mtconnect::adapter::agent {
 
     // Parsed data
     SequenceNumber_t m_next;
-    std::vector<entity::Properties> m_properties;
+    entity::EntityList m_entities;
   };
   
 
