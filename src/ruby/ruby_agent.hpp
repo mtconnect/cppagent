@@ -93,7 +93,7 @@ namespace mtconnect::ruby {
 
             for (auto &sink : agent->getSinks())
             {
-              auto obj = MRubySharedPtr<Sink>::wrap(mrb, "Sink", sink);
+              auto obj = MRubySharedPtr<sink::Sink>::wrap(mrb, "Sink", sink);
               mrb_ary_push(mrb, sinks, obj);
             }
 
