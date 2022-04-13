@@ -467,7 +467,7 @@ TEST_F(DataSetTest, Sample)
 
 TEST_F(DataSetTest, CurrentAt)
 {
-  using namespace mtconnect::rest_sink;
+  using namespace mtconnect::sink::rest_sink;
   m_agentTestHelper->addAdapter();
 
   auto rest = m_agentTestHelper->getRestService();

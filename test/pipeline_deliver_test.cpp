@@ -37,7 +37,7 @@ using namespace mtconnect::observation;
 using namespace std;
 using namespace std::literals;
 using namespace std::chrono_literals;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 
 class PipelineDeliverTest : public testing::Test
 {
