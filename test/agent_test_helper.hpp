@@ -167,10 +167,13 @@ public:
     rest_sink::RestService::registerFactory(m_sinkFactory);
     adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
-    ConfigOptions options {
-        {configuration::BufferSize, bufferSize},          {configuration::MaxAssets, maxAssets},
-        {configuration::CheckpointFrequency, checkpoint}, {configuration::AllowPut, put},
-        {configuration::SchemaVersion, version},          {configuration::Pretty, true}};
+    ConfigOptions options {{configuration::BufferSize, bufferSize},
+                           {configuration::MaxAssets, maxAssets},
+                           {configuration::CheckpointFrequency, checkpoint},
+                           {configuration::AllowPut, put},
+                           {configuration::SchemaVersion, version},
+                           {configuration::Pretty, true},
+                           {configuration::Port, 0}};
     m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, PROJECT_ROOT_DIR + file, options);
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();

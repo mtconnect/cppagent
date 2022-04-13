@@ -36,6 +36,8 @@ namespace mtconnect {
       virtual unsigned int getPort() const = 0;
       virtual const ConfigOptions &getOptions() const { return m_options; }
 
+      void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
+
     protected:
       std::string m_identity;
       std::string m_url;

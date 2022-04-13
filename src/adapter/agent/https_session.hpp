@@ -30,8 +30,9 @@ namespace mtconnect::adapter::agent {
   public:
     using super = SessionImpl<HttpsSession>;
 
-    explicit HttpsSession(boost::asio::io_context::strand &ex, const Url &url, ssl::context &ctx)
-      : super(ex, url), m_stream(ex.context(), ctx)
+    explicit HttpsSession(boost::asio::io_context::strand &ex, const Url &url, int count,
+                          int heartbeat, ssl::context &ctx)
+      : super(ex, url, count, heartbeat), m_stream(ex.context(), ctx)
     {}
     ~HttpsSession() {}
 
@@ -76,7 +77,10 @@ namespace mtconnect::adapter::agent {
     {
       if (ec)
         fail(ec, "handshake");
-      
+
+      if (m_handler && m_handler->m_connected)
+        m_handler->m_connected(m_identity);
+
       request();
     }
 
@@ -98,6 +102,9 @@ namespace mtconnect::adapter::agent {
         // http://stackoverflow.com/questions/25587403/boost-asio-ssl-async-shutdown-always-finishes-with-an-error
         ec = {};
       }
+
+      if (m_handler && m_handler->m_disconnected)
+        m_handler->m_disconnected(m_identity);
 
       if (ec)
         return fail(ec, "shutdown");

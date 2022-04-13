@@ -1,4 +1,3 @@
-
 //
 // Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
@@ -18,31 +17,25 @@
 
 #pragma once
 
-#include <boost/beast/core/error.hpp>
-
-#include <memory>
-
-#include "url_parser.hpp"
+#include "xml_helper.hpp"
+#include "utilities.hpp"
+#include "entity/entity.hpp"
 
 namespace mtconnect::adapter::agent {
+  using namespace mtconnect;
+  using namespace adapter;
+  
+  
 
-  struct ResponseDocument;
-  struct AgentHandler;
-  class Session : public std::enable_shared_from_this<Session>
+  struct ResponseDocument
   {
-  public:
-    using Next = std::function<bool(boost::beast::error_code ec, const ResponseDocument &doc)>;
+    static bool parse(const std::string_view &content,
+                      ResponseDocument &doc);
 
-    virtual ~Session() {}
-    virtual void connect() = 0;
-    virtual bool isOpen() const = 0;
-    virtual void stop() = 0;
-
-    virtual bool makeRequest(const std::string &suffix, const UrlQuery &query, bool stream,
-                             Next next) = 0;
-
-    AgentHandler *m_handler = nullptr;
-    std::string m_identity;
+    // Parsed data
+    SequenceNumber_t m_next;
+    std::vector<entity::Properties> m_properties;
   };
+  
 
-}  // namespace mtconnect::adapter::agent
+}

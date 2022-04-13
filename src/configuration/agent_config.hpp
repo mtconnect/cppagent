@@ -167,8 +167,6 @@ namespace mtconnect {
 #ifdef WITH_PYTHON
       std::unique_ptr<python::Embedded> m_python;
 #endif
-
-
     };
   }  // namespace configuration
 }  // namespace mtconnect

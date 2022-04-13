@@ -51,6 +51,8 @@ namespace mtconnect::adapter::agent {
     AddDefaultedOptions(block, m_options,
                         {{configuration::Host, "localhost"s},
                          {configuration::Port, 5000},
+                         {configuration::Count, 1000},
+                         {configuration::Heartbeat, 10000},
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
                          {configuration::RelativeTime, false}});
@@ -67,6 +69,9 @@ namespace mtconnect::adapter::agent {
       m_url.m_port = GetOption<int>(m_options, configuration::Port);
       m_url.m_path = GetOption<string>(m_options, configuration::Device).value_or("/");
     }
+
+    m_count = *GetOption<int>(m_options, configuration::Count);
+    m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
   }
 
   AgentAdapter::~AgentAdapter() {}
@@ -78,25 +83,45 @@ namespace mtconnect::adapter::agent {
       // The SSL context is required, and holds certificates
       ssl::context ctx {ssl::context::tlsv12_client};
       ctx.set_verify_mode(ssl::verify_peer);
-      m_session = make_shared<HttpsSession>(m_strand, m_url, ctx);
+      m_session = make_shared<HttpsSession>(m_strand, m_url, m_count, m_heartbeat, ctx);
     }
-    else if (m_url.m_protocol == "https")
+    else if (m_url.m_protocol == "http")
     {
-      m_session = make_shared<HttpSession>(m_strand, m_url);
+      m_session = make_shared<HttpSession>(m_strand, m_url, m_count, m_heartbeat);
     }
     else
     {
       LOG(error) << "Unknown protocol: " << m_url.m_protocol;
       return false;
     }
-    
-    m_session->makeRequest("current", UrlQuery(), false,
-                           [this](boost::beast::error_code ec, const std::string &result) {
-    });
+
+    m_session->m_handler = getAgentHandler();
+    m_session->m_identity = m_identity;
+
+    current();
 
     return true;
   }
-  
+
+  void AgentAdapter::current()
+  {
+    m_session->makeRequest(
+        "current", UrlQuery(), false,
+        [this](beast::error_code ec, const ResponseDocument &doc) { return sample(ec, doc); });
+  }
+
+  bool AgentAdapter::sample(beast::error_code ec, const ResponseDocument &doc)
+  {
+    using namespace boost;
+    UrlQuery query({{"from", lexical_cast<string>(doc.m_next)},
+                    {"count", lexical_cast<string>(m_count)},
+                    {"heartbeat", lexical_cast<string>(m_heartbeat)},
+                    {"interval", "500"}});
+    m_session->makeRequest("sample", query, true, nullptr);
+
+    return true;
+  }
+
   void AgentAdapter::stop()
   {
     m_session->stop();

@@ -415,7 +415,7 @@ namespace mtconnect {
 
         buildAssetDelivery(next);
         buildObservationDelivery(next);
-        
+
         applySplices();
       }
 

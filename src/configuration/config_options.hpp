@@ -78,6 +78,8 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttCaCert);
     DECLARE_CONFIGURATION(Url);
     DECLARE_CONFIGURATION(Path);
+    DECLARE_CONFIGURATION(Count);
+    DECLARE_CONFIGURATION(Heartbeat);
     DECLARE_CONFIGURATION(MqttTls);
 
   }  // namespace configuration

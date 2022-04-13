@@ -63,7 +63,6 @@ namespace mtconnect {
         // Virtual destructor
         ~ShdrAdapter() override { stop(); }
 
-        void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
         auto &getTerminator() const { return m_terminator; }
 
         // Inherited method to incoming data from the server

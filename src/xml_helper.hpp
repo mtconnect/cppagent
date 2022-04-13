@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <stdexcept>
+
 #define strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr)                                             \
   if ((expr) < 0)                                                             \

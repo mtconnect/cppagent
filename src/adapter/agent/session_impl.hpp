@@ -25,6 +25,7 @@
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
 
+#include "response_document.hpp"
 #include "session.hpp"
 
 namespace mtconnect::adapter::agent {
@@ -50,9 +51,9 @@ namespace mtconnect::adapter::agent {
 
     // Objects are constructed with a strand to
     // ensure that handlers do not execute concurrently.
-    SessionImpl(boost::asio::io_context::strand &strand,
-                const Url &url)
-      : m_resolver(strand.context()), m_strand(strand), m_url(url)
+    SessionImpl(boost::asio::io_context::strand &strand, const Url &url, int count, int heartbeat)
+      : m_resolver(strand.context()), m_strand(strand), m_url(url),
+        m_chunk(1 * 1024 * 1024), m_count(count), m_heartbeat(heartbeat)
     {}
 
     virtual ~SessionImpl() { stop(); }
@@ -77,13 +78,11 @@ namespace mtconnect::adapter::agent {
       else if (holds_alternative<asio::ip::address>(m_url.m_host))
       {
         asio::ip::tcp::endpoint ep(get<asio::ip::address>(m_url.m_host), m_url.m_port.value_or(80));
-                
+
         // Create the results type and call on resolve directly.
         using results_type = tcp::resolver::results_type;
-        auto results = results_type::create(ep,
-                                            m_url.getHost(),
-                                            m_url.getService());
-        
+        auto results = results_type::create(ep, m_url.getHost(), m_url.getService());
+
         beast::error_code ec;
         onResolve(ec, results);
       }
@@ -92,7 +91,8 @@ namespace mtconnect::adapter::agent {
         derived().lowestLayer().expires_after(std::chrono::seconds(30));
 
         // Do an async resolution of the address.
-        m_resolver.async_resolve(get<string>(m_url.m_host), m_url.getService(),
+        m_resolver.async_resolve(
+            get<string>(m_url.m_host), m_url.getService(),
             asio::bind_executor(
                 m_strand, beast::bind_front_handler(&SessionImpl::onResolve, derived().getptr())));
       }
@@ -105,9 +105,12 @@ namespace mtconnect::adapter::agent {
         // If we can't resolve, then shut down the adapter
         return fail(ec, "resolve");
       }
-      
+
       if (!m_resolution)
         m_resolution.emplace(results);
+
+      if (m_handler && m_handler->m_connecting)
+        m_handler->m_connecting(m_identity);
 
       // Set a timeout on the operation
       derived().lowestLayer().expires_after(std::chrono::seconds(30));
@@ -117,13 +120,11 @@ namespace mtconnect::adapter::agent {
           results, asio::bind_executor(m_strand, beast::bind_front_handler(&Derived::onConnect,
                                                                            derived().getptr())));
     }
-    
-    bool makeRequest(const std::string &suffix,
-                     const UrlQuery &query,
-                     bool stream,
-                     Result cb) override
+
+    bool makeRequest(const std::string &suffix, const UrlQuery &query, bool stream,
+                     Next next) override
     {
-      m_result = cb;
+      m_next = next;
       m_target = m_url.m_path + suffix;
       auto uq = m_url.m_query;
       if (!query.empty())
@@ -131,7 +132,11 @@ namespace mtconnect::adapter::agent {
       if (!uq.empty())
         m_target += ("?" + uq.join());
       m_streaming = stream;
-
+      m_buffer.clear();
+      m_contentType.clear();
+      m_boundary.clear();
+      m_hasHeader = false;
+      
       // Check if we are discussected.
       if (!derived().lowestLayer().socket().is_open())
       {
@@ -146,7 +151,7 @@ namespace mtconnect::adapter::agent {
         return true;
       }
     }
-    
+
     void request()
     {
       // Set up an HTTP GET request message
@@ -155,11 +160,9 @@ namespace mtconnect::adapter::agent {
       m_req.target(m_target);
       m_req.set(http::field::host, m_url.getHost());
       m_req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-      
-      http::async_write(derived().stream(), m_req,
-                        beast::bind_front_handler(&SessionImpl::onWrite,
-                                                  derived().getptr()));
 
+      http::async_write(derived().stream(), m_req,
+                        beast::bind_front_handler(&SessionImpl::onWrite, derived().getptr()));
     }
 
     void onWrite(beast::error_code ec, std::size_t bytes_transferred)
@@ -168,16 +171,188 @@ namespace mtconnect::adapter::agent {
 
       if (ec)
       {
-        m_result(ec, "");
         return fail(ec, "write");
       }
-      
+
       derived().lowestLayer().expires_after(std::chrono::seconds(30));
 
       // Receive the HTTP response
-      http::async_read(derived().stream(), m_buffer, m_res,
+      if (!m_streaming)
+      {
+        http::async_read(derived().stream(), m_buffer, m_res,
+                         asio::bind_executor(m_strand, beast::bind_front_handler(
+                                                           &Derived::onRead, derived().getptr())));
+      }
+      else
+      {
+        m_parser.emplace();
+        http::async_read_header(
+            derived().stream(), m_buffer, *m_parser,
+            asio::bind_executor(m_strand,
+                                beast::bind_front_handler(&Derived::onHeader, derived().getptr())));
+      }
+    }
+    
+    inline string findBoundary()
+    {
+      auto f = m_parser->get().find(http::field::content_type);
+      if (f != m_parser->get().end())
+      {
+        m_contentType = string(f->value());
+        auto i = m_contentType.find(';');
+        if (i != string::npos)
+        {
+          auto b = m_contentType.substr(i + 1);
+          m_contentType = m_contentType.substr(0, i);
+          auto p = b.find("=");
+          if (p != string::npos)
+          {
+            if (b.substr(0, p) == "boundary")
+            {
+              return "--"s + b.substr(p + 1);
+            }
+          }
+        }
+      }
+      
+      return "";
+    }
+    
+    void createChunkHeaderHandler()
+    {
+      m_chunkHeaderHandler = [this](std::uint64_t size, boost::string_view extensions,
+                                    boost::system::error_code &ec) {
+        http::chunk_extensions ce;
+        ce.parse(extensions, ec);
+        for (auto &c : ce)
+          cout << "Ext: " << c.first << ": " << c.second << endl;
+
+        if (ec)
+          fail(ec, "Failed in chunked extension parse");
+      };
+
+      m_chunkParser->on_chunk_header(m_chunkHeaderHandler);
+    }
+    
+    void parseMimeHeader()
+    {
+      auto start = static_cast<const char *>(m_chunk.data().data());
+      std::string_view view(start, m_chunk.data().size());
+      
+      auto bp = view.find(m_boundary.c_str());
+      if (bp == boost::string_view::npos)
+      {
+        LOG(error) << "Cannot find the boundary";
+        derived().lowestLayer().close();
+        throw runtime_error("cannot find boundary");
+      }
+
+      auto ep = view.find("\r\n\r\n", bp);
+      if (bp == boost::string_view::npos)
+      {
+        LOG(error) << "Cannot find the header separator";
+        derived().lowestLayer().close();
+        throw runtime_error("cannot find header separator");
+      }
+      ep += 4;
+
+      auto lp = strcasestr(view.data() + bp, "content-length");
+      if (lp == NULL)
+      {
+        LOG(error) << "Cannot find the content-length";
+        derived().lowestLayer().close();
+        throw runtime_error("cannot find the content-length");
+      }
+
+      m_hasHeader = true;
+      m_chunkLength = atoi(lp + 16);
+      m_chunk.consume(ep);
+    }
+    
+    void parseAndDeliverDocument(const std::string_view &buf, ResponseDocument &rd)
+    {
+      ResponseDocument::parse(buf, rd);
+      
+      if (!rd.m_properties.empty())
+      {
+        if (m_handler && m_handler->m_processData)
+          m_handler->m_processData(string(buf), m_identity);
+        if (m_handler && m_handler->m_processResponseDocument)
+          m_handler->m_processResponseDocument(rd, m_identity);
+      }
+    }
+    
+    void createChunkBodyHandler()
+    {
+      m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
+                              boost::system::error_code &ev) -> unsigned long {
+        std::ostream cstr(&m_chunk);
+        cstr << body;
+        
+        LOG(info) << "Received: --------\n" << body << "\n-------------";
+
+        if (!m_hasHeader)
+        {
+          parseMimeHeader();
+        }
+        else
+        {
+          cstr << body;
+        }
+        
+        auto len = m_chunk.size();
+        if (len >= m_chunkLength)
+        {
+          auto start = static_cast<const char *>(m_chunk.data().data());
+          string_view sbuf(start, m_chunkLength);
+
+          ResponseDocument doc;
+          parseAndDeliverDocument(sbuf, doc);
+          
+          m_chunk.consume(m_chunkLength);
+          m_hasHeader = false;
+        }
+        
+        return body.size();
+      };
+
+      m_chunkParser->on_chunk_body(m_chunkHandler);
+    }
+    
+    void onChunkedContent()
+    {
+      m_boundary = findBoundary();
+      if (m_boundary.empty())
+      {
+        LOG(error) << "Cannot find boundary";
+        return;
+      }
+
+      LOG(info) << "Found boundary: " << m_boundary;
+
+      m_chunkParser.emplace(std::move(*m_parser));
+      createChunkHeaderHandler();
+      createChunkBodyHandler();
+
+      http::async_read(derived().stream(), m_buffer, *m_chunkParser,
                        asio::bind_executor(m_strand, beast::bind_front_handler(
                                                          &Derived::onRead, derived().getptr())));
+
+    }
+
+    void onHeader(beast::error_code ec, std::size_t bytes_transferred)
+    {
+      if (m_parser->chunked())
+      {
+        onChunkedContent();
+      }
+      else
+      {
+        LOG(warning) << "Need to handle polling fallback";
+        http::async_read(derived().stream(), m_buffer, m_res,
+                         asio::bind_executor(m_strand, beast::bind_front_handler(
+                                                           &Derived::onRead, derived().getptr())));
+      }
     }
 
     void onRead(beast::error_code ec, std::size_t bytes_transferred)
@@ -186,16 +361,21 @@ namespace mtconnect::adapter::agent {
 
       if (ec)
       {
-        m_result(ec, "");
         return fail(ec, "write");
       }
-    
+
       derived().lowestLayer().expires_after(std::chrono::seconds(30));
 
       if (!derived().lowestLayer().socket().is_open())
         derived().disconnect();
+
       
-      m_result(ec, m_res.body());
+      ResponseDocument doc;
+      auto &body = m_res.body();
+      parseAndDeliverDocument(body, doc);
+
+      if (m_next)
+        m_next(ec, doc);
     }
 
   protected:
@@ -204,12 +384,30 @@ namespace mtconnect::adapter::agent {
     beast::flat_buffer m_buffer;  // (Must persist between reads)
     http::request<http::empty_body> m_req;
     http::response<http::string_body> m_res;
+
+    // Chunked content handling.
+    std::optional<http::response_parser<http::empty_body>> m_parser;
+    std::optional<http::response_parser<http::dynamic_body>> m_chunkParser;
     asio::io_context::strand m_strand;
     Url m_url;
-    
+
+    std::function<std::uint64_t(std::uint64_t, boost::string_view, boost::system::error_code &)>
+        m_chunkHandler;
+    std::function<void(std::uint64_t, boost::string_view, boost::system::error_code &)>
+        m_chunkHeaderHandler;
+
+    std::string m_boundary;
+    std::string m_contentType;
+
+    size_t m_chunkLength;
+    bool m_hasHeader;
+    boost::asio::streambuf m_chunk;
+
     std::string m_target;
-    
-    Result m_result;
+    Next m_next;
+    int m_count;
+    int m_heartbeat;
+
     bool m_streaming = false;
   };
 

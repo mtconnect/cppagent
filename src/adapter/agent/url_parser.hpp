@@ -20,12 +20,12 @@
 #include <boost/asio/ip/address.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <map>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <variant>
-#include <map>
-#include <sstream>
 
 namespace mtconnect::adapter::agent {
   using UrlQueryPair = std::pair<std::string, std::string>;
@@ -49,7 +49,7 @@ namespace mtconnect::adapter::agent {
 
       return ss.str();
     }
-    
+
     void merge(UrlQuery query)
     {
       for (const auto& kv : query)
@@ -72,7 +72,7 @@ namespace mtconnect::adapter::agent {
     std::string m_path = "/";
     UrlQuery m_query;
     std::string m_fragment;
-    
+
     struct HostVisitor
     {
       std::string operator()(std::string v) const { return v; }
@@ -80,15 +80,9 @@ namespace mtconnect::adapter::agent {
       std::string operator()(boost::asio::ip::address v) const { return v.to_string(); }
     };
 
-    std::string getHost() const
-    {
-      return std::visit(HostVisitor(), m_host);
-    }
-    
-    std::string getService() const
-    {
-      return boost::lexical_cast<std::string>(m_port.value_or(80));
-    }
+    std::string getHost() const { return std::visit(HostVisitor(), m_host); }
+
+    std::string getService() const { return boost::lexical_cast<std::string>(m_port.value_or(80)); }
 
     // the path with query and without fragment
     std::string getTarget() const

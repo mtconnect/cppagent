@@ -28,7 +28,9 @@ namespace mtconnect::adapter::agent {
   public:
     using super = SessionImpl<HttpSession>;
 
-    HttpSession(boost::asio::io_context::strand &ioc, const Url &url) : super(ioc, url), m_stream(ioc.context()) {}
+    HttpSession(boost::asio::io_context::strand &ioc, const Url &url, int count, int heartbeat)
+      : super(ioc, url, count, heartbeat), m_stream(ioc.context())
+    {}
 
     ~HttpSession() override {}
 
@@ -45,7 +47,10 @@ namespace mtconnect::adapter::agent {
     {
       if (ec)
         fail(ec, "connect");
-      
+
+      if (m_handler && m_handler->m_connected)
+        m_handler->m_connected(m_identity);
+
       request();
     }
 
@@ -55,6 +60,9 @@ namespace mtconnect::adapter::agent {
 
       // Gracefully close the socket
       m_stream.socket().shutdown(tcp::socket::shutdown_both, ec);
+
+      if (m_handler && m_handler->m_disconnected)
+        m_handler->m_disconnected(m_identity);
 
       // not_connected happens sometimes so don't bother reporting it.
       if (ec && ec != beast::errc::not_connected)

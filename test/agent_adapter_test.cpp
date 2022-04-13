@@ -28,12 +28,13 @@
 
 #include "adapter/adapter.hpp"
 #include "adapter/agent/agent_adapter.hpp"
+#include "adapter/agent/response_document.hpp"
+#include "adapter/agent/url_parser.hpp"
 #include "agent.hpp"
+#include "agent_test_helper.hpp"
 #include "device_model/reference.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
-#include "adapter/agent/url_parser.hpp"
-#include "agent_test_helper.hpp"
 
 // Registers the fixture into the 'registry'
 using namespace std;
@@ -48,6 +49,7 @@ using namespace mtconnect::asset;
 using namespace mtconnect::observation;
 
 using status = boost::beast::http::status;
+namespace asio = boost::asio;
 
 struct MockPipelineContract : public PipelineContract
 {
@@ -67,6 +69,8 @@ struct MockPipelineContract : public PipelineContract
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
 
+  std::string m_result;
+
   std::map<string, DataItemPtr> &m_dataItems;
 
   std::vector<ObservationPtr> m_observations;
@@ -85,7 +89,7 @@ protected:
     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, true);
     m_agentTestHelper->getAgent()->start();
     m_agentId = to_string(getCurrentTimeInSec());
-    
+
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
   }
@@ -97,25 +101,27 @@ protected:
       m_adapter->stop();
       m_adapter.reset();
     }
-    
+
     m_agentTestHelper->getAgent()->stop();
     m_agentTestHelper.reset();
   }
-  
-  auto createAdapter(int port, mtconnect::ConfigOptions options = {},
-                     const std::string path = "")
+
+  auto createAdapter(int port, mtconnect::ConfigOptions options = {}, const std::string path = "")
   {
     using namespace mtconnect;
     using namespace mtconnect::adapter;
 
+    string url = "http://127.0.0.1:"s + boost::lexical_cast<string>(port) + "/"s + path;
+    options.emplace(configuration::Url, url);
+    options.emplace(configuration::Port, port);
+    options.emplace(configuration::Count, 100);
+    options.emplace(configuration::Heartbeat, 500);
+
     boost::property_tree::ptree tree;
-    tree.put(configuration::Url, "http://127.0.0.1:"s +
-             boost::lexical_cast<string>(port) + "/"s + path);
-    tree.put(configuration::Port, port);
-    m_adapter = std::make_shared<agent::AgentAdapter>(m_agentTestHelper->m_ioContext, m_context, options, tree);
+    m_adapter = std::make_shared<agent::AgentAdapter>(m_agentTestHelper->m_ioContext, m_context,
+                                                      options, tree);
 
     return m_adapter;
-
   }
 
 public:
@@ -131,6 +137,39 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
-  
+
+  unique_ptr<adapter::Handler> handler = make_unique<agent::AgentHandler>();
+
+  bool connecting = false;
+  bool connected = false;
+  ResponseDocument data;
+  handler->m_processData = [&](const string &d, const string &s) {};
+  handler->m_connecting = [&](const string id) { connecting = true; };
+  handler->m_connected = [&](const string id) { connected = true; };
+
+  agent::AgentHandler *ah = static_cast<agent::AgentHandler *>(handler.get());
+  ah->m_processResponseDocument = [&](const ResponseDocument &d, const string &s) { data = d; };
+
+  adapter->setHandler(handler);
   adapter->start();
+
+  while (!connecting)
+  {
+    m_agentTestHelper->m_ioContext.run_one_for(100ms);
+  }
+  ASSERT_TRUE(connecting);
+
+  while (!connected)
+  {
+    m_agentTestHelper->m_ioContext.run_one_for(100ms);
+  }
+
+  ASSERT_TRUE(connected);
+
+  while (true)
+  {
+    m_agentTestHelper->m_ioContext.run_one_for(100ms);
+  }
+
+  ASSERT_FALSE(data.m_properties.empty());
 }
