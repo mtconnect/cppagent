@@ -19,7 +19,7 @@
 
 #include "agent.hpp"
 #include "ruby_smart_ptr.hpp"
-#include "sink.hpp"
+#include "sink/sink.hpp"
 #include "source.hpp"
 
 namespace mtconnect::ruby {
