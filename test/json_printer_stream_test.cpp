@@ -32,7 +32,7 @@
 #include "json_helper.hpp"
 #include "json_printer.hpp"
 #include "observation/observation.hpp"
-#include "rest_sink/checkpoint.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
 #include "xml_parser.hpp"
@@ -43,7 +43,8 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
+
 
 class JsonPrinterStreamTest : public testing::Test
 {
@@ -217,7 +218,7 @@ TEST_F(JsonPrinterStreamTest, TwoDevices)
 
 TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem)
 {
-  Checkpoint checkpoint;
+  mtconnect::sink::rest_sink::Checkpoint checkpoint;
   Timestamp now = chrono::system_clock::now();
   addObservationToCheckpoint(checkpoint, "if36ff60", 10254804, "AUTOMATIC"_value,
                              now);  // Controller Mode

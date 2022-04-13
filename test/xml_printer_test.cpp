@@ -23,7 +23,7 @@
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "observation/observation.hpp"
-#include "rest_sink/checkpoint.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
 #include "xml_parser.hpp"
@@ -31,7 +31,7 @@
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 

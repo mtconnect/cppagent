@@ -37,8 +37,8 @@
 #include "json_printer.hpp"
 #include "logging.hpp"
 #include "observation/observation.hpp"
-#include "rest_sink/file_cache.hpp"
-#include "rest_sink/session.hpp"
+#include "sink/rest_sink/file_cache.hpp"
+#include "sink/rest_sink/session.hpp"
 #include "xml_printer.hpp"
 
 using namespace std;
@@ -46,8 +46,8 @@ using namespace std;
 namespace mtconnect {
   using namespace device_model;
   using namespace data_item;
-  using namespace entity;
-  using namespace rest_sink;
+  using namespace entity;   
+  using namespace sink::rest_sink;
   namespace net = boost::asio;
 
   static const string g_unavailable("UNAVAILABLE");
@@ -629,7 +629,7 @@ namespace mtconnect {
     }
   }
 
-  void Agent::addSink(SinkPtr sink, bool start)
+  void Agent::addSink(sink::SinkPtr sink, bool start)
   {
     m_sinks.emplace_back(sink);
 

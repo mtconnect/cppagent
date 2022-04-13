@@ -24,12 +24,12 @@
 using namespace std;
 
 namespace mtconnect {
-  class sink_plugin_test : public Sink
+  class sink_plugin_test : public sink::Sink
   {
   public:
     sink_plugin_test(const string &name, boost::asio::io_context &context,
-                     SinkContractPtr &&contract, const ConfigOptions &config)
-      : Sink(name, move(contract))
+                     sink::SinkContractPtr &&contract, const ConfigOptions &config)
+      : sink::Sink(name, move(contract))
     {}
 
     ~sink_plugin_test() = default;
@@ -41,8 +41,8 @@ namespace mtconnect {
     uint64_t publish(observation::ObservationPtr &observation) override { return 0; }
     bool publish(asset::AssetPtr asset) override { return false; }
 
-    static SinkPtr create(const std::string &name, boost::asio::io_context &io,
-                          SinkContractPtr &&contract, const ConfigOptions &options,
+    static sink::SinkPtr create(const std::string &name, boost::asio::io_context &io,
+                          sink::SinkContractPtr &&contract, const ConfigOptions &options,
                           const boost::property_tree::ptree &block)
     {
       return std::make_shared<sink_plugin_test>(name, io, std::move(contract), options);

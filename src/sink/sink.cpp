@@ -20,20 +20,22 @@
 #include "logging.hpp"
 
 namespace mtconnect {
-  SinkPtr SinkFactory::make(const std::string &factoryName, const std::string &sinkName,
-                            boost::asio::io_context &io, SinkContractPtr &&contract,
-                            const ConfigOptions &options, const boost::property_tree::ptree &block)
-  {
-    auto factory = m_factories.find(factoryName);
-    if (factory != m_factories.end())
+  namespace sink {
+    SinkPtr SinkFactory::make(const std::string &factoryName, const std::string &sinkName,
+                              boost::asio::io_context &io, SinkContractPtr &&contract,
+                              const ConfigOptions &options,
+                              const boost::property_tree::ptree &block)
     {
-      return factory->second(sinkName, io, std::move(contract), options, block);
+      auto factory = m_factories.find(factoryName);
+      if (factory != m_factories.end())
+      {
+        return factory->second(sinkName, io, std::move(contract), options, block);
+      }
+      else
+      {
+        LOG(error) << "Cannot find Sink for name: " << factoryName;
+      }
+      return nullptr;
     }
-    else
-    {
-      LOG(error) << "Cannot find Sink for name: " << factoryName;
-    }
-    return nullptr;
-  }
-
+  }  // namespace sink
 }  // namespace mtconnect

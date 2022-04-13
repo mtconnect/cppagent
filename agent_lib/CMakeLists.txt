@@ -5,8 +5,7 @@ set(AGENT_SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/logging.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/loopback_source.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/printer.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/printer.hpp"	
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/source.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_helper.hpp"
@@ -18,8 +17,7 @@ set(AGENT_SOURCES
 
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"  
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/loopback_source.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink.cpp" 
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/loopback_source.cpp"	
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/source.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/version.cpp"  
@@ -183,29 +181,45 @@ set(AGENT_SOURCES
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/shdr_token_mapper.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/timestamp_extractor.cpp"
 
-  # src/rest_sink HEADER_FILE_ONLY
+# src/sink HEADER_FILE_ONLY
 
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/cached_file.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/checkpoint.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/circular_buffer.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/file_cache.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/parameter.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/request.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/response.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/rest_service.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/routing.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/server.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session.hpp"  
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/tls_dector.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/sink.hpp"
+
+# src/sink SOURCE_FILE_ONLY
+	
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/sink.cpp" 
+
+# src/sink/mqtt_sink HEADER_FILE_ONLY
+
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/mqtt_sink/mqtt_service.hpp"
+
+#src/sink/mqtt_sink SOURCE_FILES_ONLY
+
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/mqtt_sink/mqtt_service.cpp"
+	
+# src/sink/rest_sink HEADER_FILE_ONLY
+	
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/cached_file.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/checkpoint.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/circular_buffer.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/file_cache.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/parameter.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/request.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/response.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/rest_service.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/routing.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/server.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session.hpp"  
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.hpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/tls_dector.hpp"
   
-# src/rest_sink SOURCE_FILES_ONLY
+# src/sink/rest_sink SOURCE_FILES_ONLY
 
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/checkpoint.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/file_cache.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/rest_service.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/server.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/checkpoint.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/file_cache.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/rest_service.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/server.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
   )
 
 if(WITH_PYTHON)
@@ -252,14 +266,14 @@ if(MSVC)
   if(CMAKE_GENERATOR_TOOLSET)
     if(${CMAKE_GENERATOR_TOOLSET} MATCHES "v14[01]_xp")
       message(info ": Setting /Ob1 for rest_sink/session_impl.cpp")
-      set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
+      set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
 	PROPERTY COMPILE_FLAGS "/Ob1")
     endif()
   endif()
 
   # The modules including Beast required the /bigobj option in Windows
   set_property(SOURCE
-    "${CMAKE_CURRENT_SOURCE_DIR}/../src/rest_sink/session_impl.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/adapter/mqtt/mqtt_adapter.cpp"
     PROPERTY COMPILE_FLAGS "/bigobj")
 endif()

@@ -13,7 +13,7 @@
 #include <string>
 #include <thread>
 
-#include "rest_sink/file_cache.hpp"
+#include "sink/rest_sink/file_cache.hpp"
 
 #ifndef _WINDOWS
 #include <sys/time.h>
@@ -21,7 +21,7 @@
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 
 class FileCacheTest : public testing::Test
 {

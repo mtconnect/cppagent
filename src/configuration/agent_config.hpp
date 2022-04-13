@@ -31,9 +31,9 @@
 #include "adapter/shdr/shdr_pipeline.hpp"
 #include "agent.hpp"
 #include "parser.hpp"
-#include "rest_sink/file_cache.hpp"
+#include "sink/rest_sink/file_cache.hpp"
 #include "service.hpp"
-#include "sink.hpp"
+#include "sink/sink.hpp"
 #include "source.hpp"
 #include "utilities.hpp"
 
@@ -158,7 +158,7 @@ namespace mtconnect {
       int64_t m_rotationLogInterval {0};
 
       // Factories
-      SinkFactory m_sinkFactory;
+      sink::SinkFactory m_sinkFactory;
       SourceFactory m_sourceFactory;
       std::map<std::string, InitializationFunction> m_initializers;
 

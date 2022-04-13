@@ -30,81 +30,83 @@
 #include "configuration/config_options.hpp"
 #include "loopback_source.hpp"
 #include "pipeline/pipeline.hpp"
-#include "rest_sink/response.hpp"
-#include "rest_sink/rest_service.hpp"
-#include "rest_sink/routing.hpp"
-#include "rest_sink/server.hpp"
-#include "rest_sink/session.hpp"
+#include "sink/rest_sink/response.hpp"
+#include "sink/rest_sink/rest_service.hpp"
+#include "sink/rest_sink/routing.hpp"
+#include "sink/rest_sink/server.hpp"
+#include "sink/rest_sink/session.hpp"
 #include "test_utilities.hpp"
 
 namespace mtconnect {
   class Agent;
 
-  namespace rest_sink {
-    class TestSession : public Session
-    {
-    public:
-      using Session::Session;
-      ~TestSession() {}
-      std::shared_ptr<TestSession> shared_ptr()
+    namespace sink {
+    namespace rest_sink {
+      class TestSession : public Session
       {
-        return std::dynamic_pointer_cast<TestSession>(shared_from_this());
-      }
-
-      void run() override {}
-      void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
-      {
-        m_code = response->m_status;
-        if (response->m_file)
-          m_body = response->m_file->m_buffer;
-        else
-          m_body = response->m_body;
-        m_mimeType = response->m_mimeType;
-        if (complete)
-          complete();
-      }
-      void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override
-      {
-        if (m_streaming)
+      public:
+        using Session::Session;
+        ~TestSession() {}
+        std::shared_ptr<TestSession> shared_ptr()
         {
-          writeChunk(response->m_body, complete);
+          return std::dynamic_pointer_cast<TestSession>(shared_from_this());
         }
-        else
+
+        void run() override {}
+        void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
         {
-          writeResponse(move(response), complete);
+          m_code = response->m_status;
+          if (response->m_file)
+            m_body = response->m_file->m_buffer;
+          else
+            m_body = response->m_body;
+          m_mimeType = response->m_mimeType;
+          if (complete)
+            complete();
         }
-      }
-      void beginStreaming(const std::string &mimeType, Complete complete) override
-      {
-        m_mimeType = mimeType;
-        m_streaming = true;
-        complete();
-      }
-      void writeChunk(const std::string &chunk, Complete complete) override
-      {
-        m_chunkBody = chunk;
-        if (m_streaming)
+        void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override
+        {
+          if (m_streaming)
+          {
+            writeChunk(response->m_body, complete);
+          }
+          else
+          {
+            writeResponse(move(response), complete);
+          }
+        }
+        void beginStreaming(const std::string &mimeType, Complete complete) override
+        {
+          m_mimeType = mimeType;
+          m_streaming = true;
           complete();
-        else
-          std::cout << "Streaming done" << std::endl;
-      }
-      void close() override { m_streaming = false; }
-      void closeStream() override { m_streaming = false; }
+        }
+        void writeChunk(const std::string &chunk, Complete complete) override
+        {
+          m_chunkBody = chunk;
+          if (m_streaming)
+            complete();
+          else
+            std::cout << "Streaming done" << std::endl;
+        }
+        void close() override { m_streaming = false; }
+        void closeStream() override { m_streaming = false; }
 
-      std::string m_body;
-      std::string m_mimeType;
-      boost::beast::http::status m_code;
-      std::chrono::seconds m_expires;
+        std::string m_body;
+        std::string m_mimeType;
+        boost::beast::http::status m_code;
+        std::chrono::seconds m_expires;
 
-      std::string m_chunkBody;
-      std::string m_chunkMimeType;
-      bool m_streaming {false};
-    };
+        std::string m_chunkBody;
+        std::string m_chunkMimeType;
+        bool m_streaming {false};
+      };
 
-  }  // namespace rest_sink
+    }  // namespace rest_sink
+  }    // namespace sink
 }  // namespace mtconnect
 
-namespace mhttp = mtconnect::rest_sink;
+namespace mhttp = mtconnect::sink::rest_sink;
 namespace adpt = mtconnect::adapter;
 namespace observe = mtconnect::observation;
 
@@ -125,34 +127,34 @@ public:
   auto session() { return m_session; }
 
   // Helper method to test expected string, given optional query, & run tests
-  void responseHelper(const char *file, int line, const mtconnect::rest_sink::QueryMap &aQueries,
+  void responseHelper(const char *file, int line, const mtconnect::sink::rest_sink::QueryMap &aQueries,
                       xmlDocPtr *doc, const char *path, const char *accepts = "text/xml");
   void responseStreamHelper(const char *file, int line,
-                            const mtconnect::rest_sink::QueryMap &aQueries, const char *path,
+                            const mtconnect::sink::rest_sink::QueryMap &aQueries, const char *path,
                             const char *accepts = "text/xml");
-  void responseHelper(const char *file, int line, const mtconnect::rest_sink::QueryMap &aQueries,
+  void responseHelper(const char *file, int line, const mtconnect::sink::rest_sink::QueryMap &aQueries,
                       nlohmann::json &doc, const char *path,
                       const char *accepts = "application/json");
   void putResponseHelper(const char *file, int line, const std::string &body,
-                         const mtconnect::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
+                         const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
                          const char *path, const char *accepts = "text/xml");
   void deleteResponseHelper(const char *file, int line,
-                            const mtconnect::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
+                            const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
                             const char *path, const char *accepts = "text/xml");
 
   void chunkStreamHelper(const char *file, int line, xmlDocPtr *doc);
 
   void makeRequest(const char *file, int line, boost::beast::http::verb verb,
-                   const std::string &body, const mtconnect::rest_sink::QueryMap &aQueries,
+                   const std::string &body, const mtconnect::sink::rest_sink::QueryMap &aQueries,
                    const char *path, const char *accepts);
 
   auto getAgent() { return m_agent.get(); }
-  std::shared_ptr<mtconnect::rest_sink::RestService> getRestService()
+  std::shared_ptr<mhttp::RestService> getRestService()
   {
     using namespace mtconnect;
-    using namespace mtconnect::rest_sink;
-    SinkPtr sink = m_agent->findSink("RestService");
-    std::shared_ptr<RestService> rest = std::dynamic_pointer_cast<RestService>(sink);
+    using namespace mtconnect::sink::rest_sink;
+    sink::SinkPtr sink = m_agent->findSink("RestService");
+    std::shared_ptr<mhttp::RestService> rest = std::dynamic_pointer_cast<mhttp::RestService>(sink);
     return rest;
   }
 
@@ -164,7 +166,7 @@ public:
     using namespace mtconnect::pipeline;
     using ptree = boost::property_tree::ptree;
 
-    rest_sink::RestService::registerFactory(m_sinkFactory);
+    sink::rest_sink::RestService::registerFactory(m_sinkFactory);
     adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
     ConfigOptions options {
@@ -182,7 +184,7 @@ public:
     sinkContract->m_pipelineContext = m_context;
     auto sink = m_sinkFactory.make("RestService", "RestService", m_ioContext, move(sinkContract),
                                    options, ptree {});
-    m_restService = std::dynamic_pointer_cast<rest_sink::RestService>(sink);
+    m_restService = std::dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     m_agent->addSink(m_restService);
     m_agent->initialize(m_context);
 
@@ -256,7 +258,7 @@ public:
   mhttp::Server *m_server {nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
-  std::shared_ptr<mtconnect::rest_sink::RestService> m_restService;
+  std::shared_ptr<mtconnect::sink::rest_sink::RestService> m_restService;
   std::shared_ptr<mtconnect::LoopbackSource> m_loopback;
 
   bool m_dispatched {false};
@@ -264,14 +266,14 @@ public:
 
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::stringstream m_out;
-  mtconnect::rest_sink::RequestPtr m_request;
+  mtconnect::sink::rest_sink::RequestPtr m_request;
   boost::asio::io_context m_ioContext;
   boost::asio::io_context::strand m_strand;
   boost::asio::ip::tcp::socket m_socket;
-  mtconnect::rest_sink::Response m_response;
-  std::shared_ptr<mtconnect::rest_sink::TestSession> m_session;
+  mtconnect::sink::rest_sink::Response m_response;
+  std::shared_ptr<mtconnect::sink::rest_sink::TestSession> m_session;
 
-  mtconnect::SinkFactory m_sinkFactory;
+  mtconnect::sink::SinkFactory m_sinkFactory;
   mtconnect::SourceFactory m_sourceFactory;
 };
 

@@ -32,7 +32,7 @@ using namespace std::literals;
 using namespace mtconnect;
 using namespace mtconnect::adapter;
 using namespace mtconnect::observation;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 
 class DataSetTest : public testing::Test
 {
