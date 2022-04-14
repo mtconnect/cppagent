@@ -86,6 +86,20 @@ namespace mtconnect {
     static entity::Requirements s_assetEvent {{"assetType", false}, {"VALUE", false}};
     static entity::Requirements s_event {{"VALUE", false}};
     static entity::Requirements s_dataSet {{"VALUE", entity::DATA_SET, false}};
+    
+    static inline size_t firtNonWsColon(const string &token)
+    {
+      auto len = token.size();
+      for (size_t i = 0; i < len; i++)
+      {
+        if (token[i] == ':')
+          return i;
+        else if (!isspace(token[i]))
+          return string::npos;
+      }
+
+      return string::npos;
+    }
 
     static inline std::string extractResetTrigger(const DataItemPtr dataItem, const string &token,
                                                   Properties &properties)
@@ -93,7 +107,7 @@ namespace mtconnect {
       size_t pos;
       // Check for reset triggered
       if ((dataItem->hasProperty("ResetTrigger") || dataItem->isTable() || dataItem->isDataSet()) &&
-          (pos = token.find(':')) != string::npos)
+          (pos = firtNonWsColon(token)) != string::npos)
       {
         string trig, value;
         if (!dataItem->isDataSet())
@@ -116,7 +130,7 @@ namespace mtconnect {
         return token;
       }
     }
-
+    
     inline ObservationPtr zipProperties(const DataItemPtr dataItem, const Timestamp &timestamp,
                                         const entity::Requirements &reqs,
                                         TokenList::const_iterator &token,
