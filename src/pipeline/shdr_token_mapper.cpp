@@ -110,7 +110,6 @@ namespace mtconnect
       // Check for reset triggered
       if (dataItem->hasResetTrigger() || dataItem->isTable() || dataItem->isDataSet())
       {
-        
         string trig, value;
         if (!dataItem->isDataSet() && (pos = token.find(':')) != string::npos)
         {
