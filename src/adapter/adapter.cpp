@@ -52,6 +52,10 @@ namespace mtconnect
       if (timeout != options.end())
         m_legacyTimeout = get<Seconds>(timeout->second);
 
+      auto reconnectTimer = options.find(configuration::ReconnectInterval);
+      if (reconnectTimer != options.end())
+        m_reconnectInterval = get<Milliseconds>(reconnectTimer->second);
+
       stringstream url;
       url << "shdr://" << server << ':' << port;
       m_url = url.str();
@@ -186,7 +190,7 @@ namespace mtconnect
         if (!m_running)
           break;
 
-        // Try to reconnect every 10 seconds
+        // Try to reconnect every reconnectInterval period.
         g_logger << LINFO << "Will try to reconnect in " << m_reconnectInterval.count()
                  << " milliseconds";
         this_thread::sleep_for(m_reconnectInterval);
