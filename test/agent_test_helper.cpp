@@ -25,18 +25,19 @@
 
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "rest_sink/server.hpp"
+#include "sink/rest_sink/server.hpp"
 
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 namespace beast = boost::beast;
 namespace http = beast::http;
 
 void AgentTestHelper::makeRequest(const char *file, int line, boost::beast::http::verb verb,
                                   const std::string &body,
-                                  const mtconnect::rest_sink::QueryMap &aQueries, const char *path,
+                                  const mtconnect::sink::rest_sink::QueryMap &aQueries,
+                                  const char *path,
                                   const char *accepts)
 {
   m_request = make_shared<Request>();

@@ -34,7 +34,7 @@
 #include "json_helper.hpp"
 #include "json_printer.hpp"
 #include "observation/observation.hpp"
-#include "rest_sink/checkpoint.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
 #include "xml_parser.hpp"
@@ -323,8 +323,8 @@ TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
 
 TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
 {
-  auto server = std::make_unique<rest_sink::Server>(m_agentTestHelper->m_ioContext);
-  auto cache = std::make_unique<rest_sink::FileCache>();
+  auto server = std::make_unique<sink::rest_sink::Server>(m_agentTestHelper->m_ioContext);
+  auto cache = std::make_unique<sink::rest_sink::FileCache>();
 
   m_agentTestHelper->createAgent("/samples/relationship_test.xml", 8, 4, "1.7", 25);
   auto printer = m_agentTestHelper->m_agent->getPrinter("json");

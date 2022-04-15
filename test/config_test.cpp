@@ -27,7 +27,7 @@
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
-#include "rest_sink/rest_service.hpp"
+#include "sink/rest_sink/rest_service.hpp"
 #include "xml_printer.hpp"
 
 #ifdef _WIN32
@@ -83,7 +83,7 @@ namespace {
     ASSERT_TRUE(agent);
     const auto sink = agent->findSink("RestService");
     ASSERT_TRUE(sink);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     ASSERT_TRUE(rest);
     ASSERT_EQ(16U, rest->getBufferSize());
   }
@@ -186,7 +186,7 @@ namespace {
     ASSERT_TRUE(agent);
     const auto sink = agent->findSink("RestService");
     ASSERT_TRUE(sink);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
 
     ASSERT_TRUE(rest->getServer()->arePutsAllowed());
   }
@@ -202,7 +202,7 @@ namespace {
     ASSERT_TRUE(agent);
     const auto sink = agent->findSink("RestService");
     ASSERT_TRUE(sink);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     ASSERT_TRUE(rest);
 
     ASSERT_TRUE(rest->getServer()->arePutsAllowed());
@@ -220,7 +220,7 @@ namespace {
     ASSERT_TRUE(agent);
     const auto sink = agent->findSink("RestService");
     ASSERT_TRUE(sink);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     ASSERT_TRUE(rest);
 
     ASSERT_TRUE(rest->getServer()->arePutsAllowed());
@@ -455,7 +455,7 @@ namespace {
     ASSERT_TRUE(agent);
     const auto sink = agent->findSink("RestService");
     ASSERT_TRUE(sink);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     ASSERT_TRUE(rest);
     const auto server = rest->getServer();
 
@@ -674,7 +674,7 @@ MaxCachedFileSize = 2000
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();
@@ -694,7 +694,7 @@ MaxCachedFileSize = 2k
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();
@@ -714,7 +714,7 @@ MaxCachedFileSize = 2K
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();
@@ -734,7 +734,7 @@ MaxCachedFileSize = 2m
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();
@@ -754,7 +754,7 @@ MaxCachedFileSize = 2g
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();

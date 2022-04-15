@@ -44,7 +44,7 @@
 #include "json_helper.hpp"
 #include "json_printer.hpp"
 #include "observation/observation.hpp"
-#include "rest_sink/checkpoint.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
 #include "xml_parser.hpp"
@@ -53,7 +53,7 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 using namespace mtconnect::asset;
 
 class JsonPrinterAssetTest : public testing::Test

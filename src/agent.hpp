@@ -36,10 +36,11 @@
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
-#include "rest_sink/checkpoint.hpp"
-#include "rest_sink/circular_buffer.hpp"
-#include "rest_sink/server.hpp"
-#include "sink.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
+#include "sink/rest_sink/circular_buffer.hpp"
+#include "sink/rest_sink/server.hpp"
+#include "sink/rest_sink/rest_service.hpp"
+#include "sink/sink.hpp"
 #include "source.hpp"
 #include "xml_parser.hpp"
 
@@ -47,6 +48,11 @@ namespace mtconnect {
   namespace adapter {
     class Adapter;
   }
+
+  namespace sink {
+    class Sink;
+  }
+
   namespace device_model {
     namespace data_item {
       class DataItem;
@@ -80,12 +86,12 @@ namespace mtconnect {
     auto getPipelineContext() { return m_pipelineContext; }
 
     // Sink Contract
-    SinkContractPtr makeSinkContract();
+    sink::SinkContractPtr makeSinkContract();
     const auto &getXmlParser() const { return m_xmlParser; }
 
     // Add an adapter to the agent
     void addSource(SourcePtr adapter, bool start = false);
-    void addSink(SinkPtr sink, bool start = false);
+    void addSink(sink::SinkPtr sink, bool start = false);
 
     // Source and Sink
     SourcePtr findSource(const std::string &name) const
@@ -97,7 +103,7 @@ namespace mtconnect {
       return nullptr;
     }
 
-    SinkPtr findSink(const std::string &name) const
+    sink::SinkPtr findSink(const std::string &name) const
     {
       for (auto &s : m_sinks)
         if (s->getName() == name)
@@ -224,7 +230,7 @@ namespace mtconnect {
 
     // Sources and Sinks
     SourceList m_sources;
-    SinkList m_sinks;
+    sink::SinkList m_sinks;
 
     // Pipeline
     pipeline::PipelineContextPtr m_pipelineContext;
@@ -295,7 +301,7 @@ namespace mtconnect {
     return std::make_unique<AgentPipelineContract>(this);
   }
 
-  class AgentSinkContract : public SinkContract
+  class AgentSinkContract : public sink::SinkContract
   {
   public:
     AgentSinkContract(Agent *agent) : m_agent(agent) {}
@@ -339,8 +345,10 @@ namespace mtconnect {
     Agent *m_agent;
   };
 
-  inline SinkContractPtr Agent::makeSinkContract()
+  inline sink::SinkContractPtr Agent::makeSinkContract()
   {
     return std::make_unique<AgentSinkContract>(this);
   }
 }  // namespace mtconnect
+
+

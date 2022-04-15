@@ -56,7 +56,6 @@ namespace mtconnect {
 
     // Deliver
     next->bind(make_shared<DeliverObservation>(m_context));
-
     applySplices();
   }
 
