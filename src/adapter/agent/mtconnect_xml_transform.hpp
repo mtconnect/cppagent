@@ -57,12 +57,11 @@ namespace mtconnect::adapter::agent {
         next(entity);
       }
       
-      for (auto &entity : rd.m_assetEvents)
+      if (!rd.m_assetEvents.empty() && m_handler && m_handler->m_assetUpdated)
       {
-        if (m_handler && m_handler->m_assetUpdated)
-          m_handler->m_assetUpdated(entity);
+        m_handler->m_assetUpdated(rd.m_assetEvents);
       }
-      
+
       return std::make_shared<Entity>("Entities", Properties {{"VALUE", rd.m_entities}});
     }
 

@@ -64,8 +64,8 @@ namespace mtconnect::adapter::agent {
   protected:
     void current();
     bool sample();
-    bool assets();
-    bool asset(boost::beast::error_code ec, const ResponseDocument &doc);
+    void assets();
+    void assetUpdated(const entity::EntityList &entity);
 
 
   protected:

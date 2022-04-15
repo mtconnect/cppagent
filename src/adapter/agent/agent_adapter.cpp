@@ -106,7 +106,12 @@ namespace mtconnect::adapter::agent {
 
     m_session->m_handler = m_handler.get();
     m_session->m_identity = m_identity;
+    
+    m_handler->m_assetUpdated = [this](const EntityList &updated) {
+      assetUpdated(updated);
+    };
 
+    assets();
     current();
 
     return true;
@@ -137,6 +142,23 @@ namespace mtconnect::adapter::agent {
   {
     m_session->stop();
     m_session.reset();
+  }
+  
+  void AgentAdapter::assets()
+  {
+    UrlQuery query({{"count", "1048576"}});
+    m_assetSession->makeRequest("assets", query, true, nullptr);
+  }
+  
+  void AgentAdapter::assetUpdated(const EntityList &entities)
+  {
+    std::vector<string> idList;
+    std::transform(entities.begin(), entities.end(), back_inserter(idList), [](const EntityPtr entity) {
+      return entity->getValue<string>();
+    });
+    string ids = boost::join(idList, ";");
+    
+    m_assetSession->makeRequest("assets/" + ids, UrlQuery(), false, nullptr);
   }
 
 }  // namespace mtconnect::adapter::agent

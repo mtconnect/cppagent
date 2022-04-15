@@ -45,6 +45,20 @@ namespace mtconnect::adapter::agent {
   template <class Derived>
   class SessionImpl : public Session
   {
+    struct Request
+    {
+      Request(const std::string &suffix, const UrlQuery &query, bool stream,
+              Next next)
+      : m_suffix(suffix), m_query(query), m_stream(stream), m_next(next) {}
+      
+      std::string m_suffix;
+      UrlQuery m_query;
+      bool m_stream;
+      Next m_next;
+    };
+    
+    using RequestQueue = std::list<Request>;
+    
   public:
     Derived &derived() { return static_cast<Derived &>(*this); }
     const Derived &derived() const { return static_cast<const Derived &>(*this); }
@@ -124,33 +138,43 @@ namespace mtconnect::adapter::agent {
     bool makeRequest(const std::string &suffix, const UrlQuery &query, bool stream,
                      Next next) override
     {
-      m_next = next;
-      m_target = m_url.m_path + suffix;
-      auto uq = m_url.m_query;
-      if (!query.empty())
-        uq.merge(query);
-      if (!uq.empty())
-        m_target += ("?" + uq.join());
-      m_streaming = stream;
-      m_buffer.clear();
-      m_contentType.clear();
-      m_boundary.clear();
-      m_hasHeader = false;
-      if (m_chunk.size() > 0)
-        m_chunk.consume(m_chunk.size());
-      
-      // Check if we are discussected.
-      if (!derived().lowestLayer().socket().is_open())
+      if (m_idle)
       {
-        // Try to reconnect executiong the request on successful
-        // connection. ÷
-        connect();
-        return false;
+        m_idle = false;
+
+        m_next = next;
+        m_target = m_url.m_path + suffix;
+        auto uq = m_url.m_query;
+        if (!query.empty())
+          uq.merge(query);
+        if (!uq.empty())
+          m_target += ("?" + uq.join());
+        m_streaming = stream;
+        m_buffer.clear();
+        m_contentType.clear();
+        m_boundary.clear();
+        m_hasHeader = false;
+        if (m_chunk.size() > 0)
+          m_chunk.consume(m_chunk.size());
+        
+        // Check if we are discussected.
+        if (!derived().lowestLayer().socket().is_open())
+        {
+          // Try to reconnect executiong the request on successful
+          // connection. ÷
+          connect();
+          return false;
+        }
+        else
+        {
+          request();
+          return true;
+        }
       }
       else
       {
-        request();
-        return true;
+        m_queue.emplace_back(suffix, query, stream, next);
+        return false;
       }
     }
 
@@ -375,6 +399,16 @@ namespace mtconnect::adapter::agent {
       
       if (m_next)
         m_next();
+      else if (!m_queue.empty())
+      {
+        Request req = m_queue.front();
+        m_queue.pop_front();
+        makeRequest(req.m_suffix, req.m_query, req.m_stream, req.m_next);
+      }
+      else
+      {
+        m_idle = true;
+      }
     }
 
   protected:
@@ -401,6 +435,10 @@ namespace mtconnect::adapter::agent {
     size_t m_chunkLength;
     bool m_hasHeader;
     boost::asio::streambuf m_chunk;
+  
+    // For request queuing
+    RequestQueue m_queue;
+    bool m_idle = true;
 
     std::string m_target;
     Next m_next;
