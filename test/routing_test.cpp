@@ -9,12 +9,12 @@
 #include <sstream>
 #include <string>
 
-#include "rest_sink/response.hpp"
-#include "rest_sink/routing.hpp"
+#include "sink/rest_sink/response.hpp"
+#include "sink/rest_sink/routing.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 using verb = boost::beast::http::verb;
 
 class RoutingTest : public testing::Test

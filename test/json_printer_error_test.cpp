@@ -32,7 +32,7 @@
 #include "json_helper.hpp"
 #include "json_printer.hpp"
 #include "observation/observation.hpp"
-#include "rest_sink/checkpoint.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
 using namespace std;

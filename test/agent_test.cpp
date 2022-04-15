@@ -42,7 +42,7 @@ typedef __int64 int64_t;
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 using namespace mtconnect::adapter;
 using namespace mtconnect::observation;
 

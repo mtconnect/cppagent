@@ -19,7 +19,7 @@
 
 #include "agent.hpp"
 #include "ruby_smart_ptr.hpp"
-#include "sink.hpp"
+#include "sink/sink.hpp"
 #include "source.hpp"
 
 namespace mtconnect::ruby {
@@ -93,7 +93,7 @@ namespace mtconnect::ruby {
 
             for (auto &sink : agent->getSinks())
             {
-              auto obj = MRubySharedPtr<Sink>::wrap(mrb, "Sink", sink);
+              auto obj = MRubySharedPtr<sink::Sink>::wrap(mrb, "Sink", sink);
               mrb_ary_push(mrb, sinks, obj);
             }
 

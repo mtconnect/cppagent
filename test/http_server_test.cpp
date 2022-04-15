@@ -33,11 +33,11 @@
 #include <string>
 
 #include "logging.hpp"
-#include "rest_sink/server.hpp"
+#include "sink/rest_sink/server.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::rest_sink;
+using namespace mtconnect::sink::rest_sink;
 
 namespace asio = boost::asio;
 namespace beast = boost::beast;
