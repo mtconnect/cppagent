@@ -38,6 +38,8 @@ namespace mtconnect {
     class Pipeline
     {
     public:
+      using Splice = std::function<void(Pipeline *)>;
+      
       Pipeline(PipelineContextPtr context, boost::asio::io_context::strand &st)
         : m_start(std::make_shared<Start>()), m_context(context), m_strand(st)
       {}
@@ -45,12 +47,23 @@ namespace mtconnect {
       virtual void build(const ConfigOptions &options) = 0;
       bool started() const { return m_started; }
       boost::asio::io_context::strand &getStrand() { return m_strand; }
+      
+      void applySplices()
+      {
+        for (auto &splice : m_splices)
+        {
+          splice(this);
+        }
+      }
+      
       void clear()
       {
         m_start->stop();
         m_started = false;
+        m_start->clear();
         m_start = std::make_shared<Start>();
       }
+      
       virtual void start()
       {
         if (m_start)
@@ -59,74 +72,118 @@ namespace mtconnect {
           m_started = true;
         }
       }
-      bool spliceBefore(const std::string &target, TransformPtr transform)
+      
+      bool spliceBefore(const std::string &target, TransformPtr transform,
+                        bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
-
+        
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.first->spliceBefore(pair.second, transform);
         }
+        
+        if (!reapplied)
+        {
+          m_splices.emplace_back([target, transform](Pipeline *pipe) {
+            pipe->spliceBefore(target, transform, true);
+          });
+        }
 
         return true;
       }
-      bool spliceAfter(const std::string &target, TransformPtr transform)
+      bool spliceAfter(const std::string &target, TransformPtr transform,
+                       bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
 
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.second->spliceAfter(transform);
         }
+        
+        if (!reapplied)
+        {
+          m_splices.emplace_back([target, transform](Pipeline *pipe) {
+            pipe->spliceAfter(target, transform, true);
+          });
+        }
 
         return true;
       }
-      bool firstAfter(const std::string &target, TransformPtr transform)
+      bool firstAfter(const std::string &target, TransformPtr transform,
+                      bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
-
+        
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.second->firstAfter(transform);
         }
-
+        
+        if (!reapplied)
+        {
+          m_splices.emplace_back([target, transform](Pipeline *pipe) {
+            pipe->firstAfter(target, transform, true);
+          });
+        }
         return true;
       }
-      bool lastAfter(const std::string &target, TransformPtr transform)
+      bool lastAfter(const std::string &target, TransformPtr transform,
+                     bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
 
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.second->bind(transform);
         }
-
+        
+        if (!reapplied)
+        {
+          m_splices.emplace_back([target, transform](Pipeline *pipe) {
+            pipe->lastAfter(target, transform, true);
+          });
+        }
         return true;
       }
-      bool replace(const std::string &target, TransformPtr transform)
+      bool replace(const std::string &target, TransformPtr transform,
+                   bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
         m_start->find(target, xforms);
         if (xforms.empty())
           return false;
 
+        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.first->replace(pair.second, transform);
         }
-
+        
+        if (!reapplied)
+        {
+          m_splices.emplace_back([target, transform](Pipeline *pipe) {
+            pipe->replace(target, transform, true);
+          });
+        }
+        
         return true;
       }
 
@@ -141,6 +198,10 @@ namespace mtconnect {
         {
           pair.first->remove(pair.second);
         }
+        
+        m_splices.emplace_back([target](Pipeline *pipe) {
+          pipe->remove(target);
+        });
 
         return true;
       }
@@ -178,6 +239,7 @@ namespace mtconnect {
       TransformPtr m_start;
       PipelineContextPtr m_context;
       boost::asio::io_context::strand m_strand;
+      std::list<Splice> m_splices;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

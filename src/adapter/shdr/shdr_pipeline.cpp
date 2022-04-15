@@ -72,6 +72,8 @@ namespace mtconnect {
 
         // Handle the observations and send to nowhere
         buildObservationDelivery(next);
+        
+        applySplices();
       }
     }  // namespace shdr
   }    // namespace adapter

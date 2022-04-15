@@ -65,7 +65,7 @@ namespace mtconnect::ruby {
             mrb_value gv, block = mrb_nil_value();
             string guard;
 
-            auto c = mrb_get_args(mrb, "zo&", &name, &gv, &block);
+            auto c = mrb_get_args(mrb, "z|o&", &name, &gv, &block);
             if (c == 1)
               guard = "Entity";
             else
@@ -73,7 +73,10 @@ namespace mtconnect::ruby {
 
             auto trans = make_shared<RubyTransform>(mrb, self, name, guard);
             if (mrb_block_given_p(mrb))
+            {
               trans->m_block = block;
+              mrb_gc_register(mrb, block);
+            }
             MRubySharedPtr<Transform>::replace(mrb, self, trans);
 
             return self;
@@ -104,9 +107,12 @@ namespace mtconnect::ruby {
             }
 
             if (mrb_block_given_p(mrb))
+            {
               trans->m_guardBlock = block;
+              mrb_gc_register(mrb, block);
+            }
             trans->setGuard();
-
+            
             return self;
           },
           MRB_ARGS_OPT(1) | MRB_ARGS_BLOCK());
@@ -122,7 +128,26 @@ namespace mtconnect::ruby {
     {
       setGuard();
     }
+    
+    ~RubyTransform()
+    {
+      std::lock_guard guard(RubyVM::rubyVM());
 
+      if (RubyVM::hasVM())
+      {
+        auto mrb = RubyVM::rubyVM().state();
+        
+        mrb_gc_unregister(mrb, m_self);
+        m_self = mrb_nil_value();
+        if (!mrb_nil_p(m_block))
+          mrb_gc_unregister(mrb, m_block);
+        if (!mrb_nil_p(m_guardBlock))
+          mrb_gc_unregister(mrb, m_guardBlock);
+        m_block = mrb_nil_value();
+        m_guardBlock = mrb_nil_value();
+      }
+    }
+    
     void setMethod(mrb_sym sym) { m_method = sym; }
 
     void setGuard()
@@ -133,6 +158,8 @@ namespace mtconnect::ruby {
         m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Entity>(SKIP);
       else if (m_guardString == "Event")
         m_guard = TypeGuard<Event>(RUN) || TypeGuard<Entity>(SKIP);
+      else if (m_guardString == "Tokens")
+        m_guard = TypeGuard<pipeline::Tokens>(RUN) || TypeGuard<Entity>(SKIP);
       else if (m_guardString == "Message")
         m_guard = TypeGuard<PipelineMessage>(RUN) || TypeGuard<Entity>(SKIP);
       else
@@ -144,8 +171,17 @@ namespace mtconnect::ruby {
           using namespace entity;
           using namespace observation;
           std::lock_guard guard(RubyVM::rubyVM());
+          
+          if (!RubyVM::hasVM())
+          {
+            LOG(error) << "No Ruby VM in guard callback";
+            throw std::runtime_error("No ruby VM");
+          }
+
 
           auto mrb = RubyVM::rubyVM().state();
+          int save = mrb_gc_arena_save(mrb);
+
           mrb_value ev = MRubySharedPtr<Entity>::wrap(mrb, "Entity", entity);
 
           mrb_bool state = false;
@@ -160,12 +196,14 @@ namespace mtconnect::ruby {
                 return mrb_yield(mrb, block, ev);
               },
               data, &state);
-
+          
           if (state)
           {
             LOG(error) << "Error in guard: " << mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
             rv = mrb_nil_value();
           }
+
+          mrb_gc_arena_restore(mrb, save);
           if (!mrb_nil_p(rv))
           {
             return GuardAction(mrb_fixnum(rv));
@@ -182,18 +220,34 @@ namespace mtconnect::ruby {
 
     const entity::EntityPtr operator()(const entity::EntityPtr entity) override
     {
+      NAMED_SCOPE("RubyTransform::operator()");
+      
       using namespace entity;
       using namespace observation;
+      
+      EntityPtr res;
+      
       std::lock_guard guard(RubyVM::rubyVM());
+      if (!RubyVM::hasVM())
+      {
+        LOG(error) << "No Ruby VM in guard callback";
+        throw std::runtime_error("No ruby VM");
+      }
+      
+      auto mrb = RubyVM::rubyVM().state();
+      int save = mrb_gc_arena_save(mrb);
 
       try
       {
-        auto mrb = RubyVM::rubyVM().state();
-
         mrb_value ev;
         const char *klass = "Entity";
-        if (dynamic_cast<Observation *>(entity.get()) != nullptr)
+        Entity *ptr = entity.get();
+        if (dynamic_cast<Observation *>(ptr) != nullptr)
           klass = "Observation";
+        else if (dynamic_cast<pipeline::Timestamped *>(ptr) != nullptr)
+          klass = "Timestamped";
+        else if (dynamic_cast<pipeline::Tokens *>(ptr) != nullptr)
+          klass = "Tokens";
 
         ev = MRubySharedPtr<Entity>::wrap(mrb, klass, entity);
         mrb_value rv;
@@ -233,10 +287,8 @@ namespace mtconnect::ruby {
           rv = mrb_nil_value();
         }
 
-        EntityPtr res;
         if (!mrb_nil_p(rv))
           res = MRubySharedPtr<Entity>::unwrap(rv);
-        return res;
       }
       catch (std::exception e)
       {
@@ -247,7 +299,8 @@ namespace mtconnect::ruby {
         LOG(error) << "Unknown Exception thrown in transform";
       }
 
-      return nullptr;
+      mrb_gc_arena_restore(mrb, save);
+      return res;
     }
 
     auto &object() { return m_self; }

@@ -26,6 +26,8 @@
 #include "device_model/device.hpp"
 #include "entity/data_set.hpp"
 #include "entity/entity.hpp"
+#include "pipeline/shdr_tokenizer.hpp"
+#include "pipeline/timestamp_extractor.hpp"
 #include "ruby_smart_ptr.hpp"
 #include "ruby_type.hpp"
 
@@ -465,6 +467,18 @@ namespace mtconnect::ruby {
           },
           MRB_ARGS_NONE());
 
+      mrb_define_method(
+          mrb, componentClass, "uuid",
+          [](mrb_state *mrb, mrb_value self) {
+            auto comp = MRubySharedPtr<Entity>::unwrap<Component>(mrb, self);
+            auto &uuid = comp->getUuid();
+            if (uuid)
+              return mrb_str_new_cstr(mrb, uuid->c_str());
+            else
+              return mrb_nil_value();
+          },
+          MRB_ARGS_NONE());
+
       auto deviceClass = mrb_define_class_under(mrb, module, "Device", componentClass);
       MRB_SET_INSTANCE_TT(deviceClass, MRB_TT_DATA);
 
@@ -473,10 +487,13 @@ namespace mtconnect::ruby {
           [](mrb_state *mrb, mrb_value self) {
             auto dev = MRubySharedPtr<Entity>::unwrap<Device>(mrb, self);
             const char *name;
-            mrb_get_args(mrb, "s", &name);
+            mrb_get_args(mrb, "z", &name);
 
             auto di = dev->getDeviceDataItem(name);
-            return MRubySharedPtr<Entity>::wrap(mrb, "DataItem", di);
+            if (di)
+              return MRubySharedPtr<Entity>::wrap(mrb, "DataItem", di);
+            else
+              return mrb_nil_value();
           },
           MRB_ARGS_REQ(1));
 
@@ -521,6 +538,91 @@ namespace mtconnect::ruby {
             return mrb_str_new_cstr(mrb, di->getSubType().c_str());
           },
           MRB_ARGS_NONE());
+
+      auto tokensClass = mrb_define_class_under(mrb, module, "Tokens", entityClass);
+      MRB_SET_INSTANCE_TT(tokensClass, MRB_TT_DATA);
+      mrb_define_method(
+          mrb, tokensClass, "tokens",
+          [](mrb_state *mrb, mrb_value self) {
+            auto tokens = MRubySharedPtr<Entity>::unwrap<pipeline::Tokens>(mrb, self);
+
+            mrb_value ary = mrb_ary_new(mrb);
+            for (auto &token : tokens->m_tokens)
+            {
+              mrb_ary_push(mrb, ary, mrb_str_new_cstr(mrb, token.c_str()));
+            }
+            return ary;
+          },
+          MRB_ARGS_NONE());
+
+      mrb_define_method(
+          mrb, tokensClass, "tokens=",
+          [](mrb_state *mrb, mrb_value self) {
+            auto tokens = MRubySharedPtr<Entity>::unwrap<pipeline::Tokens>(mrb, self);
+            mrb_value ary;
+            mrb_get_args(mrb, "A", &ary);
+            if (mrb_array_p(ary))
+            {
+              tokens->m_tokens.clear();
+              auto aryp = mrb_ary_ptr(ary);
+              for (int i = 0; i < ARY_LEN(aryp); i++)
+              {
+                auto item = ARY_PTR(aryp)[i];
+                tokens->m_tokens.push_back(stringFromRuby(mrb, item));
+              }
+            }
+            return ary;
+          },
+          MRB_ARGS_REQ(1));
+
+      auto timestampedClass = mrb_define_class_under(mrb, module, "Timestamped", tokensClass);
+      MRB_SET_INSTANCE_TT(timestampedClass, MRB_TT_DATA);
+
+      mrb_define_method(
+          mrb, tokensClass, "timestamp",
+          [](mrb_state *mrb, mrb_value self) {
+            auto ts = MRubySharedPtr<Entity>::unwrap<pipeline::Timestamped>(mrb, self);
+
+            return toRuby(mrb, ts->m_timestamp);
+          },
+          MRB_ARGS_NONE());
+
+      mrb_define_method(
+          mrb, tokensClass, "timestamp=",
+          [](mrb_state *mrb, mrb_value self) {
+            auto ts = MRubySharedPtr<Entity>::unwrap<pipeline::Timestamped>(mrb, self);
+            mrb_value val;
+            mrb_get_args(mrb, "o", &val);
+
+            ts->m_timestamp = timestampFromRuby(mrb, val);
+
+            return val;
+          },
+          MRB_ARGS_REQ(1));
+
+      mrb_define_method(
+          mrb, tokensClass, "duration",
+          [](mrb_state *mrb, mrb_value self) {
+            auto ts = MRubySharedPtr<Entity>::unwrap<pipeline::Timestamped>(mrb, self);
+            if (ts->m_duration)
+              return mrb_float_value(mrb, *(ts->m_duration));
+            else
+              return mrb_nil_value();
+          },
+          MRB_ARGS_NONE());
+
+      mrb_define_method(
+          mrb, tokensClass, "duration=",
+          [](mrb_state *mrb, mrb_value self) {
+            auto ts = MRubySharedPtr<Entity>::unwrap<pipeline::Timestamped>(mrb, self);
+            mrb_float val;
+            mrb_get_args(mrb, "f", &val);
+
+            ts->m_duration = val;
+
+            return mrb_float_value(mrb, val);
+          },
+          MRB_ARGS_REQ(1));
     }
   };
 }  // namespace mtconnect::ruby
