@@ -106,23 +106,29 @@ namespace mtconnect {
     {
       size_t pos;
       // Check for reset triggered
-      if ((dataItem->hasProperty("ResetTrigger") || dataItem->isTable() || dataItem->isDataSet()) &&
-          (pos = firtNonWsColon(token)) != string::npos)
+      auto hasResetTriggered = dataItem->hasProperty("ResetTrigger");
+      if (hasResetTriggered || dataItem->isTable() || dataItem->isDataSet())
       {
         string trig, value;
-        if (!dataItem->isDataSet())
+        if (!dataItem->isDataSet() && (pos = token.find(':')) != string::npos)
         {
           trig = token.substr(pos + 1);
           value = token.substr(0, pos);
         }
-        else
+        else if (dataItem->isDataSet() && (pos = firtNonWsColon(token)) != string::npos)
         {
           auto ef = token.find_first_of(" \t", pos);
           trig = token.substr(1, ef - 1);
           if (ef != string::npos)
             value = token.substr(ef + 1);
         }
-        properties.insert_or_assign("resetTriggered", upcase(trig));
+        else
+        {
+          return token;
+        }
+        
+        if (!trig.empty())
+          properties.insert_or_assign("resetTriggered", upcase(trig));
         return value;
       }
       else
