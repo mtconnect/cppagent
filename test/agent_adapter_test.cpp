@@ -138,7 +138,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
-  unique_ptr<adapter::Handler> handler = make_unique<AgentHandler>();
+  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
 
   bool connecting = false;
   bool connected = false;
@@ -147,8 +147,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   handler->m_connecting = [&](const string id) { connecting = true; };
   handler->m_connected = [&](const string id) { connected = true; };
 
-  agent::AgentHandler *ah = static_cast<agent::AgentHandler *>(handler.get());
-  ah->m_processResponseDocument = [&](const ResponseDocument &d, const string &s) { data = d; };
+  ///ah->m_processResponseDocument = [&](const ResponseDocument &d, const string &s) { data = d; };
 
   adapter->setHandler(handler);
   adapter->start();
@@ -171,5 +170,5 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
     m_agentTestHelper->m_ioContext.run_one_for(100ms);
   }
 
-  ASSERT_FALSE(data.m_properties.empty());
+  ASSERT_FALSE(data.m_entities.empty());
 }

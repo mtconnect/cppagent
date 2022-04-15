@@ -272,15 +272,11 @@ namespace mtconnect::adapter::agent {
     }
     
     void parseAndDeliverDocument(const std::string_view &buf, ResponseDocument &rd)
-    {
-      ResponseDocument::parse(buf, rd);
-      
-      if (!rd.m_properties.empty())
+    {      
+      if (!rd.m_entities.empty())
       {
         if (m_handler && m_handler->m_processData)
           m_handler->m_processData(string(buf), m_identity);
-        if (m_handler && m_handler->m_processResponseDocument)
-          m_handler->m_processResponseDocument(rd, m_identity);
       }
     }
     
@@ -372,14 +368,13 @@ namespace mtconnect::adapter::agent {
 
       if (!derived().lowestLayer().socket().is_open())
         derived().disconnect();
-
       
-      ResponseDocument doc;
-      auto &body = m_res.body();
-      parseAndDeliverDocument(body, doc);
-
+      string body = m_res.body();
+      if (m_handler && m_handler->m_processData)
+        m_handler->m_processData(body, m_identity);
+      
       if (m_next)
-        m_next(ec, doc);
+        m_next();
     }
 
   protected:

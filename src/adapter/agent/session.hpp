@@ -31,7 +31,7 @@ namespace mtconnect::adapter::agent {
   class Session : public std::enable_shared_from_this<Session>
   {
   public:
-    using Next = std::function<bool(boost::beast::error_code ec, const ResponseDocument &doc)>;
+    using Next = std::function<bool()>;
 
     virtual ~Session() {}
     virtual void connect() = 0;
@@ -41,7 +41,7 @@ namespace mtconnect::adapter::agent {
     virtual bool makeRequest(const std::string &suffix, const UrlQuery &query, bool stream,
                              Next next) = 0;
 
-    AgentHandler *m_handler = nullptr;
+    Handler *m_handler = nullptr;
     std::string m_identity;
   };
 

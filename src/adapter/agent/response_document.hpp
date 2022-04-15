@@ -20,21 +20,28 @@
 #include "xml_helper.hpp"
 #include "utilities.hpp"
 #include "entity/entity.hpp"
+#include "pipeline/pipeline_context.hpp"
 
 namespace mtconnect::adapter::agent {
   using namespace mtconnect;
   using namespace adapter;
   
+  struct NextSequence : public pipeline::TransformState
+  {
+    SequenceNumber_t m_next;
+  };
   
 
   struct ResponseDocument
   {
     static bool parse(const std::string_view &content,
-                      ResponseDocument &doc);
+                      ResponseDocument &doc,
+                      pipeline::PipelineContextPtr context);
 
     // Parsed data
     SequenceNumber_t m_next;
     entity::EntityList m_entities;
+    entity::EntityList m_assetEvents;
   };
   
 

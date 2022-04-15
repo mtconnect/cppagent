@@ -17,10 +17,16 @@
 
 #include "response_document.hpp"
 #include "entity/data_set.hpp"
+#include "entity/xml_parser.hpp"
+#include "asset/asset.hpp"
+#include "device_model/device.hpp"
+#include "observation/observation.hpp"
+#include "pipeline/timestamp_extractor.hpp"
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+#include <date/date.h>
 
 using namespace std;
 
@@ -175,55 +181,136 @@ namespace mtconnect::adapter::agent {
       return true;
     });
   }
+  
+  inline static Timestamp parseTimestamp(const std::string value)
+  {
+    Timestamp ts;
+    istringstream in(value);
+    in >> std::setw(6) >> date::parse("%FT%T", ts);
+    if (!in.good())
+    {
+      LOG(error) << "Cound not parse XML timestamp: " << value;
+      ts = std::chrono::system_clock::now();
+    }
+
+    return ts;
+  }
+  
+  inline static DataItemPtr findDataItem(const std::string &name,
+                                         DevicePtr device,
+                                         const entity::Properties &properties)
+  {
+    auto id = properties.find("dataItemId");
+    if (id == properties.end())
+    {
+      const string &uuid = *(device->getUuid());
+      LOG(error) << "Device: " << uuid << ": Cannot find dataItemId for " << name;
+      return nullptr;
+    }
       
-  inline static bool parseDataItems(ResponseDocument &out, xmlNodePtr node)
+    auto di = device->getDeviceDataItem(get<std::string>(id->second));
+    if (!di)
+    {
+      auto diName = properties.find("name");
+      if (diName == properties.end())
+      {
+        const string &uuid = *(device->getUuid());
+        LOG(error) << "Device: " << uuid << ": Cannot data item for id and no name:" << get<std::string>(id->second);
+        return nullptr;
+      }
+      auto di = device->getDeviceDataItem(get<std::string>(diName->second));
+      if (!di)
+      {
+        const string &uuid = *(device->getUuid());
+        LOG(error) << "Device: " << uuid << ": Cannot data item for id " << get<std::string>(id->second) << " or name:" << get<std::string>(diName->second);
+        return nullptr;
+      }
+    }
+
+    return di;
+  }
+      
+  inline static bool parseDataItems(ResponseDocument &out, xmlNodePtr node,
+                                    pipeline::PipelineContextPtr context)
   {
     auto streams = findChild(node, "Streams");
     if (streams == nullptr)
       return false;
     
-    eachElement(streams, "DeviceStream", [&out](xmlNodePtr dev) {
+    auto contract = context->m_contract.get();
+    
+    eachElement(streams, "DeviceStream", [&out, &contract](xmlNodePtr dev) {
       auto uuid = attributeValue(dev, "uuid");
-      eachElement(dev, "ComponentStream", [&out, &uuid](xmlNodePtr comp) {
-        eachElement(comp, [&out, &uuid](xmlNodePtr org){
-          eachElement(org, [&out, &uuid](xmlNodePtr o){
-            EntityPtr entity = make_shared<Entity>("ObservationProperties", Properties {{"deviceUuid", uuid}});
+      auto device = contract->findDevice(uuid);
+      if (!device)
+      {
+        LOG(warning) << "Parsing XML document: cannot find device by uuid: " << uuid << ", skipping device";
+        return true;
+      }
+      
+      eachElement(dev, "ComponentStream", [&out, &device](xmlNodePtr comp) {
+        eachElement(comp, [&out, &device](xmlNodePtr org){
+          eachElement(org, [&out, &device](xmlNodePtr o){
+            Properties properties;
             
-            eachAttribute(o, [entity](xmlAttrPtr attr){
+            eachAttribute(o, [&properties](xmlAttrPtr attr){
               if (xmlStrcmp(BAD_CAST "sequence", attr->name) != 0)
               {
                 string s((const char *)attr->children->content);
-                entity->setProperty((const char*) attr->name, s);
+                properties.insert({(const char*) attr->name, s});
               }
               
               return true;
             });
-              
+            
             // Check for table or data set
             string name((const char*) o->name);
-            auto val = text(o);
-            if (val == "UNAVAILABLE")
+            auto di = findDataItem(name, device, properties);
+            if (!di)
             {
-              entity->setValue(val);
-            }
-            else if (ends_with(name, "Table"))
-            {
-              entity->setValue(DataSet());
-              auto &ds = get<DataSet>(entity->getValue());
-              dataSet(o, true, ds);
-            }
-            else if (ends_with(name, "DataSet"))
-            {
-              entity->setValue(DataSet());
-              auto &ds = get<DataSet>(entity->getValue());
-              dataSet(o, false, ds);
-            }
-            else
-            {
-              entity->setValue(val);
+              return true;
             }
             
-            out.m_entities.emplace_back(entity);
+            auto ts = properties["timestamp"];
+            auto timestamp = parseTimestamp(get<string>(ts));
+
+            auto val = text(o);
+            if (val == "UNAVAILABLE" || (!di->isDataSet() && !di->isAssetRemoved()))
+            {
+              properties.insert({"VALUE", val});
+            }
+            else if (di->isAssetRemoved())
+            {
+              auto ac = make_shared<pipeline::AssetCommand>("AssetCommand", Properties {
+                {"assetId"s, val},
+                {"device"s, *(device->getUuid())}
+              });
+              out.m_entities.emplace_back(ac);
+              return true;
+            }
+            else // isDataSet
+            {
+              Value &v = properties["VALUE"];
+              v.emplace<DataSet>();
+              DataSet &ds = get<DataSet>(v);
+              dataSet(o, di->isTable(), ds);
+            }
+            
+            ErrorList errors;
+            auto obs = observation::Observation::make(di, properties, timestamp, errors);
+            if (!errors.empty())
+            {
+              for (auto &e : errors)
+              {
+                LOG(warning) << "Error while parsing XML: " << e->what();
+              }
+              return true;
+            }
+
+            if (di->isAssetChanged())
+              out.m_assetEvents.emplace_back((obs));
+            else
+              out.m_entities.emplace_back(obs);
             return true;
           });
           return true;
@@ -238,8 +325,39 @@ namespace mtconnect::adapter::agent {
     return true;
   }
   
+  inline static bool parseAssets(ResponseDocument &out, xmlNodePtr node)
+  {
+    using namespace entity;
+    using namespace asset;
+    
+    auto assets = findChild(node, "Assets");
+    if (assets == nullptr)
+      return false;
+    
+    entity::XmlParser parser;
+    eachElement(assets, [&out, &parser](xmlNodePtr n){
+      ErrorList errors;
+      auto res = parser.parseXmlNode(Asset::getRoot(), n, errors);
+      if (!errors.empty())
+      {
+        LOG(warning) << "Could not parse asset: " << (const char*) n->name;
+        for (auto &e : errors)
+        {
+          LOG(warning) << "    Message: " << e->what();
+        }
+      }
+      
+      out.m_entities.emplace_back(res);
+
+      return true;
+    });
+    
+    return true;
+  }
+  
   bool ResponseDocument::parse(const std::string_view &content,
-                               ResponseDocument &out)
+                               ResponseDocument &out,
+                               pipeline::PipelineContextPtr context)
   {
     //xmlInitParser();
     //xmlXPathInit();
@@ -250,19 +368,26 @@ namespace mtconnect::adapter::agent {
     xmlNodePtr root = xmlDocGetRootElement(doc.get());
     if (root != nullptr)
     {
-      if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) != 0)
+      if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) == 0)
       {
+        out.m_next = next(root);
+        if (out.m_next == 0)
+        {
+          LOG(error) << "Cannot find next in header for streams doc";
+          return false;
+        }
+        
+        return parseDataItems(out, root, context);
+      }
+      else if (xmlStrcmp(BAD_CAST "MTConnectAssets", root->name) == 0)
+      {
+        return parseAssets(out, root);
+      }
+      else
+      {
+        LOG(error) << "Unknown document type: " << (const char *) root->name;
         return false;
       }
-      
-      // Get the header
-      out.m_next = next(root);
-      if (out.m_next == 0)
-      {
-        return false;
-      }
-      
-      return parseDataItems(out, root);
     }
     else
     {

@@ -26,22 +26,11 @@ namespace mtconnect::adapter::agent {
   using namespace mtconnect;
   using namespace adapter;
 
-  struct ResponseDocument;
-  struct AgentHandler : public mtconnect::adapter::Handler
-  {
-    using ProcessReponseDoc =
-        std::function<void(const ResponseDocument &data, const std::string &source)>;
-    ProcessReponseDoc m_processResponseDocument;
-  };
-  
   class AgentAdapterPipeline : public AdapterPipeline
   {
   public:
     using AdapterPipeline::AdapterPipeline;
-    
     void build(const ConfigOptions &options) override;
-    
-    std::unique_ptr<AgentHandler> makeAgentHandler();
   };
 
   class AgentAdapter : public Adapter
@@ -72,11 +61,12 @@ namespace mtconnect::adapter::agent {
     void stop() override;
     pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
 
-    AgentHandler *getAgentHandler() { return static_cast<AgentHandler*>(m_handler.get()); }
-
   protected:
     void current();
-    bool sample(boost::beast::error_code ec, const ResponseDocument &doc);
+    bool sample();
+    bool assets();
+    bool asset(boost::beast::error_code ec, const ResponseDocument &doc);
+
 
   protected:
     AgentAdapterPipeline m_pipeline;
@@ -85,6 +75,7 @@ namespace mtconnect::adapter::agent {
     int m_heartbeat;
     std::string m_host;
     std::shared_ptr<Session> m_session;
+    std::shared_ptr<Session> m_assetSession;
   };
 
 }  // namespace mtconnect::adapter::agent

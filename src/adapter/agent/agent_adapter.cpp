@@ -31,25 +31,12 @@
 #include "https_session.hpp"
 #include "logging.hpp"
 #include "session_impl.hpp"
+#include "mtconnect_xml_transform.hpp"
 
 using namespace std;
 using namespace mtconnect;
 
 namespace mtconnect::adapter::agent {
-  std::unique_ptr<AgentHandler> AgentAdapterPipeline::makeAgentHandler()
-  {
-    auto handler = std::make_unique<AgentHandler>();
-    
-    handler->m_processResponseDocument = [this](const ResponseDocument &data, const std::string &id) {
-      for (auto entity : data.m_entities)
-      {
-        run(entity);
-      }
-    };
-    
-    return handler;
-  }
-  
   void AgentAdapterPipeline::build(const ConfigOptions &options)
   {
     
@@ -75,7 +62,7 @@ namespace mtconnect::adapter::agent {
                          {configuration::RealTime, false},
                          {configuration::RelativeTime, false}});
     
-    m_handler = m_pipeline.makeAgentHandler();
+    m_handler = m_pipeline.makeHandler();
     
     auto urlOpt = GetOption<std::string>(m_options, configuration::Url);
     if (urlOpt)
@@ -104,10 +91,12 @@ namespace mtconnect::adapter::agent {
       ssl::context ctx {ssl::context::tlsv12_client};
       ctx.set_verify_mode(ssl::verify_peer);
       m_session = make_shared<HttpsSession>(m_strand, m_url, m_count, m_heartbeat, ctx);
+      m_assetSession = make_shared<HttpsSession>(m_strand, m_url, m_count, m_heartbeat, ctx);
     }
     else if (m_url.m_protocol == "http")
     {
       m_session = make_shared<HttpSession>(m_strand, m_url, m_count, m_heartbeat);
+      m_assetSession = make_shared<HttpSession>(m_strand, m_url, m_count, m_heartbeat);
     }
     else
     {
@@ -115,7 +104,7 @@ namespace mtconnect::adapter::agent {
       return false;
     }
 
-    m_session->m_handler = getAgentHandler();
+    m_session->m_handler = m_handler.get();
     m_session->m_identity = m_identity;
 
     current();
@@ -127,13 +116,15 @@ namespace mtconnect::adapter::agent {
   {
     m_session->makeRequest(
         "current", UrlQuery(), false,
-        [this](beast::error_code ec, const ResponseDocument &doc) { return sample(ec, doc); });
+        [this]() { return sample(); });
   }
 
-  bool AgentAdapter::sample(beast::error_code ec, const ResponseDocument &doc)
+  bool AgentAdapter::sample()
   {
+    auto next = m_pipeline.getContext()->getSharedState<NextSequence>("next");
+
     using namespace boost;
-    UrlQuery query({{"from", lexical_cast<string>(doc.m_next)},
+    UrlQuery query({{"from", lexical_cast<string>(next->m_next)},
                     {"count", lexical_cast<string>(m_count)},
                     {"heartbeat", lexical_cast<string>(m_heartbeat)},
                     {"interval", "500"}});
