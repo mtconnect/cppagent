@@ -32,12 +32,24 @@
 #include "logging.hpp"
 #include "mtconnect_xml_transform.hpp"
 #include "session_impl.hpp"
+#include "pipeline/deliver.hpp"
 
 using namespace std;
 using namespace mtconnect;
 
 namespace mtconnect::adapter::agent {
-  void AgentAdapterPipeline::build(const ConfigOptions &options) {}
+  void AgentAdapterPipeline::build(const ConfigOptions &options)
+  {
+    buildDeviceList();
+    buildCommandAndStatusDelivery();
+    
+    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_handler, m_device));
+    std::optional<string> obsMetrics;
+    obsMetrics = m_identity + "_observation_update_rate";
+    next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
+
+    buildAssetDelivery(next);
+  }
 
   AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
                              const ConfigOptions &options, const boost::property_tree::ptree &block)
@@ -73,15 +85,23 @@ namespace mtconnect::adapter::agent {
       m_url.m_port = GetOption<int>(m_options, configuration::Port);
       m_url.m_path = GetOption<string>(m_options, configuration::Device).value_or("/");
     }
+    
+    if (m_url.m_path[m_url.m_path.size() - 1] != '/')
+      m_url.m_path.append("/");
 
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
+    
+    m_pipeline.m_handler = m_handler.get();
+    m_pipeline.build(m_options);
   }
 
   AgentAdapter::~AgentAdapter() {}
 
   bool AgentAdapter::start()
   {
+    m_pipeline.start();
+    
     if (m_url.m_protocol == "https")
     {
       // The SSL context is required, and holds certificates
@@ -153,7 +173,7 @@ namespace mtconnect::adapter::agent {
                    [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");
 
-    m_assetSession->makeRequest("assets/" + ids, UrlQuery(), false, nullptr);
+    m_assetSession->makeRequest("/assets/" + ids, UrlQuery(), false, nullptr);
   }
 
 }  // namespace mtconnect::adapter::agent

@@ -32,8 +32,8 @@ namespace mtconnect::adapter::agent {
   public:
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
     MTConnectXmlTransform(PipelineContextPtr context, Handler *handler,
-                          const std::optional<std::string> &device = std::nullopt, int version = 1)
-      : Transform("ShdrTokenMapper"),
+                          const std::optional<std::string> &device = std::nullopt)
+      : Transform("MTConnectXmlTransform"),
         m_handler(handler),
         m_context(context),
         m_defaultDevice(device)

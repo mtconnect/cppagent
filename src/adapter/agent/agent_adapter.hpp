@@ -31,6 +31,8 @@ namespace mtconnect::adapter::agent {
   public:
     using AdapterPipeline::AdapterPipeline;
     void build(const ConfigOptions &options) override;
+    
+    Handler *m_handler = nullptr;
   };
 
   class AgentAdapter : public Adapter

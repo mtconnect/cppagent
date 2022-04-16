@@ -82,7 +82,7 @@ namespace mtconnect::adapter::agent {
   {
     string res;
     if (!eachAttribute(node, [&name, &res](xmlAttrPtr attr) {
-          if (xmlStrcmp(BAD_CAST name, attr->name))
+          if (xmlStrcmp(BAD_CAST name, attr->name) == 0)
           {
             res = (const char *)(attr->children->content);
             return false;
@@ -107,7 +107,7 @@ namespace mtconnect::adapter::agent {
       LOG(error) << "Cannot find " << name << " in resonse doc";
     }
 
-    return nullptr;
+    return child;
   }
 
   static inline SequenceNumber_t next(xmlNodePtr root)
@@ -288,7 +288,9 @@ namespace mtconnect::adapter::agent {
             {
               auto ac = make_shared<pipeline::AssetCommand>(
                   "AssetCommand",
-                  Properties {{"assetId"s, val}, {"device"s, *(device->getUuid())}});
+                  Properties {{"assetId"s, val}, {"device"s, *(device->getUuid())},
+                    {"VALUE"s, "RemoveAsset"s}
+                  });
               out.m_entities.emplace_back(ac);
               return true;
             }
@@ -385,6 +387,11 @@ namespace mtconnect::adapter::agent {
       else if (xmlStrcmp(BAD_CAST "MTConnectAssets", root->name) == 0)
       {
         return parseAssets(out, root);
+      }
+      else if (xmlStrcmp(BAD_CAST "MTConnectError", root->name) == 0)
+      {
+        LOG(error) << "Received error: " << content;
+        return false;
       }
       else
       {

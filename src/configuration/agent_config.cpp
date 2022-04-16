@@ -51,6 +51,7 @@
 
 #include "adapter/mqtt/mqtt_adapter.hpp"
 #include "adapter/shdr/shdr_adapter.hpp"
+#include "adapter/agent/agent_adapter.hpp"
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
@@ -104,6 +105,7 @@ namespace mtconnect {
       sink::rest_sink::RestService::registerFactory(m_sinkFactory);
       adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
       adapter::mqtt_adapter::MqttAdapter::registerFactory(m_sourceFactory);
+      adapter::agent::AgentAdapter::registerFactory(m_sourceFactory);
 
 #if _WINDOWS
       char execPath[MAX_PATH];

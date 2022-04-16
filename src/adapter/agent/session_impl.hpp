@@ -147,7 +147,10 @@ namespace mtconnect::adapter::agent {
         m_idle = false;
 
         m_next = next;
-        m_target = m_url.m_path + suffix;
+        if (suffix[0] == '/')
+          m_target = suffix;
+        else
+          m_target = m_url.m_path + suffix;
         auto uq = m_url.m_query;
         if (!query.empty())
           uq.merge(query);
@@ -400,18 +403,19 @@ namespace mtconnect::adapter::agent {
       string body = m_textParser->get().body();
       if (m_handler && m_handler->m_processData)
         m_handler->m_processData(body, m_identity);
+      
+      m_textParser.reset();
+      m_idle = true;
 
       if (m_next)
+      {
         m_next();
+      }
       else if (!m_queue.empty())
       {
         Request req = m_queue.front();
         m_queue.pop_front();
         makeRequest(req.m_suffix, req.m_query, req.m_stream, req.m_next);
-      }
-      else
-      {
-        m_idle = true;
       }
     }
 
