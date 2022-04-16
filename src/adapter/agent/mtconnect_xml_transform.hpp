@@ -32,9 +32,10 @@ namespace mtconnect::adapter::agent {
   public:
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
     MTConnectXmlTransform(PipelineContextPtr context, Handler *handler,
-                    const std::optional<std::string> &device = std::nullopt,
-                    int version = 1)
-      : Transform("ShdrTokenMapper"), m_handler(handler), m_context(context),
+                          const std::optional<std::string> &device = std::nullopt, int version = 1)
+      : Transform("ShdrTokenMapper"),
+        m_handler(handler),
+        m_context(context),
         m_defaultDevice(device)
     {
       m_guard = EntityNameGuard("Data", RUN);
@@ -44,19 +45,19 @@ namespace mtconnect::adapter::agent {
     {
       using namespace pipeline;
       using namespace entity;
-      
+
       const auto &data = entity->getValue<string>();
       ResponseDocument rd;
       ResponseDocument::parse(data, rd, m_context);
-      
+
       auto seq = m_context->getSharedState<NextSequence>("next");
       seq->m_next = rd.m_next;
-      
+
       for (auto &entity : rd.m_entities)
       {
         next(entity);
       }
-      
+
       if (!rd.m_assetEvents.empty() && m_handler && m_handler->m_assetUpdated)
       {
         m_handler->m_assetUpdated(rd.m_assetEvents);
@@ -70,4 +71,4 @@ namespace mtconnect::adapter::agent {
     PipelineContextPtr m_context;
     std::optional<std::string> m_defaultDevice;
   };
-}
+}  // namespace mtconnect::adapter::agent

@@ -137,6 +137,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
+  
 
   unique_ptr<adapter::Handler> handler = make_unique<Handler>();
 
@@ -147,11 +148,17 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   handler->m_connecting = [&](const string id) { connecting = true; };
   handler->m_connected = [&](const string id) { connected = true; };
 
-  ///ah->m_processResponseDocument = [&](const ResponseDocument &d, const string &s) { data = d; };
-
   adapter->setHandler(handler);
   adapter->start();
 
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+  
   while (!connecting)
   {
     m_agentTestHelper->m_ioContext.run_one_for(100ms);
@@ -164,11 +171,77 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   }
 
   ASSERT_TRUE(connected);
+  
+  timeout.cancel();
+}
 
-  while (true)
+TEST_F(AgentAdapterTest, should_get_current_from_agent)
+{
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port);
+  
+
+  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+
+  bool current = false;
+  handler->m_processData = [&](const string &d, const string &s) {
+    if (d.find("MTConnectStreams") != string::npos)
+      current = true;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+  
+  while (!current)
   {
     m_agentTestHelper->m_ioContext.run_one_for(100ms);
   }
+  ASSERT_TRUE(current);
 
-  ASSERT_FALSE(data.m_entities.empty());
+  timeout.cancel();
+}
+
+TEST_F(AgentAdapterTest, should_get_assets_from_agent)
+{
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port);
+  
+  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+
+  bool assets = false;
+  handler->m_processData = [&](const string &d, const string &s) {
+    if (d.find("MTConnectAssets") != string::npos)
+      assets = true;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+  
+  while (!assets)
+  {
+    m_agentTestHelper->m_ioContext.run_one_for(100ms);
+  }
+  ASSERT_TRUE(assets);
+
+  timeout.cancel();
 }

@@ -46,7 +46,7 @@ using namespace std;
 namespace mtconnect {
   using namespace device_model;
   using namespace data_item;
-  using namespace entity;   
+  using namespace entity;
   using namespace sink::rest_sink;
   namespace net = boost::asio;
 

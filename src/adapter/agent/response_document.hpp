@@ -17,25 +17,23 @@
 
 #pragma once
 
-#include "xml_helper.hpp"
-#include "utilities.hpp"
 #include "entity/entity.hpp"
 #include "pipeline/pipeline_context.hpp"
+#include "utilities.hpp"
+#include "xml_helper.hpp"
 
 namespace mtconnect::adapter::agent {
   using namespace mtconnect;
   using namespace adapter;
-  
+
   struct NextSequence : public pipeline::TransformState
   {
     SequenceNumber_t m_next;
   };
-  
 
   struct ResponseDocument
   {
-    static bool parse(const std::string_view &content,
-                      ResponseDocument &doc,
+    static bool parse(const std::string_view &content, ResponseDocument &doc,
                       pipeline::PipelineContextPtr context);
 
     // Parsed data
@@ -43,6 +41,5 @@ namespace mtconnect::adapter::agent {
     entity::EntityList m_entities;
     entity::EntityList m_assetEvents;
   };
-  
 
-}
+}  // namespace mtconnect::adapter::agent

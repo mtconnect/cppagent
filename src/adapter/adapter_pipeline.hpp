@@ -36,9 +36,9 @@ namespace mtconnect {
       Connect m_connecting;
       Connect m_connected;
       Connect m_disconnected;
-      
+
       // Feedback to the adapter from the pipeline – optional
-      using AssetEvent = std::function<void(const entity::EntityList &obs)>;      
+      using AssetEvent = std::function<void(const entity::EntityList &obs)>;
       AssetEvent m_assetUpdated;
     };
 

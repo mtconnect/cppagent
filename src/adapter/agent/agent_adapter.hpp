@@ -67,7 +67,6 @@ namespace mtconnect::adapter::agent {
     void assets();
     void assetUpdated(const entity::EntityList &entity);
 
-
   protected:
     AgentAdapterPipeline m_pipeline;
     Url m_url;

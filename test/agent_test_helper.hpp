@@ -40,7 +40,7 @@
 namespace mtconnect {
   class Agent;
 
-    namespace sink {
+  namespace sink {
     namespace rest_sink {
       class TestSession : public Session
       {
@@ -127,14 +127,15 @@ public:
   auto session() { return m_session; }
 
   // Helper method to test expected string, given optional query, & run tests
-  void responseHelper(const char *file, int line, const mtconnect::sink::rest_sink::QueryMap &aQueries,
-                      xmlDocPtr *doc, const char *path, const char *accepts = "text/xml");
+  void responseHelper(const char *file, int line,
+                      const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
+                      const char *path, const char *accepts = "text/xml");
   void responseStreamHelper(const char *file, int line,
                             const mtconnect::sink::rest_sink::QueryMap &aQueries, const char *path,
                             const char *accepts = "text/xml");
-  void responseHelper(const char *file, int line, const mtconnect::sink::rest_sink::QueryMap &aQueries,
-                      nlohmann::json &doc, const char *path,
-                      const char *accepts = "application/json");
+  void responseHelper(const char *file, int line,
+                      const mtconnect::sink::rest_sink::QueryMap &aQueries, nlohmann::json &doc,
+                      const char *path, const char *accepts = "application/json");
   void putResponseHelper(const char *file, int line, const std::string &body,
                          const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
                          const char *path, const char *accepts = "text/xml");

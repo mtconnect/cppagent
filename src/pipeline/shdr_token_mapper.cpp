@@ -86,7 +86,7 @@ namespace mtconnect {
     static entity::Requirements s_assetEvent {{"assetType", false}, {"VALUE", false}};
     static entity::Requirements s_event {{"VALUE", false}};
     static entity::Requirements s_dataSet {{"VALUE", entity::DATA_SET, false}};
-    
+
     static inline size_t firtNonWsColon(const string &token)
     {
       auto len = token.size();
@@ -126,7 +126,7 @@ namespace mtconnect {
         {
           return token;
         }
-        
+
         if (!trig.empty())
           properties.insert_or_assign("resetTriggered", upcase(trig));
         return value;
@@ -136,7 +136,7 @@ namespace mtconnect {
         return token;
       }
     }
-    
+
     inline ObservationPtr zipProperties(const DataItemPtr dataItem, const Timestamp &timestamp,
                                         const entity::Requirements &reqs,
                                         TokenList::const_iterator &token,

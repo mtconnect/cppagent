@@ -38,8 +38,8 @@
 #include "printer.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "sink/rest_sink/circular_buffer.hpp"
-#include "sink/rest_sink/server.hpp"
 #include "sink/rest_sink/rest_service.hpp"
+#include "sink/rest_sink/server.hpp"
 #include "sink/sink.hpp"
 #include "source.hpp"
 #include "xml_parser.hpp"
@@ -350,5 +350,3 @@ namespace mtconnect {
     return std::make_unique<AgentSinkContract>(this);
   }
 }  // namespace mtconnect
-
-

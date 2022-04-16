@@ -30,17 +30,14 @@
 #include "http_session.hpp"
 #include "https_session.hpp"
 #include "logging.hpp"
-#include "session_impl.hpp"
 #include "mtconnect_xml_transform.hpp"
+#include "session_impl.hpp"
 
 using namespace std;
 using namespace mtconnect;
 
 namespace mtconnect::adapter::agent {
-  void AgentAdapterPipeline::build(const ConfigOptions &options)
-  {
-    
-  }
+  void AgentAdapterPipeline::build(const ConfigOptions &options) {}
 
   AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
                              const ConfigOptions &options, const boost::property_tree::ptree &block)
@@ -61,9 +58,9 @@ namespace mtconnect::adapter::agent {
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
                          {configuration::RelativeTime, false}});
-    
+
     m_handler = m_pipeline.makeHandler();
-    
+
     auto urlOpt = GetOption<std::string>(m_options, configuration::Url);
     if (urlOpt)
     {
@@ -106,10 +103,11 @@ namespace mtconnect::adapter::agent {
 
     m_session->m_handler = m_handler.get();
     m_session->m_identity = m_identity;
-    
-    m_handler->m_assetUpdated = [this](const EntityList &updated) {
-      assetUpdated(updated);
-    };
+
+    m_assetSession->m_handler = m_handler.get();
+    m_assetSession->m_identity = m_identity;
+
+    m_handler->m_assetUpdated = [this](const EntityList &updated) { assetUpdated(updated); };
 
     assets();
     current();
@@ -119,9 +117,7 @@ namespace mtconnect::adapter::agent {
 
   void AgentAdapter::current()
   {
-    m_session->makeRequest(
-        "current", UrlQuery(), false,
-        [this]() { return sample(); });
+    m_session->makeRequest("current", UrlQuery(), false, [this]() { return sample(); });
   }
 
   bool AgentAdapter::sample()
@@ -143,21 +139,20 @@ namespace mtconnect::adapter::agent {
     m_session->stop();
     m_session.reset();
   }
-  
+
   void AgentAdapter::assets()
   {
     UrlQuery query({{"count", "1048576"}});
-    m_assetSession->makeRequest("assets", query, true, nullptr);
+    m_assetSession->makeRequest("assets", query, false, nullptr);
   }
-  
+
   void AgentAdapter::assetUpdated(const EntityList &entities)
   {
     std::vector<string> idList;
-    std::transform(entities.begin(), entities.end(), back_inserter(idList), [](const EntityPtr entity) {
-      return entity->getValue<string>();
-    });
+    std::transform(entities.begin(), entities.end(), back_inserter(idList),
+                   [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");
-    
+
     m_assetSession->makeRequest("assets/" + ids, UrlQuery(), false, nullptr);
   }
 

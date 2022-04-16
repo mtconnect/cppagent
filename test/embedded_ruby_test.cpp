@@ -45,9 +45,9 @@
 #include "configuration/config_options.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "pipeline/shdr_tokenizer.hpp"
-#include "sink/rest_sink/rest_service.hpp"
 #include "ruby/ruby_smart_ptr.hpp"
 #include "ruby/ruby_vm.hpp"
+#include "sink/rest_sink/rest_service.hpp"
 #include "xml_printer.hpp"
 
 #ifdef _WIN32

@@ -47,18 +47,18 @@ namespace mtconnect::adapter::agent {
   {
     struct Request
     {
-      Request(const std::string &suffix, const UrlQuery &query, bool stream,
-              Next next)
-      : m_suffix(suffix), m_query(query), m_stream(stream), m_next(next) {}
-      
+      Request(const std::string &suffix, const UrlQuery &query, bool stream, Next next)
+        : m_suffix(suffix), m_query(query), m_stream(stream), m_next(next)
+      {}
+
       std::string m_suffix;
       UrlQuery m_query;
       bool m_stream;
       Next m_next;
     };
-    
+
     using RequestQueue = std::list<Request>;
-    
+
   public:
     Derived &derived() { return static_cast<Derived &>(*this); }
     const Derived &derived() const { return static_cast<const Derived &>(*this); }
@@ -66,8 +66,12 @@ namespace mtconnect::adapter::agent {
     // Objects are constructed with a strand to
     // ensure that handlers do not execute concurrently.
     SessionImpl(boost::asio::io_context::strand &strand, const Url &url, int count, int heartbeat)
-      : m_resolver(strand.context()), m_strand(strand), m_url(url),
-        m_chunk(1 * 1024 * 1024), m_count(count), m_heartbeat(heartbeat)
+      : m_resolver(strand.context()),
+        m_strand(strand),
+        m_url(url),
+        m_chunk(1 * 1024 * 1024),
+        m_count(count),
+        m_heartbeat(heartbeat)
     {}
 
     virtual ~SessionImpl() { stop(); }
@@ -156,7 +160,7 @@ namespace mtconnect::adapter::agent {
         m_hasHeader = false;
         if (m_chunk.size() > 0)
           m_chunk.consume(m_chunk.size());
-        
+
         // Check if we are discussected.
         if (!derived().lowestLayer().socket().is_open())
         {
@@ -203,26 +207,17 @@ namespace mtconnect::adapter::agent {
       derived().lowestLayer().expires_after(std::chrono::seconds(30));
 
       // Receive the HTTP response
-      if (!m_streaming)
-      {
-        http::async_read(derived().stream(), m_buffer, m_res,
-                         asio::bind_executor(m_strand, beast::bind_front_handler(
-                                                           &Derived::onRead, derived().getptr())));
-      }
-      else
-      {
-        m_parser.emplace();
-        http::async_read_header(
-            derived().stream(), m_buffer, *m_parser,
-            asio::bind_executor(m_strand,
-                                beast::bind_front_handler(&Derived::onHeader, derived().getptr())));
-      }
+      m_headerParser.emplace();
+      http::async_read_header(
+                              derived().stream(), m_buffer, *m_headerParser,
+                              asio::bind_executor(m_strand,
+                                                  beast::bind_front_handler(&Derived::onHeader, derived().getptr())));
     }
-    
+
     inline string findBoundary()
     {
-      auto f = m_parser->get().find(http::field::content_type);
-      if (f != m_parser->get().end())
+      auto f = m_headerParser->get().find(http::field::content_type);
+      if (f != m_headerParser->get().end())
       {
         m_contentType = string(f->value());
         auto i = m_contentType.find(';');
@@ -240,14 +235,14 @@ namespace mtconnect::adapter::agent {
           }
         }
       }
-      
+
       return "";
     }
-    
+
     void createChunkHeaderHandler()
     {
       m_chunkHeaderHandler = [](std::uint64_t size, boost::string_view extensions,
-                                    boost::system::error_code &ec) {
+                                boost::system::error_code &ec) {
         http::chunk_extensions ce;
         ce.parse(extensions, ec);
         for (auto &c : ce)
@@ -259,12 +254,12 @@ namespace mtconnect::adapter::agent {
 
       m_chunkParser->on_chunk_header(m_chunkHeaderHandler);
     }
-    
+
     void parseMimeHeader()
     {
       auto start = static_cast<const char *>(m_chunk.data().data());
       std::string_view view(start, m_chunk.data().size());
-      
+
       auto bp = view.find(m_boundary.c_str());
       if (bp == boost::string_view::npos)
       {
@@ -294,23 +289,23 @@ namespace mtconnect::adapter::agent {
       m_chunkLength = atoi(lp + 16);
       m_chunk.consume(ep);
     }
-    
+
     void parseAndDeliverDocument(const std::string_view &buf, ResponseDocument &rd)
-    {      
+    {
       if (!rd.m_entities.empty())
       {
         if (m_handler && m_handler->m_processData)
           m_handler->m_processData(string(buf), m_identity);
       }
     }
-    
+
     void createChunkBodyHandler()
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
                               boost::system::error_code &ev) -> unsigned long {
         std::ostream cstr(&m_chunk);
         cstr << body;
-        
+
         LOG(info) << "Received: --------\n" << body << "\n-------------";
 
         if (!m_hasHeader)
@@ -321,7 +316,7 @@ namespace mtconnect::adapter::agent {
         {
           cstr << body;
         }
-        
+
         auto len = m_chunk.size();
         if (len >= m_chunkLength)
         {
@@ -330,17 +325,17 @@ namespace mtconnect::adapter::agent {
 
           ResponseDocument doc;
           parseAndDeliverDocument(sbuf, doc);
-          
+
           m_chunk.consume(m_chunkLength);
           m_hasHeader = false;
         }
-        
+
         return body.size();
       };
 
       m_chunkParser->on_chunk_body(m_chunkHandler);
     }
-    
+
     void onChunkedContent()
     {
       m_boundary = findBoundary();
@@ -352,28 +347,37 @@ namespace mtconnect::adapter::agent {
 
       LOG(info) << "Found boundary: " << m_boundary;
 
-      m_chunkParser.emplace(std::move(*m_parser));
+      m_chunkParser.emplace(std::move(*m_headerParser));
       createChunkHeaderHandler();
       createChunkBodyHandler();
 
       http::async_read(derived().stream(), m_buffer, *m_chunkParser,
                        asio::bind_executor(m_strand, beast::bind_front_handler(
                                                          &Derived::onRead, derived().getptr())));
-
     }
 
     void onHeader(beast::error_code ec, std::size_t bytes_transferred)
     {
-      if (m_streaming && m_parser->chunked())
+      if (ec)
+      {
+        LOG(error) << "Need to handle fallback if sreaming fails";
+        return fail(ec, "header");
+      }
+      
+      if (m_streaming && m_headerParser->chunked())
       {
         onChunkedContent();
+      }
+      else if (m_streaming)
+      {
+        LOG(error) << "Need to handle fallback if sreaming fails";
       }
       else
       {
         derived().lowestLayer().expires_after(std::chrono::seconds(30));
-
-        LOG(warning) << "Need to handle polling fallback";
-        http::async_read(derived().stream(), m_buffer, m_res,
+        
+        m_textParser.emplace(std::move(*m_headerParser));
+        http::async_read(derived().stream(), m_buffer, *m_textParser,
                          asio::bind_executor(m_strand, beast::bind_front_handler(
                                                            &Derived::onRead, derived().getptr())));
       }
@@ -385,18 +389,18 @@ namespace mtconnect::adapter::agent {
 
       if (ec)
       {
-        return fail(ec, "write");
+        return fail(ec, "read");
       }
 
       derived().lowestLayer().expires_after(std::chrono::seconds(30));
 
       if (!derived().lowestLayer().socket().is_open())
         derived().disconnect();
-      
-      string body = m_res.body();
+
+      string body = m_textParser->get().body();
       if (m_handler && m_handler->m_processData)
         m_handler->m_processData(body, m_identity);
-      
+
       if (m_next)
         m_next();
       else if (!m_queue.empty())
@@ -416,11 +420,11 @@ namespace mtconnect::adapter::agent {
     std::optional<tcp::resolver::results_type> m_resolution;
     beast::flat_buffer m_buffer;  // (Must persist between reads)
     http::request<http::empty_body> m_req;
-    http::response<http::string_body> m_res;
 
     // Chunked content handling.
-    std::optional<http::response_parser<http::empty_body>> m_parser;
+    std::optional<http::response_parser<http::empty_body>> m_headerParser;
     std::optional<http::response_parser<http::dynamic_body>> m_chunkParser;
+    std::optional<http::response_parser<http::string_body>> m_textParser;
     asio::io_context::strand m_strand;
     Url m_url;
 
@@ -435,7 +439,7 @@ namespace mtconnect::adapter::agent {
     size_t m_chunkLength;
     bool m_hasHeader;
     boost::asio::streambuf m_chunk;
-  
+
     // For request queuing
     RequestQueue m_queue;
     bool m_idle = true;
