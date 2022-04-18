@@ -26,11 +26,11 @@
 #include <stdexcept>
 #include <thread>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "asset/file_asset.hpp"
 #include "device_model/reference.hpp"
+#include "source/adapter/adapter.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
 
@@ -43,7 +43,7 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::sink::rest_sink;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
 
 using status = boost::beast::http::status;

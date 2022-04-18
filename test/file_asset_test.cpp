@@ -9,7 +9,6 @@
 #include <sstream>
 #include <string>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "asset/asset.hpp"
@@ -17,13 +16,14 @@
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
 #include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
 #include "xml_printer_helper.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::asset;
 
 class FileAssetTest : public testing::Test

@@ -26,13 +26,13 @@
 #include <stdexcept>
 #include <thread>
 
-#include "adapter/adapter.hpp"
-#include "adapter/agent/agent_adapter.hpp"
-#include "adapter/agent/response_document.hpp"
-#include "adapter/agent/url_parser.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "device_model/reference.hpp"
+#include "source/adapter/adapter.hpp"
+#include "source/adapter/agent/agent_adapter.hpp"
+#include "source/adapter/agent/response_document.hpp"
+#include "source/adapter/agent/url_parser.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
 
@@ -41,9 +41,9 @@ using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::rest_sink;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
-using namespace mtconnect::adapter::agent;
+using namespace mtconnect::source::adapter::agent;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::asset;
 using namespace mtconnect::observation;
@@ -117,7 +117,7 @@ protected:
                      int hb = 500)
   {
     using namespace mtconnect;
-    using namespace mtconnect::adapter;
+    using namespace mtconnect::source::adapter;
 
     string url = "http://127.0.0.1:"s + boost::lexical_cast<string>(port) + "/"s + path;
     options.emplace(configuration::Url, url);
@@ -153,7 +153,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
-  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
 
   bool connecting = false;
   bool connected = false;
@@ -194,7 +194,7 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
-  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
 
   bool current = false;
   handler->m_processData = [&](const string &d, const string &s) {
@@ -229,7 +229,7 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
-  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
 
   bool assets = false;
   handler->m_processData = [&](const string &d, const string &s) {
@@ -266,7 +266,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
 
   addAdapter();
 
-  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
 
   int rc = 0;
   ResponseDocument rd;
@@ -322,7 +322,7 @@ TEST_F(AgentAdapterTest, should_reconnect)
 
   addAdapter();
 
-  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
 
   int rc = 0;
   ResponseDocument rd;

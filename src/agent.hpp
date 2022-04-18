@@ -27,12 +27,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "adapter/adapter.hpp"
 #include "asset/asset_buffer.hpp"
 #include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
-#include "loopback_source.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
@@ -41,11 +39,13 @@
 #include "sink/rest_sink/rest_service.hpp"
 #include "sink/rest_sink/server.hpp"
 #include "sink/sink.hpp"
-#include "source.hpp"
+#include "source/adapter/adapter.hpp"
+#include "source/loopback_source.hpp"
+#include "source/source.hpp"
 #include "xml_parser.hpp"
 
 namespace mtconnect {
-  namespace adapter {
+  namespace source::adapter {
     class Adapter;
   }
 
@@ -221,7 +221,7 @@ namespace mtconnect {
     boost::asio::io_context &m_context;
     boost::asio::io_context::strand m_strand;
 
-    std::shared_ptr<LoopbackSource> m_loopback;
+    std::shared_ptr<source::LoopbackSource> m_loopback;
     std::unordered_map<std::string, observation::ObservationPtr> m_latest;
 
     // Asset Management
@@ -332,7 +332,7 @@ namespace mtconnect {
     {
       return m_agent->getDataItemById(id);
     }
-    void addSource(std::shared_ptr<Source> source) override { m_agent->addSource(source); }
+    void addSource(SourcePtr source) override { m_agent->addSource(source); }
 
     // Asset information
     asset::AssetStorage *getAssetStorage() override { return m_agent->getAssetStorage(); }

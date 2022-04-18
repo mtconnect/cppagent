@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include "adapter/adapter.hpp"
-#include "adapter/adapter_pipeline.hpp"
 #include "session.hpp"
+#include "source/adapter/adapter.hpp"
+#include "source/adapter/adapter_pipeline.hpp"
 #include "url_parser.hpp"
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
   using namespace mtconnect;
-  using namespace adapter;
+  using namespace source::adapter;
 
   class AgentAdapterPipeline : public AdapterPipeline
   {
@@ -85,4 +85,4 @@ namespace mtconnect::adapter::agent {
     boost::asio::steady_timer m_reconnectTimer;
   };
 
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

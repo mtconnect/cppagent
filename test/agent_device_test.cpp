@@ -22,15 +22,15 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "device_model/agent_device.hpp"
 #include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace device_model;
 using namespace entity;
 

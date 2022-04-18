@@ -24,17 +24,17 @@
 
 #include <nlohmann/json.hpp>
 
-#include "adapter/shdr/shdr_adapter.hpp"
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
-#include "loopback_source.hpp"
 #include "pipeline/pipeline.hpp"
 #include "sink/rest_sink/response.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "sink/rest_sink/routing.hpp"
 #include "sink/rest_sink/server.hpp"
 #include "sink/rest_sink/session.hpp"
+#include "source/adapter/shdr/shdr_adapter.hpp"
+#include "source/loopback_source.hpp"
 #include "test_utilities.hpp"
 
 namespace mtconnect {
@@ -107,7 +107,7 @@ namespace mtconnect {
 }  // namespace mtconnect
 
 namespace mhttp = mtconnect::sink::rest_sink;
-namespace adpt = mtconnect::adapter;
+namespace adpt = mtconnect::source::adapter;
 namespace observe = mtconnect::observation;
 
 class AgentTestHelper
@@ -165,10 +165,11 @@ public:
   {
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
+    using namespace mtconnect::source;
     using ptree = boost::property_tree::ptree;
 
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);
-    adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
+    source::adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
     ConfigOptions options {{configuration::BufferSize, bufferSize},
                            {configuration::MaxAssets, maxAssets},
@@ -215,7 +216,7 @@ public:
                   uint16_t port = 7878, const std::string &device = "")
   {
     using namespace mtconnect;
-    using namespace mtconnect::adapter;
+    using namespace mtconnect::source::adapter;
 
     if (!IsOptionSet(options, configuration::Device))
     {
@@ -263,7 +264,7 @@ public:
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::sink::rest_sink::RestService> m_restService;
-  std::shared_ptr<mtconnect::LoopbackSource> m_loopback;
+  std::shared_ptr<mtconnect::source::LoopbackSource> m_loopback;
 
   bool m_dispatched {false};
   std::string m_incomingIp;
@@ -278,7 +279,7 @@ public:
   std::shared_ptr<mtconnect::sink::rest_sink::TestSession> m_session;
 
   mtconnect::sink::SinkFactory m_sinkFactory;
-  mtconnect::SourceFactory m_sourceFactory;
+  mtconnect::source::SourceFactory m_sourceFactory;
 };
 
 struct XmlDocFreer

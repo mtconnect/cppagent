@@ -24,10 +24,10 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-  namespace adapter {
+  namespace source::adapter {
     class Adapter;
     using AdapterPtr = std::shared_ptr<Adapter>;
-  }  // namespace adapter
+  }  // namespace source::adapter
 
   namespace device_model {
     class AgentDevice : public Device
@@ -46,7 +46,7 @@ namespace mtconnect {
         Device::initialize();
       }
 
-      void addAdapter(const adapter::AdapterPtr adapter);
+      void addAdapter(const source::adapter::AdapterPtr adapter);
 
       DataItemPtr getConnectionStatus(const std::string &adapter);
       auto &getAdapters() { return m_adapters; }

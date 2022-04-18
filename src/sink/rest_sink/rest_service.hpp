@@ -20,11 +20,11 @@
 #include "boost/asio/io_context.hpp"
 
 #include "circular_buffer.hpp"
-#include "loopback_source.hpp"
 #include "request.hpp"
 #include "response.hpp"
 #include "server.hpp"
 #include "sink/sink.hpp"
+#include "source/loopback_source.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect {
@@ -51,7 +51,8 @@ namespace mtconnect {
 
       auto makeLoopbackSource(pipeline::PipelineContextPtr context)
       {
-        m_loopback = std::make_shared<LoopbackSource>("RestSource", m_strand, context, m_options);
+        m_loopback =
+            std::make_shared<source::LoopbackSource>("RestSource", m_strand, context, m_options);
         m_sinkContract->addSource(m_loopback);
         return m_loopback;
       }
@@ -209,7 +210,7 @@ namespace mtconnect {
 
       ConfigOptions m_options;
 
-      std::shared_ptr<LoopbackSource> m_loopback;
+      std::shared_ptr<source::LoopbackSource> m_loopback;
 
       uint64_t m_instanceId;
 

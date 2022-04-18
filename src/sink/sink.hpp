@@ -32,7 +32,9 @@
 
 namespace mtconnect {
   class Printer;
-  class Source;
+  namespace source {
+    class Source;
+  }
   using PrinterMap = std::map<std::string, std::unique_ptr<Printer>>;
   namespace pipeline {
     class PipelineContext;
@@ -55,7 +57,7 @@ namespace mtconnect {
       virtual void getDataItemsForPath(const DevicePtr device,
                                        const std::optional<std::string> &path,
                                        FilterSet &filter) const = 0;
-      virtual void addSource(std::shared_ptr<Source> source) = 0;
+      virtual void addSource(std::shared_ptr<source::Source> source) = 0;
 
       // Asset information
       virtual const asset::AssetStorage *getAssetStorage() = 0;

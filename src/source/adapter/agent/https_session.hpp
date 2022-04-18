@@ -22,7 +22,7 @@
 
 #include "session_impl.hpp"
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
 
   // HTTPS Session
   class HttpsSession : public SessionImpl<HttpsSession>
@@ -115,4 +115,4 @@ namespace mtconnect::adapter::agent {
   protected:
     beast::ssl_stream<beast::tcp_stream> m_stream;
   };
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

@@ -24,7 +24,7 @@
 #include "pipeline/transform.hpp"
 #include "response_document.hpp"
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
   using namespace mtconnect::entity;
   using namespace mtconnect::pipeline;
   class MTConnectXmlTransform : public Transform
@@ -71,4 +71,4 @@ namespace mtconnect::adapter::agent {
     PipelineContextPtr m_context;
     std::optional<std::string> m_defaultDevice;
   };
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

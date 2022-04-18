@@ -19,22 +19,18 @@
 
 #include "entity.hpp"
 
-namespace mtconnect {
-  namespace device_model {
-    namespace data_item {
-      class Source : public entity::Entity
-      {
-      public:
-        static entity::FactoryPtr getFactory()
-        {
-          using namespace mtconnect::entity;
-          static auto source = std::make_shared<Factory>(Requirements {{"componentId", false},
-                                                                       {"compositionId", false},
-                                                                       {"dataItemId", false},
-                                                                       {"VALUE", false}});
-          return source;
-        }
-      };
-    }  // namespace data_item
-  }    // namespace device_model
-}  // namespace mtconnect
+namespace mtconnect::device_model::data_item {
+  class Source : public entity::Entity
+  {
+  public:
+    static entity::FactoryPtr getFactory()
+    {
+      using namespace mtconnect::entity;
+      static auto source = std::make_shared<Factory>(Requirements {{"componentId", false},
+                                                                   {"compositionId", false},
+                                                                   {"dataItemId", false},
+                                                                   {"VALUE", false}});
+      return source;
+    }
+  };
+}  // namespace mtconnect::device_model::data_item

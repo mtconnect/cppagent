@@ -28,7 +28,7 @@
 #include "response_document.hpp"
 #include "session.hpp"
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
   using namespace std;
   namespace asio = boost::asio;
   namespace beast = boost::beast;
@@ -473,4 +473,4 @@ namespace mtconnect::adapter::agent {
     bool m_streaming = false;
   };
 
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

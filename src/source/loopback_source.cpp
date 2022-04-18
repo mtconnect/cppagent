@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "loopback_source.hpp"
+#include "source/loopback_source.hpp"
 
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
@@ -30,7 +30,7 @@
 
 using namespace std;
 
-namespace mtconnect {
+namespace mtconnect::source {
   using namespace observation;
   using namespace asset;
   using namespace pipeline;
@@ -158,4 +158,4 @@ namespace mtconnect {
     m_pipeline.run(ac);
   }
 
-}  // namespace mtconnect
+}  // namespace mtconnect::source

@@ -27,7 +27,7 @@
 #include <string_view>
 #include <variant>
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
   using UrlQueryPair = std::pair<std::string, std::string>;
 
   struct UrlQuery : public std::map<std::string, std::string>
@@ -95,4 +95,4 @@ namespace mtconnect::adapter::agent {
     static Url parse(const std::string_view& url);
   };
 
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

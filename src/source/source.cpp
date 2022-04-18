@@ -15,11 +15,11 @@
 //    limitations under the License.
 //
 
-#include "source.hpp"
+#include "source/source.hpp"
 
 #include "logging.hpp"
 
-namespace mtconnect {
+namespace mtconnect::source {
   SourcePtr SourceFactory::make(const std::string &factoryName, const std::string &sinkName,
                                 boost::asio::io_context &io,
                                 std::shared_ptr<pipeline::PipelineContext> context,
@@ -38,4 +38,4 @@ namespace mtconnect {
     return nullptr;
   }
 
-}  // namespace mtconnect
+}  // namespace mtconnect::source

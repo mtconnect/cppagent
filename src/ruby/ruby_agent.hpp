@@ -20,7 +20,7 @@
 #include "agent.hpp"
 #include "ruby_smart_ptr.hpp"
 #include "sink/sink.hpp"
-#include "source.hpp"
+#include "source/source.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect::device_model;
@@ -56,7 +56,7 @@ namespace mtconnect::ruby {
       mrb_define_method(
           mrb, sourceClass, "name",
           [](mrb_state *mrb, mrb_value self) {
-            auto source = MRubySharedPtr<Source>::unwrap(mrb, self);
+            auto source = MRubySharedPtr<source::Source>::unwrap(mrb, self);
             return mrb_str_new_cstr(mrb, source->getName().c_str());
           },
           MRB_ARGS_NONE());
@@ -64,7 +64,7 @@ namespace mtconnect::ruby {
       mrb_define_method(
           mrb, sourceClass, "pipeline",
           [](mrb_state *mrb, mrb_value self) {
-            auto source = MRubySharedPtr<Source>::unwrap(mrb, self);
+            auto source = MRubySharedPtr<source::Source>::unwrap(mrb, self);
             return MRubyPtr<pipeline::Pipeline>::wrap(mrb, "Pipeline", source->getPipeline());
           },
           MRB_ARGS_NONE());
@@ -77,7 +77,7 @@ namespace mtconnect::ruby {
 
             for (auto &source : agent->getSources())
             {
-              auto obj = MRubySharedPtr<Source>::wrap(mrb, "Source", source);
+              auto obj = MRubySharedPtr<source::Source>::wrap(mrb, "Source", source);
               mrb_ary_push(mrb, sources, obj);
             }
 

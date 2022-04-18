@@ -10,10 +10,10 @@
 #include <sstream>
 #include <string>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -38,7 +38,7 @@ protected:
     m_component.reset();
   }
 
-  adapter::Adapter *m_adapter {nullptr};
+  mtconnect::source::adapter::Adapter *m_adapter {nullptr};
   ComponentPtr m_component;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };

@@ -39,41 +39,39 @@ namespace mtconnect {
   using namespace entity;
   using namespace pipeline;
 
-  namespace adapter {
-    namespace shdr {
-      void ShdrPipeline::build(const ConfigOptions &options)
+  namespace source::adapter::shdr {
+    void ShdrPipeline::build(const ConfigOptions &options)
+    {
+      AdapterPipeline::build(options);
+      buildDeviceList();
+
+      buildCommandAndStatusDelivery();
+
+      TransformPtr next = bind(make_shared<ShdrTokenizer>());
+
+      // Optional type based transforms
+      if (IsOptionSet(m_options, configuration::IgnoreTimestamps))
+        next = next->bind(make_shared<IgnoreTimestamp>());
+      else
       {
-        AdapterPipeline::build(options);
-        buildDeviceList();
-
-        buildCommandAndStatusDelivery();
-
-        TransformPtr next = bind(make_shared<ShdrTokenizer>());
-
-        // Optional type based transforms
-        if (IsOptionSet(m_options, configuration::IgnoreTimestamps))
-          next = next->bind(make_shared<IgnoreTimestamp>());
-        else
-        {
-          auto extract =
-              make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
-          next = next->bind(extract);
-        }
-
-        // Token mapping to data items and asset
-        auto mapper = make_shared<ShdrTokenMapper>(
-            m_context, m_device.value_or(""),
-            GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
-
-        buildAssetDelivery(mapper);
-        mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
-
-        next = next->bind(mapper);
-
-        // Handle the observations and send to nowhere
-        buildObservationDelivery(next);
-        applySplices();
+        auto extract =
+            make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
+        next = next->bind(extract);
       }
-    }  // namespace shdr
-  }    // namespace adapter
+
+      // Token mapping to data items and asset
+      auto mapper = make_shared<ShdrTokenMapper>(
+          m_context, m_device.value_or(""),
+          GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
+
+      buildAssetDelivery(mapper);
+      mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
+
+      next = next->bind(mapper);
+
+      // Handle the observations and send to nowhere
+      buildObservationDelivery(next);
+      applySplices();
+    }
+  }  // namespace source::adapter::shdr
 }  // namespace mtconnect

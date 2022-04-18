@@ -22,9 +22,9 @@
 #include "utilities.hpp"
 #include "xml_helper.hpp"
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
   using namespace mtconnect;
-  using namespace adapter;
+  using namespace source::adapter;
 
   struct NextSequence : public pipeline::TransformState
   {
@@ -42,4 +42,4 @@ namespace mtconnect::adapter::agent {
     entity::EntityList m_assetEvents;
   };
 
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

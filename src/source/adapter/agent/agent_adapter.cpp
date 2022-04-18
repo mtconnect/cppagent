@@ -37,7 +37,7 @@
 using namespace std;
 using namespace mtconnect;
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
   void AgentAdapterPipeline::build(const ConfigOptions &options)
   {
     buildDeviceList();
@@ -212,4 +212,4 @@ namespace mtconnect::adapter::agent {
     m_assetSession->makeRequest("/assets/" + ids, UrlQuery(), false, nullptr);
   }
 
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

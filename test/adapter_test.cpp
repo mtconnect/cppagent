@@ -27,14 +27,14 @@
 #include <string>
 #include <vector>
 
-#include "adapter/shdr/shdr_adapter.hpp"
 #include "configuration/config_options.hpp"
 #include "pipeline/pipeline_context.hpp"
+#include "source/adapter/shdr/shdr_adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
-using namespace mtconnect::adapter::shdr;
+using namespace mtconnect::source::adapter;
+using namespace mtconnect::source::adapter::shdr;
 namespace asio = boost::asio;
 using namespace std::literals;
 

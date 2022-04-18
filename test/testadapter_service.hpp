@@ -19,17 +19,17 @@
 
 #include <boost/dll/alias.hpp>
 
-#include "adapter/adapter.hpp"
-#include "adapter/adapter_pipeline.hpp"
 #include "configuration/agent_config.hpp"
 #include "pipeline/pipeline.hpp"
-#include "source.hpp"
+#include "source/adapter/adapter.hpp"
+#include "source/adapter/adapter_pipeline.hpp"
+#include "source/source.hpp"
 
 using namespace std;
 
 namespace mtconnect {
   using namespace pipeline;
-  class adapter_plugin_test : public Source
+  class adapter_plugin_test : public source::Source
   {
   public:
     adapter_plugin_test(const std::string &name, boost::asio::io_context &io,
@@ -70,7 +70,7 @@ namespace mtconnect {
     Pipeline *getPipeline() override { return &m_pipeline; }
 
   protected:
-    adapter::AdapterPipeline m_pipeline;
+    source::adapter::AdapterPipeline m_pipeline;
   };
 
   BOOST_DLL_ALIAS(adapter_plugin_test::register_factory,

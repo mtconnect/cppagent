@@ -85,7 +85,8 @@ namespace mtconnect {
     NAMED_SCOPE("Agent::initialize");
 
     m_pipelineContext = context;
-    m_loopback = std::make_shared<LoopbackSource>("AgentSource", m_strand, context, m_options);
+    m_loopback =
+        std::make_shared<source::LoopbackSource>("AgentSource", m_strand, context, m_options);
 
     int major, minor;
     char c;
@@ -613,7 +614,7 @@ namespace mtconnect {
     if (start)
       source->start();
 
-    auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
+    auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
     if (m_agentDevice && adapter)
     {
       m_agentDevice->addAdapter(adapter);

@@ -20,7 +20,7 @@
 
 #include "session_impl.hpp"
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
 
   // HTTP Session
   class HttpSession : public SessionImpl<HttpSession>
@@ -75,4 +75,4 @@ namespace mtconnect::adapter::agent {
     beast::tcp_stream m_stream;
   };
 
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

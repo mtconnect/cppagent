@@ -32,7 +32,7 @@
 
 using namespace std;
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter::agent {
   using namespace mtconnect;
   using namespace entity;
 
@@ -403,4 +403,4 @@ namespace mtconnect::adapter::agent {
       return false;
     }
   }
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

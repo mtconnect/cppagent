@@ -31,9 +31,9 @@ namespace mtconnect {
     using AssetPtr = std::shared_ptr<Asset>;
   }  // namespace asset
 
-  namespace adapter {
+  namespace source::adapter {
     class Adapter;
-  }  // namespace adapter
+  }  // namespace source::adapter
   namespace pipeline {
     class Pipeline
     {

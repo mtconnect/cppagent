@@ -24,7 +24,11 @@
 
 #include "url_parser.hpp"
 
-namespace mtconnect::adapter::agent {
+namespace mtconnect::source::adapter {
+  struct Handler;
+}
+
+namespace mtconnect::source::adapter::agent {
 
   struct ResponseDocument;
   struct AgentHandler;
@@ -49,4 +53,4 @@ namespace mtconnect::adapter::agent {
     Failure m_failed;
   };
 
-}  // namespace mtconnect::adapter::agent
+}  // namespace mtconnect::source::adapter::agent

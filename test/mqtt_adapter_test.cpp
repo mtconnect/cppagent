@@ -27,13 +27,13 @@
 #include <string>
 #include <vector>
 
-#include "adapter/mqtt/mqtt_adapter.hpp"
 #include "pipeline/pipeline_context.hpp"
+#include "source/adapter/mqtt/mqtt_adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
-using namespace mtconnect::adapter::mqtt_adapter;
+using namespace mtconnect::source::adapter;
+using namespace mtconnect::source::adapter::mqtt_adapter;
 namespace asio = boost::asio;
 
 class MqttAdapterTest : public testing::Test
