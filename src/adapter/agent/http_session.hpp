@@ -46,7 +46,7 @@ namespace mtconnect::adapter::agent {
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
     {
       if (ec)
-        fail(ec, "connect");
+        return failed(ec, "connect");
 
       if (m_handler && m_handler->m_connected)
         m_handler->m_connected(m_identity);
@@ -66,7 +66,7 @@ namespace mtconnect::adapter::agent {
 
       // not_connected happens sometimes so don't bother reporting it.
       if (ec && ec != beast::errc::not_connected)
-        return fail(ec, "shutdown");
+        return failed(ec, "shutdown");
 
       // If we get here then the connection is closed gracefully
     }

@@ -32,16 +32,19 @@ namespace mtconnect::adapter::agent {
   {
   public:
     using Next = std::function<bool()>;
+    using Reconnect = std::function<void()>;
 
     virtual ~Session() {}
     virtual bool isOpen() const = 0;
     virtual void stop() = 0;
+    virtual void failed(boost::beast::error_code ec, const char *what) = 0;
 
     virtual bool makeRequest(const std::string &suffix, const UrlQuery &query, bool stream,
                              Next next) = 0;
 
     Handler *m_handler = nullptr;
     std::string m_identity;
+    Reconnect m_reconnect;
   };
 
 }  // namespace mtconnect::adapter::agent

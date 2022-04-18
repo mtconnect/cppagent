@@ -37,11 +37,6 @@ namespace mtconnect::adapter::agent {
   using tcp = boost::asio::ip::tcp;
 
   // Report a failure
-  void fail(beast::error_code ec, char const *what)
-  {
-    LOG(error) << what << ": " << ec.message() << "\n";
-  }
-
   template <class Derived>
   class SessionImpl : public Session
   {
@@ -77,6 +72,19 @@ namespace mtconnect::adapter::agent {
     virtual ~SessionImpl() { stop(); }
 
     bool isOpen() const override { return derived().lowestLayer().socket().is_open(); }
+    
+    void failed(boost::beast::error_code ec, const char *what) override
+    {
+      LOG(error) << what << ": " << ec.message() << "\n";
+      derived().lowestLayer().socket().close();
+      m_chunk.consume(m_chunk.size());
+      m_buffer.clear();
+
+      if (m_reconnect)
+      {
+        m_reconnect();
+      }
+    }
 
     void stop() override
     {
@@ -121,7 +129,7 @@ namespace mtconnect::adapter::agent {
       if (ec)
       {
         // If we can't resolve, then shut down the adapter
-        return fail(ec, "resolve");
+        return failed(ec, "resolve");
       }
 
       if (!m_resolution)
@@ -204,7 +212,7 @@ namespace mtconnect::adapter::agent {
 
       if (ec)
       {
-        return fail(ec, "write");
+        return failed(ec, "write");
       }
 
       derived().lowestLayer().expires_after(std::chrono::seconds(30));
@@ -244,7 +252,7 @@ namespace mtconnect::adapter::agent {
 
     void createChunkHeaderHandler()
     {
-      m_chunkHeaderHandler = [](std::uint64_t size, boost::string_view extensions,
+      m_chunkHeaderHandler = [this](std::uint64_t size, boost::string_view extensions,
                                 boost::system::error_code &ec) {
         http::chunk_extensions ce;
         ce.parse(extensions, ec);
@@ -252,7 +260,9 @@ namespace mtconnect::adapter::agent {
           cout << "Ext: " << c.first << ": " << c.second << endl;
 
         if (ec)
-          fail(ec, "Failed in chunked extension parse");
+        {
+          return failed(ec, "Failed in chunked extension parse");
+        }
       };
 
       m_chunkParser->on_chunk_header(m_chunkHeaderHandler);
@@ -335,7 +345,8 @@ namespace mtconnect::adapter::agent {
       m_boundary = findBoundary();
       if (m_boundary.empty())
       {
-        LOG(error) << "Cannot find boundary";
+        beast::error_code ec;
+        failed(ec, "Cannot find boundary");
         return;
       }
 
@@ -355,7 +366,8 @@ namespace mtconnect::adapter::agent {
       if (ec)
       {
         LOG(error) << "Need to handle fallback if sreaming fails";
-        return fail(ec, "header");
+        failed(ec, "header");
+        return;
       }
       
       if (m_streaming && m_headerParser->chunked())
@@ -383,7 +395,7 @@ namespace mtconnect::adapter::agent {
 
       if (ec)
       {
-        return fail(ec, "read");
+        return failed(ec, "read");
       }
 
       derived().lowestLayer().expires_after(std::chrono::seconds(30));

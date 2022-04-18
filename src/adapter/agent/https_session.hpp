@@ -61,7 +61,7 @@ namespace mtconnect::adapter::agent {
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
     {
       if (ec)
-        return fail(ec, "connect");
+        return failed(ec, "connect");
 
       // Set a timeout on the operation
       beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
@@ -76,7 +76,7 @@ namespace mtconnect::adapter::agent {
     void onHandshake(beast::error_code ec)
     {
       if (ec)
-        fail(ec, "handshake");
+        failed(ec, "handshake");
 
       if (m_handler && m_handler->m_connected)
         m_handler->m_connected(m_identity);
@@ -107,7 +107,7 @@ namespace mtconnect::adapter::agent {
         m_handler->m_disconnected(m_identity);
 
       if (ec)
-        return fail(ec, "shutdown");
+        return failed(ec, "shutdown");
 
       // If we get here then the connection is closed gracefully
     }

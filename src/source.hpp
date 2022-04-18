@@ -35,7 +35,7 @@ namespace mtconnect {
       std::shared_ptr<pipeline::PipelineContext> pipelineContext, const ConfigOptions &options,
       const boost::property_tree::ptree &block)>;
 
-  class Source
+  class Source : public std::enable_shared_from_this<Source>
   {
   public:
     Source(boost::asio::io_context &io) : m_strand(io) {}
@@ -45,6 +45,8 @@ namespace mtconnect {
       : m_name(name), m_strand(io)
     {}
     virtual ~Source() {}
+    
+    SourcePtr getptr() const { return const_cast<Source *>(this)->shared_from_this(); }
 
     virtual bool start() = 0;
     virtual void stop() = 0;

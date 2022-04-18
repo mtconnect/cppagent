@@ -53,7 +53,7 @@ namespace mtconnect::adapter::agent {
 
   AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
                              const ConfigOptions &options, const boost::property_tree::ptree &block)
-    : Adapter("AgentAdapter", io, options), m_pipeline(context, Source::m_strand)
+    : Adapter("AgentAdapter", io, options), m_pipeline(context, Source::m_strand), m_reconnectTimer(io)
   {
     GetOptions(block, m_options, options);
     AddOptions(block, m_options,
@@ -92,13 +92,16 @@ namespace mtconnect::adapter::agent {
 
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
-    m_reconnectInterval = *GetOption<int>(m_options, configuration::ReconnectInterval);
+    m_reconnectInterval = std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
 
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
   }
 
-  AgentAdapter::~AgentAdapter() {}
+  AgentAdapter::~AgentAdapter()
+  {
+    m_reconnectTimer.cancel();
+  }
 
   bool AgentAdapter::start()
   {
@@ -130,11 +133,35 @@ namespace mtconnect::adapter::agent {
     m_assetSession->m_identity = m_identity;
 
     m_handler->m_assetUpdated = [this](const EntityList &updated) { assetUpdated(updated); };
-
-    assets();
-    current();
+    
+    auto ptr = getptr();
+    m_session->m_reconnect = [ptr]() {
+      if (ptr->m_reconnecting)
+      {
+        ptr->m_reconnecting = true;
+        ptr->m_session->stop();
+        ptr->m_assetSession->stop();
+        ptr->m_reconnectTimer.expires_after(ptr->m_reconnectInterval);
+        ptr->m_reconnectTimer.async_wait(asio::bind_executor(ptr->m_strand,
+               [ptr](boost::system::error_code ec) {
+          if (!ec)
+          {
+            ptr->m_reconnecting = false;
+            ptr->run();
+          }
+        }));
+      }
+    };
+    
+    run();
 
     return true;
+  }
+  
+  void AgentAdapter::run()
+  {
+    assets();
+    current();
   }
 
   void AgentAdapter::current()
@@ -158,6 +185,7 @@ namespace mtconnect::adapter::agent {
 
   void AgentAdapter::stop()
   {
+    m_reconnectTimer.cancel();
     m_session->stop();
     m_session.reset();
   }

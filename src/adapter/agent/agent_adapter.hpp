@@ -62,8 +62,11 @@ namespace mtconnect::adapter::agent {
     bool start() override;
     void stop() override;
     pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
+    
+    auto getptr() const { return std::dynamic_pointer_cast<AgentAdapter>(Source::getptr()); }
 
   protected:
+    void run();
     void current();
     bool sample();
     void assets();
@@ -74,10 +77,12 @@ namespace mtconnect::adapter::agent {
     Url m_url;
     int m_count;
     int m_heartbeat;
-    int m_reconnectInterval;
+    bool m_reconnecting = false;
+    std::chrono::seconds m_reconnectInterval;
     std::string m_host;
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;
+    boost::asio::steady_timer m_reconnectTimer;
   };
 
 }  // namespace mtconnect::adapter::agent
