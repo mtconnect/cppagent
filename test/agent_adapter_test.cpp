@@ -126,6 +126,8 @@ protected:
     options.emplace(configuration::Heartbeat, hb);
     options.emplace(configuration::ReconnectInterval, 1);
 
+    
+
     boost::property_tree::ptree tree;
     m_adapter = std::make_shared<agent::AgentAdapter>(m_agentTestHelper->m_ioContext, m_context,
                                                       options, tree);
@@ -377,6 +379,62 @@ TEST_F(AgentAdapterTest, should_reconnect)
     m_agentTestHelper->m_ioContext.run_one();
   }
   ASSERT_TRUE(session);
+
+  timeout.cancel();
+}
+
+TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
+{
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port, {{"!CloseConnectionAfterResponse!", true}});
+
+  addAdapter();
+
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
+
+  int rc = 0;
+  ResponseDocument rd;
+  handler->m_processData = [&](const string &d, const string &s) {
+    ResponseDocument::parse(d, rd, m_context);
+    rc++;
+
+    auto seq = m_context->getSharedState<NextSequence>("next");
+    seq->m_next = rd.m_next;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      //throw runtime_error("test timed out");
+    }
+  });
+
+  while (rc < 2)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(2, rc);
+
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|execution|READY");
+
+  ASSERT_EQ(32, rd.m_entities.size());
+  rd.m_entities.clear();
+  while (rc < 3)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(3, rc);
+  ASSERT_EQ(1, rd.m_entities.size());
+
+  auto obs = rd.m_entities.front();
+  ASSERT_EQ("p5", get<string>(obs->getProperty("dataItemId")));
+  ASSERT_EQ("READY", obs->getValue<string>());
 
   timeout.cancel();
 }

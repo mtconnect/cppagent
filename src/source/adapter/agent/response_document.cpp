@@ -359,6 +359,35 @@ namespace mtconnect::source::adapter::agent {
 
     return true;
   }
+  
+  inline static void parseErrors(ResponseDocument &out, xmlNodePtr node)
+  {
+    auto errors = findChild(node, "Errors");
+    if (errors == nullptr)
+    {
+      auto error = findChild(node, "Error");
+      if (error)
+      {
+        auto code = attributeValue(error, "code");
+        auto msg = text(error);
+        out.m_errors.emplace_back(ResponseDocument::Error { code, msg });
+        
+        LOG(error) << "Received protocol error: " << code << " " << msg;
+      }
+    }
+    else
+    {
+      eachElement(errors, "Error", [&out](xmlNodePtr error) {
+        auto code = attributeValue(error, "code");
+        auto msg = text(error);
+        out.m_errors.emplace_back(ResponseDocument::Error { code, msg });
+        
+        LOG(error) << "Received protocol error: " << code << " " << msg;
+
+        return true;
+      });
+    }
+  }
 
   bool ResponseDocument::parse(const std::string_view &content, ResponseDocument &out,
                                pipeline::PipelineContextPtr context)
@@ -389,7 +418,7 @@ namespace mtconnect::source::adapter::agent {
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectError", root->name) == 0)
       {
-        LOG(error) << "Received error: " << content;
+        parseErrors(out, root);
         return false;
       }
       else

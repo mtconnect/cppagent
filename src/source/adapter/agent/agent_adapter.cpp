@@ -72,7 +72,9 @@ namespace mtconnect::source::adapter::agent {
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
                          {configuration::ReconnectInterval, 10},
-                         {configuration::RelativeTime, false}});
+                         {configuration::RelativeTime, false},
+      { "!CloseConnectionAfterResponse!", false }
+    });
 
     m_handler = m_pipeline.makeHandler();
 
@@ -96,6 +98,7 @@ namespace mtconnect::source::adapter::agent {
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
     m_reconnectInterval =
         std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
+    m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
 
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
@@ -128,9 +131,11 @@ namespace mtconnect::source::adapter::agent {
 
     m_session->m_handler = m_handler.get();
     m_session->m_identity = m_identity;
+    m_session->m_closeConnectionAfterResponse = m_closeConnectionAfterResponse;
 
     m_assetSession->m_handler = m_handler.get();
     m_assetSession->m_identity = m_identity;
+    m_assetSession->m_closeConnectionAfterResponse = m_closeConnectionAfterResponse;
 
     m_handler->m_assetUpdated = [this](const EntityList &updated) { assetUpdated(updated); };
 

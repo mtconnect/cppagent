@@ -83,6 +83,9 @@ namespace mtconnect::source::adapter::agent {
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;
     boost::asio::steady_timer m_reconnectTimer;
+    
+    // For testing
+    bool m_closeConnectionAfterResponse;
   };
 
 }  // namespace mtconnect::source::adapter::agent

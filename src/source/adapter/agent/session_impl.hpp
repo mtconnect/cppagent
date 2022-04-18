@@ -214,6 +214,9 @@ namespace mtconnect::source::adapter::agent {
       m_req.target(m_target);
       m_req.set(http::field::host, m_url.getHost());
       m_req.set(http::field::user_agent, "MTConnect Agent/2.0");
+      if (m_closeConnectionAfterResponse) {
+        m_req.set(http::field::connection, "close");
+      }
 
       http::async_write(derived().stream(), m_req,
                         beast::bind_front_handler(&SessionImpl::onWrite, derived().getptr()));
@@ -325,7 +328,7 @@ namespace mtconnect::source::adapter::agent {
           cstr << body;
         }
 
-        LOG(info) << "Received: -------- " << m_chunk.size() << " " << remain << "\n"
+        LOG(trace) << "Received: -------- " << m_chunk.size() << " " << remain << "\n"
                   << body << "\n-------------";
 
         if (!m_hasHeader)
@@ -339,7 +342,7 @@ namespace mtconnect::source::adapter::agent {
           auto start = static_cast<const char *>(m_chunk.data().data());
           string_view sbuf(start, m_chunkLength);
 
-          LOG(info) << "Received Chunk: --------\n" << sbuf << "\n-------------";
+          LOG(debug) << "Received Chunk: --------\n" << sbuf << "\n-------------";
 
           if (m_handler && m_handler->m_processData)
             m_handler->m_processData(string(sbuf), m_identity);
@@ -379,9 +382,19 @@ namespace mtconnect::source::adapter::agent {
     {
       if (ec)
       {
-        LOG(error) << "Need to handle fallback if sreaming fails";
-        failed(ec, "header");
-        return;
+        if (ec == asio::error::connection_reset)
+        {
+          LOG(debug) << "Connection reset, reconnecting";
+          derived().lowestLayer().close();
+          connect();
+          return;
+        }
+        else
+        {
+          LOG(error) << "Need to handle fallback if sreaming fails";
+          failed(ec, "header");
+          return;
+        }
       }
 
       if (m_streaming && m_headerParser->chunked())

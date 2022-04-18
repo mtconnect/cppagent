@@ -51,6 +51,7 @@ namespace mtconnect::source::adapter::agent {
     std::string m_identity;
     Reconnect m_reconnect;
     Failure m_failed;
+    bool m_closeConnectionAfterResponse = false;
   };
 
 }  // namespace mtconnect::source::adapter::agent

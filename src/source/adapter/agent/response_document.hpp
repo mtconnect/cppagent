@@ -33,6 +33,12 @@ namespace mtconnect::source::adapter::agent {
 
   struct ResponseDocument
   {
+    struct Error {
+      std::string m_code;
+      std::string m_message;
+    };
+    using Errors = std::list<Error>;
+    
     static bool parse(const std::string_view &content, ResponseDocument &doc,
                       pipeline::PipelineContextPtr context);
 
@@ -40,6 +46,7 @@ namespace mtconnect::source::adapter::agent {
     SequenceNumber_t m_next;
     entity::EntityList m_entities;
     entity::EntityList m_assetEvents;
+    Errors m_errors;
   };
 
 }  // namespace mtconnect::source::adapter::agent
