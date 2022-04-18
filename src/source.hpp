@@ -45,7 +45,7 @@ namespace mtconnect {
       : m_name(name), m_strand(io)
     {}
     virtual ~Source() {}
-    
+
     SourcePtr getptr() const { return const_cast<Source *>(this)->shared_from_this(); }
 
     virtual bool start() = 0;

@@ -72,7 +72,7 @@ namespace mtconnect::adapter::agent {
     virtual ~SessionImpl() { stop(); }
 
     bool isOpen() const override { return derived().lowestLayer().socket().is_open(); }
-    
+
     void failed(boost::beast::error_code ec, const char *what, bool reconnect = true) override
     {
       derived().lowestLayer().socket().close();
@@ -172,7 +172,7 @@ namespace mtconnect::adapter::agent {
         if (!uq.empty())
           m_target += ("?" + uq.join());
         m_streaming = stream;
-        
+
         // Clean out any previous data
         m_buffer.clear();
         m_contentType.clear();
@@ -233,9 +233,9 @@ namespace mtconnect::adapter::agent {
       // Receive the HTTP response
       m_headerParser.emplace();
       http::async_read_header(
-                              derived().stream(), m_buffer, *m_headerParser,
-                              asio::bind_executor(m_strand,
-                                                  beast::bind_front_handler(&Derived::onHeader, derived().getptr())));
+          derived().stream(), m_buffer, *m_headerParser,
+          asio::bind_executor(m_strand,
+                              beast::bind_front_handler(&Derived::onHeader, derived().getptr())));
     }
 
     inline string findBoundary()
@@ -266,7 +266,7 @@ namespace mtconnect::adapter::agent {
     void createChunkHeaderHandler()
     {
       m_chunkHeaderHandler = [this](std::uint64_t size, boost::string_view extensions,
-                                boost::system::error_code &ec) {
+                                    boost::system::error_code &ec) {
         http::chunk_extensions ce;
         ce.parse(extensions, ec);
         for (auto &c : ce)
@@ -325,7 +325,8 @@ namespace mtconnect::adapter::agent {
           cstr << body;
         }
 
-        LOG(info) << "Received: -------- " << m_chunk.size() << " " << remain << "\n" << body << "\n-------------";
+        LOG(info) << "Received: -------- " << m_chunk.size() << " " << remain << "\n"
+                  << body << "\n-------------";
 
         if (!m_hasHeader)
         {
@@ -382,7 +383,7 @@ namespace mtconnect::adapter::agent {
         failed(ec, "header");
         return;
       }
-      
+
       if (m_streaming && m_headerParser->chunked())
       {
         onChunkedContent();
@@ -394,7 +395,7 @@ namespace mtconnect::adapter::agent {
       else
       {
         derived().lowestLayer().expires_after(std::chrono::seconds(30));
-        
+
         m_textParser.emplace(std::move(*m_headerParser));
         http::async_read(derived().stream(), m_buffer, *m_textParser,
                          asio::bind_executor(m_strand, beast::bind_front_handler(
@@ -419,7 +420,7 @@ namespace mtconnect::adapter::agent {
       string body = m_textParser->get().body();
       if (m_handler && m_handler->m_processData)
         m_handler->m_processData(body, m_identity);
-      
+
       m_textParser.reset();
       m_idle = true;
 

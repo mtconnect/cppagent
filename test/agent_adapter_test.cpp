@@ -67,9 +67,7 @@ struct MockPipelineContract : public PipelineContract
   void deliverAsset(AssetPtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &dev, bool flag) override {
-    
-  }
+  void deliverConnectStatus(entity::EntityPtr, const StringList &dev, bool flag) override {}
   void sourceFailed(const std::string &id) override { m_failed = true; }
 
   bool m_failed = false;
@@ -92,11 +90,12 @@ protected:
     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, true);
     m_agentTestHelper->getAgent()->start();
     m_agentId = to_string(getCurrentTimeInSec());
-    
+
     auto printer = make_unique<XmlPrinter>();
     auto parser = make_unique<XmlParser>();
-    
-    m_device = parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()).front();
+
+    m_device =
+        parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()).front();
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_device);
@@ -133,7 +132,7 @@ protected:
 
     return m_adapter;
   }
-  
+
   void addAdapter(ConfigOptions options = ConfigOptions {})
   {
     m_agentTestHelper->addAdapter(options, "localhost", 7878,
@@ -153,7 +152,6 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
-  
 
   unique_ptr<adapter::Handler> handler = make_unique<Handler>();
 
@@ -174,7 +172,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
       throw runtime_error("test timed out");
     }
   });
-  
+
   while (!connecting)
   {
     m_agentTestHelper->m_ioContext.run_one_for(100ms);
@@ -187,7 +185,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   }
 
   ASSERT_TRUE(connected);
-  
+
   timeout.cancel();
 }
 
@@ -195,7 +193,6 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
-  
 
   unique_ptr<adapter::Handler> handler = make_unique<Handler>();
 
@@ -217,7 +214,7 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
       throw runtime_error("test timed out");
     }
   });
-  
+
   while (!current)
   {
     m_agentTestHelper->m_ioContext.run_one_for(100ms);
@@ -231,7 +228,7 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
-  
+
   unique_ptr<adapter::Handler> handler = make_unique<Handler>();
 
   bool assets = false;
@@ -252,7 +249,7 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
       throw runtime_error("test timed out");
     }
   });
-  
+
   while (!assets)
   {
     m_agentTestHelper->m_ioContext.run_one_for(100ms);
@@ -266,7 +263,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
-  
+
   addAdapter();
 
   unique_ptr<adapter::Handler> handler = make_unique<Handler>();
@@ -276,7 +273,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
   handler->m_processData = [&](const string &d, const string &s) {
     ResponseDocument::parse(d, rd, m_context);
     rc++;
-    
+
     auto seq = m_context->getSharedState<NextSequence>("next");
     seq->m_next = rd.m_next;
   };
@@ -293,13 +290,13 @@ TEST_F(AgentAdapterTest, should_receive_sample)
       throw runtime_error("test timed out");
     }
   });
-  
+
   while (rc < 2)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
   ASSERT_EQ(2, rc);
-  
+
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|execution|READY");
 
   ASSERT_EQ(32, rd.m_entities.size());
@@ -310,7 +307,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
   }
   ASSERT_EQ(3, rc);
   ASSERT_EQ(1, rd.m_entities.size());
-  
+
   auto obs = rd.m_entities.front();
   ASSERT_EQ("p5", get<string>(obs->getProperty("dataItemId")));
   ASSERT_EQ("READY", obs->getValue<string>());
@@ -322,7 +319,7 @@ TEST_F(AgentAdapterTest, should_reconnect)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port, {}, "", 5000);
-  
+
   addAdapter();
 
   unique_ptr<adapter::Handler> handler = make_unique<Handler>();
@@ -332,26 +329,22 @@ TEST_F(AgentAdapterTest, should_reconnect)
   handler->m_processData = [&](const string &d, const string &s) {
     ResponseDocument::parse(d, rd, m_context);
     rc++;
-    
+
     auto seq = m_context->getSharedState<NextSequence>("next");
     seq->m_next = rd.m_next;
   };
   handler->m_connecting = [&](const string id) {};
   handler->m_connected = [&](const string id) {};
-  
+
   bool disconnected = false;
-  handler->m_disconnected = [&](const string id) {
-    disconnected = true;
-  };
-  
+  handler->m_disconnected = [&](const string id) { disconnected = true; };
+
   adapter->setHandler(handler);
   adapter->start();
-  
+
   sink::rest_sink::SessionPtr session;
-  m_agentTestHelper->m_restService->getServer()->m_lastSession = [&](sink::rest_sink::SessionPtr ptr)
-  {
-    session = ptr;
-  };
+  m_agentTestHelper->m_restService->getServer()->m_lastSession =
+      [&](sink::rest_sink::SessionPtr ptr) { session = ptr; };
 
   boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 2s);
   timeout.async_wait([](boost::system::error_code ec) {
@@ -360,17 +353,17 @@ TEST_F(AgentAdapterTest, should_reconnect)
       throw runtime_error("test timed out");
     }
   });
-  
+
   while (rc < 2)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
-  ASSERT_EQ(2, rc);  
+  ASSERT_EQ(2, rc);
   ASSERT_TRUE(session);
-  
+
   ASSERT_EQ(32, rd.m_entities.size());
   rd.m_entities.clear();
-  
+
   session->close();
   while (!disconnected)
   {
@@ -378,7 +371,7 @@ TEST_F(AgentAdapterTest, should_reconnect)
   }
 
   session.reset();
-  
+
   while (!session)
   {
     m_agentTestHelper->m_ioContext.run_one();

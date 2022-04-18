@@ -173,7 +173,7 @@ namespace mtconnect {
                          const std::optional<std::string> type, const std::optional<Timestamp> time,
                          asset::AssetList &list);
     void notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset);
-    
+
     // Adapter feedback
     void sourceFailed(const std::string &identity);
 
@@ -294,11 +294,8 @@ namespace mtconnect {
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
     void deliverCommand(entity::EntityPtr) override;
-    
-    void sourceFailed(const std::string &identity) override
-    {
-      m_agent->sourceFailed(identity);
-    }
+
+    void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
 
   protected:
     Agent *m_agent;

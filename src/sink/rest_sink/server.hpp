@@ -146,7 +146,7 @@ namespace mtconnect::sink::rest_sink {
     void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
     void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
     ErrorFunction getErrorFunction() const { return m_errorFunction; }
-    
+
     // Callback for testing. Allows test to grab the last session dispatched.
     std::function<void(SessionPtr)> m_lastSession;
 

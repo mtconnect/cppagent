@@ -581,7 +581,7 @@ namespace mtconnect::sink::rest_sink {
         session->allowPutsFrom(m_allowPutsFrom);
       else if (m_allowPuts)
         session->allowPuts();
-      
+
       session->run();
     }
   }

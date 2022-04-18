@@ -31,7 +31,7 @@ namespace mtconnect::adapter::agent {
   public:
     using AdapterPipeline::AdapterPipeline;
     void build(const ConfigOptions &options) override;
-    
+
     Handler *m_handler = nullptr;
   };
 
@@ -62,7 +62,7 @@ namespace mtconnect::adapter::agent {
     bool start() override;
     void stop() override;
     pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
-    
+
     auto getptr() const { return std::dynamic_pointer_cast<AgentAdapter>(Source::getptr()); }
 
   protected:

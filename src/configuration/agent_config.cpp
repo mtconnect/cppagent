@@ -49,9 +49,9 @@
 #include <sys/stat.h>
 #include <vector>
 
+#include "adapter/agent/agent_adapter.hpp"
 #include "adapter/mqtt/mqtt_adapter.hpp"
 #include "adapter/shdr/shdr_adapter.hpp"
-#include "adapter/agent/agent_adapter.hpp"
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"

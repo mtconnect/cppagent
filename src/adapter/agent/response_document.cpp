@@ -217,7 +217,7 @@ namespace mtconnect::adapter::agent {
       {
         const string &uuid = *(device->getUuid());
         LOG(warning) << "Device: " << uuid
-                   << ": Cannot data item for id and no name:" << get<std::string>(id->second);
+                     << ": Cannot data item for id and no name:" << get<std::string>(id->second);
         return nullptr;
       }
       auto di = device->getDeviceDataItem(get<std::string>(diName->second));
@@ -225,8 +225,8 @@ namespace mtconnect::adapter::agent {
       {
         const string &uuid = *(device->getUuid());
         LOG(warning) << "Device: " << uuid << ": Cannot data item for id "
-                   << get<std::string>(id->second)
-                   << " or name:" << get<std::string>(diName->second);
+                     << get<std::string>(id->second)
+                     << " or name:" << get<std::string>(diName->second);
         return nullptr;
       }
     }
@@ -287,10 +287,9 @@ namespace mtconnect::adapter::agent {
             else if (di->isAssetRemoved())
             {
               auto ac = make_shared<pipeline::AssetCommand>(
-                  "AssetCommand",
-                  Properties {{"assetId"s, val}, {"device"s, *(device->getUuid())},
-                    {"VALUE"s, "RemoveAsset"s}
-                  });
+                  "AssetCommand", Properties {{"assetId"s, val},
+                                              {"device"s, *(device->getUuid())},
+                                              {"VALUE"s, "RemoveAsset"s}});
               out.m_entities.emplace_back(ac);
               return true;
             }

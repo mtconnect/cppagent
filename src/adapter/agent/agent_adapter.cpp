@@ -31,8 +31,8 @@
 #include "https_session.hpp"
 #include "logging.hpp"
 #include "mtconnect_xml_transform.hpp"
-#include "session_impl.hpp"
 #include "pipeline/deliver.hpp"
+#include "session_impl.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -42,7 +42,7 @@ namespace mtconnect::adapter::agent {
   {
     buildDeviceList();
     buildCommandAndStatusDelivery();
-    
+
     TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_handler, m_device));
     std::optional<string> obsMetrics;
     obsMetrics = m_identity + "_observation_update_rate";
@@ -53,7 +53,9 @@ namespace mtconnect::adapter::agent {
 
   AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
                              const ConfigOptions &options, const boost::property_tree::ptree &block)
-    : Adapter("AgentAdapter", io, options), m_pipeline(context, Source::m_strand), m_reconnectTimer(io)
+    : Adapter("AgentAdapter", io, options),
+      m_pipeline(context, Source::m_strand),
+      m_reconnectTimer(io)
   {
     GetOptions(block, m_options, options);
     AddOptions(block, m_options,
@@ -86,27 +88,25 @@ namespace mtconnect::adapter::agent {
       m_url.m_port = GetOption<int>(m_options, configuration::Port);
       m_url.m_path = GetOption<string>(m_options, configuration::Device).value_or("/");
     }
-    
+
     if (m_url.m_path[m_url.m_path.size() - 1] != '/')
       m_url.m_path.append("/");
 
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
-    m_reconnectInterval = std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
+    m_reconnectInterval =
+        std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
 
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
   }
 
-  AgentAdapter::~AgentAdapter()
-  {
-    m_reconnectTimer.cancel();
-  }
+  AgentAdapter::~AgentAdapter() { m_reconnectTimer.cancel(); }
 
   bool AgentAdapter::start()
   {
     m_pipeline.start();
-    
+
     if (m_url.m_protocol == "https")
     {
       // The SSL context is required, and holds certificates
@@ -133,7 +133,7 @@ namespace mtconnect::adapter::agent {
     m_assetSession->m_identity = m_identity;
 
     m_handler->m_assetUpdated = [this](const EntityList &updated) { assetUpdated(updated); };
-    
+
     m_session->m_reconnect = [this]() {
       if (m_handler->m_disconnected)
         m_handler->m_disconnected(m_identity);
@@ -143,14 +143,14 @@ namespace mtconnect::adapter::agent {
         m_session->stop();
         m_assetSession->stop();
         m_reconnectTimer.expires_after(m_reconnectInterval);
-        m_reconnectTimer.async_wait(asio::bind_executor(m_strand,
-               [this](boost::system::error_code ec) {
-          if (!ec)
-          {
-            m_reconnecting = false;
-            run();
-          }
-        }));
+        m_reconnectTimer.async_wait(
+            asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+              if (!ec)
+              {
+                m_reconnecting = false;
+                run();
+              }
+            }));
       }
     };
     m_session->m_failed = [this]() {
@@ -158,12 +158,12 @@ namespace mtconnect::adapter::agent {
         m_handler->m_disconnected(m_identity);
       m_pipeline.getContext()->m_contract->sourceFailed(m_identity);
     };
-    
+
     run();
 
     return true;
   }
-  
+
   void AgentAdapter::run()
   {
     assets();

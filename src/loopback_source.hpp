@@ -46,7 +46,7 @@ namespace mtconnect {
     {
       m_pipeline.build(options);
     }
-    
+
     bool isLoopback() override { return true; }
 
     bool start() override
