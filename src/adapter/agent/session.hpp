@@ -34,7 +34,6 @@ namespace mtconnect::adapter::agent {
     using Next = std::function<bool()>;
 
     virtual ~Session() {}
-    virtual void connect() = 0;
     virtual bool isOpen() const = 0;
     virtual void stop() = 0;
 

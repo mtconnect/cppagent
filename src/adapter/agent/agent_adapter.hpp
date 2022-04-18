@@ -74,6 +74,7 @@ namespace mtconnect::adapter::agent {
     Url m_url;
     int m_count;
     int m_heartbeat;
+    int m_reconnectInterval;
     std::string m_host;
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;

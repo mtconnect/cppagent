@@ -85,7 +85,7 @@ namespace mtconnect::adapter::agent {
     }
 
     // Start the asynchronous operation
-    void connect() override
+    virtual void connect()
     {
       // If the address is an IP address, we do not need to resolve.
       if (m_resolution)
@@ -293,31 +293,20 @@ namespace mtconnect::adapter::agent {
       m_chunk.consume(ep);
     }
 
-    void parseAndDeliverDocument(const std::string_view &buf, ResponseDocument &rd)
-    {
-      if (!rd.m_entities.empty())
-      {
-        if (m_handler && m_handler->m_processData)
-          m_handler->m_processData(string(buf), m_identity);
-      }
-    }
-
     void createChunkBodyHandler()
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
                               boost::system::error_code &ev) -> unsigned long {
-        std::ostream cstr(&m_chunk);
-        cstr << body;
+        {
+          std::ostream cstr(&m_chunk);
+          cstr << body;
+        }
 
-        LOG(info) << "Received: --------\n" << body << "\n-------------";
+        LOG(info) << "Received: -------- " << m_chunk.size() << " " << remain << "\n" << body << "\n-------------";
 
         if (!m_hasHeader)
         {
           parseMimeHeader();
-        }
-        else
-        {
-          cstr << body;
         }
 
         auto len = m_chunk.size();
@@ -326,8 +315,10 @@ namespace mtconnect::adapter::agent {
           auto start = static_cast<const char *>(m_chunk.data().data());
           string_view sbuf(start, m_chunkLength);
 
-          ResponseDocument doc;
-          parseAndDeliverDocument(sbuf, doc);
+          LOG(info) << "Received Chunk: --------\n" << sbuf << "\n-------------";
+
+          if (m_handler && m_handler->m_processData)
+            m_handler->m_processData(string(sbuf), m_identity);
 
           m_chunk.consume(m_chunkLength);
           m_hasHeader = false;

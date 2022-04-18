@@ -69,6 +69,7 @@ namespace mtconnect::adapter::agent {
                          {configuration::Heartbeat, 10000},
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
+                         {configuration::ReconnectInterval, 10000},
                          {configuration::RelativeTime, false}});
 
     m_handler = m_pipeline.makeHandler();
@@ -91,7 +92,8 @@ namespace mtconnect::adapter::agent {
 
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
-    
+    m_reconnectInterval = *GetOption<int>(m_options, configuration::ReconnectInterval);
+
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
   }

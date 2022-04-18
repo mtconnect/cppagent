@@ -53,11 +53,11 @@ namespace asio = boost::asio;
 
 struct MockPipelineContract : public PipelineContract
 {
-  MockPipelineContract(std::map<string, DataItemPtr> &items) : m_dataItems(items) {}
-  DevicePtr findDevice(const std::string &device) override { return nullptr; }
+  MockPipelineContract(DevicePtr &device) : m_device(device) {}
+  DevicePtr findDevice(const std::string &device) override { return m_device; }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
-    return m_dataItems[name];
+    return m_device->getDeviceDataItem(name);
   }
   void eachDataItem(EachDataItem fun) override {}
   void deliverObservation(observation::ObservationPtr obs) override
@@ -71,8 +71,7 @@ struct MockPipelineContract : public PipelineContract
 
   std::string m_result;
 
-  std::map<string, DataItemPtr> &m_dataItems;
-
+  DevicePtr m_device;
   std::vector<ObservationPtr> m_observations;
 };
 
@@ -89,9 +88,14 @@ protected:
     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, true);
     m_agentTestHelper->getAgent()->start();
     m_agentId = to_string(getCurrentTimeInSec());
+    
+    auto printer = make_unique<XmlPrinter>();
+    auto parser = make_unique<XmlParser>();
+    
+    m_device = parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()).front();
 
     m_context = make_shared<PipelineContext>();
-    m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
+    m_context->m_contract = make_unique<MockPipelineContract>(m_device);
   }
 
   void TearDown() override
@@ -123,6 +127,12 @@ protected:
 
     return m_adapter;
   }
+  
+  void addAdapter(ConfigOptions options = ConfigOptions {})
+  {
+    m_agentTestHelper->addAdapter(options, "localhost", 7878,
+                                  m_agentTestHelper->m_agent->defaultDevice()->getName());
+  }
 
 public:
   std::string m_agentId;
@@ -130,7 +140,7 @@ public:
   std::shared_ptr<AgentAdapter> m_adapter;
   std::chrono::milliseconds m_delay {};
   shared_ptr<PipelineContext> m_context;
-  std::map<string, DataItemPtr> m_dataItems;
+  DevicePtr m_device;
 };
 
 TEST_F(AgentAdapterTest, should_connect_to_agent)
@@ -242,6 +252,118 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
     m_agentTestHelper->m_ioContext.run_one_for(100ms);
   }
   ASSERT_TRUE(assets);
+
+  timeout.cancel();
+}
+
+TEST_F(AgentAdapterTest, should_receive_sample)
+{
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port);
+  
+  addAdapter();
+
+  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+
+  int rc = 0;
+  ResponseDocument rd;
+  handler->m_processData = [&](const string &d, const string &s) {
+    ResponseDocument::parse(d, rd, m_context);
+    rc++;
+    
+    auto seq = m_context->getSharedState<NextSequence>("next");
+    seq->m_next = rd.m_next;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+  
+  while (rc < 2)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(2, rc);
+  
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|execution|READY");
+
+  ASSERT_EQ(32, rd.m_entities.size());
+  rd.m_entities.clear();
+  while (rc < 3)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(3, rc);
+  ASSERT_EQ(1, rd.m_entities.size());
+  
+  auto obs = rd.m_entities.front();
+  ASSERT_EQ("p5", get<string>(obs->getProperty("dataItemId")));
+  ASSERT_EQ("READY", obs->getValue<string>());
+
+  timeout.cancel();
+}
+
+TEST_F(AgentAdapterTest, should_reconnect)
+{
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port);
+  
+  addAdapter();
+
+  unique_ptr<adapter::Handler> handler = make_unique<Handler>();
+
+  int rc = 0;
+  ResponseDocument rd;
+  handler->m_processData = [&](const string &d, const string &s) {
+    ResponseDocument::parse(d, rd, m_context);
+    rc++;
+    
+    auto seq = m_context->getSharedState<NextSequence>("next");
+    seq->m_next = rd.m_next;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+  
+  while (rc < 2)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(2, rc);
+  
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|execution|READY");
+
+  ASSERT_EQ(32, rd.m_entities.size());
+  rd.m_entities.clear();
+  while (rc < 3)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(3, rc);
+  ASSERT_EQ(1, rd.m_entities.size());
+  
+  auto obs = rd.m_entities.front();
+  ASSERT_EQ("p5", get<string>(obs->getProperty("dataItemId")));
+  ASSERT_EQ("READY", obs->getValue<string>());
 
   timeout.cancel();
 }
