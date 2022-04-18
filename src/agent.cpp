@@ -780,6 +780,29 @@ namespace mtconnect {
         LOG(debug) << "Cannot find availability for " << *device->getComponentName();
     }
   }
+  
+  void Agent::sourceFailed(const std::string &identity)
+  {
+    auto source = findSource(identity);
+    if (source)
+    {
+      source->stop();
+      
+      if (m_sources.size() == 1)
+      {
+        LOG(fatal) << "Last source failed, stopping";
+        stop();
+      }
+      else
+      {
+        m_sources.remove(source);
+      }
+    }
+    else
+    {
+      LOG(error) << "Cannot find failed source: " << identity;
+    }
+  }
 
   // -----------------------------------------------
   // Validation methods

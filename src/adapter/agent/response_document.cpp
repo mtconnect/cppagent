@@ -205,7 +205,7 @@ namespace mtconnect::adapter::agent {
     if (id == properties.end())
     {
       const string &uuid = *(device->getUuid());
-      LOG(error) << "Device: " << uuid << ": Cannot find dataItemId for " << name;
+      LOG(warning) << "Device: " << uuid << ": Cannot find dataItemId for " << name;
       return nullptr;
     }
 
@@ -216,7 +216,7 @@ namespace mtconnect::adapter::agent {
       if (diName == properties.end())
       {
         const string &uuid = *(device->getUuid());
-        LOG(error) << "Device: " << uuid
+        LOG(warning) << "Device: " << uuid
                    << ": Cannot data item for id and no name:" << get<std::string>(id->second);
         return nullptr;
       }
@@ -224,7 +224,7 @@ namespace mtconnect::adapter::agent {
       if (!di)
       {
         const string &uuid = *(device->getUuid());
-        LOG(error) << "Device: " << uuid << ": Cannot data item for id "
+        LOG(warning) << "Device: " << uuid << ": Cannot data item for id "
                    << get<std::string>(id->second)
                    << " or name:" << get<std::string>(diName->second);
         return nullptr;

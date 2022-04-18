@@ -67,8 +67,12 @@ struct MockPipelineContract : public PipelineContract
   void deliverAsset(AssetPtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
-  void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
+  void deliverConnectStatus(entity::EntityPtr, const StringList &dev, bool flag) override {
+    
+  }
+  void sourceFailed(const std::string &id) override { m_failed = true; }
 
+  bool m_failed = false;
   std::string m_result;
 
   DevicePtr m_device;
@@ -110,7 +114,8 @@ protected:
     m_agentTestHelper.reset();
   }
 
-  auto createAdapter(int port, mtconnect::ConfigOptions options = {}, const std::string path = "")
+  auto createAdapter(int port, mtconnect::ConfigOptions options = {}, const std::string path = "",
+                     int hb = 500)
   {
     using namespace mtconnect;
     using namespace mtconnect::adapter;
@@ -119,7 +124,8 @@ protected:
     options.emplace(configuration::Url, url);
     options.emplace(configuration::Port, port);
     options.emplace(configuration::Count, 100);
-    options.emplace(configuration::Heartbeat, 500);
+    options.emplace(configuration::Heartbeat, hb);
+    options.emplace(configuration::ReconnectInterval, 1);
 
     boost::property_tree::ptree tree;
     m_adapter = std::make_shared<agent::AgentAdapter>(m_agentTestHelper->m_ioContext, m_context,
@@ -315,7 +321,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
 TEST_F(AgentAdapterTest, should_reconnect)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
-  auto adapter = createAdapter(port);
+  auto adapter = createAdapter(port, {}, "", 5000);
   
   addAdapter();
 
@@ -332,11 +338,22 @@ TEST_F(AgentAdapterTest, should_reconnect)
   };
   handler->m_connecting = [&](const string id) {};
   handler->m_connected = [&](const string id) {};
-
+  
+  bool disconnected = false;
+  handler->m_disconnected = [&](const string id) {
+    disconnected = true;
+  };
+  
   adapter->setHandler(handler);
   adapter->start();
+  
+  sink::rest_sink::SessionPtr session;
+  m_agentTestHelper->m_restService->getServer()->m_lastSession = [&](sink::rest_sink::SessionPtr ptr)
+  {
+    session = ptr;
+  };
 
-  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 2s);
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
@@ -348,22 +365,25 @@ TEST_F(AgentAdapterTest, should_reconnect)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
-  ASSERT_EQ(2, rc);
+  ASSERT_EQ(2, rc);  
+  ASSERT_TRUE(session);
   
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|execution|READY");
-
   ASSERT_EQ(32, rd.m_entities.size());
   rd.m_entities.clear();
-  while (rc < 3)
+  
+  session->close();
+  while (!disconnected)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
-  ASSERT_EQ(3, rc);
-  ASSERT_EQ(1, rd.m_entities.size());
+
+  session.reset();
   
-  auto obs = rd.m_entities.front();
-  ASSERT_EQ("p5", get<string>(obs->getProperty("dataItemId")));
-  ASSERT_EQ("READY", obs->getValue<string>());
+  while (!session)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_TRUE(session);
 
   timeout.cancel();
 }

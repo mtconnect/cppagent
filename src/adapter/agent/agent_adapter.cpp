@@ -69,7 +69,7 @@ namespace mtconnect::adapter::agent {
                          {configuration::Heartbeat, 10000},
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
-                         {configuration::ReconnectInterval, 10000},
+                         {configuration::ReconnectInterval, 10},
                          {configuration::RelativeTime, false}});
 
     m_handler = m_pipeline.makeHandler();
@@ -134,23 +134,29 @@ namespace mtconnect::adapter::agent {
 
     m_handler->m_assetUpdated = [this](const EntityList &updated) { assetUpdated(updated); };
     
-    auto ptr = getptr();
-    m_session->m_reconnect = [ptr]() {
-      if (ptr->m_reconnecting)
+    m_session->m_reconnect = [this]() {
+      if (m_handler->m_disconnected)
+        m_handler->m_disconnected(m_identity);
+      if (!m_reconnecting)
       {
-        ptr->m_reconnecting = true;
-        ptr->m_session->stop();
-        ptr->m_assetSession->stop();
-        ptr->m_reconnectTimer.expires_after(ptr->m_reconnectInterval);
-        ptr->m_reconnectTimer.async_wait(asio::bind_executor(ptr->m_strand,
-               [ptr](boost::system::error_code ec) {
+        m_reconnecting = true;
+        m_session->stop();
+        m_assetSession->stop();
+        m_reconnectTimer.expires_after(m_reconnectInterval);
+        m_reconnectTimer.async_wait(asio::bind_executor(m_strand,
+               [this](boost::system::error_code ec) {
           if (!ec)
           {
-            ptr->m_reconnecting = false;
-            ptr->run();
+            m_reconnecting = false;
+            run();
           }
         }));
       }
+    };
+    m_session->m_failed = [this]() {
+      if (m_handler->m_disconnected)
+        m_handler->m_disconnected(m_identity);
+      m_pipeline.getContext()->m_contract->sourceFailed(m_identity);
     };
     
     run();

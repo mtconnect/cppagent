@@ -84,6 +84,7 @@ namespace {
     void deliverAssetCommand(entity::EntityPtr c) override { m_command = c; }
     void deliverCommand(entity::EntityPtr c) override { m_command = c; }
     void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
+    void sourceFailed(const std::string &id) override {}
 
     const Agent *m_agent;
     ObservationPtr m_observation;

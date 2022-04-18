@@ -183,6 +183,8 @@ namespace mtconnect::sink::rest_sink {
     else
     {
       auto dispatcher = [this](SessionPtr session, RequestPtr request) {
+        if (m_lastSession)
+          m_lastSession(session);
         dispatch(session, request);
         return true;
       };

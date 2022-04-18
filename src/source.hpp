@@ -50,6 +50,7 @@ namespace mtconnect {
 
     virtual bool start() = 0;
     virtual void stop() = 0;
+    virtual bool isLoopback() { return false; }
 
     virtual pipeline::Pipeline *getPipeline() = 0;
 

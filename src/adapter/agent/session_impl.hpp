@@ -73,21 +73,28 @@ namespace mtconnect::adapter::agent {
 
     bool isOpen() const override { return derived().lowestLayer().socket().is_open(); }
     
-    void failed(boost::beast::error_code ec, const char *what) override
+    void failed(boost::beast::error_code ec, const char *what, bool reconnect = true) override
     {
-      LOG(error) << what << ": " << ec.message() << "\n";
       derived().lowestLayer().socket().close();
-      m_chunk.consume(m_chunk.size());
-      m_buffer.clear();
+      m_idle = true;
 
-      if (m_reconnect)
+      LOG(error) << what << ": " << ec.message() << "\n";
+      if (!reconnect)
       {
+        LOG(error) << "Cannot reconnect";
+        if (m_failed)
+          m_failed();
+      }
+      else if (m_reconnect)
+      {
+        LOG(info) << "Reconnecting";
         m_reconnect();
       }
     }
 
     void stop() override
     {
+      m_idle = true;
       if (isOpen())
         derived().lowestLayer().close();
     }
@@ -129,7 +136,7 @@ namespace mtconnect::adapter::agent {
       if (ec)
       {
         // If we can't resolve, then shut down the adapter
-        return failed(ec, "resolve");
+        return failed(ec, "resolve", false);
       }
 
       if (!m_resolution)
@@ -165,9 +172,15 @@ namespace mtconnect::adapter::agent {
         if (!uq.empty())
           m_target += ("?" + uq.join());
         m_streaming = stream;
+        
+        // Clean out any previous data
         m_buffer.clear();
         m_contentType.clear();
         m_boundary.clear();
+        m_headerParser.reset();
+        m_chunkParser.reset();
+        m_textParser.reset();
+        m_req.clear();
         m_hasHeader = false;
         if (m_chunk.size() > 0)
           m_chunk.consume(m_chunk.size());
