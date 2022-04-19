@@ -448,3 +448,8 @@ TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out
 {
   GTEST_SKIP();
 }
+
+TEST_F(AgentAdapterTest, should_connect_to_tls_agent)
+{
+  GTEST_SKIP();
+}

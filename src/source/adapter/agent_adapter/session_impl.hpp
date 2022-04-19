@@ -180,8 +180,9 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_headerParser.reset();
         m_chunkParser.reset();
         m_textParser.reset();
-        m_req.clear();
+        m_req.reset();
         m_hasHeader = false;
+        m_closeOnRead = false;
         if (m_chunk.size() > 0)
           m_chunk.consume(m_chunk.size());
 
@@ -209,16 +210,17 @@ namespace mtconnect::source::adapter::agent_adapter {
     void request()
     {
       // Set up an HTTP GET request message
-      m_req.version(11);
-      m_req.method(http::verb::get);
-      m_req.target(m_target);
-      m_req.set(http::field::host, m_url.getHost());
-      m_req.set(http::field::user_agent, "MTConnect Agent/2.0");
+      m_req.emplace();
+      m_req->version(11);
+      m_req->method(http::verb::get);
+      m_req->target(m_target);
+      m_req->set(http::field::host, m_url.getHost());
+      m_req->set(http::field::user_agent, "MTConnect Agent/2.0");
       if (m_closeConnectionAfterResponse) {
-        m_req.set(http::field::connection, "close");
+        m_req->set(http::field::connection, "close");
       }
 
-      http::async_write(derived().stream(), m_req,
+      http::async_write(derived().stream(), *m_req,
                         beast::bind_front_handler(&SessionImpl::onWrite, derived().getptr()));
     }
 
@@ -240,6 +242,88 @@ namespace mtconnect::source::adapter::agent_adapter {
           asio::bind_executor(m_strand,
                               beast::bind_front_handler(&Derived::onHeader, derived().getptr())));
     }
+    
+    void onHeader(beast::error_code ec, std::size_t bytes_transferred)
+    {
+      if (ec)
+      {
+        if (ec == asio::error::connection_reset)
+        {
+          LOG(debug) << "Connection reset, reconnecting";
+          derived().lowestLayer().close();
+          connect();
+          return;
+        }
+        else
+        {
+          LOG(error) << "Need to handle fallback if sreaming fails";
+          failed(ec, "header");
+          return;
+        }
+      }
+      
+      auto &msg = m_headerParser->get();
+      if (auto a = msg.find(beast::http::field::connection); a != msg.end())
+        m_closeOnRead = a->value() == "close";
+
+      if (m_streaming && m_headerParser->chunked())
+      {
+        onChunkedContent();
+      }
+      else if (m_streaming)
+      {
+        LOG(error) << "Need to handle fallback if sreaming fails";
+      }
+      else
+      {
+        derived().lowestLayer().expires_after(std::chrono::seconds(30));
+
+        m_textParser.emplace(std::move(*m_headerParser));
+        http::async_read(derived().stream(), m_buffer, *m_textParser,
+                         asio::bind_executor(m_strand, beast::bind_front_handler(
+                                                           &Derived::onRead, derived().getptr())));
+      }
+    }
+
+    void onRead(beast::error_code ec, std::size_t bytes_transferred)
+    {
+      boost::ignore_unused(bytes_transferred);
+
+      if (ec)
+      {
+        return failed(ec, "read");
+      }
+
+      derived().lowestLayer().expires_after(std::chrono::seconds(30));
+
+      if (!derived().lowestLayer().socket().is_open())
+        derived().disconnect();
+
+      string body = m_textParser->get().body();
+      if (m_handler && m_handler->m_processData)
+        m_handler->m_processData(body, m_identity);
+
+      m_textParser.reset();
+      m_idle = true;
+      
+      m_req.reset();
+      
+      if (m_closeOnRead)
+        derived().disconnect();
+
+      if (m_next)
+      {
+        m_next();
+      }
+      else if (!m_queue.empty())
+      {
+        Request req = m_queue.front();
+        m_queue.pop_front();
+        makeRequest(req.m_suffix, req.m_query, req.m_stream, req.m_next);
+      }
+    }
+
+    // Streaming related methods
 
     inline string findBoundary()
     {
@@ -378,82 +462,12 @@ namespace mtconnect::source::adapter::agent_adapter {
                                                          &Derived::onRead, derived().getptr())));
     }
 
-    void onHeader(beast::error_code ec, std::size_t bytes_transferred)
-    {
-      if (ec)
-      {
-        if (ec == asio::error::connection_reset)
-        {
-          LOG(debug) << "Connection reset, reconnecting";
-          derived().lowestLayer().close();
-          connect();
-          return;
-        }
-        else
-        {
-          LOG(error) << "Need to handle fallback if sreaming fails";
-          failed(ec, "header");
-          return;
-        }
-      }
-
-      if (m_streaming && m_headerParser->chunked())
-      {
-        onChunkedContent();
-      }
-      else if (m_streaming)
-      {
-        LOG(error) << "Need to handle fallback if sreaming fails";
-      }
-      else
-      {
-        derived().lowestLayer().expires_after(std::chrono::seconds(30));
-
-        m_textParser.emplace(std::move(*m_headerParser));
-        http::async_read(derived().stream(), m_buffer, *m_textParser,
-                         asio::bind_executor(m_strand, beast::bind_front_handler(
-                                                           &Derived::onRead, derived().getptr())));
-      }
-    }
-
-    void onRead(beast::error_code ec, std::size_t bytes_transferred)
-    {
-      boost::ignore_unused(bytes_transferred);
-
-      if (ec)
-      {
-        return failed(ec, "read");
-      }
-
-      derived().lowestLayer().expires_after(std::chrono::seconds(30));
-
-      if (!derived().lowestLayer().socket().is_open())
-        derived().disconnect();
-
-      string body = m_textParser->get().body();
-      if (m_handler && m_handler->m_processData)
-        m_handler->m_processData(body, m_identity);
-
-      m_textParser.reset();
-      m_idle = true;
-
-      if (m_next)
-      {
-        m_next();
-      }
-      else if (!m_queue.empty())
-      {
-        Request req = m_queue.front();
-        m_queue.pop_front();
-        makeRequest(req.m_suffix, req.m_query, req.m_stream, req.m_next);
-      }
-    }
 
   protected:
     tcp::resolver m_resolver;
     std::optional<tcp::resolver::results_type> m_resolution;
     beast::flat_buffer m_buffer;  // (Must persist between reads)
-    http::request<http::empty_body> m_req;
+    std::optional<http::request<http::empty_body>> m_req;
 
     // Chunked content handling.
     std::optional<http::response_parser<http::empty_body>> m_headerParser;
@@ -482,6 +496,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     Next m_next;
     int m_count;
     int m_heartbeat;
+    bool m_closeOnRead = false;
 
     bool m_streaming = false;
   };

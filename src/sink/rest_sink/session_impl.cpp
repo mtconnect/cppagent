@@ -194,8 +194,8 @@ namespace mtconnect::sink::rest_sink {
       return;
     }
 
-    auto msg = m_parser->get();
-    auto remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
+    auto &msg = m_parser->get();
+    const auto &remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
 
     // Check for put, post, or delete
     if (msg.method() != http::verb::get)

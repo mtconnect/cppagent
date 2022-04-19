@@ -110,6 +110,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         return failed(ec, "shutdown");
 
       // If we get here then the connection is closed gracefully
+      lowestLayer().close();
     }
 
   protected:
