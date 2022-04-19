@@ -22,7 +22,7 @@
 #include "source/adapter/adapter_pipeline.hpp"
 #include "url_parser.hpp"
 
-namespace mtconnect::source::adapter::agent {
+namespace mtconnect::source::adapter::agent_adapter {
   using namespace mtconnect;
   using namespace source::adapter;
 

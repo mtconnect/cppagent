@@ -31,17 +31,17 @@ struct UserCred
 
 BOOST_FUSION_ADAPT_STRUCT(UserCred, (std::string, m_username)(std::string, m_password))
 
-BOOST_FUSION_ADAPT_STRUCT(mtconnect::source::adapter::agent::UrlQueryPair,
+BOOST_FUSION_ADAPT_STRUCT(mtconnect::source::adapter::agent_adapter::UrlQueryPair,
                           (std::string, first)(std::string, second))
 
-BOOST_FUSION_ADAPT_STRUCT(mtconnect::source::adapter::agent::Url,
-                          (std::string, m_protocol)(mtconnect::source::adapter::agent::Url::Host,
+BOOST_FUSION_ADAPT_STRUCT(mtconnect::source::adapter::agent_adapter::Url,
+                          (std::string, m_protocol)(mtconnect::source::adapter::agent_adapter::Url::Host,
                                                     m_host)(std::optional<std::string>, m_username)(
                               std::optional<std::string>, m_password)(std::optional<int>, m_port)(
-                              std::string, m_path)(mtconnect::source::adapter::agent::UrlQuery,
+                              std::string, m_path)(mtconnect::source::adapter::agent_adapter::UrlQuery,
                                                    m_query)(std::string, m_fragment))
 
-namespace mtconnect::source::adapter::agent {
+namespace mtconnect::source::adapter::agent_adapter {
 
   static boost::asio::ip::address_v4 from_four_number(unsigned char n1, unsigned char n2,
                                                       unsigned char n3, unsigned char n4)

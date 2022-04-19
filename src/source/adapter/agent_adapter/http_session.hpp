@@ -20,7 +20,7 @@
 
 #include "session_impl.hpp"
 
-namespace mtconnect::source::adapter::agent {
+namespace mtconnect::source::adapter::agent_adapter {
 
   // HTTP Session
   class HttpSession : public SessionImpl<HttpSession>

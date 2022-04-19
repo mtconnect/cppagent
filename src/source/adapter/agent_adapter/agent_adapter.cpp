@@ -37,7 +37,7 @@
 using namespace std;
 using namespace mtconnect;
 
-namespace mtconnect::source::adapter::agent {
+namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapterPipeline::build(const ConfigOptions &options)
   {
     buildDeviceList();

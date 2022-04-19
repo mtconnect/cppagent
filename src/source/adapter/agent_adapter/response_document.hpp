@@ -22,7 +22,7 @@
 #include "utilities.hpp"
 #include "xml_helper.hpp"
 
-namespace mtconnect::source::adapter::agent {
+namespace mtconnect::source::adapter::agent_adapter {
   using namespace mtconnect;
   using namespace source::adapter;
 

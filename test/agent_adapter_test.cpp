@@ -30,9 +30,9 @@
 #include "agent_test_helper.hpp"
 #include "device_model/reference.hpp"
 #include "source/adapter/adapter.hpp"
-#include "source/adapter/agent/agent_adapter.hpp"
-#include "source/adapter/agent/response_document.hpp"
-#include "source/adapter/agent/url_parser.hpp"
+#include "source/adapter/agent_adapter/agent_adapter.hpp"
+#include "source/adapter/agent_adapter/response_document.hpp"
+#include "source/adapter/agent_adapter/url_parser.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
 
@@ -43,7 +43,7 @@ using namespace mtconnect;
 using namespace mtconnect::rest_sink;
 using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
-using namespace mtconnect::source::adapter::agent;
+using namespace mtconnect::source::adapter::agent_adapter;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::asset;
 using namespace mtconnect::observation;
@@ -129,7 +129,7 @@ protected:
     
 
     boost::property_tree::ptree tree;
-    m_adapter = std::make_shared<agent::AgentAdapter>(m_agentTestHelper->m_ioContext, m_context,
+    m_adapter = std::make_shared<agent_adapter::AgentAdapter>(m_agentTestHelper->m_ioContext, m_context,
                                                       options, tree);
 
     return m_adapter;

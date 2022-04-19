@@ -32,7 +32,7 @@
 
 using namespace std;
 
-namespace mtconnect::source::adapter::agent {
+namespace mtconnect::source::adapter::agent_adapter {
   using namespace mtconnect;
   using namespace entity;
 

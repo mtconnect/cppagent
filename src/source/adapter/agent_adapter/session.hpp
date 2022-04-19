@@ -28,7 +28,7 @@ namespace mtconnect::source::adapter {
   struct Handler;
 }
 
-namespace mtconnect::source::adapter::agent {
+namespace mtconnect::source::adapter::agent_adapter {
 
   struct ResponseDocument;
   struct AgentHandler;

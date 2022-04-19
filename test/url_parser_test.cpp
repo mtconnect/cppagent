@@ -19,14 +19,14 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "source/adapter/agent/url_parser.hpp"
+#include "source/adapter/agent_adapter/url_parser.hpp"
 
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::source::adapter;
 using namespace std::literals;
 
-using namespace mtconnect::source::adapter::agent;
+using namespace mtconnect::source::adapter::agent_adapter;
 
 TEST(UrlParserTest, should_parse_url_with_port)
 {
