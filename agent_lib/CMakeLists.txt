@@ -33,7 +33,6 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/http_session.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/https_session.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/response_document.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session_impl.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.hpp"
@@ -48,7 +47,6 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.cpp" 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/response_document.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.cpp"
 
 # src/asset HEADER_FILE_ONLY 
@@ -179,6 +177,7 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline_context.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline_contract.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/response_document.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/shdr_token_mapper.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/shdr_tokenizer.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/timestamp_extractor.hpp"
@@ -191,6 +190,7 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/deliver.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/shdr_token_mapper.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/timestamp_extractor.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/response_document.cpp"
 
 # src/sink HEADER_FILE_ONLY
 

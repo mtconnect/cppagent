@@ -30,16 +30,18 @@
 #include "http_session.hpp"
 #include "https_session.hpp"
 #include "logging.hpp"
-#include "mtconnect_xml_transform.hpp"
+#include "pipeline/mtconnect_xml_transform.hpp"
 #include "pipeline/deliver.hpp"
 #include "session_impl.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::pipeline;
 
 namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapterPipeline::build(const ConfigOptions &options)
   {
+    
     buildDeviceList();
     buildCommandAndStatusDelivery();
 

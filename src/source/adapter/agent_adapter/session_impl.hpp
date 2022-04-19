@@ -25,7 +25,7 @@
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
 
-#include "response_document.hpp"
+#include "pipeline/response_document.hpp"
 #include "session.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {

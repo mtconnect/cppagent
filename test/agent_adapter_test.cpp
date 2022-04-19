@@ -31,7 +31,7 @@
 #include "device_model/reference.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/agent_adapter/agent_adapter.hpp"
-#include "source/adapter/agent_adapter/response_document.hpp"
+#include "pipeline/response_document.hpp"
 #include "source/adapter/agent_adapter/url_parser.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"

@@ -27,10 +27,11 @@
 namespace mtconnect::source::adapter {
   struct Handler;
 }
+namespace mtconnect::pipeline {
+  struct ResponseDocument;
+}
 
 namespace mtconnect::source::adapter::agent_adapter {
-
-  struct ResponseDocument;
   struct AgentHandler;
   class Session : public std::enable_shared_from_this<Session>
   {

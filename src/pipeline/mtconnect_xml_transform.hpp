@@ -24,14 +24,13 @@
 #include "pipeline/transform.hpp"
 #include "response_document.hpp"
 
-namespace mtconnect::source::adapter::agent_adapter {
+namespace mtconnect::pipeline {
   using namespace mtconnect::entity;
-  using namespace mtconnect::pipeline;
   class MTConnectXmlTransform : public Transform
   {
   public:
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
-    MTConnectXmlTransform(PipelineContextPtr context, Handler *handler,
+    MTConnectXmlTransform(PipelineContextPtr context, source::adapter::Handler *handler,
                           const std::optional<std::string> &device = std::nullopt)
       : Transform("MTConnectXmlTransform"),
         m_handler(handler),
@@ -46,7 +45,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       using namespace pipeline;
       using namespace entity;
 
-      const auto &data = entity->getValue<string>();
+      const auto &data = entity->getValue<std::string>();
       ResponseDocument rd;
       ResponseDocument::parse(data, rd, m_context);
 
@@ -67,7 +66,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
 
   protected:
-    Handler *m_handler = nullptr;
+    source::adapter::Handler *m_handler = nullptr;
     PipelineContextPtr m_context;
     std::optional<std::string> m_defaultDevice;
   };

@@ -22,9 +22,8 @@
 #include "utilities.hpp"
 #include "xml_helper.hpp"
 
-namespace mtconnect::source::adapter::agent_adapter {
+namespace mtconnect::pipeline {
   using namespace mtconnect;
-  using namespace source::adapter;
 
   struct NextSequence : public pipeline::TransformState
   {
