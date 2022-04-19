@@ -90,11 +90,11 @@ namespace mtconnect {
     const auto &getXmlParser() const { return m_xmlParser; }
 
     // Add an adapter to the agent
-    void addSource(SourcePtr adapter, bool start = false);
+    void addSource(source::SourcePtr adapter, bool start = false);
     void addSink(sink::SinkPtr sink, bool start = false);
 
     // Source and Sink
-    SourcePtr findSource(const std::string &name) const
+    source::SourcePtr findSource(const std::string &name) const
     {
       for (auto &s : m_sources)
         if (s->getName() == name)
@@ -232,7 +232,7 @@ namespace mtconnect {
     bool m_observationsInitialized {false};
 
     // Sources and Sinks
-    SourceList m_sources;
+    source::SourceList m_sources;
     sink::SinkList m_sinks;
 
     // Pipeline
@@ -332,7 +332,7 @@ namespace mtconnect {
     {
       return m_agent->getDataItemById(id);
     }
-    void addSource(SourcePtr source) override { m_agent->addSource(source); }
+    void addSource(source::SourcePtr source) override { m_agent->addSource(source); }
 
     // Asset information
     asset::AssetStorage *getAssetStorage() override { return m_agent->getAssetStorage(); }

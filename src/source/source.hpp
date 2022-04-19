@@ -86,6 +86,4 @@ namespace mtconnect {
 
     using SourceList = std::list<SourcePtr>;
   }  // namespace source
-  using SourcePtr = source::SourcePtr;
-  using SourceList = source::SourceList;
 }  // namespace mtconnect

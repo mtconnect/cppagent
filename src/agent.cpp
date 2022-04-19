@@ -607,7 +607,7 @@ namespace mtconnect {
   // Adapter Methods
   // ----------------------------------------------------
 
-  void Agent::addSource(SourcePtr source, bool start)
+  void Agent::addSource(source::SourcePtr source, bool start)
   {
     m_sources.emplace_back(source);
 

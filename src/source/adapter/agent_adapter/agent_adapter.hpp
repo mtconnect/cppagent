@@ -45,7 +45,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       auto cb = [](const std::string &name, boost::asio::io_context &io,
                    pipeline::PipelineContextPtr context, const ConfigOptions &options,
-                   const boost::property_tree::ptree &block) -> SourcePtr {
+                   const boost::property_tree::ptree &block) -> source::SourcePtr {
         auto source = std::make_shared<AgentAdapter>(io, context, options, block);
         return source;
       };

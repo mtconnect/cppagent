@@ -51,7 +51,7 @@ namespace mtconnect {
     void stop() override { m_pipeline.clear(); }
 
     // Factory method
-    static SourcePtr create(const std::string &name, boost::asio::io_context &io,
+    static source::SourcePtr create(const std::string &name, boost::asio::io_context &io,
                             pipeline::PipelineContextPtr pipelineContext,
                             const ConfigOptions &options, const boost::property_tree::ptree &block)
     {

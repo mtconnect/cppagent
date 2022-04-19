@@ -63,7 +63,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
       factory.registerFactory("mqtt",
                               [](const std::string &name, boost::asio::io_context &io,
                                  pipeline::PipelineContextPtr context, const ConfigOptions &options,
-                                 const boost::property_tree::ptree &block) -> SourcePtr {
+                                 const boost::property_tree::ptree &block) -> source::SourcePtr {
                                 auto source =
                                     std::make_shared<MqttAdapter>(io, context, options, block);
                                 return source;

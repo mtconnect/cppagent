@@ -20,7 +20,7 @@
 #include "logging.hpp"
 
 namespace mtconnect::source {
-  SourcePtr SourceFactory::make(const std::string &factoryName, const std::string &sinkName,
+  source::SourcePtr SourceFactory::make(const std::string &factoryName, const std::string &sinkName,
                                 boost::asio::io_context &io,
                                 std::shared_ptr<pipeline::PipelineContext> context,
                                 const ConfigOptions &options,
