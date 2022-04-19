@@ -62,6 +62,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                {{configuration::UUID, string()},
                 {configuration::Manufacturer, string()},
                 {configuration::Station, string()},
+                {configuration::SourceDevice, string()},
                 {configuration::Url, string()}});
 
     AddDefaultedOptions(block, m_options,
@@ -96,6 +97,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
+    m_sourceDevice = GetOption<std::string>(m_options, configuration::SourceDevice);
     m_reconnectInterval =
         std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");

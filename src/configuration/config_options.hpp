@@ -54,6 +54,7 @@ namespace mtconnect {
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);
+    DECLARE_CONFIGURATION(SourceDevice);
     DECLARE_CONFIGURATION(Host);
     DECLARE_CONFIGURATION(PreserveUUID);
     DECLARE_CONFIGURATION(UUID);

@@ -80,6 +80,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     bool m_reconnecting = false;
     std::chrono::seconds m_reconnectInterval;
     std::string m_host;
+    std::optional<std::string> m_sourceDevice;
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;
     boost::asio::steady_timer m_reconnectTimer;
