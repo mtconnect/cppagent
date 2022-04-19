@@ -302,7 +302,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       string body = m_textParser->get().body();
       if (m_handler && m_handler->m_processData)
         m_handler->m_processData(body, m_identity);
-
+      
       m_textParser.reset();
       m_idle = true;
       

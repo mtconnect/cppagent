@@ -45,7 +45,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     buildDeviceList();
     buildCommandAndStatusDelivery();
 
-    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_handler, m_device));
+    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_device));
     std::optional<string> obsMetrics;
     obsMetrics = m_identity + "_observation_update_rate";
     next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
@@ -136,12 +136,11 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_session->m_handler = m_handler.get();
     m_session->m_identity = m_identity;
     m_session->m_closeConnectionAfterResponse = m_closeConnectionAfterResponse;
+    m_session->m_updateAssets = [this]() { updateAssets(); };
 
     m_assetSession->m_handler = m_handler.get();
     m_assetSession->m_identity = m_identity;
     m_assetSession->m_closeConnectionAfterResponse = m_closeConnectionAfterResponse;
-
-    m_handler->m_assetUpdated = [this](const EntityList &updated) { assetUpdated(updated); };
 
     m_session->m_reconnect = [this]() {
       if (m_handler->m_disconnected)
@@ -186,7 +185,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   bool AgentAdapter::sample()
   {
-    auto next = m_pipeline.getContext()->getSharedState<NextSequence>("next");
+    auto next = m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
 
     using namespace boost;
     UrlQuery query({{"from", lexical_cast<string>(next->m_next)},
@@ -211,10 +210,12 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_assetSession->makeRequest("assets", query, false, nullptr);
   }
 
-  void AgentAdapter::assetUpdated(const EntityList &entities)
+  void AgentAdapter::updateAssets()
   {
+    const auto &next = m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    
     std::vector<string> idList;
-    std::transform(entities.begin(), entities.end(), back_inserter(idList),
+    std::transform(next->m_assetEvents.begin(), next->m_assetEvents.end(), back_inserter(idList),
                    [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");
 

@@ -25,11 +25,6 @@
 namespace mtconnect::pipeline {
   using namespace mtconnect;
 
-  struct NextSequence : public pipeline::TransformState
-  {
-    SequenceNumber_t m_next;
-  };
-
   struct ResponseDocument
   {
     struct Error {

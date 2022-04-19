@@ -22,18 +22,24 @@
 #include "entity/entity.hpp"
 #include "observation/observation.hpp"
 #include "pipeline/transform.hpp"
+#include "source/adapter/adapter.hpp"
 #include "response_document.hpp"
 
 namespace mtconnect::pipeline {
+  struct XmlTransformFeedback : public pipeline::TransformState
+  {
+    SequenceNumber_t m_next;
+    entity::EntityList m_assetEvents;
+  };
+  
   using namespace mtconnect::entity;
   class MTConnectXmlTransform : public Transform
   {
   public:
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
-    MTConnectXmlTransform(PipelineContextPtr context, source::adapter::Handler *handler,
+    MTConnectXmlTransform(PipelineContextPtr context,
                           const std::optional<std::string> &device = std::nullopt)
       : Transform("MTConnectXmlTransform"),
-        m_handler(handler),
         m_context(context),
         m_defaultDevice(device)
     {
@@ -49,24 +55,19 @@ namespace mtconnect::pipeline {
       ResponseDocument rd;
       ResponseDocument::parse(data, rd, m_context);
 
-      auto seq = m_context->getSharedState<NextSequence>("next");
+      auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
       seq->m_next = rd.m_next;
+      seq->m_assetEvents = rd.m_assetEvents;
 
       for (auto &entity : rd.m_entities)
       {
         next(entity);
       }
 
-      if (!rd.m_assetEvents.empty() && m_handler && m_handler->m_assetUpdated)
-      {
-        m_handler->m_assetUpdated(rd.m_assetEvents);
-      }
-
       return std::make_shared<Entity>("Entities", Properties {{"VALUE", rd.m_entities}});
     }
 
   protected:
-    source::adapter::Handler *m_handler = nullptr;
     PipelineContextPtr m_context;
     std::optional<std::string> m_defaultDevice;
   };

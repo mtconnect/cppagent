@@ -70,7 +70,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     void current();
     bool sample();
     void assets();
-    void assetUpdated(const entity::EntityList &entity);
+    void updateAssets();
 
   protected:
     AgentAdapterPipeline m_pipeline;

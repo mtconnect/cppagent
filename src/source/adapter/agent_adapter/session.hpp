@@ -23,6 +23,7 @@
 #include <memory>
 
 #include "url_parser.hpp"
+#include "entity/entity.hpp"
 
 namespace mtconnect::source::adapter {
   struct Handler;
@@ -39,6 +40,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     using Next = std::function<bool()>;
     using Reconnect = std::function<void()>;
     using Failure = std::function<void()>;
+    using UpdateAssets = std::function<void()>;
 
     virtual ~Session() {}
     virtual bool isOpen() const = 0;
@@ -52,6 +54,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::string m_identity;
     Reconnect m_reconnect;
     Failure m_failed;
+    UpdateAssets m_updateAssets;
     bool m_closeConnectionAfterResponse = false;
   };
 

@@ -33,6 +33,7 @@
 #include "source/adapter/agent_adapter/agent_adapter.hpp"
 #include "pipeline/response_document.hpp"
 #include "source/adapter/agent_adapter/url_parser.hpp"
+#include "pipeline/mtconnect_xml_transform.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
 
@@ -276,7 +277,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
-    auto seq = m_context->getSharedState<NextSequence>("next");
+    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
     seq->m_next = rd.m_next;
   };
   handler->m_connecting = [&](const string id) {};
@@ -332,7 +333,7 @@ TEST_F(AgentAdapterTest, should_reconnect)
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
-    auto seq = m_context->getSharedState<NextSequence>("next");
+    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
     seq->m_next = rd.m_next;
   };
   handler->m_connecting = [&](const string id) {};
@@ -398,7 +399,7 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
-    auto seq = m_context->getSharedState<NextSequence>("next");
+    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
     seq->m_next = rd.m_next;
   };
   handler->m_connecting = [&](const string id) {};
