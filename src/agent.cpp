@@ -788,15 +788,27 @@ namespace mtconnect {
     if (source)
     {
       source->stop();
-
-      if (m_sources.size() == 1)
+      m_sources.remove(source);
+      
+      bool ext = false;
+      for (auto &s : m_sources)
       {
-        LOG(fatal) << "Last source failed, stopping";
+        if (!s->isLoopback())
+        {
+          ext = true;
+          break;
+        }
+      }
+
+      if (!ext)
+      {
+        LOG(fatal) << "Source " << identity << "failed";
+        LOG(fatal) << "No external adapters present, shutting down";
         stop();
       }
       else
       {
-        m_sources.remove(source);
+        LOG(error) << "Source " << identity << "failed";
       }
     }
     else

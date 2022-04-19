@@ -76,7 +76,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     void onHandshake(beast::error_code ec)
     {
       if (ec)
-        failed(ec, "handshake");
+        failed(ec, "handshake", false);
 
       if (m_handler && m_handler->m_connected)
         m_handler->m_connected(m_identity);
