@@ -411,7 +411,7 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
-      //throw runtime_error("test timed out");
+      throw runtime_error("test timed out");
     }
   });
 
@@ -437,4 +437,14 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
   ASSERT_EQ("READY", obs->getValue<string>());
 
   timeout.cancel();
+}
+
+TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
+{
+  GTEST_SKIP();
+}
+
+TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out)
+{
+  GTEST_SKIP();
 }
