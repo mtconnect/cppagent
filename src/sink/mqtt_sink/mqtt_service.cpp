@@ -16,63 +16,59 @@
 //
 
 #include "mqtt_service.hpp"
-
 #include "configuration/config_options.hpp"
-
+#include "entity/json_printer.hpp"
 #include "entity/xml_parser.hpp"
-
 #include "xml_printer.hpp"
+#include "entity.hpp"
 
-namespace asio = boost::asio;
-using namespace std;
-namespace config = ::mtconnect::configuration;
+using json = nlohmann::json;
 using ptree = boost::property_tree::ptree;
 
-namespace mtconnect 
-{
-  namespace sink 
-  {
-    namespace mqtt_sink 
-    {
-        //get obeservation in
-        //create a json printer
-        //call print 
+namespace asio = boost::asio;
+namespace config = ::mtconnect::configuration;
+
+using namespace std;
+using namespace mtconnect::entity;
+using namespace mtconnect::asset;
+
+
+namespace mtconnect {
+  namespace sink {
+    namespace mqtt_sink {
+      // get obeservation in
+      // create a json printer
+      // call print
 
       MqttService::MqttService(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
-                                 const ConfigOptions &options, const ptree &config)
-          : Sink("MqttService", move(contract))  , m_context(context), m_options(options)
-        {
-         
-        }
-
-      void MqttService::start() 
-      { 
-          
+                               const ConfigOptions &options, const ptree &config)
+        : Sink("MqttService", move(contract)), m_context(context), m_options(options)
+      {
+        auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_sinkContract->getPrinter("xml"));
       }
 
-      void MqttService::stop() 
+      void MqttService::start() {}
+
+      void MqttService::stop() {}
+
+      uint64_t MqttService::publish(observation::ObservationPtr &observation)
       {
+        // get the data item from observation
+        auto dataItem = observation->getDataItem();
 
-      }
+        // convert to json and send by mqtt
 
-      uint64_t MqttService::publish(observation::ObservationPtr &observation) 
-      {
-          //get the data item from observation 
-          auto dataItem = observation->getDataItem();
-
-          //convert to json and send by mqtt
-
-          return 0; 
+        return 0;
       }
 
       bool MqttService::publish(asset::AssetPtr asset) 
-      { 
+      {
           return false; 
       }
 
       // Register the service with the sink factory
       void MqttService::registerFactory(SinkFactory &factory)
-      {     
+      {
         factory.registerFactory(
             "MqttService",
             [](const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
@@ -84,12 +80,22 @@ namespace mtconnect
 
       void MqttService::printjSonEntity()
       {
+        ErrorList errors;
+        entity::XmlParser parser;
+
+        const auto doc = R"DOC(<Device id="d1" name="M12345" uuid="M80104K162N"></Device> )DOC";
+
+        auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+
         // create a json printer
-        //
         // print json/xml particular entity
+
+        entity::JsonPrinter jsonPrinter;
+
+        auto json = jsonPrinter.print(entity);
       }
 
-        // Get the printer for a type
+      // Get the printer for a type
       const std::string MqttService::acceptFormat(const std::string &accepts) const
       {
         std::stringstream list(accepts);
@@ -105,33 +111,33 @@ namespace mtconnect
         return "xml";
       }
 
-    const Printer *MqttService::printerForAccepts(const std::string &accepts) const
+      const Printer *MqttService::printerForAccepts(const std::string &accepts) const
       {
         return m_sinkContract->getPrinter(acceptFormat(accepts));
       }
 
-    string MqttService::printError(const Printer *printer, const string &errorCode,
+      string MqttService::printError(const Printer *printer, const string &errorCode,
                                      const string &text) const
       {
         LOG(debug) << "Returning error " << errorCode << ": " << text;
-       /* if (printer)
-          return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
-                                     m_circularBuffer.getSequence(), errorCode, text);
-        else*/
+        /* if (printer)
+           return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
+                                      m_circularBuffer.getSequence(), errorCode, text);
+         else*/
 
-          return errorCode + ": " + text;
+        return errorCode + ": " + text;
       }
 
-//      /* std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> getMqttService()
-//       {
-//         using namespace mtconnect;
-//         std::unique_ptr<mtconnect::Agent> agent;
-//         sink::SinkPtr sink = agent->findSink("MqttService");
-//         std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> mqttSink =
-//             std::dynamic_pointer_cast<mtconnect::sink::mqtt_sink::MqttService>(sink);
-//         return mqttSink;
-//       }*/
-//
+      //      /* std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> getMqttService()
+      //       {
+      //         using namespace mtconnect;
+      //         std::unique_ptr<mtconnect::Agent> agent;
+      //         sink::SinkPtr sink = agent->findSink("MqttService");
+      //         std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> mqttSink =
+      //             std::dynamic_pointer_cast<mtconnect::sink::mqtt_sink::MqttService>(sink);
+      //         return mqttSink;
+      //       }*/
+      //
     }  // namespace mqtt_sink
   }    // namespace sink
 }  // namespace mtconnect

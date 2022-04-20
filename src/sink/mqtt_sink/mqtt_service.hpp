@@ -24,7 +24,10 @@
 #include "configuration/agent_config.hpp"
 
 #include "sink/sink.hpp"
+
 #include "utilities.hpp"
+
+#include "xml_printer_helper.hpp"
 
 using namespace std;
 
@@ -75,6 +78,7 @@ namespace mtconnect
 
         ConfigOptions m_options;
 
+        std::unique_ptr<XmlWriter> m_writer;
       };
 //
 //      BOOST_DLL_ALIAS(MqttService::register_factory, initialize_plugin)
