@@ -254,7 +254,8 @@ namespace {
 
     ConfigOptions options;
     boost::asio::io_context::strand strand(m_config->getContext());
-    auto loopback = std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
+    auto loopback =
+        std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
 
     mrb_value source = MRubySharedPtr<mtconnect::source::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
@@ -287,7 +288,8 @@ $source.pipeline.splice_after('Start', $trans)
 
     ConfigOptions options;
     boost::asio::io_context::strand strand(m_config->getContext());
-    auto loopback = std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
+    auto loopback =
+        std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
 
     mrb_value source = MRubySharedPtr<mtconnect::source::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
@@ -317,7 +319,8 @@ $source.pipeline.splice_after('Start', FixExecution.new('FixExec', :Event))
 
     ConfigOptions options;
     boost::asio::io_context::strand strand(m_config->getContext());
-    auto loopback = std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
+    auto loopback =
+        std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
 
     mrb_value source = MRubySharedPtr<mtconnect::source::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
@@ -349,7 +352,8 @@ $source.pipeline.splice_after('Start', $trans)
 
     ConfigOptions options;
     boost::asio::io_context::strand strand(m_config->getContext());
-    auto loopback = std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
+    auto loopback =
+        std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
 
     mrb_value source = MRubySharedPtr<mtconnect::source::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);
@@ -386,7 +390,8 @@ $source.pipeline.splice_after('Start', $trans)
 
     ConfigOptions options;
     boost::asio::io_context::strand strand(m_config->getContext());
-    auto loopback = std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
+    auto loopback =
+        std::make_shared<source::LoopbackSource>("RubySource", strand, m_context, options);
 
     mrb_value source = MRubySharedPtr<mtconnect::source::Source>::wrap(mrb, "Source", loopback);
     mrb_gv_set(mrb, mrb_intern_lit(mrb, "$source"), source);

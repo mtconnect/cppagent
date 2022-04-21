@@ -22,16 +22,28 @@
 #include "entity/entity.hpp"
 #include "observation/observation.hpp"
 #include "pipeline/transform.hpp"
-#include "source/adapter/adapter.hpp"
 #include "response_document.hpp"
 
 namespace mtconnect::pipeline {
-  struct XmlTransformFeedback : public pipeline::TransformState
+  class InstanceIdChanged : public std::runtime_error
   {
-    SequenceNumber_t m_next;
-    entity::EntityList m_assetEvents;
+  public:
+    explicit InstanceIdChanged(const char *msg, int old, int nid) 
+    : std::runtime_error(msg), m_instanceId(nid), m_oldInstanceId(old) {}
+    explicit InstanceIdChanged(const std::string &msg, int old, int nid)
+    : std::runtime_error(msg), m_instanceId(nid), m_oldInstanceId(old) {}
+
+    int m_instanceId;
+    int m_oldInstanceId;
   };
   
+  struct XmlTransformFeedback : public pipeline::TransformState
+  {
+    int m_instanceId = 0;
+    SequenceNumber_t m_next = 0;
+    entity::EntityList m_assetEvents;
+  };
+
   using namespace mtconnect::entity;
   class MTConnectXmlTransform : public Transform
   {
@@ -39,9 +51,7 @@ namespace mtconnect::pipeline {
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
     MTConnectXmlTransform(PipelineContextPtr context,
                           const std::optional<std::string> &device = std::nullopt)
-      : Transform("MTConnectXmlTransform"),
-        m_context(context),
-        m_defaultDevice(device)
+      : Transform("MTConnectXmlTransform"), m_context(context), m_defaultDevice(device)
     {
       m_guard = EntityNameGuard("Data", RUN);
     }
@@ -55,9 +65,16 @@ namespace mtconnect::pipeline {
       ResponseDocument rd;
       ResponseDocument::parse(data, rd, m_context);
 
-      auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-      seq->m_next = rd.m_next;
-      seq->m_assetEvents = rd.m_assetEvents;
+      auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+      
+      if (feedback->m_instanceId != 0 && feedback->m_instanceId != rd.m_instanceId)
+      {
+        LOG(warning) << "MTConnectXmlTransform: instance id changed";
+        throw InstanceIdChanged("Instance Id Changed", feedback->m_instanceId, rd.m_instanceId);
+      }
+      
+      feedback->m_next = rd.m_next;
+      feedback->m_assetEvents = rd.m_assetEvents;
 
       for (auto &entity : rd.m_entities)
       {
@@ -71,4 +88,4 @@ namespace mtconnect::pipeline {
     PipelineContextPtr m_context;
     std::optional<std::string> m_defaultDevice;
   };
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::pipeline

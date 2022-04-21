@@ -27,20 +27,22 @@ namespace mtconnect::pipeline {
 
   struct ResponseDocument
   {
-    struct Error {
+    struct Error
+    {
       std::string m_code;
       std::string m_message;
     };
     using Errors = std::list<Error>;
-    
+
     static bool parse(const std::string_view &content, ResponseDocument &doc,
                       pipeline::PipelineContextPtr context);
 
     // Parsed data
     SequenceNumber_t m_next;
+    int m_instanceId;
     entity::EntityList m_entities;
     entity::EntityList m_assetEvents;
     Errors m_errors;
   };
 
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::pipeline

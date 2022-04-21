@@ -21,8 +21,8 @@
 
 #include <chrono>
 
-#include "entity/entity.hpp"
 #include "agent.hpp"
+#include "entity/entity.hpp"
 #include "pipeline/mtconnect_xml_transform.hpp"
 #include "xml_printer.hpp"
 
@@ -61,9 +61,9 @@ protected:
   {
     auto printer = make_unique<XmlPrinter>();
     auto parser = make_unique<XmlParser>();
-    
-    m_device = parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml",
-                                 printer.get()).front();
+
+    m_device =
+        parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()).front();
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_device);
@@ -71,22 +71,13 @@ protected:
     m_xform->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
 
-  void TearDown() override
-  {
-    m_xform.reset();
-  }
+  void TearDown() override { m_xform.reset(); }
 
   DevicePtr m_device;
   shared_ptr<MTConnectXmlTransform> m_xform;
   shared_ptr<PipelineContext> m_context;
 };
 
-TEST_F(MTConnectXmlTransformTest, should_add_next_to_the_context)
-{
-  GTEST_SKIP();  
-}
+TEST_F(MTConnectXmlTransformTest, should_add_next_to_the_context) { GTEST_SKIP(); }
 
-TEST_F(MTConnectXmlTransformTest, should_create_list_of_assets)
-{
-  GTEST_SKIP();  
-}
+TEST_F(MTConnectXmlTransformTest, should_create_list_of_assets) { GTEST_SKIP(); }

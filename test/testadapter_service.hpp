@@ -52,8 +52,9 @@ namespace mtconnect {
 
     // Factory method
     static source::SourcePtr create(const std::string &name, boost::asio::io_context &io,
-                            pipeline::PipelineContextPtr pipelineContext,
-                            const ConfigOptions &options, const boost::property_tree::ptree &block)
+                                    pipeline::PipelineContextPtr pipelineContext,
+                                    const ConfigOptions &options,
+                                    const boost::property_tree::ptree &block)
     {
       return std::make_shared<adapter_plugin_test>(name, io, pipelineContext, options, block);
     }

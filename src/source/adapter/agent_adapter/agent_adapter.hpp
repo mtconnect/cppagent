@@ -21,6 +21,7 @@
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/adapter_pipeline.hpp"
 #include "url_parser.hpp"
+#include "pipeline/mtconnect_xml_transform.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {
   using namespace mtconnect;
@@ -67,10 +68,17 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   protected:
     void run();
+    void recover();
     void current();
     bool sample();
     void assets();
     void updateAssets();
+    
+    auto instanceId() {
+      const auto &feedback =
+          m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>("XmlTransformFeedback");
+      return feedback->m_instanceId;
+    }
 
   protected:
     AgentAdapterPipeline m_pipeline;
@@ -84,9 +92,9 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;
     boost::asio::steady_timer m_reconnectTimer;
-    
+
     // For testing
     bool m_closeConnectionAfterResponse;
   };
 
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::source::adapter::agent_adapter

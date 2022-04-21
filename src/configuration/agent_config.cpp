@@ -99,7 +99,7 @@ namespace mtconnect::configuration {
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
     using namespace source;
-    
+
     bool success = false;
 
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);

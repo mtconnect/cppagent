@@ -21,10 +21,10 @@
 
 namespace mtconnect::source {
   source::SourcePtr SourceFactory::make(const std::string &factoryName, const std::string &sinkName,
-                                boost::asio::io_context &io,
-                                std::shared_ptr<pipeline::PipelineContext> context,
-                                const ConfigOptions &options,
-                                const boost::property_tree::ptree &block)
+                                        boost::asio::io_context &io,
+                                        std::shared_ptr<pipeline::PipelineContext> context,
+                                        const ConfigOptions &options,
+                                        const boost::property_tree::ptree &block)
   {
     auto factory = m_factories.find(factoryName);
     if (factory != m_factories.end())

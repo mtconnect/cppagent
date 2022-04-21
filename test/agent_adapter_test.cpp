@@ -29,11 +29,11 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "device_model/reference.hpp"
+#include "pipeline/mtconnect_xml_transform.hpp"
+#include "pipeline/response_document.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/agent_adapter/agent_adapter.hpp"
-#include "pipeline/response_document.hpp"
 #include "source/adapter/agent_adapter/url_parser.hpp"
-#include "pipeline/mtconnect_xml_transform.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
 
@@ -127,11 +127,9 @@ protected:
     options.emplace(configuration::Heartbeat, hb);
     options.emplace(configuration::ReconnectInterval, 1);
 
-    
-
     boost::property_tree::ptree tree;
-    m_adapter = std::make_shared<agent_adapter::AgentAdapter>(m_agentTestHelper->m_ioContext, m_context,
-                                                      options, tree);
+    m_adapter = std::make_shared<agent_adapter::AgentAdapter>(m_agentTestHelper->m_ioContext,
+                                                              m_context, options, tree);
 
     return m_adapter;
   }
@@ -440,17 +438,12 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
   timeout.cancel();
 }
 
-TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
-{
-  GTEST_SKIP();
-}
+TEST_F(AgentAdapterTest, should_map_device_name_and_uuid) { GTEST_SKIP(); }
 
-TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out)
-{
-  GTEST_SKIP();
-}
+TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out) { GTEST_SKIP(); }
 
-TEST_F(AgentAdapterTest, should_connect_to_tls_agent)
-{
-  GTEST_SKIP();
-}
+TEST_F(AgentAdapterTest, should_connect_to_tls_agent) { GTEST_SKIP(); }
+
+TEST_F(AgentAdapterTest, should_first_try_to_recover_from_previous_position) { GTEST_SKIP(); }
+
+TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery) { GTEST_SKIP(); }

@@ -110,17 +110,20 @@ namespace mtconnect::pipeline {
     return child;
   }
 
-  static inline SequenceNumber_t next(xmlNodePtr root)
+  static inline bool parseHeader(ResponseDocument &out, xmlNodePtr root)
   {
     auto header = findChild(root, "Header");
     if (header)
     {
-      return boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "nextSequence"));
+      out.m_instanceId =
+          boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "instanceId"));
+      out.m_next = boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "nextSequence"));
+      return true;
     }
 
     LOG(error) << "Received incorred document: " << (const char *)root->name;
 
-    return 0;
+    return false;
   }
 
   const string text(xmlNodePtr node)
@@ -359,7 +362,7 @@ namespace mtconnect::pipeline {
 
     return true;
   }
-  
+
   inline static void parseErrors(ResponseDocument &out, xmlNodePtr node)
   {
     auto errors = findChild(node, "Errors");
@@ -370,8 +373,8 @@ namespace mtconnect::pipeline {
       {
         auto code = attributeValue(error, "code");
         auto msg = text(error);
-        out.m_errors.emplace_back(ResponseDocument::Error { code, msg });
-        
+        out.m_errors.emplace_back(ResponseDocument::Error {code, msg});
+
         LOG(error) << "Received protocol error: " << code << " " << msg;
       }
     }
@@ -380,8 +383,8 @@ namespace mtconnect::pipeline {
       eachElement(errors, "Error", [&out](xmlNodePtr error) {
         auto code = attributeValue(error, "code");
         auto msg = text(error);
-        out.m_errors.emplace_back(ResponseDocument::Error { code, msg });
-        
+        out.m_errors.emplace_back(ResponseDocument::Error {code, msg});
+
         LOG(error) << "Received protocol error: " << code << " " << msg;
 
         return true;
@@ -403,8 +406,7 @@ namespace mtconnect::pipeline {
     {
       if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) == 0)
       {
-        out.m_next = next(root);
-        if (out.m_next == 0)
+        if (!parseHeader(out, root))
         {
           LOG(error) << "Cannot find next in header for streams doc";
           return false;
@@ -432,4 +434,4 @@ namespace mtconnect::pipeline {
       return false;
     }
   }
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::pipeline

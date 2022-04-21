@@ -95,4 +95,4 @@ namespace mtconnect::source::adapter::agent_adapter {
     static Url parse(const std::string_view& url);
   };
 
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::source::adapter::agent_adapter

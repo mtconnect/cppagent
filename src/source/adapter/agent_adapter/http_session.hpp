@@ -67,7 +67,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       // not_connected happens sometimes so don't bother reporting it.
       if (ec && ec != beast::errc::not_connected)
         return failed(ec, "shutdown");
-      
+
       // If we get here then the connection is closed gracefully
       m_stream.close();
     }
@@ -76,4 +76,4 @@ namespace mtconnect::source::adapter::agent_adapter {
     beast::tcp_stream m_stream;
   };
 
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::source::adapter::agent_adapter

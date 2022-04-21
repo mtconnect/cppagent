@@ -61,38 +61,25 @@ protected:
   {
     auto printer = make_unique<XmlPrinter>();
     auto parser = make_unique<XmlParser>();
-    
+
     m_doc.emplace();
 
-    m_device = parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml",
-                                 printer.get()).front();
+    m_device =
+        parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()).front();
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_device);
   }
 
-  void TearDown() override
-  {
-    m_doc.reset();
-  }
+  void TearDown() override { m_doc.reset(); }
 
   DevicePtr m_device;
   std::optional<ResponseDocument> m_doc;
   shared_ptr<PipelineContext> m_context;
 };
 
-TEST_F(ResponseDocumentTest, should_parse_observations)
-{
-  GTEST_SKIP();  
-}
+TEST_F(ResponseDocumentTest, should_parse_observations) { GTEST_SKIP(); }
 
-TEST_F(ResponseDocumentTest, should_parse_assets)
-{
-  GTEST_SKIP();  
-}
+TEST_F(ResponseDocumentTest, should_parse_assets) { GTEST_SKIP(); }
 
-TEST_F(ResponseDocumentTest, should_parse_errors)
-{
-  GTEST_SKIP();  
-}
-
+TEST_F(ResponseDocumentTest, should_parse_errors) { GTEST_SKIP(); }

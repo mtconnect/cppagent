@@ -97,33 +97,44 @@ namespace mtconnect::source::adapter::shdr {
 
   void ShdrAdapter::processData(const string &data)
   {
-    if (m_terminator)
+    try
     {
-      if (data == *m_terminator)
+      if (m_terminator)
       {
-        if (m_handler && m_handler->m_processData)
-          m_handler->m_processData(m_body.str(), getIdentity());
-        m_terminator.reset();
+        if (data == *m_terminator)
+        {
+          if (m_handler && m_handler->m_processData)
+            m_handler->m_processData(m_body.str(), getIdentity());
+          m_terminator.reset();
+          m_body.str("");
+        }
+        else
+        {
+          m_body << endl << data;
+        }
+        
+        return;
+      }
+      
+      if (size_t multi = data.find("--multiline--"); multi != string::npos)
+      {
         m_body.str("");
+        m_body << data.substr(0, multi);
+        m_terminator = data.substr(multi);
+        return;
       }
-      else
-      {
-        m_body << endl << data;
-      }
-
-      return;
+      
+      if (m_handler && m_handler->m_processData)
+        m_handler->m_processData(data, getIdentity());
     }
-
-    if (size_t multi = data.find("--multiline--"); multi != string::npos)
+    catch (std::exception &e)
     {
-      m_body.str("");
-      m_body << data.substr(0, multi);
-      m_terminator = data.substr(multi);
-      return;
+      LOG(error) << "Error in processData: " << e.what();
     }
-
-    if (m_handler && m_handler->m_processData)
-      m_handler->m_processData(data, getIdentity());
+    catch (...)
+    {
+      LOG(error) << "Unknown exception in processData";
+    }
   }
 
   void ShdrAdapter::stop()

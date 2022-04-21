@@ -22,8 +22,8 @@
 
 #include <memory>
 
-#include "url_parser.hpp"
 #include "entity/entity.hpp"
+#include "url_parser.hpp"
 
 namespace mtconnect::source::adapter {
   struct Handler;
@@ -39,6 +39,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   public:
     using Next = std::function<bool()>;
     using Reconnect = std::function<void()>;
+    using Resync = std::function<void()>;
     using Failure = std::function<void()>;
     using UpdateAssets = std::function<void()>;
 
@@ -53,9 +54,10 @@ namespace mtconnect::source::adapter::agent_adapter {
     Handler *m_handler = nullptr;
     std::string m_identity;
     Reconnect m_reconnect;
+    Resync m_resync;
     Failure m_failed;
     UpdateAssets m_updateAssets;
     bool m_closeConnectionAfterResponse = false;
   };
 
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::source::adapter::agent_adapter

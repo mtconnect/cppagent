@@ -34,12 +34,12 @@ BOOST_FUSION_ADAPT_STRUCT(UserCred, (std::string, m_username)(std::string, m_pas
 BOOST_FUSION_ADAPT_STRUCT(mtconnect::source::adapter::agent_adapter::UrlQueryPair,
                           (std::string, first)(std::string, second))
 
-BOOST_FUSION_ADAPT_STRUCT(mtconnect::source::adapter::agent_adapter::Url,
-                          (std::string, m_protocol)(mtconnect::source::adapter::agent_adapter::Url::Host,
-                                                    m_host)(std::optional<std::string>, m_username)(
-                              std::optional<std::string>, m_password)(std::optional<int>, m_port)(
-                              std::string, m_path)(mtconnect::source::adapter::agent_adapter::UrlQuery,
-                                                   m_query)(std::string, m_fragment))
+BOOST_FUSION_ADAPT_STRUCT(
+    mtconnect::source::adapter::agent_adapter::Url,
+    (std::string, m_protocol)(mtconnect::source::adapter::agent_adapter::Url::Host,
+                              m_host)(std::optional<std::string>, m_username)(
+        std::optional<std::string>, m_password)(std::optional<int>, m_port)(std::string, m_path)(
+        mtconnect::source::adapter::agent_adapter::UrlQuery, m_query)(std::string, m_fragment))
 
 namespace mtconnect::source::adapter::agent_adapter {
 
@@ -144,4 +144,4 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
     return ast;
   }
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::source::adapter::agent_adapter

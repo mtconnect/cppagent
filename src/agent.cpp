@@ -789,7 +789,7 @@ namespace mtconnect {
     {
       source->stop();
       m_sources.remove(source);
-      
+
       bool ext = false;
       for (auto &s : m_sources)
       {

@@ -116,4 +116,4 @@ namespace mtconnect::source::adapter::agent_adapter {
   protected:
     beast::ssl_stream<beast::tcp_stream> m_stream;
   };
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::source::adapter::agent_adapter

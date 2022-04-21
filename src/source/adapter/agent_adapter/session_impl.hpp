@@ -26,6 +26,7 @@
 #include <boost/beast/version.hpp>
 
 #include "pipeline/response_document.hpp"
+#include "pipeline/mtconnect_xml_transform.hpp"
 #include "session.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {
@@ -206,6 +207,33 @@ namespace mtconnect::source::adapter::agent_adapter {
         return false;
       }
     }
+    
+    void processData(const std::string &data)
+    {
+      try
+      {
+        if (m_handler && m_handler->m_processData)
+          m_handler->m_processData(data, m_identity);
+      }
+      catch(pipeline::InstanceIdChanged &e)
+      {
+        LOG(warning) << "Instance id changed from " << e.m_oldInstanceId << " to " <<
+                        e.m_instanceId;
+        if (m_resync)
+          m_resync();
+      }
+      catch (std::exception &e)
+      {
+        beast::error_code ec;
+        LOG(error) << "AgentAdapter::processData: " << e.what();
+        failed(ec, "Exception occurred in AgentAdapter::processData", false);
+      }
+      catch (...)
+      {
+        beast::error_code ec;
+        failed(ec, "Unknown exception in AgentAdapter::processData", false);
+      }
+    }
 
     void request()
     {
@@ -216,7 +244,8 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_req->target(m_target);
       m_req->set(http::field::host, m_url.getHost());
       m_req->set(http::field::user_agent, "MTConnect Agent/2.0");
-      if (m_closeConnectionAfterResponse) {
+      if (m_closeConnectionAfterResponse)
+      {
         m_req->set(http::field::connection, "close");
       }
 
@@ -242,7 +271,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           asio::bind_executor(m_strand,
                               beast::bind_front_handler(&Derived::onHeader, derived().getptr())));
     }
-    
+
     void onHeader(beast::error_code ec, std::size_t bytes_transferred)
     {
       if (ec)
@@ -261,7 +290,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           return;
         }
       }
-      
+
       auto &msg = m_headerParser->get();
       if (auto a = msg.find(beast::http::field::connection); a != msg.end())
         m_closeOnRead = a->value() == "close";
@@ -299,15 +328,13 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (!derived().lowestLayer().socket().is_open())
         derived().disconnect();
 
-      string body = m_textParser->get().body();
-      if (m_handler && m_handler->m_processData)
-        m_handler->m_processData(body, m_identity);
-      
+      processData(m_textParser->get().body());
+
       m_textParser.reset();
       m_idle = true;
-      
+
       m_req.reset();
-      
+
       if (m_closeOnRead)
         derived().disconnect();
 
@@ -402,7 +429,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_chunkLength = atoi(lp + 16);
       m_chunk.consume(ep);
     }
-
+    
     void createChunkBodyHandler()
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
@@ -413,7 +440,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         }
 
         LOG(trace) << "Received: -------- " << m_chunk.size() << " " << remain << "\n"
-                  << body << "\n-------------";
+                   << body << "\n-------------";
 
         if (!m_hasHeader)
         {
@@ -428,9 +455,8 @@ namespace mtconnect::source::adapter::agent_adapter {
 
           LOG(debug) << "Received Chunk: --------\n" << sbuf << "\n-------------";
 
-          if (m_handler && m_handler->m_processData)
-            m_handler->m_processData(string(sbuf), m_identity);
-
+          processData(string(sbuf));
+          
           m_chunk.consume(m_chunkLength);
           m_hasHeader = false;
         }
@@ -461,7 +487,6 @@ namespace mtconnect::source::adapter::agent_adapter {
                        asio::bind_executor(m_strand, beast::bind_front_handler(
                                                          &Derived::onRead, derived().getptr())));
     }
-
 
   protected:
     tcp::resolver m_resolver;
@@ -501,4 +526,4 @@ namespace mtconnect::source::adapter::agent_adapter {
     bool m_streaming = false;
   };
 
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::source::adapter::agent_adapter

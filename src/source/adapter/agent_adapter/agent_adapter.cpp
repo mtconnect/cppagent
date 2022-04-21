@@ -30,7 +30,6 @@
 #include "http_session.hpp"
 #include "https_session.hpp"
 #include "logging.hpp"
-#include "pipeline/mtconnect_xml_transform.hpp"
 #include "pipeline/deliver.hpp"
 #include "session_impl.hpp"
 
@@ -41,7 +40,6 @@ using namespace mtconnect::pipeline;
 namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapterPipeline::build(const ConfigOptions &options)
   {
-    
     buildDeviceList();
     buildCommandAndStatusDelivery();
 
@@ -76,8 +74,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                          {configuration::RealTime, false},
                          {configuration::ReconnectInterval, 10},
                          {configuration::RelativeTime, false},
-      { "!CloseConnectionAfterResponse!", false }
-    });
+                         {"!CloseConnectionAfterResponse!", false}});
 
     m_handler = m_pipeline.makeHandler();
 
@@ -150,16 +147,22 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_reconnecting = true;
         m_session->stop();
         m_assetSession->stop();
+        
         m_reconnectTimer.expires_after(m_reconnectInterval);
         m_reconnectTimer.async_wait(
             asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
               if (!ec)
               {
-                m_reconnecting = false;
-                run();
+                if (instanceId() != 0)
+                  recover();
+                else
+                  run();
               }
             }));
       }
+    };
+    m_session->m_resync = [this]() {
+      run();
     };
     m_session->m_failed = [this]() {
       if (m_handler->m_disconnected)
@@ -174,8 +177,20 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::run()
   {
+    const auto &feedback =
+        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    feedback->m_instanceId = 0;
+    feedback->m_next = 0;
+
+    m_reconnecting = false;
     assets();
     current();
+  }
+  
+  void AgentAdapter::recover()
+  {
+    m_reconnecting = false;
+    sample();
   }
 
   void AgentAdapter::current()
@@ -185,10 +200,11 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   bool AgentAdapter::sample()
   {
-    auto next = m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    const auto &feedback =
+        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
 
     using namespace boost;
-    UrlQuery query({{"from", lexical_cast<string>(next->m_next)},
+    UrlQuery query({{"from", lexical_cast<string>(feedback->m_next)},
                     {"count", lexical_cast<string>(m_count)},
                     {"heartbeat", lexical_cast<string>(m_heartbeat)},
                     {"interval", "500"}});
@@ -212,14 +228,15 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::updateAssets()
   {
-    const auto &next = m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-    
+    const auto &feedback =
+        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+
     std::vector<string> idList;
-    std::transform(next->m_assetEvents.begin(), next->m_assetEvents.end(), back_inserter(idList),
+    std::transform(feedback->m_assetEvents.begin(), feedback->m_assetEvents.end(), back_inserter(idList),
                    [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");
 
     m_assetSession->makeRequest("/assets/" + ids, UrlQuery(), false, nullptr);
   }
 
-}  // namespace mtconnect::source::adapter::agent
+}  // namespace mtconnect::source::adapter::agent_adapter
