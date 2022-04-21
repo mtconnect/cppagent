@@ -61,13 +61,11 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     // Objects are constructed with a strand to
     // ensure that handlers do not execute concurrently.
-    SessionImpl(boost::asio::io_context::strand &strand, const Url &url, int count, int heartbeat)
+    SessionImpl(boost::asio::io_context::strand &strand, const Url &url)
       : m_resolver(strand.context()),
         m_strand(strand),
         m_url(url),
-        m_chunk(1 * 1024 * 1024),
-        m_count(count),
-        m_heartbeat(heartbeat)
+        m_chunk(1 * 1024 * 1024)
     {}
 
     virtual ~SessionImpl() { stop(); }
@@ -196,7 +194,6 @@ namespace mtconnect::source::adapter::agent_adapter {
         }
         else
         {
-          // If still connected, go to the next request
           request();
           return true;
         }
@@ -519,8 +516,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     std::string m_target;
     Next m_next;
-    int m_count;
-    int m_heartbeat;
     bool m_closeOnRead = false;
 
     bool m_streaming = false;

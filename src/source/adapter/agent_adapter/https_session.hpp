@@ -30,9 +30,8 @@ namespace mtconnect::source::adapter::agent_adapter {
   public:
     using super = SessionImpl<HttpsSession>;
 
-    explicit HttpsSession(boost::asio::io_context::strand &ex, const Url &url, int count,
-                          int heartbeat, ssl::context &ctx)
-      : super(ex, url, count, heartbeat), m_stream(ex.context(), ctx)
+    explicit HttpsSession(boost::asio::io_context::strand &ex, const Url &url, ssl::context &ctx)
+      : super(ex, url), m_stream(ex.context(), ctx)
     {}
     ~HttpsSession() {}
 

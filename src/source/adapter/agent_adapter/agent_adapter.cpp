@@ -116,13 +116,13 @@ namespace mtconnect::source::adapter::agent_adapter {
       // The SSL context is required, and holds certificates
       ssl::context ctx {ssl::context::tlsv12_client};
       ctx.set_verify_mode(ssl::verify_peer);
-      m_session = make_shared<HttpsSession>(m_strand, m_url, m_count, m_heartbeat, ctx);
-      m_assetSession = make_shared<HttpsSession>(m_strand, m_url, m_count, m_heartbeat, ctx);
+      m_session = make_shared<HttpsSession>(m_strand, m_url, ctx);
+      m_assetSession = make_shared<HttpsSession>(m_strand, m_url, ctx);
     }
     else if (m_url.m_protocol == "http")
     {
-      m_session = make_shared<HttpSession>(m_strand, m_url, m_count, m_heartbeat);
-      m_assetSession = make_shared<HttpSession>(m_strand, m_url, m_count, m_heartbeat);
+      m_session = make_shared<HttpSession>(m_strand, m_url);
+      m_assetSession = make_shared<HttpSession>(m_strand, m_url);
     }
     else
     {

@@ -28,8 +28,8 @@ namespace mtconnect::source::adapter::agent_adapter {
   public:
     using super = SessionImpl<HttpSession>;
 
-    HttpSession(boost::asio::io_context::strand &ioc, const Url &url, int count, int heartbeat)
-      : super(ioc, url, count, heartbeat), m_stream(ioc.context())
+    HttpSession(boost::asio::io_context::strand &ioc, const Url &url)
+      : super(ioc, url), m_stream(ioc.context())
     {}
 
     ~HttpSession() override {}
