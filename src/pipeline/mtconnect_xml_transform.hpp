@@ -42,6 +42,7 @@ namespace mtconnect::pipeline {
     int m_instanceId = 0;
     SequenceNumber_t m_next = 0;
     entity::EntityList m_assetEvents;
+    ResponseDocument::Errors m_errors;
   };
 
   using namespace mtconnect::entity;
@@ -73,9 +74,11 @@ namespace mtconnect::pipeline {
         throw InstanceIdChanged("Instance Id Changed", feedback->m_instanceId, rd.m_instanceId);
       }
       
+      feedback->m_instanceId = rd.m_instanceId;
       feedback->m_next = rd.m_next;
       feedback->m_assetEvents = rd.m_assetEvents;
-
+      feedback->m_errors = rd.m_errors;
+      
       for (auto &entity : rd.m_entities)
       {
         next(entity);

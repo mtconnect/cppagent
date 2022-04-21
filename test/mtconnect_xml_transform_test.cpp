@@ -78,6 +78,73 @@ protected:
   shared_ptr<PipelineContext> m_context;
 };
 
-TEST_F(MTConnectXmlTransformTest, should_add_next_to_the_context) { GTEST_SKIP(); }
+TEST_F(MTConnectXmlTransformTest, should_add_next_to_the_context)
+{
+  string data { R"(<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectStreams xmlns:m="urn:mtconnect.org:MTConnectStreams:1.7" xmlns="urn:mtconnect.org:MTConnectStreams:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectStreams:1.7 /schemas/MTConnectStreams_1.7.xsd">
+  <Header creationTime="2022-04-21T05:54:56Z" sender="IntelAgent" instanceId="1649989201" version="2.0.0.1" deviceModelChangeTime="2022-04-21T03:21:32.630619Z" bufferSize="131072" nextSequence="4992049" firstSequence="4860977" lastSequence="4992048"/>
+    <Streams/>
+</MTConnectStreams>
+)" };
+  
+  auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", "adapter"s}});
 
-TEST_F(MTConnectXmlTransformTest, should_create_list_of_assets) { GTEST_SKIP(); }
+  auto res1 = (*m_xform)(entity);
+  
+  auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+  ASSERT_EQ(1649989201, feedback->m_instanceId);
+  ASSERT_EQ(4992049, feedback->m_next);
+}
+
+TEST_F(MTConnectXmlTransformTest, should_return_errors)
+{
+  string data { R"(<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectError xmlns:m="urn:mtconnect.org:MTConnectError:1.7" xmlns="urn:mtconnect.org:MTConnectError:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectError:1.7 /schemas/MTConnectError_1.7.xsd">
+  <Header creationTime="2022-04-21T06:13:20Z" sender="IntelAgent" instanceId="1649989201" version="2.0.0.1" deviceModelChangeTime="2022-04-21T03:21:32.630619Z" bufferSize="131072"/>
+  <Errors>
+    <Error errorCode="OUT_OF_RANGE">'at' must be greater than 4871368</Error>
+  </Errors>
+</MTConnectError>)" };
+
+  auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", "adapter"s}});
+
+  auto res = (*m_xform)(entity);
+
+  auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+  
+  ASSERT_EQ(1, feedback->m_errors.size());
+  auto &error = feedback->m_errors.front();
+  ASSERT_EQ("OUT_OF_RANGE", error.m_code);
+  ASSERT_EQ("'at' must be greater than 4871368", error.m_message);
+}
+
+TEST_F(MTConnectXmlTransformTest, should_throw_when_instances_change)
+{
+  string data { R"(<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectStreams xmlns:m="urn:mtconnect.org:MTConnectStreams:1.7" xmlns="urn:mtconnect.org:MTConnectStreams:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectStreams:1.7 /schemas/MTConnectStreams_1.7.xsd">
+  <Header creationTime="2022-04-21T05:54:56Z" sender="IntelAgent" instanceId="1649989201" version="2.0.0.1" deviceModelChangeTime="2022-04-21T03:21:32.630619Z" bufferSize="131072" nextSequence="4992049" firstSequence="4860977" lastSequence="4992048"/>
+    <Streams/>
+</MTConnectStreams>
+)" };
+  
+  auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", "adapter"s}});
+
+  auto res1 = (*m_xform)(entity);
+  
+  auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+  ASSERT_EQ(1649989201, feedback->m_instanceId);
+  ASSERT_EQ(4992049, feedback->m_next);
+  
+  string recover { R"(<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectStreams xmlns:m="urn:mtconnect.org:MTConnectStreams:1.7" xmlns="urn:mtconnect.org:MTConnectStreams:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectStreams:1.7 /schemas/MTConnectStreams_1.7.xsd">
+  <Header creationTime="2022-04-21T05:54:56Z" sender="IntelAgent" instanceId="1649989202" version="2.0.0.1" deviceModelChangeTime="2022-04-21T03:21:32.630619Z" bufferSize="131072" nextSequence="12" firstSequence="1" lastSequence="11"/>
+    <Streams/>
+</MTConnectStreams>
+)" };
+
+  entity = make_shared<Entity>("Data", Properties {{"VALUE", recover}, {"source", "adapter"s}});
+  
+  EXPECT_THROW((*m_xform)(entity), InstanceIdChanged);
+  ASSERT_EQ(1649989201, feedback->m_instanceId);
+  ASSERT_EQ(4992049, feedback->m_next);
+}

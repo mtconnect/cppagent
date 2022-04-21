@@ -190,13 +190,13 @@ namespace mtconnect::source::adapter::agent_adapter {
         // Check if we are discussected.
         if (!derived().lowestLayer().socket().is_open())
         {
-          // Try to reconnect executiong the request on successful
-          // connection. ÷
+          // Try to connect
           connect();
           return false;
         }
         else
         {
+          // If still connected, go to the next request
           request();
           return true;
         }

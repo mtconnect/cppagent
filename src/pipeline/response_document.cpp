@@ -117,7 +117,10 @@ namespace mtconnect::pipeline {
     {
       out.m_instanceId =
           boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "instanceId"));
-      out.m_next = boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "nextSequence"));
+      
+      auto next = attributeValue(header, "nextSequence");
+      if (!next.empty())
+        out.m_next = boost::lexical_cast<SequenceNumber_t>(next);
       return true;
     }
 
@@ -371,7 +374,7 @@ namespace mtconnect::pipeline {
       auto error = findChild(node, "Error");
       if (error)
       {
-        auto code = attributeValue(error, "code");
+        auto code = attributeValue(error, "errorCode");
         auto msg = text(error);
         out.m_errors.emplace_back(ResponseDocument::Error {code, msg});
 
@@ -381,7 +384,7 @@ namespace mtconnect::pipeline {
     else
     {
       eachElement(errors, "Error", [&out](xmlNodePtr error) {
-        auto code = attributeValue(error, "code");
+        auto code = attributeValue(error, "errorCode");
         auto msg = text(error);
         out.m_errors.emplace_back(ResponseDocument::Error {code, msg});
 
@@ -404,14 +407,13 @@ namespace mtconnect::pipeline {
     xmlNodePtr root = xmlDocGetRootElement(doc.get());
     if (root != nullptr)
     {
+      if (!parseHeader(out, root))
+      {
+        LOG(error) << "Cannot find next in header for streams doc";
+        return false;
+      }
       if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) == 0)
       {
-        if (!parseHeader(out, root))
-        {
-          LOG(error) << "Cannot find next in header for streams doc";
-          return false;
-        }
-
         return parseDataItems(out, root, context);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectAssets", root->name) == 0)
