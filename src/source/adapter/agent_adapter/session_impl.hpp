@@ -72,23 +72,14 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     bool isOpen() const override { return derived().lowestLayer().socket().is_open(); }
 
-    void failed(boost::beast::error_code ec, const char *what, bool reconnect = true) override
+    void failed(std::error_code ec, const char *what, bool reconnect = true) override
     {
       derived().lowestLayer().socket().close();
       m_idle = true;
 
       LOG(error) << what << ": " << ec.message() << "\n";
-      if (!reconnect)
-      {
-        LOG(error) << "Cannot reconnect";
-        if (m_failed)
-          m_failed();
-      }
-      else if (m_reconnect)
-      {
-        LOG(info) << "Reconnecting";
-        m_reconnect();
-      }
+      if (m_failed)
+        m_failed(ec);
     }
 
     void stop() override
@@ -212,17 +203,15 @@ namespace mtconnect::source::adapter::agent_adapter {
         if (m_handler && m_handler->m_processData)
           m_handler->m_processData(data, m_identity);
       }
-      catch(pipeline::InstanceIdChanged &e)
+      catch(std::system_error &e)
       {
-        LOG(warning) << "Instance id changed from " << e.m_oldInstanceId << " to " <<
-                        e.m_instanceId;
-        if (m_resync)
-          m_resync();
+        LOG(warning) << "AgentAdapter - Error occurred processing data: " << e.what();
+        failed(e.code(), "Error occurred processing data", false);
       }
       catch (std::exception &e)
       {
         beast::error_code ec;
-        LOG(error) << "AgentAdapter::processData: " << e.what();
+        LOG(error) << "AgentAdapter - Error occurred processing data: " << e.what();
         failed(ec, "Exception occurred in AgentAdapter::processData", false);
       }
       catch (...)

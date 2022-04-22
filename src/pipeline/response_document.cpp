@@ -90,7 +90,7 @@ namespace mtconnect::pipeline {
           return true;
         }))
     {
-      LOG(error) << "Cannot find attribute " << name << " in resonse doc";
+      LOG(trace) << "Cannot find attribute " << name << " in resonse doc";
     }
 
     return res;
@@ -104,7 +104,8 @@ namespace mtconnect::pipeline {
           return false;
         }))
     {
-      LOG(error) << "Cannot find " << name << " in resonse doc";
+      LOG(trace) << "Cannot find element " << name << " in resonse doc";
+      return nullptr;
     }
 
     return child;
@@ -226,7 +227,7 @@ namespace mtconnect::pipeline {
                      << ": Cannot data item for id and no name:" << get<std::string>(id->second);
         return nullptr;
       }
-      auto di = device->getDeviceDataItem(get<std::string>(diName->second));
+      di = device->getDeviceDataItem(get<std::string>(diName->second));
       if (!di)
       {
         const string &uuid = *(device->getUuid());
@@ -240,7 +241,7 @@ namespace mtconnect::pipeline {
     return di;
   }
 
-  inline static bool parseDataItems(ResponseDocument &out, xmlNodePtr node,
+  inline static bool parseObservations(ResponseDocument &out, xmlNodePtr node,
                                     pipeline::PipelineContextPtr context)
   {
     auto streams = findChild(node, "Streams");
@@ -281,6 +282,10 @@ namespace mtconnect::pipeline {
             {
               return true;
             }
+            
+            // Remove old properties
+            properties.erase("name");
+            properties.erase("dataItemId");
 
             auto ts = properties["timestamp"];
             auto timestamp = parseTimestamp(get<string>(ts));
@@ -414,7 +419,7 @@ namespace mtconnect::pipeline {
       }
       if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) == 0)
       {
-        return parseDataItems(out, root, context);
+        return parseObservations(out, root, context);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectAssets", root->name) == 0)
       {

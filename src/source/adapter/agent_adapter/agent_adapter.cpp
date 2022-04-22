@@ -139,40 +139,74 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_assetSession->m_identity = m_identity;
     m_assetSession->m_closeConnectionAfterResponse = m_closeConnectionAfterResponse;
 
-    m_session->m_reconnect = [this]() {
-      if (m_handler->m_disconnected)
-        m_handler->m_disconnected(m_identity);
-      if (!m_reconnecting)
-      {
-        m_reconnecting = true;
-        m_session->stop();
-        m_assetSession->stop();
-        
-        m_reconnectTimer.expires_after(m_reconnectInterval);
-        m_reconnectTimer.async_wait(
-            asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
-              if (!ec)
-              {
-                if (instanceId() != 0)
-                  recover();
-                else
-                  run();
-              }
-            }));
-      }
-    };
-    m_session->m_resync = [this]() {
-      run();
-    };
-    m_session->m_failed = [this]() {
-      if (m_handler->m_disconnected)
-        m_handler->m_disconnected(m_identity);
-      m_pipeline.getContext()->m_contract->sourceFailed(m_identity);
-    };
+    using namespace std::placeholders;
+    m_session->m_failed = std::bind(&AgentAdapter::sessionFailed, this, _1);
+    m_assetSession->m_failed = std::bind(&AgentAdapter::sessionFailed, this, _1);
 
     run();
 
     return true;
+  }
+  
+  void AgentAdapter::recoverStreams()
+  {
+    if (!m_reconnecting)
+    {
+      m_reconnecting = true;
+      m_session->stop();
+      m_assetSession->stop();
+      
+      m_reconnectTimer.expires_after(m_reconnectInterval);
+      m_reconnectTimer.async_wait(
+          asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+            if (!ec)
+            {
+              if (instanceId() != 0)
+                recover();
+              else
+                run();
+            }
+          }));
+    }
+  }
+  
+  void AgentAdapter::sessionFailed(std::error_code &ec)
+  {
+    if (ec.category() == source::TheErrorCategory())
+    {
+      switch (static_cast<ErrorCode>(ec.value()))
+      {
+        case ErrorCode::INSTANCE_ID_CHANGED:
+        case ErrorCode::RESTART_STREAM:
+          run();
+          break;
+          
+        case ErrorCode::STREAM_CLOSED:
+          if (m_handler->m_disconnected)
+            m_handler->m_disconnected(m_identity);
+          recoverStreams();
+          break;
+
+        case ErrorCode::RECOVER_STREAM:
+          recoverStreams();
+          break;
+          
+        case ErrorCode::ADAPTER_FAILED:
+          if (m_handler->m_disconnected)
+            m_handler->m_disconnected(m_identity);
+          m_pipeline.getContext()->m_contract->sourceFailed(m_identity);
+          break;
+          
+        default:
+          LOG(error) << "Unknown error: " << ec.message();
+          break;
+      }
+    }
+    else
+    {
+      if (m_handler->m_disconnected)
+        m_handler->m_disconnected(m_identity);
+    }
   }
 
   void AgentAdapter::run()

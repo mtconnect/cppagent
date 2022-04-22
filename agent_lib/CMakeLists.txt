@@ -24,18 +24,19 @@ set(AGENT_SOURCES
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter_pipeline.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.hpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/connector.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_adapter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_pipeline.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/http_session.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/https_session.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session_impl.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.hpp" 
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/connector.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_adapter.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_pipeline.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/error_code.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.hpp"
 
 # src/source SOURCE_FILES_ONLY
         

@@ -108,7 +108,7 @@ TEST_F(MTConnectXmlTransformTest, should_return_errors)
 
   auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", "adapter"s}});
 
-  auto res = (*m_xform)(entity);
+  EXPECT_THROW((*m_xform)(entity), std::system_error);
 
   auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
   
@@ -144,7 +144,7 @@ TEST_F(MTConnectXmlTransformTest, should_throw_when_instances_change)
 
   entity = make_shared<Entity>("Data", Properties {{"VALUE", recover}, {"source", "adapter"s}});
   
-  EXPECT_THROW((*m_xform)(entity), InstanceIdChanged);
+  EXPECT_THROW((*m_xform)(entity), std::system_error);
   ASSERT_EQ(1649989201, feedback->m_instanceId);
   ASSERT_EQ(4992049, feedback->m_next);
 }

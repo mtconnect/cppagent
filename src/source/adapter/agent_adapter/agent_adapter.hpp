@@ -74,6 +74,9 @@ namespace mtconnect::source::adapter::agent_adapter {
     void assets();
     void updateAssets();
     
+    void sessionFailed(std::error_code &ec);
+    void recoverStreams();
+
     auto instanceId() {
       const auto &feedback =
           m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>("XmlTransformFeedback");

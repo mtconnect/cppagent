@@ -23,20 +23,9 @@
 #include "observation/observation.hpp"
 #include "pipeline/transform.hpp"
 #include "response_document.hpp"
+#include "source/error_code.hpp"
 
 namespace mtconnect::pipeline {
-  class InstanceIdChanged : public std::runtime_error
-  {
-  public:
-    explicit InstanceIdChanged(const char *msg, int old, int nid) 
-    : std::runtime_error(msg), m_instanceId(nid), m_oldInstanceId(old) {}
-    explicit InstanceIdChanged(const std::string &msg, int old, int nid)
-    : std::runtime_error(msg), m_instanceId(nid), m_oldInstanceId(old) {}
-
-    int m_instanceId;
-    int m_oldInstanceId;
-  };
-  
   struct XmlTransformFeedback : public pipeline::TransformState
   {
     int m_instanceId = 0;
@@ -61,6 +50,7 @@ namespace mtconnect::pipeline {
     {
       using namespace pipeline;
       using namespace entity;
+      using namespace mtconnect::source;
 
       const auto &data = entity->getValue<std::string>();
       ResponseDocument rd;
@@ -70,14 +60,23 @@ namespace mtconnect::pipeline {
       
       if (feedback->m_instanceId != 0 && feedback->m_instanceId != rd.m_instanceId)
       {
-        LOG(warning) << "MTConnectXmlTransform: instance id changed";
-        throw InstanceIdChanged("Instance Id Changed", feedback->m_instanceId, rd.m_instanceId);
+        feedback->m_assetEvents.clear();
+        feedback->m_errors.clear();
+
+        LOG(warning) << "MTConnectXmlTransform: instance id changed from " << feedback->m_instanceId
+            << " to " << rd.m_instanceId;
+        throw std::system_error(make_error_code(ErrorCode::INSTANCE_ID_CHANGED));
       }
       
       feedback->m_instanceId = rd.m_instanceId;
       feedback->m_next = rd.m_next;
       feedback->m_assetEvents = rd.m_assetEvents;
       feedback->m_errors = rd.m_errors;
+      
+      if (rd.m_errors.size() > 0)
+      {
+        throw std::system_error(make_error_code(ErrorCode::RESTART_STREAM));
+      }
       
       for (auto &entity : rd.m_entities)
       {
