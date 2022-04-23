@@ -78,7 +78,7 @@ namespace mtconnect::pipeline {
     return false;
   }
 
-  inline string attributeValue(xmlNodePtr node, const char *name)
+  inline string attributeValue(xmlNodePtr node, const char *name, bool optional = false)
   {
     string res;
     if (!eachAttribute(node, [&name, &res](xmlAttrPtr attr) {
@@ -90,13 +90,14 @@ namespace mtconnect::pipeline {
           return true;
         }))
     {
-      LOG(trace) << "Cannot find attribute " << name << " in resonse doc";
+      if (!optional)
+        LOG(debug) << "Cannot find attribute " << name << " in resonse doc";
     }
 
     return res;
   }
 
-  inline static xmlNodePtr findChild(xmlNodePtr node, const char *name)
+  inline static xmlNodePtr findChild(xmlNodePtr node, const char *name, bool optional = false)
   {
     xmlNodePtr child;
     if (!eachElement(node, name, [&child](xmlNodePtr node) {
@@ -104,7 +105,8 @@ namespace mtconnect::pipeline {
           return false;
         }))
     {
-      LOG(trace) << "Cannot find element " << name << " in resonse doc";
+      if (!optional)
+        LOG(debug) << "Cannot find element " << name << " in resonse doc";
       return nullptr;
     }
 
@@ -119,7 +121,7 @@ namespace mtconnect::pipeline {
       out.m_instanceId =
           boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "instanceId"));
       
-      auto next = attributeValue(header, "nextSequence");
+      auto next = attributeValue(header, "nextSequence", false);
       if (!next.empty())
         out.m_next = boost::lexical_cast<SequenceNumber_t>(next);
       return true;
@@ -136,9 +138,7 @@ namespace mtconnect::pipeline {
     {
       if (n->type == XML_TEXT_NODE)
       {
-        string s((const char *)n->content);
-        trim(s);
-        return s;
+        return trim((const char *)n->content);
       }
     }
 
@@ -148,28 +148,38 @@ namespace mtconnect::pipeline {
   inline DataSetValue type(const string &s)
   {
     using namespace boost;
+    if (s.empty())
+      return std::monostate();
 
+    bool dbl = false;
     for (const char c : s)
     {
-      if (!isdigit(c) || c != '.')
+      if (!isdigit(c) && c != '.')
+      {
+        return s;
+      }
+      else if (c == '.' && dbl)
       {
         return s;
       }
       else if (c == '.')
       {
-        return lexical_cast<double>(s);
+        dbl = true;
       }
     }
-
-    return lexical_cast<int64_t>(s);
+    
+    if (dbl)
+      return lexical_cast<double>(s);
+    else
+      return lexical_cast<int64_t>(s);
   }
-
+  
   inline void dataSet(xmlNodePtr node, bool table, DataSet &ds)
   {
     eachElement(node, "Entry", [table, &ds](xmlNodePtr n) {
       DataSetEntry entry;
       entry.m_key = attributeValue(n, "key");
-      entry.m_removed = attributeValue(n, "removed") == "true";
+      entry.m_removed = attributeValue(n, "removed", true) == "true";
 
       if (table)
       {
@@ -177,9 +187,12 @@ namespace mtconnect::pipeline {
         DataSet &row = get<DataSet>(entry.m_value);
 
         eachElement(n, "Cell", [&row](xmlNodePtr c) {
-          dataSet(c, false, row);
+          row.emplace(attributeValue(c, "key"), type(text(c)));
           return true;
         });
+        
+        if (row.empty())
+          entry.m_value.emplace<monostate>();
       }
       else
       {

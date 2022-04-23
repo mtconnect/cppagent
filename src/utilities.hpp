@@ -72,6 +72,7 @@ typedef unsigned __int64 uint64_t;
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
+#include  <boost/algorithm/string/trim.hpp>
 
 //####### CONSTANTS #######
 
@@ -290,20 +291,23 @@ namespace mtconnect {
 
   inline std::string ltrim(std::string s)
   {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) { return !std::isspace(ch); }));
+    boost::algorithm::trim_left(s);
     return s;
   }
 
   // trim from end (in place)
   static inline std::string rtrim(std::string s)
   {
-    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) { return !std::isspace(ch); }).base(),
-            s.end());
+    boost::algorithm::trim_right(s);
     return s;
   }
 
   // trim from both ends (in place)
-  inline std::string trim(std::string s) { return rtrim(ltrim(s)); }
+  inline std::string trim(std::string s)
+  {
+    boost::algorithm::trim(s);
+    return s;
+  }
 
   inline bool starts_with(const std::string &value, const std::string_view &beginning)
   {

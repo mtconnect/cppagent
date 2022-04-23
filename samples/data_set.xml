@@ -43,7 +43,7 @@
                 <DataItem type="CONTROLLER_MODE" category="EVENT" id="p2" name="mode"/>
                 <DataItem type="LINE" category="EVENT" id="p3" name="line"/>
                 <DataItem type="PROGRAM" category="EVENT" id="p4" name="program"/>
-                <DataItem type="WORKPIECE_OFFSET" category="EVENT" id="wp1" name="wpo"
+                <DataItem type="WORK_OFFSET" category="EVENT" id="wp1" name="wpo"
                   representation="TABLE">
                   <Definition>
                     <Description>A Complex Workpiece Offset Table</Description>
