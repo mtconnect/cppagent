@@ -27,6 +27,8 @@
 #include <string_view>
 #include <variant>
 
+#include "utilities.hpp"
+
 namespace mtconnect::source::adapter::agent_adapter {
   using UrlQueryPair = std::pair<std::string, std::string>;
 
@@ -89,8 +91,32 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       if (m_query.size())
         return m_path + '?' + m_query.join();
-      return m_path;
+      else
+        return m_path;
     }
+    
+    std::string getTarget(const std::optional<std::string> &device,
+                          const std::string &operation,
+                          const UrlQuery &query) const
+    {
+      UrlQuery uq { m_query };
+      if (!query.empty())
+        uq.merge(query);
+      
+      std::stringstream path;
+      path << m_path;
+      if (m_path[m_path.size() - 1] != '/')
+        path << '/';
+      if (device)
+        path << *device << '/';
+      if (!operation.empty())
+        path << operation;
+      if (uq.size() > 0)
+        path << '?' << uq.join();
+      
+      return path.str();
+    }
+
 
     static Url parse(const std::string_view& url);
   };

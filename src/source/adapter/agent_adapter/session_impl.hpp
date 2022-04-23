@@ -43,10 +43,12 @@ namespace mtconnect::source::adapter::agent_adapter {
   {
     struct Request
     {
-      Request(const std::string &suffix, const UrlQuery &query, bool stream, Next next)
-        : m_suffix(suffix), m_query(query), m_stream(stream), m_next(next)
+      Request(const std::optional<std::string> &device,
+              const std::string &suffix, const UrlQuery &query, bool stream, Next next)
+        : m_sourceDevice(device), m_suffix(suffix), m_query(query), m_stream(stream), m_next(next)
       {}
 
+      std::optional<std::string> m_sourceDevice;
       std::string m_suffix;
       UrlQuery m_query;
       bool m_stream;
@@ -144,7 +146,9 @@ namespace mtconnect::source::adapter::agent_adapter {
                                                                            derived().getptr())));
     }
 
-    bool makeRequest(const std::string &suffix, const UrlQuery &query, bool stream,
+    bool makeRequest(const std::optional<std::string> &device,
+                     const std::string &suffix,
+                     const UrlQuery &query, bool stream,
                      Next next) override
     {
       if (m_idle)
@@ -152,15 +156,8 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_idle = false;
 
         m_next = next;
-        if (suffix[0] == '/')
-          m_target = suffix;
-        else
-          m_target = m_url.m_path + suffix;
-        auto uq = m_url.m_query;
-        if (!query.empty())
-          uq.merge(query);
-        if (!uq.empty())
-          m_target += ("?" + uq.join());
+        
+        m_target = m_url.getTarget(device, suffix, query);        
         m_streaming = stream;
 
         // Clean out any previous data
@@ -191,7 +188,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
       else
       {
-        m_queue.emplace_back(suffix, query, stream, next);
+        m_queue.emplace_back(device, suffix, query, stream, next);
         return false;
       }
     }
@@ -332,7 +329,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       {
         Request req = m_queue.front();
         m_queue.pop_front();
-        makeRequest(req.m_suffix, req.m_query, req.m_stream, req.m_next);
+        makeRequest(req.m_sourceDevice, req.m_suffix, req.m_query, req.m_stream, req.m_next);
       }
     }
 

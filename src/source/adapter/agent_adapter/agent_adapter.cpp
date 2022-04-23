@@ -18,6 +18,8 @@
 #include "agent_adapter.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/beast/core/error.hpp>
+#include <boost/beast/http/error.hpp>
 
 #include <cstdio>
 #include <fstream>
@@ -96,10 +98,21 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
-    m_sourceDevice = GetOption<std::string>(m_options, configuration::SourceDevice);
+        
     m_reconnectInterval =
         std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
+    
+    auto device = GetOption<string>(m_options, configuration::Device);
+    if (!device)
+    {
+      LOG(fatal) << "Agent Adapter must target a device";
+      m_failed = true;
+    }
+    else
+    {
+      m_sourceDevice = GetOption<string>(m_options, configuration::SourceDevice).value_or(*device);
+    }
 
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
@@ -109,6 +122,11 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   bool AgentAdapter::start()
   {
+    if (m_failed)
+    {
+      LOG(error) << "Agent adapter cannot start: fatal error";
+      return false;
+    }
     m_pipeline.start();
 
     if (m_url.m_protocol == "https")
@@ -178,7 +196,14 @@ namespace mtconnect::source::adapter::agent_adapter {
       {
         case ErrorCode::INSTANCE_ID_CHANGED:
         case ErrorCode::RESTART_STREAM:
-          run();
+          m_reconnectTimer.expires_after(100ms);
+          m_reconnectTimer.async_wait(
+              asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+                if (!ec)
+                {
+                  run();
+                }
+              }));
           break;
           
         case ErrorCode::STREAM_CLOSED:
@@ -206,11 +231,24 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       if (m_handler->m_disconnected)
         m_handler->m_disconnected(m_identity);
+      
+      switch (static_cast<beast::http::error>(ec.value()))
+      {
+        case beast::http::error::end_of_stream:
+          recoverStreams();
+          break;
+          
+        default:
+          break;
+      }
     }
   }
 
   void AgentAdapter::run()
   {
+//    m_session->stop();
+//    m_assetSession->stop();
+
     const auto &feedback =
         m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
     feedback->m_instanceId = 0;
@@ -229,7 +267,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::current()
   {
-    m_session->makeRequest("current", UrlQuery(), false, [this]() { return sample(); });
+    m_session->makeRequest(m_sourceDevice, "current", UrlQuery(), false, [this]() { return sample(); });
   }
 
   bool AgentAdapter::sample()
@@ -242,7 +280,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                     {"count", lexical_cast<string>(m_count)},
                     {"heartbeat", lexical_cast<string>(m_heartbeat)},
                     {"interval", "500"}});
-    m_session->makeRequest("sample", query, true, nullptr);
+    m_session->makeRequest(m_sourceDevice, "sample", query, true, nullptr);
 
     return true;
   }
@@ -257,7 +295,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapter::assets()
   {
     UrlQuery query({{"count", "1048576"}});
-    m_assetSession->makeRequest("assets", query, false, nullptr);
+    m_assetSession->makeRequest(nullopt, "assets", query, false, nullptr);
   }
 
   void AgentAdapter::updateAssets()
@@ -270,7 +308,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                    [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");
 
-    m_assetSession->makeRequest("/assets/" + ids, UrlQuery(), false, nullptr);
+    m_assetSession->makeRequest(nullopt, "/assets/" + ids, UrlQuery(), false, nullptr);
   }
 
 }  // namespace mtconnect::source::adapter::agent_adapter
