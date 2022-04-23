@@ -25,8 +25,8 @@
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
 
-#include "pipeline/response_document.hpp"
 #include "pipeline/mtconnect_xml_transform.hpp"
+#include "pipeline/response_document.hpp"
 #include "session.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {
@@ -43,8 +43,8 @@ namespace mtconnect::source::adapter::agent_adapter {
   {
     struct Request
     {
-      Request(const std::optional<std::string> &device,
-              const std::string &suffix, const UrlQuery &query, bool stream, Next next)
+      Request(const std::optional<std::string> &device, const std::string &suffix,
+              const UrlQuery &query, bool stream, Next next)
         : m_sourceDevice(device), m_suffix(suffix), m_query(query), m_stream(stream), m_next(next)
       {}
 
@@ -64,10 +64,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     // Objects are constructed with a strand to
     // ensure that handlers do not execute concurrently.
     SessionImpl(boost::asio::io_context::strand &strand, const Url &url)
-      : m_resolver(strand.context()),
-        m_strand(strand),
-        m_url(url),
-        m_chunk(1 * 1024 * 1024)
+      : m_resolver(strand.context()), m_strand(strand), m_url(url), m_chunk(1 * 1024 * 1024)
     {}
 
     virtual ~SessionImpl() { stop(); }
@@ -146,18 +143,16 @@ namespace mtconnect::source::adapter::agent_adapter {
                                                                            derived().getptr())));
     }
 
-    bool makeRequest(const std::optional<std::string> &device,
-                     const std::string &suffix,
-                     const UrlQuery &query, bool stream,
-                     Next next) override
+    bool makeRequest(const std::optional<std::string> &device, const std::string &suffix,
+                     const UrlQuery &query, bool stream, Next next) override
     {
       if (m_idle)
       {
         m_idle = false;
 
         m_next = next;
-        
-        m_target = m_url.getTarget(device, suffix, query);        
+
+        m_target = m_url.getTarget(device, suffix, query);
         m_streaming = stream;
 
         // Clean out any previous data
@@ -192,7 +187,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         return false;
       }
     }
-    
+
     void processData(const std::string &data)
     {
       try
@@ -200,7 +195,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         if (m_handler && m_handler->m_processData)
           m_handler->m_processData(data, m_identity);
       }
-      catch(std::system_error &e)
+      catch (std::system_error &e)
       {
         LOG(warning) << "AgentAdapter - Error occurred processing data: " << e.what();
         failed(e.code(), "Error occurred processing data", false);
@@ -412,7 +407,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_chunkLength = atoi(lp + 16);
       m_chunk.consume(ep);
     }
-    
+
     void createChunkBodyHandler()
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
@@ -439,7 +434,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           LOG(debug) << "Received Chunk: --------\n" << sbuf << "\n-------------";
 
           processData(string(sbuf));
-          
+
           m_chunk.consume(m_chunkLength);
           m_hasHeader = false;
         }

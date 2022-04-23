@@ -17,11 +17,11 @@
 
 #pragma once
 
+#include "pipeline/mtconnect_xml_transform.hpp"
 #include "session.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/adapter_pipeline.hpp"
 #include "url_parser.hpp"
-#include "pipeline/mtconnect_xml_transform.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {
   using namespace mtconnect;
@@ -73,13 +73,15 @@ namespace mtconnect::source::adapter::agent_adapter {
     bool sample();
     void assets();
     void updateAssets();
-    
+
     void sessionFailed(std::error_code &ec);
     void recoverStreams();
 
-    auto instanceId() {
+    auto instanceId()
+    {
       const auto &feedback =
-          m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>("XmlTransformFeedback");
+          m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>(
+              "XmlTransformFeedback");
       return feedback->m_instanceId;
     }
 

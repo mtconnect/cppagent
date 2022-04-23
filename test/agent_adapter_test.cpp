@@ -341,24 +341,20 @@ TEST_F(AgentAdapterTest, should_reconnect)
   handler->m_connected = [&](const string id) {};
 
   bool disconnected = false;
-  handler->m_disconnected = [&](const string id) {
-    disconnected = true;
-  };
+  handler->m_disconnected = [&](const string id) { disconnected = true; };
 
   adapter->setHandler(handler);
   adapter->start();
 
   sink::rest_sink::SessionPtr session;
   m_agentTestHelper->m_restService->getServer()->m_lastSession =
-      [&](sink::rest_sink::SessionPtr ptr) {
-        session = ptr;
-      };
+      [&](sink::rest_sink::SessionPtr ptr) { session = ptr; };
 
   boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 2s);
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
-      //throw runtime_error("test timed out");
+      // throw runtime_error("test timed out");
     }
   });
 
@@ -475,33 +471,28 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
     if (recovering)
     {
       recovering = false;
-      throw std::system_error(make_error_code(mtconnect::source::ErrorCode::RESTART_STREAM));
+      throw std::system_error(make_error_code(mtconnect::source::ErrorCode::INSTANCE_ID_CHANGED));
     }
     seq->m_instanceId = rd.m_instanceId;
     disconnected = false;
   };
   handler->m_connecting = [&](const string id) {};
-  handler->m_connected = [&](const string id) {
-  };
+  handler->m_connected = [&](const string id) {};
 
-  handler->m_disconnected = [&](const string id) {
-    disconnected = true;
-  };
+  handler->m_disconnected = [&](const string id) { disconnected = true; };
 
   adapter->setHandler(handler);
   adapter->start();
 
   sink::rest_sink::SessionPtr session;
   m_agentTestHelper->m_restService->getServer()->m_lastSession =
-      [&](sink::rest_sink::SessionPtr ptr) {
-        session = ptr;
-      };
+      [&](sink::rest_sink::SessionPtr ptr) { session = ptr; };
 
   boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 2s);
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
-      //throw runtime_error("test timed out");
+      // throw runtime_error("test timed out");
     }
   });
 
@@ -528,7 +519,7 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
     m_agentTestHelper->m_ioContext.run_one();
   }
   ASSERT_TRUE(session);
-  
+
   while (disconnected)
   {
     m_agentTestHelper->m_ioContext.run_one();

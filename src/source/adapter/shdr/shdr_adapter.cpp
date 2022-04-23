@@ -112,10 +112,10 @@ namespace mtconnect::source::adapter::shdr {
         {
           m_body << endl << data;
         }
-        
+
         return;
       }
-      
+
       if (size_t multi = data.find("--multiline--"); multi != string::npos)
       {
         m_body.str("");
@@ -123,7 +123,7 @@ namespace mtconnect::source::adapter::shdr {
         m_terminator = data.substr(multi);
         return;
       }
-      
+
       if (m_handler && m_handler->m_processData)
         m_handler->m_processData(data, getIdentity());
     }

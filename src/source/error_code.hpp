@@ -17,12 +17,11 @@
 
 #pragma once
 
-#include <system_error>
 #include <iostream>
 #include <string>
+#include <system_error>
 
-namespace mtconnect::source
-{
+namespace mtconnect::source {
   enum class ErrorCode
   {
     OK = 0,
@@ -34,61 +33,62 @@ namespace mtconnect::source
   };
 }
 
-namespace std
-{
-  template<>
-  struct is_error_code_enum<mtconnect::source::ErrorCode> : true_type {};
+namespace std {
+  template <>
+  struct is_error_code_enum<mtconnect::source::ErrorCode> : true_type
+  {};
 
-  template<>
-  struct is_error_condition_enum<mtconnect::source::ErrorCode> : true_type {};
-}
+  template <>
+  struct is_error_condition_enum<mtconnect::source::ErrorCode> : true_type
+  {};
+}  // namespace std
 
-namespace mtconnect::source
-{
+namespace mtconnect::source {
   struct ErrorCategory : std::error_category
   {
     const char *name() const noexcept override { return "MTConnect::Error"; }
     std::string message(int ec) const override
     {
-      switch (static_cast<ErrorCode>(ec)) {
+      switch (static_cast<ErrorCode>(ec))
+      {
         case ErrorCode::OK:
           return "No error";
-          
+
         case ErrorCode::ADAPTER_FAILED:
           return "Adapter failed and cannot recover";
-          
+
         case ErrorCode::INSTANCE_ID_CHANGED:
           return "The instance Id of an agent has changed";
-          
+
         case ErrorCode::STREAM_CLOSED:
           return "The stream closed";
-          
+
         case ErrorCode::RECOVER_STREAM:
           return "The data stream needs to recover from last position";
-          
+
         case ErrorCode::RESTART_STREAM:
           return "The data stream needs to restart";
-          
+
         default:
           return "Unknown mtconnect error";
       }
     }
   };
-  
+
   inline const std::error_category &TheErrorCategory()
   {
     static const ErrorCategory theErrorCategory {};
     return theErrorCategory;
   }
-  
+
   inline std::error_code make_error_code(ErrorCode ec)
   {
-    return { static_cast<int>(ec), TheErrorCategory()};
-  }
-  
-  inline std::error_condition make_error_condition(ErrorCode ec)
-  {
-    return { static_cast<int>(ec), TheErrorCategory()};
+    return {static_cast<int>(ec), TheErrorCategory()};
   }
 
-}
+  inline std::error_condition make_error_condition(ErrorCode ec)
+  {
+    return {static_cast<int>(ec), TheErrorCategory()};
+  }
+
+}  // namespace mtconnect::source

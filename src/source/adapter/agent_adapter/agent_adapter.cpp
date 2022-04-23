@@ -98,11 +98,11 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
-        
+
     m_reconnectInterval =
         std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
-    
+
     auto device = GetOption<string>(m_options, configuration::Device);
     if (!device)
     {
@@ -165,7 +165,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     return true;
   }
-  
+
   void AgentAdapter::recoverStreams()
   {
     if (!m_reconnecting)
@@ -173,7 +173,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_reconnecting = true;
       m_session->stop();
       m_assetSession->stop();
-      
+
       m_reconnectTimer.expires_after(m_reconnectInterval);
       m_reconnectTimer.async_wait(
           asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
@@ -187,7 +187,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           }));
     }
   }
-  
+
   void AgentAdapter::sessionFailed(std::error_code &ec)
   {
     if (ec.category() == source::TheErrorCategory())
@@ -205,7 +205,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                 }
               }));
           break;
-          
+
         case ErrorCode::STREAM_CLOSED:
           if (m_handler->m_disconnected)
             m_handler->m_disconnected(m_identity);
@@ -215,13 +215,13 @@ namespace mtconnect::source::adapter::agent_adapter {
         case ErrorCode::RECOVER_STREAM:
           recoverStreams();
           break;
-          
+
         case ErrorCode::ADAPTER_FAILED:
           if (m_handler->m_disconnected)
             m_handler->m_disconnected(m_identity);
           m_pipeline.getContext()->m_contract->sourceFailed(m_identity);
           break;
-          
+
         default:
           LOG(error) << "Unknown error: " << ec.message();
           break;
@@ -231,13 +231,13 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       if (m_handler->m_disconnected)
         m_handler->m_disconnected(m_identity);
-      
+
       switch (static_cast<beast::http::error>(ec.value()))
       {
         case beast::http::error::end_of_stream:
           recoverStreams();
           break;
-          
+
         default:
           break;
       }
@@ -246,8 +246,8 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::run()
   {
-//    m_session->stop();
-//    m_assetSession->stop();
+    //    m_session->stop();
+    //    m_assetSession->stop();
 
     const auto &feedback =
         m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
@@ -258,7 +258,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     assets();
     current();
   }
-  
+
   void AgentAdapter::recover()
   {
     m_reconnecting = false;
@@ -267,7 +267,8 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::current()
   {
-    m_session->makeRequest(m_sourceDevice, "current", UrlQuery(), false, [this]() { return sample(); });
+    m_session->makeRequest(m_sourceDevice, "current", UrlQuery(), false,
+                           [this]() { return sample(); });
   }
 
   bool AgentAdapter::sample()
@@ -304,7 +305,8 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
 
     std::vector<string> idList;
-    std::transform(feedback->m_assetEvents.begin(), feedback->m_assetEvents.end(), back_inserter(idList),
+    std::transform(feedback->m_assetEvents.begin(), feedback->m_assetEvents.end(),
+                   back_inserter(idList),
                    [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");
 

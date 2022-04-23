@@ -120,7 +120,7 @@ namespace mtconnect::pipeline {
     {
       out.m_instanceId =
           boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "instanceId"));
-      
+
       auto next = attributeValue(header, "nextSequence", false);
       if (!next.empty())
         out.m_next = boost::lexical_cast<SequenceNumber_t>(next);
@@ -167,13 +167,13 @@ namespace mtconnect::pipeline {
         dbl = true;
       }
     }
-    
+
     if (dbl)
       return lexical_cast<double>(s);
     else
       return lexical_cast<int64_t>(s);
   }
-  
+
   inline void dataSet(xmlNodePtr node, bool table, DataSet &ds)
   {
     eachElement(node, "Entry", [table, &ds](xmlNodePtr n) {
@@ -190,7 +190,7 @@ namespace mtconnect::pipeline {
           row.emplace(attributeValue(c, "key"), type(text(c)));
           return true;
         });
-        
+
         if (row.empty())
           entry.m_value.emplace<monostate>();
       }
@@ -255,7 +255,7 @@ namespace mtconnect::pipeline {
   }
 
   inline static bool parseObservations(ResponseDocument &out, xmlNodePtr node,
-                                    pipeline::PipelineContextPtr context)
+                                       pipeline::PipelineContextPtr context)
   {
     auto streams = findChild(node, "Streams");
     if (streams == nullptr)
@@ -295,7 +295,7 @@ namespace mtconnect::pipeline {
             {
               return true;
             }
-            
+
             // Remove old properties
             properties.erase("name");
             properties.erase("dataItemId");

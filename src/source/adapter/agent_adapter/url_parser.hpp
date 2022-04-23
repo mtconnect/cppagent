@@ -94,15 +94,14 @@ namespace mtconnect::source::adapter::agent_adapter {
       else
         return m_path;
     }
-    
-    std::string getTarget(const std::optional<std::string> &device,
-                          const std::string &operation,
-                          const UrlQuery &query) const
+
+    std::string getTarget(const std::optional<std::string>& device, const std::string& operation,
+                          const UrlQuery& query) const
     {
-      UrlQuery uq { m_query };
+      UrlQuery uq {m_query};
       if (!query.empty())
         uq.merge(query);
-      
+
       std::stringstream path;
       path << m_path;
       if (m_path[m_path.size() - 1] != '/')
@@ -113,10 +112,9 @@ namespace mtconnect::source::adapter::agent_adapter {
         path << operation;
       if (uq.size() > 0)
         path << '?' << uq.join();
-      
+
       return path.str();
     }
-
 
     static Url parse(const std::string_view& url);
   };

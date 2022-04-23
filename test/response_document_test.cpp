@@ -64,8 +64,7 @@ protected:
 
     m_doc.emplace();
 
-    m_device =
-        parser->parseFile(PROJECT_ROOT_DIR "/samples/data_set.xml", printer.get()).front();
+    m_device = parser->parseFile(PROJECT_ROOT_DIR "/samples/data_set.xml", printer.get()).front();
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_device);
@@ -80,7 +79,7 @@ protected:
 
 TEST_F(ResponseDocumentTest, should_parse_observations)
 {
-  string data { R"(<?xml version="1.0" encoding="UTF-8"?>
+  string data {R"(<?xml version="1.0" encoding="UTF-8"?>
 <MTConnectStreams xmlns:m="urn:mtconnect.org:MTConnectStreams:1.8"
     xmlns="urn:mtconnect.org:MTConnectStreams:1.8"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -109,17 +108,17 @@ TEST_F(ResponseDocumentTest, should_parse_observations)
         </DeviceStream>
     </Streams>
 </MTConnectStreams>
-)" };
-  
+)"};
+
   m_doc.emplace();
   ResponseDocument::parse(data, *m_doc, m_context);
-  
+
   ASSERT_EQ(5741581, m_doc->m_next);
   ASSERT_EQ(1649989201, m_doc->m_instanceId);
-  
+
   ASSERT_EQ(3, m_doc->m_entities.size());
   auto ent = m_doc->m_entities.begin();
-  
+
   ASSERT_EQ("AssetCommand", (*ent)->getName());
   ASSERT_EQ("RemoveAsset", (*ent)->getValue<string>());
   ASSERT_EQ("TOOLDEF", (*ent)->get<string>("assetId"));
@@ -137,16 +136,15 @@ TEST_F(ResponseDocumentTest, should_parse_observations)
 
   ASSERT_EQ(1, m_doc->m_assetEvents.size());
   auto aent = m_doc->m_assetEvents.begin();
-  
+
   ASSERT_EQ("AssetChanged", (*aent)->getName());
   ASSERT_EQ("TOOLABC", (*aent)->getValue<string>());
   ASSERT_EQ("d_asset_chg", (*aent)->get<string>("dataItemId"));
-
 }
 
 TEST_F(ResponseDocumentTest, should_parse_data_sets)
 {
-  string data { R"(<?xml version="1.0" encoding="UTF-8"?>
+  string data {R"(<?xml version="1.0" encoding="UTF-8"?>
 <MTConnectStreams xmlns:m="urn:mtconnect.org:MTConnectStreams:1.8"
     xmlns="urn:mtconnect.org:MTConnectStreams:1.8"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -170,17 +168,17 @@ TEST_F(ResponseDocumentTest, should_parse_data_sets)
         </DeviceStream>
     </Streams>
 </MTConnectStreams>
-)" };
-  
+)"};
+
   m_doc.emplace();
   ResponseDocument::parse(data, *m_doc, m_context);
-  
+
   ASSERT_EQ(5741581, m_doc->m_next);
   ASSERT_EQ(1649989201, m_doc->m_instanceId);
-  
+
   ASSERT_EQ(2, m_doc->m_entities.size());
   auto ent = m_doc->m_entities.begin();
-  
+
   ASSERT_EQ("VariableDataSet", (*ent)->getName());
   ASSERT_EQ("v1", (*ent)->get<string>("dataItemId"));
   ASSERT_EQ("vars", (*ent)->get<string>("name"));
@@ -192,7 +190,7 @@ TEST_F(ResponseDocumentTest, should_parse_data_sets)
   ASSERT_EQ(4, (*ent)->get<int64_t>("count"));
   const auto &ds = (*ent)->getValue<DataSet>();
   ASSERT_EQ(4, ds.size());
-  
+
   auto dse = ds.begin();
   ASSERT_EQ("X100", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
@@ -207,7 +205,7 @@ TEST_F(ResponseDocumentTest, should_parse_data_sets)
   ASSERT_EQ("X102", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
   ASSERT_EQ(44.6, get<double>(dse->m_value));
-  
+
   dse++;
   ASSERT_EQ("X103", dse->m_key);
   ASSERT_TRUE(dse->m_removed);
@@ -216,7 +214,7 @@ TEST_F(ResponseDocumentTest, should_parse_data_sets)
 
 TEST_F(ResponseDocumentTest, should_parse_tables)
 {
-  string data { R"(<?xml version="1.0" encoding="UTF-8"?>
+  string data {R"(<?xml version="1.0" encoding="UTF-8"?>
 <MTConnectStreams xmlns:m="urn:mtconnect.org:MTConnectStreams:1.8"
     xmlns="urn:mtconnect.org:MTConnectStreams:1.8"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -252,17 +250,17 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
         </DeviceStream>
     </Streams>
 </MTConnectStreams>
-)" };
-  
+)"};
+
   m_doc.emplace();
   ResponseDocument::parse(data, *m_doc, m_context);
-  
+
   ASSERT_EQ(5741581, m_doc->m_next);
   ASSERT_EQ(1649989201, m_doc->m_instanceId);
-  
+
   ASSERT_EQ(2, m_doc->m_entities.size());
   auto ent = m_doc->m_entities.begin();
-  
+
   ASSERT_EQ("WorkOffsetTable", (*ent)->getName());
   ASSERT_EQ("wp1", (*ent)->get<string>("dataItemId"));
   ASSERT_EQ("wpo", (*ent)->get<string>("name"));
@@ -273,14 +271,14 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
   ent++;
   const auto &ds = (*ent)->getValue<DataSet>();
   ASSERT_EQ(4, ds.size());
-  
+
   auto dse = ds.begin();
   ASSERT_EQ("W1", dse->m_key);
   ASSERT_FALSE(dse->m_removed);
 
   const auto &v1 = get<DataSet>(dse->m_value);
   ASSERT_EQ(3, v1.size());
-  
+
   auto v1i = v1.begin();
   ASSERT_EQ("X", v1i->m_key);
   ASSERT_EQ(1.0, get<double>(v1i->m_value));
@@ -297,7 +295,7 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
 
   const auto &v2 = get<DataSet>(dse->m_value);
   ASSERT_EQ(3, v2.size());
-  
+
   auto v2i = v2.begin();
   ASSERT_EQ("X2", v2i->m_key);
   ASSERT_EQ(4.0, get<double>(v2i->m_value));
@@ -314,7 +312,7 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
 
   const auto &v3 = get<DataSet>(dse->m_value);
   ASSERT_EQ(3, v3.size());
-  
+
   auto v3i = v3.begin();
   ASSERT_EQ("A", v3i->m_key);
   ASSERT_EQ("A", get<string>(v3i->m_value));
@@ -324,7 +322,6 @@ TEST_F(ResponseDocumentTest, should_parse_tables)
   v3i++;
   ASSERT_EQ("C", v3i->m_key);
   ASSERT_EQ("C", get<string>(v3i->m_value));
-
 
   dse++;
   ASSERT_EQ("W4", dse->m_key);
@@ -345,32 +342,32 @@ TEST_F(ResponseDocumentTest, should_parse_assets)
   char *buffer = new char[size + 1];
   str.read(buffer, size);
   buffer[size] = '\0';
-  
+
   m_doc.emplace();
   ResponseDocument::parse(buffer, *m_doc, m_context);
 
   ASSERT_EQ(1, m_doc->m_entities.size());
   auto asset = m_doc->m_entities.front();
-  
+
   ASSERT_EQ("CuttingTool", asset->getName());
 }
 
 TEST_F(ResponseDocumentTest, should_parse_errors)
 {
-  string data { R"(<?xml version="1.0" encoding="UTF-8"?>
+  string data {R"(<?xml version="1.0" encoding="UTF-8"?>
 <MTConnectError xmlns:m="urn:mtconnect.org:MTConnectError:1.7" xmlns="urn:mtconnect.org:MTConnectError:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectError:1.7 /schemas/MTConnectError_1.7.xsd">
   <Header creationTime="2022-04-21T06:13:20Z" sender="IntelAgent" instanceId="1649989201" version="2.0.0.1" deviceModelChangeTime="2022-04-21T03:21:32.630619Z" bufferSize="131072"/>
   <Errors>
     <Error errorCode="OUT_OF_RANGE">'at' must be greater than 4871368</Error>
     <Error errorCode="FAILURE">Something went wrong</Error>
   </Errors>
-</MTConnectError>)" };
+</MTConnectError>)"};
 
   m_doc.emplace();
   ResponseDocument::parse(data, *m_doc, m_context);
-  
+
   auto err = m_doc->m_errors.begin();
-  
+
   ASSERT_EQ(2, m_doc->m_errors.size());
   ASSERT_EQ("OUT_OF_RANGE", err->m_code);
   ASSERT_EQ("'at' must be greater than 4871368", err->m_message);
@@ -382,15 +379,15 @@ TEST_F(ResponseDocumentTest, should_parse_errors)
 
 TEST_F(ResponseDocumentTest, should_parse_legacy_error)
 {
-  string data { R"(<?xml version="1.0" encoding="UTF-8"?>
+  string data {R"(<?xml version="1.0" encoding="UTF-8"?>
 <MTConnectError xmlns:m="urn:mtconnect.org:MTConnectError:1.7" xmlns="urn:mtconnect.org:MTConnectError:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectError:1.7 /schemas/MTConnectError_1.7.xsd">
   <Header creationTime="2022-04-21T06:13:20Z" sender="IntelAgent" instanceId="1649989201" version="2.0.0.1" deviceModelChangeTime="2022-04-21T03:21:32.630619Z" bufferSize="131072"/>
     <Error errorCode="OUT_OF_RANGE">'at' must be greater than 4871368</Error>
-</MTConnectError>)" };
+</MTConnectError>)"};
 
   m_doc.emplace();
   ResponseDocument::parse(data, *m_doc, m_context);
-  
+
   ASSERT_EQ(1, m_doc->m_errors.size());
   auto &error = m_doc->m_errors.front();
   ASSERT_EQ("OUT_OF_RANGE", error.m_code);

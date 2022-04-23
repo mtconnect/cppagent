@@ -69,10 +69,10 @@ typedef unsigned __int64 uint64_t;
 #include <unistd.h>
 #endif
 
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
-#include  <boost/algorithm/string/trim.hpp>
 
 //####### CONSTANTS #######
 

@@ -46,11 +46,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     virtual void stop() = 0;
     virtual void failed(std::error_code ec, const char *what, bool reconnect = true) = 0;
 
-    virtual bool makeRequest(const std::optional<std::string> &device,
-                             const std::string &suffix,
-                             const UrlQuery &query,
-                             bool stream,
-                             Next next) = 0;
+    virtual bool makeRequest(const std::optional<std::string> &device, const std::string &suffix,
+                             const UrlQuery &query, bool stream, Next next) = 0;
 
     Handler *m_handler = nullptr;
     std::string m_identity;

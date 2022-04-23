@@ -57,27 +57,27 @@ namespace mtconnect::pipeline {
       ResponseDocument::parse(data, rd, m_context);
 
       auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-      
+
       if (feedback->m_instanceId != 0 && feedback->m_instanceId != rd.m_instanceId)
       {
         feedback->m_assetEvents.clear();
         feedback->m_errors.clear();
 
         LOG(warning) << "MTConnectXmlTransform: instance id changed from " << feedback->m_instanceId
-            << " to " << rd.m_instanceId;
+                     << " to " << rd.m_instanceId;
         throw std::system_error(make_error_code(ErrorCode::INSTANCE_ID_CHANGED));
       }
-      
+
       feedback->m_instanceId = rd.m_instanceId;
       feedback->m_next = rd.m_next;
       feedback->m_assetEvents = rd.m_assetEvents;
       feedback->m_errors = rd.m_errors;
-      
+
       if (rd.m_errors.size() > 0)
       {
         throw std::system_error(make_error_code(ErrorCode::RESTART_STREAM));
       }
-      
+
       for (auto &entity : rd.m_entities)
       {
         next(entity);

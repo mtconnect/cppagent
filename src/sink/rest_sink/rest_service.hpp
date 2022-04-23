@@ -149,7 +149,7 @@ namespace mtconnect {
       // Output an XML Error
       std::string printError(const Printer *printer, const std::string &errorCode,
                              const std::string &text) const;
-      
+
       // For testing
       auto instanceId() const { return m_instanceId; }
       void setInstanceId(uint64_t id) { m_instanceId = id; }
