@@ -35,7 +35,8 @@ namespace mtconnect::pipeline {
     using Errors = std::list<Error>;
 
     static bool parse(const std::string_view &content, ResponseDocument &doc,
-                      pipeline::PipelineContextPtr context);
+                      pipeline::PipelineContextPtr context,
+                      const std::optional<std::string> &device = std::nullopt);
 
     // Parsed data
     SequenceNumber_t m_next;

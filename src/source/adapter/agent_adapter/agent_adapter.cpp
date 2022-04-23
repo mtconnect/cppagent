@@ -42,6 +42,7 @@ using namespace mtconnect::pipeline;
 namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapterPipeline::build(const ConfigOptions &options)
   {
+    m_options = options;
     buildDeviceList();
     buildCommandAndStatusDelivery();
 
@@ -289,7 +290,8 @@ namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapter::stop()
   {
     m_reconnectTimer.cancel();
-    m_session->stop();
+    if (m_session)
+      m_session->stop();
     m_session.reset();
   }
 

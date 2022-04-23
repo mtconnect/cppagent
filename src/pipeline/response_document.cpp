@@ -255,7 +255,8 @@ namespace mtconnect::pipeline {
   }
 
   inline static bool parseObservations(ResponseDocument &out, xmlNodePtr node,
-                                       pipeline::PipelineContextPtr context)
+                                       pipeline::PipelineContextPtr context,
+                                       const std::optional<std::string> &deviceName)
   {
     auto streams = findChild(node, "Streams");
     if (streams == nullptr)
@@ -263,14 +264,28 @@ namespace mtconnect::pipeline {
 
     auto contract = context->m_contract.get();
 
-    eachElement(streams, "DeviceStream", [&out, &contract](xmlNodePtr dev) {
-      auto uuid = attributeValue(dev, "uuid");
-      auto device = contract->findDevice(uuid);
-      if (!device)
+    eachElement(streams, "DeviceStream", [&out, &contract, &deviceName](xmlNodePtr dev) {
+      DevicePtr device;
+      if (deviceName)
       {
-        LOG(warning) << "Parsing XML document: cannot find device by uuid: " << uuid
-                     << ", skipping device";
-        return true;
+        device = contract->findDevice(*deviceName);
+        if (!device)
+        {
+          LOG(warning) << "Parsing XML document: cannot find device by uuid: " << *deviceName
+                       << ", skipping device";
+          return true;
+        }
+      }
+      else
+      {
+        auto uuid = attributeValue(dev, "uuid");
+        device = contract->findDevice(uuid);
+        if (!device)
+        {
+          LOG(warning) << "Parsing XML document: cannot find device by uuid: " << uuid
+                       << ", skipping device";
+          return true;
+        }
       }
 
       eachElement(dev, "ComponentStream", [&out, &device](xmlNodePtr comp) {
@@ -354,7 +369,8 @@ namespace mtconnect::pipeline {
     return true;
   }
 
-  inline static bool parseAssets(ResponseDocument &out, xmlNodePtr node)
+  inline static bool parseAssets(ResponseDocument &out, xmlNodePtr node,
+                                 const std::optional<std::string> &device)
   {
     using namespace entity;
     using namespace asset;
@@ -414,7 +430,8 @@ namespace mtconnect::pipeline {
   }
 
   bool ResponseDocument::parse(const std::string_view &content, ResponseDocument &out,
-                               pipeline::PipelineContextPtr context)
+                               pipeline::PipelineContextPtr context,
+                               const std::optional<std::string> &device)
   {
     // xmlInitParser();
     // xmlXPathInit();
@@ -432,11 +449,11 @@ namespace mtconnect::pipeline {
       }
       if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) == 0)
       {
-        return parseObservations(out, root, context);
+        return parseObservations(out, root, context, device);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectAssets", root->name) == 0)
       {
-        return parseAssets(out, root);
+        return parseAssets(out, root, device);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectError", root->name) == 0)
       {

@@ -54,7 +54,7 @@ namespace mtconnect::pipeline {
 
       const auto &data = entity->getValue<std::string>();
       ResponseDocument rd;
-      ResponseDocument::parse(data, rd, m_context);
+      ResponseDocument::parse(data, rd, m_context, m_defaultDevice);
 
       auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
 

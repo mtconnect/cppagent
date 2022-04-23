@@ -55,7 +55,11 @@ namespace asio = boost::asio;
 struct MockPipelineContract : public PipelineContract
 {
   MockPipelineContract(DevicePtr &device) : m_device(device) {}
-  DevicePtr findDevice(const std::string &device) override { return m_device; }
+  DevicePtr findDevice(const std::string &device) override
+  {
+    m_deviceName = device;
+    return m_device;
+  }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
     return m_device->getDeviceDataItem(name);
@@ -73,7 +77,7 @@ struct MockPipelineContract : public PipelineContract
 
   bool m_failed = false;
   std::string m_result;
-
+  std::string m_deviceName;
   DevicePtr m_device;
   std::vector<ObservationPtr> m_observations;
 };
@@ -441,14 +445,6 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
   timeout.cancel();
 }
 
-TEST_F(AgentAdapterTest, should_map_device_name_and_uuid) { GTEST_SKIP(); }
-
-TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out) { GTEST_SKIP(); }
-
-TEST_F(AgentAdapterTest, should_connect_to_tls_agent) { GTEST_SKIP(); }
-
-TEST_F(AgentAdapterTest, should_first_try_to_recover_from_previous_position) { GTEST_SKIP(); }
-
 TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
@@ -488,7 +484,7 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   m_agentTestHelper->m_restService->getServer()->m_lastSession =
       [&](sink::rest_sink::SessionPtr ptr) { session = ptr; };
 
-  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 2s);
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 3s);
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
@@ -519,6 +515,7 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
     m_agentTestHelper->m_ioContext.run_one();
   }
   ASSERT_TRUE(session);
+  recovering = false;
 
   while (disconnected)
   {
@@ -527,3 +524,35 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
 
   timeout.cancel();
 }
+
+TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
+{
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port, {{configuration::Device, "NewMachine"s}}, "", 5000);
+
+  addAdapter();
+
+  adapter->start();
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+
+  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+
+  while (contract->m_observations.size() == 0)
+  {
+    contract->m_deviceName.clear();
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+
+  ASSERT_EQ("NewMachine", contract->m_deviceName);
+}
+
+TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out) { GTEST_SKIP(); }
+
+TEST_F(AgentAdapterTest, should_connect_to_tls_agent) { GTEST_SKIP(); }
