@@ -448,7 +448,7 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
 TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
-  auto adapter = createAdapter(port, {}, "", 5000);
+  auto adapter = createAdapter(port, {}, "", 500);
 
   addAdapter();
 
@@ -488,7 +488,7 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
-      // throw runtime_error("test timed out");
+      throw runtime_error("test timed out");
     }
   });
 
@@ -510,17 +510,17 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
 
   recovering = true;
   session.reset();
-  while (!session)
+  while (recovering)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
-  ASSERT_TRUE(session);
-  recovering = false;
+  ASSERT_FALSE(recovering);
 
   while (disconnected)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
+  ASSERT_FALSE(disconnected);
 
   timeout.cancel();
 }
