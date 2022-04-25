@@ -227,6 +227,8 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_req->set(http::field::connection, "close");
       }
 
+      derived().lowestLayer().expires_after(m_timeout);
+
       http::async_write(derived().stream(), *m_req,
                         beast::bind_front_handler(&SessionImpl::onWrite, derived().getptr()));
     }
@@ -240,7 +242,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         return failed(ec, "write");
       }
 
-      derived().lowestLayer().expires_after(std::chrono::seconds(30));
+      derived().lowestLayer().expires_after(m_timeout);
 
       // Receive the HTTP response
       m_headerParser.emplace();
@@ -283,7 +285,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
       else
       {
-        derived().lowestLayer().expires_after(std::chrono::seconds(30));
+        derived().lowestLayer().expires_after(m_timeout);
 
         m_textParser.emplace(std::move(*m_headerParser));
         http::async_read(derived().stream(), m_buffer, *m_textParser,
@@ -301,7 +303,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         return failed(ec, "read");
       }
 
-      derived().lowestLayer().expires_after(std::chrono::seconds(30));
+      derived().lowestLayer().expires_after(m_timeout);
 
       if (!derived().lowestLayer().socket().is_open())
         derived().disconnect();
@@ -460,6 +462,8 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_chunkParser.emplace(std::move(*m_headerParser));
       createChunkHeaderHandler();
       createChunkBodyHandler();
+      
+      derived().lowestLayer().expires_after(m_timeout);
 
       http::async_read(derived().stream(), m_buffer, *m_chunkParser,
                        asio::bind_executor(m_strand, beast::bind_front_handler(
@@ -500,6 +504,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     bool m_closeOnRead = false;
 
     bool m_streaming = false;
+    bool m_polling = false;
   };
 
 }  // namespace mtconnect::source::adapter::agent_adapter

@@ -63,7 +63,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         return failed(ec, "connect");
 
       // Set a timeout on the operation
-      beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
+      derived().lowestLayer().expires_after(m_timeout);
 
       // Perform the SSL handshake
       m_stream.async_handshake(
@@ -86,7 +86,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     void disconnect()
     {
       // Set a timeout on the operation
-      beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(30));
+      derived().lowestLayer().expires_after(m_timeout);
 
       // Gracefully close the stream
       m_stream.async_shutdown(asio::bind_executor(

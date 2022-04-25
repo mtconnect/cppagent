@@ -54,6 +54,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     Failure m_failed;
     UpdateAssets m_updateAssets;
     bool m_closeConnectionAfterResponse = false;
+    std::chrono::milliseconds m_timeout = std::chrono::milliseconds(20000);
   };
 
 }  // namespace mtconnect::source::adapter::agent_adapter
