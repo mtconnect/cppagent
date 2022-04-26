@@ -36,20 +36,16 @@
 using namespace std;
 using namespace mtconnect::entity;
 
-namespace mtconnect 
-{
+namespace mtconnect {
   class XmlPrinter;
 
-  namespace sink 
-  {
-    namespace mqtt_sink 
-    {
+  namespace sink {
+    namespace mqtt_sink {
       class MqttService : public sink::Sink
       {
-          //dynamic loading of sink
+        // dynamic loading of sink
 
       public:
-
         MqttService(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
                     const ConfigOptions &options, const boost::property_tree::ptree &config);
 
@@ -66,21 +62,12 @@ namespace mtconnect
 
         static void registerFactory(SinkFactory &factory);
 
-        void printjSonEntity();
-
-         // Get the printer for a type
-        const std::string acceptFormat(const std::string &accepts) const;
-
-        const Printer *printerForAccepts(const std::string &accepts) const;
-       
-       protected:
-
+      protected:
         boost::asio::io_context &m_context;
 
         ConfigOptions m_options;
 
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
-
       };
     }  // namespace mqtt_sink
   }    // namespace sink

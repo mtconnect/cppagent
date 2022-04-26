@@ -27,6 +27,7 @@
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
+#include "sink/mqtt_sink/mqtt_service.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "xml_printer.hpp"
 
@@ -679,6 +680,30 @@ MaxCachedFileSize = 2000
 
     auto cache = rest->getFileCache();
     ASSERT_EQ(2000, cache->getMaxCachedFileSize());
+  } 
+
+  TEST_F(ConfigTest, dynamic_load_Mqtt_sink)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Sinks {
+      MqttService {
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+
+    const auto mqttService =
+        dynamic_pointer_cast<sink::mqtt_sink::MqttService>(agent->findSink("MqttService"));
+
+    ASSERT_TRUE(mqttService != nullptr);
   }
 
   TEST_F(ConfigTest, max_cache_size_in_kb)

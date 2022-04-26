@@ -173,6 +173,8 @@ add_agent_test(http_server FALSE sink/rest_sink TRUE)
 add_agent_test(tls_http_server FALSE sink/rest_sink TRUE)
 add_agent_test(routing FALSE sink/rest_sink)
 
+add_agent_test(mqtt_sink_plugin FALSE sink/mqtt_sink)
+
 add_agent_test(json_printer_asset TRUE json)
 add_agent_test(json_printer_error TRUE json)
 add_agent_test(json_printer_probe TRUE json)

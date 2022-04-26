@@ -45,9 +45,15 @@ namespace mtconnect {
         m_jsonPrinter = std::unique_ptr<JsonPrinter>(jsonPrinter);
       }
 
-      void MqttService::start() {}
+      void MqttService::start()
+      {
+        // mqtt client side not a server side...
+      }
 
-      void MqttService::stop() {}
+      void MqttService::stop()
+      {
+        // stop client side
+      }
 
       uint64_t MqttService::publish(observation::ObservationPtr &observation)
       {
@@ -55,14 +61,12 @@ namespace mtconnect {
         auto dataItem = observation->getDataItem();
 
         // convert to json and send by mqtt
+        auto json = m_jsonPrinter->print(dataItem);
 
         return 0;
       }
 
-      bool MqttService::publish(asset::AssetPtr asset) 
-      {
-          return false; 
-      }
+      bool MqttService::publish(asset::AssetPtr asset) { return false; }
 
       // Register the service with the sink factory
       void MqttService::registerFactory(SinkFactory &factory)
@@ -75,43 +79,6 @@ namespace mtconnect {
               return sink;
             });
       }
-
-      void MqttService::printjSonEntity()
-      {
-        ErrorList errors;
-        entity::XmlParser parser;
-
-        const auto doc = R"({"Device": {"id": "d1","name": "M12345","uuid": "M80104K162N"}})";
-
-        auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
-
-        // create a json printer
-        // print json/xml particular entity
-
-        auto json = m_jsonPrinter->print(entity);
-      }
-
-      // Get the printer for a type
-      const std::string MqttService::acceptFormat(const std::string &accepts) const
-      {
-        std::stringstream list(accepts);
-        std::string accept;
-        while (std::getline(list, accept, ','))
-        {
-          for (const auto &p : m_sinkContract->getPrinters())
-          {
-            if (ends_with(accept, p.first))
-              return p.first;
-          }
-        }
-        return "json";
-      }
-
-      const Printer *MqttService::printerForAccepts(const std::string &accepts) const
-      {
-        return m_sinkContract->getPrinter(acceptFormat(accepts));
-      }    
-
     }  // namespace mqtt_sink
   }    // namespace sink
 }  // namespace mtconnect
