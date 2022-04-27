@@ -372,7 +372,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     void parseMimeHeader()
     {
       auto start = static_cast<const char *>(m_chunk.data().data());
-      std::string_view view(start, m_chunk.data().size());
+      boost::string_view view(start, m_chunk.data().size());
 
       auto bp = view.find(m_boundary.c_str());
       if (bp == boost::string_view::npos)
@@ -391,16 +391,24 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
       ep += 4;
 
-      auto lp = strcasestr(view.data() + bp, "content-length");
-      if (lp == NULL)
+      using string_view_range = boost::iterator_range<boost::string_view::iterator>;
+      auto svi = string_view_range(view.begin() + bp, view.end());
+      auto lp = boost::ifind_first(svi, string_view_range(boost::string_view("content-length:")));
+      
+      if (lp.empty())
       {
         LOG(error) << "Cannot find the content-length";
         derived().lowestLayer().close();
-        throw runtime_error("cannot find the content-length");
+        return failed(source::make_error_code(source::ErrorCode::RESTART_STREAM), "Framing error in streaming data: no content length");
       }
+      
+      boost::string_view length(lp.end());
+      auto ls = length.find_first_not_of(" ");
+      auto es = length.find_first_of("\r\n");
+      string_view_range range { length.begin() + ls, length.begin() + es };
 
       m_hasHeader = true;
-      m_chunkLength = atoi(lp + 16);
+      m_chunkLength = boost::lexical_cast<size_t>(range);
       m_chunk.consume(ep);
     }
 

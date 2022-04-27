@@ -336,7 +336,7 @@ TEST_F(ResponseDocumentTest, should_parse_assets)
 
   ifstream str(PROJECT_ROOT_DIR "/test/resources/ext_asset.xml");
   ASSERT_TRUE(str.is_open());
-  str.seekg(0, std::ios_base::seekdir::end);
+  str.seekg(0, std::ios_base::end);
   size_t size = str.tellg();
   str.seekg(0);
   char *buffer = new char[size + 1];
