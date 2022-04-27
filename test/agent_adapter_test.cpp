@@ -325,7 +325,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
 TEST_F(AgentAdapterTest, should_reconnect)
 {
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
-  auto adapter = createAdapter(port, {}, "", 5000);
+  auto adapter = createAdapter(port, {}, "", 1000);
 
   addAdapter();
 
@@ -333,7 +333,10 @@ TEST_F(AgentAdapterTest, should_reconnect)
 
   int rc = 0;
   ResponseDocument rd;
+  bool response = false;
   handler->m_processData = [&](const string &d, const string &s) {
+    response = true;
+
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
@@ -354,11 +357,11 @@ TEST_F(AgentAdapterTest, should_reconnect)
   m_agentTestHelper->m_restService->getServer()->m_lastSession =
       [&](sink::rest_sink::SessionPtr ptr) { session = ptr; };
 
-  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 2s);
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 5s);
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
-      // throw runtime_error("test timed out");
+      throw runtime_error("test timed out");
     }
   });
 
@@ -373,18 +376,14 @@ TEST_F(AgentAdapterTest, should_reconnect)
   rd.m_entities.clear();
 
   session->close();
-  while (!disconnected)
+  response = false;
+  while (!response)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
 
-  session.reset();
-
-  while (!session)
-  {
-    m_agentTestHelper->m_ioContext.run_one();
-  }
   ASSERT_TRUE(session);
+  ASSERT_FALSE(disconnected);
 
   timeout.cancel();
 }
@@ -457,13 +456,20 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   int rc = 0;
   bool disconnected = false;
   bool recovering = false;
+  bool response = false;
   ResponseDocument rd;
   handler->m_processData = [&](const string &d, const string &s) {
+    rd.m_next = 0;
+    rd.m_instanceId = 0;
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
+    if (rd.m_next != 0)
+      response = true;
+
     auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-    seq->m_next = rd.m_next;
+    if (rd.m_next != 0)
+      seq->m_next = rd.m_next;
     if (recovering)
     {
       recovering = false;
@@ -488,7 +494,7 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
-      throw runtime_error("test timed out");
+      // throw runtime_error("test timed out");
     }
   });
 
@@ -503,7 +509,8 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   rd.m_entities.clear();
 
   session->close();
-  while (!disconnected)
+  response = false;
+  while (!response)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
@@ -515,12 +522,14 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
     m_agentTestHelper->m_ioContext.run_one();
   }
   ASSERT_FALSE(recovering);
+  ASSERT_TRUE(disconnected);
 
-  while (disconnected)
+  response = false;
+  while (!response)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
-  ASSERT_FALSE(disconnected);
+  ASSERT_TRUE(response);
 
   timeout.cancel();
 }
@@ -551,6 +560,73 @@ TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
   }
 
   ASSERT_EQ("NewMachine", contract->m_deviceName);
+}
+
+TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
+{
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  auto adapter = createAdapter(port, {{"UsePolling", true}});
+
+  addAdapter();
+
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
+
+  int rc = 0;
+  ResponseDocument rd;
+  handler->m_processData = [&](const string &d, const string &s) {
+    ResponseDocument::parse(d, rd, m_context);
+    rc++;
+
+    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    seq->m_next = rd.m_next;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 2s);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+
+  while (rc < 2)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(2, rc);
+
+  auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+  auto next = seq->m_next;
+
+  ASSERT_EQ(32, rd.m_entities.size());
+  rd.m_entities.clear();
+  while (rc < 4)
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+  ASSERT_EQ(4, rc);
+
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|execution|READY");
+
+  while (rd.m_entities.empty())
+  {
+    m_agentTestHelper->m_ioContext.run_one();
+  }
+
+  ASSERT_EQ(1, rd.m_entities.size());
+  seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+  ASSERT_GT(seq->m_next, next);
+
+  auto obs = rd.m_entities.front();
+  ASSERT_EQ("p5", get<string>(obs->getProperty("dataItemId")));
+  ASSERT_EQ("READY", obs->getValue<string>());
+
+  timeout.cancel();
 }
 
 TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out) { GTEST_SKIP(); }

@@ -41,20 +41,6 @@ namespace mtconnect::source::adapter::agent_adapter {
   template <class Derived>
   class SessionImpl : public Session
   {
-    struct Request
-    {
-      Request(const std::optional<std::string> &device, const std::string &suffix,
-              const UrlQuery &query, bool stream, Next next)
-        : m_sourceDevice(device), m_suffix(suffix), m_query(query), m_stream(stream), m_next(next)
-      {}
-
-      std::optional<std::string> m_sourceDevice;
-      std::string m_suffix;
-      UrlQuery m_query;
-      bool m_stream;
-      Next m_next;
-    };
-
     using RequestQueue = std::list<Request>;
 
   public:
@@ -71,10 +57,10 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     bool isOpen() const override { return derived().lowestLayer().socket().is_open(); }
 
-    void failed(std::error_code ec, const char *what, bool reconnect = true) override
+    void failed(std::error_code ec, const char *what) override
     {
       derived().lowestLayer().socket().close();
-      m_idle = true;
+      m_request.reset();
 
       LOG(error) << what << ": " << ec.message() << "\n";
       if (m_failed)
@@ -83,9 +69,78 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void stop() override
     {
-      m_idle = true;
       if (isOpen())
         derived().lowestLayer().close();
+      m_state = SessionState::CLOSED;
+      m_request.reset();
+    }
+
+    bool makeRequest(const Request &req) override
+    {
+      if (!m_request)
+      {
+        m_request.emplace(req);
+
+        // Clean out any previous data
+        m_buffer.clear();
+        m_contentType.clear();
+        m_boundary.clear();
+        m_headerParser.reset();
+        m_chunkParser.reset();
+        m_textParser.reset();
+        m_req.reset();
+        m_hasHeader = false;
+        m_closeOnRead = false;
+        if (m_chunk.size() > 0)
+          m_chunk.consume(m_chunk.size());
+
+        // Check if we are discussected.
+        if (!derived().lowestLayer().socket().is_open())
+        {
+          // Try to connect
+          connect();
+          return false;
+        }
+        else
+        {
+          request();
+          return true;
+        }
+      }
+      else
+      {
+        m_queue.emplace_back(req);
+        return false;
+      }
+    }
+
+    void processData(const std::string &data)
+    {
+      try
+      {
+        if (m_handler && m_handler->m_processData)
+          m_handler->m_processData(data, m_identity);
+      }
+      catch (std::system_error &e)
+      {
+        LOG(warning) << "AgentAdapter - Error occurred processing data: " << e.what();
+        if (e.code().category() == TheErrorCategory())
+          failed(e.code(), "Error occurred processing data");
+        else
+          failed(source::make_error_code(ErrorCode::RETRY_REQUEST),
+                 "Exception occurred in AgentAdapter::processData");
+      }
+      catch (std::exception &e)
+      {
+        LOG(error) << "AgentAdapter - Error occurred processing data: " << e.what();
+        failed(source::make_error_code(ErrorCode::RETRY_REQUEST),
+               "Exception occurred in AgentAdapter::processData");
+      }
+      catch (...)
+      {
+        failed(source::make_error_code(ErrorCode::RETRY_REQUEST),
+               "Unknown exception in AgentAdapter::processData");
+      }
     }
 
     // Start the asynchronous operation
@@ -125,7 +180,9 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (ec)
       {
         // If we can't resolve, then shut down the adapter
-        return failed(ec, "resolve", false);
+        LOG(error) << "Cannot resolve address " << m_url.getHost() << ", shutting down";
+        LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
+        return failed(source::make_error_code(source::ErrorCode::ADAPTER_FAILED), "resolve");
       }
 
       if (!m_resolution)
@@ -143,83 +200,13 @@ namespace mtconnect::source::adapter::agent_adapter {
                                                                            derived().getptr())));
     }
 
-    bool makeRequest(const std::optional<std::string> &device, const std::string &suffix,
-                     const UrlQuery &query, bool stream, Next next) override
-    {
-      if (m_idle)
-      {
-        m_idle = false;
-
-        m_next = next;
-
-        m_target = m_url.getTarget(device, suffix, query);
-        m_streaming = stream;
-
-        // Clean out any previous data
-        m_buffer.clear();
-        m_contentType.clear();
-        m_boundary.clear();
-        m_headerParser.reset();
-        m_chunkParser.reset();
-        m_textParser.reset();
-        m_req.reset();
-        m_hasHeader = false;
-        m_closeOnRead = false;
-        if (m_chunk.size() > 0)
-          m_chunk.consume(m_chunk.size());
-
-        // Check if we are discussected.
-        if (!derived().lowestLayer().socket().is_open())
-        {
-          // Try to connect
-          connect();
-          return false;
-        }
-        else
-        {
-          request();
-          return true;
-        }
-      }
-      else
-      {
-        m_queue.emplace_back(device, suffix, query, stream, next);
-        return false;
-      }
-    }
-
-    void processData(const std::string &data)
-    {
-      try
-      {
-        if (m_handler && m_handler->m_processData)
-          m_handler->m_processData(data, m_identity);
-      }
-      catch (std::system_error &e)
-      {
-        LOG(warning) << "AgentAdapter - Error occurred processing data: " << e.what();
-        failed(e.code(), "Error occurred processing data", false);
-      }
-      catch (std::exception &e)
-      {
-        beast::error_code ec;
-        LOG(error) << "AgentAdapter - Error occurred processing data: " << e.what();
-        failed(ec, "Exception occurred in AgentAdapter::processData", false);
-      }
-      catch (...)
-      {
-        beast::error_code ec;
-        failed(ec, "Unknown exception in AgentAdapter::processData", false);
-      }
-    }
-
     void request()
     {
       // Set up an HTTP GET request message
       m_req.emplace();
       m_req->version(11);
       m_req->method(http::verb::get);
-      m_req->target(m_target);
+      m_req->target(m_request->getTarget(m_url));
       m_req->set(http::field::host, m_url.getHost());
       m_req->set(http::field::user_agent, "MTConnect Agent/2.0");
       if (m_closeConnectionAfterResponse)
@@ -239,7 +226,8 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       if (ec)
       {
-        return failed(ec, "write");
+        LOG(error) << "Cannot send request: " << ec.category().name() << " " << ec.message();
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "write");
       }
 
       derived().lowestLayer().expires_after(m_timeout);
@@ -256,32 +244,29 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       if (ec)
       {
-        if (ec == asio::error::connection_reset)
+        LOG(error) << "Error getting request header: " << ec.category().name() << " "
+                   << ec.message();
+        derived().lowestLayer().close();
+        if (m_request->m_stream && ec == beast::error::timeout)
         {
-          LOG(debug) << "Connection reset, reconnecting";
-          derived().lowestLayer().close();
-          connect();
-          return;
+          LOG(warning) << "Switching to polling";
+          return failed(source::make_error_code(ErrorCode::MULTIPART_STREAM_FAILED), "header");
         }
         else
         {
-          LOG(error) << "Need to handle fallback if sreaming fails";
-          failed(ec, "header");
-          return;
+          return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "header");
         }
+
+        return;
       }
 
       auto &msg = m_headerParser->get();
       if (auto a = msg.find(beast::http::field::connection); a != msg.end())
         m_closeOnRead = a->value() == "close";
 
-      if (m_streaming && m_headerParser->chunked())
+      if (m_request->m_stream && m_headerParser->chunked())
       {
         onChunkedContent();
-      }
-      else if (m_streaming)
-      {
-        LOG(error) << "Need to handle fallback if sreaming fails";
       }
       else
       {
@@ -300,7 +285,16 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       if (ec)
       {
-        return failed(ec, "read");
+        if (m_request->m_stream && ec == beast::error::timeout)
+        {
+          LOG(warning) << "Switching to polling";
+          return failed(source::make_error_code(ErrorCode::MULTIPART_STREAM_FAILED), "header");
+        }
+        else
+        {
+          LOG(error) << "Error getting response: " << ec.category().name() << " " << ec.message();
+          return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "read");
+        }
       }
 
       derived().lowestLayer().expires_after(m_timeout);
@@ -311,22 +305,25 @@ namespace mtconnect::source::adapter::agent_adapter {
       processData(m_textParser->get().body());
 
       m_textParser.reset();
-      m_idle = true;
-
       m_req.reset();
+
+      auto next = m_request->m_next;
+      m_request.reset();
 
       if (m_closeOnRead)
         derived().disconnect();
+      else
+        m_state = SessionState::IDLE;
 
-      if (m_next)
+      if (next)
       {
-        m_next();
+        next();
       }
       else if (!m_queue.empty())
       {
         Request req = m_queue.front();
         m_queue.pop_front();
-        makeRequest(req.m_sourceDevice, req.m_suffix, req.m_query, req.m_stream, req.m_next);
+        makeRequest(req);
       }
     }
 
@@ -457,12 +454,14 @@ namespace mtconnect::source::adapter::agent_adapter {
         return;
       }
 
+      m_state = SessionState::STREAMING;
+
       LOG(info) << "Found boundary: " << m_boundary;
 
       m_chunkParser.emplace(std::move(*m_headerParser));
       createChunkHeaderHandler();
       createChunkBodyHandler();
-      
+
       derived().lowestLayer().expires_after(m_timeout);
 
       http::async_read(derived().stream(), m_buffer, *m_chunkParser,
@@ -492,19 +491,14 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::string m_contentType;
 
     size_t m_chunkLength;
-    bool m_hasHeader;
+    bool m_hasHeader = false;
     boost::asio::streambuf m_chunk;
 
     // For request queuing
+    std::optional<Request> m_request;
     RequestQueue m_queue;
-    bool m_idle = true;
 
-    std::string m_target;
-    Next m_next;
     bool m_closeOnRead = false;
-
-    bool m_streaming = false;
-    bool m_polling = false;
   };
 
 }  // namespace mtconnect::source::adapter::agent_adapter

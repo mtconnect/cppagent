@@ -28,8 +28,9 @@ namespace mtconnect::source {
     ADAPTER_FAILED,
     STREAM_CLOSED,
     INSTANCE_ID_CHANGED,
-    RECOVER_STREAM,
-    RESTART_STREAM
+    RESTART_STREAM,
+    RETRY_REQUEST,
+    MULTIPART_STREAM_FAILED
   };
 }
 
@@ -63,11 +64,14 @@ namespace mtconnect::source {
         case ErrorCode::STREAM_CLOSED:
           return "The stream closed";
 
-        case ErrorCode::RECOVER_STREAM:
-          return "The data stream needs to recover from last position";
-
         case ErrorCode::RESTART_STREAM:
           return "The data stream needs to restart";
+
+        case ErrorCode::RETRY_REQUEST:
+          return "Retry last failed request";
+
+        case ErrorCode::MULTIPART_STREAM_FAILED:
+          return "Multipart/x-mixed-replace is not available";
 
         default:
           return "Unknown mtconnect error";

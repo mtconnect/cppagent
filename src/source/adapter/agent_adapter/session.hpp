@@ -41,17 +41,45 @@ namespace mtconnect::source::adapter::agent_adapter {
     using Failure = std::function<void(std::error_code &ec)>;
     using UpdateAssets = std::function<void()>;
 
+    struct Request
+    {
+      Request(const std::optional<std::string> &device, const std::string &suffix,
+              const UrlQuery &query, bool stream, Next next)
+        : m_sourceDevice(device), m_suffix(suffix), m_query(query), m_stream(stream), m_next(next)
+      {}
+
+      Request(const Request &request) = default;
+
+      std::optional<std::string> m_sourceDevice;
+      std::string m_suffix;
+      UrlQuery m_query;
+      bool m_stream;
+      Next m_next;
+
+      auto getTarget(const Url &url) { return url.getTarget(m_sourceDevice, m_suffix, m_query); }
+    };
+
+    enum class SessionState
+    {
+      CLOSED,
+      IDLE,
+      STREAMING,
+      TIMED_OUT,
+      DISCONNECTING,
+      FAILED
+    };
+
     virtual ~Session() {}
     virtual bool isOpen() const = 0;
     virtual void stop() = 0;
-    virtual void failed(std::error_code ec, const char *what, bool reconnect = true) = 0;
+    virtual void failed(std::error_code ec, const char *what) = 0;
 
-    virtual bool makeRequest(const std::optional<std::string> &device, const std::string &suffix,
-                             const UrlQuery &query, bool stream, Next next) = 0;
+    virtual bool makeRequest(const Request &request) = 0;
 
     Handler *m_handler = nullptr;
     std::string m_identity;
     Failure m_failed;
+    SessionState m_state = SessionState::CLOSED;
     UpdateAssets m_updateAssets;
     bool m_closeConnectionAfterResponse = false;
     std::chrono::milliseconds m_timeout = std::chrono::milliseconds(20000);

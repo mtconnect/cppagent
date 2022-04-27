@@ -50,8 +50,8 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (!SSL_set_tlsext_host_name(m_stream.native_handle(), m_url.getHost().c_str()))
       {
         beast::error_code ec {static_cast<int>(::ERR_get_error()), asio::error::get_ssl_category()};
-        std::cerr << ec.message() << "\n";
-        return;
+        LOG(error) << "Cannot set TLS host name: " << ec.category().name() << " " << ec.message();
+        return failed(source::make_error_code(ErrorCode::ADAPTER_FAILED), "tls host name");
       }
 
       super::connect();
@@ -60,7 +60,11 @@ namespace mtconnect::source::adapter::agent_adapter {
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
     {
       if (ec)
-        return failed(ec, "connect");
+      {
+        LOG(error) << "TLS cannot connect to " << m_url.getHost() << ", shutting down";
+        LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "connect");
+      }
 
       // Set a timeout on the operation
       derived().lowestLayer().expires_after(m_timeout);
@@ -75,7 +79,11 @@ namespace mtconnect::source::adapter::agent_adapter {
     void onHandshake(beast::error_code ec)
     {
       if (ec)
-        failed(ec, "handshake", false);
+      {
+        LOG(error) << "TLS cannot handshake to " << m_url.getHost() << ", shutting down";
+        LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
+        return failed(source::make_error_code(ErrorCode::ADAPTER_FAILED), "handshake");
+      }
 
       if (m_handler && m_handler->m_connected)
         m_handler->m_connected(m_identity);
@@ -85,6 +93,8 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void disconnect()
     {
+      m_state = SessionState::DISCONNECTING;
+
       // Set a timeout on the operation
       derived().lowestLayer().expires_after(m_timeout);
 
@@ -105,11 +115,18 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (m_handler && m_handler->m_disconnected)
         m_handler->m_disconnected(m_identity);
 
-      if (ec)
-        return failed(ec, "shutdown");
-
       // If we get here then the connection is closed gracefully
       lowestLayer().close();
+
+      m_state = SessionState::CLOSED;
+
+      if (ec)
+      {
+        LOG(error) << "Shutdown failed: " << ec.category().name() << " " << ec.message();
+        // No action needs to be taken.
+      }
+
+      m_request.reset();
     }
 
   protected:

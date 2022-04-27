@@ -46,7 +46,11 @@ namespace mtconnect::source::adapter::agent_adapter {
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
     {
       if (ec)
-        return failed(ec, "connect");
+      {
+        LOG(error) << "Cannot connect to " << m_url.getHost() << ", shutting down";
+        LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "connect");
+      }
 
       if (m_handler && m_handler->m_connected)
         m_handler->m_connected(m_identity);
@@ -64,12 +68,18 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (m_handler && m_handler->m_disconnected)
         m_handler->m_disconnected(m_identity);
 
+      m_state = SessionState::CLOSED;
+
+      // Close the connection anyway, but feedback the error.
+      m_stream.close();
+
       // not_connected happens sometimes so don't bother reporting it.
       if (ec && ec != beast::errc::not_connected)
-        return failed(ec, "shutdown");
+      {
+        LOG(error) << "Shutdown error: " << ec.category().name() << " " << ec.message();
+      }
 
-      // If we get here then the connection is closed gracefully
-      m_stream.close();
+      m_request.reset();
     }
 
   protected:

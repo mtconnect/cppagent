@@ -58,7 +58,9 @@ namespace mtconnect::source::adapter::agent_adapter {
                              const ConfigOptions &options, const boost::property_tree::ptree &block)
     : Adapter("AgentAdapter", io, options),
       m_pipeline(context, Source::m_strand),
-      m_reconnectTimer(io)
+      m_reconnectTimer(io),
+      m_pollingTimer(io),
+      m_assetRetryTimer(io)
   {
     GetOptions(block, m_options, options);
     AddOptions(block, m_options,
@@ -73,10 +75,12 @@ namespace mtconnect::source::adapter::agent_adapter {
                          {configuration::Port, 5000},
                          {configuration::Count, 1000},
                          {configuration::Heartbeat, 10000},
+                         {configuration::PollingInterval, 500},
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
                          {configuration::ReconnectInterval, 10},
                          {configuration::RelativeTime, false},
+                         {configuration::UsePolling, false},
                          {"!CloseConnectionAfterResponse!", false}});
 
     m_handler = m_pipeline.makeHandler();
@@ -99,9 +103,12 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
-
+    m_usePolling = *GetOption<bool>(m_options, configuration::UsePolling);
     m_reconnectInterval =
         std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
+    m_pollingInterval =
+        std::chrono::milliseconds(*GetOption<int>(m_options, configuration::PollingInterval));
+
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
 
     auto device = GetOption<string>(m_options, configuration::Device);
@@ -159,37 +166,93 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_assetSession->m_closeConnectionAfterResponse = m_closeConnectionAfterResponse;
 
     using namespace std::placeholders;
-    m_session->m_failed = std::bind(&AgentAdapter::sessionFailed, this, _1);
-    m_assetSession->m_failed = std::bind(&AgentAdapter::sessionFailed, this, _1);
+    m_assetSession->m_failed = std::bind(&AgentAdapter::assetsFailed, this, _1);
+    m_session->m_failed = std::bind(&AgentAdapter::streamsFailed, this, _1);
 
     run();
 
     return true;
   }
 
+  void AgentAdapter::clear()
+  {
+    m_streamRequest.reset();
+    m_assetRequest.reset();
+
+    m_assetRetryTimer.cancel();
+    m_pollingTimer.cancel();
+    m_reconnectTimer.cancel();
+
+    m_session->stop();
+    m_assetSession->stop();
+
+    const auto &feedback =
+        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    feedback->m_instanceId = 0;
+    feedback->m_next = 0;
+  }
+
   void AgentAdapter::recoverStreams()
   {
-    if (!m_reconnecting)
+    if (!canRecover())
     {
-      m_reconnecting = true;
-      m_session->stop();
-      m_assetSession->stop();
+      clear();
+    }
 
-      m_reconnectTimer.expires_after(m_reconnectInterval);
-      m_reconnectTimer.async_wait(
+    m_reconnectTimer.expires_after(m_reconnectInterval);
+    m_reconnectTimer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+      if (!ec)
+      {
+        if (canRecover() && m_streamRequest)
+          m_session->makeRequest(*m_streamRequest);
+        else
+          run();
+      }
+    }));
+  }
+
+  void AgentAdapter::recoverAssetRequest()
+  {
+    if (m_assetRequest)
+    {
+      m_assetRetryTimer.expires_after(m_reconnectInterval);
+      m_assetRetryTimer.async_wait(
           asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
-            if (!ec)
+            if (!ec && m_assetRequest)
             {
-              if (instanceId() != 0)
-                recover();
-              else
-                run();
+              m_assetSession->makeRequest(*m_assetRequest);
             }
           }));
     }
   }
 
-  void AgentAdapter::sessionFailed(std::error_code &ec)
+  void AgentAdapter::assetsFailed(std::error_code &ec)
+  {
+    if (ec.category() == source::TheErrorCategory())
+    {
+      switch (static_cast<ErrorCode>(ec.value()))
+      {
+        case ErrorCode::ADAPTER_FAILED:
+          stop();
+          if (m_handler->m_disconnected)
+            m_handler->m_disconnected(m_identity);
+          m_pipeline.getContext()->m_contract->sourceFailed(m_identity);
+          break;
+
+        case ErrorCode::RETRY_REQUEST:
+          recoverAssetRequest();
+          break;
+
+        default:
+
+          break;
+      }
+    }
+    else
+    {}
+  }
+
+  void AgentAdapter::streamsFailed(std::error_code &ec)
   {
     if (ec.category() == source::TheErrorCategory())
     {
@@ -197,14 +260,16 @@ namespace mtconnect::source::adapter::agent_adapter {
       {
         case ErrorCode::INSTANCE_ID_CHANGED:
         case ErrorCode::RESTART_STREAM:
-          m_reconnectTimer.expires_after(100ms);
-          m_reconnectTimer.async_wait(
-              asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
-                if (!ec)
-                {
-                  run();
-                }
-              }));
+        {
+          if (m_handler->m_disconnected)
+            m_handler->m_disconnected(m_identity);
+          clear();
+          recoverStreams();
+          break;
+        }
+
+        case ErrorCode::RETRY_REQUEST:
+          recoverStreams();
           break;
 
         case ErrorCode::STREAM_CLOSED:
@@ -213,14 +278,16 @@ namespace mtconnect::source::adapter::agent_adapter {
           recoverStreams();
           break;
 
-        case ErrorCode::RECOVER_STREAM:
-          recoverStreams();
-          break;
-
         case ErrorCode::ADAPTER_FAILED:
+          stop();
           if (m_handler->m_disconnected)
             m_handler->m_disconnected(m_identity);
           m_pipeline.getContext()->m_contract->sourceFailed(m_identity);
+          break;
+
+        case ErrorCode::MULTIPART_STREAM_FAILED:
+          m_usePolling = true;
+          recoverStreams();
           break;
 
         default:
@@ -247,13 +314,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::run()
   {
-    //    m_session->stop();
-    //    m_assetSession->stop();
-
-    const auto &feedback =
-        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-    feedback->m_instanceId = 0;
-    feedback->m_next = 0;
+    clear();
 
     m_reconnecting = false;
     assets();
@@ -268,8 +329,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::current()
   {
-    m_session->makeRequest(m_sourceDevice, "current", UrlQuery(), false,
-                           [this]() { return sample(); });
+    m_streamRequest.emplace(m_sourceDevice, "current", UrlQuery(), false,
+                            [this]() { return sample(); });
+    m_session->makeRequest(*m_streamRequest);
   }
 
   bool AgentAdapter::sample()
@@ -277,12 +339,34 @@ namespace mtconnect::source::adapter::agent_adapter {
     const auto &feedback =
         m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
 
-    using namespace boost;
-    UrlQuery query({{"from", lexical_cast<string>(feedback->m_next)},
-                    {"count", lexical_cast<string>(m_count)},
-                    {"heartbeat", lexical_cast<string>(m_heartbeat)},
-                    {"interval", "500"}});
-    m_session->makeRequest(m_sourceDevice, "sample", query, true, nullptr);
+    if (m_usePolling)
+    {
+      using namespace boost;
+      UrlQuery query({{"from", lexical_cast<string>(feedback->m_next)},
+                      {"count", lexical_cast<string>(m_count)}});
+      m_streamRequest.emplace(m_sourceDevice, "sample", query, false, [this]() {
+        m_pollingTimer.expires_after(m_pollingInterval);
+        m_pollingTimer.async_wait(
+            asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+              if (!ec && m_streamRequest)
+              {
+                sample();
+              }
+            }));
+        return true;
+      });
+      m_session->makeRequest(*m_streamRequest);
+    }
+    else
+    {
+      using namespace boost;
+      UrlQuery query({{"from", lexical_cast<string>(feedback->m_next)},
+                      {"count", lexical_cast<string>(m_count)},
+                      {"heartbeat", lexical_cast<string>(m_heartbeat)},
+                      {"interval", lexical_cast<string>(m_pollingInterval.count())}});
+      m_streamRequest.emplace(m_sourceDevice, "sample", query, true, nullptr);
+      m_session->makeRequest(*m_streamRequest);
+    }
 
     return true;
   }
@@ -298,7 +382,11 @@ namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapter::assets()
   {
     UrlQuery query({{"count", "1048576"}});
-    m_assetSession->makeRequest(nullopt, "assets", query, false, nullptr);
+    m_assetRequest.emplace(m_sourceDevice, "assets", query, false, [this]() {
+      m_assetRequest.reset();
+      return true;
+    });
+    m_assetSession->makeRequest(*m_assetRequest);
   }
 
   void AgentAdapter::updateAssets()
@@ -312,7 +400,11 @@ namespace mtconnect::source::adapter::agent_adapter {
                    [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");
 
-    m_assetSession->makeRequest(nullopt, "/assets/" + ids, UrlQuery(), false, nullptr);
+    m_assetRequest.emplace(nullopt, "assets/" + ids, UrlQuery(), false, [this]() {
+      m_assetRequest.reset();
+      return true;
+    });
+    m_assetSession->makeRequest(*m_assetRequest);
   }
 
 }  // namespace mtconnect::source::adapter::agent_adapter

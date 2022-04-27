@@ -74,8 +74,12 @@ namespace mtconnect::source::adapter::agent_adapter {
     void assets();
     void updateAssets();
 
-    void sessionFailed(std::error_code &ec);
+    void streamsFailed(std::error_code &ec);
+    void assetsFailed(std::error_code &ec);
     void recoverStreams();
+    void recoverAssetRequest();
+
+    void clear();
 
     auto instanceId()
     {
@@ -85,19 +89,36 @@ namespace mtconnect::source::adapter::agent_adapter {
       return feedback->m_instanceId;
     }
 
+    bool canRecover()
+    {
+      const auto &feedback =
+          m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>(
+              "XmlTransformFeedback");
+      return feedback->m_instanceId != 0 && feedback->m_next != 0;
+    }
+
   protected:
     AgentAdapterPipeline m_pipeline;
     Url m_url;
-    int m_count;
-    int m_heartbeat;
+    int m_count = 1000;
+    int m_heartbeat = 10000;
     bool m_reconnecting = false;
     bool m_failed = false;
+    bool m_usePolling = false;
+
     std::chrono::seconds m_reconnectInterval;
+    std::chrono::milliseconds m_pollingInterval;
     std::string m_host;
     std::string m_sourceDevice;
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;
     boost::asio::steady_timer m_reconnectTimer;
+    boost::asio::steady_timer m_pollingTimer;
+    boost::asio::steady_timer m_assetRetryTimer;
+
+    // Current and Asset Request
+    std::optional<Session::Request> m_streamRequest;
+    std::optional<Session::Request> m_assetRequest;
 
     // For testing
     bool m_closeConnectionAfterResponse;
