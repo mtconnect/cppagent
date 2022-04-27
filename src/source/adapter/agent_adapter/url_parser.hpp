@@ -115,7 +115,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       return path.str();
     }
-    
+
     int getPort() const
     {
       if (m_port)
@@ -127,7 +127,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       else
         return 0;
     }
-    
+
     std::string getUrlText(const std::optional<std::string>& device)
     {
       std::stringstream url;

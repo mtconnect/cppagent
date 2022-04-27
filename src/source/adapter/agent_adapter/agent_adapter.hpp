@@ -119,7 +119,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     boost::asio::steady_timer m_reconnectTimer;
     boost::asio::steady_timer m_pollingTimer;
     boost::asio::steady_timer m_assetRetryTimer;
-    
+
     std::unique_ptr<boost::asio::ssl::context> m_streamContext;
     std::unique_ptr<boost::asio::ssl::context> m_assetContext;
 

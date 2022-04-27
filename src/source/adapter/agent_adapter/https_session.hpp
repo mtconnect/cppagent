@@ -63,7 +63,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
     {
-      
       if (ec)
       {
         LOG(error) << "TLS cannot connect to " << m_url.getHost() << ", shutting down";

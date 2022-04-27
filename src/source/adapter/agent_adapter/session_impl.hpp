@@ -24,7 +24,6 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
-#include <boost/beast/ssl.hpp>
 
 #include "pipeline/mtconnect_xml_transform.hpp"
 #include "pipeline/response_document.hpp"
@@ -263,8 +262,10 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       auto &msg = m_headerParser->get();
       if (auto a = msg.find(beast::http::field::connection); a != msg.end())
+      {
         m_closeOnRead = a->value() == "close";
-
+      }
+      
       if (m_request->m_stream && m_headerParser->chunked())
       {
         onChunkedContent();
@@ -358,7 +359,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           cout << "Ext: " << c.first << ": " << c.second << endl;
 #endif
         derived().lowestLayer().expires_after(m_timeout);
-        
+
         if (ec)
         {
           return failed(ec, "Failed in chunked extension parse");
@@ -407,7 +408,6 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
                               boost::system::error_code &ev) -> unsigned long {
-        
         {
           std::ostream cstr(&m_chunk);
           cstr << body;

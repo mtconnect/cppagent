@@ -105,8 +105,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_count = *GetOption<int>(m_options, configuration::Count);
     m_heartbeat = *GetOption<Milliseconds>(m_options, configuration::Heartbeat);
     m_usePolling = *GetOption<bool>(m_options, configuration::UsePolling);
-    m_reconnectInterval =
-        *GetOption<Milliseconds>(m_options, configuration::ReconnectInterval);
+    m_reconnectInterval = *GetOption<Milliseconds>(m_options, configuration::ReconnectInterval);
     m_pollingInterval = *GetOption<Milliseconds>(m_options, configuration::PollingInterval);
 
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
@@ -121,7 +120,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       m_sourceDevice = GetOption<string>(m_options, configuration::SourceDevice).value_or(*device);
     }
-    
+
     m_name = m_url.getUrlText(m_sourceDevice);
     boost::uuids::detail::sha1 sha1;
     sha1.process_bytes(m_name.c_str(), m_name.length());
@@ -152,9 +151,9 @@ namespace mtconnect::source::adapter::agent_adapter {
       // The SSL context is required, and holds certificates
       m_streamContext = make_unique<ssl::context>(ssl::context::tlsv12_client);
       m_streamContext->set_verify_mode(ssl::verify_none);
-      
+
       m_session = make_shared<HttpsSession>(m_strand, m_url, *m_streamContext);
-      
+
       m_assetContext = make_unique<ssl::context>(ssl::context::tlsv12_client);
       m_assetContext->set_verify_mode(ssl::verify_none);
 
