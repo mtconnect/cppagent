@@ -30,8 +30,7 @@ namespace mtconnect::source::adapter {
     virtual ~Adapter() {}
 
     virtual const std::string &getHost() const = 0;
-    virtual const std::string &getUrl() const { return m_url; }
-    virtual const std::string &getIdentity() const { return m_identity; }
+    const std::string &getIdentity() const override { return m_identity; }
     virtual unsigned int getPort() const = 0;
     virtual const ConfigOptions &getOptions() const { return m_options; }
 
@@ -39,7 +38,6 @@ namespace mtconnect::source::adapter {
 
   protected:
     std::string m_identity;
-    std::string m_url;
     std::unique_ptr<Handler> m_handler;
     ConfigOptions m_options;
   };

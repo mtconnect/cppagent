@@ -23,6 +23,10 @@
 #include "source/adapter/adapter_pipeline.hpp"
 #include "url_parser.hpp"
 
+namespace boost::asio::ssl {
+  class context;
+}
+
 namespace mtconnect::source::adapter::agent_adapter {
   using namespace mtconnect;
   using namespace source::adapter;
@@ -101,12 +105,12 @@ namespace mtconnect::source::adapter::agent_adapter {
     AgentAdapterPipeline m_pipeline;
     Url m_url;
     int m_count = 1000;
-    int m_heartbeat = 10000;
+    std::chrono::milliseconds m_heartbeat;
     bool m_reconnecting = false;
     bool m_failed = false;
     bool m_usePolling = false;
 
-    std::chrono::seconds m_reconnectInterval;
+    std::chrono::milliseconds m_reconnectInterval;
     std::chrono::milliseconds m_pollingInterval;
     std::string m_host;
     std::string m_sourceDevice;
@@ -115,6 +119,9 @@ namespace mtconnect::source::adapter::agent_adapter {
     boost::asio::steady_timer m_reconnectTimer;
     boost::asio::steady_timer m_pollingTimer;
     boost::asio::steady_timer m_assetRetryTimer;
+    
+    std::unique_ptr<boost::asio::ssl::context> m_streamContext;
+    std::unique_ptr<boost::asio::ssl::context> m_assetContext;
 
     // Current and Asset Request
     std::optional<Session::Request> m_streamRequest;

@@ -97,7 +97,7 @@ namespace mtconnect {
     source::SourcePtr findSource(const std::string &name) const
     {
       for (auto &s : m_sources)
-        if (s->getName() == name)
+        if (s->getIdentity() == name)
           return s;
 
       return nullptr;

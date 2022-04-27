@@ -33,7 +33,11 @@ namespace mtconnect::source::adapter::agent_adapter {
     explicit HttpsSession(boost::asio::io_context::strand &ex, const Url &url, ssl::context &ctx)
       : super(ex, url), m_stream(ex.context(), ctx)
     {}
-    ~HttpsSession() {}
+    ~HttpsSession()
+    {
+      if (isOpen())
+        beast::get_lowest_layer(m_stream).close();
+    }
 
     auto &stream() { return m_stream; }
     auto &lowestLayer() { return beast::get_lowest_layer(m_stream); }
@@ -59,6 +63,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
     {
+      
       if (ec)
       {
         LOG(error) << "TLS cannot connect to " << m_url.getHost() << ", shutting down";
@@ -131,5 +136,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   protected:
     beast::ssl_stream<beast::tcp_stream> m_stream;
+    optional<ssl::context> m_sslContext;
   };
 }  // namespace mtconnect::source::adapter::agent_adapter

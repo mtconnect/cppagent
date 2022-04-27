@@ -84,7 +84,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     std::string getHost() const { return std::visit(HostVisitor(), m_host); }
 
-    std::string getService() const { return boost::lexical_cast<std::string>(m_port.value_or(80)); }
+    std::string getService() const { return boost::lexical_cast<std::string>(getPort()); }
 
     // the path with query and without fragment
     std::string getTarget() const
@@ -114,6 +114,27 @@ namespace mtconnect::source::adapter::agent_adapter {
         path << '?' << uq.join();
 
       return path.str();
+    }
+    
+    int getPort() const
+    {
+      if (m_port)
+        return *m_port;
+      else if (m_protocol == "https")
+        return 443;
+      else if (m_protocol == "http")
+        return 80;
+      else
+        return 0;
+    }
+    
+    std::string getUrlText(const std::optional<std::string>& device)
+    {
+      std::stringstream url;
+      url << m_protocol << "://" << getHost() << ':' << getPort() << getTarget();
+      if (device)
+        url << *device;
+      return url.str();
     }
 
     static Url parse(const std::string_view& url);

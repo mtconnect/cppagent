@@ -629,6 +629,7 @@ TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
   timeout.cancel();
 }
 
-TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out) { GTEST_SKIP(); }
+// Not sure if this is the correct behavior
+// TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out) { GTEST_SKIP(); }
 
 TEST_F(AgentAdapterTest, should_connect_to_tls_agent) { GTEST_SKIP(); }

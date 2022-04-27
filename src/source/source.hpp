@@ -52,6 +52,7 @@ namespace mtconnect {
       virtual bool start() = 0;
       virtual void stop() = 0;
       virtual bool isLoopback() { return false; }
+      virtual const std::string &getIdentity() const { return m_name; }
 
       virtual pipeline::Pipeline *getPipeline() = 0;
 

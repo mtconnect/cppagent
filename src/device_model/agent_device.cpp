@@ -111,7 +111,7 @@ namespace mtconnect {
             Properties {
                 {"type", "ADAPTER_URI"s}, {"id", id + "_adapter_uri"}, {"category", "EVENT"s}},
             errors);
-        di->setConstantValue(adapter->getUrl());
+        di->setConstantValue(adapter->getName());
         comp->addDataItem(di, errors);
       }
 

@@ -20,6 +20,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/beast/core/error.hpp>
 #include <boost/beast/http/error.hpp>
+#include <boost/uuid/name_generator_sha1.hpp>
 
 #include <cstdio>
 #include <fstream>
@@ -74,11 +75,11 @@ namespace mtconnect::source::adapter::agent_adapter {
                         {{configuration::Host, "localhost"s},
                          {configuration::Port, 5000},
                          {configuration::Count, 1000},
-                         {configuration::Heartbeat, 10000},
-                         {configuration::PollingInterval, 500},
+                         {configuration::Heartbeat, 10000ms},
+                         {configuration::PollingInterval, 500ms},
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
-                         {configuration::ReconnectInterval, 10},
+                         {configuration::ReconnectInterval, 10000ms},
                          {configuration::RelativeTime, false},
                          {configuration::UsePolling, false},
                          {"!CloseConnectionAfterResponse!", false}});
@@ -102,12 +103,11 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_url.m_path.append("/");
 
     m_count = *GetOption<int>(m_options, configuration::Count);
-    m_heartbeat = *GetOption<int>(m_options, configuration::Heartbeat);
+    m_heartbeat = *GetOption<Milliseconds>(m_options, configuration::Heartbeat);
     m_usePolling = *GetOption<bool>(m_options, configuration::UsePolling);
     m_reconnectInterval =
-        std::chrono::seconds(*GetOption<int>(m_options, configuration::ReconnectInterval));
-    m_pollingInterval =
-        std::chrono::milliseconds(*GetOption<int>(m_options, configuration::PollingInterval));
+        *GetOption<Milliseconds>(m_options, configuration::ReconnectInterval);
+    m_pollingInterval = *GetOption<Milliseconds>(m_options, configuration::PollingInterval);
 
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
 
@@ -121,6 +121,16 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       m_sourceDevice = GetOption<string>(m_options, configuration::SourceDevice).value_or(*device);
     }
+    
+    m_name = m_url.getUrlText(m_sourceDevice);
+    boost::uuids::detail::sha1 sha1;
+    sha1.process_bytes(m_name.c_str(), m_name.length());
+    boost::uuids::detail::sha1::digest_type digest;
+    sha1.get_digest(digest);
+
+    stringstream identity;
+    identity << std::hex << digest[0] << digest[1] << digest[2];
+    m_identity = string("_") + (identity.str()).substr(0, 10);
 
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
@@ -140,10 +150,15 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_url.m_protocol == "https")
     {
       // The SSL context is required, and holds certificates
-      ssl::context ctx {ssl::context::tlsv12_client};
-      ctx.set_verify_mode(ssl::verify_peer);
-      m_session = make_shared<HttpsSession>(m_strand, m_url, ctx);
-      m_assetSession = make_shared<HttpsSession>(m_strand, m_url, ctx);
+      m_streamContext = make_unique<ssl::context>(ssl::context::tlsv12_client);
+      m_streamContext->set_verify_mode(ssl::verify_none);
+      
+      m_session = make_shared<HttpsSession>(m_strand, m_url, *m_streamContext);
+      
+      m_assetContext = make_unique<ssl::context>(ssl::context::tlsv12_client);
+      m_assetContext->set_verify_mode(ssl::verify_none);
+
+      m_assetSession = make_shared<HttpsSession>(m_strand, m_url, *m_assetContext);
     }
     else if (m_url.m_protocol == "http")
     {
@@ -183,8 +198,10 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_pollingTimer.cancel();
     m_reconnectTimer.cancel();
 
-    m_session->stop();
-    m_assetSession->stop();
+    if (m_session)
+      m_session->stop();
+    if (m_assetSession)
+      m_assetSession->stop();
 
     const auto &feedback =
         m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
@@ -362,7 +379,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       using namespace boost;
       UrlQuery query({{"from", lexical_cast<string>(feedback->m_next)},
                       {"count", lexical_cast<string>(m_count)},
-                      {"heartbeat", lexical_cast<string>(m_heartbeat)},
+                      {"heartbeat", lexical_cast<string>(m_heartbeat.count())},
                       {"interval", lexical_cast<string>(m_pollingInterval.count())}});
       m_streamRequest.emplace(m_sourceDevice, "sample", query, true, nullptr);
       m_session->makeRequest(*m_streamRequest);
@@ -373,10 +390,13 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::stop()
   {
-    m_reconnectTimer.cancel();
+    clear();
     if (m_session)
       m_session->stop();
     m_session.reset();
+    if (m_assetSession)
+      m_assetSession->stop();
+    m_assetSession.reset();
   }
 
   void AgentAdapter::assets()

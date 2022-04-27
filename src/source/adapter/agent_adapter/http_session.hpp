@@ -32,7 +32,11 @@ namespace mtconnect::source::adapter::agent_adapter {
       : super(ioc, url), m_stream(ioc.context())
     {}
 
-    ~HttpSession() override {}
+    ~HttpSession() override
+    {
+      if (isOpen())
+        beast::get_lowest_layer(m_stream).close();
+    }
 
     shared_ptr<HttpSession> getptr()
     {

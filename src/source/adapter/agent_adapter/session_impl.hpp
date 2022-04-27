@@ -24,6 +24,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
+#include <boost/beast/ssl.hpp>
 
 #include "pipeline/mtconnect_xml_transform.hpp"
 #include "pipeline/response_document.hpp"
@@ -69,8 +70,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void stop() override
     {
-      if (isOpen())
-        derived().lowestLayer().close();
       m_state = SessionState::CLOSED;
       m_request.reset();
     }
@@ -154,7 +153,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
       else if (holds_alternative<asio::ip::address>(m_url.m_host))
       {
-        asio::ip::tcp::endpoint ep(get<asio::ip::address>(m_url.m_host), m_url.m_port.value_or(80));
+        asio::ip::tcp::endpoint ep(get<asio::ip::address>(m_url.m_host), m_url.getPort());
 
         // Create the results type and call on resolve directly.
         using results_type = tcp::resolver::results_type;
@@ -165,7 +164,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
       else
       {
-        derived().lowestLayer().expires_after(std::chrono::seconds(30));
+        derived().lowestLayer().expires_after(m_timeout);
 
         // Do an async resolution of the address.
         m_resolver.async_resolve(
@@ -192,7 +191,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_handler->m_connecting(m_identity);
 
       // Set a timeout on the operation
-      derived().lowestLayer().expires_after(std::chrono::seconds(30));
+      derived().lowestLayer().expires_after(m_timeout);
 
       // Make the connection on the IP address we get from a lookup
       derived().lowestLayer().async_connect(
@@ -209,6 +208,8 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_req->target(m_request->getTarget(m_url));
       m_req->set(http::field::host, m_url.getHost());
       m_req->set(http::field::user_agent, "MTConnect Agent/2.0");
+      m_req->set(http::field::connection, "keep-alive");
+
       if (m_closeConnectionAfterResponse)
       {
         m_req->set(http::field::connection, "close");
@@ -285,16 +286,8 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       if (ec)
       {
-        if (m_request->m_stream && ec == beast::error::timeout)
-        {
-          LOG(warning) << "Switching to polling";
-          return failed(source::make_error_code(ErrorCode::MULTIPART_STREAM_FAILED), "header");
-        }
-        else
-        {
-          LOG(error) << "Error getting response: " << ec.category().name() << " " << ec.message();
-          return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "read");
-        }
+        LOG(error) << "Error getting response: " << ec.category().name() << " " << ec.message();
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "read");
       }
 
       derived().lowestLayer().expires_after(m_timeout);
@@ -358,11 +351,14 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       m_chunkHeaderHandler = [this](std::uint64_t size, boost::string_view extensions,
                                     boost::system::error_code &ec) {
+#if 0
         http::chunk_extensions ce;
         ce.parse(extensions, ec);
         for (auto &c : ce)
           cout << "Ext: " << c.first << ": " << c.second << endl;
-
+#endif
+        derived().lowestLayer().expires_after(m_timeout);
+        
         if (ec)
         {
           return failed(ec, "Failed in chunked extension parse");
@@ -411,6 +407,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
                               boost::system::error_code &ev) -> unsigned long {
+        
         {
           std::ostream cstr(&m_chunk);
           cstr << body;
@@ -430,7 +427,7 @@ namespace mtconnect::source::adapter::agent_adapter {
           auto start = static_cast<const char *>(m_chunk.data().data());
           string_view sbuf(start, m_chunkLength);
 
-          LOG(debug) << "Received Chunk: --------\n" << sbuf << "\n-------------";
+          LOG(trace) << "Received Chunk: --------\n" << sbuf << "\n-------------";
 
           processData(string(sbuf));
 
@@ -456,7 +453,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       m_state = SessionState::STREAMING;
 
-      LOG(info) << "Found boundary: " << m_boundary;
+      LOG(trace) << "Found boundary: " << m_boundary;
 
       m_chunkParser.emplace(std::move(*m_headerParser));
       createChunkHeaderHandler();

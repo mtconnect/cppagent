@@ -802,18 +802,19 @@ namespace mtconnect {
 
       if (!ext)
       {
-        LOG(fatal) << "Source " << identity << "failed";
+        LOG(fatal) << "Source " << source->getName() << " failed";
         LOG(fatal) << "No external adapters present, shutting down";
         stop();
+        m_context.stop();
       }
       else
       {
-        LOG(error) << "Source " << identity << "failed";
+        LOG(error) << "Source " << source->getName() << " failed";
       }
     }
     else
     {
-      LOG(error) << "Cannot find failed source: " << identity;
+      LOG(error) << "Cannot find failed source: " << source->getName();
     }
   }
 

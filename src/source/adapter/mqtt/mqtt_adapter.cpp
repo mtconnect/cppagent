@@ -362,12 +362,11 @@ namespace mtconnect {
       else
         m_client =
             make_shared<MqttAdapterClient>(m_ioContext, m_options, &m_pipeline, m_handler.get());
-      m_name = m_client->getIdentity();
       m_options[configuration::AdapterIdentity] = m_name;
       m_pipeline.build(m_options);
 
       m_identity = m_client->getIdentity();
-      m_url = m_client->getUrl();
+      m_name = m_client->getUrl();
     }
 
     void MqttAdapter::loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options)

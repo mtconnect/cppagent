@@ -72,7 +72,7 @@ namespace mtconnect::source::adapter::shdr {
 
     stringstream url;
     url << "shdr://" << m_server << ':' << m_port;
-    m_url = url.str();
+    m_name = url.str();
 
     stringstream identity;
     identity << '_' << m_server << '_' << m_port;
@@ -141,10 +141,10 @@ namespace mtconnect::source::adapter::shdr {
   {
     NAMED_SCOPE("input.adapter.stop");
     // Will stop threaded object gracefully Adapter::thread()
-    LOG(debug) << "Waiting for adapter to stop: " << m_url;
+    LOG(debug) << "Waiting for adapter to stop: " << m_name;
     m_running = false;
     close();
-    LOG(debug) << "Adapter exited: " << m_url;
+    LOG(debug) << "Adapter exited: " << m_name;
   }
 
   inline bool is_true(const std::string &value) { return value == "yes" || value == "true"; }
