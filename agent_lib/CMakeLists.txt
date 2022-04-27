@@ -287,6 +287,7 @@ if(MSVC)
   set_property(SOURCE
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
     PROPERTY COMPILE_FLAGS "/bigobj")
 endif()
 

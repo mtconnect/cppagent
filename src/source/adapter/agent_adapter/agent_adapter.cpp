@@ -131,6 +131,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     identity << std::hex << digest[0] << digest[1] << digest[2];
     m_identity = string("_") + (identity.str()).substr(0, 10);
 
+    m_options.insert_or_assign(configuration::AdapterIdentity, m_identity);
+
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
   }

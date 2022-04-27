@@ -200,6 +200,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void request()
     {
+      if (!m_request)
+        return;
+
       // Set up an HTTP GET request message
       m_req.emplace();
       m_req->version(11);
@@ -228,6 +231,12 @@ namespace mtconnect::source::adapter::agent_adapter {
       {
         LOG(error) << "Cannot send request: " << ec.category().name() << " " << ec.message();
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "write");
+      }
+
+      if (!m_request)
+      {
+        LOG(error) << "Wrote but no request";
+        return;
       }
 
       derived().lowestLayer().expires_after(m_timeout);
@@ -260,6 +269,12 @@ namespace mtconnect::source::adapter::agent_adapter {
         return;
       }
 
+      if (!m_request)
+      {
+        LOG(error) << "Received a header but no request";
+        return;
+      }
+
       auto &msg = m_headerParser->get();
       if (auto a = msg.find(beast::http::field::connection); a != msg.end())
       {
@@ -289,6 +304,12 @@ namespace mtconnect::source::adapter::agent_adapter {
       {
         LOG(error) << "Error getting response: " << ec.category().name() << " " << ec.message();
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "read");
+      }
+
+      if (!m_request) 
+      {
+        LOG(error) << "read data but no request";
+        return;
       }
 
       derived().lowestLayer().expires_after(m_timeout);
