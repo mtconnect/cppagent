@@ -108,6 +108,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::chrono::milliseconds m_heartbeat;
     bool m_reconnecting = false;
     bool m_failed = false;
+    bool m_stopped = false;
     bool m_usePolling = false;
 
     std::chrono::milliseconds m_reconnectInterval;

@@ -92,9 +92,6 @@ protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, true);
-    m_agentTestHelper->getAgent()->start();
-    m_agentId = to_string(getCurrentTimeInSec());
 
     auto printer = make_unique<XmlPrinter>();
     auto parser = make_unique<XmlParser>();
@@ -111,11 +108,21 @@ protected:
     if (m_adapter)
     {
       m_adapter->stop();
+      m_agentTestHelper->m_ioContext.run_for(100ms);
       m_adapter.reset();
     }
 
     m_agentTestHelper->getAgent()->stop();
+    m_agentTestHelper->m_ioContext.run_for(100ms);
     m_agentTestHelper.reset();
+  }
+
+  void createAgent(ConfigOptions options = {})
+  {
+    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true,
+                                   options);
+    m_agentTestHelper->getAgent()->start();
+    m_agentId = to_string(getCurrentTimeInSec());
   }
 
   auto createAdapter(int port, mtconnect::ConfigOptions options = {}, const std::string path = "",
@@ -130,8 +137,8 @@ protected:
     options.emplace(configuration::SourceDevice, "LinuxCNC"s);
     options.emplace(configuration::Port, port);
     options.emplace(configuration::Count, 100);
-    options.emplace(configuration::Heartbeat, hb);
-    options.emplace(configuration::ReconnectInterval, 1);
+    options.emplace(configuration::Heartbeat, Milliseconds(hb));
+    options.emplace(configuration::ReconnectInterval, 500ms);
 
     boost::property_tree::ptree tree;
     m_adapter = std::make_shared<agent_adapter::AgentAdapter>(m_agentTestHelper->m_ioContext,
@@ -157,6 +164,8 @@ public:
 
 TEST_F(AgentAdapterTest, should_connect_to_agent)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
@@ -198,6 +207,8 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
 
 TEST_F(AgentAdapterTest, should_get_current_from_agent)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
@@ -233,6 +244,8 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
 
 TEST_F(AgentAdapterTest, should_get_assets_from_agent)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
@@ -268,6 +281,8 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
 
 TEST_F(AgentAdapterTest, should_receive_sample)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port);
 
@@ -324,6 +339,8 @@ TEST_F(AgentAdapterTest, should_receive_sample)
 
 TEST_F(AgentAdapterTest, should_reconnect)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port, {}, "", 1000);
 
@@ -385,11 +402,14 @@ TEST_F(AgentAdapterTest, should_reconnect)
   ASSERT_TRUE(session);
   ASSERT_FALSE(disconnected);
 
+  m_agentTestHelper->m_restService->getServer()->m_lastSession = nullptr;
   timeout.cancel();
 }
 
 TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port, {{"!CloseConnectionAfterResponse!", true}});
 
@@ -446,6 +466,8 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
 
 TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port, {}, "", 500);
 
@@ -531,11 +553,14 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   }
   ASSERT_TRUE(response);
 
+  m_agentTestHelper->m_restService->getServer()->m_lastSession = nullptr;
   timeout.cancel();
 }
 
 TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port, {{configuration::Device, "NewMachine"s}}, "", 5000);
 
@@ -564,6 +589,8 @@ TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
 
 TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
 {
+  createAgent();
+
   auto port = m_agentTestHelper->m_restService->getServer()->getPort();
   auto adapter = createAdapter(port, {{"UsePolling", true}});
 
@@ -633,4 +660,52 @@ TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
 // TEST_F(AgentAdapterTest, should_fallback_to_polling_samples_if_chunked_times_out) { GTEST_SKIP();
 // }
 
-TEST_F(AgentAdapterTest, should_connect_to_tls_agent) { GTEST_SKIP(); }
+const string CertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
+const string KeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
+const string DhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
+
+TEST_F(AgentAdapterTest, should_connect_to_tls_agent)
+{
+  using namespace mtconnect::configuration;
+
+  createAgent({{{TlsCertificateChain, CertFile},
+                {TlsPrivateKey, KeyFile},
+                {TlsDHKey, DhFile},
+                {TlsCertificatePassword, "mtconnect"s}}});
+
+  auto port = m_agentTestHelper->m_restService->getServer()->getPort();
+  string url = "https://127.0.0.1:"s + boost::lexical_cast<string>(port) + "/";
+  auto adapter = createAdapter(port, {{configuration::Url, url}});
+
+  addAdapter();
+
+  unique_ptr<source::adapter::Handler> handler = make_unique<Handler>();
+
+  bool current = false;
+  handler->m_processData = [&](const string &d, const string &s) {
+    if (d.find("MTConnectStreams") != string::npos)
+      current = true;
+  };
+  handler->m_connecting = [&](const string id) {};
+  handler->m_connected = [&](const string id) {};
+
+  adapter->setHandler(handler);
+  adapter->start();
+
+  boost::asio::steady_timer timeout(m_agentTestHelper->m_ioContext, 500ms);
+  timeout.async_wait([](boost::system::error_code ec) {
+    if (!ec)
+    {
+      throw runtime_error("test timed out");
+    }
+  });
+
+  while (!current)
+  {
+    m_agentTestHelper->m_ioContext.run_one_for(100ms);
+  }
+  ASSERT_TRUE(current);
+
+  timeout.cancel();
+}

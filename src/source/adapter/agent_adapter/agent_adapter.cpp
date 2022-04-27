@@ -210,6 +210,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::recoverStreams()
   {
+    if (m_stopped)
+      return;
+
     if (!canRecover())
     {
       clear();
@@ -244,6 +247,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::assetsFailed(std::error_code &ec)
   {
+    if (m_stopped)
+      return;
+
     if (ec.category() == source::TheErrorCategory())
     {
       switch (static_cast<ErrorCode>(ec.value()))
@@ -264,12 +270,13 @@ namespace mtconnect::source::adapter::agent_adapter {
           break;
       }
     }
-    else
-    {}
   }
 
   void AgentAdapter::streamsFailed(std::error_code &ec)
   {
+    if (m_stopped)
+      return;
+
     if (ec.category() == source::TheErrorCategory())
     {
       switch (static_cast<ErrorCode>(ec.value()))
@@ -330,6 +337,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::run()
   {
+    if (m_stopped)
+      return;
+
     clear();
 
     m_reconnecting = false;
@@ -339,12 +349,18 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::recover()
   {
+    if (m_stopped)
+      return;
+
     m_reconnecting = false;
     sample();
   }
 
   void AgentAdapter::current()
   {
+    if (m_stopped)
+      return;
+
     m_streamRequest.emplace(m_sourceDevice, "current", UrlQuery(), false,
                             [this]() { return sample(); });
     m_session->makeRequest(*m_streamRequest);
@@ -352,6 +368,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   bool AgentAdapter::sample()
   {
+    if (m_stopped)
+      return false;
+
     const auto &feedback =
         m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
 
@@ -389,6 +408,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::stop()
   {
+    m_stopped = true;
     clear();
     if (m_session)
       m_session->stop();

@@ -265,7 +265,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       {
         m_closeOnRead = a->value() == "close";
       }
-      
+
       if (m_request->m_stream && m_headerParser->chunked())
       {
         onChunkedContent();

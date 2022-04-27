@@ -184,7 +184,7 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
     ASSERT_XML_PATH_EQUAL(doc,
                           ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX
                                                   "_adapter_uri']/m:Constraints/m:Value",
-                          m_agentTestHelper->m_adapter->getUrl().c_str());
+                          m_agentTestHelper->m_adapter->getName().c_str());
   }
 }
 
@@ -226,7 +226,7 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_ADAPTER_STREAM "/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
-                          m_agentTestHelper->m_adapter->getUrl().c_str());
+                          m_agentTestHelper->m_adapter->getName().c_str());
   }
 }
 
@@ -240,7 +240,7 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
-                          m_agentTestHelper->m_adapter->getUrl().c_str());
+                          m_agentTestHelper->m_adapter->getName().c_str());
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
                           "UNAVAILABLE");
   }

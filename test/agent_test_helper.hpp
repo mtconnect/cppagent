@@ -161,7 +161,7 @@ public:
 
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
                    const std::string &version = "1.7", int checkpoint = 25, bool put = false,
-                   bool observe = true)
+                   bool observe = true, const mtconnect::ConfigOptions ops = {})
   {
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
@@ -171,13 +171,15 @@ public:
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);
     source::adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
-    ConfigOptions options {{configuration::BufferSize, bufferSize},
-                           {configuration::MaxAssets, maxAssets},
-                           {configuration::CheckpointFrequency, checkpoint},
-                           {configuration::AllowPut, put},
-                           {configuration::SchemaVersion, version},
-                           {configuration::Pretty, true},
-                           {configuration::Port, 0}};
+    ConfigOptions options = ops;
+    options.emplace(configuration::BufferSize, bufferSize);
+    options.emplace(configuration::MaxAssets, maxAssets);
+    options.emplace(configuration::CheckpointFrequency, checkpoint);
+    options.emplace(configuration::AllowPut, put);
+    options.emplace(configuration::SchemaVersion, version);
+    options.emplace(configuration::Pretty, true);
+    options.emplace(configuration::Port, 0);
+
     m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, PROJECT_ROOT_DIR + file, options);
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
