@@ -182,6 +182,12 @@ namespace mtconnect::source::adapter::agent_adapter {
         LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
         return failed(source::make_error_code(source::ErrorCode::ADAPTER_FAILED), "resolve");
       }
+      
+      if (!m_request)
+      {
+        LOG(error) << "Resolved but no request";
+        return;
+      }
 
       if (!m_resolution)
         m_resolution.emplace(results);
@@ -236,7 +242,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (!m_request)
       {
         LOG(error) << "Wrote but no request";
-        return;
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "write");
       }
 
       derived().lowestLayer().expires_after(m_timeout);
@@ -272,7 +278,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (!m_request)
       {
         LOG(error) << "Received a header but no request";
-        return;
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "header");
       }
 
       auto &msg = m_headerParser->get();
@@ -309,7 +315,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (!m_request) 
       {
         LOG(error) << "read data but no request";
-        return;
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "header");
       }
 
       derived().lowestLayer().expires_after(m_timeout);
@@ -437,6 +443,14 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
                               boost::system::error_code &ev) -> unsigned long {
+        
+        if (!m_request)
+        {
+          derived().lowestLayer().close();
+          failed(source::make_error_code(source::ErrorCode::RETRY_REQUEST), "Framing error in streaming data: no content length");
+          return 0;
+        }
+        
         {
           std::ostream cstr(&m_chunk);
           cstr << body;
