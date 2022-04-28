@@ -17,15 +17,6 @@
 
 #include "description.hpp"
 
-#include <list>
-#include <map>
-#include <optional>
-#include <string>
-#include <utility>
-
-#include "entity.hpp"
-#include "utilities.hpp"
-
 using namespace std;
 
 namespace mtconnect {

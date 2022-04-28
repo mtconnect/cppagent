@@ -24,7 +24,7 @@
 #include <utility>
 
 #include "device.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "logging.hpp"
 #include "utilities.hpp"
 

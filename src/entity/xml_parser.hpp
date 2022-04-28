@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "factory.hpp"
 #include "requirement.hpp"
 #include "utilities.hpp"

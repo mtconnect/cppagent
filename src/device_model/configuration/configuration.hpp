@@ -17,7 +17,8 @@
 
 #pragma once
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
+#include "entity/factory.hpp"
 
 namespace mtconnect {
   namespace device_model {

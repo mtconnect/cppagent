@@ -12,7 +12,7 @@
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "asset/cutting_tool.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "entity/json_printer.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"

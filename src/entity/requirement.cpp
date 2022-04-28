@@ -26,7 +26,7 @@
 #include <date/date.h>
 #include <string_view>
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "factory.hpp"
 #include "logging.hpp"
 

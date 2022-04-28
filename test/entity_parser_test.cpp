@@ -10,7 +10,7 @@
 #include <string>
 
 #include "agent.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "entity/xml_parser.hpp"
 #include "json_helper.hpp"
 #include "source/adapter/adapter.hpp"

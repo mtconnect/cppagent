@@ -9,7 +9,8 @@
 #include <sstream>
 #include <string>
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
+#include "entity/factory.hpp"
 
 using namespace std;
 using namespace std::literals;

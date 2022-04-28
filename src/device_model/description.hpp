@@ -23,7 +23,8 @@
 #include <string>
 #include <utility>
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
+#include "entity/factory.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect {

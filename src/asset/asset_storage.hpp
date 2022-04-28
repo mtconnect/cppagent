@@ -24,7 +24,7 @@
 #include <unordered_map>
 
 #include "asset/asset.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect {

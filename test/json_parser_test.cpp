@@ -11,7 +11,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "entity/json_parser.cpp"
 #include "entity/json_parser.hpp"
 

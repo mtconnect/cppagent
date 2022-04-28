@@ -32,7 +32,7 @@
 
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "entity/json_printer.cpp"
 #include "entity/json_printer.hpp"
 #include "entity/xml_parser.hpp"

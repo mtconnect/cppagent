@@ -19,7 +19,7 @@
 
 #include <unordered_set>
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
 
 extern "C"
 {

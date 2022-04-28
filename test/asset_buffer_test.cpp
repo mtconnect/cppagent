@@ -27,7 +27,7 @@
 
 #include "agent_test_helper.hpp"
 #include "asset/asset_buffer.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "test_utilities.hpp"
 #include "xml_printer.hpp"
 
