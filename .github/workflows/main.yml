@@ -13,6 +13,15 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
+# define variables - used below, like ${{ env.platforms }}
+env:
+  # for available platforms see output of a previous run -
+  # ie the "Setup Docker BuildX" / "Inspect Builder" section
+  # has eg "node_platforms": "linux/amd64,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6"
+  # but the platforms must also be included in the os image chosen -
+  # eg the ubuntu image doesn't include linux/arm/v6.
+  platforms: linux/amd64,linux/arm64,linux/arm/v7
+  
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -39,5 +48,8 @@ jobs:
           conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
 
       - name: Build app
-        run: conan build . -bf build
-      
+        run: |
+          conan build . -bf build
+          echo $GITHUB_WORKSPACE
+          ls $GITHUB_WORKSPACE
+
