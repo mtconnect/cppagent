@@ -59,16 +59,6 @@ namespace mtconnect::source::adapter::agent_adapter {
       auto getTarget(const Url &url) { return url.getTarget(m_sourceDevice, m_suffix, m_query); }
     };
 
-    enum class SessionState
-    {
-      CLOSED,
-      IDLE,
-      STREAMING,
-      TIMED_OUT,
-      DISCONNECTING,
-      FAILED
-    };
-
     virtual ~Session() {}
     virtual bool isOpen() const = 0;
     virtual void stop() = 0;
@@ -79,7 +69,6 @@ namespace mtconnect::source::adapter::agent_adapter {
     Handler *m_handler = nullptr;
     std::string m_identity;
     Failure m_failed;
-    SessionState m_state = SessionState::CLOSED;
     UpdateAssets m_updateAssets;
     bool m_closeConnectionAfterResponse = false;
     std::chrono::milliseconds m_timeout = std::chrono::milliseconds(30000);

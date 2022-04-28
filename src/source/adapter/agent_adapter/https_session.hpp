@@ -104,8 +104,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void disconnect()
     {
-      m_state = SessionState::DISCONNECTING;
-
       // Set a timeout on the operation
       derived().lowestLayer().expires_after(m_timeout);
 
@@ -128,8 +126,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       // If we get here then the connection is closed gracefully
       lowestLayer().close();
-
-      m_state = SessionState::CLOSED;
 
       if (ec)
       {

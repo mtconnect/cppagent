@@ -69,7 +69,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void stop() override
     {
-      m_state = SessionState::CLOSED;
       m_request.reset();
     }
 
@@ -333,8 +332,6 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       if (m_closeOnRead)
         derived().disconnect();
-      else
-        m_state = SessionState::IDLE;
 
       if (next)
       {
@@ -502,8 +499,6 @@ namespace mtconnect::source::adapter::agent_adapter {
         failed(ec, "Cannot find boundary");
         return;
       }
-
-      m_state = SessionState::STREAMING;
 
       LOG(trace) << "Found boundary: " << m_boundary;
 

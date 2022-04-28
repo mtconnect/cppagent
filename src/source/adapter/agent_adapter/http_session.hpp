@@ -79,8 +79,6 @@ namespace mtconnect::source::adapter::agent_adapter {
       if (m_handler && m_handler->m_disconnected)
         m_handler->m_disconnected(m_identity);
 
-      m_state = SessionState::CLOSED;
-
       // Close the connection anyway, but feedback the error.
       m_stream.close();
 
