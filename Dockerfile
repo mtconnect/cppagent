@@ -9,6 +9,10 @@ FROM ubuntu:21.04 AS compile
 #   && git clone https://github.com/mtconnect/cppagent_dev.git agent \
 #   && cd agent
 
+# tzinfo hangs without this
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=USA/Chicago
+
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
 # this follows recommended Docker practices -
