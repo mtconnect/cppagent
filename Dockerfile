@@ -13,8 +13,7 @@ FROM ubuntu:21.04 AS compile
 # note: Dockerfiles run as root by default, so don't need sudo
 # this follows recommended Docker practices -
 # see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
-RUN sudo apt update \
-  && sudo apt install python3-pip -y
+RUN apt update && apt install python3-pip -y
 
 
 ENV PATH=$HOME/venv3.9/bin:$PATH
