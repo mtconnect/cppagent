@@ -20,7 +20,7 @@
 #include "entity/entity.hpp"
 #include "pipeline/pipeline_context.hpp"
 #include "utilities.hpp"
-#include "xml_helper.hpp"
+#include "printer/xml_helper.hpp"
 
 namespace mtconnect::pipeline {
   using namespace mtconnect;

@@ -30,7 +30,7 @@
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "json_helper.hpp"
-#include "json_printer.hpp"
+#include "printer/json_printer.hpp"
 #include "observation/observation.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "utilities.hpp"

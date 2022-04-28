@@ -19,7 +19,7 @@
 
 #include "configuration/config_options.hpp"
 #include "entity/xml_parser.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 namespace asio = boost::asio;
 using namespace std;

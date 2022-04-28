@@ -24,7 +24,7 @@
 #include "agent.hpp"
 #include "entity/entity.hpp"
 #include "pipeline/mtconnect_xml_transform.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;

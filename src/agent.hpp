@@ -33,7 +33,7 @@
 #include "device_model/device.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
-#include "printer.hpp"
+#include "printer/printer.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "sink/rest_sink/circular_buffer.hpp"
 #include "sink/rest_sink/rest_service.hpp"
@@ -42,7 +42,7 @@
 #include "source/adapter/adapter.hpp"
 #include "source/loopback_source.hpp"
 #include "source/source.hpp"
-#include "xml_parser.hpp"
+#include "parser/xml_parser.hpp"
 
 namespace mtconnect {
   namespace source::adapter {

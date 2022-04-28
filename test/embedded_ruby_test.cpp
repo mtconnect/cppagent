@@ -48,7 +48,7 @@
 #include "ruby/ruby_vm.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "source/adapter/shdr/shdr_adapter.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 #ifdef _WIN32
 #include <direct.h>

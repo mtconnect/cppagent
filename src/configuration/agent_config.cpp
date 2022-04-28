@@ -57,7 +57,7 @@
 #include "source/adapter/mqtt/mqtt_adapter.hpp"
 #include "source/adapter/shdr/shdr_adapter.hpp"
 #include "version.h"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 #ifdef WITH_PYTHON
 #include "python/embedded.hpp"

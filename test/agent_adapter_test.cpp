@@ -35,7 +35,7 @@
 #include "source/adapter/agent_adapter/agent_adapter.hpp"
 #include "source/adapter/agent_adapter/url_parser.hpp"
 #include "test_utilities.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 // Registers the fixture into the 'registry'
 using namespace std;

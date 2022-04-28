@@ -19,7 +19,7 @@
 
 #include <sstream>
 
-#include "printer.hpp"
+#include "printer/printer.hpp"
 
 using namespace std;
 

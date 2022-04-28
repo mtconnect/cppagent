@@ -26,8 +26,8 @@
 #include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
+#include "parser/xml_parser.hpp"
+#include "printer/xml_printer.hpp"
 
 using namespace std;
 using namespace mtconnect;

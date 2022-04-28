@@ -16,7 +16,7 @@
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
 #include "source/adapter/adapter.hpp"
-#include "xml_printer_helper.hpp"
+#include "printer/xml_printer_helper.hpp"
 
 using namespace std;
 using namespace mtconnect;

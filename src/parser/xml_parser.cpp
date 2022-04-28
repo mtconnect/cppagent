@@ -27,7 +27,7 @@
 #include "device_model/composition.hpp"
 #include "entity/xml_parser.hpp"
 #include "logging.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 #if _MSC_VER >= 1900
 #define gets gets_s

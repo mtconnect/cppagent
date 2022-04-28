@@ -42,13 +42,13 @@
 #include "device_model/device.hpp"
 #include "entity/xml_parser.hpp"
 #include "json_helper.hpp"
-#include "json_printer.hpp"
+#include "printer/json_printer.hpp"
 #include "observation/observation.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
+#include "parser/xml_parser.hpp"
+#include "printer/xml_printer.hpp"
 
 using json = nlohmann::json;
 using namespace std;

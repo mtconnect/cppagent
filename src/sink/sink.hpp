@@ -28,7 +28,7 @@
 #include "asset/asset_storage.hpp"
 #include "device_model/device.hpp"
 #include "observation/observation.hpp"
-#include "printer.hpp"
+#include "printer/printer.hpp"
 
 namespace mtconnect {
   class Printer;

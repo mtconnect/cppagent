@@ -20,7 +20,7 @@
 #include <unordered_set>
 
 #include "asset/asset.hpp"
-#include "printer.hpp"
+#include "printer/printer.hpp"
 #include "utilities.hpp"
 
 extern "C"

@@ -22,7 +22,7 @@
 #include <libxml/xmlwriter.h>
 
 #include "logging.hpp"
-#include "xml_printer_helper.hpp"
+#include "printer/xml_printer_helper.hpp"
 
 using namespace std;
 

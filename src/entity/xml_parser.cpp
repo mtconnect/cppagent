@@ -22,7 +22,7 @@
 #include <libxml/xpathInternals.h>
 
 #include "logging.hpp"
-#include "xml_helper.hpp"
+#include "printer/xml_helper.hpp"
 
 using namespace std;
 

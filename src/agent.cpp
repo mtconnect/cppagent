@@ -34,12 +34,12 @@
 #include "configuration/config_options.hpp"
 #include "device_model/agent_device.hpp"
 #include "entity/xml_parser.hpp"
-#include "json_printer.hpp"
+#include "printer/json_printer.hpp"
 #include "logging.hpp"
 #include "observation/observation.hpp"
 #include "sink/rest_sink/file_cache.hpp"
 #include "sink/rest_sink/session.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 using namespace std;
 

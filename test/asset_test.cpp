@@ -17,7 +17,7 @@
 #include "entity/xml_printer.hpp"
 #include "json_helper.hpp"
 #include "source/adapter/adapter.hpp"
-#include "xml_printer_helper.hpp"
+#include "printer/xml_printer_helper.hpp"
 
 using json = nlohmann::json;
 using namespace std;

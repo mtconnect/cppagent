@@ -25,8 +25,8 @@
 
 #include "device_model/reference.hpp"
 #include "test_utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
+#include "parser/xml_parser.hpp"
+#include "printer/xml_printer.hpp"
 
 using namespace std;
 using namespace std::literals;

@@ -32,7 +32,7 @@
 #include "device_model/reference.hpp"
 #include "source/adapter/adapter.hpp"
 #include "test_utilities.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 #if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;
