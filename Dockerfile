@@ -13,17 +13,21 @@ FROM ubuntu:21.04 AS compile
 # note: Dockerfiles run as root by default, so don't need sudo
 # this follows recommended Docker practices -
 # see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
+RUN sudo apt update \
+  && sudo apt install python3-pip -y
+
+
 ENV PATH=$HOME/venv3.9/bin:$PATH
 ENV CONAN_PROFILE=conan/profiles/gcc
 ENV WITH_RUBY=True
-# RUN pip install conan \
-#   && conan export conan/mqtt_cpp \
-#   && conan export conan/mruby \
-#   && conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
-RUN pip install conan
-RUN conan export conan/mqtt_cpp
-RUN conan export conan/mruby
-RUN conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
+RUN pip install conan \
+  && conan export conan/mqtt_cpp \
+  && conan export conan/mruby \
+  && conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
+# RUN pip install conan
+# RUN conan export conan/mqtt_cpp
+# RUN conan export conan/mruby
+# RUN conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
 
 # compile source (~20mins - 3hrs for qemu)
 RUN conan build . -bf build
