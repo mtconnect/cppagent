@@ -398,6 +398,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void parseMimeHeader()
     {
+      using namespace boost;
+      namespace algo = boost::algorithm;
+
       auto start = static_cast<const char *>(m_chunk.data().data());
       boost::string_view view(start, m_chunk.data().size());
 
@@ -420,7 +423,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       using string_view_range = boost::iterator_range<boost::string_view::iterator>;
       auto svi = string_view_range(view.begin() + bp, view.end());
-      auto lp = boost::ifind_first(svi, string_view_range(boost::string_view("content-length:")));
+      auto lp = boost::ifind_first(svi, boost::string_view("content-length:"));
       
       if (lp.empty())
       {
@@ -430,11 +433,17 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
       
       boost::string_view length(lp.end());
-      auto ls = length.find_first_not_of(" ");
-      length.remove_prefix(ls);
-      auto size = length.find_first_not_of("0123456789");
-      m_chunkLength = boost::lexical_cast<size_t>(length.substr(0, size));
-
+      auto digits = length.substr(0, length.find("\n"));
+      auto finder = boost::token_finder(algo::is_digit(), algo::token_compress_on);
+      auto rng = finder(digits.begin(), digits.end());
+      if (rng.empty())
+      {
+        LOG(error) << "Cannot find the length in chunk";
+        derived().lowestLayer().close();
+        return failed(source::make_error_code(source::ErrorCode::RESTART_STREAM), "Framing error in streaming data: no content length");
+      }
+      
+      m_chunkLength = boost::lexical_cast<size_t>(rng);
       m_hasHeader = true;
       m_chunk.consume(ep);
     }

@@ -132,7 +132,7 @@ namespace mtconnect::ruby {
     ~RubyTransform()
     {
       std::lock_guard guard(RubyVM::rubyVM());
-      if (&RubyVM::rubyVM())
+      if (RubyVM::hasVM())
       {
         auto mrb = RubyVM::rubyVM().state();
 
