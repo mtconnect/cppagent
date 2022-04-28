@@ -1,20 +1,31 @@
 # MTConnect C++ Agent Docker image build instructions
 
+# run this with
+#   docker buildx build --secret id=access_token,src=ACCESS_TOKEN .
+# ACCESS_TOKEN is a file containing a GitHub personal access token,
+# so can clone the private mtconnect cppagent_dev repo.
+# keep it out of the github repo with .gitignore.
+# see below at 
+#   git clone https://$(cat /run/secrets/access_token)@github.com...
+
 # base image - ubuntu has linux/arm/v7, linux/amd64, etc
-FROM ubuntu:21.04 AS compile
+# FROM ubuntu:21.04 AS compile
+FROM ubuntu:22.04 AS compile
 
 # tzinfo hangs without this
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=USA/Chicago
 
 # update os and add dependencies
-# note: Dockerfiles run as root by default, so don't need sudo
 # this follows recommended Docker practices -
 # see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
-RUN apt update && apt install git python3-pip -y 
+# note: Dockerfiles run as root by default, so don't need sudo
+RUN apt update && apt install git cmake python3-pip ruby rake -y 
+RUN pip install conan
 
 # get latest source code
 #. can use `git checkout foo` to get a specific version here
+# see https://vsupalov.com/docker-buildkit-features/
 RUN --mount=type=secret,id=access_token \
   cd ~ \
   && git clone https://$(cat /run/secrets/access_token)@github.com/mtconnect/cppagent_dev.git agent \
@@ -23,17 +34,15 @@ RUN --mount=type=secret,id=access_token \
 ENV PATH=$HOME/venv3.9/bin:$PATH
 ENV CONAN_PROFILE=conan/profiles/gcc
 ENV WITH_RUBY=True
-RUN pip install conan \
+RUN cd ~/agent \
   && conan export conan/mqtt_cpp \
   && conan export conan/mruby \
   && conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
-# RUN pip install conan
-# RUN conan export conan/mqtt_cpp
-# RUN conan export conan/mruby
-# RUN conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
+
+RUN apt install libxml2 cppunit
 
 # compile source (~20mins - 3hrs for qemu)
-RUN conan build . -bf build
+RUN cd ~/agent && conan build . -bf build
 
 # # install agent executable
 # # RUN cp ~/agent/build/agent/agent /usr/local/bin
