@@ -6,7 +6,7 @@ FROM ubuntu:21.04 AS compile
 # get latest source code
 #. can use `git checkout foo` to get a specific version here
 RUN cd ~ \
-  && git clone https://github.com/mtconnect/cppagent_dev.git agent \
+  && git clone https://${ACCESS_TOKEN}@github.com/mtconnect/cppagent_dev.git agent \
   && cd agent
 
 # tzinfo hangs without this
