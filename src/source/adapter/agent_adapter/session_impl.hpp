@@ -431,11 +431,11 @@ namespace mtconnect::source::adapter::agent_adapter {
       
       boost::string_view length(lp.end());
       auto ls = length.find_first_not_of(" ");
-      auto es = length.find_first_of("\r\n");
-      string_view_range range { length.begin() + ls, length.begin() + es };
+      length.remove_prefix(ls);
+      auto size = length.find_first_not_of("0123456789");
+      m_chunkLength = boost::lexical_cast<size_t>(length.substr(0, size));
 
       m_hasHeader = true;
-      m_chunkLength = boost::lexical_cast<size_t>(range);
       m_chunk.consume(ep);
     }
 
@@ -447,8 +447,8 @@ namespace mtconnect::source::adapter::agent_adapter {
         if (!m_request)
         {
           derived().lowestLayer().close();
-          failed(source::make_error_code(source::ErrorCode::RETRY_REQUEST), "Framing error in streaming data: no content length");
-          return 0;
+          failed(source::make_error_code(source::ErrorCode::RETRY_REQUEST), "Stream body but no request");
+          return body.size();
         }
         
         {

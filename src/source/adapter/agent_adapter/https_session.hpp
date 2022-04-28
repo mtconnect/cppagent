@@ -69,9 +69,16 @@ namespace mtconnect::source::adapter::agent_adapter {
         LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "connect");
       }
+      
+      if (!m_request)
+      {
+        lowestLayer().close();
+        LOG(error) << "Connected and no reqiest";
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "connect");
+      }
 
       // Set a timeout on the operation
-      derived().lowestLayer().expires_after(m_timeout);
+      lowestLayer().expires_after(m_timeout);
 
       // Perform the SSL handshake
       m_stream.async_handshake(

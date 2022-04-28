@@ -55,6 +55,13 @@ namespace mtconnect::source::adapter::agent_adapter {
         LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "connect");
       }
+      
+      if (!m_request)
+      {
+        m_stream.close();
+        LOG(error) << "Connected and no reqiest";
+        return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "connect");
+      }
 
       if (m_handler && m_handler->m_connected)
         m_handler->m_connected(m_identity);
