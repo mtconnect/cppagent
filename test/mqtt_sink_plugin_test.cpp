@@ -47,7 +47,7 @@ using namespace mtconnect::configuration;
 using namespace mtconnect::sink;
 using namespace mtconnect::sink::mqtt_sink;
 namespace asio = boost::asio;
-using json = nlohmann::json;
+//using json = nlohmann::json;
 
 namespace mtconnect {
 
