@@ -3,12 +3,6 @@
 # base image - ubuntu has linux/arm/v7, linux/amd64, etc
 FROM ubuntu:21.04 AS compile
 
-# get latest source code
-#. can use `git checkout foo` to get a specific version here
-RUN cd ~ \
-  && git clone https://${ACCESS_TOKEN}@github.com/mtconnect/cppagent_dev.git agent \
-  && cd agent
-
 # tzinfo hangs without this
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=USA/Chicago
@@ -17,8 +11,14 @@ ENV TZ=USA/Chicago
 # note: Dockerfiles run as root by default, so don't need sudo
 # this follows recommended Docker practices -
 # see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
-RUN apt update && apt install python3-pip -y
+RUN apt update && apt install git python3-pip -y 
 
+# get latest source code
+#. can use `git checkout foo` to get a specific version here
+RUN --mount=type=secret,id=access_token \
+  cd ~ \
+  && git clone https://$(cat /run/secrets/access_token)@github.com/mtconnect/cppagent_dev.git agent \
+  && cd agent
 
 ENV PATH=$HOME/venv3.9/bin:$PATH
 ENV CONAN_PROFILE=conan/profiles/gcc
