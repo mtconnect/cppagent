@@ -92,7 +92,6 @@ target_include_directories(
     "${CONAN_INCLUDE_DIRS}"
     "${PROJECT_BINARY_DIR}/agent_lib"
     "${CMAKE_CURRENT_LIST_DIR}/../src"
-    "${googletest_SOURCE_DIR}/googletest/include"
     )
 set_property(TARGET agent_test_lib PROPERTY
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -117,8 +116,6 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
   target_link_libraries(${AGENT_TEST_NAME}_test agent_lib agent_test_lib CONAN_PKG::gtest)
-  target_include_directories(${AGENT_TEST_NAME}_test
-    PRIVATE "${googletest_SOURCE_DIR}/googletest/include")
 
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
