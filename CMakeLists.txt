@@ -109,6 +109,7 @@ install(DIRECTORY schemas/ DESTINATION "schemas")
 install(DIRECTORY simulator/ DESTINATION "simulator")
 install(DIRECTORY styles/ DESTINATION "styles")
 install(DIRECTORY tools/ DESTINATION "tools")
+install(DIRECTORY demo/ DESTINATION "demo")
 install(FILES simulator/agent.cfg DESTINATION "bin")
 
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
