@@ -19,12 +19,12 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
 #include "device_model/data_item/data_item.hpp"
+#include "source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::entity;
 using namespace mtconnect::device_model::data_item;
 

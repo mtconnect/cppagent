@@ -10,11 +10,11 @@
 #include <sstream>
 #include <string>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "device_model/composition.hpp"
 #include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;

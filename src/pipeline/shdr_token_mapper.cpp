@@ -87,28 +87,48 @@ namespace mtconnect {
     static entity::Requirements s_event {{"VALUE", false}};
     static entity::Requirements s_dataSet {{"VALUE", entity::DATA_SET, false}};
 
+    static inline size_t firtNonWsColon(const string &token)
+    {
+      auto len = token.size();
+      for (size_t i = 0; i < len; i++)
+      {
+        if (token[i] == ':')
+          return i;
+        else if (!isspace(token[i]))
+          return string::npos;
+      }
+
+      return string::npos;
+    }
+
     static inline std::string extractResetTrigger(const DataItemPtr dataItem, const string &token,
                                                   Properties &properties)
     {
       size_t pos;
       // Check for reset triggered
-      if ((dataItem->hasProperty("ResetTrigger") || dataItem->isTable() || dataItem->isDataSet()) &&
-          (pos = token.find(':')) != string::npos)
+      auto hasResetTriggered = dataItem->hasProperty("ResetTrigger");
+      if (hasResetTriggered || dataItem->isTable() || dataItem->isDataSet())
       {
         string trig, value;
-        if (!dataItem->isDataSet())
+        if (!dataItem->isDataSet() && (pos = token.find(':')) != string::npos)
         {
           trig = token.substr(pos + 1);
           value = token.substr(0, pos);
         }
-        else
+        else if (dataItem->isDataSet() && (pos = firtNonWsColon(token)) != string::npos)
         {
           auto ef = token.find_first_of(" \t", pos);
           trig = token.substr(1, ef - 1);
           if (ef != string::npos)
             value = token.substr(ef + 1);
         }
-        properties.insert_or_assign("resetTriggered", upcase(trig));
+        else
+        {
+          return token;
+        }
+
+        if (!trig.empty())
+          properties.insert_or_assign("resetTriggered", upcase(trig));
         return value;
       }
       else
@@ -250,7 +270,7 @@ namespace mtconnect {
         auto body = *token++;
 
         XmlParser parser;
-        res = parser.parse(Asset::getRoot(), body, "1.7", errors);
+        res = parser.parse(Asset::getRoot(), body, "2.0", errors);
         if (auto asset = dynamic_pointer_cast<Asset>(res))
         {
           asset->setAssetId(assetId);

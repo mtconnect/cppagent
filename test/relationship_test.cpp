@@ -9,16 +9,16 @@
 #include <sstream>
 #include <string>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "entity/json_printer.hpp"
 #include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace entity;
 using namespace device_model;
 
@@ -37,7 +37,7 @@ protected:
 
   void TearDown() override { m_agentTestHelper.reset(); }
 
-  adapter::Adapter *m_adapter {nullptr};
+  source::adapter::Adapter *m_adapter {nullptr};
   std::string m_agentId;
   ComponentPtr m_component {nullptr};
 

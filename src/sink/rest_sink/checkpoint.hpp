@@ -71,4 +71,3 @@ namespace mtconnect {
     }  // namespace rest_sink
   }    // namespace sink
 }  // namespace mtconnect
-

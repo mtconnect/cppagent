@@ -28,7 +28,7 @@
 #include <sstream>
 #include <thread>
 
-#include "adapter/shdr/connector.hpp"
+#include "source/adapter/shdr/connector.hpp"
 
 namespace date {};
 using namespace date;
@@ -36,8 +36,8 @@ using namespace date;
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
-using namespace mtconnect::adapter::shdr;
+using namespace mtconnect::source::adapter;
+using namespace mtconnect::source::adapter::shdr;
 
 namespace asio = boost::asio;
 using tcp = boost::asio::ip::tcp;

@@ -23,11 +23,11 @@
 #include <filesystem>
 #include <string>
 
-#include "adapter/shdr/shdr_adapter.hpp"
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
 #include "sink/rest_sink/rest_service.hpp"
+#include "source/adapter/shdr/shdr_adapter.hpp"
 #include "xml_printer.hpp"
 
 #ifdef _WIN32
@@ -96,7 +96,7 @@ namespace {
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto source = agent->getSources().back();
-    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
+    const auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
 
     auto deviceName = GetOption<string>(adapter->getOptions(), configuration::Device);
     ASSERT_TRUE(deviceName);
@@ -130,7 +130,7 @@ namespace {
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto source = agent->getSources().back();
-    const auto adapter = dynamic_pointer_cast<adapter::shdr::ShdrAdapter>(source);
+    const auto adapter = dynamic_pointer_cast<source::adapter::shdr::ShdrAdapter>(source);
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
@@ -313,7 +313,7 @@ namespace {
 
     const auto agent = m_config->getAgent();
     const auto source = agent->getSources().back();
-    const auto adapter = dynamic_pointer_cast<adapter::shdr::ShdrAdapter>(source);
+    const auto adapter = dynamic_pointer_cast<source::adapter::shdr::ShdrAdapter>(source);
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }
@@ -327,7 +327,7 @@ namespace {
 
     const auto agent = m_config->getAgent();
     const auto source = agent->getSources().back();
-    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
+    const auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
 
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
@@ -345,7 +345,7 @@ namespace {
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto source = agent->getSources().back();
-    const auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
+    const auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
 
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
@@ -674,7 +674,8 @@ MaxCachedFileSize = 2000
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();
@@ -694,7 +695,8 @@ MaxCachedFileSize = 2k
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();
@@ -714,7 +716,8 @@ MaxCachedFileSize = 2K
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();
@@ -734,7 +737,8 @@ MaxCachedFileSize = 2m
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();
@@ -754,7 +758,8 @@ MaxCachedFileSize = 2g
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
 
     ASSERT_TRUE(agent);
-    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
     ASSERT_TRUE(rest != nullptr);
 
     auto cache = rest->getFileCache();

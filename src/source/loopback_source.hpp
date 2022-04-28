@@ -21,10 +21,10 @@
 #include "observation/observation.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_context.hpp"
-#include "source.hpp"
+#include "source/source.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect {
+namespace mtconnect::source {
   class LoopbackPipeline : public pipeline::Pipeline
   {
   public:
@@ -46,6 +46,8 @@ namespace mtconnect {
     {
       m_pipeline.build(options);
     }
+
+    bool isLoopback() override { return true; }
 
     bool start() override
     {
@@ -82,4 +84,4 @@ namespace mtconnect {
   protected:
     LoopbackPipeline m_pipeline;
   };
-}  // namespace mtconnect
+}  // namespace mtconnect::source

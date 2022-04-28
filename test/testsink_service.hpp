@@ -42,8 +42,8 @@ namespace mtconnect {
     bool publish(asset::AssetPtr asset) override { return false; }
 
     static sink::SinkPtr create(const std::string &name, boost::asio::io_context &io,
-                          sink::SinkContractPtr &&contract, const ConfigOptions &options,
-                          const boost::property_tree::ptree &block)
+                                sink::SinkContractPtr &&contract, const ConfigOptions &options,
+                                const boost::property_tree::ptree &block)
     {
       return std::make_shared<sink_plugin_test>(name, io, std::move(contract), options);
     }

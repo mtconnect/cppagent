@@ -92,7 +92,6 @@ target_include_directories(
     "${CONAN_INCLUDE_DIRS}"
     "${PROJECT_BINARY_DIR}/agent_lib"
     "${CMAKE_CURRENT_LIST_DIR}/../src"
-    "${googletest_SOURCE_DIR}/googletest/include"
     )
 set_property(TARGET agent_test_lib PROPERTY
   MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -117,8 +116,6 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
     MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
   target_link_libraries(${AGENT_TEST_NAME}_test agent_lib agent_test_lib CONAN_PKG::gtest)
-  target_include_directories(${AGENT_TEST_NAME}_test
-    PRIVATE "${googletest_SOURCE_DIR}/googletest/include")
 
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
@@ -186,6 +183,8 @@ add_agent_test(xml_printer TRUE xml)
 add_agent_test(adapter FALSE adapter)
 add_agent_test(connector FALSE adapter)
 add_agent_test(mqtt_adapter FALSE adapter)
+add_agent_test(url_parser FALSE adapter)
+add_agent_test(agent_adapter FALSE adapter)
 
 add_agent_test(shdr_tokenizer FALSE pipeline)
 add_agent_test(timestamp_extractor FALSE pipeline)
@@ -195,6 +194,8 @@ add_agent_test(pipeline_deliver TRUE pipeline)
 add_agent_test(topic_mapping TRUE pipeline)
 add_agent_test(period_filter TRUE pipeline)
 add_agent_test(pipeline_edit FALSE pipeline)
+add_agent_test(mtconnect_xml_transform FALSE pipeline)
+add_agent_test(response_document FALSE pipeline)
 
 add_agent_test(agent TRUE core)
 add_agent_test(asset_buffer TRUE core)

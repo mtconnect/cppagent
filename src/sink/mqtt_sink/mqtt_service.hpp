@@ -18,23 +18,13 @@
 #pragma once
 
 #include "boost/asio/io_context.hpp"
-
 #include <boost/dll/alias.hpp>
 
 #include "configuration/agent_config.hpp"
-
 #include "sink/sink.hpp"
-
 #include "utilities.hpp"
 
-#include "xml_printer_helper.hpp"
-
-#include "printer.hpp"
-
-#include "entity/json_printer.hpp"
-
 using namespace std;
-using namespace mtconnect::entity;
 
 namespace mtconnect {
   class XmlPrinter;
@@ -62,16 +52,25 @@ namespace mtconnect {
 
         static void registerFactory(SinkFactory &factory);
 
+        void printjSonEntity();
+
+        // Get the printer for a type
+        const std::string acceptFormat(const std::string &accepts) const;
+
+        const Printer *printerForAccepts(const std::string &accepts) const;
+
+        // Output an XML Error
+        std::string printError(const Printer *printer, const std::string &errorCode,
+                               const std::string &text) const;
+
       protected:
         boost::asio::io_context &m_context;
 
         ConfigOptions m_options;
-
-        std::unique_ptr<JsonPrinter> m_jsonPrinter;
       };
+      //
+      //      BOOST_DLL_ALIAS(MqttService::register_factory, initialize_plugin)
+      //
     }  // namespace mqtt_sink
   }    // namespace sink
 }  // namespace mtconnect
-
-
-

@@ -60,6 +60,7 @@ namespace mtconnect {
       using super = std::nullptr_t;
 
       Entity() {}
+      Entity(const std::string &name) : m_name(name) {}
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
       {}
       Entity(const Entity &entity) = default;

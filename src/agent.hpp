@@ -27,25 +27,25 @@
 #include <unordered_map>
 #include <vector>
 
-#include "adapter/adapter.hpp"
 #include "asset/asset_buffer.hpp"
 #include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
-#include "loopback_source.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "sink/rest_sink/circular_buffer.hpp"
-#include "sink/rest_sink/server.hpp"
 #include "sink/rest_sink/rest_service.hpp"
+#include "sink/rest_sink/server.hpp"
 #include "sink/sink.hpp"
-#include "source.hpp"
+#include "source/adapter/adapter.hpp"
+#include "source/loopback_source.hpp"
+#include "source/source.hpp"
 #include "xml_parser.hpp"
 
 namespace mtconnect {
-  namespace adapter {
+  namespace source::adapter {
     class Adapter;
   }
 
@@ -90,14 +90,14 @@ namespace mtconnect {
     const auto &getXmlParser() const { return m_xmlParser; }
 
     // Add an adapter to the agent
-    void addSource(SourcePtr adapter, bool start = false);
+    void addSource(source::SourcePtr adapter, bool start = false);
     void addSink(sink::SinkPtr sink, bool start = false);
 
     // Source and Sink
-    SourcePtr findSource(const std::string &name) const
+    source::SourcePtr findSource(const std::string &name) const
     {
       for (auto &s : m_sources)
-        if (s->getName() == name)
+        if (s->getIdentity() == name)
           return s;
 
       return nullptr;
@@ -174,6 +174,9 @@ namespace mtconnect {
                          asset::AssetList &list);
     void notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset);
 
+    // Adapter feedback
+    void sourceFailed(const std::string &identity);
+
     // For testing
     auto getAgentDevice() { return m_agentDevice; }
 
@@ -218,7 +221,7 @@ namespace mtconnect {
     boost::asio::io_context &m_context;
     boost::asio::io_context::strand m_strand;
 
-    std::shared_ptr<LoopbackSource> m_loopback;
+    std::shared_ptr<source::LoopbackSource> m_loopback;
     std::unordered_map<std::string, observation::ObservationPtr> m_latest;
 
     // Asset Management
@@ -229,7 +232,7 @@ namespace mtconnect {
     bool m_observationsInitialized {false};
 
     // Sources and Sinks
-    SourceList m_sources;
+    source::SourceList m_sources;
     sink::SinkList m_sinks;
 
     // Pipeline
@@ -292,6 +295,8 @@ namespace mtconnect {
                               bool autoAvailable) override;
     void deliverCommand(entity::EntityPtr) override;
 
+    void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
+
   protected:
     Agent *m_agent;
   };
@@ -327,7 +332,7 @@ namespace mtconnect {
     {
       return m_agent->getDataItemById(id);
     }
-    void addSource(std::shared_ptr<Source> source) override { m_agent->addSource(source); }
+    void addSource(source::SourcePtr source) override { m_agent->addSource(source); }
 
     // Asset information
     asset::AssetStorage *getAssetStorage() override { return m_agent->getAssetStorage(); }
@@ -350,5 +355,3 @@ namespace mtconnect {
     return std::make_unique<AgentSinkContract>(this);
   }
 }  // namespace mtconnect
-
-

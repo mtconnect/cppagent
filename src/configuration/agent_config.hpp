@@ -27,14 +27,14 @@
 #include <string>
 #include <thread>
 
-#include "adapter/adapter.hpp"
-#include "adapter/shdr/shdr_pipeline.hpp"
 #include "agent.hpp"
 #include "parser.hpp"
-#include "sink/rest_sink/file_cache.hpp"
 #include "service.hpp"
+#include "sink/rest_sink/file_cache.hpp"
 #include "sink/sink.hpp"
-#include "source.hpp"
+#include "source/adapter/adapter.hpp"
+#include "source/adapter/shdr/shdr_pipeline.hpp"
+#include "source/source.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect {
@@ -130,7 +130,7 @@ namespace mtconnect {
       std::list<std::thread> m_workers;
 
       pipeline::PipelineContextPtr m_pipelineContext;
-      std::unique_ptr<adapter::Handler> m_adapterHandler;
+      std::unique_ptr<source::adapter::Handler> m_adapterHandler;
       boost::shared_ptr<text_sink> m_sink;
       std::string m_version;
       bool m_monitorFiles = false;
@@ -153,7 +153,7 @@ namespace mtconnect {
 
       // Factories
       sink::SinkFactory m_sinkFactory;
-      SourceFactory m_sourceFactory;
+      source::SourceFactory m_sourceFactory;
       std::map<std::string, InitializationFunction> m_initializers;
 
       int m_workerThreadCount {1};
@@ -167,8 +167,6 @@ namespace mtconnect {
 #ifdef WITH_PYTHON
       std::unique_ptr<python::Embedded> m_python;
 #endif
-
-
     };
   }  // namespace configuration
 }  // namespace mtconnect
