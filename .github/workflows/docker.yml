@@ -18,7 +18,11 @@ env:
   # has eg "node_platforms": "linux/amd64,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6"
   # but the platforms must also be included in the os image chosen -
   # eg the ubuntu image doesn't include linux/arm/v6.
-  platforms: linux/amd64,linux/arm64,linux/arm/v7
+  
+  # platforms: linux/amd64,linux/arm64,linux/arm/v7
+
+  #. for testing
+  platforms: linux/amd64
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
