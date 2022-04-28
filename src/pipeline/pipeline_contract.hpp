@@ -63,6 +63,7 @@ namespace mtconnect {
       virtual void deliverCommand(entity::EntityPtr) = 0;
       virtual void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                                         bool autoAvailable) = 0;
+      virtual void sourceFailed(const std::string &identity) = 0;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

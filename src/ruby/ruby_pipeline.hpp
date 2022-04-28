@@ -45,7 +45,7 @@ namespace mtconnect::ruby {
             const char *name;
             TransformPtr transform;
             mrb_value trans;
-            
+
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zo", &name, &trans);
             transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
@@ -56,7 +56,7 @@ namespace mtconnect::ruby {
             else
             {
               LOG(error) << "Cannot splice " << transform->getName()
-                << " before transform: " << name;
+                         << " before transform: " << name;
             }
 
             return self;
@@ -68,7 +68,7 @@ namespace mtconnect::ruby {
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
             mrb_value trans;
-            
+
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zo", &name, &trans);
             auto transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
@@ -79,7 +79,7 @@ namespace mtconnect::ruby {
             else
             {
               LOG(error) << "Cannot splice " << transform->getName()
-                << " after transform: " << name;
+                         << " after transform: " << name;
             }
 
             return self;
@@ -91,7 +91,7 @@ namespace mtconnect::ruby {
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
             mrb_value trans;
-            
+
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zo", &name, &trans);
             auto transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
@@ -102,7 +102,7 @@ namespace mtconnect::ruby {
             else
             {
               LOG(error) << "Cannot add " << transform->getName()
-                << " first after transform: " << name;
+                         << " first after transform: " << name;
             }
 
             return self;
@@ -114,7 +114,7 @@ namespace mtconnect::ruby {
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
             mrb_value trans;
-            
+
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zo", &name, &trans);
             auto transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
@@ -125,7 +125,7 @@ namespace mtconnect::ruby {
             else
             {
               LOG(error) << "Cannot add " << transform->getName()
-                << " last after transform: " << name;
+                         << " last after transform: " << name;
             }
 
             return self;
@@ -152,7 +152,7 @@ namespace mtconnect::ruby {
           [](mrb_state *mrb, mrb_value self) {
             const char *name;
             mrb_value trans;
-            
+
             auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
             mrb_get_args(mrb, "zo", &name, &trans);
             auto transform = MRubySharedPtr<Transform>::unwrap(mrb, trans);
@@ -162,8 +162,7 @@ namespace mtconnect::ruby {
             }
             else
             {
-              LOG(error) << "Cannot replace " << name
-                << " with: " << transform->getName();
+              LOG(error) << "Cannot replace " << name << " with: " << transform->getName();
             }
 
             return self;

@@ -32,202 +32,195 @@
 #include "logging.hpp"
 #include "session_impl.hpp"
 
-namespace mtconnect {
-  namespace sink {
-    namespace rest_sink {
-      namespace beast = boost::beast;  // from <boost/beast.hpp>
-      namespace http = beast::http;    // from <boost/beast/http.hpp>
-      namespace net = boost::asio;     // from <boost/asio.hpp>
-      namespace asio = boost::asio;
-      namespace ip = boost::asio::ip;
-      using tcp = boost::asio::ip::tcp;
-      namespace algo = boost::algorithm;
-      namespace ssl = boost::asio::ssl;
+namespace mtconnect::sink::rest_sink {
+  namespace beast = boost::beast;  // from <boost/beast.hpp>
+  namespace http = beast::http;    // from <boost/beast/http.hpp>
+  namespace net = boost::asio;     // from <boost/asio.hpp>
+  namespace asio = boost::asio;
+  namespace ip = boost::asio::ip;
+  using tcp = boost::asio::ip::tcp;
+  namespace algo = boost::algorithm;
+  namespace ssl = boost::asio::ssl;
 
-      using namespace std;
-      using boost::placeholders::_1;
-      using boost::placeholders::_2;
+  using namespace std;
+  using boost::placeholders::_1;
+  using boost::placeholders::_2;
 
-      void Server::loadTlsCertificate()
+  void Server::loadTlsCertificate()
+  {
+    if (HasOption(m_options, configuration::TlsCertificateChain) &&
+        HasOption(m_options, configuration::TlsPrivateKey) &&
+        HasOption(m_options, configuration::TlsDHKey))
+    {
+      LOG(info) << "Initializing TLS support";
+      if (HasOption(m_options, configuration::TlsCertificatePassword))
       {
-        if (HasOption(m_options, configuration::TlsCertificateChain) &&
-            HasOption(m_options, configuration::TlsPrivateKey) &&
-            HasOption(m_options, configuration::TlsDHKey))
-        {
-          LOG(info) << "Initializing TLS support";
-          if (HasOption(m_options, configuration::TlsCertificatePassword))
-          {
-            m_sslContext.set_password_callback(
-                [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
-                  return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
-                });
-          }
-
-          m_sslContext.set_options(ssl::context::default_workarounds |
-                                   asio::ssl::context::no_sslv2 |
-                                   asio::ssl::context::single_dh_use);
-          m_sslContext.use_certificate_chain_file(
-              *GetOption<string>(m_options, configuration::TlsCertificateChain));
-          m_sslContext.use_private_key_file(
-              *GetOption<string>(m_options, configuration::TlsPrivateKey),
-              asio::ssl::context::file_format::pem);
-          m_sslContext.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
-
-          m_tlsEnabled = true;
-
-          m_tlsOnly = IsOptionSet(m_options, configuration::TlsOnly);
-
-          if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
-          {
-            LOG(info) << "Will only accept client connections with valid certificates";
-
-            m_sslContext.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
-            if (HasOption(m_options, configuration::TlsClientCAs))
-            {
-              LOG(info) << "Adding Client Certificates.";
-              m_sslContext.load_verify_file(
-                  *GetOption<string>(m_options, configuration::TlsClientCAs));
-            }
-          }
-        }
+        m_sslContext.set_password_callback(
+            [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
+              return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
+            });
       }
 
-      void Server::start()
+      m_sslContext.set_options(ssl::context::default_workarounds | asio::ssl::context::no_sslv2 |
+                               asio::ssl::context::single_dh_use);
+      m_sslContext.use_certificate_chain_file(
+          *GetOption<string>(m_options, configuration::TlsCertificateChain));
+      m_sslContext.use_private_key_file(*GetOption<string>(m_options, configuration::TlsPrivateKey),
+                                        asio::ssl::context::file_format::pem);
+      m_sslContext.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
+
+      m_tlsEnabled = true;
+
+      m_tlsOnly = IsOptionSet(m_options, configuration::TlsOnly);
+
+      if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
       {
-        try
+        LOG(info) << "Will only accept client connections with valid certificates";
+
+        m_sslContext.set_verify_mode(ssl::verify_peer | ssl::verify_fail_if_no_peer_cert);
+        if (HasOption(m_options, configuration::TlsClientCAs))
         {
-          m_run = true;
-          listen();
-        }
-        catch (exception &e)
-        {
-          LOG(fatal) << "Cannot start server: " << e.what();
-          std::exit(1);
+          LOG(info) << "Adding Client Certificates.";
+          m_sslContext.load_verify_file(*GetOption<string>(m_options, configuration::TlsClientCAs));
         }
       }
+    }
+  }
 
-      // Listen for an HTTP server connection
-      void Server::listen()
-      {
-        NAMED_SCOPE("Server::listen");
+  void Server::start()
+  {
+    try
+    {
+      m_run = true;
+      listen();
+    }
+    catch (exception &e)
+    {
+      LOG(fatal) << "Cannot start server: " << e.what();
+      std::exit(1);
+    }
+  }
 
-        beast::error_code ec;
+  // Listen for an HTTP server connection
+  void Server::listen()
+  {
+    NAMED_SCOPE("Server::listen");
 
-        // Blocking call to listen for a connection
-        tcp::endpoint ep(m_address, m_port);
-        m_acceptor.open(ep.protocol(), ec);
-        if (ec)
-        {
-          fail(ec, "Cannot open server socket");
-          return;
-        }
-        m_acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
-        if (ec)
-        {
-          fail(ec, "Cannot set reuse address");
-          return;
-        }
-        m_acceptor.bind(ep, ec);
-        if (ec)
-        {
-          fail(ec, "Cannot bind to server address");
-          return;
-        }
-        if (m_port == 0)
-        {
-          m_port = m_acceptor.local_endpoint().port();
-        }
+    beast::error_code ec;
 
-        m_acceptor.listen(net::socket_base::max_listen_connections, ec);
-        if (ec)
-        {
-          fail(ec, "Cannot set listen queue length");
-          return;
-        }
+    // Blocking call to listen for a connection
+    tcp::endpoint ep(m_address, m_port);
+    m_acceptor.open(ep.protocol(), ec);
+    if (ec)
+    {
+      fail(ec, "Cannot open server socket");
+      return;
+    }
+    m_acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
+    if (ec)
+    {
+      fail(ec, "Cannot set reuse address");
+      return;
+    }
+    m_acceptor.bind(ep, ec);
+    if (ec)
+    {
+      fail(ec, "Cannot bind to server address");
+      return;
+    }
+    if (m_port == 0)
+    {
+      m_port = m_acceptor.local_endpoint().port();
+    }
 
-        m_listening = true;
-        m_acceptor.async_accept(net::make_strand(m_context),
-                                beast::bind_front_handler(&Server::accept, this));
-      }
+    m_acceptor.listen(net::socket_base::max_listen_connections, ec);
+    if (ec)
+    {
+      fail(ec, "Cannot set listen queue length");
+      return;
+    }
 
-      bool Server::allowPutFrom(const std::string &host)
-      {
-        NAMED_SCOPE("Server::allowPutFrom");
+    m_listening = true;
+    m_acceptor.async_accept(net::make_strand(m_context),
+                            beast::bind_front_handler(&Server::accept, this));
+  }
 
-        // Resolve the host to an ip address to verify remote addr
-        beast::error_code ec;
-        ip::tcp::resolver resolve(m_context);
-        auto results = resolve.resolve(host, "0", ec);
-        if (ec)
-        {
-          LOG(error) << "Cannot resolve address: " << host;
-          LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
-          return false;
-        }
+  bool Server::allowPutFrom(const std::string &host)
+  {
+    NAMED_SCOPE("Server::allowPutFrom");
 
-        // Add the results to the set of allowed hosts
-        for (auto &addr : results)
-        {
-          m_allowPutsFrom.insert(addr.endpoint().address());
-        }
-        m_allowPuts = true;
+    // Resolve the host to an ip address to verify remote addr
+    beast::error_code ec;
+    ip::tcp::resolver resolve(m_context);
+    auto results = resolve.resolve(host, "0", ec);
+    if (ec)
+    {
+      LOG(error) << "Cannot resolve address: " << host;
+      LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
+      return false;
+    }
 
+    // Add the results to the set of allowed hosts
+    for (auto &addr : results)
+    {
+      m_allowPutsFrom.insert(addr.endpoint().address());
+    }
+    m_allowPuts = true;
+
+    return true;
+  }
+
+  void Server::accept(beast::error_code ec, tcp::socket socket)
+  {
+    NAMED_SCOPE("Server::accept");
+
+    if (ec)
+    {
+      LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
+
+      fail(ec, "Accept failed");
+    }
+    else
+    {
+      auto dispatcher = [this](SessionPtr session, RequestPtr request) {
+        if (m_lastSession)
+          m_lastSession(session);
+        dispatch(session, request);
         return true;
-      }
-
-      void Server::accept(beast::error_code ec, tcp::socket socket)
+      };
+      if (m_tlsEnabled)
       {
-        NAMED_SCOPE("Server::accept");
+        auto dectector =
+            make_shared<TlsDector>(move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
+                                   m_allowPutsFrom, m_fields, dispatcher, m_errorFunction);
 
-        if (ec)
-        {
-          LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
-
-          fail(ec, "Accept failed");
-        }
-        else
-        {
-          auto dispatcher = [this](SessionPtr session, RequestPtr request) {
-            dispatch(session, request);
-            return true;
-          };
-          if (m_tlsEnabled)
-          {
-            auto dectector =
-                make_shared<TlsDector>(move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
-                                       m_allowPutsFrom, m_fields, dispatcher, m_errorFunction);
-
-            dectector->run();
-          }
-          else
-          {
-            boost::beast::flat_buffer buffer;
-            boost::beast::tcp_stream stream(move(socket));
-            auto session = make_shared<HttpSession>(move(stream), move(buffer), m_fields,
-                                                    dispatcher, m_errorFunction);
-
-            if (!m_allowPutsFrom.empty())
-              session->allowPutsFrom(m_allowPutsFrom);
-            else if (m_allowPuts)
-              session->allowPuts();
-
-            session->run();
-          }
-          m_acceptor.async_accept(net::make_strand(m_context),
-                                  beast::bind_front_handler(&Server::accept, this));
-        }
+        dectector->run();
       }
-
-      //------------------------------------------------------------------------------
-
-      // Report a failure
-      void Server::fail(beast::error_code ec, char const *what)
+      else
       {
-        LOG(error) << " error: " << ec.message();
+        boost::beast::flat_buffer buffer;
+        boost::beast::tcp_stream stream(move(socket));
+        auto session = make_shared<HttpSession>(move(stream), move(buffer), m_fields, dispatcher,
+                                                m_errorFunction);
+
+        if (!m_allowPutsFrom.empty())
+          session->allowPutsFrom(m_allowPutsFrom);
+        else if (m_allowPuts)
+          session->allowPuts();
+
+        session->run();
       }
+      m_acceptor.async_accept(net::make_strand(m_context),
+                              beast::bind_front_handler(&Server::accept, this));
+    }
+  }
 
-    }  // namespace rest_sink
-  }    // namespace sink
-}  // namespace mtconnect
+  //------------------------------------------------------------------------------
 
+  // Report a failure
+  void Server::fail(beast::error_code ec, char const *what)
+  {
+    LOG(error) << " error: " << ec.message();
+  }
 
+}  // namespace mtconnect::sink::rest_sink

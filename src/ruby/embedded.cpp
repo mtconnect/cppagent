@@ -132,7 +132,6 @@ namespace mtconnect::ruby {
           {
             LOG(fatal) << "Failed to load module: " << mod << ": " << ex.what();
             exit(1);
-
           }
           catch (...)
           {

@@ -45,7 +45,6 @@ using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 using namespace mtconnect::sink::rest_sink;
 
-
 class JsonPrinterStreamTest : public testing::Test
 {
 protected:

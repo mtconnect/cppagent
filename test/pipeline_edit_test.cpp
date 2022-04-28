@@ -21,7 +21,6 @@
 
 #include <chrono>
 
-#include "adapter/adapter.hpp"
 #include "agent_test_helper.hpp"
 #include "observation/observation.hpp"
 #include "pipeline/deliver.hpp"
@@ -29,9 +28,10 @@
 #include "pipeline/duplicate_filter.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/shdr_token_mapper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;

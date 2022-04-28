@@ -9,16 +9,16 @@
 #include <sstream>
 #include <string>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace device_model;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace entity;
 
 class ReferencesTest : public testing::Test

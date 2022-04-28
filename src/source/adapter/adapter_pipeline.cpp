@@ -15,9 +15,8 @@
 //    limitations under the License.
 //
 
-#include "adapter_pipeline.hpp"
+#include "source/adapter/adapter_pipeline.hpp"
 
-#include "adapter.hpp"
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
@@ -29,6 +28,7 @@
 #include "pipeline/timestamp_extractor.hpp"
 #include "pipeline/topic_mapper.hpp"
 #include "pipeline/upcase_value.hpp"
+#include "source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace std::literals;
@@ -38,7 +38,7 @@ namespace mtconnect {
   using namespace entity;
   using namespace pipeline;
 
-  namespace adapter {
+  namespace source::adapter {
     std::unique_ptr<Handler> AdapterPipeline::makeHandler()
     {
       auto handler = make_unique<Handler>();
@@ -142,5 +142,5 @@ namespace mtconnect {
       obsMetrics = m_identity + "_observation_update_rate";
       next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
     }
-  }  // namespace adapter
+  }  // namespace source::adapter
 }  // namespace mtconnect

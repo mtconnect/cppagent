@@ -17,11 +17,11 @@
 
 #include "agent_device.hpp"
 
-#include "adapter/adapter.hpp"
 #include "configuration/config_options.hpp"
 #include "data_item/constraints.hpp"
 #include "data_item/data_item.hpp"
 #include "logging.hpp"
+#include "source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace std::literals;
@@ -66,7 +66,7 @@ namespace mtconnect {
       return getDeviceDataItem(adapter + "_connection_status");
     }
 
-    void AgentDevice::addAdapter(const adapter::AdapterPtr adapter)
+    void AgentDevice::addAdapter(const source::adapter::AdapterPtr adapter)
     {
       using namespace entity;
       using namespace device_model::data_item;
@@ -111,7 +111,7 @@ namespace mtconnect {
             Properties {
                 {"type", "ADAPTER_URI"s}, {"id", id + "_adapter_uri"}, {"category", "EVENT"s}},
             errors);
-        di->setConstantValue(adapter->getUrl());
+        di->setConstantValue(adapter->getName());
         comp->addDataItem(di, errors);
       }
 

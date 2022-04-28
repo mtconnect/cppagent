@@ -46,7 +46,7 @@ using namespace std;
 namespace mtconnect {
   using namespace device_model;
   using namespace data_item;
-  using namespace entity;   
+  using namespace entity;
   using namespace sink::rest_sink;
   namespace net = boost::asio;
 
@@ -85,7 +85,8 @@ namespace mtconnect {
     NAMED_SCOPE("Agent::initialize");
 
     m_pipelineContext = context;
-    m_loopback = std::make_shared<LoopbackSource>("AgentSource", m_strand, context, m_options);
+    m_loopback =
+        std::make_shared<source::LoopbackSource>("AgentSource", m_strand, context, m_options);
 
     int major, minor;
     char c;
@@ -606,14 +607,14 @@ namespace mtconnect {
   // Adapter Methods
   // ----------------------------------------------------
 
-  void Agent::addSource(SourcePtr source, bool start)
+  void Agent::addSource(source::SourcePtr source, bool start)
   {
     m_sources.emplace_back(source);
 
     if (start)
       source->start();
 
-    auto adapter = dynamic_pointer_cast<adapter::Adapter>(source);
+    auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
     if (m_agentDevice && adapter)
     {
       m_agentDevice->addAdapter(adapter);
@@ -778,6 +779,42 @@ namespace mtconnect {
       }
       else
         LOG(debug) << "Cannot find availability for " << *device->getComponentName();
+    }
+  }
+
+  void Agent::sourceFailed(const std::string &identity)
+  {
+    auto source = findSource(identity);
+    if (source)
+    {
+      source->stop();
+      m_sources.remove(source);
+
+      bool ext = false;
+      for (auto &s : m_sources)
+      {
+        if (!s->isLoopback())
+        {
+          ext = true;
+          break;
+        }
+      }
+
+      if (!ext)
+      {
+        LOG(fatal) << "Source " << source->getName() << " failed";
+        LOG(fatal) << "No external adapters present, shutting down";
+        stop();
+        m_context.stop();
+      }
+      else
+      {
+        LOG(error) << "Source " << source->getName() << " failed";
+      }
+    }
+    else
+    {
+      LOG(error) << "Cannot find failed source: " << source->getName();
     }
   }
 

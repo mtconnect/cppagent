@@ -112,7 +112,7 @@ namespace mtconnect::ruby {
               mrb_gc_register(mrb, block);
             }
             trans->setGuard();
-            
+
             return self;
           },
           MRB_ARGS_OPT(1) | MRB_ARGS_BLOCK());
@@ -128,15 +128,14 @@ namespace mtconnect::ruby {
     {
       setGuard();
     }
-    
+
     ~RubyTransform()
     {
       std::lock_guard guard(RubyVM::rubyVM());
-
       if (RubyVM::hasVM())
       {
         auto mrb = RubyVM::rubyVM().state();
-        
+
         mrb_gc_unregister(mrb, m_self);
         m_self = mrb_nil_value();
         if (!mrb_nil_p(m_block))
@@ -147,7 +146,7 @@ namespace mtconnect::ruby {
         m_guardBlock = mrb_nil_value();
       }
     }
-    
+
     void setMethod(mrb_sym sym) { m_method = sym; }
 
     void setGuard()
@@ -171,13 +170,6 @@ namespace mtconnect::ruby {
           using namespace entity;
           using namespace observation;
           std::lock_guard guard(RubyVM::rubyVM());
-          
-          if (!RubyVM::hasVM())
-          {
-            LOG(error) << "No Ruby VM in guard callback";
-            throw std::runtime_error("No ruby VM");
-          }
-
 
           auto mrb = RubyVM::rubyVM().state();
           int save = mrb_gc_arena_save(mrb);
@@ -196,7 +188,7 @@ namespace mtconnect::ruby {
                 return mrb_yield(mrb, block, ev);
               },
               data, &state);
-          
+
           if (state)
           {
             LOG(error) << "Error in guard: " << mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
@@ -221,19 +213,13 @@ namespace mtconnect::ruby {
     const entity::EntityPtr operator()(const entity::EntityPtr entity) override
     {
       NAMED_SCOPE("RubyTransform::operator()");
-      
+
       using namespace entity;
       using namespace observation;
-      
+
       EntityPtr res;
-      
+
       std::lock_guard guard(RubyVM::rubyVM());
-      if (!RubyVM::hasVM())
-      {
-        LOG(error) << "No Ruby VM in guard callback";
-        throw std::runtime_error("No ruby VM");
-      }
-      
       auto mrb = RubyVM::rubyVM().state();
       int save = mrb_gc_arena_save(mrb);
 

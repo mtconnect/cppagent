@@ -44,12 +44,6 @@ namespace mtconnect::ruby {
       {
         mrb_close(m_mrb);
       }
-      m_mrb = nullptr;
-    }
-    
-    operator bool ()
-    {
-      return m_mrb != nullptr;
     }
 
     auto state() { return m_mrb; }
@@ -60,7 +54,7 @@ namespace mtconnect::ruby {
     void try_lock() { m_mutex.try_lock(); }
 
     static auto &rubyVM() { return *m_vm; }
-    static bool hasVM() { return m_vm != nullptr && *m_vm; }
+    static bool hasVM() { return  m_vm != nullptr; }
 
   protected:
     void createModule() { m_module = mrb_define_module(m_mrb, "MTConnect"); }
