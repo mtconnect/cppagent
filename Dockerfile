@@ -3,11 +3,11 @@
 # base image - ubuntu has linux/arm/v7, linux/amd64, etc
 FROM ubuntu:21.04 AS compile
 
-# # get latest source code
-# #. can use `git checkout foo` to get a specific version here
-# RUN cd ~ \
-#   && git clone https://github.com/mtconnect/cppagent_dev.git agent \
-#   && cd agent
+# get latest source code
+#. can use `git checkout foo` to get a specific version here
+RUN cd ~ \
+  && git clone https://github.com/mtconnect/cppagent_dev.git agent \
+  && cd agent
 
 # tzinfo hangs without this
 ARG DEBIAN_FRONTEND=noninteractive
