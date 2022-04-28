@@ -3,11 +3,11 @@
 # base image - ubuntu has linux/arm/v7, linux/amd64, etc
 FROM ubuntu:21.04 AS compile
 
-# get latest source code
-#. can use `git checkout foo` to get a specific version here
-RUN cd ~ \
-  && git clone https://github.com/mtconnect/cppagent_dev.git agent \
-  && cd agent
+# # get latest source code
+# #. can use `git checkout foo` to get a specific version here
+# RUN cd ~ \
+#   && git clone https://github.com/mtconnect/cppagent_dev.git agent \
+#   && cd agent
 
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
@@ -24,13 +24,14 @@ RUN pip install conan \
 # compile source (~20mins - 3hrs for qemu)
 RUN conan build . -bf build
 
-# install agent executable
-RUN cp ~/agent/build/agent/agent /usr/local/bin
+# # install agent executable
+# # RUN cp ~/agent/build/agent/agent /usr/local/bin
+# RUN cp build/agent/agent /usr/local/bin
 
-# copy simulator data to /etc/mtconnect
-RUN mkdir -p /etc/mtconnect \
-  && cd ~/agent \
-  && cp -r schemas simulator styles /etc/mtconnect
+# # copy simulator data to /etc/mtconnect
+# RUN mkdir -p /etc/mtconnect \
+#   && cd ~/agent \
+#   && cp -r schemas simulator styles /etc/mtconnect
 
 # # expose port
 # EXPOSE 5000
