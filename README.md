@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 1.7
+MTConnect C++ Agent Version 2.0
 --------
 [![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent_dev)
 
@@ -10,6 +10,8 @@ server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 2.0.0.1 Rearchitecture of the agent with TLS, MQTT Adapter, Ruby Interpreter, Agent Adaptr, and much more
 
 Version 1.7.0.0 added kinematics, solid models, and new specifications types.
 
@@ -511,6 +513,64 @@ can specify a new static file you would like to deliver:
 The agent will not serve all files from a directory and will not provide an index 
 function as this is insecure and not the intended function of the agent.
 
+Ruby
+---------
+
+If the "-o with_ruby=True" build is selected, then use to following configuration:
+
+    Ruby {
+      module = path/to/module.rb
+    }
+
+The module specified at the path given will be loaded. There are examples in the test/Resources/ruby directory in 
+github: [Ruby Tests](https://github.com/mtconnect/cppagent_dev/tree/master/test/resources/ruby).
+
+The current functionality is limited to the pipeline transformations from the adapters. Future changes will include adding sources and sinks.
+
+The following is a complete example for fixing the Execution of a machine:
+
+```ruby
+class AlertTransform < MTConnect::RubyTransform
+  def initialize(name, filter)
+    @cache = Hash.new
+    super(name, filter)
+  end
+
+  @@count = 0
+  def transform(obs)
+    @@count += 1
+    if @@count % 10000 == 0
+      puts "---------------------------"
+      puts ">  #{ObjectSpace.count_objects}"
+      puts "---------------------------"
+    end
+    
+    dataItemId = obs.properties[:dataItemId]
+    if dataItemId == 'servotemp1' or dataItemId == 'Xfrt' or dataItemId == 'Xload'
+      @cache[dataItemId] = obs.value
+      device = MTConnect.agent.default_device
+      
+      di = device.data_item('xaxisstate')
+      if @cache['servotemp1'].to_f > 10.0 or @cache['Xfrt'].to_f > 10.0 or @cache['Xload'].to_f > 10
+        newobs = MTConnect::Observation.new(di, "ERROR")
+      else
+        newobs = MTConnect::Observation.new(di, "OK")
+      end
+      forward(newobs)
+    end
+    forward(obs)
+  end
+end
+    
+MTConnect.agent.sources.each do |s|
+  pipe = s.pipeline
+  puts "Splicing the pipeline"
+  trans = AlertTransform.new('AlertTransform', :Sample)
+  puts trans
+  pipe.splice_before('DeliverObservation', trans)
+end
+```
+
 Configuration Parameters
 ---------
 
@@ -764,6 +824,30 @@ The following parameters must be present to enable https requests. If there is n
 	* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7.
 		*Default*: false
 
+
+### Agent Adapter Configuration
+
+* `Url` - The URL of the source agent. `http:` or `https:` are accepted for the protocol.
+* `SourceDevice` – The Device name or UUID for the source of the data
+* `Count` – the number of items request during a single sample
+
+    *Default*: 1000  
+    
+* `Polling Interval` – The interval used for streaming or polling in milliseconds
+
+    *Default*: 500ms
+    
+* `Reconnect Interval` – The interval between reconnection attampts in milliseconds
+
+    *Default*: 10000ms
+    
+* `Use Polling` – Force the adapter to use polling instead of streaming. Only set to `true` if x-multipart-replace blocked.
+
+    *Default*: false
+    
+* `Heartbeat` – The heartbeat interval from the server
+
+    *Default*: 10000ms
 
 logger_config configuration items
 -----
@@ -1156,7 +1240,8 @@ Clone the agent to another directory:
 Make a build subdirectory of `cppagent_dev`
 
     cd cppagent_dev
-	conan export conan\mqtt_cpp
+    conan export conan\mqtt_cpp
+    conan export conan\mruby
 	
 ####  To build for 64 bit Windows
 	
@@ -1203,6 +1288,7 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 	
 	cd cppagent_dev
 	conan export conan/mqtt_cpp
+	conan export conan/mruby
 	conan install . -if build --build=missing -pr conan/profiles/gcc
 	
 ### Build the agent
@@ -1229,9 +1315,10 @@ Install brew and xcode command line tools
 	
 ### Install the dependencies
 
-	cd cppagent_dev
+    cd cppagent_dev
     conan export conan/mqtt_cpp
-	conan install . -if build  --build=missing
+    conan export conan/mruby
+    conan install . -if build  --build=missing
 	
 ### Build the agent
 	
