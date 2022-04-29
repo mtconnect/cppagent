@@ -1,13 +1,4 @@
 //
-//  json_printer_asset_test.cpp
-//  agent_test
-//
-//  Created by William Sobel on 3/28/19.
-//
-
-#include <cstdio>
-
-//
 // Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //

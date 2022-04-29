@@ -273,7 +273,7 @@ namespace mtconnect::configuration {
     // Check every 10 seconds
     do
     {
-      this_thread::sleep_for(10ms);
+      this_thread::sleep_for(10s);
 
       time_t devices = 0, cfg = 0;
       bool check = true;
