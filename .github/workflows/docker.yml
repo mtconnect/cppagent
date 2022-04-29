@@ -23,8 +23,6 @@ env:
 
   #. for testing
   platforms: linux/amd64
-
-  ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -59,6 +57,7 @@ jobs:
           context: .
           file: Dockerfile
           platforms: ${{ env.platforms }}
+          secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
 
           # docker hub user/repo:tag
           tags: |
