@@ -84,7 +84,7 @@ EXPOSE 5000
 
 # install agent executable
 COPY --from=build /root/agent/build/bin/agent /usr/local/bin/
-RUN chmod +x /user/local/bin/agent
+# RUN chmod +x /user/local/bin/agent
 
 # copy data to /etc/mtconnect
 COPY --from=build /root/agent/schemas /etc/mtconnect/
