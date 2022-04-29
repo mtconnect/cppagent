@@ -11,7 +11,7 @@
 #   git clone https://$(cat /run/secrets/access_token)@github.com...
 
 # ---------------------------------------------------------------------
-# OS
+# os
 # ---------------------------------------------------------------------
 
 # base image - ubuntu has linux/arm/v7, linux/amd64, etc
@@ -21,7 +21,7 @@ FROM ubuntu:latest AS os
 ARG DEBIAN_FRONTEND=noninteractive
 
 # ---------------------------------------------------------------------
-# Build
+# build
 # ---------------------------------------------------------------------
 
 FROM os AS build
@@ -68,52 +68,36 @@ ENV CONAN_CPU_COUNT=2
 RUN cd ~/agent && conan build . -bf build
 
 
-# # ---------------------------------------------------------------------
-# # Release
-# # ---------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# release
+# ---------------------------------------------------------------------
 
-# FROM os AS release
+FROM os AS release
 
-# LABEL author="mtconnect" description="Docker image for the latest Development MTConnect C++ Agent"
+LABEL author="mtconnect" description="Docker image for the latest Development MTConnect C++ Agent"
 
-# EXPOSE 5000
+# install ruby for simulator
+RUN apt-get update && apt-get install -y ruby
 
-# WORKDIR /agent/
+# expose port
+EXPOSE 5000
 
-# # COPY agent.cfg /agent/
-# # COPY ./mtconnect-devicefiles/Devices/ /agent/devices/
-# # COPY ./mtconnect-devicefiles/Assets/ /agent/assets
-# # COPY docker-entrypoint.sh /agent/
-# # # COPY --from=ubuntu-core app_build/simulator/ /agent/simulator
-# # COPY --from=ubuntu-core app_build/schemas/ /agent/schemas
-# # COPY --from=ubuntu-core app_build/styles/ /agent/styles
-# # COPY --from=ubuntu-core app_build/build/bin/agent /agent/agent
-# # RUN chmod +x /agent/agent \
-# #   && chmod +x /agent/docker-entrypoint.sh
+# install agent executable
+COPY --from=build ~/agent/build/bin/agent /usr/local/bin
+# RUN chmod +x /user/local/bin/agent
 
-# # # ENTRYPOINT ["/bin/sh", "-x", "/agent/docker-entrypoint.sh"]
+# copy data to /etc/mtconnect
+COPY --from=build ~/agent/schemas /etc/mtconnect
+COPY --from=build ~/agent/simulator /etc/mtconnect
+COPY --from=build ~/agent/styles /etc/mtconnect
 
-# # ---
+WORKDIR /etc/mtconnect
 
-# # install agent executable
-# # RUN cp ~/agent/build/agent/agent /usr/local/bin
-# RUN cp build/agent/agent /usr/local/bin
-
-# # copy simulator data to /etc/mtconnect
-# RUN mkdir -p /etc/mtconnect \
-#   && cd ~/agent \
-#   && cp -r schemas simulator styles /etc/mtconnect
-
-# # # expose port
-# # EXPOSE 5000
-
-# # WORKDIR /etc/mtconnect
-
-# # # default command - can override with docker run or docker-compose command.
-# # # this runs the adapter simulator and the agent using the sample config file.
-# # # note: must use shell form here instead of exec form, since we're running 
-# # # multiple statements using shell commands (& and &&).
-# # # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
-# # CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
-# #   /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
-# #   cd /etc/mtconnect/simulator && agent debug agent.cfg
+# default command - can override with docker run or docker-compose command.
+# this runs the adapter simulator and the agent using the sample config file.
+# note: must use shell form here instead of exec form, since we're running 
+# multiple statements using shell commands (& and &&).
+# see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
+CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
+  /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
+  cd /etc/mtconnect/simulator && agent debug agent.cfg
