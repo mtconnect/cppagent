@@ -83,13 +83,13 @@ RUN apt-get update && apt-get install -y ruby
 EXPOSE 5000
 
 # install agent executable
-COPY --from=build ~/agent/build/bin/agent /usr/local/bin
-# RUN chmod +x /user/local/bin/agent
+COPY --from=build /root/agent/build/bin/agent /usr/local/bin
+RUN chmod +x /user/local/bin/agent
 
 # copy data to /etc/mtconnect
-COPY --from=build ~/agent/schemas /etc/mtconnect
-COPY --from=build ~/agent/simulator /etc/mtconnect
-COPY --from=build ~/agent/styles /etc/mtconnect
+COPY --from=build /root/agent/schemas /etc/mtconnect
+COPY --from=build /root/agent/simulator /etc/mtconnect
+COPY --from=build /root/agent/styles /etc/mtconnect
 
 WORKDIR /etc/mtconnect
 
