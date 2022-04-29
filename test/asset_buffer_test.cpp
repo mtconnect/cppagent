@@ -28,8 +28,8 @@
 #include "agent_test_helper.hpp"
 #include "asset/asset_buffer.hpp"
 #include "entity/entity.hpp"
-#include "test_utilities.hpp"
 #include "printer/xml_printer.hpp"
+#include "test_utilities.hpp"
 
 #if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;

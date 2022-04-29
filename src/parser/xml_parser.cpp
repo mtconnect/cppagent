@@ -52,7 +52,7 @@ namespace mtconnect::parser {
   using namespace observation;
   using namespace device_model;
   using namespace printer;
-  
+
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
     va_list args;
@@ -386,4 +386,4 @@ namespace mtconnect::parser {
       LOG(warning) << "getDataItems: Could not parse path: " << inputPath;
     }
   }
-}  // namespace mtconnect
+}  // namespace mtconnect::parser

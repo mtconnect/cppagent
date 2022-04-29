@@ -44,11 +44,11 @@
 #include "configuration/config_options.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "pipeline/shdr_tokenizer.hpp"
+#include "printer/xml_printer.hpp"
 #include "ruby/ruby_smart_ptr.hpp"
 #include "ruby/ruby_vm.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "source/adapter/shdr/shdr_adapter.hpp"
-#include "printer/xml_printer.hpp"
 
 #ifdef _WIN32
 #include <direct.h>

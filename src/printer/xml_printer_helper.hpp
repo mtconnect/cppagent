@@ -123,4 +123,4 @@ namespace mtconnect::printer {
     std::string m_name;
     std::string m_key;
   };
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

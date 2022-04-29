@@ -29,7 +29,7 @@
 
 namespace mtconnect {
   namespace printer {
-  class Printer;
+    class Printer;
   }
   namespace sink::rest_sink {
     using status = boost::beast::http::status;

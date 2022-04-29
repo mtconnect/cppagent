@@ -685,4 +685,4 @@ namespace mtconnect::printer {
       }
     }
   }
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

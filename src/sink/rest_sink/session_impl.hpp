@@ -30,9 +30,9 @@
 
 namespace mtconnect {
   namespace printer {
-  class Printer;
+    class Printer;
   }
-  
+
   namespace sink::rest_sink {
     template <class Derived>
     class SessionImpl : public Session

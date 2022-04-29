@@ -32,7 +32,7 @@
 
 namespace mtconnect {
   namespace printer {
-  class Printer;
+    class Printer;
   }
   namespace source {
     class Source;

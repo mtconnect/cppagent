@@ -31,6 +31,7 @@
 #include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
+#include "parser/xml_parser.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer/printer.hpp"
@@ -42,7 +43,6 @@
 #include "source/adapter/adapter.hpp"
 #include "source/loopback_source.hpp"
 #include "source/source.hpp"
-#include "parser/xml_parser.hpp"
 
 namespace mtconnect {
   namespace source::adapter {

@@ -38,4 +38,4 @@ namespace mtconnect::printer {
     using std::logic_error::logic_error;
   };
 
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

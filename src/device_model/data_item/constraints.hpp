@@ -19,7 +19,6 @@
 
 #include "entity/entity.hpp"
 #include "entity/factory.hpp"
-
 #include "filter.hpp"
 
 namespace mtconnect {

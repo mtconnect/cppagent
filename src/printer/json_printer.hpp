@@ -50,4 +50,4 @@ namespace mtconnect::printer {
     std::string m_version;
     std::string m_hostname;
   };
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

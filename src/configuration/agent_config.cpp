@@ -52,12 +52,12 @@
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
+#include "printer/xml_printer.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "source/adapter/agent_adapter/agent_adapter.hpp"
 #include "source/adapter/mqtt/mqtt_adapter.hpp"
 #include "source/adapter/shdr/shdr_adapter.hpp"
 #include "version.h"
-#include "printer/xml_printer.hpp"
 
 #ifdef WITH_PYTHON
 #include "python/embedded.hpp"

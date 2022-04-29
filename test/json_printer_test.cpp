@@ -37,8 +37,8 @@
 #include "entity/json_printer.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
-#include "source/adapter/adapter.hpp"
 #include "printer/xml_printer_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;

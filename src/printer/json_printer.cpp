@@ -383,4 +383,4 @@ namespace mtconnect::printer {
 
     return print(doc, m_pretty);
   }
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

@@ -34,12 +34,12 @@
 #include "configuration/config_options.hpp"
 #include "device_model/agent_device.hpp"
 #include "entity/xml_parser.hpp"
-#include "printer/json_printer.hpp"
 #include "logging.hpp"
 #include "observation/observation.hpp"
+#include "printer/json_printer.hpp"
+#include "printer/xml_printer.hpp"
 #include "sink/rest_sink/file_cache.hpp"
 #include "sink/rest_sink/session.hpp"
-#include "printer/xml_printer.hpp"
 
 using namespace std;
 
@@ -337,8 +337,8 @@ namespace mtconnect {
     try
     {
       // Load the configuration for the Agent
-      auto devices = m_xmlParser->parseFile(configXmlPath,
-                                            dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
+      auto devices = m_xmlParser->parseFile(
+          configXmlPath, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
 
       // Fir the DeviceAdded event for each device
       for (auto device : devices)

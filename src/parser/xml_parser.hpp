@@ -44,7 +44,8 @@ namespace mtconnect::parser {
     virtual ~XmlParser();
 
     // Parses a file and returns a list of devices
-    std::list<device_model::DevicePtr> parseFile(const std::string &aPath, printer::XmlPrinter *aPrinter);
+    std::list<device_model::DevicePtr> parseFile(const std::string &aPath,
+                                                 printer::XmlPrinter *aPrinter);
 
     // Just loads the document, assumed it has already been parsed before.
     void loadDocument(const std::string &aDoc);
@@ -57,4 +58,4 @@ namespace mtconnect::parser {
     xmlDocPtr m_doc = nullptr;
     mutable std::shared_mutex m_mutex;
   };
-}  // namespace mtconnect
+}  // namespace mtconnect::parser

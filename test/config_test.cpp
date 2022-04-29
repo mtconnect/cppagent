@@ -26,9 +26,9 @@
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
+#include "printer/xml_printer.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "source/adapter/shdr/shdr_adapter.hpp"
-#include "printer/xml_printer.hpp"
 
 #ifdef _WIN32
 #include <direct.h>

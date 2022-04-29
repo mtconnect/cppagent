@@ -31,11 +31,11 @@
 #include "device_model/reference.hpp"
 #include "pipeline/mtconnect_xml_transform.hpp"
 #include "pipeline/response_document.hpp"
+#include "printer/xml_printer.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/agent_adapter/agent_adapter.hpp"
 #include "source/adapter/agent_adapter/url_parser.hpp"
 #include "test_utilities.hpp"
-#include "printer/xml_printer.hpp"
 
 // Registers the fixture into the 'registry'
 using namespace std;
@@ -229,7 +229,7 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
-     // throw runtime_error("test timed out");
+      // throw runtime_error("test timed out");
     }
   });
 

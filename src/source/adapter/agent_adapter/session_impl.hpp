@@ -67,10 +67,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_failed(ec);
     }
 
-    void stop() override
-    {
-      m_request.reset();
-    }
+    void stop() override { m_request.reset(); }
 
     bool makeRequest(const Request &req) override
     {
@@ -181,7 +178,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
         return failed(source::make_error_code(source::ErrorCode::ADAPTER_FAILED), "resolve");
       }
-      
+
       if (!m_request)
       {
         LOG(error) << "Resolved but no request";
@@ -311,7 +308,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "read");
       }
 
-      if (!m_request) 
+      if (!m_request)
       {
         LOG(error) << "read data but no request";
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "header");
@@ -421,14 +418,15 @@ namespace mtconnect::source::adapter::agent_adapter {
       using string_view_range = boost::iterator_range<boost::string_view::iterator>;
       auto svi = string_view_range(view.begin() + bp, view.end());
       auto lp = boost::ifind_first(svi, boost::string_view("content-length:"));
-      
+
       if (lp.empty())
       {
         LOG(error) << "Cannot find the content-length";
         derived().lowestLayer().close();
-        return failed(source::make_error_code(source::ErrorCode::RESTART_STREAM), "Framing error in streaming data: no content length");
+        return failed(source::make_error_code(source::ErrorCode::RESTART_STREAM),
+                      "Framing error in streaming data: no content length");
       }
-      
+
       boost::string_view length(lp.end());
       auto digits = length.substr(0, length.find("\n"));
       auto finder = boost::token_finder(algo::is_digit(), algo::token_compress_on);
@@ -437,9 +435,10 @@ namespace mtconnect::source::adapter::agent_adapter {
       {
         LOG(error) << "Cannot find the length in chunk";
         derived().lowestLayer().close();
-        return failed(source::make_error_code(source::ErrorCode::RESTART_STREAM), "Framing error in streaming data: no content length");
+        return failed(source::make_error_code(source::ErrorCode::RESTART_STREAM),
+                      "Framing error in streaming data: no content length");
       }
-      
+
       m_chunkLength = boost::lexical_cast<size_t>(rng);
       m_hasHeader = true;
       m_chunk.consume(ep);
@@ -449,14 +448,14 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
                               boost::system::error_code &ev) -> unsigned long {
-        
         if (!m_request)
         {
           derived().lowestLayer().close();
-          failed(source::make_error_code(source::ErrorCode::RETRY_REQUEST), "Stream body but no request");
+          failed(source::make_error_code(source::ErrorCode::RETRY_REQUEST),
+                 "Stream body but no request");
           return body.size();
         }
-        
+
         {
           std::ostream cstr(&m_chunk);
           cstr << body;

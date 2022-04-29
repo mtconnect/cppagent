@@ -19,8 +19,8 @@
 
 #include "entity/entity.hpp"
 #include "pipeline/pipeline_context.hpp"
-#include "utilities.hpp"
 #include "printer/xml_helper.hpp"
+#include "utilities.hpp"
 
 namespace mtconnect::pipeline {
   using namespace mtconnect;

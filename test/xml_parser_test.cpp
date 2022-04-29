@@ -24,9 +24,9 @@
 #include <stdexcept>
 
 #include "device_model/reference.hpp"
-#include "test_utilities.hpp"
 #include "parser/xml_parser.hpp"
 #include "printer/xml_printer.hpp"
+#include "test_utilities.hpp"
 
 using namespace std;
 using namespace std::literals;

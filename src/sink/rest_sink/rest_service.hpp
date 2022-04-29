@@ -29,15 +29,16 @@
 
 namespace mtconnect {
   namespace printer {
-  class XmlPrinter;
+    class XmlPrinter;
   }
-  
+
   namespace sink::rest_sink {
     struct AsyncSampleResponse;
     struct AsyncCurrentResponse;
 
-    using NamespaceFunction = void (printer::XmlPrinter::*)(const std::string &, const std::string &,
-                                                   const std::string &);
+    using NamespaceFunction = void (printer::XmlPrinter::*)(const std::string &,
+                                                            const std::string &,
+                                                            const std::string &);
     using StyleFunction = void (printer::XmlPrinter::*)(const std::string &);
 
     class RestService : public Sink
@@ -190,8 +191,8 @@ namespace mtconnect {
                                    const std::optional<SequenceNumber_t> &at);
 
       // Sample data collection
-      std::string fetchSampleData(const printer::Printer *printer, const FilterSetOpt &filterSet, int count,
-                                  const std::optional<SequenceNumber_t> &from,
+      std::string fetchSampleData(const printer::Printer *printer, const FilterSetOpt &filterSet,
+                                  int count, const std::optional<SequenceNumber_t> &from,
                                   const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
                                   bool &endOfBuffer,
                                   observation::ChangeObserver *observer = nullptr);

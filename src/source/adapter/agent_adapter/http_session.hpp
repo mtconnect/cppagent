@@ -55,7 +55,7 @@ namespace mtconnect::source::adapter::agent_adapter {
         LOG(error) << "  Reason: " << ec.category().name() << " " << ec.message();
         return failed(source::make_error_code(ErrorCode::RETRY_REQUEST), "connect");
       }
-      
+
       if (!m_request)
       {
         m_stream.close();

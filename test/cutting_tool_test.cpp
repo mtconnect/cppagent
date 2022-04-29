@@ -17,9 +17,9 @@
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
 #include "printer/xml_printer.hpp"
 #include "printer/xml_printer_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -434,8 +434,7 @@ TEST_F(CuttingToolTest, TestMeasurementsError)
 
 TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
 {
-  auto printer =
-      dynamic_cast<printer::XmlPrinter *>(m_agentTestHelper->m_agent->getPrinter("xml"));
+  auto printer = dynamic_cast<printer::XmlPrinter *>(m_agentTestHelper->m_agent->getPrinter("xml"));
   ASSERT_TRUE(printer != nullptr);
 
   printer->clearAssetsNamespaces();
