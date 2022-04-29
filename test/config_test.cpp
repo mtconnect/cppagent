@@ -680,7 +680,7 @@ MaxCachedFileSize = 2000
 
     auto cache = rest->getFileCache();
     ASSERT_EQ(2000, cache->getMaxCachedFileSize());
-  }
+  }   
 
   TEST_F(ConfigTest, max_cache_size_in_kb)
   {
