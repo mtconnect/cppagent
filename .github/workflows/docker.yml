@@ -1,6 +1,13 @@
+# build docker image
+
+# needs secrets set for these -
+#   ACCESS_TOKEN - a github personal access token to access the private repo
+#   DOCKERHUB_USERNAME - ladder99 for now
+#   DOCKERHUB_TOKEN
+
 name: Build Docker image
 
-# Controls when the workflow will run
+# when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   #push:
@@ -8,34 +15,33 @@ on:
   #pull_request:
   #  branches: [ master ]
 
-  # Allows you to run this workflow manually from the Actions tab
+  # allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# define variables - used below, like ${{ env.platforms }}
+# variables - used below, like ${{ env.platforms }}
 env:
   # for available platforms see output of a previous run -
   # ie the "Setup Docker BuildX" / "Inspect Builder" section
   # has eg "node_platforms": "linux/amd64,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6"
   # but the platforms must also be included in the os image chosen -
   # eg the ubuntu image doesn't include linux/arm/v6.
-  
   # platforms: linux/amd64,linux/arm64,linux/arm/v7
-
-  #. for testing
+  #. for initial testing
   platforms: linux/amd64
   
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# a workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
+  # this workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
+    # the type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    # steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      # checks-out your repository under $GITHUB_WORKSPACE
       - uses: actions/checkout@v3
 
+      # the QEMU emulator lets us build for arm processors also
       # see https://github.com/docker/setup-qemu-action
       - name: Set up QEMU emulator
         uses: docker/setup-qemu-action@v1
@@ -60,28 +66,9 @@ jobs:
           secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
 
           # docker hub user/repo:tag
+          #. add version here
           tags: |
             ladder99/agent2:latest
 
           # push to docker hub
           push: true
-
-#       # Runs a set of commands using the runners shell
-#       - name: Set up build
-#         run: |
-#           #echo $GITHUB_WORKSPACE
-#           #ls $GITHUB_WORKSPACE
-#           export PATH=$HOME/venv3.9/bin:$PATH
-#           export CONAN_PROFILE=conan/profiles/gcc
-#           export WITH_RUBY=True
-#           pip install conan
-#           conan export conan/mqtt_cpp
-#           conan export conan/mruby
-#           conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
-
-#       - name: Build app
-#         run: |
-#           conan build . -bf build
-#           echo $GITHUB_WORKSPACE
-#           ls $GITHUB_WORKSPACE
-
