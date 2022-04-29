@@ -21,7 +21,7 @@
 #include "printer/printer.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect {
+namespace mtconnect::printer {
   class JsonPrinter : public Printer
   {
   public:

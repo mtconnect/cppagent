@@ -26,8 +26,9 @@
 
 using namespace std;
 
-namespace mtconnect {
-  namespace entity {
+namespace mtconnect::entity {
+  using namespace mtconnect::printer;
+  
     extern "C" void XMLCDECL entityXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
     {
       va_list args;
@@ -237,5 +238,4 @@ namespace mtconnect {
 
       return entity;
     }
-  }  // namespace entity
 }  // namespace mtconnect

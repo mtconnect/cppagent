@@ -29,11 +29,11 @@ class AssetTest : public testing::Test
 {
 protected:
 protected:
-  void SetUp() override { m_writer = make_unique<XmlWriter>(true); }
+  void SetUp() override { m_writer = make_unique<printer::XmlWriter>(true); }
 
   void TearDown() override { m_writer.reset(); }
 
-  std::unique_ptr<XmlWriter> m_writer;
+  std::unique_ptr<printer::XmlWriter> m_writer;
 };
 
 TEST_F(AssetTest, TestExtendedAsset)

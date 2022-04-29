@@ -28,7 +28,9 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
+  namespace printer {
   class Printer;
+  }
   namespace sink::rest_sink {
     using status = boost::beast::http::status;
 

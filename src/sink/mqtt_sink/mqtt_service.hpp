@@ -57,10 +57,10 @@ namespace mtconnect {
         // Get the printer for a type
         const std::string acceptFormat(const std::string &accepts) const;
 
-        const Printer *printerForAccepts(const std::string &accepts) const;
+        const printer::Printer *printerForAccepts(const std::string &accepts) const;
 
         // Output an XML Error
-        std::string printError(const Printer *printer, const std::string &errorCode,
+        std::string printError(const printer::Printer *printer, const std::string &errorCode,
                                const std::string &text) const;
 
       protected:

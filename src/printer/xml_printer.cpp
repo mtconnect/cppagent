@@ -49,7 +49,7 @@
 
 using namespace std;
 
-namespace mtconnect {
+namespace mtconnect::printer {
   using namespace observation;
   using namespace asset;
   using namespace device_model::configuration;

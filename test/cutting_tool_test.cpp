@@ -41,7 +41,7 @@ protected:
     // Asset types are registered in the agent.
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
 
-    m_writer = make_unique<XmlWriter>(true);
+    m_writer = make_unique<printer::XmlWriter>(true);
   }
 
   void TearDown() override
@@ -55,7 +55,7 @@ protected:
   std::string m_agentId;
   DevicePtr m_device {nullptr};
 
-  std::unique_ptr<XmlWriter> m_writer;
+  std::unique_ptr<printer::XmlWriter> m_writer;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
@@ -435,7 +435,7 @@ TEST_F(CuttingToolTest, TestMeasurementsError)
 TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
 {
   auto printer =
-      dynamic_cast<mtconnect::XmlPrinter *>(m_agentTestHelper->m_agent->getPrinter("xml"));
+      dynamic_cast<printer::XmlPrinter *>(m_agentTestHelper->m_agent->getPrinter("xml"));
   ASSERT_TRUE(printer != nullptr);
 
   printer->clearAssetsNamespaces();

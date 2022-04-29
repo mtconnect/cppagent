@@ -25,6 +25,7 @@ using namespace mtconnect;
 using namespace mtconnect::entity;
 using namespace mtconnect::source::adapter;
 using namespace mtconnect::asset;
+using namespace mtconnect::printer;
 
 class FileAssetTest : public testing::Test
 {

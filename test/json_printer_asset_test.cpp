@@ -66,7 +66,7 @@ protected:
     FileArchetypeAsset::registerAsset();
     FileAsset::registerAsset();
 
-    m_printer = std::make_unique<JsonPrinter>("1.5", true);
+    m_printer = std::make_unique<printer::JsonPrinter>("1.5", true);
     m_parser = std::make_unique<entity::XmlParser>();
   }
 
@@ -89,7 +89,7 @@ protected:
     return asset;
   }
 
-  std::unique_ptr<JsonPrinter> m_printer;
+  std::unique_ptr<printer::JsonPrinter> m_printer;
   std::unique_ptr<entity::XmlParser> m_parser;
 };
 

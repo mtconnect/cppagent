@@ -31,11 +31,13 @@
 #include "printer/printer.hpp"
 
 namespace mtconnect {
+  namespace printer {
   class Printer;
+  }
   namespace source {
     class Source;
   }
-  using PrinterMap = std::map<std::string, std::unique_ptr<Printer>>;
+  using PrinterMap = std::map<std::string, std::unique_ptr<printer::Printer>>;
   namespace pipeline {
     class PipelineContext;
   }
@@ -45,7 +47,7 @@ namespace mtconnect {
     {
     public:
       virtual ~SinkContract() = default;
-      virtual Printer *getPrinter(const std::string &aType) const = 0;
+      virtual printer::Printer *getPrinter(const std::string &aType) const = 0;
       virtual const PrinterMap &getPrinters() const = 0;
 
       // Get device from device map

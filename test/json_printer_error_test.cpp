@@ -42,9 +42,9 @@ using json = nlohmann::json;
 class JsonPrinterErrorTest : public testing::Test
 {
 protected:
-  void SetUp() override { m_printer = std::make_unique<JsonPrinter>("1.5", true); }
+  void SetUp() override { m_printer = std::make_unique<printer::JsonPrinter>("1.5", true); }
 
-  std::unique_ptr<JsonPrinter> m_printer;
+  std::unique_ptr<printer::JsonPrinter> m_printer;
 };
 
 TEST_F(JsonPrinterErrorTest, PrintError)

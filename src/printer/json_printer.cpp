@@ -36,7 +36,7 @@
 using namespace std;
 using json = nlohmann::json;
 
-namespace mtconnect {
+namespace mtconnect::printer {
   using namespace observation;
   using namespace device_model;
 
@@ -205,7 +205,7 @@ namespace mtconnect {
       {
         json items = json::array();
         for (auto &event : m_events)
-          items.emplace_back(::mtconnect::toJson(event));
+          items.emplace_back(printer::toJson(event));
 
         ret = make_pair(m_category, items);
       }

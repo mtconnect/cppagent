@@ -181,7 +181,7 @@ namespace mtconnect {
     auto getAgentDevice() { return m_agentDevice; }
 
     // Printers
-    Printer *getPrinter(const std::string &aType) const
+    printer::Printer *getPrinter(const std::string &aType) const
     {
       auto printer = m_printers.find(aType);
       if (printer != m_printers.end())
@@ -239,7 +239,7 @@ namespace mtconnect {
     pipeline::PipelineContextPtr m_pipelineContext;
 
     // Pointer to the configuration file for node access
-    std::unique_ptr<XmlParser> m_xmlParser;
+    std::unique_ptr<parser::XmlParser> m_xmlParser;
     PrinterMap m_printers;
 
     // Agent Device
@@ -312,7 +312,7 @@ namespace mtconnect {
     AgentSinkContract(Agent *agent) : m_agent(agent) {}
     ~AgentSinkContract() = default;
 
-    Printer *getPrinter(const std::string &aType) const override
+    printer::Printer *getPrinter(const std::string &aType) const override
     {
       return m_agent->getPrinter(aType);
     }

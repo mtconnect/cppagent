@@ -49,8 +49,8 @@ class JsonPrinterProbeTest : public testing::Test
 protected:
   void SetUp() override
   {
-    m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
-    m_printer = std::make_unique<JsonPrinter>("1.5", true);
+    m_xmlPrinter = std::make_unique<printer::XmlPrinter>("1.5");
+    m_printer = std::make_unique<printer::JsonPrinter>("1.5", true);
 
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml", 8, 4, "1.5", 25);
@@ -67,12 +67,12 @@ protected:
     m_devices.clear();
   }
 
-  std::unique_ptr<JsonPrinter> m_printer;
+  std::unique_ptr<printer::JsonPrinter> m_printer;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
   std::list<DevicePtr> m_devices;
 
-  std::unique_ptr<XmlPrinter> m_xmlPrinter;
+  std::unique_ptr<printer::XmlPrinter> m_xmlPrinter;
 };
 
 TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)

@@ -31,7 +31,7 @@
     throw XmlError("XML Error at " __FILE__ "(" xml_strfy(__LINE__) "): " #expr); \
   }
 
-namespace mtconnect {
+namespace mtconnect::printer {
   class XmlError : public std::logic_error
   {
   public:

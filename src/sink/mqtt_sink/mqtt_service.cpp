@@ -89,12 +89,12 @@ namespace mtconnect {
         return "xml";
       }
 
-      const Printer *MqttService::printerForAccepts(const std::string &accepts) const
+      const printer::Printer *MqttService::printerForAccepts(const std::string &accepts) const
       {
         return m_sinkContract->getPrinter(acceptFormat(accepts));
       }
 
-      string MqttService::printError(const Printer *printer, const string &errorCode,
+      string MqttService::printError(const printer::Printer *printer, const string &errorCode,
                                      const string &text) const
       {
         LOG(debug) << "Returning error " << errorCode << ": " << text;

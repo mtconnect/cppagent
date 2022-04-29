@@ -30,8 +30,10 @@
 #include "sink/rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect {
+namespace mtconnect::printer {
   class XmlPrinter;
+}
+namespace mtconnect::parser {
 
   class XmlParser
   {
@@ -42,7 +44,7 @@ namespace mtconnect {
     virtual ~XmlParser();
 
     // Parses a file and returns a list of devices
-    std::list<device_model::DevicePtr> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
+    std::list<device_model::DevicePtr> parseFile(const std::string &aPath, printer::XmlPrinter *aPrinter);
 
     // Just loads the document, assumed it has already been parsed before.
     void loadDocument(const std::string &aDoc);

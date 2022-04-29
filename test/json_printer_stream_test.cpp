@@ -50,9 +50,9 @@ class JsonPrinterStreamTest : public testing::Test
 protected:
   void SetUp() override
   {
-    m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
-    m_printer = std::make_unique<JsonPrinter>("1.5", true);
-    m_config = std::make_unique<XmlParser>();
+    m_xmlPrinter = std::make_unique<printer::XmlPrinter>("1.5");
+    m_printer = std::make_unique<printer::JsonPrinter>("1.5", true);
+    m_config = std::make_unique<parser::XmlParser>();
     m_devices =
         m_config->parseFile(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", m_xmlPrinter.get());
   }
@@ -93,9 +93,9 @@ protected:
   }
 
 protected:
-  std::unique_ptr<JsonPrinter> m_printer;
-  std::unique_ptr<XmlParser> m_config;
-  std::unique_ptr<XmlPrinter> m_xmlPrinter;
+  std::unique_ptr<printer::JsonPrinter> m_printer;
+  std::unique_ptr<parser::XmlParser> m_config;
+  std::unique_ptr<printer::XmlPrinter> m_xmlPrinter;
   std::list<DevicePtr> m_devices;
 };
 

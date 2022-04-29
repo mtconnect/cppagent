@@ -21,7 +21,7 @@
 
 #include "printer/xml_helper.hpp"
 
-namespace mtconnect {
+namespace mtconnect::printer {
   class XmlWriter
   {
   public:

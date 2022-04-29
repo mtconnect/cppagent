@@ -32,6 +32,7 @@ namespace mtconnect {
   using namespace observation;
   using namespace asset;
   using namespace device_model;
+  using namespace printer;
   namespace sink::rest_sink {
     RestService::RestService(asio::io_context &context, SinkContractPtr &&contract,
                              const ConfigOptions &options, const ptree &config)

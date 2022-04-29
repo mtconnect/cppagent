@@ -29,8 +29,10 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
+  namespace printer {
   class Printer;
-
+  }
+  
   namespace sink::rest_sink {
     template <class Derived>
     class SessionImpl : public Session

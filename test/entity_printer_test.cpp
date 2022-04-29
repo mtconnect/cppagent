@@ -26,7 +26,7 @@ using namespace std::literals;
 class EntityPrinterTest : public testing::Test
 {
 protected:
-  void SetUp() override { m_writer = make_unique<XmlWriter>(true); }
+  void SetUp() override { m_writer = make_unique<printer::XmlWriter>(true); }
 
   void TearDown() override { m_writer.reset(); }
 
@@ -60,7 +60,7 @@ protected:
     return root;
   }
 
-  std::unique_ptr<XmlWriter> m_writer;
+  std::unique_ptr<printer::XmlWriter> m_writer;
 };
 
 TEST_F(EntityPrinterTest, TestParseSimpleDocument)

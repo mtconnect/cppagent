@@ -27,6 +27,7 @@
 using namespace std;
 
 namespace mtconnect {
+  using namespace printer;
   namespace entity {
     inline string stripUndeclaredNamespace(const QName &qname,
                                            const unordered_set<string> &namespaces)

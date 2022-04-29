@@ -48,10 +48,11 @@ using namespace std;
     throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
   }
 
-namespace mtconnect {
+namespace mtconnect::parser {
   using namespace observation;
   using namespace device_model;
-
+  using namespace printer;
+  
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
     va_list args;

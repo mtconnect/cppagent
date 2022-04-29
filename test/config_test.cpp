@@ -244,7 +244,7 @@ namespace {
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("x");
@@ -262,7 +262,7 @@ namespace {
     m_config->loadConfig(devices);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getDevicesUrn("y");
     ASSERT_EQ(std::string("urn:example.com:ExampleDevices:1.2"), path);
@@ -279,7 +279,7 @@ namespace {
     m_config->loadConfig(asset);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getAssetsUrn("z");
     ASSERT_EQ(std::string("urn:example.com:ExampleAssets:1.2"), path);
@@ -296,7 +296,7 @@ namespace {
     m_config->loadConfig(errors);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getErrorUrn("a");
     ASSERT_EQ(std::string("urn:example.com:ExampleErrors:1.2"), path);
@@ -365,7 +365,7 @@ namespace {
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("m");
@@ -385,7 +385,7 @@ namespace {
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto version = printer->getSchemaVersion();
@@ -414,7 +414,7 @@ namespace {
     m_config->loadConfig(schemas);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("m");

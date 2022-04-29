@@ -59,8 +59,8 @@ class MTConnectXmlTransformTest : public testing::Test
 protected:
   void SetUp() override
   {
-    auto printer = make_unique<XmlPrinter>();
-    auto parser = make_unique<XmlParser>();
+    auto printer = make_unique<printer::XmlPrinter>();
+    auto parser = make_unique<parser::XmlParser>();
 
     m_device =
         parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()).front();

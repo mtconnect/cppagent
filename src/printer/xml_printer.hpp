@@ -31,6 +31,8 @@ extern "C"
 
 namespace mtconnect {
   class SensorConfiguration;
+  
+  namespace printer {
   class XmlWriter;
 
   class XmlPrinter : public Printer
@@ -133,4 +135,5 @@ namespace mtconnect {
     std::string m_errorStyle;
     std::string m_assetStyle;
   };
+  }
 }  // namespace mtconnect

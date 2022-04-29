@@ -34,6 +34,8 @@ namespace mtconnect {
     class Asset;
     class CuttingTool;
   }  // namespace asset
+  
+  namespace printer {
   using DevicePtr = std::shared_ptr<device_model::Device>;
 
   using ProtoErrorList = std::list<std::pair<std::string, std::string>>;
@@ -75,4 +77,5 @@ namespace mtconnect {
     bool m_pretty;
     std::string m_modelChangeTime;
   };
+  }
 }  // namespace mtconnect
