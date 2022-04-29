@@ -47,7 +47,7 @@ namespace mtconnect {
         m_jsonPrinter = std::unique_ptr<JsonPrinter>(jsonPrinter);
       }
 
-      void MqttService::start() 
+      void MqttService::start()
       {
         // mqtt client side not a server side...
       }

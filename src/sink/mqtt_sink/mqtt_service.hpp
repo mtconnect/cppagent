@@ -22,10 +22,10 @@
 
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
+#include "printer/printer.hpp"
+#include "printer/xml_printer_helper.hpp"
 #include "sink/sink.hpp"
 #include "utilities.hpp"
-#include "printer/xml_printer_helper.hpp"
-#include "printer/printer.hpp"
 
 using namespace std;
 using namespace mtconnect::entity;
@@ -57,7 +57,6 @@ namespace mtconnect {
         static void registerFactory(SinkFactory &factory);
 
       protected:
-
         boost::asio::io_context &m_context;
         ConfigOptions m_options;
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
