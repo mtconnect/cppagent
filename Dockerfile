@@ -7,8 +7,9 @@
 # so can clone the private mtconnect cppagent_dev repo.
 # keep it out of the github repo with .gitignore.
 # this sets up a file with the contents accessible at /run/secrete/access_token.
-# see below at 
-#   git clone https://$(cat /run/secrets/access_token)@github.com...
+# use as below with
+#   RUN --mount=type=secret,id=access_token \
+#     git clone https://$(cat /run/secrets/access_token)@github.com...
 
 # ---------------------------------------------------------------------
 # os
@@ -60,13 +61,12 @@ RUN cd ~/agent \
   -o run_tests=False \
   -o with_ruby=$WITH_RUBY
 
-# limit cpus so don't run out of memory
+# limit cpus so don't run out of memory on local machine
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
-ENV CONAN_CPU_COUNT=2
+ENV CONAN_CPU_COUNT=1
 
 # compile source (~20mins - 3hrs for qemu)
 RUN cd ~/agent && conan build . -bf build
-
 
 # ---------------------------------------------------------------------
 # release
@@ -79,19 +79,24 @@ LABEL author="mtconnect" description="Docker image for the latest Development MT
 # install ruby for simulator
 RUN apt-get update && apt-get install -y ruby
 
+# change to a new non-root user for better security.
+# this also adds the user to a group with the same name.
+# --create-home creates a home folder, ie /home/<username>
+RUN useradd --create-home agent
+USER agent
+
+# install agent executable
+COPY --chown=agent:agent --from=build /root/agent/build/bin/agent /usr/local/bin/
+
+# copy data to /etc/mtconnect
+COPY --chown=agent:agent --from=build /root/agent/schemas /etc/mtconnect/schemas
+COPY --chown=agent:agent --from=build /root/agent/simulator /etc/mtconnect/simulator
+COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
+
 # expose port
 EXPOSE 5000
 
-# install agent executable
-COPY --from=build /root/agent/build/bin/agent /usr/local/bin/
-# RUN chmod +x /user/local/bin/agent
-
-# copy data to /etc/mtconnect
-COPY --from=build /root/agent/schemas /etc/mtconnect/
-COPY --from=build /root/agent/simulator /etc/mtconnect/
-COPY --from=build /root/agent/styles /etc/mtconnect/
-
-WORKDIR /etc/mtconnect
+WORKDIR /home/agent
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
@@ -101,3 +106,22 @@ WORKDIR /etc/mtconnect
 CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
   /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
   cd /etc/mtconnect/simulator && agent debug agent.cfg
+
+# ---------------------------------------------------------------------
+# note
+# ---------------------------------------------------------------------
+
+# After setup, the dirs look like this -
+#
+# /usr/local/bin
+#  |-- agent - the cppagent application
+#
+# /etc/mtconnect
+#  |-- schemas - xsd files
+#  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
+#  |-- styles - Streams.xsl, Streams.css, favicon.ico
+#
+# the default simulator/agent.cfg has -
+#   Devices = ../simulator/VMC-3Axis.xml
+#   Files { styles { Path = ../styles } }
+# see https://github.com/mtconnect/cppagent/blob/master/simulator/agent.cfg
