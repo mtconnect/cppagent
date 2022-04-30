@@ -1,13 +1,20 @@
 # MTConnect C++ Agent Docker image build instructions
 
-# run this with
+# if building this with a private repo (eg cppagent_dev), need to send
+# in a github access token in order to clone the repo. 
+#
+# to build locally, run this with -
 #   docker buildx build --secret id=access_token,src=ACCESS_TOKEN .
-# see https://vsupalov.com/docker-buildkit-features/
 # ACCESS_TOKEN is a file containing a GitHub personal access token,
 # so can clone the private mtconnect cppagent_dev repo.
 # keep it out of the github repo with .gitignore.
 # this sets up a file with the contents accessible at /run/secrete/access_token.
-# use as below with
+# see https://vsupalov.com/docker-buildkit-features/
+#
+# to build in github actions, pass this into the docker/build-push-action@v2 step -
+#   secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
+#
+# then use access token as below with
 #   RUN --mount=type=secret,id=access_token \
 #     git clone https://$(cat /run/secrets/access_token)@github.com...
 
