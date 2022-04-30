@@ -7,9 +7,9 @@
 name: Build Docker image
 
 # variables
-# use below, eg with ${{ env.version }}
+# can use these below, eg with ${{ env.version }}
 env:
-  version: 2.0.0.1 #. keep uptodate
+  version: 2.0.0.1 #. keep uptodate - how?
   dockerhub_username: ladder99 #. will change to mtconnect
   # for available platforms see output of a previous run -
   # ie the "Setup Docker BuildX" / "Inspect Builder" section
