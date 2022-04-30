@@ -13,3 +13,4 @@ cmake-build-debug/**
 cmake-build-release/**
 .idea/**
 ACCESS_TOKEN
+.DS_Store
