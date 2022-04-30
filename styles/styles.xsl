@@ -29,7 +29,7 @@
               <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" style="padding: 5px 10px;" href="https://mtconnect.org" target="_blank" rel="noopener noreferrer">
-              <img alt="Brand" src="styles/LogoMTConnect.gif" />
+              <img alt="Brand" src="styles/LogoMTConnect.jpg" />
             </a>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -163,7 +163,7 @@
       </div>
 
       <button onclick="gotoTop()" id="gotoTop" title="Go to top">
-        <img src="/styles/icon-up.gif" />
+        <img src="/styles/icon-up.jpg" />
       </button>
 
       <!-- note: jquery is needed for bootstrap modal -->
@@ -219,7 +219,7 @@
                   <!-- add +/- if item has any child elements -->
                   <xsl:choose>
                     <xsl:when test="*">
-                      <img style="width:12px;" src="/styles/icon-minus.gif" />
+                      <img style="width:12px;" src="/styles/icon-minus.jpg" />
                     </xsl:when>
                     <xsl:otherwise>
                       &#8198;
@@ -470,7 +470,7 @@
                 <!-- add +/- if item has any child elements -->
                 <xsl:choose>
                   <xsl:when test="*">
-                    <img style="width:12px;" src="/styles/icon-minus.gif" />
+                    <img style="width:12px;" src="/styles/icon-minus.jpg" />
                   </xsl:when>
                   <xsl:otherwise>
 										&#8198;

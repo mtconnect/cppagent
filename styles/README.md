@@ -12,7 +12,7 @@ Windows had trouble handling the xsl:include statements, like
 
 it appends extra text at the end of the xml, confusing the browser. So copied/pasted that code into the main styles.xsl file.
 
-Windows also had trouble rendering the png files, so changed those to gifs. 
+Windows also had trouble rendering both png and gif files, so changed those to jpgs. 
 
 
 ## Installation
