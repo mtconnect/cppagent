@@ -1,0 +1,192 @@
+/* define global variables */
+:root {
+  --header-height: 60px;
+}
+
+.container-fluid {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.nav,
+.navbar,
+.navbar-default,
+.navbar-nav,
+.navbar-collapse,
+.navbar-header,
+.navbar-form,
+.navbar-brand {
+  background: black;
+}
+.navbar-header {
+  padding-left: 10px;
+}
+
+/* change icons for summary/detail */
+/* https://stackoverflow.com/questions/10813581/replace-the-expand-icon-of-html5-details-tag */
+details > summary {
+  list-style-type: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details > summary::before {
+  /* content: '▶️'; */
+  /* content: '&boxplus;'; */
+  content: '⊞';
+}
+details[open] > summary::before {
+  /* content: '🔽'; */
+  /* content: '&boxminus;'; */
+  content: '⊟';
+}
+/* details { */
+/* border: 1px solid gray; */
+/* border-radius: 0.2rem; */
+/* padding: 0.5rem; */
+/* } */
+details[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
+summary {
+  cursor: pointer;
+}
+
+/* h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+} */
+
+body {
+  /* since the table is the scroller, hide body scrollbars... */
+  /* see https://dev.to/debadeepsen/a-table-with-a-fixed-sticky-header-54gm */
+  overflow-y: hidden;
+}
+
+.page-container {
+  margin-top: var(--header-height);
+}
+
+.stickytable-container {
+  width: 100%;
+  height: calc(100vh - var(--header-height));
+  overflow-y: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.subtable {
+  margin: 8px 8px 8px 3em;
+}
+
+table th {
+  text-align: left;
+  background: #e2e2e2;
+}
+
+/* don't do sticky unless it's a top-level table */
+.table > thead > tr > th {
+  position: sticky;
+  top: 0px;
+}
+
+/* table tbody tr:nth-child(odd) td {
+  background: #fafafa;
+} */
+
+.table > tbody > tr > td,
+.table > tbody > tr > th,
+.table > tfoot > tr > td,
+.table > tfoot > tr > th,
+.table > thead > tr > td,
+.table > thead > tr > th,
+.subtable td {
+  padding: 1px 8px;
+  border: 1px solid #ddd;
+}
+
+th > .truncate,
+td > .truncate {
+  width: auto;
+  min-width: 0;
+  max-width: 200px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* tabs */
+.nav > li {
+  background: #333;
+  margin-right: 2px;
+  border-radius: 6px 6px 0 0;
+  /* border-bottom: 2px solid #333; */
+  border-bottom: 4px solid #333;
+}
+.navbar-inverse .navbar-nav > li.selected {
+  background: #555;
+  border-bottom: 4px solid limegreen;
+  /* border-bottom: 4px solid #21b4ec; */
+}
+.navbar-inverse .navbar-nav > li.selected > a {
+  color: white;
+}
+
+.btn.active {
+  /* background: yellowgreen; */
+  /* background: #649fec; */
+  background: #c4e073;
+}
+
+#gotoTop {
+  position: fixed;
+  bottom: 15px;
+  right: 20px;
+  z-index: 99;
+  border: none;
+  outline: none;
+  color: black;
+  background: rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+#gotoTop img {
+  width: 32px;
+}
+
+.navbar-header {
+  /* background: white; */
+  padding: 2px;
+  border-radius: 4px 4px 0 0;
+}
+.navbar-brand {
+  margin: 0 !important;
+  padding: 0;
+  /* background: white; */
+}
+.navbar-brand img {
+  height: 40px;
+}
+
+.modal-dialog {
+  /* width: 600px; */
+  width: 960px;
+  /* margin: 30px auto; */
+}
+.modal-content {
+  font-size: 1.2em;
+}
+.modal-content h4 {
+  font-weight: bold;
+}
