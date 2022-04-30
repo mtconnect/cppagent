@@ -2,53 +2,15 @@ set(AGENT_SOURCES
  # src HEADER_FILE_ONLY
         
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/logging.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer.hpp"        
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_helper.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_parser.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer_helper.hpp"
 
 # src SOURCE_FILES_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/json_printer.cpp"  
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/version.cpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_parser.cpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/xml_printer.cpp"  
         
-# src/source HEADER_FILE_ONLY
-
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter_pipeline.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/http_session.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/https_session.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session_impl.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.hpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/connector.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_adapter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_pipeline.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/error_code.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.hpp"
-
-# src/source SOURCE_FILES_ONLY
-        
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter_pipeline.cpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/connector.cpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_adapter.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_pipeline.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.cpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.cpp"
 
 # src/asset HEADER_FILE_ONLY 
 
@@ -133,7 +95,6 @@ set(AGENT_SOURCES
 
 # src/entity HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity.hpp" 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/data_set.hpp"        
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/entity.hpp"  
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/factory.hpp" 
@@ -165,6 +126,14 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.cpp" 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.cpp"        
 
+# src/parser HEADER_FILE_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/parser/xml_parser.hpp"
+
+# src/parser SOURCE_FILES_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/parser/xml_parser.cpp"
+
 # src/pipeline HEADER_FILE_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/convert_sample.hpp"
@@ -193,6 +162,48 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/timestamp_extractor.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/response_document.cpp"
 
+# src/printer HEADER_FILE_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/json_printer.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/printer.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/xml_helper.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/xml_printer.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/xml_printer_helper.hpp"
+
+# src/printer SOURCE_FILES_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/json_printer.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/xml_printer.cpp"
+
+# src/source HEADER_FILE_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter_pipeline.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/http_session.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/https_session.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session_impl.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/connector.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_adapter.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_pipeline.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/error_code.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.hpp"
+
+# src/source SOURCE_FILES_ONLY
+        
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter_pipeline.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/connector.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_adapter.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_pipeline.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.cpp"
 # src/sink HEADER_FILE_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/sink.hpp"

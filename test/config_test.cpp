@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,9 +26,9 @@
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
+#include "printer/xml_printer.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "source/adapter/shdr/shdr_adapter.hpp"
-#include "xml_printer.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -244,7 +244,7 @@ namespace {
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("x");
@@ -262,7 +262,7 @@ namespace {
     m_config->loadConfig(devices);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getDevicesUrn("y");
     ASSERT_EQ(std::string("urn:example.com:ExampleDevices:1.2"), path);
@@ -279,7 +279,7 @@ namespace {
     m_config->loadConfig(asset);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getAssetsUrn("z");
     ASSERT_EQ(std::string("urn:example.com:ExampleAssets:1.2"), path);
@@ -296,7 +296,7 @@ namespace {
     m_config->loadConfig(errors);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getErrorUrn("a");
     ASSERT_EQ(std::string("urn:example.com:ExampleErrors:1.2"), path);
@@ -365,7 +365,7 @@ namespace {
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("m");
@@ -385,7 +385,7 @@ namespace {
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto version = printer->getSchemaVersion();
@@ -414,7 +414,7 @@ namespace {
     m_config->loadConfig(schemas);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("m");
@@ -680,7 +680,7 @@ MaxCachedFileSize = 2000
 
     auto cache = rest->getFileCache();
     ASSERT_EQ(2000, cache->getMaxCachedFileSize());
-  }   
+  }
 
   TEST_F(ConfigTest, max_cache_size_in_kb)
   {

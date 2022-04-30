@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,17 +23,19 @@
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "observation/observation.hpp"
+#include "parser/xml_parser.hpp"
+#include "printer/xml_printer.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
 
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::sink::rest_sink;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
+using namespace mtconnect::printer;
+using namespace mtconnect::parser;
 
 Properties operator"" _value(const char *value, size_t s)
 {
@@ -46,7 +48,7 @@ protected:
   void SetUp() override
   {
     m_config = new XmlParser();
-    m_printer = new XmlPrinter("1.7", true);
+    m_printer = new printer::XmlPrinter("1.7", true);
     m_printer->setSchemaVersion("");
     m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", m_printer);
   }
@@ -59,8 +61,8 @@ protected:
     m_printer = nullptr;
   }
 
-  mtconnect::XmlParser *m_config {nullptr};
-  mtconnect::XmlPrinter *m_printer {nullptr};
+  mtconnect::parser::XmlParser *m_config {nullptr};
+  mtconnect::printer::XmlPrinter *m_printer {nullptr};
   std::list<mtconnect::DevicePtr> m_devices;
 
   // Construct a component event and set it as the data item's latest event

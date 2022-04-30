@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,13 +32,13 @@
 
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "entity/json_printer.cpp"
 #include "entity/json_printer.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
+#include "printer/xml_printer_helper.hpp"
 #include "source/adapter/adapter.hpp"
-#include "xml_printer_helper.hpp"
 
 using json = nlohmann::json;
 using namespace std;

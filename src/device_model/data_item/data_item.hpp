@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@
 #include "constraints.hpp"
 #include "definition.hpp"
 #include "device_model/component.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "filter.hpp"
 #include "observation/change_observer.hpp"
 #include "relationships.hpp"

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,8 +30,8 @@
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "json_helper.hpp"
-#include "json_printer.hpp"
 #include "observation/observation.hpp"
+#include "printer/json_printer.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
@@ -42,9 +42,9 @@ using json = nlohmann::json;
 class JsonPrinterErrorTest : public testing::Test
 {
 protected:
-  void SetUp() override { m_printer = std::make_unique<JsonPrinter>("1.5", true); }
+  void SetUp() override { m_printer = std::make_unique<printer::JsonPrinter>("1.5", true); }
 
-  std::unique_ptr<JsonPrinter> m_printer;
+  std::unique_ptr<printer::JsonPrinter> m_printer;
 };
 
 TEST_F(JsonPrinterErrorTest, PrintError)

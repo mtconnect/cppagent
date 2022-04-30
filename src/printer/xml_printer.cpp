@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +49,7 @@
 
 using namespace std;
 
-namespace mtconnect {
+namespace mtconnect::printer {
   using namespace observation;
   using namespace asset;
   using namespace device_model::configuration;
@@ -685,4 +685,4 @@ namespace mtconnect {
       }
     }
   }
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

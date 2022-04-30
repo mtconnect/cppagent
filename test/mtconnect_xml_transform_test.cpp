@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@
 #include "agent.hpp"
 #include "entity/entity.hpp"
 #include "pipeline/mtconnect_xml_transform.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -59,8 +59,8 @@ class MTConnectXmlTransformTest : public testing::Test
 protected:
   void SetUp() override
   {
-    auto printer = make_unique<XmlPrinter>();
-    auto parser = make_unique<XmlParser>();
+    auto printer = make_unique<printer::XmlPrinter>();
+    auto parser = make_unique<parser::XmlParser>();
 
     m_device =
         parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()).front();

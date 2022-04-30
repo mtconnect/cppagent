@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,11 +22,12 @@
 #include <libxml/xmlwriter.h>
 
 #include "logging.hpp"
-#include "xml_printer_helper.hpp"
+#include "printer/xml_printer_helper.hpp"
 
 using namespace std;
 
 namespace mtconnect {
+  using namespace printer;
   namespace entity {
     inline string stripUndeclaredNamespace(const QName &qname,
                                            const unordered_set<string> &namespaces)

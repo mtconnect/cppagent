@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,11 +31,11 @@
     throw XmlError("XML Error at " __FILE__ "(" xml_strfy(__LINE__) "): " #expr); \
   }
 
-namespace mtconnect {
+namespace mtconnect::printer {
   class XmlError : public std::logic_error
   {
   public:
     using std::logic_error::logic_error;
   };
 
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,12 +28,10 @@
 #include <string>
 #include <vector>
 
-#include "json_printer.hpp"
-
 #include "configuration/agent_config.hpp"
-#include "sink/mqtt_sink/mqtt_service.hpp"
 #include "pipeline/pipeline_context.hpp"
-#include "configuration/agent_config.hpp"
+#include "printer/json_printer.hpp"
+#include "sink/mqtt_sink/mqtt_service.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -47,7 +45,7 @@ using namespace mtconnect::configuration;
 using namespace mtconnect::sink;
 using namespace mtconnect::sink::mqtt_sink;
 namespace asio = boost::asio;
-//using json = nlohmann::json;
+// using json = nlohmann::json;
 
 namespace mtconnect {
 
@@ -82,17 +80,17 @@ namespace mtconnect {
     {
       mtconnect::configuration::gAgentLogger = config.getLogger();
       PLUGIN_LOG(debug) << "Registering sink factory for mqtt_sink_plugin_test";
-      config.getSinkFactory().registerFactory("mqtt_sink_plugin_test", &mqtt_sink_plugin_test::create);
+      config.getSinkFactory().registerFactory("mqtt_sink_plugin_test",
+                                              &mqtt_sink_plugin_test::create);
     }
   };
 
   BOOST_DLL_ALIAS(mqtt_sink_plugin_test::register_factory, initialize_plugin)
-}
+}  // namespace mtconnect
 
 class MqttSinkTest : public testing::Test
 {
 protected:
-
   void SetUp() override
   {
     m_config = std::make_unique<AgentConfiguration>();
@@ -109,7 +107,6 @@ protected:
   std::unique_ptr<AgentConfiguration> m_config;
   std::filesystem::path m_cwd;
 };
-
 
 TEST_F(MqttSinkTest, dynamic_load_Mqtt_sink)
 {
@@ -158,8 +155,6 @@ Sinks {
 
   ASSERT_TRUE(agent);
 
-  //const auto sink = agent->findSink("mqtt_sink_plugin_test");
-  //ASSERT_TRUE(sink != nullptr);
+  // const auto sink = agent->findSink("mqtt_sink_plugin_test");
+  // ASSERT_TRUE(sink != nullptr);
 }
-
-

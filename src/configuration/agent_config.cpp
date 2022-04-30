@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,13 +52,13 @@
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
+#include "printer/xml_printer.hpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "source/adapter/agent_adapter/agent_adapter.hpp"
 #include "source/adapter/mqtt/mqtt_adapter.hpp"
 #include "source/adapter/shdr/shdr_adapter.hpp"
 #include "version.h"
-#include "xml_printer.hpp"
 
 #ifdef WITH_PYTHON
 #include "python/embedded.hpp"
@@ -273,7 +273,7 @@ namespace mtconnect::configuration {
     // Check every 10 seconds
     do
     {
-      this_thread::sleep_for(10ms);
+      this_thread::sleep_for(10s);
 
       time_t devices = 0, cfg = 0;
       bool check = true;

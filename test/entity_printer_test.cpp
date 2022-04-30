@@ -1,3 +1,20 @@
+//
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -12,11 +29,11 @@
 #include <libxml/xmlwriter.h>
 
 #include "agent.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
+#include "printer/xml_printer_helper.hpp"
 #include "source/adapter/adapter.hpp"
-#include "xml_printer_helper.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -26,7 +43,7 @@ using namespace std::literals;
 class EntityPrinterTest : public testing::Test
 {
 protected:
-  void SetUp() override { m_writer = make_unique<XmlWriter>(true); }
+  void SetUp() override { m_writer = make_unique<printer::XmlWriter>(true); }
 
   void TearDown() override { m_writer.reset(); }
 
@@ -60,7 +77,7 @@ protected:
     return root;
   }
 
-  std::unique_ptr<XmlWriter> m_writer;
+  std::unique_ptr<printer::XmlWriter> m_writer;
 };
 
 TEST_F(EntityPrinterTest, TestParseSimpleDocument)

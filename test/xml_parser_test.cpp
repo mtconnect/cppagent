@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,9 +24,9 @@
 #include <stdexcept>
 
 #include "device_model/reference.hpp"
+#include "parser/xml_parser.hpp"
+#include "printer/xml_printer.hpp"
 #include "test_utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
 
 using namespace std;
 using namespace std::literals;
@@ -44,8 +44,8 @@ protected:
 
     try
     {
-      std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
-      m_xmlParser = new XmlParser();
+      std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+      m_xmlParser = new parser::XmlParser();
       m_devices =
           m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get());
     }
@@ -64,7 +64,7 @@ protected:
     }
   }
 
-  XmlParser *m_xmlParser {nullptr};
+  parser::XmlParser *m_xmlParser {nullptr};
   std::list<DevicePtr> m_devices;
 };
 
@@ -76,13 +76,13 @@ TEST_F(XmlParserTest, Constructor)
     m_xmlParser = nullptr;
   }
 
-  std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
-  m_xmlParser = new XmlParser();
+  std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+  m_xmlParser = new parser::XmlParser();
   ASSERT_THROW(m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/badPath.xml", printer.get()),
                std::runtime_error);
   delete m_xmlParser;
   m_xmlParser = nullptr;
-  m_xmlParser = new XmlParser();
+  m_xmlParser = new parser::XmlParser();
   ASSERT_NO_THROW(
       m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()));
 }
@@ -179,8 +179,8 @@ TEST_F(XmlParserTest, GetDataItemsExt)
   // For the rest we will check with the extended schema
   try
   {
-    std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
-    m_xmlParser = new XmlParser();
+    std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+    m_xmlParser = new parser::XmlParser();
     m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", printer.get());
   }
   catch (exception &)
@@ -207,8 +207,8 @@ TEST_F(XmlParserTest, ExtendedSchema)
 
   try
   {
-    std::unique_ptr<XmlPrinter> printer(new XmlPrinter());
-    m_xmlParser = new XmlParser();
+    std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+    m_xmlParser = new parser::XmlParser();
     m_devices = m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", printer.get());
   }
   catch (exception &)
@@ -279,8 +279,8 @@ TEST_F(XmlParserTest, NoNamespace)
     m_xmlParser = nullptr;
   }
 
-  unique_ptr<XmlPrinter> printer(new XmlPrinter());
-  m_xmlParser = new XmlParser();
+  unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+  m_xmlParser = new parser::XmlParser();
   ASSERT_NO_THROW(
       m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/NoNamespace.xml", printer.get()));
 }
@@ -291,8 +291,8 @@ TEST_F(XmlParserTest, FilteredDataItem13)
   m_xmlParser = nullptr;
   try
   {
-    unique_ptr<XmlPrinter> printer(new XmlPrinter());
-    m_xmlParser = new XmlParser();
+    unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+    m_xmlParser = new parser::XmlParser();
     m_devices =
         m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", printer.get());
   }
@@ -319,8 +319,8 @@ TEST_F(XmlParserTest, FilteredDataItem)
 
   try
   {
-    unique_ptr<XmlPrinter> printer(new XmlPrinter());
-    m_xmlParser = new XmlParser();
+    unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+    m_xmlParser = new parser::XmlParser();
     m_devices =
         m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/filter_example.xml", printer.get());
   }
@@ -351,8 +351,8 @@ TEST_F(XmlParserTest, References)
 
   try
   {
-    unique_ptr<XmlPrinter> printer(new XmlPrinter());
-    m_xmlParser = new XmlParser();
+    unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+    m_xmlParser = new parser::XmlParser();
     m_devices =
         m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/reference_example.xml", printer.get());
   }
@@ -413,8 +413,8 @@ TEST_F(XmlParserTest, SourceReferences)
 
   try
   {
-    unique_ptr<XmlPrinter> printer(new XmlPrinter());
-    m_xmlParser = new XmlParser();
+    unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+    m_xmlParser = new parser::XmlParser();
     m_devices =
         m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/reference_example.xml", printer.get());
   }
@@ -442,8 +442,8 @@ TEST_F(XmlParserTest, DataItemRelationships)
     m_xmlParser = nullptr;
   }
 
-  unique_ptr<XmlPrinter> printer(new XmlPrinter());
-  m_xmlParser = new XmlParser();
+  unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
+  m_xmlParser = new parser::XmlParser();
   m_devices =
       m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", printer.get());
 
