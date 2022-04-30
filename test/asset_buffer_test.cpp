@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,9 +27,9 @@
 
 #include "agent_test_helper.hpp"
 #include "asset/asset_buffer.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
+#include "printer/xml_printer.hpp"
 #include "test_utilities.hpp"
-#include "xml_printer.hpp"
 
 #if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,11 +31,11 @@
 #include "device_model/reference.hpp"
 #include "pipeline/mtconnect_xml_transform.hpp"
 #include "pipeline/response_document.hpp"
+#include "printer/xml_printer.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/agent_adapter/agent_adapter.hpp"
 #include "source/adapter/agent_adapter/url_parser.hpp"
 #include "test_utilities.hpp"
-#include "xml_printer.hpp"
 
 // Registers the fixture into the 'registry'
 using namespace std;
@@ -93,8 +93,8 @@ protected:
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
 
-    auto printer = make_unique<XmlPrinter>();
-    auto parser = make_unique<XmlParser>();
+    auto printer = make_unique<printer::XmlPrinter>();
+    auto parser = make_unique<parser::XmlParser>();
 
     m_device =
         parser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()).front();
@@ -229,7 +229,7 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
   timeout.async_wait([](boost::system::error_code ec) {
     if (!ec)
     {
-     // throw runtime_error("test timed out");
+      // throw runtime_error("test timed out");
     }
   });
 

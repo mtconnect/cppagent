@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,11 +44,11 @@
 #include "configuration/config_options.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "pipeline/shdr_tokenizer.hpp"
+#include "printer/xml_printer.hpp"
 #include "ruby/ruby_smart_ptr.hpp"
 #include "ruby/ruby_vm.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "source/adapter/shdr/shdr_adapter.hpp"
-#include "xml_printer.hpp"
 
 #ifdef _WIN32
 #include <direct.h>

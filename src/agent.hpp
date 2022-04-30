@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,9 +31,10 @@
 #include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
+#include "parser/xml_parser.hpp"
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
-#include "printer.hpp"
+#include "printer/printer.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "sink/rest_sink/circular_buffer.hpp"
 #include "sink/rest_sink/rest_service.hpp"
@@ -42,7 +43,6 @@
 #include "source/adapter/adapter.hpp"
 #include "source/loopback_source.hpp"
 #include "source/source.hpp"
-#include "xml_parser.hpp"
 
 namespace mtconnect {
   namespace source::adapter {
@@ -181,7 +181,7 @@ namespace mtconnect {
     auto getAgentDevice() { return m_agentDevice; }
 
     // Printers
-    Printer *getPrinter(const std::string &aType) const
+    printer::Printer *getPrinter(const std::string &aType) const
     {
       auto printer = m_printers.find(aType);
       if (printer != m_printers.end())
@@ -239,7 +239,7 @@ namespace mtconnect {
     pipeline::PipelineContextPtr m_pipelineContext;
 
     // Pointer to the configuration file for node access
-    std::unique_ptr<XmlParser> m_xmlParser;
+    std::unique_ptr<parser::XmlParser> m_xmlParser;
     PrinterMap m_printers;
 
     // Agent Device
@@ -312,7 +312,7 @@ namespace mtconnect {
     AgentSinkContract(Agent *agent) : m_agent(agent) {}
     ~AgentSinkContract() = default;
 
-    Printer *getPrinter(const std::string &aType) const override
+    printer::Printer *getPrinter(const std::string &aType) const override
     {
       return m_agent->getPrinter(aType);
     }

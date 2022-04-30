@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,9 +18,10 @@
 #include "mqtt_service.hpp"
 
 #include "configuration/config_options.hpp"
-#include "entity.hpp"
+#include "entity/entity.hpp"
+#include "entity/factory.hpp"
 #include "entity/xml_parser.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 using json = nlohmann::json;
 using ptree = boost::property_tree::ptree;
@@ -46,7 +47,7 @@ namespace mtconnect {
         m_jsonPrinter = std::unique_ptr<JsonPrinter>(jsonPrinter);
       }
 
-      void MqttService::start() 
+      void MqttService::start()
       {
         // mqtt client side not a server side...
       }
@@ -80,7 +81,6 @@ namespace mtconnect {
               return sink;
             });
       }
-
     }  // namespace mqtt_sink
   }    // namespace sink
 }  // namespace mtconnect

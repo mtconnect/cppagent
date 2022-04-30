@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,9 +19,9 @@
 
 #include <libxml/xmlwriter.h>
 
-#include "xml_helper.hpp"
+#include "printer/xml_helper.hpp"
 
-namespace mtconnect {
+namespace mtconnect::printer {
   class XmlWriter
   {
   public:
@@ -123,4 +123,4 @@ namespace mtconnect {
     std::string m_name;
     std::string m_key;
   };
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

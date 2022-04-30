@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,12 +34,12 @@
 #include "configuration/config_options.hpp"
 #include "device_model/agent_device.hpp"
 #include "entity/xml_parser.hpp"
-#include "json_printer.hpp"
 #include "logging.hpp"
 #include "observation/observation.hpp"
+#include "printer/json_printer.hpp"
+#include "printer/xml_printer.hpp"
 #include "sink/rest_sink/file_cache.hpp"
 #include "sink/rest_sink/session.hpp"
-#include "xml_printer.hpp"
 
 using namespace std;
 
@@ -59,7 +59,7 @@ namespace mtconnect {
     : m_options(options),
       m_context(context),
       m_strand(m_context),
-      m_xmlParser(make_unique<mtconnect::XmlParser>()),
+      m_xmlParser(make_unique<parser::XmlParser>()),
       m_version(
           GetOption<string>(options, mtconnect::configuration::SchemaVersion).value_or("1.7")),
       m_configXmlPath(configXmlPath),
@@ -76,8 +76,8 @@ namespace mtconnect {
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
 
     // Create the Printers
-    m_printers["xml"] = make_unique<XmlPrinter>(m_version, m_pretty);
-    m_printers["json"] = make_unique<JsonPrinter>(m_version, m_pretty);
+    m_printers["xml"] = make_unique<printer::XmlPrinter>(m_version, m_pretty);
+    m_printers["json"] = make_unique<printer::JsonPrinter>(m_version, m_pretty);
   }
 
   void Agent::initialize(pipeline::PipelineContextPtr context)
@@ -337,8 +337,8 @@ namespace mtconnect {
     try
     {
       // Load the configuration for the Agent
-      auto devices = m_xmlParser->parseFile(configXmlPath,
-                                            dynamic_cast<XmlPrinter *>(m_printers["xml"].get()));
+      auto devices = m_xmlParser->parseFile(
+          configXmlPath, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
 
       // Fir the DeviceAdded event for each device
       for (auto device : devices)
@@ -364,7 +364,7 @@ namespace mtconnect {
   {
     NAMED_SCOPE("Agent::verifyDevice");
 
-    auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
+    auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
     const auto &schemaVersion = xmlPrinter->getSchemaVersion();
 
     // Add the devices to the device map and create availability and
@@ -551,7 +551,7 @@ namespace mtconnect {
     NAMED_SCOPE("Agent::loadCachedProbe");
 
     // Reload the document for path resolution
-    auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_printers["xml"].get());
+    auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
     m_xmlParser->loadDocument(xmlPrinter->printProbe(0, 0, 0, 0, 0, m_devices));
   }
 

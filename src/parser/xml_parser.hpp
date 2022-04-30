@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,8 +30,10 @@
 #include "sink/rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect {
+namespace mtconnect::printer {
   class XmlPrinter;
+}
+namespace mtconnect::parser {
 
   class XmlParser
   {
@@ -42,7 +44,8 @@ namespace mtconnect {
     virtual ~XmlParser();
 
     // Parses a file and returns a list of devices
-    std::list<device_model::DevicePtr> parseFile(const std::string &aPath, XmlPrinter *aPrinter);
+    std::list<device_model::DevicePtr> parseFile(const std::string &aPath,
+                                                 printer::XmlPrinter *aPrinter);
 
     // Just loads the document, assumed it has already been parsed before.
     void loadDocument(const std::string &aDoc);
@@ -55,4 +58,4 @@ namespace mtconnect {
     xmlDocPtr m_doc = nullptr;
     mutable std::shared_mutex m_mutex;
   };
-}  // namespace mtconnect
+}  // namespace mtconnect::parser

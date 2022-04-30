@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,7 +54,7 @@ namespace mtconnect::ruby {
     void try_lock() { m_mutex.try_lock(); }
 
     static auto &rubyVM() { return *m_vm; }
-    static bool hasVM() { return  m_vm != nullptr; }
+    static bool hasVM() { return m_vm != nullptr; }
 
   protected:
     void createModule() { m_module = mrb_define_module(m_mrb, "MTConnect"); }

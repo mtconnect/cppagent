@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@
 #include "device_model/composition.hpp"
 #include "entity/xml_parser.hpp"
 #include "logging.hpp"
-#include "xml_printer.hpp"
+#include "printer/xml_printer.hpp"
 
 #if _MSC_VER >= 1900
 #define gets gets_s
@@ -48,9 +48,10 @@ using namespace std;
     throw runtime_error("XML Error at " __FILE__ "(" strfy(__LINE__) "): " #expr); \
   }
 
-namespace mtconnect {
+namespace mtconnect::parser {
   using namespace observation;
   using namespace device_model;
+  using namespace printer;
 
   extern "C" void XMLCDECL agentXMLErrorFunc(void *ctx ATTRIBUTE_UNUSED, const char *msg, ...)
   {
@@ -385,4 +386,4 @@ namespace mtconnect {
       LOG(warning) << "getDataItems: Could not parse path: " << inputPath;
     }
   }
-}  // namespace mtconnect
+}  // namespace mtconnect::parser

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,10 +22,10 @@
 
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
+#include "printer/printer.hpp"
+#include "printer/xml_printer_helper.hpp"
 #include "sink/sink.hpp"
 #include "utilities.hpp"
-#include "xml_printer_helper.hpp"
-#include "printer.hpp"
 
 using namespace std;
 using namespace mtconnect::entity;
@@ -55,9 +55,8 @@ namespace mtconnect {
         bool publish(asset::AssetPtr asset) override;
 
         static void registerFactory(SinkFactory &factory);
-        
-      protected:
 
+      protected:
         boost::asio::io_context &m_context;
         ConfigOptions m_options;
         std::unique_ptr<JsonPrinter> m_jsonPrinter;

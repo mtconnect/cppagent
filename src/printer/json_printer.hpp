@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,10 +18,10 @@
 #pragma once
 
 #include "asset/cutting_tool.hpp"
-#include "printer.hpp"
+#include "printer/printer.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect {
+namespace mtconnect::printer {
   class JsonPrinter : public Printer
   {
   public:
@@ -50,4 +50,4 @@ namespace mtconnect {
     std::string m_version;
     std::string m_hostname;
   };
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

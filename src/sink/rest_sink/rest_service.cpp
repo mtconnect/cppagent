@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +19,8 @@
 
 #include "configuration/config_options.hpp"
 #include "entity/xml_parser.hpp"
+#include "printer/xml_printer.hpp"
 #include "server.hpp"
-#include "xml_printer.hpp"
 
 namespace asio = boost::asio;
 using namespace std;
@@ -32,6 +32,7 @@ namespace mtconnect {
   using namespace observation;
   using namespace asset;
   using namespace device_model;
+  using namespace printer;
   namespace sink::rest_sink {
     RestService::RestService(asio::io_context &context, SinkContractPtr &&contract,
                              const ConfigOptions &options, const ptree &config)

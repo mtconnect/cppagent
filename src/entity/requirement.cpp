@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,7 @@
 #include <date/date.h>
 #include <string_view>
 
-#include "entity.hpp"
+#include "entity/entity.hpp"
 #include "factory.hpp"
 #include "logging.hpp"
 

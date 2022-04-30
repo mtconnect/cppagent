@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@
 using namespace std;
 using json = nlohmann::json;
 
-namespace mtconnect {
+namespace mtconnect::printer {
   using namespace observation;
   using namespace device_model;
 
@@ -205,7 +205,7 @@ namespace mtconnect {
       {
         json items = json::array();
         for (auto &event : m_events)
-          items.emplace_back(::mtconnect::toJson(event));
+          items.emplace_back(printer::toJson(event));
 
         ret = make_pair(m_category, items);
       }
@@ -383,4 +383,4 @@ namespace mtconnect {
 
     return print(doc, m_pretty);
   }
-}  // namespace mtconnect
+}  // namespace mtconnect::printer

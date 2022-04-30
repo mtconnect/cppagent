@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,14 +28,16 @@
 #include "asset/asset_storage.hpp"
 #include "device_model/device.hpp"
 #include "observation/observation.hpp"
-#include "printer.hpp"
+#include "printer/printer.hpp"
 
 namespace mtconnect {
-  class Printer;
+  namespace printer {
+    class Printer;
+  }
   namespace source {
     class Source;
   }
-  using PrinterMap = std::map<std::string, std::unique_ptr<Printer>>;
+  using PrinterMap = std::map<std::string, std::unique_ptr<printer::Printer>>;
   namespace pipeline {
     class PipelineContext;
   }
@@ -45,7 +47,7 @@ namespace mtconnect {
     {
     public:
       virtual ~SinkContract() = default;
-      virtual Printer *getPrinter(const std::string &aType) const = 0;
+      virtual printer::Printer *getPrinter(const std::string &aType) const = 0;
       virtual const PrinterMap &getPrinters() const = 0;
 
       // Get device from device map

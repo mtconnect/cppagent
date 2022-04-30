@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,13 +32,13 @@
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "json_helper.hpp"
-#include "json_printer.hpp"
 #include "observation/observation.hpp"
+#include "parser/xml_parser.hpp"
+#include "printer/json_printer.hpp"
+#include "printer/xml_printer.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
-#include "xml_parser.hpp"
-#include "xml_printer.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -49,8 +49,8 @@ class JsonPrinterProbeTest : public testing::Test
 protected:
   void SetUp() override
   {
-    m_xmlPrinter = std::make_unique<XmlPrinter>("1.5");
-    m_printer = std::make_unique<JsonPrinter>("1.5", true);
+    m_xmlPrinter = std::make_unique<printer::XmlPrinter>("1.5");
+    m_printer = std::make_unique<printer::JsonPrinter>("1.5", true);
 
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml", 8, 4, "1.5", 25);
@@ -67,12 +67,12 @@ protected:
     m_devices.clear();
   }
 
-  std::unique_ptr<JsonPrinter> m_printer;
+  std::unique_ptr<printer::JsonPrinter> m_printer;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
   std::list<DevicePtr> m_devices;
 
-  std::unique_ptr<XmlPrinter> m_xmlPrinter;
+  std::unique_ptr<printer::XmlPrinter> m_xmlPrinter;
 };
 
 TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
