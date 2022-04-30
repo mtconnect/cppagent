@@ -49,6 +49,7 @@ public:
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
+  void sourceFailed(const std::string &id) override {}
 
   std::map<string, DataItemPtr> &m_dataItems;
 };

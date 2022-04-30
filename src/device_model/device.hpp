@@ -24,7 +24,7 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
-  namespace adapter {
+  namespace source::adapter {
     class Adapter;
   }
 
@@ -54,7 +54,7 @@ namespace mtconnect {
       void addDeviceDataItem(DataItemPtr dataItem);
       DataItemPtr getDeviceDataItem(const std::string &name) const;
 
-      void addAdapter(adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
+      void addAdapter(source::adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
       ComponentPtr getComponentById(const std::string &aId) const
       {
         auto comp = m_componentsById.find(aId);
@@ -75,7 +75,7 @@ namespace mtconnect {
 
       void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors) override;
 
-      std::vector<adapter::Adapter *> m_adapters;
+      std::vector<source::adapter::Adapter *> m_adapters;
 
       auto getMTConnectVersion() const { maybeGet<std::string>("mtconnectVersion"); }
 

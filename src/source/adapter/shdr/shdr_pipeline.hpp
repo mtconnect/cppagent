@@ -17,20 +17,16 @@
 
 #pragma once
 
-#include "adapter/adapter_pipeline.hpp"
+#include "source/adapter/adapter_pipeline.hpp"
 
-namespace mtconnect {
-  namespace adapter {
-    namespace shdr {
-      class ShdrPipeline : public AdapterPipeline
-      {
-      public:
-        ShdrPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
-          : AdapterPipeline(context, st)
-        {}
+namespace mtconnect::source::adapter::shdr {
+  class ShdrPipeline : public AdapterPipeline
+  {
+  public:
+    ShdrPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
+      : AdapterPipeline(context, st)
+    {}
 
-        void build(const ConfigOptions &options) override;
-      };
-    }  // namespace shdr
-  }    // namespace adapter
-}  // namespace mtconnect
+    void build(const ConfigOptions &options) override;
+  };
+}  // namespace mtconnect::source::adapter::shdr

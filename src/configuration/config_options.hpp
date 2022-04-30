@@ -54,6 +54,9 @@ namespace mtconnect {
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(Device);
+    DECLARE_CONFIGURATION(SourceDevice);
+    DECLARE_CONFIGURATION(UsePolling);
+    DECLARE_CONFIGURATION(PollingInterval);
     DECLARE_CONFIGURATION(Host);
     DECLARE_CONFIGURATION(PreserveUUID);
     DECLARE_CONFIGURATION(UUID);
@@ -78,6 +81,8 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttCaCert);
     DECLARE_CONFIGURATION(Url);
     DECLARE_CONFIGURATION(Path);
+    DECLARE_CONFIGURATION(Count);
+    DECLARE_CONFIGURATION(Heartbeat);
     DECLARE_CONFIGURATION(MqttTls);
 
   }  // namespace configuration

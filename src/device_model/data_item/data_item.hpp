@@ -34,7 +34,7 @@
 #endif
 
 namespace mtconnect {
-  namespace adapter {
+  namespace source::adapter {
     class Adapter;
   }
   namespace device_model {

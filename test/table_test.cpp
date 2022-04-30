@@ -26,15 +26,15 @@
 #include <sstream>
 #include <string>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 using namespace mtconnect::sink::rest_sink;
@@ -80,7 +80,7 @@ TEST_F(TableTest, DataItem)
   ASSERT_TRUE(m_dataItem1->isDataSet());
 
   ASSERT_EQ((string) "TABLE", m_dataItem1->get<string>("representation"));
-  ASSERT_EQ((string) "WorkpieceOffsetTable", m_dataItem1->getObservationName());
+  ASSERT_EQ((string) "WorkOffsetTable", m_dataItem1->getObservationName());
 }
 
 TEST_F(TableTest, test_simple_table_formats)
@@ -252,7 +252,7 @@ TEST_F(TableTest, Current)
 
   {
     PARSE_XML_RESPONSE("/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:WorkpieceOffsetTable[@dataItemId='wp1']",
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:WorkOffsetTable[@dataItemId='wp1']",
                           "UNAVAILABLE");
   }
 
@@ -263,21 +263,21 @@ TEST_F(TableTest, Current)
   {
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//m:WorkpieceOffsetTable"
+                          "//m:DeviceStream//m:WorkOffsetTable"
                           "[@dataItemId='wp1']@count",
                           "3");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "X", "1");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "Y", "2");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "Z", "3");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.1", "X", "1");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.1", "Y", "2");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.1", "Z", "3");
 
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "X", "4");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "Y", "5");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "Z", "6");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.2", "X", "4");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.2", "Y", "5");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.2", "Z", "6");
 
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "X", "7");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "Y", "8");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "Z", "9");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "U", "10");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.3", "X", "7");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.3", "Y", "8");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.3", "Z", "9");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.3", "U", "10");
   }
 
   m_agentTestHelper->m_adapter->processData(
@@ -287,21 +287,21 @@ TEST_F(TableTest, Current)
   {
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:DeviceStream//m:WorkpieceOffsetTable"
+                          "//m:DeviceStream//m:WorkOffsetTable"
                           "[@dataItemId='wp1']@count",
                           "3");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "X", "1");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "Y", "2");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.1", "Z", "3");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.1", "X", "1");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.1", "Y", "2");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.1", "Z", "3");
 
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "X", "4");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "Y", "5");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.2", "Z", "6");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.2", "X", "4");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.2", "Y", "5");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.2", "Z", "6");
 
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "X", "7");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "Y", "8");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "Z", "9");
-    ASSERT_TABLE_ENTRY(doc, "WorkpieceOffsetTable[@dataItemId='wp1']", "G53.3", "U", "11");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.3", "X", "7");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.3", "Y", "8");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.3", "Z", "9");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.3", "U", "11");
   }
 }
 
@@ -339,7 +339,7 @@ TEST_F(TableTest, JsonCurrent)
     {
       ASSERT_TRUE(o.is_object());
       auto v = o.begin().key();
-      if (v == "WorkpieceOffsetTable")
+      if (v == "WorkOffsetTable")
       {
         offsets = o;
         break;
@@ -347,18 +347,18 @@ TEST_F(TableTest, JsonCurrent)
     }
     ASSERT_TRUE(offsets.is_object());
 
-    ASSERT_EQ(3, offsets.at("/WorkpieceOffsetTable/count"_json_pointer).get<int>());
+    ASSERT_EQ(3, offsets.at("/WorkOffsetTable/count"_json_pointer).get<int>());
 
-    ASSERT_EQ(1.0, offsets.at("/WorkpieceOffsetTable/value/G53.1/X"_json_pointer).get<double>());
-    ASSERT_EQ(2.0, offsets.at("/WorkpieceOffsetTable/value/G53.1/Y"_json_pointer).get<double>());
-    ASSERT_EQ(3.0, offsets.at("/WorkpieceOffsetTable/value/G53.1/Z"_json_pointer).get<double>());
-    ASSERT_EQ(4.0, offsets.at("/WorkpieceOffsetTable/value/G53.2/X"_json_pointer).get<double>());
-    ASSERT_EQ(5.0, offsets.at("/WorkpieceOffsetTable/value/G53.2/Y"_json_pointer).get<double>());
-    ASSERT_EQ(6.0, offsets.at("/WorkpieceOffsetTable/value/G53.2/Z"_json_pointer).get<double>());
-    ASSERT_EQ(7.0, offsets.at("/WorkpieceOffsetTable/value/G53.3/X"_json_pointer).get<double>());
-    ASSERT_EQ(8.0, offsets.at("/WorkpieceOffsetTable/value/G53.3/Y"_json_pointer).get<double>());
-    ASSERT_EQ(9, offsets.at("/WorkpieceOffsetTable/value/G53.3/Z"_json_pointer).get<int64_t>());
-    ASSERT_EQ(10.0, offsets.at("/WorkpieceOffsetTable/value/G53.3/U"_json_pointer).get<double>());
+    ASSERT_EQ(1.0, offsets.at("/WorkOffsetTable/value/G53.1/X"_json_pointer).get<double>());
+    ASSERT_EQ(2.0, offsets.at("/WorkOffsetTable/value/G53.1/Y"_json_pointer).get<double>());
+    ASSERT_EQ(3.0, offsets.at("/WorkOffsetTable/value/G53.1/Z"_json_pointer).get<double>());
+    ASSERT_EQ(4.0, offsets.at("/WorkOffsetTable/value/G53.2/X"_json_pointer).get<double>());
+    ASSERT_EQ(5.0, offsets.at("/WorkOffsetTable/value/G53.2/Y"_json_pointer).get<double>());
+    ASSERT_EQ(6.0, offsets.at("/WorkOffsetTable/value/G53.2/Z"_json_pointer).get<double>());
+    ASSERT_EQ(7.0, offsets.at("/WorkOffsetTable/value/G53.3/X"_json_pointer).get<double>());
+    ASSERT_EQ(8.0, offsets.at("/WorkOffsetTable/value/G53.3/Y"_json_pointer).get<double>());
+    ASSERT_EQ(9, offsets.at("/WorkOffsetTable/value/G53.3/Z"_json_pointer).get<int64_t>());
+    ASSERT_EQ(10.0, offsets.at("/WorkOffsetTable/value/G53.3/U"_json_pointer).get<double>());
   }
 }
 
@@ -395,7 +395,7 @@ TEST_F(TableTest, JsonCurrentText)
     {
       ASSERT_TRUE(o.is_object());
       auto v = o.begin().key();
-      if (v == "WorkpieceOffsetTable")
+      if (v == "WorkOffsetTable")
       {
         offsets = o;
         break;
@@ -403,10 +403,10 @@ TEST_F(TableTest, JsonCurrentText)
     }
     ASSERT_TRUE(offsets.is_object());
 
-    ASSERT_EQ(3, offsets.at("/WorkpieceOffsetTable/count"_json_pointer).get<int>());
+    ASSERT_EQ(3, offsets.at("/WorkOffsetTable/count"_json_pointer).get<int>());
 
     ASSERT_EQ(string("string with space"),
-              offsets.at("/WorkpieceOffsetTable/value/G53.1/s"_json_pointer).get<string>());
+              offsets.at("/WorkOffsetTable/value/G53.1/s"_json_pointer).get<string>());
   }
 }
 
@@ -583,5 +583,133 @@ TEST_F(TableTest, JsonDefinitionTest)
 
     ASSERT_EQ("FEATURE_ID", entries[2].at("/EntryDefinition/keyType"_json_pointer).get<string>());
     ASSERT_EQ("UUID", entries[2].at("/EntryDefinition/type"_json_pointer).get<string>());
+  }
+}
+
+TEST_F(TableTest, shoud_correctly_parse_data_with_colon)
+{
+  m_agentTestHelper->addAdapter();
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:WorkOffsetTable[@dataItemId='wp1']",
+                          "UNAVAILABLE");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|wpo|A0={NAME='CHECK LINEAR GUIDE LUB-OIL LEVEL' VALUE=22748038 "
+      "TARGET=0 LAST_SERVICE_DATE=2022-04-06T04:00:00.0000Z} A1={NAME='CHECK SPINDLE LUB-OIL "
+      "LEVEL' VALUE=8954 TARGET=22676400 LAST_SERVICE_DATE=2022-04-07T04:00:00.0000Z} "
+      "A2={NAME='CHECK COOLANT LEVEL' VALUE=22751515 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-07-14T04:00:00.0000Z} A3={NAME='CHECK SPINDLE COOLANT LEVEL' "
+      "VALUE=27098873 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A4={NAME='CHECK "
+      "HYDRAULIC UNITOIL LEVEL' VALUE=27098872 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A5={NAME='CLEAN COOLANT FILTER' VALUE=27098871 "
+      "TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A6={NAME='CHECK HYDRAULIC UNIT "
+      "PRESSURE' VALUE=27098889 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} "
+      "A7={NAME='CHECK AIR PRESSURE' VALUE=27098890 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A8={NAME='CLEAN CHIPS FROM WAY COVERS' "
+      "VALUE=27098892 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A9={NAME='CHECK CHIP "
+      "LEVEL IN CHIP BUCKET' VALUE=27098893 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} "
+      "A10={NAME='CLEAN CNC & CHILLER AIR FILTERS' VALUE=27098895 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z}");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//m:WorkOffsetTable"
+                          "[@dataItemId='wp1']@count",
+                          "11");
+
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//m:WorkOffsetTable"
+                          "[@dataItemId='wp1']@resetTriggered",
+                          nullptr);
+
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A0", "NAME",
+                       "CHECK LINEAR GUIDE LUB-OIL LEVEL");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A0", "VALUE", "22748038");
+
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A1", "NAME",
+                       "CHECK SPINDLE LUB-OIL LEVEL");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A1", "VALUE", "8954");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|wpo|:RESET A0={NAME='CHECK LINEAR GUIDE LUB-OIL LEVEL' VALUE=22748038 "
+      "TARGET=0 LAST_SERVICE_DATE=2022-04-06T04:00:00.0000Z} A1={NAME='CHECK SPINDLE LUB-OIL "
+      "LEVEL' VALUE=8954 TARGET=22676400 LAST_SERVICE_DATE=2022-04-07T04:00:00.0000Z} "
+      "A2={NAME='CHECK COOLANT LEVEL' VALUE=22751515 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-07-14T04:00:00.0000Z} A3={NAME='CHECK SPINDLE COOLANT LEVEL' "
+      "VALUE=27098873 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A4={NAME='CHECK "
+      "HYDRAULIC UNITOIL LEVEL' VALUE=27098872 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A5={NAME='CLEAN COOLANT FILTER' VALUE=27098871 "
+      "TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A6={NAME='CHECK HYDRAULIC UNIT "
+      "PRESSURE' VALUE=27098889 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} "
+      "A7={NAME='CHECK AIR PRESSURE' VALUE=27098890 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A8={NAME='CLEAN CHIPS FROM WAY COVERS' "
+      "VALUE=27098892 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A9={NAME='CHECK CHIP "
+      "LEVEL IN CHIP BUCKET' VALUE=27098893 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} "
+      "A10={NAME='CLEAN CNC & CHILLER AIR FILTERS' VALUE=27098895 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z}");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//m:WorkOffsetTable"
+                          "[@dataItemId='wp1']@count",
+                          "11");
+
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//m:WorkOffsetTable"
+                          "[@dataItemId='wp1']@resetTriggered",
+                          "RESET");
+
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A0", "NAME",
+                       "CHECK LINEAR GUIDE LUB-OIL LEVEL");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A0", "VALUE", "22748038");
+
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A1", "NAME",
+                       "CHECK SPINDLE LUB-OIL LEVEL");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A1", "VALUE", "8954");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|wpo|    :DAILY A0={NAME='CHECK LINEAR GUIDE LUB-OIL LEVEL' "
+      "VALUE=22748038 TARGET=0 LAST_SERVICE_DATE=2022-04-06T04:00:00.0000Z} A1={NAME='CHECK "
+      "SPINDLE LUB-OIL LEVEL' VALUE=8954 TARGET=22676400 "
+      "LAST_SERVICE_DATE=2022-04-07T04:00:00.0000Z} A2={NAME='CHECK COOLANT LEVEL' VALUE=22751515 "
+      "TARGET=0 LAST_SERVICE_DATE=2021-07-14T04:00:00.0000Z} A3={NAME='CHECK SPINDLE COOLANT "
+      "LEVEL' VALUE=27098873 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A4={NAME='CHECK "
+      "HYDRAULIC UNITOIL LEVEL' VALUE=27098872 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A5={NAME='CLEAN COOLANT FILTER' VALUE=27098871 "
+      "TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A6={NAME='CHECK HYDRAULIC UNIT "
+      "PRESSURE' VALUE=27098889 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} "
+      "A7={NAME='CHECK AIR PRESSURE' VALUE=27098890 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A8={NAME='CLEAN CHIPS FROM WAY COVERS' "
+      "VALUE=27098892 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} A9={NAME='CHECK CHIP "
+      "LEVEL IN CHIP BUCKET' VALUE=27098893 TARGET=0 LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z} "
+      "A10={NAME='CLEAN CNC & CHILLER AIR FILTERS' VALUE=27098895 TARGET=0 "
+      "LAST_SERVICE_DATE=2021-05-19T04:00:00.0000Z}");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//m:WorkOffsetTable"
+                          "[@dataItemId='wp1']@count",
+                          "11");
+
+    ASSERT_XML_PATH_EQUAL(doc,
+                          "//m:DeviceStream//m:WorkOffsetTable"
+                          "[@dataItemId='wp1']@resetTriggered",
+                          "DAILY");
+
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A0", "NAME",
+                       "CHECK LINEAR GUIDE LUB-OIL LEVEL");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A0", "VALUE", "22748038");
+
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A1", "NAME",
+                       "CHECK SPINDLE LUB-OIL LEVEL");
+    ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "A1", "VALUE", "8954");
   }
 }

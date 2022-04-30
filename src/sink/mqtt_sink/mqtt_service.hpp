@@ -18,30 +18,28 @@
 #pragma once
 
 #include "boost/asio/io_context.hpp"
-
 #include <boost/dll/alias.hpp>
 
 #include "configuration/agent_config.hpp"
-
+#include "entity/json_printer.hpp"
 #include "sink/sink.hpp"
 #include "utilities.hpp"
+#include "xml_printer_helper.hpp"
+#include "printer.hpp"
 
 using namespace std;
+using namespace mtconnect::entity;
 
-namespace mtconnect 
-{
+namespace mtconnect {
   class XmlPrinter;
 
-  namespace sink 
-  {
-    namespace mqtt_sink 
-    {
+  namespace sink {
+    namespace mqtt_sink {
       class MqttService : public sink::Sink
       {
-          //dynamic loading of sink
+        // dynamic loading of sink
 
       public:
-
         MqttService(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
                     const ConfigOptions &options, const boost::property_tree::ptree &config);
 
@@ -57,31 +55,14 @@ namespace mtconnect
         bool publish(asset::AssetPtr asset) override;
 
         static void registerFactory(SinkFactory &factory);
-
-        void printjSonEntity();
-
-         // Get the printer for a type
-        const std::string acceptFormat(const std::string &accepts) const;
-
-        const Printer *printerForAccepts(const std::string &accepts) const;
-
-        // Output an XML Error
-        std::string printError(const Printer *printer, const std::string &errorCode,
-                               const std::string &text) const;
-
-       protected:
+        
+      protected:
 
         boost::asio::io_context &m_context;
-
         ConfigOptions m_options;
-
+        std::unique_ptr<JsonPrinter> m_jsonPrinter;
       };
-//
-//      BOOST_DLL_ALIAS(MqttService::register_factory, initialize_plugin)
-//
+
     }  // namespace mqtt_sink
   }    // namespace sink
 }  // namespace mtconnect
-
-
-

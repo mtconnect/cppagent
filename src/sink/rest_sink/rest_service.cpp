@@ -28,15 +28,11 @@ namespace config = ::mtconnect::configuration;
 
 using ptree = boost::property_tree::ptree;
 
-namespace mtconnect 
-{
+namespace mtconnect {
   using namespace observation;
   using namespace asset;
   using namespace device_model;
-  namespace sink 
-  {
-    namespace rest_sink 
-    {
+  namespace sink::rest_sink {
     RestService::RestService(asio::io_context &context, SinkContractPtr &&contract,
                              const ConfigOptions &options, const ptree &config)
       : Sink("RestService", move(contract)),
@@ -101,7 +97,7 @@ namespace mtconnect
       makeLoopbackSource(m_sinkContract->m_pipelineContext);
     }
 
-     // Register the service with the sink factory
+    // Register the service with the sink factory
     void RestService::registerFactory(SinkFactory &factory)
     {
       factory.registerFactory(
@@ -112,32 +108,20 @@ namespace mtconnect
             return sink;
           });
     }
-  
-    void RestService::start() 
-    {
-        m_server->start(); 
-    }
 
-    void RestService::stop()
-    { 
-        m_server->stop(); 
-    }   
+    void RestService::start() { m_server->start(); }
 
-      // Observation management
+    void RestService::stop() { m_server->stop(); }
+
+    // Observation management
     observation::ObservationPtr RestService::getFromBuffer(uint64_t seq) const
     {
       return m_circularBuffer.getFromBuffer(seq);
     }
-          
-    SequenceNumber_t RestService::getSequence() const 
-    {
-        return m_circularBuffer.getSequence(); 
-    }
 
-    unsigned int RestService::getBufferSize() const 
-    { 
-        return m_circularBuffer.getBufferSize(); 
-    }
+    SequenceNumber_t RestService::getSequence() const { return m_circularBuffer.getSequence(); }
+
+    unsigned int RestService::getBufferSize() const { return m_circularBuffer.getBufferSize(); }
 
     SequenceNumber_t RestService::getFirstSequence() const
     {
@@ -145,10 +129,7 @@ namespace mtconnect
     }
 
     // For testing...
-    void RestService::setSequence(uint64_t seq) 
-    { 
-        m_circularBuffer.setSequence(seq); 
-    }
+    void RestService::setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
 
     // Configuration
     void RestService::loadNamespace(const ptree &tree, const char *namespaceType,
@@ -1151,11 +1132,8 @@ namespace mtconnect
       }
     }
 
-     // For debugging
-    void RestService::setLogStreamData(bool log)
-    {
-        m_logStreamData = log; 
-    }
+    // For debugging
+    void RestService::setLogStreamData(bool log) { m_logStreamData = log; }
 
     // Get the printer for a type
     const std::string RestService::acceptFormat(const std::string &accepts) const
@@ -1173,7 +1151,7 @@ namespace mtconnect
       return "xml";
     }
 
-    const Printer* RestService::printerForAccepts(const std::string &accepts) const
+    const Printer *RestService::printerForAccepts(const std::string &accepts) const
     {
       return m_sinkContract->getPrinter(acceptFormat(accepts));
     }
@@ -1326,7 +1304,5 @@ namespace mtconnect
                                   lastSeq, *observations);
     }
 
-    }  // namespace rest_sink
-  } // namespace sink
+  }  // namespace sink::rest_sink
 }  // namespace mtconnect
-

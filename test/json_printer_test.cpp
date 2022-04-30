@@ -30,7 +30,6 @@
 
 #include <nlohmann/json.hpp>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "configuration/config_options.hpp"
 #include "entity.hpp"
@@ -38,6 +37,7 @@
 #include "entity/json_printer.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
+#include "source/adapter/adapter.hpp"
 #include "xml_printer_helper.hpp"
 
 using json = nlohmann::json;

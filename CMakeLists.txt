@@ -3,7 +3,7 @@ set(AGENT_VERSION_MAJOR 2)
 set(AGENT_VERSION_MINOR 0)
 set(AGENT_VERSION_PATCH 0)
 set(AGENT_VERSION_BUILD 1)
-set(AGENT_VERSION_RC "RC14")
+set(AGENT_VERSION_RC "RC15")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
@@ -109,6 +109,7 @@ install(DIRECTORY schemas/ DESTINATION "schemas")
 install(DIRECTORY simulator/ DESTINATION "simulator")
 install(DIRECTORY styles/ DESTINATION "styles")
 install(DIRECTORY tools/ DESTINATION "tools")
+install(DIRECTORY demo/ DESTINATION "demo")
 install(FILES simulator/agent.cfg DESTINATION "bin")
 
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)

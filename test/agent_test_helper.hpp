@@ -24,23 +24,23 @@
 
 #include <nlohmann/json.hpp>
 
-#include "adapter/shdr/shdr_adapter.hpp"
 #include "agent.hpp"
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
-#include "loopback_source.hpp"
 #include "pipeline/pipeline.hpp"
 #include "sink/rest_sink/response.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "sink/rest_sink/routing.hpp"
 #include "sink/rest_sink/server.hpp"
 #include "sink/rest_sink/session.hpp"
+#include "source/adapter/shdr/shdr_adapter.hpp"
+#include "source/loopback_source.hpp"
 #include "test_utilities.hpp"
 
 namespace mtconnect {
   class Agent;
 
-    namespace sink {
+  namespace sink {
     namespace rest_sink {
       class TestSession : public Session
       {
@@ -107,7 +107,7 @@ namespace mtconnect {
 }  // namespace mtconnect
 
 namespace mhttp = mtconnect::sink::rest_sink;
-namespace adpt = mtconnect::adapter;
+namespace adpt = mtconnect::source::adapter;
 namespace observe = mtconnect::observation;
 
 class AgentTestHelper
@@ -127,14 +127,15 @@ public:
   auto session() { return m_session; }
 
   // Helper method to test expected string, given optional query, & run tests
-  void responseHelper(const char *file, int line, const mtconnect::sink::rest_sink::QueryMap &aQueries,
-                      xmlDocPtr *doc, const char *path, const char *accepts = "text/xml");
+  void responseHelper(const char *file, int line,
+                      const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
+                      const char *path, const char *accepts = "text/xml");
   void responseStreamHelper(const char *file, int line,
                             const mtconnect::sink::rest_sink::QueryMap &aQueries, const char *path,
                             const char *accepts = "text/xml");
-  void responseHelper(const char *file, int line, const mtconnect::sink::rest_sink::QueryMap &aQueries,
-                      nlohmann::json &doc, const char *path,
-                      const char *accepts = "application/json");
+  void responseHelper(const char *file, int line,
+                      const mtconnect::sink::rest_sink::QueryMap &aQueries, nlohmann::json &doc,
+                      const char *path, const char *accepts = "application/json");
   void putResponseHelper(const char *file, int line, const std::string &body,
                          const mtconnect::sink::rest_sink::QueryMap &aQueries, xmlDocPtr *doc,
                          const char *path, const char *accepts = "text/xml");
@@ -160,19 +161,25 @@ public:
 
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
                    const std::string &version = "1.7", int checkpoint = 25, bool put = false,
-                   bool observe = true)
+                   bool observe = true, const mtconnect::ConfigOptions ops = {})
   {
     using namespace mtconnect;
     using namespace mtconnect::pipeline;
+    using namespace mtconnect::source;
     using ptree = boost::property_tree::ptree;
 
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);
-    adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
+    source::adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
-    ConfigOptions options {
-        {configuration::BufferSize, bufferSize},          {configuration::MaxAssets, maxAssets},
-        {configuration::CheckpointFrequency, checkpoint}, {configuration::AllowPut, put},
-        {configuration::SchemaVersion, version},          {configuration::Pretty, true}};
+    ConfigOptions options = ops;
+    options.emplace(configuration::BufferSize, bufferSize);
+    options.emplace(configuration::MaxAssets, maxAssets);
+    options.emplace(configuration::CheckpointFrequency, checkpoint);
+    options.emplace(configuration::AllowPut, put);
+    options.emplace(configuration::SchemaVersion, version);
+    options.emplace(configuration::Pretty, true);
+    options.emplace(configuration::Port, 0);
+
     m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, PROJECT_ROOT_DIR + file, options);
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
@@ -211,7 +218,7 @@ public:
                   uint16_t port = 7878, const std::string &device = "")
   {
     using namespace mtconnect;
-    using namespace mtconnect::adapter;
+    using namespace mtconnect::source::adapter;
 
     if (!IsOptionSet(options, configuration::Device))
     {
@@ -259,7 +266,7 @@ public:
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::sink::rest_sink::RestService> m_restService;
-  std::shared_ptr<mtconnect::LoopbackSource> m_loopback;
+  std::shared_ptr<mtconnect::source::LoopbackSource> m_loopback;
 
   bool m_dispatched {false};
   std::string m_incomingIp;
@@ -274,7 +281,7 @@ public:
   std::shared_ptr<mtconnect::sink::rest_sink::TestSession> m_session;
 
   mtconnect::sink::SinkFactory m_sinkFactory;
-  mtconnect::SourceFactory m_sourceFactory;
+  mtconnect::source::SourceFactory m_sourceFactory;
 };
 
 struct XmlDocFreer

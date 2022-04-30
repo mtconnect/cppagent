@@ -11,11 +11,11 @@
 
 #include <libxml/xmlwriter.h>
 
-#include "adapter/adapter.hpp"
 #include "agent.hpp"
 #include "entity.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
+#include "source/adapter/adapter.hpp"
 #include "xml_printer_helper.hpp"
 
 using namespace std;

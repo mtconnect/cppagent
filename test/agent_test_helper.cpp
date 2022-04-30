@@ -37,8 +37,7 @@ namespace http = beast::http;
 void AgentTestHelper::makeRequest(const char *file, int line, boost::beast::http::verb verb,
                                   const std::string &body,
                                   const mtconnect::sink::rest_sink::QueryMap &aQueries,
-                                  const char *path,
-                                  const char *accepts)
+                                  const char *path, const char *accepts)
 {
   m_request = make_shared<Request>();
 
