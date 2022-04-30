@@ -163,7 +163,7 @@
       </div>
 
       <button onclick="gotoTop()" id="gotoTop" title="Go to top">
-        <img src="/styles/icon-up.jpg" />
+        <img src="/styles/icon-up.ico" />
       </button>
 
       <!-- note: jquery is needed for bootstrap modal -->
@@ -219,7 +219,7 @@
                   <!-- add +/- if item has any child elements -->
                   <xsl:choose>
                     <xsl:when test="*">
-                      <img style="width:12px;" src="/styles/icon-minus.jpg" />
+                      <img style="width:12px;" src="/styles/icon-minus.ico" />
                     </xsl:when>
                     <xsl:otherwise>
                       &#8198;
@@ -470,7 +470,7 @@
                 <!-- add +/- if item has any child elements -->
                 <xsl:choose>
                   <xsl:when test="*">
-                    <img style="width:12px;" src="/styles/icon-minus.jpg" />
+                    <img style="width:12px;" src="/styles/icon-minus.ico" />
                   </xsl:when>
                   <xsl:otherwise>
 										&#8198;
