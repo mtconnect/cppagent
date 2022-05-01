@@ -33,7 +33,7 @@
 #
 # then should be able to run with something like
 #
-#   docker run -it -p5001:5000 ladder99/agent2:latest
+#   docker run -it -p5001:5000 --name agent2 ladder99/agent2:latest
 #
 # and visit http://localhost:5001 to see output
 #
