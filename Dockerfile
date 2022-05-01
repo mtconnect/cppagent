@@ -3,8 +3,14 @@
 # if building this with a private repo (eg cppagent_dev), need to pass
 # in a github access token in order to clone the repo. 
 #
-# to build locally, run this with -
-#   docker buildx build --secret id=access_token,src=ACCESS_TOKEN .
+# to build locally, run this with something like -
+#
+#   docker buildx build \
+#     --platform linux/amd64,linux/arm64,linux/arm/v7 \
+#     --tag ladder99/agent2 \
+#     --secret id=access_token,src=ACCESS_TOKEN \
+#     .
+#
 # ACCESS_TOKEN is a file containing a GitHub personal access token,
 # so can clone the private mtconnect cppagent_dev repo.
 # keep it out of the github repo with .gitignore.
@@ -12,9 +18,11 @@
 # see https://vsupalov.com/docker-buildkit-features/
 #
 # to build in github actions, pass this into the docker/build-push-action@v2 step -
+#
 #   secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
 #
 # then use access token as below with
+#
 #   RUN --mount=type=secret,id=access_token \
 #     git clone https://$(cat /run/secrets/access_token)@github.com...
 
@@ -38,9 +46,6 @@ FROM os AS build
 # this follows recommended Docker practices -
 # see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
 # note: Dockerfiles run as root by default, so don't need sudo
-# git cmake python3-pip ruby rake \
-#	build-essential python3.9 python3-pip git cmake make \
-# libxml2 cppunit
 RUN apt-get clean \
   && apt-get update \
   && apt-get install -y \
