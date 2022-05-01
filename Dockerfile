@@ -3,6 +3,7 @@
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
+
 # if building this with a private repo (eg cppagent_dev), need to pass
 # in a github access token in order to clone the repo. 
 #
@@ -130,12 +131,13 @@ WORKDIR /home/agent
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
 CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
   /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
-  cd /etc/mtconnect/simulator && agent debug agent.cfg
+  cd /etc/mtconnect/simulator && agent run agent.cfg
 
 # ---------------------------------------------------------------------
 # note
 # ---------------------------------------------------------------------
-# After setup, the dirs look like this -
+
+# after setup, the dirs look like this -
 #
 # /usr/local/bin
 #  |-- agent - the cppagent application
@@ -143,9 +145,4 @@ CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
 # /etc/mtconnect
 #  |-- schemas - xsd files
 #  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
-#  |-- styles - Streams.xsl, Streams.css, favicon.ico
-#
-# the default simulator/agent.cfg has -
-#   Devices = ../simulator/VMC-3Axis.xml
-#   Files { styles { Path = ../styles } }
-# see https://github.com/mtconnect/cppagent/blob/master/simulator/agent.cfg
+#  |-- styles - styles.xsl, styles.css, favicon.ico, etc
