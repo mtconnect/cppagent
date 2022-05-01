@@ -35,6 +35,8 @@
 #   docker run -it -p5001:5000 ladder99/agent2:latest
 #
 # and visit http://localhost:5001 to see output
+#
+# for examples see https://www.docker.com/blog/multi-arch-images/
 
 # ---------------------------------------------------------------------
 # os
