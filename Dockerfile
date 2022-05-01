@@ -1,14 +1,18 @@
 # MTConnect C++ Agent Docker image build instructions
 
+# ---------------------------------------------------------------------
+# notes
+# ---------------------------------------------------------------------
 # if building this with a private repo (eg cppagent_dev), need to pass
 # in a github access token in order to clone the repo. 
 #
-# to build locally, run this with something like -
+# to build locally and push to docker hub, run this with something like -
 #
 #   docker buildx build \
 #     --platform linux/amd64,linux/arm64,linux/arm/v7 \
 #     --tag ladder99/agent2 \
 #     --secret id=access_token,src=ACCESS_TOKEN \
+#     --push \
 #     .
 #
 # ACCESS_TOKEN is a file containing a GitHub personal access token,
@@ -25,6 +29,12 @@
 #
 #   RUN --mount=type=secret,id=access_token \
 #     git clone https://$(cat /run/secrets/access_token)@github.com...
+#
+# then should be able to run with something like
+#
+#   docker run -it -p5001:5000 ladder99/agent2:latest
+#
+# and visit http://localhost:5001 to see output
 
 # ---------------------------------------------------------------------
 # os
@@ -123,7 +133,6 @@ CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
 # ---------------------------------------------------------------------
 # note
 # ---------------------------------------------------------------------
-
 # After setup, the dirs look like this -
 #
 # /usr/local/bin
