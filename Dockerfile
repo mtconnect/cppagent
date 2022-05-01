@@ -9,7 +9,7 @@
 # to build locally and push to docker hub, run this with something like -
 #
 #   docker buildx build \
-#     --platform linux/amd64,linux/arm64,linux/arm/v7 \
+#     --platform linux/amd64,linux/arm64 \
 #     --tag ladder99/agent2 \
 #     --secret id=access_token,src=ACCESS_TOKEN \
 #     --push \
@@ -42,7 +42,7 @@
 # os
 # ---------------------------------------------------------------------
 
-# base image - ubuntu has linux/arm/v7, linux/amd64, etc
+# base image - ubuntu has linux/amd64, linux/arm64 etc
 FROM ubuntu:latest AS os
 
 # tzinfo hangs without this
