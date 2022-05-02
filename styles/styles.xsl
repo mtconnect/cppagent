@@ -29,7 +29,7 @@
               <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" style="padding: 5px 10px;" href="https://mtconnect.org" target="_blank" rel="noopener noreferrer">
-              <img alt="Brand" src="styles/LogoMTConnect.jpg" />
+              <img alt="Brand" src="styles/LogoMTConnect.webp" />
             </a>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -163,7 +163,7 @@
       </div>
 
       <button onclick="gotoTop()" id="gotoTop" title="Go to top">
-        <img src="/styles/icon-up.ico" />
+        <img src="/styles/icon-up.webp" />
       </button>
 
       <!-- note: jquery is needed for bootstrap modal -->
@@ -219,13 +219,13 @@
                   <!-- add +/- if item has any child elements -->
                   <xsl:choose>
                     <xsl:when test="*">
-                      <img style="width:12px;" src="/styles/icon-minus.ico" />
+                      <img style="width:12px;" src="/styles/icon-minus.webp" />
                     </xsl:when>
                     <xsl:otherwise>
                       &#8198;
                     </xsl:otherwise>
                   </xsl:choose>
-                  &#8198;
+                  <!-- &#8198; -->
                   <!-- narrow space - see https://stackoverflow.com/questions/8515365/are-there-other-whitespace-codes-like-nbsp-for-half-spaces-em-spaces-en-space -->
                   &#8198;
                   <xsl:value-of select="$element" />
@@ -470,13 +470,13 @@
                 <!-- add +/- if item has any child elements -->
                 <xsl:choose>
                   <xsl:when test="*">
-                    <img style="width:12px;" src="/styles/icon-minus.ico" />
+                    <img style="width:12px;" src="/styles/icon-minus.webp" />
                   </xsl:when>
                   <xsl:otherwise>
 										&#8198;
                   </xsl:otherwise>
                 </xsl:choose>
-                &#8198;
+                <!-- &#8198; -->
                 <!-- narrow space - see https://stackoverflow.com/questions/8515365/are-there-other-whitespace-codes-like-nbsp-for-half-spaces-em-spaces-en-space -->
                 &#8198;
                 <xsl:value-of select="$element" />
