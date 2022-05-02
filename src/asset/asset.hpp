@@ -42,6 +42,8 @@ namespace mtconnect {
       }
       ~Asset() override = default;
 
+      const entity::Value &getIdentity() const override { return getProperty("assetId"); }
+
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
 

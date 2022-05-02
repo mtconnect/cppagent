@@ -31,6 +31,8 @@ namespace mtconnect {
         using entity::Entity::Entity;
         ~Relationship() override = default;
 
+        const entity::Value &getIdentity() const override { return getProperty("idRef"); }
+
         static entity::FactoryPtr getDataItemFactory()
         {
           using namespace mtconnect::entity;

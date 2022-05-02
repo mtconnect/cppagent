@@ -48,6 +48,8 @@ namespace mtconnect {
         UNKNOWN
       };
 
+      const entity::Value &getIdentity() const override { return getProperty("idRef"); }
+
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
 
