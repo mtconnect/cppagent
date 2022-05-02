@@ -1,6 +1,6 @@
 # build docker image
 
-# needs secrets set for these -
+# needs github secrets set for these -
 #   ACCESS_TOKEN - a github personal access token to access the private repo
 #   DOCKERHUB_TOKEN - token for the account specified at env.dockerhub_username
 
@@ -11,13 +11,8 @@ name: Build Docker image
 env:
   version: 2.0.0.1 #. keep uptodate (how?)
   dockerhub_username: ladder99 #. change to mtconnect
-  # for available platforms see output of a previous run -
-  # ie the "Setup Docker BuildX" / "Inspect Builder" section
-  # has eg "node_platforms": "linux/amd64,linux/arm64,linux/riscv64,linux/ppc64le,linux/s390x,linux/386,linux/arm/v7,linux/arm/v6"
-  # but the platforms must also be included in the os image chosen -
-  # eg the ubuntu image doesn't include linux/arm/v6.
   platforms: linux/amd64,linux/arm64
-  
+
 # when to run workflow
 on:
   # # run on push or pull request events for the master branch
