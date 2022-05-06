@@ -244,7 +244,9 @@ namespace mtconnect
 
       // If there is leftover text, the text was invalid.
       // Warn that it is being discarded
-      if (!rest.empty())
+      auto index = rest.find_first_not_of(" \r\t");
+
+      if (index != string::npos)
       {
         logger << dlib::LWARN << "Cannot parse complete string, malformed data set: '" << rest
                << "'";

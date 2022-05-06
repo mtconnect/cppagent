@@ -2,7 +2,7 @@
 set(AGENT_VERSION_MAJOR 1)
 set(AGENT_VERSION_MINOR 8)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 3)
+set(AGENT_VERSION_BUILD 4	)
 #set(AGENT_VERSION_RC "RC9")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
