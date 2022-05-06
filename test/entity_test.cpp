@@ -795,3 +795,8 @@ TEST_F(EntityTest, entities_should_merge_entity_list)
 
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
+
+TEST_F(EntityTest, entities_should_merge_entity_list_without_identity)
+{
+  GTEST_SKIP();
+}

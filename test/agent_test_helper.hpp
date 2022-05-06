@@ -120,7 +120,7 @@ public:
     m_restService.reset();
     m_adapter.reset();
     if (m_agent)
-      m_agent->stop();
+ h      m_agent->stop();
     m_agent.reset();
   }
 
