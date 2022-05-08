@@ -1,0 +1,69 @@
+# build docker image
+
+# needs github secrets set for these -
+#   ACCESS_TOKEN - a github personal access token to access the private repo
+#   DOCKERHUB_TOKEN - token for the account specified at env.dockerhub_username
+
+name: Build Docker image
+
+# variables
+# can use these below, eg with ${{ env.version }}
+env:
+  version: 2.0.0.1 #. keep uptodate (how?)
+  dockerhub_username: ladder99 #. change to mtconnect
+  platforms: linux/amd64,linux/arm64
+
+# when to run workflow
+on:
+  # # run on push or pull request events for the master branch
+  # push:
+  #   branches: [ master ]
+  # pull_request:
+  #   branches: [ master ]
+
+  # allows you to run this workflow manually from the actions tab
+  workflow_dispatch:
+
+# a workflow run has one or more jobs that can run sequentially or in parallel
+jobs:
+  # this workflow contains a single job called "build"
+  build:
+    # the type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # checks-out your repository under $GITHUB_WORKSPACE
+      - uses: actions/checkout@v3
+
+      # the QEMU emulator lets us build for arm processors also
+      # see https://github.com/docker/setup-qemu-action
+      - name: Set up QEMU emulator
+        uses: docker/setup-qemu-action@v1
+
+      # see https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.dockerhub_username }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # see https://github.com/docker/build-push-action
+      - name: Build image and push to DockerHub
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile
+          platforms: ${{ env.platforms }}
+          secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
+
+          # docker hub user/repo:tag
+          tags: |
+            ladder99/agent2:latest
+            ladder99/agent2:${{ env.version }}
+
+          # push to docker hub
+          push: true
