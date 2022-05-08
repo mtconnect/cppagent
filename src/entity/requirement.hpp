@@ -72,6 +72,8 @@ namespace mtconnect {
       QSTRING = 0x20 | STRING,
       TABLE = 0x10 | DATA_SET
     };
+    
+    const int16_t VALUE_TYPE_BASE = 0x0F;
 
     bool ConvertValueToType(Value &value, ValueType type, bool table = false);
 

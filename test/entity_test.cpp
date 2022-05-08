@@ -796,7 +796,197 @@ TEST_F(EntityTest, entities_should_merge_entity_list)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
-TEST_F(EntityTest, entities_should_merge_entity_list_without_identity)
+TEST_F(EntityTest, should_remove_missing_entities)
+{
+  auto root = make_shared<Factory>();
+
+  auto second = make_shared<Factory>(
+      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+
+  auto seconds = make_shared<Factory>(
+      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+  seconds->registerMatchers();
+
+  auto simple = make_shared<Factory>(Requirements {
+      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
+      Requirement("seconds", ENTITY_LIST, seconds)});
+  root->registerFactory("simple", simple);
+
+  auto createEnt = [&](auto v, auto s) -> EntityPtr {
+    auto fact = root->factoryFor("simple");
+    auto secondsFact = fact->factoryFor("seconds");
+    auto secondFact = secondsFact->factoryFor("second");
+
+    Properties sndp1 {{"id", "1"s}, {"VALUE", 1_i64}};
+    auto se1 = secondsFact->create("second", sndp1);
+
+    EntityList list {se1};
+    if (s)
+    {
+      Properties sndp2 {{"id", "2"s}, {"VALUE", 2}};
+      auto se2 = secondsFact->create("second", sndp2);
+      list.push_back(se2);
+    }
+    
+    ErrorList errors;
+    auto se3 = fact->create("seconds", list, errors);
+
+    Properties simpp {{"id", "abc"s}, {"name", "xxx"s}, {"size", 10_i64}, {"seconds", se3}};
+
+    auto entity = root->create("simple", simpp);
+    return entity;
+  };
+
+  auto v1 = createEnt("woof"s, true);
+  ASSERT_TRUE(v1);
+
+  auto list = v1->getList("seconds");
+  ASSERT_TRUE(list);
+  ASSERT_EQ(2, list->size());
+
+  auto v2 = createEnt("meow"s, false);
+  ASSERT_TRUE(v2);
+
+  auto list2 = v2->getList("seconds");
+  ASSERT_TRUE(list2);
+  ASSERT_EQ(1, list2->size());
+
+  v1->updateTo(v2);
+  auto list3 = v1->getList("seconds");
+  ASSERT_TRUE(list3);
+  ASSERT_EQ(1, list3->size());
+
+  ASSERT_EQ(*(v1.get()), *(v2.get()));
+}
+
+TEST_F(EntityTest, should_ignore_certain_entities_with_specific_ids)
+{
+  auto root = make_shared<Factory>();
+
+  auto second = make_shared<Factory>(
+      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+
+  auto seconds = make_shared<Factory>(
+      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+  seconds->registerMatchers();
+
+  auto simple = make_shared<Factory>(Requirements {
+      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
+      Requirement("seconds", ENTITY_LIST, seconds)});
+  root->registerFactory("simple", simple);
+
+  auto createEnt = [&](auto v, auto s) -> EntityPtr {
+    auto fact = root->factoryFor("simple");
+    auto secondsFact = fact->factoryFor("seconds");
+    auto secondFact = secondsFact->factoryFor("second");
+
+    Properties sndp1 {{"id", "1"s}, {"VALUE", 1_i64}};
+    auto se1 = secondsFact->create("second", sndp1);
+
+    EntityList list {se1};
+    if (s)
+    {
+      Properties sndp2 {{"id", "2"s}, {"VALUE", 2}};
+      auto se2 = secondsFact->create("second", sndp2);
+      list.push_back(se2);
+    }
+    
+    ErrorList errors;
+    auto se3 = fact->create("seconds", list, errors);
+
+    Properties simpp {{"id", "abc"s}, {"name", "xxx"s}, {"size", 10_i64}, {"seconds", se3}};
+
+    auto entity = root->create("simple", simpp);
+    return entity;
+  };
+
+  auto v1 = createEnt("woof"s, true);
+  ASSERT_TRUE(v1);
+
+  auto list = v1->getList("seconds");
+  ASSERT_TRUE(list);
+  ASSERT_EQ(2, list->size());
+
+  auto v2 = createEnt("meow"s, false);
+  ASSERT_TRUE(v2);
+
+  auto list2 = v2->getList("seconds");
+  ASSERT_TRUE(list2);
+  ASSERT_EQ(1, list2->size());
+
+  v1->updateTo(v2, { "2"s });
+  auto list3 = v1->getList("seconds");
+  ASSERT_TRUE(list3);
+  ASSERT_EQ(2, list3->size());
+
+  ASSERT_NE(*(v1.get()), *(v2.get()));
+}
+
+TEST_F(EntityTest, should_ignore_certain_entities_with_changes_and_removals)
+{
+  auto root = make_shared<Factory>();
+
+  auto second = make_shared<Factory>(
+      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+
+  auto seconds = make_shared<Factory>(
+      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+  seconds->registerMatchers();
+
+  auto simple = make_shared<Factory>(Requirements {
+      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
+      Requirement("seconds", ENTITY_LIST, seconds)});
+  root->registerFactory("simple", simple);
+
+  auto createEnt = [&](auto v, auto s, int i) -> EntityPtr {
+    auto fact = root->factoryFor("simple");
+    auto secondsFact = fact->factoryFor("seconds");
+    auto secondFact = secondsFact->factoryFor("second");
+
+    Properties sndp1 {{"id", "1"s}, {"VALUE", 10_i64 + i}};
+    auto se1 = secondsFact->create("second", sndp1);
+
+    EntityList list {se1};
+    if (s)
+    {
+      Properties sndp2 {{"id", "2"s}, {"VALUE", 20_i64 + i}};
+      auto se2 = secondsFact->create("second", sndp2);
+      list.push_back(se2);
+    }
+    
+    ErrorList errors;
+    auto se3 = fact->create("seconds", list, errors);
+
+    Properties simpp {{"id", "abc"s}, {"name", "xxx"s}, {"size", 10_i64}, {"seconds", se3}};
+
+    auto entity = root->create("simple", simpp);
+    return entity;
+  };
+
+  auto v1 = createEnt("woof"s, true, 1);
+  ASSERT_TRUE(v1);
+
+  auto list = v1->getList("seconds");
+  ASSERT_TRUE(list);
+  ASSERT_EQ(2, list->size());
+
+  auto v2 = createEnt("meow"s, false, 2);
+  ASSERT_TRUE(v2);
+
+  auto list2 = v2->getList("seconds");
+  ASSERT_TRUE(list2);
+  ASSERT_EQ(1, list2->size());
+
+  v1->updateTo(v2);
+  auto list3 = v1->getList("seconds");
+  ASSERT_TRUE(list3);
+  ASSERT_EQ(1, list3->size());
+  ASSERT_EQ(12_i64, list->front()->getValue<int64_t>());
+
+  ASSERT_EQ(*(v1.get()), *(v2.get()));
+}
+
+TEST_F(EntityTest, entities_should_merge_entity_lists_without_identity)
 {
   GTEST_SKIP();
 }

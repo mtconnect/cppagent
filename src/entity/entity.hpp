@@ -167,7 +167,7 @@ namespace mtconnect {
       bool operator==(const Entity &other) const;
       bool operator!=(const Entity &other) const { return !(*this == other); }
 
-      bool updateTo(const EntityPtr other);
+      bool updateTo(const EntityPtr other, const std::set<std::string> protect = {});
 
       // Entity Factory
     protected:
@@ -251,9 +251,44 @@ namespace mtconnect {
 
     struct ValueMergeVisitor
     {
-      ValueMergeVisitor(Value &t) : m_this(t) {}
+      ValueMergeVisitor(Value &t, const std::set<std::string> protect) : m_this(t), m_protect(protect) {}
 
-      bool operator()(const EntityPtr &other) { return std::get<EntityPtr>(m_this)->updateTo(other); }
+      bool operator()(const EntityPtr &other) { return std::get<EntityPtr>(m_this)->updateTo(other, m_protect); }
+      
+      bool mergeRemainder(EntityList &list, EntityList &revised, bool changed)
+      {
+        if (changed)
+        {
+          for (auto &o : list)
+          {
+            const auto &id = o->getIdentity();
+            if (std::holds_alternative<std::string>(id))
+            {
+              auto s = std::get<std::string>(id);
+              if (m_protect.count(s) > 0)
+                revised.push_back(o);
+            }
+          }
+        }
+        else
+        {
+          changed = std::any_of(list.begin(), list.end(),
+                                [this](const auto &o) {
+            const auto &id = o->getIdentity();
+            if (std::holds_alternative<std::string>(id))
+            {
+              auto s = std::get<std::string>(id);
+              return m_protect.count(s) == 0;
+            }
+            else
+            {
+              return true;
+            }
+          });
+        }
+        
+        return changed;
+      }
 
       bool operator()(const EntityList &other)
       {
@@ -264,9 +299,9 @@ namespace mtconnect {
         for (const auto &o : other)
         {
           const auto &id = o->getIdentity();
+          decltype(list.begin()) it;
           if (id.index() != EMPTY)
           {
-            decltype(list.begin()) it;
             for (it = list.begin(); it != list.end(); it++)
             {
               if ((*it)->getIdentity() == id)
@@ -275,7 +310,7 @@ namespace mtconnect {
 
             if (it != list.end())
             {
-              if ((*it)->updateTo(o))
+              if ((*it)->updateTo(o, m_protect))
                 changed = true;
               list.erase(it);
               revised.push_back(*it);
@@ -283,7 +318,6 @@ namespace mtconnect {
           }
           else
           {
-            decltype(list.begin()) it;
             for (it = list.begin(); it != list.end(); it++)
             {
               if (*(o.get()) == *(it->get()))
@@ -292,8 +326,8 @@ namespace mtconnect {
 
             if (it != list.end())
             {
-              revised.push_back(*it);
               list.erase(it);
+              revised.push_back(*it);
             }
             else
             {
@@ -303,6 +337,11 @@ namespace mtconnect {
           }
         }
 
+        if (!list.empty())
+        {
+          changed = mergeRemainder(list, revised, changed);
+        }
+        
         if (changed)
           m_this = revised;
 
@@ -325,9 +364,10 @@ namespace mtconnect {
 
     private:
       Value &m_this;
+      std::set<std::string> m_protect;
     };
 
-    inline bool Entity::updateTo(const EntityPtr other)
+    inline bool Entity::updateTo(const EntityPtr other, const std::set<std::string> protect)
     {
       bool changed = false;
       if (m_name != other->m_name)
@@ -349,7 +389,7 @@ namespace mtconnect {
           }
           else
           {
-            if (std::visit(ValueMergeVisitor(value), op->second))
+            if (std::visit(ValueMergeVisitor(value, protect), op->second))
               changed = true;
           }
         }
