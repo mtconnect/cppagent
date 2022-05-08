@@ -167,7 +167,7 @@ namespace mtconnect {
       bool operator==(const Entity &other) const;
       bool operator!=(const Entity &other) const { return !(*this == other); }
 
-      bool merge(const EntityPtr other);
+      bool updateTo(const EntityPtr other);
 
       // Entity Factory
     protected:
@@ -253,7 +253,7 @@ namespace mtconnect {
     {
       ValueMergeVisitor(Value &t) : m_this(t) {}
 
-      bool operator()(const EntityPtr &other) { return std::get<EntityPtr>(m_this)->merge(other); }
+      bool operator()(const EntityPtr &other) { return std::get<EntityPtr>(m_this)->updateTo(other); }
 
       bool operator()(const EntityList &other)
       {
@@ -275,7 +275,7 @@ namespace mtconnect {
 
             if (it != list.end())
             {
-              if ((*it)->merge(o))
+              if ((*it)->updateTo(o))
                 changed = true;
               list.erase(it);
               revised.push_back(*it);
@@ -327,7 +327,7 @@ namespace mtconnect {
       Value &m_this;
     };
 
-    inline bool Entity::merge(const EntityPtr other)
+    inline bool Entity::updateTo(const EntityPtr other)
     {
       bool changed = false;
       if (m_name != other->m_name)

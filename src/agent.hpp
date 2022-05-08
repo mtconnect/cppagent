@@ -167,6 +167,7 @@ namespace mtconnect {
     // Pipeline methods
     void receiveObservation(observation::ObservationPtr observation);
     void receiveAsset(asset::AssetPtr asset);
+    void receiveDevice(device_model::DevicePtr device);
     bool removeAsset(DevicePtr device, const std::string &id,
                      const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,
@@ -294,6 +295,7 @@ namespace mtconnect {
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
     void deliverCommand(entity::EntityPtr) override;
+    void deliverDevice(DevicePtr device) override { m_agent->receiveDevice(device); }
 
     void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
 

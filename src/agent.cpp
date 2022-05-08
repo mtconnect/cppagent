@@ -234,6 +234,10 @@ namespace mtconnect {
       }
     }
   }
+  
+  void Agent::receiveDevice(device_model::DevicePtr device)
+  {
+  }
 
   bool Agent::removeAsset(DevicePtr device, const std::string &id,
                           const std::optional<Timestamp> time)

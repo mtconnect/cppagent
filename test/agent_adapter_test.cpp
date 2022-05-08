@@ -70,6 +70,7 @@ struct MockPipelineContract : public PipelineContract
     m_observations.push_back(obs);
   }
   void deliverAsset(AssetPtr) override {}
+  void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &dev, bool flag) override {}

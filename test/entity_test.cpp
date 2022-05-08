@@ -733,7 +733,7 @@ TEST_F(EntityTest, entities_should_merge)
   auto v2 = createEnt("meow"s, 20_i64);
   ASSERT_TRUE(v2);
 
-  v1->merge(v2);
+  v1->updateTo(v2);
   ASSERT_EQ(20_i64, v1->get<int64_t>("size"));
   ASSERT_EQ("meow"s, sec1->getValue<string>());
 
@@ -787,7 +787,7 @@ TEST_F(EntityTest, entities_should_merge_entity_list)
   auto v2 = createEnt("meow"s, 20_i64);
   ASSERT_TRUE(v2);
 
-  v1->merge(v2);
+  v1->updateTo(v2);
   auto it = list->begin();
   ASSERT_EQ(21_i64, (*it)->getValue<int64_t>());
   it++;
