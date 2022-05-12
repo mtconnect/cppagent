@@ -20,6 +20,7 @@
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
+#include "client/mqtt/mqtt_client.hpp"
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
 #include "printer/printer.hpp"
@@ -29,6 +30,7 @@
 
 using namespace std;
 using namespace mtconnect::entity;
+using namespace mtconnect::mqtt_client;
 
 namespace mtconnect {
   class XmlPrinter;
@@ -60,6 +62,7 @@ namespace mtconnect {
         boost::asio::io_context &m_context;
         ConfigOptions m_options;
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
+        std::shared_ptr<MqttClientImpl> m_client;
       };
 
     }  // namespace mqtt_sink

@@ -20,6 +20,9 @@
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/adapter_pipeline.hpp"
 
+#include <mqtt/async_client.hpp>
+#include <mqtt/setup_log.hpp>
+
 namespace mtconnect::source::adapter::mqtt_adapter {
   class MqttAdapterImpl : public std::enable_shared_from_this<MqttAdapterImpl>
   {

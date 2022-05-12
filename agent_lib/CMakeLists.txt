@@ -27,6 +27,14 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/cutting_tool.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/file_asset.cpp"
         
+# src/client HEADER_FILE_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_client.hpp"
+
+# src/client SOURCE_FILES_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_client.cpp"
+		
 # src/configuration HEADER_FILE_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/agent_config.hpp"
@@ -204,6 +212,7 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.cpp"
+		
 # src/sink HEADER_FILE_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/sink.hpp"
@@ -295,7 +304,8 @@ if(MSVC)
   endif()
 
   # The modules including Beast required the /bigobj option in Windows
-  set_property(SOURCE
+  set_property(SOURCE    
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/mqtt_sink/mqtt_service.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"

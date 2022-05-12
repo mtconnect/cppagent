@@ -17,6 +17,7 @@
 
 #include "mqtt_service.hpp"
 
+#include "client/mqtt/mqtt_client.cpp"
 #include "configuration/config_options.hpp"
 #include "entity/entity.hpp"
 #include "entity/factory.hpp"
@@ -45,16 +46,27 @@ namespace mtconnect {
       {
         auto jsonPrinter = dynamic_cast<JsonPrinter *>(m_sinkContract->getPrinter("json"));
         m_jsonPrinter = std::unique_ptr<JsonPrinter>(jsonPrinter);
+
+        if (IsOptionSet(m_options, configuration::MqttTls))
+        {
+          m_client = make_shared<MqttTlsClient>(m_context, m_options);
+        }
+        else
+        {
+           m_client = make_shared<MqttClient>(m_context, m_options);
+        }
       }
 
       void MqttService::start()
       {
         // mqtt client side not a server side...
+        m_client->start();
       }
 
       void MqttService::stop()
       {
         // stop client side
+        m_client->stop();
       }
 
       uint64_t MqttService::publish(observation::ObservationPtr &observation)
