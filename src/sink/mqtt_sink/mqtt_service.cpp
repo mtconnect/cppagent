@@ -60,7 +60,7 @@ namespace mtconnect {
       void MqttService::start()
       {
         // mqtt client side not a server side...
-        m_client->start();
+        m_client->start(true);
       }
 
       void MqttService::stop()

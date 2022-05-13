@@ -31,7 +31,7 @@ using namespace std;
 namespace asio = boost::asio;
 
 namespace mtconnect {
-  
+
   using namespace source::adapter;
 
   namespace mqtt_client {
@@ -81,7 +81,7 @@ namespace mtconnect {
 
       Derived &derived() { return static_cast<Derived &>(*this); }
 
-      bool start() override
+      bool start(bool publishOnly) override
       {
         NAMED_SCOPE("MqttClient::start");
 
@@ -111,18 +111,16 @@ namespace mtconnect {
         });
 
         client->set_suback_handler(
-            [](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
+            [&](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
               LOG(debug) << "suback received. packet_id: " << packet_id;
               for (auto const &e : results)
               {
-                LOG(debug) << "subscribe result: " << e;
+                LOG(debug) << "suback result: " << e;
                 // Do something if the subscription failed...
               }
 
-              //if (packet_id == m_clientId)
-              //{
-                //MqttPublish();                
-              //}
+              if (packet_id == m_clientId)
+                MqttPublish();
 
               return true;
             });
@@ -163,7 +161,6 @@ namespace mtconnect {
       }
 
     protected:
-
       void subscribe()
       {
         NAMED_SCOPE("MqttClientImpl::subscribe");
@@ -196,45 +193,41 @@ namespace mtconnect {
       }
 
       void MqttPublish()
-      { 
+      {
         NAMED_SCOPE("MqttClientImpl::publish");
-        auto pTopics = GetOption<StringList>(m_options, configuration::Topics);
-        std::vector<std::tuple<string,mqtt::publish_options>> pTopicList;
-        if (pTopics)
+
+        m_clientId = derived().getClient()->acquire_unique_packet_id();
+
+        auto topics = GetOption<StringList>(m_options, configuration::Topics);
+
+        std::string pTopic;
+        if (topics)
         {
-          for (auto &topic : *pTopics)
+          for (auto &topic : *topics)
           {
             auto loc = topic.find(':');
             if (loc != string::npos)
             {
-              pTopicList.emplace_back(
-                  make_tuple(topic.substr(loc + 1), mqtt::qos::at_least_once));
+              pTopic = topic.substr(loc + 1);  
+              break;
             }
           }
         }
         else
         {
-          LOG(warning) << "No topics specified, publishing to '#'";
-          pTopicList.emplace_back(make_tuple("#"s, mqtt::qos::at_least_once));
+          LOG(warning) << "No topics specified, subscribing to '#'";
         }
 
-        m_clientId = derived().getClient()->acquire_unique_packet_id();
-        derived().getClient()->async_publish("mqtt_client_cpp / topic1",
-                                                 "test1",
-                                             MQTT_NS::qos::at_most_once, 
+        derived().getClient()->async_publish(m_clientId, pTopic, "content", mqtt::qos::at_most_once,
                                              [](mqtt::error_code ec) {
-          if (ec)
-          {
-            LOG(error) << "Publish failed: " << ec.message();
-          }
-        });   
-
+                                               if (ec)
+                                               {
+                                                 LOG(error) << "Publish failed: " << ec.message();
+                                               }
+                                             });
       }
 
-      void connect()
-      {
-        derived().getClient()->async_connect();
-      }     
+      void connect() { derived().getClient()->async_connect(); }
 
       void reconnect()
       {
@@ -266,7 +259,6 @@ namespace mtconnect {
       }
 
     protected:
-
       ConfigOptions m_options;
 
       std::string m_host;

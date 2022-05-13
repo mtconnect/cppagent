@@ -30,7 +30,7 @@ namespace mtconnect {
       const auto &getIdentity() const { return m_identity; }
       const auto &getUrl() const { return m_url; }
 
-      virtual bool start() = 0;
+      virtual bool start(bool publicOnly = false) = 0;
       virtual void stop() = 0;
 
     protected:
