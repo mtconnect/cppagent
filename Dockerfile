@@ -120,7 +120,10 @@ COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
 # expose port
 EXPOSE 5000
 
-WORKDIR /home/agent
+# WORKDIR /home/agent
+
+# need this so rest server can find styles?
+WORKDIR /etc/mtconnect
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
