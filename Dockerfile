@@ -87,7 +87,7 @@ RUN cd ~/agent \
 # limit cpus so don't run out of memory on local machine
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
 # can turn off if building in cloud
-# ENV CONAN_CPU_COUNT=1
+ENV CONAN_CPU_COUNT=1
 
 # compile source (~20mins - 4hrs for qemu)
 RUN cd ~/agent && conan build . -bf build
