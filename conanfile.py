@@ -19,7 +19,7 @@ class CppAgentConan(ConanFile):
         "run_tests": True,
         "build_tests": True,
         "without_python": True,
-        "without_ruby": True,
+        "without_ruby": False,
         "without_ipv6": False,
         "with_python": False,
         "with_ruby": False,
