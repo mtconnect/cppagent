@@ -18,6 +18,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <boost/range/algorithm.hpp>
 
 #include "data_set.hpp"
 #include "qname.hpp"
@@ -186,7 +187,7 @@ namespace mtconnect {
       Properties m_properties;
       OrderMapPtr m_order;
     };
-
+    
     struct ValueEqualVisitor
     {
       ValueEqualVisitor(const Value &t) : m_this(t) {}
@@ -298,15 +299,9 @@ namespace mtconnect {
         EntityList revised;
         for (const auto &o : other)
         {
-          const auto &id = o->getIdentity();
-          decltype(list.begin()) it;
-          if (id.index() != EMPTY)
+          if (const auto &id = o->getIdentity())
           {
-            for (it = list.begin(); it != list.end(); it++)
-            {
-              if ((*it)->getIdentity() == id)
-                break;
-            }
+            auto it = boost::find_if(list, [&id](auto &e) { return e->getIdentity() == id; });
 
             if (it != list.end())
             {
@@ -318,11 +313,7 @@ namespace mtconnect {
           }
           else
           {
-            for (it = list.begin(); it != list.end(); it++)
-            {
-              if (*(o.get()) == *(it->get()))
-                break;
-            }
+            auto it = boost::find_if(list, [&o](auto &e) { return *(o.get()) == *(e.get()); });
 
             if (it != list.end())
             {
