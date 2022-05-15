@@ -88,7 +88,7 @@ TEST_F(FileCacheTest, verify_large_files_are_not_cached)
   ASSERT_LT(0, file->m_size);
   ASSERT_TRUE(m_cache->hasFile("/schemas/MTConnectDevices_1.7.xsd"));
 
-  auto css = m_cache->getFile("/styles/Streams.css");
+  auto css = m_cache->getFile("/styles/old1/Streams.css");
   ASSERT_TRUE(css);
   ASSERT_TRUE(css->m_cached);
 }
