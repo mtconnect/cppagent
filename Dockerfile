@@ -75,6 +75,11 @@ ENV PATH=$HOME/venv3.9/bin:$PATH
 ENV CONAN_PROFILE=conan/profiles/docker
 ENV WITH_RUBY=True
 
+# limit cpus so don't run out of memory on local machine
+# symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
+# can turn off if building in cloud
+ENV CONAN_CPU_COUNT=1
+
 # make installer
 RUN cd ~/agent \
   && conan export conan/mqtt_cpp \
@@ -83,11 +88,6 @@ RUN cd ~/agent \
   -pr $CONAN_PROFILE \
   -o run_tests=False \
   -o with_ruby=$WITH_RUBY
-
-# limit cpus so don't run out of memory on local machine
-# symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
-# can turn off if building in cloud
-# ENV CONAN_CPU_COUNT=1
 
 # compile source (~20mins - 4hrs for qemu)
 RUN cd ~/agent && conan build . -bf build
@@ -120,7 +120,10 @@ COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
 # expose port
 EXPOSE 5000
 
-WORKDIR /home/agent
+# WORKDIR /home/agent
+
+# need this so rest server can find styles?
+WORKDIR /etc/mtconnect
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
