@@ -14,7 +14,8 @@ image:
 environment:
   matrix:
     - WITH_RUBY: True
-    - WITH_RUBY: False
+
+#    - WITH_RUBY: False
 
 configuration:
   - Release
