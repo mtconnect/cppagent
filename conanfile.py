@@ -19,7 +19,7 @@ class CppAgentConan(ConanFile):
         "run_tests": True,
         "build_tests": True,
         "without_python": True,
-        "without_ruby": True,
+        "without_ruby": False,
         "without_ipv6": False,
         "with_python": False,
         "with_ruby": False,
@@ -79,7 +79,7 @@ class CppAgentConan(ConanFile):
         if not self.windows_xp:
             self.requires("gtest/1.10.0")
         if self.options.with_ruby:
-            self.requires("mruby/3.0.0")
+            self.requires("mruby/3.1.0")
         
     def build(self):
         cmake = CMake(self)

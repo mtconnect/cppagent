@@ -8,7 +8,7 @@ import glob
 
 class MRubyConan(ConanFile):
     name = "mruby"
-    version = "3.0.0"
+    version = "3.1.0"
     license = "https://github.com/mruby/mruby/blob/master/LICENSE"
     author = "Yukihiro “Matz” Matsumoto"
     homepage = "https://mruby.org/"
@@ -70,7 +70,7 @@ class MRubyConan(ConanFile):
 
     def source(self):
         git = tools.Git(self._mruby_source)
-        git.clone("https://github.com/mruby/mruby.git", "stable")
+        git.clone("https://github.com/mruby/mruby.git", "3.1.0")
         
     def build(self):
         self.run("rake MRUBY_CONFIG=%s" % self.build_config,
