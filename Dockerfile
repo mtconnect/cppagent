@@ -120,10 +120,8 @@ COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
 # expose port
 EXPOSE 5000
 
-# WORKDIR /home/agent
-
-# need this so rest server can find styles?
-WORKDIR /etc/mtconnect
+WORKDIR /home/agent
+# WORKDIR /etc/mtconnect
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
@@ -147,3 +145,5 @@ CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
 #  |-- schemas - xsd files
 #  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
 #  |-- styles - styles.xsl, styles.css, favicon.ico, etc
+#
+# /home/agent - the user's directory
