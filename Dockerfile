@@ -64,11 +64,12 @@ RUN apt-get clean \
   && pip install conan
 
 # get latest source code
+# NOTE: make sure you are checking out the right repo - github.com/bburns OR github.com/mtconnect
 # could use `git checkout foo` to get a specific version here
 RUN --mount=type=secret,id=access_token \
   cd ~ \
   && git clone --recurse-submodules --progress --depth 1 \
-  https://$(cat /run/secrets/access_token)@github.com/mtconnect/cppagent_dev.git agent
+  https://$(cat /run/secrets/access_token)@github.com/bburns/cppagent_dev.git agent
 
 # set some variables
 ENV PATH=$HOME/venv3.9/bin:$PATH
