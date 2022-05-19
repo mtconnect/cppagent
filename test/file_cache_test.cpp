@@ -40,6 +40,8 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::sink::rest_sink;
 
+#define RESOURCE_ROOT PROJECT_ROOT_DIR "/test/resources"
+
 class FileCacheTest : public testing::Test
 {
 protected:
@@ -55,7 +57,7 @@ TEST_F(FileCacheTest, FindFiles)
   string uri("/schemas");
 
   // Register a file with the agent.
-  auto list = m_cache->registerDirectory(uri, PROJECT_ROOT_DIR "/schemas", "1.7");
+  auto list = m_cache->registerDirectory(uri, RESOURCE_ROOT "/schemas", "1.7");
 
   ASSERT_TRUE(m_cache->hasFile("/schemas/MTConnectDevices_1.7.xsd"));
   auto file = m_cache->getFile("/schemas/MTConnectDevices_1.7.xsd");
@@ -66,7 +68,7 @@ TEST_F(FileCacheTest, FindFiles)
 TEST_F(FileCacheTest, IconMimeType)
 {
   // Register a file with the agent.
-  auto list = m_cache->registerDirectory("/styles", PROJECT_ROOT_DIR "/styles", "1.7");
+  auto list = m_cache->registerDirectory("/styles", RESOURCE_ROOT "/styles", "1.7");
 
   auto file = m_cache->getFile("/styles/favicon.ico");
   ASSERT_TRUE(file);
@@ -78,8 +80,8 @@ TEST_F(FileCacheTest, verify_large_files_are_not_cached)
   // Make a cache that can only hold 1024 byte files
   m_cache = make_unique<FileCache>(1024);
 
-  m_cache->addDirectory("/schemas", PROJECT_ROOT_DIR "/schemas", "none.xsd");
-  m_cache->addDirectory("/styles", PROJECT_ROOT_DIR "/styles", "none.css");
+  m_cache->addDirectory("/schemas", RESOURCE_ROOT "/schemas", "none.xsd");
+  m_cache->addDirectory("/styles", RESOURCE_ROOT "/styles", "none.css");
 
   ASSERT_FALSE(m_cache->hasFile("/schemas/MTConnectDevices_1.7.xsd"));
   auto file = m_cache->getFile("/schemas/MTConnectDevices_1.7.xsd");
@@ -95,7 +97,7 @@ TEST_F(FileCacheTest, verify_large_files_are_not_cached)
 
 TEST_F(FileCacheTest, base_directory_should_redirect)
 {
-  m_cache->addDirectory("/schemas", PROJECT_ROOT_DIR "/schemas", "none.xsd");
+  m_cache->addDirectory("/schemas", RESOURCE_ROOT "/schemas", "none.xsd");
   auto file = m_cache->getFile("/schemas");
   ASSERT_TRUE(file);
   ASSERT_EQ("/schemas/none.xsd", file->m_redirect);
@@ -114,7 +116,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file)
   namespace fs = std::filesystem;
 
   // Cleanup
-  fs::path zipped(PROJECT_ROOT_DIR "/test/resources");
+  fs::path zipped(RESOURCE_ROOT);
   zipped /= "zipped_file.txt.gz";
   if (fs::exists(zipped))
   {
