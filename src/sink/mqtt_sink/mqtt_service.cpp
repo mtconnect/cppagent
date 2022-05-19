@@ -47,20 +47,57 @@ namespace mtconnect {
         auto jsonPrinter = dynamic_cast<JsonPrinter *>(m_sinkContract->getPrinter("json"));
         m_jsonPrinter = std::unique_ptr<JsonPrinter>(jsonPrinter);
 
+      GetOptions(config, m_options, options);
+        AddOptions(config, m_options,
+                   {{configuration::UUID, string()},
+                    {configuration::Manufacturer, string()},
+                    {configuration::Station, string()},
+                    {configuration::Url, string()},
+                    {configuration::MqttCaCert, string()}});
+      AddDefaultedOptions(config, m_options,
+                          {{configuration::Host, "localhost"s},
+                           {configuration::Port, 1883},
+                           {configuration::MqttTls, false},
+                           {configuration::AutoAvailable, false},
+                           {configuration::RealTime, false},
+                           {configuration::RelativeTime, false}});
+        loadTopics(config, m_options);
+
         if (IsOptionSet(m_options, configuration::MqttTls))
         {
           m_client = make_shared<MqttTlsClient>(m_context, m_options);
         }
         else
         {
-           m_client = make_shared<MqttClient>(m_context, m_options);
+          m_client = make_shared<MqttClient>(m_context, m_options);
+        }
+      }
+
+      void MqttService::loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options)
+      {
+        auto topics = tree.get_child_optional(configuration::Topics);
+        if (topics)
+        {
+          StringList list;
+          if (topics->size() == 0)
+          {
+            list.emplace_back(":" + topics->get_value<string>());
+          }
+          else
+          {
+            for (auto &f : *topics)
+            {
+              list.emplace_back(f.first + ":" + f.second.data());
+            }
+          }
+          options[configuration::Topics] = list;
         }
       }
 
       void MqttService::start()
       {
         // mqtt client side not a server side...
-        m_client->start(true);
+        m_client->start();
       }
 
       void MqttService::stop()

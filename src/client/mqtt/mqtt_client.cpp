@@ -24,6 +24,9 @@
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 
+#include "source/adapter/adapter.hpp"
+#include "source/adapter/mqtt/mqtt_adapter.hpp"
+
 #include <boost/log/trivial.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
 
@@ -31,7 +34,9 @@ using namespace std;
 namespace asio = boost::asio;
 
 namespace mtconnect {
-
+  using namespace observation;
+  using namespace entity;
+  using namespace pipeline;
   using namespace source::adapter;
 
   namespace mqtt_client {
@@ -60,6 +65,38 @@ namespace mtconnect {
           m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
           m_reconnectTimer(ioContext)
       {
+        m_publishOnly = true;
+
+        std::stringstream url;
+        url << "mqtt://" << m_host << ':' << m_port;
+        m_url = url.str();
+
+        std::stringstream identity;
+        identity << '_' << m_host << '_' << m_port;
+
+        boost::uuids::detail::sha1 sha1;
+        sha1.process_bytes(identity.str().c_str(), identity.str().length());
+        boost::uuids::detail::sha1::digest_type digest;
+        sha1.get_digest(digest);
+
+        identity.str("");
+        identity << std::hex << digest[0] << digest[1] << digest[2];
+        m_identity = std::string("_") + (identity.str()).substr(0, 10);
+      }
+
+      MqttClientBase(boost::asio::io_context &ioContext, const ConfigOptions &options,
+                     source::adapter::mqtt_adapter::MqttPipeline *pipeline,
+                     source::adapter::Handler *handler)
+        : MqttClientImpl(ioContext),
+          m_options(options),
+          m_host(*GetOption<std::string>(options, configuration::Host)),
+          m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
+          m_pipeline(pipeline),
+          m_handler(handler),
+          m_reconnectTimer(ioContext)
+      {
+        m_publishOnly = false;
+
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
         m_url = url.str();
@@ -81,7 +118,7 @@ namespace mtconnect {
 
       Derived &derived() { return static_cast<Derived &>(*this); }
 
-      bool start(bool publishOnly) override
+      bool start() override
       {
         NAMED_SCOPE("MqttClient::start");
 
@@ -95,6 +132,9 @@ namespace mtconnect {
         client->set_connack_handler([this](bool sp, mqtt::connect_return_code connack_return_code) {
           if (connack_return_code == mqtt::connect_return_code::accepted)
           {
+            if (m_handler)
+                m_handler->m_connected(m_identity);
+
             subscribe();
           }
           else
@@ -107,6 +147,8 @@ namespace mtconnect {
         client->set_close_handler([this]() {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
+          if (m_handler)
+              m_handler->m_disconnected(m_identity);
           reconnect();
         });
 
@@ -119,7 +161,7 @@ namespace mtconnect {
                 // Do something if the subscription failed...
               }
 
-              if (packet_id == m_clientId)
+              if (m_publishOnly && packet_id == m_clientId)
                 MqttPublish();
 
               return true;
@@ -135,8 +177,12 @@ namespace mtconnect {
                                            mqtt::buffer contents) {
           if (packet_id)
             LOG(debug) << "packet_id: " << *packet_id;
+
           LOG(debug) << "topic_name: " << topic_name;
           LOG(debug) << "contents: " << contents;
+
+          if (!m_publishOnly)
+          receive(topic_name, contents);
 
           return true;
         });
@@ -208,7 +254,7 @@ namespace mtconnect {
             auto loc = topic.find(':');
             if (loc != string::npos)
             {
-              pTopic = topic.substr(loc + 1);  
+              pTopic = topic.substr(loc + 1);
               break;
             }
           }
@@ -227,7 +273,19 @@ namespace mtconnect {
                                              });
       }
 
-      void connect() { derived().getClient()->async_connect(); }
+      void connect()
+      {
+        if (m_handler)
+          m_handler->m_connecting(m_identity);
+
+        derived().getClient()->async_connect();
+      }
+
+      void receive(mqtt::buffer &topic, mqtt::buffer &contents)
+      {
+        if (m_handler)
+          m_handler->m_processMessage(string(topic), string(contents), m_identity);
+      }
 
       void reconnect()
       {
@@ -269,9 +327,15 @@ namespace mtconnect {
 
       bool m_running;
 
+      bool m_publishOnly;
+
+      source::adapter::mqtt_adapter::MqttPipeline *m_pipeline;
+
+      source::adapter::Handler *m_handler = nullptr;
+
       boost::asio::steady_timer m_reconnectTimer;
     };
-
+   
     class MqttClient : public MqttClientBase<MqttClient>
     {
     public:

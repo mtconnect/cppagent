@@ -59,6 +59,10 @@ namespace mtconnect {
         static void registerFactory(SinkFactory &factory);
 
       protected:
+
+        void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
+
+      protected:
         boost::asio::io_context &m_context;
         ConfigOptions m_options;
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
