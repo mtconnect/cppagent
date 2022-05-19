@@ -218,6 +218,10 @@ namespace mtconnect {
             usage(1);
           }
         }
+        else
+        {
+          usage(1);
+        }
 
         g_service = this;
         m_isService = true;
