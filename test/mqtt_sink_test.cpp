@@ -93,5 +93,7 @@ Sinks {
       dynamic_pointer_cast<sink::mqtt_sink::MqttService>(agent->findSink("MqttService"));
 
   ASSERT_TRUE(mqttService != nullptr);
+
+  mqttService->start();
 }
 

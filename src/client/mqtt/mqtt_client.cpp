@@ -124,7 +124,8 @@ namespace mtconnect {
 
         mqtt::setup_log();
 
-        auto client = derived().getClient();
+        auto client = derived().getClient();      
+
         client->set_client_id(m_identity);
         client->clean_session();
         client->set_keep_alive_sec(10);
@@ -133,7 +134,7 @@ namespace mtconnect {
           if (connack_return_code == mqtt::connect_return_code::accepted)
           {
             if (m_handler)
-                m_handler->m_connected(m_identity);
+              m_handler->m_connected(m_identity);
 
             subscribe();
           }
@@ -148,7 +149,12 @@ namespace mtconnect {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
           if (m_handler)
-              m_handler->m_disconnected(m_identity);
+            m_handler->m_disconnected(m_identity);
+          reconnect();
+        });
+
+         client->set_error_handler([this](mqtt::error_code ec) {
+          LOG(error) << "error: " << ec.message();
           reconnect();
         });
 
@@ -167,10 +173,7 @@ namespace mtconnect {
               return true;
             });
 
-        client->set_error_handler([this](mqtt::error_code ec) {
-          LOG(error) << "error: " << ec.message();
-          reconnect();
-        });
+       
 
         client->set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
                                            mqtt::publish_options pubopts, mqtt::buffer topic_name,
@@ -181,7 +184,6 @@ namespace mtconnect {
           LOG(debug) << "topic_name: " << topic_name;
           LOG(debug) << "contents: " << contents;
 
-          if (!m_publishOnly)
           receive(topic_name, contents);
 
           return true;
@@ -199,11 +201,15 @@ namespace mtconnect {
         m_reconnectTimer.cancel();
         auto client = derived().getClient();
         auto url = m_url;
-        client->async_disconnect(10s, [client, url](mqtt::error_code ec) {
-          LOG(warning) << url << " disconnected: " << ec.message();
-        });
 
-        client.reset();
+        if (client)
+        {
+          client->async_disconnect(10s, [client, url](mqtt::error_code ec) {
+            LOG(warning) << url << " disconnected: " << ec.message();
+          });
+
+          client.reset();
+        }
       }
 
     protected:
@@ -285,7 +291,7 @@ namespace mtconnect {
       {
         if (m_handler)
           m_handler->m_processMessage(string(topic), string(contents), m_identity);
-      }
+      }      
 
       void reconnect()
       {
