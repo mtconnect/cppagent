@@ -234,14 +234,153 @@ TEST_F(ObservationTest, subType_prefix_should_be_passed_through)
 #if 0
 TEST_F(ObservationTest, Condition)
 {
-  DataItem dataItem({{"id", "c1"}, {"category", "EVENT"},
-    {"type","TOOL_SUFFIX"}, {"subType", "x:AUTO"}
+  DataItem d({{"id", "c1"}, {"category", "CONDITION"},
+    {"type","TEMPERATURE"}, {"name", "DataItemTest1"}
   });
 
-  ErrorList errors;
-  auto event = Observation::make(&dataItem, {{ "VALUE", "Test"s }}, m_time, errors);
-  ASSERT_EQ(0, errors.size());
-  
-  ASSERT_EQ("x:AUTO", dataItem.getSubType());
-  ASSERT_EQ("x:AUTO", event->get<string>("subType"));
+  ObservationPtr event1(new Observation(*d, time, (string) "FAULT|4321|1|HIGH|Overtemp", 123),
+                        true);
+
+  ASSERT_EQ(Observation::FAULT, event1->getLevel());
+  ASSERT_EQ((string) "Overtemp", event1->getValue());
+
+  const auto &attr_list1 = event1->getAttributes();
+  map<string, string> attrs1;
+
+  for (const auto &attr : attr_list1)
+    attrs1[attr.first] = attr.second;
+
+  ASSERT_EQ((string) "TEMPERATURE", attrs1["type"]);
+  ASSERT_EQ((string) "123", attrs1["sequence"]);
+  ASSERT_EQ((string) "4321", attrs1["nativeCode"]);
+  ASSERT_EQ((string) "HIGH", attrs1["qualifier"]);
+  ASSERT_EQ((string) "1", attrs1["nativeSeverity"]);
+  ASSERT_EQ((string) "Fault", event1->getLevelString());
+
+  ObservationPtr event2(new Observation(*d, time, (string) "fault|4322|2|LOW|Overtemp", 123), true);
+
+  ASSERT_EQ(Observation::FAULT, event2->getLevel());
+  ASSERT_EQ((string) "Overtemp", event2->getValue());
+
+  const auto &attr_list2 = event2->getAttributes();
+  map<string, string> attrs2;
+
+  for (const auto &attr : attr_list2)
+    attrs2[attr.first] = attr.second;
+
+  ASSERT_EQ((string) "TEMPERATURE", attrs2["type"]);
+  ASSERT_EQ((string) "123", attrs2["sequence"]);
+  ASSERT_EQ((string) "4322", attrs2["nativeCode"]);
+  ASSERT_EQ((string) "LOW", attrs2["qualifier"]);
+  ASSERT_EQ((string) "2", attrs2["nativeSeverity"]);
+  ASSERT_EQ((string) "Fault", event2->getLevelString());
+
+  d.reset();
 }
+
+TEST_F(ObservationTest, TimeSeries)
+{
+  string time("NOW");
+  std::map<string, string> attributes1;
+  attributes1["id"] = "1";
+  attributes1["name"] = "test";
+  attributes1["type"] = "TEMPERATURE";
+  attributes1["category"] = "SAMPLE";
+  attributes1["representation"] = "TIME_SERIES";
+  auto d = make_unique<DataItem>(attributes1);
+
+  ASSERT_TRUE(d->isTimeSeries());
+
+  ObservationPtr event1(new Observation(*d, time, (string) "6||1 2 3 4 5 6 ", 123), true);
+  const auto &attr_list1 = event1->getAttributes();
+  map<string, string> attrs1;
+
+  for (const auto &attr : attr_list1)
+    attrs1[attr.first] = attr.second;
+
+  ASSERT_TRUE(event1->isTimeSeries());
+
+  ASSERT_EQ(6, event1->getSampleCount());
+  auto values = event1->getTimeSeries();
+
+  for (auto i = 0; i < event1->getSampleCount(); i++)
+  {
+    ASSERT_EQ((float)(i + 1), values[i]);
+  }
+
+  ASSERT_EQ((string) "", event1->getValue());
+  ASSERT_EQ(0, (int)attrs1.count("sampleRate"));
+
+  ObservationPtr event2(new Observation(*d, time, (string) "7|42000|10 20 30 40 50 60 70 ", 123),
+                        true);
+  const auto &attr_list2 = event2->getAttributes();
+  map<string, string> attrs2;
+
+  for (const auto &attr : attr_list2)
+    attrs2[attr.first] = attr.second;
+
+  ASSERT_TRUE(event2->isTimeSeries());
+
+  ASSERT_EQ(7, event2->getSampleCount());
+  ASSERT_EQ((string) "", event2->getValue());
+  ASSERT_EQ((string) "42000", attrs2["sampleRate"]);
+  values = event2->getTimeSeries();
+
+  for (auto i = 0; i < event1->getSampleCount(); i++)
+  {
+    ASSERT_EQ((float)((i + 1) * 10), values[i]);
+  }
+
+  d.reset();
+}
+
+TEST_F(ObservationTest, Duration)
+{
+  string time("2011-02-18T15:52:41Z@200.1232");
+  std::map<string, string> attributes1;
+  attributes1["id"] = "1";
+  attributes1["name"] = "test";
+  attributes1["type"] = "TEMPERATURE";
+  attributes1["category"] = "SAMPLE";
+  attributes1["statistic"] = "AVERAGE";
+  auto d = make_unique<DataItem>(attributes1);
+
+  ObservationPtr event1(new Observation(*d, time, (string) "11.0", 123), true);
+  const auto &attr_list = event1->getAttributes();
+  map<string, string> attrs1;
+
+  for (const auto &attr : attr_list)
+    attrs1[attr.first] = attr.second;
+
+  ASSERT_EQ((string) "AVERAGE", attrs1["statistic"]);
+  ASSERT_EQ((string) "2011-02-18T15:52:41Z", attrs1["timestamp"]);
+  ASSERT_EQ((string) "200.1232", attrs1["duration"]);
+
+  d.reset();
+}
+
+TEST_F(ObservationTest, AssetChanged)
+{
+  string time("2011-02-18T15:52:41Z@200.1232");
+  std::map<string, string> attributes1;
+  attributes1["id"] = "1";
+  attributes1["name"] = "ac";
+  attributes1["type"] = "ASSET_CHANGED";
+  attributes1["category"] = "EVENT";
+  auto d = make_unique<DataItem>(attributes1);
+
+  ASSERT_TRUE(d->isAssetChanged());
+
+  ObservationPtr event1(new Observation(*d, time, (string) "CuttingTool|123", 123), true);
+  const auto &attr_list = event1->getAttributes();
+  map<string, string> attrs1;
+
+  for (const auto &attr : attr_list)
+    attrs1[attr.first] = attr.second;
+
+  ASSERT_EQ((string) "CuttingTool", attrs1["assetType"]);
+  ASSERT_EQ((string) "123", event1->getValue());
+
+  d.reset();
+}
+#endif

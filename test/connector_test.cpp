@@ -26,9 +26,6 @@
 #include <date/date.h>  // This file is to allow std::chrono types to be output to a stream
 #include <memory>
 #include <sstream>
-#include <iomanip>
-#include <iostream>
-#include <numeric>
 #include <thread>
 
 #include "source/adapter/shdr/connector.hpp"

@@ -659,7 +659,7 @@ TEST_F(XmlPrinterTest, ChangeVersion)
 {
   // Devices
   m_printer->clearDevicesNamespaces();
-  
+
   {
     PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
     ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation",
@@ -781,24 +781,6 @@ TEST_F(XmlPrinterTest, CheckDeviceChangeTime)
                           m_printer->getModelChangeTime().c_str());
   }
 }
-
-TEST_F(XmlPrinterTest, CheckDeviceChangeTime)
-{
-  m_printer = new XmlPrinter("1.7", true);
-  m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", m_printer);
-  m_printer->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
-  ASSERT_FALSE(m_printer->getModelChangeTime().empty());
-
-  {
-    PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
-    ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation",
-                          "urn:mtconnect.org:MTConnectDevices:1.7 "
-                          "http://schemas.mtconnect.org/schemas/"
-                          "MTConnectDevices_1.7.xsd");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime", m_printer->getModelChangeTime().c_str());
-  }
-}
-
 
 TEST_F(XmlPrinterTest, SourceReferences)
 {

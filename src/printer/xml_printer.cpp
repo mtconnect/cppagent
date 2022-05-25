@@ -650,11 +650,6 @@ namespace mtconnect::printer {
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
             AGENT_VERSION_BUILD);
     addAttribute(writer, "version", version);
-    
-    if (m_schemaVersion >= "1.7")
-    {
-      addAttribute(writer, "deviceModelChangeTime", m_ModelChangeTime);
-    }
 
     if (m_schemaVersion >= "1.7")
     {

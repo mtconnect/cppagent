@@ -331,9 +331,6 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   m_devices = m_agentTestHelper->m_agent->getDevices();
   auto doc = printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
-  
-  ASSERT_FALSE(printer->getModelChangeTime().empty());
-  ASSERT_EQ(printer->getModelChangeTime(), jdoc.at("/MTConnectDevices/Header/deviceModelChangeTime"_json_pointer).get<string>());
 
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
   auto linear = devices.at(1).at("/Device/Components/0/Axes/Components/0/Linear"_json_pointer);
