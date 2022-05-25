@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,23 +17,20 @@
 
 #include "xml_printer.hpp"
 
-#include "xml_printer_helper.hpp"
 #include <unordered_map>
-
-#include <dlib/logger.h>
 
 #include <libxml/xmlwriter.h>
 
-using namespace std;
-using namespace mtconnect::observation;
+#include "logging.hpp"
+#include "printer/xml_printer_helper.hpp"
 
-namespace mtconnect
-{
-  namespace entity
-  {
-    static dlib::logger g_logger("entity.xml.printer");
-    
-    inline string stripUndeclaredNamespace(const QName &qname, const unordered_set<string> &namespaces)
+using namespace std;
+
+namespace mtconnect {
+  using namespace printer;
+  namespace entity {
+    inline string stripUndeclaredNamespace(const QName &qname,
+                                           const unordered_set<string> &namespaces)
     {
       string name;
       if (qname.hasNs() && namespaces.count(string(qname.getNs())) == 0)
@@ -123,8 +120,7 @@ namespace mtconnect
                                           addSimpleElement(writer, "Cell", format(d), attrs);
                                         },
                                         [](auto &a) {
-                                                g_logger << dlib::LERROR
-                                                         << "Invalid type for DataSetVariant cell";
+                                          LOG(error) << "Invalid type for DataSetVariant cell";
                                         }},
                                     c.m_value);
                             }
@@ -177,6 +173,7 @@ namespace mtconnect
     void XmlPrinter::print(xmlTextWriterPtr writer, const EntityPtr entity,
                            const std::unordered_set<std::string> &namespaces)
     {
+      NAMED_SCOPE("entity.xml_printer");
       const auto &properties = entity->getProperties();
       const auto order = entity->getOrder();
       const auto *localNamespaces = &namespaces;

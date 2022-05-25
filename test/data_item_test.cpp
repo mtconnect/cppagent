@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,45 +19,54 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "device_model/data_item.hpp"
-#include "test_utilities.hpp"
+#include "device_model/data_item/data_item.hpp"
+#include "source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::entity;
+using namespace mtconnect::device_model::data_item;
 
 class DataItemTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {
-    std::map<string, string> attributes1, attributes2, attributes3;
+    {
+      Properties props {{"id", "1"s},
+                        {"name", "DataItemTest1"s},
+                        {"type", "ACCELERATION"s},
+                        {"category", "SAMPLE"s},
+                        {"units", "PERCENT"s},
+                        {"nativeUnits", "PERCENT"s}};
+      ErrorList errors;
+      m_dataItemA = DataItem::make(props, errors);
+      EXPECT_EQ(0, errors.size());
+    }
 
-    attributes1["id"] = "1";
-    attributes1["name"] = "DataItemTest1";
-    attributes1["type"] = "ACCELERATION";
-    attributes1["category"] = "SAMPLE";
-    attributes1["nativeUnits"] = "PERCENT";
-    m_dataItemA = make_unique<DataItem>(attributes1);
+    {
+      Properties props {{"id", "3"s},
+                        {"name", "DataItemTest2"s},
+                        {"type", "ACCELERATION"s},
+                        {"subType", "ACTUAL"s},
+                        {"category", "SAMPLE"s},
+                        {"units", "REVOLUTION/MINUTE"s},
+                        {"nativeScale", "1.0"s},
+                        {"significantDigits", "1"s},
+                        {"coordinateSystem", "WORK"s}};
+      ErrorList errors;
+      m_dataItemB = DataItem::make(props, errors);
+      EXPECT_EQ(0, errors.size());
+    }
 
-    attributes2["id"] = "3";
-    attributes2["name"] = "DataItemTest2";
-    attributes2["type"] = "ACCELERATION";
-    attributes2["subType"] = "ACTUAL";
-    attributes2["category"] = "EVENT";
-    attributes2["units"] = "REVOLUTION/MINUTE";
-    attributes2["nativeScale"] = "1.0";
-    attributes2["significantDigits"] = "1";
-    attributes2["coordinateSystem"] = "testCoordinateSystem";
-    m_dataItemB = make_unique<DataItem>(attributes2);
-
-    attributes3["id"] = "4";
-    attributes3["name"] = "DataItemTest3";
-    attributes3["type"] = "LOAD";
-    attributes3["category"] = "CONDITION";
-    m_dataItemC = make_unique<DataItem>(attributes3);
+    {
+      Properties props {
+          {"id", "4"s}, {"name", "DataItemTest1"s}, {"type", "LOAD"s}, {"category", "CONDITION"s}};
+      ErrorList errors;
+      m_dataItemC = DataItem::make(props, errors);
+      EXPECT_EQ(0, errors.size());
+    }
   }
 
   void TearDown() override
@@ -67,21 +76,9 @@ class DataItemTest : public testing::Test
     m_dataItemC.reset();
   }
 
-  std::unique_ptr<DataItem> m_dataItemA;
-  std::unique_ptr<DataItem> m_dataItemB;
-  std::unique_ptr<DataItem> m_dataItemC;
-
-  
-  // Helper to test values
-  void testValueHelper(std::map<std::string, std::string> &attributes,
-                       const std::string &nativeUnits, float expected, const double value,
-                       const char *file, int line)
-  {
-    attributes["nativeUnits"] = nativeUnits;
-    DataItem dataItem(attributes);
-    dataItem.setConversionRequired(true);
-    auto convertedValue = dataItem.convertValue(value);
-  }
+  DataItemPtr m_dataItemA;
+  DataItemPtr m_dataItemB;
+  DataItemPtr m_dataItemC;
 };
 
 #define TEST_VALUE(attributes, nativeUnits, expected, value) \
@@ -89,279 +86,149 @@ class DataItemTest : public testing::Test
 
 TEST_F(DataItemTest, Getters)
 {
-  ASSERT_EQ((string) "1", m_dataItemA->getId());
-  ASSERT_EQ((string) "DataItemTest1", m_dataItemA->getName());
-  ASSERT_EQ((string) "ACCELERATION", m_dataItemA->getType());
-  ASSERT_EQ((string) "Acceleration", m_dataItemA->getElementName());
-  ASSERT_EQ((string) "PERCENT", m_dataItemA->getNativeUnits());
-  ASSERT_TRUE(m_dataItemA->getSubType().empty());
-  ASSERT_TRUE(!m_dataItemA->hasNativeScale());
+  ASSERT_EQ("1", m_dataItemA->getId());
+  ASSERT_EQ("DataItemTest1", m_dataItemA->getName());
+  ASSERT_EQ("ACCELERATION", m_dataItemA->getType());
+  ASSERT_EQ("Acceleration", m_dataItemA->getObservationName());
+  ASSERT_EQ("PERCENT", m_dataItemA->get<string>("nativeUnits"));
+  ASSERT_FALSE(m_dataItemA->maybeGet<string>("subType"));
+  ASSERT_FALSE(m_dataItemA->maybeGet<string>("nativeScale"));
 
-  ASSERT_EQ((string) "3", m_dataItemB->getId());
-  ASSERT_EQ((string) "DataItemTest2", m_dataItemB->getName());
-  ASSERT_EQ((string) "ACCELERATION", m_dataItemB->getType());
-  ASSERT_EQ((string) "Acceleration", m_dataItemB->getElementName());
-  ASSERT_EQ((string) "ACTUAL", m_dataItemB->getSubType());
-  ASSERT_EQ(m_dataItemB->getNativeUnits(), m_dataItemB->getUnits());
-  ASSERT_EQ(1.0f, m_dataItemB->getNativeScale());
-}
-
-TEST_F(DataItemTest, GetAttributes)
-{
-  const auto &attributes1 = m_dataItemA->getAttributes();
-  ASSERT_EQ((string) "1", attributes1.at("id"));
-  ASSERT_EQ((string) "DataItemTest1", attributes1.at("name"));
-  ASSERT_EQ((string) "ACCELERATION", attributes1.at("type"));
-  ASSERT_TRUE(attributes1.find("subType") == attributes1.end());
-  ASSERT_EQ((string) "PERCENT", attributes1.at("nativeUnits"));
-  ASSERT_TRUE(attributes1.find("getNativeScale") == attributes1.end());
-  ASSERT_TRUE(attributes1.find("coordinateSystem") == attributes1.end());
-
-  const auto &attributes2 = m_dataItemB->getAttributes();
-  ASSERT_EQ((string) "3", attributes2.at("id"));
-  ASSERT_EQ((string) "DataItemTest2", attributes2.at("name"));
-  ASSERT_EQ((string) "ACCELERATION", attributes2.at("type"));
-  ASSERT_EQ((string) "ACTUAL", attributes2.at("subType"));
-  ASSERT_EQ(attributes2.at("nativeUnits"), attributes2.at("units"));
-  ASSERT_EQ((string) "1", attributes2.at("nativeScale"));
-  ASSERT_EQ((string) "testCoordinateSystem", attributes2.at("coordinateSystem"));
+  ASSERT_EQ("3", m_dataItemB->getId());
+  ASSERT_EQ("DataItemTest2", m_dataItemB->getName());
+  ASSERT_EQ("ACCELERATION", m_dataItemB->getType());
+  ASSERT_EQ("Acceleration", m_dataItemB->getObservationName());
+  ASSERT_EQ("ACTUAL", m_dataItemB->get<string>("subType"));
+  ASSERT_FALSE(m_dataItemB->maybeGet<string>("nativeUnits"));
+  ASSERT_EQ(1.0, m_dataItemB->get<double>("nativeScale"));
 }
 
 TEST_F(DataItemTest, HasNameAndSource)
 {
+  namespace di = mtconnect::device_model::data_item;
+
   ASSERT_TRUE(m_dataItemA->hasName("DataItemTest1"));
   ASSERT_TRUE(m_dataItemB->hasName("DataItemTest2"));
 
-  ASSERT_TRUE(m_dataItemA->getSource().empty());
-  ASSERT_TRUE(m_dataItemB->getSource().empty());
+  ASSERT_FALSE(m_dataItemA->hasProperty("Source"));
+  ASSERT_FALSE(m_dataItemB->hasProperty("Source"));
 
-  ASSERT_TRUE(!m_dataItemB->hasName("DataItemTest2Source"));
-  ASSERT_EQ((string) "DataItemTest2", m_dataItemB->getSourceOrName());
+  ASSERT_FALSE(m_dataItemB->hasName("DataItemTest2Source"));
+  ASSERT_EQ("DataItemTest2", m_dataItemB->getSourceOrName());
 
-  m_dataItemB->addSource("DataItemTest2Source", "", "", "");
-  ASSERT_TRUE(m_dataItemB->hasName("DataItemTest2Source"));
-  ASSERT_EQ((string) "DataItemTest2Source", m_dataItemB->getSource());
-  ASSERT_EQ((string) "DataItemTest2Source", m_dataItemB->getSourceOrName());
+  Properties sp {{"VALUE", "DataItemTest2Source"s}};
+  ErrorList errors;
+  auto source = di::Source::getFactory()->make("Source", sp, errors);
+  ASSERT_TRUE(errors.empty());
+
+  Properties props {{"id", "1"s},
+                    {"name", "DataItemTest1"s},
+                    {"type", "ACCELERATION"s},
+                    {"category", "SAMPLE"s},
+                    {"units", "PERCENT"s},
+                    {"nativeUnits", "PERCENT"s},
+                    {"Source", source}};
+  auto dataItem = DataItem::make(props, errors);
+  ASSERT_TRUE(errors.empty());
+
+  ASSERT_TRUE(dataItem->hasName("DataItemTest2Source"));
+  ASSERT_EQ("DataItemTest2Source", dataItem->getSource()->getValue<string>());
+  ASSERT_EQ("DataItemTest2Source", dataItem->getPreferredName());
 }
 
 TEST_F(DataItemTest, IsSample)
 {
   ASSERT_TRUE(m_dataItemA->isSample());
-  ASSERT_TRUE(!m_dataItemB->isSample());
-}
-
-TEST_F(DataItemTest, Component)
-{
-  std::map<string, string> attributes1;
-  attributes1["id"] = "3";
-  attributes1["name"] = "AxesTestA";
-  attributes1["uuid"] = "UniversalUniqueIdA";
-  attributes1["sampleRate"] = "100.11";
-
-  mtconnect::Component axes("Axes", attributes1);
-  m_dataItemA->setComponent(axes);
-
-  ASSERT_TRUE(&axes == m_dataItemA->getComponent());
+  ASSERT_FALSE(m_dataItemC->isSample());
 }
 
 TEST_F(DataItemTest, GetCamel)
 {
-  string prefix;
-  ASSERT_TRUE(DataItem::getCamelType("", prefix).empty());
-  ASSERT_EQ((string) "Camels", DataItem::getCamelType("CAMELS", prefix));
-  ASSERT_TRUE(prefix.empty());
+  std::optional<string> prefix;
+  ASSERT_TRUE(pascalize("", prefix).empty());
+  ASSERT_EQ((string) "Camels", pascalize("CAMELS", prefix));
+  ASSERT_FALSE(prefix);
 
   // Test the one exception to the rules...
-  ASSERT_EQ((string) "PH", DataItem::getCamelType("PH", prefix));
-  ASSERT_EQ((string) "VoltageDC", DataItem::getCamelType("VOLTAGE_DC", prefix));
-  ASSERT_EQ((string) "VoltageAC", DataItem::getCamelType("VOLTAGE_AC", prefix));
-  ASSERT_EQ((string) "MTConnectVersion", DataItem::getCamelType("MTCONNECT_VERSION", prefix));
-  ASSERT_EQ((string) "DeviceURI", DataItem::getCamelType("DEVICE_URI", prefix));
+  ASSERT_EQ((string) "PH", pascalize("PH", prefix));
+  ASSERT_EQ((string) "VoltageDC", pascalize("VOLTAGE_DC", prefix));
+  ASSERT_EQ((string) "VoltageAC", pascalize("VOLTAGE_AC", prefix));
+  ASSERT_EQ((string) "MTConnectVersion", pascalize("MTCONNECT_VERSION", prefix));
+  ASSERT_EQ((string) "DeviceURI", pascalize("DEVICE_URI", prefix));
 
-  ASSERT_EQ((string) "CamelCase", DataItem::getCamelType("CAMEL_CASE", prefix));
-  ASSERT_EQ((string) "ABCc", DataItem::getCamelType("A_B_CC", prefix));
+  ASSERT_EQ((string) "CamelCase", pascalize("CAMEL_CASE", prefix));
+  ASSERT_EQ((string) "ABCc", pascalize("A_B_CC", prefix));
 
-  prefix.clear();
-  ASSERT_EQ((string) "CamelCase", DataItem::getCamelType("x:CAMEL_CASE", prefix));
-  ASSERT_EQ((string) "x", prefix);
+  prefix.reset();
+  ASSERT_EQ((string) "CamelCase", pascalize("x:CAMEL_CASE", prefix));
+  ASSERT_EQ((string) "x", *prefix);
 }
 
-TEST_F(DataItemTest, Conversion)
-{
-  std::map<string, string> attributes1;
-  attributes1["id"] = "p";
-  attributes1["name"] = "position";
-  attributes1["type"] = "POSITION";
-  attributes1["category"] = "SAMPLE";
-  attributes1["units"] = "MILLIMETER_3D";
-  attributes1["nativeUnits"] = "INCH_3D";
-  attributes1["coordinateSystem"] = "testCoordinateSystem";
-  DataItem item1(attributes1);
-  item1.conversionRequired();
-
-  {
-    Value value{Vector{1.0, 2.0, 3.0}};
-    item1.convertValue(value);
-    auto vec = get<Vector>(value);
-    EXPECT_NEAR(25.4, vec[0], 0.0001);
-    EXPECT_NEAR(50.8, vec[1], 0.0001);
-    EXPECT_NEAR(76.2, vec[2], 0.0001);
-  }
-
-  std::map<string, string> attributes2;
-  attributes2["id"] = "p";
-  attributes2["name"] = "position";
-  attributes2["type"] = "POSITION";
-  attributes2["category"] = "SAMPLE";
-  attributes2["units"] = "DEGREE_3D";
-  attributes2["nativeUnits"] = "RADIAN_3D";
-  attributes2["coordinateSystem"] = "testCoordinateSystem";
-  DataItem item2(attributes2);
-  item2.conversionRequired();
-
-  {
-    Value value{Vector{1.0, 2.0, 3.0}};
-    item2.convertValue(value);
-    auto vec = get<Vector>(value);
-    EXPECT_NEAR(57.29578, vec[0], 0.0001);
-    EXPECT_NEAR(114.5916, vec[1], 0.0001);
-    EXPECT_NEAR(171.8873, vec[2], 0.0001);
-  }
-
-  std::map<string, string> attributes3;
-  attributes3["id"] = "p";
-  attributes3["name"] = "position";
-  attributes3["type"] = "POSITION";
-  attributes3["category"] = "SAMPLE";
-  attributes3["units"] = "MILLIMETER";
-  attributes3["nativeUnits"] = "MILLIMETER";
-  attributes3["nativeScale"] = "10";
-  attributes3["coordinateSystem"] = "testScale";
-  DataItem item3(attributes3);
-  item3.conversionRequired();
-
-  EXPECT_NEAR(1.3, item3.convertValue(13.0), 0.0001);
-
-  std::map<string, string> attributes4;
-  attributes4["id"] = "p";
-  attributes4["name"] = "position";
-  attributes4["type"] = "POSITION";
-  attributes4["category"] = "SAMPLE";
-  attributes4["units"] = "AMPERE";
-  attributes4["nativeUnits"] = "KILOAMPERE";
-  attributes4["coordinateSystem"] = "testScale";
-  DataItem item4(attributes4);
-  item4.conversionRequired();
-
-  EXPECT_NEAR(130.0, item4.convertValue(0.13), 0.0001);
-
-  DataItem item5(attributes4);
-
-  item5.setConversionRequired(false);
-  ASSERT_TRUE(!item5.conversionRequired());
-
-  EXPECT_DOUBLE_EQ(0.13, item5.convertValue(0.13));
-}
-
-TEST_F(DataItemTest, ConvertSimpleUnits)
-{
-  std::map<string, string> attributes;
-  attributes["id"] = "1";
-  attributes["name"] = "DataItemTest";
-  attributes["type"] = "ACCELERATION";
-  attributes["category"] = "SAMPLE";
-
-  TEST_VALUE(attributes, "INCH", 2.0f * 25.4f, 2.0);
-  TEST_VALUE(attributes, "FOOT", 2.0f * 304.8f, 2.0);
-  TEST_VALUE(attributes, "CENTIMETER", 2.0f * 10.0f, 2.0);
-  TEST_VALUE(attributes, "DECIMETER", 2.0f * 100.0f, 2.0);
-  TEST_VALUE(attributes, "METER", 2.0f * 1000.0f, 2.0);
-  TEST_VALUE(attributes, "FAHRENHEIT", (2.0f - 32.0f) * (5.0f / 9.0f), 2.0);
-  TEST_VALUE(attributes, "POUND", 2.0f * 0.45359237f, 2.0);
-  TEST_VALUE(attributes, "GRAM", 2.0f / 1000.0f, 2.0);
-  TEST_VALUE(attributes, "RADIAN", 2.0f * 57.2957795f, 2.0);
-  TEST_VALUE(attributes, "MINUTE", 2.0f * 60.0f, 2.0);
-  TEST_VALUE(attributes, "HOUR", 2.0f * 3600.0f, 2.0);
-  TEST_VALUE(attributes, "MILLIMETER", 2.0f, 2.0);
-  TEST_VALUE(attributes, "PERCENT", 2.0f, 2.0);
-  TEST_VALUE(attributes, "REVOLUTION/MINUTE", 2.0f, 2.0);
-  TEST_VALUE(attributes, "REVOLUTION/SECOND", 2.0f * 60.0f, 2.0);
-  TEST_VALUE(attributes, "GRAM/INCH", (2.0f / 1000.0f) / 25.4f, 2.0);
-  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f), 2.0);
-
-  attributes["nativeScale"] = "0.5";
-  TEST_VALUE(attributes, "MILLIMETER/MINUTE^3", (2.0f) / (60.0f * 60.0f * 60.0f * 0.5f), 2.0);
-}
-
-TEST_F(DataItemTest, Condition)
-{
-  ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory());
-}
+TEST_F(DataItemTest, Condition) { ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory()); }
 
 TEST_F(DataItemTest, TimeSeries)
 {
-  std::map<string, string> attributes1;
+  {
+    Properties props {{"id", "1"s},
+                      {"name", "DataItemTest1"s},
+                      {"type", "POSITION"s},
+                      {"category", "SAMPLE"s},
+                      {"units", "MILLIMETER"s},
+                      {"nativeUnits", "MILLIMETER"s},
+                      {"representation", "TIME_SERIES"s}};
+    ErrorList errors;
+    auto d = DataItem::make(props, errors);
+    EXPECT_EQ(0, errors.size());
 
-  attributes1["id"] = "1";
-  attributes1["name"] = "DataItemTest1";
-  attributes1["type"] = "POSITION";
-  attributes1["category"] = "SAMPLE";
-  attributes1["units"] = "MILLIMETER";
-  attributes1["nativeUnits"] = "MILLIMETER";
-  attributes1["representation"] = "TIME_SERIES";
-  auto d = make_unique<DataItem>(attributes1);
+    ASSERT_EQ(string("PositionTimeSeries"), d->getObservationName());
+  }
 
-  ASSERT_EQ(string("PositionTimeSeries"), d->getElementName());
-  d.reset();
+  {
+    Properties props {{"id", "1"s},
+                      {"name", "DataItemTest1"s},
+                      {"type", "POSITION"s},
+                      {"category", "SAMPLE"s},
+                      {"units", "MILLIMETER"s},
+                      {"nativeUnits", "MILLIMETER"s},
+                      {"representation", "VALUE"s}};
+    ErrorList errors;
+    auto d = DataItem::make(props, errors);
+    EXPECT_EQ(0, errors.size());
 
-  attributes1.clear();
-  attributes1["id"] = "1";
-  attributes1["name"] = "DataItemTest1";
-  attributes1["type"] = "POSITION";
-  attributes1["category"] = "SAMPLE";
-  attributes1["units"] = "MILLIMETER";
-  attributes1["nativeUnits"] = "MILLIMETER";
-  attributes1["representation"] = "VALUE";
-  d = make_unique<DataItem>(attributes1);
-
-  ASSERT_EQ(string("Position"), d->getElementName());
-  d.reset();
+    ASSERT_EQ(string("Position"), d->getObservationName());
+  }
 }
 
 TEST_F(DataItemTest, Statistic)
 {
-  std::map<string, string> attributes1;
+  Properties props {{"id", "1"s},
+                    {"name", "DataItemTest1"s},
+                    {"type", "POSITION"s},
+                    {"category", "SAMPLE"s},
+                    {"units", "MILLIMETER"s},
+                    {"nativeUnits", "MILLIMETER"s},
+                    {"statistic", "AVERAGE"s}};
+  ErrorList errors;
+  auto d = DataItem::make(props, errors);
+  EXPECT_EQ(0, errors.size());
 
-  attributes1["id"] = "1";
-  attributes1["name"] = "DataItemTest1";
-  attributes1["type"] = "POSITION";
-  attributes1["category"] = "SAMPLE";
-  attributes1["units"] = "MILLIMETER";
-  attributes1["nativeUnits"] = "MILLIMETER";
-  attributes1["statistic"] = "AVERAGE";
-  auto d = make_unique<DataItem>(attributes1);
-
-  ASSERT_EQ(string("AVERAGE"), d->getStatistic());
-  d.reset();
+  ASSERT_EQ("AVERAGE", d->get<string>("statistic"));
 }
 
 TEST_F(DataItemTest, SampleRate)
 {
-  std::map<string, string> attributes1;
+  Properties props {{"id", "1"s},
+                    {"name", "DataItemTest1"s},
+                    {"type", "POSITION"s},
+                    {"category", "SAMPLE"s},
+                    {"units", "MILLIMETER"s},
+                    {"nativeUnits", "MILLIMETER"s},
+                    {"sampleRate", "42000"s}};
+  ErrorList errors;
+  auto d = DataItem::make(props, errors);
+  EXPECT_EQ(0, errors.size());
 
-  attributes1["id"] = "1";
-  attributes1["name"] = "DataItemTest1";
-  attributes1["type"] = "POSITION";
-  attributes1["category"] = "SAMPLE";
-  attributes1["units"] = "MILLIMETER";
-  attributes1["nativeUnits"] = "MILLIMETER";
-  attributes1["statistic"] = "AVERAGE";
-  attributes1["representation"] = "TIME_SERIES";
-  attributes1["sampleRate"] = "42000";
-  auto d = make_unique<DataItem>(attributes1);
-
-  ASSERT_EQ(string("42000"), d->getSampleRate());
-  d.reset();
+  ASSERT_EQ(42000, d->get<double>("sampleRate"));
 }
 
 TEST_F(DataItemTest, subType_should_be_given_verbatum)

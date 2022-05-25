@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,53 +19,52 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "agent_test_helper.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
-#include "pipeline/duplicate_filter.hpp"
-#include "pipeline/delta_filter.hpp"
-#include "pipeline/deliver.hpp"
-#include "pipeline/pipeline.hpp"
-#include "observation/observation.hpp"
-#include "adapter/adapter.hpp"
 #include <chrono>
 
+#include "agent_test_helper.hpp"
+#include "observation/observation.hpp"
+#include "pipeline/deliver.hpp"
+#include "pipeline/delta_filter.hpp"
+#include "pipeline/duplicate_filter.hpp"
+#include "pipeline/pipeline.hpp"
+#include "pipeline/shdr_token_mapper.hpp"
+#include "source/adapter/adapter.hpp"
+
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::pipeline;
 using namespace mtconnect::observation;
 using namespace std;
 using namespace std::literals;
 using namespace std::chrono_literals;
+using namespace mtconnect::sink::rest_sink;
 
 class PipelineDeliverTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml",
-                                   8, 4, "1.7", 25);
+    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml", 8, 4, "1.7", 25);
     m_agentId = to_string(getCurrentTimeInSec());
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
-  void TearDown() override
-  {
-    m_agentTestHelper.reset();
-  }
+  void TearDown() override { m_agentTestHelper.reset(); }
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   std::string m_agentId;
-  Device *m_device{nullptr};
+  DevicePtr m_device {nullptr};
 };
 
 TEST_F(PipelineDeliverTest, test_simple_flow)
 {
   m_agentTestHelper->addAdapter();
-  auto seq = m_agentTestHelper->m_agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
-  ASSERT_EQ(seq + 1, m_agentTestHelper->m_agent->getSequence());
-  auto obs = m_agentTestHelper->m_agent->getFromBuffer(seq);
+  ASSERT_EQ(seq + 1, rest->getSequence());
+  auto obs = rest->getFromBuffer(seq);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Xpos", obs->getDataItem()->getName());
   ASSERT_EQ(100.0, obs->getValue<double>());
@@ -74,70 +73,44 @@ TEST_F(PipelineDeliverTest, test_simple_flow)
 
 TEST_F(PipelineDeliverTest, filter_duplicates)
 {
-  ConfigOptions options{{configuration::FilterDuplicates, true}};
+  ConfigOptions options {{configuration::FilterDuplicates, true}};
   m_agentTestHelper->addAdapter(options);
-  auto seq = m_agentTestHelper->m_agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
-  ASSERT_EQ(seq + 1, m_agentTestHelper->m_agent->getSequence());
-  
-  auto obs = m_agentTestHelper->m_agent->getFromBuffer(seq);
+  ASSERT_EQ(seq + 1, rest->getSequence());
+
+  auto obs = rest->getFromBuffer(seq);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Xpos", obs->getDataItem()->getName());
   ASSERT_EQ(100.0, obs->getValue<double>());
-  
+
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
-  ASSERT_EQ(seq + 1, m_agentTestHelper->m_agent->getSequence());
+  ASSERT_EQ(seq + 1, rest->getSequence());
 
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|101.0");
-  ASSERT_EQ(seq + 2, m_agentTestHelper->m_agent->getSequence());
-  auto obs2 = m_agentTestHelper->m_agent->getFromBuffer(seq + 1);
+  ASSERT_EQ(seq + 2, rest->getSequence());
+  auto obs2 = rest->getFromBuffer(seq + 1);
   ASSERT_EQ(101.0, obs2->getValue<double>());
 }
 
-//a01c7f30
+// a01c7f30
 TEST_F(PipelineDeliverTest, filter_upcase)
 {
-  ConfigOptions options{{configuration::UpcaseDataItemValue, true}};
+  ConfigOptions options {{configuration::UpcaseDataItemValue, true}};
   m_agentTestHelper->addAdapter(options);
-  auto seq = m_agentTestHelper->m_agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|a01c7f30|active");
-  ASSERT_EQ(seq + 1, m_agentTestHelper->m_agent->getSequence());
-  
-  auto obs = m_agentTestHelper->m_agent->getFromBuffer(seq);
+  ASSERT_EQ(seq + 1, rest->getSequence());
+
+  auto obs = rest->getFromBuffer(seq);
   ASSERT_TRUE(obs);
   ASSERT_EQ("a01c7f30", obs->getDataItem()->getId());
   ASSERT_EQ("ACTIVE", obs->getValue<string>());
-  
+
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|101.0");
-  ASSERT_EQ(seq + 2, m_agentTestHelper->m_agent->getSequence());
-  auto obs2 = m_agentTestHelper->m_agent->getFromBuffer(seq + 1);
+  ASSERT_EQ(seq + 2, rest->getSequence());
+  auto obs2 = rest->getFromBuffer(seq + 1);
   ASSERT_EQ(101.0, obs2->getValue<double>());
-}
-
-TEST_F(PipelineDeliverTest, extract_duration) 
-{
-  m_agentTestHelper->addAdapter();
-  auto seq = m_agentTestHelper->m_agent->getSequence();
-  m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z@200.1232|Xpos|100.0");
-  ASSERT_EQ(seq + 1, m_agentTestHelper->m_agent->getSequence());
-  auto obs = m_agentTestHelper->m_agent->getFromBuffer(seq);
-  ASSERT_TRUE(obs);
-  ASSERT_EQ("Xpos", obs->getDataItem()->getName());
-  ASSERT_EQ(100.0, obs->getValue<double>());
-  ASSERT_EQ("2021-01-22T12:33:45.123Z", format(obs->getTimestamp()));
-  ASSERT_EQ(200.1232, obs->get<double>("duration"));
-}
-
-TEST_F(PipelineDeliverTest, unit_conversion)
-{
-  m_agentTestHelper->addAdapter(ConfigOptions{{configuration::ConversionRequired, true}});
-  auto seq = m_agentTestHelper->m_agent->getSequence();
-  m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:48.123Z|amp|10.1");
-  ASSERT_EQ(seq + 1, m_agentTestHelper->m_agent->getSequence());
-  auto obs = m_agentTestHelper->m_agent->getFromBuffer(seq);
-  ASSERT_TRUE(obs);
-  ASSERT_EQ("amp", obs->getDataItem()->getName());
-  ASSERT_EQ("KILOAMPERE", obs->getDataItem()->getNativeUnits());
-  std::cout << obs->get<double>("VALUE");
-  ASSERT_EQ(10100.0, obs->getValue<double>());
 }

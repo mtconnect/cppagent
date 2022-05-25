@@ -1,0 +1,10 @@
+include(default)
+
+[settings]
+arch=x86
+arch_build=x86
+compiler.toolset=v141_xp
+compiler.runtime=MT
+
+[env]
+WINVER=0x0501

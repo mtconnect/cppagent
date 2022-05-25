@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +20,9 @@
 #include "observation/observation.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class Agent;
-  namespace pipeline
-  {
+  namespace pipeline {
     class DeltaFilter : public Transform
     {
     public:
@@ -40,7 +38,7 @@ namespace mtconnect
       {
         using namespace observation;
         constexpr static auto lambda = [](const Sample &s) {
-          return s.getDataItem()->hasMinimumDelta();
+          return bool(s.getDataItem()->getMinimumDelta());
         };
         m_guard = LambdaGuard<Sample, ExactTypeGuard<Sample>>(lambda, RUN) ||
                   TypeGuard<Observation>(SKIP);
@@ -66,7 +64,7 @@ namespace mtconnect
           return next(entity);
         }
 
-        auto filter = di->getFilterValue();
+        auto filter = *di->getMinimumDelta();
         double value = o->getValue<double>();
         if (filterMinimumDelta(id, value, filter))
           return EntityPtr();

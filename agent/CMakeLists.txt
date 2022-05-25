@@ -9,12 +9,38 @@ if(WIN32)
 endif()
 
 add_executable(agent ${AGENT_SOURCES})
+
+set_property(TARGET agent PROPERTY
+  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+if(WITH_PYTHON)
+  target_compile_definitions(
+    agent
+    PUBLIC
+    WITH_PYTHON )
+endif()
+
+if(WITH_RUBY)
+  target_compile_definitions(
+    agent
+    PUBLIC
+    WITH_RUBY )
+endif()
+
+if(AGENT_WITHOUT_IPV6)
+  target_compile_definitions(
+    agent
+    PUBLIC
+    AGENT_WITHOUT_IPV6 )
+endif()
+
 target_link_libraries(
   agent
   PRIVATE
-    agent_lib
-    $<$<PLATFORM_ID:Windows>:shlwapi>
-)
+  agent_lib
+  $<$<PLATFORM_ID:Windows>:shlwapi>
+  )
+
 target_clangtidy_setup(agent_lib)
 
 install(TARGETS agent RUNTIME DESTINATION bin)

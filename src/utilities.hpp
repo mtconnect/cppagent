@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,19 +31,20 @@
 #define NOMINMAX 1
 #endif
 
-#include <date/date.h>
-
 #include <chrono>
 #include <ctime>
+#include <date/date.h>
 #include <fstream>
 #include <iomanip>
 #include <limits>
 #include <list>
 #include <map>
 #include <optional>
+#include <set>
 #include <sstream>
 #include <string>
 #include <time.h>
+#include <unordered_map>
 #include <variant>
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -62,12 +63,16 @@ typedef unsigned __int64 uint64_t;
 #else
 #define O_BINARY 0
 #define ISNAN(x) std::isnan(x)
-#include <sys/resource.h>
-
 #include <cstdint>
 #include <memory>
+#include <sys/resource.h>
 #include <unistd.h>
 #endif
+
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/regex.hpp>
 
 //####### CONSTANTS #######
 
@@ -81,8 +86,7 @@ const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 const unsigned int DEFAULT_MAX_ASSETS = 1024;
 
-namespace mtconnect
-{
+namespace mtconnect {
   // Message for when enumerations do not exist in an array/enumeration
   const int ENUM_MISS = -1;
 
@@ -116,7 +120,7 @@ namespace mtconnect
 
   inline int stringToInt(const std::string &text, int outOfRangeDefault)
   {
-    int value = 0.0;
+    int value = 0;
     try
     {
       value = stoi(text);
@@ -170,16 +174,6 @@ namespace mtconnect
     return text;
   }
 
-  // Convert a string to the same string with all upper case letters
-  inline std::string toLowerCase(std::string &text)
-  {
-    std::transform(text.begin(), text.end(), text.begin(),
-                   [](unsigned char c) { return std::tolower(c); });
-
-    return text;
-  }
-
-  
   // Check if each char in a string is a positive integer
   inline bool isNonNegativeInteger(const std::string &s)
   {
@@ -295,6 +289,26 @@ namespace mtconnect
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
   }
 
+  inline std::string ltrim(std::string s)
+  {
+    boost::algorithm::trim_left(s);
+    return s;
+  }
+
+  // trim from end (in place)
+  static inline std::string rtrim(std::string s)
+  {
+    boost::algorithm::trim_right(s);
+    return s;
+  }
+
+  // trim from both ends (in place)
+  inline std::string trim(std::string s)
+  {
+    boost::algorithm::trim(s);
+    return s;
+  }
+
   inline bool starts_with(const std::string &value, const std::string_view &beginning)
   {
     if (beginning.size() > value.size())
@@ -312,7 +326,7 @@ namespace mtconnect
            });
   }
 
-  typedef std::map<std::string, std::string> Attributes;
+  using Attributes = std::map<std::string, std::string>;
 
   template <class... Ts>
   struct overloaded : Ts...
@@ -334,6 +348,9 @@ namespace mtconnect
     auto end() const { return std::rend(m_iterable); }
   };
 
+  using SequenceNumber_t = uint64_t;
+  using FilterSet = std::set<std::string>;
+  using FilterSetOpt = std::optional<FilterSet>;
   using Milliseconds = std::chrono::milliseconds;
   using Microseconds = std::chrono::microseconds;
   using Seconds = std::chrono::seconds;
@@ -361,6 +378,122 @@ namespace mtconnect
       return false;
   }
 
+  inline bool HasOption(const ConfigOptions &options, const std::string &name)
+  {
+    auto v = options.find(name);
+    return v != options.end();
+  }
+
+  inline auto ConvertOption(const std::string &s, const ConfigOption &def)
+  {
+    ConfigOption option;
+    visit(overloaded {[&option, &s](const std::string &) {
+                        if (s.empty())
+                          option = std::monostate();
+                        else
+                          option = s;
+                      },
+                      [&option, &s](const int &) { option = stoi(s); },
+                      [&option, &s](const Milliseconds &) { option = Milliseconds {stoi(s)}; },
+                      [&option, &s](const Seconds &) { option = Seconds {stoi(s)}; },
+                      [&option, &s](const double &) { option = stod(s); },
+                      [&option, &s](const bool &) { option = s == "yes" || s == "true"; },
+                      [](const auto &) {}},
+          def);
+    return option;
+  }
+
+  inline int64_t ConvertFileSize(const ConfigOptions &options, const std::string &name,
+                                 int64_t size = 0)
+  {
+    using namespace std;
+    using boost::regex;
+    using boost::smatch;
+
+    auto value = GetOption<string>(options, name);
+    if (value)
+    {
+      static const regex pat("([0-9]+)([GgMmKkBb]*)");
+      smatch match;
+      string v = *value;
+      if (regex_match(v, match, pat))
+      {
+        size = boost::lexical_cast<int64_t>(match[1]);
+        if (match[2].matched)
+        {
+          switch (match[2].str()[0])
+          {
+            case 'G':
+            case 'g':
+              size *= 1024;
+
+            case 'M':
+            case 'm':
+              size *= 1024;
+
+            case 'K':
+            case 'k':
+              size *= 1024;
+          }
+        }
+      }
+      else
+      {
+        std::stringstream msg;
+        msg << "Invalid value for " << name << ": " << *value << endl;
+        throw std::runtime_error(msg.str());
+      }
+    }
+
+    return size;
+  }
+
+  inline void AddOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
+                         const ConfigOptions &entries)
+  {
+    for (auto &e : entries)
+    {
+      auto val = tree.get_optional<std::string>(e.first);
+      if (val)
+      {
+        auto v = ConvertOption(*val, e.second);
+        if (v.index() != 0)
+          options.insert_or_assign(e.first, v);
+      }
+    }
+  }
+
+  inline void AddDefaultedOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
+                                  const ConfigOptions &entries)
+  {
+    for (auto &e : entries)
+    {
+      auto val = tree.get_optional<std::string>(e.first);
+      if (val)
+      {
+        auto v = ConvertOption(*val, e.second);
+        if (v.index() != 0)
+          options.insert_or_assign(e.first, v);
+      }
+      else if (options.find(e.first) == options.end())
+        options.insert_or_assign(e.first, e.second);
+    }
+  }
+
+  inline void GetOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
+                         const ConfigOptions &entries)
+  {
+    for (auto &e : entries)
+    {
+      if (!std::holds_alternative<std::string>(e.second) ||
+          !std::get<std::string>(e.second).empty())
+      {
+        options.emplace(e.first, e.second);
+      }
+    }
+    AddOptions(tree, options, entries);
+  }
+
   inline std::string format(const Timestamp &ts)
   {
     using namespace std;
@@ -374,6 +507,64 @@ namespace mtconnect
     }
     time.append("Z");
     return time;
+  }
+
+  inline void capitalize(std::string::iterator start, std::string::iterator end)
+  {
+    using namespace std;
+
+    // Exceptions to the rule
+    const static std::unordered_map<std::string, std::string> exceptions = {
+        {"AC", "AC"}, {"DC", "DC"},   {"PH", "PH"},
+        {"IP", "IP"}, {"URI", "URI"}, {"MTCONNECT", "MTConnect"}};
+
+    const auto &w = exceptions.find(std::string(start, end));
+    if (w != exceptions.end())
+    {
+      copy(w->second.begin(), w->second.end(), start);
+    }
+    else
+    {
+      *start = ::toupper(*start);
+      start++;
+      transform(start, end, start, ::tolower);
+    }
+  }
+
+  inline std::string pascalize(const std::string &type, std::optional<std::string> &prefix)
+  {
+    using namespace std;
+    if (type.empty())
+      return "";
+
+    string camel;
+    auto colon = type.find(':');
+
+    if (colon != string::npos)
+    {
+      prefix = type.substr(0ul, colon);
+      camel = type.substr(colon + 1ul);
+    }
+    else
+      camel = type;
+
+    auto start = camel.begin();
+    decltype(start) end;
+
+    bool done;
+    do
+    {
+      end = find(start, camel.end(), '_');
+      capitalize(start, end);
+      done = end == camel.end();
+      if (!done)
+      {
+        camel.erase(end);
+        start = end;
+      }
+    } while (!done);
+
+    return camel;
   }
 
 #ifdef _WINDOWS

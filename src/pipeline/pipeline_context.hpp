@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,15 +17,14 @@
 
 #pragma once
 
-#include "pipeline_contract.hpp"
-
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+#include "pipeline_contract.hpp"
+
+namespace mtconnect {
+  namespace pipeline {
     struct TransformState
     {
       // For mutex locking

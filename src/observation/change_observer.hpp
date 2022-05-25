@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,33 +17,43 @@
 
 #pragma once
 
-#include "utilities.hpp"
-#include <condition_variable>
+#include <boost/asio.hpp>
+#include <boost/bind/bind.hpp>
 
+#include <condition_variable>
 #include <mutex>
 #include <vector>
 
-namespace mtconnect
-{
-  namespace observation
-  {
+#include "utilities.hpp"
+
+namespace mtconnect {
+  namespace observation {
     class ChangeSignaler;
     class ChangeObserver
     {
     public:
-      ChangeObserver() = default;
+      ChangeObserver(boost::asio::io_context::strand &strand)
+        : m_strand(strand), m_timer(strand.context())
+      {}
 
       virtual ~ChangeObserver();
 
-      bool wait(unsigned long timeout) const
+      bool wait(std::chrono::milliseconds duration,
+                std::function<void(boost::system::error_code)> handler)
       {
         std::unique_lock<std::recursive_mutex> lock(m_mutex);
 
         if (m_sequence != UINT64_MAX)
-          return true;
-
-        return m_cv.wait_for(m_mutex, std::chrono::milliseconds{timeout},
-                             [this]() { return m_sequence != UINT64_MAX; });
+        {
+          boost::asio::post(boost::asio::bind_executor(
+              m_strand, boost::bind(handler, boost::system::error_code {})));
+        }
+        else
+        {
+          m_timer.expires_from_now(duration);
+          m_timer.async_wait(handler);
+        }
+        return true;
       }
 
       void signal(uint64_t sequence)
@@ -53,7 +63,7 @@ namespace mtconnect
         if (m_sequence > sequence && sequence)
           m_sequence = sequence;
 
-        m_cv.notify_one();
+        m_timer.cancel();
       }
 
       uint64_t getSequence() const { return m_sequence; }
@@ -67,10 +77,11 @@ namespace mtconnect
       }
 
     private:
+      boost::asio::io_context::strand &m_strand;
       mutable std::recursive_mutex m_mutex;
-      mutable std::condition_variable_any m_cv;
+      boost::asio::steady_timer m_timer;
 
-      std::vector<ChangeSignaler *> m_signalers;
+      std::list<ChangeSignaler *> m_signalers;
       volatile uint64_t m_sequence = UINT64_MAX;
 
     protected:
@@ -93,7 +104,7 @@ namespace mtconnect
     protected:
       // Observer Lists
       mutable std::recursive_mutex m_observerMutex;
-      std::vector<ChangeObserver *> m_observers;
+      std::list<ChangeObserver *> m_observers;
     };
   }  // namespace observation
 }  // namespace mtconnect

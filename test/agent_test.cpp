@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,20 +19,20 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
-#include "agent_test_helper.hpp"
-#include "test_utilities.hpp"
-#include "xml_printer.hpp"
-#include "assets/file_asset.hpp"
-
-#include <dlib/server.h>
-
 #include <chrono>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <thread>
+
+#include "agent.hpp"
+#include "agent_test_helper.hpp"
+#include "asset/file_asset.hpp"
+#include "device_model/reference.hpp"
+#include "printer/xml_printer.hpp"
+#include "source/adapter/adapter.hpp"
+#include "test_utilities.hpp"
 
 #if defined(WIN32) && _MSC_VER < 1500
 typedef __int64 int64_t;
@@ -42,60 +42,60 @@ typedef __int64 int64_t;
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
-using namespace mtconnect::http_server;
-using namespace mtconnect::adapter;
+using namespace mtconnect::sink::rest_sink;
+using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
+
+using status = boost::beast::http::status;
 
 class AgentTest : public testing::Test
 {
- public:
-  typedef dlib::map<std::string, std::string>::kernel_1a_c map_type;
-  using queue_type = dlib::queue<std::string>::kernel_1a_c;
+public:
+  typedef std::map<std::string, std::string> map_type;
+  using queue_type = list<string>;
 
- protected:
+protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                   8, 4, "1.3", 25, true);
+    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 25, true);
     m_agentId = to_string(getCurrentTimeInSec());
   }
 
-  void TearDown() override
+  void TearDown() override { m_agentTestHelper.reset(); }
+
+  void addAdapter(ConfigOptions options = ConfigOptions {})
   {
-    m_agentTestHelper.reset();
+    m_agentTestHelper->addAdapter(options, "localhost", 7878,
+                                  m_agentTestHelper->m_agent->defaultDevice()->getName());
   }
 
-  void addAdapter(ConfigOptions options = ConfigOptions{})
-  {
-    m_agentTestHelper->addAdapter(options, "localhost", 7878, m_agentTestHelper->m_agent->defaultDevice()->getName());
-  }
-  
- public:
+public:
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 
-  std::chrono::milliseconds m_delay{};
+  std::chrono::milliseconds m_delay {};
 };
 
 TEST_F(AgentTest, Constructor)
 {
-  auto server1 = make_unique<http_server::Server>();
-  auto cache1 = make_unique<http_server::FileCache>();
-  unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/badPath.xml", 17, 8, "1.7");
+  using namespace configuration;
+  ConfigOptions options {{BufferSize, 17}, {MaxAssets, 8}, {SchemaVersion, "1.7"s}};
+
+  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
+                                               PROJECT_ROOT_DIR "/samples/badPath.xml", options);
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
-  ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
+  ASSERT_THROW(agent->initialize(context), std::runtime_error);
   agent.reset();
-  
-  auto server2 = make_unique<http_server::Server>();
-  auto cache2 = make_unique<http_server::FileCache>();
-  agent = make_unique<Agent>(server2, cache2, PROJECT_ROOT_DIR "/samples/test_config.xml", 17, 8, "1.7");
-  
+
+  agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
+                             PROJECT_ROOT_DIR "/samples/test_config.xml", options);
+
   context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
-  ASSERT_NO_THROW(agent->initialize(context, {}));
+  ASSERT_NO_THROW(agent->initialize(context));
 }
 
 TEST_F(AgentTest, Probe)
@@ -123,13 +123,15 @@ TEST_F(AgentTest, Probe)
 
 TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
-  auto server1 = make_unique<http_server::Server>();
-  auto cache1 = make_unique<http_server::FileCache>();
-  unique_ptr<Agent> agent = make_unique<Agent>(server1, cache1, PROJECT_ROOT_DIR "/samples/dup_uuid.xml", 17, 8, "1.5");
+  using namespace configuration;
+  ConfigOptions options {{BufferSize, 17}, {MaxAssets, 8}, {SchemaVersion, "1.5"s}};
+
+  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
+                                               PROJECT_ROOT_DIR "/samples/dup_uuid.xml", options);
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
-  ASSERT_THROW(agent->initialize(context, {}), std::runtime_error);
+  ASSERT_THROW(agent->initialize(context), std::runtime_error);
 }
 
 TEST_F(AgentTest, BadDevices)
@@ -139,14 +141,14 @@ TEST_F(AgentTest, BadDevices)
     string message = (string) "Could not find the device 'LinuxCN'";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "NO_DEVICE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", message.c_str());
-    ASSERT_EQ(NOT_FOUND, m_agentTestHelper->m_response.m_code);
+    ASSERT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
   }
 }
 
 TEST_F(AgentTest, BadXPath)
 {
   {
-    Routing::QueryMap query{{ "path", "//////Linear"}};
+    QueryMap query {{"path", "//////Linear"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string) "The path could not be parsed. Invalid syntax: //////Linear";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
@@ -154,7 +156,7 @@ TEST_F(AgentTest, BadXPath)
   }
 
   {
-    Routing::QueryMap query{{ "path", "//Axes?//Linear"}};
+    QueryMap query {{"path", "//Axes?//Linear"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string) "The path could not be parsed. Invalid syntax: //Axes?//Linear";
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_XPATH");
@@ -162,7 +164,7 @@ TEST_F(AgentTest, BadXPath)
   }
 
   {
-    Routing::QueryMap query{{ "path", "//Devices/Device[@name=\"I_DON'T_EXIST\""}};
+    QueryMap query {{"path", "//Devices/Device[@name=\"I_DON'T_EXIST\""}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     string message = (string)
     "The path could not be parsed. Invalid syntax: //Devices/Device[@name=\"I_DON'T_EXIST\"";
@@ -174,70 +176,64 @@ TEST_F(AgentTest, BadXPath)
 TEST_F(AgentTest, GoodPath)
 {
   {
-    Routing::QueryMap query{{ "path", "//Power"}};
+    QueryMap query {{"path", "//Power"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:ComponentStream[@component='Power']//m:PowerState",
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Power']//m:PowerState",
                           "UNAVAILABLE");
     ASSERT_XML_PATH_COUNT(doc, "//m:ComponentStream", 1);
   }
-  
+
   {
-    Routing::QueryMap query{{ "path",
-      "//Rotary[@name='C']//DataItem[@category='SAMPLE' or @category='CONDITION']"}};
+    QueryMap query {
+        {"path", "//Rotary[@name='C']//DataItem[@category='SAMPLE' or @category='CONDITION']"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
 
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:ComponentStream[@component='Rotary']//m:SpindleSpeed",
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:SpindleSpeed",
                           "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:ComponentStream[@component='Rotary']//m:Load",
-                          "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc,
-                          "//m:ComponentStream[@component='Rotary']//m:Unavailable",
-                          "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Load", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ComponentStream[@component='Rotary']//m:Unavailable", "");
   }
 }
 
 TEST_F(AgentTest, BadPath)
 {
-  using namespace http_server;
+  using namespace rest_sink;
   {
     PARSE_XML_RESPONSE("/bad_path");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /bad_path");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "0.0.0.0: Cannot find handler for: GET /bad_path");
+    EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 
   {
     PARSE_XML_RESPONSE("/bad/path/");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /bad/path/");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "0.0.0.0: Cannot find handler for: GET /bad/path/");
+    EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/current/blah");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Error processing request from:  - No matching route for: GET /LinuxCNC/current/blah");
-    EXPECT_EQ(BAD_REQUEST, m_agentTestHelper->m_response.m_code);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
+                          "0.0.0.0: Cannot find handler for: GET /LinuxCNC/current/blah");
+    EXPECT_EQ(status::not_found, m_agentTestHelper->session()->m_code);
     EXPECT_FALSE(m_agentTestHelper->m_dispatched);
   }
 }
 
 TEST_F(AgentTest, CurrentAt)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   PARSE_XML_RESPONSE_QUERY("/current", query);
 
-  auto agent = m_agentTestHelper->m_agent.get();
-  
   addAdapter();
 
   // Get the current position
-  int seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  int seq = rest->getSequence();
   char line[80] = {0};
 
   // Add many events
@@ -250,10 +246,12 @@ TEST_F(AgentTest, CurrentAt)
   // Check each current at all the positions.
   for (int i = 0; i < 100; i++)
   {
-    query["at"] = to_string(i + seq);;
+    // cout << "Line #: " << i + 1 << " at " << i + seq << endl;
+    query["at"] = to_string(i + seq);
+    ;
     PARSE_XML_RESPONSE_QUERY("/current", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
-                          to_string(i + 1).c_str());
+    // m_agentTestHelper->printsession();
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", to_string(i + 1).c_str());
   }
 
   // Test buffer wrapping
@@ -267,28 +265,28 @@ TEST_F(AgentTest, CurrentAt)
   // Check each current at all the positions.
   for (int i = 100; i < 301; i++)
   {
-    query["at"] = to_string(i + seq);;
+    query["at"] = to_string(i + seq);
+    ;
     PARSE_XML_RESPONSE_QUERY("/current", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
-                          to_string(i + 1).c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", to_string(i + 1).c_str());
   }
 
   // Check the first couple of items in the list
   for (int j = 0; j < 10; j++)
   {
-    int i = agent->getSequence() - agent->getBufferSize() - seq + j;
-    query["at"] = to_string(i + seq);;
+    int i = rest->getSequence() - rest->getBufferSize() - seq + j;
+    query["at"] = to_string(i + seq);
+    ;
     PARSE_XML_RESPONSE_QUERY("/current", query);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line",
-                          to_string(i + 1).c_str());
-
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line", to_string(i + 1).c_str());
   }
 
   // Test out of range...
   {
-    int i = agent->getSequence() - agent->getBufferSize() - seq - 1;
+    int i = rest->getSequence() - rest->getBufferSize() - seq - 1;
     sprintf(line, "'at' must be greater than %d", i + seq);
-    query["at"] = to_string(i + seq);;
+    query["at"] = to_string(i + seq);
+    ;
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
@@ -297,8 +295,7 @@ TEST_F(AgentTest, CurrentAt)
 
 TEST_F(AgentTest, CurrentAt64)
 {
-  auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   addAdapter();
 
@@ -306,8 +303,9 @@ TEST_F(AgentTest, CurrentAt64)
   char line[80] = {0};
 
   // Initialize the sliding buffer at a very large number.
+  auto rest = m_agentTestHelper->getRestService();
   uint64_t start = (((uint64_t)1) << 48) + 1317;
-  agent->setSequence(start);
+  rest->setSequence(start);
 
   // Add many events
   for (int i = 1; i <= 500; i++)
@@ -328,8 +326,7 @@ TEST_F(AgentTest, CurrentAt64)
 
 TEST_F(AgentTest, CurrentAtOutOfRange)
 {
-  auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   addAdapter();
 
@@ -343,7 +340,8 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  int seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  int seq = rest->getSequence();
 
   {
     query["at"] = to_string(seq);
@@ -353,7 +351,7 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
 
-  seq = agent->getFirstSequence() - 1;
+  seq = rest->getFirstSequence() - 1;
 
   {
     query["at"] = to_string(seq);
@@ -364,42 +362,42 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
   }
 }
 
-TEST_F(AgentTest, AddAdapter)
-{
-  addAdapter();
-}
+TEST_F(AgentTest, AddAdapter) { addAdapter(); }
 
 TEST_F(AgentTest, FileDownload)
 {
-  auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
   // Register a file with the agent.
-  agent->getFileCache()->registerFile(uri, string(PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd"), "1.1");
+  auto rest = m_agentTestHelper->getRestService();
+  rest->getFileCache()->setMaxCachedFileSize(100 * 1024);
+  rest->getFileCache()->registerFile(
+      uri, string(PROJECT_ROOT_DIR "/schemas/MTConnectDevices_1.1.xsd"), "1.1");
 
   // Reqyest the file...
   PARSE_TEXT_RESPONSE(uri.c_str());
-  ASSERT_FALSE(m_agentTestHelper->m_response.m_body.empty());
-  ASSERT_TRUE(m_agentTestHelper->m_response.m_body.find_last_of("TEST SCHEMA FILE 1234567890\n") != string::npos);
+  ASSERT_FALSE(m_agentTestHelper->session()->m_body.empty());
+  ASSERT_TRUE(m_agentTestHelper->session()->m_body.find_last_of("TEST SCHEMA FILE 1234567890\n") !=
+              string::npos);
 }
 
 TEST_F(AgentTest, FailedFileDownload)
 {
-  auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   string uri("/schemas/MTConnectDevices_1.1.xsd");
 
   // Register a file with the agent.
-  agent->getFileCache()->registerFile(uri, string("./BadFileName.xsd"), "1.1");
+  auto rest = m_agentTestHelper->getRestService();
+  rest->getFileCache()->registerFile(uri, string("./BadFileName.xsd"), "1.1");
 
   {
     PARSE_XML_RESPONSE(uri.c_str());
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
-                          ("Error processing request from:  - No matching route for: GET " + uri).c_str());
+                          ("0.0.0.0: Cannot find handler for: GET " + uri).c_str());
   }
 }
 
@@ -408,20 +406,18 @@ TEST_F(AgentTest, Composition)
   auto agent = m_agentTestHelper->m_agent.get();
   addAdapter();
 
-  DataItem *motor = agent->getDataItemForDevice("LinuxCNC", "zt1");
+  DataItemPtr motor = agent->getDataItemForDevice("LinuxCNC", "zt1");
   ASSERT_TRUE(motor);
 
-  DataItem *amp = agent->getDataItemForDevice("LinuxCNC", "zt2");
+  DataItemPtr amp = agent->getDataItemForDevice("LinuxCNC", "zt2");
   ASSERT_TRUE(amp);
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|zt1|100|zt2|200");
 
   {
     PARSE_XML_RESPONSE("/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']",
-                          "100");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt2']",
-                          "200");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']", "100");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt2']", "200");
 
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Temperature[@dataItemId='zt1']@compositionId",
                           "zmotor");
@@ -432,16 +428,19 @@ TEST_F(AgentTest, Composition)
 
 TEST_F(AgentTest, BadCount)
 {
-  int size = m_agentTestHelper->m_agent->getBufferSize() + 1;
+  auto rest = m_agentTestHelper->getRestService();
+  int size = rest->getBufferSize() + 1;
   {
-    Routing::QueryMap query{{"count", "NON_INTEGER"}};
+    QueryMap query {{"count", "NON_INTEGER"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Parameter Error processing request from:  - for query parameter 'count': cannot convert string 'NON_INTEGER' to integer");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
+                          "0.0.0.0: Parameter Error: for query parameter 'count': cannot convert "
+                          "string 'NON_INTEGER' to integer");
   }
 
   {
-    Routing::QueryMap query{{"count", "-500"}};
+    QueryMap query {{"count", "-500"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be greater than ");
@@ -450,14 +449,14 @@ TEST_F(AgentTest, BadCount)
   }
 
   {
-    Routing::QueryMap query{{"count", "0"}};
+    QueryMap query {{"count", "0"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'count' must not be zero(0)");
   }
 
   {
-    Routing::QueryMap query{{"count", "500"}};
+    QueryMap query {{"count", "500"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than ");
@@ -466,23 +465,22 @@ TEST_F(AgentTest, BadCount)
   }
 
   {
-    Routing::QueryMap query{{"count", "9999999"}};
+    QueryMap query {{"count", "9999999"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be less than ");
     value += to_string(size);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
-  
+
   {
-    Routing::QueryMap query{{"count", "-9999999"}};
+    QueryMap query {{"count", "-9999999"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     string value("'count' must be greater than ");
     value += to_string(-size);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", value.c_str());
   }
-
 }
 
 TEST_F(AgentTest, Adapter)
@@ -503,7 +501,8 @@ TEST_F(AgentTest, Adapter)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Alarm[1]", "UNAVAILABLE");
   }
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|alarm|code|nativeCode|severity|state|description");
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|alarm|code|nativeCode|severity|state|description");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -516,9 +515,8 @@ TEST_F(AgentTest, Adapter)
 
 TEST_F(AgentTest, SampleAtNextSeq)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
-  auto agent = m_agentTestHelper->m_agent.get();
 
   // Get the current position
   char line[80] = {0};
@@ -530,7 +528,8 @@ TEST_F(AgentTest, SampleAtNextSeq)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  int seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  int seq = rest->getSequence();
   {
     query["from"] = to_string(seq);
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -540,11 +539,10 @@ TEST_F(AgentTest, SampleAtNextSeq)
 
 TEST_F(AgentTest, SampleCount)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
-  auto agent = m_agentTestHelper->m_agent.get();
-
-  auto seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence();
 
   // Get the current position
   char line[80] = {0};
@@ -577,10 +575,8 @@ TEST_F(AgentTest, SampleCount)
 
 TEST_F(AgentTest, SampleLastCount)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
-  auto agent = m_agentTestHelper->m_agent.get();
-
 
   // Get the current position
   char line[80] = {0};
@@ -591,8 +587,9 @@ TEST_F(AgentTest, SampleLastCount)
     sprintf(line, "2021-02-01T12:00:00Z|line|%d|Xact|%d", i, i);
     m_agentTestHelper->m_adapter->processData(line);
   }
-  
-  auto seq = agent->getSequence() - 20;
+
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence() - 20;
 
   {
     query["path"] = "//DataItem[@name='Xact']";
@@ -614,10 +611,8 @@ TEST_F(AgentTest, SampleLastCount)
 
 TEST_F(AgentTest, SampleToParameter)
 {
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
-  auto agent = m_agentTestHelper->m_agent.get();
-
 
   // Get the current position
   char line[80] = {0};
@@ -628,8 +623,9 @@ TEST_F(AgentTest, SampleToParameter)
     sprintf(line, "2021-02-01T12:00:00Z|line|%d|Xact|%d", i, i);
     m_agentTestHelper->m_adapter->processData(line);
   }
-  
-  auto seq = agent->getSequence() - 20;
+
+  auto rest = m_agentTestHelper->getRestService();
+  auto seq = rest->getSequence() - 20;
 
   {
     query["path"] = "//DataItem[@name='Xact']";
@@ -650,7 +646,6 @@ TEST_F(AgentTest, SampleToParameter)
     }
   }
 
-
   {
     query["path"] = "//DataItem[@name='Xact']";
     query["count"] = "10";
@@ -670,13 +665,12 @@ TEST_F(AgentTest, SampleToParameter)
       ASSERT_XML_PATH_EQUAL(doc, line, to_string(start + j * 2 + 1).c_str());
     }
   }
-  
+
   // TODO: Test negative conditions
   // count < 0
   // to > nextSequence
   // to > from
 }
-
 
 TEST_F(AgentTest, EmptyStream)
 {
@@ -693,8 +687,8 @@ TEST_F(AgentTest, EmptyStream)
   }
 
   {
-    auto agent = m_agentTestHelper->m_agent.get();
-    Routing::QueryMap query{{"from", to_string(agent->getSequence())}};
+    auto rest = m_agentTestHelper->getRestService();
+    QueryMap query {{"from", to_string(rest->getSequence())}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
@@ -703,15 +697,16 @@ TEST_F(AgentTest, EmptyStream)
 TEST_F(AgentTest, AddToBuffer)
 {
   auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
 
   string device("LinuxCNC"), key("badKey"), value("ON");
   auto seqNum = 0;
-  auto event1 = agent->getFromBuffer(seqNum);
+  auto rest = m_agentTestHelper->getRestService();
+  auto event1 = rest->getFromBuffer(seqNum);
   ASSERT_FALSE(event1);
 
   {
-    query["from"] = to_string(agent->getSequence());
+    query["from"] = to_string(rest->getSequence());
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
@@ -720,8 +715,8 @@ TEST_F(AgentTest, AddToBuffer)
 
   auto di2 = agent->getDataItemForDevice(device, key);
   seqNum = m_agentTestHelper->addToBuffer(di2, {{"VALUE", value}}, chrono::system_clock::now());
-  auto event2 = agent->getFromBuffer(seqNum);
-  ASSERT_EQ(3, event2.use_count());
+  auto event2 = rest->getFromBuffer(seqNum);
+  ASSERT_EQ(4, event2.use_count());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -735,17 +730,16 @@ TEST_F(AgentTest, AddToBuffer)
   }
 }
 
-
 TEST_F(AgentTest, SequenceNumberRollover)
 {
 #ifndef WIN32
-  auto agent = m_agentTestHelper->m_agent.get();
-  Routing::QueryMap query;
+  QueryMap query;
   addAdapter();
 
   // Set the sequence number near MAX_UINT32
-  agent->setSequence(0xFFFFFFA0);
-  SequenceNumber_t seq = agent->getSequence();
+  auto rest = m_agentTestHelper->getRestService();
+  rest->setSequence(0xFFFFFFA0);
+  SequenceNumber_t seq = rest->getSequence();
   ASSERT_EQ((int64_t)0xFFFFFFA0, seq);
 
   // Get the current position
@@ -759,10 +753,8 @@ TEST_F(AgentTest, SequenceNumberRollover)
 
     {
       PARSE_XML_RESPONSE("/current");
-      ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence",
-                            to_string(seq + i).c_str());
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
-                            to_string(seq + i + 1).c_str());
+      ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence", to_string(seq + i).c_str());
+      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + i + 1).c_str());
     }
 
     {
@@ -770,8 +762,7 @@ TEST_F(AgentTest, SequenceNumberRollover)
       query["count"] = "128";
 
       PARSE_XML_RESPONSE_QUERY("/sample", query);
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence",
-                            to_string(seq + i + 1).c_str());
+      ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + i + 1).c_str());
 
       for (int j = 0; j <= i; j++)
       {
@@ -786,20 +777,19 @@ TEST_F(AgentTest, SequenceNumberRollover)
       query["count"] = "1";
 
       PARSE_XML_RESPONSE_QUERY("/sample", query);
-      ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence",
-                            to_string(seq + j).c_str());
+      ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line@sequence", to_string(seq + j).c_str());
       ASSERT_XML_PATH_EQUAL(doc, "//m:Header@nextSequence", to_string(seq + j + 1).c_str());
     }
   }
 
-  ASSERT_EQ(uint64_t(0xFFFFFFA0) + 128ul, agent->getSequence());
+  ASSERT_EQ(uint64_t(0xFFFFFFA0) + 128ul, rest->getSequence());
 #endif
 }
 
 TEST_F(AgentTest, DuplicateCheck)
 {
   addAdapter();
-  
+
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
@@ -870,7 +860,7 @@ TEST_F(AgentTest, AutoAvailable)
   auto id = adapter->getIdentity();
   auto d = agent->getDevices().front();
   StringList devices;
-  devices.emplace_back(d->getName());
+  devices.emplace_back(*d->getComponentName());
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -914,7 +904,7 @@ TEST_F(AgentTest, MultipleDisconnect)
 
   auto d = agent->getDevices().front();
   StringList devices;
-  devices.emplace_back(d->getName());
+  devices.emplace_back(*d->getComponentName());
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/sample");
@@ -1011,28 +1001,33 @@ TEST_F(AgentTest, InitialTimeSeriesValues)
 
 TEST_F(AgentTest, DynamicCalibration)
 {
-  addAdapter(ConfigOptions{{configuration::ConversionRequired, true}});
+  addAdapter({{configuration::ConversionRequired, true}});
   auto agent = m_agentTestHelper->getAgent();
-  
+
   // Add a 10.111000 seconds
-  m_agentTestHelper->m_adapter->protocolCommand("* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
+  m_agentTestHelper->m_adapter->protocolCommand(
+      "* calibration:Yact|.01|200.0|Zact|0.02|300|Xts|0.01|500");
   auto di = agent->getDataItemForDevice("LinuxCNC", "Yact");
   ASSERT_TRUE(di);
 
-  ASSERT_TRUE(di->hasFactor());
-  ASSERT_EQ(0.01, di->getConversionFactor());
-  ASSERT_EQ(200.0, di->getConversionOffset());
+  // TODO: Fix conversions
+  auto &conv1 = di->getConverter();
+  ASSERT_TRUE(conv1);
+  ASSERT_EQ(0.01, conv1->factor());
+  ASSERT_EQ(200.0, conv1->offset());
 
   di = agent->getDataItemForDevice("LinuxCNC", "Zact");
   ASSERT_TRUE(di);
 
-  ASSERT_TRUE(di->hasFactor());
-  ASSERT_EQ(0.02, di->getConversionFactor());
-  ASSERT_EQ(300.0, di->getConversionOffset());
+  auto &conv2 = di->getConverter();
+  ASSERT_TRUE(conv2);
+  ASSERT_EQ(0.02, conv2->factor());
+  ASSERT_EQ(300.0, conv2->offset());
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|Yact|200|Zact|600");
   m_agentTestHelper->m_adapter->processData(
-      "2021-02-01T12:00:00Z|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5119 5119 5118 "
+      "2021-02-01T12:00:00Z|Xts|25|| 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 5118 "
+      "5119 5119 5118 "
       "5118 5117 5117 5119 5119 5118 5118 5118 5118 5118");
 
   {
@@ -1050,7 +1045,7 @@ TEST_F(AgentTest, FilterValues13)
 {
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   addAdapter();
-  
+
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[1]", "UNAVAILABLE");
@@ -1083,16 +1078,6 @@ TEST_F(AgentTest, FilterValues13)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[3]", "106");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Load[4]", "112");
   }
-
-#if 0
-  auto item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "pos");
-  ASSERT_TRUE(item);
-  ASSERT_TRUE(item->hasMinimumDelta());
-
-  ASSERT_FALSE(item->isFiltered(0.0, NAN));
-  ASSERT_TRUE(item->isFiltered(5.0, NAN));
-  ASSERT_FALSE(item->isFiltered(20.0, NAN));
-#endif
 }
 
 TEST_F(AgentTest, FilterValues)
@@ -1129,7 +1114,8 @@ TEST_F(AgentTest, FilterValues)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
   }
 
-  m_agentTestHelper->m_adapter->processData("2018-04-27T05:00:40.25|load|106|load|108|load|112|pos|35|pos|40");
+  m_agentTestHelper->m_adapter->processData(
+      "2018-04-27T05:00:40.25|load|106|load|108|load|112|pos|35|pos|40");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1178,7 +1164,7 @@ TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
   }
 
   m_agentTestHelper->m_adapter->processData("2018-04-27T05:01:32.000666|load|103|pos|25");
-  dlib::sleep(11 * 1000);
+  this_thread::sleep_for(11s);
   m_agentTestHelper->m_adapter->processData("2018-04-27T05:01:40.888666|load|106|pos|30");
 
   {
@@ -1217,16 +1203,6 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[2]", "20");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Position[3]", "30");
   }
-
-#if 0
-  DataItem *item = m_agentTestHelper->getAgent()->getDataItemByName((string) "LinuxCNC", "load");
-  ASSERT_TRUE(item);
-  ASSERT_TRUE(item->hasMinimumDelta());
-
-  ASSERT_FALSE(item->isFiltered(0.0, NAN));
-  ASSERT_TRUE(item->isFiltered(4.0, NAN));
-  ASSERT_FALSE(item->isFiltered(20.0, NAN));
-#endif
 }
 
 TEST_F(AgentTest, ResetTriggered)
@@ -1254,6 +1230,8 @@ TEST_F(AgentTest, ResetTriggered)
 
 TEST_F(AgentTest, References)
 {
+  using namespace device_model;
+
   m_agentTestHelper->createAgent("/samples/reference_example.xml");
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
@@ -1262,31 +1240,45 @@ TEST_F(AgentTest, References)
   auto item = agent->getDataItemForDevice((string) "LinuxCNC", id);
   auto comp = item->getComponent();
 
-  const auto refs = comp->getReferences();
-  const auto ref = refs[0];
+  auto references = comp->getList("References");
+  ASSERT_TRUE(references);
+  ASSERT_EQ(3, references->size());
+  auto reference = references->begin();
 
-  ASSERT_EQ((string) "c4", ref.m_id);
-  ASSERT_EQ((string) "chuck", ref.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref.m_type);
+  EXPECT_EQ("DataItemRef", (*reference)->getName());
 
-  ASSERT_TRUE(ref.m_dataItem) << "DataItem was not resolved";
+  EXPECT_EQ("chuck", (*reference)->get<string>("name"));
+  EXPECT_EQ("c4", (*reference)->get<string>("idRef"));
 
-  const mtconnect::Component::Reference &ref2 = refs[1];
-  ASSERT_EQ((string) "d2", ref2.m_id);
-  ASSERT_EQ((string) "door", ref2.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::DATA_ITEM, ref2.m_type);
+  auto ref = dynamic_pointer_cast<Reference>(*reference);
+  ASSERT_TRUE(ref);
 
-  const mtconnect::Component::Reference &ref3 = refs[2];
-  ASSERT_EQ((string) "ele", ref3.m_id);
-  ASSERT_EQ((string) "electric", ref3.m_name);
-  ASSERT_EQ(mtconnect::Component::Reference::COMPONENT, ref3.m_type);
+  ASSERT_EQ(Reference::DATA_ITEM, ref->getReferenceType());
+  ASSERT_TRUE(ref->getDataItem().lock()) << "DataItem was not resolved";
+  reference++;
 
-  ASSERT_TRUE(ref3.m_component) << "DataItem was not resolved";
+  EXPECT_EQ("door", (*reference)->get<string>("name"));
+  EXPECT_EQ("d2", (*reference)->get<string>("idRef"));
 
+  ref = dynamic_pointer_cast<Reference>(*reference);
+  ASSERT_TRUE(ref);
+
+  ASSERT_EQ(Reference::DATA_ITEM, ref->getReferenceType());
+  ASSERT_TRUE(ref->getDataItem().lock()) << "DataItem was not resolved";
+
+  reference++;
+  EXPECT_EQ("electric", (*reference)->get<string>("name"));
+  EXPECT_EQ("ele", (*reference)->get<string>("idRef"));
+
+  ref = dynamic_pointer_cast<Reference>(*reference);
+  ASSERT_TRUE(ref);
+
+  ASSERT_EQ(Reference::COMPONENT, ref->getReferenceType());
+  ASSERT_TRUE(ref->getComponent().lock()) << "DataItem was not resolved";
 
   // Additional data items should be included
   {
-    Routing::QueryMap query {{"path", "//BarFeederInterface"}};
+    QueryMap query {{"path", "//BarFeederInterface"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
 
     ASSERT_XML_PATH_EQUAL(
@@ -1391,7 +1383,8 @@ TEST_F(AgentTest, ConditionSequence)
   }
 
   m_agentTestHelper->m_adapter->processData(
-      "2021-02-01T12:00:00Z|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+      "2021-02-01T12:00:00Z|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side "
+      "FFFFFFFF");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1451,7 +1444,8 @@ TEST_F(AgentTest, ConditionSequence)
   }
 
   m_agentTestHelper->m_adapter->processData(
-      "2021-02-01T12:00:00Z|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side FFFFFFFF");
+      "2021-02-01T12:00:00Z|lp|FAULT|2218|ALARM_B|HIGH|2218-1 ALARM_B UNUSABLE G-code  A side "
+      "FFFFFFFF");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -1605,14 +1599,16 @@ TEST_F(AgentTest, ConstantValue)
   auto agent = m_agentTestHelper->getAgent();
   auto di = agent->getDataItemForDevice("LinuxCNC", "block");
   ASSERT_TRUE(di);
-  di->addConstrainedValue("UNAVAILABLE");
+
+  di->setConstantValue("UNAVAILABLE");
 
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block[1]", "UNAVAILABLE");
   }
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|G01X00|Smode|INDEX|line|204");
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|block|G01X00|Smode|INDEX|line|204");
 
   {
     PARSE_XML_RESPONSE("/sample");
@@ -1627,7 +1623,7 @@ TEST_F(AgentTest, ConstantValue)
 TEST_F(AgentTest, BadDataItem)
 {
   addAdapter();
-  
+
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Line[1]", "UNAVAILABLE");
@@ -1642,7 +1638,6 @@ TEST_F(AgentTest, BadDataItem)
   }
 }
 
-
 // --------------------- Adapter Commands ----------------------
 
 TEST_F(AgentTest, AdapterCommands)
@@ -1652,7 +1647,7 @@ TEST_F(AgentTest, AdapterCommands)
 
   auto device = agent->getDeviceByName("LinuxCNC");
   ASSERT_TRUE(device);
-  ASSERT_FALSE(device->m_preserveUuid);
+  ASSERT_FALSE(device->preserveUuid());
 
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
   m_agentTestHelper->m_adapter->parseBuffer("* manufacturer: Big Tool\n");
@@ -1667,7 +1662,7 @@ TEST_F(AgentTest, AdapterCommands)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
 
-  device->m_preserveUuid = true;
+  device->setPreserveUuid(true);
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: XXXXXXX\n");
 
   {
@@ -1685,42 +1680,42 @@ TEST_F(AgentTest, AdapterDeviceCommand)
   ASSERT_TRUE(device1);
   auto device2 = agent->getDeviceByName("Device2");
   ASSERT_TRUE(device2);
-  
+
   addAdapter();
 
-  auto device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
-  ASSERT_EQ(device1->getName(), device);
-  
+  auto device =
+      GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
+  ASSERT_EQ(device1->getComponentName(), device);
+
   m_agentTestHelper->m_adapter->parseBuffer("* device: device-2\n");
   device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
-  ASSERT_EQ(device2->getUuid(), device);
-  
+  ASSERT_EQ(string(*device2->getUuid()), device);
+
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: new-uuid\n");
-  ASSERT_EQ("new-uuid", device2->getUuid());
+  ASSERT_EQ("new-uuid", string(*device2->getUuid()));
 
   m_agentTestHelper->m_adapter->parseBuffer("* device: device-1\n");
   device = GetOption<string>(m_agentTestHelper->m_adapter->getOptions(), configuration::Device);
-  ASSERT_EQ(device1->getUuid(), device);
-  
+  ASSERT_EQ(string(*device1->getUuid()), device);
+
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: another-uuid\n");
-  ASSERT_EQ("another-uuid", device1->getUuid());
+  ASSERT_EQ("another-uuid", string(*device1->getUuid()));
 }
 
 TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
 {
-  m_agentTestHelper->createAgent("/samples/kinematics.xml",
-                                 8, 4, "1.7", 25);  
+  m_agentTestHelper->createAgent("/samples/kinematics.xml", 8, 4, "1.7", 25);
   addAdapter();
-  
+
   auto printer = m_agentTestHelper->m_agent->getPrinter("xml");
   ASSERT_FALSE(printer->getModelChangeTime().empty());
-  
+
   {
     PARSE_XML_RESPONSE("/Agent/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "UNAVAILABLE");
   }
-  
+
   m_agentTestHelper->m_adapter->parseBuffer("* adapterVersion: 2.10\n");
   m_agentTestHelper->m_adapter->parseBuffer("* mtconnectVersion: 1.7\n");
 
@@ -1728,21 +1723,25 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
     PARSE_XML_RESPONSE("/Agent/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "2.10");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "1.7");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime", printer->getModelChangeTime().c_str());;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime",
+                          printer->getModelChangeTime().c_str());
+    ;
   }
-  
+
   // Test updating device change time
   string old = printer->getModelChangeTime();
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: another-uuid\n");
   ASSERT_GT(printer->getModelChangeTime(), old);
-  
+
   {
     PARSE_XML_RESPONSE("/Agent/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime", printer->getModelChangeTime().c_str());;
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime",
+                          printer->getModelChangeTime().c_str());
+    ;
   }
 
   // Test Case insensitivity
-  
+
   m_agentTestHelper->m_adapter->parseBuffer("* adapterversion: 3.10\n");
   m_agentTestHelper->m_adapter->parseBuffer("* mtconnectversion: 1.6\n");
 
@@ -1751,19 +1750,17 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AdapterSoftwareVersion", "3.10");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectVersion", "1.6");
   }
-
 }
-
 
 TEST_F(AgentTest, UUIDChange)
 {
   auto agent = m_agentTestHelper->getAgent();
   auto device = agent->getDeviceByName("LinuxCNC");
   ASSERT_TRUE(device);
-  ASSERT_FALSE(device->m_preserveUuid);
+  ASSERT_FALSE(device->preserveUuid());
 
   addAdapter();
-  
+
   m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
   m_agentTestHelper->m_adapter->parseBuffer("* manufacturer: Big Tool\n");
   m_agentTestHelper->m_adapter->parseBuffer("* serialNumber: XXXX-1234\n");
@@ -1789,25 +1786,24 @@ TEST_F(AgentTest, UUIDChange)
 
 TEST_F(AgentTest, AssetStorage)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                              8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
-  ASSERT_TRUE(agent->getServer()->isPutEnabled());
+  auto rest = m_agentTestHelper->getRestService();
+  ASSERT_TRUE(rest->getServer()->arePutsAllowed());
   string body = "<Part assetId='P1' deviceUuid='LinuxCNC'>TEST</Part>";
-  Routing::QueryMap queries;
+  QueryMap queries;
 
   queries["type"] = "Part";
   queries["device"] = "LinuxCNC";
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, agent->getAssetStorage()->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, agent->getAssetStorage()->getCount());
 
   {
     PARSE_XML_RESPONSE_PUT("/asset/123", body, queries);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+    ASSERT_EQ((unsigned int)1, agent->getAssetStorage()->getCount());
   }
 
-  m_agentTestHelper->m_request.m_verb = "GET";
   {
     PARSE_XML_RESPONSE("/asset/123");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
@@ -1825,21 +1821,22 @@ TEST_F(AgentTest, AssetStorage)
 
 TEST_F(AgentTest, AssetBuffer)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                              8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
-  Routing::QueryMap queries;
+  QueryMap queries;
 
   queries["device"] = "000";
   queries["type"] = "Part";
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  const auto &storage = agent->getAssetStorage();
+
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, storage->getCount());
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
-    ASSERT_EQ(1, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+    ASSERT_EQ(1, storage->getCountForType("Part"));
   }
 
   {
@@ -1851,16 +1848,16 @@ TEST_F(AgentTest, AssetBuffer)
   // Make sure replace works properly
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
-    ASSERT_EQ(1, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+    ASSERT_EQ(1, storage->getCountForType("Part"));
   }
 
   body = "<Part assetId='P2'>TEST 2</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
-    ASSERT_EQ(2, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)2, storage->getCount());
+    ASSERT_EQ(2, storage->getCountForType("Part"));
   }
 
   {
@@ -1873,8 +1870,8 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)3, agent->getAssetCount());
-    ASSERT_EQ(3, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)3, storage->getCount());
+    ASSERT_EQ(3, storage->getCountForType("Part"));
   }
 
   {
@@ -1887,14 +1884,14 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
+    ASSERT_EQ((unsigned int)4, storage->getCount());
   }
 
   {
     PARSE_XML_RESPONSE("/asset/P4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part", "TEST 4");
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   // Test multiple asset get
@@ -1909,7 +1906,7 @@ TEST_F(AgentTest, AssetBuffer)
 
   // Test multiple asset get with filter
   {
-    PARSE_XML_RESPONSE_QUERY("/assets", queries);
+    PARSE_XML_RESPONSE_QUERY("/asset", queries);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[4]", "TEST 4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part[3]", "TEST 3");
@@ -1931,8 +1928,8 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)4, storage->getCount());
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   {
@@ -1944,15 +1941,16 @@ TEST_F(AgentTest, AssetBuffer)
   {
     PARSE_XML_RESPONSE("/asset/P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: P1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
+                          "Cannot find asset for asset Ids: P1");
   }
 
   body = "<Part assetId='P3'>TEST 6</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)4, storage->getCount());
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   {
@@ -1971,16 +1969,16 @@ TEST_F(AgentTest, AssetBuffer)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)4, storage->getCount());
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   body = "<Part assetId='P6'>TEST 8</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)4, agent->getAssetCount());
-    ASSERT_EQ(4, agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)4, storage->getCount());
+    ASSERT_EQ(4, storage->getCountForType("Part"));
   }
 
   {
@@ -1993,7 +1991,8 @@ TEST_F(AgentTest, AssetBuffer)
   {
     PARSE_XML_RESPONSE("/asset/P4");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: P4");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
+                          "Cannot find asset for asset Ids: P4");
   }
 }
 
@@ -2002,7 +2001,8 @@ TEST_F(AgentTest, AssetError)
   {
     PARSE_XML_RESPONSE("/asset/123");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error@errorCode", "ASSET_NOT_FOUND");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error", "Cannot find asset for assetId: 123");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error",
+                          "Cannot find asset for asset Ids: 123");
   }
 }
 
@@ -2010,10 +2010,12 @@ TEST_F(AgentTest, AdapterAddAsset)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/asset/P1");
@@ -2026,8 +2028,10 @@ TEST_F(AgentTest, MultiLineAsset)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
-  
-  m_agentTestHelper->m_adapter->parseBuffer("2021-02-01T12:00:00Z|@ASSET@|P1|Part|--multiline--AAAA\n");
+  const auto &storage = agent->getAssetStorage();
+
+  m_agentTestHelper->m_adapter->parseBuffer(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|Part|--multiline--AAAA\n");
   m_agentTestHelper->m_adapter->parseBuffer(
       "<Part assetId='P1'>\n"
       "  <PartXXX>TEST 1</PartXXX>\n"
@@ -2036,8 +2040,8 @@ TEST_F(AgentTest, MultiLineAsset)
   m_agentTestHelper->m_adapter->parseBuffer(
       "</Part>\n"
       "--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/asset/P1");
@@ -2061,29 +2065,32 @@ TEST_F(AgentTest, MultiLineAsset)
 TEST_F(AgentTest, BadAsset)
 {
   addAdapter();
-  auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = m_agentTestHelper->m_agent->getAssetStorage();
 
-  m_agentTestHelper->m_adapter->parseBuffer("2021-02-01T12:00:00Z|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
+  m_agentTestHelper->m_adapter->parseBuffer(
+      "2021-02-01T12:00:00Z|@ASSET@|111|CuttingTool|--multiline--AAAA\n");
   m_agentTestHelper->m_adapter->parseBuffer((getFile("asset4.xml") + "\n").c_str());
   m_agentTestHelper->m_adapter->parseBuffer("--multiline--AAAA\n");
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)0, storage->getCount());
 }
 
 TEST_F(AgentTest, AssetRemoval)
 {
   string body = "<Part assetId='P1'>TEST 1</Part>";
-  Routing::QueryMap query;
+  QueryMap query;
 
   query["device"] = "LinuxCNC";
   query["type"] = "Part";
 
-  ASSERT_EQ((unsigned int)4, m_agentTestHelper->m_agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)0, m_agentTestHelper->m_agent->getAssetCount());
+  const auto &storage = m_agentTestHelper->m_agent->getAssetStorage();
+
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)0, storage->getCount());
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
-    ASSERT_EQ(1, m_agentTestHelper->m_agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+    ASSERT_EQ(1, storage->getCountForType("Part"));
   }
 
   {
@@ -2095,16 +2102,16 @@ TEST_F(AgentTest, AssetRemoval)
   // Make sure replace works properly
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)1, m_agentTestHelper->m_agent->getAssetCount());
-    ASSERT_EQ(1, m_agentTestHelper->m_agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+    ASSERT_EQ(1, storage->getCountForType("Part"));
   }
 
   body = "<Part assetId='P2'>TEST 2</Part>";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)2, m_agentTestHelper->m_agent->getAssetCount());
-    ASSERT_EQ(2, m_agentTestHelper->m_agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)2, storage->getCount());
+    ASSERT_EQ(2, storage->getCountForType("Part"));
   }
 
   {
@@ -2117,8 +2124,8 @@ TEST_F(AgentTest, AssetRemoval)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)3, m_agentTestHelper->m_agent->getAssetCount());
-    ASSERT_EQ(3, m_agentTestHelper->m_agent->getAssetCount("Part"));
+    ASSERT_EQ((unsigned int)3, storage->getCount());
+    ASSERT_EQ(3, storage->getCountForType("Part"));
   }
 
   {
@@ -2131,8 +2138,8 @@ TEST_F(AgentTest, AssetRemoval)
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, query);
-    ASSERT_EQ((unsigned int)3, m_agentTestHelper->m_agent->getAssetCount(false));
-    ASSERT_EQ(3, m_agentTestHelper->m_agent->getAssetCount("Part", false));
+    ASSERT_EQ((unsigned int)3, storage->getCount(false));
+    ASSERT_EQ(3, storage->getCountForType("Part", false));
   }
 
   {
@@ -2142,7 +2149,7 @@ TEST_F(AgentTest, AssetRemoval)
   }
 
   {
-    PARSE_XML_RESPONSE("/assets");
+    PARSE_XML_RESPONSE("/asset");
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
@@ -2151,7 +2158,7 @@ TEST_F(AgentTest, AssetRemoval)
 
   query["removed"] = "true";
   {
-    PARSE_XML_RESPONSE_QUERY("/assets", query);
+    PARSE_XML_RESPONSE_QUERY("/asset", query);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[1]", "TEST 1");
@@ -2164,19 +2171,23 @@ TEST_F(AgentTest, AssetRemoval)
 TEST_F(AgentTest, AssetRemovalByAdapter)
 {
   addAdapter();
-  Routing::QueryMap query;
+  QueryMap query;
   auto agent = m_agentTestHelper->getAgent();
-  
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  const auto &storage = agent->getAssetStorage();
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
-  ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
-  ASSERT_EQ((unsigned int)3, agent->getAssetCount());
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
+  ASSERT_EQ((unsigned int)2, storage->getCount());
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
+  ASSERT_EQ((unsigned int)3, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2185,7 +2196,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   }
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P2\r");
-  ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
+  ASSERT_EQ((unsigned int)3, storage->getCount(false));
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2194,7 +2205,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   }
 
   {
-    PARSE_XML_RESPONSE("/assets");
+    PARSE_XML_RESPONSE("/asset");
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[2]", "TEST 1");
@@ -2205,7 +2216,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   // not regenerate the attributes for the asset.
   query["removed"] = "true";
   {
-    PARSE_XML_RESPONSE_QUERY("/assets", query);
+    PARSE_XML_RESPONSE_QUERY("/asset", query);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "2");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
@@ -2217,7 +2228,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
 TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 {
   m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.2", 25);
-  
+
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
@@ -2253,10 +2264,12 @@ TEST_F(AgentTest, AssetPrependId)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/asset/0001");
@@ -2270,11 +2283,13 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2283,7 +2298,7 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
   }
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P1");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount(false));
+  ASSERT_EQ((unsigned int)1, storage->getCount(false));
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2296,14 +2311,15 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
 
 TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                              8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
   addAdapter();
+  const auto &storage = agent->getAssetStorage();
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount(false));
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, storage->getCount(false));
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2314,14 +2330,13 @@ TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
   {
     PARSE_XML_RESPONSE_DELETE("/asset/P1");
   }
-  
+
   {
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved", "P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetRemoved@assetType", "Part");
   }
 }
-
 
 TEST_F(AgentTest, AssetChangedWhenUnavailable)
 {
@@ -2338,17 +2353,21 @@ TEST_F(AgentTest, RemoveAllAssets)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
+  const auto &storage = agent->getAssetStorage();
 
-  ASSERT_EQ((unsigned int)4, agent->getMaxAssets());
+  ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
-  ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  ASSERT_EQ((unsigned int)1, storage->getCount());
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
-  ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 2</Part>");
+  ASSERT_EQ((unsigned int)2, storage->getCount());
 
-  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
-  ASSERT_EQ((unsigned int)3, agent->getAssetCount());
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P3|Part|<Part assetId='P3'>TEST 3</Part>");
+  ASSERT_EQ((unsigned int)3, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2357,7 +2376,7 @@ TEST_F(AgentTest, RemoveAllAssets)
   }
 
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ALL_ASSETS@|Part");
-  ASSERT_EQ((unsigned int)3, agent->getAssetCount(false));
+  ASSERT_EQ((unsigned int)3, storage->getCount(false));
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2366,20 +2385,19 @@ TEST_F(AgentTest, RemoveAllAssets)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged", "UNAVAILABLE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetChanged@assetType", "Part");
   }
-  
-  ASSERT_EQ((unsigned int)0, agent->getAssetCount());
+
+  ASSERT_EQ((unsigned int)0, storage->getCount());
 
   {
     PARSE_XML_RESPONSE("/assets");
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 0);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
   }
 
   // TODO: When asset is removed and the content is literal, it will
   // not regenerate the attributes for the asset.
   {
-    Routing::QueryMap q{{ "removed", "true" }};
-    PARSE_XML_RESPONSE_QUERY("/assets", q);
+    QueryMap q {{"removed", "true"}};
+    PARSE_XML_RESPONSE_QUERY("/asset", q);
     ASSERT_XML_PATH_COUNT(doc, "//m:Assets/*", 3);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "0");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Assets/*[3]", "TEST 1");
@@ -2390,21 +2408,21 @@ TEST_F(AgentTest, RemoveAllAssets)
 
 TEST_F(AgentTest, AssetProbe)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                              8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
-  Routing::QueryMap queries;
+  QueryMap queries;
+  const auto &storage = agent->getAssetStorage();
 
   queries["device"] = "LinuxCNC";
   queries["type"] = "Part";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_EQ((unsigned int)1, agent->getAssetCount());
+    ASSERT_EQ((unsigned int)1, storage->getCount());
   }
   {
     PARSE_XML_RESPONSE_PUT("/asset/P2", body, queries);
-    ASSERT_EQ((unsigned int)2, agent->getAssetCount());
+    ASSERT_EQ((unsigned int)2, storage->getCount());
   }
 
   {
@@ -2416,11 +2434,10 @@ TEST_F(AgentTest, AssetProbe)
 
 TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
 {
-  m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                 8, 4, "1.3", 4, true);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
   const string body {
-R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
+      R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
   <CuttingToolLifeCycle>
     <CutterStatus>
       <Status>NEW</Status>
@@ -2431,57 +2448,66 @@ R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
     </Measurements>
   </CuttingToolLifeCycle>
 </CuttingTool>
-)DOC" };
-  
-  Routing::QueryMap queries;
+)DOC"};
+
+  QueryMap queries;
 
   queries["device"] = "LinuxCNC";
   queries["type"] = "CuttingTool";
 
   {
     PARSE_XML_RESPONSE_PUT("/asset", body, queries);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]@errorCode", "INVALID_REQUEST");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]@errorCode",
+                          "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[1]",
                           "Asset parsed with errors.");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]@errorCode", "INVALID_REQUEST");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]@errorCode",
+                          "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[2]",
                           "FunctionalLength(VALUE): Property VALUE is required and not provided");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]@errorCode", "INVALID_REQUEST");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]@errorCode",
+                          "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[3]",
                           "Measurements: Invalid element 'FunctionalLength'");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]@errorCode", "INVALID_REQUEST");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]@errorCode",
+                          "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[4]",
                           "CuttingDiameterMax(VALUE): Property VALUE is required and not provided");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]@errorCode", "INVALID_REQUEST");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]@errorCode",
+                          "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[5]",
                           "Measurements: Invalid element 'CuttingDiameterMax'");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]@errorCode", "INVALID_REQUEST");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]@errorCode",
+                          "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[6]",
-                          "Measurements(Measurement): Entity list requirement Measurement must have at least 1 entries, 0 found");
-    
-    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]@errorCode", "INVALID_REQUEST");
+                          "Measurements(Measurement): Entity list requirement Measurement must "
+                          "have at least 1 entries, 0 found");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]@errorCode",
+                          "INVALID_REQUEST");
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]",
                           "CuttingToolLifeCycle: Invalid element 'Measurements'");
   }
 }
 
-
 //  ---------------- Srreaming Tests ---------------------
 
 TEST_F(AgentTest, BadInterval)
 {
-  Routing::QueryMap query;
+  QueryMap query;
 
   {
     query["interval"] = "NON_INTEGER";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "INVALID_REQUEST");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "Parameter Error processing request from:  - for query parameter 'interval': cannot convert string 'NON_INTEGER' to integer");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
+                          "0.0.0.0: Parameter Error: for query parameter 'interval': cannot "
+                          "convert string 'NON_INTEGER' to integer");
   }
 
   {
@@ -2495,136 +2521,112 @@ TEST_F(AgentTest, BadInterval)
     query["interval"] = "2147483647";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "'interval' must be less than 2147483647");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be less than 2147483647");
   }
 
   {
     query["interval"] = "999999999999999999";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error",
-                          "'interval' must be greater than -1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be greater than -1");
   }
 }
 
+#ifndef APPVEYOR
 
 TEST_F(AgentTest, StreamData)
 {
   addAdapter();
-  auto agent = m_agentTestHelper->getAgent();
-  auto heartbeatFreq{200ms};
+  auto heartbeatFreq {200ms};
+  auto rest = m_agentTestHelper->getRestService();
 
   // Start a thread...
-  Routing::QueryMap query;
+  QueryMap query;
   query["interval"] = "50";
   query["heartbeat"] = to_string(heartbeatFreq.count());
-  query["from"] = to_string(agent->getSequence());
+  query["from"] = to_string(rest->getSequence());
 
   // Heartbeat test. Heartbeat should be sent in 200ms. Give
   // 25ms range.
   {
+#ifdef APPVEYOR
+    auto slop {160ms};
+#else
+    auto slop {35ms};
+#endif
+
     auto startTime = system_clock::now();
+    PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
+    while (m_agentTestHelper->m_session->m_chunkBody.empty() &&
+           (system_clock::now() - startTime) < 230ms)
+      m_agentTestHelper->m_ioContext.run_one_for(5ms);
+    auto delta = system_clock::now() - startTime;
+    cout << "Delta after heartbeat: " << delta.count() << endl;
+    ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
 
-    auto killThreadLambda = [](AgentTest *test) {
-      this_thread::sleep_for(test->m_delay);
-      test->m_agentTestHelper->m_out.setstate(ios::eofbit);
-    };
+    PARSE_XML_CHUNK();
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
+    EXPECT_GT((heartbeatFreq + slop), delta)
+        << "delta " << delta.count() << " < hbf " << (heartbeatFreq + slop).count();
+    EXPECT_LT(heartbeatFreq, delta) << "delta > hbf: " << delta.count();
 
-    m_delay = 20ms;
-    auto killThread = std::thread{killThreadLambda, this};
-    try
-    {
-      PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
-
-      auto delta = system_clock::now() - startTime;
-      //cout << "Delta: " << delta.count() << endl;
-      ASSERT_TRUE(delta < (heartbeatFreq + 35ms));
-      ASSERT_TRUE(delta > heartbeatFreq);
-      killThread.join();
-    }
-    catch (...)
-    {
-      killThread.join();
-      throw;
-    }
+    m_agentTestHelper->m_session->closeStream();
   }
-
-  m_agentTestHelper->m_out.clear();
-  m_agentTestHelper->m_out.str("");
 
   // Set some data and make sure we get data within 40ms.
   // Again, allow for some slop.
-  auto minExpectedResponse{40ms};
   {
+    auto delay {40ms};
+#ifdef APPVEYOR
+    auto slop {160ms};
+#else
+    auto slop {35ms};
+#endif
+
+    PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
+    m_agentTestHelper->m_ioContext.run_for(delay);
+
     auto startTime = system_clock::now();
+    m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
+    m_agentTestHelper->m_ioContext.run_for(5ms);
+    auto delta = system_clock::now() - startTime;
+    cout << "Delta after data: " << delta.count() << endl;
 
-    auto AddThreadLambda = [](AgentTest *test) {
-      this_thread::sleep_for(test->m_delay);
-      test->m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
-      test->m_agentTestHelper->m_out.setstate(ios::eofbit);
-    };
+    ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
+    PARSE_XML_CHUNK();
 
-    m_delay = 10ms;
-    auto addThread = std::thread{AddThreadLambda, this};
-    try
-    {
-      PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
-
-      auto delta = system_clock::now() - startTime;
-      //cout << "Delta: " << delta.count() << endl;
-      ASSERT_LT(delta, (minExpectedResponse + 50ms));
-      ASSERT_GT(delta, minExpectedResponse);
-      addThread.join();
-    }
-    catch (...)
-    {
-      addThread.join();
-      throw;
-    }
+    EXPECT_GT(slop, delta) << "delta " << delta.count() << " < delay " << slop.count();
   }
 }
+#endif
 
 TEST_F(AgentTest, StreamDataObserver)
 {
   addAdapter();
-  auto agent = m_agentTestHelper->getAgent();
-  
+  auto rest = m_agentTestHelper->getRestService();
+
   // Start a thread...
-  key_value_map query;
+  std::map<string, string> query;
   query["interval"] = "100";
   query["heartbeat"] = "1000";
   query["count"] = "10";
-  query["from"] = to_string(agent->getSequence());
+  query["from"] = to_string(rest->getSequence());
+  query["path"] = "//DataItem[@name='line']";
 
   // Test to make sure the signal will push the sequence number forward and capture
   // the new data.
   {
-    auto streamThreadLambda = [](AgentTest *test) {
-      auto agent = test->m_agentTestHelper->getAgent();
-      this_thread::sleep_for(test->m_delay);
-      agent->setSequence(agent->getSequence() + 20ull);
-      test->m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
-      this_thread::sleep_for(120ms);
-      test->m_agentTestHelper->m_out.setstate(ios::eofbit);
-    };
-
-    m_delay = 50ms;
-    auto seq = to_string(agent->getSequence() + 20ull);
-
-    auto streamThread = std::thread{streamThreadLambda, this};
-    try
+    PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
+    auto seq = to_string(rest->getSequence() + 20ull);
+    for (int i = 0; i < 20; i++)
     {
-      PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
-      ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
-      streamThread.join();
+      m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|" + to_string(i));
     }
-    catch (...)
-    {
-      streamThread.join();
-      throw;
-    }
+    m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
+    m_agentTestHelper->m_ioContext.run_for(200ms);
+
+    PARSE_XML_CHUNK();
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
   }
 }
 
@@ -2632,10 +2634,9 @@ TEST_F(AgentTest, StreamDataObserver)
 
 TEST_F(AgentTest, Put)
 {
-  m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                 8, 4, "1.3", 4, true);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
-  Routing::QueryMap queries;
+  QueryMap queries;
   string body;
 
   queries["time"] = "2021-02-01T12:00:00Z";
@@ -2652,46 +2653,4 @@ TEST_F(AgentTest, Put)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
     ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
   }
-  
 }
-
-#if 0
-// Test diabling of HTTP PUT or POST. This is handled before the request. Tested
-// in the server
-TEST_F(AgentTest, PutBlockingFrom)
-{
-  m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                 8, 4, "1.3", 4, true);
-  
-  Routing::QueryMap queries;
-  string body;
-
-  m_agentTestHelper->m_server->allowPutFrom("192.168.0.1");
-
-  queries["time"] = "TIME";
-  queries["line"] = "205";
-  
-
-  {
-    PARSE_XML_RESPONSE_PUT("/LinuxCNC", body, queries);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "HTTP PUT, POST, and DELETE are not allowed from 127.0.0.1");
-  }
-
-  {
-    PARSE_XML_RESPONSE("/LinuxCNC/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "UNAVAILABLE");
-  }
-
-  // Retry request after adding ip address
-  m_agentTestHelper->m_server->allowPutFrom("127.0.0.1");
-
-  {
-    PARSE_XML_RESPONSE_PUT("/LinuxCNC", body, queries);
-  }
-
-  {
-    PARSE_XML_RESPONSE("/LinuxCNC/current");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:Line", "205");
-  }
-}
-#endif

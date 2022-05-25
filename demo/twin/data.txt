@@ -1,0 +1,16 @@
+#
+# data Item id | display label-optional
+#
+mode|Controller Mode
+execution|Execution
+program|Program/Main
+activeprog|Program/Active
+Tool_number|Tool ID
+Srpm|RPM
+pallet_num|Pallet ID
+doorstate|Door State
+Xabs|X
+Yabs|Y
+Zabs|Z
+Babs|B
+Cabs|C

@@ -4,6 +4,16 @@ Stylesheet for the MTConnect Agent - transforms XML data to a grid UI - with tab
 
 ![](screenshot.jpg)
 
+## Note
+
+Windows had trouble handling the xsl:include statements, like
+
+  <xsl:include href="styles-probe.xsl" />
+
+it appends extra text at the end of the xml, confusing the browser. So copied/pasted that code into the main styles.xsl file.
+
+Windows also had trouble rendering the small png, gif, and jpg files, so changed those to icos. 
+
 
 ## Installation
 

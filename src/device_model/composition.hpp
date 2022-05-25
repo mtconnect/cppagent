@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,50 +17,14 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
-#include "description.hpp"
-#include "utilities.hpp"
+#include "entity/entity.hpp"
 
-#include <list>
-#include <map>
-#include <memory>
-#include <optional>
-#include <sstream>
-#include <string>
-#include <utility>
-
-namespace mtconnect
-{
-  class Composition
-  {
-  public:
-    Composition() = default;
-    Composition(const Composition &) = default;
-    ~Composition() = default;
-
-    const std::map<std::string, bool> &properties() const
+namespace mtconnect {
+  namespace device_model {
+    struct Composition
     {
-      const static std::map<std::string, bool> properties = {
-          {"id", true}, {"uuid", false}, {"name", false}, {"type", true}};
-      ;
-      return properties;
-    }
-
-    const std::optional<Description> &getDescription() const { return m_description; }
-
-    void setDescription(Description &d) { m_description = d; }
-
-    const auto &getConfiguration() const { return m_configuration; }
-
-    void addConfiguration(std::unique_ptr<ComponentConfiguration> &config)
-    {
-      m_configuration.emplace_back(std::move(config));
-    }
-
-    std::map<std::string, std::string> m_attributes;
-
-  protected:
-    std::list<std::unique_ptr<ComponentConfiguration>> m_configuration;
-    std::optional<Description> m_description;
-  };
+      static entity::FactoryPtr getFactory();
+      static entity::FactoryPtr getRoot();
+    };
+  }  // namespace device_model
 }  // namespace mtconnect

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +17,15 @@
 
 #include "entity/json_parser.hpp"
 
-#include <dlib/logger.h>
-
 #include <nlohmann/json.hpp>
+
+#include "logging.hpp"
 
 using namespace std;
 using json = nlohmann::json;
 
-namespace mtconnect
-{
-  namespace entity
-  {
-    static dlib::logger g_logger("entity.json_parser");
-
+namespace mtconnect {
+  namespace entity {
     static EntityPtr parseJson(FactoryPtr factory, string entity_name, json jNode,
                                ErrorList& errors)
     {
@@ -104,14 +100,14 @@ namespace mtconnect
               auto ent = parseJson(ef, it.key(), it.value(), errors);
               if (ent)
               {
-                if (ef->isList())
+                if (l != nullptr)
                 {
                   l->emplace_back(ent);
                 }
               }
               else
               {
-                cout << "Unexpected element: " << it.key();
+                LOG(debug) << "Unexpected element: " << it.key();
                 errors.emplace_back(
                     new EntityError("Invalid element '" + it.key() + "'", entity_name));
               }
@@ -135,6 +131,7 @@ namespace mtconnect
     EntityPtr JsonParser::parse(FactoryPtr factory, const string& document, const string& version,
                                 ErrorList& errors)
     {
+      NAMED_SCOPE("entity.json_parser");
       EntityPtr entity;
       auto jsonObj = json::parse(document.c_str());
       auto entity_name = jsonObj.begin().key();

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,34 +16,47 @@
 //
 
 #pragma once
+#include <map>
+
 #include "component.hpp"
-#include "data_item.hpp"
+#include "data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "utilities.hpp"
 
-#include <map>
-
-namespace mtconnect
-{
-  namespace adapter
-  {
+namespace mtconnect {
+  namespace source::adapter {
     class Adapter;
-  }
-  class AgentDevice : public Device
-  {
-  public:
-    // Constructor that sets variables from an attribute map
-    AgentDevice(const Attributes &attributes);
-    ~AgentDevice() override = default;
+    using AdapterPtr = std::shared_ptr<Adapter>;
+  }  // namespace source::adapter
 
-    void addAdapter(const adapter::Adapter *adapter);
+  namespace device_model {
+    class AgentDevice : public Device
+    {
+    public:
+      // Constructor that sets variables from an attribute map
+      AgentDevice(const std::string &name, entity::Properties &props);
+      ~AgentDevice() override = default;
+      static entity::FactoryPtr getFactory();
 
-    DataItem *getConnectionStatus(const std::string &adapter);
+      void initialize() override
+      {
+        addRequiredDataItems();
+        entity::ErrorList errors;
+        addChild(m_adapters, errors);
+        Device::initialize();
+      }
 
-  protected:
-    void addRequiredDataItems();
+      void addAdapter(const source::adapter::AdapterPtr adapter);
 
-  protected:
-    Component *m_adapters{nullptr};
-  };
+      DataItemPtr getConnectionStatus(const std::string &adapter);
+      auto &getAdapters() { return m_adapters; }
+
+    protected:
+      void addRequiredDataItems();
+
+    protected:
+      ComponentPtr m_adapters;
+    };
+    using AgentDevicePtr = std::shared_ptr<AgentDevice>;
+  }  // namespace device_model
 }  // namespace mtconnect

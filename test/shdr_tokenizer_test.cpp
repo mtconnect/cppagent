@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,11 +19,11 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <chrono>
+
+#include "entity/entity.hpp"
 #include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/timestamp_extractor.hpp"
-#include "entity/entity.hpp"
-
-#include <chrono>
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -37,18 +37,12 @@ class ShdrTokenizerTest : public testing::Test
 protected:
   void SetUp() override
   {
-    dlib::set_all_logging_output_streams(cout);
-    dlib::set_all_logging_levels(dlib::LDEBUG);
-
     m_tokenizer = make_shared<ShdrTokenizer>();
     m_tokenizer->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
-  
-  void TearDown() override
-  {
-    m_tokenizer.reset();
-  }
-  
+
+  void TearDown() override { m_tokenizer.reset(); }
+
   shared_ptr<ShdrTokenizer> m_tokenizer;
 };
 
@@ -57,11 +51,11 @@ inline std::list<std::string> extract(const Properties &props)
   std::list<string> list;
   for (auto &p : props)
     list.emplace_back(get<string>(p.second));
-  
+
   return list;
 }
 
-template<typename T>
+template <typename T>
 inline bool isOfType(const EntityPtr &p)
 {
   const auto &o = *p;
@@ -71,17 +65,17 @@ inline bool isOfType(const EntityPtr &p)
 TEST_F(ShdrTokenizerTest, SimpleTokens)
 {
   std::map<std::string, std::list<std::string>> data {
-    { "   |hello   |   kitty| cat | ", { "", "hello", "kitty", "cat", "" } },
-    { "hello|kitty", { "hello", "kitty" } },
-    { "hello|kitty|", { "hello", "kitty", "" } },
-    { "|hello|kitty|", { "", "hello", "kitty", "" } },
-    { R"D(hello|xxx={b="12345", c="xxxxx"}}|bbb)D",
-      { "hello", R"D(xxx={b="12345", c="xxxxx"}})D", "bbb" } },
+      {"   |hello   |   kitty| cat | ", {"", "hello", "kitty", "cat", ""}},
+      {"hello|kitty", {"hello", "kitty"}},
+      {"hello|kitty|", {"hello", "kitty", ""}},
+      {"|hello|kitty|", {"", "hello", "kitty", ""}},
+      {R"D(hello|xxx={b="12345", c="xxxxx"}}|bbb)D",
+       {"hello", R"D(xxx={b="12345", c="xxxxx"}})D", "bbb"}},
   };
-    
+
   for (const auto &test : data)
   {
-    auto data = std::make_shared<entity::Entity>("Data", Properties{{"VALUE", test.first}});
+    auto data = std::make_shared<entity::Entity>("Data", Properties {{"VALUE", test.first}});
     auto entity = (*m_tokenizer)(data);
     ASSERT_TRUE(entity);
     auto tokens = dynamic_pointer_cast<Tokens>(entity);
@@ -140,11 +134,11 @@ TEST_F(ShdrTokenizerTest, escaped_line)
   data["y|\"a\\|"] = {"y", "\"a\\", ""};
   data["y|\"a\\|z"] = {"y", "\"a\\", "z"};
   data[R"(y|"a\|"z)"] = {"y", "\"a\\", "\"z"};
-  data["x|y||z"] = { "x", "y", "", "z"};
-  
+  data["x|y||z"] = {"x", "y", "", "z"};
+
   for (const auto &test : data)
   {
-    auto data = std::make_shared<entity::Entity>("Data", Properties{{"VALUE", test.first}});
+    auto data = std::make_shared<entity::Entity>("Data", Properties {{"VALUE", test.first}});
     auto entity = (*m_tokenizer)(data);
     ASSERT_TRUE(entity);
     auto tokens = dynamic_pointer_cast<Tokens>(entity);
@@ -152,4 +146,3 @@ TEST_F(ShdrTokenizerTest, escaped_line)
     EXPECT_EQ(test.second, tokens->m_tokens) << " given text: " << test.first;
   }
 }
-

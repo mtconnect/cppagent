@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,12 @@
 
 #pragma once
 
-#include "assets/asset.hpp"
+#include "asset/asset.hpp"
 #include "observation/observation.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace pipeline {
     class ConvertSample : public Transform
     {
     public:
@@ -38,15 +36,13 @@ namespace mtconnect
         using namespace observation;
         using namespace entity;
         auto sample = std::dynamic_pointer_cast<Sample>(entity);
-        if (sample)
+        if (sample && !sample->isUnavailable())
         {
-          auto di = sample->getDataItem();
-          if (di->conversionRequired())
+          auto &converter = sample->getDataItem()->getConverter();
+          if (converter)
           {
             auto ns = sample->copy();
-            Value &value = ns->getValue();
-            di->convertValue(value);
-
+            converter->convertValue(ns->getValue());
             return next(ns);
           }
         }

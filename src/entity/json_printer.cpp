@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,22 +17,17 @@
 
 #include "json_printer.hpp"
 
-#include <dlib/logger.h>
-
 #include <nlohmann/json.hpp>
+
+#include "logging.hpp"
 
 using namespace std;
 using json = nlohmann::json;
 
-namespace mtconnect
-{
-  namespace entity
-  {
-    static dlib::logger g_logger("entity.xml.printer");
-
-    inline static json toJson(const observation::DataSet &set)
+namespace mtconnect {
+  namespace entity {
+    inline static json toJson(const DataSet &set)
     {
-      using namespace observation;
       json value;
       for (auto &e : set)
       {
@@ -55,8 +50,7 @@ namespace mtconnect
                                           [&row, &c](const int64_t &i) { row[c.m_key] = i; },
                                           [&row, &c](const double &d) { row[c.m_key] = d; },
                                           [](auto &a) {
-                                           g_logger << dlib::LERROR
-                                                    << "Invalid  variant type for table cell";
+                                            LOG(error) << "Invalid  variant type for table cell";
                                           }},
                                       c.m_value);
                               }
@@ -76,7 +70,7 @@ namespace mtconnect
       return visit(overloaded {[](const EntityPtr &) -> json { return nullptr; },
                                [](const std::monostate &) -> json { return nullptr; },
                                [](const EntityList &) -> json { return nullptr; },
-                               [](const observation::DataSet &v) -> json { return toJson(v); },
+                               [](const DataSet &v) -> json { return toJson(v); },
                                [](const Timestamp &v) -> json { return toJson(v); },
                                [](const auto &arg) -> json { return arg; }},
                    value);
@@ -84,6 +78,7 @@ namespace mtconnect
 
     json JsonPrinter::printEntity(const EntityPtr entity) const
     {
+      NAMED_SCOPE("entity.json_printer");
       json jsonObj;
 
       for (auto &e : entity->getProperties())

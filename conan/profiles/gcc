@@ -1,0 +1,6 @@
+include(default)
+
+[settings]
+compiler.libcxx=libstdc++11
+
+[env]

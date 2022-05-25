@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +17,6 @@
 
 #pragma once
 
-#include "adapter/adapter.hpp"
-#include "agent_loopback_pipeline.hpp"
-#include "assets/asset_buffer.hpp"
-#include "http_server/server.hpp"
-#include "observation/checkpoint.hpp"
-#include "observation/circular_buffer.hpp"
-#include "pipeline/pipeline.hpp"
-#include "pipeline/pipeline_contract.hpp"
-#include "printer.hpp"
-#include "service.hpp"
-#include "xml_parser.hpp"
-#include <unordered_map>
-
 #include <chrono>
 #include <list>
 #include <map>
@@ -37,100 +24,120 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-namespace mtconnect
-{
-  namespace adapter
-  {
+#include "asset/asset_buffer.hpp"
+#include "configuration/service.hpp"
+#include "device_model/agent_device.hpp"
+#include "device_model/device.hpp"
+#include "parser/xml_parser.hpp"
+#include "pipeline/pipeline.hpp"
+#include "pipeline/pipeline_contract.hpp"
+#include "printer/printer.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
+#include "sink/rest_sink/circular_buffer.hpp"
+#include "sink/rest_sink/rest_service.hpp"
+#include "sink/rest_sink/server.hpp"
+#include "sink/sink.hpp"
+#include "source/adapter/adapter.hpp"
+#include "source/loopback_source.hpp"
+#include "source/source.hpp"
+
+namespace mtconnect {
+  namespace source::adapter {
     class Adapter;
   }
-  class DataItem;
-  class Device;
-  class AgentDevice;
+
+  namespace sink {
+    class Sink;
+  }
+
+  namespace device_model {
+    namespace data_item {
+      class DataItem;
+    }
+  };  // namespace device_model
+  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
   class Agent
   {
   public:
-    struct RequestResult
-    {
-      RequestResult(){};
-      RequestResult(const std::string &body, const http_server::ResponseCode status,
-                    const std::string &format)
-        : m_body(body), m_status(status), m_format(format)
-      {
-      }
-      RequestResult(const RequestResult &) = default;
-
-      std::string m_body;
-      http_server::ResponseCode m_status;
-      std::string m_format;
-    };
-
     // Load agent with the xml configuration
-    Agent(std::unique_ptr<http_server::Server> &server,
-          std::unique_ptr<http_server::FileCache> &cache, const std::string &configXmlPath,
-          int bufferSize, int maxAssets, const std::string &version, int checkpointFreq = 1000,
-          bool pretty = false);
+    Agent(boost::asio::io_context &context, const std::string &configXmlPath,
+          const ConfigOptions &options);
 
     // Virtual destructor
     ~Agent();
 
-    // Make loopback pipeline
-    void initialize(pipeline::PipelineContextPtr context, const ConfigOptions &options);
+    // Initialize models and pipeline
+    void initialize(pipeline::PipelineContextPtr context);
+    void initialDataItemObservations();
 
     // Start and stop
     void start();
     void stop();
+    auto &getContext() { return m_context; }
 
-    // HTTP Server
-    auto getServer() const { return m_server.get(); }
+    // Pipeline Contract
     std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
+    auto getPipelineContext() { return m_pipelineContext; }
+
+    // Sink Contract
+    sink::SinkContractPtr makeSinkContract();
+    const auto &getXmlParser() const { return m_xmlParser; }
 
     // Add an adapter to the agent
-    void addAdapter(adapter::Adapter *adapter, bool start = false);
-    const auto &getAdapters() const { return m_adapters; }
+    void addSource(source::SourcePtr adapter, bool start = false);
+    void addSink(sink::SinkPtr sink, bool start = false);
+
+    // Source and Sink
+    source::SourcePtr findSource(const std::string &name) const
+    {
+      for (auto &s : m_sources)
+        if (s->getIdentity() == name)
+          return s;
+
+      return nullptr;
+    }
+
+    sink::SinkPtr findSink(const std::string &name) const
+    {
+      for (auto &s : m_sinks)
+        if (s->getName() == name)
+          return s;
+
+      return nullptr;
+    }
+
+    const auto &getSources() const { return m_sources; }
+    const auto &getSinks() const { return m_sinks; }
 
     // Get device from device map
-    Device *getDeviceByName(const std::string &name);
-    Device *getDeviceByName(const std::string &name) const;
-    Device *findDeviceByUUIDorName(const std::string &idOrName) const;
+    DevicePtr getDeviceByName(const std::string &name);
+    DevicePtr getDeviceByName(const std::string &name) const;
+    DevicePtr findDeviceByUUIDorName(const std::string &idOrName) const;
     const auto &getDevices() const { return m_devices; }
-    Device *defaultDevice() const
+    DevicePtr defaultDevice() const
     {
       if (m_devices.size() > 0)
       {
         for (auto device : m_devices)
-          if (device->getClass() != "Agent")
+          if (device->getName() != "Agent")
             return device;
       }
 
       return nullptr;
     }
 
+    // Asset information
+    asset::AssetStorage *getAssetStorage() { return m_assetStorage.get(); }
+
     // Add the a device from a configuration file
-    void addDevice(Device *device);
-    void deviceChanged(Device *device, const std::string &oldUuid, const std::string &oldName);
-
-    // Add component events to the sliding buffer
-    observation::SequenceNumber_t addToBuffer(observation::ObservationPtr &observation);
-    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, entity::Properties props,
-                                              std::optional<Timestamp> timestamp = std::nullopt);
-    observation::SequenceNumber_t addToBuffer(DataItem *dataItem, const std::string &value,
-                                              std::optional<Timestamp> timestamp = std::nullopt);
-
-    // Asset management
-    void addAsset(AssetPtr asset);
-    AssetPtr addAsset(Device *device, const std::string &asset,
-                      const std::optional<std::string> &id, const std::optional<std::string> &type,
-                      const std::optional<std::string> &time, entity::ErrorList &errors);
-    bool removeAsset(Device *device, const std::string &id,
-                     const std::optional<Timestamp> time = std::nullopt);
-    bool removeAllAssets(const std::optional<std::string> device,
-                         const std::optional<std::string> type, const std::optional<Timestamp> time,
-                         AssetList &list);
+    void addDevice(DevicePtr device);
+    void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
 
     // Message when adapter has connected and disconnected
     void connecting(const std::string &adapter);
@@ -141,139 +148,15 @@ namespace mtconnect
     void receiveCommand(const std::string &device, const std::string &command,
                         const std::string &value, const std::string &source);
 
-    DataItem *getDataItemForDevice(const std::string &deviceName,
-                                const std::string &dataItemName) const
+    DataItemPtr getDataItemForDevice(const std::string &deviceName,
+                                     const std::string &dataItemName) const
     {
       auto dev = findDeviceByUUIDorName(deviceName);
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
 
-    observation::ObservationPtr getFromBuffer(uint64_t seq) const
-    {
-      return m_circularBuffer.getFromBuffer(seq);
-    }
-    observation::SequenceNumber_t getSequence() const { return m_circularBuffer.getSequence(); }
-    unsigned int getBufferSize() const { return m_circularBuffer.getBufferSize(); }
-    auto getMaxAssets() const { return m_assetBuffer.getMaxAssets(); }
-    auto getAssetCount(bool active = true) const { return m_assetBuffer.getCount(active); }
-    const auto &getAssets() const { return m_assetBuffer.getAssets(); }
-    auto getFileCache() { return m_fileCache.get(); }
-
-    auto getAssetCount(const std::string &type, bool active = true) const
-    {
-      return m_assetBuffer.getCountForType(type, active);
-    }
-
-    observation::SequenceNumber_t getFirstSequence() const
-    {
-      return m_circularBuffer.getFirstSequence();
-    }
-
-    // For testing...
-    void setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
-    auto getAgentDevice() { return m_agentDevice; }
-
-    // MTConnect Requests
-    RequestResult probeRequest(const std::string &format,
-                               const std::optional<std::string> &device = std::nullopt);
-    RequestResult currentRequest(
-        const std::string &format, const std::optional<std::string> &device = std::nullopt,
-        const std::optional<observation::SequenceNumber_t> &at = std::nullopt,
-        const std::optional<std::string> &path = std::nullopt);
-    RequestResult sampleRequest(
-        const std::string &format, const int count = 100,
-        const std::optional<std::string> &device = std::nullopt,
-        const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
-        const std::optional<observation::SequenceNumber_t> &to = std::nullopt,
-        const std::optional<std::string> &path = std::nullopt);
-    RequestResult streamSampleRequest(
-        http_server::Response &response, const std::string &format, const int interval,
-        const int heartbeat, const int count = 100,
-        const std::optional<std::string> &device = std::nullopt,
-        const std::optional<observation::SequenceNumber_t> &from = std::nullopt,
-        const std::optional<std::string> &path = std::nullopt);
-    RequestResult streamCurrentRequest(http_server::Response &response, const std::string &format,
-                                       const int interval,
-                                       const std::optional<std::string> &device = std::nullopt,
-                                       const std::optional<std::string> &path = std::nullopt);
-    RequestResult assetRequest(const std::string &format, const int32_t count, const bool removed,
-                               const std::optional<std::string> &type = std::nullopt,
-                               const std::optional<std::string> &device = std::nullopt);
-    RequestResult assetIdsRequest(const std::string &format, const std::list<std::string> &ids);
-    RequestResult putAssetRequest(const std::string &format, const std::string &asset,
-                                  const std::optional<std::string> &type,
-                                  const std::optional<std::string> &device = std::nullopt,
-                                  const std::optional<std::string> &uuid = std::nullopt);
-    RequestResult deleteAssetRequest(const std::string &format, const std::list<std::string> &ids);
-    RequestResult deleteAllAssetsRequest(const std::string &format,
-                                         const std::optional<std::string> &device = std::nullopt,
-                                         const std::optional<std::string> &type = std::nullopt);
-    RequestResult putObservationRequest(const std::string &format, const std::string &device,
-                                        const http_server::Routing::QueryMap observations,
-                                        const std::optional<std::string> &time = std::nullopt);
-
-    // For debugging
-    void setLogStreamData(bool log) { m_logStreamData = log; }
-
-    // Get the printer for a type
-    const std::string acceptFormat(const std::string &accepts) const;
-    Printer *getPrinter(const std::string &aType) const
-    {
-      auto printer = m_printers.find(aType);
-      if (printer != m_printers.end())
-        return printer->second.get();
-      else
-        return nullptr;
-    }
-    const Printer *printerForAccepts(const std::string &accepts) const
-    {
-      return getPrinter(acceptFormat(accepts));
-    }
-
-  protected:
-    friend class AgentPipelineContract;
-
-    // Initialization methods
-    void createAgentDevice();
-    void loadXMLDeviceFile(const std::string &config);
-    void verifyDevice(Device *device);
-    void initializeDataItems(Device *device);
-    void loadCachedProbe();
-
-    // HTTP Routings
-    void createPutObservationRoutings();
-    void createFileRoutings();
-    void createProbeRoutings();
-    void createSampleRoutings();
-    void createCurrentRoutings();
-    void createAssetRoutings();
-
-    // Current Data Collection
-    std::string fetchCurrentData(const Printer *printer, const observation::FilterSetOpt &filterSet,
-                                 const std::optional<observation::SequenceNumber_t> &at);
-
-    // Sample data collection
-    std::string fetchSampleData(const Printer *printer, const observation::FilterSetOpt &filterSet,
-                                int count, const std::optional<observation::SequenceNumber_t> &from,
-                                const std::optional<observation::SequenceNumber_t> &to,
-                                observation::SequenceNumber_t &end, bool &endOfBuffer,
-                                observation::ChangeObserver *observer = nullptr);
-
-    // Asset methods
-    void getAssets(const Printer *printer, const std::list<std::string> &ids, AssetList &list);
-    void getAssets(const Printer *printer, const int32_t count, const bool removed,
-                   const std::optional<std::string> &type, const std::optional<std::string> &device,
-                   AssetList &list);
-
-    // Output an XML Error
-    std::string printError(const Printer *printer, const std::string &errorCode,
-                           const std::string &text) const;
-
-    // Handle the device/path parameters for the xpath search
-    std::string devicesAndPath(const std::optional<std::string> &path, const Device *device) const;
-
     // Find data items by name/id
-    DataItem *getDataItemById(const std::string &id) const
+    DataItemPtr getDataItemById(const std::string &id) const
     {
       auto diPos = m_dataItemMap.find(id);
       if (diPos != m_dataItemMap.end())
@@ -281,52 +164,98 @@ namespace mtconnect
       return nullptr;
     }
 
-    // Verification methods
-    template <typename T>
-    void checkRange(const Printer *printer, const T value, const T min, const T max,
-                    const std::string &param, bool notZero = false) const;
-    void checkPath(const Printer *printer, const std::optional<std::string> &path,
-                   const Device *device, observation::FilterSet &filter) const;
-    Device *checkDevice(const Printer *printer, const std::string &uuid) const;
+    // Pipeline methods
+    void receiveObservation(observation::ObservationPtr observation);
+    void receiveAsset(asset::AssetPtr asset);
+    bool removeAsset(DevicePtr device, const std::string &id,
+                     const std::optional<Timestamp> time = std::nullopt);
+    bool removeAllAssets(const std::optional<std::string> device,
+                         const std::optional<std::string> type, const std::optional<Timestamp> time,
+                         asset::AssetList &list);
+    void notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset);
+
+    // Adapter feedback
+    void sourceFailed(const std::string &identity);
+
+    // For testing
+    auto getAgentDevice() { return m_agentDevice; }
+
+    // Printers
+    printer::Printer *getPrinter(const std::string &aType) const
+    {
+      auto printer = m_printers.find(aType);
+      if (printer != m_printers.end())
+        return printer->second.get();
+      else
+        return nullptr;
+    }
+    const auto &getPrinters() const { return m_printers; }
+
+    // Handle the device/path parameters for the xpath search
+    std::string devicesAndPath(const std::optional<std::string> &path,
+                               const DevicePtr device) const;
 
   protected:
-    // Unique id based on the time of creation
-    uint64_t m_instanceId;
-    bool m_initialized{false};
+    friend class AgentPipelineContract;
 
-    // HTTP Server
-    std::unique_ptr<http_server::Server> m_server;
-    std::unique_ptr<http_server::FileCache> m_fileCache;
+    // Initialization methods
+    void createAgentDevice();
+    void loadXMLDeviceFile(const std::string &config);
+    void verifyDevice(DevicePtr device);
+    void initializeDataItems(DevicePtr device);
+    void loadCachedProbe();
+
+    observation::ObservationPtr getLatest(const std::string &id)
+    {
+      auto o = m_latest.find(id);
+      if (o != m_latest.end())
+        return o->second;
+      else
+        return nullptr;
+    }
+
+    observation::ObservationPtr getLatest(const DataItemPtr &di) { return getLatest(di->getId()); }
+
+  protected:
+    ConfigOptions m_options;
+    boost::asio::io_context &m_context;
+    boost::asio::io_context::strand m_strand;
+
+    std::shared_ptr<source::LoopbackSource> m_loopback;
+    std::unordered_map<std::string, observation::ObservationPtr> m_latest;
+
+    // Asset Management
+    std::unique_ptr<asset::AssetStorage> m_assetStorage;
+
+    // Unique id based on the time of creation
+    bool m_initialized {false};
+    bool m_observationsInitialized {false};
+
+    // Sources and Sinks
+    source::SourceList m_sources;
+    sink::SinkList m_sinks;
+
+    // Pipeline
+    pipeline::PipelineContextPtr m_pipelineContext;
 
     // Pointer to the configuration file for node access
-    std::unique_ptr<XmlParser> m_xmlParser;
-    std::map<std::string, std::unique_ptr<Printer>> m_printers;
-
-    // Circular Buffer
-    observation::CircularBuffer m_circularBuffer;
+    std::unique_ptr<parser::XmlParser> m_xmlParser;
+    PrinterMap m_printers;
 
     // Agent Device
-    AgentDevice *m_agentDevice{nullptr};
-
-    // Asset Buffer
-    AssetBuffer m_assetBuffer;
+    device_model::AgentDevicePtr m_agentDevice;
 
     // Data containers
-    std::list<adapter::Adapter *> m_adapters;
-    std::list<Device *> m_devices;
-    std::unordered_map<std::string, Device *> m_deviceNameMap;
-    std::unordered_map<std::string, Device *> m_deviceUuidMap;
-    std::unordered_map<std::string, DataItem *> m_dataItemMap;
-
-    // Loopback
-    std::unique_ptr<AgentLoopbackPipeline> m_loopback;
+    std::list<DevicePtr> m_devices;
+    std::unordered_map<std::string, DevicePtr> m_deviceNameMap;
+    std::unordered_map<std::string, DevicePtr> m_deviceUuidMap;
+    std::unordered_map<std::string, DataItemPtr> m_dataItemMap;
 
     // Xml Config
     std::string m_version;
     std::string m_configXmlPath;
 
     // For debugging
-    bool m_logStreamData;
     bool m_pretty;
   };
 
@@ -336,13 +265,13 @@ namespace mtconnect
     AgentPipelineContract(Agent *agent) : m_agent(agent) {}
     ~AgentPipelineContract() = default;
 
-    Device *findDevice(const std::string &device) override
+    DevicePtr findDevice(const std::string &device) override
     {
       return m_agent->findDeviceByUUIDorName(device);
     }
-    DataItem *findDataItem(const std::string &device, const std::string &name) override
+    DataItemPtr findDataItem(const std::string &device, const std::string &name) override
     {
-      Device *dev = m_agent->findDeviceByUUIDorName(device);
+      DevicePtr dev = m_agent->findDeviceByUUIDorName(device);
       if (dev != nullptr)
       {
         return dev->getDeviceDataItem(name);
@@ -356,12 +285,17 @@ namespace mtconnect
         fun(di.second);
       }
     }
-    void deliverObservation(observation::ObservationPtr obs) override { m_agent->addToBuffer(obs); }
-    void deliverAsset(AssetPtr asset) override { m_agent->addAsset(asset); }
+    void deliverObservation(observation::ObservationPtr obs) override
+    {
+      m_agent->receiveObservation(obs);
+    }
+    void deliverAsset(asset::AssetPtr asset) override { m_agent->receiveAsset(asset); }
     void deliverAssetCommand(entity::EntityPtr command) override;
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
     void deliverCommand(entity::EntityPtr) override;
+
+    void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
 
   protected:
     Agent *m_agent;
@@ -372,4 +306,52 @@ namespace mtconnect
     return std::make_unique<AgentPipelineContract>(this);
   }
 
+  class AgentSinkContract : public sink::SinkContract
+  {
+  public:
+    AgentSinkContract(Agent *agent) : m_agent(agent) {}
+    ~AgentSinkContract() = default;
+
+    printer::Printer *getPrinter(const std::string &aType) const override
+    {
+      return m_agent->getPrinter(aType);
+    }
+
+    // Get device from device map
+    DevicePtr getDeviceByName(const std::string &name) const override
+    {
+      return m_agent->getDeviceByName(name);
+    }
+    DevicePtr findDeviceByUUIDorName(const std::string &idOrName) const override
+    {
+      return m_agent->findDeviceByUUIDorName(idOrName);
+    }
+    const std::list<DevicePtr> &getDevices() const override { return m_agent->getDevices(); }
+    DevicePtr defaultDevice() const override { return m_agent->defaultDevice(); }
+    DataItemPtr getDataItemById(const std::string &id) const override
+    {
+      return m_agent->getDataItemById(id);
+    }
+    void addSource(source::SourcePtr source) override { m_agent->addSource(source); }
+
+    // Asset information
+    asset::AssetStorage *getAssetStorage() override { return m_agent->getAssetStorage(); }
+    const PrinterMap &getPrinters() const override { return m_agent->getPrinters(); }
+
+    void getDataItemsForPath(const DevicePtr device, const std::optional<std::string> &path,
+                             FilterSet &filter) const override
+    {
+      std::string dataPath = m_agent->devicesAndPath(path, device);
+      const auto &parser = m_agent->getXmlParser();
+      parser->getDataItems(filter, dataPath);
+    }
+
+  protected:
+    Agent *m_agent;
+  };
+
+  inline sink::SinkContractPtr Agent::makeSinkContract()
+  {
+    return std::make_unique<AgentSinkContract>(this);
+  }
 }  // namespace mtconnect

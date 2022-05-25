@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,30 +17,28 @@
 
 #include "requirement.hpp"
 
-#include "entity.hpp"
-#include "factory.hpp"
-#include <string_view>
-
-#include <date/date.h>
-
-#include <dlib/logger.h>
+#include <boost/algorithm/string.hpp>
 
 #include <cctype>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
+#include <date/date.h>
+#include <string_view>
+
+#include "entity/entity.hpp"
+#include "factory.hpp"
+#include "logging.hpp"
 
 using namespace std;
 
 namespace mtconnect {
-  using namespace observation;
-  namespace entity
-  {
-    static dlib::logger g_logger("EntityRequirement");
-
+  namespace entity {
     Requirement::Requirement(const std::string &name, ValueType type, FactoryPtr f, bool required)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {
+      NAMED_SCOPE("EntityRequirement");
+
       if (type == ENTITY_LIST)
       {
         f->setList(true);

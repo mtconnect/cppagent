@@ -1,71 +1,99 @@
 version: '{build}'
+
 branches:
   only:
-  - master
-# clone_folder: c:\projects\cppagent_dev
+    - master
+    - /.*master.*/
+
+
 image:
-- Ubuntu2004
-- Visual Studio 2019
+  - Visual Studio 2019
+  - macOS
+  - Ubuntu2004
+
+environment:
+  matrix:
+    - WITH_RUBY: True
+
+#    - WITH_RUBY: False
 
 configuration:
-- Release
+  - Release
 
-platform:
-- x86
+#platform:
+#C:\  - x86
 
-#environment:
-#  matrix:
-#  - arch: Win32
-#  - arch: #does not work, Release|x64 not a valid target
+cache:
+  - c:\.conan\ -> conanfile.py
+  - c:\conan\ -> conanfile.py
+  - /home/appveyor/.conan -> conanfile.py
+  - /Users/appveyor/.conan -> conanfile.py
 
 matrix:
   fast_finish: true
   
-# skip unsupported combinations
 init:
-- cmd: |-
-    echo %APPVEYOR_BUILD_WORKER_IMAGE%
-    echo %MSBUILD_FLAGS%
+  - cmd: |-
+      echo %APPVEYOR_BUILD_WORKER_IMAGE%
+      echo %MSBUILD_FLAGS%
+
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))  
+# - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
 
 before_build:
-- cmd: |-
-    mkdir build
-    cd build
-    cmake --version
-    cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
-- sh: export CC=/usr/bin/gcc-9
-- sh: export CXX=/usr/bin/g++-9
-- sh: mkdir build
-- sh: cd build
-- sh: cmake --version
-- sh: cmake .. -DAGENT_ENABLE_UNITTESTS=ON -DCMAKE_VERBOSE_MAKEFILE=ON
-    
+  - cmd: |-
+      set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;C:\Ruby30\bin;%PATH%
+      "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+      set
+      if not exist C:\conan mkdir C:\conan
+      set CONAN_USER_HOME=C:\conan
+      pip install conan
+      conan export conan/mqtt_cpp
+      conan export conan/mruby
+      conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False -o with_ruby=%WITH_RUBY%
+  - sh: |-
+      export PATH=$HOME/venv3.9/bin:$PATH
+      if [[ $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
+      then
+        export CONAN_PROFILE=conan/profiles/gcc-appveyor
+      elif [[ $APPVEYOR_BUILD_WORKER_IMAGE = "macOS" ]]
+      then
+        export CONAN_PROFILE=conan/profiles/macos
+      else
+        echo "*NIX Operating System" $APPVEYOR_BUILD_WORKER_IMAGE " Not Supported"
+        exit 99
+      fi
+      pip install conan
+      conan export conan/mqtt_cpp
+      conan export conan/mruby
+      conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
 
 build:
-  project: '{APPVEYOR_BUILD_FOLDER}/build'
   verbosity: minimal
   parallel: true
 
 build_script:
-- cmd: |-
-    cd %APPVEYOR_BUILD_FOLDER%\build
-    cmake --build . --config Release --target ALL_BUILD -- %MSBUILD_FLAGS%
-- sh: |-
-    cd ${APPVEYOR_BUILD_FOLDER}/build
-    cmake --build . --config Release --target all -- -j4
+  - conan build . -bf build
 
 test_script:
-- cmd: ctest -C Release --output-on-failure
-- sh: ctest
+  - cmd: |-
+      cd %APPVEYOR_BUILD_FOLDER%/build
+      ctest -C Release --output-on-failure
+  - sh: |-
+      cd ${APPVEYOR_BUILD_FOLDER}/build
+      ctest --output-on-failure
 
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   
 only_commits:
   files:
     - CMakeLists.txt
     - appveyor.yml
+    - conanfile.py
     - src/
     - test/
     - cmake/
-    - dlib_fix/
-    - libxml2_make/
     - agent/
+    - conan/
+

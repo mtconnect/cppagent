@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,90 +16,123 @@
 //
 
 #include "device.hpp"
-#include "config_options.hpp"
-#include <dlib/logger.h>
+
+#include "configuration/config_options.hpp"
+#include "entity/factory.hpp"
+#include "logging.hpp"
 
 using namespace std;
 
-namespace mtconnect
-{
-  static dlib::logger g_logger("device");
+namespace mtconnect {
+  using namespace entity;
+  using namespace configuration;
 
-  Device::Device(const Attributes &attributes, const std::string block)
-    : Component(block, attributes),
-      m_preserveUuid(false),
-      m_availabilityAdded(false),
-      m_iso841Class(-1),
-      m_availability(nullptr),
-      m_assetChanged(nullptr),
-      m_assetRemoved(nullptr)
-  {
-    const auto &isoPos = attributes.find("iso841Class");
-    if (isoPos != attributes.end())
+  namespace device_model {
+    entity::FactoryPtr Device::getFactory()
     {
-      m_iso841Class = atoi(isoPos->second.c_str());
-      m_attributes["iso841Class"] = isoPos->second;
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Component::getFactory());
+        factory->getRequirement("name")->setMultiplicity(1, 1);
+        factory->getRequirement("uuid")->setMultiplicity(1, 1);
+        factory->addRequirements({{"iso841Class", false}, {"mtconnectVersion", false}});
+        factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr {
+          auto device = make_shared<Device>("Device"s, ps);
+          device->initialize();
+          return device;
+        });
+        Component::getFactory()->registerFactory("Device", factory);
+      }
+      return factory;
     }
-    const auto &version = attributes.find("mtconnectVersion");
-    if (version != attributes.end())
+
+    entity::FactoryPtr Device::getRoot()
     {
-      m_mtconnectVersion = version->second;
-      m_attributes["mtconnectVersion"] = m_mtconnectVersion;
+      static auto factory = make_shared<Factory>(
+          Requirements {{"Device", ENTITY, getFactory(), 1, Requirement::Infinite}});
+
+      return factory;
     }
-  }
 
-  Device::~Device() = default;
-
-  void Device::setOptions(const ConfigOptions &options)
-  {
-    if (auto opt = GetOption<bool>(options, configuration::PreserveUUID))
-      m_preserveUuid = *opt;
-  }
-
-  // TODO: Clean up these initialization methods for data items
-  void Device::addDeviceDataItem(DataItem *dataItem)
-  {
-    if (!dataItem->getSource().empty())
-      m_deviceDataItemsBySource[dataItem->getSource()] = dataItem;
-
-    if (!dataItem->getName().empty())
-      m_deviceDataItemsByName[dataItem->getName()] = dataItem;
-
-    if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
+    void Device::registerDataItem(DataItemPtr di)
     {
-      g_logger << dlib::LERROR << "Duplicate data item id: " << dataItem->getId() << " for device "
-               << m_name << ", skipping";
+      m_deviceDataItemsById[di->getId()] = di;
+      if (di->hasProperty("name"))
+        m_deviceDataItemsByName[di->get<string>("name")] = di;
+      if (di->hasProperty("Source") && di->get<EntityPtr>("Source")->hasValue())
+        m_deviceDataItemsBySource[di->get<EntityPtr>("Source")->getValue<string>()] = di;
     }
-    else
-      m_deviceDataItemsById[dataItem->getId()] = dataItem;
-  }
 
-  void Device::addDataItem(DataItem *dataItem)
-  {
-    Component::addDataItem(dataItem);
+    Device::Device(const std::string &name, entity::Properties &props) : Component(name, props)
+    {
+      NAMED_SCOPE("device");
+      auto items = getList("DataItems");
+      if (items)
+      {
+        for (auto &item : *items)
+        {
+          auto di = dynamic_pointer_cast<data_item::DataItem>(item);
+          cachePointers(di);
+        }
+      }
+    }
 
-    if (dataItem->getType() == "AVAILABILITY")
-      m_availability = dataItem;
-    else if (dataItem->getType() == "ASSET_CHANGED")
-      m_assetChanged = dataItem;
-    else if (dataItem->getType() == "ASSET_REMOVED")
-      m_assetRemoved = dataItem;
-  }
+    void Device::setOptions(const ConfigOptions &options)
+    {
+      if (auto opt = GetOption<bool>(options, PreserveUUID))
+        m_preserveUuid = *opt;
+    }
 
-  DataItem *Device::getDeviceDataItem(const std::string &name) const
-  {
-    const auto sourcePos = m_deviceDataItemsBySource.find(name);
-    if (sourcePos != m_deviceDataItemsBySource.end())
-      return sourcePos->second;
+    // TODO: Clean up these initialization methods for data items
+    void Device::addDeviceDataItem(DataItemPtr dataItem)
+    {
+      if (dataItem->hasProperty("Source") && dataItem->getSource()->hasValue())
+        m_deviceDataItemsBySource[dataItem->getSource()->getValue<string>()] = dataItem;
 
-    const auto namePos = m_deviceDataItemsByName.find(name);
-    if (namePos != m_deviceDataItemsByName.end())
-      return namePos->second;
+      if (dataItem->getName())
+        m_deviceDataItemsByName[*dataItem->getName()] = dataItem;
 
-    const auto &idPos = m_deviceDataItemsById.find(name);
-    if (idPos != m_deviceDataItemsById.end())
-      return idPos->second;
+      if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
+      {
+        LOG(error) << "Duplicate data item id: " << dataItem->getId() << " for device "
+                   << get<string>("name") << ", skipping";
+      }
+      else
+        m_deviceDataItemsById[dataItem->getId()] = dataItem;
+    }
 
-    return nullptr;
-  }
+    void Device::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)
+    {
+      Component::addDataItem(dataItem, errors);
+      cachePointers(dataItem);
+    }
+
+    void Device::cachePointers(DataItemPtr dataItem)
+    {
+      if (dataItem->getType() == "AVAILABILITY")
+        m_availability = dataItem;
+      else if (dataItem->getType() == "ASSET_CHANGED")
+        m_assetChanged = dataItem;
+      else if (dataItem->getType() == "ASSET_REMOVED")
+        m_assetRemoved = dataItem;
+    }
+
+    DataItemPtr Device::getDeviceDataItem(const std::string &name) const
+    {
+      const auto sourcePos = m_deviceDataItemsBySource.find(name);
+      if (sourcePos != m_deviceDataItemsBySource.end())
+        return sourcePos->second.lock();
+
+      const auto namePos = m_deviceDataItemsByName.find(name);
+      if (namePos != m_deviceDataItemsByName.end())
+        return namePos->second.lock();
+
+      const auto &idPos = m_deviceDataItemsById.find(name);
+      if (idPos != m_deviceDataItemsById.end())
+        return idPos->second.lock();
+
+      return nullptr;
+    }
+  }  // namespace device_model
 }  // namespace mtconnect
