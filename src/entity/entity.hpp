@@ -168,7 +168,7 @@ namespace mtconnect {
       bool operator==(const Entity &other) const;
       bool operator!=(const Entity &other) const { return !(*this == other); }
 
-      bool updateTo(const EntityPtr other, const std::set<std::string> protect = {});
+      bool reviseTo(const EntityPtr other, const std::set<std::string> protect = {});
 
       // Entity Factory
     protected:
@@ -254,7 +254,7 @@ namespace mtconnect {
     {
       ValueMergeVisitor(Value &t, const std::set<std::string> protect) : m_this(t), m_protect(protect) {}
 
-      bool operator()(const EntityPtr &other) { return std::get<EntityPtr>(m_this)->updateTo(other, m_protect); }
+      bool operator()(const EntityPtr &other) { return std::get<EntityPtr>(m_this)->reviseTo(other, m_protect); }
       
       bool mergeRemainder(EntityList &list, EntityList &revised, bool changed)
       {
@@ -305,7 +305,7 @@ namespace mtconnect {
 
             if (it != list.end())
             {
-              if ((*it)->updateTo(o, m_protect))
+              if ((*it)->reviseTo(o, m_protect))
                 changed = true;
               list.erase(it);
               revised.push_back(*it);
@@ -358,7 +358,7 @@ namespace mtconnect {
       std::set<std::string> m_protect;
     };
 
-    inline bool Entity::updateTo(const EntityPtr other, const std::set<std::string> protect)
+    inline bool Entity::reviseTo(const EntityPtr other, const std::set<std::string> protect)
     {
       bool changed = false;
       if (m_name != other->m_name)

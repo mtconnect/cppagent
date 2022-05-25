@@ -18,6 +18,7 @@
 #include "agent.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -49,6 +50,7 @@ namespace mtconnect {
   using namespace entity;
   using namespace sink::rest_sink;
   namespace net = boost::asio;
+  namespace fs = boost::filesystem;
 
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
@@ -237,6 +239,63 @@ namespace mtconnect {
   
   void Agent::receiveDevice(device_model::DevicePtr device)
   {
+    NAMED_SCOPE("Agent::receiveDevice");
+    
+    // diff the device against the current device with the same uuid
+    auto uuid = device->getUuid();
+    if (!uuid)
+    {
+      LOG(error) << "Device does not have a uuid: " << device->getName();
+      return;
+    }
+    
+    auto old = m_deviceUuidMap.find(*uuid);
+    
+    // idle the io-context
+    // TODO: Need to communicate back to the agent config to idle the context
+    // Question: Should the agent have control over the loop?
+    m_context.stop();
+    
+    // If this is a new device
+    if (old == m_deviceUuidMap.end())
+    {
+      LOG(info) << "Received new device: " << *uuid << ", adding";
+      addDevice(device);
+    }
+    else
+    {
+      // if different,  and revise to new device leaving in place
+      // the asset changed, removed, and availability data items
+
+      auto chg = device->getAssetChanged()->getId();
+      auto rem = device->getAssetRemoved()->getId();
+      auto avail = device->getAvailability()->getId();
+      
+      if (old->second->reviseTo(device, { chg, rem, avail }))
+      {
+
+      // update with a new version of the device.xml, saving the old one
+      // with a date time stamp
+      auto ext = "."s + getCurrentTime(LOCAL);
+      fs::path config(m_configXmlPath);
+      fs::path backup(m_configXmlPath + ext);
+      fs::rename(config, backup);
+      
+      auto &xml = m_printers["xml"];
+      auto probe = xml->printProbe(0, 0, 0, 0, 0, m_devices);
+      
+      ofstream devices(config.string());
+      devices << probe;
+      devices.close();
+      }
+      else
+      {
+        LOG(info) << "Device " << *uuid << " did not change, ignoring new device";
+      }
+    }
+    
+    // restart the io-context
+    m_context.restart();
   }
 
   bool Agent::removeAsset(DevicePtr device, const std::string &id,
@@ -474,7 +533,7 @@ namespace mtconnect {
     {
       // Check if we are already initialized. If so, the device will need to be
       // verified, additional data items added, and initial values set.
-      if (!m_initialized)
+      //if (!m_initialized)
       {
         m_devices.push_back(device);
         m_deviceNameMap[device->get<string>("name")] = device;
@@ -496,8 +555,8 @@ namespace mtconnect {
           }
         }
       }
-      else
-        LOG(warning) << "Adding device " << uuid << " after initialialization not supported yet";
+      //else
+      //  LOG(warning) << "Adding device " << uuid << " after initialialization not supported yet";
     }
 
     for (auto &printer : m_printers)

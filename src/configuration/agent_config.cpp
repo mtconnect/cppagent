@@ -335,7 +335,7 @@ namespace mtconnect::configuration {
   {
     do
     {
-      m_restart = false;
+      m_restart = true;
       if (m_monitorFiles)
       {
         // Start the file monitor to check for changes to cfg or devices.

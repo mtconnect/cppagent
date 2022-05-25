@@ -733,7 +733,7 @@ TEST_F(EntityTest, entities_should_merge)
   auto v2 = createEnt("meow"s, 20_i64);
   ASSERT_TRUE(v2);
 
-  v1->updateTo(v2);
+  v1->reviseTo(v2);
   ASSERT_EQ(20_i64, v1->get<int64_t>("size"));
   ASSERT_EQ("meow"s, sec1->getValue<string>());
 
@@ -787,7 +787,7 @@ TEST_F(EntityTest, entities_should_merge_entity_list)
   auto v2 = createEnt("meow"s, 20_i64);
   ASSERT_TRUE(v2);
 
-  v1->updateTo(v2);
+  v1->reviseTo(v2);
   auto it = list->begin();
   ASSERT_EQ(21_i64, (*it)->getValue<int64_t>());
   it++;
@@ -851,7 +851,7 @@ TEST_F(EntityTest, should_remove_missing_entities)
   ASSERT_TRUE(list2);
   ASSERT_EQ(1, list2->size());
 
-  v1->updateTo(v2);
+  v1->reviseTo(v2);
   auto list3 = v1->getList("seconds");
   ASSERT_TRUE(list3);
   ASSERT_EQ(1, list3->size());
@@ -914,7 +914,7 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_specific_ids)
   ASSERT_TRUE(list2);
   ASSERT_EQ(1, list2->size());
 
-  v1->updateTo(v2, { "2"s });
+  v1->reviseTo(v2, { "2"s });
   auto list3 = v1->getList("seconds");
   ASSERT_TRUE(list3);
   ASSERT_EQ(2, list3->size());
@@ -977,7 +977,7 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_changes_and_removals)
   ASSERT_TRUE(list2);
   ASSERT_EQ(1, list2->size());
 
-  v1->updateTo(v2);
+  v1->reviseTo(v2);
   auto list3 = v1->getList("seconds");
   ASSERT_TRUE(list3);
   ASSERT_EQ(1, list3->size());
