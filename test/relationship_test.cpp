@@ -1,12 +1,23 @@
+//
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
-
-#include "adapter/adapter.hpp"
-#include "agent.hpp"
-#include "agent_test_helper.hpp"
-#include "json_helper.hpp"
-#include "device_model/relationships.hpp"
 
 #include <cstdio>
 #include <fstream>
@@ -15,33 +26,37 @@
 #include <sstream>
 #include <string>
 
+#include "agent.hpp"
+#include "agent_test_helper.hpp"
+#include "entity/json_printer.hpp"
+#include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
+
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
+using namespace entity;
+using namespace device_model;
 
 class RelationshipTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/configuration.xml",
-                                   8, 4, "1.7", 25);
+    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "1.7", 25);
     m_agentId = to_string(getCurrentTimeInSec());
 
     auto device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
     m_component = device->getComponentById("c");
   }
 
-  void TearDown() override
-  {
-    m_agentTestHelper.reset();
-  }
+  void TearDown() override { m_agentTestHelper.reset(); }
 
-  adapter::Adapter *m_adapter{nullptr};
+  source::adapter::Adapter *m_adapter {nullptr};
   std::string m_agentId;
-  Component *m_component{nullptr};
+  ComponentPtr m_component {nullptr};
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
@@ -49,40 +64,31 @@ class RelationshipTest : public testing::Test
 TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
-  
-  ASSERT_EQ(2, m_component->getConfiguration().size());
-  
-  const auto conf = m_component->getConfiguration().front().get();
-  ASSERT_EQ(typeid(Relationships), typeid(*conf));
-  
-  const Relationships *rels = dynamic_cast<const Relationships*>(conf);
-  ASSERT_NE(nullptr, rels);
-  ASSERT_EQ(2, rels->getRelationships().size());
-  
-  auto reli = rels->getRelationships().begin();
-  const auto rel1 = reli->get();
-  
-  ASSERT_EQ(typeid(ComponentRelationship), typeid(*rel1));
-  const auto crel = dynamic_cast<ComponentRelationship*>(rel1);
-  EXPECT_EQ("ref1", crel->m_id);
-  EXPECT_EQ("Power", crel->m_name);
-  EXPECT_EQ("PEER", crel->m_type);
-  EXPECT_EQ("CRITICAL", crel->m_criticality);
-  EXPECT_EQ("power", crel->m_idRef);
-  
-  reli++;
-  
-  const auto rel2 = reli->get();
-  
-  ASSERT_EQ(typeid(DeviceRelationship), typeid(*rel2));
-  const auto drel = dynamic_cast<DeviceRelationship*>(rel2);
-  EXPECT_EQ("ref2", drel->m_id);
-  EXPECT_EQ("coffee", drel->m_name);
-  EXPECT_EQ("PARENT", drel->m_type);
-  EXPECT_EQ("NON_CRITICAL", drel->m_criticality);
-  EXPECT_EQ("AUXILIARY", drel->m_role);
-  EXPECT_EQ("http://127.0.0.1:2000/coffee", drel->m_href);
-  EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", drel->m_deviceUuidRef);
+
+  const auto &clc = m_component->get<EntityPtr>("Configuration");
+  ASSERT_TRUE(clc);
+
+  auto rels = clc->getList("Relationships");
+
+  ASSERT_EQ(2, rels->size());
+
+  auto it = rels->begin();
+
+  EXPECT_EQ("ref1", (*it)->get<string>("id"));
+  EXPECT_EQ("Power", (*it)->get<string>("name"));
+  EXPECT_EQ("PEER", (*it)->get<string>("type"));
+  EXPECT_EQ("CRITICAL", (*it)->get<string>("criticality"));
+  EXPECT_EQ("power", (*it)->get<string>("idRef"));
+
+  it++;
+
+  EXPECT_EQ("ref2", (*it)->get<string>("id"));
+  EXPECT_EQ("coffee", (*it)->get<string>("name"));
+  EXPECT_EQ("PARENT", (*it)->get<string>("type"));
+  EXPECT_EQ("NON_CRITICAL", (*it)->get<string>("criticality"));
+  EXPECT_EQ("AUXILIARY", (*it)->get<string>("role"));
+  EXPECT_EQ("http://127.0.0.1:2000/coffee", (*it)->get<string>("href"));
+  EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", (*it)->get<string>("deviceUuidRef"));
 }
 
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
@@ -92,37 +98,40 @@ TEST_F(RelationshipTest, XmlPrinting)
 {
   {
     PARSE_XML_RESPONSE("/probe");
-    
-    ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH , 1);
-    ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH "/*" , 2);
 
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@id" , "ref1");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@name" , "Power");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@type" , "PEER");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@criticality" , "CRITICAL");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@idRef" , "power");
+    ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH, 1);
+    ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH "/*", 2);
 
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@id" , "ref2");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@name" , "coffee");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@type" , "PARENT");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@criticality" , "NON_CRITICAL");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@role" , "AUXILIARY");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@href" , "http://127.0.0.1:2000/coffee");
-    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@deviceUuidRef" , "bfccbfb0-5111-0138-6cd5-0c85909298d9");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@id", "ref1");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@name", "Power");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@type", "PEER");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@criticality",
+                          "CRITICAL");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@idRef", "power");
+
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@id", "ref2");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@name", "coffee");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@type", "PARENT");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@criticality",
+                          "NON_CRITICAL");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@role", "AUXILIARY");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@href",
+                          "http://127.0.0.1:2000/coffee");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@deviceUuidRef",
+                          "bfccbfb0-5111-0138-6cd5-0c85909298d9");
   }
 }
 
 TEST_F(RelationshipTest, JsonPrinting)
 {
-  m_agentTestHelper->m_request.m_accepts = "Application/json";
-
   {
     PARSE_JSON_RESPONSE("/probe");
-    
+
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(1).at("/Device"_json_pointer);
 
     auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
+
     auto relationships = rotary.at("/Configuration/Relationships"_json_pointer);
     ASSERT_TRUE(relationships.is_array());
     ASSERT_EQ(2_S, relationships.size());
@@ -144,6 +153,5 @@ TEST_F(RelationshipTest, JsonPrinting)
     EXPECT_EQ("AUXILIARY", dfields["role"]);
     EXPECT_EQ("http://127.0.0.1:2000/coffee", dfields["href"]);
     EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", dfields["deviceUuidRef"]);
-
   }
 }

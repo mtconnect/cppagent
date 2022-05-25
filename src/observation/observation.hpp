@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,25 +17,21 @@
 
 #pragma once
 
-#include "data_set.hpp"
-#include "device_model/component.hpp"
-#include "device_model/data_item.hpp"
-#include "entity/entity.hpp"
-#include "utilities.hpp"
-
-#include <date/date.h>
-
 #include <cmath>
+#include <date/date.h>
 #include <set>
 #include <string>
 #include <utility>
 #include <variant>
 #include <vector>
 
-namespace mtconnect
-{
-  namespace observation
-  {
+#include "device_model/component.hpp"
+#include "device_model/data_item/data_item.hpp"
+#include "entity/entity.hpp"
+#include "utilities.hpp"
+
+namespace mtconnect {
+  namespace observation {
     // Types of Observations:
     // Event, Sample, Timeseries, DataSetEvent, Message, Alarm,
     // AssetEvent, ThreeSpaceSmple, Condition, AssetEvent
@@ -48,30 +44,28 @@ namespace mtconnect
     {
     public:
       using super = entity::Entity;
-
       using entity::Entity::Entity;
+
       static entity::FactoryPtr getFactory();
       ~Observation() override = default;
       virtual ObservationPtr copy() const { return std::make_shared<Observation>(); }
 
-      static ObservationPtr make(const DataItem *dataItem, const entity::Properties &props,
+      static ObservationPtr make(const DataItemPtr dataItem, const entity::Properties &props,
                                  const Timestamp &timestamp, entity::ErrorList &errors);
 
-      void setDataItem(const DataItem *dataItem)
+      static void setProperties(const DataItemPtr dataItem, entity::Properties &props)
       {
-        m_dataItem = dataItem;
-        setProperty("dataItemId", m_dataItem->getId());
-        if (!m_dataItem->getName().empty())
-          setProperty("name", m_dataItem->getName());
-        if (!m_dataItem->getCompositionId().empty())
-          setProperty("compositionId", m_dataItem->getCompositionId());
-        if (!m_dataItem->getSubType().empty())
-          setProperty("subType", m_dataItem->getSubType());
-        if (!m_dataItem->getStatistic().empty())
-          setProperty("statistic", m_dataItem->getStatistic());
+        for (auto &prop : dataItem->getObservationProperties())
+          props.emplace(prop);
       }
 
-      const DataItem *getDataItem() const { return m_dataItem; }
+      void setDataItem(const DataItemPtr dataItem)
+      {
+        m_dataItem = dataItem;
+        setProperties(dataItem, m_properties);
+      }
+
+      const auto getDataItem() const { return m_dataItem; }
       auto getSequence() const { return m_sequence; }
 
       void setTimestamp(const Timestamp &ts)
@@ -94,7 +88,7 @@ namespace mtconnect
         setProperty("VALUE", "UNAVAILABLE"s);
       }
       bool isUnavailable() const { return m_unavailable; }
-      virtual void setEntityName() { Entity::setQName(m_dataItem->getPrefixedElementName()); }
+      virtual void setEntityName() { Entity::setQName(m_dataItem->getObservationName()); }
 
       bool operator<(const Observation &another) const
       {
@@ -110,9 +104,9 @@ namespace mtconnect
 
     protected:
       Timestamp m_timestamp;
-      bool m_unavailable{false};
-      const DataItem *m_dataItem{nullptr};
-      uint64_t m_sequence{0};
+      bool m_unavailable {false};
+      DataItemPtr m_dataItem {nullptr};
+      uint64_t m_sequence {0};
     };
 
     class Sample : public Observation
@@ -272,7 +266,7 @@ namespace mtconnect
 
     protected:
       std::string m_code;
-      Level m_level{NORMAL};
+      Level m_level {NORMAL};
       ConditionPtr m_prev;
     };
 
@@ -297,12 +291,12 @@ namespace mtconnect
       ~DataSetEvent() override = default;
       ObservationPtr copy() const override { return std::make_shared<DataSetEvent>(*this); }
 
-      const DataSet &getDataSet() const
+      const entity::DataSet &getDataSet() const
       {
         const entity::Value &v = getValue();
-        return std::get<DataSet>(v);
+        return std::get<entity::DataSet>(v);
       }
-      void setDataSet(const DataSet &set)
+      void setDataSet(const entity::DataSet &set)
       {
         setValue(set);
         setProperty("count", int64_t(set.size()));

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,10 +19,8 @@
 
 #include "transform.hpp"
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace pipeline {
     class DuplicateFilter : public Transform
     {
     public:
@@ -37,7 +35,7 @@ namespace mtconnect
       {
         using namespace observation;
         static constexpr auto lambda = [](const Observation &o) {
-          return !o.getDataItem()->allowDups();
+          return !o.getDataItem()->isDiscrete();
         };
         m_guard =
             LambdaGuard<Observation, ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>>(

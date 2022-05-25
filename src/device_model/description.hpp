@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,36 +17,22 @@
 
 #pragma once
 
-#include "component_configuration.hpp"
-#include "utilities.hpp"
-
 #include <list>
 #include <map>
 #include <optional>
 #include <string>
 #include <utility>
 
-namespace mtconnect
-{
-  class Description
-  {
-  public:
-    Description() = default;
-    Description(const Description &another) = default;
-    Description(std::string body) : m_body(std::move(body)) {}
-    ~Description() = default;
+#include "entity/entity.hpp"
+#include "entity/factory.hpp"
+#include "utilities.hpp"
 
-    const std::map<std::string, bool> &properties() const
+namespace mtconnect {
+  namespace device_model {
+    struct Description
     {
-      const static std::map<std::string, bool> properties = {
-          {"manufacturer", false}, {"model", false}, {"serialNumber", false}, {"station", false}};
-      ;
-      return properties;
-    }
-
-    std::string m_body;
-    std::map<std::string, std::string> m_attributes;
-
-  protected:
-  };
+      static entity::FactoryPtr getFactory();
+      static entity::FactoryPtr getRoot();
+    };
+  }  // namespace device_model
 }  // namespace mtconnect

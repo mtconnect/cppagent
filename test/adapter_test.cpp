@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,32 +19,42 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "adapter/adapter.hpp"
-#include "pipeline/pipeline_context.hpp"
+#include <boost/asio.hpp>
+
 #include <map>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
-#include <memory>
+
+#include "configuration/config_options.hpp"
+#include "pipeline/pipeline_context.hpp"
+#include "source/adapter/shdr/shdr_adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
+using namespace mtconnect::source::adapter::shdr;
+namespace asio = boost::asio;
+using namespace std::literals;
 
 TEST(AdapterTest, MultilineData)
 {
+  asio::io_context ioc;
+  asio::io_context::strand strand(ioc);
+  ConfigOptions options {{configuration::Host, "localhost"s}, {configuration::Port, 7878}};
+  boost::property_tree::ptree tree;
   pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
-  auto pipeline = make_unique<AdapterPipeline>(context);
-  auto adapter = make_unique<Adapter>("localhost", 7878, ConfigOptions{}, pipeline);
-  
+  auto adapter = make_unique<ShdrAdapter>(ioc, context, options, tree);
+
   auto handler = make_unique<Handler>();
   string data;
   handler->m_processData = [&](const string &d, const string &s) { data = d; };
   adapter->setHandler(handler);
-  
+
   adapter->processData("Simple Pass Through");
   EXPECT_EQ("Simple Pass Through", data);
-  
+
   EXPECT_FALSE(adapter->getTerminator());
   adapter->processData("A multiline message: --multiline--ABC1234");
   EXPECT_TRUE(adapter->getTerminator());
@@ -52,10 +62,9 @@ TEST(AdapterTest, MultilineData)
   adapter->processData("Another Line...");
   adapter->processData("--multiline--ABC---");
   adapter->processData("--multiline--ABC1234");
-  
+
   const auto exp = R"DOC(A multiline message: 
 Another Line...
 --multiline--ABC---)DOC";
   EXPECT_EQ(exp, data);
 }
-

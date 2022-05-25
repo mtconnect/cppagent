@@ -16,6 +16,17 @@
             </Transformation>
           </CoordinateSystem>
         </CoordinateSystems>
+		<SensorConfiguration>
+		  <FirmwareVersion>2.02</FirmwareVersion>
+		  <CalibrationDate>2010-05-16</CalibrationDate>
+		  <NextCalibrationDate>2010-05-16</NextCalibrationDate>
+		  <CalibrationInitials>WS</CalibrationInitials>
+		  <Channels>
+			<Channel number="1" name="A/D:1">
+			  <Description>A/D With Thermister</Description>
+			</Channel>
+		  </Channels>
+		</SensorConfiguration>
       </Configuration>
       <DataItems>
         <DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>
@@ -30,7 +41,7 @@
                   <DeviceRelationship id="ref2" name="coffee" type="PARENT" criticality="NON_CRITICAL" role="AUXILIARY" href="http://127.0.0.1:2000/coffee" deviceUuidRef="bfccbfb0-5111-0138-6cd5-0c85909298d9"/>
                 </Relationships>
                 <Specifications>
-                  <Specification type="ROTARY_VELOCITY" subType="ACTUAL" dataItemIdRef="c1" units="REVOLUTION/MINUTE" compositionIdRef="cmotor" name="speed_limit" coordinateSystemIdRef="machine">
+                  <Specification id="spec" type="ROTARY_VELOCITY" subType="ACTUAL" dataItemIdRef="c1" units="REVOLUTION/MINUTE" compositionIdRef="cmotor" name="speed_limit" coordinateSystemIdRef="machine">
                     <Maximum>10000</Maximum>
                     <Minimum>100</Minimum>
                     <Nominal>1000</Nominal>
@@ -96,11 +107,11 @@
           <Compositions>
             <Composition id="zmotor" type="MOTOR" uuid="12345" name="motor_name">
 							<Description manufacturer="open" model="vroom" serialNumber="12356" station="A">
-								Hello There
+							Hello There
 							</Description>
 							<Configuration>
 								<Specifications>
-									<Specification type="VOLTAGE_AC" units="VOLT" name="voltage">
+									<Specification id="spec2" type="VOLTAGE_AC" units="VOLT" name="voltage">
 										<Maximum>10000</Maximum>
 										<Minimum>100</Minimum>
 										<Nominal>1000</Nominal>

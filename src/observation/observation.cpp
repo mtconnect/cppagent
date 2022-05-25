@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,13 +17,12 @@
 
 #include "observation.hpp"
 
-#include "device_model/data_item.hpp"
-#include "entity/factory.hpp"
-
-#include <dlib/logger.h>
-
 #include <mutex>
 #include <regex>
+
+#include "device_model/data_item/data_item.hpp"
+#include "entity/factory.hpp"
+#include "logging.hpp"
 
 #ifdef _WINDOWS
 #define strcasecmp stricmp
@@ -33,14 +32,10 @@
 
 using namespace std;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace entity;
 
-  namespace observation
-  {
-    static dlib::logger g_logger("Observation");
-
+  namespace observation {
     FactoryPtr Observation::getFactory()
     {
       static FactoryPtr factory;
@@ -88,24 +83,16 @@ namespace mtconnect
       return factory;
     }
 
-    ObservationPtr Observation::make(const DataItem *dataItem, const Properties &incompingProps,
+    ObservationPtr Observation::make(const DataItemPtr dataItem, const Properties &incompingProps,
                                      const Timestamp &timestamp, entity::ErrorList &errors)
     {
+      NAMED_SCOPE("Observation");
+
       auto props = entity::Properties(incompingProps);
-      props.insert_or_assign("dataItemId", dataItem->getId());
-      if (!dataItem->getName().empty())
-        props.insert_or_assign("name", dataItem->getName());
-      if (!dataItem->getCompositionId().empty())
-        props.insert_or_assign("compositionId", dataItem->getCompositionId());
-      if (!dataItem->getSubType().empty())
-        props.insert_or_assign("subType", dataItem->getSubType());
-      if (!dataItem->getStatistic().empty())
-        props.insert_or_assign("statistic", dataItem->getStatistic());
-      if (dataItem->isCondition())
-        props.insert_or_assign("type", dataItem->getType());
+      setProperties(dataItem, props);
       props.insert_or_assign("timestamp", timestamp);
 
-      bool unavailable{false};
+      bool unavailable {false};
       string level;
       if (dataItem->isCondition())
       {
@@ -139,18 +126,17 @@ namespace mtconnect
           unavailable = true;
         }
       }
-      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getPrefixedElementName();
-      if (dataItem->is3D())
+      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getObservationName();
+      if (dataItem->isThreeSpace())
         key += ":3D";
 
       auto ent = getFactory()->create(key, props, errors);
       if (!ent)
       {
-        g_logger << dlib::LWARN
-                 << "Could not parse properties for data item: " << dataItem->getName();
+        LOG(warning) << "Could not parse properties for data item: " << dataItem->getId();
         for (auto &e : errors)
         {
-          g_logger << dlib::LWARN << "   Error: " << e->what();
+          LOG(warning) << "   Error: " << e->what();
         }
         throw EntityError("Invalid properties for data item");
       }
@@ -161,10 +147,12 @@ namespace mtconnect
 
       if (unavailable)
         obs->makeUnavailable();
+
       if (!dataItem->isCondition())
         obs->setEntityName();
       else if (!unavailable)
         dynamic_pointer_cast<Condition>(obs)->setLevel(level);
+
       return obs;
     }
 
@@ -178,7 +166,7 @@ namespace mtconnect
           return make_shared<Event>(name, props);
         });
         factory->addRequirements(
-            Requirements{{"VALUE", false}, {"resetTriggered", USTRING, false}});
+            Requirements {{"VALUE", false}, {"resetTriggered", USTRING, false}});
       }
 
       return factory;
@@ -200,9 +188,9 @@ namespace mtconnect
           }
           return ent;
         });
-        factory->addRequirements(Requirements{{"count", INTEGER, false},
-                                              {"VALUE", DATA_SET, false},
-                                              {"resetTriggered", USTRING, false}});
+        factory->addRequirements(Requirements {{"count", INTEGER, false},
+                                               {"VALUE", DATA_SET, false},
+                                               {"resetTriggered", USTRING, false}});
       }
 
       return factory;
@@ -225,7 +213,7 @@ namespace mtconnect
           return ent;
         });
 
-        factory->addRequirements(Requirements{{"VALUE", TABLE, false}});
+        factory->addRequirements(Requirements {{"VALUE", TABLE, false}});
       }
 
       return factory;
@@ -302,12 +290,12 @@ namespace mtconnect
           }
           return cond;
         });
-        factory->addRequirements(Requirements{{"type", USTRING, true},
-                                              {"nativeCode", false},
-                                              {"nativeSeverity", false},
-                                              {"qualifier", USTRING, false},
-                                              {"statistic", USTRING, false},
-                                              {"VALUE", false}});
+        factory->addRequirements(Requirements {{"type", USTRING, true},
+                                               {"nativeCode", false},
+                                               {"nativeSeverity", false},
+                                               {"qualifier", USTRING, false},
+                                               {"statistic", USTRING, false},
+                                               {"VALUE", false}});
       }
 
       return factory;

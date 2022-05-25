@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,31 +15,23 @@
 //    limitations under the License.
 //
 
+#include <boost/asio.hpp>
 #include "agent.hpp"
-#include "config.hpp"
+#include "configuration/agent_config.hpp"
+
 #include "fcntl.h"
 #include "sys/stat.h"
-
-#include "dlib/config_reader.h"
 
 #include <cstring>
 
 using namespace std;
-using namespace dlib;
 using namespace mtconnect;
-
-#include <dlib/logger.h>
-#include <dlib/threads.h>
-
-static logger g_logger("main");
-
-#ifdef _WINDOWS
-#define strncasecmp strnicmp
-#endif
 
 int main(int aArgc, const char *aArgv[])
 {
-  AgentConfiguration config;
+  NAMED_SCOPE("MAIN");
+  
+  configuration::AgentConfiguration config;
 
   int ret = config.main(aArgc, aArgv);
   fclose(stdin);

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,19 +17,24 @@
 
 #include "deliver.hpp"
 
-#include "agent.hpp"
-#include "assets/cutting_tool.hpp"
-#include "assets/file_asset.hpp"
+#include <boost/asio/bind_executor.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/bind/placeholders.hpp>
 
-namespace mtconnect
-{
+#include <chrono>
+
+#include "agent.hpp"
+#include "asset/cutting_tool.hpp"
+#include "asset/file_asset.hpp"
+#include "logging.hpp"
+
+using namespace std::literals::chrono_literals;
+
+namespace mtconnect {
   using namespace observation;
   using namespace entity;
 
-  namespace pipeline
-  {
-    static dlib::logger g_logger("pipeline.deliver");
-
+  namespace pipeline {
     const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
     {
       using namespace observation;
@@ -45,73 +50,82 @@ namespace mtconnect
 
       return entity;
     }
-    
-    void ComputeMetrics::stop()
+
+    void ComputeMetrics::start()
     {
-      g_logger << dlib::LDEBUG << "Stopping compute thread";
-      {
-        std::unique_lock<std::mutex> lk(m_mutex);
-        m_running = false;
-        m_condition.notify_all();
-      }
-      g_logger << dlib::LDEBUG << "Compute thread stopped";
+      m_timer.cancel();
+      m_first = true;
+
+      compute(boost::system::error_code());
     }
 
-    void ComputeMetrics::operator()()
+    void ComputeMetrics::compute(boost::system::error_code ec)
 
     {
-      using namespace std;
-      using namespace chrono;
-      using namespace chrono_literals;
+      NAMED_SCOPE("pipeline.deliver");
 
-      if (!m_dataItem)
-        return;
-
-      auto di = m_contract->findDataItem("Agent", *m_dataItem);
-      if (di == nullptr)
+      if (!ec)
       {
-        g_logger << LWARN << "Could not find data item: " << *m_dataItem << ", exiting metrics";
-        return;
-      }
+        using namespace std;
+        using namespace chrono;
+        using namespace chrono_literals;
 
-      size_t last{0};
-      double lastAvg{0.0};
-      while (m_running)
-      {
-        auto count = *m_count;
-        auto delta = count - last;
+        if (!m_dataItem)
+          return;
 
-        double avg = delta + exp(-(10.0 / 60.0)) * (lastAvg - delta);
-        g_logger << dlib::LDEBUG << *m_dataItem
-                 << " - Average for last 1 minutes: " << (avg / 10.0);
-        g_logger << dlib::LDEBUG << *m_dataItem
-                 << " - Delta for last 10 seconds: " << (double(delta) / 10.0);
-
-        last = count;
-        if (avg != lastAvg)
+        auto di = m_contract->findDataItem("Agent", *m_dataItem);
+        if (di == nullptr)
         {
-          ErrorList errors;
-          auto obs =
-              Observation::make(di, Properties{{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
-                                system_clock::now(), errors);
-          m_contract->deliverObservation(obs);
-          lastAvg = avg;
+          LOG(warning) << "Could not find data item: " << *m_dataItem << ", exiting metrics";
+          return;
         }
+
+        auto now = std::chrono::steady_clock::now();
+        if (m_first)
         {
-          unique_lock<std::mutex> lk(m_mutex);
-          m_condition.wait_for(lk, 10s, [this]{ return !m_running; });
+          m_last = 0;
+          m_lastAvg = 0.0;
+          m_lastTime = now;
+          m_first = false;
         }
+        else
+        {
+          std::chrono::duration<double> dt = now - m_lastTime;
+          m_lastTime = now;
+
+          auto count = *m_count;
+          auto delta = count - m_last;
+
+          double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
+          LOG(debug) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
+          LOG(debug) << *m_dataItem
+                     << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
+
+          m_last = count;
+          if (avg != m_lastAvg)
+          {
+            ErrorList errors;
+            auto obs = Observation::make(
+                di, Properties {{"VALUE", double(delta) / 10.0}, {"duration", 10.0}},
+                system_clock::now(), errors);
+            m_contract->deliverObservation(obs);
+            m_lastAvg = avg;
+          }
+        }
+
+        using boost::placeholders::_1;
+        m_timer.expires_from_now(10s);
+        m_timer.async_wait(
+            boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, this, _1)));
       }
-      
-      g_logger << dlib::LDEBUG << "Metrics thread exited";
     }
 
     const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
     {
-      auto a = std::dynamic_pointer_cast<Asset>(entity);
+      auto a = std::dynamic_pointer_cast<asset::Asset>(entity);
       if (!a)
       {
-        throw EntityError("Unexpected entity type, cannot convert to asset in DeliverObservation");
+        throw EntityError("Unexpected entity type, cannot convert to asset in DeliverAsset");
       }
 
       m_contract->deliverAsset(a);

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,48 +17,181 @@
 
 #pragma once
 
-#include "observation/observation.hpp"
 #include "pipeline_context.hpp"
 #include "pipeline_contract.hpp"
 #include "transform.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class Agent;
-  class Device;
-  class DataItem;
-  class Asset;
-  using AssetPtr = std::shared_ptr<Asset>;
+  namespace device_model {
+    class Device;
+  }
+  namespace asset {
+    class Asset;
+    using AssetPtr = std::shared_ptr<Asset>;
+  }  // namespace asset
 
-  namespace adapter
-  {
+  namespace source::adapter {
     class Adapter;
-    struct Handler;
-  }  // namespace adapter
-  namespace pipeline
-  {
+  }  // namespace source::adapter
+  namespace pipeline {
     class Pipeline
     {
     public:
-      Pipeline(PipelineContextPtr context) : m_start(std::make_shared<Start>()), m_context(context)
-      {
-      }
+      using Splice = std::function<void(Pipeline *)>;
+
+      Pipeline(PipelineContextPtr context, boost::asio::io_context::strand &st)
+        : m_start(std::make_shared<Start>()), m_context(context), m_strand(st)
+      {}
       virtual ~Pipeline() { m_start->stop(); }
       virtual void build(const ConfigOptions &options) = 0;
       bool started() const { return m_started; }
+      boost::asio::io_context::strand &getStrand() { return m_strand; }
+
+      void applySplices()
+      {
+        for (auto &splice : m_splices)
+        {
+          splice(this);
+        }
+      }
+
       void clear()
       {
         m_start->stop();
         m_started = false;
+        m_start->clear();
         m_start = std::make_shared<Start>();
       }
+
       virtual void start()
       {
         if (m_start)
         {
-          m_start->start();
+          m_start->start(m_strand);
           m_started = true;
         }
+      }
+
+      bool spliceBefore(const std::string &target, TransformPtr transform, bool reapplied = false)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+
+        transform->unlink();
+        for (auto &pair : xforms)
+        {
+          pair.first->spliceBefore(pair.second, transform);
+        }
+
+        if (!reapplied)
+        {
+          m_splices.emplace_back(
+              [target, transform](Pipeline *pipe) { pipe->spliceBefore(target, transform, true); });
+        }
+
+        return true;
+      }
+      bool spliceAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+
+        transform->unlink();
+        for (auto &pair : xforms)
+        {
+          pair.second->spliceAfter(transform);
+        }
+
+        if (!reapplied)
+        {
+          m_splices.emplace_back(
+              [target, transform](Pipeline *pipe) { pipe->spliceAfter(target, transform, true); });
+        }
+
+        return true;
+      }
+      bool firstAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+
+        transform->unlink();
+        for (auto &pair : xforms)
+        {
+          pair.second->firstAfter(transform);
+        }
+
+        if (!reapplied)
+        {
+          m_splices.emplace_back(
+              [target, transform](Pipeline *pipe) { pipe->firstAfter(target, transform, true); });
+        }
+        return true;
+      }
+      bool lastAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+
+        transform->unlink();
+        for (auto &pair : xforms)
+        {
+          pair.second->bind(transform);
+        }
+
+        if (!reapplied)
+        {
+          m_splices.emplace_back(
+              [target, transform](Pipeline *pipe) { pipe->lastAfter(target, transform, true); });
+        }
+        return true;
+      }
+      bool replace(const std::string &target, TransformPtr transform, bool reapplied = false)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+
+        transform->unlink();
+        for (auto &pair : xforms)
+        {
+          pair.first->replace(pair.second, transform);
+        }
+
+        if (!reapplied)
+        {
+          m_splices.emplace_back(
+              [target, transform](Pipeline *pipe) { pipe->replace(target, transform, true); });
+        }
+
+        return true;
+      }
+
+      bool remove(const std::string &target)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        if (xforms.empty())
+          return false;
+
+        for (auto &pair : xforms)
+        {
+          pair.first->remove(pair.second);
+        }
+
+        m_splices.emplace_back([target](Pipeline *pipe) { pipe->remove(target); });
+
+        return true;
       }
 
       const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
@@ -71,6 +204,8 @@ namespace mtconnect
 
       bool hasContext() const { return bool(m_context); }
       bool hasContract() const { return bool(m_context) && bool(m_context->m_contract); }
+      PipelineContextPtr getContext() { return m_context; }
+      const auto &getContract() { return m_context->m_contract; }
 
     protected:
       class Start : public Transform
@@ -88,9 +223,11 @@ namespace mtconnect
         }
       };
 
-      bool m_started { false };
+      bool m_started {false};
       TransformPtr m_start;
       PipelineContextPtr m_context;
+      boost::asio::io_context::strand m_strand;
+      std::list<Splice> m_splices;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

@@ -1,11 +1,23 @@
+//
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// All rights reserved.
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+//
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
-
-#include "entity.hpp"
-#include <nlohmann/json.hpp>
-#include "entity/json_parser.hpp"
-#include "entity/json_parser.cpp"
 
 #include <cstdio>
 #include <fstream>
@@ -14,6 +26,12 @@
 #include <sstream>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
+#include "entity/entity.hpp"
+#include "entity/json_parser.cpp"
+#include "entity/json_parser.hpp"
+
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
@@ -21,7 +39,7 @@ using namespace mtconnect::entity;
 
 class JsonParserTest : public testing::Test
 {
- protected:
+protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
   }
@@ -30,7 +48,7 @@ class JsonParserTest : public testing::Test
 
   FactoryPtr components()
   {
-    auto component = make_shared<Factory>(Requirements{
+    auto component = make_shared<Factory>(Requirements {
         Requirement("id", true),
         Requirement("name", false),
         Requirement("uuid", false),
@@ -44,17 +62,16 @@ class JsonParserTest : public testing::Test
     component->addRequirements({Requirement("Components", ENTITY_LIST, components, false)});
 
     auto device = make_shared<Factory>(*component);
-    device->addRequirements(Requirements{
+    device->addRequirements(Requirements {
         Requirement("name", true),
         Requirement("uuid", true),
     });
 
-    auto root = make_shared<Factory>(Requirements{Requirement("Device", ENTITY, device)});
+    auto root = make_shared<Factory>(Requirements {Requirement("Device", ENTITY, device)});
 
     return root;
   }
 };
-
 
 TEST_F(JsonParserTest, TestParseSimpleDocument)
 {
@@ -72,7 +89,7 @@ TEST_F(JsonParserTest, TestParseSimpleDocument)
       Requirements({Requirement("FileComment", ENTITY, fileComment, 1, Requirement::Infinite)}));
   fileComments->registerMatchers();
 
-  auto fileArchetype = make_shared<Factory>(Requirements{
+  auto fileArchetype = make_shared<Factory>(Requirements {
       Requirement("assetId", true), Requirement("deviceUuid", true), Requirement("timestamp", true),
       Requirement("removed", false), Requirement("name", true), Requirement("mediaType", true),
       Requirement("applicationCategory", true), Requirement("applicationType", true),
@@ -80,7 +97,7 @@ TEST_F(JsonParserTest, TestParseSimpleDocument)
       Requirement("FileProperties", ENTITY_LIST, fileProperties, false)});
 
   auto root =
-      make_shared<Factory>(Requirements{Requirement("FileArchetype", ENTITY, fileArchetype)});
+      make_shared<Factory>(Requirements {Requirement("FileArchetype", ENTITY, fileArchetype)});
 
   auto doc = R"(
     {
@@ -122,7 +139,6 @@ TEST_F(JsonParserTest, TestParseSimpleDocument)
   ASSERT_EQ("two", get<string>((*it)->getProperty("name")));
   ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
 }
-
 
 TEST_F(JsonParserTest, TestRecursiveEntityLists)
 {
@@ -175,7 +191,6 @@ TEST_F(JsonParserTest, TestRecursiveEntityLists)
   ASSERT_EQ("h1", get<string>((*sli)->getProperty("id")));
 }
 
-
 TEST_F(JsonParserTest, TestRecursiveEntityListFailure)
 {
   auto root = components();
@@ -203,7 +218,6 @@ TEST_F(JsonParserTest, TestRecursiveEntityListFailure)
   ASSERT_EQ(string("Device(uuid): Property uuid is required and not provided"),
             errors.front()->what());
 }
-
 
 TEST_F(JsonParserTest, TestRecursiveEntityListMissingComponents)
 {
@@ -246,7 +260,6 @@ TEST_F(JsonParserTest, TestRecursiveEntityListMissingComponents)
   ASSERT_FALSE(sl);
 }
 
-
 TEST_F(JsonParserTest, TestRawContent)
 {
   auto definition =
@@ -270,6 +283,8 @@ TEST_F(JsonParserTest, TestRawContent)
 
   ASSERT_EQ("JSON", get<string>(entity->getProperty("format")));
 
-  string expected =  "{\"SomeContent\": {\"with\":\"stuff\",\\n\"value\":\"And some text\"},\\n\"AndMoreContent\": {},\\n\"value\":\"And random text as well.\"}";
+  string expected =
+      "{\"SomeContent\": {\"with\":\"stuff\",\\n\"value\":\"And some "
+      "text\"},\\n\"AndMoreContent\": {},\\n\"value\":\"And random text as well.\"}";
   ASSERT_EQ(expected, get<string>(entity->getProperty("RAW")));
 }

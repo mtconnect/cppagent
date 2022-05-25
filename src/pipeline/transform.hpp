@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2019, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,16 +17,19 @@
 
 #pragma once
 
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/io_context_strand.hpp>
+
 #include "entity/entity.hpp"
 #include "guard.hpp"
 #include "pipeline_context.hpp"
 
-namespace mtconnect
-{
-  class DataItem;
-
-  namespace pipeline
-  {
+namespace mtconnect {
+  namespace device_model::data_item {
+    class DataItem;
+  }  // namespace device_model::data_item
+  using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+  namespace pipeline {
     // A transform takes an entity and transforms it to another
     // entity. The transform is an object with the overloaded
     // operation () takes the object type and performs produces an
@@ -39,9 +42,9 @@ namespace mtconnect
     using TransformPtr = std::shared_ptr<Transform>;
     using TransformList = std::list<TransformPtr>;
 
-    using ApplyDataItem = std::function<void(const DataItem *di)>;
+    using ApplyDataItem = std::function<void(const DataItemPtr di)>;
     using EachDataItem = std::function<void(ApplyDataItem)>;
-    using FindDataItem = std::function<DataItem *(const std::string &, const std::string &)>;
+    using FindDataItem = std::function<DataItemPtr(const std::string &, const std::string &)>;
 
     class Transform : public std::enable_shared_from_this<Transform>
     {
@@ -50,16 +53,28 @@ namespace mtconnect
       Transform(const std::string &name) : m_name(name) {}
       virtual ~Transform() = default;
 
+      auto &getName() const { return m_name; }
+
       virtual void stop()
       {
         for (auto &t : m_next)
           t->stop();
       }
-      virtual void start()
+
+      virtual void start(boost::asio::io_context::strand &st)
       {
         for (auto &t : m_next)
-          t->start();
+          t->start(st);
       }
+
+      virtual void clear()
+      {
+        for (auto &t : m_next)
+          t->clear();
+        unlink();
+      }
+
+      virtual void unlink() { m_next.clear(); }
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
@@ -108,6 +123,85 @@ namespace mtconnect
       }
       const Guard &getGuard() const { return m_guard; }
       void setGuard(const Guard &guard) { m_guard = guard; }
+
+      using TransformPair = std::pair<TransformPtr, TransformPtr>;
+      using ListOfTransforms = std::list<TransformPair>;
+
+      void findRec(const std::string &target, ListOfTransforms &xforms)
+      {
+        for (auto &t : m_next)
+        {
+          if (t->getName() == target)
+          {
+            xforms.push_back(TransformPair {getptr(), t});
+          }
+          t->findRec(target, xforms);
+        }
+      }
+
+      void find(const std::string &target, ListOfTransforms &xforms)
+      {
+        if (m_name == target)
+        {
+          xforms.push_back(TransformPair {nullptr, getptr()});
+        }
+
+        findRec(target, xforms);
+      }
+
+      void spliceBefore(TransformPtr old, TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            xform->bind(old);
+            *it = xform;
+            return;
+          }
+        }
+      }
+      void spliceAfter(TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          xform->bind(*it);
+        }
+        m_next.clear();
+        bind(xform);
+        return;
+      }
+      void firstAfter(TransformPtr xform) { m_next.emplace_front(xform); }
+      void replace(TransformPtr old, TransformPtr xform)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            *it = xform;
+            for (auto nxt = old->m_next.begin(); it != old->m_next.end(); it++)
+            {
+              xform->bind(*nxt);
+            }
+          }
+        }
+      }
+
+      void remove(TransformPtr old)
+      {
+        for (auto it = m_next.begin(); it != m_next.end(); it++)
+        {
+          if (it->get() == old.get())
+          {
+            m_next.erase(it);
+            for (auto nxt = old->m_next.begin(); it != old->m_next.end(); it++)
+            {
+              bind(*nxt);
+            }
+            break;
+          }
+        }
+      }
 
     protected:
       std::string m_name;

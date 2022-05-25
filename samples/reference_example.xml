@@ -13,14 +13,14 @@
             <Rotary name="C" id="c">
               <DataItems>
                 <DataItem type="LOAD" category="SAMPLE" units="PERCENT" nativeUnits="PERCENT" id="c1" name="load">
-                  <Constraints>
-                    <MinimumChange>5.0</MinimumChange>
-                  </Constraints>
+                  <Filters>
+                    <Filter type="MINIMUM_DELTA">5.0</Filter>
+                  </Filters>
                 </DataItem>
                 <DataItem type="POSITION" category="SAMPLE" units="MILLIMETER" nativeUnits="MILLIMETER" id="c2" name="pos">
-                  <Constraints>
-                    <MinimumChange type="PERCENT">10.0</MinimumChange>
-                  </Constraints>
+                  <Filters>
+                    <Filter type="MINIMUM_DELTA">10.0</Filter>
+                  </Filters>
                 </DataItem>
                 <DataItem name="Smode" type="ROTARY_MODE" category="EVENT" id="c3">
                   <Constraints><Value>SPINDLE</Value></Constraints>

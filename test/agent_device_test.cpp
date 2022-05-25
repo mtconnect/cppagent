@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,68 +19,104 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "device_model/agent_device.hpp"
-#include "adapter/adapter.hpp"
+#include <boost/asio/read_until.hpp>
+#include <boost/asio/write.hpp>
+
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
+#include "device_model/agent_device.hpp"
 #include "json_helper.hpp"
+#include "source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::adapter;
+using namespace mtconnect::source::adapter;
+using namespace device_model;
+using namespace entity;
+
+namespace asio = boost::asio;
+using tcp = boost::asio::ip::tcp;
+namespace ip = boost::asio::ip;
+namespace sys = boost::system;
+namespace config = mtconnect::configuration;
 
 class AgentDeviceTest : public testing::Test
 {
- protected:
-
+protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml",
-                                   8, 4, "1.7", 25);
+    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.7", 25);
     m_agentId = to_string(getCurrentTimeInSec());
     m_agentDevice = m_agentTestHelper->m_agent->getAgentDevice();
   }
 
   void TearDown() override
   {
+    m_agentTestHelper->m_ioContext.stop();
     if (m_server)
-    {
-      m_agentTestHelper->m_adapter->stop();
-      m_server.reset();
-      m_serverSocket.reset();
-    }
+      m_server->close();
+    m_server.reset();
+    m_acceptor.reset();
 
     m_agentTestHelper.reset();
   }
 
   void addAdapter(bool suppress = false)
   {
-    ConfigOptions options{{configuration::SuppressIPAddress, suppress}};
+    ConfigOptions options {{config::SuppressIPAddress, suppress}};
     m_agentTestHelper->addAdapter(options, "127.0.0.1", m_port, "LinuxCNC");
     m_agentTestHelper->m_adapter->setReconnectInterval(1s);
   }
-  
-  void createListener()
+
+  void startServer(const std::string addr = "127.0.0.1")
   {
-    ASSERT_TRUE(!create_listener(m_server, m_port, "127.0.0.1"));
-    m_port = m_server->get_listening_port();
+    tcp::endpoint sp(ip::make_address(addr), m_port);
+    m_connected = false;
+    m_acceptor = make_unique<tcp::acceptor>(m_agentTestHelper->m_ioContext, sp);
+    ASSERT_TRUE(m_acceptor->is_open());
+    tcp::endpoint ep = m_acceptor->local_endpoint();
+    m_port = ep.port();
+
+    m_acceptor->async_accept([this](sys::error_code ec, tcp::socket socket) {
+      if (ec)
+        cout << ec.category().message(ec.value()) << ": " << ec.message() << endl;
+      ASSERT_FALSE(ec);
+      ASSERT_TRUE(socket.is_open());
+      m_connected = true;
+      m_server = make_unique<tcp::socket>(std::move(socket));
+    });
   }
-  
- public:
-  AgentDevice *m_agentDevice{nullptr};
+
+  template <typename Rep, typename Period>
+  void runUntil(chrono::duration<Rep, Period> to, function<bool()> pred)
+  {
+    for (int runs = 0; runs < 10 && !pred(); runs++)
+    {
+      m_agentTestHelper->m_ioContext.run_one_for(to);
+    }
+
+    EXPECT_TRUE(pred());
+  }
+
+public:
+  AgentDevicePtr m_agentDevice;
   std::string m_agentId;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
-  uint16_t m_port{21788};
-  dlib::scoped_ptr<dlib::listener> m_server;
-  dlib::scoped_ptr<dlib::connection> m_serverSocket;
+
+  unsigned short m_port {0};
+
+  std::unique_ptr<asio::ip::tcp::socket> m_server;
+  std::unique_ptr<tcp::acceptor> m_acceptor;
+  bool m_connected;
+  string m_line;
 };
 
 TEST_F(AgentDeviceTest, AgentDeviceCreation)
 {
   ASSERT_NE(nullptr, m_agentDevice);
   ASSERT_EQ(2, m_agentTestHelper->m_agent->getDevices().size());
-  ASSERT_EQ("Agent", m_agentDevice->getName());
+  ASSERT_EQ("Agent", m_agentDevice->getName().str());
 }
 
 TEST_F(AgentDeviceTest, VerifyRequiredDataItems)
@@ -109,12 +145,13 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
   auto &uuid = agent->getDevices().back()->getUuid();
   ASSERT_EQ("000", uuid);
   auto found = false;
-  
-  for (auto seq = agent->getSequence() - 1; !found && seq > 0ull; seq--)
+
+  auto rest = m_agentTestHelper->getRestService();
+
+  for (auto seq = rest->getSequence() - 1; !found && seq > 0ull; seq--)
   {
-    auto event = agent->getFromBuffer(seq);
-    if (event->getDataItem()->getType() == "DEVICE_ADDED" &&
-        uuid == event->getValue<string>())
+    auto event = rest->getFromBuffer(seq);
+    if (event->getDataItem()->getType() == "DEVICE_ADDED" && uuid == event->getValue<string>())
     {
       found = true;
     }
@@ -129,38 +166,40 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 #define ADAPTER_PATH ADAPTERS_PATH "/m:Components/m:Adapter"
 #define ADAPTER_DATA_ITEMS_PATH ADAPTER_PATH "/m:DataItems"
 
-#define ID_PREFIX "_83a0a5df80"
+#define ID_PREFIX "_d0c33d4315"
 
 TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
 {
+  m_port = 21788;
   addAdapter();
   {
     PARSE_XML_RESPONSE("/Agent/probe");
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:21788");
-    
-    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
-                          "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']@type",
-                          "ADAPTER_URI");
-    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_DATA_ITEMS_PATH
-                          "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']/m:Constraints/m:Value",
-                          m_agentTestHelper->m_adapter->getUrl().c_str());
+
+    ASSERT_XML_PATH_EQUAL(
+        doc, ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']@type",
+        "ADAPTER_URI");
+    ASSERT_XML_PATH_EQUAL(doc,
+                          ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX
+                                                  "_adapter_uri']/m:Constraints/m:Value",
+                          m_agentTestHelper->m_adapter->getName().c_str());
   }
 }
 
 TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 {
+  m_port = 21788;
   addAdapter(true);
   {
     PARSE_XML_RESPONSE("/Agent/probe");
-    m_agentTestHelper->printResponse();
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "LinuxCNC");
-    
-    ASSERT_XML_PATH_COUNT(doc, ADAPTER_DATA_ITEMS_PATH
-                          "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']", 0);
+
+    ASSERT_XML_PATH_COUNT(
+        doc, ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']", 0);
   }
 }
 
@@ -168,83 +207,83 @@ TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 #define AGENT_DEVICE_DEVICE_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Agent']"
 #define AGENT_DEVICE_ADAPTER_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Adapter']"
 
-
 TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 {
-  addAdapter();
-  
   {
     PARSE_XML_RESPONSE("/Agent/current");
-    
+  }
+  addAdapter();
+
+  {
+    PARSE_XML_RESPONSE("/Agent/current");
+
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_DEVICE_STREAM "/m:Events/m:Availability", "AVAILABLE");
+
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_STREAM "/*", 2);
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_DEVICE_STREAM "/*", 1);
 
-    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_DEVICE_STREAM "/m:Events/m:DeviceAdded",
-                          "000");
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_DEVICE_STREAM "/m:Events/m:DeviceAdded", "000");
 
     ASSERT_XML_PATH_COUNT(doc, AGENT_DEVICE_ADAPTER_STREAM "/*", 2);
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
-                          m_agentTestHelper->m_adapter->getUrl().c_str());
+                          m_agentTestHelper->m_adapter->getName().c_str());
   }
 }
 
 TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
 {
+  srand(chrono::system_clock::now().time_since_epoch().count());
   m_port = rand() % 10000 + 5000;
   addAdapter();
-  
+
   {
     PARSE_XML_RESPONSE("/Agent/current");
-          
+
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:AdapterURI",
-                          m_agentTestHelper->m_adapter->getUrl().c_str());
+                          m_agentTestHelper->m_adapter->getName().c_str());
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
                           "UNAVAILABLE");
-
   }
+
   m_agentTestHelper->m_adapter->start();
-  this_thread::sleep_for(100ms);
+  m_agentTestHelper->m_ioContext.run_for(1500ms);
 
   {
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
                           "LISTENING");
-
   }
-  createListener();
-  this_thread::sleep_for(100ms);
 
-  auto res = m_server->accept(m_serverSocket);
-  ASSERT_EQ(0, res);
-  this_thread::sleep_for(100ms);
-  ASSERT_TRUE(m_serverSocket.get());
+  startServer();
+  runUntil(10s, [this]() { return m_connected; });
+  m_agentTestHelper->m_ioContext.run_for(10ms);
 
   {
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
                           "ESTABLISHED");
-    
   }
-  
-  m_serverSocket->shutdown();
-  m_server.reset();
-  this_thread::sleep_for(100ms);
+
+  ASSERT_TRUE(m_server);
+  m_server->close();
+  m_acceptor->close();
+  runUntil(1s, [this]() { return !m_agentTestHelper->m_adapter->isConnected(); });
 
   {
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
                           "CLOSED");
-    
   }
-  this_thread::sleep_for(1100ms);
+
+  m_agentTestHelper->m_ioContext.run_for(1500ms);
+
   {
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
                           "LISTENING");
-    
   }
 }

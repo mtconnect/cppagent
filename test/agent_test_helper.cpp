@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,79 +19,82 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "agent.hpp"
-#include <nlohmann/json.hpp>
-#include "agent_test_helper.hpp"
-#include "http_server/server.hpp"
-
 #include <cstdio>
+
+#include <nlohmann/json.hpp>
+
+#include "agent.hpp"
+#include "agent_test_helper.hpp"
+#include "sink/rest_sink/server.hpp"
 
 using namespace std;
 using namespace std::chrono;
 using namespace mtconnect;
-using namespace mtconnect::http_server;
+using namespace mtconnect::sink::rest_sink;
+namespace beast = boost::beast;
+namespace http = beast::http;
 
-void AgentTestHelper::makeRequest(const char *file, int line,
-                                  const char *verb, const std::string &body,
-                                  const mtconnect::http_server::Routing::QueryMap &aQueries,
-                                  const char *path)
+void AgentTestHelper::makeRequest(const char *file, int line, boost::beast::http::verb verb,
+                                  const std::string &body,
+                                  const mtconnect::sink::rest_sink::QueryMap &aQueries,
+                                  const char *path, const char *accepts)
 {
+  m_request = make_shared<Request>();
+
   m_dispatched = false;
   m_out.str("");
-  m_request.m_verb = verb;
-  m_request.m_query = aQueries;
-  m_request.m_body = body;
-  m_request.m_parameters.clear();
-  
+  m_request->m_verb = verb;
+  m_request->m_query = aQueries;
+  m_request->m_body = body;
+  m_request->m_accepts = accepts;
+  m_request->m_parameters.clear();
+
   if (path != nullptr)
-    m_request.m_path = path;
-  
-  ASSERT_FALSE(m_request.m_path.empty());
-  m_dispatched = m_agent->getServer()->handleRequest(m_request, m_response);
+    m_request->m_path = path;
+
+  ASSERT_FALSE(m_request->m_path.empty());
+
+  m_dispatched = m_restService->getServer()->dispatch(m_session, m_request);
 }
 
-
-void AgentTestHelper::responseHelper(const char *file, int line,
-                                     const Routing::QueryMap &aQueries,
-                                     xmlDocPtr *doc, const char *path)
+void AgentTestHelper::responseHelper(const char *file, int line, const QueryMap &aQueries,
+                                     xmlDocPtr *doc, const char *path, const char *accepts)
 {
-  makeRequest(file, line, "GET", "", aQueries, path);
-  if (ends_with(m_response.m_mimeType, "xml"))
-    *doc = xmlParseMemory(m_response.m_body.c_str(), m_response.m_body.size());
+  makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
+  *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
-void AgentTestHelper::responseStreamHelper(const char *file, int line,
-                                     const Routing::QueryMap &aQueries,
-                                     xmlDocPtr *doc, const char *path)
+void AgentTestHelper::responseStreamHelper(const char *file, int line, const QueryMap &aQueries,
+                                           const char *path, const char *accepts)
 {
-  makeRequest(file, line, "GET", "", aQueries, path);
-  if (ends_with(m_response.m_chunkMimeType, "xml"))
-    *doc = xmlParseMemory(m_response.m_chunkBody.c_str(), m_response.m_chunkBody.size());
+  makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
 }
 
 void AgentTestHelper::putResponseHelper(const char *file, int line, const string &body,
-                                        const Routing::QueryMap &aQueries, xmlDocPtr *doc,
-                                        const char *path)
+                                        const QueryMap &aQueries, xmlDocPtr *doc, const char *path,
+                                        const char *accepts)
 {
-  makeRequest(file, line, "PUT", body, aQueries, path);
-  if (ends_with(m_response.m_mimeType, "xml"))
-    *doc = xmlParseMemory(m_response.m_body.c_str(), m_response.m_body.size());
+  makeRequest(file, line, http::verb::put, body, aQueries, path, accepts);
+  if (ends_with(m_session->m_mimeType, "xml"))
+    *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
-void AgentTestHelper::deleteResponseHelper(const char *file, int line,
-                                           const Routing::QueryMap &aQueries, xmlDocPtr *doc,
-                                           const char *path)
+void AgentTestHelper::deleteResponseHelper(const char *file, int line, const QueryMap &aQueries,
+                                           xmlDocPtr *doc, const char *path, const char *accepts)
 {
-  makeRequest(file, line, "DELETE", "", aQueries, path);
-  if (ends_with(m_response.m_mimeType, "xml"))
-      *doc = xmlParseMemory(m_response.m_body.c_str(), m_response.m_body.size());
+  makeRequest(file, line, http::verb::delete_, "", aQueries, path, accepts);
+  if (ends_with(m_session->m_mimeType, "xml"))
+    *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
 }
 
-void AgentTestHelper::responseHelper(const char *file, int line,
-                                     const Routing::QueryMap &aQueries,
-                                     nlohmann::json &doc,
-                                     const char *path)
+void AgentTestHelper::chunkStreamHelper(const char *file, int line, xmlDocPtr *doc)
 {
-  makeRequest(file, line, "GET", "", aQueries, path);
-  doc = nlohmann::json::parse(m_response.m_body);
+  *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), m_session->m_chunkBody.size());
+}
+
+void AgentTestHelper::responseHelper(const char *file, int line, const QueryMap &aQueries,
+                                     nlohmann::json &doc, const char *path, const char *accepts)
+{
+  makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
+  doc = nlohmann::json::parse(m_session->m_body);
 }

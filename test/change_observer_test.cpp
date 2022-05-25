@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,35 +19,33 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "observation/change_observer.hpp"
-
 #include <chrono>
 #include <thread>
 
+#include "observation/change_observer.hpp"
 
+using namespace std::chrono_literals;
 
-namespace mtconnect
-{
+namespace mtconnect {
   using namespace observation;
   class ChangeObserverTest : public testing::Test
   {
-   protected:
-    void SetUp() override
-    {
-      m_signaler = std::make_unique<mtconnect::ChangeSignaler>();
-    }
+  public:
+    ChangeObserverTest() : m_strand(m_context) {}
 
-    void TearDown() override
-    {
-      m_signaler.reset();
-    }
+  protected:
+    void SetUp() override { m_signaler = std::make_unique<mtconnect::ChangeSignaler>(); }
 
+    void TearDown() override { m_signaler.reset(); }
+
+    boost::asio::io_context m_context;
+    boost::asio::io_context::strand m_strand;
     std::unique_ptr<mtconnect::ChangeSignaler> m_signaler;
   };
 
   TEST_F(ChangeObserverTest, AddObserver)
   {
-    mtconnect::ChangeObserver changeObserver;
+    mtconnect::ChangeObserver changeObserver(m_strand);
 
     ASSERT_FALSE(m_signaler->hasObserver(&changeObserver));
     m_signaler->addObserver(&changeObserver);
@@ -56,58 +54,57 @@ namespace mtconnect
 
   TEST_F(ChangeObserverTest, SignalObserver)
   {
-    using namespace std::chrono_literals;
-    mtconnect::ChangeObserver changeObserver;
+    mtconnect::ChangeObserver changeObserver(m_strand);
 
     auto const expectedExeTime = 500ms;
-    auto const expectedSeq = uint64_t{100};
-    auto threadLambda = [&](mtconnect::ChangeSignaler *changeSignaler) {
-      std::this_thread::sleep_for(expectedExeTime);
-      changeSignaler->signalObservers(expectedSeq);
-    };
+    auto const expectedSeq = uint64_t {100};
 
     m_signaler->addObserver(&changeObserver);
     ASSERT_FALSE(changeObserver.wasSignaled());
-    auto workerThread = std::thread{threadLambda, m_signaler.get()};
 
     auto startTime = std::chrono::system_clock::now();
-    ASSERT_TRUE(changeObserver.wait(
-        (expectedExeTime * 2).count()));  // Wait to be signalled within twice expected time
+    std::chrono::milliseconds duration;
+    ASSERT_TRUE(changeObserver.wait((expectedExeTime * 2), [&](boost::system::error_code ec) {
+      EXPECT_EQ(boost::asio::error::operation_aborted, ec);
+      duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now() - startTime);
+      ASSERT_TRUE(changeObserver.wasSignaled());
+    }));  // Wait to be signalled within twice expected time
 
+    m_context.run_until(startTime + expectedExeTime);
+    changeObserver.signal(expectedSeq);
+    m_context.run_one();
     // The worker thread was put to sleep for 500 milli-seconds before signalling
     // observers, so at very least the duration should be greater than 500 milli-seconds.
     // The observer should also have received the sequence number 100
-    auto durationMs = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now() - startTime);
-    workerThread.join();
-    ASSERT_LE(expectedExeTime.count(), durationMs.count());
-    ASSERT_EQ(expectedSeq, changeObserver.getSequence());
     ASSERT_TRUE(changeObserver.wasSignaled());
+    ASSERT_LE(expectedExeTime, duration);
+    ASSERT_GE(expectedExeTime * 2, duration);
+    ASSERT_EQ(expectedSeq, changeObserver.getSequence());
 
     // Run the same test again but only wait for a shorter period than the
     // thread will take to execute. The observer should not be signalled
     // and the call should fail.
     changeObserver.reset();
     ASSERT_FALSE(changeObserver.wasSignaled());
-    auto workerThread2 = std::thread{threadLambda, m_signaler.get()};
-    try
-    {
-      auto waitResult = changeObserver.wait(
-          (expectedExeTime / 2).count());  // Only wait a maximum of 1 / 2 the expected time
-
-      // We can be spuriously woken up, so check that the work was not finished
-      if (waitResult && !changeObserver.wasSignaled())
-        waitResult = false;
-
-      ASSERT_FALSE(waitResult);
+    startTime = std::chrono::system_clock::now();
+    duration = 0ms;
+    auto waitResult = changeObserver.wait((expectedExeTime / 2), [&](boost::system::error_code ec) {
+      EXPECT_FALSE(ec);
+      duration = std::chrono::duration_cast<std::chrono::milliseconds>(
+          std::chrono::system_clock::now() - startTime);
       ASSERT_FALSE(changeObserver.wasSignaled());
-      workerThread2.join();
-    }
-    catch (...)
-    {
-      workerThread2.join();
-      throw;
-    }
+    });  // Wait to be signalled within twice expected time
+    // Only wait a maximum of 1 / 2 the expected time
+
+    m_context.run_until(startTime + expectedExeTime);
+
+    // We can be spuriously woken up, so check that the work was not finished
+    if (waitResult && !changeObserver.wasSignaled())
+      waitResult = false;
+
+    ASSERT_FALSE(waitResult);
+    ASSERT_FALSE(changeObserver.wasSignaled());
   }
 
   TEST_F(ChangeObserverTest, Cleanup)
@@ -115,7 +112,7 @@ namespace mtconnect
     mtconnect::ChangeObserver *changeObserver = nullptr;
 
     {
-      changeObserver = new mtconnect::ChangeObserver;
+      changeObserver = new mtconnect::ChangeObserver(m_strand);
       m_signaler->addObserver(changeObserver);
       ASSERT_TRUE(m_signaler->hasObserver(changeObserver));
       delete changeObserver;  // Not setting to nullptr so we can test observer was removed
@@ -126,62 +123,56 @@ namespace mtconnect
 
   TEST_F(ChangeObserverTest, ChangeSequence)
   {
-    mtconnect::ChangeObserver changeObserver;
+    mtconnect::ChangeObserver changeObserver(m_strand);
 
     m_signaler->addObserver(&changeObserver);
     ASSERT_FALSE(changeObserver.wasSignaled());
 
-    auto threadLambda = [](mtconnect::ChangeSignaler *changeSignaler) {
-      changeSignaler->signalObservers(uint64_t{100});
-      changeSignaler->signalObservers(uint64_t{200});
-      changeSignaler->signalObservers(uint64_t{300});
-    };
-    auto workerThread = std::thread{threadLambda, m_signaler.get()};
-    try
-    {
-      ASSERT_TRUE(changeObserver.wait(2000));
+    auto const waitTime = 2000ms;
+
+    bool called {false};
+    ASSERT_TRUE(changeObserver.wait(waitTime, [&](boost::system::error_code ec) {
+      EXPECT_EQ(boost::asio::error::operation_aborted, ec);
       ASSERT_TRUE(changeObserver.wasSignaled());
+      called = true;
+    }));  // Wait to be signalled within twice expected time
 
-      ASSERT_EQ(uint64_t{100}, changeObserver.getSequence());
+    m_context.run_until(std::chrono::system_clock::now() + 50ms);
+    m_signaler->signalObservers(uint64_t {100});
+    m_signaler->signalObservers(uint64_t {200});
+    m_signaler->signalObservers(uint64_t {300});
+    m_context.run_one();
 
-      // Wait for things to clean up...
-      workerThread.join();
-    }
-    catch (...)
-    {
-      workerThread.join();
-      throw;
-    }
+    ASSERT_TRUE(called);
+    ASSERT_TRUE(changeObserver.wasSignaled());
+
+    ASSERT_EQ(uint64_t {100}, changeObserver.getSequence());
   }
 
   TEST_F(ChangeObserverTest, ChangeSequence2)
   {
     using namespace std::chrono_literals;
-    mtconnect::ChangeObserver changeObserver;
+    mtconnect::ChangeObserver changeObserver(m_strand);
 
     m_signaler->addObserver(&changeObserver);
 
-    auto threadLambda = [](mtconnect::ChangeSignaler *changeSignaler) {
-      changeSignaler->signalObservers(uint64_t{100});
-      changeSignaler->signalObservers(uint64_t{200});
-      changeSignaler->signalObservers(uint64_t{300});
-      changeSignaler->signalObservers(uint64_t{30});
-    };
-    auto workerThread = std::thread{threadLambda, m_signaler.get()};
-    try
-    {
-      ASSERT_TRUE(changeObserver.wait(2000));
+    auto const waitTime = 2000ms;
+    bool called {false};
+    ASSERT_TRUE(changeObserver.wait(waitTime, [&](boost::system::error_code ec) {
+      EXPECT_EQ(boost::asio::error::operation_aborted, ec);
       ASSERT_TRUE(changeObserver.wasSignaled());
-      std::this_thread::sleep_for(50ms);
-      ASSERT_EQ(uint64_t{30}, changeObserver.getSequence());
+      called = true;
+    }));  // Wait to be signalled within twice expected time
 
-      // Wait for things to clean up...
-      workerThread.join();
-    }
-    catch (...)
-    {
-      workerThread.join();
-      throw;
-    }
+    m_context.run_until(std::chrono::system_clock::now() + 50ms);
+    m_signaler->signalObservers(uint64_t {100});
+    m_signaler->signalObservers(uint64_t {200});
+    m_signaler->signalObservers(uint64_t {300});
+    m_signaler->signalObservers(uint64_t {30});
+    m_context.run_one();
+
+    ASSERT_TRUE(called);
+    ASSERT_TRUE(changeObserver.wasSignaled());
+    ASSERT_EQ(uint64_t {30}, changeObserver.getSequence());
   }
-}  // namespace
+}  // namespace mtconnect

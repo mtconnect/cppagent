@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,12 +21,10 @@
 #include "transform.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect
-{
+namespace mtconnect {
   class Agent;
 
-  namespace pipeline
-  {
+  namespace pipeline {
     using namespace entity;
 
     class Timestamped : public Tokens
@@ -37,13 +35,24 @@ namespace mtconnect
       Timestamped(const Tokens &ptr) : Tokens(ptr) {}
       Timestamped(const Timestamped &ts, TokenList list)
         : Tokens(ts, list), m_timestamp(ts.m_timestamp), m_duration(ts.m_duration)
-      {
-      }
+      {}
       ~Timestamped() = default;
       Timestamp m_timestamp;
       std::optional<double> m_duration;
     };
     using TimestampedPtr = std::shared_ptr<Timestamped>;
+
+    class AssetCommand : public Timestamped
+    {
+    public:
+      using Timestamped::Timestamped;
+    };
+
+    class Observations : public Timestamped
+    {
+    public:
+      using Timestamped::Timestamped;
+    };
 
     class ExtractTimestamp : public Transform
     {
@@ -90,7 +99,7 @@ namespace mtconnect
       Now m_now;
 
     protected:
-      bool m_relativeTime{false};
+      bool m_relativeTime {false};
       std::optional<Timestamp> m_base;
       Microseconds m_offset;
     };

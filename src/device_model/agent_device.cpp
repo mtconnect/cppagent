@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,129 +17,168 @@
 
 #include "agent_device.hpp"
 
-#include "adapter/adapter.hpp"
-#include "utilities.hpp"
-#include "config_options.hpp"
-
-#include <dlib/logger.h>
-#include <dlib/md5.h>
+#include "configuration/config_options.hpp"
+#include "data_item/constraints.hpp"
+#include "data_item/data_item.hpp"
+#include "logging.hpp"
+#include "source/adapter/adapter.hpp"
 
 using namespace std;
+using namespace std::literals;
+namespace config = mtconnect::configuration;
 
-namespace mtconnect
-{
-  static dlib::logger g_logger("agent_device");
-
-  AgentDevice::AgentDevice(const Attributes &attributes) : Device(attributes, "Agent")
-  {
-    addRequiredDataItems();
-
-    m_adapters = new Component("Adapters", {{"id", "__adapters__"}});
-    addChild(m_adapters);
-  }
-
-  DataItem *AgentDevice::getConnectionStatus(const std::string &adapter)
-  {
-    return getDeviceDataItem(adapter + "_connection_status");
-  }
-
-  void AgentDevice::addAdapter(const adapter::Adapter *adapter)
-  {
-    bool suppress = GetOption<bool>(adapter->getOptions(), configuration::SuppressIPAddress).value_or(false);
-    auto id = adapter->getIdentity();
-
-    std::map<string, string> attrs{{"id", id}};
-    if (!suppress)
+namespace mtconnect {
+  using namespace entity;
+  namespace device_model {
+    entity::FactoryPtr AgentDevice::getFactory()
     {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Device::getFactory());
+        factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr {
+          auto dev = make_shared<AgentDevice>("Agent"s, ps);
+          dev->initialize();
+          return dev;
+        });
+        Component::getFactory()->registerFactory("Agent", factory);
+      }
+      return factory;
+    }
+
+    AgentDevice::AgentDevice(const std::string &name, entity::Properties &props)
+      : Device(name, props)
+    {
+      NAMED_SCOPE("agent_device");
+      ErrorList errors;
+      m_adapters = Component::make("Adapters", {{"id", "__adapters__"s}}, errors);
+      if (!errors.empty())
+      {
+        for (auto &e : errors)
+        {
+          LOG(fatal) << "Cannot create AgentDevice: " << e->what();
+        }
+      }
+    }
+
+    DataItemPtr AgentDevice::getConnectionStatus(const std::string &adapter)
+    {
+      return getDeviceDataItem(adapter + "_connection_status");
+    }
+
+    void AgentDevice::addAdapter(const source::adapter::AdapterPtr adapter)
+    {
+      using namespace entity;
+      using namespace device_model::data_item;
+      bool suppress =
+          GetOption<bool>(adapter->getOptions(), config::SuppressIPAddress).value_or(false);
+      auto id = adapter->getIdentity();
+
       stringstream name;
-      name << adapter->getServer() << ':' << adapter->getPort();
-      attrs["name"] = name.str();
+      name << adapter->getHost() << ':' << adapter->getPort();
+
+      ErrorList errors;
+      Properties attrs {{"id", id}};
+      if (!suppress)
+      {
+        stringstream name;
+        name << adapter->getHost() << ':' << adapter->getPort();
+        attrs["name"] = name.str();
+      }
+      else
+      {
+        auto device = GetOption<string>(adapter->getOptions(), config::Device);
+        if (device)
+          attrs["name"] = *device;
+      }
+      auto comp = Component::make("Adapter", attrs, errors);
+      m_adapters->addChild(comp, errors);
+
+      {
+        ErrorList errors;
+        auto di = DataItem::make({{"type", "CONNECTION_STATUS"s},
+                                  {"id", id + "_connection_status"s},
+                                  {"category", "EVENT"s}},
+                                 errors);
+        comp->addDataItem(di, errors);
+      }
+
+      if (!suppress)
+      {
+        using namespace device_model::data_item;
+        ErrorList errors;
+        auto di = DataItem::make(
+            Properties {
+                {"type", "ADAPTER_URI"s}, {"id", id + "_adapter_uri"}, {"category", "EVENT"s}},
+            errors);
+        di->setConstantValue(adapter->getName());
+        comp->addDataItem(di, errors);
+      }
+
+      {
+        ErrorList errors;
+        auto di = DataItem::make({{"type", "OBSERVATION_UPDATE_RATE"s},
+                                  {"id", id + "_observation_update_rate"s},
+                                  {"units", "COUNT/SECOND"s},
+                                  {"statistic", "AVERAGE"s},
+                                  {"category", "SAMPLE"s}},
+                                 errors);
+        comp->addDataItem(di, errors);
+      }
+
+      {
+        ErrorList errors;
+        auto di = DataItem::make({{"type", "ASSET_UPDATE_RATE"s},
+                                  {"id", id + "_asset_update_rate"s},
+                                  {"units", "COUNT/SECOND"s},
+                                  {"statistic", "AVERAGE"s},
+                                  {"category", "SAMPLE"s}},
+                                 errors);
+        comp->addDataItem(di, errors);
+      }
+
+      {
+        ErrorList errors;
+        auto di = DataItem::make({{"type", "ADAPTER_SOFTWARE_VERSION"s},
+                                  {"id", id + "_adapter_software_version"s},
+                                  {"category", "EVENT"s}},
+                                 errors);
+        comp->addDataItem(di, errors);
+      }
+
+      {
+        ErrorList errors;
+        auto di = DataItem::make({{"type", "MTCONNECT_VERSION"s},
+                                  {"id", id + "_mtconnect_version"s},
+                                  {"category", "EVENT"s}},
+                                 errors);
+        comp->addDataItem(di, errors);
+      }
     }
-    else
+
+    void AgentDevice::addRequiredDataItems()
     {
-      auto device = GetOption<string>(adapter->getOptions(), configuration::Device);
-      if (device)
-        attrs["name"] = *device;
+      using namespace entity;
+      using namespace device_model::data_item;
+      ErrorList errors;
+
+      // Add the required data items
+      auto di = DataItem::make(
+          {{"type", "AVAILABILITY"s}, {"id", "agent_avail"s}, {"category", "EVENT"s}}, errors);
+      addDataItem(di, errors);
+
+      // Add the required data items
+      auto add = DataItem::make(
+          {{"type", "DEVICE_ADDED"s}, {"id", "device_added"s}, {"category", "EVENT"s}}, errors);
+      addDataItem(add, errors);
+
+      auto removed = DataItem::make(
+          {{"type", "DEVICE_REMOVED"s}, {"id", "device_removed"s}, {"category", "EVENT"s}}, errors);
+      addDataItem(removed, errors);
+
+      auto changed = DataItem::make(
+          {{"type", "DEVICE_CHANGED"s}, {"id", "device_changed"s}, {"category", "EVENT"s}}, errors);
+      addDataItem(changed, errors);
     }
-    auto comp = new Component("Adapter", attrs);
-    m_adapters->addChild(comp);
-
-    {
-      auto di = new DataItem({{"type", "CONNECTION_STATUS"},
-                              {"id", id + "_connection_status"},
-                              {"category", "EVENT"}});
-      di->setComponent(*comp);
-      comp->addDataItem(di);
-    }
-
-    if (!suppress)
-    {
-      auto di = new DataItem(
-          {{"type", "ADAPTER_URI"}, {"id", id + "_adapter_uri"}, {"category", "EVENT"}});
-      di->setComponent(*comp);
-      di->addConstrainedValue(adapter->getUrl());
-      comp->addDataItem(di);
-    }
-
-    {
-      auto di = new DataItem({{"type", "OBSERVATION_UPDATE_RATE"},
-                              {"id", id + "_observation_update_rate"},
-                              {"units", "COUNT/SECOND"},
-                              {"statistic", "AVERAGE"},
-                              {"category", "SAMPLE"}});
-      di->setComponent(*comp);
-      comp->addDataItem(di);
-    }
-
-    {
-      auto di = new DataItem({{"type", "ASSET_UPDATE_RATE"},
-                              {"id", id + "_asset_update_rate"},
-                              {"units", "COUNT/SECOND"},
-                              {"statistic", "AVERAGE"},
-                              {"category", "SAMPLE"}});
-      di->setComponent(*comp);
-      comp->addDataItem(di);
-    }
-
-    {
-      auto di = new DataItem({{"type", "ADAPTER_SOFTWARE_VERSION"},
-                              {"id", id + "_adapter_software_version"},
-                              {"category", "EVENT"}});
-      di->setComponent(*comp);
-      comp->addDataItem(di);
-    }
-
-    {
-      auto di = new DataItem({{"type", "MTCONNECT_VERSION"},
-                              {"id", id + "_mtconnect_version"},
-                              {"category", "EVENT"}});
-      di->setComponent(*comp);
-      comp->addDataItem(di);
-    }
-  }
-
-  void AgentDevice::addRequiredDataItems()
-  {
-    // Add the required data items
-    auto di =
-        new DataItem({{"type", "AVAILABILITY"}, {"id", "agent_avail"}, {"category", "EVENT"}});
-    di->setComponent(*this);
-    addDataItem(di);
-
-    // Add the required data items
-    auto add =
-        new DataItem({{"type", "DEVICE_ADDED"}, {"id", "device_added"}, {"category", "EVENT"}});
-    add->setComponent(*this);
-    addDataItem(add);
-
-    auto removed =
-        new DataItem({{"type", "DEVICE_REMOVED"}, {"id", "device_removed"}, {"category", "EVENT"}});
-    removed->setComponent(*this);
-    addDataItem(removed);
-
-    auto changed =
-        new DataItem({{"type", "DEVICE_CHANGED"}, {"id", "device_changed"}, {"category", "EVENT"}});
-    changed->setComponent(*this);
-    addDataItem(changed);
-  }
+  }  // namespace device_model
 }  // namespace mtconnect

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +19,12 @@
 
 #include <unordered_set>
 
-#include <dlib/logger.h>
+#include "logging.hpp"
 
 using namespace std;
 
 namespace mtconnect {
   namespace entity {
-    static dlib::logger g_logger("EntityFactory");
-
     void Factory::_dupFactory(FactoryPtr &factory, FactoryMap &factories)
     {
       auto old = factories.find(factory);
@@ -75,7 +73,7 @@ namespace mtconnect {
       return copy;
     }
 
-    void Factory::LogError(const std::string &what) { g_logger << dlib::LWARN << what; }
+    void Factory::LogError(const std::string &what) { LOG(warning) << what; }
 
     void Factory::performConversions(Properties &properties, ErrorList &errors) const
     {
@@ -93,8 +91,7 @@ namespace mtconnect {
             }
             catch (PropertyError &e)
             {
-              g_logger << dlib::LWARN << "Error occurred converting " << r.getName() << ": "
-                       << e.what();
+              LOG(warning) << "Error occurred converting " << r.getName() << ": " << e.what();
               e.setProperty(r.getName());
               errors.emplace_back(e.dup());
               properties.erase(p);
@@ -106,6 +103,7 @@ namespace mtconnect {
 
     bool Factory::isSufficient(Properties &properties, ErrorList &errors) const
     {
+      NAMED_SCOPE("EntityFactory");
       bool success {true};
       for (auto &p : properties)
         p.first.clearMark();

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,15 +19,16 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "agent.hpp"
-#include "config.hpp"
-#include "config_options.hpp"
-#include "rolling_file_logger.hpp"
-#include "xml_printer.hpp"
-
 #include <chrono>
-#include <string>
 #include <filesystem>
+#include <string>
+
+#include "agent.hpp"
+#include "configuration/agent_config.hpp"
+#include "configuration/config_options.hpp"
+#include "printer/xml_printer.hpp"
+#include "sink/rest_sink/rest_service.hpp"
+#include "source/adapter/shdr/shdr_adapter.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -35,20 +36,19 @@
 #define chdir _chdir
 #endif
 
-static dlib::logger g_logger("config_test");
-
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::configuration;
 namespace fs = std::filesystem;
 
-namespace
-{
+namespace {
   class ConfigTest : public testing::Test
   {
-   protected:
+  protected:
     void SetUp() override
     {
-      m_config = std::make_unique<mtconnect::AgentConfiguration>();
+      m_config = std::make_unique<AgentConfiguration>();
+      m_config->setDebug(true);
       m_cwd = std::filesystem::current_path();
     }
 
@@ -58,7 +58,7 @@ namespace
       chdir(m_cwd.string().c_str());
     }
 
-    std::unique_ptr<mtconnect::AgentConfiguration> m_config;
+    std::unique_ptr<AgentConfiguration> m_config;
     std::filesystem::path m_cwd;
   };
 
@@ -66,8 +66,7 @@ namespace
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
-    std::istringstream str("");
-    m_config->loadConfig(str);
+    m_config->loadConfig("");
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
@@ -78,22 +77,26 @@ namespace
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
-    std::istringstream str("BufferSize = 4\n");
-    m_config->loadConfig(str);
+    m_config->loadConfig("BufferSize = 4\n");
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_EQ(16U, agent->getBufferSize());
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+    ASSERT_EQ(16U, rest->getBufferSize());
   }
 
   TEST_F(ConfigTest, Device)
   {
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n");
+    string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().back();
+    const auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
 
     auto deviceName = GetOption<string>(adapter->getOptions(), configuration::Device);
     ASSERT_TRUE(deviceName);
@@ -102,120 +105,134 @@ namespace
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
-    
+
     auto device = agent->findDeviceByUUIDorName(*deviceName);
-    ASSERT_TRUE(device->m_preserveUuid);
+    ASSERT_TRUE(device->preserveUuid());
   }
 
   TEST_F(ConfigTest, Adapter)
   {
     using namespace std::chrono_literals;
 
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "Adapters { LinuxCNC { \n"
-                           "Port = 23\n"
-                           "Host = 10.211.55.1\n"
-                           "FilterDuplicates = true\n"
-                           "AutoAvailable = true\n"
-                           "IgnoreTimestamps = true\n"
-                           "PreserveUUID = true\n"
-                           "LegacyTimeout = 2000\n"
-                           "} }\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "Adapters { LinuxCNC { \n"
+               "Port = 23\n"
+               "Host = 10.211.55.1\n"
+               "FilterDuplicates = true\n"
+               "AutoAvailable = true\n"
+               "IgnoreTimestamps = true\n"
+               "PreserveUUID = true\n"
+               "LegacyTimeout = 2000\n"
+               "} }\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().back();
+    const auto adapter = dynamic_pointer_cast<source::adapter::shdr::ShdrAdapter>(source);
 
     ASSERT_EQ(23, (int)adapter->getPort());
     ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
-    
+
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
-    
+
     // TODO: Need to link to device to the adapter.
-    //ASSERT_TRUE(device->m_preserveUuid);
+    // ASSERT_TRUE(device->m_preserveUuid);
   }
 
   TEST_F(ConfigTest, DefaultPreserveUUID)
   {
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "PreserveUUID = true\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "PreserveUUID = true\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto device = agent->getDevices().front();
 
-    ASSERT_TRUE(device->m_preserveUuid);
+    ASSERT_TRUE(device->preserveUuid());
   }
 
   TEST_F(ConfigTest, DefaultPreserveOverride)
   {
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "PreserveUUID = true\n"
-                           "Adapters { LinuxCNC { \n"
-                           "PreserveUUID = false\n"
-                           "} }\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "PreserveUUID = true\n"
+               "Adapters { LinuxCNC { \n"
+               "PreserveUUID = false\n"
+               "} }\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
     const auto device = agent->findDeviceByUUIDorName("LinuxCNC");
 
-    ASSERT_FALSE(device->m_preserveUuid);
+    ASSERT_FALSE(device->preserveUuid());
   }
 
   TEST_F(ConfigTest, DisablePut)
   {
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "AllowPut = true\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "AllowPut = true\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
 
-    ASSERT_TRUE(agent->getServer()->isPutEnabled());
+    ASSERT_TRUE(rest->getServer()->arePutsAllowed());
   }
 
   TEST_F(ConfigTest, LimitPut)
   {
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "AllowPutFrom = localhost\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "AllowPutFrom = localhost\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->getServer()->isPutEnabled());
-    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("127.0.0.1")));
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+
+    ASSERT_TRUE(rest->getServer()->arePutsAllowed());
+    ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("127.0.0.1")));
   }
 
   TEST_F(ConfigTest, LimitPutFromHosts)
   {
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "AllowPutFrom = localhost, 192.168.0.1\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "AllowPutFrom = localhost, 192.168.0.1\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_TRUE(agent->getServer()->isPutEnabled());
-    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("127.0.0.1")));
-    ASSERT_TRUE(agent->getServer()->isPutAllowedFrom(std::string("192.168.0.1")));
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+
+    ASSERT_TRUE(rest->getServer()->arePutsAllowed());
+    ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("127.0.0.1")));
+    ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("192.168.0.1")));
   }
 
   TEST_F(ConfigTest, Namespaces)
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
-    std::istringstream streams(
+    string streams(
         "StreamsNamespaces {\n"
         "x {\n"
         "Urn = urn:example.com:ExampleStreams:1.2\n"
@@ -227,13 +244,13 @@ namespace
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("x");
     ASSERT_EQ(std::string("urn:example.com:ExampleStreams:1.2"), path);
 
-    std::istringstream devices(
+    string devices(
         "DevicesNamespaces {\n"
         "y {\n"
         "Urn = urn:example.com:ExampleDevices:1.2\n"
@@ -245,12 +262,12 @@ namespace
     m_config->loadConfig(devices);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getDevicesUrn("y");
     ASSERT_EQ(std::string("urn:example.com:ExampleDevices:1.2"), path);
 
-    std::istringstream assets(
+    string asset(
         "AssetsNamespaces {\n"
         "z {\n"
         "Urn = urn:example.com:ExampleAssets:1.2\n"
@@ -259,15 +276,15 @@ namespace
         "}\n"
         "}\n");
 
-    m_config->loadConfig(assets);
+    m_config->loadConfig(asset);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getAssetsUrn("z");
     ASSERT_EQ(std::string("urn:example.com:ExampleAssets:1.2"), path);
 
-    std::istringstream errors(
+    string errors(
         "ErrorNamespaces {\n"
         "a {\n"
         "Urn = urn:example.com:ExampleErrors:1.2\n"
@@ -279,7 +296,7 @@ namespace
     m_config->loadConfig(errors);
     agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
     path = printer->getErrorUrn("a");
     ASSERT_EQ(std::string("urn:example.com:ExampleErrors:1.2"), path);
@@ -289,45 +306,46 @@ namespace
   {
     using namespace std::chrono_literals;
 
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "LegacyTimeout = 2000\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "LegacyTimeout = 2000\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
-    ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().back();
+    const auto adapter = dynamic_pointer_cast<source::adapter::shdr::ShdrAdapter>(source);
 
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }
 
   TEST_F(ConfigTest, IgnoreTimestamps)
   {
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "IgnoreTimestamps = true\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "IgnoreTimestamps = true\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
-    ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().back();
+    const auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
 
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
   {
-    std::istringstream str("Devices = " PROJECT_ROOT_DIR
-                           "/samples/test_config.xml\n"
-                           "IgnoreTimestamps = true\n"
-                           "Adapters { LinuxCNC { \n"
-                           "IgnoreTimestamps = false\n"
-                           "} }\n");
+    string str("Devices = " PROJECT_ROOT_DIR
+               "/samples/test_config.xml\n"
+               "IgnoreTimestamps = true\n"
+               "Adapters { LinuxCNC { \n"
+               "IgnoreTimestamps = false\n"
+               "} }\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    const auto adapter = agent->getAdapters().front();
+    const auto source = agent->getSources().back();
+    const auto adapter = dynamic_pointer_cast<source::adapter::Adapter>(source);
 
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
@@ -336,7 +354,7 @@ namespace
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
-    std::istringstream streams(
+    string streams(
         "StreamsNamespaces {\n"
         "m {\n"
         "Location = /schemas/MTConnectStreams_1.2.xsd\n"
@@ -347,7 +365,7 @@ namespace
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("m");
@@ -362,12 +380,12 @@ namespace
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
-    std::istringstream streams("SchemaVersion = 1.4\n");
+    string streams("SchemaVersion = 1.4\n");
 
     m_config->loadConfig(streams);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto version = printer->getSchemaVersion();
@@ -380,7 +398,7 @@ namespace
   {
     chdir(PROJECT_ROOT_DIR "/test");
     m_config->updateWorkingDirectory();
-    std::istringstream schemas(
+    string schemas(
         "SchemaVersion = 1.3\n"
         "Files {\n"
         "schemas {\n"
@@ -396,7 +414,7 @@ namespace
     m_config->loadConfig(schemas);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
-    auto printer = dynamic_cast<mtconnect::XmlPrinter *>(agent->getPrinter("xml"));
+    auto printer = dynamic_cast<printer::XmlPrinter *>(agent->getPrinter("xml"));
     ASSERT_TRUE(printer);
 
     auto path = printer->getStreamsUrn("m");
@@ -420,135 +438,540 @@ namespace
     ASSERT_EQ(std::string("/schemas/MTConnectError_1.3.xsd"), location);
   }
 
-  TEST_F(ConfigTest, LogFileRollover)
-  {
-    chdir(TEST_BIN_ROOT_DIR);
-// This test/rollover is fragile on Windows due to file caching.
-// Whilst the agent uses standard C runtime file functions
-// this can not easily be worked around. Better to disable the test.
-    m_config->updateWorkingDirectory();
-#ifndef _WINDOWS
-    std::istringstream logger(
-        "logger_config {"
-        "logging_level = ERROR\n"
-        "max_size = 150\n"
-        "max_index = 5\n"
-        "output = file agent.log"
-        "}\n");
-    char buffer[64] = {0};
-    ::remove("agent.log");
-
-    for (int i = 1; i <= 10; i++)
-    {
-      sprintf(buffer, "agent.log.%d", i);
-      ::remove(buffer);
-    }
-
-    m_config->loadConfig(logger);
-
-    ASSERT_TRUE(file_exists("agent.log"));
-    ASSERT_FALSE(file_exists("agent.log.1"));
-    ASSERT_FALSE(file_exists("agent.log.2"));
-    ASSERT_FALSE(file_exists("agent.log.3"));
-    ASSERT_FALSE(file_exists("agent.log.4"));
-    ASSERT_FALSE(file_exists("agent.log.5"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.1"));
-    ASSERT_FALSE(file_exists("agent.log.2"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.2"));
-    ASSERT_FALSE(file_exists("agent.log.3"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.3"));
-    ASSERT_FALSE(file_exists("agent.log.4"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.4"));
-    ASSERT_FALSE(file_exists("agent.log.5"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.5"));
-    ASSERT_FALSE(file_exists("agent.log.6"));
-
-    g_logger << LERROR << "12345678901234567890";
-    g_logger << LERROR << "12345678901234567890";
-    ASSERT_TRUE(file_exists("agent.log.5"));
-    ASSERT_FALSE(file_exists("agent.log.6"));
-#endif
-  }
-
-  TEST_F(ConfigTest, MaxSize)
-  {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-    std::istringstream logger(
-        "logger_config {"
-        "max_size = 150\n"
-        "}\n");
-    m_config->loadConfig(logger);
-    auto fl = m_config->getLogger();
-    ASSERT_EQ(150ULL, fl->getMaxSize());
-    m_config.reset();
-
-    m_config = std::make_unique<mtconnect::AgentConfiguration>();
-    std::istringstream logger2(
-        "logger_config {"
-        "max_size = 15K\n"
-        "}\n");
-    m_config->loadConfig(logger2);
-
-    fl = m_config->getLogger();
-    ASSERT_EQ(15ULL * 1024ULL, fl->getMaxSize());
-    m_config.reset();
-
-    m_config = std::make_unique<mtconnect::AgentConfiguration>();
-    std::istringstream logger3(
-        "logger_config {"
-        "max_size = 15M\n"
-        "}\n");
-    m_config->loadConfig(logger3);
-
-    fl = m_config->getLogger();
-    ASSERT_EQ(15ULL * 1024ULL * 1024ULL, fl->getMaxSize());
-    m_config.reset();
-
-    m_config = std::make_unique<mtconnect::AgentConfiguration>();
-    std::istringstream logger4(
-        "logger_config {"
-        "max_size = 15G\n"
-        "}\n");
-    m_config->loadConfig(logger4);
-
-    fl = m_config->getLogger();
-    ASSERT_EQ(15ULL * 1024ULL * 1024ULL * 1024ULL, fl->getMaxSize());
-  }
-  
   TEST_F(ConfigTest, check_http_headers)
   {
     chdir(TEST_BIN_ROOT_DIR);
     m_config->updateWorkingDirectory();
 
-    std::istringstream str("HttpHeaders {\n"
-                           "  Access-Control-Allow-Origin = *\n"
-                           "\n"
-                           "}\n");
+    string str(
+        "HttpHeaders {\n"
+        "  Access-Control-Allow-Origin = *\n"
+        "\n"
+        "}\n");
     m_config->loadConfig(str);
     auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
     ASSERT_TRUE(agent);
 
-    const auto &server = agent->getServer();
+    ASSERT_TRUE(agent);
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+    const auto server = rest->getServer();
+
+    // TODO: Get headers working again
     const auto &headers = server->getHttpHeaders();
-    
+
     ASSERT_EQ(1, headers.size());
-    ASSERT_EQ("Access-Control-Allow-Origin: *", headers.front());
+    const auto &first = headers.front();
+    ASSERT_EQ("Access-Control-Allow-Origin", first.first);
+    ASSERT_EQ(" *", first.second);
   }
+
+  TEST_F(ConfigTest, dynamic_load_sinks_bad)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Plugins {
+    TestBADService {
+    }
+}
+Sinks {
+    TestBADService {
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto sink = agent->findSink("TestBADService");
+    ASSERT_TRUE(sink == nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_sinks_simple)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Sinks {
+      sink_plugin_test {
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+
+    const auto sink = agent->findSink("sink_plugin_test");
+    ASSERT_TRUE(sink != nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_sinks_with_plugin_block)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Plugins {
+   sink_plugin_test {
+   }
+}
+Sinks {
+      sink_plugin_test {
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+
+    const auto sink = agent->findSink("sink_plugin_test");
+    ASSERT_TRUE(sink != nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_sinks_assigned_name)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Sinks {
+      sink_plugin_test:Sink1 {
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto sink1 = agent->findSink("sink_plugin_test");
+    ASSERT_TRUE(sink1 == nullptr);
+
+    const auto sink2 = agent->findSink("Sink1");
+    ASSERT_TRUE(sink2 != nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_sinks_assigned_name_tag)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Sinks {
+      sink_plugin_test {
+        Name = Sink1
+    }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto sink1 = agent->findSink("sink_plugin_test");
+    ASSERT_TRUE(sink1 == nullptr);
+
+    const auto sink2 = agent->findSink("Sink1");
+    ASSERT_TRUE(sink2 != nullptr);
+  }
+
+  //
+  TEST_F(ConfigTest, dynamic_load_adapter_bad)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Adapters {
+  BadAdapter:Test {
+    Host=Host1
+    Port=7878
+  }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto adapter = agent->findSource("_Host1_7878");
+    ASSERT_TRUE(adapter == nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_adapter_simple)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Adapters {
+    adapter_plugin_test:Test {
+    Host=Host1
+    Port=7878
+  }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto adapter = agent->findSource("Test");
+    ASSERT_TRUE(adapter != nullptr);
+  }
+
+  TEST_F(ConfigTest, dynamic_load_adapter_with_plugin_block)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+Plugins {
+    adapter_plugin_test {
+    }
+}
+Adapters {
+  Test {
+    Host=Host1
+    Port=7878
+    Protocol = adapter_plugin_test
+  }
+}
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto adapter = agent->findSource("Test");
+    ASSERT_TRUE(adapter != nullptr);
+  }
+
+  TEST_F(ConfigTest, max_cache_size_in_no_units)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2000
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2000, cache->getMaxCachedFileSize());
+  }
+
+  TEST_F(ConfigTest, max_cache_size_in_kb)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2k
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2048, cache->getMaxCachedFileSize());
+  }
+
+  TEST_F(ConfigTest, max_cache_size_in_Kb_in_uppercase)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2K
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2048, cache->getMaxCachedFileSize());
+  }
+
+  TEST_F(ConfigTest, max_cache_size_in_mb)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2m
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2 * 1024 * 1024, cache->getMaxCachedFileSize());
+  }
+
+  TEST_F(ConfigTest, max_cache_size_in_gb)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+
+    string str(R"(
+MaxCachedFileSize = 2g
+)");
+
+    m_config->loadConfig(str);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+
+    ASSERT_TRUE(agent);
+    const auto rest =
+        dynamic_pointer_cast<sink::rest_sink::RestService>(agent->findSink("RestService"));
+    ASSERT_TRUE(rest != nullptr);
+
+    auto cache = rest->getFileCache();
+    ASSERT_EQ(2ull * 1024 * 1024 * 1024, cache->getMaxCachedFileSize());
+  }
+
+#define EXPECT_PATH_EQ(p1, p2) \
+  EXPECT_EQ(std::filesystem::weakly_canonical(p1), std::filesystem::weakly_canonical(p2))
+
+  TEST_F(ConfigTest, log_output_should_set_archive_file_pattern)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    string str(R"(
+logger_config {
+  output = file agent.log
+}
+)");
+
+    m_config->loadConfig(str);
+
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+
+    EXPECT_EQ("agent_%Y-%m-%d_%H-%M-%S_%N.log", m_config->getLogArchivePattern().filename());
+    EXPECT_EQ("agent.log", m_config->getLogFileName().filename());
+    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
+  }
+
+  TEST_F(ConfigTest, log_output_should_configure_file_name)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    string str(R"(
+logger_config {
+  output = file logging.log logging_%N.log
+}
+)");
+
+    m_config->loadConfig(str);
+
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+
+    EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
+    EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
+    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
+  }
+
+  TEST_F(ConfigTest, log_should_configure_file_name)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    string str(R"(
+logger_config {
+  file_name = logging.log
+  archive_pattern = logging_%N.log
+}
+)");
+
+    m_config->loadConfig(str);
+
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+
+    EXPECT_EQ("logging_%N.log", m_config->getLogArchivePattern().filename());
+    EXPECT_EQ("logging.log", m_config->getLogFileName().filename());
+    EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
+  }
+
+  TEST_F(ConfigTest, log_should_specify_relative_directory)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    string str(R"(
+logger_config {
+  file_name = logging.log
+  archive_pattern = logs/logging_%N.log
+}
+)");
+
+    m_config->loadConfig(str);
+
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+
+    fs::path path {std::filesystem::canonical(TEST_BIN_ROOT_DIR) / "logs"};
+
+    EXPECT_PATH_EQ(path / "logging_%N.log", m_config->getLogArchivePattern());
+    EXPECT_PATH_EQ(path / "logging.log", m_config->getLogFileName());
+    EXPECT_PATH_EQ(path, m_config->getLogDirectory());
+  }
+
+  TEST_F(ConfigTest, log_should_specify_relative_directory_with_active_in_parent)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    string str(R"(
+logger_config {
+  file_name = ./logging.log
+  archive_pattern = logs/logging_%N.log
+}
+)");
+
+    m_config->loadConfig(str);
+
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+
+    fs::path path {std::filesystem::canonical(TEST_BIN_ROOT_DIR)};
+
+    EXPECT_PATH_EQ(path / "logs" / "logging_%N.log", m_config->getLogArchivePattern());
+    EXPECT_PATH_EQ(path / "logging.log", m_config->getLogFileName());
+    EXPECT_PATH_EQ(path / "logs", m_config->getLogDirectory());
+  }
+
+  TEST_F(ConfigTest, log_should_specify_max_file_and_rotation_size)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    using namespace boost::log::trivial;
+
+    string str(R"(
+logger_config {
+  max_size = 1gb
+  rotation_size = 20gb
+}
+)");
+
+    m_config->loadConfig(str);
+
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+
+    EXPECT_EQ(severity_level::info, m_config->getLogLevel());
+    EXPECT_EQ(1ll * 1024 * 1024 * 1024, m_config->getMaxLogFileSize());
+    EXPECT_EQ(20ll * 1024 * 1024 * 1024, m_config->getLogRotationSize());
+  }
+
+  TEST_F(ConfigTest, log_should_configure_logging_level)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    using namespace boost::log::trivial;
+
+    string str(R"(
+logger_config {
+   level = fatal
+}
+)");
+
+    m_config->loadConfig(str);
+
+    auto sink = m_config->getLoggerSink();
+    ASSERT_TRUE(sink);
+
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+
+    m_config->setLoggingLevel("all");
+    EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
+    m_config->setLoggingLevel("none");
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+    m_config->setLoggingLevel("trace");
+    EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
+    m_config->setLoggingLevel("debug");
+    EXPECT_EQ(severity_level::debug, m_config->getLogLevel());
+    m_config->setLoggingLevel("info");
+    EXPECT_EQ(severity_level::info, m_config->getLogLevel());
+    m_config->setLoggingLevel("lwarn");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "lwarn";
+    m_config->setLoggingLevel("lwarning");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "lwarning";
+    m_config->setLoggingLevel("warning");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "warning";
+    m_config->setLoggingLevel("error");
+    EXPECT_EQ(severity_level::error, m_config->getLogLevel());
+    m_config->setLoggingLevel("fatal");
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+
+    m_config->setLoggingLevel("ALL");
+    EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
+    m_config->setLoggingLevel("NONE");
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+    m_config->setLoggingLevel("TRACE");
+    EXPECT_EQ(severity_level::trace, m_config->getLogLevel());
+    m_config->setLoggingLevel("DEBUG");
+    EXPECT_EQ(severity_level::debug, m_config->getLogLevel());
+    m_config->setLoggingLevel("INFO");
+    EXPECT_EQ(severity_level::info, m_config->getLogLevel());
+    m_config->setLoggingLevel("LWARN");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "LWARN";
+    m_config->setLoggingLevel("LWARNING");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "LWARNING";
+    m_config->setLoggingLevel("WARNING");
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel()) << "WARNING";
+    m_config->setLoggingLevel("ERROR");
+    EXPECT_EQ(severity_level::error, m_config->getLogLevel());
+    m_config->setLoggingLevel("FATAL");
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+  }
+
 }  // namespace

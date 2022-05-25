@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +17,11 @@
 
 #include "utilities.hpp"
 
-#include <date/tz.h>
-
 #include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <date/tz.h>
 #include <list>
 #include <map>
 #include <mutex>
@@ -45,8 +44,7 @@
 using namespace std;
 using namespace std::chrono;
 
-namespace mtconnect
-{
+namespace mtconnect {
   void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
 
   uint64_t parseTimeMicro(const std::string &aTime)

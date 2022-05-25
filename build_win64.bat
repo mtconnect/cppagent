@@ -1,10 +1,14 @@
-mkdir build_win64
+if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat" ("C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat")
+
+if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars64.bat" ("C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars64.bat")
+
+if exist "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat" ("C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvars64.bat")
+
+del build_win64/*.* /s /q
+
+conan export conan/mqtt_cpp
+conan install . -if build_win64 --build=missing -pr conan/profiles/vs64
+conan build . -bf build_win64
+
 cd build_win64
-
-del /s /q *.*
-
-cmake -G "Visual Studio 16 2019" -A x64 ..
-cmake --build . --config Release --target ALL_BUILD
-ctest -C Release
 cpack -G ZIP
-

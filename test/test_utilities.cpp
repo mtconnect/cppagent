@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,17 +19,16 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "test_utilities.hpp"
+#include <iostream>
 
 #include <libxml/tree.h>
 #include <libxml/xpathInternals.h>
 
-#include <iostream>
+#include "test_utilities.hpp"
 
 using namespace std;
 
-namespace
-{
+namespace {
   template <typename T>
   std::string toString(T value)
   {
@@ -224,8 +223,10 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
       cerr << "Cannot handle type: " << first->type << endl;
   }
 
-  trim(actual);
+  xmlXPathFreeObject(obj);
+  xmlXPathFreeContext(xpathCtx);
 
+  trim(actual);
   string message = (string) "Incorrect value for path " + xpath;
 
   if (expected[0] != '!')
@@ -279,6 +280,10 @@ void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected, const std::s
   string message = (string) "Incorrect count of elements for path " + xpath;
 
   int actual = obj->nodesetval->nodeNr;
+
+  xmlXPathFreeObject(obj);
+  xmlXPathFreeContext(xpathCtx);
+
   failNotEqualIf(actual != expected, toString(expected), toString(actual), message, file, line);
 }
 

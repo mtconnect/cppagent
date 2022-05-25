@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
 
 #include <unordered_map>
 
-#include "observation/data_set.hpp"
+#include "data_set.hpp"
 #include "qname.hpp"
 #include "requirement.hpp"
 
@@ -42,7 +42,7 @@ namespace mtconnect {
     using OrderList = std::list<std::string>;
     using OrderMap = std::unordered_map<std::string, int>;
     using OrderMapPtr = std::shared_ptr<OrderMap>;
-    using Property = std::pair<std::string, Value>;
+    using Property = std::pair<PropertyKey, Value>;
 
     template <typename T>
     inline std::optional<T> OptionallyGet(const std::string &key, const Properties &props)
@@ -60,6 +60,7 @@ namespace mtconnect {
       using super = std::nullptr_t;
 
       Entity() {}
+      Entity(const std::string &name) : m_name(name) {}
       Entity(const std::string &name, const Properties &props) : m_name(name), m_properties(props)
       {}
       Entity(const Entity &entity) = default;

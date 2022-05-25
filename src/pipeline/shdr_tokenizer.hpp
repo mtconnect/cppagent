@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,18 +17,16 @@
 
 #pragma once
 
-#include "entity/entity.hpp"
-#include "transform.hpp"
-
 #include <chrono>
 #include <regex>
 
-namespace mtconnect
-{
+#include "entity/entity.hpp"
+#include "transform.hpp"
+
+namespace mtconnect {
   class Agent;
 
-  namespace pipeline
-  {
+  namespace pipeline {
     using TokenList = std::list<std::string>;
     class Tokens : public entity::Entity
     {
@@ -90,7 +88,7 @@ namespace mtconnect
         using namespace std;
         auto cp = data.c_str();
         std::string token;
-        bool copied{false};
+        bool copied {false};
         while (*cp != '\0')
         {
           while (*cp != '\0' && isspace(*cp))

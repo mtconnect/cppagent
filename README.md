@@ -1,7 +1,7 @@
 
-MTConnect C++ Agent Version 1.7
+MTConnect C++ Agent Version 2.0
 --------
-[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent)
+[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent_dev)
 
 The C++ Agent provides the a complete implementation of the HTTP
 server required by the MTConnect standard. The agent provides the
@@ -10,6 +10,8 @@ server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 2.0.0.1 Rearchitecture of the agent with TLS, MQTT Adapter, Ruby Interpreter, Agent Adaptr, and much more
 
 Version 1.7.0.0 added kinematics, solid models, and new specifications types.
 
@@ -137,7 +139,7 @@ Each set of files must be declared using a named file description, like schema o
 styles and the local `Path` and the `Location` the files will be mapped to in the
 HTTP server namespace. For example:
 
-    http://example.com:5000/schemas/MTConnectStreams_1.3.xsd will map to ../schemas/MTConnectStreams_1.3.xsd
+    http://example.com:5000/schemas/MTConnectStreams_1.7.xsd will map to ../schemas/MTConnectStreams_1.7.xsd
 
 All files will be mapped and the directory names do not need to be the same. These files can be either served directly or can be used to extend the schema or add XSLT stylesheets for formatting the XML in browsers.
 
@@ -147,12 +149,12 @@ To specify the new schema for the documents, use the following declaration:
 
     StreamsNamespaces {
       e {
-        Urn = urn:example.com:ExampleStreams:1.3
-        Location = /schemas/ExampleStreams_1.3.xsd
+        Urn = urn:example.com:ExampleStreams:1.7
+        Location = /schemas/ExampleStreams_1.7.xsd
       }
     }
 
-This will use the ExampleStreams_1.3.xsd schema in the document. The `e` is the alias that will be
+This will use the ExampleStreams_1.7.xsd schema in the document. The `e` is the alias that will be
 used to reference the extended schema. The `Location` is the location of the xsd file relative in 
 the agent namespace. The `Location` must be mapped in the `Files` section.
 
@@ -511,6 +513,64 @@ can specify a new static file you would like to deliver:
 The agent will not serve all files from a directory and will not provide an index 
 function as this is insecure and not the intended function of the agent.
 
+Ruby
+---------
+
+If the "-o with_ruby=True" build is selected, then use to following configuration:
+
+    Ruby {
+      module = path/to/module.rb
+    }
+
+The module specified at the path given will be loaded. There are examples in the test/Resources/ruby directory in 
+github: [Ruby Tests](https://github.com/mtconnect/cppagent_dev/tree/master/test/resources/ruby).
+
+The current functionality is limited to the pipeline transformations from the adapters. Future changes will include adding sources and sinks.
+
+The following is a complete example for fixing the Execution of a machine:
+
+```ruby
+class AlertTransform < MTConnect::RubyTransform
+  def initialize(name, filter)
+    @cache = Hash.new
+    super(name, filter)
+  end
+
+  @@count = 0
+  def transform(obs)
+    @@count += 1
+    if @@count % 10000 == 0
+      puts "---------------------------"
+      puts ">  #{ObjectSpace.count_objects}"
+      puts "---------------------------"
+    end
+    
+    dataItemId = obs.properties[:dataItemId]
+    if dataItemId == 'servotemp1' or dataItemId == 'Xfrt' or dataItemId == 'Xload'
+      @cache[dataItemId] = obs.value
+      device = MTConnect.agent.default_device
+      
+      di = device.data_item('xaxisstate')
+      if @cache['servotemp1'].to_f > 10.0 or @cache['Xfrt'].to_f > 10.0 or @cache['Xload'].to_f > 10
+        newobs = MTConnect::Observation.new(di, "ERROR")
+      else
+        newobs = MTConnect::Observation.new(di, "OK")
+      end
+      forward(newobs)
+    end
+    forward(obs)
+  end
+end
+    
+MTConnect.agent.sources.each do |s|
+  pipe = s.pipeline
+  puts "Splicing the pipeline"
+  trans = AlertTransform.new('AlertTransform', :Sample)
+  puts trans
+  pipe.splice_before('DeliverObservation', trans)
+end
+```
+
 Configuration Parameters
 ---------
 
@@ -619,7 +679,44 @@ Configuration Parameters
     *Default*: 1
 	
 * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7. This applies to all adapters.
+
     *Default*: false
+
+* `WorkerThreads` - The number of operating system threads dedicated to the Agent
+
+    *Default*: 1
+	
+#### Configuration Pameters for TLS (https) Support ####
+
+The following parameters must be present to enable https requests. If there is no password on the certificate, `TlsCertificatePassword` may be omitted.
+	
+* `TlsCertificateChain` - The name of the file containing the certificate chain created from signing authority
+
+    *Default*: *NULL*
+
+* `TlsPrivateKey` -  The name of the file containing the private key for the certificate
+
+    *Default*: *NULL*
+
+* `TlsDHKey` -  The name of the file containing the Diffie–Hellman key
+
+    *Default*: *NULL*
+
+* `TlsCertificatePassword` -  The password used when creating the certificate. If none was supplied, do not use.
+
+    *Default*: *NULL*
+
+* `TlsOnly` -  Only allow secure connections, http requests will be rejected
+
+    *Default*: false
+
+* `TlsVerifyClientCertificate` - Request and verify the client certificate against root authorities
+
+    *Default*: false
+
+* `TlsClientCAs` - For `TlsVerifyClientCertificate`, specifies a file that contains additional certificate authorities for verification
+
+    *Default*: *NULL*
 
 
 ### Adapter configuration items ###
@@ -727,6 +824,30 @@ Configuration Parameters
 	* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7.
 		*Default*: false
 
+
+### Agent Adapter Configuration
+
+* `Url` - The URL of the source agent. `http:` or `https:` are accepted for the protocol.
+* `SourceDevice` – The Device name or UUID for the source of the data
+* `Count` – the number of items request during a single sample
+
+    *Default*: 1000  
+    
+* `Polling Interval` – The interval used for streaming or polling in milliseconds
+
+    *Default*: 500ms
+    
+* `Reconnect Interval` – The interval between reconnection attampts in milliseconds
+
+    *Default*: 10000ms
+    
+* `Use Polling` – Force the adapter to use polling instead of streaming. Only set to `true` if x-multipart-replace blocked.
+
+    *Default*: false
+    
+* `Heartbeat` – The heartbeat interval from the server
+
+    *Default*: 10000ms
 
 logger_config configuration items
 -----
@@ -1099,3 +1220,210 @@ An example in ruby is as follows:
     => #<Net::HTTPOK 200 OK readbody=true>
     > r.body
     => "<success/>"
+	
+# Building the agent on Windows and Ubuntu
+
+## Building on Windows
+
+The MTConnect Agent uses the conan package manager to install dependencies:
+
+  [Conan Package Manager Downloads](https://conan.io/downloads.html)
+
+Download the Windows installer for your platform and run the installer.
+
+You also need CMake [CMake](https://cmake.org/download/) and git [git](https://git-scm.com/download/win)
+
+### Setting up build
+
+Clone the agent to another directory:
+
+    git clone git@github.com:/mtconnect/cppagent_dev.git
+
+Make a build subdirectory of `cppagent_dev`
+
+    cd cppagent_dev
+    conan export conan\mqtt_cpp
+    conan export conan\mruby
+	
+####  To build for 64 bit Windows
+	
+Make sure to setup the environment:
+
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\VC\Auxiliary\Build\vcvars64.bat"
+
+or
+
+    "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+	
+    conan install . -if build -s build_type=Release --build=missing -pr conan/profiles/vs64
+   	conan build . -bf build
+
+
+#### To build for 32 bit Windows
+
+    conan install . -if build -s build_type=Release --build=missing -pr conan/profiles/vs32
+	conan build . -bf build
+
+#### To build for Windows XP
+
+The windows XP 140 XP toolchain needs to be installed under individual component in the Visual Studio 2019 installer. 
+
+    conan install . -s build_type=Release --build=missing -pr conan/profiles/vsxp
+	conan build . -bf build
+
+### Package the release
+
+    cpack -G ZIP
+
+## Building on Ubuntu on 20.04 LTS
+
+### Setup the build
+
+    sudo apt-get install build-essential python3.9 python3-pip git cmake
+	python3.9 -m pip install conan
+
+### Download the source
+
+	git clone git@github.com:/mtconnect/cppagent_dev.git
+	
+### Install the dependencies
+	
+	cd cppagent_dev
+	conan export conan/mqtt_cpp
+	conan export conan/mruby
+	conan install . -if build --build=missing -pr conan/profiles/gcc
+	
+### Build the agent
+	
+	conan build . -bf build
+	
+## Building on Mac OS
+
+Install brew and xcode command line tools
+	
+	/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+	xcode-select —install
+
+### Setup the build
+
+    brew install git
+    brew install cmake
+
+	pip3 install conan
+
+### Download the source
+
+	git clone git@github.com:/mtconnect/cppagent_dev.git
+	
+### Install the dependencies
+
+    cd cppagent_dev
+    conan export conan/mqtt_cpp
+    conan export conan/mruby
+    conan install . -if build  --build=missing
+	
+### Build the agent
+	
+	conan build . -bf build
+	
+### For XCode
+   
+	mkdir build & cd build
+    cmake -G Xcode ..
+
+## Building on Fedora Alpine
+
+### As Root
+
+	apk add g++ python3 cmake git linux-headers make perl
+	
+	python3 -m ensurepip
+	python3 -m pip install --upgrade pip
+
+### As the user
+	
+	export PATH=~/.local/bin:$PATH
+	pip3 install conan	
+	git clone git@github.com:/mtconnect/cppagent_dev.git	
+
+### Export mqtt_cpp package
+
+	cd cppagent_dev
+	conan export conan/mqtt_cpp/
+
+### Install packages
+
+         conan install . -if build -pr conan/profiles/gcc --build=missing
+	
+## Build the agent
+
+	conan build . -bf build
+
+# Creating Test Certifications (see resources gen_certs shell script)
+
+This section assumes you have installed openssl and can use the command line. The subject of the certificate is only for testing and should not be used in production. This section is provided to support testing and verification of the functionality. A certificate provided by a real certificate authority should be used in a production process.
+
+NOTE: The certificates must be generated with OpenSSL version 1.1.1 or later. LibreSSL 2.8.3 is not compatible with 
+      more recent version of SSL on raspian (Debian).
+
+## Server Creating self-signed certificate chain
+
+### Create Signing authority key and certificate
+
+	openssl req -x509 -nodes -sha256 -days 3650 -newkey rsa:3072 -keyout rootca.key -out rootca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=serverca.org"
+
+### User Key
+
+    openssl genrsa -out user.key 3072
+
+#### Signing Request
+
+    openssl req -new -sha256 -key user.key -out user.csr -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=user.org"
+
+#### User Certificate using root signing certificate
+
+    openssl x509 -req -in user.csr -CA rootca.crt -CAkey rootca.key -CAcreateserial -out user.crt -days 3650
+
+### Create DH Parameters
+
+    openssl dhparam -out dh2048.pem 3072
+
+### Verify
+
+    openssl verify -CAfile rootca.crt rootca.crt
+    openssl verify -CAfile rootca.crt user.crt
+
+## Client Certificate
+
+### Create Signing authority key
+
+    openssl req -x509 -nodes -sha256 -days 3650 -newkey rsa:3072 -keyout clientca.key -out clientca.crt -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=clientca.org"
+
+### Create client key
+
+    openssl genrsa -out client.key 3072
+
+### Create client signing request
+
+    openssl req -new -key client.key -out client.csr -subj "/C=US/ST=State/L=City/O=Your Company, Inc./OU=IT/CN=client.org"
+
+### Create Client Certificate
+
+For client.cnf
+
+    basicConstraints = CA:FALSE
+    nsCertType = client, email
+    nsComment = "OpenSSL Generated Client Certificate"
+    subjectKeyIdentifier = hash
+    authorityKeyIdentifier = keyid,issuer
+    keyUsage = critical, nonRepudiation, digitalSignature, keyEncipherment
+    extendedKeyUsage = clientAuth, emailProtection
+
+### Create the cert
+
+    openssl x509 -req -in client.csr -CA clientca.crt -CAkey clientca.key -out client.crt -CAcreateserial -days 3650 -sha256 -extfile client.cnf
+
+### Verify
+
+    openssl verify -CAfile clientca.crt clientca.crt
+    openssl verify -CAfile clientca.crt client.crt

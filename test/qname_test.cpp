@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ using namespace std;
 TEST(QNameTest, should_handle_simple_name_without_prefix)
 {
   QName qname("SomeName");
-  
+
   ASSERT_EQ("SomeName", qname);
   ASSERT_EQ("SomeName", qname.getName());
   ASSERT_EQ("SomeName", qname.getQName());
@@ -37,7 +37,7 @@ TEST(QNameTest, should_handle_simple_name_without_prefix)
 TEST(QNameTest, should_split_name_with_prefix)
 {
   QName qname("x:SomeName");
-  
+
   ASSERT_EQ("x:SomeName", qname);
   ASSERT_EQ("SomeName", qname.getName());
   ASSERT_FALSE(qname.getNs().empty());
@@ -47,7 +47,7 @@ TEST(QNameTest, should_split_name_with_prefix)
 TEST(QNameTest, should_construct_with_name_and_prefix)
 {
   QName qname("SomeName", "x");
-  
+
   ASSERT_EQ("x:SomeName", qname);
   ASSERT_EQ("SomeName", qname.getName());
   ASSERT_FALSE(qname.getNs().empty());
@@ -57,9 +57,9 @@ TEST(QNameTest, should_construct_with_name_and_prefix)
 TEST(QNameTest, should_set_name_and_keep_namespace)
 {
   QName qname("SomeName", "x");
-  
+
   ASSERT_EQ("x", qname.getNs());
-  
+
   qname.setName("Dog");
   ASSERT_EQ("x:Dog", qname);
   ASSERT_EQ("Dog", qname.getName());
@@ -69,7 +69,7 @@ TEST(QNameTest, should_set_namespace_and_keep_name)
 {
   QName qname("SomeName");
   ASSERT_TRUE(qname.getNs().empty());
-  
+
   qname.setNs("x");
   ASSERT_EQ("x:SomeName", qname);
   ASSERT_EQ("SomeName", qname.getName());
@@ -82,7 +82,6 @@ TEST(QNameTest, should_clear)
   ASSERT_FALSE(qname.getNs().empty());
   ASSERT_FALSE(qname.getName().empty());
 
-  
   qname.clear();
   ASSERT_TRUE(qname.empty());
   ASSERT_TRUE(qname.getNs().empty());

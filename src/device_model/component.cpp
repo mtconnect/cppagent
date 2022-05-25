@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,149 +17,135 @@
 
 #include "component.hpp"
 
-#include "agent.hpp"
-#include "composition.hpp"
-#include "data_item.hpp"
-#include "device_model/device.hpp"
-
 #include <cstdlib>
 #include <stdexcept>
 
+#include "agent.hpp"
+#include "composition.hpp"
+#include "configuration/configuration.hpp"
+#include "data_item/data_item.hpp"
+#include "description.hpp"
+#include "device_model/device.hpp"
+#include "reference.hpp"
+
 using namespace std;
 
-namespace mtconnect
-{
-  // Component public methods
-  Component::Component(const string &className, const std::map<string, string> &attributes,
-                       const string &prefix)
-  {
-    const auto idPos = attributes.find("id");
-    if (idPos != attributes.end())
-      m_id = idPos->second;
+namespace mtconnect {
+  using namespace entity;
+  namespace device_model {
+    using namespace data_item;
 
-    const auto namePos = attributes.find("name");
-    if (namePos != attributes.end())
-      m_name = namePos->second;
-
-    const auto nativeNamePos = attributes.find("nativeName");
-    if (nativeNamePos != attributes.end())
-      m_nativeName = nativeNamePos->second;
-
-    const auto uuidPos = attributes.find("uuid");
-    if (uuidPos != attributes.end())
-      m_uuid = uuidPos->second;
-
-    const auto sampleIntervalPos = attributes.find("sampleInterval");
-    if (sampleIntervalPos != attributes.end())
-      m_sampleInterval = stringToFloat(sampleIntervalPos->second.c_str());
-    else
+    // Component public methods
+    Component::Component(const std::string &name, const entity::Properties &props)
+      : Entity(name, props)
     {
-      const auto sampleRatePos = attributes.find("sampleRate");
-      if (sampleRatePos == attributes.end())
-        m_sampleInterval = 0.0f;
-      else
-        m_sampleInterval = stringToFloat(sampleRatePos->second.c_str());
+      m_id = get<string>("id");
+      m_name = maybeGet<string>("name");
+      m_uuid = maybeGet<string>("uuid");
     }
 
-    m_parent = nullptr;
-    m_device = nullptr;
-    m_class = className;
-    m_prefix = prefix;
-    m_prefixedClass = prefix + ":" + className;
-    m_attributes = buildAttributes();
-  }
-
-  Component::~Component()
-  {
-    for (auto &i : m_children)
-      delete i;
-    m_children.clear();
-    for (auto &i : m_dataItems)
-      delete i;
-    m_dataItems.clear();
-  }
-
-  std::map<string, string> Component::buildAttributes() const
-  {
-    std::map<string, string> attributes;
-    attributes["id"] = m_id;
-
-    if (!m_name.empty())
-      attributes["name"] = m_name;
-
-    if (m_sampleInterval != 0.0f)
-      attributes["sampleInterval"] = format(m_sampleInterval);
-
-    if (!m_uuid.empty())
-      attributes["uuid"] = m_uuid;
-
-    if (!m_nativeName.empty())
-      attributes["nativeName"] = m_nativeName;
-
-    return attributes;
-  }
-
-  void Component::addDescription(string body, const std::map<string, string> &attributes)
-  {
-    m_description = attributes;
-
-    if (!body.empty())
-      m_descriptionBody = body;
-  }
-
-  Device *Component::getDevice()
-  {
-    if (!m_device)
+    void Component::connectDataItems()
     {
-      m_device = dynamic_cast<Device *>(this);
-      if (m_device == nullptr && m_parent)
-        m_device = m_parent->getDevice();
-    }
-
-    return m_device;
-  }
-
-  void Component::addDataItem(DataItem *dataItem)
-  {
-    m_dataItems.emplace_back(dataItem);
-    if (getDevice())
-      getDevice()->addDeviceDataItem(dataItem);
-  }
-
-  void Component::resolveReferences()
-  {
-    Device *device = getDevice();
-
-    for (auto &reference : m_references)
-    {
-      if (reference.m_type == Component::Reference::DATA_ITEM)
+      auto items = getList("DataItems");
+      if (items)
       {
-        auto di = device->getDeviceDataItem(reference.m_id);
-        if (!di)
-          throw runtime_error("Cannot resolve Reference for component " + m_name +
-                              " to data item " + reference.m_id);
-        reference.m_dataItem = di;
-      }
-      else if (reference.m_type == Component::Reference::COMPONENT)
-      {
-        auto comp = device->getComponentById(reference.m_id);
-        if (!comp)
-          throw runtime_error("Cannot resolve Reference for component " + m_name +
-                              " to component " + reference.m_id);
-
-        reference.m_component = comp;
+        for (auto &item : *items)
+          dynamic_pointer_cast<data_item::DataItem>(item)->setComponent(getptr());
       }
     }
 
-    for (const auto &childComponent : m_children)
-      childComponent->resolveReferences();
-  }
+    void Component::buildDeviceMaps(DevicePtr device)
+    {
+      device->registerComponent(getptr());
 
-  void Component::setParent(Component *parent)
-  {
-    m_parent = parent;
-    auto device = getDevice();
-    if (device)
-      device->addComponent(this);
-  }
+      auto items = getList("DataItems");
+      if (items)
+      {
+        for (auto &item : *items)
+          device->registerDataItem(dynamic_pointer_cast<data_item::DataItem>(item));
+      }
+
+      auto children = getChildren();
+      if (children)
+      {
+        for (auto &child : *children)
+        {
+          auto cp = dynamic_pointer_cast<Component>(child);
+          cp->setParent(getptr());
+          cp->setDevice(device);
+          cp->buildDeviceMaps(device);
+        }
+      }
+    }
+
+    FactoryPtr Component::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        auto dataItems = DataItem::getFactory();
+        auto compositions = Composition::getFactory();
+        auto configuration = configuration::Configuration::getFactory();
+        auto description = Description::getFactory();
+        auto references = Reference::getFactory();
+        factory = make_shared<Factory>(
+            Requirements {// Attributes
+                          {"id", true},
+                          {"name", false},
+                          {"nativeName", false},
+                          {"sampleRate", DOUBLE, false},
+                          {"sampleInterval", DOUBLE, false},
+                          {"uuid", false},
+                          {"Description", ENTITY, description, false},
+                          {"DataItems", ENTITY_LIST, dataItems, false},
+                          {"Compositions", ENTITY_LIST, compositions, false},
+                          {"References", ENTITY_LIST, references, false},
+                          {"Configuration", ENTITY, configuration, false}},
+            [](const std::string &name, Properties &props) -> EntityPtr {
+              auto ptr = make_shared<Component>(name, props);
+              ptr->initialize();
+              return dynamic_pointer_cast<Entity>(ptr);
+            });
+        factory->setOrder(
+            {"Description", "Configuration", "DataItems", "Compositions", "References"});
+        auto component = make_shared<Factory>(
+            Requirements {{"Component", ENTITY, factory, 1, Requirement::Infinite}});
+        component->registerFactory(regex(".+"), factory);
+        component->registerMatchers();
+        factory->addRequirements(Requirements {{"Components", ENTITY_LIST, component, false}});
+      }
+      return factory;
+    }
+
+    Component::~Component() {}
+
+    void Component::resolveReferences(DevicePtr device)
+    {
+      auto references = getList("References");
+      if (references)
+      {
+        for (auto &reference : *references)
+        {
+          dynamic_pointer_cast<Reference>(reference)->resolve(device);
+        }
+      }
+      auto children = getChildren();
+      if (children)
+      {
+        for (const auto &child : *children)
+          dynamic_pointer_cast<Component>(child)->resolveReferences(device);
+      }
+    }
+
+    void Component::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)
+    {
+      if (addToList("DataItems", Component::getFactory(), dataItem, errors))
+      {
+        dataItem->setComponent(getptr());
+        auto device = getDevice();
+        if (device)
+          device->registerDataItem(dataItem);
+      }
+    }
+  }  // namespace device_model
 }  // namespace mtconnect

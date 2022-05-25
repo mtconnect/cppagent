@@ -1,71 +1,108 @@
 # MTConnect C++ Agent Docker image build instructions
-# Adapted from https://mtcup.org/Installing_C++_Agent_on_Ubuntu
-# Agent source code https://github.com/mtconnect/cppagent
 
-#----------------------------------------------------------------------------
-# build os
-#----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# notes
+# ---------------------------------------------------------------------
 
-# base image - ubuntu has linux/arm/v7, linux/amd64, etc
-FROM ubuntu:21.04 AS compile
+# if building this with a private repo (eg cppagent_dev), need to pass
+# in a github access token in order to clone the repo. 
+#
+# to build locally and push to docker hub, run this with something like -
+#
+#   docker buildx build \
+#     --platform linux/amd64,linux/arm64 \
+#     --tag ladder99/agent2 \
+#     --secret id=access_token,src=ACCESS_TOKEN \
+#     --push \
+#     .
+#
+# ACCESS_TOKEN is a file containing a GitHub personal access token,
+# so can clone the private mtconnect cppagent_dev repo.
+# keep it out of the github repo with .gitignore.
+# this sets up a file with the contents accessible at /run/secrete/access_token.
+# see https://vsupalov.com/docker-buildkit-features/
+#
+# to build in github actions, pass this into the docker/build-push-action@v2 step -
+#
+#   secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
+#
+# then use access token as below with
+#
+#   RUN --mount=type=secret,id=access_token \
+#     git clone https://$(cat /run/secrets/access_token)@github.com...
+#
+# then should be able to run with something like
+#
+#   docker run -it -p5001:5000 --name agent2 --rm ladder99/agent2:latest
+#
+# and visit http://localhost:5001 to see demo output
+
+# ---------------------------------------------------------------------
+# os
+# ---------------------------------------------------------------------
+
+# base image - ubuntu has linux/amd64, linux/arm64 etc
+FROM ubuntu:latest AS os
+
+# tzinfo hangs without this
+ARG DEBIAN_FRONTEND=noninteractive
+
+# ---------------------------------------------------------------------
+# build
+# ---------------------------------------------------------------------
+
+FROM os AS build
 
 # update os and add dependencies
-# note: removed ruby - install in second stage
-# note: dockerfiles run as root by default, so don't need sudo
-# this follows recommended docker practices -
+# this follows recommended Docker practices -
 # see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
-RUN apt-get update && apt-get install -y \
-  build-essential \
-  cmake \
-  curl \
-  git \
-  libcppunit-dev \
-  libxml2 \
-  libxml2-dev \
-  screen \
-  && rm -rf /var/lib/apt/lists/*
+# note: Dockerfiles run as root by default, so don't need sudo
+RUN apt-get clean \
+  && apt-get update \
+  && apt-get install -y \
+  build-essential python3.9 python3-pip git cmake make ruby rake \
+  && pip install conan
 
-#----------------------------------------------------------------------------
-# build makefile
-#----------------------------------------------------------------------------
+# get latest source code
+# NOTE: make sure you are checking out the right repo - github.com/bburns OR github.com/mtconnect
+# could use `git checkout foo` to get a specific version here
+RUN --mount=type=secret,id=access_token \
+  cd ~ \
+  && git clone --recurse-submodules --progress --depth 1 \
+  https://$(cat /run/secrets/access_token)@github.com/bburns/cppagent_dev.git agent
 
-# get latest cppagent source
-RUN mkdir -p ~/agent/build \
-  && cd ~/agent \
-  && git clone https://github.com/mtconnect/cppagent.git
+# set some variables
+ENV PATH=$HOME/venv3.9/bin:$PATH
+ENV CONAN_PROFILE=conan/profiles/docker
+ENV WITH_RUBY=True
 
-# build makefile using cmake
-RUN cd ~/agent/build \
-  && cmake -D CMAKE_BUILD_TYPE=Release ../cppagent/
+# limit cpus so don't run out of memory on local machine
+# symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
+# can turn off if building in cloud
+ENV CONAN_CPU_COUNT=1
 
-#----------------------------------------------------------------------------
-# compile app
-#----------------------------------------------------------------------------
+# make installer
+RUN cd ~/agent \
+  && conan export conan/mqtt_cpp \
+  && conan export conan/mruby \
+  && conan install . -if build --build=missing \
+  -pr $CONAN_PROFILE \
+  -o run_tests=False \
+  -o with_ruby=$WITH_RUBY
 
-# compile source (~20mins - 3hrs for qemu)
-RUN cd ~/agent/build && make
+# compile source (~20mins - 4hrs for qemu)
+RUN cd ~/agent && conan build . -bf build
 
-# install agent executable
-RUN cp ~/agent/build/agent/agent /usr/local/bin
+# ---------------------------------------------------------------------
+# release
+# ---------------------------------------------------------------------
 
-# copy simulator data to /etc/mtconnect
-RUN mkdir -p /etc/mtconnect \
-  && cd ~/agent/cppagent \
-  && cp -r schemas simulator styles /etc/mtconnect
+FROM os AS release
 
-#----------------------------------------------------------------------------
-# install
-#----------------------------------------------------------------------------
-
-# multi-stage build - bring only essentials from previous layers
-
-# start with a base image
-FROM ubuntu:21.04
+LABEL author="mtconnect" description="Docker image for the latest Development MTConnect C++ Agent"
 
 # install ruby for simulator
-RUN apt-get update && apt-get install -y \
-  ruby \
-  && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y ruby
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
@@ -73,14 +110,19 @@ RUN apt-get update && apt-get install -y \
 RUN useradd --create-home agent
 USER agent
 
-# copy agent app and simulator files from previous layers
-COPY --chown=agent:agent --from=compile /usr/local/bin/agent /usr/local/bin
-COPY --chown=agent:agent --from=compile /etc/mtconnect /etc/mtconnect
+# install agent executable
+COPY --chown=agent:agent --from=build /root/agent/build/bin/agent /usr/local/bin/
+
+# copy data to /etc/mtconnect
+COPY --chown=agent:agent --from=build /root/agent/schemas /etc/mtconnect/schemas
+COPY --chown=agent:agent --from=build /root/agent/simulator /etc/mtconnect/simulator
+COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
 
 # expose port
 EXPOSE 5000
 
-WORKDIR /etc/mtconnect
+WORKDIR /home/agent
+# WORKDIR /etc/mtconnect
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
@@ -89,23 +131,20 @@ WORKDIR /etc/mtconnect
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
 CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
   /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
-  cd /etc/mtconnect/simulator && agent debug agent.cfg
+  cd /etc/mtconnect/simulator && agent run agent.cfg
 
-#----------------------------------------------------------------------------
-# notes
-#----------------------------------------------------------------------------
+# ---------------------------------------------------------------------
+# note
+# ---------------------------------------------------------------------
 
-# After setup, the dirs look like this -
+# after setup, the dirs look like this -
+#
+# /usr/local/bin
+#  |-- agent - the cppagent application
 #
 # /etc/mtconnect
 #  |-- schemas - xsd files
 #  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
-#  |-- styles - Streams.xsl, Streams.css, favicon.ico
+#  |-- styles - styles.xsl, styles.css, favicon.ico, etc
 #
-# /usr/local/bin
-#  |-- agent - the agent application
-#
-# the default simulator/agent.cfg has -
-#   Devices = ../simulator/VMC-3Axis.xml
-#   Files { styles { Path = ../styles } }
-# see https://github.com/mtconnect/cppagent/blob/master/simulator/agent.cfg
+# /home/agent - the user's directory

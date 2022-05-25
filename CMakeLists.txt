@@ -1,12 +1,12 @@
 # The version number.
-set(AGENT_VERSION_MAJOR 1)
-set(AGENT_VERSION_MINOR 8)
+set(AGENT_VERSION_MAJOR 2)
+set(AGENT_VERSION_MINOR 0)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 3)
-#set(AGENT_VERSION_RC "RC9")
+set(AGENT_VERSION_BUILD 2)
+set(AGENT_VERSION_RC "")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
-cmake_minimum_required(VERSION 3.11 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 set(USE_FOLDERS ON)
 
@@ -19,12 +19,14 @@ set(INSTALL_GTEST OFF FORCE)
 
 project(cppagent LANGUAGES C CXX)
 
-# All of the C++ Agent code, DLib require C++ 14 features to compile.
 # We will define these properties by default for each CMake target to be created.
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_COMPILE_FEATURES cxx_std_17)
+
+set(WITH_PYTHON OFF CACHE STRING "With Python Support")
+set(WITH_RUBY OFF CACHE STRING "With Ruby Support")
 
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
@@ -61,16 +63,30 @@ if(MSVC)
   set(WINVER "0x0600" CACHE STRING "Windows Target Version: 0x0400 - 95 & NT 4.0, 0x0500 - 2000, 0x0501 - XP, 0x0600 - Vista, 0x0601 - 7, 0x0602 - 8")
 endif()
 
+if (UNIX)
+  add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
+ENDIF()
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+if (CONAN_USER_MRUBY_mruby)
+  message(INFO ": Turning on Embedded Ruby")
+  set(WITH_RUBY ON FORCE)
+endif()
+
+conan_basic_setup(TARGETS)
+
+if(WITH_PYTHON)
+  set(Python_USE_STATIC_LIBS ON)
+
+  find_package(Python3 COMPONENTS Interpreter Development Development.Embed)
+  message("Include dirs of Python: " ${Python3_INCLUDE_DIRS} )
+  message("Libs of Python: " ${Python3_LIBRARIES} )
+endif()
+
 include(cmake/msvc_use_static_runtime.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)
-
-# Add our dependency projects
-include(cmake/LibXML2.cmake)
-include(cmake/DLib.cmake)
-include(cmake/Date.cmake)
-include(cmake/json.cmake)
 
 # Add our projects
 add_subdirectory(agent_lib)
@@ -82,6 +98,8 @@ endif()
 
 include(cmake/ide_integration.cmake)
 
+create_clangformat_target()
+
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
 # We will set this to the agent_test project.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT agent_test)
@@ -91,6 +109,7 @@ install(DIRECTORY schemas/ DESTINATION "schemas")
 install(DIRECTORY simulator/ DESTINATION "simulator")
 install(DIRECTORY styles/ DESTINATION "styles")
 install(DIRECTORY tools/ DESTINATION "tools")
+install(DIRECTORY demo/ DESTINATION "demo")
 install(FILES simulator/agent.cfg DESTINATION "bin")
 
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
@@ -102,5 +121,3 @@ set(CPACK_PACKAGE_NAME "cppagent")
 set(CPACK_PACKAGE_VENDOR "MTConnect.org")
 
 include(CPack)
-
-

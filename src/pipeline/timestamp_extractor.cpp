@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2021, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,17 +18,14 @@
 #include "timestamp_extractor.hpp"
 
 #include <date/date.h>
-
 #include <optional>
+
+#include "logging.hpp"
 
 using namespace std;
 
-namespace mtconnect
-{
-  namespace pipeline
-  {
-    static dlib::logger g_logger("TimestampExtractor");
-
+namespace mtconnect {
+  namespace pipeline {
     inline optional<double> getDuration(std::string &timestamp)
     {
       optional<double> duration;
@@ -38,7 +35,7 @@ namespace mtconnect
       {
         auto read = pos + 1;
         ;
-        auto dur{timestamp.substr(read)};
+        auto dur {timestamp.substr(read)};
         duration = std::stod(dur, &read);
         if (read == pos + 1)
           duration.reset();
@@ -57,6 +54,8 @@ namespace mtconnect
       using namespace date::literals;
       using namespace date;
 
+      NAMED_SCOPE("TimestampExtractor");
+
       // Extract duration
       string timestamp = token;
       entity->m_duration = getDuration(timestamp);
@@ -68,7 +67,7 @@ namespace mtconnect
       }
 
       Timestamp ts;
-      bool has_t{timestamp.find('T') != string::npos};
+      bool has_t {timestamp.find('T') != string::npos};
       if (has_t)
       {
         istringstream in(timestamp);
