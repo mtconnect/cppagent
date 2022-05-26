@@ -8563,7 +8563,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='StringEventType'>
-        <xs:attribute name='assetType' type='AssetAttrTypeType' use='required'>
+        <xs:attribute name='assetType' type='AssetAttrTypeType' use='optional'>
           <xs:annotation>
             <xs:documentation>
               The type of asset that was updated.
@@ -8594,7 +8594,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
     </xs:annotation>
     <xs:simpleContent>
       <xs:extension base='StringEventType'>
-        <xs:attribute name='assetType' type='AssetAttrTypeType' use='required'>
+        <xs:attribute name='assetType' type='AssetAttrTypeType' use='optional'>
           <xs:annotation>
             <xs:documentation>
               The type of asset that was updated.

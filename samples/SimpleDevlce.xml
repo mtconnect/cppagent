@@ -36,7 +36,7 @@
                   </Constraints>
                 </DataItem>
                 <DataItem id="r1841b70" type="LOAD" category="SAMPLE" units="PERCENT" name="Sload"/>
-                <DataItem id="taa7a0f0" type="AMPERAGE" category="SAMPLE" units="AMPERE" compositionId="b7792870"/>
+                <DataItem id="taa7a0f0" type="AMPERAGE" category="SAMPLE" units="AMPERE" compositionId="b7792870" name="amp" nativeUnits="KILOAMPERE"/>
                 <DataItem id="afb596b0" type="AMPERAGE" category="CONDITION" compositionId="b7792870" name="Soverload">
                   <Source dataItemId="taa7a0f0"/>
                 </DataItem>
