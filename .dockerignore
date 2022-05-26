@@ -1,0 +1,28 @@
+.git
+.github
+.idea
+.vscode
+
+build
+install
+# test # need this for compilation
+unix
+
+.clang*
+.dockerignore
+.gitignore
+.travis.yml
+appveyor.yml
+build*.bat
+BUILD.TXT
+ChangeLog
+# CMakeLists.txt # need this
+# conanfile.py # need this
+Dockerfile
+Glossary*.pdf
+LICENSE.TXT
+README.md
+terms.tex
+
+*.log
+.DS_Store

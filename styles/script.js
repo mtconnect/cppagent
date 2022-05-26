@@ -16,7 +16,7 @@ window.onload = function () {
 
   // restore to last vertical position
   const scrollTop = localStorage.getItem('scrollTop-' + tabname)
-  if (scrollTop != null) {
+  if (scrollTop != null && container) {
     container.scrollTop = parseInt(scrollTop)
   }
 
@@ -81,7 +81,9 @@ function getParameterByName(name) {
 
 // scroll back to top of page
 function gotoTop() {
-  container.scrollTo({ top: 0, behavior: 'smooth' })
+  if (container) {
+    container.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 }
 
 // mini xml parser/formatter - from https://stackoverflow.com/a/57771987/243392

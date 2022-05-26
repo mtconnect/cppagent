@@ -1,48 +1,53 @@
-# MTConnect C++ Agent Docker image build instructions
+# MTConnect C++ Public Agent Docker image build instructions
 
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
-
-# if building this with a private repo (eg cppagent_dev), need to pass
-# in a github access token in order to clone the repo. 
 #
-# to build locally and push to docker hub, run this with something like -
+# to build an image locally and run it, supply the branch or tag 
+# (defaults to 'main') -
+#
+#   docker build --tag agent-image --build-arg BRANCH=2.0.0.5 .
+#   docker run -it --rm --init --name agent-container -p5001:5000 agent-image
+#
+# to build a cross-platform image, push to docker hub, and run it -
 #
 #   docker buildx build \
 #     --platform linux/amd64,linux/arm64 \
-#     --tag ladder99/agent2 \
-#     --secret id=access_token,src=ACCESS_TOKEN \
+#     --build-arg BRANCH=v2.0.0.5 \
+#     --tag mtconnect/agent:2.0.0.5 \
+#     --tag mtconnect/agent:latest \
 #     --push \
 #     .
+#   docker run -it --rm --init --name agent -p5001:5000 mtconnect/agent
 #
-# ACCESS_TOKEN is a file containing a GitHub personal access token,
-# so can clone the private mtconnect cppagent_dev repo.
-# keep it out of the github repo with .gitignore.
-# this sets up a file with the contents accessible at /run/secrete/access_token.
-# see https://vsupalov.com/docker-buildkit-features/
+# visit http://localhost:5001 to see the demo output.
 #
-# to build in github actions, pass this into the docker/build-push-action@v2 step -
+# to use a different configuration, use a volume mount point -
 #
-#   secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
+# eg on Windows,
 #
-# then use access token as below with
+#   docker run -it --rm --init --name agent -p5001:5000 ^
+#     -v %cd%:/foo mtconnect/agent ^
+#     /bin/sh -c "cd /foo/simulator && agent run agent.cfg"
 #
-#   RUN --mount=type=secret,id=access_token \
-#     git clone https://$(cat /run/secrets/access_token)@github.com...
+# or on Mac/Linux,
 #
-# then should be able to run with something like
-#
-#   docker run -it -p5001:5000 --name agent2 --rm ladder99/agent2:latest
-#
-# and visit http://localhost:5001 to see demo output
+#   docker run -it --rm --init --name agent -p5001:5000 \
+#     -v "$(pwd)":/foo mtconnect/agent \
+#     /bin/sh -c "cd /foo/simulator && agent run agent.cfg"
+
+
+# branch or tag of agent repo to checkout, eg v2.0.0.5
+ARG BRANCH=main
 
 # ---------------------------------------------------------------------
 # os
 # ---------------------------------------------------------------------
 
-# base image - ubuntu has linux/amd64, linux/arm64 etc
-FROM ubuntu:latest AS os
+# base image - ubuntu has amd64, arm64 etc.
+# 22.04 is the current long term support release, maintained until 2025-04.
+FROM ubuntu:22.04 AS os
 
 # tzinfo hangs without this
 ARG DEBIAN_FRONTEND=noninteractive
@@ -54,8 +59,6 @@ ARG DEBIAN_FRONTEND=noninteractive
 FROM os AS build
 
 # update os and add dependencies
-# this follows recommended Docker practices -
-# see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
 # note: Dockerfiles run as root by default, so don't need sudo
 RUN apt-get clean \
   && apt-get update \
@@ -63,13 +66,16 @@ RUN apt-get clean \
   build-essential python3.9 python3-pip git cmake make ruby rake \
   && pip install conan
 
-# get latest source code
-# NOTE: make sure you are checking out the right repo - github.com/bburns OR github.com/mtconnect
-# could use `git checkout foo` to get a specific version here
-RUN --mount=type=secret,id=access_token \
-  cd ~ \
-  && git clone --recurse-submodules --progress --depth 1 \
-  https://$(cat /run/secrets/access_token)@github.com/bburns/cppagent_dev.git agent
+# make an agent directory and cd into it
+WORKDIR /root/agent
+
+# clone into the agent directory and checkout the version we want
+RUN git clone --recurse-submodules --progress --depth 1 \
+  https://github.com/mtconnect/cppagent.git . \
+  && git checkout $BRANCH
+
+# # or, for local testing can just bring in the repo contents
+# COPY . .
 
 # set some variables
 ENV PATH=$HOME/venv3.9/bin:$PATH
@@ -78,12 +84,11 @@ ENV WITH_RUBY=True
 
 # limit cpus so don't run out of memory on local machine
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
-# can turn off if building in cloud
+# could turn off if building in cloud
 ENV CONAN_CPU_COUNT=1
 
 # make installer
-RUN cd ~/agent \
-  && conan export conan/mqtt_cpp \
+RUN conan export conan/mqtt_cpp \
   && conan export conan/mruby \
   && conan install . -if build --build=missing \
   -pr $CONAN_PROFILE \
@@ -91,7 +96,7 @@ RUN cd ~/agent \
   -o with_ruby=$WITH_RUBY
 
 # compile source (~20mins - 4hrs for qemu)
-RUN cd ~/agent && conan build . -bf build
+RUN conan build . -bf build
 
 # ---------------------------------------------------------------------
 # release
@@ -99,7 +104,7 @@ RUN cd ~/agent && conan build . -bf build
 
 FROM os AS release
 
-LABEL author="mtconnect" description="Docker image for the latest Development MTConnect C++ Agent"
+LABEL author="mtconnect" description="Docker image for MTConnect C++ Agent"
 
 # install ruby for simulator
 RUN apt-get update && apt-get install -y ruby
@@ -122,7 +127,6 @@ COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
 EXPOSE 5000
 
 WORKDIR /home/agent
-# WORKDIR /etc/mtconnect
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
@@ -133,8 +137,9 @@ CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
   /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
   cd /etc/mtconnect/simulator && agent run agent.cfg
 
+
 # ---------------------------------------------------------------------
-# note
+# notes
 # ---------------------------------------------------------------------
 
 # after setup, the dirs look like this -
