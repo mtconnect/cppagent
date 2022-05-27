@@ -78,6 +78,8 @@ namespace mtconnect {
 
       virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
+      
+      TransformList &getNext() { return m_next; }
 
       const entity::EntityPtr next(const entity::EntityPtr entity)
       {

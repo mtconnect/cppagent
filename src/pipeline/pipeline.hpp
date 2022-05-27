@@ -122,7 +122,6 @@ namespace mtconnect {
         if (xforms.empty())
           return false;
 
-        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.second->firstAfter(transform);
@@ -135,6 +134,7 @@ namespace mtconnect {
         }
         return true;
       }
+      
       bool lastAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
@@ -142,7 +142,6 @@ namespace mtconnect {
         if (xforms.empty())
           return false;
 
-        transform->unlink();
         for (auto &pair : xforms)
         {
           pair.second->bind(transform);
@@ -155,6 +154,7 @@ namespace mtconnect {
         }
         return true;
       }
+      
       bool replace(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;

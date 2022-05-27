@@ -2654,3 +2654,26 @@ TEST_F(AgentTest, Put)
     ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
   }
 }
+
+TEST_F(AgentTest, put_condition_should_parse_condition_data)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+
+  QueryMap queries;
+  string body;
+
+  queries["time"] = "2021-02-01T12:00:00Z";
+  queries["lp"] = "FAULT|2001|1||SCANHISTORYRESET";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/LinuxCNC", body, queries);
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Fault@timestamp", "2021-02-01T12:00:00Z");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Fault@nativeCode", "2001");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Fault@nativeSeverity", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Fault", "SCANHISTORYRESET");
+  }
+}
