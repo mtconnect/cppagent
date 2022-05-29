@@ -106,16 +106,26 @@ namespace mtconnect::entity {
       {
         if (attr->type == XML_ATTRIBUTE_NODE)
         {
+          entity::QName qname((const char *)attr->name);
+          if (attr->ns)
+            qname.setNs((const char *) attr->ns->prefix);
           properties.insert(
-              {(const char *)attr->name, string((const char *)attr->children->content)});
+              {qname, string((const char *)attr->children->content)});
         }
       }
 
       if (parseNamespaces && node->nsDef)
       {
-        auto def = node->nsDef;
-        string name {string("xmlns:") + (const char *)def->prefix};
-        properties.insert({name, string((const char *)def->href)});
+        for (auto def = node->nsDef; def; def = def->next)
+        {
+          string name;
+          if (def->prefix)
+            name = {string("xmlns:") + (const char *)def->prefix};
+          else
+            name = "xmlns";
+          
+          properties.insert({name, string((const char *)def->href)});
+        }
       }
 
       if (ef->hasRaw())
