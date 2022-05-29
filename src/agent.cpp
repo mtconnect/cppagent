@@ -31,6 +31,7 @@
 #include "asset/asset.hpp"
 #include "asset/cutting_tool.hpp"
 #include "asset/file_asset.hpp"
+#include "asset/raw_material.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/agent_device.hpp"
 #include "entity/xml_parser.hpp"
@@ -71,7 +72,8 @@ namespace mtconnect {
     CuttingTool::registerAsset();
     FileArchetypeAsset::registerAsset();
     FileAsset::registerAsset();
-
+    RawMaterial::registerAsset();
+    
     m_assetStorage = make_unique<AssetBuffer>(
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
 

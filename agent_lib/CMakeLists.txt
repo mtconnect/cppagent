@@ -19,6 +19,7 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset_storage.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/cutting_tool.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/file_asset.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/raw_material.hpp"
 
 # src/asset SOURCE_FILES_ONLY
   
@@ -26,6 +27,7 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset_buffer.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/cutting_tool.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/file_asset.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/raw_material.cpp"
         
 # src/configuration HEADER_FILE_ONLY
 
