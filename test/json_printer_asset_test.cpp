@@ -207,8 +207,6 @@ TEST_F(JsonPrinterAssetTest, CuttingItem)
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
 
-  cout << doc;
-
   auto cuttingItems = jdoc.at(
       "/MTConnectAssets/Assets/0/"
       "CuttingTool/CuttingToolLifeCycle/"

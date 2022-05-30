@@ -19,11 +19,11 @@
 
 #include "configuration/config_options.hpp"
 #include "entity/xml_parser.hpp"
-#include "printer/xml_printer.hpp"
-#include "server.hpp"
+#include "pipeline/shdr_token_mapper.hpp"
 #include "pipeline/shdr_tokenizer.hpp"
 #include "pipeline/timestamp_extractor.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
+#include "printer/xml_printer.hpp"
+#include "server.hpp"
 
 namespace asio = boost::asio;
 using namespace std;
@@ -333,22 +333,22 @@ namespace mtconnect {
         } while (!line.eof());
       }
     }
-    
-    std::shared_ptr<source::LoopbackSource>  RestService::makeLoopbackSource(pipeline::PipelineContextPtr context)
+
+    std::shared_ptr<source::LoopbackSource> RestService::makeLoopbackSource(
+        pipeline::PipelineContextPtr context)
     {
       using namespace pipeline;
       using namespace source;
-      
-      m_loopback =
-          make_shared<LoopbackSource>("RestSource", m_strand, context, m_options);
+
+      m_loopback = make_shared<LoopbackSource>("RestSource", m_strand, context, m_options);
       auto pipeline = m_loopback->getPipeline();
-      
+
       auto tokenizer = make_shared<ShdrTokenizer>();
       if (!pipeline->spliceBefore("UpcaseValue", tokenizer))
         pipeline->spliceBefore("DuplicateFilter", tokenizer);
-      
+
       pipeline->spliceAfter("ShdrTokenizer", make_shared<ExtractTimestamp>(false));
-      
+
       auto mapper = make_shared<ShdrTokenMapper>(context, "", 2);
       pipeline->spliceAfter("ExtractTimestamp", mapper);
       mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
@@ -356,11 +356,10 @@ namespace mtconnect {
       // Reattach the first in the chain to catch non-data entities
       auto next = mapper->getNext().front();
       pipeline->lastAfter("Start", next);
-      
+
       m_sinkContract->addSource(m_loopback);
       return m_loopback;
     }
-
 
     // -----------------------------------------------------------
     // Request Routing

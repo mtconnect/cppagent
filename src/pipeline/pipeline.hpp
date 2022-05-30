@@ -134,7 +134,7 @@ namespace mtconnect {
         }
         return true;
       }
-      
+
       bool lastAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
@@ -154,7 +154,7 @@ namespace mtconnect {
         }
         return true;
       }
-      
+
       bool replace(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;

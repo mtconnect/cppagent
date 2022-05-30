@@ -105,7 +105,6 @@ namespace mtconnect::source {
     }
   }
 
-  
   AssetPtr LoopbackSource::receiveAsset(DevicePtr device, const std::string &document,
                                         const std::optional<std::string> &id,
                                         const std::optional<std::string> &type,
