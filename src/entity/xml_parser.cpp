@@ -118,7 +118,7 @@ namespace mtconnect::entity {
             qname.setNs((const char *) attr->ns->prefix);
           properties.insert(
               {qname, string((const char *)attr->children->content)});
-          if (!islower(qname[0]))
+          if (!islower(qname.getName()[0]))
           {
             attrs.emplace(qname);
           }
@@ -208,10 +208,13 @@ namespace mtconnect::entity {
       try
       {
         auto entity = ef->make(qname, properties, errors);
-        if (order)
-          entity->setOrder(order);
-        if (!attrs.empty())
-          entity->setAttributes(attrs);
+        if (entity)
+        {
+          if (order)
+            entity->setOrder(order);
+          if (!attrs.empty())
+            entity->setAttributes(attrs);
+        }
         return entity;
       }
       catch (EntityError &e)

@@ -158,7 +158,11 @@ namespace mtconnect {
         return OptionallyGet<T>("VALUE", m_properties);
       }
 
-      void setOrder(const OrderMapPtr order) { m_order = order; }
+      void setOrder(const OrderMapPtr order)
+      {
+        if (!m_order)
+          m_order = order;
+      }
       const OrderMapPtr getOrder() const { return m_order; }
       auto find(const std::string &name) { return m_properties.find(name); }
       auto erase(Properties::iterator &it) { return m_properties.erase(it); }
