@@ -64,16 +64,22 @@ RUN apt-get clean \
   && pip install conan
 
 # get latest source code
+# NOTE: make sure you are checking out the right repo - github.com/bburns OR github.com/mtconnect
 # could use `git checkout foo` to get a specific version here
 RUN --mount=type=secret,id=access_token \
   cd ~ \
   && git clone --recurse-submodules --progress --depth 1 \
-  https://$(cat /run/secrets/access_token)@github.com/mtconnect/cppagent_dev.git agent
+  https://$(cat /run/secrets/access_token)@github.com/bburns/cppagent_dev.git agent
 
 # set some variables
 ENV PATH=$HOME/venv3.9/bin:$PATH
 ENV CONAN_PROFILE=conan/profiles/docker
 ENV WITH_RUBY=True
+
+# limit cpus so don't run out of memory on local machine
+# symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
+# can turn off if building in cloud
+ENV CONAN_CPU_COUNT=1
 
 # make installer
 RUN cd ~/agent \
@@ -83,11 +89,6 @@ RUN cd ~/agent \
   -pr $CONAN_PROFILE \
   -o run_tests=False \
   -o with_ruby=$WITH_RUBY
-
-# limit cpus so don't run out of memory on local machine
-# symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
-# can turn off if building in cloud
-# ENV CONAN_CPU_COUNT=1
 
 # compile source (~20mins - 4hrs for qemu)
 RUN cd ~/agent && conan build . -bf build
@@ -121,6 +122,7 @@ COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
 EXPOSE 5000
 
 WORKDIR /home/agent
+# WORKDIR /etc/mtconnect
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
@@ -144,3 +146,5 @@ CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
 #  |-- schemas - xsd files
 #  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
 #  |-- styles - styles.xsl, styles.css, favicon.ico, etc
+#
+# /home/agent - the user's directory

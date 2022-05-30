@@ -52,13 +52,8 @@ namespace mtconnect {
       // Register the service with the sink factory
       static void registerFactory(SinkFactory &factory);
 
-      auto makeLoopbackSource(pipeline::PipelineContextPtr context)
-      {
-        m_loopback =
-            std::make_shared<source::LoopbackSource>("RestSource", m_strand, context, m_options);
-        m_sinkContract->addSource(m_loopback);
-        return m_loopback;
-      }
+      std::shared_ptr<source::LoopbackSource> makeLoopbackSource(
+          pipeline::PipelineContextPtr context);
 
       // Sink Methods
       void start() override;

@@ -180,7 +180,17 @@ namespace mtconnect {
       void operator()(const string &arg, Timestamp &ts)
       {
         istringstream in(arg);
-        in >> std::setw(6) >> date::parse("%FT%T", ts);
+
+        // If there isa a time portion in the string, parse the time
+        if (arg.find('T') != string::npos)
+        {
+          in >> std::setw(6) >> date::parse("%FT%T", ts);
+        }
+        else
+        {
+          // Just parse the date
+          in >> date::parse("%F", ts);
+        }
       }
       void operator()(const string &arg, Vector &r)
       {

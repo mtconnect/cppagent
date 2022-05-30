@@ -141,6 +141,8 @@ endmacro()
 add_agent_test(asset TRUE asset)
 add_agent_test(file_asset TRUE asset)
 add_agent_test(cutting_tool TRUE asset)
+add_agent_test(raw_material TRUE asset)
+add_agent_test(qif_document TRUE asset)
 
 add_agent_test(agent_device TRUE device_model)
 add_agent_test(component FALSE device_model)

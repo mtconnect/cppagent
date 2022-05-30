@@ -44,6 +44,7 @@ namespace mtconnect {
     using OrderMap = std::unordered_map<std::string, int>;
     using OrderMapPtr = std::shared_ptr<OrderMap>;
     using Property = std::pair<PropertyKey, Value>;
+    using AttributeSet = std::set<QName>;
 
     template <typename T>
     inline std::optional<T> OptionallyGet(const std::string &key, const Properties &props)
@@ -160,10 +161,16 @@ namespace mtconnect {
         return OptionallyGet<T>("VALUE", m_properties);
       }
 
-      void setOrder(const OrderMapPtr order) { m_order = order; }
+      void setOrder(const OrderMapPtr order)
+      {
+        if (!m_order)
+          m_order = order;
+      }
       const OrderMapPtr getOrder() const { return m_order; }
       auto find(const std::string &name) { return m_properties.find(name); }
       auto erase(Properties::iterator &it) { return m_properties.erase(it); }
+      void setAttributes(AttributeSet a) { m_attributes = a; }
+      const auto &getAttributes() const { return m_attributes; }
 
       bool operator==(const Entity &other) const;
       bool operator!=(const Entity &other) const { return !(*this == other); }
@@ -186,6 +193,7 @@ namespace mtconnect {
       QName m_name;
       Properties m_properties;
       OrderMapPtr m_order;
+      AttributeSet m_attributes;
     };
     
     struct ValueEqualVisitor

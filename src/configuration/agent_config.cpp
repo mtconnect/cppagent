@@ -185,8 +185,9 @@ namespace mtconnect::configuration {
     }
     catch (std::exception &e)
     {
-      LOG(fatal) << "Agent failed to load: " << e.what() << " from " << m_configFile;
-      cerr << "Agent failed to load: " << e.what() << " from " << m_configFile << std::endl;
+      cerr << std::endl
+           << "Agent failed to load: " << e.what() << " from " << m_configFile << std::endl;
+      LOG(fatal) << std::endl << "Agent failed to load: " << e.what() << " from " << m_configFile;
       usage(1);
     }
   }
@@ -369,7 +370,8 @@ namespace mtconnect::configuration {
   {
     LOG(info) << "Agent stopping";
     m_restart = false;
-    m_agent->stop();
+    if (m_agent)
+      m_agent->stop();
     m_context.stop();
     LOG(info) << "Agent Configuration stopped";
   }

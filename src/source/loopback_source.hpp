@@ -73,6 +73,7 @@ namespace mtconnect::source {
                              std::optional<Timestamp> timestamp = std::nullopt);
     SequenceNumber_t receive(DataItemPtr dataItem, const std::string &value,
                              std::optional<Timestamp> timestamp = std::nullopt);
+    SequenceNumber_t receive(const std::string &shdr);
 
     void receive(asset::AssetPtr asset) { m_pipeline.run(asset); }
     asset::AssetPtr receiveAsset(DevicePtr device, const std::string &document,
