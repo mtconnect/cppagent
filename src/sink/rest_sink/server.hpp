@@ -137,14 +137,14 @@ namespace mtconnect::sink::rest_sink {
         LOG(error) << txt.str();
         session->fail(boost::beast::http::status::not_found, txt.str());
       }
-      catch(std::logic_error &le)
+      catch (std::logic_error &le)
       {
         std::stringstream txt;
         txt << session->getRemote().address() << ": Logic Error: " << le.what();
         LOG(error) << txt.str();
         session->fail(boost::beast::http::status::not_found, txt.str());
       }
-      catch(...)
+      catch (...)
       {
         std::stringstream txt;
         txt << session->getRemote().address() << ": Unknown Error thrown";

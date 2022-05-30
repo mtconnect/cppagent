@@ -180,7 +180,7 @@ namespace mtconnect {
       void operator()(const string &arg, Timestamp &ts)
       {
         istringstream in(arg);
-        
+
         // If there isa a time portion in the string, parse the time
         if (arg.find('T') != string::npos)
         {

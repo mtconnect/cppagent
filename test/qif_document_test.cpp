@@ -20,12 +20,12 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include <cstdio>
+#include <date/date.h>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <date/date.h>
 
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
@@ -79,7 +79,6 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-
 TEST_F(QIFDocumentTest, minimal_qif_definition)
 {
   using namespace date;
@@ -107,7 +106,7 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
   </QIFDocument>
 </QIFDocumentWrapper>
 )DOC";
-  
+
   ErrorList errors;
   entity::XmlParser parser;
 
@@ -125,17 +124,18 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
 
   auto qif = asset->get<EntityPtr>("QIFDocument");
   ASSERT_NE(nullptr, qif);
-  
+
   ASSERT_EQ("http://qifstandards.org/xsd/qif2", qif->get<string>("xmlns"));
-  ASSERT_EQ("http://qifstandards.org/xsd/qif2 QIFApplications/QIFDocument.xsd", qif->get<string>("xsi:schemaLocation"));
+  ASSERT_EQ("http://qifstandards.org/xsd/qif2 QIFApplications/QIFDocument.xsd",
+            qif->get<string>("xsi:schemaLocation"));
   ASSERT_EQ("2.0.0", qif->get<string>("versionQIF"));
 
   auto version = qif->get<EntityPtr>("Version");
   ASSERT_TRUE(version);
-  
+
   ASSERT_EQ("fd43400a-29bf-4ec6-b96c-e2f846eb6ff6"s,
             version->get<EntityPtr>("ThisInstanceQPId")->getValue<string>());
-  
+
   auto product = qif->get<EntityPtr>("Product");
   ASSERT_TRUE(product);
   auto partSet = product->get<EntityPtr>("PartSet");
@@ -144,7 +144,8 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
   auto part = partSet->get<EntityPtr>("Part");
   ASSERT_EQ("1"s, part->get<string>("id"));
   ASSERT_EQ("Widget"s, part->get<EntityPtr>("Name")->getValue<string>());
-  ASSERT_EQ("ed43400a-29bf-4ec6-b96c-e2f846eb6f00"s, part->get<EntityPtr>("QPId")->getValue<string>());
+  ASSERT_EQ("ed43400a-29bf-4ec6-b96c-e2f846eb6f00"s,
+            part->get<EntityPtr>("QPId")->getValue<string>());
   auto root = product->get<EntityPtr>("RootPart");
   ASSERT_TRUE(root);
   ASSERT_EQ("1"s, root->get<EntityPtr>("Id")->getValue<string>());
@@ -153,7 +154,8 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
 TEST_F(QIFDocumentTest, test_qif_xml_round_trip)
 {
   using namespace date;
-  const auto doc = R"DOC(<QIFDocumentWrapper assetId="30d278e0-c150-013a-c34d-4e7f553bbb76" qifDocumentType="PLAN">
+  const auto doc =
+      R"DOC(<QIFDocumentWrapper assetId="30d278e0-c150-013a-c34d-4e7f553bbb76" qifDocumentType="PLAN">
   <QIFDocument versionQIF="2.0.0" xmlns="http://qifstandards.org/xsd/qif2" xmlns:q="http://qifstandards.org/xsd/qif2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://qifstandards.org/xsd/qif2 QIFApplications/QIFDocument.xsd">
     <Version>
       <ThisInstanceQPId>fd43400a-29bf-4ec6-b96c-e2f846eb6ff6</ThisInstanceQPId>
@@ -172,7 +174,7 @@ TEST_F(QIFDocumentTest, test_qif_xml_round_trip)
   </QIFDocument>
 </QIFDocumentWrapper>
 )DOC";
-  
+
   ErrorList errors;
   entity::XmlParser parser;
 
@@ -216,7 +218,7 @@ TEST_F(QIFDocumentTest, should_generate_json)
   </QIFDocument>
 </QIFDocumentWrapper>
 )DOC";
-  
+
   ErrorList errors;
   entity::XmlParser parser;
 
@@ -225,7 +227,7 @@ TEST_F(QIFDocumentTest, should_generate_json)
 
   auto asset = dynamic_cast<Asset *>(entity.get());
   ASSERT_NE(nullptr, asset);
-  
+
   entity::JsonPrinter jsonPrinter;
   auto json = jsonPrinter.print(entity);
 
@@ -233,7 +235,7 @@ TEST_F(QIFDocumentTest, should_generate_json)
   buffer << std::setw(2);
   buffer << json;
   string res = buffer.str();
-    
+
   ASSERT_EQ(R"DOC({
   "QIFDocumentWrapper": {
     "QIFDocument": {
@@ -270,5 +272,6 @@ TEST_F(QIFDocumentTest, should_generate_json)
     "assetId": "30d278e0-c150-013a-c34d-4e7f553bbb76",
     "qifDocumentType": "PLAN"
   }
-})DOC"s, res);
+})DOC"s,
+            res);
 }

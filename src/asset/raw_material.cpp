@@ -26,44 +26,47 @@ namespace mtconnect::asset {
     static FactoryPtr factory;
     if (!factory)
     {
-      static auto material = make_shared<Factory>(Requirements {
-        {"id", false},
-        {"name", false},
-        {"type", true},
-        {"Lot", false},
-        {"Manufacturer", false},
-        {"ManufacturingDate", TIMESTAMP, false},
-        {"ManufacturingCode", false},
-        {"MaterialCode", false}
-      });
-      
-      material->setOrder({"Lot", "Manufacturer", "ManufacturingDate", "ManufacturingCode", "MaterialCode"});
-      
+      static auto material =
+          make_shared<Factory>(Requirements {{"id", false},
+                                             {"name", false},
+                                             {"type", true},
+                                             {"Lot", false},
+                                             {"Manufacturer", false},
+                                             {"ManufacturingDate", TIMESTAMP, false},
+                                             {"ManufacturingCode", false},
+                                             {"MaterialCode", false}});
+
+      material->setOrder(
+          {"Lot", "Manufacturer", "ManufacturingDate", "ManufacturingCode", "MaterialCode"});
+
       factory = make_shared<Factory>(*Asset::getFactory());
-      factory->addRequirements(Requirements {{"name", false},
-                                          {"containerType", false},
-                                          {"processKind", false},
-        {"serialNumber", false},
-        {"HasMaterial", BOOL, false},
-        {"Form", {"BAR", "BLOCK", "CASTING", "FILAMENT", "GAS", "GEL", "LIQUID", "POWDER", "SHEET"}, true},
-        {"ManufacturingDate", TIMESTAMP, false},
-        {"FirstUseDate", TIMESTAMP, false},
-        {"LastUseDate", TIMESTAMP, false},
-        {"InitialVolume", DOUBLE, false},
-        {"InitialDimension", DOUBLE, false},
-        {"InitialQuantity", INTEGER, false},
-        {"CurrentVolume", DOUBLE, false},
-        {"CurrentDimension", DOUBLE, false},
-        {"CurrentQuantity", INTEGER, false},
-        {"Material", ENTITY, material, false}
-      });
-      factory->setOrder({"HasMaterial", "Form", "ManufacturingDate", "FirstUseDate", "LastUseDate", "InitialVolume", "InitialDimension", "InitialQuantity", "CurrentVolume", "CurrentDimension", "CurrentQuantity", "Material"});
-      
+      factory->addRequirements(Requirements {
+          {"name", false},
+          {"containerType", false},
+          {"processKind", false},
+          {"serialNumber", false},
+          {"HasMaterial", BOOL, false},
+          {"Form",
+           {"BAR", "BLOCK", "CASTING", "FILAMENT", "GAS", "GEL", "LIQUID", "POWDER", "SHEET"},
+           true},
+          {"ManufacturingDate", TIMESTAMP, false},
+          {"FirstUseDate", TIMESTAMP, false},
+          {"LastUseDate", TIMESTAMP, false},
+          {"InitialVolume", DOUBLE, false},
+          {"InitialDimension", DOUBLE, false},
+          {"InitialQuantity", INTEGER, false},
+          {"CurrentVolume", DOUBLE, false},
+          {"CurrentDimension", DOUBLE, false},
+          {"CurrentQuantity", INTEGER, false},
+          {"Material", ENTITY, material, false}});
+      factory->setOrder({"HasMaterial", "Form", "ManufacturingDate", "FirstUseDate", "LastUseDate",
+                         "InitialVolume", "InitialDimension", "InitialQuantity", "CurrentVolume",
+                         "CurrentDimension", "CurrentQuantity", "Material"});
     }
-    
+
     return factory;
   }
-  
+
   void RawMaterial::registerAsset()
   {
     static bool once {true};
@@ -74,4 +77,4 @@ namespace mtconnect::asset {
     }
   }
 
-}
+}  // namespace mtconnect::asset

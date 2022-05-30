@@ -35,16 +35,16 @@ namespace mtconnect::asset {
       doc->setAny(true);
 
       factory = make_shared<Factory>(*Asset::getFactory());
-      factory->addRequirements(Requirements {{"qifDocumentType", {
-        "MEASUREMENT_RESOURCE", "PLAN", "PRODUCT", "RESULTS", "RULES", "STATISTICS"
-      }, true},
-        {"QIFDocument", ENTITY, doc, true}
-      });
+      factory->addRequirements(Requirements {
+          {"qifDocumentType",
+           {"MEASUREMENT_RESOURCE", "PLAN", "PRODUCT", "RESULTS", "RULES", "STATISTICS"},
+           true},
+          {"QIFDocument", ENTITY, doc, true}});
     }
-    
+
     return factory;
   }
-  
+
   void QIFDocumentWrapper::registerAsset()
   {
     static bool once {true};
@@ -54,4 +54,4 @@ namespace mtconnect::asset {
       once = false;
     }
   }
-}
+}  // namespace mtconnect::asset

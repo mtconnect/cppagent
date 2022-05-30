@@ -20,12 +20,12 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include <cstdio>
+#include <date/date.h>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <date/date.h>
 
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
@@ -79,7 +79,6 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-
 TEST_F(RawMaterialTest, minimal_raw_material_definition)
 {
   using namespace date;
@@ -91,7 +90,7 @@ TEST_F(RawMaterialTest, minimal_raw_material_definition)
   <ManufacturingDate>2022-05-20</ManufacturingDate>
 </RawMaterial>
 )DOC";
-  
+
   ErrorList errors;
   entity::XmlParser parser;
 
@@ -110,7 +109,7 @@ TEST_F(RawMaterialTest, minimal_raw_material_definition)
   ASSERT_EQ("bucket", asset->get<string>("containerType"));
   ASSERT_EQ("GEL", asset->get<string>("Form"));
   ASSERT_TRUE(asset->get<bool>("HasMaterial"));
-  
+
   auto date = asset->get<Timestamp>("ManufacturingDate");
   auto ymd = year_month_day(floor<days>(date));
   ASSERT_EQ(2022, int(ymd.year()));
@@ -133,7 +132,7 @@ TEST_F(RawMaterialTest, should_parse_raw_material_and_material)
   </Material>
 </RawMaterial>
 )DOC";
-  
+
   ErrorList errors;
   entity::XmlParser parser;
 
@@ -157,13 +156,13 @@ TEST_F(RawMaterialTest, should_parse_raw_material_and_material)
   ASSERT_EQ(2022, int(ymd.year()));
   ASSERT_EQ(1, unsigned(ymd.month()));
   ASSERT_EQ(10, unsigned(ymd.day()));
-
 }
 
 TEST_F(RawMaterialTest, should_round_trip_xml)
 {
   using namespace date;
-  const auto doc = R"DOC(<RawMaterial assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76" containerType="bucket" name="bob" processKind="FLA" serialNumber="21345">
+  const auto doc =
+      R"DOC(<RawMaterial assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76" containerType="bucket" name="bob" processKind="FLA" serialNumber="21345">
   <HasMaterial>true</HasMaterial>
   <Form>GEL</Form>
   <ManufacturingDate>2022-05-20T00:00:00Z</ManufacturingDate>
@@ -184,13 +183,13 @@ TEST_F(RawMaterialTest, should_round_trip_xml)
   </Material>
 </RawMaterial>
 )DOC";
-  
+
   ErrorList errors;
   entity::XmlParser parser;
 
   auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
   ASSERT_EQ(0, errors.size());
-  
+
   entity::XmlPrinter printer;
   printer.print(*m_writer, entity, {"x"});
   string content = m_writer->getContent();
@@ -201,7 +200,8 @@ TEST_F(RawMaterialTest, should_round_trip_xml)
 TEST_F(RawMaterialTest, should_generate_json)
 {
   using namespace date;
-  const auto doc = R"DOC(<RawMaterial assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76" containerType="bucket" name="bob" processKind="FLA" serialNumber="21345">
+  const auto doc =
+      R"DOC(<RawMaterial assetId="7ae770f0-c11e-013a-c34c-4e7f553bbb76" containerType="bucket" name="bob" processKind="FLA" serialNumber="21345">
   <HasMaterial>true</HasMaterial>
   <Form>GEL</Form>
   <ManufacturingDate>2022-05-20T00:00:00Z</ManufacturingDate>
@@ -222,20 +222,20 @@ TEST_F(RawMaterialTest, should_generate_json)
   </Material>
 </RawMaterial>
 )DOC";
-  
+
   ErrorList errors;
   entity::XmlParser parser;
 
   auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
   ASSERT_EQ(0, errors.size());
-  
+
   entity::JsonPrinter jsonPrinter;
   auto json = jsonPrinter.print(entity);
 
   stringstream buffer;
   buffer << std::setw(2);
   buffer << json;
-  
+
   ASSERT_EQ(R"({
   "RawMaterial": {
     "CurrentDimension": 255.8,
@@ -265,7 +265,6 @@ TEST_F(RawMaterialTest, should_generate_json)
     "processKind": "FLA",
     "serialNumber": "21345"
   }
-})", buffer.str());
-  
-  
+})",
+            buffer.str());
 }

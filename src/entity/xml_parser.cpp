@@ -101,7 +101,7 @@ namespace mtconnect::entity {
       {
         order = make_shared<OrderMap>();
       }
-      
+
       Properties properties;
       EntityList *l {nullptr};
       if (ef->isList())
@@ -115,9 +115,8 @@ namespace mtconnect::entity {
         {
           entity::QName qname((const char *)attr->name);
           if (attr->ns)
-            qname.setNs((const char *) attr->ns->prefix);
-          properties.insert(
-              {qname, string((const char *)attr->children->content)});
+            qname.setNs((const char *)attr->ns->prefix);
+          properties.insert({qname, string((const char *)attr->children->content)});
           if (!islower(qname.getName()[0]))
           {
             attrs.emplace(qname);
@@ -134,7 +133,7 @@ namespace mtconnect::entity {
             name = {string("xmlns:") + (const char *)def->prefix};
           else
             name = "xmlns";
-          
+
           properties.insert({name, string((const char *)def->href)});
         }
       }
@@ -157,7 +156,7 @@ namespace mtconnect::entity {
             {
               order->emplace(name, orderCount++);
             }
-            
+
             if (ef->isSimpleProperty(name))
             {
               if (child->children != nullptr && child->children->content != nullptr)

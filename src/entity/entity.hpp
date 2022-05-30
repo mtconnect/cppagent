@@ -168,7 +168,7 @@ namespace mtconnect {
       auto erase(Properties::iterator &it) { return m_properties.erase(it); }
       void setAttributes(AttributeSet a) { m_attributes = a; }
       const auto &getAttributes() const { return m_attributes; }
-      
+
       // Entity Factory
     protected:
       Value &getProperty_(const std::string &name)

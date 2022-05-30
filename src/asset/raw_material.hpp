@@ -32,6 +32,5 @@ namespace mtconnect::asset {
   public:
     static entity::FactoryPtr getFactory();
     static void registerAsset();
-  };  
-}
-
+  };
+}  // namespace mtconnect::asset
