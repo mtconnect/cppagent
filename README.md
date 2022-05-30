@@ -1281,6 +1281,16 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 
     cpack -G ZIP
 
+## *NIX Builds
+
+The minimum memory (main + swap) when building with on CPU is 3GB. Less than that will likely cause the build to fail.
+
+If the build runs out of resources, there are two options, you can add swap or set the following environment variable:
+
+    export CONAN_CPU_COUNT=1
+	
+to instruct conan to not parallelize the builds. Some of the modules that include boost beast require significant resources to build.
+
 ## Building on Ubuntu on 20.04 LTS
 
 ### Setup the build
