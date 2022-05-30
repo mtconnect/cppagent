@@ -540,8 +540,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   ASSERT_TRUE(cutterStatus);
   ASSERT_EQ("okuma.com:OkumaToolAssets", get<string>(cutterStatus->getProperty("xmlns:x")));
 
-  auto status = get<EntityPtr>(cutterStatus->getProperty("Status"));
-  ASSERT_EQ("AVAILABLE", status->getValue<string>());
+  ASSERT_EQ("AVAILABLE", cutterStatus->get<string>("Status"));
 
   auto toolGroup = get<EntityPtr>(item->getProperty("x:ItemProgramToolGroup"));
   ASSERT_TRUE(toolGroup);
@@ -603,9 +602,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
               ],
               "indices": "1",
               "x:ItemCutterStatus": {
-                "Status": {
-                  "value": "AVAILABLE"
-                },
+                "Status": "AVAILABLE",
                 "xmlns:x": "okuma.com:OkumaToolAssets"
               },
               "x:ItemProgramToolGroup": {

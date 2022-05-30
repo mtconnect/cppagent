@@ -81,6 +81,7 @@ namespace mtconnect {
         m_isList = true;
       }
 
+      bool isProperty(const std::string &name) const { return m_properties.count(name) > 0; }
       bool isPropertySet(const std::string &name) const { return m_propertySets.count(name) > 0; }
       bool isSimpleProperty(const std::string &name) const
       {
@@ -234,6 +235,7 @@ namespace mtconnect {
       {
         for (auto &r : m_requirements)
         {
+          m_properties.emplace(r.getName());
           auto factory = r.getFactory();
           if (factory && (r.getType() == ENTITY || r.getType() == ENTITY_LIST))
           {
@@ -292,6 +294,7 @@ namespace mtconnect {
 
       std::set<std::string> m_propertySets;
       std::set<std::string> m_simpleProperties;
+      std::set<std::string> m_properties;
     };
 
   }  // namespace entity

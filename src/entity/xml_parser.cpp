@@ -152,12 +152,20 @@ namespace mtconnect::entity {
           if (child->type == XML_ELEMENT_NODE)
           {
             auto name = nodeQName(child);
+            bool simple = ef->isSimpleProperty(name);
             if (order)
             {
               order->emplace(name, orderCount++);
+
+              if (!simple && !ef->isProperty(name))
+              {
+                simple = child->children != nullptr && child->properties == nullptr &&
+                         child->nsDef == nullptr && child->children->next == nullptr &&
+                         child->children->type == XML_TEXT_NODE;
+              }
             }
 
-            if (ef->isSimpleProperty(name))
+            if (simple)
             {
               if (child->children != nullptr && child->children->content != nullptr)
               {

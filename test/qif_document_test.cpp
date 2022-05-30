@@ -133,8 +133,7 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
   auto version = qif->get<EntityPtr>("Version");
   ASSERT_TRUE(version);
 
-  ASSERT_EQ("fd43400a-29bf-4ec6-b96c-e2f846eb6ff6"s,
-            version->get<EntityPtr>("ThisInstanceQPId")->getValue<string>());
+  ASSERT_EQ("fd43400a-29bf-4ec6-b96c-e2f846eb6ff6"s, version->get<string>("ThisInstanceQPId"));
 
   auto product = qif->get<EntityPtr>("Product");
   ASSERT_TRUE(product);
@@ -143,12 +142,11 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
   ASSERT_EQ("1"s, partSet->get<string>("N"));
   auto part = partSet->get<EntityPtr>("Part");
   ASSERT_EQ("1"s, part->get<string>("id"));
-  ASSERT_EQ("Widget"s, part->get<EntityPtr>("Name")->getValue<string>());
-  ASSERT_EQ("ed43400a-29bf-4ec6-b96c-e2f846eb6f00"s,
-            part->get<EntityPtr>("QPId")->getValue<string>());
+  ASSERT_EQ("Widget"s, part->get<string>("Name"));
+  ASSERT_EQ("ed43400a-29bf-4ec6-b96c-e2f846eb6f00"s, part->get<string>("QPId"));
   auto root = product->get<EntityPtr>("RootPart");
   ASSERT_TRUE(root);
-  ASSERT_EQ("1"s, root->get<EntityPtr>("Id")->getValue<string>());
+  ASSERT_EQ("1"s, root->get<string>("Id"));
 }
 
 TEST_F(QIFDocumentTest, test_qif_xml_round_trip)
@@ -243,25 +241,17 @@ TEST_F(QIFDocumentTest, should_generate_json)
         "PartSet": {
           "N": "1",
           "Part": {
-            "Name": {
-              "value": "Widget"
-            },
-            "QPId": {
-              "value": "ed43400a-29bf-4ec6-b96c-e2f846eb6f00"
-            },
+            "Name": "Widget",
+            "QPId": "ed43400a-29bf-4ec6-b96c-e2f846eb6f00",
             "id": "1"
           }
         },
         "RootPart": {
-          "Id": {
-            "value": "1"
-          }
+          "Id": "1"
         }
       },
       "Version": {
-        "ThisInstanceQPId": {
-          "value": "fd43400a-29bf-4ec6-b96c-e2f846eb6ff6"
-        }
+        "ThisInstanceQPId": "fd43400a-29bf-4ec6-b96c-e2f846eb6ff6"
       },
       "versionQIF": "2.0.0",
       "xmlns": "http://qifstandards.org/xsd/qif2",
