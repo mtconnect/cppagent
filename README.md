@@ -523,7 +523,7 @@ If the "-o with_ruby=True" build is selected, then use to following configuratio
     }
 
 The module specified at the path given will be loaded. There are examples in the test/Resources/ruby directory in 
-github: [Ruby Tests](https://github.com/mtconnect/cppagent_dev/tree/master/test/resources/ruby).
+github: [Ruby Tests](https://github.com/mtconnect/cppagent/tree/master/test/resources/ruby).
 
 The current functionality is limited to the pipeline transformations from the adapters. Future changes will include adding sources and sinks.
 
@@ -1237,11 +1237,11 @@ You also need CMake [CMake](https://cmake.org/download/) and git [git](https://g
 
 Clone the agent to another directory:
 
-    git clone git@github.com:/mtconnect/cppagent_dev.git
+	git clone https://github.com/mtconnect/cppagent.git
 
 Make a build subdirectory of `cppagent_dev`
 
-    cd cppagent_dev
+    cd cppagent
     conan export conan\mqtt_cpp
     conan export conan\mruby
 	
@@ -1279,16 +1279,16 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 
 ### Setup the build
 
-    sudo apt-get install build-essential python3.9 python3-pip git cmake
+    sudo apt-get install build-essential python3.9 python3-pip git cmake ruby rake
 	python3.9 -m pip install conan
 
 ### Download the source
 
-	git clone git@github.com:/mtconnect/cppagent_dev.git
+	git clone https://github.com/mtconnect/cppagent.git
 	
 ### Install the dependencies
 	
-	cd cppagent_dev
+	cd cppagent
 	conan export conan/mqtt_cpp
 	conan export conan/mruby
 	conan install . -if build --build=missing -pr conan/profiles/gcc
@@ -1313,11 +1313,11 @@ Install brew and xcode command line tools
 
 ### Download the source
 
-	git clone git@github.com:/mtconnect/cppagent_dev.git
+	git clone https://github.com/mtconnect/cppagent.git
 	
 ### Install the dependencies
 
-    cd cppagent_dev
+    cd cppagent
     conan export conan/mqtt_cpp
     conan export conan/mruby
     conan install . -if build  --build=missing
@@ -1335,7 +1335,8 @@ Install brew and xcode command line tools
 
 ### As Root
 
-	apk add g++ python3 cmake git linux-headers make perl
+	apk add g++ python3 cmake git linux-headers make perl ruby
+	gem install rake
 	
 	python3 -m ensurepip
 	python3 -m pip install --upgrade pip
@@ -1344,12 +1345,13 @@ Install brew and xcode command line tools
 	
 	export PATH=~/.local/bin:$PATH
 	pip3 install conan	
-	git clone git@github.com:/mtconnect/cppagent_dev.git	
+	git clone https://github.com/mtconnect/cppagent.git
 
 ### Export mqtt_cpp package
 
-	cd cppagent_dev
+	cd cppagent
 	conan export conan/mqtt_cpp/
+	conan export conan/mruby/
 
 ### Install packages
 
