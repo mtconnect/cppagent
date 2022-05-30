@@ -130,34 +130,44 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
   ASSERT_EQ("http://qifstandards.org/xsd/qif2 QIFApplications/QIFDocument.xsd", qif->get<string>("xsi:schemaLocation"));
   ASSERT_EQ("2.0.0", qif->get<string>("versionQIF"));
 
+  auto version = qif->get<EntityPtr>("Version");
+  ASSERT_TRUE(version);
   
-  auto content = qif->get<string>("RAW");
-  ASSERT_EQ(R"(<Version><ThisInstanceQPId>fd43400a-29bf-4ec6-b96c-e2f846eb6ff6</ThisInstanceQPId></Version><Product><PartSet N="1"><Part id="1"><Name>Widget</Name><QPId>ed43400a-29bf-4ec6-b96c-e2f846eb6f00</QPId></Part></PartSet><RootPart><Id>1</Id></RootPart></Product>)", content);
+  ASSERT_EQ("fd43400a-29bf-4ec6-b96c-e2f846eb6ff6"s,
+            version->get<EntityPtr>("ThisInstanceQPId")->getValue<string>());
+  
+  auto product = qif->get<EntityPtr>("Product");
+  ASSERT_TRUE(product);
+  auto partSet = product->get<EntityPtr>("PartSet");
+  ASSERT_TRUE(partSet);
+  ASSERT_EQ("1"s, partSet->get<string>("N"));
+  auto part = partSet->get<EntityPtr>("Part");
+  ASSERT_EQ("1"s, part->get<string>("id"));
+  ASSERT_EQ("Widget"s, part->get<EntityPtr>("Name")->getValue<string>());
+  ASSERT_EQ("ed43400a-29bf-4ec6-b96c-e2f846eb6f00"s, part->get<EntityPtr>("QPId")->getValue<string>());
+  auto root = product->get<EntityPtr>("RootPart");
+  ASSERT_TRUE(root);
+  ASSERT_EQ("1"s, root->get<EntityPtr>("Id")->getValue<string>());
 }
 
 TEST_F(QIFDocumentTest, test_qif_xml_round_trip)
 {
   using namespace date;
-  const auto doc = R"DOC(
-<QIFDocumentWrapper assetId="30d278e0-c150-013a-c34d-4e7f553bbb76" qifDocumentType="PLAN">
-  <QIFDocument xmlns="http://qifstandards.org/xsd/qif2"
-     xmlns:q="http://qifstandards.org/xsd/qif2"
-     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-     versionQIF="2.0.0"
-     xsi:schemaLocation="http://qifstandards.org/xsd/qif2 QIFApplications/QIFDocument.xsd">
-        <Version>
-          <ThisInstanceQPId>fd43400a-29bf-4ec6-b96c-e2f846eb6ff6</ThisInstanceQPId>
-        </Version>
-        <Product>
-        <PartSet N="1">
-          <Part id="1">
-            <Name>Widget</Name>
-            <QPId>ed43400a-29bf-4ec6-b96c-e2f846eb6f00</QPId>
-          </Part>
-        </PartSet>
-        <RootPart>
-          <Id>1</Id>
-        </RootPart>
+  const auto doc = R"DOC(<QIFDocumentWrapper assetId="30d278e0-c150-013a-c34d-4e7f553bbb76" qifDocumentType="PLAN">
+  <QIFDocument versionQIF="2.0.0" xmlns="http://qifstandards.org/xsd/qif2" xmlns:q="http://qifstandards.org/xsd/qif2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://qifstandards.org/xsd/qif2 QIFApplications/QIFDocument.xsd">
+    <Version>
+      <ThisInstanceQPId>fd43400a-29bf-4ec6-b96c-e2f846eb6ff6</ThisInstanceQPId>
+    </Version>
+    <Product>
+      <PartSet N="1">
+        <Part id="1">
+          <Name>Widget</Name>
+          <QPId>ed43400a-29bf-4ec6-b96c-e2f846eb6f00</QPId>
+        </Part>
+      </PartSet>
+      <RootPart>
+        <Id>1</Id>
+      </RootPart>
     </Product>
   </QIFDocument>
 </QIFDocumentWrapper>
@@ -176,13 +186,10 @@ TEST_F(QIFDocumentTest, test_qif_xml_round_trip)
   printer.print(*m_writer, entity, {"x"});
   string content = m_writer->getContent();
 
-  ASSERT_EQ(R"(<QIFDocumentWrapper assetId="30d278e0-c150-013a-c34d-4e7f553bbb76" qifDocumentType="PLAN">
-  <QIFDocument versionQIF="2.0.0" xmlns="http://qifstandards.org/xsd/qif2" xmlns:q="http://qifstandards.org/xsd/qif2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://qifstandards.org/xsd/qif2 QIFApplications/QIFDocument.xsd"><Version><ThisInstanceQPId>fd43400a-29bf-4ec6-b96c-e2f846eb6ff6</ThisInstanceQPId></Version><Product><PartSet N="1"><Part id="1"><Name>Widget</Name><QPId>ed43400a-29bf-4ec6-b96c-e2f846eb6f00</QPId></Part></PartSet><RootPart><Id>1</Id></RootPart></Product></QIFDocument>
-</QIFDocumentWrapper>
-)", content);
+  ASSERT_EQ(doc, content);
 }
 
-TEST_F(QIFDocumentTest, should_generate_xml_with_embedded_xml)
+TEST_F(QIFDocumentTest, should_generate_json)
 {
   using namespace date;
   const auto doc = R"DOC(
@@ -225,11 +232,35 @@ TEST_F(QIFDocumentTest, should_generate_xml_with_embedded_xml)
   stringstream buffer;
   buffer << std::setw(2);
   buffer << json;
-  
-  ASSERT_EQ(R"({
+  string res = buffer.str();
+    
+  ASSERT_EQ(R"DOC({
   "QIFDocumentWrapper": {
     "QIFDocument": {
-      "value": "<Version><ThisInstanceQPId>fd43400a-29bf-4ec6-b96c-e2f846eb6ff6</ThisInstanceQPId></Version><Product><PartSet N=\"1\"><Part id=\"1\"><Name>Widget</Name><QPId>ed43400a-29bf-4ec6-b96c-e2f846eb6f00</QPId></Part></PartSet><RootPart><Id>1</Id></RootPart></Product>",
+      "Product": {
+        "PartSet": {
+          "N": "1",
+          "Part": {
+            "Name": {
+              "value": "Widget"
+            },
+            "QPId": {
+              "value": "ed43400a-29bf-4ec6-b96c-e2f846eb6f00"
+            },
+            "id": "1"
+          }
+        },
+        "RootPart": {
+          "Id": {
+            "value": "1"
+          }
+        }
+      },
+      "Version": {
+        "ThisInstanceQPId": {
+          "value": "fd43400a-29bf-4ec6-b96c-e2f846eb6ff6"
+        }
+      },
       "versionQIF": "2.0.0",
       "xmlns": "http://qifstandards.org/xsd/qif2",
       "xmlns:q": "http://qifstandards.org/xsd/qif2",
@@ -239,5 +270,5 @@ TEST_F(QIFDocumentTest, should_generate_xml_with_embedded_xml)
     "assetId": "30d278e0-c150-013a-c34d-4e7f553bbb76",
     "qifDocumentType": "PLAN"
   }
-})", buffer.str());
+})DOC"s, res);
 }

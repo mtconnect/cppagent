@@ -95,6 +95,13 @@ namespace mtconnect::entity {
     auto ef = factory->factoryFor(qname);
     if (ef)
     {
+      OrderMapPtr order;
+      AttributeSet attrs;
+      if (ef->isAny())
+      {
+        order = make_shared<OrderMap>();
+      }
+      
       Properties properties;
       EntityList *l {nullptr};
       if (ef->isList())
@@ -111,6 +118,10 @@ namespace mtconnect::entity {
             qname.setNs((const char *) attr->ns->prefix);
           properties.insert(
               {qname, string((const char *)attr->children->content)});
+          if (!islower(qname[0]))
+          {
+            attrs.emplace(qname);
+          }
         }
       }
 
@@ -136,11 +147,17 @@ namespace mtconnect::entity {
       }
       else
       {
+        int orderCount = 0;
         for (xmlNodePtr child = node->children; child; child = child->next)
         {
           if (child->type == XML_ELEMENT_NODE)
           {
             auto name = nodeQName(child);
+            if (order)
+            {
+              order->emplace(name, orderCount++);
+            }
+            
             if (ef->isSimpleProperty(name))
             {
               if (child->children != nullptr && child->children->content != nullptr)
@@ -191,6 +208,10 @@ namespace mtconnect::entity {
       try
       {
         auto entity = ef->make(qname, properties, errors);
+        if (order)
+          entity->setOrder(order);
+        if (!attrs.empty())
+          entity->setAttributes(attrs);
         return entity;
       }
       catch (EntityError &e)
