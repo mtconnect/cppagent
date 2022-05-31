@@ -18,8 +18,8 @@ Clone from github
 -----
 
 	$ mkdir agent; cd agent
-	$ git clone git@github.com:mtconnect/cppagent_dev.git
-	$ cd cppagent_dev
+	$ git clone git@github.com:mtconnect/cppagent.git
+	$ cd cppagent
 	$ git submodule init
 	$ git submodule update
 
