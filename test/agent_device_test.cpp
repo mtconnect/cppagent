@@ -27,6 +27,7 @@
 #include "device_model/agent_device.hpp"
 #include "json_helper.hpp"
 #include "source/adapter/adapter.hpp"
+#include "version.h"
 
 using namespace std;
 using namespace mtconnect;
@@ -46,7 +47,8 @@ protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.7", 25);
+    auto version = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
+    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, version, 25);
     m_agentId = to_string(getCurrentTimeInSec());
     m_agentDevice = m_agentTestHelper->m_agent->getAgentDevice();
   }
@@ -174,6 +176,9 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
   addAdapter();
   {
     PARSE_XML_RESPONSE("/Agent/probe");
+    auto version = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
+    ASSERT_XML_PATH_EQUAL(doc, AGENT_PATH "@mtconnectVersion", version.c_str());
+    
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:21788");
