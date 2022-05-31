@@ -76,7 +76,7 @@ namespace mtconnect {
           if (cached)
           {
             allocate(m_size);
-            auto file = std::fopen(path.string().c_str(), "r");
+            auto file = std::fopen(path.string().c_str(), "rb");
             m_size = std::fread(m_buffer, 1, m_size, file);
           }
           m_lastWrite = std::filesystem::last_write_time(m_path);

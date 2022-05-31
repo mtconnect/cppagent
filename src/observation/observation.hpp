@@ -316,8 +316,6 @@ namespace mtconnect {
     class AssetEvent : public Event
     {
     public:
-      using super = Event;
-
       using Event::Event;
       static entity::FactoryPtr getFactory();
       ~AssetEvent() override = default;
