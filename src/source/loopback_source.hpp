@@ -54,7 +54,10 @@ namespace mtconnect::source {
       m_pipeline.start();
       return true;
     }
-    void stop() override {}
+    void stop() override
+    {
+      m_pipeline.clear();
+    }
     pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
 
     SequenceNumber_t receive(observation::ObservationPtr observation)

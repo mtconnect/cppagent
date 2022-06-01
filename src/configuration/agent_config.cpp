@@ -292,21 +292,32 @@ namespace mtconnect::configuration {
         << "Monitor thread has detected change in configuration files, restarting agent.";
 
         m_agent->stop();
-        
-        LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
 
-        m_context.pause([this](AsyncContext &context) {
+        m_monitorTimer.expires_from_now(5s);
+        m_monitorTimer.async_wait([this](boost::system::error_code ec) {
+          LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
           m_agent.reset();
-          m_configTime.reset();
-          m_deviceTime.reset();
           
-          // Re initialize
-          boost::program_options::variables_map options;
-          boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
-                                                       false);
-          options.insert(make_pair("config-file"s, value));
-          initialize(options);
+          m_context.pause([this](AsyncContext &context) {
+            m_configTime.reset();
+            m_deviceTime.reset();
+            
+            // Re initialize
+            boost::program_options::variables_map options;
+            boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
+                                                         false);
+            options.insert(make_pair("config-file"s, value));
+            initialize(options);
+            m_agent->start();
+
+            if (m_monitorFiles)
+            {
+              scheduleMonitorTimer();
+            }
+          });
         });
+        
+        return;
       }
 
       // Handle device changed by delivering the device file to the agent

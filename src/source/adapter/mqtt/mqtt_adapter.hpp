@@ -78,7 +78,11 @@ namespace mtconnect::source::adapter::mqtt_adapter {
       m_pipeline.start();
       return m_client->start();
     }
-    void stop() override { m_client->stop(); }
+    void stop() override
+    {
+      m_client->stop();
+      m_pipeline.clear();
+    }
 
     pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
 

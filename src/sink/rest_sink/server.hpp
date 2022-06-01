@@ -79,7 +79,11 @@ namespace mtconnect::sink::rest_sink {
     void start();
 
     // Shutdown
-    void stop() { m_run = false; };
+    void stop()
+    {
+      m_run = false;
+      m_acceptor.close();
+    };
 
     void listen();
 

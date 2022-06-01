@@ -35,7 +35,6 @@ namespace mtconnect::configuration {
     
     void setThreadCount(int threads) { m_threadCount = threads; }
     
-    
     void start()
     {
       m_running = true;

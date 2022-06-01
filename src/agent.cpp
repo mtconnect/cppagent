@@ -296,12 +296,26 @@ namespace mtconnect {
       
       // if different,  and revise to new device leaving in place
       // the asset changed, removed, and availability data items
-      auto chg = oldDev->getAssetChanged()->getId();
-      auto rem = oldDev->getAssetRemoved()->getId();
-      auto avail = oldDev->getAvailability()->getId();
+      std::set<std::string> ids;
+      if (oldDev->getAssetChanged())
+        ids.insert(oldDev->getAssetChanged()->getId());
+      if (oldDev->getAssetRemoved())
+        ids.insert(oldDev->getAssetRemoved()->getId());
+      if (oldDev->getAvailability())
+        ids.insert(oldDev->getAvailability()->getId());
 
-      if (oldDev->reviseTo(device, {chg, rem, avail}))
+      if (oldDev->reviseTo(device, ids))
       {
+        // Remove the old data items
+        for (auto di : oldDev->getDeviceDataItems())
+          m_dataItemMap.erase(di.first);
+        
+        // Reinitialize data item maps
+        oldDev->initialize();
+        
+        for (auto di : oldDev->getDeviceDataItems())
+          m_dataItemMap.emplace(di.first, di.second);
+        
         // update with a new version of the device.xml, saving the old one
         // with a date time stamp
         auto ext = "."s + getCurrentTime(LOCAL);
@@ -318,6 +332,9 @@ namespace mtconnect {
         ofstream devices(config.string());
         devices << probe;
         devices.close();
+                
+        auto d = m_agentDevice->getDeviceDataItem("device_changed");
+        m_loopback->receive(d, *uuid);
       }
       else
       {
@@ -522,8 +539,7 @@ namespace mtconnect {
         if (m_dataItemMap[d->getId()] != d)
         {
           LOG(fatal) << "Duplicate DataItem id " << d->getId()
-                     << " for device: " << *device->getComponentName()
-                     << " and data item name: " << d->getId();
+                     << " for device: " << *device->getComponentName();
           std::exit(1);
         }
       }

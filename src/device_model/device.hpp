@@ -40,6 +40,11 @@ namespace mtconnect {
 
       void initialize() override
       {
+        m_deviceDataItemsById.clear();
+        m_deviceDataItemsByName.clear();
+        m_deviceDataItemsBySource.clear();
+        m_componentsById.clear();
+        
         Component::initialize();
         buildDeviceMaps(getptr());
         resolveReferences(getptr());
