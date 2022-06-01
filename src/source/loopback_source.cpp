@@ -91,6 +91,20 @@ namespace mtconnect::source {
       return receive(dataItem, {{"VALUE", value}}, timestamp);
   }
 
+  SequenceNumber_t LoopbackSource::receive(const std::string &data)
+  {
+    auto ent = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", getIdentity()}});
+    auto res = m_pipeline.run(ent);
+    if (auto obs = std::dynamic_pointer_cast<observation::Observation>(res))
+    {
+      return obs->getSequence();
+    }
+    else
+    {
+      return 0;
+    }
+  }
+
   AssetPtr LoopbackSource::receiveAsset(DevicePtr device, const std::string &document,
                                         const std::optional<std::string> &id,
                                         const std::optional<std::string> &type,
