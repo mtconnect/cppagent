@@ -58,7 +58,7 @@ namespace mtconnect {
   static const string g_available("AVAILABLE");
 
   // Agent public methods
-  Agent::Agent(boost::asio::io_context &context, const string &configXmlPath,
+  Agent::Agent(boost::asio::io_context &context, const string &deviceXmlPath,
                const ConfigOptions &options)
     : m_options(options),
       m_context(context),
@@ -66,7 +66,7 @@ namespace mtconnect {
       m_xmlParser(make_unique<parser::XmlParser>()),
       m_version(
           GetOption<string>(options, mtconnect::configuration::SchemaVersion).value_or("1.7")),
-      m_configXmlPath(configXmlPath),
+      m_deviceXmlPath(deviceXmlPath),
       m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
   {
     using namespace asset;
@@ -102,7 +102,7 @@ namespace mtconnect {
     {
       createAgentDevice();
     }
-    loadXMLDeviceFile(m_configXmlPath);
+    loadXMLDeviceFile(m_deviceXmlPath);
     loadCachedProbe();
 
     m_initialized = true;
@@ -240,11 +240,40 @@ namespace mtconnect {
       }
     }
   }
-  
+
+  void Agent::reloadDevices(const std::string &deviceFile)
+  {
+    try
+    {
+      // Load the configuration for the Agent
+      auto devices = m_xmlParser->parseFile(
+          deviceFile, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
+
+      // Fir the DeviceAdded event for each device
+      for (auto device : devices)
+        receiveDevice(device);
+      loadCachedProbe();
+    }
+    catch (runtime_error &e)
+    {
+      LOG(fatal) << "Error loading xml configuration: " + deviceFile;
+      LOG(fatal) << "Error detail: " << e.what();
+      cerr << e.what() << endl;
+      throw e;
+    }
+    catch (exception &f)
+    {
+      LOG(fatal) << "Error loading xml configuration: " + deviceFile;
+      LOG(fatal) << "Error detail: " << f.what();
+      cerr << f.what() << endl;
+      throw f;
+    }
+  }
+
   void Agent::receiveDevice(device_model::DevicePtr device)
   {
     NAMED_SCOPE("Agent::receiveDevice");
-    
+
     // diff the device against the current device with the same uuid
     auto uuid = device->getUuid();
     if (!uuid)
@@ -252,14 +281,9 @@ namespace mtconnect {
       LOG(error) << "Device does not have a uuid: " << device->getName();
       return;
     }
-    
+
     auto old = m_deviceUuidMap.find(*uuid);
-    
-    // idle the io-context
-    // TODO: Need to communicate back to the agent config to idle the context
-    // Question: Should the agent have control over the loop?
-    m_context.stop();
-    
+
     // If this is a new device
     if (old == m_deviceUuidMap.end())
     {
@@ -268,38 +292,38 @@ namespace mtconnect {
     }
     else
     {
+      auto oldDev = old->second;
+      
       // if different,  and revise to new device leaving in place
       // the asset changed, removed, and availability data items
+      auto chg = oldDev->getAssetChanged()->getId();
+      auto rem = oldDev->getAssetRemoved()->getId();
+      auto avail = oldDev->getAvailability()->getId();
 
-      auto chg = device->getAssetChanged()->getId();
-      auto rem = device->getAssetRemoved()->getId();
-      auto avail = device->getAvailability()->getId();
-      
-      if (old->second->reviseTo(device, { chg, rem, avail }))
+      if (oldDev->reviseTo(device, {chg, rem, avail}))
       {
+        // update with a new version of the device.xml, saving the old one
+        // with a date time stamp
+        auto ext = "."s + getCurrentTime(LOCAL);
+        fs::path config(m_deviceXmlPath);
+        fs::path backup(m_deviceXmlPath + ext);
+        fs::rename(config, backup);
 
-      // update with a new version of the device.xml, saving the old one
-      // with a date time stamp
-      auto ext = "."s + getCurrentTime(LOCAL);
-      fs::path config(m_configXmlPath);
-      fs::path backup(m_configXmlPath + ext);
-      fs::rename(config, backup);
-      
-      auto &xml = m_printers["xml"];
-      auto probe = xml->printProbe(0, 0, 0, 0, 0, m_devices);
-      
-      ofstream devices(config.string());
-      devices << probe;
-      devices.close();
+        printer::XmlPrinter printer(m_version, true);
+        decltype(m_devices) list;
+        copy_if(m_devices.begin(), m_devices.end(), back_inserter(list),
+                [](DevicePtr d) { return dynamic_cast<AgentDevice*>(d.get()) == nullptr; });
+        auto probe = printer.printProbe(0, 0, 0, 0, 0, list);
+
+        ofstream devices(config.string());
+        devices << probe;
+        devices.close();
       }
       else
       {
         LOG(info) << "Device " << *uuid << " did not change, ignoring new device";
       }
     }
-    
-    // restart the io-context
-    m_context.restart();
   }
 
   bool Agent::removeAsset(DevicePtr device, const std::string &id,
@@ -537,7 +561,7 @@ namespace mtconnect {
     {
       // Check if we are already initialized. If so, the device will need to be
       // verified, additional data items added, and initial values set.
-      //if (!m_initialized)
+      // if (!m_initialized)
       {
         m_devices.push_back(device);
         m_deviceNameMap[device->get<string>("name")] = device;
@@ -559,8 +583,8 @@ namespace mtconnect {
           }
         }
       }
-      //else
-      //  LOG(warning) << "Adding device " << uuid << " after initialialization not supported yet";
+      // else
+      //   LOG(warning) << "Adding device " << uuid << " after initialialization not supported yet";
     }
 
     for (auto &printer : m_printers)

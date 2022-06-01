@@ -827,7 +827,7 @@ TEST_F(EntityTest, should_remove_missing_entities)
       auto se2 = secondsFact->create("second", sndp2);
       list.push_back(se2);
     }
-    
+
     ErrorList errors;
     auto se3 = fact->create("seconds", list, errors);
 
@@ -890,7 +890,7 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_specific_ids)
       auto se2 = secondsFact->create("second", sndp2);
       list.push_back(se2);
     }
-    
+
     ErrorList errors;
     auto se3 = fact->create("seconds", list, errors);
 
@@ -914,7 +914,7 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_specific_ids)
   ASSERT_TRUE(list2);
   ASSERT_EQ(1, list2->size());
 
-  v1->reviseTo(v2, { "2"s });
+  v1->reviseTo(v2, {"2"s});
   auto list3 = v1->getList("seconds");
   ASSERT_TRUE(list3);
   ASSERT_EQ(2, list3->size());
@@ -953,7 +953,7 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_changes_and_removals)
       auto se2 = secondsFact->create("second", sndp2);
       list.push_back(se2);
     }
-    
+
     ErrorList errors;
     auto se3 = fact->create("seconds", list, errors);
 
@@ -986,7 +986,4 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_changes_and_removals)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
-TEST_F(EntityTest, entities_should_merge_entity_lists_without_identity)
-{
-  GTEST_SKIP();
-}
+TEST_F(EntityTest, entities_should_merge_entity_lists_without_identity) { GTEST_SKIP(); }

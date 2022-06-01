@@ -27,6 +27,7 @@
 #include <string>
 #include <thread>
 
+#include "async_context.hpp"
 #include "agent.hpp"
 #include "parser.hpp"
 #include "service.hpp"
@@ -81,7 +82,7 @@ namespace mtconnect {
 
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
       const Agent *getAgent() const { return m_agent.get(); }
-      auto &getContext() { return m_context; }
+      auto &getContext() { return m_context.getContext(); }
 
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
@@ -120,25 +121,30 @@ namespace mtconnect {
 
       std::optional<std::filesystem::path> checkPath(const std::string &name);
 
-      void monitorThread();
+      void monitorFiles(boost::system::error_code ec);
+      void scheduleMonitorTimer();
 
     protected:
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
 
-      boost::asio::io_context m_context;
+      AsyncContext m_context;
       std::unique_ptr<Agent> m_agent;
-      std::list<std::thread> m_workers;
 
       pipeline::PipelineContextPtr m_pipelineContext;
       std::unique_ptr<source::adapter::Handler> m_adapterHandler;
       boost::shared_ptr<text_sink> m_sink;
       std::string m_version;
-      bool m_monitorFiles = false;
-      int m_minimumConfigReloadAge = 15;
       std::string m_devicesFile;
-      bool m_restart = false;
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
+
+      // File monitoring
+      boost::asio::steady_timer m_monitorTimer;
+      bool m_monitorFiles = false;
+      int m_minimumConfigReloadAge = 15;
+      bool m_restart = false;
+      std::optional<std::filesystem::file_time_type> m_configTime;
+      std::optional<std::filesystem::file_time_type> m_deviceTime;
 
       // Logging info for testing
       std::filesystem::path m_logDirectory;

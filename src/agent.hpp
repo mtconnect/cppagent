@@ -66,7 +66,7 @@ namespace mtconnect {
   {
   public:
     // Load agent with the xml configuration
-    Agent(boost::asio::io_context &context, const std::string &configXmlPath,
+    Agent(boost::asio::io_context &context, const std::string &deviceXmlPath,
           const ConfigOptions &options);
 
     // Virtual destructor
@@ -138,6 +138,7 @@ namespace mtconnect {
     // Add the a device from a configuration file
     void addDevice(DevicePtr device);
     void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
+    void reloadDevices(const std::string &deviceFile);
 
     // Message when adapter has connected and disconnected
     void connecting(const std::string &adapter);
@@ -254,7 +255,7 @@ namespace mtconnect {
 
     // Xml Config
     std::string m_version;
-    std::string m_configXmlPath;
+    std::string m_deviceXmlPath;
 
     // For debugging
     bool m_pretty;

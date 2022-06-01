@@ -17,8 +17,9 @@
 
 #pragma once
 
-#include <unordered_map>
 #include <boost/range/algorithm.hpp>
+
+#include <unordered_map>
 
 #include "data_set.hpp"
 #include "qname.hpp"
@@ -195,7 +196,7 @@ namespace mtconnect {
       OrderMapPtr m_order;
       AttributeSet m_attributes;
     };
-    
+
     struct ValueEqualVisitor
     {
       ValueEqualVisitor(const Value &t) : m_this(t) {}
@@ -260,10 +261,15 @@ namespace mtconnect {
 
     struct ValueMergeVisitor
     {
-      ValueMergeVisitor(Value &t, const std::set<std::string> protect) : m_this(t), m_protect(protect) {}
+      ValueMergeVisitor(Value &t, const std::set<std::string> protect)
+        : m_this(t), m_protect(protect)
+      {}
 
-      bool operator()(const EntityPtr &other) { return std::get<EntityPtr>(m_this)->reviseTo(other, m_protect); }
-      
+      bool operator()(const EntityPtr &other)
+      {
+        return std::get<EntityPtr>(m_this)->reviseTo(other, m_protect);
+      }
+
       bool mergeRemainder(EntityList &list, EntityList &revised, bool changed)
       {
         if (changed)
@@ -281,8 +287,7 @@ namespace mtconnect {
         }
         else
         {
-          changed = std::any_of(list.begin(), list.end(),
-                                [this](const auto &o) {
+          changed = std::any_of(list.begin(), list.end(), [this](const auto &o) {
             const auto &id = o->getIdentity();
             if (std::holds_alternative<std::string>(id))
             {
@@ -295,7 +300,7 @@ namespace mtconnect {
             }
           });
         }
-        
+
         return changed;
       }
 
@@ -340,7 +345,7 @@ namespace mtconnect {
         {
           changed = mergeRemainder(list, revised, changed);
         }
-        
+
         if (changed)
           m_this = revised;
 

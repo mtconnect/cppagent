@@ -96,7 +96,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", logr::attributes::utc_cl
 namespace mtconnect::configuration {
   boost::log::trivial::logger_type *gAgentLogger = nullptr;
 
-  AgentConfiguration::AgentConfiguration()
+  AgentConfiguration::AgentConfiguration() : m_monitorTimer(m_context.getContext())
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
     using namespace source;
@@ -209,166 +209,151 @@ namespace mtconnect::configuration {
       m_sink.reset();
   }
 
-#ifdef _WINDOWS
-  static time_t GetFileModificationTime(const string &file)
+  void AgentConfiguration::monitorFiles(boost::system::error_code ec)
   {
-    FILETIME createTime, accessTime, writeTime = {0, 0};
-    auto handle =
-        CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (handle == INVALID_HANDLE_VALUE)
-    {
-      LOG(warning) << "Could not find file: " << file;
-      return 0;
-    }
-    if (!GetFileTime(handle, &createTime, &accessTime, &writeTime))
-    {
-      LOG(warning) << "GetFileTime failed for: " << file;
-      writeTime = {0, 0};
-    }
-    CloseHandle(handle);
+    using namespace std;
+    using namespace chrono;
+    using namespace chrono_literals;
 
-    uint64_t windowsFileTime = (writeTime.dwLowDateTime | uint64_t(writeTime.dwHighDateTime) << 32);
-
-    return windowsFileTime / 10000000ull - 11644473600ull;
-  }
-#else
-  static time_t GetFileModificationTime(const string &file)
-  {
-    struct stat buf = {0};
-    if (stat(file.c_str(), &buf) != 0)
+    if (ec)
     {
-      LOG(warning) << "Cannot stat file (" << errno << "): " << file;
-      perror("Cannot stat file");
-      return 0;
+      LOG(info) << "Monitor files stopped";
+      return;
     }
 
-    return buf.st_mtime;
-  }
-#endif
-
-  void AgentConfiguration::monitorThread()
-  {
     NAMED_SCOPE("AgentConfiguration::monitorThread");
 
-    time_t devices_at_start = 0, cfg_at_start = 0;
 
     LOG(debug) << "Monitoring files: " << m_configFile << " and " << m_devicesFile
                << ", will warm start if they change.";
 
-    if ((cfg_at_start = GetFileModificationTime(m_configFile.string())) == 0)
+    std::error_code fec;
+    auto cfgTime = filesystem::last_write_time(m_configFile, fec);
+    if (fec)
     {
       LOG(warning) << "Cannot stat config file: " << m_configFile << ", exiting monitor";
+      scheduleMonitorTimer();
       return;
     }
-    if ((devices_at_start = GetFileModificationTime(m_devicesFile)) == 0)
+
+    auto devTime = filesystem::last_write_time(m_devicesFile, fec);
+    if (fec)
     {
       LOG(warning) << "Cannot stat devices file: " << m_devicesFile << ", exiting monitor";
+      scheduleMonitorTimer();
       return;
     }
 
-    LOG(trace) << "Configuration start time: " << cfg_at_start;
-    LOG(trace) << "Device start time: " << devices_at_start;
+    auto dt = decltype(devTime)::clock::to_time_t(devTime);
+    auto ct = decltype(cfgTime)::clock::to_time_t(cfgTime);
 
-    bool changed = false;
+    LOG(trace) << "Configuration start time: " << ct;
+    LOG(trace) << "Device start time: " << dt;
 
-    // Check every 10 seconds
-    do
+    if (!m_deviceTime || !m_configTime)
     {
-      this_thread::sleep_for(10s);
+      m_deviceTime.emplace(devTime);
+      m_configTime.emplace(cfgTime);
 
-      time_t devices = 0, cfg = 0;
-      bool check = true;
+      LOG(debug) << "Setting device and config times";
 
-      if ((cfg = GetFileModificationTime(m_configFile.string())) == 0)
-      {
-        LOG(warning) << "Cannot stat config file: " << m_configFile << ", retrying in 10 seconds";
-        check = false;
-      }
-
-      if ((devices = GetFileModificationTime(m_devicesFile)) == 0)
-      {
-        LOG(warning) << "Cannot stat devices file: " << m_devicesFile << ", retrying in 10 seconds";
-        check = false;
-      }
-
-      LOG(trace) << "Configuration times: " << cfg_at_start << " -- " << cfg;
-      LOG(trace) << "Device times: " << devices_at_start << " -- " << devices;
-
-      // Check if the files have changed.
-      if (check && (cfg_at_start != cfg || devices_at_start != devices))
-      {
-        time_t now = time(nullptr);
-        LOG(warning) << "Detected change in configuration files. Will reload when youngest file "
-                        "is at least "
-                     << m_minimumConfigReloadAge << " seconds old";
-        LOG(warning) << "    Devices.xml file modified " << (now - devices) << " seconds ago";
-        LOG(warning) << "    ...cfg file modified " << (now - cfg) << " seconds ago";
-
-        changed =
-            (now - cfg) > m_minimumConfigReloadAge && (now - devices) > m_minimumConfigReloadAge;
-      }
-    } while (!changed);  // && m_agent->is_running());
-
-    // Restart agent if changed...
-    // stop agent and signal to warm start
-    if (!m_context.stopped() && changed)
-    {
-      LOG(warning)
-          << "Monitor thread has detected change in configuration files, restarting agent.";
-
-      m_restart = true;
-      m_agent->stop();
-      m_agent.reset();
-
-      LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
-
-      // Re initialize
-      boost::program_options::variables_map options;
-      boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
-                                                   false);
-      options.insert(make_pair("config-file"s, value));
-      initialize(options);
+      scheduleMonitorTimer();
+      return;
     }
-    LOG(debug) << "Monitor thread is exiting";
+
+    if (devTime == *m_deviceTime && cfgTime == *m_configTime)
+    {
+      scheduleMonitorTimer();
+      return;
+    }
+
+    // Check if the files have changed.
+    auto now = filesystem::file_time_type::clock::now();
+    auto nt = decltype(now)::clock::to_time_t(now);
+
+    using namespace date;
+    
+    LOG(warning)
+        << "Detected change in configuration files. Will reload when youngest file is at least "
+        << m_minimumConfigReloadAge << " seconds old";
+    LOG(warning) << "    Devices.xml file modified " << (nt - dt) << " seconds ago";
+    LOG(warning) << "    ...cfg file modified " << (nt - ct) << " seconds ago";
+
+    auto delta = min(now - cfgTime, now - devTime);
+    if (delta < seconds(m_minimumConfigReloadAge))
+    {
+      LOG(warning) << "Changed, waiting " << int32_t((seconds(m_minimumConfigReloadAge) - delta).count());
+    }
+    else
+    {
+      if (cfgTime != *m_configTime)
+      {
+        LOG(warning)
+        << "Monitor thread has detected change in configuration files, restarting agent.";
+
+        m_agent->stop();
+        
+        LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
+
+        m_context.pause([this](AsyncContext &context) {
+          m_agent.reset();
+          m_configTime.reset();
+          m_deviceTime.reset();
+          
+          // Re initialize
+          boost::program_options::variables_map options;
+          boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
+                                                       false);
+          options.insert(make_pair("config-file"s, value));
+          initialize(options);
+        });
+      }
+
+      // Handle device changed by delivering the device file to the agent
+      if (devTime != *m_deviceTime)
+      {
+        m_context.pause([this](AsyncContext &context) {
+          m_agent->reloadDevices(m_devicesFile);
+          m_deviceTime.reset();
+        });
+      }
+    }
+    
+    scheduleMonitorTimer();
+    return;
+  }
+
+  void AgentConfiguration::scheduleMonitorTimer()
+  {
+    using namespace chrono;
+    using namespace chrono_literals;
+
+    using boost::placeholders::_1;
+
+    m_monitorTimer.expires_from_now(10s);
+    m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
   }
 
   void AgentConfiguration::start()
   {
-    do
+    if (m_monitorFiles)
     {
-      m_restart = true;
-      if (m_monitorFiles)
-      {
-        // Start the file monitor to check for changes to cfg or devices.
-        LOG(debug) << "Waiting for monitor thread to exit to restart agent";
-        // mon = std::make_unique<>(
-        // make_mfp(*this, &AgentConfiguration::monitorThread));
-      }
+      // Start the file monitor to check for changes to cfg or devices.
+      LOG(debug) << "Waiting for monitor thread to exit to restart agent";
 
-      m_agent->start();
+      boost::system::error_code ec;
+      AgentConfiguration::monitorFiles(ec);
+    }
 
-      for (int i = 0; i < m_workerThreadCount; i++)
-      {
-        m_workers.emplace_back(std::thread([this]() { m_context.run(); }));
-      }
-      for (auto &w : m_workers)
-      {
-        w.join();
-      }
-
-      if (m_restart && m_monitorFiles)
-      {
-        // Will destruct and wait to re-initialize.
-        LOG(debug) << "Waiting for monitor thread to exit to restart agent";
-        // mon.reset(nullptr);
-        LOG(debug) << "Monitor has exited";
-      }
-    } while (m_restart);
+    m_context.setThreadCount(m_workerThreadCount);
+    m_agent->start();
+    m_context.start();    
   }
 
   void AgentConfiguration::stop()
   {
     LOG(info) << "Agent stopping";
+    m_monitorTimer.cancel();
     m_restart = false;
     if (m_agent)
       m_agent->stop();
@@ -643,7 +628,8 @@ namespace mtconnect::configuration {
                 {configuration::AllowPutFrom, ""s}});
 
     m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
-
+    m_monitorFiles = *GetOption<bool>(options, configuration::MonitorConfigFiles);
+    
     auto devices = config.get_optional<string>(configuration::Devices);
     if (devices)
     {
