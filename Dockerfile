@@ -1,12 +1,9 @@
-# MTConnect C++ Agent Docker image build instructions
+# MTConnect Public C++ Agent Docker image build instructions
 
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
 
-# if building this with a private repo (eg cppagent_dev), need to pass
-# in a github access token in order to clone the repo. 
-#
 # to build locally and push to docker hub, run this with something like -
 #
 #   docker buildx build \
@@ -15,21 +12,6 @@
 #     --secret id=access_token,src=ACCESS_TOKEN \
 #     --push \
 #     .
-#
-# ACCESS_TOKEN is a file containing a GitHub personal access token,
-# so can clone the private mtconnect cppagent_dev repo.
-# keep it out of the github repo with .gitignore.
-# this sets up a file with the contents accessible at /run/secrete/access_token.
-# see https://vsupalov.com/docker-buildkit-features/
-#
-# to build in github actions, pass this into the docker/build-push-action@v2 step -
-#
-#   secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
-#
-# then use access token as below with
-#
-#   RUN --mount=type=secret,id=access_token \
-#     git clone https://$(cat /run/secrets/access_token)@github.com...
 #
 # then should be able to run with something like
 #
@@ -69,7 +51,7 @@ RUN apt-get clean \
 RUN --mount=type=secret,id=access_token \
   cd ~ \
   && git clone --recurse-submodules --progress --depth 1 \
-  https://$(cat /run/secrets/access_token)@github.com/bburns/cppagent_dev.git agent
+  https://github.com/mtconnect/cppagent.git agent
 
 # set some variables
 ENV PATH=$HOME/venv3.9/bin:$PATH
