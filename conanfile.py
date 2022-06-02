@@ -27,6 +27,7 @@ class CppAgentConan(ConanFile):
         "boost:shared": False,
         "boost:without_python": True,
         "boost:without_test": True,
+        "boost:extra_b2_flags": "visibility=hidden",
 
         "libxml2:shared": False,
         "libxml2:include_utils": False,

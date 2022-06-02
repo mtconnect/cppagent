@@ -48,7 +48,10 @@ namespace mtconnect {
 
       void addAdapter(const source::adapter::AdapterPtr adapter);
 
-      DataItemPtr getConnectionStatus(const std::string &adapter);
+      DataItemPtr getConnectionStatus(const std::string &adapter)
+      {
+        return getDeviceDataItem(adapter + "_connection_status");
+      }
       auto &getAdapters() { return m_adapters; }
 
     protected:

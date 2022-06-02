@@ -292,11 +292,22 @@ namespace mtconnect {
       LOG(error) << "Device does not have a uuid: " << device->getName();
       return;
     }
+    
+    DevicePtr oldDev = findDeviceByUUIDorName(*uuid);
+    if (!oldDev)
+    {
+      auto name = device->getComponentName();
+      if (!name)
+      {
+        LOG(error) << "Device does not have a name" << *uuid;
+        return;
+      }
 
-    auto old = m_deviceUuidMap.find(*uuid);
+      oldDev = findDeviceByUUIDorName(*name);
+    }
 
     // If this is a new device
-    if (old == m_deviceUuidMap.end())
+    if (!oldDev)
     {
       LOG(info) << "Received new device: " << *uuid << ", adding";
       addDevice(device);
@@ -305,8 +316,6 @@ namespace mtconnect {
     }
     else
     {
-      auto oldDev = old->second;
-      
       // if different,  and revise to new device leaving in place
       // the asset changed, removed, and availability data items
       std::set<std::string> ids;
@@ -317,10 +326,18 @@ namespace mtconnect {
       if (oldDev->getAvailability())
         ids.insert(oldDev->getAvailability()->getId());
       
-      string name = device->getName();
+      auto name = device->getComponentName();
+      if (!name)
+      {
+        LOG(error) << "Device does not have a name" << *device->getUuid();
+        return;
+      }
 
+      LOG(info) << "Updating device " << *uuid << " to new device model";
       if (oldDev->reviseTo(device, ids))
       {
+        LOG(info) << "Device " << *uuid << " changed, updating mappings";
+        
         // Remove the old data items
         for (auto di : oldDev->getDeviceDataItems())
           m_dataItemMap.erase(di.first);
@@ -331,12 +348,17 @@ namespace mtconnect {
         for (auto di : oldDev->getDeviceDataItems())
           m_dataItemMap.emplace(di.first, di.second);
         
-        if (oldDev->get<string>("name") != name)
+        if (oldDev->get<string>("name") != *name)
         {
-          m_deviceNameMap.erase(name);
+          m_deviceNameMap.erase(*name);
           m_deviceNameMap[oldDev->get<string>("name")] = oldDev;
         }
-        
+        if (oldDev->get<string>("uuid") != *uuid)
+        {
+          m_deviceUuidMap.erase(*uuid);
+          m_deviceUuidMap[oldDev->get<string>("uuid")] = oldDev;
+        }
+
         if (version)
           versionDeviceXml();
         
@@ -643,9 +665,11 @@ namespace mtconnect {
   {
     NAMED_SCOPE("Agent::deviceChanged");
 
+    bool changed = false;
     string uuid = *device->getUuid();
     if (uuid != oldUuid)
     {
+      changed = true;
       if (m_agentDevice)
       {
         auto d = m_agentDevice->getDeviceDataItem("device_removed");
@@ -658,29 +682,33 @@ namespace mtconnect {
 
     if (*device->getComponentName() != oldName)
     {
+      changed = true;
       m_deviceNameMap.erase(oldName);
       m_deviceNameMap[device->get<string>("name")] = device;
     }
 
-    versionDeviceXml();
-    loadCachedProbe();
-
-    if (m_agentDevice)
+    if (changed)
     {
-      for (auto &printer : m_printers)
-        printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
-
-      if (device->getUuid() != oldUuid)
+      versionDeviceXml();
+      loadCachedProbe();
+      
+      if (m_agentDevice)
       {
-        auto d = m_agentDevice->getDeviceDataItem("device_added");
-        if (d)
-          m_loopback->receive(d, uuid);
-      }
-      else
-      {
-        auto d = m_agentDevice->getDeviceDataItem("device_changed");
-        if (d)
-          m_loopback->receive(d, uuid);
+        for (auto &printer : m_printers)
+          printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
+        
+        if (device->getUuid() != oldUuid)
+        {
+          auto d = m_agentDevice->getDeviceDataItem("device_added");
+          if (d)
+            m_loopback->receive(d, uuid);
+        }
+        else
+        {
+          auto d = m_agentDevice->getDeviceDataItem("device_changed");
+          if (d)
+            m_loopback->receive(d, uuid);
+        }
       }
     }
   }
@@ -692,6 +720,9 @@ namespace mtconnect {
     // Reload the document for path resolution
     auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
     m_xmlParser->loadDocument(xmlPrinter->printProbe(0, 0, 0, 0, 0, m_devices));
+    
+    for (auto &printer : m_printers)
+      printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
   }
 
   // ----------------------------------------------------
