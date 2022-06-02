@@ -5,7 +5,7 @@
 # ---------------------------------------------------------------------
 #
 # to build an image locally and run it, supply the branch or tag 
-# (defaults to 'main') -
+# (defaults to 'master') -
 #
 #   docker build --tag agent-image --build-arg BRANCH=2.0.0.5 .
 #   docker run -it --rm --init --name agent-container -p5001:5000 agent-image
@@ -39,7 +39,7 @@
 
 
 # branch or tag of agent repo to checkout, eg v2.0.0.5
-ARG BRANCH=main
+ARG BRANCH=master
 
 # ---------------------------------------------------------------------
 # os

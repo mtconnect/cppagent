@@ -1,7 +1,6 @@
 # build docker image
 
-# needs github secrets set for these -
-#   ACCESS_TOKEN - a github personal access token to access the private repo
+# needs github secret set for -
 #   DOCKERHUB_TOKEN - token for the account specified at env.dockerhub_username
 
 name: Build Docker image
@@ -10,7 +9,7 @@ name: Build Docker image
 # can use these below, eg with ${{ env.version }}
 env:
   branch: v2.0.0.7 #. keep uptodate - how?
-  dockerhub_username: mtconnect
+  dockerhub_username: ladder99 #. change to mtconnect
   platforms: linux/amd64,linux/arm64
 
 # when to run workflow
