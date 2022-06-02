@@ -10,7 +10,7 @@ name: Build Docker image
 # can use these below, eg with ${{ env.version }}
 env:
   branch: v2.0.0.7 #. keep uptodate - how?
-  dockerhub_username: ladder99 #. change to mtconnect
+  dockerhub_username: mtconnect
   platforms: linux/amd64,linux/arm64
 
 # when to run workflow
@@ -58,7 +58,6 @@ jobs:
           context: .
           file: Dockerfile
           platforms: ${{ env.platforms }}
-          secrets: "access_token=${{ secrets.ACCESS_TOKEN }}"
 
           # docker hub user/repo:tag
           tags: |
