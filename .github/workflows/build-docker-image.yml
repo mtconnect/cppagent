@@ -9,7 +9,7 @@ name: Build Docker image
 # variables
 # can use these below, eg with ${{ env.version }}
 env:
-  version: 2.0.0.1 #. keep uptodate (how?)
+  branch: v2.0.0.7 #. keep uptodate - how?
   dockerhub_username: ladder99 #. change to mtconnect
   platforms: linux/amd64,linux/arm64
 
@@ -62,8 +62,8 @@ jobs:
 
           # docker hub user/repo:tag
           tags: |
-            ladder99/agent2:latest
-            ladder99/agent2:${{ env.version }}
+            ${{ env.dockerhub_username }}/agent:latest
+            ${{ env.dockerhub_username }}/agent:${{ env.version }}
 
           # push to docker hub
           push: true
