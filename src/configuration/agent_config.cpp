@@ -293,29 +293,24 @@ namespace mtconnect::configuration {
 
         m_agent->stop();
 
-        m_monitorTimer.expires_from_now(5s);
-        m_monitorTimer.async_wait([this](boost::system::error_code ec) {
-          LOG(warning) << "Monitor agent has completed shutdown, reinitializing agent.";
+        m_context.pause([this](AsyncContext &context) {
           m_agent.reset();
+          m_configTime.reset();
+          m_deviceTime.reset();
           
-          m_context.pause([this](AsyncContext &context) {
-            m_configTime.reset();
-            m_deviceTime.reset();
-            
-            // Re initialize
-            boost::program_options::variables_map options;
-            boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
-                                                         false);
-            options.insert(make_pair("config-file"s, value));
-            initialize(options);
-            m_agent->start();
-
-            if (m_monitorFiles)
-            {
-              scheduleMonitorTimer();
-            }
-          });
-        });
+          // Re initialize
+          boost::program_options::variables_map options;
+          boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
+                                                       false);
+          options.insert(make_pair("config-file"s, value));
+          initialize(options);
+          m_agent->start();
+          
+          if (m_monitorFiles)
+          {
+            scheduleMonitorTimer();
+          }
+        }, true);
         
         return;
       }
@@ -615,6 +610,7 @@ namespace mtconnect::configuration {
                 {configuration::UpcaseDataItemValue, true},
                 {configuration::FilterDuplicates, false},
                 {configuration::MonitorConfigFiles, false},
+                {configuration::VersionDeviceXmlUpdates, false},
                 {configuration::MinimumConfigReloadAge, 15},
                 {configuration::Pretty, false},
                 {configuration::PidFile, "agent.pid"s},
@@ -640,7 +636,7 @@ namespace mtconnect::configuration {
 
     m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
     m_monitorFiles = *GetOption<bool>(options, configuration::MonitorConfigFiles);
-    
+
     auto devices = config.get_optional<string>(configuration::Devices);
     if (devices)
     {

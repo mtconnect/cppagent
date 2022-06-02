@@ -80,6 +80,8 @@ namespace mtconnect {
 
     m_assetStorage = make_unique<AssetBuffer>(
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
+    m_versionDeviceXml =
+        GetOption<bool>(options, mtconnect::configuration::VersionDeviceXmlUpdates).value_or(false);
 
     // Create the Printers
     m_printers["xml"] = make_unique<printer::XmlPrinter>(m_version, m_pretty);
@@ -178,6 +180,13 @@ namespace mtconnect {
     LOG(info) << "Shutting down sinks";
     for (auto sink : m_sinks)
       sink->stop();
+    
+    // Signal all observers
+    LOG(info) << "Signaling observers to close sessions";
+    for (auto di : m_dataItemMap)
+    {
+      di.second->signalObservers(0);
+    }
 
     LOG(info) << "Shutting down completed";
   }
@@ -251,7 +260,7 @@ namespace mtconnect {
 
       // Fir the DeviceAdded event for each device
       for (auto device : devices)
-        receiveDevice(device);
+        receiveDevice(device, false);
       loadCachedProbe();
     }
     catch (runtime_error &e)
@@ -270,7 +279,7 @@ namespace mtconnect {
     }
   }
 
-  void Agent::receiveDevice(device_model::DevicePtr device)
+  void Agent::receiveDevice(device_model::DevicePtr device, bool version)
   {
     NAMED_SCOPE("Agent::receiveDevice");
 
@@ -289,6 +298,8 @@ namespace mtconnect {
     {
       LOG(info) << "Received new device: " << *uuid << ", adding";
       addDevice(device);
+      if (version)
+        versionDeviceXml();
     }
     else
     {
@@ -303,6 +314,8 @@ namespace mtconnect {
         ids.insert(oldDev->getAssetRemoved()->getId());
       if (oldDev->getAvailability())
         ids.insert(oldDev->getAvailability()->getId());
+      
+      string name = device->getName();
 
       if (oldDev->reviseTo(device, ids))
       {
@@ -316,23 +329,15 @@ namespace mtconnect {
         for (auto di : oldDev->getDeviceDataItems())
           m_dataItemMap.emplace(di.first, di.second);
         
-        // update with a new version of the device.xml, saving the old one
-        // with a date time stamp
-        auto ext = "."s + getCurrentTime(LOCAL);
-        fs::path config(m_deviceXmlPath);
-        fs::path backup(m_deviceXmlPath + ext);
-        fs::rename(config, backup);
-
-        printer::XmlPrinter printer(m_version, true);
-        decltype(m_devices) list;
-        copy_if(m_devices.begin(), m_devices.end(), back_inserter(list),
-                [](DevicePtr d) { return dynamic_cast<AgentDevice*>(d.get()) == nullptr; });
-        auto probe = printer.printProbe(0, 0, 0, 0, 0, list);
-
-        ofstream devices(config.string());
-        devices << probe;
-        devices.close();
-                
+        if (oldDev->get<string>("name") != name)
+        {
+          m_deviceNameMap.erase(name);
+          m_deviceNameMap[oldDev->get<string>("name")] = oldDev;
+        }
+        
+        if (version)
+          versionDeviceXml();
+        
         auto d = m_agentDevice->getDeviceDataItem("device_changed");
         m_loopback->receive(d, *uuid);
       }
@@ -340,6 +345,30 @@ namespace mtconnect {
       {
         LOG(info) << "Device " << *uuid << " did not change, ignoring new device";
       }
+    }
+  }
+  
+  void Agent::versionDeviceXml()
+  {
+    if (m_versionDeviceXml)
+    {
+      // update with a new version of the device.xml, saving the old one
+      // with a date time stamp
+      auto ext = "."s + getCurrentTime(LOCAL);
+      fs::path file(m_deviceXmlPath);
+      fs::path backup(m_deviceXmlPath + ext);
+      if (!fs::exists(backup))
+        fs::rename(file, backup);
+      
+      printer::XmlPrinter printer(m_version, true);
+      decltype(m_devices) list;
+      copy_if(m_devices.begin(), m_devices.end(), back_inserter(list),
+              [](DevicePtr d) { return dynamic_cast<AgentDevice*>(d.get()) == nullptr; });
+      auto probe = printer.printProbe(0, 0, 0, 0, 0, list);
+      
+      ofstream devices(file.string());
+      devices << probe;
+      devices.close();
     }
   }
 
@@ -631,6 +660,7 @@ namespace mtconnect {
       m_deviceNameMap[device->get<string>("name")] = device;
     }
 
+    versionDeviceXml();
     loadCachedProbe();
 
     if (m_agentDevice)

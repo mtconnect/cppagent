@@ -168,7 +168,7 @@ namespace mtconnect {
     // Pipeline methods
     void receiveObservation(observation::ObservationPtr observation);
     void receiveAsset(asset::AssetPtr asset);
-    void receiveDevice(device_model::DevicePtr device);
+    void receiveDevice(device_model::DevicePtr device, bool version = true);
     bool removeAsset(DevicePtr device, const std::string &id,
                      const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,
@@ -206,6 +206,7 @@ namespace mtconnect {
     void verifyDevice(DevicePtr device);
     void initializeDataItems(DevicePtr device);
     void loadCachedProbe();
+    void versionDeviceXml();
 
     observation::ObservationPtr getLatest(const std::string &id)
     {
@@ -256,6 +257,7 @@ namespace mtconnect {
     // Xml Config
     std::string m_version;
     std::string m_deviceXmlPath;
+    bool m_versionDeviceXml = false;
 
     // For debugging
     bool m_pretty;

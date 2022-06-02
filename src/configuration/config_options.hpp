@@ -31,6 +31,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MaxAssets);
     DECLARE_CONFIGURATION(CheckpointFrequency);
     DECLARE_CONFIGURATION(MonitorConfigFiles);
+    DECLARE_CONFIGURATION(VersionDeviceXmlUpdates);
     DECLARE_CONFIGURATION(MinimumConfigReloadAge);
     DECLARE_CONFIGURATION(Pretty);
     DECLARE_CONFIGURATION(PidFile);
