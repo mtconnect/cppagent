@@ -360,7 +360,7 @@ namespace mtconnect {
         PyConfig_Read(&config);
         config.dev_mode = true;
         PyWideStringList_Append(&config.module_search_paths,
-                                L"/Users/will/projects/MTConnect/agent/cppagent_dev/modules");
+                                L"/Users/will/projects/MTConnect/agent/cppagent/modules");
         Py_InitializeFromConfig(&config);
         PyConfig_Clear(&config);
 

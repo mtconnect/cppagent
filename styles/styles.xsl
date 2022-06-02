@@ -39,7 +39,7 @@
               <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" style="padding: 5px 10px;" href="https://mtconnect.org" target="_blank" rel="noopener noreferrer">
-              <img alt="Brand" src="styles/LogoMTConnect.webp" />
+              <img alt="Brand" src="/styles/MTConnect_Logo.png" />
             </a>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">

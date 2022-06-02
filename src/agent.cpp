@@ -31,6 +31,8 @@
 #include "asset/asset.hpp"
 #include "asset/cutting_tool.hpp"
 #include "asset/file_asset.hpp"
+#include "asset/qif_document.hpp"
+#include "asset/raw_material.hpp"
 #include "configuration/config_options.hpp"
 #include "device_model/agent_device.hpp"
 #include "entity/xml_parser.hpp"
@@ -40,6 +42,7 @@
 #include "printer/xml_printer.hpp"
 #include "sink/rest_sink/file_cache.hpp"
 #include "sink/rest_sink/session.hpp"
+#include "version.h"
 
 using namespace std;
 
@@ -61,7 +64,8 @@ namespace mtconnect {
       m_strand(m_context),
       m_xmlParser(make_unique<parser::XmlParser>()),
       m_version(
-          GetOption<string>(options, mtconnect::configuration::SchemaVersion).value_or("1.7")),
+          GetOption<string>(options, mtconnect::configuration::SchemaVersion).
+                value_or(to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR))),
       m_configXmlPath(configXmlPath),
       m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
   {
@@ -71,6 +75,8 @@ namespace mtconnect {
     CuttingTool::registerAsset();
     FileArchetypeAsset::registerAsset();
     FileAsset::registerAsset();
+    RawMaterial::registerAsset();
+    QIFDocumentWrapper::registerAsset();
 
     m_assetStorage = make_unique<AssetBuffer>(
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
@@ -314,7 +320,7 @@ namespace mtconnect {
     Properties ps {{"uuid", "0b49a3a0-18ca-0139-8748-2cde48001122"s},
                    {"id", "agent_2cde48001122"s},
                    {"name", "Agent"s},
-                   {"mtconnectVersion", "1.7"s}};
+                   {"mtconnectVersion", m_version}};
     m_agentDevice =
         dynamic_pointer_cast<AgentDevice>(AgentDevice::getFactory()->make("Agent", ps, errors));
     if (!errors.empty())

@@ -203,10 +203,11 @@ namespace mtconnect {
       list<Property> elements;
 
       // Partition the properties
+      const auto &attrs = entity->getAttributes();
       for (const auto &prop : properties)
       {
         auto &key = prop.first;
-        if (islower(key.getName()[0]))
+        if (islower(key.getName()[0]) || attrs.count(key) > 0)
           attributes.emplace_back(prop);
         else
           elements.emplace_back(prop);

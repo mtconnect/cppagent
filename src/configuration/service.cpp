@@ -218,17 +218,17 @@ namespace mtconnect {
             usage(1);
           }
         }
-        else
-        {
-          usage(1);
-        }
 
         g_service = this;
         m_isService = true;
         SERVICE_TABLE_ENTRY DispatchTable[] = {{"", (LPSERVICE_MAIN_FUNCTION)SvcMain},
                                                {nullptr, nullptr}};
 
-        if (!StartServiceCtrlDispatcher(DispatchTable))
+        if (StartServiceCtrlDispatcher(DispatchTable) == 0)
+        {
+          usage(1);
+        }
+        else
         {
           SvcReportEvent("StartServiceCtrlDispatcher");
         }

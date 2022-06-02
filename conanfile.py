@@ -4,7 +4,7 @@ class CppAgentConan(ConanFile):
     name = "mtconnect_cppagent"
     version = "2.0"
     generators = "cmake"
-    url = "https://github.com/mtconnect/cppagent_dev.git"
+    url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False], "build_tests": [True, False], "without_python": [True, False],

@@ -95,6 +95,13 @@ namespace mtconnect::entity {
     auto ef = factory->factoryFor(qname);
     if (ef)
     {
+      OrderMapPtr order;
+      AttributeSet attrs;
+      if (ef->isAny())
+      {
+        order = make_shared<OrderMap>();
+      }
+
       Properties properties;
       EntityList *l {nullptr};
       if (ef->isList())
@@ -106,16 +113,29 @@ namespace mtconnect::entity {
       {
         if (attr->type == XML_ATTRIBUTE_NODE)
         {
-          properties.insert(
-              {(const char *)attr->name, string((const char *)attr->children->content)});
+          entity::QName qname((const char *)attr->name);
+          if (attr->ns)
+            qname.setNs((const char *)attr->ns->prefix);
+          properties.insert({qname, string((const char *)attr->children->content)});
+          if (!islower(qname.getName()[0]))
+          {
+            attrs.emplace(qname);
+          }
         }
       }
 
       if (parseNamespaces && node->nsDef)
       {
-        auto def = node->nsDef;
-        string name {string("xmlns:") + (const char *)def->prefix};
-        properties.insert({name, string((const char *)def->href)});
+        for (auto def = node->nsDef; def; def = def->next)
+        {
+          string name;
+          if (def->prefix)
+            name = {string("xmlns:") + (const char *)def->prefix};
+          else
+            name = "xmlns";
+
+          properties.insert({name, string((const char *)def->href)});
+        }
       }
 
       if (ef->hasRaw())
@@ -126,12 +146,26 @@ namespace mtconnect::entity {
       }
       else
       {
+        int orderCount = 0;
         for (xmlNodePtr child = node->children; child; child = child->next)
         {
           if (child->type == XML_ELEMENT_NODE)
           {
             auto name = nodeQName(child);
-            if (ef->isSimpleProperty(name))
+            bool simple = ef->isSimpleProperty(name);
+            if (order)
+            {
+              order->emplace(name, orderCount++);
+
+              if (!simple && !ef->isProperty(name))
+              {
+                simple = child->children != nullptr && child->properties == nullptr &&
+                         child->nsDef == nullptr && child->children->next == nullptr &&
+                         child->children->type == XML_TEXT_NODE;
+              }
+            }
+
+            if (simple)
             {
               if (child->children != nullptr && child->children->content != nullptr)
               {
@@ -181,6 +215,13 @@ namespace mtconnect::entity {
       try
       {
         auto entity = ef->make(qname, properties, errors);
+        if (entity)
+        {
+          if (order)
+            entity->setOrder(order);
+          if (!attrs.empty())
+            entity->setAttributes(attrs);
+        }
         return entity;
       }
       catch (EntityError &e)
