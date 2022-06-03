@@ -1,18 +1,17 @@
-# build docker image
+# build docker image and push to docker hub
 
 # needs github secrets set for -
 #   DOCKERHUB_USERNAME - ie mtconnect
 #   DOCKERHUB_TOKEN - token for that account
 
-# BE SURE TO UPDATE TAG FOR DOCKER IMAGE BEFORE BUILDING -
-# see CMakeLists.txt for current version.
+# Set VERSION below before building.
+# See CMakeLists.txt for the current version.
+# Note: this will tag the image with that version, as well as 'latest'.
 
 name: Build Docker image
 
-# variables
-# can use these below, eg with ${{ env.TAG }}
 env:
-  TAG: 2.0.0.7
+  VERSION: 2.0.0.7
   PLATFORMS: linux/amd64,linux/arm64
 
 # when to run workflow
@@ -39,7 +38,7 @@ jobs:
       # see https://github.com/actions/checkout
       - uses: actions/checkout@v3
         with:
-          ref: master
+          ref: v${{ env.VERSION }}
 
       # the QEMU emulator lets us build for arm processors also
       # see https://github.com/docker/setup-qemu-action
@@ -67,7 +66,7 @@ jobs:
           # docker hub user/repo:tag
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/agent:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/agent:${{ env.TAG }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/agent:${{ env.VERSION }}
 
           # push to docker hub
           push: true
