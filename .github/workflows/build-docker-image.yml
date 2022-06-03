@@ -38,7 +38,8 @@ jobs:
       # see https://github.com/actions/checkout
       - uses: actions/checkout@v3
         with:
-          ref: v${{ env.VERSION }}
+          # ref: v${{ env.VERSION }}
+          ref: master
 
       # the QEMU emulator lets us build for arm processors also
       # see https://github.com/docker/setup-qemu-action
