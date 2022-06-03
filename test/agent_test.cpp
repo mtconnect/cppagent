@@ -2539,6 +2539,7 @@ TEST_F(AgentTest, StreamData)
   addAdapter();
   auto heartbeatFreq {200ms};
   auto rest = m_agentTestHelper->getRestService();
+  rest->start();
 
   // Start a thread...
   QueryMap query;
@@ -2604,6 +2605,7 @@ TEST_F(AgentTest, StreamDataObserver)
 {
   addAdapter();
   auto rest = m_agentTestHelper->getRestService();
+  rest->start();
 
   // Start a thread...
   std::map<string, string> query;
