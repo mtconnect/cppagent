@@ -4,18 +4,17 @@
 # notes
 # ---------------------------------------------------------------------
 #
-# to build an image locally and run it, supply the branch or tag 
-# (defaults to 'master') -
+# to build an image locally and run it
 #
-#   docker build --tag agent-image --build-arg BRANCH=2.0.0.5 .
+#   docker build --tag agent-image .
 #   docker run -it --rm --init --name agent-container -p5001:5000 agent-image
 #
 # to build a cross-platform image, push to docker hub, and run it -
+# (see CMakeLists.txt for current version number) -
 #
 #   docker buildx build \
 #     --platform linux/amd64,linux/arm64 \
-#     --build-arg BRANCH=v2.0.0.5 \
-#     --tag mtconnect/agent:2.0.0.5 \
+#     --tag mtconnect/agent:2.0.0.7 \
 #     --tag mtconnect/agent:latest \
 #     --push \
 #     .
@@ -37,9 +36,6 @@
 #     -v "$(pwd)":/foo mtconnect/agent \
 #     /bin/sh -c "cd /foo/simulator && agent run agent.cfg"
 
-
-# branch or tag of agent repo to checkout, eg v2.0.0.5
-ARG BRANCH=master
 
 # ---------------------------------------------------------------------
 # os
@@ -69,13 +65,8 @@ RUN apt-get clean \
 # make an agent directory and cd into it
 WORKDIR /root/agent
 
-# clone into the agent directory and checkout the version we want
-RUN git clone --recurse-submodules --progress --depth 1 \
-  https://github.com/mtconnect/cppagent.git . \
-  && git checkout $BRANCH
-
-# # or, for local testing can just bring in the repo contents
-# COPY . .
+# bring in the repo contents, minus .dockerignore files
+COPY . .
 
 # set some variables
 ENV PATH=$HOME/venv3.9/bin:$PATH
@@ -139,7 +130,7 @@ CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
 
 
 # ---------------------------------------------------------------------
-# notes
+# note
 # ---------------------------------------------------------------------
 
 # after setup, the dirs look like this -

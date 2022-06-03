@@ -1,16 +1,19 @@
 # build docker image
 
-# needs github secret set for -
-#   DOCKERHUB_TOKEN - token for the account specified at env.dockerhub_username
+# needs github secrets set for -
+#   DOCKERHUB_USERNAME - ie mtconnect
+#   DOCKERHUB_TOKEN - token for that account
+
+# BE SURE TO UPDATE TAG FOR DOCKER IMAGE BEFORE BUILDING -
+# see CMakeLists.txt for current version.
 
 name: Build Docker image
 
 # variables
-# can use these below, eg with ${{ env.version }}
+# can use these below, eg with ${{ env.TAG }}
 env:
-  branch: v2.0.0.7 #. keep uptodate - how?
-  dockerhub_username: ladder99 #. change to mtconnect
-  platforms: linux/amd64,linux/arm64
+  TAG: 2.0.0.7
+  PLATFORMS: linux/amd64,linux/arm64
 
 # when to run workflow
 on:
@@ -33,7 +36,10 @@ jobs:
     # steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # checks-out your repository under $GITHUB_WORKSPACE
+      # see https://github.com/actions/checkout
       - uses: actions/checkout@v3
+        with:
+          ref: master
 
       # the QEMU emulator lets us build for arm processors also
       # see https://github.com/docker/setup-qemu-action
@@ -47,7 +53,7 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: ${{ env.dockerhub_username }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       # see https://github.com/docker/build-push-action
@@ -56,12 +62,12 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          platforms: ${{ env.platforms }}
+          platforms: ${{ env.PLATFORMS }}
 
           # docker hub user/repo:tag
           tags: |
-            ${{ env.dockerhub_username }}/agent:latest
-            ${{ env.dockerhub_username }}/agent:${{ env.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/agent:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/agent:${{ env.TAG }}
 
           # push to docker hub
           push: true
