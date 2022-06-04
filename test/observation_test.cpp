@@ -231,26 +231,22 @@ TEST_F(ObservationTest, subType_prefix_should_be_passed_through)
 TEST_F(ObservationTest, shoud_handle_asset_type)
 {
   ErrorList errors;
-  auto dataItem = DataItem::make(
-      {{"id", "c1"s}, {"category", "EVENT"s}, {"type", "ASSET_CHANGED"s}},
-      errors);
+  auto dataItem =
+      DataItem::make({{"id", "c1"s}, {"category", "EVENT"s}, {"type", "ASSET_CHANGED"s}}, errors);
 
   auto event1 = Observation::make(dataItem, {{"VALUE", "123"s}, {"assetType", "CuttingTool"s}},
-                                 m_time, errors);
+                                  m_time, errors);
   ASSERT_EQ(0, errors.size());
-  
+
   ASSERT_EQ("CuttingTool"s, event1->get<string>("assetType"));
   ASSERT_EQ("123"s, event1->getValue<string>());
 
-
-  auto event2 = Observation::make(dataItem, {{"VALUE", "UNAVAILABLE"s}},
-                                 m_time, errors);
+  auto event2 = Observation::make(dataItem, {{"VALUE", "UNAVAILABLE"s}}, m_time, errors);
   ASSERT_EQ(0, errors.size());
-  
+
   ASSERT_TRUE(event2->isUnavailable());
   ASSERT_EQ("UNAVAILABLE"s, event2->get<string>("assetType"));
 }
-
 
 // TODO: Make sure these tests are covered someplace else. Refactoring
 //       Moved this functionality outside the observation.
