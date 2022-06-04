@@ -451,10 +451,12 @@ namespace mtconnect::configuration {
                          {"file_name", defaultFileName},
                          {"archive_pattern", defaultArchivePattern},
                          {"level", "info"s}});
-    AddOptions(logger, options, {{"output", string()}});
+    AddOptions(logger, options, {{"output", string()},
+                                 {"logging_level", string()}});
 
     auto output = GetOption<string>(options, "output");
-    auto level = setLoggingLevel(*GetOption<string>(options, "level"));
+    auto levelOpt = *GetOption<string>(options, "level");
+    auto level = setLoggingLevel(GetOption<string>(options, "logging_level").value_or(levelOpt));
 
     gAgentLogger = m_logger = &::boost::log::trivial::logger::get();
 
