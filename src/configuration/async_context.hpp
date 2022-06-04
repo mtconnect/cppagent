@@ -25,22 +25,19 @@ namespace mtconnect::configuration {
 
   // Manages the boost asio context and allows for a syncronous
   // callback to execute when all the worker threads have stopped.
-  class AsyncContext 
+  class AsyncContext
   {
   public:
     using SyncCallback = std::function<void(AsyncContext &context)>;
     using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
-    
-    AsyncContext()
-    {
-      m_guard.emplace(m_context.get_executor());
-    }
-    
+
+    AsyncContext() { m_guard.emplace(m_context.get_executor()); }
+
     auto &getContext() { return m_context; }
-    operator boost::asio::io_context& () { return m_context; }
-    
+    operator boost::asio::io_context &() { return m_context; }
+
     void setThreadCount(int threads) { m_threadCount = threads; }
-    
+
     void start()
     {
       m_running = true;
@@ -55,7 +52,7 @@ namespace mtconnect::configuration {
           w.join();
         }
         m_workers.clear();
-        
+
         if (m_syncCallback)
         {
           m_syncCallback(*this);
@@ -65,10 +62,10 @@ namespace mtconnect::configuration {
             restart();
           }
         }
-        
+
       } while (m_running);
     }
-    
+
     void pause(SyncCallback callback, bool safeStop = false)
     {
       m_syncCallback = callback;
@@ -77,7 +74,7 @@ namespace mtconnect::configuration {
       else
         m_context.stop();
     }
-    
+
     void stop(bool safeStop = true)
     {
       m_running = false;
@@ -86,23 +83,22 @@ namespace mtconnect::configuration {
       else
         m_context.stop();
     }
-    
+
     void restart()
     {
       if (!m_guard)
         m_guard.emplace(m_context.get_executor());
       m_context.restart();
     }
-    
+
   protected:
     boost::asio::io_context m_context;
     std::list<std::thread> m_workers;
     SyncCallback m_syncCallback;
     std::optional<WorkGuard> m_guard;
-    
+
     int m_threadCount = 1;
     bool m_running = false;
   };
-    
-}
 
+}  // namespace mtconnect::configuration

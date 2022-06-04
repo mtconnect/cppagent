@@ -66,8 +66,8 @@ namespace mtconnect {
       m_strand(m_context),
       m_xmlParser(make_unique<parser::XmlParser>()),
       m_version(
-          GetOption<string>(options, mtconnect::configuration::SchemaVersion).
-                value_or(to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR))),
+          GetOption<string>(options, mtconnect::configuration::SchemaVersion)
+              .value_or(to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR))),
       m_deviceXmlPath(deviceXmlPath),
       m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
   {
@@ -182,7 +182,7 @@ namespace mtconnect {
     LOG(info) << "Shutting down sinks";
     for (auto sink : m_sinks)
       sink->stop();
-    
+
     // Signal all observers
     LOG(info) << "Signaling observers to close sessions";
     for (auto di : m_dataItemMap)
@@ -292,7 +292,7 @@ namespace mtconnect {
       LOG(error) << "Device does not have a uuid: " << device->getName();
       return;
     }
-    
+
     DevicePtr oldDev = findDeviceByUUIDorName(*uuid);
     if (!oldDev)
     {
@@ -325,7 +325,7 @@ namespace mtconnect {
         ids.insert(oldDev->getAssetRemoved()->getId());
       if (oldDev->getAvailability())
         ids.insert(oldDev->getAvailability()->getId());
-      
+
       auto name = device->getComponentName();
       if (!name)
       {
@@ -337,17 +337,17 @@ namespace mtconnect {
       if (oldDev->reviseTo(device, ids))
       {
         LOG(info) << "Device " << *uuid << " changed, updating mappings";
-        
+
         // Remove the old data items
         for (auto di : oldDev->getDeviceDataItems())
           m_dataItemMap.erase(di.first);
-        
+
         // Reinitialize data item maps
         oldDev->initialize();
-        
+
         for (auto di : oldDev->getDeviceDataItems())
           m_dataItemMap.emplace(di.first, di.second);
-        
+
         if (oldDev->get<string>("name") != *name)
         {
           m_deviceNameMap.erase(*name);
@@ -361,7 +361,7 @@ namespace mtconnect {
 
         if (version)
           versionDeviceXml();
-        
+
         auto d = m_agentDevice->getDeviceDataItem("device_changed");
         m_loopback->receive(d, *uuid);
       }
@@ -371,7 +371,7 @@ namespace mtconnect {
       }
     }
   }
-  
+
   void Agent::versionDeviceXml()
   {
     if (m_versionDeviceXml)
@@ -383,13 +383,13 @@ namespace mtconnect {
       fs::path backup(m_deviceXmlPath + ext);
       if (!fs::exists(backup))
         fs::rename(file, backup);
-      
+
       printer::XmlPrinter printer(m_version, true);
       decltype(m_devices) list;
       copy_if(m_devices.begin(), m_devices.end(), back_inserter(list),
-              [](DevicePtr d) { return dynamic_cast<AgentDevice*>(d.get()) == nullptr; });
+              [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
       auto probe = printer.printProbe(0, 0, 0, 0, 0, list);
-      
+
       ofstream devices(file.string());
       devices << probe;
       devices.close();
@@ -691,12 +691,12 @@ namespace mtconnect {
     {
       versionDeviceXml();
       loadCachedProbe();
-      
+
       if (m_agentDevice)
       {
         for (auto &printer : m_printers)
           printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
-        
+
         if (device->getUuid() != oldUuid)
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
@@ -720,7 +720,7 @@ namespace mtconnect {
     // Reload the document for path resolution
     auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
     m_xmlParser->loadDocument(xmlPrinter->printProbe(0, 0, 0, 0, 0, m_devices));
-    
+
     for (auto &printer : m_printers)
       printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
   }

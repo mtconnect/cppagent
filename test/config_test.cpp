@@ -40,6 +40,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::configuration;
 namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace {
   class ConfigTest : public testing::Test
@@ -973,5 +974,31 @@ logger_config {
     m_config->setLoggingLevel("FATAL");
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
   }
+
+  TEST_F(ConfigTest, should_reload_device_xml_file)
+  {
+    GTEST_SKIP();
+    return;
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(TEST_BIN_ROOT_DIR ""),
+                                                 false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    auto t = fs::last_write_time("");
+    fs::last_write_time("", t + 60s);
+  }
+
+  TEST_F(ConfigTest, should_reload_device_xml_and_skip_unchanged_devices) { GTEST_SKIP(); }
+
+  TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices) { GTEST_SKIP(); }
+
+  TEST_F(ConfigTest, should_restart_agent_when_config_file_changes) { GTEST_SKIP(); }
 
 }  // namespace

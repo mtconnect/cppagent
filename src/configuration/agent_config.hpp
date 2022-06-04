@@ -27,8 +27,8 @@
 #include <string>
 #include <thread>
 
-#include "async_context.hpp"
 #include "agent.hpp"
+#include "async_context.hpp"
 #include "parser.hpp"
 #include "service.hpp"
 #include "sink/rest_sink/file_cache.hpp"
@@ -141,7 +141,8 @@ namespace mtconnect {
       // File monitoring
       boost::asio::steady_timer m_monitorTimer;
       bool m_monitorFiles = false;
-      int m_minimumConfigReloadAge = 15;
+      std::chrono::seconds m_monitorInterval;
+      std::chrono::seconds m_monitorDelay;
       bool m_restart = false;
       std::optional<std::filesystem::file_time_type> m_configTime;
       std::optional<std::filesystem::file_time_type> m_deviceTime;

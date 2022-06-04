@@ -144,7 +144,7 @@ namespace mtconnect::source::adapter::shdr {
     LOG(debug) << "Waiting for adapter to stop: " << m_name;
     m_running = false;
     close();
-    
+
     m_pipeline.clear();
     LOG(debug) << "Adapter exited: " << m_name;
   }

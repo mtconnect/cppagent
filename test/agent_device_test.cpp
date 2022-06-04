@@ -178,7 +178,7 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
     PARSE_XML_RESPONSE("/Agent/probe");
     auto version = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
     ASSERT_XML_PATH_EQUAL(doc, AGENT_PATH "@mtconnectVersion", version.c_str());
-    
+
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "127.0.0.1:21788");

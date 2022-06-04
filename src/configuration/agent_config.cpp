@@ -223,7 +223,6 @@ namespace mtconnect::configuration {
 
     NAMED_SCOPE("AgentConfiguration::monitorThread");
 
-
     LOG(debug) << "Monitoring files: " << m_configFile << " and " << m_devicesFile
                << ", will warm start if they change.";
 
@@ -272,46 +271,48 @@ namespace mtconnect::configuration {
     auto nt = decltype(now)::clock::to_time_t(now);
 
     using namespace date;
-    
+
     LOG(warning)
         << "Detected change in configuration files. Will reload when youngest file is at least "
-        << m_minimumConfigReloadAge << " seconds old";
+        << m_monitorDelay.count() << " seconds old";
     LOG(warning) << "    Devices.xml file modified " << (nt - dt) << " seconds ago";
     LOG(warning) << "    ...cfg file modified " << (nt - ct) << " seconds ago";
 
     auto delta = min(now - cfgTime, now - devTime);
-    if (delta < seconds(m_minimumConfigReloadAge))
+    if (delta < m_monitorDelay)
     {
-      LOG(warning) << "Changed, waiting " << int32_t((seconds(m_minimumConfigReloadAge) - delta).count());
+      LOG(warning) << "Changed, waiting " << int32_t((m_monitorDelay - delta).count());
     }
     else
     {
       if (cfgTime != *m_configTime)
       {
         LOG(warning)
-        << "Monitor thread has detected change in configuration files, restarting agent.";
+            << "Monitor thread has detected change in configuration files, restarting agent.";
 
         m_agent->stop();
 
-        m_context.pause([this](AsyncContext &context) {
-          m_agent.reset();
-          m_configTime.reset();
-          m_deviceTime.reset();
-          
-          // Re initialize
-          boost::program_options::variables_map options;
-          boost::program_options::variable_value value(boost::optional<string>(m_configFile.string()),
-                                                       false);
-          options.insert(make_pair("config-file"s, value));
-          initialize(options);
-          m_agent->start();
-          
-          if (m_monitorFiles)
-          {
-            scheduleMonitorTimer();
-          }
-        }, true);
-        
+        m_context.pause(
+            [this](AsyncContext &context) {
+              m_agent.reset();
+              m_configTime.reset();
+              m_deviceTime.reset();
+
+              // Re initialize
+              boost::program_options::variables_map options;
+              boost::program_options::variable_value value(
+                  boost::optional<string>(m_configFile.string()), false);
+              options.insert(make_pair("config-file"s, value));
+              initialize(options);
+              m_agent->start();
+
+              if (m_monitorFiles)
+              {
+                scheduleMonitorTimer();
+              }
+            },
+            true);
+
         return;
       }
 
@@ -324,7 +325,7 @@ namespace mtconnect::configuration {
         });
       }
     }
-    
+
     scheduleMonitorTimer();
     return;
   }
@@ -336,7 +337,7 @@ namespace mtconnect::configuration {
 
     using boost::placeholders::_1;
 
-    m_monitorTimer.expires_from_now(10s);
+    m_monitorTimer.expires_from_now(m_monitorInterval);
     m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
   }
 
@@ -353,7 +354,7 @@ namespace mtconnect::configuration {
 
     m_context.setThreadCount(m_workerThreadCount);
     m_agent->start();
-    m_context.start();    
+    m_context.start();
   }
 
   void AgentConfiguration::stop()
@@ -610,6 +611,8 @@ namespace mtconnect::configuration {
                 {configuration::UpcaseDataItemValue, true},
                 {configuration::FilterDuplicates, false},
                 {configuration::MonitorConfigFiles, false},
+                {configuration::MonitorInterval, 10s},
+                {configuration::MonitorDelay, 30s},
                 {configuration::VersionDeviceXmlUpdates, false},
                 {configuration::MinimumConfigReloadAge, 15},
                 {configuration::Pretty, false},
@@ -636,6 +639,8 @@ namespace mtconnect::configuration {
 
     m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
     m_monitorFiles = *GetOption<bool>(options, configuration::MonitorConfigFiles);
+    m_monitorInterval = *GetOption<Seconds>(options, configuration::MonitorInterval);
+    m_monitorDelay = *GetOption<Seconds>(options, configuration::MonitorDelay);
 
     auto devices = config.get_optional<string>(configuration::Devices);
     if (devices)

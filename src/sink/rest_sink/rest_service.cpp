@@ -820,7 +820,7 @@ namespace mtconnect {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
       using boost::placeholders::_1;
       using boost::placeholders::_2;
-      
+
       if (!m_server->isRunning())
       {
         asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
@@ -969,7 +969,7 @@ namespace mtconnect {
                                         boost::system::error_code ec)
     {
       using boost::placeholders::_1;
-      
+
       if (!m_server->isRunning())
       {
         asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
@@ -985,7 +985,6 @@ namespace mtconnect {
                                        "Unexpected error streamNextCurrent, aborting");
         return;
       }
-
 
       asyncResponse->m_session->writeChunk(
           fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt),
