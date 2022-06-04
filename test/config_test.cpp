@@ -974,4 +974,41 @@ logger_config {
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
   }
 
+  TEST_F(ConfigTest, log_should_support_logging_level)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    using namespace boost::log::trivial;
+
+    string str(R"(
+logger_config {
+   logging_level = fatal
+}
+)");
+
+    m_config->loadConfig(str);
+    EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
+  }
+
+  TEST_F(ConfigTest, log_level_should_override_logging_level)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    using namespace boost::log::trivial;
+
+    string str(R"(
+logger_config {
+   level = warning
+   logging_level = fatal
+}
+)");
+
+    m_config->loadConfig(str);
+    EXPECT_EQ(severity_level::warning, m_config->getLogLevel());
+  }
+
 }  // namespace

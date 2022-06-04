@@ -64,8 +64,8 @@ namespace mtconnect {
       m_strand(m_context),
       m_xmlParser(make_unique<parser::XmlParser>()),
       m_version(
-          GetOption<string>(options, mtconnect::configuration::SchemaVersion).
-                value_or(to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR))),
+          GetOption<string>(options, mtconnect::configuration::SchemaVersion)
+              .value_or(to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR))),
       m_configXmlPath(configXmlPath),
       m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
   {
