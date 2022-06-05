@@ -1,5 +1,10 @@
 # build docker image and push to docker hub
 
+# note: this won't work because the cross-platform build takes around 10h,
+# but github limits us to 6h.
+# so need to build it locally and push to docker hub.
+# see Dockerfile for instructions.
+
 # needs github secrets set for -
 #   DOCKERHUB_USERNAME - ie mtconnect
 #   DOCKERHUB_TOKEN - token for that account
