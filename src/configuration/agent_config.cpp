@@ -243,12 +243,6 @@ namespace mtconnect::configuration {
       return;
     }
 
-    auto dt = decltype(devTime)::clock::to_time_t(devTime);
-    auto ct = decltype(cfgTime)::clock::to_time_t(cfgTime);
-
-    LOG(trace) << "Configuration start time: " << ct;
-    LOG(trace) << "Device start time: " << dt;
-
     if (!m_deviceTime || !m_configTime)
     {
       m_deviceTime.emplace(devTime);
@@ -268,15 +262,12 @@ namespace mtconnect::configuration {
 
     // Check if the files have changed.
     auto now = filesystem::file_time_type::clock::now();
-    auto nt = decltype(now)::clock::to_time_t(now);
 
     using namespace date;
 
     LOG(warning)
         << "Detected change in configuration files. Will reload when youngest file is at least "
         << m_monitorDelay.count() << " seconds old";
-    LOG(warning) << "    Devices.xml file modified " << (nt - dt) << " seconds ago";
-    LOG(warning) << "    ...cfg file modified " << (nt - ct) << " seconds ago";
 
     auto delta = min(now - cfgTime, now - devTime);
     if (delta < m_monitorDelay)
