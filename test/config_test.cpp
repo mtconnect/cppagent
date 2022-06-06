@@ -977,7 +977,7 @@ logger_config {
 
   TEST_F(ConfigTest, should_reload_device_xml_file)
   {
-    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir");
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_1");
     if (!fs::exists(root))
       fs::create_directory(root);
     chdir(root.string().c_str());
@@ -1081,7 +1081,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_reload_device_xml_and_skip_unchanged_devices)
   {
-    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir");
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_2");
     if (!fs::exists(root))
       fs::create_directory(root);
     chdir(root.string().c_str());
@@ -1157,7 +1157,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_restart_agent_when_config_file_changes)
   {
-    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir");
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_3");
     if (!fs::exists(root))
       fs::create_directory(root);
     chdir(root.string().c_str());
@@ -1211,21 +1211,25 @@ Port = 0
       }
     });
 
-    auto th = thread([this, agent, &instance, &context]() {
-      this_thread::sleep_for(4s);
+    auto th = thread([this, agent, instance, &context]() {
+      this_thread::sleep_for(5s);
 
-      context.getContext().dispatch([this, agent, &instance]() {
-        auto agent2 = m_config->getAgent();
-        const auto sink = agent2->findSink("RestService");
-        EXPECT_TRUE(sink);
-        const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
-        EXPECT_TRUE(rest);
+      boost::asio::steady_timer timer1(context.getContext());
+      timer1.expires_from_now(1s);
+      timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
+        if (!ec)
+        {
+          auto agent2 = m_config->getAgent();
+          const auto sink = agent2->findSink("RestService");
+          EXPECT_TRUE(sink);
+          const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+          EXPECT_TRUE(rest);
 
-        EXPECT_NE(agent, agent2);
-        EXPECT_NE(instance, rest->instanceId());
-
-        m_config->stop();
+          EXPECT_NE(agent, agent2);
+          EXPECT_NE(instance, rest->instanceId());
+        }
       });
+      m_config->stop();
     });
 
     m_config->start();
@@ -1234,7 +1238,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices)
   {
-    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir");
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_4");
     if (!fs::exists(root))
       fs::create_directory(root);
     chdir(root.string().c_str());
@@ -1301,7 +1305,7 @@ Port = 0
         auto agent = m_config->getAgent();
         auto devices = agent->getDevices();
         EXPECT_EQ(3, devices.size());
-        
+
         auto last = devices.back();
         EXPECT_TRUE(last);
         EXPECT_EQ("001", last->getUuid());
@@ -1313,6 +1317,11 @@ Port = 0
         EXPECT_TRUE(last->getDeviceDataItem("xex"));
         EXPECT_TRUE(last->getDeviceDataItem("o1_asset_chg"));
         EXPECT_TRUE(last->getDeviceDataItem("o1_asset_rem"));
+
+        EXPECT_TRUE(agent->getDataItemById("xd1"));
+        EXPECT_TRUE(agent->getDataItemById("xex"));
+        EXPECT_TRUE(agent->getDataItemById("o1_asset_rem"));
+        EXPECT_TRUE(agent->getDataItemById("o1_asset_chg"));
       }
       m_config->stop();
     });
