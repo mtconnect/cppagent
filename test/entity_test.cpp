@@ -886,7 +886,7 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_specific_ids)
     EntityList list {se1};
     if (s)
     {
-      Properties sndp2 {{"id", "2"s}, {"VALUE", 2}};
+      Properties sndp2 {{"id", "2"s}, {"VALUE", 2_i64}};
       auto se2 = secondsFact->create("second", sndp2);
       list.push_back(se2);
     }
