@@ -28,6 +28,7 @@
 #include "configuration/agent_config.hpp"
 #include "configuration/config_options.hpp"
 #include "pipeline/pipeline.hpp"
+#include "sink/mqtt_sink/mqtt_service.hpp"
 #include "sink/rest_sink/response.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "sink/rest_sink/routing.hpp"
@@ -117,6 +118,7 @@ public:
 
   ~AgentTestHelper()
   {
+    m_mqttService.reset();
     m_restService.reset();
     m_adapter.reset();
     if (m_agent)
@@ -159,6 +161,15 @@ public:
     return rest;
   }
 
+  std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> getMqttService()
+  {
+    using namespace mtconnect;
+    sink::SinkPtr sink = m_agent->findSink("MqttService");
+    std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> mqtt =
+        std::dynamic_pointer_cast<mtconnect::sink::mqtt_sink::MqttService>(sink);
+    return mqtt;
+  }
+
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
                    const std::string &version = "1.7", int checkpoint = 25, bool put = false,
                    bool observe = true, const mtconnect::ConfigOptions ops = {})
@@ -169,6 +180,7 @@ public:
     using ptree = boost::property_tree::ptree;
 
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);
+    sink::mqtt_sink::MqttService::registerFactory(m_sinkFactory);
     source::adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
     ConfigOptions options = ops;
@@ -189,10 +201,19 @@ public:
 
     auto sinkContract = m_agent->makeSinkContract();
     sinkContract->m_pipelineContext = m_context;
+   
     auto sink = m_sinkFactory.make("RestService", "RestService", m_ioContext, move(sinkContract),
                                    options, ptree {});
     m_restService = std::dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     m_agent->addSink(m_restService);
+
+    auto mqttContract = m_agent->makeSinkContract();
+    mqttContract->m_pipelineContext = m_context;
+    auto mqttsink = m_sinkFactory.make("MqttService", "MqttService", m_ioContext,
+                                       move(mqttContract), options, ptree {});
+    m_mqttService = std::dynamic_pointer_cast<sink::mqtt_sink::MqttService>(mqttsink);
+    m_agent->addSink(m_mqttService);
+
     m_agent->initialize(m_context);
 
     if (observe)
@@ -232,7 +253,7 @@ public:
 
     return m_adapter;
   }
-
+ 
   uint64_t addToBuffer(mtconnect::DataItemPtr di, const mtconnect::entity::Properties &shdr,
                        const mtconnect::Timestamp &time)
   {
@@ -265,6 +286,7 @@ public:
   mhttp::Server *m_server {nullptr};
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
+  std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> m_mqttService;
   std::shared_ptr<mtconnect::sink::rest_sink::RestService> m_restService;
   std::shared_ptr<mtconnect::source::LoopbackSource> m_loopback;
 

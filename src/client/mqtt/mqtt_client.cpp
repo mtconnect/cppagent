@@ -196,13 +196,12 @@ namespace mtconnect {
       }
 
       void stop() override
-      {
-        m_running = false;
+      {       
         m_reconnectTimer.cancel();
         auto client = derived().getClient();
         auto url = m_url;
 
-        if (client)
+        if (m_running && client)
         {
           client->async_disconnect(10s, [client, url](mqtt::error_code ec) {
             LOG(warning) << url << " disconnected: " << ec.message();
@@ -210,6 +209,8 @@ namespace mtconnect {
 
           client.reset();
         }
+        if (m_running)
+          m_running = false;
       }
 
     protected:
@@ -377,7 +378,7 @@ namespace mtconnect {
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
-          }
+          }         
         }
 
         return m_client;

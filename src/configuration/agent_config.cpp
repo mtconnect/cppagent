@@ -946,6 +946,18 @@ namespace mtconnect::configuration {
                                      std::move(sinkContract), options, config);
       m_agent->addSink(sink);
     }
+
+    // add Mqtt sink
+    auto mqtt = m_agent->findSink("MqttService");
+    if (!mqtt)
+    {
+      auto sinkContract = m_agent->makeSinkContract();
+      sinkContract->m_pipelineContext = m_pipelineContext;
+
+      auto sink = m_sinkFactory.make("MqttService", "MqttService", m_context,
+                                     std::move(sinkContract), options, config);
+      m_agent->addSink(sink);
+    }
   }
 
   void AgentConfiguration::loadPlugins(const ptree &plugins)
