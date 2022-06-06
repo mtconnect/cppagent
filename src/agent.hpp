@@ -168,7 +168,7 @@ namespace mtconnect {
     // Pipeline methods
     void receiveObservation(observation::ObservationPtr observation);
     void receiveAsset(asset::AssetPtr asset);
-    void receiveDevice(device_model::DevicePtr device, bool version = true);
+    bool receiveDevice(device_model::DevicePtr device, bool version = true);
     bool removeAsset(DevicePtr device, const std::string &id,
                      const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,

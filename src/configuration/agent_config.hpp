@@ -83,6 +83,7 @@ namespace mtconnect {
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
       const Agent *getAgent() const { return m_agent.get(); }
       auto &getContext() { return m_context.getContext(); }
+      auto &getAsyncContext() { return m_context; }
 
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 

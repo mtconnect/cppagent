@@ -261,9 +261,13 @@ namespace mtconnect {
           deviceFile, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
 
       // Fir the DeviceAdded event for each device
+      bool changed = false;
       for (auto device : devices)
-        receiveDevice(device, false);
-      loadCachedProbe();
+      {
+        changed = receiveDevice(device, false) || changed;
+      }
+      if (changed)
+        loadCachedProbe();
     }
     catch (runtime_error &e)
     {
@@ -281,7 +285,7 @@ namespace mtconnect {
     }
   }
 
-  void Agent::receiveDevice(device_model::DevicePtr device, bool version)
+  bool Agent::receiveDevice(device_model::DevicePtr device, bool version)
   {
     NAMED_SCOPE("Agent::receiveDevice");
 
@@ -290,7 +294,7 @@ namespace mtconnect {
     if (!uuid)
     {
       LOG(error) << "Device does not have a uuid: " << device->getName();
-      return;
+      return false;
     }
 
     DevicePtr oldDev = findDeviceByUUIDorName(*uuid);
@@ -300,7 +304,7 @@ namespace mtconnect {
       if (!name)
       {
         LOG(error) << "Device does not have a name" << *uuid;
-        return;
+        return false;
       }
 
       oldDev = findDeviceByUUIDorName(*name);
@@ -313,6 +317,7 @@ namespace mtconnect {
       addDevice(device);
       if (version)
         versionDeviceXml();
+      return true;
     }
     else
     {
@@ -330,7 +335,7 @@ namespace mtconnect {
       if (!name)
       {
         LOG(error) << "Device does not have a name" << *device->getUuid();
-        return;
+        return false;
       }
 
       LOG(info) << "Updating device " << *uuid << " to new device model";
@@ -364,12 +369,16 @@ namespace mtconnect {
 
         auto d = m_agentDevice->getDeviceDataItem("device_changed");
         m_loopback->receive(d, *uuid);
+
+        return true;
       }
       else
       {
         LOG(info) << "Device " << *uuid << " did not change, ignoring new device";
       }
     }
+
+    return false;
   }
 
   void Agent::versionDeviceXml()

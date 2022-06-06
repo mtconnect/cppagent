@@ -32,6 +32,8 @@ namespace mtconnect::configuration {
     using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
 
     AsyncContext() { m_guard.emplace(m_context.get_executor()); }
+    AsyncContext(const AsyncContext &) = delete;
+    ~AsyncContext() {}
 
     auto &getContext() { return m_context; }
     operator boost::asio::io_context &() { return m_context; }
@@ -90,6 +92,9 @@ namespace mtconnect::configuration {
         m_guard.emplace(m_context.get_executor());
       m_context.restart();
     }
+
+  private:
+    void operator=(const AsyncContext &) {}
 
   protected:
     boost::asio::io_context m_context;
