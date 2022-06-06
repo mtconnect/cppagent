@@ -1,5 +1,10 @@
 # build docker image and push to docker hub
 
+# note: this won't work because the cross-platform build takes around 10h,
+# but github limits us to 6h.
+# so need to build it locally and push to docker hub.
+# see Dockerfile for instructions.
+
 # needs github secrets set for -
 #   DOCKERHUB_USERNAME - ie mtconnect
 #   DOCKERHUB_TOKEN - token for that account
@@ -11,7 +16,7 @@
 name: Build Docker image
 
 env:
-  VERSION: 2.0.0.7
+  VERSION: 2.0.0.8
   PLATFORMS: linux/amd64,linux/arm64
 
 # when to run workflow
@@ -39,6 +44,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: v${{ env.VERSION }}
+          # ref: master
 
       # the QEMU emulator lets us build for arm processors also
       # see https://github.com/docker/setup-qemu-action
