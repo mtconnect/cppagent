@@ -1232,6 +1232,92 @@ Port = 0
     th.join();
   }
 
-  TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices) { GTEST_SKIP(); }
+  TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices)
+  {
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir");
+    if (!fs::exists(root))
+      fs::create_directory(root);
+    chdir(root.string().c_str());
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+MonitorConfigFiles = true
+MonitorInterval = 1
+MonitorDelay = 1
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
+                  fs::copy_options::overwrite_existing);
+    auto t = fs::last_write_time(devices);
+    fs::last_write_time(devices, t - 1min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &context = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto chg = printer->getModelChangeTime();
+    auto device = agent->getDeviceByName("LinuxCNC");
+
+    auto dataItem = device->getDeviceDataItem("c1");
+    ASSERT_TRUE(dataItem);
+    ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
+
+    DataItemPtr di;
+
+    boost::asio::steady_timer timer1(context.getContext());
+    timer1.expires_from_now(1s);
+    timer1.async_wait([this, &devices](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config2.xml", devices,
+                      fs::copy_options::overwrite_existing);
+      }
+    });
+
+    boost::asio::steady_timer timer2(context.getContext());
+    timer2.expires_from_now(4s);
+    timer2.async_wait([this](boost::system::error_code ec) {
+      if (!ec)
+      {
+        auto agent = m_config->getAgent();
+        auto devices = agent->getDevices();
+        EXPECT_EQ(3, devices.size());
+        
+        auto last = devices.back();
+        EXPECT_TRUE(last);
+        EXPECT_EQ("001", last->getUuid());
+
+        auto dis = last->getDeviceDataItems();
+        EXPECT_EQ(4, dis.size());
+
+        EXPECT_TRUE(last->getDeviceDataItem("xd1"));
+        EXPECT_TRUE(last->getDeviceDataItem("xex"));
+        EXPECT_TRUE(last->getDeviceDataItem("o1_asset_chg"));
+        EXPECT_TRUE(last->getDeviceDataItem("o1_asset_rem"));
+      }
+      m_config->stop();
+    });
+
+    m_config->start();
+  }
 
 }  // namespace
