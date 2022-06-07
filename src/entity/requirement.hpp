@@ -73,9 +73,14 @@ namespace mtconnect {
     {
     public:
       using ValueVariant::ValueVariant;
+      Value(const Value &v) = default;
+      Value(Value &&v) = default;
+      Value() = default;
+
+      Value &operator=(const Value &v) = default;
+      Value &operator=(Value &&v) = default;
 
       bool empty() const { return this->index() == EMPTY; }
-      operator bool() const { return !empty(); }
     };
 
     class Factory;

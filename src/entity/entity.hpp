@@ -312,7 +312,7 @@ namespace mtconnect {
         EntityList revised;
         for (const auto &o : other)
         {
-          if (const auto &id = o->getIdentity())
+          if (const auto &id = o->getIdentity(); !id.empty())
           {
             auto it = boost::find_if(list, [&id](auto &e) { return e->getIdentity() == id; });
 
