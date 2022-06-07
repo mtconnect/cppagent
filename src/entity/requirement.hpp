@@ -46,7 +46,7 @@ namespace mtconnect {
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
 
-    using ValueVariant = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t,
+    using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t,
                                       double, bool, Vector, DataSet, Timestamp, std::nullptr_t>;
 
     enum ValueType : int16_t
@@ -68,20 +68,6 @@ namespace mtconnect {
     };
 
     const int16_t VALUE_TYPE_BASE = 0x0F;
-
-    class Value : public ValueVariant
-    {
-    public:
-      using ValueVariant::ValueVariant;
-      Value(const Value &v) = default;
-      Value(Value &&v) = default;
-      Value() = default;
-
-      Value &operator=(const Value &v) = default;
-      Value &operator=(Value &&v) = default;
-
-      bool empty() const { return this->index() == EMPTY; }
-    };
 
     class Factory;
     using FactoryPtr = std::shared_ptr<Factory>;

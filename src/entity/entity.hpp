@@ -312,7 +312,7 @@ namespace mtconnect {
         EntityList revised;
         for (const auto &o : other)
         {
-          if (const auto &id = o->getIdentity(); !id.empty())
+          if (const auto &id = o->getIdentity(); !std::holds_alternative<std::monostate>(id))
           {
             auto it = boost::find_if(list, [&id](auto &e) { return e->getIdentity() == id; });
 
@@ -320,8 +320,8 @@ namespace mtconnect {
             {
               if ((*it)->reviseTo(o, m_protect))
                 changed = true;
-              list.erase(it);
               revised.push_back(*it);
+              list.erase(it);
             }
           }
           else
@@ -330,8 +330,8 @@ namespace mtconnect {
 
             if (it != list.end())
             {
-              list.erase(it);
               revised.push_back(*it);
+              list.erase(it);
             }
             else
             {
