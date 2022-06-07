@@ -27,7 +27,6 @@ class CppAgentConan(ConanFile):
         "boost:shared": False,
         "boost:without_python": True,
         "boost:without_test": True,
-        "boost:extra_b2_flags": "visibility=hidden",
 
         "libxml2:shared": False,
         "libxml2:include_utils": False,
@@ -70,6 +69,9 @@ class CppAgentConan(ConanFile):
             
         if not self.options.without_python:
             self.options.with_python = True
+
+        if self.settings.os == "Macos":
+            self.options["boost"].visibility = "hidden"
         
  #       if self.windows_xp:
  #           self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0501 "
