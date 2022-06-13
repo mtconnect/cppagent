@@ -106,6 +106,8 @@ namespace mtconnect {
         m_client->stop();
       }
 
+      std::shared_ptr<MqttClientImpl> MqttService::getClient() { return m_client; }
+
       uint64_t MqttService::publish(observation::ObservationPtr &observation)
       {
         // get the data item from observation
