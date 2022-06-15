@@ -52,24 +52,23 @@ protected:
 
   void TearDown() override
   {
-    m_agentTestHelper->getAgent()->stop();
-    m_agentTestHelper->m_ioContext.run_for(100ms);
+    const auto agent = m_agentTestHelper->getAgent();
+    if (agent)
+    {
+      m_agentTestHelper->getAgent()->stop();
+      m_agentTestHelper->m_ioContext.run_for(100ms);
+    }
     m_agentTestHelper.reset();
 
-    m_server.reset();   
-  }  
+    m_server.reset();
+  }
 
   void createAgent(ConfigOptions options = {})
-  {
+  {   
     m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "2.0", 25, false, true,
                                    options);   
 
     m_agentTestHelper->getAgent()->start();
-
-    m_client = m_agentTestHelper->getMqttService()->getClient();
-
-    if (!m_client)
-      createClient(options);
   } 
 
   void createServer(const ConfigOptions &options)
@@ -99,7 +98,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(MqttSinkTest, dynamic_load_Mqtt_sink)
+TEST_F(MqttSinkTest, Load_Mqtt_sink)
 {
   createAgent();
 
@@ -111,39 +110,88 @@ TEST_F(MqttSinkTest, dynamic_load_Mqtt_sink)
   ASSERT_TRUE(mqttService);
 }
 
-TEST_F(MqttSinkTest, publish_Mqtt)
+TEST_F(MqttSinkTest, Mqtt_Subscribe_Publish)
 {
-  createAgent();
+  std::uint16_t pid_sub1;
 
-  auto agent = m_agentTestHelper->getAgent();
+  boost::asio::io_context ioc;
+  auto c = mqtt::make_client(ioc, "test.mosquitto.org", 1883);
 
-  const auto mqttService =
-      dynamic_pointer_cast<sink::mqtt_sink::MqttService>(agent->findSink("MqttService"));
+  c->set_client_id("cliendId1");
+  c->set_clean_session(true);
+  c->set_keep_alive_sec(10);
 
-  ASSERT_TRUE(mqttService);
+  c->set_connack_handler([&c, &pid_sub1](bool sp, mqtt::connect_return_code connack_return_code) {
+    std::cout << "Connack handler called" << std::endl;
+    std::cout << "Session Present: " << std::boolalpha << sp << std::endl;
+    std::cout << "Connack Return Code: " << connack_return_code << std::endl;
+    if (connack_return_code == mqtt::connect_return_code::accepted)
+    {
+      pid_sub1 = c->acquire_unique_packet_id();
 
- string body;
-  auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-    EXPECT_EQ("Body Content", request->m_body);
-    body = request->m_body;
-
-    ResponsePtr resp = make_unique<Response>(status::ok);
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+      c->async_subscribe(pid_sub1, "mqtt_client_cpp/topic1", MQTT_NS::qos::at_most_once,
+                         // [optional] checking async_subscribe completion code
+                         [](MQTT_NS::error_code ec) {
+                           std::cout << "async_subscribe callback: " << ec.message() << std::endl;
+                         });
+    }
     return true;
-  };
+  });
+  c->set_close_handler([] { std::cout << "closed" << std::endl; });
 
-  m_server->addRouting({boost::beast::http::verb::get, "/probe", handler});
+  c->set_suback_handler(
+      [&c, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
+        std::cout << "suback received. packet_id: " << packet_id << std::endl;
+        for (auto const &e : results)
+        {
+          std::cout << "subscribe result: " << e << std::endl;
+        }
 
-  startServer();
+        if (packet_id == pid_sub1)
+        {
+          c->async_publish("mqtt_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
+                           // [optional] checking async_publish completion code
+                           [](MQTT_NS::error_code ec) {
+                             std::cout << "async_publish callback: " << ec.message() << std::endl;
+                             ASSERT_EQ(ec.message(), "The operation completed successfully");
+                           });
+        }
 
-  mqttService->getClient()->start();
+        return true;
+      });
+  c->set_publish_handler([&c](mqtt::optional<std::uint16_t> packet_id,
+                              mqtt::publish_options pubopts, mqtt::buffer topic_name,
+                              mqtt::buffer contents) {
+    std::cout << "publish received."
+              << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
+              << " retain: " << pubopts.get_retain() << std::endl;
+    if (packet_id)
+    {
+      std::cout << "packet_id: " << *packet_id << std::endl;
+      std::cout << "topic_name: " << topic_name << std::endl;
+      std::cout << "contents: " << contents << std::endl;
+    }
 
-  //startClient();
+    c->disconnect();
+    return true;
+  });
 
- // m_client->spawnRequest(http::verb::get, "/probe", "Body Content", false);
- // ASSERT_TRUE(m_client->m_done);
- // ASSERT_EQ("Body Content", body);
-  
+  c->connect();
+
+  ioc.run();
 }
 
+TEST_F(MqttSinkTest, Mqtt_Sink_publish)
+{
+    //mqtt://homeassistant:1883
+  ConfigOptions options {{configuration::Host, "localhost"s}, {configuration::Port, 1883}};
 
+  createAgent(options);
+
+  auto agent = m_agentTestHelper->getAgent();
+
+  const auto mqttService =
+      dynamic_pointer_cast<sink::mqtt_sink::MqttService>(agent->findSink("MqttService"));
+
+  ASSERT_TRUE(mqttService);
+}
