@@ -2260,20 +2260,6 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
   }
 }
 
-TEST_F(AgentTest, shound_add_asset_count_when_20)
-{
-  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "2.0", 25);
-
-  {
-    PARSE_XML_RESPONSE("/LinuxCNC/probe");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", "true");
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
-    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_COUNT']", 1);
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_COUNT']@representation", "DATA_SET");
-  }
-}
-
 
 TEST_F(AgentTest, AssetPrependId)
 {
@@ -2693,7 +2679,103 @@ TEST_F(AgentTest, put_condition_should_parse_condition_data)
   }
 }
 
+TEST_F(AgentTest, shound_add_asset_count_when_20)
+{
+  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "2.0", 25);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", "true");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_COUNT']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_COUNT']@representation", "DATA_SET");
+  }
+}
+
+
+
 TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
 {
-  GTEST_SKIP();
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  string body = "<Part assetId='P1'>TEST 1</Part>";
+  QueryMap queries;
+  const auto &storage = agent->getAssetStorage();
+
+  queries["device"] = "LinuxCNC";
+  queries["type"] = "Part";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body, queries);
+    ASSERT_EQ((unsigned int)1, storage->getCount());
+  }
+  {
+    PARSE_XML_RESPONSE_PUT("/asset/P2", body, queries);
+    ASSERT_EQ((unsigned int)2, storage->getCount());
+  }
+
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_COUNT(doc, "//m:Header/*", 0);
+  }
+}
+
+TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  string body1 = "<Part assetId='P1'>TEST 1</Part>";
+  QueryMap queries;
+  const auto &storage = agent->getAssetStorage();
+
+  queries["device"] = "LinuxCNC";
+  queries["type"] = "Part";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body1, queries);
+    ASSERT_EQ(1u, storage->getCount());
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
+  }
+  
+  string body2 = "<PartThing assetId='P2'>TEST 2</PartThing>";
+  queries["type"] = "PartThing";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset", body2, queries);
+    ASSERT_EQ(2u, storage->getCount());
+  }
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='PartThing']", "1");
+  }
+  
+  {
+    PARSE_XML_RESPONSE_PUT("/asset/P3", body2, queries);
+    ASSERT_EQ(3u, storage->getCount());
+  }
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='PartThing']", "2");
+  }
+  
+  body2 = "<PartThing assetId='P3' removed='true'>TEST 2</PartThing>";
+
+  {
+    PARSE_XML_RESPONSE_PUT("/asset/P3", body2, queries);
+    ASSERT_EQ(2u, storage->getCount());
+  }
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='PartThing']", "1");
+  }
+
 }

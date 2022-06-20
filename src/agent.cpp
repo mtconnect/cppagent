@@ -238,6 +238,15 @@ namespace mtconnect {
       {
         m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
       }
+      
+      auto dc = device->getAssetCount();
+      if (dc)
+      {
+        auto count = m_assetStorage->getCountForType(asset->getType());
+        
+        DataSet set{DataSetEntry(asset->getType(), int64_t(count))};
+        m_loopback->receive(dc, {{"VALUE", set}});
+      }
     }
   }
 
