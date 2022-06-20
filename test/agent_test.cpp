@@ -2260,6 +2260,21 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
   }
 }
 
+TEST_F(AgentTest, shound_add_asset_count_when_20)
+{
+  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "2.0", 25);
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_CHANGED']@discrete", "true");
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_REMOVED']", 1);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_COUNT']", 1);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DataItem[@type='ASSET_COUNT']@representation", "DATA_SET");
+  }
+}
+
+
 TEST_F(AgentTest, AssetPrependId)
 {
   addAdapter();
@@ -2676,4 +2691,9 @@ TEST_F(AgentTest, put_condition_should_parse_condition_data)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Fault@nativeSeverity", "1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Fault", "SCANHISTORYRESET");
   }
+}
+
+TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
+{
+  GTEST_SKIP();
 }

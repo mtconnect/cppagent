@@ -419,6 +419,17 @@ namespace mtconnect {
                                errors);
       device->addDataItem(di, errors);
     }
+    
+    if (!device->getAssetCount() && (major >= 2))
+    {
+      entity::ErrorList errors;
+      auto di = DataItem::make({{"type", "ASSET_COUNT"s},
+                                {"id", device->getId() + "_asset_count"},
+                                {"category", "EVENT"s},
+                                {"representation", "DATA_SET"s}},
+                               errors);
+      device->addDataItem(di, errors);
+    }
   }
 
   void Agent::initializeDataItems(DevicePtr device)
@@ -878,7 +889,7 @@ namespace mtconnect {
     }
     else if (cmd == "RemoveAll")
     {
-      string type = command->get<string>("type");
+      auto type = command->maybeGet<string>("type");
       auto device = command->maybeGet<string>("device");
       asset::AssetList list;
       m_agent->removeAllAssets(device, type, nullopt, list);
