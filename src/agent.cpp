@@ -238,6 +238,15 @@ namespace mtconnect {
       {
         m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
       }
+      
+      auto dc = device->getAssetCount();
+      if (dc)
+      {
+        auto count = m_assetStorage->getCountForType(asset->getType());
+        
+        DataSet set{DataSetEntry(asset->getType(), int64_t(count))};
+        m_loopback->receive(dc, {{"VALUE", set}});
+      }
     }
   }
 
@@ -416,6 +425,17 @@ namespace mtconnect {
       auto di = DataItem::make({{"type", "ASSET_REMOVED"s},
                                 {"id", device->getId() + "_asset_rem"},
                                 {"category", "EVENT"s}},
+                               errors);
+      device->addDataItem(di, errors);
+    }
+    
+    if (!device->getAssetCount() && (major >= 2))
+    {
+      entity::ErrorList errors;
+      auto di = DataItem::make({{"type", "ASSET_COUNT"s},
+                                {"id", device->getId() + "_asset_count"},
+                                {"category", "EVENT"s},
+                                {"representation", "DATA_SET"s}},
                                errors);
       device->addDataItem(di, errors);
     }
@@ -878,7 +898,7 @@ namespace mtconnect {
     }
     else if (cmd == "RemoveAll")
     {
-      string type = command->get<string>("type");
+      auto type = command->maybeGet<string>("type");
       auto device = command->maybeGet<string>("device");
       asset::AssetList list;
       m_agent->removeAllAssets(device, type, nullopt, list);
