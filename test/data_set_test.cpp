@@ -351,6 +351,9 @@ TEST_F(DataSetTest, Current)
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']",
                           "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']@count",
+                          "0");
+
   }
 
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -418,6 +421,7 @@ TEST_F(DataSetTest, Sample)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "0");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
@@ -484,6 +488,7 @@ TEST_F(DataSetTest, CurrentAt)
     QueryMap query {{"at", to_string(seq - 1)}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "0");
   }
 
   {
@@ -593,6 +598,7 @@ TEST_F(DataSetTest, ResetWithNoItems)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "0");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
@@ -626,6 +632,7 @@ TEST_F(DataSetTest, DuplicateCompression)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:VariableDataSet[1]@count", "0");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "c", "3");
@@ -721,6 +728,7 @@ TEST_F(DataSetTest, Discrete)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[1]", "UNAVAILABLE");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:BlockDataSet[1]@count", "0");
     ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "a", "1");
     ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "b", "2");
     ASSERT_DATA_SET_ENTRY(doc, "BlockDataSet[2]", "c", "3");

@@ -290,6 +290,12 @@ namespace mtconnect {
       static entity::FactoryPtr getFactory();
       ~DataSetEvent() override = default;
       ObservationPtr copy() const override { return std::make_shared<DataSetEvent>(*this); }
+      
+      void makeUnavailable() override
+      {
+        super::makeUnavailable();
+        setProperty("count", int64_t(0));
+      }
 
       const entity::DataSet &getDataSet() const
       {
