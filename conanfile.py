@@ -73,11 +73,6 @@ class CppAgentConan(ConanFile):
         if self.settings.os == "Macos":
             self.options["boost"].visibility = "hidden"
         
- #       if self.windows_xp:
- #           self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0501 "
- #       elif self.settings.os == 'Windows':
- #           self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0600 "            
-
     def requirements(self):
         if not self.windows_xp:
             self.requires("gtest/1.10.0")
