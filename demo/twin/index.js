@@ -133,7 +133,8 @@ async function loadAndStreamData() {
 	protocol.loadModel(obj => {
 		const enc = device.findComponent('Enclosure');
 		const material = new THREE.MeshPhongMaterial( { color: 0x0A0A0A, specular: 0x111111, shininess: 200, opacity: 0.5, transparent: true } );
-		enc.geometry.model.material = material;
+                if (enc)
+			enc.geometry.model.material = material;
 		
 		protocol.streamData(dataItems.concat(conditionDataItems));
 
