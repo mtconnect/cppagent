@@ -110,12 +110,13 @@ protected:
     {
       m_adapter->stop();
       m_agentTestHelper->m_ioContext.run_for(100ms);
-      m_adapter.reset();
     }
 
     m_agentTestHelper->getAgent()->stop();
-    m_agentTestHelper->m_ioContext.run_for(100ms);
+    m_agentTestHelper->m_ioContext.run_for(100s);
     m_agentTestHelper.reset();
+
+    m_adapter.reset();
   }
 
   void createAgent(ConfigOptions options = {})
