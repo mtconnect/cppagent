@@ -96,7 +96,8 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", logr::attributes::utc_cl
 namespace mtconnect::configuration {
   boost::log::trivial::logger_type *gAgentLogger = nullptr;
 
-  AgentConfiguration::AgentConfiguration() : m_monitorTimer(m_context.getContext())
+  AgentConfiguration::AgentConfiguration()
+    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->getContext())
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
     using namespace source;
@@ -195,18 +196,22 @@ namespace mtconnect::configuration {
   AgentConfiguration::~AgentConfiguration()
   {
     stop();
-
-    logr::core::get()->remove_all_sinks();
-    m_pipelineContext.reset();
-    m_adapterHandler.reset();
-    m_agent.reset();
+    m_context.reset();
 
     m_sinkFactory.clear();
     m_sourceFactory.clear();
+
+    m_pipelineContext.reset();
+    m_adapterHandler.reset();
+
+    m_agent.reset();
+
     m_initializers.clear();
 
     if (m_sink)
       m_sink.reset();
+
+    logr::core::get()->remove_all_sinks();
   }
 
   void AgentConfiguration::monitorFiles(boost::system::error_code ec)
@@ -283,7 +288,7 @@ namespace mtconnect::configuration {
 
         m_agent->stop();
 
-        m_context.pause(
+        m_context->pause(
             [this](AsyncContext &context) {
               m_agent.reset();
               m_configTime.reset();
@@ -310,7 +315,7 @@ namespace mtconnect::configuration {
       // Handle device changed by delivering the device file to the agent
       if (devTime != *m_deviceTime)
       {
-        m_context.pause([this](AsyncContext &context) {
+        m_context->pause([this](AsyncContext &context) {
           m_agent->reloadDevices(m_devicesFile);
           m_deviceTime.reset();
         });
@@ -343,9 +348,9 @@ namespace mtconnect::configuration {
       AgentConfiguration::monitorFiles(ec);
     }
 
-    m_context.setThreadCount(m_workerThreadCount);
+    m_context->setThreadCount(m_workerThreadCount);
     m_agent->start();
-    m_context.start();
+    m_context->start();
   }
 
   void AgentConfiguration::stop()
@@ -355,7 +360,7 @@ namespace mtconnect::configuration {
     m_restart = false;
     if (m_agent)
       m_agent->stop();
-    m_context.stop();
+    m_context->stop();
     LOG(info) << "Agent Configuration stopped";
   }
 
@@ -680,7 +685,7 @@ namespace mtconnect::configuration {
     LOG(info) << "Starting agent on port " << int(port);
 
     // Make the Agent
-    m_agent = make_unique<Agent>(m_context, m_devicesFile, options);
+    m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
 
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
@@ -828,7 +833,7 @@ namespace mtconnect::configuration {
             blockOptions.add_child("logger_config", *logger);
         }
 
-        auto source = m_sourceFactory.make(factory, name, m_context, m_pipelineContext,
+        auto source = m_sourceFactory.make(factory, name, getAsyncContext(), m_pipelineContext,
                                            adapterOptions, blockOptions);
 
         if (source)
@@ -846,7 +851,7 @@ namespace mtconnect::configuration {
       adapterOptions[configuration::Device] = deviceName;
       LOG(info) << "Adding default adapter for " << device->getName() << " on localhost:7878";
 
-      auto source = m_sourceFactory.make("shdr", "default", m_context, m_pipelineContext,
+      auto source = m_sourceFactory.make("shdr", "default", getAsyncContext(), m_pipelineContext,
                                          adapterOptions, ptree {});
       m_agent->addSource(source, false);
     }
@@ -916,7 +921,7 @@ namespace mtconnect::configuration {
         auto sinkContract = m_agent->makeSinkContract();
         sinkContract->m_pipelineContext = m_pipelineContext;
 
-        auto sink = m_sinkFactory.make(factory, sinkName, m_context, std::move(sinkContract),
+        auto sink = m_sinkFactory.make(factory, sinkName, getAsyncContext(), std::move(sinkContract),
                                        options, sinkBlockOptions);
         if (sink)
         {
@@ -933,7 +938,7 @@ namespace mtconnect::configuration {
       auto sinkContract = m_agent->makeSinkContract();
       sinkContract->m_pipelineContext = m_pipelineContext;
 
-      auto sink = m_sinkFactory.make("RestService", "RestService", m_context,
+      auto sink = m_sinkFactory.make("RestService", "RestService", getAsyncContext(),
                                      std::move(sinkContract), options, config);
       m_agent->addSink(sink);
     }

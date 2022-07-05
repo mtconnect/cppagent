@@ -339,6 +339,8 @@ namespace mtconnect {
         ids.insert(oldDev->getAssetRemoved()->getId());
       if (oldDev->getAvailability())
         ids.insert(oldDev->getAvailability()->getId());
+      if (oldDev->getAssetCount())
+        ids.insert(oldDev->getAssetCount()->getId());
 
       auto name = device->getComponentName();
       if (!name)

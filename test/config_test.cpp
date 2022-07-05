@@ -1000,7 +1000,7 @@ Port = 0
     fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
                   fs::copy_options::overwrite_existing);
     auto t = fs::last_write_time(devices);
-    fs::last_write_time(devices, t - 1min);
+    fs::last_write_time(devices, t - 60min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1054,7 +1054,7 @@ Port = 0
     });
 
     boost::asio::steady_timer timer2(context.getContext());
-    timer2.expires_from_now(4s);
+    timer2.expires_from_now(6s);
     timer2.async_wait([this, agent, &di, &chg](boost::system::error_code ec) {
       if (!ec)
       {
@@ -1124,8 +1124,6 @@ Port = 0
     ASSERT_TRUE(dataItem);
     ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
 
-    DataItemPtr di;
-
     boost::asio::steady_timer timer1(context.getContext());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices](boost::system::error_code ec) {
@@ -1140,7 +1138,7 @@ Port = 0
     });
 
     boost::asio::steady_timer timer2(context.getContext());
-    timer2.expires_from_now(4s);
+    timer2.expires_from_now(6s);
     timer2.async_wait([this, &chg](boost::system::error_code ec) {
       if (!ec)
       {
@@ -1298,7 +1296,7 @@ Port = 0
     });
 
     boost::asio::steady_timer timer2(context.getContext());
-    timer2.expires_from_now(4s);
+    timer2.expires_from_now(6s);
     timer2.async_wait([this](boost::system::error_code ec) {
       if (!ec)
       {
@@ -1311,17 +1309,19 @@ Port = 0
         EXPECT_EQ("001", last->getUuid());
 
         auto dis = last->getDeviceDataItems();
-        EXPECT_EQ(4, dis.size());
+        EXPECT_EQ(5, dis.size());
 
         EXPECT_TRUE(last->getDeviceDataItem("xd1"));
         EXPECT_TRUE(last->getDeviceDataItem("xex"));
         EXPECT_TRUE(last->getDeviceDataItem("o1_asset_chg"));
         EXPECT_TRUE(last->getDeviceDataItem("o1_asset_rem"));
+        EXPECT_TRUE(last->getDeviceDataItem("o1_asset_count"));
 
         EXPECT_TRUE(agent->getDataItemById("xd1"));
         EXPECT_TRUE(agent->getDataItemById("xex"));
         EXPECT_TRUE(agent->getDataItemById("o1_asset_rem"));
         EXPECT_TRUE(agent->getDataItemById("o1_asset_chg"));
+        EXPECT_TRUE(agent->getDataItemById("o1_asset_count"));
       }
       m_config->stop();
     });

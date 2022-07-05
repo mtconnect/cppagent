@@ -18,6 +18,7 @@
 #pragma once
 
 #include <boost/asio.hpp>
+#include <boost/thread/thread.hpp>
 
 #include "logging.hpp"
 
@@ -43,17 +44,33 @@ namespace mtconnect::configuration {
     void start()
     {
       m_running = true;
+      m_paused = false;
       do
       {
         for (int i = 0; i < m_threadCount; i++)
         {
-          m_workers.emplace_back(std::thread([this]() { m_context.run(); }));
+          m_workers.emplace_back(boost::thread([this]() { 
+              m_context.run(); 
+              }));
         }
+        auto &first = m_workers.front();
+        while (m_running && !m_paused)
+        {
+          if (!first.try_join_for(boost::chrono::seconds(5)) && !m_running)
+          {
+            if (!first.try_join_for(boost::chrono::seconds(5)))
+              m_context.stop();
+          }
+        }
+
         for (auto &w : m_workers)
         {
           w.join();
         }
         m_workers.clear();
+
+        if (m_delayedStop.joinable())
+          m_delayedStop.join();
 
         if (m_syncCallback)
         {
@@ -70,6 +87,7 @@ namespace mtconnect::configuration {
 
     void pause(SyncCallback callback, bool safeStop = false)
     {
+      m_paused = true;
       m_syncCallback = callback;
       if (safeStop && m_guard)
         m_guard.reset();
@@ -88,6 +106,7 @@ namespace mtconnect::configuration {
 
     void restart()
     {
+      m_paused = false;
       if (!m_guard)
         m_guard.emplace(m_context.get_executor());
       m_context.restart();
@@ -98,12 +117,14 @@ namespace mtconnect::configuration {
 
   protected:
     boost::asio::io_context m_context;
-    std::list<std::thread> m_workers;
+    std::list<boost::thread> m_workers;
     SyncCallback m_syncCallback;
     std::optional<WorkGuard> m_guard;
+    std::thread m_delayedStop;
 
     int m_threadCount = 1;
     bool m_running = false;
+    bool m_paused = false;
   };
 
 }  // namespace mtconnect::configuration

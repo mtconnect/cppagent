@@ -82,8 +82,8 @@ namespace mtconnect {
 
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
       const Agent *getAgent() const { return m_agent.get(); }
-      auto &getContext() { return m_context.getContext(); }
-      auto &getAsyncContext() { return m_context; }
+      auto &getContext() { return m_context->getContext(); }
+      auto &getAsyncContext() { return *m_context.get(); }
 
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
@@ -128,7 +128,9 @@ namespace mtconnect {
     protected:
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
 
-      AsyncContext m_context;
+      std::map<std::string, InitializationFunction> m_initializers;
+
+      std::unique_ptr<AsyncContext> m_context;
       std::unique_ptr<Agent> m_agent;
 
       pipeline::PipelineContextPtr m_pipelineContext;
@@ -162,7 +164,6 @@ namespace mtconnect {
       // Factories
       sink::SinkFactory m_sinkFactory;
       source::SourceFactory m_sourceFactory;
-      std::map<std::string, InitializationFunction> m_initializers;
 
       int m_workerThreadCount {1};
 
