@@ -74,10 +74,11 @@ protected:
   void createServer(const ConfigOptions &options)
   {
     using namespace mtconnect::configuration;
-    ConfigOptions opts {{Port, 1883}, {ServerIp, "localhost"s}};
-    opts.merge(ConfigOptions(options));
+    ConfigOptions opts(options);
+    opts[Port] = 0;
+    opts[ServerIp] = "127.0.0.1"s;
     m_server = make_unique<Server>(m_context, opts);
-  }
+  }  
 
   void startServer()
   {
@@ -87,8 +88,14 @@ protected:
   }
 
   void createClient(const ConfigOptions &options)
-  { 
-      m_client = make_shared<mtconnect::mqtt_client::MqttClient>(m_context, options);
+  {   
+    m_client = make_shared<mtconnect::mqtt_client::MqttClient>(m_context, options);
+  }
+
+  void startClient()
+  {
+    if (m_client)
+      m_client->start();
   }
 
   unique_ptr<Server> m_server;
@@ -112,14 +119,16 @@ TEST_F(MqttSinkTest, Load_Mqtt_sink)
 
 TEST_F(MqttSinkTest, Mqtt_Subscribe_Publish)
 {
+  
   std::uint16_t pid_sub1;
 
   boost::asio::io_context ioc;
   auto c = mqtt::make_client(ioc, "test.mosquitto.org", 1883);
+  //auto c = mqtt::make_client(ioc, "mqtt://homeassistant", 1883);
 
   c->set_client_id("cliendId1");
   c->set_clean_session(true);
-  c->set_keep_alive_sec(10);
+  c->set_keep_alive_sec(30);
 
   c->set_connack_handler([&c, &pid_sub1](bool sp, mqtt::connect_return_code connack_return_code) {
     std::cout << "Connack handler called" << std::endl;
@@ -165,12 +174,11 @@ TEST_F(MqttSinkTest, Mqtt_Subscribe_Publish)
     std::cout << "publish received."
               << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
               << " retain: " << pubopts.get_retain() << std::endl;
-    if (packet_id)
-    {
+    if (packet_id)    
       std::cout << "packet_id: " << *packet_id << std::endl;
       std::cout << "topic_name: " << topic_name << std::endl;
       std::cout << "contents: " << contents << std::endl;
-    }
+    
 
     c->disconnect();
     return true;
@@ -181,17 +189,34 @@ TEST_F(MqttSinkTest, Mqtt_Subscribe_Publish)
   ioc.run();
 }
 
+const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+
 TEST_F(MqttSinkTest, Mqtt_Sink_publish)
 {
-    //mqtt://homeassistant:1883
-  ConfigOptions options {{configuration::Host, "localhost"s}, {configuration::Port, 1883}};
+  // mqtt://homeassistant:1883
+  ConfigOptions options {
+      {configuration::Host, "localhost"s}, {configuration::Port, 1883},
+      {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
+      {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
 
-  createAgent(options);
+  createServer(options);
 
-  auto agent = m_agentTestHelper->getAgent();
+  createClient(options);
 
-  const auto mqttService =
-      dynamic_pointer_cast<sink::mqtt_sink::MqttService>(agent->findSink("MqttService"));
+  auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
+    ResponsePtr resp = make_unique<Response>(status::ok);
+    resp->m_body = "Done";
+    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
 
-  ASSERT_TRUE(mqttService);
+    return true;
+  };
+
+  m_server->addRouting({boost::beast::http::verb::get, "/probe", probe});
+
+  startServer();
+
+  startClient();
+
+  m_client->stop();
+
 }

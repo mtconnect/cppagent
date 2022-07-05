@@ -65,8 +65,6 @@ namespace mtconnect {
           m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
           m_reconnectTimer(ioContext)
       {
-        m_publishOnly = true;
-
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
         m_url = url.str();
@@ -95,8 +93,6 @@ namespace mtconnect {
           m_handler(handler),
           m_reconnectTimer(ioContext)
       {
-        m_publishOnly = false;
-
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
         m_url = url.str();
@@ -124,7 +120,7 @@ namespace mtconnect {
 
         mqtt::setup_log();
 
-        auto client = derived().getClient();      
+        auto client = derived().getClient();
 
         client->set_client_id(m_identity);
         client->clean_session();
@@ -153,7 +149,7 @@ namespace mtconnect {
           reconnect();
         });
 
-         client->set_error_handler([this](mqtt::error_code ec) {
+        client->set_error_handler([this](mqtt::error_code ec) {
           LOG(error) << "error: " << ec.message();
           reconnect();
         });
@@ -167,28 +163,32 @@ namespace mtconnect {
                 // Do something if the subscription failed...
               }
 
-              if (m_publishOnly && packet_id == m_clientId)
+              if (packet_id == m_clientId)
                 MqttPublish();
+
+              reconnect();
 
               return true;
             });
-
-       
 
         client->set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
                                            mqtt::publish_options pubopts, mqtt::buffer topic_name,
                                            mqtt::buffer contents) {
           if (packet_id)
+          {
             LOG(debug) << "packet_id: " << *packet_id;
-
-          LOG(debug) << "topic_name: " << topic_name;
-          LOG(debug) << "contents: " << contents;
+            LOG(debug) << "topic_name: " << topic_name;
+            LOG(debug) << "contents: " << contents;
+          }
 
           receive(topic_name, contents);
 
           return true;
         });
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         m_running = true;
         connect();
 
@@ -212,6 +212,7 @@ namespace mtconnect {
         if (m_running)
           m_running = false;
       }
+
 
     protected:
       void subscribe()
@@ -253,7 +254,8 @@ namespace mtconnect {
 
         auto topics = GetOption<StringList>(m_options, configuration::Topics);
 
-        std::string pTopic;
+        std::string pTopic;//publish topic
+        std::string pContent;//publish content
         if (topics)
         {
           for (auto &topic : *topics)
@@ -261,7 +263,8 @@ namespace mtconnect {
             auto loc = topic.find(':');
             if (loc != string::npos)
             {
-              pTopic = topic.substr(loc + 1);
+              pTopic = topic.substr(loc + 1);//after : values
+              pContent = topic.substr(0, loc);  // first values before : or something else..??
               break;
             }
           }
@@ -271,7 +274,7 @@ namespace mtconnect {
           LOG(warning) << "No topics specified, subscribing to '#'";
         }
 
-        derived().getClient()->async_publish(m_clientId, pTopic, "content", mqtt::qos::at_most_once,
+        derived().getClient()->async_publish(m_clientId, pTopic, pContent, mqtt::qos::at_most_once,
                                              [](mqtt::error_code ec) {
                                                if (ec)
                                                {
@@ -333,8 +336,6 @@ namespace mtconnect {
       std::uint16_t m_clientId {0};
 
       bool m_running;
-
-      bool m_publishOnly;
 
       source::adapter::mqtt_adapter::MqttPipeline *m_pipeline;
 
