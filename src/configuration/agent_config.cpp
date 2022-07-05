@@ -196,7 +196,6 @@ namespace mtconnect::configuration {
   AgentConfiguration::~AgentConfiguration()
   {
     stop();
-    m_context.reset();
 
     m_sinkFactory.clear();
     m_sourceFactory.clear();
@@ -207,6 +206,7 @@ namespace mtconnect::configuration {
     m_agent.reset();
 
     m_initializers.clear();
+    m_context.reset();
 
     if (m_sink)
       m_sink.reset();
