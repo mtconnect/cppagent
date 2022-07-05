@@ -206,6 +206,8 @@ namespace mtconnect::configuration {
     m_agent.reset();
 
     m_initializers.clear();
+    m_ruby.reset();
+
     m_context.reset();
 
     if (m_sink)
