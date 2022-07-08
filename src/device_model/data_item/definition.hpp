@@ -27,6 +27,20 @@ namespace mtconnect {
       class Definition : public entity::Entity
       {
       public:
+        class Entry : public entity::Entity
+        {
+        public:
+          using entity::Entity::Entity;
+          const entity::Value &getIdentity() const override
+          {
+            auto it = m_properties.find("key");
+            if (it == m_properties.end())
+              return getProperty("keyType");
+            else
+              return it->second;
+          }
+        };
+
         static entity::FactoryPtr getFactory()
         {
           using namespace mtconnect::entity;
@@ -43,6 +57,10 @@ namespace mtconnect {
 
             auto cells = make_shared<Factory>(
                 Requirements {{"CellDefinition", ENTITY, cell, 1, Requirement::Infinite}});
+            cells->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+              auto ptr = make_shared<Entry>(name, props);
+              return dynamic_pointer_cast<entity::Entity>(ptr);
+            });
 
             auto entry =
                 make_shared<Factory>(Requirements {{"Description", false},
@@ -53,6 +71,10 @@ namespace mtconnect {
                                                    {"units", false},
                                                    {"CellDefinitions", ENTITY_LIST, cells, false}});
             entry->setOrder({"Description", "CellDefinitions"});
+            entry->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+              auto ptr = make_shared<Entry>(name, props);
+              return dynamic_pointer_cast<entity::Entity>(ptr);
+            });
 
             auto entries = make_shared<Factory>(
                 Requirements {{"EntryDefinition", ENTITY, entry, 1, Requirement::Infinite}});

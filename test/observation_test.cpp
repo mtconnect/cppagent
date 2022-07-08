@@ -228,6 +228,26 @@ TEST_F(ObservationTest, subType_prefix_should_be_passed_through)
   ASSERT_EQ("x:AUTO", event->get<string>("subType"));
 }
 
+TEST_F(ObservationTest, shoud_handle_asset_type)
+{
+  ErrorList errors;
+  auto dataItem =
+      DataItem::make({{"id", "c1"s}, {"category", "EVENT"s}, {"type", "ASSET_CHANGED"s}}, errors);
+
+  auto event1 = Observation::make(dataItem, {{"VALUE", "123"s}, {"assetType", "CuttingTool"s}},
+                                  m_time, errors);
+  ASSERT_EQ(0, errors.size());
+
+  ASSERT_EQ("CuttingTool"s, event1->get<string>("assetType"));
+  ASSERT_EQ("123"s, event1->getValue<string>());
+
+  auto event2 = Observation::make(dataItem, {{"VALUE", "UNAVAILABLE"s}}, m_time, errors);
+  ASSERT_EQ(0, errors.size());
+
+  ASSERT_TRUE(event2->isUnavailable());
+  ASSERT_EQ("UNAVAILABLE"s, event2->get<string>("assetType"));
+}
+
 // TODO: Make sure these tests are covered someplace else. Refactoring
 //       Moved this functionality outside the observation.
 
@@ -359,28 +379,4 @@ TEST_F(ObservationTest, Duration)
   d.reset();
 }
 
-TEST_F(ObservationTest, AssetChanged)
-{
-  string time("2011-02-18T15:52:41Z@200.1232");
-  std::map<string, string> attributes1;
-  attributes1["id"] = "1";
-  attributes1["name"] = "ac";
-  attributes1["type"] = "ASSET_CHANGED";
-  attributes1["category"] = "EVENT";
-  auto d = make_unique<DataItem>(attributes1);
-
-  ASSERT_TRUE(d->isAssetChanged());
-
-  ObservationPtr event1(new Observation(*d, time, (string) "CuttingTool|123", 123), true);
-  const auto &attr_list = event1->getAttributes();
-  map<string, string> attrs1;
-
-  for (const auto &attr : attr_list)
-    attrs1[attr.first] = attr.second;
-
-  ASSERT_EQ((string) "CuttingTool", attrs1["assetType"]);
-  ASSERT_EQ((string) "123", event1->getValue());
-
-  d.reset();
-}
 #endif

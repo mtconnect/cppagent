@@ -180,9 +180,12 @@ namespace mtconnect::sink::rest_sink {
 
       fail(ec, "Accept failed");
     }
-    else
+    else if (m_run)
     {
       auto dispatcher = [this](SessionPtr session, RequestPtr request) {
+        if (!m_run)
+          return false;
+
         if (m_lastSession)
           m_lastSession(session);
         dispatch(session, request);

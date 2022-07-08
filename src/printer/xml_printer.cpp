@@ -620,7 +620,7 @@ namespace mtconnect::printer {
         mtcLocation = xmlns + " " + ns.second.mSchemaLocation;
       }
     }
-
+    
     // Write the schema location
     if (location.empty() && !mtcLocation.empty())
       location = mtcLocation;
@@ -650,8 +650,13 @@ namespace mtconnect::printer {
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
             AGENT_VERSION_BUILD);
     addAttribute(writer, "version", version);
+    
+    int major, minor;
+    char c;
+    stringstream v(m_schemaVersion);
+    v >> major >> c >> minor;
 
-    if (m_schemaVersion >= "1.7")
+    if (major > 1 || (major == 1 && minor >= 7))
     {
       addAttribute(writer, "deviceModelChangeTime", m_modelChangeTime);
     }
@@ -675,7 +680,7 @@ namespace mtconnect::printer {
       addAttribute(writer, "lastSequence", to_string(lastSeq));
     }
 
-    if (aType == eDEVICES && count && !count->empty())
+    if (major < 2 && aType == eDEVICES && count && !count->empty())
     {
       AutoElement ele(writer, "AssetCounts");
 

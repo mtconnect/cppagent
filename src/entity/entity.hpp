@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <boost/range/algorithm.hpp>
+
 #include <unordered_map>
 
 #include "data_set.hpp"
@@ -68,6 +70,8 @@ namespace mtconnect {
       virtual ~Entity() {}
 
       EntityPtr getptr() const { return const_cast<Entity *>(this)->shared_from_this(); }
+
+      virtual const entity::Value &getIdentity() const { return getProperty("id"); }
 
       bool hasListWithAttribute() const
       {
@@ -169,6 +173,11 @@ namespace mtconnect {
       void setAttributes(AttributeSet a) { m_attributes = a; }
       const auto &getAttributes() const { return m_attributes; }
 
+      bool operator==(const Entity &other) const;
+      bool operator!=(const Entity &other) const { return !(*this == other); }
+
+      bool reviseTo(const EntityPtr other, const std::set<std::string> protect = {});
+
       // Entity Factory
     protected:
       Value &getProperty_(const std::string &name)
@@ -187,5 +196,215 @@ namespace mtconnect {
       OrderMapPtr m_order;
       AttributeSet m_attributes;
     };
+
+    struct ValueEqualVisitor
+    {
+      ValueEqualVisitor(const Value &t) : m_this(t) {}
+
+      bool operator()(const EntityPtr &other)
+      {
+        return *std::get<EntityPtr>(m_this) == *(other.get());
+      }
+
+      bool operator()(const EntityList &other)
+      {
+        const auto &list = std::get<EntityList>(m_this);
+        if (list.size() != other.size())
+          return false;
+        for (auto it1 = list.cbegin(), it2 = other.cbegin(); it1 != list.cend(); it1++, it2++)
+        {
+          if (*(it1->get()) != *(it2->get()))
+            return false;
+        }
+
+        return true;
+      }
+
+      template <class T>
+      bool operator()(const T &other)
+      {
+        return std::get<T>(m_this) == other;
+      }
+
+    private:
+      const Value &m_this;
+    };
+
+    inline bool operator==(const Value &v1, const Value &v2)
+    {
+      if (v1.index() != v2.index())
+        return false;
+
+      return std::visit(ValueEqualVisitor(v1), v2);
+    }
+
+    inline bool operator!=(const Value &v1, const Value &v2) { return !(v1 == v2); }
+
+    inline bool Entity::operator==(const Entity &other) const
+    {
+      if (m_name != other.m_name)
+        return false;
+
+      if (m_properties.size() != other.m_properties.size())
+        return false;
+
+      for (auto it1 = m_properties.cbegin(), it2 = other.m_properties.cbegin();
+           it1 != m_properties.cend(); it1++, it2++)
+      {
+        if (it1->first != it2->first || it1->second != it2->second)
+        {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    struct ValueMergeVisitor
+    {
+      ValueMergeVisitor(Value &t, const std::set<std::string> protect)
+        : m_this(t), m_protect(protect)
+      {}
+
+      bool operator()(const EntityPtr &other)
+      {
+        return std::get<EntityPtr>(m_this)->reviseTo(other, m_protect);
+      }
+
+      bool mergeRemainder(EntityList &list, EntityList &revised, bool changed)
+      {
+        if (changed)
+        {
+          for (auto &o : list)
+          {
+            const auto &id = o->getIdentity();
+            if (std::holds_alternative<std::string>(id))
+            {
+              auto s = std::get<std::string>(id);
+              if (m_protect.count(s) > 0)
+                revised.push_back(o);
+            }
+          }
+        }
+        else
+        {
+          changed = std::any_of(list.begin(), list.end(), [this](const auto &o) {
+            const auto &id = o->getIdentity();
+            if (std::holds_alternative<std::string>(id))
+            {
+              auto s = std::get<std::string>(id);
+              return m_protect.count(s) == 0;
+            }
+            else
+            {
+              return true;
+            }
+          });
+        }
+
+        return changed;
+      }
+
+      bool operator()(const EntityList &other)
+      {
+        bool changed = false;
+        auto list = std::get<EntityList>(m_this);
+
+        EntityList revised;
+        for (const auto &o : other)
+        {
+          if (const auto &id = o->getIdentity(); !std::holds_alternative<std::monostate>(id))
+          {
+            auto it = boost::find_if(list, [&id](auto &e) { return e->getIdentity() == id; });
+
+            if (it != list.end())
+            {
+              if ((*it)->reviseTo(o, m_protect))
+                changed = true;
+              revised.push_back(*it);
+              list.erase(it);
+            }
+          }
+          else
+          {
+            auto it = boost::find_if(list, [&o](auto &e) { return *(o.get()) == *(e.get()); });
+
+            if (it != list.end())
+            {
+              revised.push_back(*it);
+              list.erase(it);
+            }
+            else
+            {
+              revised.push_back(o);
+              changed = true;
+            }
+          }
+        }
+
+        if (!list.empty())
+        {
+          changed = mergeRemainder(list, revised, changed);
+        }
+
+        if (changed)
+          m_this = revised;
+
+        return changed;
+      }
+
+      template <class T>
+      bool operator()(const T &other)
+      {
+        if (std::get<T>(m_this) != other)
+        {
+          m_this = other;
+          return true;
+        }
+        else
+        {
+          return false;
+        }
+      }
+
+    private:
+      Value &m_this;
+      std::set<std::string> m_protect;
+    };
+
+    inline bool Entity::reviseTo(const EntityPtr other, const std::set<std::string> protect)
+    {
+      bool changed = false;
+      if (m_name != other->m_name)
+      {
+        m_name = other->m_name;
+        changed = true;
+      }
+
+      std::vector<PropertyKey> removed;
+      for (auto &[key, value] : m_properties)
+      {
+        auto op = other->m_properties.find(key);
+        if (op != other->m_properties.end())
+        {
+          if (value.index() != op->second.index())
+          {
+            value = op->second;
+            changed = true;
+          }
+          else
+          {
+            if (std::visit(ValueMergeVisitor(value, protect), op->second))
+              changed = true;
+          }
+        }
+        else
+        {
+          removed.push_back(key);
+          changed = true;
+        }
+      }
+
+      return changed;
+    }
   }  // namespace entity
 }  // namespace mtconnect

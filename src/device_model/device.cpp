@@ -116,6 +116,8 @@ namespace mtconnect {
         m_assetChanged = dataItem;
       else if (dataItem->getType() == "ASSET_REMOVED")
         m_assetRemoved = dataItem;
+      else if (dataItem->getType() == "ASSET_COUNT")
+        m_assetCount = dataItem;
     }
 
     DataItemPtr Device::getDeviceDataItem(const std::string &name) const

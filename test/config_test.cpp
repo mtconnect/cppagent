@@ -40,6 +40,7 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::configuration;
 namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace {
   class ConfigTest : public testing::Test
@@ -974,4 +975,357 @@ logger_config {
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
   }
 
+  TEST_F(ConfigTest, should_reload_device_xml_file)
+  {
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_1");
+    if (!fs::exists(root))
+      fs::create_directory(root);
+    chdir(root.string().c_str());
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+MonitorConfigFiles = true
+MonitorInterval = 1
+MonitorDelay = 1
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
+                  fs::copy_options::overwrite_existing);
+    auto t = fs::last_write_time(devices);
+    fs::last_write_time(devices, t - 60min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &context = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto chg = printer->getModelChangeTime();
+    auto device = agent->getDeviceByName("LinuxCNC");
+
+    auto dataItem = device->getDeviceDataItem("c1");
+    ASSERT_TRUE(dataItem);
+    ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
+
+    DataItemPtr di;
+
+    boost::asio::steady_timer timer1(context.getContext());
+    timer1.expires_from_now(1s);
+    timer1.async_wait([this, &devices, &di, agent](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        di = agent->getDataItemById("c1");
+        EXPECT_TRUE(di);
+        EXPECT_EQ("SPINDLE_SPEED", di->getType());
+
+        // Modify devices
+        ifstream is {devices.string(), ios::binary | ios::ate};
+        auto size = is.tellg();
+        string str(size, '\0');  // construct string to stream size
+        is.seekg(0);
+        is.read(&str[0], size);
+
+        auto pos = str.find("SPINDLE_SPEED");
+        EXPECT_NE(string::npos, pos);
+
+        str.replace(pos, 13, "ROTARY_VELOCITY");
+        is.close();
+
+        ofstream os(devices.string());
+        os << str;
+      }
+    });
+
+    boost::asio::steady_timer timer2(context.getContext());
+    timer2.expires_from_now(6s);
+    timer2.async_wait([this, agent, &di, &chg](boost::system::error_code ec) {
+      if (!ec)
+      {
+        auto device = agent->getDeviceByName("LinuxCNC");
+        auto dataItem = agent->getDataItemById("c1");
+        EXPECT_EQ("ROTARY_VELOCITY", dataItem->getType());
+
+        dataItem = agent->getDataItemById("c1");
+        EXPECT_TRUE(dataItem);
+        EXPECT_EQ("ROTARY_VELOCITY", dataItem->getType());
+
+        EXPECT_EQ(di.get(), dataItem.get());
+
+        auto agent = m_config->getAgent();
+        const auto &printer = agent->getPrinter("xml");
+        EXPECT_NE(nullptr, printer);
+        EXPECT_NE(chg, printer->getModelChangeTime());
+      }
+      m_config->stop();
+    });
+
+    m_config->start();
+  }
+
+  TEST_F(ConfigTest, should_reload_device_xml_and_skip_unchanged_devices)
+  {
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_2");
+    if (!fs::exists(root))
+      fs::create_directory(root);
+    chdir(root.string().c_str());
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+MonitorConfigFiles = true
+MonitorInterval = 1
+MonitorDelay = 1
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
+                  fs::copy_options::overwrite_existing);
+    auto t = fs::last_write_time(devices);
+    fs::last_write_time(devices, t - 1min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &context = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto chg = printer->getModelChangeTime();
+    auto device = agent->getDeviceByName("LinuxCNC");
+
+    auto dataItem = device->getDeviceDataItem("c1");
+    ASSERT_TRUE(dataItem);
+    ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
+
+    boost::asio::steady_timer timer1(context.getContext());
+    timer1.expires_from_now(1s);
+    timer1.async_wait([this, &devices](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        fs::last_write_time(devices, fs::file_time_type::clock::now());
+      }
+    });
+
+    boost::asio::steady_timer timer2(context.getContext());
+    timer2.expires_from_now(6s);
+    timer2.async_wait([this, &chg](boost::system::error_code ec) {
+      if (!ec)
+      {
+        auto agent = m_config->getAgent();
+        const auto &printer = agent->getPrinter("xml");
+        EXPECT_NE(nullptr, printer);
+        EXPECT_EQ(chg, printer->getModelChangeTime());
+      }
+      m_config->stop();
+    });
+
+    m_config->start();
+  }
+
+  TEST_F(ConfigTest, should_restart_agent_when_config_file_changes)
+  {
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_3");
+    if (!fs::exists(root))
+      fs::create_directory(root);
+    chdir(root.string().c_str());
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+    auto &context = m_config->getAsyncContext();
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+MonitorConfigFiles = true
+MonitorInterval = 1
+MonitorDelay = 1
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
+                  fs::copy_options::overwrite_existing);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    auto t = fs::last_write_time(config);
+    fs::last_write_time(config, t - 1min);
+
+    m_config->initialize(options);
+
+    auto agent = m_config->getAgent();
+    const auto sink = agent->findSink("RestService");
+    ASSERT_TRUE(sink);
+    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+
+    auto instance = rest->instanceId();
+
+    boost::asio::steady_timer timer1(context.getContext());
+    timer1.expires_from_now(1s);
+    timer1.async_wait([this, &config](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        fs::last_write_time(config, fs::file_time_type::clock::now());
+      }
+    });
+
+    auto th = thread([this, agent, instance, &context]() {
+      this_thread::sleep_for(5s);
+
+      boost::asio::steady_timer timer1(context.getContext());
+      timer1.expires_from_now(1s);
+      timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
+        if (!ec)
+        {
+          auto agent2 = m_config->getAgent();
+          const auto sink = agent2->findSink("RestService");
+          EXPECT_TRUE(sink);
+          const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+          EXPECT_TRUE(rest);
+
+          EXPECT_NE(agent, agent2);
+          EXPECT_NE(instance, rest->instanceId());
+        }
+      });
+      m_config->stop();
+    });
+
+    m_config->start();
+    th.join();
+  }
+
+  TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices)
+  {
+    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_4");
+    if (!fs::exists(root))
+      fs::create_directory(root);
+    chdir(root.string().c_str());
+    m_config->updateWorkingDirectory();
+    m_config->setDebug(false);
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+MonitorConfigFiles = true
+MonitorInterval = 1
+MonitorDelay = 1
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
+                  fs::copy_options::overwrite_existing);
+    auto t = fs::last_write_time(devices);
+    fs::last_write_time(devices, t - 1min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &context = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto chg = printer->getModelChangeTime();
+    auto device = agent->getDeviceByName("LinuxCNC");
+
+    auto dataItem = device->getDeviceDataItem("c1");
+    ASSERT_TRUE(dataItem);
+    ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
+
+    DataItemPtr di;
+
+    boost::asio::steady_timer timer1(context.getContext());
+    timer1.expires_from_now(1s);
+    timer1.async_wait([this, &devices](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config2.xml", devices,
+                      fs::copy_options::overwrite_existing);
+      }
+    });
+
+    boost::asio::steady_timer timer2(context.getContext());
+    timer2.expires_from_now(6s);
+    timer2.async_wait([this](boost::system::error_code ec) {
+      if (!ec)
+      {
+        auto agent = m_config->getAgent();
+        auto devices = agent->getDevices();
+        EXPECT_EQ(3, devices.size());
+
+        auto last = devices.back();
+        EXPECT_TRUE(last);
+        EXPECT_EQ("001", last->getUuid());
+
+        auto dis = last->getDeviceDataItems();
+        EXPECT_EQ(5, dis.size());
+
+        EXPECT_TRUE(last->getDeviceDataItem("xd1"));
+        EXPECT_TRUE(last->getDeviceDataItem("xex"));
+        EXPECT_TRUE(last->getDeviceDataItem("o1_asset_chg"));
+        EXPECT_TRUE(last->getDeviceDataItem("o1_asset_rem"));
+        EXPECT_TRUE(last->getDeviceDataItem("o1_asset_count"));
+
+        EXPECT_TRUE(agent->getDataItemById("xd1"));
+        EXPECT_TRUE(agent->getDataItemById("xex"));
+        EXPECT_TRUE(agent->getDataItemById("o1_asset_rem"));
+        EXPECT_TRUE(agent->getDataItemById("o1_asset_chg"));
+        EXPECT_TRUE(agent->getDataItemById("o1_asset_count"));
+      }
+      m_config->stop();
+    });
+
+    m_config->start();
+  }
 }  // namespace

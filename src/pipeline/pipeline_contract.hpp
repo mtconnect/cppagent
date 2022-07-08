@@ -59,6 +59,7 @@ namespace mtconnect {
       virtual void eachDataItem(EachDataItem fun) = 0;
       virtual void deliverObservation(observation::ObservationPtr) = 0;
       virtual void deliverAsset(asset::AssetPtr) = 0;
+      virtual void deliverDevice(DevicePtr device) = 0;
       virtual void deliverAssetCommand(entity::EntityPtr) = 0;
       virtual void deliverCommand(entity::EntityPtr) = 0;
       virtual void deliverConnectStatus(entity::EntityPtr, const StringList &devices,

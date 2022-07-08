@@ -66,7 +66,7 @@ namespace mtconnect {
   {
   public:
     // Load agent with the xml configuration
-    Agent(boost::asio::io_context &context, const std::string &configXmlPath,
+    Agent(boost::asio::io_context &context, const std::string &deviceXmlPath,
           const ConfigOptions &options);
 
     // Virtual destructor
@@ -138,6 +138,7 @@ namespace mtconnect {
     // Add the a device from a configuration file
     void addDevice(DevicePtr device);
     void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
+    void reloadDevices(const std::string &deviceFile);
 
     // Message when adapter has connected and disconnected
     void connecting(const std::string &adapter);
@@ -167,6 +168,7 @@ namespace mtconnect {
     // Pipeline methods
     void receiveObservation(observation::ObservationPtr observation);
     void receiveAsset(asset::AssetPtr asset);
+    bool receiveDevice(device_model::DevicePtr device, bool version = true);
     bool removeAsset(DevicePtr device, const std::string &id,
                      const std::optional<Timestamp> time = std::nullopt);
     bool removeAllAssets(const std::optional<std::string> device,
@@ -204,6 +206,7 @@ namespace mtconnect {
     void verifyDevice(DevicePtr device);
     void initializeDataItems(DevicePtr device);
     void loadCachedProbe();
+    void versionDeviceXml();
 
     observation::ObservationPtr getLatest(const std::string &id)
     {
@@ -253,7 +256,8 @@ namespace mtconnect {
 
     // Xml Config
     std::string m_version;
-    std::string m_configXmlPath;
+    std::string m_deviceXmlPath;
+    bool m_versionDeviceXml = false;
 
     // For debugging
     bool m_pretty;
@@ -294,6 +298,7 @@ namespace mtconnect {
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
     void deliverCommand(entity::EntityPtr) override;
+    void deliverDevice(DevicePtr device) override { m_agent->receiveDevice(device); }
 
     void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
 

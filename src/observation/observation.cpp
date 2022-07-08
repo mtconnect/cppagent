@@ -308,7 +308,12 @@ namespace mtconnect {
       {
         factory = make_shared<Factory>(*Event::getFactory());
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-          return make_shared<AssetEvent>(name, props);
+          auto ent = make_shared<AssetEvent>(name, props);
+          if (!ent->hasProperty("assetType") && !ent->hasValue())
+          {
+            ent->setProperty("assetType", "UNAVAILABLE"s);
+          }
+          return ent;
         });
         factory->addRequirements(Requirements({{"assetType", false}}));
       }

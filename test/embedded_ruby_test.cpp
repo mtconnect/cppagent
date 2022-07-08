@@ -81,6 +81,7 @@ namespace {
     void eachDataItem(EachDataItem fun) override {}
     void deliverObservation(observation::ObservationPtr obs) override { m_observation = obs; }
     void deliverAsset(AssetPtr a) override { m_asset = a; }
+    void deliverDevice(DevicePtr) override {}
     void deliverAssetCommand(entity::EntityPtr c) override { m_command = c; }
     void deliverCommand(entity::EntityPtr c) override { m_command = c; }
     void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
