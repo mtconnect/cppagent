@@ -78,9 +78,14 @@ namespace mtconnect {
             Sample::getFactory());
         factory->registerFactory(
             [](const std::string &name) {
-              return starts_with(name, "Events:") && ends_with(name, ":UNITS");
+              return starts_with(name, "Events:") && ends_with(name, ":DOUBLE");
             },
-            NumericEvent::getFactory());
+            DoubleEvent::getFactory());
+        factory->registerFactory(
+            [](const std::string &name) {
+              return starts_with(name, "Events:") && ends_with(name, ":INT");
+            },
+            IntEvent::getFactory());
         factory->registerFactory(
             [](const std::string &name) { return starts_with(name, "Events:"); },
             Event::getFactory());
@@ -221,19 +226,36 @@ namespace mtconnect {
       return factory;
     }
 
-    FactoryPtr NumericEvent::getFactory()
+    FactoryPtr DoubleEvent::getFactory()
     {
       static FactoryPtr factory;
       if (!factory)
       {
         factory = make_shared<Factory>(*Observation::getFactory());
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-          return make_shared<NumericEvent>(name, props);
+          return make_shared<DoubleEvent>(name, props);
         });
         factory->addRequirements(Requirements({{"resetTriggered", USTRING, false},
                                                {"statistic", USTRING, false},
                                                {"duration", DOUBLE, false},
                                                {"VALUE", DOUBLE, false}}));
+      }
+      return factory;
+    }
+
+    FactoryPtr IntEvent::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Observation::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<IntEvent>(name, props);
+        });
+        factory->addRequirements(Requirements({{"resetTriggered", USTRING, false},
+                                               {"statistic", USTRING, false},
+                                               {"duration", DOUBLE, false},
+                                               {"VALUE", INTEGER, false}}));
       }
       return factory;
     }

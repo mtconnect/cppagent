@@ -252,7 +252,47 @@ TEST_F(ObservationTest, shoud_handle_asset_type)
   ASSERT_EQ("UNAVAILABLE"s, event2->get<string>("assetType"));
 }
 
-TEST_F(ObservationTest, should_treat_events_with_units_as_numeric)
+TEST_F(ObservationTest, should_treat_events_with_non_count_units_as_doubles)
+{
+  ErrorList errors;
+  auto dataItem = DataItem::make(
+      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "FEEDRATE_OVERRIDE"s}, {"units", "PERCENT"s}}, errors);
+
+  auto event = Observation::make(dataItem, {{"VALUE", "123"s}}, m_time, errors);
+
+  ASSERT_TRUE(dynamic_pointer_cast<DoubleEvent>(event));
+  ASSERT_EQ(0, errors.size());
+
+  auto &value = event->getValue();
+  ASSERT_TRUE(holds_alternative<double>(value));
+  ASSERT_EQ(123.0, get<double>(value));
+
+  printer::XmlWriter writer(true);
+  entity::XmlPrinter printer;
+
+  printer.print((xmlTextWriterPtr)writer, event, {});
+
+  auto expected = string {
+      R"DOC(<FeedrateOverride dataItemId="x" timestamp="2021-01-19T10:01:00Z">123</FeedrateOverride>
+)DOC"};
+
+  ASSERT_EQ(expected, writer.getContent());
+
+  entity::JsonPrinter jprinter;
+  json jdoc;
+  jdoc = jprinter.print(event);
+
+  ASSERT_EQ(123.0, jdoc.at("/FeedrateOverride/value"_json_pointer).get<double>());
+
+  stringstream buffer;
+  buffer << jdoc;
+
+  ASSERT_EQ(
+      R"DOC({"FeedrateOverride":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":123.0}})DOC",
+      buffer.str());
+}
+
+TEST_F(ObservationTest, should_treat_events_with_count_as_integer)
 {
   ErrorList errors;
   auto dataItem = DataItem::make(
@@ -260,12 +300,12 @@ TEST_F(ObservationTest, should_treat_events_with_units_as_numeric)
 
   auto event = Observation::make(dataItem, {{"VALUE", "123"s}}, m_time, errors);
 
-  ASSERT_TRUE(dynamic_pointer_cast<NumericEvent>(event));
+  ASSERT_TRUE(dynamic_pointer_cast<IntEvent>(event));
   ASSERT_EQ(0, errors.size());
 
   auto &value = event->getValue();
-  ASSERT_TRUE(holds_alternative<double>(value));
-  ASSERT_EQ(123.0, get<double>(value));
+  ASSERT_TRUE(holds_alternative<int64_t>(value));
+  ASSERT_EQ(123.0, get<int64_t>(value));
 
   printer::XmlWriter writer(true);
   entity::XmlPrinter printer;
@@ -288,6 +328,6 @@ TEST_F(ObservationTest, should_treat_events_with_units_as_numeric)
   buffer << jdoc;
 
   ASSERT_EQ(
-      R"DOC({"PartCount":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":123.0}})DOC",
+      R"DOC({"PartCount":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":123}})DOC",
       buffer.str());
 }

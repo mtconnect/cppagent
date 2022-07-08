@@ -281,15 +281,26 @@ namespace mtconnect {
       ObservationPtr copy() const override { return std::make_shared<Event>(*this); }
     };
 
-    class NumericEvent : public Observation
+    class DoubleEvent : public Observation
     {
     public:
       using super = Observation;
 
       using Observation::Observation;
       static entity::FactoryPtr getFactory();
-      ~NumericEvent() override = default;
-      ObservationPtr copy() const override { return std::make_shared<NumericEvent>(*this); }
+      ~DoubleEvent() override = default;
+      ObservationPtr copy() const override { return std::make_shared<DoubleEvent>(*this); }
+    };
+
+    class IntEvent : public Observation
+    {
+    public:
+      using super = Observation;
+
+      using Observation::Observation;
+      static entity::FactoryPtr getFactory();
+      ~IntEvent() override = default;
+      ObservationPtr copy() const override { return std::make_shared<IntEvent>(*this); }
     };
 
     class DataSetEvent : public Event
