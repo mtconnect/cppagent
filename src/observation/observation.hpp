@@ -281,6 +281,17 @@ namespace mtconnect {
       ObservationPtr copy() const override { return std::make_shared<Event>(*this); }
     };
 
+    class NumericEvent : public Observation
+    {
+    public:
+      using super = Observation;
+
+      using Observation::Observation;
+      static entity::FactoryPtr getFactory();
+      ~NumericEvent() override = default;
+      ObservationPtr copy() const override { return std::make_shared<NumericEvent>(*this); }
+    };
+
     class DataSetEvent : public Event
     {
     public:
@@ -290,7 +301,7 @@ namespace mtconnect {
       static entity::FactoryPtr getFactory();
       ~DataSetEvent() override = default;
       ObservationPtr copy() const override { return std::make_shared<DataSetEvent>(*this); }
-      
+
       void makeUnavailable() override
       {
         super::makeUnavailable();

@@ -2260,7 +2260,6 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
   }
 }
 
-
 TEST_F(AgentTest, AssetPrependId)
 {
   addAdapter();
@@ -2693,8 +2692,6 @@ TEST_F(AgentTest, shound_add_asset_count_when_20)
   }
 }
 
-
-
 TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
@@ -2741,7 +2738,7 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
     PARSE_XML_RESPONSE("/LinuxCNC/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
   }
-  
+
   string body2 = "<PartThing assetId='P2'>TEST 2</PartThing>";
   queries["type"] = "PartThing";
 
@@ -2755,7 +2752,7 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='PartThing']", "1");
   }
-  
+
   {
     PARSE_XML_RESPONSE_PUT("/asset/P3", body2, queries);
     ASSERT_EQ(3u, storage->getCount());
@@ -2765,7 +2762,7 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='PartThing']", "2");
   }
-  
+
   body2 = "<PartThing assetId='P3' removed='true'>TEST 2</PartThing>";
 
   {
@@ -2777,5 +2774,4 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='PartThing']", "1");
   }
-
 }

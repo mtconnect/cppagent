@@ -620,7 +620,7 @@ namespace mtconnect::printer {
         mtcLocation = xmlns + " " + ns.second.mSchemaLocation;
       }
     }
-    
+
     // Write the schema location
     if (location.empty() && !mtcLocation.empty())
       location = mtcLocation;
@@ -650,7 +650,7 @@ namespace mtconnect::printer {
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
             AGENT_VERSION_BUILD);
     addAttribute(writer, "version", version);
-    
+
     int major, minor;
     char c;
     stringstream v(m_schemaVersion);

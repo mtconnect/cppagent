@@ -22,8 +22,8 @@
 #include <iostream>
 
 #include <libxml/tree.h>
-#include <libxml/xpathInternals.h>
 #include <libxml/xmlwriter.h>
+#include <libxml/xpathInternals.h>
 
 #include "test_utilities.hpp"
 
@@ -131,14 +131,15 @@ void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std
     int size;
     xmlChar *memory;
     xmlDocDumpFormatMemory(doc, &memory, &size, 1);
-    
+
     stringstream message;
     message << file << "(" << line << "): "
-      << "Xpath " << xpath << " did not match any nodes in XML document" << endl << ((const char *) memory);
+            << "Xpath " << xpath << " did not match any nodes in XML document" << endl
+            << ((const char *)memory);
     xmlFree(memory);
-    
+
     FAIL() << message.str();
-    
+
     if (obj)
       xmlXPathFreeObject(obj);
 

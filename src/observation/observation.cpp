@@ -77,6 +77,11 @@ namespace mtconnect {
             [](const std::string &name) { return starts_with(name, "Samples:"); },
             Sample::getFactory());
         factory->registerFactory(
+            [](const std::string &name) {
+              return starts_with(name, "Events:") && ends_with(name, ":UNITS");
+            },
+            NumericEvent::getFactory());
+        factory->registerFactory(
             [](const std::string &name) { return starts_with(name, "Events:"); },
             Event::getFactory());
       }
@@ -129,6 +134,8 @@ namespace mtconnect {
       string key = string(dataItem->getCategoryText()) + ":" + dataItem->getObservationName();
       if (dataItem->isThreeSpace())
         key += ":3D";
+      else if (dataItem->isEvent() && dataItem->hasProperty("units"))
+        key += ":UNITS";
 
       auto ent = getFactory()->create(key, props, errors);
       if (!ent)
@@ -216,6 +223,23 @@ namespace mtconnect {
         factory->addRequirements(Requirements {{"VALUE", TABLE, false}});
       }
 
+      return factory;
+    }
+
+    FactoryPtr NumericEvent::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Observation::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<NumericEvent>(name, props);
+        });
+        factory->addRequirements(Requirements({{"resetTriggered", USTRING, false},
+                                               {"statistic", USTRING, false},
+                                               {"duration", DOUBLE, false},
+                                               {"VALUE", DOUBLE, false}}));
+      }
       return factory;
     }
 
