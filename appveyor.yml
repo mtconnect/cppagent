@@ -36,9 +36,9 @@ init:
   - cmd: |-
       echo %APPVEYOR_BUILD_WORKER_IMAGE%
       echo %MSBUILD_FLAGS%
+  - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
 
 #  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))  
- - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
 
 before_build:
   - cmd: |-
