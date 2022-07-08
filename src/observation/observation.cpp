@@ -131,13 +131,8 @@ namespace mtconnect {
           unavailable = true;
         }
       }
-      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getObservationName();
-      if (dataItem->isThreeSpace())
-        key += ":3D";
-      else if (dataItem->isEvent() && dataItem->hasProperty("units"))
-        key += ":UNITS";
 
-      auto ent = getFactory()->create(key, props, errors);
+      auto ent = getFactory()->create(dataItem->getKey(), props, errors);
       if (!ent)
       {
         LOG(warning) << "Could not parse properties for data item: " << dataItem->getId();

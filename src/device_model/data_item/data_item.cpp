@@ -221,6 +221,12 @@ namespace mtconnect {
           m_converter = make_unique<UnitConversion>();
         m_converter->scale(get<double>("nativeScale"));
       }
+
+      m_key = string(m_categoryText) + ":" + m_observationName;
+      if (m_specialClass == THREE_SPACE_CLS)
+        m_key += ":3D";
+      else if (m_category == EVENT && hasProperty("units"))
+        m_key += ":UNITS";
     }
 
     bool DataItem::hasName(const string &name) const
