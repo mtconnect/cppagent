@@ -256,7 +256,7 @@ TEST_F(ObservationTest, should_treat_events_with_units_as_numeric)
 {
   ErrorList errors;
   auto dataItem = DataItem::make(
-      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "PART_COUNT"s}, {"units"s, "COUNT"}}, errors);
+      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "PART_COUNT"s}, {"units", "COUNT"s}}, errors);
 
   auto event = Observation::make(dataItem, {{"VALUE", "123"s}}, m_time, errors);
 
