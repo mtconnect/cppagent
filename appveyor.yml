@@ -53,7 +53,7 @@ before_build:
       conan export conan/mruby
       conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False -o with_ruby=%WITH_RUBY%
   - sh: |-
-      export PATH=$HOME/venv3.9/bin:$PATH
+      export PATH=$HOME/venv3.10/bin:$PATH
       if [[ $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
       then
         export CONAN_PROFILE=conan/profiles/gcc-appveyor
