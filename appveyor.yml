@@ -7,9 +7,9 @@ branches:
 
 
 image:
+  - Ubuntu2004
   - Visual Studio 2019
   - macOS
-  - Ubuntu2004
 
 environment:
   matrix:
@@ -38,7 +38,7 @@ init:
       echo %MSBUILD_FLAGS%
 
 #  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))  
-# - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
+ - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
 
 before_build:
   - cmd: |-
