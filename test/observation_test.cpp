@@ -22,13 +22,13 @@
 #include <list>
 
 #include "device_model/data_item/data_item.hpp"
+#include "entity/json_printer.hpp"
 #include "entity/xml_parser.hpp"
 #include "entity/xml_printer.hpp"
 #include "observation/observation.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "printer/xml_printer_helper.hpp"
 #include "test_utilities.hpp"
-#include "entity/json_printer.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -269,8 +269,8 @@ TEST_F(ObservationTest, should_treat_events_with_units_as_numeric)
 
   printer::XmlWriter writer(true);
   entity::XmlPrinter printer;
-  
-  printer.print((xmlTextWriterPtr) writer, event, {});
+
+  printer.print((xmlTextWriterPtr)writer, event, {});
 
   auto expected = string {
       R"DOC(<PartCount dataItemId="x" timestamp="2021-01-19T10:01:00Z">123</PartCount>
@@ -283,9 +283,11 @@ TEST_F(ObservationTest, should_treat_events_with_units_as_numeric)
   jdoc = jprinter.print(event);
 
   ASSERT_EQ(123.0, jdoc.at("/PartCount/value"_json_pointer).get<double>());
-  
+
   stringstream buffer;
   buffer << jdoc;
-  
-  ASSERT_EQ(R"DOC({"PartCount":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":123.0}})DOC", buffer.str());
+
+  ASSERT_EQ(
+      R"DOC({"PartCount":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":123.0}})DOC",
+      buffer.str());
 }
