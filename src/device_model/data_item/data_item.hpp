@@ -96,6 +96,7 @@ namespace mtconnect {
         const auto &getMinimumDelta() const { return m_minimumDelta; }
         const auto &getMinimumPeriod() const { return m_minimumPeriod; }
         bool hasName(const std::string &name) const;
+        const auto &getKey() const { return m_key; }
 
         const auto &getType() { return get<std::string>("type"); }
         const auto &getSubType() { return get<std::string>("subType"); }
@@ -165,6 +166,7 @@ namespace mtconnect {
         std::optional<std::string> m_constantValue;
         std::optional<double> m_minimumDelta;
         std::optional<double> m_minimumPeriod;
+        std::string m_key;
 
         // Category of data item
         ECategory m_category;
