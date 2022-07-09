@@ -22,8 +22,12 @@
 #include <list>
 
 #include "device_model/data_item/data_item.hpp"
+#include "entity/json_printer.hpp"
+#include "entity/xml_parser.hpp"
+#include "entity/xml_printer.hpp"
 #include "observation/observation.hpp"
 #include "pipeline/convert_sample.hpp"
+#include "printer/xml_printer_helper.hpp"
 #include "test_utilities.hpp"
 
 using namespace std;
@@ -248,135 +252,82 @@ TEST_F(ObservationTest, shoud_handle_asset_type)
   ASSERT_EQ("UNAVAILABLE"s, event2->get<string>("assetType"));
 }
 
-// TODO: Make sure these tests are covered someplace else. Refactoring
-//       Moved this functionality outside the observation.
-
-#if 0
-TEST_F(ObservationTest, Condition)
+TEST_F(ObservationTest, should_treat_events_with_non_count_units_as_doubles)
 {
-  DataItem d({{"id", "c1"}, {"category", "CONDITION"},
-    {"type","TEMPERATURE"}, {"name", "DataItemTest1"}
-  });
+  ErrorList errors;
+  auto dataItem = DataItem::make(
+      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "FEEDRATE_OVERRIDE"s}, {"units", "PERCENT"s}}, errors);
 
-  ObservationPtr event1(new Observation(*d, time, (string) "FAULT|4321|1|HIGH|Overtemp", 123),
-                        true);
+  auto event = Observation::make(dataItem, {{"VALUE", "123.555"s}}, m_time, errors);
 
-  ASSERT_EQ(Observation::FAULT, event1->getLevel());
-  ASSERT_EQ((string) "Overtemp", event1->getValue());
+  ASSERT_TRUE(dynamic_pointer_cast<DoubleEvent>(event));
+  ASSERT_EQ(0, errors.size());
 
-  const auto &attr_list1 = event1->getAttributes();
-  map<string, string> attrs1;
+  auto &value = event->getValue();
+  ASSERT_TRUE(holds_alternative<double>(value));
+  ASSERT_EQ(123.555, get<double>(value));
 
-  for (const auto &attr : attr_list1)
-    attrs1[attr.first] = attr.second;
+  printer::XmlWriter writer(true);
+  entity::XmlPrinter printer;
 
-  ASSERT_EQ((string) "TEMPERATURE", attrs1["type"]);
-  ASSERT_EQ((string) "123", attrs1["sequence"]);
-  ASSERT_EQ((string) "4321", attrs1["nativeCode"]);
-  ASSERT_EQ((string) "HIGH", attrs1["qualifier"]);
-  ASSERT_EQ((string) "1", attrs1["nativeSeverity"]);
-  ASSERT_EQ((string) "Fault", event1->getLevelString());
+  printer.print((xmlTextWriterPtr)writer, event, {});
 
-  ObservationPtr event2(new Observation(*d, time, (string) "fault|4322|2|LOW|Overtemp", 123), true);
+  auto expected = string {
+      R"DOC(<FeedrateOverride dataItemId="x" timestamp="2021-01-19T10:01:00Z">123.555</FeedrateOverride>
+)DOC"};
 
-  ASSERT_EQ(Observation::FAULT, event2->getLevel());
-  ASSERT_EQ((string) "Overtemp", event2->getValue());
+  ASSERT_EQ(expected, writer.getContent());
 
-  const auto &attr_list2 = event2->getAttributes();
-  map<string, string> attrs2;
+  entity::JsonPrinter jprinter;
+  json jdoc;
+  jdoc = jprinter.print(event);
 
-  for (const auto &attr : attr_list2)
-    attrs2[attr.first] = attr.second;
+  ASSERT_EQ(123.555, jdoc.at("/FeedrateOverride/value"_json_pointer).get<double>());
 
-  ASSERT_EQ((string) "TEMPERATURE", attrs2["type"]);
-  ASSERT_EQ((string) "123", attrs2["sequence"]);
-  ASSERT_EQ((string) "4322", attrs2["nativeCode"]);
-  ASSERT_EQ((string) "LOW", attrs2["qualifier"]);
-  ASSERT_EQ((string) "2", attrs2["nativeSeverity"]);
-  ASSERT_EQ((string) "Fault", event2->getLevelString());
+  stringstream buffer;
+  buffer << jdoc;
 
-  d.reset();
+  ASSERT_EQ(
+      R"DOC({"FeedrateOverride":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":123.555}})DOC",
+      buffer.str());
 }
 
-TEST_F(ObservationTest, TimeSeries)
+TEST_F(ObservationTest, should_treat_events_with_count_as_integer)
 {
-  string time("NOW");
-  std::map<string, string> attributes1;
-  attributes1["id"] = "1";
-  attributes1["name"] = "test";
-  attributes1["type"] = "TEMPERATURE";
-  attributes1["category"] = "SAMPLE";
-  attributes1["representation"] = "TIME_SERIES";
-  auto d = make_unique<DataItem>(attributes1);
+  ErrorList errors;
+  auto dataItem = DataItem::make(
+      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "PART_COUNT"s}, {"units", "COUNT"s}}, errors);
 
-  ASSERT_TRUE(d->isTimeSeries());
+  auto event = Observation::make(dataItem, {{"VALUE", "123"s}}, m_time, errors);
 
-  ObservationPtr event1(new Observation(*d, time, (string) "6||1 2 3 4 5 6 ", 123), true);
-  const auto &attr_list1 = event1->getAttributes();
-  map<string, string> attrs1;
+  ASSERT_TRUE(dynamic_pointer_cast<IntEvent>(event));
+  ASSERT_EQ(0, errors.size());
 
-  for (const auto &attr : attr_list1)
-    attrs1[attr.first] = attr.second;
+  auto &value = event->getValue();
+  ASSERT_TRUE(holds_alternative<int64_t>(value));
+  ASSERT_EQ(123.0, get<int64_t>(value));
 
-  ASSERT_TRUE(event1->isTimeSeries());
+  printer::XmlWriter writer(true);
+  entity::XmlPrinter printer;
 
-  ASSERT_EQ(6, event1->getSampleCount());
-  auto values = event1->getTimeSeries();
+  printer.print((xmlTextWriterPtr)writer, event, {});
 
-  for (auto i = 0; i < event1->getSampleCount(); i++)
-  {
-    ASSERT_EQ((float)(i + 1), values[i]);
-  }
+  auto expected = string {
+      R"DOC(<PartCount dataItemId="x" timestamp="2021-01-19T10:01:00Z">123</PartCount>
+)DOC"};
 
-  ASSERT_EQ((string) "", event1->getValue());
-  ASSERT_EQ(0, (int)attrs1.count("sampleRate"));
+  ASSERT_EQ(expected, writer.getContent());
 
-  ObservationPtr event2(new Observation(*d, time, (string) "7|42000|10 20 30 40 50 60 70 ", 123),
-                        true);
-  const auto &attr_list2 = event2->getAttributes();
-  map<string, string> attrs2;
+  entity::JsonPrinter jprinter;
+  json jdoc;
+  jdoc = jprinter.print(event);
 
-  for (const auto &attr : attr_list2)
-    attrs2[attr.first] = attr.second;
+  ASSERT_EQ(123.0, jdoc.at("/PartCount/value"_json_pointer).get<double>());
 
-  ASSERT_TRUE(event2->isTimeSeries());
+  stringstream buffer;
+  buffer << jdoc;
 
-  ASSERT_EQ(7, event2->getSampleCount());
-  ASSERT_EQ((string) "", event2->getValue());
-  ASSERT_EQ((string) "42000", attrs2["sampleRate"]);
-  values = event2->getTimeSeries();
-
-  for (auto i = 0; i < event1->getSampleCount(); i++)
-  {
-    ASSERT_EQ((float)((i + 1) * 10), values[i]);
-  }
-
-  d.reset();
+  ASSERT_EQ(
+      R"DOC({"PartCount":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":123}})DOC",
+      buffer.str());
 }
-
-TEST_F(ObservationTest, Duration)
-{
-  string time("2011-02-18T15:52:41Z@200.1232");
-  std::map<string, string> attributes1;
-  attributes1["id"] = "1";
-  attributes1["name"] = "test";
-  attributes1["type"] = "TEMPERATURE";
-  attributes1["category"] = "SAMPLE";
-  attributes1["statistic"] = "AVERAGE";
-  auto d = make_unique<DataItem>(attributes1);
-
-  ObservationPtr event1(new Observation(*d, time, (string) "11.0", 123), true);
-  const auto &attr_list = event1->getAttributes();
-  map<string, string> attrs1;
-
-  for (const auto &attr : attr_list)
-    attrs1[attr.first] = attr.second;
-
-  ASSERT_EQ((string) "AVERAGE", attrs1["statistic"]);
-  ASSERT_EQ((string) "2011-02-18T15:52:41Z", attrs1["timestamp"]);
-  ASSERT_EQ((string) "200.1232", attrs1["duration"]);
-
-  d.reset();
-}
-
-#endif

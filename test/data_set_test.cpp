@@ -351,9 +351,7 @@ TEST_F(DataSetTest, Current)
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']",
                           "UNAVAILABLE");
-    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']@count",
-                          "0");
-
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:VariableDataSet[@dataItemId='v1']@count", "0");
   }
 
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
