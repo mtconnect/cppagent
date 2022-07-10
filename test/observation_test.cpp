@@ -331,3 +331,55 @@ TEST_F(ObservationTest, should_treat_events_with_count_as_integer)
       R"DOC({"PartCount":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":123}})DOC",
       buffer.str());
 }
+
+TEST_F(ObservationTest, should_use_three_space_sample_for_3_space_events)
+{
+  ErrorList errors;
+  auto dataItem = DataItem::make(
+      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "WORKPIECE_OFFSET"s}, {"units", "MILLIMETER_3D"s}}, errors);
+
+  auto event = Observation::make(dataItem, {{"VALUE", "1.2 2.3 3.4"s}}, m_time, errors);
+
+  ASSERT_TRUE(dynamic_pointer_cast<ThreeSpaceSample>(event));
+  ASSERT_EQ(0, errors.size());
+
+  auto &value = event->getValue();
+  ASSERT_TRUE(holds_alternative<Vector>(value));
+  
+  auto &vector = get<Vector>(value);
+  ASSERT_EQ(3, vector.size());
+  ASSERT_EQ(1.2, vector[0]);
+  ASSERT_EQ(2.3, vector[1]);
+  ASSERT_EQ(3.4, vector[2]);
+
+  printer::XmlWriter writer(true);
+  entity::XmlPrinter printer;
+
+  printer.print((xmlTextWriterPtr)writer, event, {});
+
+  auto expected = string {
+      R"DOC(<WorkpieceOffset dataItemId="x" timestamp="2021-01-19T10:01:00Z">1.2 2.3 3.4</WorkpieceOffset>
+)DOC"};
+
+  ASSERT_EQ(expected, writer.getContent());
+
+  entity::JsonPrinter jprinter;
+  json jdoc;
+  jdoc = jprinter.print(event);
+
+  auto node = jdoc.at("/WorkpieceOffset/value"_json_pointer);
+  ASSERT_TRUE(node.is_array());
+  ASSERT_EQ(3, node.size());
+  
+  auto v = node.begin();
+  ASSERT_EQ(1.2, v->get<double>());
+  ASSERT_EQ(2.3, (++v)->get<double>());
+  ASSERT_EQ(3.4, (++v)->get<double>());
+    
+  stringstream buffer;
+  buffer << jdoc;
+
+  ASSERT_EQ(
+      R"DOC({"WorkpieceOffset":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":[1.2,2.3,3.4]}})DOC",
+      buffer.str());
+}
