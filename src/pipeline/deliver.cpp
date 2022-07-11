@@ -55,6 +55,7 @@ namespace mtconnect {
     {
       m_timer.cancel();
       m_first = true;
+      m_stopped = false;
 
       compute(boost::system::error_code());
     }
@@ -64,7 +65,7 @@ namespace mtconnect {
     {
       NAMED_SCOPE("pipeline.deliver");
 
-      if (!ec)
+      if (!ec && !m_stopped)
       {
         using namespace std;
         using namespace chrono;
@@ -116,7 +117,7 @@ namespace mtconnect {
         using boost::placeholders::_1;
         m_timer.expires_from_now(10s);
         m_timer.async_wait(
-            boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, this, _1)));
+            boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, ptr(), _1)));
       }
     }
 

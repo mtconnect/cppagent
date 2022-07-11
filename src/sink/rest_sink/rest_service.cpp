@@ -821,6 +821,13 @@ namespace mtconnect {
       using boost::placeholders::_1;
       using boost::placeholders::_2;
 
+      if (!m_server->isRunning())
+      {
+        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                       "Agent shutting down, aborting stream");
+        return;
+      }
+
       if (ec && ec != boost::asio::error::operation_aborted)
       {
         LOG(warning) << "Unexpected error streamNextSampleChunk, aborting";
@@ -962,6 +969,22 @@ namespace mtconnect {
                                         boost::system::error_code ec)
     {
       using boost::placeholders::_1;
+
+      if (!m_server->isRunning())
+      {
+        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                       "Agent shutting down, aborting stream");
+        return;
+      }
+
+      if (ec && ec != boost::asio::error::operation_aborted)
+      {
+        LOG(warning) << "Unexpected error streamNextCurrent, aborting";
+        LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
+        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                       "Unexpected error streamNextCurrent, aborting");
+        return;
+      }
 
       asyncResponse->m_session->writeChunk(
           fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt),

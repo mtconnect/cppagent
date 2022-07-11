@@ -97,7 +97,6 @@ class MRubyConan(ConanFile):
 
         self.user_info.mruby = 'ON'
 
-        self.cpp_info.libdirs = ["lib"]
         self.cpp_info.bindirs = ["bin"]
         if self.settings.os == 'Windows':
             self.cpp_info.libs = ["libmruby"]

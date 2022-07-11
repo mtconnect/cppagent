@@ -651,7 +651,12 @@ namespace mtconnect::printer {
             AGENT_VERSION_BUILD);
     addAttribute(writer, "version", version);
 
-    if (m_schemaVersion >= "1.7")
+    int major, minor;
+    char c;
+    stringstream v(m_schemaVersion);
+    v >> major >> c >> minor;
+
+    if (major > 1 || (major == 1 && minor >= 7))
     {
       addAttribute(writer, "deviceModelChangeTime", m_modelChangeTime);
     }
@@ -675,7 +680,7 @@ namespace mtconnect::printer {
       addAttribute(writer, "lastSequence", to_string(lastSeq));
     }
 
-    if (aType == eDEVICES && count && !count->empty())
+    if (major < 2 && aType == eDEVICES && count && !count->empty())
     {
       AutoElement ele(writer, "AssetCounts");
 

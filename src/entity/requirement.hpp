@@ -46,14 +46,8 @@ namespace mtconnect {
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
 
-    using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
-                               bool, Vector, DataSet, Timestamp, std::nullptr_t>;
-
-    class Factory;
-    using FactoryPtr = std::shared_ptr<Factory>;
-    using ControlledVocab = std::list<std::string>;
-    using Pattern = std::optional<std::regex>;
-    using VocabSet = std::optional<std::unordered_set<std::string>>;
+    using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t,
+                                      double, bool, Vector, DataSet, Timestamp, std::nullptr_t>;
 
     enum ValueType : int16_t
     {
@@ -72,6 +66,14 @@ namespace mtconnect {
       QSTRING = 0x20 | STRING,
       TABLE = 0x10 | DATA_SET
     };
+
+    const int16_t VALUE_TYPE_BASE = 0x0F;
+
+    class Factory;
+    using FactoryPtr = std::shared_ptr<Factory>;
+    using ControlledVocab = std::list<std::string>;
+    using Pattern = std::optional<std::regex>;
+    using VocabSet = std::optional<std::unordered_set<std::string>>;
 
     bool ConvertValueToType(Value &value, ValueType type, bool table = false);
 

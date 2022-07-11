@@ -42,6 +42,7 @@ set(AGENT_SOURCES
 # src/configuration HEADER_FILE_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/agent_config.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/async_context.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/config_options.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/parser.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/service.hpp"

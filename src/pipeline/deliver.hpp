@@ -27,7 +27,7 @@
 
 namespace mtconnect {
   namespace pipeline {
-    struct ComputeMetrics
+    struct ComputeMetrics : std::enable_shared_from_this<ComputeMetrics>
     {
       ComputeMetrics(boost::asio::io_context::strand &st, PipelineContract *contract,
                      const std::optional<std::string> &dataItem, std::shared_ptr<size_t> &count)
@@ -38,9 +38,15 @@ namespace mtconnect {
           m_timer(st.context())
       {}
 
+      std::shared_ptr<ComputeMetrics> ptr() { return shared_from_this(); }
+
       void compute(boost::system::error_code ec);
 
-      void stop() { m_timer.cancel(); }
+      void stop()
+      {
+        m_stopped = true;
+        m_timer.cancel();
+      }
 
       void start();
 
@@ -52,6 +58,7 @@ namespace mtconnect {
       boost::asio::io_context::strand &m_strand;
       boost::asio::steady_timer m_timer;
       bool m_first {true};
+      bool m_stopped {false};
       size_t m_last {0};
       double m_lastAvg {0.0};
     };

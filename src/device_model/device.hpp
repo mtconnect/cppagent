@@ -40,6 +40,11 @@ namespace mtconnect {
 
       void initialize() override
       {
+        m_deviceDataItemsById.clear();
+        m_deviceDataItemsByName.clear();
+        m_deviceDataItemsBySource.clear();
+        m_componentsById.clear();
+
         Component::initialize();
         buildDeviceMaps(getptr());
         resolveReferences(getptr());
@@ -83,6 +88,7 @@ namespace mtconnect {
       DataItemPtr getAvailability() const { return m_availability; }
       DataItemPtr getAssetChanged() const { return m_assetChanged; }
       DataItemPtr getAssetRemoved() const { return m_assetRemoved; }
+      DataItemPtr getAssetCount() const { return m_assetCount; }
 
       void setPreserveUuid(bool v) { m_preserveUuid = v; }
       bool preserveUuid() const { return m_preserveUuid; }
@@ -99,6 +105,7 @@ namespace mtconnect {
       DataItemPtr m_availability;
       DataItemPtr m_assetChanged;
       DataItemPtr m_assetRemoved;
+      DataItemPtr m_assetCount;
 
       // Mapping of device names to data items
       std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsByName;

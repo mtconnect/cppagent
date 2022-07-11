@@ -418,6 +418,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_assetSession)
       m_assetSession->stop();
     m_assetSession.reset();
+    m_pipeline.clear();
   }
 
   void AgentAdapter::assets()

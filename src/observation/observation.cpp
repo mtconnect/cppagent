@@ -77,6 +77,16 @@ namespace mtconnect {
             [](const std::string &name) { return starts_with(name, "Samples:"); },
             Sample::getFactory());
         factory->registerFactory(
+            [](const std::string &name) {
+              return starts_with(name, "Events:") && ends_with(name, ":DOUBLE");
+            },
+            DoubleEvent::getFactory());
+        factory->registerFactory(
+            [](const std::string &name) {
+              return starts_with(name, "Events:") && ends_with(name, ":INT");
+            },
+            IntEvent::getFactory());
+        factory->registerFactory(
             [](const std::string &name) { return starts_with(name, "Events:"); },
             Event::getFactory());
       }
@@ -126,11 +136,8 @@ namespace mtconnect {
           unavailable = true;
         }
       }
-      string key = string(dataItem->getCategoryText()) + ":" + dataItem->getObservationName();
-      if (dataItem->isThreeSpace())
-        key += ":3D";
 
-      auto ent = getFactory()->create(key, props, errors);
+      auto ent = getFactory()->create(dataItem->getKey(), props, errors);
       if (!ent)
       {
         LOG(warning) << "Could not parse properties for data item: " << dataItem->getId();
@@ -216,6 +223,40 @@ namespace mtconnect {
         factory->addRequirements(Requirements {{"VALUE", TABLE, false}});
       }
 
+      return factory;
+    }
+
+    FactoryPtr DoubleEvent::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Observation::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<DoubleEvent>(name, props);
+        });
+        factory->addRequirements(Requirements({{"resetTriggered", USTRING, false},
+                                               {"statistic", USTRING, false},
+                                               {"duration", DOUBLE, false},
+                                               {"VALUE", DOUBLE, false}}));
+      }
+      return factory;
+    }
+
+    FactoryPtr IntEvent::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Observation::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<IntEvent>(name, props);
+        });
+        factory->addRequirements(Requirements({{"resetTriggered", USTRING, false},
+                                               {"statistic", USTRING, false},
+                                               {"duration", DOUBLE, false},
+                                               {"VALUE", INTEGER, false}}));
+      }
       return factory;
     }
 
@@ -308,7 +349,12 @@ namespace mtconnect {
       {
         factory = make_shared<Factory>(*Event::getFactory());
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
-          return make_shared<AssetEvent>(name, props);
+          auto ent = make_shared<AssetEvent>(name, props);
+          if (!ent->hasProperty("assetType") && !ent->hasValue())
+          {
+            ent->setProperty("assetType", "UNAVAILABLE"s);
+          }
+          return ent;
         });
         factory->addRequirements(Requirements({{"assetType", false}}));
       }

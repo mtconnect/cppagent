@@ -48,5 +48,17 @@
         </Power>
       </Components>
     </Device>
+    <Device uuid="001" name="Other" id="o1">
+      <DataItems>        
+        <DataItem id="xd1" type="AVAILABILITY" category="EVENT"/>
+      </DataItems>
+      <Components>
+        <Controller id="xco">
+          <DataItems>
+            <DataItem id="xex" type="EXECUTION" category="EVENT"/>
+          </DataItems>
+        </Controller>
+      </Components>
+    </Device>
   </Devices>
 </MTConnectDevices>

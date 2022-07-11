@@ -39,7 +39,7 @@
               <span class="icon-bar"></span>
             </button>
             <a class="navbar-brand" style="padding: 5px 10px;" href="https://mtconnect.org" target="_blank" rel="noopener noreferrer">
-              <img alt="Brand" src="styles/LogoMTConnect.webp" />
+              <img alt="Brand" src="/styles/MTConnect_Logo.png" />
             </a>
           </div>
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -416,7 +416,7 @@
             <xsl:variable name="rowStyle">
               <xsl:choose>
                 <xsl:when test="$element='Header' or $element='DeviceStream' or $element='Samples' or $element='Events' or $element='Conditions'">
-								  font-weight:bold;
+                  font-weight:bold;
                 </xsl:when>
               </xsl:choose>
             </xsl:variable>
@@ -483,7 +483,7 @@
                     <img style="width:12px;" src="/styles/icon-minus.webp" />
                   </xsl:when>
                   <xsl:otherwise>
-										&#8198;
+                    &#8198;
                   </xsl:otherwise>
                 </xsl:choose>
                 <!-- &#8198; -->

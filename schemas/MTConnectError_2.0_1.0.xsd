@@ -31,7 +31,7 @@ WHETHER UNDER CONTRACT, TORT, WARRANTY OR OTHERWISE, ARISING IN ANY WAY OUT OF
 THIS AGREEMENT, USE OR INABILITY TO USE MTCONNECT MATERIALS, WHETHER OR NOT
 SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 -->
-<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectError:2.0.0' xmlns:mt='urn:mtconnect.org:MTConnectError:2.0.0' targetNamespace='urn:mtconnect.org:MTConnectError:2.0.0' elementFormDefault='qualified' attributeFormDefault='unqualified' xmlns:vc='http://www.w3.org/2007/XMLSchema-versioning' vc:minVersion='1.1'>
+<xs:schema xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns='urn:mtconnect.org:MTConnectError:2.0' xmlns:mt='urn:mtconnect.org:MTConnectError:2.0' targetNamespace='urn:mtconnect.org:MTConnectError:2.0' elementFormDefault='qualified' attributeFormDefault='unqualified'>
   <xs:element name='MTConnectError' type='MTConnectErrorType'>
     <xs:annotation>
       <xs:documentation>
@@ -197,7 +197,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         The item&apos;s reference to the Device model composition
       </xs:documentation>
     </xs:annotation>
-    <xs:restriction base='xs:IDREF'/>
+    <xs:restriction base='xs:NMTOKEN'/>
   </xs:simpleType>
   <xs:simpleType name='DurationTimeType'>
     <xs:annotation>
@@ -4045,7 +4045,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
         appear in the document.
       </xs:documentation>
     </xs:annotation>
-    <xs:all>
+    <xs:sequence>
       <xs:element name='Error' type='ErrorType' minOccurs='1' maxOccurs='unbounded'>
         <xs:annotation>
           <xs:documentation>
@@ -4054,7 +4054,7 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-    </xs:all>
+    </xs:sequence>
   </xs:complexType>
   <xs:simpleType name='ErrorDescriptionType'>
     <xs:annotation>

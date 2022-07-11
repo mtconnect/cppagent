@@ -192,19 +192,8 @@ static inline void touch(const std::filesystem::path &file)
   namespace fs = std::filesystem;
   namespace ch = std::chrono;
 
-#ifdef _WINDOWS
   auto now = fs::file_time_type::clock::now();
   fs::last_write_time(file, now);
-#else
-  auto scnow = ch::system_clock::to_time_t(ch::system_clock::now());
-
-  timeval now[2];
-  now[0].tv_sec = scnow;
-  now[0].tv_usec = 0;
-  now[1] = now[0];
-
-  utimes(file.string().c_str(), now);
-#endif
 }
 
 TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)

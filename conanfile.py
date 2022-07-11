@@ -4,7 +4,7 @@ class CppAgentConan(ConanFile):
     name = "mtconnect_cppagent"
     version = "2.0"
     generators = "cmake"
-    url = "https://github.com/mtconnect/cppagent_dev.git"
+    url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False], "build_tests": [True, False], "without_python": [True, False],
@@ -69,12 +69,10 @@ class CppAgentConan(ConanFile):
             
         if not self.options.without_python:
             self.options.with_python = True
-        
- #       if self.windows_xp:
- #           self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0501 "
- #       elif self.settings.os == 'Windows':
- #           self.options["boost"].extra_b2_flags = self.options["boost"].extra_b2_flags + "define=BOOST_USE_WINAPI_VERSION=0x0600 "            
 
+        if self.settings.os == "Macos":
+            self.options["boost"].visibility = "hidden"
+        
     def requirements(self):
         if not self.windows_xp:
             self.requires("gtest/1.10.0")

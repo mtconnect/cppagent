@@ -79,7 +79,11 @@ namespace mtconnect::sink::rest_sink {
     void start();
 
     // Shutdown
-    void stop() { m_run = false; };
+    void stop()
+    {
+      m_run = false;
+      m_acceptor.close();
+    };
 
     void listen();
 
@@ -101,6 +105,7 @@ namespace mtconnect::sink::rest_sink {
 
     // PUT and POST handling
     bool isListening() const { return m_listening; }
+    bool isRunning() const { return m_run; }
     bool arePutsAllowed() const { return m_allowPuts; }
     bool allowPutFrom(const std::string &host);
     void allowPuts(bool allow = true) { m_allowPuts = allow; }

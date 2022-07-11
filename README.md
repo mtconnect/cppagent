@@ -1,7 +1,7 @@
 
 MTConnect C++ Agent Version 2.0
 --------
-[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent_dev)
+[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48/branch/master?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent/branch/master)
 
 The C++ Agent provides the a complete implementation of the HTTP
 server required by the MTConnect standard. The agent provides the
@@ -11,19 +11,19 @@ the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
 
-Version 2.0.0.1 Rearchitecture of the agent with TLS, MQTT Adapter, Ruby Interpreter, Agent Adaptr, and much more
+Version 2.0.0 Rearchitecture of the agent with TLS, MQTT Adapter, Ruby Interpreter, Agent Adaptr, and much more
 
-Version 1.7.0.0 added kinematics, solid models, and new specifications types.
+Version 1.7.0 added kinematics, solid models, and new specifications types.
 
-Version 1.6.0.0 added coordinate systems, specifications, and tabular data.
+Version 1.6.0 added coordinate systems, specifications, and tabular data.
 
-Version 1.5.0.0 added Data Set capabilities and has been updated to use C++ 14.
+Version 1.5.0 added Data Set capabilities and has been updated to use C++ 14.
 
-Version 1.4.0.0 added time period filter constraint, compositions, initial values, and reset triggers.
+Version 1.4.0 added time period filter constraint, compositions, initial values, and reset triggers.
 
-Version 1.3.0.0 added the filter constraints, references, cutting tool archetypes, and formatting styles.
+Version 1.3.0 added the filter constraints, references, cutting tool archetypes, and formatting styles.
 
-Version 1.2.0.0 added the capability to support assets.
+Version 1.2.0 added the capability to support assets.
 
 Version 1.1.0.8 add the ability to run the C++ Agent as a Windows
 service and support for a configuration file instead of command line
@@ -89,18 +89,7 @@ later.
 Building
 -------
 
-Download cmake from [cmake](http://www.cmake.org/cmake/resources/software.html)
-
-Make sure to initialize submodules:
-
-    git submodule init
-    git submodule update
-
-Configure cmake using the `CMakeLists.txt` file in the agent
-directory. This will generate a project file for the target
-platform. See CMake documentation for more information.
-
-
+Platform specific instructions are at the end of the README.
 
 Configuration
 ------
@@ -139,7 +128,7 @@ Each set of files must be declared using a named file description, like schema o
 styles and the local `Path` and the `Location` the files will be mapped to in the
 HTTP server namespace. For example:
 
-    http://example.com:5000/schemas/MTConnectStreams_1.7.xsd will map to ../schemas/MTConnectStreams_1.7.xsd
+    http://example.com:5000/schemas/MTConnectStreams_2.0.xsd will map to ../schemas/MTConnectStreams_2.0.xsd
 
 All files will be mapped and the directory names do not need to be the same. These files can be either served directly or can be used to extend the schema or add XSLT stylesheets for formatting the XML in browsers.
 
@@ -149,12 +138,12 @@ To specify the new schema for the documents, use the following declaration:
 
     StreamsNamespaces {
       e {
-        Urn = urn:example.com:ExampleStreams:1.7
-        Location = /schemas/ExampleStreams_1.7.xsd
+        Urn = urn:example.com:ExampleStreams:2.0
+        Location = /schemas/ExampleStreams_2.0.xsd
       }
     }
 
-This will use the ExampleStreams_1.7.xsd schema in the document. The `e` is the alias that will be
+This will use the ExampleStreams_2.0.xsd schema in the document. The `e` is the alias that will be
 used to reference the extended schema. The `Location` is the location of the xsd file relative in 
 the agent namespace. The `Location` must be mapped in the `Files` section.
 
@@ -439,20 +428,20 @@ namespace -- you cannot change it.
 
 	StreamsNamespaces {
 	  m {
-	    Location = /schemas/MTConnectStreams_1.7.xsd
-	    Path = ./MTConnectStreams_1.7.xsd
+	    Location = /schemas/MTConnectStreams_2.0.xsd
+	    Path = ./MTConnectStreams_2.0.xsd
 	  }
 	}
 
 	DevicesNamespaces {
 	  m {
-	    Location = /schemas/MTConnectDevices_1.7.xsd
-	    Path = ./MTConnectDevices_1.7.xsd
+	    Location = /schemas/MTConnectDevices_2.0.xsd
+	    Path = ./MTConnectDevices_2.0.xsd
 	  }
 	}
     
 The MTConnect agent will now serve the standard MTConnect schema files
-from the local directory using the schema path /schemas/MTConnectDevices_1.7.xsd.
+from the local directory using the schema path /schemas/MTConnectDevices_2.0.xsd.
 
 
 ### Example: 10 ###
@@ -464,19 +453,19 @@ Agent serve them up locally.
 
 	DevicesNamespaces {
 	  x {
-	    Urn = urn:example.com:ExampleDevices:1.7
-	    Location = /schemas/ExampleDevices_1.7.xsd
-	    Path = ./ExampleDevices_1.7.xsd
+	    Urn = urn:example.com:ExampleDevices:2.0
+	    Location = /schemas/ExampleDevices_2.0.xsd
+	    Path = ./ExampleDevices_2.0.xsd
 	  }
 
 	Files {
 	  stream { 
-	    Location = /schemas/MTConnectStreams_1.7.xsd
-	    Path = ./MTConnectStreams_1.7.xsd
+	    Location = /schemas/MTConnectStreams_2.0.xsd
+	    Path = ./MTConnectStreams_2.0.xsd
 	  }
 	  device { 
-	    Location = /schemas/MTConnectDevices_1.7.xsd
-	    Path = ./MTConnectDevices_1.7.xsd
+	    Location = /schemas/MTConnectDevices_2.0.xsd
+	    Path = ./MTConnectDevices_2.0.xsd
 	  }
 	}
 	
@@ -484,20 +473,20 @@ Or use the short form for all files:
 
         Files {
           schemas { 
-            Location = /schemas/MTConnectStreams_1.7.xsd
-            Path = ./MTConnectStreams_1.7.xsd
+            Location = /schemas/MTConnectStreams_2.0.xsd
+            Path = ./MTConnectStreams_2.0.xsd
           }
         }
     
 If you have specified in your xs:include schemaLocation inside the 
-ExampleDevices_1.7.xsd file the location "/schemas/MTConnectStreams_1.7.xsd",
+ExampleDevices_2.0.xsd file the location "/schemas/MTConnectStreams_2.0.xsd",
 this will allow it to be served properly. This can also be done using the 
 Devices namespace:
 
 	DevicesNamespaces {
 	  m {
-	    Location = /schemas/MTConnectDevices_1.7.xsd
-	    Path = ./MTConnectDevices_1.7.xsd
+	    Location = /schemas/MTConnectDevices_2.0.xsd
+	    Path = ./MTConnectDevices_2.0.xsd
 	  }
 	}
 
@@ -523,7 +512,7 @@ If the "-o with_ruby=True" build is selected, then use to following configuratio
     }
 
 The module specified at the path given will be loaded. There are examples in the test/Resources/ruby directory in 
-github: [Ruby Tests](https://github.com/mtconnect/cppagent_dev/tree/master/test/resources/ruby).
+github: [Ruby Tests](https://github.com/mtconnect/cppagent/tree/master/test/resources/ruby).
 
 The current functionality is limited to the pipeline transformations from the adapters. Future changes will include adding sources and sinks.
 
@@ -651,7 +640,7 @@ Configuration Parameters
     
 * `SchemaVersion` - Change the schema version to a different version number.
 
-    *Default*: 1.7
+    *Default*: 2.0
 
 * `ConversionRequired` - Global default for data item units conversion in the agent. 
   Assumes the adapter has already done unit conversion.
@@ -678,7 +667,7 @@ Configuration Parameters
 
     *Default*: 1
 	
-* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7. This applies to all adapters.
+* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names. This applies to all adapters.
 
     *Default*: false
 
@@ -821,7 +810,7 @@ The following parameters must be present to enable https requests. If there is n
 
 	    *Default*: 1
 
-	* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names for 1.7.
+	* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names.
 		*Default*: false
 
 
@@ -879,7 +868,7 @@ logger_config configuration items
             
         *Default*: NEVER
     
-Adapter Agent Protocol Version 1.7
+Adapter Agent Protocol Version 2.0
 =======
 
 The principle adapter data format is a simple plain text stream separated by the pipe character `|`. Every line except for commands starts with an optional timestamp in UTC. If the timestamp is not supplied the agent will supply a timestamp of its own taken at the arrival time of the data to the agent. The remainder of the line is a key followed by data – depending on the type of data item is being written to.
@@ -1221,27 +1210,44 @@ An example in ruby is as follows:
     > r.body
     => "<success/>"
 	
-# Building the agent on Windows and Ubuntu
+# Building the agent
+
+## Overview
+
+The agent build is dependent on the following utilities:
+
+* C++ Compiler compliant with C++ 17
+* git is optional but suggested to download source and update when changes occur
+* cmake for build generator and testing
+* python 3 and pip to support conan for dependency and package management
+* ruby and rake for mruby to support building the embedded scripting engine [not required if -o with_ruby=False]
 
 ## Building on Windows
 
 The MTConnect Agent uses the conan package manager to install dependencies:
 
-  [Conan Package Manager Downloads](https://conan.io/downloads.html)
+  [python 3](https://www.python.org/downloads/) and [Conan Package Manager Downloads](https://conan.io/downloads.html)
 
 Download the Windows installer for your platform and run the installer.
 
-You also need CMake [CMake](https://cmake.org/download/) and git [git](https://git-scm.com/download/win)
+You also need [git](https://git-scm.com/download/win) and [ruby](https://rubyinstaller.org) if you want to embed mruby.
+
+CMake is installed as part of Visual Studio. If you are using Visual Studio for the build, use the bundled version. Otherwise download from CMake [CMake](https://cmake.org/download/).
 
 ### Setting up build
 
+Install dependencies from the downloads above. Make sure python, ruby, and cmake are in your path.
+
+	pip install --upgrade pip
+	pip install conan
+
 Clone the agent to another directory:
 
-    git clone git@github.com:/mtconnect/cppagent_dev.git
+	git clone https://github.com/mtconnect/cppagent.git
 
-Make a build subdirectory of `cppagent_dev`
+Make a build subdirectory of `cppagent`
 
-    cd cppagent_dev
+    cd cppagent
     conan export conan\mqtt_cpp
     conan export conan\mruby
 	
@@ -1275,20 +1281,30 @@ The windows XP 140 XP toolchain needs to be installed under individual component
 
     cpack -G ZIP
 
+## *NIX Builds
+
+The minimum memory (main + swap) when building with on CPU is 3GB. Less than that will likely cause the build to fail.
+
+If the build runs out of resources, there are two options, you can add swap or set the following environment variable:
+
+    export CONAN_CPU_COUNT=1
+	
+to instruct conan to not parallelize the builds. Some of the modules that include boost beast require significant resources to build.
+
 ## Building on Ubuntu on 20.04 LTS
 
 ### Setup the build
 
-    sudo apt-get install build-essential python3.9 python3-pip git cmake
+    sudo apt-get install build-essential python3.9 python3-pip git cmake ruby rake
 	python3.9 -m pip install conan
 
 ### Download the source
 
-	git clone git@github.com:/mtconnect/cppagent_dev.git
+	git clone https://github.com/mtconnect/cppagent.git
 	
 ### Install the dependencies
 	
-	cd cppagent_dev
+	cd cppagent
 	conan export conan/mqtt_cpp
 	conan export conan/mruby
 	conan install . -if build --build=missing -pr conan/profiles/gcc
@@ -1313,11 +1329,11 @@ Install brew and xcode command line tools
 
 ### Download the source
 
-	git clone git@github.com:/mtconnect/cppagent_dev.git
+	git clone https://github.com/mtconnect/cppagent.git
 	
 ### Install the dependencies
 
-    cd cppagent_dev
+    cd cppagent
     conan export conan/mqtt_cpp
     conan export conan/mruby
     conan install . -if build  --build=missing
@@ -1335,7 +1351,8 @@ Install brew and xcode command line tools
 
 ### As Root
 
-	apk add g++ python3 cmake git linux-headers make perl
+	apk add g++ python3 cmake git linux-headers make perl ruby
+	gem install rake
 	
 	python3 -m ensurepip
 	python3 -m pip install --upgrade pip
@@ -1344,12 +1361,13 @@ Install brew and xcode command line tools
 	
 	export PATH=~/.local/bin:$PATH
 	pip3 install conan	
-	git clone git@github.com:/mtconnect/cppagent_dev.git	
+	git clone https://github.com/mtconnect/cppagent.git
 
 ### Export mqtt_cpp package
 
-	cd cppagent_dev
+	cd cppagent
 	conan export conan/mqtt_cpp/
+	conan export conan/mruby/
 
 ### Install packages
 
