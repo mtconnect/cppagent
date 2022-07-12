@@ -125,19 +125,21 @@ namespace mtconnect {
         m_representation = reps.find(*rep)->second;
 
       auto &category = get<string>("category");
+      
+      auto units = maybeGet<string>("units");
+      if (units && ends_with(*units, "3D"))
+        m_specialClass = THREE_SPACE_CLS;
+
       if (category == "SAMPLE")
       {
         m_category = SAMPLE;
         m_categoryText = samples;
-
-        auto units = maybeGet<string>("units");
-        if (units && ends_with(*units, "3D"))
-          m_specialClass = THREE_SPACE_CLS;
       }
       else if (category == "EVENT")
       {
         m_category = EVENT;
         m_categoryText = events;
+
         if (type == "ALARM")
           m_specialClass = ALARM_CLS;
         else if (type == "MESSAGE")
