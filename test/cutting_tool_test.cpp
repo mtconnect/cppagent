@@ -687,3 +687,48 @@ TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
 </CuttingTool>
 )DOC");
 }
+
+TEST_F(CuttingToolTest, element_order_should_place_cutter_status_before_locus)
+{
+  const auto doc =
+      R"DOC(<CuttingTool assetId="M8010W4194N1.2" deviceUuid="5fd88408-7811-3c6b-5400-11f4026b6890" serialNumber="0" timestamp="2022-07-12T22:38:38.2295Z" toolId="14076001">
+  <CuttingToolLifeCycle>
+    <CutterStatus>
+      <Status>USED</Status>
+    </CutterStatus>
+    <Location negativeOverlap="0" positiveOverlap="0" type="POT">2</Location>
+    <CuttingItems count="1">
+      <CuttingItem indices="1">
+        <Description>FACE MILL</Description>
+        <CutterStatus>
+          <Status>USED</Status>
+          <Status>AVAILABLE</Status>
+          <Status>ALLOCATED</Status>
+        </CutterStatus>
+        <Locus>12</Locus>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="MINUTES" warning="80">4858</ItemLife>
+        <ItemLife countDirection="UP" initial="0" limit="0" type="PART_COUNT" warning="80">523</ItemLife>
+        <ProgramToolGroup>14076001</ProgramToolGroup>
+        <Measurements>
+          <CuttingDiameter nominal="76">76.16299</CuttingDiameter>
+          <FunctionalLength>259.955</FunctionalLength>
+        </Measurements>
+      </CuttingItem>
+    </CuttingItems>
+  </CuttingToolLifeCycle>
+</CuttingTool>
+)DOC";
+
+  ErrorList errors;
+  entity::XmlParser parser;
+
+  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  ASSERT_EQ(0, errors.size());
+
+  // Round trip test
+  entity::XmlPrinter printer;
+  printer.print(*m_writer, entity, {});
+  string content = m_writer->getContent();
+  
+  ASSERT_EQ(content, doc);
+}
