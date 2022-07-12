@@ -77,9 +77,10 @@ namespace mtconnect {
 
       m_handler = m_pipeline.makeHandler();
       if (IsOptionSet(m_options, configuration::MqttTls))
-        m_client = make_shared<MqttTlsClient>(m_ioContext, m_options, &m_pipeline, m_handler.get());
+        m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
+                                                                      &m_pipeline, m_handler.get());
       else
-        m_client = make_shared<MqttClient>(m_ioContext, m_options, &m_pipeline, m_handler.get());
+        m_client = make_shared<mtconnect::mqtt_client::MqttClient>(m_ioContext, m_options, &m_pipeline, m_handler.get());
       m_options[configuration::AdapterIdentity] = m_name;
       m_pipeline.build(m_options);
 
@@ -107,7 +108,10 @@ namespace mtconnect {
         options[configuration::Topics] = list;
       }
     }
-
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="factory"></param>
     void MqttAdapter::registerFactory(SourceFactory &factory)
     {
       factory.registerFactory("mqtt",
@@ -137,7 +141,8 @@ namespace mtconnect {
     }
     void MqttAdapter::stop() 
     {
-        m_client->stop(); 
+      m_client->stop();
+      m_pipeline.clear();
     }
 
     mtconnect::pipeline::Pipeline *MqttAdapter::getPipeline() 
