@@ -77,7 +77,8 @@ namespace mtconnect {
         item->setAny(true);
 
         measurements->registerMatchers();
-        item->setOrder({"Description", "Locus", "ItemLife", "ProgramToolGroup", "Measurements"});
+        item->setOrder({"Description", "CutterStatus", "Locus", "ItemLife",
+                        "ProgramToolGroup", "Measurements"});
 
         static auto items = make_shared<Factory>(Requirements {
             {"count", INTEGER, true}, {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
