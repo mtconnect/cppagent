@@ -390,10 +390,16 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_chunkParser->on_chunk_header(m_chunkHeaderHandler);
     }
 
-    void parseMimeHeader()
+    bool parseMimeHeader()
     {
       using namespace boost;
       namespace algo = boost::algorithm;
+      
+      if (m_chunk.data().size() < 128)
+      {
+        LOG(trace) << "Not enough data for mime header: " << m_chunk.data().size();
+        return false;
+      }
 
       auto start = static_cast<const char *>(m_chunk.data().data());
       boost::string_view view(start, m_chunk.data().size());
@@ -401,17 +407,21 @@ namespace mtconnect::source::adapter::agent_adapter {
       auto bp = view.find(m_boundary.c_str());
       if (bp == boost::string_view::npos)
       {
-        LOG(error) << "Cannot find the boundary";
+        LOG(warning) << "Cannot find the boundary";
         derived().lowestLayer().close();
-        throw runtime_error("cannot find boundary");
+        failed(source::make_error_code(source::ErrorCode::RESTART_STREAM),
+               "Framing error in streaming data: no content length");
+        return false;
       }
 
       auto ep = view.find("\r\n\r\n", bp);
       if (bp == boost::string_view::npos)
       {
-        LOG(error) << "Cannot find the header separator";
+        LOG(warning) << "Cannot find the header separator";
         derived().lowestLayer().close();
-        throw runtime_error("cannot find header separator");
+        failed(source::make_error_code(source::ErrorCode::RESTART_STREAM),
+               "Framing error in streaming data: no content length");
+        return false;
       }
       ep += 4;
 
@@ -421,10 +431,11 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       if (lp.empty())
       {
-        LOG(error) << "Cannot find the content-length";
+        LOG(warning) << "Cannot find the content-length";
         derived().lowestLayer().close();
-        return failed(source::make_error_code(source::ErrorCode::RESTART_STREAM),
-                      "Framing error in streaming data: no content length");
+        failed(source::make_error_code(source::ErrorCode::RESTART_STREAM),
+               "Framing error in streaming data: no content length");
+        return false;
       }
 
       boost::string_view length(lp.end());
@@ -433,15 +444,18 @@ namespace mtconnect::source::adapter::agent_adapter {
       auto rng = finder(digits.begin(), digits.end());
       if (rng.empty())
       {
-        LOG(error) << "Cannot find the length in chunk";
+        LOG(warning) << "Cannot find the length in chunk";
         derived().lowestLayer().close();
-        return failed(source::make_error_code(source::ErrorCode::RESTART_STREAM),
-                      "Framing error in streaming data: no content length");
+        failed(source::make_error_code(source::ErrorCode::RESTART_STREAM),
+               "Framing error in streaming data: no content length");
+        return false;
       }
 
       m_chunkLength = boost::lexical_cast<size_t>(rng);
       m_hasHeader = true;
       m_chunk.consume(ep);
+      
+      return true;
     }
 
     void createChunkBodyHandler()
@@ -466,7 +480,11 @@ namespace mtconnect::source::adapter::agent_adapter {
 
         if (!m_hasHeader)
         {
-          parseMimeHeader();
+          if (!parseMimeHeader())
+          {
+            LOG(trace) << "Insufficient data to parse chunk header, wait for more data";
+            return body.size();
+          }
         }
 
         auto len = m_chunk.size();
