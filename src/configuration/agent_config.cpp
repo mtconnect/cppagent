@@ -206,11 +206,9 @@ namespace mtconnect::configuration {
     m_agent.reset();
 
     m_initializers.clear();
-    
-#ifdef WITH_RUBY 
-	m_ruby.reset();
+#ifdef WITH_RUBY
+    m_ruby.reset();
 #endif
-
     m_context.reset();
 
     if (m_sink)
@@ -944,18 +942,6 @@ namespace mtconnect::configuration {
       sinkContract->m_pipelineContext = m_pipelineContext;
 
       auto sink = m_sinkFactory.make("RestService", "RestService", getAsyncContext(),
-                                     std::move(sinkContract), options, config);
-      m_agent->addSink(sink);
-    }
-
-    // add Mqtt sink
-    auto mqtt = m_agent->findSink("MqttService");
-    if (!mqtt)
-    {
-      auto sinkContract = m_agent->makeSinkContract();
-      sinkContract->m_pipelineContext = m_pipelineContext;
-
-      auto sink = m_sinkFactory.make("MqttService", "MqttService", getAsyncContext(),
                                      std::move(sinkContract), options, config);
       m_agent->addSink(sink);
     }
