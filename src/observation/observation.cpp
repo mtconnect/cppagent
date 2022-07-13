@@ -74,6 +74,11 @@ namespace mtconnect {
             },
             ThreeSpaceSample::getFactory());
         factory->registerFactory(
+            [](const std::string &name) {
+              return starts_with(name, "Events:") && ends_with(name, ":3D");
+            },
+            ThreeSpaceSample::getFactory());
+        factory->registerFactory(
             [](const std::string &name) { return starts_with(name, "Samples:"); },
             Sample::getFactory());
         factory->registerFactory(
