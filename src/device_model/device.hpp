@@ -95,6 +95,11 @@ namespace mtconnect {
 
       void registerDataItem(DataItemPtr di);
       void registerComponent(ComponentPtr c) { m_componentsById[c->getId()] = c; }
+      
+      const std::string getTopicName() const override
+      {
+        return *m_uuid;
+      }
 
     protected:
       void cachePointers(DataItemPtr dataItem);

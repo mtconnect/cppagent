@@ -21,6 +21,7 @@
 #include <array>
 #include <map>
 #include <string>
+#include <boost/algorithm/string.hpp>
 
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
@@ -284,6 +285,35 @@ namespace mtconnect {
         addToList("Constraints", getFactory()->factoryFor("DataItem"), v, errors);
         m_constantValue = value;
       }
+    }
+    
+    inline void path(std::list<string> &pth,
+                     ComponentPtr c)
+    {
+      auto p = c->getParent();
+      if (p)
+        path(pth, p);
+      
+      pth.push_back(c->getTopicName());
+    }
+    
+    void DataItem::makeTopic()
+    {
+      std::list<string> pth;
+      auto comp = m_component.lock();
+     
+      path(pth, comp);
+      stringstream name;
+      name << getObservationName();
+      optional<string> opt;
+      auto sub = maybeGet<string>("subType");
+      if (sub)
+        name << '.' << pascalize(*sub, opt);
+      if (m_name)
+        name << '[' << *m_name << ']';
+      pth.push_back(name.str());
+      
+      m_topic = boost::algorithm::join(pth, "/");
     }
   }  // namespace device_model::data_item
 }  // namespace mtconnect
