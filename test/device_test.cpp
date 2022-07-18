@@ -217,7 +217,7 @@ TEST_F(DeviceTest, should_create_component_and_data_item_topic)
   axes->addChild(linear, errors);
   ASSERT_TRUE(errors.empty());
 
-  auto data1 = DataItem::make({{"id", "id"s}, {"name", "Xact"},
+  auto data1 = DataItem::make({{"id", "id"s}, {"name", "Xact"s},
                                 {"type", "POSITION"s},
                                 {"subType", "ACTUAL"s},
                                {"category", "SAMPLE"s}},
