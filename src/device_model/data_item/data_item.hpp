@@ -101,6 +101,7 @@ namespace mtconnect {
         const auto &getType() { return get<std::string>("type"); }
         const auto &getSubType() { return get<std::string>("subType"); }
         const auto &getTopic() const { return m_topic; }
+        const auto &getTopicName() const { return m_topicName; }
 
         ECategory getCategory() const { return m_category; }
         ERepresentation getRepresentation() const { return m_representation; }
@@ -175,6 +176,7 @@ namespace mtconnect {
         std::optional<double> m_minimumPeriod;
         std::string m_key;
         std::string m_topic;
+        std::string m_topicName;
 
         // Category of data item
         ECategory m_category;

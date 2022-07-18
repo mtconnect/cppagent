@@ -311,7 +311,8 @@ namespace mtconnect {
         name << '.' << pascalize(*sub, opt);
       if (m_name)
         name << '[' << *m_name << ']';
-      pth.push_back(name.str());
+      m_topicName = name.str();
+      pth.push_back(m_topicName);
       
       m_topic = boost::algorithm::join(pth, "/");
     }
