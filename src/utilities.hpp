@@ -566,16 +566,4 @@ namespace mtconnect {
 
     return camel;
   }
-
-#ifdef _WINDOWS
-#include <io.h>
-  typedef long volatile AtomicInt;
-#else
-#ifdef MACOSX
-#include <libkern/OSAtomic.h>
-  typedef volatile long AtomicInt;
-#else
-  using AtomicInt = int;
-#endif
-#endif
 }  // namespace mtconnect

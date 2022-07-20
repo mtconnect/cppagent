@@ -100,6 +100,8 @@ namespace mtconnect {
 
         const auto &getType() { return get<std::string>("type"); }
         const auto &getSubType() { return get<std::string>("subType"); }
+        const auto &getTopic() const { return m_topic; }
+        const auto &getTopicName() const { return m_topicName; }
 
         ECategory getCategory() const { return m_category; }
         ERepresentation getRepresentation() const { return m_representation; }
@@ -128,6 +130,8 @@ namespace mtconnect {
           setProperty("discrete", true);
           m_discrete = true;
         }
+        
+        void makeTopic();
 
         // Value converter
         const auto &getConverter() const { return m_converter; }
@@ -137,7 +141,11 @@ namespace mtconnect {
         }
 
         // Set/get component that data item is associated with
-        void setComponent(ComponentPtr component) { m_component = component; }
+        void setComponent(ComponentPtr component)
+        {
+          m_component = component;
+          makeTopic();
+        }
         ComponentPtr getComponent() const { return m_component.lock(); }
 
         // Get the name for the adapter feed
@@ -167,6 +175,8 @@ namespace mtconnect {
         std::optional<double> m_minimumDelta;
         std::optional<double> m_minimumPeriod;
         std::string m_key;
+        std::string m_topic;
+        std::string m_topicName;
 
         // Category of data item
         ECategory m_category;

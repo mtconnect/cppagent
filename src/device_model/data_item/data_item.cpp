@@ -21,6 +21,7 @@
 #include <array>
 #include <map>
 #include <string>
+#include <boost/algorithm/string.hpp>
 
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
@@ -125,19 +126,21 @@ namespace mtconnect {
         m_representation = reps.find(*rep)->second;
 
       auto &category = get<string>("category");
+      
+      auto units = maybeGet<string>("units");
+      if (units && ends_with(*units, "3D"))
+        m_specialClass = THREE_SPACE_CLS;
+
       if (category == "SAMPLE")
       {
         m_category = SAMPLE;
         m_categoryText = samples;
-
-        auto units = maybeGet<string>("units");
-        if (units && ends_with(*units, "3D"))
-          m_specialClass = THREE_SPACE_CLS;
       }
       else if (category == "EVENT")
       {
         m_category = EVENT;
         m_categoryText = events;
+
         if (type == "ALARM")
           m_specialClass = ALARM_CLS;
         else if (type == "MESSAGE")
@@ -223,14 +226,17 @@ namespace mtconnect {
       }
 
       m_key = string(m_categoryText) + ":" + m_observationName;
-      if (m_specialClass == THREE_SPACE_CLS)
-        m_key += ":3D";
-      else if (m_category == EVENT && hasProperty("units"))
+      if (!isDataSet())
       {
-        if (this->get<string>("units") == "COUNT")
-          m_key += ":INT";
-        else
-          m_key += ":DOUBLE";
+        if (m_specialClass == THREE_SPACE_CLS)
+          m_key += ":3D";
+        else if (m_category == EVENT && hasProperty("units"))
+        {
+          if (this->get<string>("units") == "COUNT")
+            m_key += ":INT";
+          else
+            m_key += ":DOUBLE";
+        }
       }
     }
 
@@ -279,6 +285,36 @@ namespace mtconnect {
         addToList("Constraints", getFactory()->factoryFor("DataItem"), v, errors);
         m_constantValue = value;
       }
+    }
+    
+    inline void path(std::list<string> &pth,
+                     ComponentPtr c)
+    {
+      auto p = c->getParent();
+      if (p)
+        path(pth, p);
+      
+      pth.push_back(c->getTopicName());
+    }
+    
+    void DataItem::makeTopic()
+    {
+      std::list<string> pth;
+      auto comp = m_component.lock();
+     
+      path(pth, comp);
+      stringstream name;
+      name << getObservationName();
+      optional<string> opt;
+      auto sub = maybeGet<string>("subType");
+      if (sub)
+        name << '.' << pascalize(*sub, opt);
+      if (m_name)
+        name << '[' << *m_name << ']';
+      m_topicName = name.str();
+      pth.push_back(m_topicName);
+      
+      m_topic = boost::algorithm::join(pth, "/");
     }
   }  // namespace device_model::data_item
 }  // namespace mtconnect
