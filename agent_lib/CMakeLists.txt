@@ -34,10 +34,12 @@ set(AGENT_SOURCES
 # src/client HEADER_FILE_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_client.hpp"
-
+		"${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_server.hpp"
+		
 # src/client SOURCE_FILES_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_client.cpp"
+		"${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_server.cpp"
 		
 # src/configuration HEADER_FILE_ONLY
 

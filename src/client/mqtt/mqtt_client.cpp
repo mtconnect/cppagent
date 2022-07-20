@@ -175,11 +175,9 @@ namespace mtconnect {
                                            mqtt::publish_options pubopts, mqtt::buffer topic_name,
                                            mqtt::buffer contents) {
           if (packet_id)
-          {
             LOG(debug) << "packet_id: " << *packet_id;
-            LOG(debug) << "topic_name: " << topic_name;
-            LOG(debug) << "contents: " << contents;
-          }
+          LOG(debug) << "topic_name: " << topic_name;
+          LOG(debug) << "contents: " << contents;
 
           receive(topic_name, contents);
 

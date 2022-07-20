@@ -81,11 +81,12 @@ namespace mtconnect {
                                                                       &m_pipeline, m_handler.get());
       else
         m_client = make_shared<mtconnect::mqtt_client::MqttClient>(m_ioContext, m_options, &m_pipeline, m_handler.get());
-      m_options[configuration::AdapterIdentity] = m_name;
-      m_pipeline.build(m_options);
-
+    
       m_identity = m_client->getIdentity();
       m_name = m_client->getUrl();
+
+      m_options[configuration::AdapterIdentity] = m_name;
+      m_pipeline.build(m_options);
     }
 
     void MqttAdapter::loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options)

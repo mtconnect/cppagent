@@ -113,6 +113,8 @@ namespace mtconnect {
         // get the data item from observation
         auto dataItem = observation->getDataItem();
 
+        //auto topics = dataItem->getTopics();
+
         // convert to json and send by mqtt
         auto json = m_jsonPrinter->print(dataItem);
 
