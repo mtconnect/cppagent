@@ -47,20 +47,21 @@ namespace mtconnect {
         auto jsonPrinter = dynamic_cast<JsonPrinter *>(m_sinkContract->getPrinter("json"));
         m_jsonPrinter = std::unique_ptr<JsonPrinter>(jsonPrinter);
 
-      GetOptions(config, m_options, options);
+        GetOptions(config, m_options, options);
         AddOptions(config, m_options,
                    {{configuration::UUID, string()},
                     {configuration::Manufacturer, string()},
                     {configuration::Station, string()},
                     {configuration::Url, string()},
                     {configuration::MqttCaCert, string()}});
-      AddDefaultedOptions(config, m_options,
-                          {{configuration::Host, "localhost"s},
-                           {configuration::Port, 1883},
-                           {configuration::MqttTls, false},
-                           {configuration::AutoAvailable, false},
-                           {configuration::RealTime, false},
-                           {configuration::RelativeTime, false}});
+        AddDefaultedOptions(config, m_options,
+                            {{configuration::Host, "localhost"s},
+                             {configuration::Port, 1883},
+                             {configuration::MqttTls, false},
+                             {configuration::AutoAvailable, false},
+                             {configuration::RealTime, false},
+                             {configuration::RelativeTime, false}});
+
         loadTopics(config, m_options);
 
         if (IsOptionSet(m_options, configuration::MqttTls))
@@ -111,13 +112,14 @@ namespace mtconnect {
       uint64_t MqttService::publish(observation::ObservationPtr &observation)
       {
         // get the data item from observation
-        auto dataItem = observation->getDataItem();
+        DataItemPtr dataItem = observation->getDataItem();
 
-        //auto topics = dataItem->getTopics();
-
+        auto topic = dataItem->getTopic();//client asyn topic
+        auto content = dataItem->getTopicName();//client asyn content
+                
         // convert to json and send by mqtt
-        auto json = m_jsonPrinter->print(dataItem);
-
+        //auto json = m_jsonPrinter->print(dataItem);
+        
         return 0;
       }
 
