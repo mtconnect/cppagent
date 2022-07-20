@@ -137,7 +137,7 @@ namespace mtconnect::entity {
       m_value %= (m_number | m_quoted | m_braced | m_simple);
 
       m_number %= (m_real | m_long) >> &(space | char_("}'\"") | eoi);
-      
+
       m_simple %= lexeme[+(char_ - (char_("\"'{}") | space))];
 
       m_quoted %= (omit[char_("\"'")[_a = _1]] >>
@@ -151,10 +151,10 @@ namespace mtconnect::entity {
       // Table support with quoted and braced content
       m_quotedDataSet =
           (char_("\"'")[_a = _1] >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit(_a);
-      
+
       m_bracedDataSet =
           (lit('{') >> *space >> *(m_entry[add_entry(_val, _1)] >> *space)) > lit('}');
-      
+
       m_tableValue %= (m_quotedDataSet | m_bracedDataSet);
       m_tableEntry = (m_key >> -("=" > &(space | lit('{') | '\'' | '"') >>
                                  -m_tableValue))[make_entry(_val, _1, _2)];

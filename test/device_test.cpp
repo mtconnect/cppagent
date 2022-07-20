@@ -191,15 +191,13 @@ TEST_F(DeviceTest, GetDataItem)
 TEST_F(DeviceTest, should_create_data_item_topic)
 {
   ErrorList errors;
-  auto data1 = DataItem::make({{"id", "id"s},
-                               {"type", "AVAILABILITY"s},
-                               {"category", "EVENT"s}},
-                              errors);
+  auto data1 =
+      DataItem::make({{"id", "id"s}, {"type", "AVAILABILITY"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
   m_devA->addDataItem(data1, errors);
 
   DataItemPtr di = dynamic_pointer_cast<DataItem>(data1);
-  
+
   ASSERT_EQ("UnivUniqId1/Availability", di->getTopic());
   ASSERT_EQ("Availability", di->getTopicName());
 }
@@ -212,23 +210,22 @@ TEST_F(DeviceTest, should_create_component_and_data_item_topic)
   m_devA->addChild(axes, errors);
   ASSERT_TRUE(errors.empty());
 
-  auto linear = Component::make("Linear", {{"id", "ax"s},
-                                            {"name", "X"s}}, errors);
+  auto linear = Component::make("Linear", {{"id", "ax"s}, {"name", "X"s}}, errors);
   ASSERT_TRUE(errors.empty());
   axes->addChild(linear, errors);
   ASSERT_TRUE(errors.empty());
 
-  auto data1 = DataItem::make({{"id", "id"s}, {"name", "Xact"s},
-                                {"type", "POSITION"s},
-                                {"subType", "ACTUAL"s},
+  auto data1 = DataItem::make({{"id", "id"s},
+                               {"name", "Xact"s},
+                               {"type", "POSITION"s},
+                               {"subType", "ACTUAL"s},
                                {"category", "SAMPLE"s}},
                               errors);
   ASSERT_TRUE(errors.empty());
   linear->addDataItem(data1, errors);
 
   DataItemPtr di = dynamic_pointer_cast<DataItem>(data1);
-  
-  ASSERT_EQ("UnivUniqId1/Axes/Linear[X]/Position.Actual[Xact]",
-            di->getTopic());
+
+  ASSERT_EQ("UnivUniqId1/Axes/Linear[X]/Position.Actual[Xact]", di->getTopic());
   ASSERT_EQ("Position.Actual[Xact]", di->getTopicName());
 }

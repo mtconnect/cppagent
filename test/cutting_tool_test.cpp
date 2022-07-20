@@ -729,6 +729,6 @@ TEST_F(CuttingToolTest, element_order_should_place_cutter_status_before_locus)
   entity::XmlPrinter printer;
   printer.print(*m_writer, entity, {});
   string content = m_writer->getContent();
-  
+
   ASSERT_EQ(content, doc);
 }

@@ -18,10 +18,11 @@
 
 #include "data_item.hpp"
 
+#include <boost/algorithm/string.hpp>
+
 #include <array>
 #include <map>
 #include <string>
-#include <boost/algorithm/string.hpp>
 
 #include "device_model/device.hpp"
 #include "entity/requirement.hpp"
@@ -126,7 +127,7 @@ namespace mtconnect {
         m_representation = reps.find(*rep)->second;
 
       auto &category = get<string>("category");
-      
+
       auto units = maybeGet<string>("units");
       if (units && ends_with(*units, "3D"))
         m_specialClass = THREE_SPACE_CLS;
@@ -286,22 +287,21 @@ namespace mtconnect {
         m_constantValue = value;
       }
     }
-    
-    inline void path(std::list<string> &pth,
-                     ComponentPtr c)
+
+    inline void path(std::list<string> &pth, ComponentPtr c)
     {
       auto p = c->getParent();
       if (p)
         path(pth, p);
-      
+
       pth.push_back(c->getTopicName());
     }
-    
+
     void DataItem::makeTopic()
     {
       std::list<string> pth;
       auto comp = m_component.lock();
-     
+
       path(pth, comp);
       stringstream name;
       name << getObservationName();
@@ -313,7 +313,7 @@ namespace mtconnect {
         name << '[' << *m_name << ']';
       m_topicName = name.str();
       pth.push_back(m_topicName);
-      
+
       m_topic = boost::algorithm::join(pth, "/");
     }
   }  // namespace device_model::data_item
