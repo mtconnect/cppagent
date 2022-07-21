@@ -924,8 +924,8 @@ namespace mtconnect::configuration {
         auto sinkContract = m_agent->makeSinkContract();
         sinkContract->m_pipelineContext = m_pipelineContext;
 
-        auto sink = m_sinkFactory.make(factory, sinkName, getAsyncContext(), std::move(sinkContract),
-                                       options, sinkBlockOptions);
+        auto sink = m_sinkFactory.make(factory, sinkName, getAsyncContext(),
+                                       std::move(sinkContract), options, sinkBlockOptions);
         if (sink)
         {
           m_agent->addSink(sink);

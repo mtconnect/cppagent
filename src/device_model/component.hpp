@@ -66,10 +66,10 @@ namespace mtconnect {
       const auto &getId() const { return m_id; }
       const auto &getComponentName() const { return m_name; }
       const auto &getUuid() const { return m_uuid; }
-      
+
       virtual const std::string getTopicName() const
       {
-        std::string topic { getName() };
+        std::string topic {getName()};
         if (m_name)
         {
           topic.append("[").append(*m_name).append("]");

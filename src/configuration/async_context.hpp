@@ -49,9 +49,7 @@ namespace mtconnect::configuration {
       {
         for (int i = 0; i < m_threadCount; i++)
         {
-          m_workers.emplace_back(boost::thread([this]() { 
-              m_context.run(); 
-              }));
+          m_workers.emplace_back(boost::thread([this]() { m_context.run(); }));
         }
         auto &first = m_workers.front();
         while (m_running && !m_paused)
