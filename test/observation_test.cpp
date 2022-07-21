@@ -256,7 +256,8 @@ TEST_F(ObservationTest, should_treat_events_with_non_count_units_as_doubles)
 {
   ErrorList errors;
   auto dataItem = DataItem::make(
-      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "FEEDRATE_OVERRIDE"s}, {"units", "PERCENT"s}}, errors);
+      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "FEEDRATE_OVERRIDE"s}, {"units", "PERCENT"s}},
+      errors);
 
   auto event = Observation::make(dataItem, {{"VALUE", "123.555"s}}, m_time, errors);
 
@@ -335,8 +336,11 @@ TEST_F(ObservationTest, should_treat_events_with_count_as_integer)
 TEST_F(ObservationTest, should_use_three_space_sample_for_3_space_events)
 {
   ErrorList errors;
-  auto dataItem = DataItem::make(
-      {{"id", "x"s}, {"category", "EVENT"s}, {"type", "WORKPIECE_OFFSET"s}, {"units", "MILLIMETER_3D"s}}, errors);
+  auto dataItem = DataItem::make({{"id", "x"s},
+                                  {"category", "EVENT"s},
+                                  {"type", "WORKPIECE_OFFSET"s},
+                                  {"units", "MILLIMETER_3D"s}},
+                                 errors);
 
   auto event = Observation::make(dataItem, {{"VALUE", "1.2 2.3 3.4"s}}, m_time, errors);
 
@@ -345,7 +349,7 @@ TEST_F(ObservationTest, should_use_three_space_sample_for_3_space_events)
 
   auto &value = event->getValue();
   ASSERT_TRUE(holds_alternative<Vector>(value));
-  
+
   auto &vector = get<Vector>(value);
   ASSERT_EQ(3, vector.size());
   ASSERT_EQ(1.2, vector[0]);
@@ -370,12 +374,12 @@ TEST_F(ObservationTest, should_use_three_space_sample_for_3_space_events)
   auto node = jdoc.at("/WorkpieceOffset/value"_json_pointer);
   ASSERT_TRUE(node.is_array());
   ASSERT_EQ(3, node.size());
-  
+
   auto v = node.begin();
   ASSERT_EQ(1.2, v->get<double>());
   ASSERT_EQ(2.3, (++v)->get<double>());
   ASSERT_EQ(3.4, (++v)->get<double>());
-    
+
   stringstream buffer;
   buffer << jdoc;
 

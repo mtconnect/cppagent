@@ -130,7 +130,7 @@ namespace mtconnect {
           setProperty("discrete", true);
           m_discrete = true;
         }
-        
+
         void makeTopic();
 
         // Value converter

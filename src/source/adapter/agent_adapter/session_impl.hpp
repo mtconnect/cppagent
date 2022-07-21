@@ -394,7 +394,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       using namespace boost;
       namespace algo = boost::algorithm;
-      
+
       if (m_chunk.data().size() < 128)
       {
         LOG(trace) << "Not enough data for mime header: " << m_chunk.data().size();
@@ -454,7 +454,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_chunkLength = boost::lexical_cast<size_t>(rng);
       m_hasHeader = true;
       m_chunk.consume(ep);
-      
+
       return true;
     }
 

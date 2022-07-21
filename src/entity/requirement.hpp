@@ -46,8 +46,8 @@ namespace mtconnect {
     using EntityList = std::list<std::shared_ptr<Entity>>;
     using Vector = std::vector<double>;
 
-    using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t,
-                                      double, bool, Vector, DataSet, Timestamp, std::nullptr_t>;
+    using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
+                               bool, Vector, DataSet, Timestamp, std::nullptr_t>;
 
     enum ValueType : int16_t
     {
