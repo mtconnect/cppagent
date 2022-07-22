@@ -94,19 +94,7 @@ namespace mtconnect {
       {
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
-        m_url = url.str();
-
-        std::stringstream identity;
-        identity << '_' << m_host << '_' << m_port;
-
-        boost::uuids::detail::sha1 sha1;
-        sha1.process_bytes(identity.str().c_str(), identity.str().length());
-        boost::uuids::detail::sha1::digest_type digest;
-        sha1.get_digest(digest);
-
-        identity.str("");
-        identity << std::hex << digest[0] << digest[1] << digest[2];
-        m_identity = std::string("_") + (identity.str()).substr(0, 10);
+        m_url = url.str();        
       }
 
       ~MqttServerBase() { stop(); }
@@ -137,69 +125,68 @@ namespace mtconnect {
           // including close_handler and error_handler.
           ep.start_session(std::make_tuple(std::move(spep), std::move(g)));
 
-          ep.set_connack_handler([](bool sp, mqtt::connect_return_code connack_return_code) {
-            // ep.set_connack_handler([/*&m_connections,*/ wp](
-            //                            MQTT_NS::buffer client_id,
-            //                                              MQTT_NS::optional<MQTT_NS::buffer>
-            //                                              username,
-            //                                              MQTT_NS::optional<MQTT_NS::buffer>
-            //                                              password,
-            //                                              MQTT_NS::optional<MQTT_NS::will>,
-            //                                              bool clean_session,
-            //                                              std::uint16_t keep_alive) {
-            if (connack_return_code == mqtt::connect_return_code::accepted)
-            {
-              /* using namespace MQTT_NS::literals;
-               LOG(info) << "[server] client_id    : " << client_id << std::endl;
-               LOG(info) << "[server] username     : " << (username ? username.value() : "none"_mb)
-                         << std::endl;
-               LOG(info) << "[server] password     : " << (password ? password.value() : "none"_mb)
-                         << std::endl;
-               LOG(info) << "[server] clean_session: " << std::boolalpha << clean_session
-                         << std::endl;
-               LOG(info) << "[server] keep_alive   : " << keep_alive << std::endl;*/
+          std::set<con_sp_t> connections;
+          mi_sub_con subs;
 
-              // auto sp = wp.lock();
-              // m_connections.insert(sp);
-              // sp->connack(false, MQTT_NS::connect_return_code::accepted);
-            }
-
+          ep.set_connect_handler([&connections, wp](MQTT_NS::buffer client_id,
+                                                    MQTT_NS::optional<MQTT_NS::buffer> username,
+                                                    MQTT_NS::optional<MQTT_NS::buffer> password,
+                                                    MQTT_NS::optional<MQTT_NS::will>,
+                                                    bool clean_session, std::uint16_t keep_alive) {
+            using namespace MQTT_NS::literals;
+            LOG(info) << "[server] client_id    : " << client_id << std::endl;
+            LOG(info) << "[server] username     : " << (username ? username.value() : "none"_mb)
+                      << std::endl;
+            LOG(info) << "[server] password     : " << (password ? password.value() : "none"_mb)
+                      << std::endl;
+            LOG(info) << "[server] clean_session: " << std::boolalpha << clean_session << std::endl;
+            LOG(info) << "[server] keep_alive   : " << keep_alive << std::endl;
+            auto sp = wp.lock();
+            connections.insert(sp);
+            sp->connack(false, MQTT_NS::connect_return_code::accepted);
             return true;
           });
 
-          ep.set_close_handler([wp]() {
+          ep.set_close_handler([&connections, &subs, wp]() {
             LOG(info) << "MQTT "
                       << ": server closed";
-            // auto con = wp.lock();
-            // m_connections.erase(con);
-            /*auto &idx = m_subs.get<tag_con>();
+            auto con = wp.lock();
+            connections.erase(con);
+            auto &idx = subs.get<tag_con>();
             auto r = idx.equal_range(con);
-            idx.erase(r.first, r.second);*/
+            idx.erase(r.first, r.second);
           });
 
-          ep.set_error_handler([wp](mqtt::error_code ec) {
+          ep.set_error_handler([&connections, &subs, wp](mqtt::error_code ec) {
             LOG(error) << "error: " << ec.message();
-            // auto con = wp.lock();
-            // m_connections.erase(con);
-            /* auto &idx = m_subs.get<tag_con>();
-             auto r = idx.equal_range(con);
-             idx.erase(r.first, r.second);*/
+            auto con = wp.lock();
+            connections.erase(con);
+            auto &idx = subs.get<tag_con>();
+            auto r = idx.equal_range(con);
+            idx.erase(r.first, r.second);
           });
 
-          /*ep.set_puback_handler(
-              [](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
-                LOG(debug) << "server puback received. packet_id: " << packet_id;
-                for (auto const &e : results)
-                {
-                  LOG(debug) << "suback result: " << e;
-                }
+          ep.set_subscribe_handler([&subs, wp](packet_id_t packet_id,
+                                               std::vector<MQTT_NS::subscribe_entry> entries) {
+            LOG(debug) << "[server] subscribe received. packet_id: " << packet_id << std::endl;
+            std::vector<MQTT_NS::suback_return_code> res;
+            res.reserve(entries.size());
+            auto sp = wp.lock();
+            BOOST_ASSERT(sp);
+            for (auto const &e : entries)
+            {
+              LOG(debug) << "[server] topic_filter: " << e.topic_filter
+                            << " qos: " << e.subopts.get_qos() << std::endl;
+              res.emplace_back(MQTT_NS::qos_to_suback_return_code(e.subopts.get_qos()));
+              subs.emplace(std::move(e.topic_filter), sp, e.subopts.get_qos());
+            }
+            sp->suback(packet_id, res);
+            return true;
+          });
 
-                return true;
-              });*/
-
-          ep.set_publish_handler([](mqtt::optional<std::uint16_t> packet_id,
-                                    mqtt::publish_options pubopts, mqtt::buffer topic_name,
-                                    mqtt::buffer contents) {
+          ep.set_publish_handler([&subs](mqtt::optional<std::uint16_t> packet_id,
+                                         mqtt::publish_options pubopts, mqtt::buffer topic_name,
+                                         mqtt::buffer contents) {
             LOG(debug) << "[server] publish received."
                        << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
                        << " retain: " << pubopts.get_retain() << std::endl;
@@ -210,18 +197,16 @@ namespace mtconnect {
             LOG(debug) << "server topic_name: " << topic_name;
             LOG(debug) << "server contents: " << contents;
 
-            /* auto const &idx = subs.get<tag_topic>();
-             auto r = idx.equal_range(topic_name);
-             for (; r.first != r.second; ++r.first)
-             {
-               r.first->con->publish(topic_name, contents,
-                                     std::min(r.first->qos_value, pubopts.get_qos()));
-             }*/
+            auto const &idx = subs.get<tag_topic>();
+            auto r = idx.equal_range(topic_name);
+            for (; r.first != r.second; ++r.first)
+            {
+              r.first->con->publish(topic_name, contents,
+                                    std::min(r.first->qos_value, pubopts.get_qos()));
+            }
 
             return true;
-          });
-
-          // connect();
+          });          
 
           return true;
         });
@@ -236,69 +221,17 @@ namespace mtconnect {
         auto server = derived().getServer();
         auto url = m_url;
 
-        LOG(warning) << url << "server disconnected: ";
-      }
-
-    protected:
-      void subscribeHandler()
-      {
-        NAMED_SCOPE("MqttServerImpl::subscribeHandler");
-        /*ep.set_subscribe_handler(
-            [&subs, wp](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
-              locked_cout() << "[server] subscribe received. packet_id: " << packet_id << std::endl;
-              std::vector<MQTT_NS::suback_return_code> res;
-              res.reserve(entries.size());
-              auto sp = wp.lock();
-              BOOST_ASSERT(sp);
-              for (auto const &e : entries)
-              {
-                locked_cout() << "[server] topic_filter: " << e.topic_filter
-                              << " qos: " << e.subopts.get_qos() << std::endl;
-                res.emplace_back(MQTT_NS::qos_to_suback_return_code(e.subopts.get_qos()));
-                subs.emplace(std::move(e.topic_filter), sp, e.subopts.get_qos());
-              }
-              sp->suback(packet_id, res);
-              return true;
-            });*/
-      }
-
-      void unSubscribeHandler()
-      {
-        NAMED_SCOPE("MqttServerImpl::subscribeHandler");
-
-        /* ep.set_unsubscribe_handler([&subs, wp](packet_id_t packet_id,
-                                               std::vector<MQTT_NS::unsubscribe_entry> entries) {
-          locked_cout() << "[server] unsubscribe received. packet_id: " << packet_id << std::endl;
-          auto sp = wp.lock();
-          for (auto const &e : entries)
-          {
-            auto it = subs.find(std::make_tuple(sp, e.topic_filter));
-            if (it != subs.end())
-            {
-              subs.erase(it);
-            }
-          }
-          BOOST_ASSERT(sp);
-          sp->unsuback(packet_id);
-          return true;
+       /* ep.set_close_handler([&connections, &subs, wp]() {
+          LOG(info) << "MQTT "
+                    << ": server closed";
+          auto con = wp.lock();
+          connections.erase(con);
+          auto &idx = subs.get<tag_con>();
+          auto r = idx.equal_range(con);
+          idx.erase(r.first, r.second);
         });*/
-      }
 
-      void publishHandler() { NAMED_SCOPE("MqttServerImpl::publishHandler"); }
-
-      void disconnect()
-      {
-        /*ep.set_disconnect_handler([&connections, &subs, wp]() {
-        locked_cout() << "[server] disconnect received." << std::endl;
-        auto sp = wp.lock();
-        BOOST_ASSERT(sp);
-        close_proc(connections, subs, sp);
-      });*/
-      }
-      void connect()
-      {
-        /* if (m_handler)
-           m_handler->m_connecting(m_identity);*/
+        LOG(warning) << url << "server disconnected: ";
       }
 
     protected:
@@ -307,12 +240,6 @@ namespace mtconnect {
       std::string m_host;
 
       unsigned int m_port;
-
-      std::uint16_t m_clientId {0};
-
-      std::set<con_sp_t> m_connections;
-
-      mi_sub_con m_subs;
     };
 
     class MqttTlsServer : public MqttServerBase<MqttTlsServer>

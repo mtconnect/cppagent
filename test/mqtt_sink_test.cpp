@@ -51,12 +51,7 @@ class MqttSinkTest : public testing::Test
 protected:
   void SetUp() override
   {    
-    // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-
-    //using namespace mtconnect::configuration;
-    //m_server = make_unique<Server>(m_context, ConfigOptions {{Port, 0}, {ServerIp, "127.0.0.1"s}});
-  
   }
 
   void TearDown() override
@@ -91,9 +86,12 @@ protected:
 
   void startServer()
   {
-    bool start = m_server->start();
-    if (start)
-        m_context.run_one();
+    if (m_server)
+    {
+      bool start = m_server->start();
+     /* if (start)
+        m_context.run_one();*/
+    }
   }
 
   void createClient(const ConfigOptions &options)
@@ -132,7 +130,7 @@ TEST_F(MqttSinkTest, Mqtt_Sink_publish)
 {
   // mqtt://homeassistant:1883
   ConfigOptions options {
-      {configuration::Host, "localhost"s}, {configuration::Port, 1883},
+      {configuration::Host, "localhost"s}, {configuration::Port, 0},
       {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
       {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
 
@@ -147,7 +145,7 @@ TEST_F(MqttSinkTest, Mqtt_Sink_publish)
   m_client->stop();
 }
 
-
+//works fine with mosquitto server not with mqtt localhost
 TEST_F(MqttSinkTest, Mosquitto_Mqtt_CreateClient)
 {  
   std::uint16_t pid_sub1;
@@ -218,7 +216,7 @@ TEST_F(MqttSinkTest, Mosquitto_Mqtt_CreateClient)
   ioc.run();
 }
 
-
+//Mqtt over web sockets...
 namespace mi = boost::multi_index;
 
 using con_t = MQTT_NS::server_tls_ws<>::endpoint_t;
@@ -397,6 +395,7 @@ void server_proc(Server& s, std::set<con_sp_t>& connections, mi_sub_con& subs)
   s.listen();
 }
 
+//test case for mqtt over websockets 
 TEST_F(MqttSinkTest, Mosquitto_Mqtt_CreateServer)
 {
   MQTT_NS::setup_log();

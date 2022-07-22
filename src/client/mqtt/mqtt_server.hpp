@@ -24,7 +24,6 @@ namespace mtconnect {
      public:
        MqttServerImpl(boost::asio::io_context &ioc) : m_ioContext(ioc) {}
        virtual ~MqttServerImpl() = default;
-       const auto &getIdentity() const { return m_identity; }
        const auto &getUrl() const { return m_url; }
 
        virtual bool start() = 0;
@@ -33,7 +32,6 @@ namespace mtconnect {
      protected:
        boost::asio::io_context &m_ioContext;
        std::string m_url;
-       std::string m_identity;
      };
    }  // namespace mqtt_server
  }  // namespace mtconnect::mqtt_server
