@@ -165,9 +165,26 @@ namespace mtconnect::printer {
   {
     entity::JsonPrinter printer(m_jsonVersion);
 
-    json devicesDoc = json::array();
-    for (const auto &device : devices)
-      devicesDoc.emplace_back(printer.print(device));
+    json devicesDoc;
+    
+    if (m_jsonVersion == 1)
+    {
+      devicesDoc = json::array();
+      for (const auto &device : devices)
+        devicesDoc.emplace_back(printer.print(device));
+    }
+    else if (m_jsonVersion == 2)
+    {
+      entity::EntityList list;
+      copy(devices.begin(), devices.end(), back_inserter(list));
+      entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
+      entity->setProperty("LIST", list);
+      devicesDoc = printer.printEntity(entity);
+    }
+    else
+    {
+      throw runtime_error("invalid json printer version");
+    }
 
     json doc = json::object({{"MTConnectDevices",
                               {{"Header", probeAssetHeader(m_version, hostname(), instanceId,
