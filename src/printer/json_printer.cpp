@@ -206,16 +206,11 @@ namespace mtconnect::printer {
         }
         else if (m_version == 2)
         {
-          if (m_events.size() == 1)
-            ret.second = printer.print(m_events.front());
-          else
-          {
-            entity::EntityList list;
-            copy(m_events.begin(), m_events.end(), back_inserter(list));
-            entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
-            entity->setProperty("LIST", list);
-            ret.second = printer.printEntity(entity);
-          }
+          entity::EntityList list;
+          copy(m_events.begin(), m_events.end(), back_inserter(list));
+          entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
+          entity->setProperty("LIST", list);
+          ret.second = printer.printEntity(entity);
         }
       }
       return ret;
@@ -274,7 +269,10 @@ namespace mtconnect::printer {
             obj[string(c.first)] = c.second;
         }
 
-        ret = json::object({{"ComponentStream", obj}});
+        if (m_version == 1)
+          ret = json::object({{"ComponentStream", obj}});
+        else if (m_version == 2)
+          ret = obj;
       }
       return ret;
     }
@@ -322,21 +320,21 @@ namespace mtconnect::printer {
         json items = json::array();
         for (auto &comp : m_components)
           items.emplace_back(comp.toJson());
-        obj["ComponentStreams"] = items;
         
         if (m_version == 1)
         {
+          obj["ComponentStreams"] = items;
           ret = json::object({{"DeviceStream", obj}});
         }
         else if (m_version == 2)
         {
           if (m_components.size() == 1)
           {
-            ret["ComponentStreams"] = items.front();
+            ret["ComponentStream"] = items.front();
           }
           else
           {
-            ret["ComponentStreams"] = items;
+            ret["ComponentStream"] = items;
           }
         }
         else

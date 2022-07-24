@@ -206,6 +206,33 @@ TEST_F(JsonPrinterStreamTest, ComponentStreamTwoComponents)
   ASSERT_EQ(string("zf476090"), stream2.at("/componentId"_json_pointer).get<string>());
 }
 
+TEST_F(JsonPrinterStreamTest, two_components_version_2)
+{
+  m_printer = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
+
+  Checkpoint checkpoint;
+  addObservationToCheckpoint(checkpoint, "Xpos", 10254804, 100_value);
+  addObservationToCheckpoint(checkpoint, "Sspeed_act", 10254805, 500_value);
+  ObservationList list;
+  checkpoint.getObservations(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
+  
+  auto jdoc = json::parse(doc);
+  auto streams = jdoc.at("/MTConnectStreams/Streams/DeviceStream/ComponentStream"_json_pointer);
+  ASSERT_EQ(2_S, streams.size());
+  
+  json stream1 = streams[0];
+  ASSERT_TRUE(stream1.is_object());
+  ASSERT_EQ(string("Linear"), stream1.at("/component"_json_pointer).get<string>());
+  ASSERT_EQ(string("e373fec0"), stream1.at("/componentId"_json_pointer).get<string>());
+
+  json stream2 = streams[1];
+  ASSERT_TRUE(stream2.is_object());
+  ASSERT_EQ(string("Rotary"), stream2.at("/component"_json_pointer).get<string>());
+  ASSERT_EQ(string("zf476090"), stream2.at("/componentId"_json_pointer).get<string>());
+}
+
+
 TEST_F(JsonPrinterStreamTest, TwoDevices)
 {
   Checkpoint checkpoint;
@@ -296,8 +323,7 @@ TEST_F(JsonPrinterStreamTest, samples_and_events_version_2)
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   auto jdoc = json::parse(doc);
   
-  auto streams = jdoc.at("/MTConnectStreams/Streams/DeviceStream/ComponentStreams"_json_pointer);
-  auto stream = streams.at("/ComponentStream"_json_pointer);
+  auto stream = jdoc.at("/MTConnectStreams/Streams/DeviceStream/ComponentStream"_json_pointer);
   ASSERT_TRUE(stream.is_object());
 
   ASSERT_EQ(string("a4a7bdf0"), stream.at("/componentId"_json_pointer).get<string>());
