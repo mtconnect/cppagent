@@ -178,13 +178,6 @@ namespace mtconnect::printer {
     return print(doc, m_pretty);
   }
 
-  inline json toJson(const ObservationPtr &observation,
-                     uint32_t version)
-  {
-    entity::JsonPrinter printer(version);
-    return printer.print(observation);
-  }
-
   class CategoryRef
   {
   public:
@@ -198,33 +191,48 @@ namespace mtconnect::printer {
     }
 
     bool isCategory(const char *cat) { return m_category == cat; }
-
-    pair<string, json> toJson()
+    
+    pair<string_view, json> toJson()
     {
-      pair<string, json> ret;
+      entity::JsonPrinter printer(m_version);
+      pair<string_view, json> ret(m_category, json::object());
       if (!m_category.empty())
       {
-        json items = json::array();
-        for (auto &event : m_events)
-          items.emplace_back(printer::toJson(event, m_version));
-
-        ret = make_pair(m_category, items);
+        if (m_version == 1)
+        {
+          ret.second = json::array();
+          for (auto &event : m_events)
+            ret.second.emplace_back(printer.print(event));
+        }
+        else if (m_version == 2)
+        {
+          if (m_events.size() == 1)
+            ret.second = printer.print(m_events.front());
+          else
+          {
+            entity::EntityList list;
+            copy(m_events.begin(), m_events.end(), back_inserter(list));
+            entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
+            entity->setProperty("LIST", list);
+            ret.second = printer.printEntity(entity);
+          }
+        }
       }
       return ret;
     }
 
   protected:
-    string m_category;
-    vector<ObservationPtr> m_events;
+    string_view m_category;
+    list<ObservationPtr> m_events;
     uint32_t m_version;
   };
 
   class ComponentRef
   {
   public:
-    ComponentRef(const ComponentPtr component, uint32_t version) : m_component(component), m_categoryRef(nullptr), m_version(version) {}
+    ComponentRef(const ComponentPtr component, uint32_t version) : m_component(component), m_version(version) {}
     ComponentRef(const ComponentRef &other)
-      : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr),
+      : m_component(other.m_component), m_categories(other.m_categories),
     m_version(other.m_version)
     {}
 
@@ -236,14 +244,14 @@ namespace mtconnect::printer {
       if (m_component == component)
       {
         auto cat = dataItem->getCategoryText();
-        if (m_categoryRef == nullptr || !m_categoryRef->isCategory(cat))
+        if (!m_categoryRef || !(*m_categoryRef)->isCategory(cat))
         {
           m_categories.emplace_back(cat, m_version);
-          m_categoryRef = &m_categories.back();
+          m_categoryRef.emplace(&m_categories.back());
         }
 
-        if (m_categoryRef != nullptr)
-          return m_categoryRef->addObservation(observation);
+        if (m_categoryRef)
+          return (*m_categoryRef)->addObservation(observation);
       }
       return false;
     }
@@ -263,7 +271,7 @@ namespace mtconnect::printer {
         {
           auto c = cat.toJson();
           if (!c.first.empty())
-            obj[c.first] = c.second;
+            obj[string(c.first)] = c.second;
         }
 
         ret = json::object({{"ComponentStream", obj}});
@@ -274,14 +282,14 @@ namespace mtconnect::printer {
   protected:
     const ComponentPtr m_component;
     vector<CategoryRef> m_categories;
-    CategoryRef *m_categoryRef;
+    optional<CategoryRef*> m_categoryRef;
     uint32_t m_version;
   };
 
   class DeviceRef
   {
   public:
-    DeviceRef(const DevicePtr device, uint32_t version) : m_device(device), m_componentRef(nullptr), m_version(version) {}
+    DeviceRef(const DevicePtr device, uint32_t version) : m_device(device), m_version(version) {}
     DeviceRef(const DeviceRef &other) : m_device(other.m_device), m_components(other.m_components), m_version(other.m_version)
     {}
 
@@ -292,14 +300,14 @@ namespace mtconnect::printer {
     {
       if (m_device == device)
       {
-        if (m_componentRef == nullptr || !m_componentRef->isComponent(component))
+        if (!m_componentRef || !(*m_componentRef)->isComponent(component))
         {
           m_components.emplace_back(component, m_version);
-          m_componentRef = &m_components.back();
+          m_componentRef.emplace(&m_components.back());
         }
 
-        if (m_componentRef != nullptr)
-          return m_componentRef->addObservation(observation, component, dataItem);
+        if (m_componentRef)
+          return (*m_componentRef)->addObservation(observation, component, dataItem);
       }
       return false;
     }
@@ -307,15 +315,34 @@ namespace mtconnect::printer {
     json toJson()
     {
       json ret;
-      if (m_device != nullptr && !m_components.empty())
+      if (m_device && !m_components.empty())
       {
-        json obj =
-            json::object({{"name", *m_device->getComponentName()}, {"uuid", *m_device->getUuid()}});
+        json obj = json::object({{"name", *m_device->getComponentName()},
+          {"uuid", *m_device->getUuid()}});
         json items = json::array();
         for (auto &comp : m_components)
           items.emplace_back(comp.toJson());
         obj["ComponentStreams"] = items;
-        ret = json::object({{"DeviceStream", obj}});
+        
+        if (m_version == 1)
+        {
+          ret = json::object({{"DeviceStream", obj}});
+        }
+        else if (m_version == 2)
+        {
+          if (m_components.size() == 1)
+          {
+            ret["ComponentStreams"] = items.front();
+          }
+          else
+          {
+            ret["ComponentStreams"] = items;
+          }
+        }
+        else
+        {
+          throw runtime_error("Invalid json printer version");
+        }
       }
       return ret;
     }
@@ -323,7 +350,7 @@ namespace mtconnect::printer {
   protected:
     const DevicePtr m_device;
     vector<ComponentRef> m_components;
-    ComponentRef *m_componentRef;
+    optional<ComponentRef*> m_componentRef;
     uint32_t m_version;
   };
 
@@ -331,7 +358,7 @@ namespace mtconnect::printer {
                                        const uint64_t nextSeq, const uint64_t firstSeq,
                                        const uint64_t lastSeq, ObservationList &observations) const
   {
-    json streams = json::array();
+    json streams;
 
     if (observations.size() > 0)
     {
@@ -346,7 +373,7 @@ namespace mtconnect::printer {
         const auto component = dataItem->getComponent();
         const auto device = component->getDevice();
 
-        if (deviceRef == nullptr || !deviceRef->isDevice(device))
+        if (!deviceRef || !deviceRef->isDevice(device))
         {
           devices.emplace_back(device, m_jsonVersion);
           deviceRef = &devices.back();
@@ -355,8 +382,21 @@ namespace mtconnect::printer {
         deviceRef->addObservation(observation, device, component, dataItem);
       }
 
+      streams = json::array();
       for (auto &ref : devices)
         streams.emplace_back(ref.toJson());
+
+      if (m_jsonVersion == 2)
+      {
+        if (devices.size() == 1)
+        {
+          streams = json::object({{ "DeviceStream", streams.front() }});
+        }
+        else
+        {
+          streams = json::object({{ "DeviceStream", streams }});
+        }
+      }
     }
 
     json doc = json::object(

@@ -34,11 +34,11 @@ namespace mtconnect {
       {
         return json::object({{entity->getName(), printEntity(entity)}});
       }
+      json printEntity(const EntityPtr entity) const;
 
     protected:
       void printEntityList1(json &obj, const EntityList &list) const;
       void printEntityList2(json &obj, const EntityList &list) const;
-      json printEntity(const EntityPtr entity) const;
       
     protected:
       uint32_t m_version;
