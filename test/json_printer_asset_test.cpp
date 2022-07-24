@@ -255,26 +255,47 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
   ASSERT_EQ(string("Some Express..."), def.at("/value"_json_pointer).get<string>());
 }
 
-// TODO: Test extended asset suppot
-#if 0
-TEST_F(JsonPrinterAssetTest, UnknownAssetType)
+TEST_F(JsonPrinterAssetTest, json_printer_version_2_with_multiple_assets)
 {
-  AssetPtr asset(new Asset("BLAH", "Bar", "Some Random Stuff"));
-  asset->setTimestamp("2001-12-17T09:30:47Z");
-  asset->setDeviceUuid("7800f530-34a9");
+  m_printer = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
 
-  vector<AssetPtr> assetList = {asset};
+  AssetList assetList;
+  
+  auto xml1 = getFile("asset1.xml");
+  entity::ErrorList errors;
+  AssetPtr asset = parseAsset(xml1, errors);
+  asset->setAssetId("FIRST");
+  ASSERT_TRUE(asset);
+  assetList.push_back(asset);
+  
+  auto xml2 = getFile("cutting_tool_archetype.xml");
+  asset = parseAsset(xml2, errors);
+  asset->setAssetId("SECOND");
+  ASSERT_TRUE(asset);
+  assetList.push_back(asset);
+  
+  asset = parseAsset(xml1, errors);
+  ASSERT_TRUE(asset);
+  asset->setAssetId("THIRD");
+  assetList.push_back(asset);
+
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
 
-  cout << jdoc.dump(2) << endl;
-  auto bar = jdoc.at(
-      "/MTConnectAssets/Assets/0/"
-      "Bar"_json_pointer);
-  ASSERT_TRUE(bar.is_object());
-  ASSERT_EQ("BLAH"_S, bar.at("/assetId"_json_pointer).get<string>());
-  ASSERT_EQ("2001-12-17T09:30:47Z"_S, bar.at("/timestamp"_json_pointer).get<string>());
-  ASSERT_EQ("7800f530-34a9"_S, bar.at("/deviceUuid"_json_pointer).get<string>());
-  ASSERT_EQ("Some Random Stuff"_S, bar.at("/text"_json_pointer).get<string>());
+  auto assets = jdoc.at(
+      "/MTConnectAssets/Assets"_json_pointer);
+  ASSERT_TRUE(assets.is_object());
+  
+  auto tools = assets.at("/CuttingTool"_json_pointer);
+  ASSERT_TRUE(tools.is_array());
+  ASSERT_EQ(2_S, tools.size());
+  
+  ASSERT_EQ("FIRST", tools.at("/0/assetId"_json_pointer));
+  ASSERT_EQ("THIRD", tools.at("/1/assetId"_json_pointer));
+
+  auto arch = assets.at("/CuttingToolArchetype"_json_pointer);
+  ASSERT_TRUE(arch.is_object());
+
+  ASSERT_EQ("SECOND", arch.at("/assetId"_json_pointer));
+
 }
-#endif

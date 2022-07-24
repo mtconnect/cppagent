@@ -411,11 +411,26 @@ namespace mtconnect::printer {
                                        const asset::AssetList &asset) const
   {
     entity::JsonPrinter printer(m_jsonVersion);
-
-    json assetDoc = json::array();
-    for (const auto &asset : asset)
-      assetDoc.emplace_back(printer.print(asset));
-
+    json assetDoc;
+    if (m_jsonVersion == 1)
+    {
+      assetDoc = json::array();
+      for (const auto &asset : asset)
+        assetDoc.emplace_back(printer.print(asset));
+    }
+    else if (m_jsonVersion == 2)
+    {
+      entity::EntityList list;
+      copy(asset.begin(), asset.end(), back_inserter(list));
+      entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
+      entity->setProperty("LIST", list);
+      assetDoc = printer.printEntity(entity);
+    }
+    else
+    {
+      throw runtime_error("invalid json printer version");
+    }
+    
     json doc = json::object(
         {{"MTConnectAssets",
           {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize, assetCount,
