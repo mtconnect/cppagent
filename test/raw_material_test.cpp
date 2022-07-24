@@ -229,7 +229,7 @@ TEST_F(RawMaterialTest, should_generate_json)
   auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jsonPrinter;
+  entity::JsonPrinter jsonPrinter(1);
   auto json = jsonPrinter.print(entity);
 
   stringstream buffer;

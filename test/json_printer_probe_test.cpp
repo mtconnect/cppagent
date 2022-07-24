@@ -50,7 +50,7 @@ protected:
   void SetUp() override
   {
     m_xmlPrinter = std::make_unique<printer::XmlPrinter>("1.5");
-    m_printer = std::make_unique<printer::JsonPrinter>("1.5", true);
+    m_printer = std::make_unique<printer::JsonPrinter>(1, "1.5", true);
 
     m_agentTestHelper = make_unique<AgentTestHelper>();
     m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml", 8, 4, "1.5", 25);

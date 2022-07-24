@@ -57,7 +57,7 @@ protected:
     FileArchetypeAsset::registerAsset();
     FileAsset::registerAsset();
 
-    m_printer = std::make_unique<printer::JsonPrinter>("1.5", true);
+    m_printer = std::make_unique<printer::JsonPrinter>(1, "1.5", true);
     m_parser = std::make_unique<entity::XmlParser>();
   }
 

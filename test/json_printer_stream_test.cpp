@@ -51,7 +51,7 @@ protected:
   void SetUp() override
   {
     m_xmlPrinter = std::make_unique<printer::XmlPrinter>("1.5");
-    m_printer = std::make_unique<printer::JsonPrinter>("1.5", true);
+    m_printer = std::make_unique<printer::JsonPrinter>(1, "1.5", true);
     m_config = std::make_unique<parser::XmlParser>();
     m_devices =
         m_config->parseFile(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", m_xmlPrinter.get());

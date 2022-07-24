@@ -28,7 +28,7 @@ namespace mtconnect {
     class JsonPrinter
     {
     public:
-      JsonPrinter() = default;
+      JsonPrinter(uint32_t version) : m_version(version) {};
 
       json print(const EntityPtr entity) const
       {
@@ -36,7 +36,12 @@ namespace mtconnect {
       }
 
     protected:
+      void printEntityList1(json &obj, const EntityList &list) const;
+      void printEntityList2(json &obj, const EntityList &list) const;
       json printEntity(const EntityPtr entity) const;
+      
+    protected:
+      uint32_t m_version;
     };
   }  // namespace entity
 }  // namespace mtconnect

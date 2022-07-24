@@ -163,7 +163,7 @@ TEST_F(JsonPrinterTest, Header)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -186,7 +186,7 @@ TEST_F(JsonPrinterTest, Devices)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -209,7 +209,7 @@ TEST_F(JsonPrinterTest, Components)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -241,7 +241,7 @@ TEST_F(JsonPrinterTest, TopLevelDataItems)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -278,7 +278,7 @@ TEST_F(JsonPrinterTest, ElementListWithProperty)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);

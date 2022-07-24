@@ -40,8 +40,8 @@ namespace mtconnect::printer {
   using namespace observation;
   using namespace device_model;
 
-  JsonPrinter::JsonPrinter(const string version, bool pretty)
-    : Printer(pretty), m_schemaVersion(version)
+  JsonPrinter::JsonPrinter(uint32_t jsonVersion, const string version, bool pretty)
+    : Printer(pretty), m_schemaVersion(version), m_jsonVersion(jsonVersion)
   {
     NAMED_SCOPE("JsonPrinter::JsonPrinter");
     char appVersion[32] = {0};
@@ -163,7 +163,7 @@ namespace mtconnect::printer {
                                       const std::list<DevicePtr> &devices,
                                       const std::map<std::string, size_t> *count) const
   {
-    entity::JsonPrinter printer;
+    entity::JsonPrinter printer(m_jsonVersion);
 
     json devicesDoc = json::array();
     for (const auto &device : devices)
@@ -178,16 +178,17 @@ namespace mtconnect::printer {
     return print(doc, m_pretty);
   }
 
-  inline json toJson(const ObservationPtr &observation)
+  inline json toJson(const ObservationPtr &observation,
+                     uint32_t version)
   {
-    entity::JsonPrinter printer;
+    entity::JsonPrinter printer(version);
     return printer.print(observation);
   }
 
   class CategoryRef
   {
   public:
-    CategoryRef(const char *cat) : m_category(cat) {}
+    CategoryRef(const char *cat, uint32_t version) : m_category(cat), m_version(version) {}
     CategoryRef(const CategoryRef &other) = default;
 
     bool addObservation(const ObservationPtr &observation)
@@ -205,7 +206,7 @@ namespace mtconnect::printer {
       {
         json items = json::array();
         for (auto &event : m_events)
-          items.emplace_back(printer::toJson(event));
+          items.emplace_back(printer::toJson(event, m_version));
 
         ret = make_pair(m_category, items);
       }
@@ -215,14 +216,16 @@ namespace mtconnect::printer {
   protected:
     string m_category;
     vector<ObservationPtr> m_events;
+    uint32_t m_version;
   };
 
   class ComponentRef
   {
   public:
-    ComponentRef(const ComponentPtr component) : m_component(component), m_categoryRef(nullptr) {}
+    ComponentRef(const ComponentPtr component, uint32_t version) : m_component(component), m_categoryRef(nullptr), m_version(version) {}
     ComponentRef(const ComponentRef &other)
-      : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr)
+      : m_component(other.m_component), m_categories(other.m_categories), m_categoryRef(nullptr),
+    m_version(other.m_version)
     {}
 
     bool isComponent(const ComponentPtr &component) { return m_component == component; }
@@ -235,7 +238,7 @@ namespace mtconnect::printer {
         auto cat = dataItem->getCategoryText();
         if (m_categoryRef == nullptr || !m_categoryRef->isCategory(cat))
         {
-          m_categories.emplace_back(cat);
+          m_categories.emplace_back(cat, m_version);
           m_categoryRef = &m_categories.back();
         }
 
@@ -248,7 +251,7 @@ namespace mtconnect::printer {
     json toJson()
     {
       json ret;
-      if (m_component != nullptr && !m_categories.empty())
+      if (m_component && !m_categories.empty())
       {
         json obj = json::object(
             {{"component", m_component->getName()}, {"componentId", m_component->getId()}});
@@ -272,13 +275,14 @@ namespace mtconnect::printer {
     const ComponentPtr m_component;
     vector<CategoryRef> m_categories;
     CategoryRef *m_categoryRef;
+    uint32_t m_version;
   };
 
   class DeviceRef
   {
   public:
-    DeviceRef(const DevicePtr device) : m_device(device), m_componentRef(nullptr) {}
-    DeviceRef(const DeviceRef &other) : m_device(other.m_device), m_components(other.m_components)
+    DeviceRef(const DevicePtr device, uint32_t version) : m_device(device), m_componentRef(nullptr), m_version(version) {}
+    DeviceRef(const DeviceRef &other) : m_device(other.m_device), m_components(other.m_components), m_version(other.m_version)
     {}
 
     bool isDevice(const DevicePtr device) { return device == m_device; }
@@ -290,7 +294,7 @@ namespace mtconnect::printer {
       {
         if (m_componentRef == nullptr || !m_componentRef->isComponent(component))
         {
-          m_components.emplace_back(component);
+          m_components.emplace_back(component, m_version);
           m_componentRef = &m_components.back();
         }
 
@@ -320,6 +324,7 @@ namespace mtconnect::printer {
     const DevicePtr m_device;
     vector<ComponentRef> m_components;
     ComponentRef *m_componentRef;
+    uint32_t m_version;
   };
 
   std::string JsonPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
@@ -343,7 +348,7 @@ namespace mtconnect::printer {
 
         if (deviceRef == nullptr || !deviceRef->isDevice(device))
         {
-          devices.emplace_back(device);
+          devices.emplace_back(device, m_jsonVersion);
           deviceRef = &devices.back();
         }
 
@@ -361,15 +366,13 @@ namespace mtconnect::printer {
            {"Streams", streams}}}});
 
     return print(doc, m_pretty);
-
-    return print(doc, m_pretty);
   }
 
   std::string JsonPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
                                        const unsigned int assetCount,
                                        const asset::AssetList &asset) const
   {
-    entity::JsonPrinter printer;
+    entity::JsonPrinter printer(m_jsonVersion);
 
     json assetDoc = json::array();
     for (const auto &asset : asset)
