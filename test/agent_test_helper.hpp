@@ -207,12 +207,15 @@ public:
     m_restService = std::dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     m_agent->addSink(m_restService);
 
-    auto mqttContract = m_agent->makeSinkContract();
-    mqttContract->m_pipelineContext = m_context;
-    auto mqttsink = m_sinkFactory.make("MqttService", "MqttService", m_ioContext,
-                                       move(mqttContract), options, ptree {});
-    m_mqttService = std::dynamic_pointer_cast<sink::mqtt_sink::MqttService>(mqttsink);
-    m_agent->addSink(m_mqttService);
+    if (HasOption(options, "MqttSink"))
+    {
+      auto mqttContract = m_agent->makeSinkContract();
+      mqttContract->m_pipelineContext = m_context;
+      auto mqttsink = m_sinkFactory.make("MqttService", "MqttService", m_ioContext,
+                                         move(mqttContract), options, ptree {});
+      m_mqttService = std::dynamic_pointer_cast<sink::mqtt_sink::MqttService>(mqttsink);
+      m_agent->addSink(m_mqttService);
+    }
 
     m_agent->initialize(m_context);
 
