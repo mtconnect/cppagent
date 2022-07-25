@@ -20,7 +20,7 @@
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
-#include "mqtt//mqtt_client.hpp"
+#include "mqtt/mqtt_client.hpp"
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
 #include "printer/printer.hpp"
@@ -58,7 +58,7 @@ namespace mtconnect {
 
         static void registerFactory(SinkFactory &factory);
 
-        std::shared_ptr<MqttClientImpl> getClient();
+        std::shared_ptr<MqttClient> getClient();
 
       protected:
 
@@ -68,7 +68,7 @@ namespace mtconnect {
         boost::asio::io_context &m_context;
         ConfigOptions m_options;
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
-        std::shared_ptr<MqttClientImpl> m_client;
+        std::shared_ptr<MqttClient> m_client;
       };
 
     }  // namespace mqtt_sink

@@ -17,7 +17,7 @@
 
 #include "mqtt_service.hpp"
 
-#include "mqtt//mqtt_client.cpp"
+#include "mqtt/mqtt_client_impl.hpp"
 #include "configuration/config_options.hpp"
 #include "entity/entity.hpp"
 #include "entity/factory.hpp"
@@ -70,7 +70,7 @@ namespace mtconnect {
         }
         else
         {
-          m_client = make_shared<MqttClient>(m_context, m_options);
+          m_client = make_shared<MqttTcpClient>(m_context, m_options);
         }
       }
 
@@ -107,7 +107,7 @@ namespace mtconnect {
         m_client->stop();
       }
 
-      std::shared_ptr<MqttClientImpl> MqttService::getClient() { return m_client; }
+      std::shared_ptr<MqttClient> MqttService::getClient() { return m_client; }
 
       uint64_t MqttService::publish(observation::ObservationPtr &observation)
       {

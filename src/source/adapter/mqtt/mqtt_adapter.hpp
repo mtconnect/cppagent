@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "mqtt//mqtt_client.hpp"
+#include "mqtt/mqtt_client.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/adapter_pipeline.hpp"
 
@@ -73,6 +73,6 @@ namespace mtconnect::source::adapter::mqtt_adapter {
 
     MqttPipeline m_pipeline;
 
-    std::shared_ptr<MqttClientImpl> m_client;
+    std::shared_ptr<MqttClient> m_client;
   };
 }  // namespace mtconnect::source::adapter::mqtt_adapter

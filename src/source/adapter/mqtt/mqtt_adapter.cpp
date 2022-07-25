@@ -23,7 +23,7 @@
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 
-#include "mqtt//mqtt_client.cpp"
+#include "mqtt/mqtt_client_impl.hpp"
 
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
@@ -80,7 +80,7 @@ namespace mtconnect {
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
                                                                       &m_pipeline, m_handler.get());
       else
-        m_client = make_shared<mtconnect::mqtt_client::MqttClient>(m_ioContext, m_options, &m_pipeline, m_handler.get());
+        m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_ioContext, m_options, &m_pipeline, m_handler.get());
     
       m_identity = m_client->getIdentity();
       m_name = m_client->getUrl();

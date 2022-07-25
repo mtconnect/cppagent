@@ -22,11 +22,11 @@
 
 namespace mtconnect {
   namespace mqtt_client {
-    class MqttClientImpl : public std::enable_shared_from_this<MqttClientImpl>
+    class MqttClient : public std::enable_shared_from_this<MqttClient>
     {
     public:
-      MqttClientImpl(boost::asio::io_context &ioc) : m_ioContext(ioc) {}
-      virtual ~MqttClientImpl() = default;
+      MqttClient(boost::asio::io_context &ioc) : m_ioContext(ioc) {}
+      virtual ~MqttClient() = default;
       const auto &getIdentity() const { return m_identity; }
       const auto &getUrl() const { return m_url; }
 

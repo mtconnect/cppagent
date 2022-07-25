@@ -55,11 +55,11 @@ namespace mtconnect {
                                                 std::uint16_t, mqtt::protocol_version>;
 
     template <typename Derived>
-    class MqttClientBase : public MqttClientImpl
+    class MqttClientImpl : public MqttClient
     {
     public:
-      MqttClientBase(boost::asio::io_context &ioContext, const ConfigOptions &options)
-        : MqttClientImpl(ioContext),
+      MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options)
+        : MqttClient(ioContext),
           m_options(options),
           m_host(*GetOption<std::string>(options, configuration::Host)),
           m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
@@ -82,10 +82,10 @@ namespace mtconnect {
         m_identity = std::string("_") + (identity.str()).substr(0, 10);
       }
 
-      MqttClientBase(boost::asio::io_context &ioContext, const ConfigOptions &options,
+      MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options,
                      source::adapter::mqtt_adapter::MqttPipeline *pipeline,
                      source::adapter::Handler *handler)
-        : MqttClientImpl(ioContext),
+        : MqttClient(ioContext),
           m_options(options),
           m_host(*GetOption<std::string>(options, configuration::Host)),
           m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
@@ -110,7 +110,7 @@ namespace mtconnect {
         m_identity = std::string("_") + (identity.str()).substr(0, 10);
       }
 
-      ~MqttClientBase() { stop(); }
+      ~MqttClientImpl() { stop(); }
 
       Derived &derived() { return static_cast<Derived &>(*this); }
 
@@ -342,10 +342,10 @@ namespace mtconnect {
       boost::asio::steady_timer m_reconnectTimer;
     };
    
-    class MqttClient : public MqttClientBase<MqttClient>
+    class MqttTcpClient : public MqttClientImpl<MqttTcpClient>
     {
     public:
-      using base = MqttClientBase<MqttClient>;
+      using base = MqttClientImpl<MqttTcpClient>;
       using base::base;
 
       auto getClient()
@@ -362,10 +362,10 @@ namespace mtconnect {
       mqtt_client m_client;
     };
 
-    class MqttTlsClient : public MqttClientBase<MqttTlsClient>
+    class MqttTlsClient : public MqttClientImpl<MqttTlsClient>
     {
     public:
-      using base = MqttClientBase<MqttTlsClient>;
+      using base = MqttClientImpl<MqttTlsClient>;
       using base::base;
 
       auto &getClient()

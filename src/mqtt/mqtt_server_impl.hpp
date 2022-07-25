@@ -83,11 +83,11 @@ namespace mtconnect {
                                    BOOST_MULTI_INDEX_MEMBER(sub_con, con_sp_t, con)>>>;
 
     template <typename Derived>
-    class MqttServerBase : public MqttServerImpl
+    class MqttServerImpl : public MqttServer
     {
     public:
-      MqttServerBase(boost::asio::io_context &ioContext, const ConfigOptions &options)
-        : MqttServerImpl(ioContext),
+      MqttServerImpl(boost::asio::io_context &ioContext, const ConfigOptions &options)
+        : MqttServer(ioContext),
           m_options(options),
           m_host(*GetOption<std::string>(options, configuration::Host)),
           m_port(GetOption<int>(options, configuration::Port).value_or(0))
@@ -97,7 +97,7 @@ namespace mtconnect {
         m_url = url.str();        
       }
 
-      ~MqttServerBase() { stop(); }
+      ~MqttServerImpl() { stop(); }
 
       Derived &derived() { return static_cast<Derived &>(*this); }
 
@@ -242,10 +242,10 @@ namespace mtconnect {
       unsigned int m_port;
     };
 
-    class MqttTlsServer : public MqttServerBase<MqttTlsServer>
+    class MqttTlsServer : public MqttServerImpl<MqttTlsServer>
     {
     public:
-      using base = MqttServerBase<MqttTlsServer>;
+      using base = MqttServerImpl<MqttTlsServer>;
       using base::base;
 
       auto getServer()

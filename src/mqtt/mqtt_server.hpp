@@ -19,11 +19,11 @@
 
 namespace mtconnect {
    namespace mqtt_server {
-     class MqttServerImpl : public std::enable_shared_from_this<MqttServerImpl>
+     class MqttServer : public std::enable_shared_from_this<MqttServer>
      {
      public:
-       MqttServerImpl(boost::asio::io_context &ioc) : m_ioContext(ioc) {}
-       virtual ~MqttServerImpl() = default;
+       MqttServer(boost::asio::io_context &ioc) : m_ioContext(ioc) {}
+       virtual ~MqttServer() = default;
        const auto &getUrl() const { return m_url; }
 
        virtual bool start() = 0;

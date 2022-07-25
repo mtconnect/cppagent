@@ -30,8 +30,8 @@
 #include <mqtt_server_cpp.hpp>
 
 #include "agent_test_helper.hpp"
-#include "mqtt//mqtt_client.cpp"
-#include "mqtt//mqtt_server.cpp"
+#include "mqtt/mqtt_client_impl.hpp"
+#include "mqtt/mqtt_server_impl.hpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
 
 
@@ -97,7 +97,7 @@ protected:
 
   void createClient(const ConfigOptions &options)
   {   
-    m_client = make_shared<mtconnect::mqtt_client::MqttClient>(m_context, options);
+    m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_context, options);
   }
 
   void startClient()
@@ -106,8 +106,8 @@ protected:
       m_client->start();
   }
 
-  std::shared_ptr<mtconnect::mqtt_server::MqttServerImpl> m_server;
-  std::shared_ptr<MqttClientImpl> m_client;
+  std::shared_ptr<mtconnect::mqtt_server::MqttServer> m_server;
+  std::shared_ptr<MqttClient> m_client;
   asio::io_context m_context;
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
