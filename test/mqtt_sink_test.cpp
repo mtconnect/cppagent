@@ -68,9 +68,10 @@ protected:
   }
 
   void createAgent(ConfigOptions options = {})
-  {   
-    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "2.0", 25, false, true,
-                                   options);   
+  {
+    options.emplace("MqttSink", true);
+    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "2.0", 25,
+                                   false, true,  options);   
 
     m_agentTestHelper->getAgent()->start();
   } 
@@ -398,6 +399,8 @@ void server_proc(Server& s, std::set<con_sp_t>& connections, mi_sub_con& subs)
 //test case for mqtt over websockets 
 TEST_F(MqttSinkTest, Mqtt_WebsocketsServer)
 {
+  GTEST_SKIP();
+  
  // MQTT_NS::setup_log();
  //  
  // std::uint16_t port = boost::lexical_cast<std::uint16_t>(0);
