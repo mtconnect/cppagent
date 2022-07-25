@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "client/mqtt/mqtt_client.hpp"
+#include "mqtt//mqtt_client.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/adapter_pipeline.hpp"
 

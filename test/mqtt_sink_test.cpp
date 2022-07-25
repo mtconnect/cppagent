@@ -30,8 +30,8 @@
 #include <mqtt_server_cpp.hpp>
 
 #include "agent_test_helper.hpp"
-#include "client/mqtt/mqtt_client.cpp"
-#include "client/mqtt/mqtt_server.cpp"
+#include "mqtt//mqtt_client.cpp"
+#include "mqtt//mqtt_server.cpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
 
 

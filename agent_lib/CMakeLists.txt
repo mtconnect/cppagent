@@ -31,15 +31,15 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/raw_material.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/qif_document.cpp"
         
-# src/client HEADER_FILE_ONLY
+# src/mqtt HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_client.hpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_server.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_client.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_server.hpp"
 		
-# src/client SOURCE_FILES_ONLY
+# src/mqtt SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_client.cpp"
-		"${CMAKE_CURRENT_SOURCE_DIR}/../src/client/mqtt/mqtt_server.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_client.cpp"
+		    "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_server.cpp"
 		
 # src/configuration HEADER_FILE_ONLY
 

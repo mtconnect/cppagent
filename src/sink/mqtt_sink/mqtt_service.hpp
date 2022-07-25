@@ -20,7 +20,7 @@
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
-#include "client/mqtt/mqtt_client.hpp"
+#include "mqtt//mqtt_client.hpp"
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
 #include "printer/printer.hpp"

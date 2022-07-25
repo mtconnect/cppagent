@@ -17,7 +17,7 @@
 
 #include "mqtt_service.hpp"
 
-#include "client/mqtt/mqtt_client.cpp"
+#include "mqtt//mqtt_client.cpp"
 #include "configuration/config_options.hpp"
 #include "entity/entity.hpp"
 #include "entity/factory.hpp"

@@ -23,7 +23,7 @@
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 
-#include "client/mqtt/mqtt_client.cpp"
+#include "mqtt//mqtt_client.cpp"
 
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
