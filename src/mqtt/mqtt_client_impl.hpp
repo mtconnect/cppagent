@@ -108,7 +108,7 @@ namespace mtconnect {
       }
 
       ~MqttClientImpl() { stop(); }
-
+      
       Derived &derived() { return static_cast<Derived &>(*this); }
 
       bool start() override
@@ -126,6 +126,7 @@ namespace mtconnect {
         client->set_connack_handler([this](bool sp, mqtt::connect_return_code connack_return_code) {
           if (connack_return_code == mqtt::connect_return_code::accepted)
           {
+            m_connected = true;
             if (m_handler)
               m_handler->m_connected(m_identity);
 
@@ -141,6 +142,7 @@ namespace mtconnect {
         client->set_close_handler([this]() {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
+          m_connected = false;
           if (m_handler)
             m_handler->m_disconnected(m_identity);
           reconnect();
@@ -207,7 +209,7 @@ namespace mtconnect {
             });
             
             client.reset();
-          }          
+          }
         }
       }
 
@@ -327,16 +329,13 @@ namespace mtconnect {
       ConfigOptions m_options;
 
       std::string m_host;
-
-      unsigned int m_port;
+      unsigned int m_port { 1883 };
 
       std::uint16_t m_clientId {0};
 
-      bool m_running;
+      source::adapter::mqtt_adapter::MqttPipeline *m_pipeline { nullptr };
 
-      source::adapter::mqtt_adapter::MqttPipeline *m_pipeline;
-
-      source::adapter::Handler *m_handler = nullptr;
+      source::adapter::Handler *m_handler { nullptr };
 
       boost::asio::steady_timer m_reconnectTimer;
     };
@@ -347,7 +346,7 @@ namespace mtconnect {
       using base = MqttClientImpl<MqttTcpClient>;
       using base::base;
 
-      auto getClient()
+      auto &getClient()
       {
         if (!m_client)
         {

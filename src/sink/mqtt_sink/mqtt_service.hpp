@@ -60,6 +60,8 @@ namespace mtconnect {
         static void registerFactory(SinkFactory &factory);
 
         std::shared_ptr<MqttClient> getClient();
+        
+        bool isConnected() { return m_client && m_client->isConnected(); }
 
       protected:
         void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);

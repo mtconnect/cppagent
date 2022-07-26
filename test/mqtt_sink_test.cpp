@@ -44,6 +44,8 @@ namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
 
+using namespace std::chrono_literals;
+
 class MqttSinkTest : public testing::Test
 {
 protected:
@@ -77,7 +79,7 @@ protected:
     ConfigOptions opts(options);
     opts[Port] = 0;
     opts[ServerIp] = "127.0.0.1"s;
-    m_server = make_shared<mtconnect::mqtt_server::MqttTlsServer>(m_context, opts);
+    m_server = make_shared<mtconnect::mqtt_server::MqttTcpServer>(m_context, opts);
   }
 
   void startServer()
@@ -85,6 +87,7 @@ protected:
     if (m_server)
     {
       bool start = m_server->start();
+      m_port = m_server->getPort();
       /* if (start)
          m_context.run_one();*/
     }
@@ -92,13 +95,14 @@ protected:
 
   void createClient(const ConfigOptions& options)
   {
-    m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_context, options);
+    ConfigOptions opts(options);
+    opts[configuration::Port] = m_port;
+    m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_context, opts);
   }
 
-  void startClient()
+  bool startClient()
   {
-    if (m_client)
-      m_client->start();
+    return m_client && m_client->start();
   }
 
   std::shared_ptr<mtconnect::mqtt_server::MqttServer> m_server;
@@ -106,6 +110,7 @@ protected:
   asio::io_context m_context;
 
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
+  uint16_t m_port { 0 };
 };
 
 TEST_F(MqttSinkTest, Load_Mqtt_sink)
@@ -132,13 +137,18 @@ TEST_F(MqttSinkTest, Mqtt_Sink_publish)
       {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
 
   createServer(options);
+  startServer();
+  m_context.run_for(1s);
+
+  ASSERT_NE(0, m_port);
 
   createClient(options);
-
-  startServer();
-
-  startClient();
-
+  ASSERT_TRUE(startClient());
+  m_context.run_for(1s);
+  
+  ASSERT_TRUE(m_client->isConnected());
+  
+  
   m_client->stop();
 }
 

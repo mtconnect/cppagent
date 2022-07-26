@@ -83,8 +83,7 @@ namespace mtconnect {
       MqttServerImpl(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : MqttServer(ioContext),
           m_options(options),
-          m_host(*GetOption<std::string>(options, configuration::Host)),
-          m_port(GetOption<int>(options, configuration::Port).value_or(0))
+          m_host(*GetOption<std::string>(options, configuration::Host))
       {
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
@@ -101,7 +100,7 @@ namespace mtconnect {
 
         mqtt::setup_log();
 
-        auto server = derived().getServer();
+        auto &server = derived().createServer();
 
         server.set_accept_handler([&server](con_sp_t spep) {
           auto &ep = *spep;
@@ -206,14 +205,20 @@ namespace mtconnect {
         });
 
         server.listen();
-
+        m_port = server.port();
+        
         return true;
       }
 
       void stop() override
       {
-        auto server = derived().getServer();
+        auto &server = derived().getServer();
         auto url = m_url;
+
+        if (server)
+        {
+          server->close();
+        }
 
         /* ep.set_close_handler([&connections, &subs, wp]() {
            LOG(info) << "MQTT "
@@ -232,26 +237,67 @@ namespace mtconnect {
       ConfigOptions m_options;
 
       std::string m_host;
-
-      unsigned int m_port;
+    };
+    
+    class MqttTcpServer : public MqttServerImpl<MqttTcpServer>
+    {
+    public:
+      using base = MqttServerImpl<MqttTcpServer>;
+      using base::base;
+      using server = MQTT_NS::server<>;
+      
+      MqttTcpServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
+      : base(ioContext, options)
+      {
+        m_port = GetOption<int>(options, configuration::Port).value_or(1883);
+      }
+      
+      auto &getServer() { return m_server; }
+      
+      auto &createServer()
+      {
+        if (!m_server)
+        {
+          m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
+                           m_ioContext);
+        }
+        
+        return *m_server;
+      }
+      
+    protected:
+      std::optional<server> m_server;
     };
 
     class MqttTlsServer : public MqttServerImpl<MqttTlsServer>
     {
     public:
       using base = MqttServerImpl<MqttTlsServer>;
-      using base::base;
-
-      auto getServer()
+      MqttTlsServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
+      : base(ioContext, options)
       {
-        boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
-
-        auto server = MQTT_NS::server_tls_ws<>(
-            boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port), std::move(ctx),
-            m_ioContext);
-
-        return server;
+        m_port = GetOption<int>(options, configuration::Port).value_or(8883);
       }
+      
+      using base::base;
+      using server = MQTT_NS::server_tls_ws<>;
+      
+      auto &getServer() { return m_server; }
+
+      auto &createServer()
+      {
+        if (!m_server)
+        {
+          boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
+          m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
+                           std::move(ctx), m_ioContext);
+        }
+        
+        return *m_server;
+      }
+      
+    protected:
+      std::optional<server> m_server;
     };
   }  // namespace mqtt_server
 }  // namespace mtconnect

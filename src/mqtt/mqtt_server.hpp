@@ -21,9 +21,10 @@ namespace mtconnect {
     class MqttServer : public std::enable_shared_from_this<MqttServer>
     {
     public:
-      MqttServer(boost::asio::io_context &ioc) : m_ioContext(ioc) {}
+      MqttServer(boost::asio::io_context &ioc) : m_ioContext(ioc), m_port(1883) {}
       virtual ~MqttServer() = default;
       const auto &getUrl() const { return m_url; }
+      auto getPort() const { return m_port; }
 
       virtual bool start() = 0;
       virtual void stop() = 0;
@@ -31,6 +32,7 @@ namespace mtconnect {
     protected:
       boost::asio::io_context &m_ioContext;
       std::string m_url;
+      uint16_t m_port;
     };
   }  // namespace mqtt_server
 }  // namespace mtconnect
