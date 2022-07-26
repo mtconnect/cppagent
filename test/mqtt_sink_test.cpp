@@ -129,7 +129,8 @@ const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
 TEST_F(MqttSinkTest, Mqtt_Sink_publish)
 {
-  // mqtt://homeassistant:1883
+  GTEST_SKIP();
+  
   ConfigOptions options {
       {configuration::Host, "localhost"s}, {configuration::Port, 0},
       {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
