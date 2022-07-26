@@ -279,7 +279,7 @@ TEST_F(ObservationTest, should_treat_events_with_non_count_units_as_doubles)
 
   ASSERT_EQ(expected, writer.getContent());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
   json jdoc;
   jdoc = jprinter.print(event);
 
@@ -319,7 +319,7 @@ TEST_F(ObservationTest, should_treat_events_with_count_as_integer)
 
   ASSERT_EQ(expected, writer.getContent());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
   json jdoc;
   jdoc = jprinter.print(event);
 
@@ -367,7 +367,7 @@ TEST_F(ObservationTest, should_use_three_space_sample_for_3_space_events)
 
   ASSERT_EQ(expected, writer.getContent());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
   json jdoc;
   jdoc = jprinter.print(event);
 

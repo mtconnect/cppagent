@@ -163,7 +163,7 @@ TEST_F(JsonPrinterTest, Header)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -186,7 +186,7 @@ TEST_F(JsonPrinterTest, Devices)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -209,7 +209,7 @@ TEST_F(JsonPrinterTest, Components)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -241,7 +241,7 @@ TEST_F(JsonPrinterTest, TopLevelDataItems)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -250,6 +250,29 @@ TEST_F(JsonPrinterTest, TopLevelDataItems)
   ASSERT_EQ("AVAILABILITY", dataitems.at("/0/DataItem/type"_json_pointer).get<string>());
   ASSERT_EQ("ASSET_CHANGED", dataitems.at("/1/DataItem/type"_json_pointer).get<string>());
   ASSERT_EQ("ASSET_REMOVED", dataitems.at("/2/DataItem/type"_json_pointer).get<string>());
+}
+
+TEST_F(JsonPrinterTest, data_items_using_version_2)
+{
+  auto root = createFileArchetypeFactory();
+
+  auto doc = deviceModel();
+
+  ErrorList errors;
+  entity::XmlParser parser;
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  entity::JsonPrinter jprinter(2);
+
+  json jdoc;
+  jdoc = jprinter.print(entity);
+  
+  auto dataitems = jdoc.at("/MTConnectDevices/Devices/Device/DataItems/DataItem"_json_pointer);
+  ASSERT_EQ("AVAILABILITY", dataitems.at("/0/type"_json_pointer).get<string>());
+  ASSERT_EQ("ASSET_CHANGED", dataitems.at("/1/type"_json_pointer).get<string>());
+  ASSERT_EQ("ASSET_REMOVED", dataitems.at("/2/type"_json_pointer).get<string>());
 }
 
 TEST_F(JsonPrinterTest, ElementListWithProperty)
@@ -278,7 +301,7 @@ TEST_F(JsonPrinterTest, ElementListWithProperty)
   auto entity = parser.parse(root, doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jprinter;
+  entity::JsonPrinter jprinter(1);
 
   json jdoc;
   jdoc = jprinter.print(entity);
@@ -288,4 +311,42 @@ TEST_F(JsonPrinterTest, ElementListWithProperty)
             jdoc.at("/Root/CuttingItems/list/0/CuttingItem/itemId"_json_pointer).get<string>());
   ASSERT_EQ("2",
             jdoc.at("/Root/CuttingItems/list/1/CuttingItem/itemId"_json_pointer).get<string>());
+}
+
+TEST_F(JsonPrinterTest, elements_with_property_list_version_2)
+{
+  auto item = make_shared<Factory>(Requirements {{"itemId", true}});
+
+  auto items = make_shared<Factory>(Requirements {
+      {"count", INTEGER, true}, {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
+
+  auto lifeCycle = make_shared<Factory>(Requirements {{"CuttingItems", ENTITY_LIST, items, true}});
+
+  auto root = make_shared<Factory>(Requirements {{"Root", ENTITY, lifeCycle, true}});
+
+  string doc = R"DOC(
+<Root>
+  <CuttingItems count="2">
+    <CuttingItem itemId="1"/>
+    <CuttingItem itemId="2"/>
+  </CuttingItems>
+</Root>
+)DOC";
+
+  ErrorList errors;
+  entity::XmlParser parser;
+
+  auto entity = parser.parse(root, doc, "1.7", errors);
+  ASSERT_EQ(0, errors.size());
+
+  entity::JsonPrinter jprinter(2);
+
+  json jdoc;
+  jdoc = jprinter.print(entity);
+  
+  ASSERT_EQ(2, jdoc.at("/Root/CuttingItems/count"_json_pointer).get<int>());
+  ASSERT_EQ("1",
+            jdoc.at("/Root/CuttingItems/list/CuttingItem/0/itemId"_json_pointer).get<string>());
+  ASSERT_EQ("2",
+            jdoc.at("/Root/CuttingItems/list/CuttingItem/1/itemId"_json_pointer).get<string>());
 }

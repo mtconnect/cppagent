@@ -28,15 +28,20 @@ namespace mtconnect {
     class JsonPrinter
     {
     public:
-      JsonPrinter() = default;
+      JsonPrinter(uint32_t version) : m_version(version) {};
 
       json print(const EntityPtr entity) const
       {
         return json::object({{entity->getName(), printEntity(entity)}});
       }
+      json printEntity(const EntityPtr entity) const;
 
     protected:
-      json printEntity(const EntityPtr entity) const;
+      void printEntityList1(json &obj, const EntityList &list) const;
+      void printEntityList2(json &obj, const EntityList &list) const;
+      
+    protected:
+      uint32_t m_version;
     };
   }  // namespace entity
 }  // namespace mtconnect

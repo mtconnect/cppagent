@@ -555,7 +555,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
 
-  entity::JsonPrinter jsonPrinter;
+  entity::JsonPrinter jsonPrinter(1);
   auto json = jsonPrinter.print(entity);
 
   stringstream buffer;
