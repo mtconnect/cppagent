@@ -39,4 +39,4 @@ namespace mtconnect {
       std::string m_identity;
     };
   }  // namespace mqtt_client
-}  // namespace mtconnect::mqtt_client
+}  // namespace mtconnect

@@ -201,7 +201,7 @@ public:
 
     auto sinkContract = m_agent->makeSinkContract();
     sinkContract->m_pipelineContext = m_context;
-   
+
     auto sink = m_sinkFactory.make("RestService", "RestService", m_ioContext, move(sinkContract),
                                    options, ptree {});
     m_restService = std::dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
@@ -256,7 +256,7 @@ public:
 
     return m_adapter;
   }
- 
+
   uint64_t addToBuffer(mtconnect::DataItemPtr di, const mtconnect::entity::Properties &shdr,
                        const mtconnect::Timestamp &time)
   {

@@ -23,7 +23,7 @@
 
 using namespace mtconnect::mqtt_client;
 
-namespace mtconnect::source::adapter::mqtt_adapter {  
+namespace mtconnect::source::adapter::mqtt_adapter {
 
   class MqttPipeline : public AdapterPipeline
   {
@@ -39,7 +39,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
   };
 
   class MqttAdapter : public Adapter
-  {    
+  {
   public:
     MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
                 const ConfigOptions &options, const boost::property_tree::ptree &block);

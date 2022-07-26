@@ -23,10 +23,9 @@
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 
-#include "mqtt/mqtt_client_impl.hpp"
-
 #include "configuration/config_options.hpp"
 #include "device_model/device.hpp"
+#include "mqtt/mqtt_client_impl.hpp"
 #include "pipeline/convert_sample.hpp"
 #include "pipeline/deliver.hpp"
 #include "pipeline/delta_filter.hpp"
@@ -80,8 +79,9 @@ namespace mtconnect {
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
                                                                       &m_pipeline, m_handler.get());
       else
-        m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_ioContext, m_options, &m_pipeline, m_handler.get());
-    
+        m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_ioContext, m_options,
+                                                                      &m_pipeline, m_handler.get());
+
       m_identity = m_client->getIdentity();
       m_name = m_client->getUrl();
 
@@ -110,7 +110,7 @@ namespace mtconnect {
       }
     }
     /// <summary>
-    /// 
+    ///
     /// </summary>
     /// <param name="factory"></param>
     void MqttAdapter::registerFactory(SourceFactory &factory)
@@ -125,31 +125,22 @@ namespace mtconnect {
                               });
     }
 
-    const std::string & MqttAdapter::getHost() const 
-    {
-        return m_host; 
-    }
+    const std::string &MqttAdapter::getHost() const { return m_host; }
 
-    unsigned int MqttAdapter::getPort() const 
-    {
-        return m_port; 
-    }
+    unsigned int MqttAdapter::getPort() const { return m_port; }
 
-    bool MqttAdapter::start() 
+    bool MqttAdapter::start()
     {
       m_pipeline.start();
       return m_client->start();
     }
-    void MqttAdapter::stop() 
+    void MqttAdapter::stop()
     {
       m_client->stop();
       m_pipeline.clear();
     }
 
-    mtconnect::pipeline::Pipeline *MqttAdapter::getPipeline() 
-    {
-        return &m_pipeline;
-    }
+    mtconnect::pipeline::Pipeline *MqttAdapter::getPipeline() { return &m_pipeline; }
 
     void MqttPipeline::build(const ConfigOptions &options)
     {

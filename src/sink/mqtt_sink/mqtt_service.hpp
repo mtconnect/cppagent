@@ -19,13 +19,11 @@
 
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
-
 #include "mqtt/mqtt_client.hpp"
-
 #include "observation/observation.hpp"
-
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
+#include "mqtt/mqtt_client.hpp"
 #include "printer/printer.hpp"
 #include "printer/xml_printer_helper.hpp"
 #include "sink/sink.hpp"
@@ -64,7 +62,6 @@ namespace mtconnect {
         std::shared_ptr<MqttClient> getClient();
 
       protected:
-
         void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
 
         std::string printProbe(const unsigned int instanceId,

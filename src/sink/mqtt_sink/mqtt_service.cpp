@@ -17,11 +17,11 @@
 
 #include "mqtt_service.hpp"
 
-#include "mqtt/mqtt_client_impl.hpp"
 #include "configuration/config_options.hpp"
 #include "entity/entity.hpp"
 #include "entity/factory.hpp"
 #include "entity/xml_parser.hpp"
+#include "mqtt/mqtt_client_impl.hpp"
 #include "printer/xml_printer.hpp"
 
 using json = nlohmann::json;
@@ -120,7 +120,7 @@ namespace mtconnect {
         entity::EntityPtr dataEntity =
             make_shared<entity::Entity>("LIST");  // dataItem->getTopicList();
 
-        auto jsonDoc = m_jsonPrinter->print(dataEntity);
+        auto jsonDoc = m_jsonPrinter->printEntity(dataEntity);
 
         return 0;
       }

@@ -15,28 +15,22 @@
 //    limitations under the License.
 //
 
+#include <boost/log/trivial.hpp>
+#include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/uuid/name_generator_sha1.hpp>
 
 #include <inttypes.h>
-
-#include "mqtt_server.hpp"
-
-
-#include "configuration/config_options.hpp"
-
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
+#include <mqtt_server_cpp.hpp>
 
+#include "configuration/config_options.hpp"
+#include "mqtt_server.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/mqtt/mqtt_adapter.hpp"
-
-#include <boost/log/trivial.hpp>
-#include <boost/uuid/name_generator_sha1.hpp>
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index/composite_key.hpp>
-
-#include <mqtt_server_cpp.hpp>
 
 using namespace std;
 namespace asio = boost::asio;
@@ -94,7 +88,7 @@ namespace mtconnect {
       {
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
-        m_url = url.str();        
+        m_url = url.str();
       }
 
       ~MqttServerImpl() { stop(); }
@@ -166,23 +160,23 @@ namespace mtconnect {
             idx.erase(r.first, r.second);
           });
 
-          ep.set_subscribe_handler([&subs, wp](packet_id_t packet_id,
-                                               std::vector<MQTT_NS::subscribe_entry> entries) {
-            LOG(debug) << "[server] subscribe received. packet_id: " << packet_id << std::endl;
-            std::vector<MQTT_NS::suback_return_code> res;
-            res.reserve(entries.size());
-            auto sp = wp.lock();
-            BOOST_ASSERT(sp);
-            for (auto const &e : entries)
-            {
-              LOG(debug) << "[server] topic_filter: " << e.topic_filter
-                            << " qos: " << e.subopts.get_qos() << std::endl;
-              res.emplace_back(MQTT_NS::qos_to_suback_return_code(e.subopts.get_qos()));
-              subs.emplace(std::move(e.topic_filter), sp, e.subopts.get_qos());
-            }
-            sp->suback(packet_id, res);
-            return true;
-          });
+          ep.set_subscribe_handler(
+              [&subs, wp](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
+                LOG(debug) << "[server] subscribe received. packet_id: " << packet_id << std::endl;
+                std::vector<MQTT_NS::suback_return_code> res;
+                res.reserve(entries.size());
+                auto sp = wp.lock();
+                BOOST_ASSERT(sp);
+                for (auto const &e : entries)
+                {
+                  LOG(debug) << "[server] topic_filter: " << e.topic_filter
+                             << " qos: " << e.subopts.get_qos() << std::endl;
+                  res.emplace_back(MQTT_NS::qos_to_suback_return_code(e.subopts.get_qos()));
+                  subs.emplace(std::move(e.topic_filter), sp, e.subopts.get_qos());
+                }
+                sp->suback(packet_id, res);
+                return true;
+              });
 
           ep.set_publish_handler([&subs](mqtt::optional<std::uint16_t> packet_id,
                                          mqtt::publish_options pubopts, mqtt::buffer topic_name,
@@ -206,7 +200,7 @@ namespace mtconnect {
             }
 
             return true;
-          });          
+          });
 
           return true;
         });
@@ -221,15 +215,15 @@ namespace mtconnect {
         auto server = derived().getServer();
         auto url = m_url;
 
-       /* ep.set_close_handler([&connections, &subs, wp]() {
-          LOG(info) << "MQTT "
-                    << ": server closed";
-          auto con = wp.lock();
-          connections.erase(con);
-          auto &idx = subs.get<tag_con>();
-          auto r = idx.equal_range(con);
-          idx.erase(r.first, r.second);
-        });*/
+        /* ep.set_close_handler([&connections, &subs, wp]() {
+           LOG(info) << "MQTT "
+                     << ": server closed";
+           auto con = wp.lock();
+           connections.erase(con);
+           auto &idx = subs.get<tag_con>();
+           auto r = idx.equal_range(con);
+           idx.erase(r.first, r.second);
+         });*/
 
         LOG(warning) << url << "server disconnected: ";
       }
@@ -261,5 +255,3 @@ namespace mtconnect {
     };
   }  // namespace mqtt_server
 }  // namespace mtconnect
-
-

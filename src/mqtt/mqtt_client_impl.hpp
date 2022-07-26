@@ -15,20 +15,17 @@
 //    limitations under the License.
 //
 
+#include <boost/log/trivial.hpp>
+#include <boost/uuid/name_generator_sha1.hpp>
+
 #include <inttypes.h>
-
-#include "mqtt_client.hpp"
-
-#include "configuration/config_options.hpp"
-
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 
+#include "configuration/config_options.hpp"
+#include "mqtt_client.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/mqtt/mqtt_adapter.hpp"
-
-#include <boost/log/trivial.hpp>
-#include <boost/uuid/name_generator_sha1.hpp>
 
 using namespace std;
 namespace asio = boost::asio;
@@ -184,7 +181,7 @@ namespace mtconnect {
           return true;
         });
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <returns></returns>
         m_running = true;
@@ -194,23 +191,25 @@ namespace mtconnect {
       }
 
       void stop() override
-      {       
-        m_reconnectTimer.cancel();
-        auto client = derived().getClient();
-        auto url = m_url;
-
-        if (m_running && client)
-        {
-          client->async_disconnect(10s, [client, url](mqtt::error_code ec) {
-            LOG(warning) << url << " disconnected: " << ec.message();
-          });
-
-          client.reset();
-        }
+      {
         if (m_running)
+        {
           m_running = false;
-      }
 
+          m_reconnectTimer.cancel();
+          auto client = derived().getClient();
+          auto url = m_url;
+          
+          if (client)
+          {
+            client->async_disconnect(10s, [client, url](mqtt::error_code ec) {
+              LOG(warning) << url << " disconnected: " << ec.message();
+            });
+            
+            client.reset();
+          }          
+        }
+      }
 
     protected:
       void subscribe()
@@ -252,8 +251,8 @@ namespace mtconnect {
 
         auto topics = GetOption<StringList>(m_options, configuration::Topics);
 
-        std::string pTopic;//publish topic
-        std::string pContent;//publish content
+        std::string pTopic;    // publish topic
+        std::string pContent;  // publish content
         if (topics)
         {
           for (auto &topic : *topics)
@@ -261,7 +260,7 @@ namespace mtconnect {
             auto loc = topic.find(':');
             if (loc != string::npos)
             {
-              pTopic = topic.substr(loc + 1);//after : values
+              pTopic = topic.substr(loc + 1);   // after : values
               pContent = topic.substr(0, loc);  // first values before : or something else..??
               break;
             }
@@ -293,7 +292,7 @@ namespace mtconnect {
       {
         if (m_handler)
           m_handler->m_processMessage(string(topic), string(contents), m_identity);
-      }      
+      }
 
       void reconnect()
       {
@@ -341,7 +340,7 @@ namespace mtconnect {
 
       boost::asio::steady_timer m_reconnectTimer;
     };
-   
+
     class MqttTcpClient : public MqttClientImpl<MqttTcpClient>
     {
     public:
@@ -377,7 +376,7 @@ namespace mtconnect {
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
-          }         
+          }
         }
 
         return m_client;

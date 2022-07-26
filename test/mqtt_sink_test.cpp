@@ -19,21 +19,20 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-
 #include <boost/asio.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/member.hpp>
 #include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
+
 #include <mqtt_server_cpp.hpp>
 
 #include "agent_test_helper.hpp"
 #include "mqtt/mqtt_client_impl.hpp"
 #include "mqtt/mqtt_server_impl.hpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
-
 
 using json = nlohmann::json;
 
@@ -45,14 +44,10 @@ namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace http = boost::beast::http;
 
-
 class MqttSinkTest : public testing::Test
 {
 protected:
-  void SetUp() override
-  {    
-    m_agentTestHelper = make_unique<AgentTestHelper>();
-  }
+  void SetUp() override { m_agentTestHelper = make_unique<AgentTestHelper>(); }
 
   void TearDown() override
   {
@@ -70,33 +65,33 @@ protected:
   void createAgent(ConfigOptions options = {})
   {
     options.emplace("MqttSink", true);
-    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "2.0", 25,
-                                   false, true,  options);   
+    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "2.0", 25, false, true,
+                                   options);
 
     m_agentTestHelper->getAgent()->start();
-  } 
+  }
 
-  void createServer(const ConfigOptions &options)
+  void createServer(const ConfigOptions& options)
   {
     using namespace mtconnect::configuration;
     ConfigOptions opts(options);
     opts[Port] = 0;
     opts[ServerIp] = "127.0.0.1"s;
     m_server = make_shared<mtconnect::mqtt_server::MqttTlsServer>(m_context, opts);
-  }  
+  }
 
   void startServer()
   {
     if (m_server)
     {
       bool start = m_server->start();
-     /* if (start)
-        m_context.run_one();*/
+      /* if (start)
+         m_context.run_one();*/
     }
   }
 
-  void createClient(const ConfigOptions &options)
-  {   
+  void createClient(const ConfigOptions& options)
+  {
     m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_context, options);
   }
 
@@ -139,7 +134,7 @@ TEST_F(MqttSinkTest, Mqtt_Sink_publish)
   createServer(options);
 
   createClient(options);
- 
+
   startServer();
 
   startClient();
@@ -147,35 +142,59 @@ TEST_F(MqttSinkTest, Mqtt_Sink_publish)
   m_client->stop();
 }
 
-//works fine with mosquitto server not with mqtt localhost
+// works fine with mosquitto server not with mqtt localhost
 TEST_F(MqttSinkTest, Mosquitto_Mqtt_CreateClient)
-{  
+{
   std::uint16_t pid_sub1;
 
   boost::asio::io_context ioc;
   auto client = mqtt::make_client(ioc, "test.mosquitto.org", 1883);
-  
+
   client->set_client_id("cliendId1");
   client->set_clean_session(true);
   client->set_keep_alive_sec(30);
 
-  client->set_connack_handler([&client, &pid_sub1](bool sp,
-                                              mqtt::connect_return_code connack_return_code) {
-    std::cout << "Connack handler called" << std::endl;
-    std::cout << "Session Present: " << std::boolalpha << sp << std::endl;
-    std::cout << "Connack Return Code: " << connack_return_code << std::endl;
-    if (connack_return_code == mqtt::connect_return_code::accepted)
-    {
-      pid_sub1 = client->acquire_unique_packet_id();
+  client->set_connack_handler(
+      [&client, &pid_sub1](bool sp, mqtt::connect_return_code connack_return_code) {
+        std::cout << "Connack handler called" << std::endl;
+        std::cout << "Session Present: " << std::boolalpha << sp << std::endl;
+        std::cout << "Connack Return Code: " << connack_return_code << std::endl;
+        if (connack_return_code == mqtt::connect_return_code::accepted)
+        {
+          pid_sub1 = client->acquire_unique_packet_id();
 
-      client->async_subscribe(pid_sub1, "mqtt_client_cpp/topic1", MQTT_NS::qos::at_most_once,
-                         // [optional] checking async_subscribe completion code
-                         [](MQTT_NS::error_code ec) {
-                           std::cout << "async_subscribe callback: " << ec.message() << std::endl;
-                         });
+          client->async_subscribe(pid_sub1, "mqtt_client_cpp/topic1", MQTT_NS::qos::at_most_once,
+                                  // [optional] checking async_subscribe completion code
+                                  [](MQTT_NS::error_code ec) {
+                                    std::cout << "async_subscribe callback: " << ec.message()
+                                              << std::endl;
+                                  });
+        }
+        return true;
+      });
+  client->set_close_handler([] { std::cout << "closed" << std::endl; });
+
+  client->set_suback_handler([&client, &pid_sub1](std::uint16_t packet_id,
+                                                  std::vector<mqtt::suback_return_code> results) {
+    std::cout << "suback received. packet_id: " << packet_id << std::endl;
+    for (auto const& e : results)
+    {
+      std::cout << "subscribe result: " << e << std::endl;
     }
+
+    if (packet_id == pid_sub1)
+    {
+      client->async_publish("mqtt_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
+                            // [optional] checking async_publish completion code
+                            [](MQTT_NS::error_code ec) {
+                              std::cout << "async_publish callback: " << ec.message() << std::endl;
+                              ASSERT_EQ(ec.message(), "Success");
+                            });
+    }
+
     return true;
   });
+
   client->set_close_handler([] { std::cout << "closed" << std::endl; });
 
   client->set_suback_handler(
@@ -199,17 +218,18 @@ TEST_F(MqttSinkTest, Mosquitto_Mqtt_CreateClient)
 
         return true;
       });
+
   client->set_publish_handler([&client](mqtt::optional<std::uint16_t> packet_id,
-                              mqtt::publish_options pubopts, mqtt::buffer topic_name,
-                              mqtt::buffer contents) {
+                                        mqtt::publish_options pubopts, mqtt::buffer topic_name,
+                                        mqtt::buffer contents) {
     std::cout << "publish received."
               << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
               << " retain: " << pubopts.get_retain() << std::endl;
-    if (packet_id)    
+    if (packet_id)
       std::cout << "packet_id: " << *packet_id << std::endl;
-      std::cout << "topic_name: " << topic_name << std::endl;
-      std::cout << "contents: " << contents << std::endl;
-    
+    std::cout << "topic_name: " << topic_name << std::endl;
+    std::cout << "contents: " << contents << std::endl;
+
     client->disconnect();
     return true;
   });
@@ -219,7 +239,7 @@ TEST_F(MqttSinkTest, Mosquitto_Mqtt_CreateClient)
   ioc.run();
 }
 
-//Mqtt over web sockets...
+// Mqtt over web sockets...
 namespace mi = boost::multi_index;
 
 using con_t = MQTT_NS::server_tls_ws<>::endpoint_t;
@@ -266,9 +286,8 @@ inline void close_proc(std::set<con_sp_t>& cons, mi_sub_con& subs, con_sp_t cons
 template <typename Server>
 void server_proc(Server& s, std::set<con_sp_t>& connections, mi_sub_con& subs)
 {
-  s.set_error_handler([](MQTT_NS::error_code ec) {
-    std::cout << "[server] error: " << ec.message() << std::endl;
-  });
+  s.set_error_handler(
+      [](MQTT_NS::error_code ec) { std::cout << "[server] error: " << ec.message() << std::endl; });
   s.set_accept_handler([&s, &connections, &subs](con_sp_t spep) {
     auto& ep = *spep;
     std::weak_ptr<con_t> wp(spep);
@@ -308,9 +327,9 @@ void server_proc(Server& s, std::set<con_sp_t>& connections, mi_sub_con& subs)
       using namespace MQTT_NS::literals;
       std::cout << "[server] client_id    : " << client_id << std::endl;
       std::cout << "[server] username     : " << (username ? username.value() : "none"_mb)
-                    << std::endl;
+                << std::endl;
       std::cout << "[server] password     : " << (password ? password.value() : "none"_mb)
-                    << std::endl;
+                << std::endl;
       std::cout << "[server] clean_session: " << std::boolalpha << clean_session << std::endl;
       std::cout << "[server] keep_alive   : " << keep_alive << std::endl;
       auto sp = wp.lock();
@@ -345,8 +364,8 @@ void server_proc(Server& s, std::set<con_sp_t>& connections, mi_sub_con& subs)
                                    MQTT_NS::publish_options pubopts, MQTT_NS::buffer topic_name,
                                    MQTT_NS::buffer contents) {
       std::cout << "[server] publish received."
-                    << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
-                    << " retain: " << pubopts.get_retain() << std::endl;
+                << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
+                << " retain: " << pubopts.get_retain() << std::endl;
       if (packet_id)
         std::cout << "[server] packet_id: " << *packet_id << std::endl;
       std::cout << "[server] topic_name: " << topic_name << std::endl;
@@ -370,7 +389,7 @@ void server_proc(Server& s, std::set<con_sp_t>& connections, mi_sub_con& subs)
           for (auto const& e : entries)
           {
             std::cout << "[server] topic_filter: " << e.topic_filter
-                          << " qos: " << e.subopts.get_qos() << std::endl;
+                      << " qos: " << e.subopts.get_qos() << std::endl;
             res.emplace_back(MQTT_NS::qos_to_suback_return_code(e.subopts.get_qos()));
             subs.emplace(std::move(e.topic_filter), sp, e.subopts.get_qos());
           }
@@ -398,30 +417,29 @@ void server_proc(Server& s, std::set<con_sp_t>& connections, mi_sub_con& subs)
   s.listen();
 }
 
-//test case for mqtt over websockets 
+// test case for mqtt over websockets
 TEST_F(MqttSinkTest, Mqtt_WebsocketsServer)
 {
   GTEST_SKIP();
 
-  MQTT_NS::setup_log();
+  // MQTT_NS::setup_log();
+  //
+  // std::uint16_t port = boost::lexical_cast<std::uint16_t>(0);
 
-  std::uint16_t port = boost::lexical_cast<std::uint16_t>(0);
+  // // server
+  //
+  // boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
 
-  // server
+  ////std::cout << boost::asio::ip::address_v4::loopback() << "\n";
 
-  boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
+  // boost::asio::io_context iocs;
+  // auto s = MQTT_NS::server_tls_ws<>(
+  //     boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 0),
+  //     std::move(ctx), iocs);
 
-  /*std::cout << boost::asio::ip::address_v4::loopback() << "\n";
+  // std::set<con_sp_t> connections;
+  // mi_sub_con subs;
+  // server_proc(s, connections, subs);
 
-  boost::asio::io_context iocs;
-  auto s = MQTT_NS::server_tls_ws<>(
-      boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port), std::move(ctx), iocs);
-
-  std::set<con_sp_t> connections;
-  mi_sub_con subs;
-  server_proc(s, connections, subs);
-
-  iocs.run();*/
+  // iocs.run();
 }
-
-
