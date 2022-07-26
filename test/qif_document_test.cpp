@@ -226,7 +226,7 @@ TEST_F(QIFDocumentTest, should_generate_json)
   auto asset = dynamic_cast<Asset *>(entity.get());
   ASSERT_NE(nullptr, asset);
 
-  entity::JsonPrinter jsonPrinter;
+  entity::JsonPrinter jsonPrinter(1);
   auto json = jsonPrinter.print(entity);
 
   stringstream buffer;

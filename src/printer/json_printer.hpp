@@ -25,7 +25,7 @@ namespace mtconnect::printer {
   class JsonPrinter : public Printer
   {
   public:
-    JsonPrinter(const std::string version = "", bool pretty = false);
+    JsonPrinter(uint32_t jsonVersion, const std::string version = "", bool pretty = false);
     ~JsonPrinter() override = default;
 
     std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
@@ -49,5 +49,6 @@ namespace mtconnect::printer {
     std::string m_schemaVersion;
     std::string m_version;
     std::string m_hostname;
+    uint32_t m_jsonVersion;
   };
 }  // namespace mtconnect::printer
