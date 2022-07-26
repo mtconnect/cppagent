@@ -114,13 +114,124 @@ namespace mtconnect {
         // get the data item from observation
         DataItemPtr dataItem = observation->getDataItem();
 
-        auto topic = dataItem->getTopic();//client asyn topic
-        auto content = dataItem->getTopicName();//client asyn content
-                
-        // convert to json and send by mqtt
-        //auto json = m_jsonPrinter->print(dataItem);
-        
+        auto topic = dataItem->getTopic();        // client asyn topic
+        auto content = dataItem->getTopicName();  // client asyn content
+
+        entity::EntityPtr dataEntity =
+            make_shared<entity::Entity>("LIST");  // dataItem->getTopicList();
+
+        auto jsonDoc = m_jsonPrinter->print(dataEntity);
+
         return 0;
+      }
+
+      std::string MqttService::printAssets(const unsigned int instanceId,
+                                           const unsigned int bufferSize,
+                                           const unsigned int assetCount,
+                                           const asset::AssetList &asset) const
+      {
+        /*  json doc = json::object(
+              {{"MTConnectAssets",
+                {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize,
+                                             assetCount, m_schemaVersion, m_modelChangeTime)},
+                 {"Assets", assetDoc}}}});
+          return print(doc);*/
+
+        return "";
+      }
+
+      std::string MqttService::printDeviceStreams(const unsigned int instanceId,
+                                                  const unsigned int bufferSize,
+                                                  const uint64_t nextSeq, const uint64_t firstSeq,
+                                                  const uint64_t lastSeq,
+                                                  ObservationList &observations) const
+      {
+        /*json streams = json::array();
+        json streams;
+
+        if (observations.size() > 0)
+        {
+          observations.sort(ObservationCompare);
+          vector<DeviceRef> devices;
+          DeviceRef *deviceRef = nullptr;
+          for (auto &observation : observations)
+          {
+            const auto dataItem = observation->getDataItem();
+            const auto component = dataItem->getComponent();
+            const auto device = component->getDevice();
+
+            if (deviceRef == nullptr || !deviceRef->isDevice(device))
+              if (!deviceRef || !deviceRef->isDevice(device))
+              {
+                devices.emplace_back(device);
+                devices.emplace_back(device, m_jsonVersion);
+                deviceRef = &devices.back();
+              }
+
+            deviceRef->addObservation(observation, device, component, dataItem);
+          }
+
+          streams = json::array();
+          for (auto &ref : devices)
+            streams.emplace_back(ref.toJson());
+
+          if (m_jsonVersion == 2)
+          {
+            if (devices.size() == 1)
+            {
+              streams = json::object({{"DeviceStream", streams.front()}});
+            }
+            else
+            {
+              streams = json::object({{"DeviceStream", streams}});
+            }
+          }
+        }*/
+        return "";
+      }
+
+      std::string MqttService::printProbe(const unsigned int instanceId,
+                                          const unsigned int bufferSize, const uint64_t nextSeq,
+                                          const unsigned int assetBufferSize,
+                                          const unsigned int assetCount,
+                                          const std::list<DevicePtr> &devices,
+                                          const std::map<std::string, size_t> *count) const
+      {
+        // entity::JsonPrinter printer;
+        // entity::JsonPrinter printer(m_jsonVersion);
+
+        // json devicesDoc = json::array();
+        // for (const auto &device : devices)
+        //  devicesDoc.emplace_back(printer.print(device));
+        // json devicesDoc;
+
+        // if (m_jsonVersion == 1)
+        //{
+        //  devicesDoc = json::array();
+        //  for (const auto &device : devices)
+        //    devicesDoc.emplace_back(printer.print(device));
+        //}
+        // else if (m_jsonVersion == 2)
+        //{
+        //  entity::EntityList list;
+        //  copy(devices.begin(), devices.end(), back_inserter(list));
+        //  entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
+        //  entity->setProperty("LIST", list);
+        //  devicesDoc = printer.printEntity(entity);
+        //}
+        // else
+        //{
+        //  throw runtime_error("invalid json printer version");
+        //}
+
+        // json doc =
+        //    json::object({{"MTConnectDevices",
+        //                   {{"Header", probeAssetHeader(m_version, hostname(), instanceId,
+        //                                                bufferSize, assetBufferSize, assetCount,
+        //                                                m_schemaVersion, m_modelChangeTime)},
+        //                    {"Devices", devicesDoc}}}});
+        // return print(doc);
+        return "";
       }
 
       bool MqttService::publish(asset::AssetPtr asset) { return false; }

@@ -21,6 +21,9 @@
 #include <boost/dll/alias.hpp>
 
 #include "mqtt/mqtt_client.hpp"
+
+#include "observation/observation.hpp"
+
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
 #include "printer/printer.hpp"
@@ -64,6 +67,23 @@ namespace mtconnect {
 
         void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
 
+        std::string printProbe(const unsigned int instanceId,
+                                            const unsigned int bufferSize, const uint64_t nextSeq,
+                                            const unsigned int assetBufferSize,
+                                            const unsigned int assetCount,
+                                            const std::list<DevicePtr> &devices,
+                                            const std::map<std::string, size_t> *count) const;
+        
+        std::string printDeviceStreams(const unsigned int instanceId, const unsigned int bufferSize,
+                                       const uint64_t nextSeq, const uint64_t firstSeq,
+                                       const uint64_t lastSeq,
+                                       observation::ObservationList &observations) const;
+
+        std::string printAssets(const unsigned int instanceId,
+                                             const unsigned int bufferSize,
+                                             const unsigned int assetCount,
+                                             const asset::AssetList &asset) const;        
+         
       protected:
         boost::asio::io_context &m_context;
         ConfigOptions m_options;
