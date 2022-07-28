@@ -169,6 +169,9 @@ namespace mtconnect {
         client->set_suback_handler(
             [&](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
               LOG(debug) << "suback received. packet_id: " << packet_id;
+              // This handler makes no sense!!!
+              return true;
+              
               if (!m_running)
                 return false;
               
@@ -178,8 +181,9 @@ namespace mtconnect {
                 // Do something if the subscription failed...
               }
 
+              // Why is this being done?
               if (packet_id == m_clientId)
-                mqttPublish();
+                publish();
 
               reconnect();
 
@@ -270,12 +274,13 @@ namespace mtconnect {
         });
       }
 
-      void mqttPublish()
+      void publish()
       {
         NAMED_SCOPE("MqttClientImpl::publish");
         if (!m_running)
           return;
 
+#if 0
         m_clientId = derived().getClient()->acquire_unique_packet_id();
 
         auto topics = GetOption<StringList>(m_options, configuration::Topics);
@@ -307,6 +312,7 @@ namespace mtconnect {
                                                  LOG(error) << "Publish failed: " << ec.message();
                                                }
                                              });
+#endif
       }
 
       void connect()

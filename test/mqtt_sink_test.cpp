@@ -165,13 +165,21 @@ TEST_F(MqttSinkTest, mqtt_client_should_connect_to_broker)
   m_client->stop();
 }
 
-// works fine with mosquitto server not with mqtt localhost
-TEST_F(MqttSinkTest, Mosquitto_Mqtt_CreateClient)
+TEST_F(MqttSinkTest, mqtt_client_should_connect_to_local_server)
 {
+  ConfigOptions options {
+      {configuration::Host, "localhost"s}, {configuration::Port, 0},
+      {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
+      {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
+
+  createServer(options);
+  startServer();
+
+  ASSERT_NE(0, m_port);
+  
   std::uint16_t pid_sub1;
 
-  boost::asio::io_context ioc;
-  auto client = mqtt::make_client(ioc, "test.mosquitto.org", 1883);
+  auto client = mqtt::make_async_client(m_context, "localhost", m_port);
 
   client->set_client_id("cliendId1");
   client->set_clean_session(true);
@@ -253,13 +261,13 @@ TEST_F(MqttSinkTest, Mosquitto_Mqtt_CreateClient)
     std::cout << "topic_name: " << topic_name << std::endl;
     std::cout << "contents: " << contents << std::endl;
 
-    client->disconnect();
+    client->async_disconnect();
     return true;
   });
 
-  client->connect();
+  client->async_connect();
 
-  ioc.run();
+  m_context.run();
 }
 
 // Mqtt over web sockets...
