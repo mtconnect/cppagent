@@ -59,9 +59,19 @@ protected:
       m_agentTestHelper->getAgent()->stop();
       m_agentTestHelper->m_ioContext.run_for(100ms);
     }
+    if (m_client)
+    {
+      m_client->stop();
+      m_context.run_for(100ms);
+      m_client.reset();
+    }
+    if (m_server)
+    {
+      m_server->stop();
+      m_context.run_for(500ms);
+      m_server.reset();
+    }
     m_agentTestHelper.reset();
-
-    m_server.reset();
   }
 
   void createAgent(ConfigOptions options = {})
@@ -87,9 +97,11 @@ protected:
     if (m_server)
     {
       bool start = m_server->start();
-      m_port = m_server->getPort();
-      /* if (start)
-         m_context.run_one();*/
+      if (start)
+      {
+        m_port = m_server->getPort();
+        m_context.run_for(500ms);
+      }
     }
   }
 
@@ -102,7 +114,12 @@ protected:
 
   bool startClient()
   {
-    return m_client && m_client->start();
+    bool started = m_client && m_client->start();
+    if (started)
+    {
+      m_context.run_for(1s);
+    }
+    return started;
   }
 
   std::shared_ptr<mtconnect::mqtt_server::MqttServer> m_server;
@@ -113,7 +130,7 @@ protected:
   uint16_t m_port { 0 };
 };
 
-TEST_F(MqttSinkTest, Load_Mqtt_sink)
+TEST_F(MqttSinkTest, mqtt_sink_should_be_loaded_by_agent)
 {
   createAgent();
 
@@ -127,10 +144,8 @@ TEST_F(MqttSinkTest, Load_Mqtt_sink)
 
 const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
-TEST_F(MqttSinkTest, Mqtt_Sink_publish)
+TEST_F(MqttSinkTest, mqtt_client_should_connect_to_broker)
 {
-  GTEST_SKIP();
-  
   ConfigOptions options {
       {configuration::Host, "localhost"s}, {configuration::Port, 0},
       {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
@@ -138,13 +153,11 @@ TEST_F(MqttSinkTest, Mqtt_Sink_publish)
 
   createServer(options);
   startServer();
-  m_context.run_for(1s);
 
   ASSERT_NE(0, m_port);
 
   createClient(options);
   ASSERT_TRUE(startClient());
-  m_context.run_for(1s);
   
   ASSERT_TRUE(m_client->isConnected());
   

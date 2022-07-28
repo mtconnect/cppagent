@@ -115,7 +115,7 @@ namespace mtconnect {
       {
         NAMED_SCOPE("MqttClient::start");
 
-        mqtt::setup_log();
+        //mqtt::setup_log();
 
         auto client = derived().getClient();
 
@@ -124,7 +124,11 @@ namespace mtconnect {
         client->set_keep_alive_sec(10);
 
         client->set_connack_handler([this](bool sp, mqtt::connect_return_code connack_return_code) {
-          if (connack_return_code == mqtt::connect_return_code::accepted)
+          if (!m_running)
+          {
+            return false;
+          }
+          else if (connack_return_code == mqtt::connect_return_code::accepted)
           {
             m_connected = true;
             if (m_handler)
@@ -145,17 +149,29 @@ namespace mtconnect {
           m_connected = false;
           if (m_handler)
             m_handler->m_disconnected(m_identity);
-          reconnect();
+          if (m_running)
+          {
+            reconnect();
+            return true;
+          }
+          else
+          {
+            return false;
+          }
         });
 
         client->set_error_handler([this](mqtt::error_code ec) {
           LOG(error) << "error: " << ec.message();
-          reconnect();
+          if (m_running)
+            reconnect();
         });
 
         client->set_suback_handler(
             [&](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
               LOG(debug) << "suback received. packet_id: " << packet_id;
+              if (!m_running)
+                return false;
+              
               for (auto const &e : results)
               {
                 LOG(debug) << "suback result: " << e;
@@ -163,7 +179,7 @@ namespace mtconnect {
               }
 
               if (packet_id == m_clientId)
-                MqttPublish();
+                mqttPublish();
 
               reconnect();
 
@@ -178,9 +194,15 @@ namespace mtconnect {
           LOG(debug) << "topic_name: " << topic_name;
           LOG(debug) << "contents: " << contents;
 
-          receive(topic_name, contents);
-
-          return true;
+          if (m_running)
+          {
+            receive(topic_name, contents);
+            return true;
+          }
+          else
+          {
+            return false;
+          }
         });
         /// <summary>
         ///
@@ -217,6 +239,9 @@ namespace mtconnect {
       void subscribe()
       {
         NAMED_SCOPE("MqttClientImpl::subscribe");
+        if (!m_running)
+          return;
+
         auto topics = GetOption<StringList>(m_options, configuration::Topics);
         std::vector<std::tuple<string, mqtt::subscribe_options>> topicList;
         if (topics)
@@ -245,9 +270,11 @@ namespace mtconnect {
         });
       }
 
-      void MqttPublish()
+      void mqttPublish()
       {
         NAMED_SCOPE("MqttClientImpl::publish");
+        if (!m_running)
+          return;
 
         m_clientId = derived().getClient()->acquire_unique_packet_id();
 

@@ -98,11 +98,11 @@ namespace mtconnect {
       {
         NAMED_SCOPE("MqttServer::start");
 
-        mqtt::setup_log();
+        //mqtt::setup_log();
 
         auto &server = derived().createServer();
 
-        server.set_accept_handler([&server](con_sp_t spep) {
+        server.set_accept_handler([&server, this](con_sp_t spep) {
           auto &ep = *spep;
           std::weak_ptr<con_t> wp(spep);
 
@@ -117,11 +117,7 @@ namespace mtconnect {
           // It makes sure wp.lock() never return nullptr in the handlers below
           // including close_handler and error_handler.
           ep.start_session(std::make_tuple(std::move(spep), std::move(g)));
-
-          std::set<con_sp_t> connections;
-          mi_sub_con subs;
-
-          ep.set_connect_handler([&connections, wp](MQTT_NS::buffer client_id,
+          ep.set_connect_handler([this, &server, wp](MQTT_NS::buffer client_id,
                                                     MQTT_NS::optional<MQTT_NS::buffer> username,
                                                     MQTT_NS::optional<MQTT_NS::buffer> password,
                                                     MQTT_NS::optional<MQTT_NS::will>,
@@ -135,49 +131,69 @@ namespace mtconnect {
             LOG(info) << "[server] clean_session: " << std::boolalpha << clean_session << std::endl;
             LOG(info) << "[server] keep_alive   : " << keep_alive << std::endl;
             auto sp = wp.lock();
-            connections.insert(sp);
+            if (!sp)
+            {
+              LOG(error) << "Endpoint has been deleted";
+              return false;
+            }
+            m_connections.insert(sp);
             sp->connack(false, MQTT_NS::connect_return_code::accepted);
             return true;
           });
 
-          ep.set_close_handler([&connections, &subs, wp]() {
+          ep.set_close_handler([this, wp]() {
             LOG(info) << "MQTT "
                       << ": server closed";
             auto con = wp.lock();
-            connections.erase(con);
-            auto &idx = subs.get<tag_con>();
+            if (!con)
+            {
+              LOG(error) << "Endpoint has been deleted";
+              return false;
+            }
+            m_connections.erase(con);
+            auto &idx = m_subs.get<tag_con>();
             auto r = idx.equal_range(con);
             idx.erase(r.first, r.second);
           });
 
-          ep.set_error_handler([&connections, &subs, wp](mqtt::error_code ec) {
+          ep.set_error_handler([this, wp](mqtt::error_code ec) {
             LOG(error) << "error: " << ec.message();
             auto con = wp.lock();
-            connections.erase(con);
-            auto &idx = subs.get<tag_con>();
+            if (!con)
+            {
+              LOG(error) << "Endpoint has been deleted";
+              return false;
+            }
+            m_connections.erase(con);
+            auto &idx = m_subs.get<tag_con>();
             auto r = idx.equal_range(con);
             idx.erase(r.first, r.second);
           });
 
           ep.set_subscribe_handler(
-              [&subs, wp](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
+              [this, wp](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
                 LOG(debug) << "[server] subscribe received. packet_id: " << packet_id << std::endl;
                 std::vector<MQTT_NS::suback_return_code> res;
                 res.reserve(entries.size());
                 auto sp = wp.lock();
                 BOOST_ASSERT(sp);
+                if (!sp)
+                {
+                  LOG(error) << "Endpoint has been deleted";
+                  return false;
+                }
                 for (auto const &e : entries)
                 {
                   LOG(debug) << "[server] topic_filter: " << e.topic_filter
                              << " qos: " << e.subopts.get_qos() << std::endl;
                   res.emplace_back(MQTT_NS::qos_to_suback_return_code(e.subopts.get_qos()));
-                  subs.emplace(std::move(e.topic_filter), sp, e.subopts.get_qos());
+                  m_subs.emplace(std::move(e.topic_filter), sp, e.subopts.get_qos());
                 }
                 sp->suback(packet_id, res);
                 return true;
               });
 
-          ep.set_publish_handler([&subs](mqtt::optional<std::uint16_t> packet_id,
+          ep.set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
                                          mqtt::publish_options pubopts, mqtt::buffer topic_name,
                                          mqtt::buffer contents) {
             LOG(debug) << "[server] publish received."
@@ -190,7 +206,7 @@ namespace mtconnect {
             LOG(debug) << "server topic_name: " << topic_name;
             LOG(debug) << "server contents: " << contents;
 
-            auto const &idx = subs.get<tag_topic>();
+            auto const &idx = m_subs.get<tag_topic>();
             auto r = idx.equal_range(topic_name);
             for (; r.first != r.second; ++r.first)
             {
@@ -235,6 +251,8 @@ namespace mtconnect {
 
     protected:
       ConfigOptions m_options;
+      std::set<con_sp_t> m_connections;
+      mi_sub_con m_subs;
 
       std::string m_host;
     };
