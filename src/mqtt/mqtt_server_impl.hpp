@@ -98,13 +98,11 @@ namespace mtconnect {
       {
         NAMED_SCOPE("MqttServer::start");
 
-        //mqtt::setup_log();
-
         auto &server = derived().createServer();
 
         server.set_accept_handler([&server, this](con_sp_t spep) {
           auto &ep = *spep;
-          std::weak_ptr<con_t> wp(spep);
+          m_wp = spep;
 
           using packet_id_t = typename std::remove_reference_t<decltype(ep)>::packet_id_t;
           LOG(info) << "[server] accept" << std::endl;
@@ -117,7 +115,7 @@ namespace mtconnect {
           // It makes sure wp.lock() never return nullptr in the handlers below
           // including close_handler and error_handler.
           ep.start_session(std::make_tuple(std::move(spep), std::move(g)));
-          ep.set_connect_handler([this, &server, wp](MQTT_NS::buffer client_id,
+          ep.set_connect_handler([this, &server](MQTT_NS::buffer client_id,
                                                     MQTT_NS::optional<MQTT_NS::buffer> username,
                                                     MQTT_NS::optional<MQTT_NS::buffer> password,
                                                     MQTT_NS::optional<MQTT_NS::will>,
@@ -130,7 +128,7 @@ namespace mtconnect {
                       << std::endl;
             LOG(info) << "[server] clean_session: " << std::boolalpha << clean_session << std::endl;
             LOG(info) << "[server] keep_alive   : " << keep_alive << std::endl;
-            auto sp = wp.lock();
+            auto sp = m_wp.lock();
             if (!sp)
             {
               LOG(error) << "Endpoint has been deleted";
@@ -141,10 +139,10 @@ namespace mtconnect {
             return true;
           });
 
-          ep.set_close_handler([this, wp]() {
+          ep.set_close_handler([this]() {
             LOG(info) << "MQTT "
                       << ": server closed";
-            auto con = wp.lock();
+            auto con = m_wp.lock();
             if (!con)
             {
               LOG(error) << "Endpoint has been deleted";
@@ -156,9 +154,9 @@ namespace mtconnect {
             idx.erase(r.first, r.second);
           });
 
-          ep.set_error_handler([this, wp](mqtt::error_code ec) {
+          ep.set_error_handler([this](mqtt::error_code ec) {
             LOG(error) << "error: " << ec.message();
-            auto con = wp.lock();
+            auto con = m_wp.lock();
             if (!con)
             {
               LOG(error) << "Endpoint has been deleted";
@@ -171,11 +169,11 @@ namespace mtconnect {
           });
 
           ep.set_subscribe_handler(
-              [this, wp](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
+              [this](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
                 LOG(debug) << "[server] subscribe received. packet_id: " << packet_id << std::endl;
                 std::vector<MQTT_NS::suback_return_code> res;
                 res.reserve(entries.size());
-                auto sp = wp.lock();
+                auto sp = m_wp.lock();
                 BOOST_ASSERT(sp);
                 if (!sp)
                 {
@@ -233,27 +231,24 @@ namespace mtconnect {
 
         if (server)
         {
+          LOG(info) << "MQTT "
+                    << ": server closed";
+
+          auto con = m_wp.lock();
+          m_connections.erase(con);
+          auto &idx = m_subs.get<tag_con>();
+          auto r = idx.equal_range(con);
+          idx.erase(r.first, r.second);
+
           server->close();
-        }
-
-        /* ep.set_close_handler([&connections, &subs, wp]() {
-           LOG(info) << "MQTT "
-                     << ": server closed";
-           auto con = wp.lock();
-           connections.erase(con);
-           auto &idx = subs.get<tag_con>();
-           auto r = idx.equal_range(con);
-           idx.erase(r.first, r.second);
-         });*/
-
-        LOG(warning) << url << "server disconnected: ";
+        }       
       }
 
     protected:
       ConfigOptions m_options;
       std::set<con_sp_t> m_connections;
       mi_sub_con m_subs;
-
+      std::weak_ptr<con_t> m_wp;
       std::string m_host;
     };
     
