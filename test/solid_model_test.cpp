@@ -92,6 +92,8 @@ TEST_F(SolidModelTest, ParseRotarySolidModel)
   ASSERT_EQ("spindle", model->get<string>("itemRef"));
   ASSERT_EQ("STL", model->get<string>("mediaType"));
   ASSERT_EQ("machine", model->get<string>("coordinateSystemIdRef"));
+  ASSERT_EQ("MILLIMETER", model->get<string>("units"));
+  ASSERT_EQ("METER", model->get<string>("nativeUnits"));
 
   auto tf = model->maybeGet<EntityPtr>("Transformation");
   ASSERT_TRUE(tf);
@@ -187,7 +189,7 @@ TEST_F(SolidModelTest, RotaryJsonPrinting)
     auto model = rotary.at("/Configuration/SolidModel"_json_pointer);
     ASSERT_TRUE(model.is_object());
 
-    ASSERT_EQ(6, model.size());
+    ASSERT_EQ(8, model.size());
     EXPECT_EQ("cm", model["id"]);
     EXPECT_EQ("STL", model["mediaType"]);
     EXPECT_EQ("machine", model["coordinateSystemIdRef"]);
