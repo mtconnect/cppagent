@@ -102,36 +102,35 @@ namespace mtconnect {
 
         server.set_accept_handler([&server, this](con_sp_t spep) {
           auto &ep = *spep;
-          m_wp = spep;
-
+          std::weak_ptr<con_t> wp = spep;
           using packet_id_t = typename std::remove_reference_t<decltype(ep)>::packet_id_t;
-          LOG(info) << "[server] accept" << std::endl;
+          LOG(info) << "Server: Accepted" << std::endl;
           // For server close if ep is closed.
           auto g = MQTT_NS::shared_scope_guard([&server] {
-            LOG(info) << "[server] session end" << std::endl;
+            LOG(info) << "Server: session end" << std::endl;
             server.close();
           });
           // Pass spep to keep lifetime.
           // It makes sure wp.lock() never return nullptr in the handlers below
           // including close_handler and error_handler.
           ep.start_session(std::make_tuple(std::move(spep), std::move(g)));
-          ep.set_connect_handler([this, &server](MQTT_NS::buffer client_id,
+          ep.set_connect_handler([this, &server,wp](MQTT_NS::buffer client_id,
                                                     MQTT_NS::optional<MQTT_NS::buffer> username,
                                                     MQTT_NS::optional<MQTT_NS::buffer> password,
                                                     MQTT_NS::optional<MQTT_NS::will>,
                                                     bool clean_session, std::uint16_t keep_alive) {
             using namespace MQTT_NS::literals;
-            LOG(info) << "[server] client_id    : " << client_id << std::endl;
-            LOG(info) << "[server] username     : " << (username ? username.value() : "none"_mb)
+            LOG(info) << "Server: Client_id    : " << client_id << std::endl;
+            LOG(info) << "Server: User Name     : " << (username ? username.value() : "none"_mb)
                       << std::endl;
-            LOG(info) << "[server] password     : " << (password ? password.value() : "none"_mb)
+            LOG(info) << "Server: Password     : " << (password ? password.value() : "none"_mb)
                       << std::endl;
-            LOG(info) << "[server] clean_session: " << std::boolalpha << clean_session << std::endl;
-            LOG(info) << "[server] keep_alive   : " << keep_alive << std::endl;
-            auto sp = m_wp.lock();
+            LOG(info) << "Server: Clean_session: " << std::boolalpha << clean_session << std::endl;
+            LOG(info) << "Server: Keep_alive   : " << keep_alive << std::endl;
+            auto sp = wp.lock();
             if (!sp)
             {
-              LOG(error) << "Endpoint has been deleted";
+              LOG(error) << "Server: Endpoint has been deleted";
               return false;
             }
             m_connections.insert(sp);
@@ -139,13 +138,13 @@ namespace mtconnect {
             return true;
           });
 
-          ep.set_close_handler([this]() {
+          ep.set_close_handler([this,wp]() {
             LOG(info) << "MQTT "
-                      << ": server closed";
-            auto con = m_wp.lock();
+                      << ": Server closed";
+            auto con = wp.lock();
             if (!con)
             {
-              LOG(error) << "Endpoint has been deleted";
+              LOG(error) << "Server Endpoint has been deleted";
               return false;
             }
             m_connections.erase(con);
@@ -154,12 +153,12 @@ namespace mtconnect {
             idx.erase(r.first, r.second);
           });
 
-          ep.set_error_handler([this](mqtt::error_code ec) {
+          ep.set_error_handler([this,wp](mqtt::error_code ec) {
             LOG(error) << "error: " << ec.message();
-            auto con = m_wp.lock();
+            auto con = wp.lock();
             if (!con)
             {
-              LOG(error) << "Endpoint has been deleted";
+              LOG(error) << "Server Endpoint has been deleted";
               return false;
             }
             m_connections.erase(con);
@@ -169,20 +168,20 @@ namespace mtconnect {
           });
 
           ep.set_subscribe_handler(
-              [this](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
-                LOG(debug) << "[server] subscribe received. packet_id: " << packet_id << std::endl;
+              [this,wp](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
+                LOG(debug) << "Server: Subscribe received. packet_id: " << packet_id << std::endl;
                 std::vector<MQTT_NS::suback_return_code> res;
                 res.reserve(entries.size());
-                auto sp = m_wp.lock();
+                auto sp = wp.lock();
                 BOOST_ASSERT(sp);
                 if (!sp)
                 {
-                  LOG(error) << "Endpoint has been deleted";
+                  LOG(error) << "Server Endpoint has been deleted";
                   return false;
                 }
                 for (auto const &e : entries)
                 {
-                  LOG(debug) << "[server] topic_filter: " << e.topic_filter
+                  LOG(debug) << "Server: topic_filter: " << e.topic_filter
                              << " qos: " << e.subopts.get_qos() << std::endl;
                   res.emplace_back(MQTT_NS::qos_to_suback_return_code(e.subopts.get_qos()));
                   m_subs.emplace(std::move(e.topic_filter), sp, e.subopts.get_qos());
@@ -194,15 +193,15 @@ namespace mtconnect {
           ep.set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
                                          mqtt::publish_options pubopts, mqtt::buffer topic_name,
                                          mqtt::buffer contents) {
-            LOG(debug) << "[server] publish received."
+            LOG(debug) << "Server: publish received."
                        << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
                        << " retain: " << pubopts.get_retain() << std::endl;
 
             if (packet_id)
-              LOG(debug) << "server packet_id: " << *packet_id;
+              LOG(debug) << "Server packet_id: " << *packet_id;
 
-            LOG(debug) << "server topic_name: " << topic_name;
-            LOG(debug) << "server contents: " << contents;
+            LOG(debug) << "Server topic_name: " << topic_name;
+            LOG(debug) << "Server contents: " << contents;
 
             auto const &idx = m_subs.get<tag_topic>();
             auto r = idx.equal_range(topic_name);
@@ -232,14 +231,8 @@ namespace mtconnect {
         if (server)
         {
           LOG(info) << "MQTT "
-                    << ": server closed";
-
-          auto con = m_wp.lock();
-          m_connections.erase(con);
-          auto &idx = m_subs.get<tag_con>();
-          auto r = idx.equal_range(con);
-          idx.erase(r.first, r.second);
-
+                    << ": Server closed";
+         
           server->close();
         }       
       }
@@ -247,8 +240,7 @@ namespace mtconnect {
     protected:
       ConfigOptions m_options;
       std::set<con_sp_t> m_connections;
-      mi_sub_con m_subs;
-      std::weak_ptr<con_t> m_wp;
+      mi_sub_con m_subs;      
       std::string m_host;
     };
     

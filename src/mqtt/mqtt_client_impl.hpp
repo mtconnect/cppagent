@@ -134,7 +134,7 @@ namespace mtconnect {
             if (m_handler)
               m_handler->m_connected(m_identity);
 
-            subscribe();
+            //subscribe();
           }
           else
           {
@@ -165,31 +165,7 @@ namespace mtconnect {
           if (m_running)
             reconnect();
         });
-
-        client->set_suback_handler(
-            [&](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
-              LOG(debug) << "suback received. packet_id: " << packet_id;
-              // This handler makes no sense!!!
-              return true;
-              
-              if (!m_running)
-                return false;
-              
-              for (auto const &e : results)
-              {
-                LOG(debug) << "suback result: " << e;
-                // Do something if the subscription failed...
-              }
-
-              // Why is this being done?
-              if (packet_id == m_clientId)
-                publish();
-
-              reconnect();
-
-              return true;
-            });
-
+        
         client->set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
                                            mqtt::publish_options pubopts, mqtt::buffer topic_name,
                                            mqtt::buffer contents) {
@@ -239,7 +215,27 @@ namespace mtconnect {
         }
       }
 
+      bool subscribe(const std::string &topic) override
+      {
+        NAMED_SCOPE("MqttClientImpl::subscribe");
+        if (!m_running)
+          return false;
+
+        m_clientId = derived().getClient()->acquire_unique_packet_id();
+        derived().getClient()->async_subscribe(
+            m_clientId, topic.c_str(), mqtt::qos::at_least_once, [](mqtt::error_code ec) {
+              if (ec)
+              {
+                LOG(error) << "Subscribe failed: " << ec.message();
+                return false;
+              }
+            });
+
+        return true;
+      }
+
     protected:
+
       void subscribe()
       {
         NAMED_SCOPE("MqttClientImpl::subscribe");
@@ -328,7 +324,9 @@ namespace mtconnect {
         if (m_handler)
           m_handler->m_processMessage(string(topic), string(contents), m_identity);
       }
-
+      /// <summary>
+      /// 
+      /// </summary>
       void reconnect()
       {
         NAMED_SCOPE("Mqtt_Client::reconnect");

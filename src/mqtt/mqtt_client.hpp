@@ -29,10 +29,9 @@ namespace mtconnect {
       virtual ~MqttClient() = default;
       const auto &getIdentity() const { return m_identity; }
       const auto &getUrl() const { return m_url; }
-
       virtual bool start() = 0;
       virtual void stop() = 0;
-      
+      virtual bool subscribe(const std::string &topic) = 0;      
       auto isConnected() { return m_connected; }
       auto isRunning() { return m_running; }
 

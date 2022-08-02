@@ -18,19 +18,28 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <string>
+#include <nlohmann/json.hpp>
+
 #include "agent_test_helper.hpp"
 #include "mqtt/mqtt_client_impl.hpp"
 #include "mqtt/mqtt_server_impl.hpp"
+#include "printer/json_printer.hpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
 
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::sink::mqtt_sink;
+using json = nlohmann::json;
 
 class MqttSinkTest : public testing::Test
 {
 protected:
-  void SetUp() override { m_agentTestHelper = make_unique<AgentTestHelper>(); }
+  void SetUp() override
+  {
+    m_agentTestHelper = make_unique<AgentTestHelper>();
+    m_jsonPrinter = std::make_unique<printer::JsonPrinter>(2, "1.5", true);  
+  }
 
   void TearDown() override
   {
@@ -53,12 +62,13 @@ protected:
       m_server.reset();
     }
     m_agentTestHelper.reset();
+    m_jsonPrinter.reset();
   }
 
   void createAgent(ConfigOptions options = {})
   {
     options.emplace("MqttSink", true);
-    m_agentTestHelper->createAgent("/samples/configuration.xml", 8, 4, "2.0", 25, false, true,
+    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true,
                                    options);
 
     m_agentTestHelper->getAgent()->start();
@@ -103,10 +113,10 @@ protected:
     return started;
   }
 
+  std::unique_ptr<printer::JsonPrinter> m_jsonPrinter;
   std::shared_ptr<mtconnect::mqtt_server::MqttServer> m_server;
   std::shared_ptr<MqttClient> m_client;
   asio::io_context m_context;
-
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
   uint16_t m_port { 0 };
 };
@@ -123,6 +133,51 @@ TEST_F(MqttSinkTest, mqtt_sink_should_be_loaded_by_agent)
   ASSERT_TRUE(mqttService);
 }
 
+TEST_F(MqttSinkTest, mqtt_sink_to_send_Probe)
+{
+  createAgent();
+
+  ConfigOptions options {{configuration::Host, "localhost"s},
+                         {configuration::Port, 0},
+                         {configuration::MqttTls, false},
+                         {configuration::AutoAvailable, false},
+                         {configuration::RealTime, false}};
+
+  createServer(options);
+
+  startServer();
+
+  ASSERT_NE(0, m_port);
+
+  auto agent = m_agentTestHelper->getAgent();
+
+  const auto mqttService =
+      dynamic_pointer_cast<sink::mqtt_sink::MqttService>(agent->findSink("MqttService"));
+
+  ASSERT_TRUE(mqttService);
+
+  if (mqttService->isConnected())
+  {   
+    std::shared_ptr<MqttClient> client = mqttService->getClient();
+    if (client)
+    {
+      std::list<DevicePtr> devices = m_agentTestHelper->m_agent->getDevices();
+
+      auto doc = m_jsonPrinter->printProbe(123, 9999, 1, 1024, 10, devices);
+      auto jdoc = json::parse(doc);
+      auto it = jdoc.begin();
+      ASSERT_NE(string("MTConnectDevices"), it.key());
+      auto jsonDevices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
+
+      auto device = jsonDevices.at(0).at("/Device"_json_pointer);
+      auto device2 = jsonDevices.at(1).at("/Device"_json_pointer);
+
+      ASSERT_NE(string("x872a3490"), device.at("/id"_json_pointer).get<string>());
+      ASSERT_NE(string("SimpleCnc"), device.at("/name"_json_pointer).get<string>());
+    }
+  }
+}
+
 const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
 TEST_F(MqttSinkTest, mqtt_client_should_connect_to_broker)
@@ -133,18 +188,86 @@ TEST_F(MqttSinkTest, mqtt_client_should_connect_to_broker)
       {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
 
   createServer(options);
+
   startServer();
 
   ASSERT_NE(0, m_port);
 
   createClient(options);
+
   ASSERT_TRUE(startClient());
   
-  ASSERT_TRUE(m_client->isConnected());
-  
-  
+  ASSERT_TRUE(m_client->isConnected());    
+
   m_client->stop();
 }
+
+TEST_F(MqttSinkTest, mqtt_client_print_probe)
+{
+  createAgent();
+
+  ConfigOptions options {
+      {configuration::Host, "localhost"s}, {configuration::Port, 0},
+      {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
+      {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
+
+  createServer(options);
+
+  startServer();
+
+  ASSERT_NE(0, m_port);
+
+  createClient(options);
+   
+  ASSERT_TRUE(startClient());
+
+  ASSERT_TRUE(m_client->isConnected());
+
+  if (m_client && m_client->isConnected())
+  {
+    StringList topicList;
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
+    auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
+   
+    for (auto& device : devices)
+    {
+      auto dataItems = device.at("/DataItems"_json_pointer);
+
+      for (int i = 0; i < dataItems.size(); i++)
+      {
+        auto dataItem = dataItems.at(i);
+      //}
+      //for (auto const& dataItem : dataItems)
+      //{
+        string dataItemId = dataItem.at("/DataItem/id"_json_pointer).get<string>();
+        bool sucess = m_client->subscribe(dataItemId);
+        if (!sucess)
+        {
+          continue;
+        }
+      }
+    }
+
+    /*auto device = devices.at(0).at("/Device"_json_pointer);
+    auto dataItems = device.at("/DataItems"_json_pointer);
+
+    auto dataitem0 = dataItems.at(0);
+    string dataItemId0 = dataitem0.at("/DataItem/id"_json_pointer).get<string>();
+    ASSERT_EQ(string("a"), dataItemId0);
+    topicList.push_back(dataItemId0);
+    m_client->subscribe(dataItemId0);
+
+    auto dataitem1 = dataItems.at(1);
+    string dataItemId1 = dataitem1.at("/DataItem/id"_json_pointer).get<string>();
+    ASSERT_EQ(string("avail"), dataItemId1);
+    topicList.push_back(dataItemId1);
+    
+    m_client->subscribe(dataItemId1);*/
+  }   
+
+  m_client->stop();
+}
+
 
 TEST_F(MqttSinkTest, mqtt_client_should_connect_to_local_server)
 {
