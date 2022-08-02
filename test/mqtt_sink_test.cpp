@@ -133,7 +133,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_be_loaded_by_agent)
   ASSERT_TRUE(mqttService);
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_to_send_Probe)
+TEST_F(MqttSinkTest, mqtt_sink_probe_to_subscribe)
 {  
   createAgent();
 
@@ -159,22 +159,28 @@ TEST_F(MqttSinkTest, mqtt_sink_to_send_Probe)
   if (mqttService->isConnected())
   {   
     std::shared_ptr<MqttClient> client = mqttService->getClient();
-    if (client)
+    
+    if (m_client && m_client->isConnected())
     {
       std::list<DevicePtr> devices = m_agentTestHelper->m_agent->getDevices();
 
-      auto doc = m_jsonPrinter->printProbe(123, 9999, 1, 1024, 10, devices);
-      auto jdoc = json::parse(doc);
-      auto it = jdoc.begin();
-      ASSERT_NE(string("MTConnectDevices"), it.key());
-      auto jsonDevices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
-
-      auto device = jsonDevices.at(0).at("/Device"_json_pointer);
-      auto device2 = jsonDevices.at(1).at("/Device"_json_pointer);
-
-      ASSERT_NE(string("x872a3490"), device.at("/id"_json_pointer).get<string>());
-      ASSERT_NE(string("SimpleCnc"), device.at("/name"_json_pointer).get<string>());
+      for (auto device : devices)
+      {
+        const auto& dataItems = device->getDeviceDataItems();
+        for (const auto& dataItemAssoc : dataItems)
+        {
+          auto dataItem = dataItemAssoc.second.lock();
+          string dataItemId = dataItem->getId();
+          bool sucess = m_client->subscribe(dataItemId);
+          if (!sucess)
+          {
+            continue;
+          }
+        }
+      }
     }
+
+    client->stop();
   }
 }
 
@@ -202,9 +208,9 @@ TEST_F(MqttSinkTest, mqtt_client_should_connect_to_broker)
   m_client->stop();
 }
 
-TEST_F(MqttSinkTest, mqtt_client_print_probe)
+TEST_F(MqttSinkTest, mqtt_localhost_probe_to_subscribe)
 {
-  GTEST_SKIP();
+  //GTEST_SKIP();
 	
   createAgent();
 
@@ -230,17 +236,17 @@ TEST_F(MqttSinkTest, mqtt_client_print_probe)
     StringList topicList;
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
-   
-    for (auto& device : devices)
+
+    for (int d = 0; d < devices.size(); d++)
     {
+      auto device = devices.at(d).at("/Device"_json_pointer);
+
       auto dataItems = device.at("/DataItems"_json_pointer);
 
       for (int i = 0; i < dataItems.size(); i++)
       {
         auto dataItem = dataItems.at(i);
-      //}
-      //for (auto const& dataItem : dataItems)
-      //{
+
         string dataItemId = dataItem.at("/DataItem/id"_json_pointer).get<string>();
         bool sucess = m_client->subscribe(dataItemId);
         if (!sucess)
@@ -249,27 +255,9 @@ TEST_F(MqttSinkTest, mqtt_client_print_probe)
         }
       }
     }
-
-    /*auto device = devices.at(0).at("/Device"_json_pointer);
-    auto dataItems = device.at("/DataItems"_json_pointer);
-
-    auto dataitem0 = dataItems.at(0);
-    string dataItemId0 = dataitem0.at("/DataItem/id"_json_pointer).get<string>();
-    ASSERT_EQ(string("a"), dataItemId0);
-    topicList.push_back(dataItemId0);
-    m_client->subscribe(dataItemId0);
-
-    auto dataitem1 = dataItems.at(1);
-    string dataItemId1 = dataitem1.at("/DataItem/id"_json_pointer).get<string>();
-    ASSERT_EQ(string("avail"), dataItemId1);
-    topicList.push_back(dataItemId1);
-    
-    m_client->subscribe(dataItemId1);*/
-  }   
-
+  }
   m_client->stop();
 }
-
 
 TEST_F(MqttSinkTest, mqtt_client_should_connect_to_local_server)
 {
