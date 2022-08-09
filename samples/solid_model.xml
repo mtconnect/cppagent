@@ -28,7 +28,7 @@
           <Components>
             <Rotary name="C" id="c">
 							<Configuration>
-								<SolidModel id="cm" mediaType="STL" solidModelIdRef="dm" itemRef="spindle" coordinateSystemIdRef="machine">
+								<SolidModel id="cm" mediaType="STL" solidModelIdRef="dm" itemRef="spindle" coordinateSystemIdRef="machine" units="MILLIMETER" nativeUnits="METER">
 									<Transformation>
 										<Translation>10 20 30</Translation>
 										<Rotation>90 -90 180</Rotation>
