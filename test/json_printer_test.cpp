@@ -268,7 +268,7 @@ TEST_F(JsonPrinterTest, data_items_using_version_2)
 
   json jdoc;
   jdoc = jprinter.print(entity);
-  
+
   auto dataitems = jdoc.at("/MTConnectDevices/Devices/Device/DataItems/DataItem"_json_pointer);
   ASSERT_EQ("AVAILABILITY", dataitems.at("/0/type"_json_pointer).get<string>());
   ASSERT_EQ("ASSET_CHANGED", dataitems.at("/1/type"_json_pointer).get<string>());
@@ -343,7 +343,7 @@ TEST_F(JsonPrinterTest, elements_with_property_list_version_2)
 
   json jdoc;
   jdoc = jprinter.print(entity);
-  
+
   ASSERT_EQ(2, jdoc.at("/Root/CuttingItems/count"_json_pointer).get<int>());
   ASSERT_EQ("1",
             jdoc.at("/Root/CuttingItems/list/CuttingItem/0/itemId"_json_pointer).get<string>());

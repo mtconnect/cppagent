@@ -93,8 +93,8 @@ protected:
   }
 
   void addObservationToList(ObservationList &list, const char *name, uint64_t sequence,
-                                  Properties props, Timestamp time = chrono::system_clock::now(),
-                                  std::optional<double> duration = nullopt)
+                            Properties props, Timestamp time = chrono::system_clock::now(),
+                            std::optional<double> duration = nullopt)
   {
     const auto d = getDataItem(name);
     ASSERT_TRUE(d) << "Could not find data item " << name;
@@ -216,11 +216,11 @@ TEST_F(JsonPrinterStreamTest, two_components_version_2)
   ObservationList list;
   checkpoint.getObservations(list);
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
-  
+
   auto jdoc = json::parse(doc);
   auto streams = jdoc.at("/MTConnectStreams/Streams/DeviceStream/ComponentStream"_json_pointer);
   ASSERT_EQ(2_S, streams.size());
-  
+
   json stream1 = streams[0];
   ASSERT_TRUE(stream1.is_object());
   ASSERT_EQ(string("Linear"), stream1.at("/component"_json_pointer).get<string>());
@@ -231,7 +231,6 @@ TEST_F(JsonPrinterStreamTest, two_components_version_2)
   ASSERT_EQ(string("Rotary"), stream2.at("/component"_json_pointer).get<string>());
   ASSERT_EQ(string("zf476090"), stream2.at("/componentId"_json_pointer).get<string>());
 }
-
 
 TEST_F(JsonPrinterStreamTest, TwoDevices)
 {
@@ -308,21 +307,21 @@ TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem)
 TEST_F(JsonPrinterStreamTest, samples_and_events_version_2)
 {
   m_printer = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
-  
+
   ObservationList list;
   Timestamp now = chrono::system_clock::now();
-  
+
   addObservationToList(list, "if36ff60", 10254804, "AUTOMATIC"_value,
-                             now);  // Controller Mode
-  addObservationToList(list, "r186cd60", 10254805,
-                             Properties {{"VALUE", Vector {10, 20, 30}}}, now);  // Path Position
-  addObservationToList(list, "r186cd60", 10254806,
-                             Properties {{"VALUE", Vector {11, 21, 31}}}, now);  // Path Position
-  addObservationToList(list, "r186cd60", 10254807,
-                             Properties {{"VALUE", Vector {12, 22, 32}}}, now);  // Path Position
+                       now);  // Controller Mode
+  addObservationToList(list, "r186cd60", 10254805, Properties {{"VALUE", Vector {10, 20, 30}}},
+                       now);  // Path Position
+  addObservationToList(list, "r186cd60", 10254806, Properties {{"VALUE", Vector {11, 21, 31}}},
+                       now);  // Path Position
+  addObservationToList(list, "r186cd60", 10254807, Properties {{"VALUE", Vector {12, 22, 32}}},
+                       now);  // Path Position
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   auto jdoc = json::parse(doc);
-  
+
   auto stream = jdoc.at("/MTConnectStreams/Streams/DeviceStream/ComponentStream"_json_pointer);
   ASSERT_TRUE(stream.is_object());
 
@@ -339,19 +338,19 @@ TEST_F(JsonPrinterStreamTest, samples_and_events_version_2)
 
   auto samples = stream.at("/Samples"_json_pointer);
   ASSERT_TRUE(samples.is_object());
-  
+
   auto positions = samples.at("/PathPosition"_json_pointer);
   ASSERT_TRUE(positions.is_array());
   ASSERT_EQ(3_S, positions.size());
-  
+
   ASSERT_EQ(10.0, positions.at("/0/value/0"_json_pointer).get<double>());
   ASSERT_EQ(20.0, positions.at("/0/value/1"_json_pointer).get<double>());
   ASSERT_EQ(30.0, positions.at("/0/value/2"_json_pointer).get<double>());
-  
+
   ASSERT_EQ(string("r186cd60"), positions.at("/0/dataItemId"_json_pointer).get<string>());
   ASSERT_EQ(format(now), positions.at("/0/timestamp"_json_pointer).get<string>());
   ASSERT_EQ(uint64_t(10254805), positions.at("/0/sequence"_json_pointer).get<uint64_t>());
-  
+
   ASSERT_EQ(11.0, positions.at("/1/value/0"_json_pointer).get<double>());
   ASSERT_EQ(21.0, positions.at("/1/value/1"_json_pointer).get<double>());
   ASSERT_EQ(31.0, positions.at("/1/value/2"_json_pointer).get<double>());

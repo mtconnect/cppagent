@@ -39,7 +39,7 @@ namespace mtconnect {
     protected:
       void printEntityList1(json &obj, const EntityList &list) const;
       void printEntityList2(json &obj, const EntityList &list) const;
-      
+
     protected:
       uint32_t m_version;
     };
