@@ -374,14 +374,16 @@ TEST_F(JsonPrinterProbeTest, version_2_with_multiple_devices)
 
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
-  
+
+  ASSERT_EQ(2, jdoc["MTConnectDevices"]["jsonVersion"].get<int>());
+
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
   ASSERT_TRUE(devices.is_object());
-  
+
   auto device = jdoc.at("/MTConnectDevices/Devices/Device"_json_pointer);
   ASSERT_TRUE(device.is_array());
   ASSERT_EQ(2_S, device.size());
-  
+
   ASSERT_EQ("device-1", device.at("/0/uuid"_json_pointer));
   ASSERT_EQ("device-2", device.at("/1/uuid"_json_pointer));
 }

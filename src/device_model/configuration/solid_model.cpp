@@ -33,21 +33,20 @@ namespace mtconnect {
                                                  Requirement("Rotation", VECTOR, 3, false)});
 
           solidModel = make_shared<Factory>(
-              Requirements {
-                {"id", true},
-                {"units", false},
-                {"nativeUnits", false},
-                {"coordinateSystemIdRef", false},
-                {"solidModelIdRef", false},
-                {"href", false},
-                {"itemRef", false},
-                {"mediaType", ControlledVocab {"STEP", "STL", "GDML", "OBJ", "COLLADA",
-                                                         "IGES", "3DS", "ACIS", "X_T"},
-                  true},
-                
-                {"Transformation", ENTITY, transformation, false},
-                {"Scale", VECTOR, 3, false}}
-                );
+              Requirements {{"id", true},
+                            {"units", false},
+                            {"nativeUnits", false},
+                            {"coordinateSystemIdRef", false},
+                            {"solidModelIdRef", false},
+                            {"href", false},
+                            {"itemRef", false},
+                            {"mediaType",
+                             ControlledVocab {"STEP", "STL", "GDML", "OBJ", "COLLADA", "IGES",
+                                              "3DS", "ACIS", "X_T"},
+                             true},
+
+                            {"Transformation", ENTITY, transformation, false},
+                            {"Scale", VECTOR, 3, false}});
 
           solidModel->registerMatchers();
         }
