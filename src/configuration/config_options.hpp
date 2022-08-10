@@ -31,7 +31,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(CheckpointFrequency);
     DECLARE_CONFIGURATION(Devices);
     DECLARE_CONFIGURATION(HttpHeaders);
-    DECLARE_CONFIGURATION(JsonPrinterVersion);
+    DECLARE_CONFIGURATION(JsonVersion);
     DECLARE_CONFIGURATION(LogStreams);
     DECLARE_CONFIGURATION(MaxAssets);
     DECLARE_CONFIGURATION(MaxCachedFileSize);
