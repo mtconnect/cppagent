@@ -61,8 +61,6 @@ namespace mtconnect {
                              {configuration::AutoAvailable, false},
                              {configuration::RealTime, false},
                              {configuration::RelativeTime, false}});
-
-        loadTopics(config, m_options);
         
         auto clientHandler = make_unique<ClientHandler>();
 
@@ -74,27 +72,6 @@ namespace mtconnect {
         else
         {
           m_client = make_shared<MqttTcpClient>(m_context, m_options, move(clientHandler));
-        }
-      }
-
-      void MqttService::loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options)
-      {
-        auto topics = tree.get_child_optional(configuration::Topics);
-        if (topics)
-        {
-          StringList list;
-          if (topics->size() == 0)
-          {
-            list.emplace_back(":" + topics->get_value<string>());
-          }
-          else
-          {
-            for (auto &f : *topics)
-            {
-              list.emplace_back(f.first + ":" + f.second.data());
-            }
-          }
-          options[configuration::Topics] = list;
         }
       }
 
