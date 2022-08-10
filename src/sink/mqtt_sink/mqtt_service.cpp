@@ -63,14 +63,17 @@ namespace mtconnect {
                              {configuration::RelativeTime, false}});
 
         loadTopics(config, m_options);
+        
+        auto clientHandler = make_unique<ClientHandler>();
+
 
         if (IsOptionSet(m_options, configuration::MqttTls))
         {
-          m_client = make_shared<MqttTlsClient>(m_context, m_options);
+          m_client = make_shared<MqttTlsClient>(m_context, m_options, move(clientHandler));
         }
         else
         {
-          m_client = make_shared<MqttTcpClient>(m_context, m_options);
+          m_client = make_shared<MqttTcpClient>(m_context, m_options, move(clientHandler));
         }
       }
 
@@ -99,6 +102,11 @@ namespace mtconnect {
       {
         // mqtt client side not a server side...
         m_client->start();
+
+        for (const auto &dev : m_sinkContract->getDevices())
+        {
+          publish(dev);
+        }
       }
 
       void MqttService::stop()
@@ -129,11 +137,15 @@ namespace mtconnect {
       
       bool MqttService::publish(device_model::DevicePtr device)
       {
+        
         return true;
       }
 
 
-      bool MqttService::publish(asset::AssetPtr asset) { return false; }
+      bool MqttService::publish(asset::AssetPtr asset)
+      {
+        return false;
+      }
 
       // Register the service with the sink factory
       void MqttService::registerFactory(SinkFactory &factory)

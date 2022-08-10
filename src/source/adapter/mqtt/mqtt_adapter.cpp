@@ -75,12 +75,31 @@ namespace mtconnect {
       loadTopics(block, m_options);
 
       m_handler = m_pipeline.makeHandler();
+      auto clientHandler = make_unique<ClientHandler>();
+
+      clientHandler->m_connecting = [this](shared_ptr<MqttClient> client) {
+        m_handler->m_connecting(client->getIdentity());
+      };
+
+      clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
+        m_handler->m_connected(client->getIdentity());
+      };
+      
+      clientHandler->m_disconnected = [this](shared_ptr<MqttClient> client) {
+        m_handler->m_disconnected(client->getIdentity());
+      };
+
+      clientHandler->m_receive = [this](shared_ptr<MqttClient> client, const std::string &topic, const std::string &payload) {
+        m_handler->m_processMessage(topic, payload, client->getIdentity());
+      };
+
+      
       if (IsOptionSet(m_options, configuration::MqttTls))
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
-                                                                      &m_pipeline, m_handler.get());
+                                                                      move(clientHandler));
       else
         m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_ioContext, m_options,
-                                                                      &m_pipeline, m_handler.get());
+                                                                      move(clientHandler));
 
       m_identity = m_client->getIdentity();
       m_name = m_client->getUrl();

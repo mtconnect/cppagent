@@ -100,7 +100,8 @@ protected:
   {
     ConfigOptions opts(options);
     opts[configuration::Port] = m_port;
-    m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_context, opts);
+    auto clientHandler = make_unique<ClientHandler>();
+    m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_context, opts, move(clientHandler));
   }
 
   bool startClient()
