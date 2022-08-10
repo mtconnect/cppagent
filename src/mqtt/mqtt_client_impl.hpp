@@ -229,8 +229,28 @@ namespace mtconnect {
                 LOG(error) << "Subscribe failed: " << ec.message();
                 return false;
               }
+              return true;
             });
 
+        return true;
+      }
+      
+      bool publish(const std::string &topic, const std::string &payload) override
+      {
+        NAMED_SCOPE("MqttClientImpl::publish");
+        if (!m_running)
+          return false;
+
+        
+        m_clientId = derived().getClient()->acquire_unique_packet_id();
+        derived().getClient()->async_publish(m_clientId, topic, payload, mqtt::qos::at_most_once,
+                                             [](mqtt::error_code ec) {
+                                               if (ec)
+                                               {
+                                                 LOG(error) << "Publish failed: " << ec.message();
+                                               }
+                                             });
+        
         return true;
       }
 
@@ -268,47 +288,6 @@ namespace mtconnect {
             LOG(error) << "Subscribe failed: " << ec.message();
           }
         });
-      }
-
-      void publish()
-      {
-        NAMED_SCOPE("MqttClientImpl::publish");
-        if (!m_running)
-          return;
-
-#if 0
-        m_clientId = derived().getClient()->acquire_unique_packet_id();
-
-        auto topics = GetOption<StringList>(m_options, configuration::Topics);
-
-        std::string pTopic;    // publish topic
-        std::string pContent;  // publish content
-        if (topics)
-        {
-          for (auto &topic : *topics)
-          {
-            auto loc = topic.find(':');
-            if (loc != string::npos)
-            {
-              pTopic = topic.substr(loc + 1);   // after : values
-              pContent = topic.substr(0, loc);  // first values before : or something else..??
-              break;
-            }
-          }
-        }
-        else
-        {
-          LOG(warning) << "No topics specified, subscribing to '#'";
-        }
-
-        derived().getClient()->async_publish(m_clientId, pTopic, pContent, mqtt::qos::at_most_once,
-                                             [](mqtt::error_code ec) {
-                                               if (ec)
-                                               {
-                                                 LOG(error) << "Publish failed: " << ec.message();
-                                               }
-                                             });
-#endif
       }
 
       void connect()

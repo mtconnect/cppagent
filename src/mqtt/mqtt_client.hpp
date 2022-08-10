@@ -31,7 +31,8 @@ namespace mtconnect {
       const auto &getUrl() const { return m_url; }
       virtual bool start() = 0;
       virtual void stop() = 0;
-      virtual bool subscribe(const std::string &topic) = 0;      
+      virtual bool subscribe(const std::string &topic) = 0;
+      virtual bool publish(const std::string &topic, const std::string &payload) = 0;
       auto isConnected() { return m_connected; }
       auto isRunning() { return m_running; }
 

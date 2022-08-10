@@ -9,6 +9,7 @@ scenario = false
 $verbose = false
 fast = nil
 server = '0.0.0.0'
+max = nil
 
 OptionParser.new do |opts|
   opts.banner = 'Usage: run_scenrio.rb [-lfh] [-s server] [-p port] <file>'
@@ -37,6 +38,10 @@ OptionParser.new do |opts|
   opts.on('-f [rate]', OptionParser::DecimalNumeric, 'Pump as fast as possible') do |v|
     puts "FAST - Will deliver data at with #{v} seconds between items"
     fast = v.to_f
+  end
+  
+  opts.on('-m [rate]', OptionParser::DecimalNumeric, 'Maximum amount of time to sleep between observations') do |v|
+    max = v.to_f
   end
   
   opts.on('-s', '--server [server]', String, 'Server IP port to bind to (default: 0.0.0.0)') do |v|
@@ -117,7 +122,13 @@ begin
       
           if last
             delta = time - last
-            sleep delta if delta > 0.0
+            if delta > 0.0
+              if max and delta > max
+                sleep max
+              else
+                sleep delta
+              end
+            end
           end
         end
         line = "#{format_time}|#{r}"
