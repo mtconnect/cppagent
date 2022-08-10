@@ -55,39 +55,12 @@ namespace mtconnect {
     class MqttClientImpl : public MqttClient
     {
     public:
-      MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options)
-        : MqttClient(ioContext),
-          m_options(options),
-          m_host(*GetOption<std::string>(options, configuration::Host)),
-          m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
-          m_reconnectTimer(ioContext)
-      {
-        std::stringstream url;
-        url << "mqtt://" << m_host << ':' << m_port;
-        m_url = url.str();
-
-        std::stringstream identity;
-        identity << '_' << m_host << '_' << m_port;
-
-        boost::uuids::detail::sha1 sha1;
-        sha1.process_bytes(identity.str().c_str(), identity.str().length());
-        boost::uuids::detail::sha1::digest_type digest;
-        sha1.get_digest(digest);
-
-        identity.str("");
-        identity << std::hex << digest[0] << digest[1] << digest[2];
-        m_identity = std::string("_") + (identity.str()).substr(0, 10);
-      }
-
       MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options,
-                     source::adapter::mqtt_adapter::MqttPipeline *pipeline,
-                     source::adapter::Handler *handler)
-        : MqttClient(ioContext),
+                     std::unique_ptr<ClientHandler> &&handler)
+        : MqttClient(ioContext, move(handler)),
           m_options(options),
           m_host(*GetOption<std::string>(options, configuration::Host)),
           m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
-          m_pipeline(pipeline),
-          m_handler(handler),
           m_reconnectTimer(ioContext)
       {
         std::stringstream url;
@@ -132,9 +105,7 @@ namespace mtconnect {
           {
             m_connected = true;
             if (m_handler)
-              m_handler->m_connected(m_identity);
-
-            //subscribe();
+              m_handler->m_connected(shared_from_this());
           }
           else
           {
@@ -148,7 +119,7 @@ namespace mtconnect {
           // Queue on a strand
           m_connected = false;
           if (m_handler)
-            m_handler->m_disconnected(m_identity);
+            m_handler->m_disconnected(shared_from_this());
           if (m_running)
           {
             reconnect();
@@ -229,8 +200,28 @@ namespace mtconnect {
                 LOG(error) << "Subscribe failed: " << ec.message();
                 return false;
               }
+              return true;
             });
 
+        return true;
+      }
+      
+      bool publish(const std::string &topic, const std::string &payload) override
+      {
+        NAMED_SCOPE("MqttClientImpl::publish");
+        if (!m_running)
+          return false;
+
+        
+        m_clientId = derived().getClient()->acquire_unique_packet_id();
+        derived().getClient()->async_publish(m_clientId, topic, payload, mqtt::qos::at_most_once,
+                                             [](mqtt::error_code ec) {
+                                               if (ec)
+                                               {
+                                                 LOG(error) << "Publish failed: " << ec.message();
+                                               }
+                                             });
+        
         return true;
       }
 
@@ -270,51 +261,10 @@ namespace mtconnect {
         });
       }
 
-      void publish()
-      {
-        NAMED_SCOPE("MqttClientImpl::publish");
-        if (!m_running)
-          return;
-
-#if 0
-        m_clientId = derived().getClient()->acquire_unique_packet_id();
-
-        auto topics = GetOption<StringList>(m_options, configuration::Topics);
-
-        std::string pTopic;    // publish topic
-        std::string pContent;  // publish content
-        if (topics)
-        {
-          for (auto &topic : *topics)
-          {
-            auto loc = topic.find(':');
-            if (loc != string::npos)
-            {
-              pTopic = topic.substr(loc + 1);   // after : values
-              pContent = topic.substr(0, loc);  // first values before : or something else..??
-              break;
-            }
-          }
-        }
-        else
-        {
-          LOG(warning) << "No topics specified, subscribing to '#'";
-        }
-
-        derived().getClient()->async_publish(m_clientId, pTopic, pContent, mqtt::qos::at_most_once,
-                                             [](mqtt::error_code ec) {
-                                               if (ec)
-                                               {
-                                                 LOG(error) << "Publish failed: " << ec.message();
-                                               }
-                                             });
-#endif
-      }
-
       void connect()
       {
         if (m_handler)
-          m_handler->m_connecting(m_identity);
+          m_handler->m_connecting(shared_from_this());
 
         derived().getClient()->async_connect();
       }
@@ -322,7 +272,7 @@ namespace mtconnect {
       void receive(mqtt::buffer &topic, mqtt::buffer &contents)
       {
         if (m_handler)
-          m_handler->m_processMessage(string(topic), string(contents), m_identity);
+          m_handler->m_receive(shared_from_this(), string(topic), string(contents));
       }
       /// <summary>
       /// 
@@ -363,10 +313,6 @@ namespace mtconnect {
       unsigned int m_port { 1883 };
 
       std::uint16_t m_clientId {0};
-
-      source::adapter::mqtt_adapter::MqttPipeline *m_pipeline { nullptr };
-
-      source::adapter::Handler *m_handler { nullptr };
 
       boost::asio::steady_timer m_reconnectTimer;
     };

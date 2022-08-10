@@ -136,7 +136,8 @@ namespace mtconnect::printer {
     }
 
     json doc = json::object({{"MTConnectError",
-                              {{"Header", header(m_version, hostname(), instanceId, bufferSize,
+                              {{"jsonVersion", m_jsonVersion},
+                               {"Header", header(m_version, hostname(), instanceId, bufferSize,
                                                  m_schemaVersion, m_modelChangeTime)},
                                {"Errors", errors}}}});
 
@@ -166,7 +167,7 @@ namespace mtconnect::printer {
     entity::JsonPrinter printer(m_jsonVersion);
 
     json devicesDoc;
-    
+
     if (m_jsonVersion == 1)
     {
       devicesDoc = json::array();
@@ -187,7 +188,8 @@ namespace mtconnect::printer {
     }
 
     json doc = json::object({{"MTConnectDevices",
-                              {{"Header", probeAssetHeader(m_version, hostname(), instanceId,
+                              {{"jsonVersion", m_jsonVersion},
+                               {"Header", probeAssetHeader(m_version, hostname(), instanceId,
                                                            bufferSize, assetBufferSize, assetCount,
                                                            m_schemaVersion, m_modelChangeTime)},
                                {"Devices", devicesDoc}}}});
@@ -208,7 +210,7 @@ namespace mtconnect::printer {
     }
 
     bool isCategory(const char *cat) { return m_category == cat; }
-    
+
     pair<string_view, json> toJson()
     {
       entity::JsonPrinter printer(m_version);
@@ -242,10 +244,11 @@ namespace mtconnect::printer {
   class ComponentRef
   {
   public:
-    ComponentRef(const ComponentPtr component, uint32_t version) : m_component(component), m_version(version) {}
+    ComponentRef(const ComponentPtr component, uint32_t version)
+      : m_component(component), m_version(version)
+    {}
     ComponentRef(const ComponentRef &other)
-      : m_component(other.m_component), m_categories(other.m_categories),
-    m_version(other.m_version)
+      : m_component(other.m_component), m_categories(other.m_categories), m_version(other.m_version)
     {}
 
     bool isComponent(const ComponentPtr &component) { return m_component == component; }
@@ -297,7 +300,7 @@ namespace mtconnect::printer {
   protected:
     const ComponentPtr m_component;
     vector<CategoryRef> m_categories;
-    optional<CategoryRef*> m_categoryRef;
+    optional<CategoryRef *> m_categoryRef;
     uint32_t m_version;
   };
 
@@ -305,7 +308,8 @@ namespace mtconnect::printer {
   {
   public:
     DeviceRef(const DevicePtr device, uint32_t version) : m_device(device), m_version(version) {}
-    DeviceRef(const DeviceRef &other) : m_device(other.m_device), m_components(other.m_components), m_version(other.m_version)
+    DeviceRef(const DeviceRef &other)
+      : m_device(other.m_device), m_components(other.m_components), m_version(other.m_version)
     {}
 
     bool isDevice(const DevicePtr device) { return device == m_device; }
@@ -332,12 +336,12 @@ namespace mtconnect::printer {
       json ret;
       if (m_device && !m_components.empty())
       {
-        json obj = json::object({{"name", *m_device->getComponentName()},
-          {"uuid", *m_device->getUuid()}});
+        json obj =
+            json::object({{"name", *m_device->getComponentName()}, {"uuid", *m_device->getUuid()}});
         json items = json::array();
         for (auto &comp : m_components)
           items.emplace_back(comp.toJson());
-        
+
         if (m_version == 1)
         {
           obj["ComponentStreams"] = items;
@@ -365,7 +369,7 @@ namespace mtconnect::printer {
   protected:
     const DevicePtr m_device;
     vector<ComponentRef> m_components;
-    optional<ComponentRef*> m_componentRef;
+    optional<ComponentRef *> m_componentRef;
     uint32_t m_version;
   };
 
@@ -405,18 +409,19 @@ namespace mtconnect::printer {
       {
         if (devices.size() == 1)
         {
-          streams = json::object({{ "DeviceStream", streams.front() }});
+          streams = json::object({{"DeviceStream", streams.front()}});
         }
         else
         {
-          streams = json::object({{ "DeviceStream", streams }});
+          streams = json::object({{"DeviceStream", streams}});
         }
       }
     }
 
     json doc = json::object(
         {{"MTConnectStreams",
-          {{"Header", streamHeader(m_version, hostname(), instanceId, bufferSize, nextSeq, firstSeq,
+          {{"jsonVersion", m_jsonVersion},
+           {"Header", streamHeader(m_version, hostname(), instanceId, bufferSize, nextSeq, firstSeq,
                                    lastSeq, m_schemaVersion, m_modelChangeTime)},
            {"Streams", streams}}}});
 
@@ -447,10 +452,11 @@ namespace mtconnect::printer {
     {
       throw runtime_error("invalid json printer version");
     }
-    
+
     json doc = json::object(
         {{"MTConnectAssets",
-          {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize, assetCount,
+          {{"jsonVersion", m_jsonVersion},
+           {"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize, assetCount,
                                        m_schemaVersion, m_modelChangeTime)},
            {"Assets", assetDoc}}}});
 

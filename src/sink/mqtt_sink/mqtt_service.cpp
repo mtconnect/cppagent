@@ -63,14 +63,17 @@ namespace mtconnect {
                              {configuration::RelativeTime, false}});
 
         loadTopics(config, m_options);
+        
+        auto clientHandler = make_unique<ClientHandler>();
+
 
         if (IsOptionSet(m_options, configuration::MqttTls))
         {
-          m_client = make_shared<MqttTlsClient>(m_context, m_options);
+          m_client = make_shared<MqttTlsClient>(m_context, m_options, move(clientHandler));
         }
         else
         {
-          m_client = make_shared<MqttTcpClient>(m_context, m_options);
+          m_client = make_shared<MqttTcpClient>(m_context, m_options, move(clientHandler));
         }
       }
 
@@ -99,6 +102,11 @@ namespace mtconnect {
       {
         // mqtt client side not a server side...
         m_client->start();
+
+        for (const auto &dev : m_sinkContract->getDevices())
+        {
+          publish(dev);
+        }
       }
 
       void MqttService::stop()
@@ -117,124 +125,27 @@ namespace mtconnect {
         auto topic = dataItem->getTopic();        // client asyn topic
         auto content = dataItem->getTopicName();  // client asyn content
 
-        entity::EntityPtr dataEntity =
-            make_shared<entity::Entity>("LIST");  // dataItem->getTopicList();
+        auto jsonDoc = m_jsonPrinter->printEntity(observation);
+        
+        stringstream buffer;
+        buffer << jsonDoc;
 
-        auto jsonDoc = m_jsonPrinter->printEntity(dataEntity);
-
+        m_client->publish(topic, buffer.str());
+        
         return 0;
       }
-
-      std::string MqttService::printAssets(const unsigned int instanceId,
-                                           const unsigned int bufferSize,
-                                           const unsigned int assetCount,
-                                           const asset::AssetList &asset) const
+      
+      bool MqttService::publish(device_model::DevicePtr device)
       {
-        /*  json doc = json::object(
-              {{"MTConnectAssets",
-                {{"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize,
-                                             assetCount, m_schemaVersion, m_modelChangeTime)},
-                 {"Assets", assetDoc}}}});
-          return print(doc);*/
-
-        return "";
+        
+        return true;
       }
 
-      std::string MqttService::printDeviceStreams(const unsigned int instanceId,
-                                                  const unsigned int bufferSize,
-                                                  const uint64_t nextSeq, const uint64_t firstSeq,
-                                                  const uint64_t lastSeq,
-                                                  ObservationList &observations) const
+
+      bool MqttService::publish(asset::AssetPtr asset)
       {
-        /*json streams = json::array();
-        json streams;
-
-        if (observations.size() > 0)
-        {
-          observations.sort(ObservationCompare);
-          vector<DeviceRef> devices;
-          DeviceRef *deviceRef = nullptr;
-          for (auto &observation : observations)
-          {
-            const auto dataItem = observation->getDataItem();
-            const auto component = dataItem->getComponent();
-            const auto device = component->getDevice();
-
-            if (deviceRef == nullptr || !deviceRef->isDevice(device))
-              if (!deviceRef || !deviceRef->isDevice(device))
-              {
-                devices.emplace_back(device);
-                devices.emplace_back(device, m_jsonVersion);
-                deviceRef = &devices.back();
-              }
-
-            deviceRef->addObservation(observation, device, component, dataItem);
-          }
-
-          streams = json::array();
-          for (auto &ref : devices)
-            streams.emplace_back(ref.toJson());
-
-          if (m_jsonVersion == 2)
-          {
-            if (devices.size() == 1)
-            {
-              streams = json::object({{"DeviceStream", streams.front()}});
-            }
-            else
-            {
-              streams = json::object({{"DeviceStream", streams}});
-            }
-          }
-        }*/
-        return "";
+        return false;
       }
-
-      std::string MqttService::printProbe(const unsigned int instanceId,
-                                          const unsigned int bufferSize, const uint64_t nextSeq,
-                                          const unsigned int assetBufferSize,
-                                          const unsigned int assetCount,
-                                          const std::list<DevicePtr> &devices,
-                                          const std::map<std::string, size_t> *count) const
-      {
-        // entity::JsonPrinter printer;
-        // entity::JsonPrinter printer(m_jsonVersion);
-
-        // json devicesDoc = json::array();
-        // for (const auto &device : devices)
-        //  devicesDoc.emplace_back(printer.print(device));
-        // json devicesDoc;
-
-        // if (m_jsonVersion == 1)
-        //{
-        //  devicesDoc = json::array();
-        //  for (const auto &device : devices)
-        //    devicesDoc.emplace_back(printer.print(device));
-        //}
-        // else if (m_jsonVersion == 2)
-        //{
-        //  entity::EntityList list;
-        //  copy(devices.begin(), devices.end(), back_inserter(list));
-        //  entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
-        //  entity->setProperty("LIST", list);
-        //  devicesDoc = printer.printEntity(entity);
-        //}
-        // else
-        //{
-        //  throw runtime_error("invalid json printer version");
-        //}
-
-        // json doc =
-        //    json::object({{"MTConnectDevices",
-        //                   {{"Header", probeAssetHeader(m_version, hostname(), instanceId,
-        //                                                bufferSize, assetBufferSize, assetCount,
-        //                                                m_schemaVersion, m_modelChangeTime)},
-        //                    {"Devices", devicesDoc}}}});
-        // return print(doc);
-        return "";
-      }
-
-      bool MqttService::publish(asset::AssetPtr asset) { return false; }
 
       // Register the service with the sink factory
       void MqttService::registerFactory(SinkFactory &factory)

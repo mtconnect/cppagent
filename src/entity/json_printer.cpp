@@ -75,7 +75,7 @@ namespace mtconnect {
                                [](const auto &arg) -> json { return arg; }},
                    value);
     }
-    
+
     void JsonPrinter::printEntityList1(json &obj, const EntityList &list) const
     {
       obj = json::array();
@@ -108,7 +108,7 @@ namespace mtconnect {
           it->second.emplace_back(printEntity(ei));
         }
       }
-      
+
       for (auto &me : items)
       {
         obj[me.first] = me.second;

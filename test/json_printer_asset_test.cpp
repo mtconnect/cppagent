@@ -260,20 +260,20 @@ TEST_F(JsonPrinterAssetTest, json_printer_version_2_with_multiple_assets)
   m_printer = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
 
   AssetList assetList;
-  
+
   auto xml1 = getFile("asset1.xml");
   entity::ErrorList errors;
   AssetPtr asset = parseAsset(xml1, errors);
   asset->setAssetId("FIRST");
   ASSERT_TRUE(asset);
   assetList.push_back(asset);
-  
+
   auto xml2 = getFile("cutting_tool_archetype.xml");
   asset = parseAsset(xml2, errors);
   asset->setAssetId("SECOND");
   ASSERT_TRUE(asset);
   assetList.push_back(asset);
-  
+
   asset = parseAsset(xml1, errors);
   ASSERT_TRUE(asset);
   asset->setAssetId("THIRD");
@@ -282,14 +282,13 @@ TEST_F(JsonPrinterAssetTest, json_printer_version_2_with_multiple_assets)
   auto doc = m_printer->printAssets(123, 1024, 10, assetList);
   auto jdoc = json::parse(doc);
 
-  auto assets = jdoc.at(
-      "/MTConnectAssets/Assets"_json_pointer);
+  auto assets = jdoc.at("/MTConnectAssets/Assets"_json_pointer);
   ASSERT_TRUE(assets.is_object());
-  
+
   auto tools = assets.at("/CuttingTool"_json_pointer);
   ASSERT_TRUE(tools.is_array());
   ASSERT_EQ(2_S, tools.size());
-  
+
   ASSERT_EQ("FIRST", tools.at("/0/assetId"_json_pointer));
   ASSERT_EQ("THIRD", tools.at("/1/assetId"_json_pointer));
 
@@ -297,5 +296,4 @@ TEST_F(JsonPrinterAssetTest, json_printer_version_2_with_multiple_assets)
   ASSERT_TRUE(arch.is_object());
 
   ASSERT_EQ("SECOND", arch.at("/assetId"_json_pointer));
-
 }

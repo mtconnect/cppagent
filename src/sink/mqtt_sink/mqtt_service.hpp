@@ -56,6 +56,8 @@ namespace mtconnect {
         uint64_t publish(observation::ObservationPtr &observation) override;
 
         bool publish(asset::AssetPtr asset) override;
+        
+        bool publish(device_model::DevicePtr device) override;
 
         static void registerFactory(SinkFactory &factory);
 
@@ -65,23 +67,6 @@ namespace mtconnect {
 
       protected:
         void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
-
-        std::string printProbe(const unsigned int instanceId,
-                                            const unsigned int bufferSize, const uint64_t nextSeq,
-                                            const unsigned int assetBufferSize,
-                                            const unsigned int assetCount,
-                                            const std::list<DevicePtr> &devices,
-                                            const std::map<std::string, size_t> *count) const;
-        
-        std::string printDeviceStreams(const unsigned int instanceId, const unsigned int bufferSize,
-                                       const uint64_t nextSeq, const uint64_t firstSeq,
-                                       const uint64_t lastSeq,
-                                       observation::ObservationList &observations) const;
-
-        std::string printAssets(const unsigned int instanceId,
-                                             const unsigned int bufferSize,
-                                             const unsigned int assetCount,
-                                             const asset::AssetList &asset) const;        
          
       protected:
         boost::asio::io_context &m_context;
