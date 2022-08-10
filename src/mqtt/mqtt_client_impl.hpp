@@ -104,7 +104,7 @@ namespace mtconnect {
           else if (connack_return_code == mqtt::connect_return_code::accepted)
           {
             m_connected = true;
-            if (m_handler)
+            if (m_handler && m_handler->m_connected)
               m_handler->m_connected(shared_from_this());
           }
           else
@@ -118,7 +118,7 @@ namespace mtconnect {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
           m_connected = false;
-          if (m_handler)
+          if (m_handler && m_handler->m_disconnected)
             m_handler->m_disconnected(shared_from_this());
           if (m_running)
           {
@@ -263,7 +263,7 @@ namespace mtconnect {
 
       void connect()
       {
-        if (m_handler)
+        if (m_handler && m_handler->m_connecting)
           m_handler->m_connecting(shared_from_this());
 
         derived().getClient()->async_connect();
@@ -271,7 +271,7 @@ namespace mtconnect {
 
       void receive(mqtt::buffer &topic, mqtt::buffer &contents)
       {
-        if (m_handler)
+        if (m_handler && m_handler->m_receive)
           m_handler->m_receive(shared_from_this(), string(topic), string(contents));
       }
       /// <summary>

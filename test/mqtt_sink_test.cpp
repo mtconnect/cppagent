@@ -22,6 +22,7 @@
 #include <nlohmann/json.hpp>
 
 #include "agent_test_helper.hpp"
+#include "device_model/data_item/data_item.hpp"
 #include "mqtt/mqtt_client_impl.hpp"
 #include "mqtt/mqtt_server_impl.hpp"
 #include "printer/json_printer.hpp"
@@ -29,6 +30,7 @@
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::device_model::data_item;
 using namespace mtconnect::sink::mqtt_sink;
 using json = nlohmann::json;
 
@@ -166,13 +168,13 @@ TEST_F(MqttSinkTest, mqtt_sink_probe_to_subscribe)
       std::list<DevicePtr> devices = m_agentTestHelper->m_agent->getDevices();
 
       for (auto device : devices)
-      {
+      {       
         const auto& dataItems = device->getDeviceDataItems();
         for (const auto& dataItemAssoc : dataItems)
         {
           auto dataItem = dataItemAssoc.second.lock();
-          string dataItemId = dataItem->getId();
-          bool sucess = m_client->subscribe(dataItemId);
+          string dataTopic = dataItem->getTopic();
+          bool sucess = m_client->subscribe(dataTopic);
           if (!sucess)
           {
             continue;
@@ -183,6 +185,67 @@ TEST_F(MqttSinkTest, mqtt_sink_probe_to_subscribe)
 
     client->stop();
   }
+}
+
+TEST_F(MqttSinkTest, mqtt_publish_observations)
+{
+  createAgent();
+
+  ConfigOptions options {{configuration::Host, "localhost"s},
+                         {configuration::Port, 0},
+                         {configuration::MqttTls, false},
+                         {configuration::AutoAvailable, false},
+                         {configuration::RealTime, false}};
+
+  createClient(options);
+
+  startClient();
+
+  ErrorList errors;
+  auto time = chrono::system_clock::now();
+
+  DataItemPtr dataItem1 = DataItem::make(
+      {{"id", "1"s}, {"name", "DataItemTest1"s}, {"type", "PROGRAM"s}, {"category", "EVENT"s}},
+      errors);
+
+  DataItemPtr dataItem2 = DataItem::make({{"id", "3"s},
+                                          {"name", "DataItemTest2"s},
+                                          {"type", "POSITION"s},
+                                          {"category", "SAMPLE"s},
+                                          {"subType", "ACTUAL"s},
+                                          {"units", "MILLIMETER"s},
+                                          {"nativeUnits", "MILLIMETER"s}},
+                                         errors);
+
+  ObservationPtr compEventA = Observation::make(dataItem1, {{"VALUE", "Test"s}}, time, errors);
+
+  ObservationPtr compEventB =
+      Observation::make(dataItem2, {{"VALUE", 1.1231}}, time + 10min, errors);
+
+  auto agent = m_agentTestHelper->getAgent();
+
+  const auto mqttService =
+      dynamic_pointer_cast<sink::mqtt_sink::MqttService>(agent->findSink("MqttService"));
+
+  /*std::unique_ptr<printer::JsonPrinter>  jsonPrinter =
+      std::make_unique<printer::JsonPrinter>(2, "1.5", true);
+
+  auto jsonDoc = jsonPrinter->printEntity(compEventA);
+
+  stringstream buffer;
+  buffer << jsonDoc;
+
+  m_client->publish(topic, buffer.str());*/
+
+  //uint64_t compA = mqttService->publish(compEventA);
+  //uint64_t compB = mqttService->publish(compEventB);
+
+  /*sink::SinkContractPtr sink;
+  std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> mqttService =
+      std::make_shared<mtconnect::sink::mqtt_sink::MqttService>(m_context, sink, options,
+                                                                boost::property_tree::ptree {});
+  uint64_t compA = mqttService->publish(compEventA);
+  uint64_t compB = mqttService->publish(compEventB);*/
 }
 
 const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
@@ -210,9 +273,7 @@ TEST_F(MqttSinkTest, mqtt_client_should_connect_to_broker)
 }
 
 TEST_F(MqttSinkTest, mqtt_localhost_probe_to_subscribe)
-{
-  //GTEST_SKIP();
-	
+{  
   createAgent();
 
   ConfigOptions options {
@@ -234,22 +295,16 @@ TEST_F(MqttSinkTest, mqtt_localhost_probe_to_subscribe)
 
   if (m_client && m_client->isConnected())
   {
-    StringList topicList;
-    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
-    auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
+    std::list<DevicePtr> devices = m_agentTestHelper->m_agent->getDevices();
 
-    for (int d = 0; d < devices.size(); d++)
+    for (auto device : devices)
     {
-      auto device = devices.at(d).at("/Device"_json_pointer);
-
-      auto dataItems = device.at("/DataItems"_json_pointer);
-
-      for (int i = 0; i < dataItems.size(); i++)
+      const auto& dataItems = device->getDeviceDataItems();
+      for (const auto& dataItemAssoc : dataItems)
       {
-        auto dataItem = dataItems.at(i);
-
-        string dataItemId = dataItem.at("/DataItem/id"_json_pointer).get<string>();
-        bool sucess = m_client->subscribe(dataItemId);
+        auto dataItem = dataItemAssoc.second.lock();
+        string dataTopic = dataItem->getTopic();
+        bool sucess = m_client->subscribe(dataTopic);
         if (!sucess)
         {
           continue;

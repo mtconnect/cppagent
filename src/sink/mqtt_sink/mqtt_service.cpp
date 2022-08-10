@@ -101,6 +101,9 @@ namespace mtconnect {
       void MqttService::start()
       {
         // mqtt client side not a server side...
+        if (!m_client)
+          return;
+
         m_client->start();
 
         for (const auto &dev : m_sinkContract->getDevices())
@@ -112,7 +115,8 @@ namespace mtconnect {
       void MqttService::stop()
       {
         // stop client side
-        m_client->stop();
+        if (m_client)
+          m_client->stop();
       }
 
       std::shared_ptr<MqttClient> MqttService::getClient() { return m_client; }
@@ -130,7 +134,8 @@ namespace mtconnect {
         stringstream buffer;
         buffer << jsonDoc;
 
-        m_client->publish(topic, buffer.str());
+        if (m_client)
+            m_client->publish(topic, buffer.str());
         
         return 0;
       }
