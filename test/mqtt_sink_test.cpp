@@ -27,11 +27,14 @@
 #include "mqtt/mqtt_server_impl.hpp"
 #include "printer/json_printer.hpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
 
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::device_model::data_item;
 using namespace mtconnect::sink::mqtt_sink;
+using namespace mtconnect::sink::rest_sink;
+
 using json = nlohmann::json;
 
 class MqttSinkTest : public testing::Test
@@ -137,7 +140,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_be_loaded_by_agent)
 }
 
 TEST_F(MqttSinkTest, mqtt_sink_probe_to_subscribe)
-{  
+{
   createAgent();
 
   ConfigOptions options {{configuration::Host, "localhost"s},
@@ -159,35 +162,30 @@ TEST_F(MqttSinkTest, mqtt_sink_probe_to_subscribe)
 
   ASSERT_TRUE(mqttService);
 
-  if (mqttService->isConnected())
-  {   
-    std::shared_ptr<MqttClient> client = mqttService->getClient();
-    
-    if (m_client && m_client->isConnected())
-    {
-      std::list<DevicePtr> devices = m_agentTestHelper->m_agent->getDevices();
+  std::shared_ptr<MqttClient> client = mqttService->getClient();
 
-      for (auto device : devices)
-      {       
-        const auto& dataItems = device->getDeviceDataItems();
-        for (const auto& dataItemAssoc : dataItems)
+  if (client && client->isConnected())
+  {
+    std::list<DevicePtr> devices = m_agentTestHelper->m_agent->getDevices();
+
+    for (auto device : devices)
+    {
+      const auto& dataItems = device->getDeviceDataItems();
+      for (const auto& dataItemAssoc : dataItems)
+      {
+        auto dataItem = dataItemAssoc.second.lock();
+        string dataTopic = dataItem->getTopic();
+        bool sucess = client->subscribe(dataTopic);
+        if (!sucess)
         {
-          auto dataItem = dataItemAssoc.second.lock();
-          string dataTopic = dataItem->getTopic();
-          bool sucess = m_client->subscribe(dataTopic);
-          if (!sucess)
-          {
-            continue;
-          }
+          continue;
         }
       }
     }
-
-    client->stop();
   }
 }
 
-TEST_F(MqttSinkTest, mqtt_publish_observations)
+TEST_F(MqttSinkTest, mqtt_sink_probe_to_publish)
 {
   createAgent();
 
@@ -197,58 +195,103 @@ TEST_F(MqttSinkTest, mqtt_publish_observations)
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false}};
 
-  createClient(options);
+  createServer(options);
 
-  startClient();
+  startServer();
 
-  ErrorList errors;
-  auto time = chrono::system_clock::now();
-
-  DataItemPtr dataItem1 = DataItem::make(
-      {{"id", "1"s}, {"name", "DataItemTest1"s}, {"type", "PROGRAM"s}, {"category", "EVENT"s}},
-      errors);
-
-  DataItemPtr dataItem2 = DataItem::make({{"id", "3"s},
-                                          {"name", "DataItemTest2"s},
-                                          {"type", "POSITION"s},
-                                          {"category", "SAMPLE"s},
-                                          {"subType", "ACTUAL"s},
-                                          {"units", "MILLIMETER"s},
-                                          {"nativeUnits", "MILLIMETER"s}},
-                                         errors);
-
-  ObservationPtr compEventA = Observation::make(dataItem1, {{"VALUE", "Test"s}}, time, errors);
-
-  ObservationPtr compEventB =
-      Observation::make(dataItem2, {{"VALUE", 1.1231}}, time + 10min, errors);
+  ASSERT_NE(0, m_port);
 
   auto agent = m_agentTestHelper->getAgent();
 
   const auto mqttService =
       dynamic_pointer_cast<sink::mqtt_sink::MqttService>(agent->findSink("MqttService"));
 
-  /*std::unique_ptr<printer::JsonPrinter>  jsonPrinter =
-      std::make_unique<printer::JsonPrinter>(2, "1.5", true);
+  ASSERT_TRUE(mqttService);
 
-  auto jsonDoc = jsonPrinter->printEntity(compEventA);
+  std::shared_ptr<MqttClient> client = mqttService->getClient();
 
-  stringstream buffer;
-  buffer << jsonDoc;
+  if (client && client->isConnected())
+  {
+    std::list<DevicePtr> devices = m_agentTestHelper->m_agent->getDevices();
+    ErrorList errors;
+    auto time = chrono::system_clock::now();
+    ObservationList observationList;
 
-  m_client->publish(topic, buffer.str());*/
+    for (auto device : devices)
+    {
+      const auto& dataItems = device->getDeviceDataItems();
+      for (const auto& dataItemAssoc : dataItems)
+      {
+        auto dataItem = dataItemAssoc.second.lock();
+        string dataTopic = dataItem->getTopic();
+        auto dataEvent =
+            Observation::make(dataItem, dataItem->getObservationProperties(), time, errors);
+        observationList.push_back(dataEvent);
+      }
+    }
+     auto jsonDoc =
+        m_jsonPrinter->printSample(123, 131072, 10974584, 10843512, 10123800, observationList);
 
-  //uint64_t compA = mqttService->publish(compEventA);
-  //uint64_t compB = mqttService->publish(compEventB);
+    stringstream buffer;
+    buffer << jsonDoc;
 
-  /*sink::SinkContractPtr sink;
-  std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> mqttService =
-      std::make_shared<mtconnect::sink::mqtt_sink::MqttService>(m_context, sink, options,
-                                                                boost::property_tree::ptree {});
-  uint64_t compA = mqttService->publish(compEventA);
-  uint64_t compB = mqttService->publish(compEventB);*/
+    m_client->publish("Topics", buffer.str());
+  }
 }
 
-const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+TEST_F(MqttSinkTest, mqtt_sink_publish_observations)
+{
+  GTEST_SKIP();
+
+  ErrorList errors;
+  auto time = chrono::system_clock::now();
+  ObservationList observationList;
+  auto prop = entity::Properties {{"VALUE", "123"s}};
+
+  auto add = DataItem::make(
+      {{"type", "DEVICE_ADDED"s}, {"id", "device_added"s}, {"category", "EVENT"s}}, errors);
+
+  auto event1 = Observation::make(add, prop, time, errors);
+  observationList.push_back(event1);
+
+  auto removed = DataItem::make(
+      {{"type", "DEVICE_REMOVED"s}, {"id", "device_removed"s}, {"category", "EVENT"s}}, errors);
+  auto event2 = Observation::make(removed, prop, time, errors);
+  observationList.push_back(event2);
+
+  auto changed = DataItem::make(
+      {{"type", "DEVICE_CHANGED"s}, {"id", "device_changed"s}, {"category", "EVENT"s}}, errors);
+  auto event3 = Observation::make(changed, prop, time, errors);
+  observationList.push_back(event3);
+
+  ConfigOptions options {{configuration::Host, "localhost"s},
+                         {configuration::Port, 0},
+                         {configuration::MqttTls, false},
+                         {configuration::AutoAvailable, false},
+                         {configuration::RealTime, false}};
+
+  createServer(options);
+  startServer();
+
+  createClient(options);
+
+  ASSERT_TRUE(startClient());
+
+  ASSERT_TRUE(m_client->isConnected());
+
+  if (m_client && m_client->isConnected())
+  {
+    auto jsonDoc =
+        m_jsonPrinter->printSample(123, 131072, 10974584, 10843512, 10123800, observationList);
+
+    stringstream buffer;
+    buffer << jsonDoc;
+
+    m_client->publish(jsonDoc, buffer.str());
+  }
+}
+
+  const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
 TEST_F(MqttSinkTest, mqtt_client_should_connect_to_broker)
 {
@@ -267,9 +310,7 @@ TEST_F(MqttSinkTest, mqtt_client_should_connect_to_broker)
 
   ASSERT_TRUE(startClient());
   
-  ASSERT_TRUE(m_client->isConnected());    
-
-  m_client->stop();
+  ASSERT_TRUE(m_client->isConnected()); 
 }
 
 TEST_F(MqttSinkTest, mqtt_localhost_probe_to_subscribe)
@@ -312,7 +353,58 @@ TEST_F(MqttSinkTest, mqtt_localhost_probe_to_subscribe)
       }
     }
   }
-  m_client->stop();
+}
+
+TEST_F(MqttSinkTest, mqtt_localhost_publish_observations)
+{
+  createAgent();
+
+  ConfigOptions options {{configuration::Host, "localhost"s},
+                         {configuration::Port, 0},
+                         {configuration::MqttTls, false},
+                         {configuration::AutoAvailable, false},
+                         {configuration::RealTime, false}};
+
+  createServer(options);
+
+  startServer();
+
+  createClient(options);
+
+  ASSERT_TRUE(startClient());
+
+  ASSERT_TRUE(m_client->isConnected());
+
+  if (m_client && m_client->isConnected())
+  {
+    ErrorList errors;
+    auto time = chrono::system_clock::now();
+    ObservationList observationList;
+
+    auto agent = m_agentTestHelper->getAgent();
+    std::list<DevicePtr> devices = agent->getDevices();
+
+    for (auto device : devices)
+    {
+      const auto& dataItems = device->getDeviceDataItems();
+      for (const auto& dataItemAssoc : dataItems)
+      {
+        auto dataItem = dataItemAssoc.second.lock();
+        string dataTopic = dataItem->getTopic();
+
+        auto dataEvent =
+            Observation::make(dataItem, dataItem->getObservationProperties(), time, errors);
+        observationList.push_back(dataEvent);
+      }
+    }
+    auto jsonDoc =
+        m_jsonPrinter->printSample(123, 131072, 10974584, 10843512, 10123800, observationList);
+
+    stringstream buffer;
+    buffer << jsonDoc;
+
+    m_client->publish("ObservationList", buffer.str());
+  }
 }
 
 TEST_F(MqttSinkTest, mqtt_client_should_connect_to_local_server)
@@ -326,7 +418,7 @@ TEST_F(MqttSinkTest, mqtt_client_should_connect_to_local_server)
   startServer();
 
   ASSERT_NE(0, m_port);
-  
+
   std::uint16_t pid_sub1;
 
   auto client = mqtt::make_async_client(m_context, "localhost", m_port);
@@ -371,6 +463,7 @@ TEST_F(MqttSinkTest, mqtt_client_should_connect_to_local_server)
                               std::cout << "async_publish callback: " << ec.message() << std::endl;
                               ASSERT_EQ(ec.message(), "Success");
                             });
+      return true;
     }
 
     return true;
@@ -378,27 +471,26 @@ TEST_F(MqttSinkTest, mqtt_client_should_connect_to_local_server)
 
   client->set_close_handler([] { std::cout << "closed" << std::endl; });
 
-  client->set_suback_handler(
-      [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
-        std::cout << "suback received. packet_id: " << packet_id << std::endl;
-        for (auto const &e : results)
-        {
-          std::cout << "subscribe result: " << e << std::endl;
-        }
+  client->set_suback_handler([&client, &pid_sub1](std::uint16_t packet_id,
+                                                  std::vector<mqtt::suback_return_code> results) {
+    std::cout << "suback received. packet_id: " << packet_id << std::endl;
+    for (auto const& e : results)
+    {
+      std::cout << "subscribe result: " << e << std::endl;
+    }
 
-        if (packet_id == pid_sub1)
-        {
-          client->async_publish("mqtt_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
-                                // [optional] checking async_publish completion code
-                                [packet_id](MQTT_NS::error_code ec) {
-                                  std::cout << "async_publish callback: " << ec.message()
-                                            << std::endl;
-                                  ASSERT_TRUE(packet_id);
-                                });
-        }
+    if (packet_id == pid_sub1)
+    {
+      client->async_publish("mqtt_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
+                            // [optional] checking async_publish completion code
+                            [packet_id](MQTT_NS::error_code ec) {
+                              std::cout << "async_publish callback: " << ec.message() << std::endl;
+                              ASSERT_TRUE(packet_id);
+                            });
+    }
 
-        return true;
-      });
+    return true;
+  });
 
   client->set_publish_handler([&client](mqtt::optional<std::uint16_t> packet_id,
                                         mqtt::publish_options pubopts, mqtt::buffer topic_name,

@@ -214,7 +214,7 @@ namespace mtconnect {
 
         
         m_clientId = derived().getClient()->acquire_unique_packet_id();
-        derived().getClient()->async_publish(m_clientId, topic, payload, mqtt::qos::at_most_once,
+        derived().getClient()->async_publish(m_clientId, topic, payload, mqtt::qos::at_least_once,
                                              [](mqtt::error_code ec) {
                                                if (ec)
                                                {
