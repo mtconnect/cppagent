@@ -198,6 +198,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_devices)
   bool gotDevice = false;
   handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient>, const std::string &topic,
                                              const std::string &payload) {
+    EXPECT_EQ("MTConnect/Device/000", topic);
+
     ErrorList list;
     auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
     EXPECT_EQ(0, list.size());
@@ -231,6 +233,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_retain_devices)
   bool gotDevice = false;
   handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient>, const std::string &topic,
                                              const std::string &payload) {
+    EXPECT_EQ("MTConnect/Device/000", topic);
+    
     ErrorList list;
     auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
     EXPECT_EQ(0, list.size());

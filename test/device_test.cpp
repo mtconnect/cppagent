@@ -195,6 +195,7 @@ TEST_F(DeviceTest, should_create_data_item_topic)
       DataItem::make({{"id", "id"s}, {"type", "AVAILABILITY"s}, {"category", "EVENT"s}}, errors);
   ASSERT_TRUE(errors.empty());
   m_devA->addDataItem(data1, errors);
+  data1->makeTopic();
 
   DataItemPtr di = dynamic_pointer_cast<DataItem>(data1);
 
@@ -225,6 +226,7 @@ TEST_F(DeviceTest, should_create_component_and_data_item_topic)
   linear->addDataItem(data1, errors);
 
   DataItemPtr di = dynamic_pointer_cast<DataItem>(data1);
+  di->makeTopic();
 
   ASSERT_EQ("UnivUniqId1/Axes/Linear[X]/Position.Actual[Xact]", di->getTopic());
   ASSERT_EQ("Position.Actual[Xact]", di->getTopicName());
