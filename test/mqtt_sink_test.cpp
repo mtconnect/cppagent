@@ -95,6 +95,25 @@ protected:
     
     m_server = make_shared<mtconnect::mqtt_server::MqttTcpServer>(m_agentTestHelper->m_ioContext, opts);
   }
+  
+  template <typename Rep, typename Period>
+  void waitFor(const chrono::duration<Rep, Period>& time, function<bool()> pred)
+  {
+    boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
+    timer.expires_from_now(time);
+    timer.async_wait([](boost::system::error_code ec) {
+      if (!ec)
+      {
+        FAIL();
+      }
+    });
+    
+    while (!pred())
+    {
+      m_agentTestHelper->m_ioContext.run_for(100ms);
+    }
+    timer.cancel();
+  }
 
   void startServer()
   {
@@ -158,21 +177,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker)
   
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
-
-  boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
-  timer.expires_from_now(5s);
-  timer.async_wait([](boost::system::error_code ec) {
-    if (!ec)
-    {
-      FAIL();
-    }
-  });
   
-  while (!service->isConnected())
-  {
-    m_agentTestHelper->m_ioContext.run_for(100ms);
-  }
-  timer.cancel();
+  waitFor(1s, [&service]() { return service->isConnected(); });
   
   ASSERT_TRUE(service->isConnected());
 }
