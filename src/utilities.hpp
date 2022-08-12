@@ -479,9 +479,8 @@ namespace mtconnect {
         options.insert_or_assign(e.first, e.second);
     }
   }
-  
-  inline void MergeOptions(ConfigOptions &options,
-                           const ConfigOptions &entries)
+
+  inline void MergeOptions(ConfigOptions &options, const ConfigOptions &entries)
   {
     for (auto &e : entries)
     {

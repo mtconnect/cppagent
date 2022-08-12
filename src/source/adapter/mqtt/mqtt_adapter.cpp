@@ -84,16 +84,16 @@ namespace mtconnect {
       clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
         m_handler->m_connected(client->getIdentity());
       };
-      
+
       clientHandler->m_disconnected = [this](shared_ptr<MqttClient> client) {
         m_handler->m_disconnected(client->getIdentity());
       };
 
-      clientHandler->m_receive = [this](shared_ptr<MqttClient> client, const std::string &topic, const std::string &payload) {
+      clientHandler->m_receive = [this](shared_ptr<MqttClient> client, const std::string &topic,
+                                        const std::string &payload) {
         m_handler->m_processMessage(topic, payload, client->getIdentity());
       };
 
-      
       if (IsOptionSet(m_options, configuration::MqttTls))
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
                                                                       move(clientHandler));

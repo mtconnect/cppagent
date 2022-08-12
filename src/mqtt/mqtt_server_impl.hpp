@@ -114,11 +114,11 @@ namespace mtconnect {
           // It makes sure wp.lock() never return nullptr in the handlers below
           // including close_handler and error_handler.
           ep.start_session(std::make_tuple(std::move(spep), std::move(g)));
-          ep.set_connect_handler([this, &server,wp](MQTT_NS::buffer client_id,
-                                                    MQTT_NS::optional<MQTT_NS::buffer> username,
-                                                    MQTT_NS::optional<MQTT_NS::buffer> password,
-                                                    MQTT_NS::optional<MQTT_NS::will>,
-                                                    bool clean_session, std::uint16_t keep_alive) {
+          ep.set_connect_handler([this, &server, wp](MQTT_NS::buffer client_id,
+                                                     MQTT_NS::optional<MQTT_NS::buffer> username,
+                                                     MQTT_NS::optional<MQTT_NS::buffer> password,
+                                                     MQTT_NS::optional<MQTT_NS::will>,
+                                                     bool clean_session, std::uint16_t keep_alive) {
             using namespace MQTT_NS::literals;
             LOG(info) << "Server: Client_id    : " << client_id << std::endl;
             LOG(info) << "Server: User Name     : " << (username ? username.value() : "none"_mb)
@@ -138,7 +138,7 @@ namespace mtconnect {
             return true;
           });
 
-          ep.set_close_handler([this,wp]() {
+          ep.set_close_handler([this, wp]() {
             LOG(info) << "MQTT "
                       << ": Server closed";
             auto con = wp.lock();
@@ -153,7 +153,7 @@ namespace mtconnect {
             idx.erase(r.first, r.second);
           });
 
-          ep.set_error_handler([this,wp](mqtt::error_code ec) {
+          ep.set_error_handler([this, wp](mqtt::error_code ec) {
             LOG(error) << "error: " << ec.message();
             auto con = wp.lock();
             if (!con)
@@ -168,7 +168,7 @@ namespace mtconnect {
           });
 
           ep.set_subscribe_handler(
-              [this,wp](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
+              [this, wp](packet_id_t packet_id, std::vector<MQTT_NS::subscribe_entry> entries) {
                 LOG(debug) << "Server: Subscribe received. packet_id: " << packet_id << std::endl;
                 std::vector<MQTT_NS::suback_return_code> res;
                 res.reserve(entries.size());
@@ -191,8 +191,8 @@ namespace mtconnect {
               });
 
           ep.set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
-                                         mqtt::publish_options pubopts, mqtt::buffer topic_name,
-                                         mqtt::buffer contents) {
+                                        mqtt::publish_options pubopts, mqtt::buffer topic_name,
+                                        mqtt::buffer contents) {
             LOG(debug) << "Server: publish received."
                        << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
                        << " retain: " << pubopts.get_retain() << std::endl;
@@ -219,7 +219,7 @@ namespace mtconnect {
 
         server.listen();
         m_port = server.port();
-        
+
         return true;
       }
 
@@ -232,33 +232,33 @@ namespace mtconnect {
         {
           LOG(info) << "MQTT "
                     << ": Server closed";
-         
+
           server->close();
-        }       
+        }
       }
 
     protected:
       ConfigOptions m_options;
       std::set<con_sp_t> m_connections;
-      mi_sub_con m_subs;      
+      mi_sub_con m_subs;
       std::string m_host;
     };
-    
+
     class MqttTcpServer : public MqttServerImpl<MqttTcpServer>
     {
     public:
       using base = MqttServerImpl<MqttTcpServer>;
       using base::base;
       using server = MQTT_NS::server<>;
-      
+
       MqttTcpServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
-      : base(ioContext, options)
+        : base(ioContext, options)
       {
         m_port = GetOption<int>(options, configuration::MqttPort).value_or(1883);
       }
-      
+
       auto &getServer() { return m_server; }
-      
+
       auto &createServer()
       {
         if (!m_server)
@@ -266,10 +266,10 @@ namespace mtconnect {
           m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
                            m_ioContext);
         }
-        
+
         return *m_server;
       }
-      
+
     protected:
       std::optional<server> m_server;
     };
@@ -279,14 +279,14 @@ namespace mtconnect {
     public:
       using base = MqttServerImpl<MqttTlsServer>;
       MqttTlsServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
-      : base(ioContext, options)
+        : base(ioContext, options)
       {
         m_port = GetOption<int>(options, configuration::Port).value_or(8883);
       }
-      
+
       using base::base;
       using server = MQTT_NS::server_tls_ws<>;
-      
+
       auto &getServer() { return m_server; }
 
       auto &createServer()
@@ -297,10 +297,10 @@ namespace mtconnect {
           m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
                            std::move(ctx), m_ioContext);
         }
-        
+
         return *m_server;
       }
-      
+
     protected:
       std::optional<server> m_server;
     };

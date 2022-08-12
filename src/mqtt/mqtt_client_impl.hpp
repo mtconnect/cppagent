@@ -81,14 +81,14 @@ namespace mtconnect {
       }
 
       ~MqttClientImpl() { stop(); }
-      
+
       Derived &derived() { return static_cast<Derived &>(*this); }
 
       bool start() override
       {
         NAMED_SCOPE("MqttClient::start");
 
-        //mqtt::setup_log();
+        // mqtt::setup_log();
 
         auto client = derived().getClient();
 
@@ -136,7 +136,7 @@ namespace mtconnect {
           if (m_running)
             reconnect();
         });
-        
+
         client->set_publish_handler([this](mqtt::optional<std::uint16_t> packet_id,
                                            mqtt::publish_options pubopts, mqtt::buffer topic_name,
                                            mqtt::buffer contents) {
@@ -155,7 +155,7 @@ namespace mtconnect {
             return false;
           }
         });
-                
+
         m_running = true;
         connect();
 
@@ -171,13 +171,13 @@ namespace mtconnect {
           m_reconnectTimer.cancel();
           auto client = derived().getClient();
           auto url = m_url;
-          
+
           if (client)
           {
             client->async_disconnect(10s, [client, url](mqtt::error_code ec) {
               LOG(warning) << url << " disconnected: " << ec.message();
             });
-            
+
             client.reset();
           }
         }
@@ -202,28 +202,27 @@ namespace mtconnect {
 
         return true;
       }
-      
+
       bool publish(const std::string &topic, const std::string &payload) override
       {
         NAMED_SCOPE("MqttClientImpl::publish");
         if (!m_running)
           return false;
 
-        
         m_clientId = derived().getClient()->acquire_unique_packet_id();
-        derived().getClient()->async_publish(m_clientId, topic, payload, mqtt::qos::at_least_once,
+        derived().getClient()->async_publish(m_clientId, topic, payload,
+                                             mqtt::qos::at_least_once | mqtt::retain::yes,
                                              [](mqtt::error_code ec) {
                                                if (ec)
                                                {
                                                  LOG(error) << "Publish failed: " << ec.message();
                                                }
                                              });
-        
+
         return true;
       }
 
     protected:
-
       void subscribe()
       {
         NAMED_SCOPE("MqttClientImpl::subscribe");
@@ -272,7 +271,7 @@ namespace mtconnect {
           m_handler->m_receive(shared_from_this(), string(topic), string(contents));
       }
       /// <summary>
-      /// 
+      ///
       /// </summary>
       void reconnect()
       {
@@ -307,7 +306,7 @@ namespace mtconnect {
       ConfigOptions m_options;
 
       std::string m_host;
-      unsigned int m_port { 1883 };
+      unsigned int m_port {1883};
 
       std::uint16_t m_clientId {0};
 

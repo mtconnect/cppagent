@@ -44,7 +44,7 @@ namespace mtconnect {
                                const ConfigOptions &options, const ptree &config)
         : Sink("MqttService", move(contract)), m_context(context), m_options(options)
       {
-        auto jsonPrinter = dynamic_cast<printer::JsonPrinter*>(m_sinkContract->getPrinter("json"));
+        auto jsonPrinter = dynamic_cast<printer::JsonPrinter *>(m_sinkContract->getPrinter("json"));
         m_jsonPrinter = make_unique<entity::JsonPrinter>(jsonPrinter->getJsonVersion());
 
         GetOptions(config, m_options, options);
@@ -64,7 +64,7 @@ namespace mtconnect {
                              {configuration::AutoAvailable, false},
                              {configuration::RealTime, false},
                              {configuration::RelativeTime, false}});
-        
+
         auto clientHandler = make_unique<ClientHandler>();
         clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
           // Publish latest devices, assets, and observations
@@ -77,7 +77,7 @@ namespace mtconnect {
           {
             pub(obs.second);
           }
-          
+
           AssetList list;
           m_sinkContract->getAssetStorage()->getAssets(list, 100000);
           for (auto &asset : list)
@@ -117,25 +117,24 @@ namespace mtconnect {
       }
 
       std::shared_ptr<MqttClient> MqttService::getClient() { return m_client; }
-      
+
       void MqttService::pub(const observation::ObservationPtr &observation)
       {
         // get the data item from observation
         DataItemPtr dataItem = observation->getDataItem();
 
-        auto topic = m_observationPrefix + dataItem->getTopic();        // client asyn topic
-        auto content = dataItem->getTopicName();  // client asyn content
+        auto topic = m_observationPrefix + dataItem->getTopic();  // client asyn topic
+        auto content = dataItem->getTopicName();                  // client asyn content
 
         // We may want to use the observation from the checkpoint.
         auto jsonDoc = m_jsonPrinter->printEntity(observation);
-        
+
         stringstream buffer;
         buffer << jsonDoc;
 
         if (m_client)
-            m_client->publish(topic, buffer.str());
+          m_client->publish(topic, buffer.str());
       }
-
 
       uint64_t MqttService::publish(observation::ObservationPtr &observation)
       {
@@ -144,13 +143,12 @@ namespace mtconnect {
         // the observation from the checkpoint.
         m_latest.addObservation(observation);
         pub(observation);
-        
+
         return 0;
       }
-      
+
       bool MqttService::publish(device_model::DevicePtr device)
       {
-        
         auto topic = m_devicePrefix + *device->getUuid();
         auto doc = m_jsonPrinter->print(device);
 
@@ -158,11 +156,10 @@ namespace mtconnect {
         buffer << doc;
 
         if (m_client)
-            m_client->publish(topic, buffer.str());
+          m_client->publish(topic, buffer.str());
 
         return true;
       }
-
 
       bool MqttService::publish(asset::AssetPtr asset)
       {
@@ -173,7 +170,7 @@ namespace mtconnect {
         buffer << doc;
 
         if (m_client)
-            m_client->publish(topic, buffer.str());
+          m_client->publish(topic, buffer.str());
 
         return true;
       }

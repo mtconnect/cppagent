@@ -141,10 +141,7 @@ namespace mtconnect {
         }
 
         // Set/get component that data item is associated with
-        void setComponent(ComponentPtr component)
-        {
-          m_component = component;
-        }
+        void setComponent(ComponentPtr component) { m_component = component; }
         ComponentPtr getComponent() const { return m_component.lock(); }
 
         // Get the name for the adapter feed

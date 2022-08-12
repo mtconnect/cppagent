@@ -55,7 +55,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(TlsVerifyClientCertificate);
     DECLARE_CONFIGURATION(VersionDeviceXmlUpdates);
     DECLARE_CONFIGURATION(WorkerThreads);
-    
+
     // MQTT Configuration
     DECLARE_CONFIGURATION(DeviceTopic);
     DECLARE_CONFIGURATION(AssetTopic);
@@ -64,7 +64,6 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttTls);
     DECLARE_CONFIGURATION(MqttPort);
     DECLARE_CONFIGURATION(MqttHost);
-
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(AdapterIdentity);

@@ -19,16 +19,17 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include <string>
+
 #include <nlohmann/json.hpp>
 
 #include "agent_test_helper.hpp"
 #include "device_model/data_item/data_item.hpp"
+#include "entity/json_parser.hpp"
 #include "mqtt/mqtt_client_impl.hpp"
 #include "mqtt/mqtt_server_impl.hpp"
 #include "printer/json_printer.hpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
-#include "entity/json_parser.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -44,7 +45,7 @@ protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_jsonPrinter = std::make_unique<printer::JsonPrinter>(2, "1.5", true);  
+    m_jsonPrinter = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
   }
 
   void TearDown() override
@@ -75,30 +76,29 @@ protected:
   {
     ConfigOptions opts(options);
     MergeOptions(opts, {{"MqttSink", true},
-      {configuration::MqttPort, m_port},
-      {configuration::MqttHost, "127.0.0.1"s}
-    });
-    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true,
-                                   opts);
+                        {configuration::MqttPort, m_port},
+                        {configuration::MqttHost, "127.0.0.1"s}});
+    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
 
     m_agentTestHelper->getAgent()->start();
   }
 
-  void createServer(const ConfigOptions& options)
+  void createServer(const ConfigOptions &options)
   {
     using namespace mtconnect::configuration;
     ConfigOptions opts(options);
     MergeOptions(opts, {{ServerIp, "127.0.0.1"s},
-                           {MqttPort, 0},
-                           {MqttTls, false},
-                           {AutoAvailable, false},
-                           {RealTime, false}});
-    
-    m_server = make_shared<mtconnect::mqtt_server::MqttTcpServer>(m_agentTestHelper->m_ioContext, opts);
+                        {MqttPort, 0},
+                        {MqttTls, false},
+                        {AutoAvailable, false},
+                        {RealTime, false}});
+
+    m_server =
+        make_shared<mtconnect::mqtt_server::MqttTcpServer>(m_agentTestHelper->m_ioContext, opts);
   }
-  
+
   template <typename Rep, typename Period>
-  bool waitFor(const chrono::duration<Rep, Period>& time, function<bool()> pred)
+  bool waitFor(const chrono::duration<Rep, Period> &time, function<bool()> pred)
   {
     boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
     timer.expires_from_now(time);
@@ -109,13 +109,13 @@ protected:
         timeout = true;
       }
     });
-    
+
     while (!timeout && !pred())
     {
       m_agentTestHelper->m_ioContext.run_for(100ms);
     }
     timer.cancel();
-    
+
     return pred();
   }
 
@@ -131,17 +131,18 @@ protected:
       }
     }
   }
-  
-  void createClient(const ConfigOptions& options, unique_ptr<ClientHandler> &&handler)
+
+  void createClient(const ConfigOptions &options, unique_ptr<ClientHandler> &&handler)
   {
     using namespace mtconnect::configuration;
     ConfigOptions opts(options);
     MergeOptions(opts, {{Host, "127.0.0.1"s},
-                           {MqttPort, m_port},
-                           {MqttTls, false},
-                           {AutoAvailable, false},
-                           {RealTime, false}});
-    m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext, opts, move(handler));
+                        {MqttPort, m_port},
+                        {MqttTls, false},
+                        {AutoAvailable, false},
+                        {RealTime, false}});
+    m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext,
+                                                                  opts, move(handler));
   }
 
   bool startClient()
@@ -159,7 +160,7 @@ protected:
   std::shared_ptr<MqttClient> m_client;
   std::shared_ptr<MqttService> m_service;
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
-  uint16_t m_port { 0 };
+  uint16_t m_port {0};
 };
 
 TEST_F(MqttSinkTest, mqtt_sink_should_be_loaded_by_agent)
@@ -175,12 +176,12 @@ TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker)
   ConfigOptions options;
   createServer(options);
   startServer();
-  
+
   ASSERT_NE(0, m_port);
-  
+
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
-  
+
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
 }
 
@@ -190,12 +191,13 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_devices)
   createServer(options);
   startServer();
   ASSERT_NE(0, m_port);
-  
+
   entity::JsonParser parser;
-  
+
   auto handler = make_unique<ClientHandler>();
   bool gotDevice = false;
-  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient>, const std::string &topic, const std::string &payload) {
+  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient>, const std::string &topic,
+                                             const std::string &payload) {
     ErrorList list;
     auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
     EXPECT_EQ(0, list.size());
@@ -212,10 +214,43 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_devices)
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
-    
+
   waitFor(2s, [&gotDevice]() { return gotDevice; });
 }
 
+TEST_F(MqttSinkTest, mqtt_sink_should_retain_devices)
+{
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+
+  entity::JsonParser parser;
+
+  auto handler = make_unique<ClientHandler>();
+  bool gotDevice = false;
+  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient>, const std::string &topic,
+                                             const std::string &payload) {
+    ErrorList list;
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    EXPECT_EQ(0, list.size());
+    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
+    EXPECT_TRUE(dev);
+    EXPECT_EQ("LinuxCNC", dev->getComponentName());
+    EXPECT_EQ("000", *dev->getUuid());
+    gotDevice = true;
+  };
+  createClient(options, move(handler));
+  ASSERT_TRUE(startClient());
+
+  createAgent();
+  auto service = m_agentTestHelper->getMqttService();
+  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+
+  m_client->subscribe("MTConnect/Device/000");
+
+  waitFor(2s, [&gotDevice]() { return gotDevice; });
+}
 
 #if 0
 TEST_F(MqttSinkTest, mqtt_sink_probe_to_subscribe)
