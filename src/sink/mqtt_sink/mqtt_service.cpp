@@ -56,6 +56,9 @@ namespace mtconnect {
                     {configuration::MqttCaCert, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::Host, "localhost"s},
+          {configuration::DeviceTopic, "MTConnect/Device/"s},
+          {configuration::AssetTopic, "MTConnect/Asset/"s},
+          {configuration::ObservationTopic, "MTConnect/Observation/"s},
                              {configuration::Port, 1883},
                              {configuration::MqttTls, false},
                              {configuration::AutoAvailable, false},
@@ -63,7 +66,29 @@ namespace mtconnect {
                              {configuration::RelativeTime, false}});
         
         auto clientHandler = make_unique<ClientHandler>();
+        clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
+          // Publish latest devices, assets, and observations
+          for (auto &dev : m_sinkContract->getDevices())
+          {
+            publish(dev);
+          }
 
+          for (auto &obs : m_latest.getObservations())
+          {
+            pub(obs.second);
+          }
+          
+          AssetList list;
+          m_sinkContract->getAssetStorage()->getAssets(list, 100000);
+          for (auto &asset : list)
+          {
+            publish(asset);
+          }
+        };
+
+        m_devicePrefix = get<string>(m_options[configuration::DeviceTopic]);
+        m_assetPrefix = get<string>(m_options[configuration::AssetTopic]);
+        m_observationPrefix = get<string>(m_options[configuration::ObservationTopic]);
 
         if (IsOptionSet(m_options, configuration::MqttTls))
         {
@@ -82,11 +107,6 @@ namespace mtconnect {
           return;
 
         m_client->start();
-
-        for (const auto &dev : m_sinkContract->getDevices())
-        {
-          publish(dev);
-        }
       }
 
       void MqttService::stop()
@@ -97,15 +117,16 @@ namespace mtconnect {
       }
 
       std::shared_ptr<MqttClient> MqttService::getClient() { return m_client; }
-
-      uint64_t MqttService::publish(observation::ObservationPtr &observation)
+      
+      void MqttService::pub(const observation::ObservationPtr &observation)
       {
         // get the data item from observation
         DataItemPtr dataItem = observation->getDataItem();
 
-        auto topic = dataItem->getTopic();        // client asyn topic
+        auto topic = m_observationPrefix + dataItem->getTopic();        // client asyn topic
         auto content = dataItem->getTopicName();  // client asyn content
 
+        // We may want to use the observation from the checkpoint.
         auto jsonDoc = m_jsonPrinter->printEntity(observation);
         
         stringstream buffer;
@@ -113,6 +134,16 @@ namespace mtconnect {
 
         if (m_client)
             m_client->publish(topic, buffer.str());
+      }
+
+
+      uint64_t MqttService::publish(observation::ObservationPtr &observation)
+      {
+        // add obsrvations to the checkpoint. We may want to publish the checkpoint
+        // observation vs the delta. The complete observation can be obtained by getting
+        // the observation from the checkpoint.
+        m_latest.addObservation(observation);
+        pub(observation);
         
         return 0;
       }
@@ -120,13 +151,31 @@ namespace mtconnect {
       bool MqttService::publish(device_model::DevicePtr device)
       {
         
+        auto topic = m_devicePrefix + get<string>(device->getIdentity());
+        auto doc = m_jsonPrinter->print(device);
+
+        stringstream buffer;
+        buffer << doc;
+
+        if (m_client)
+            m_client->publish(topic, buffer.str());
+
         return true;
       }
 
 
       bool MqttService::publish(asset::AssetPtr asset)
       {
-        return false;
+        auto topic = m_assetPrefix + get<string>(asset->getIdentity());
+        auto doc = m_jsonPrinter->print(asset);
+
+        stringstream buffer;
+        buffer << doc;
+
+        if (m_client)
+            m_client->publish(topic, buffer.str());
+
+        return true;
       }
 
       // Register the service with the sink factory

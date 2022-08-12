@@ -28,6 +28,7 @@
 #include "printer/xml_printer_helper.hpp"
 #include "sink/sink.hpp"
 #include "utilities.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
 
 using namespace std;
 using namespace mtconnect::entity;
@@ -66,13 +67,19 @@ namespace mtconnect {
         bool isConnected() { return m_client && m_client->isConnected(); }
 
       protected:
-        void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
+        void pub(const observation::ObservationPtr &observation);
          
       protected:
+        std::string m_devicePrefix;
+        std::string m_assetPrefix;
+        std::string m_observationPrefix;
+        
         boost::asio::io_context &m_context;
         ConfigOptions m_options;
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
         std::shared_ptr<MqttClient> m_client;
+        
+        rest_sink::Checkpoint m_latest;
       };
 
     }  // namespace mqtt_sink
