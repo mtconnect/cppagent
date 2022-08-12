@@ -79,7 +79,8 @@ protected:
                         {configuration::MqttPort, m_port},
                         {configuration::MqttHost, "127.0.0.1"s}});
     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
-
+    addAdapter();
+    
     m_agentTestHelper->getAgent()->start();
   }
 
@@ -154,6 +155,12 @@ protected:
     }
     return started;
   }
+  
+  void addAdapter(ConfigOptions options = ConfigOptions {})
+  {
+    m_agentTestHelper->addAdapter(options, "localhost", 7878,
+                                  m_agentTestHelper->m_agent->defaultDevice()->getName());
+  }
 
   std::unique_ptr<printer::JsonPrinter> m_jsonPrinter;
   std::shared_ptr<mtconnect::mqtt_server::MqttServer> m_server;
@@ -214,6 +221,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_devices)
   m_client->subscribe("MTConnect/Device/000");
 
   createAgent();
+  
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
 
@@ -222,6 +230,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_devices)
 
 TEST_F(MqttSinkTest, mqtt_sink_should_retain_devices)
 {
+  
+  
   ConfigOptions options;
   createServer(options);
   startServer();
@@ -250,6 +260,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_retain_devices)
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+  
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
 
   m_client->subscribe("MTConnect/Device/000");
 
