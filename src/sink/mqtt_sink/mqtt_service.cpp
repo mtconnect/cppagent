@@ -151,7 +151,7 @@ namespace mtconnect {
       bool MqttService::publish(device_model::DevicePtr device)
       {
         
-        auto topic = m_devicePrefix + get<string>(device->getIdentity());
+        auto topic = m_devicePrefix + *device->getUuid();
         auto doc = m_jsonPrinter->print(device);
 
         stringstream buffer;

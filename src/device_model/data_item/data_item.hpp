@@ -144,7 +144,6 @@ namespace mtconnect {
         void setComponent(ComponentPtr component)
         {
           m_component = component;
-          makeTopic();
         }
         ComponentPtr getComponent() const { return m_component.lock(); }
 

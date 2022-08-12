@@ -28,6 +28,7 @@
 #include "printer/json_printer.hpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
 #include "sink/rest_sink/checkpoint.hpp"
+#include "entity/json_parser.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -97,22 +98,25 @@ protected:
   }
   
   template <typename Rep, typename Period>
-  void waitFor(const chrono::duration<Rep, Period>& time, function<bool()> pred)
+  bool waitFor(const chrono::duration<Rep, Period>& time, function<bool()> pred)
   {
     boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
     timer.expires_from_now(time);
-    timer.async_wait([](boost::system::error_code ec) {
+    bool timeout = false;
+    timer.async_wait([&timeout](boost::system::error_code ec) {
       if (!ec)
       {
-        FAIL();
+        timeout = true;
       }
     });
     
-    while (!pred())
+    while (!timeout && !pred())
     {
       m_agentTestHelper->m_ioContext.run_for(100ms);
     }
     timer.cancel();
+    
+    return pred();
   }
 
   void startServer()
@@ -145,7 +149,7 @@ protected:
     bool started = m_client && m_client->start();
     if (started)
     {
-      m_agentTestHelper->m_ioContext.run_for(1s);
+      return waitFor(1s, [this]() { return m_client->isConnected(); });
     }
     return started;
   }
@@ -168,7 +172,6 @@ TEST_F(MqttSinkTest, mqtt_sink_should_be_loaded_by_agent)
 
 TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker)
 {
-
   ConfigOptions options;
   createServer(options);
   startServer();
@@ -178,10 +181,41 @@ TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker)
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
   
-  waitFor(1s, [&service]() { return service->isConnected(); });
-  
-  ASSERT_TRUE(service->isConnected());
+  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
 }
+
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_devices)
+{
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+  
+  entity::JsonParser parser;
+  
+  auto handler = make_unique<ClientHandler>();
+  bool gotDevice = false;
+  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient>, const std::string &topic, const std::string &payload) {
+    ErrorList list;
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    EXPECT_EQ(0, list.size());
+    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
+    EXPECT_TRUE(dev);
+    EXPECT_EQ("LinuxCNC", dev->getComponentName());
+    EXPECT_EQ("000", *dev->getUuid());
+    gotDevice = true;
+  };
+  createClient(options, move(handler));
+  ASSERT_TRUE(startClient());
+  m_client->subscribe("MTConnect/Device/000");
+
+  createAgent();
+  auto service = m_agentTestHelper->getMqttService();
+  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+    
+  waitFor(2s, [&gotDevice]() { return gotDevice; });
+}
+
 
 #if 0
 TEST_F(MqttSinkTest, mqtt_sink_probe_to_subscribe)

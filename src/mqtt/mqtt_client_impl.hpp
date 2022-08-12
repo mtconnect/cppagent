@@ -155,10 +155,7 @@ namespace mtconnect {
             return false;
           }
         });
-        /// <summary>
-        ///
-        /// </summary>
-        /// <returns></returns>
+                
         m_running = true;
         connect();
 
