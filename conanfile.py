@@ -12,7 +12,7 @@ class CppAgentConan(ConanFile):
                "with_python": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
-    requires = ["boost/1.77.0", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
+    requires = ["boost/1.77.0@#2852c576d24f6707a0c44aa0a820a337", "libxml2/2.9.10", "date/2.4.1", "nlohmann_json/3.9.1", 
     	        "mqtt_cpp/11.0.0", "openssl/1.1.1k"]
     build_policy = "missing"
     default_options = {

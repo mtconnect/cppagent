@@ -136,7 +136,7 @@ protected:
   {
     using namespace mtconnect::configuration;
     ConfigOptions opts(options);
-    MergeOptions(opts, {{Host, "127.0.0.1"s},
+    MergeOptions(opts, {{MqttHost, "127.0.0.1"s},
                         {MqttPort, m_port},
                         {MqttTls, false},
                         {AutoAvailable, false},

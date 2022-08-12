@@ -83,7 +83,7 @@ namespace mtconnect {
       MqttServerImpl(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : MqttServer(ioContext),
           m_options(options),
-          m_host(*GetOption<std::string>(options, configuration::Host))
+          m_host(*GetOption<std::string>(options, configuration::ServerIp))
       {
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
