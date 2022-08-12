@@ -479,6 +479,15 @@ namespace mtconnect {
         options.insert_or_assign(e.first, e.second);
     }
   }
+  
+  inline void MergeOptions(ConfigOptions &options,
+                           const ConfigOptions &entries)
+  {
+    for (auto &e : entries)
+    {
+      options.insert_or_assign(e.first, e.second);
+    }
+  }
 
   inline void GetOptions(const boost::property_tree::ptree &tree, ConfigOptions &options,
                          const ConfigOptions &entries)

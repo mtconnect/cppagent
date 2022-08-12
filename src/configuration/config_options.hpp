@@ -62,6 +62,8 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(ObservationTopic);
     DECLARE_CONFIGURATION(MqttCaCert);
     DECLARE_CONFIGURATION(MqttTls);
+    DECLARE_CONFIGURATION(MqttPort);
+    DECLARE_CONFIGURATION(MqttHost);
 
 
     // Adapter Configuration

@@ -59,8 +59,8 @@ namespace mtconnect {
                      std::unique_ptr<ClientHandler> &&handler)
         : MqttClient(ioContext, move(handler)),
           m_options(options),
-          m_host(*GetOption<std::string>(options, configuration::Host)),
-          m_port(GetOption<int>(options, configuration::Port).value_or(1883)),
+          m_host(GetOption<std::string>(options, configuration::MqttHost).value_or("localhost")),
+          m_port(GetOption<int>(options, configuration::MqttPort).value_or(1883)),
           m_reconnectTimer(ioContext)
       {
         std::stringstream url;

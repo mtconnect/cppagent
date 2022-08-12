@@ -254,7 +254,7 @@ namespace mtconnect {
       MqttTcpServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
       : base(ioContext, options)
       {
-        m_port = GetOption<int>(options, configuration::Port).value_or(1883);
+        m_port = GetOption<int>(options, configuration::MqttPort).value_or(1883);
       }
       
       auto &getServer() { return m_server; }

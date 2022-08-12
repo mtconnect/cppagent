@@ -43,6 +43,8 @@ namespace mtconnect::printer {
                             const unsigned int assetCount,
                             const asset::AssetList &asset) const override;
     std::string mimeType() const override { return "application/mtconnect+json"; }
+    
+    uint32_t getJsonVersion() const { return m_jsonVersion; }
 
   protected:
     const std::string &hostname() const;

@@ -20,9 +20,9 @@
 #include "configuration/config_options.hpp"
 #include "entity/entity.hpp"
 #include "entity/factory.hpp"
-#include "entity/xml_parser.hpp"
+#include "entity/json_parser.hpp"
 #include "mqtt/mqtt_client_impl.hpp"
-#include "printer/xml_printer.hpp"
+#include "printer/json_printer.hpp"
 
 using json = nlohmann::json;
 using ptree = boost::property_tree::ptree;
@@ -44,8 +44,8 @@ namespace mtconnect {
                                const ConfigOptions &options, const ptree &config)
         : Sink("MqttService", move(contract)), m_context(context), m_options(options)
       {
-        auto jsonPrinter = dynamic_cast<JsonPrinter *>(m_sinkContract->getPrinter("json"));
-        m_jsonPrinter = std::unique_ptr<JsonPrinter>(jsonPrinter);
+        auto jsonPrinter = dynamic_cast<printer::JsonPrinter*>(m_sinkContract->getPrinter("json"));
+        m_jsonPrinter = make_unique<entity::JsonPrinter>(jsonPrinter->getJsonVersion());
 
         GetOptions(config, m_options, options);
         AddOptions(config, m_options,
@@ -55,11 +55,11 @@ namespace mtconnect {
                     {configuration::Url, string()},
                     {configuration::MqttCaCert, string()}});
         AddDefaultedOptions(config, m_options,
-                            {{configuration::Host, "localhost"s},
-          {configuration::DeviceTopic, "MTConnect/Device/"s},
-          {configuration::AssetTopic, "MTConnect/Asset/"s},
-          {configuration::ObservationTopic, "MTConnect/Observation/"s},
-                             {configuration::Port, 1883},
+                            {{configuration::MqttHost, "127.0.0.1"s},
+                             {configuration::DeviceTopic, "MTConnect/Device/"s},
+                             {configuration::AssetTopic, "MTConnect/Asset/"s},
+                             {configuration::ObservationTopic, "MTConnect/Observation/"s},
+                             {configuration::MqttPort, 1883},
                              {configuration::MqttTls, false},
                              {configuration::AutoAvailable, false},
                              {configuration::RealTime, false},
