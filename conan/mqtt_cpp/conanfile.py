@@ -10,7 +10,7 @@ class MqttcppConan(ConanFile):
     description = "MQTT client/server for C++14 based on Boost.Asio"
     topics = ("mqtt")
     settings = "os", "compiler", "build_type", "arch"
-    requires = "boost/1.77.0"
+    requires = "boost/1.77.0@#2852c576d24f6707a0c44aa0a820a337"
 
     def source(self):
         git = tools.Git("repo")

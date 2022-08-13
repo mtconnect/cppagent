@@ -151,6 +151,8 @@ namespace mtconnect {
             auto &idx = m_subs.get<tag_con>();
             auto r = idx.equal_range(con);
             idx.erase(r.first, r.second);
+            
+            return true;
           });
 
           ep.set_error_handler([this, wp](mqtt::error_code ec) {
@@ -165,6 +167,8 @@ namespace mtconnect {
             auto &idx = m_subs.get<tag_con>();
             auto r = idx.equal_range(con);
             idx.erase(r.first, r.second);
+            
+            return true;
           });
 
           ep.set_subscribe_handler(
