@@ -20,6 +20,7 @@
 #include "pipeline_context.hpp"
 #include "pipeline_contract.hpp"
 #include "transform.hpp"
+#include <future>
 
 namespace mtconnect {
   class Agent;
@@ -58,10 +59,29 @@ namespace mtconnect {
 
       void clear()
       {
-        m_start->stop();
-        m_started = false;
-        m_start->clear();
-        m_start = std::make_shared<Start>();
+        using namespace std::chrono_literals;
+        if (m_start->getNext().size() > 0)
+        {
+          if (m_strand.context().stopped())
+          {
+            clearTransforms();
+          }
+          else
+          {
+            std::promise<void> p;
+            auto f = p.get_future();
+            m_strand.dispatch([this, &p]() {
+              clearTransforms();
+              p.set_value();
+            });
+            
+            while (f.wait_for(1ms) != std::future_status::ready)
+            {
+              m_strand.context().run_for(10ms);
+            }
+            f.get();
+          }
+        }
       }
 
       virtual void start()
@@ -222,6 +242,14 @@ namespace mtconnect {
           return entity::EntityPtr();
         }
       };
+      
+      void clearTransforms()
+      {
+        m_start->stop();
+        m_started = false;
+        m_start->clear();
+        m_start = std::make_shared<Start>();
+      }
 
       bool m_started {false};
       TransformPtr m_start;

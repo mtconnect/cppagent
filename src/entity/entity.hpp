@@ -323,6 +323,11 @@ namespace mtconnect {
               revised.push_back(*it);
               list.erase(it);
             }
+            else
+            {
+              revised.push_back(o);
+              changed = true;
+            }
           }
           else
           {
