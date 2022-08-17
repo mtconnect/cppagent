@@ -50,12 +50,6 @@
 
    void TearDown() override
    {
-     const auto agent = m_agentTestHelper->getAgent();
-     if (agent)
-     {
-       m_agentTestHelper->getAgent()->stop();
-       m_agentTestHelper->m_ioContext.run_for(100ms);
-     }
      if (m_client)
      {
        m_client->stop();
@@ -70,17 +64,6 @@
      }
      m_agentTestHelper.reset();
      m_jsonPrinter.reset();
-   }
-
-   void createAgent(ConfigOptions options = {})
-   {
-     ConfigOptions opts(options);
-     MergeOptions(opts, {{"MqttSink", true},
-                         {configuration::MqttPort, m_port},
-                         {configuration::MqttHost, "127.0.0.1"s}});
-     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
-    
-     m_agentTestHelper->getAgent()->start();
    }
 
    void createServer(const ConfigOptions &options)
@@ -187,105 +170,7 @@
    ASSERT_TRUE(m_client->isConnected()); 
  }
 
- TEST_F(MqttIsolatedUnitTest, mqtt_localhost_probe_to_subscribe)
- {  
-   createAgent();
-
-   ConfigOptions options {
-       {configuration::Host, "localhost"s}, {configuration::Port, 0},
-       {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
-       {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
-
-   createServer(options);
-
-   startServer();
-
-   ASSERT_NE(0, m_port);
-
-   auto handler = make_unique<ClientHandler>();
-
-   createClient(options, move(handler));
-   
-   ASSERT_TRUE(startClient());
-
-   ASSERT_TRUE(m_client->isConnected());
-
-   if (m_client && m_client->isConnected())
-   {
-     std::list<DevicePtr> devices = m_agentTestHelper->m_agent->getDevices();
-
-     for (auto device : devices)
-     {
-       const auto& dataItems = device->getDeviceDataItems();
-       for (const auto& dataItemAssoc : dataItems)
-       {
-         auto dataItem = dataItemAssoc.second.lock();
-         string dataTopic = dataItem->getTopic();
-         bool sucess = m_client->subscribe(dataTopic);
-         if (!sucess)
-         {
-           continue;
-         }
-       }
-     }
-   }
- }
-
- TEST_F(MqttIsolatedUnitTest, mqtt_localhost_publish_observations)
- {
-   createAgent();
-
-   ConfigOptions options {{configuration::Host, "localhost"s},
-                          {configuration::Port, 0},
-                          {configuration::MqttTls, false},
-                          {configuration::AutoAvailable, false},
-                          {configuration::RealTime, false}};
-
-   createServer(options);
-
-   startServer();
-
-   auto handler = make_unique<ClientHandler>();
-
-   createClient(options, move(handler));
-
-   ASSERT_TRUE(startClient());
-
-   ASSERT_TRUE(m_client->isConnected());
-
-   if (m_client && m_client->isConnected())
-   {
-     ErrorList errors;
-     auto time = chrono::system_clock::now();
-     ObservationList observationList;
-
-     auto agent = m_agentTestHelper->getAgent();
-     std::list<DevicePtr> devices = agent->getDevices();
-
-     for (auto device : devices)
-     {
-       const auto& dataItems = device->getDeviceDataItems();
-       for (const auto& dataItemAssoc : dataItems)
-       {
-         auto dataItem = dataItemAssoc.second.lock();
-         string dataTopic = dataItem->getTopic();
-
-         auto dataEvent =
-             Observation::make(dataItem, dataItem->getObservationProperties(), time, errors);
-         observationList.push_back(dataEvent);
-       }
-     }
-     auto jsonDoc =
-         m_jsonPrinter->printSample(123, 131072, 10974584, 10843512, 10123800, observationList);
-
-     stringstream buffer;
-     buffer << jsonDoc;
-
-     m_client->publish("ObservationList", buffer.str());
-   }
- }
-
- TEST_F(MqttIsolatedUnitTest, mqtt_client_should_connect_to_local_server)
+ TEST_F(MqttIsolatedUnitTest, mqtt_client_should_receive_loopback_publication)
  {
    ConfigOptions options {
        {configuration::Host, "localhost"s}, {configuration::Port, 0},
@@ -299,7 +184,7 @@
 
    std::uint16_t pid_sub1;
 
-   auto client = mqtt::make_async_client(m_agentTestHelper->getAgent()->getContext(), "localhost", m_port);
+   auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext, "localhost", m_port);
 
    client->set_client_id("cliendId1");
    client->set_clean_session(true);
@@ -317,6 +202,7 @@
            client->async_subscribe(pid_sub1, "mqtt_client_cpp/topic1", MQTT_NS::qos::at_most_once,
                                   //[optional] checking async_subscribe completion code
                                    [](MQTT_NS::error_code ec) {
+             EXPECT_FALSE(ec);
                                      std::cout << "async_subscribe callback: " << ec.message()
                                                << std::endl;
                                    });
@@ -338,8 +224,10 @@
        client->async_publish("mqtt_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
                             //[optional] checking async_publish completion code
                              [](MQTT_NS::error_code ec) {
+                               EXPECT_FALSE(ec);
+
                                std::cout << "async_publish callback: " << ec.message() << std::endl;
-                               ASSERT_EQ(ec.message(), "Success");
+                               EXPECT_EQ(ec.message(), "Success");
                              });
        return true;
      }
@@ -362,6 +250,8 @@
        client->async_publish("mqtt_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
                             //[optional] checking async_publish completion code
                              [packet_id](MQTT_NS::error_code ec) {
+                               EXPECT_FALSE(ec);
+
                                std::cout << "async_publish callback: " << ec.message() << std::endl;
                                ASSERT_TRUE(packet_id);
                              });
@@ -370,7 +260,8 @@
      return true;
    });
 
-   client->set_publish_handler([&client](mqtt::optional<std::uint16_t> packet_id,
+   bool received = false;
+   client->set_publish_handler([&client, &received](mqtt::optional<std::uint16_t> packet_id,
                                          mqtt::publish_options pubopts, mqtt::buffer topic_name,
                                          mqtt::buffer contents) {
      std::cout << "publish received."
@@ -380,13 +271,23 @@
        std::cout << "packet_id: " << *packet_id << std::endl;
      std::cout << "topic_name: " << topic_name << std::endl;
      std::cout << "contents: " << contents << std::endl;
+     
+     EXPECT_EQ("mqtt_client_cpp/topic1", topic_name);
+     EXPECT_EQ("test1", contents);
 
      client->async_disconnect();
+     received = true;
      return true;
    });
 
    client->async_connect();
 
-   m_agentTestHelper->getAgent()->getContext().run();
+   m_agentTestHelper->m_ioContext.run();
+   
+   ASSERT_TRUE(received);
  }
 
+TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
+{
+  GTEST_SKIP();
+}
