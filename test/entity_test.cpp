@@ -817,13 +817,13 @@ TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
     auto secondsFact = fact->factoryFor("seconds");
     auto secondFact = secondsFact->factoryFor("second");
 
-    Properties sndp1 {{"id", "1"s}, {"VALUE", 1}};
+    Properties sndp1 {{"id", "1"s}, {"VALUE", 1_i64}};
     auto se1 = secondsFact->create("second", sndp1);
     EntityList list { se1 };
 
     if (s)
     {
-      Properties sndp2 {{"id", "2"s}, {"VALUE", 2}};
+      Properties sndp2 {{"id", "2"s}, {"VALUE", 2_i64}};
       auto se2 = secondsFact->create("second", sndp2);
       list.push_back(se2);
     }
@@ -837,14 +837,14 @@ TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
     return entity;
   };
 
-  auto v1 = createEnt("woof"s, 0);
+  auto v1 = createEnt("woof"s, 0_i64);
   ASSERT_TRUE(v1);
 
   auto const &list1 = v1->getList("seconds");
   ASSERT_TRUE(list1);
   EXPECT_EQ(1, list1->size());
 
-  auto v2 = createEnt("meow"s, 1);
+  auto v2 = createEnt("meow"s, 1_i64);
   ASSERT_TRUE(v2);
 
   auto const &list2 = v2->getList("seconds");
