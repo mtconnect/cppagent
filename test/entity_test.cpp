@@ -796,6 +796,76 @@ TEST_F(EntityTest, entities_should_merge_entity_list)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
+TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
+{
+  auto root = make_shared<Factory>();
+
+  auto second = make_shared<Factory>(
+      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+
+  auto seconds = make_shared<Factory>(
+      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+  seconds->registerMatchers();
+
+  auto simple = make_shared<Factory>(Requirements {
+      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
+      Requirement("seconds", ENTITY_LIST, seconds)});
+  root->registerFactory("simple", simple);
+
+  auto createEnt = [&](auto v, auto s) -> EntityPtr {
+    auto fact = root->factoryFor("simple");
+    auto secondsFact = fact->factoryFor("seconds");
+    auto secondFact = secondsFact->factoryFor("second");
+
+    Properties sndp1 {{"id", "1"s}, {"VALUE", 1_i64}};
+    auto se1 = secondsFact->create("second", sndp1);
+    EntityList list { se1 };
+
+    if (s)
+    {
+      Properties sndp2 {{"id", "2"s}, {"VALUE", 2_i64}};
+      auto se2 = secondsFact->create("second", sndp2);
+      list.push_back(se2);
+    }
+
+    ErrorList errors;
+    auto se3 = fact->create("seconds", list, errors);
+
+    Properties simpp {{"id", "abc"s}, {"name", "xxx"s}, {"size", s + 1}, {"seconds", se3}};
+
+    auto entity = root->create("simple", simpp);
+    return entity;
+  };
+
+  auto v1 = createEnt("woof"s, 0_i64);
+  ASSERT_TRUE(v1);
+
+  auto const &list1 = v1->getList("seconds");
+  ASSERT_TRUE(list1);
+  EXPECT_EQ(1, list1->size());
+
+  auto v2 = createEnt("meow"s, 1_i64);
+  ASSERT_TRUE(v2);
+
+  auto const &list2 = v2->getList("seconds");
+  ASSERT_TRUE(list2);
+  EXPECT_EQ(2, list2->size());
+
+  ASSERT_TRUE(v1->reviseTo(v2));
+  //EXPECT_EQ(2, list1->size());
+
+  auto const &list3 = v1->getList("seconds");
+  EXPECT_EQ(2, list3->size());
+
+  auto it = list3->begin();
+  EXPECT_EQ(1_i64, (*it)->getValue<int64_t>());
+  it++;
+  EXPECT_EQ(2_i64, (*it)->getValue<int64_t>());
+
+  EXPECT_EQ(*(v1.get()), *(v2.get()));
+}
+
+
 TEST_F(EntityTest, should_remove_missing_entities)
 {
   auto root = make_shared<Factory>();

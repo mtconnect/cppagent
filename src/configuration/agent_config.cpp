@@ -418,6 +418,7 @@ namespace mtconnect::configuration {
     namespace kw = boost::log::keywords;
     namespace expr = logr::expressions;
 
+    logr::core::get()->remove_all_sinks();
     m_sink.reset();
 
     //// Add the commonly used attributes; includes TimeStamp, ProcessID and ThreadID and others
