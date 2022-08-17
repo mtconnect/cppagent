@@ -88,8 +88,6 @@ namespace mtconnect {
       {
         NAMED_SCOPE("MqttClient::start");
 
-        // mqtt::setup_log();
-
         auto client = derived().getClient();
 
         client->set_client_id(m_identity);
@@ -223,40 +221,6 @@ namespace mtconnect {
       }
 
     protected:
-      void subscribe()
-      {
-        NAMED_SCOPE("MqttClientImpl::subscribe");
-        if (!m_running)
-          return;
-
-        auto topics = GetOption<StringList>(m_options, configuration::Topics);
-        std::vector<std::tuple<string, mqtt::subscribe_options>> topicList;
-        if (topics)
-        {
-          for (auto &topic : *topics)
-          {
-            auto loc = topic.find(':');
-            if (loc != string::npos)
-            {
-              topicList.emplace_back(make_tuple(topic.substr(loc + 1), mqtt::qos::at_least_once));
-            }
-          }
-        }
-        else
-        {
-          LOG(warning) << "No topics specified, subscribing to '#'";
-          topicList.emplace_back(make_tuple("#"s, mqtt::qos::at_least_once));
-        }
-
-        m_clientId = derived().getClient()->acquire_unique_packet_id();
-        derived().getClient()->async_subscribe(m_clientId, topicList, [](mqtt::error_code ec) {
-          if (ec)
-          {
-            LOG(error) << "Subscribe failed: " << ec.message();
-          }
-        });
-      }
-
       void connect()
       {
         if (m_handler && m_handler->m_connecting)
@@ -270,6 +234,7 @@ namespace mtconnect {
         if (m_handler && m_handler->m_receive)
           m_handler->m_receive(shared_from_this(), string(topic), string(contents));
       }
+
       /// <summary>
       ///
       /// </summary>
@@ -306,6 +271,7 @@ namespace mtconnect {
       ConfigOptions m_options;
 
       std::string m_host;
+
       unsigned int m_port {1883};
 
       std::uint16_t m_clientId {0};
