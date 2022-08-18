@@ -291,3 +291,8 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 {
   GTEST_SKIP();
 }
+
+TEST_F(MqttIsolatedUnitTest, should_conenct_using_authentication)
+{
+  GTEST_SKIP();
+}
