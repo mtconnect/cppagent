@@ -95,5 +95,6 @@ only_commits:
     - test/
     - cmake/
     - agent/
+    - agent_lib/
     - conan/
 
