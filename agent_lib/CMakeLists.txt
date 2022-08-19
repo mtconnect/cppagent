@@ -370,6 +370,7 @@ target_compile_definitions(
     MQTT_STD_OPTIONAL
     MQTT_STD_STRING_VIEW
     MQTT_USE_LOG
+    BOOST_FILESYSTEM_VERSION=3
     )
 
 if(WITH_PYTHON)
