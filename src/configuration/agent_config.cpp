@@ -610,7 +610,7 @@ namespace mtconnect::configuration {
                 {configuration::ReconnectInterval, 10000ms},
                 {configuration::IgnoreTimestamps, false},
                 {configuration::ConversionRequired, true},
-                {configuration::JsonPrinterVersion, 2},
+                {configuration::JsonVersion, 2},
                 {configuration::UpcaseDataItemValue, true},
                 {configuration::FilterDuplicates, false},
                 {configuration::MonitorConfigFiles, false},

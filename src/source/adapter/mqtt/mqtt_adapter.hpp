@@ -17,28 +17,15 @@
 
 #pragma once
 
+#include "mqtt/mqtt_client.hpp"
 #include "source/adapter/adapter.hpp"
 #include "source/adapter/adapter_pipeline.hpp"
 
+using namespace mtconnect::mqtt_client;
+
 namespace mtconnect::source::adapter::mqtt_adapter {
-  class MqttAdapterImpl : public std::enable_shared_from_this<MqttAdapterImpl>
-  {
-  public:
-    MqttAdapterImpl(boost::asio::io_context &ioc) : m_ioContext(ioc) {}
-    virtual ~MqttAdapterImpl() = default;
-    const auto &getIdentity() const { return m_identity; }
-    const auto &getUrl() const { return m_url; }
 
-    virtual bool start() = 0;
-    virtual void stop() = 0;
-
-  protected:
-    boost::asio::io_context &m_ioContext;
-    std::string m_url;
-    std::string m_identity;
-  };
-
-  class MqttPipeline : public adapter::AdapterPipeline
+  class MqttPipeline : public AdapterPipeline
   {
   public:
     MqttPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &strand)
@@ -58,47 +45,34 @@ namespace mtconnect::source::adapter::mqtt_adapter {
                 const ConfigOptions &options, const boost::property_tree::ptree &block);
     ~MqttAdapter() override {}
 
-    static void registerFactory(SourceFactory &factory)
-    {
-      factory.registerFactory("mqtt",
-                              [](const std::string &name, boost::asio::io_context &io,
-                                 pipeline::PipelineContextPtr context, const ConfigOptions &options,
-                                 const boost::property_tree::ptree &block) -> source::SourcePtr {
-                                auto source =
-                                    std::make_shared<MqttAdapter>(io, context, options, block);
-                                return source;
-                              });
-    }
+    static void registerFactory(SourceFactory &factory);
 
-    const std::string &getHost() const override { return m_host; };
-    unsigned int getPort() const override { return m_port; }
+    const std::string &getHost() const override;
 
-    bool start() override
-    {
-      m_pipeline.start();
-      return m_client->start();
-    }
-    void stop() override
-    {
-      m_client->stop();
-      m_pipeline.clear();
-    }
+    unsigned int getPort() const override;
 
-    pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
+    bool start() override;
+
+    void stop() override;
+
+    pipeline::Pipeline *getPipeline() override;
 
   protected:
     void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
 
   protected:
     boost::asio::io_context &m_ioContext;
+
     boost::asio::io_context::strand m_strand;
     // If the connector has been running
     bool m_running;
 
     std::string m_host;
+
     unsigned int m_port;
 
     MqttPipeline m_pipeline;
-    std::shared_ptr<MqttAdapterImpl> m_client;
+
+    std::shared_ptr<MqttClient> m_client;
   };
 }  // namespace mtconnect::source::adapter::mqtt_adapter

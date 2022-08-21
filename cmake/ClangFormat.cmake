@@ -49,5 +49,5 @@ macro(create_clangformat_target)
       )
   endif()
 
-  # set_property(TARGET clangformat PROPERTY SOURCES ${clangformat_files})
+   #set_property(TARGET clangformat PROPERTY SOURCES ${clangformat_files})
 endmacro()

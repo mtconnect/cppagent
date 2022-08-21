@@ -22,13 +22,17 @@
 
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
+#include "mqtt/mqtt_client.hpp"
+#include "observation/observation.hpp"
 #include "printer/printer.hpp"
 #include "printer/xml_printer_helper.hpp"
+#include "sink/rest_sink/checkpoint.hpp"
 #include "sink/sink.hpp"
 #include "utilities.hpp"
 
 using namespace std;
 using namespace mtconnect::entity;
+using namespace mtconnect::mqtt_client;
 
 namespace mtconnect {
   class XmlPrinter;
@@ -54,12 +58,28 @@ namespace mtconnect {
 
         bool publish(asset::AssetPtr asset) override;
 
+        bool publish(device_model::DevicePtr device) override;
+
         static void registerFactory(SinkFactory &factory);
 
+        std::shared_ptr<MqttClient> getClient();
+
+        bool isConnected() { return m_client && m_client->isConnected(); }
+
       protected:
+        void pub(const observation::ObservationPtr &observation);
+
+      protected:
+        std::string m_devicePrefix;
+        std::string m_assetPrefix;
+        std::string m_observationPrefix;
+
         boost::asio::io_context &m_context;
         ConfigOptions m_options;
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
+        std::shared_ptr<MqttClient> m_client;
+
+        rest_sink::Checkpoint m_latest;
       };
 
     }  // namespace mqtt_sink

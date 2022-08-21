@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 2.0
+MTConnect C++ Agent Version 2.1
 --------
 [![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48/branch/master?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent/branch/master)
 
@@ -10,6 +10,8 @@ server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 2.1.0 Added MQTT Sink, Agent Restart and new JSON format (version 2)
 
 Version 2.0.0 Rearchitecture of the agent with TLS, MQTT Adapter, Ruby Interpreter, Agent Adaptr, and much more
 
@@ -616,6 +618,10 @@ Configuration Parameters
 
     *Default*: none
 
+* `JsonVersion`     - JSON Printer format. Old format: 1, new format: 2
+
+    *Default*: 2
+
 * `LegacyTimeout`	- The default length of time an adapter can be silent before it
   is disconnected. This is only for legacy adapters that do not support heartbeats.
 
@@ -706,9 +712,40 @@ The following parameters must be present to enable https requests. If there is n
 * `TlsClientCAs` - For `TlsVerifyClientCertificate`, specifies a file that contains additional certificate authorities for verification
 
     *Default*: *NULL*
+    
+### MQTT Configuration
 
+* `MqttHost` - IP Address or name of the MQTT Broker
 
-### Adapter configuration items ###
+    *Default*: 127.0.0.1
+  
+* `MqttPort` - Port number of MQTT Broker
+
+    *Default*: 1883
+  
+* `MqttCaCert` - CA Certificate for MQTT TLS connection to the MTT Broker
+
+    *Default*: *NULL*
+
+* `MqttTls` - TLS Certificate for secure connection to the MQTT Broker
+
+    *Default*: *NULL*
+
+#### MQTT Sink
+
+* `DeviceTopic` - Prefix for the Device Model topic
+
+    *Default*: MTConnect/Device/
+
+* `ObservationTopic` - Prefix for the Streams events, samples, and conditions
+
+    *Default*: MTConnect/Observation/
+
+* `AssetTopic` - Prefix for the Assets
+
+    *Default*: MTConnect/Asset/
+
+### Adapter Configuration Items ###
 
 * `Adapters` - Adapters begins a list of device blocks. If the Adapters
   are not specified and the Devices file only contains one device, a
@@ -1297,6 +1334,7 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 
     sudo apt-get install build-essential python3.9 python3-pip git cmake ruby rake
 	python3.9 -m pip install conan
+    echo 'export PATH=$HOME/.local/bin:$PATH' >> .bashrc
 
 ### Download the source
 

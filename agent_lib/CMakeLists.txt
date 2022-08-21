@@ -120,6 +120,13 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/requirement.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.cpp" 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.cpp"
+
+# src/mqtt HEADER_FILE_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_client.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_server.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_client_impl.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_server_impl.hpp"
   
 # src/observation HEADER_FILE_ONLY 
         
@@ -209,6 +216,7 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.cpp"
+		
 # src/sink HEADER_FILE_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/sink.hpp"
@@ -300,7 +308,8 @@ if(MSVC)
   endif()
 
   # The modules including Beast required the /bigobj option in Windows
-  set_property(SOURCE
+  set_property(SOURCE    
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/mqtt_sink/mqtt_service.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
@@ -361,6 +370,7 @@ target_compile_definitions(
     MQTT_STD_OPTIONAL
     MQTT_STD_STRING_VIEW
     MQTT_USE_LOG
+    BOOST_FILESYSTEM_VERSION=3
     )
 
 if(WITH_PYTHON)

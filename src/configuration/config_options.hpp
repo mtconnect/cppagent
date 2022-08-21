@@ -31,7 +31,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(CheckpointFrequency);
     DECLARE_CONFIGURATION(Devices);
     DECLARE_CONFIGURATION(HttpHeaders);
-    DECLARE_CONFIGURATION(JsonPrinterVersion);
+    DECLARE_CONFIGURATION(JsonVersion);
     DECLARE_CONFIGURATION(LogStreams);
     DECLARE_CONFIGURATION(MaxAssets);
     DECLARE_CONFIGURATION(MaxCachedFileSize);
@@ -56,6 +56,15 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(VersionDeviceXmlUpdates);
     DECLARE_CONFIGURATION(WorkerThreads);
 
+    // MQTT Configuration
+    DECLARE_CONFIGURATION(DeviceTopic);
+    DECLARE_CONFIGURATION(AssetTopic);
+    DECLARE_CONFIGURATION(ObservationTopic);
+    DECLARE_CONFIGURATION(MqttCaCert);
+    DECLARE_CONFIGURATION(MqttTls);
+    DECLARE_CONFIGURATION(MqttPort);
+    DECLARE_CONFIGURATION(MqttHost);
+
     // Adapter Configuration
     DECLARE_CONFIGURATION(AdapterIdentity);
     DECLARE_CONFIGURATION(AdditionalDevices);
@@ -69,8 +78,6 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(IgnoreTimestamps);
     DECLARE_CONFIGURATION(LegacyTimeout);
     DECLARE_CONFIGURATION(Manufacturer);
-    DECLARE_CONFIGURATION(MqttCaCert);
-    DECLARE_CONFIGURATION(MqttTls);
     DECLARE_CONFIGURATION(Path);
     DECLARE_CONFIGURATION(PollingInterval);
     DECLARE_CONFIGURATION(PreserveUUID);

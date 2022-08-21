@@ -84,8 +84,9 @@ namespace mtconnect {
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
     m_versionDeviceXml =
         GetOption<bool>(options, mtconnect::configuration::VersionDeviceXmlUpdates).value_or(false);
-    
-    auto jsonVersion = uint32_t(GetOption<int>(options, mtconnect::configuration::JsonPrinterVersion).value_or(2));
+
+    auto jsonVersion =
+        uint32_t(GetOption<int>(options, mtconnect::configuration::JsonVersion).value_or(2));
 
     // Create the Printers
     m_printers["xml"] = make_unique<printer::XmlPrinter>(m_version, m_pretty);

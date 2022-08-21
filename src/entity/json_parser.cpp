@@ -56,7 +56,7 @@ namespace mtconnect {
           }
           else if (value.is_number())
           {
-            if (jNode[property_key].get<double>() == jNode[property_key].get<int64_t>())
+            if (jNode[key].get<double>() == jNode[key].get<int64_t>())
               properties.insert({property_key, int64_t(value)});
             else
               properties.insert({property_key, double(value)});

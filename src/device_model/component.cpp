@@ -57,12 +57,15 @@ namespace mtconnect {
     void Component::buildDeviceMaps(DevicePtr device)
     {
       device->registerComponent(getptr());
-
       auto items = getList("DataItems");
       if (items)
       {
         for (auto &item : *items)
-          device->registerDataItem(dynamic_pointer_cast<data_item::DataItem>(item));
+        {
+          auto di = dynamic_pointer_cast<data_item::DataItem>(item);
+          device->registerDataItem(di);
+          di->makeTopic();
+        }
       }
 
       auto children = getChildren();
