@@ -331,3 +331,88 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Asset)
 
   waitFor(3s, [&gotControllerDataItem]() { return gotControllerDataItem; });
 }
+
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_Dataset)
+{
+  GTEST_SKIP();
+
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+
+  entity::JsonParser parser;
+
+  auto handler = make_unique<ClientHandler>();
+  bool gotControllerDataItem = false;
+  handler->m_receive = [&gotControllerDataItem, &parser](std::shared_ptr<MqttClient>,
+                                                         const std::string &topic,
+                                                         const std::string &payload) {
+    EXPECT_EQ("MTConnect/Observation/000/Controller[Controller]/Path/VARIABLE[vars]", topic);
+    auto jdoc = json::parse(payload);
+    string id = jdoc.at("/Part/a"_json_pointer).get<string>();
+   // ASSERT_DATA_SET_ENTRY(doc, "VariableDataSet[2]", "a", "1");
+    if (id == string("1"))
+    {
+      EXPECT_TRUE(true);
+      gotControllerDataItem = true;
+    }  
+  };
+  createClient(options, move(handler));
+  ASSERT_TRUE(startClient());
+
+  createAgent("/samples/data_set.xml");
+  auto service = m_agentTestHelper->getMqttService();
+  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+  auto time = chrono::system_clock::now();
+
+  m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
+
+  m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/Path/VARIABLE[vars]");
+
+  waitFor(3s, [&gotControllerDataItem]() { return gotControllerDataItem; });
+}
+
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_Table)
+{
+  GTEST_SKIP();
+
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+
+  entity::JsonParser parser;
+
+  auto handler = make_unique<ClientHandler>();
+  bool gotControllerDataItem = false;
+  handler->m_receive = [&gotControllerDataItem, &parser](std::shared_ptr<MqttClient>,
+                                                         const std::string &topic,
+                                                         const std::string &payload) {
+    EXPECT_EQ("MTConnect/Observation/000/Controller[Controller]/Path/WORK_OFFSET[wpo]", topic);
+    auto jdoc = json::parse(payload);
+    //ASSERT_TABLE_ENTRY(doc, "WorkOffsetTable[@dataItemId='wp1']", "G53.2", "X", "4");
+
+    string id = jdoc.at("/EntryDefinition/key"_json_pointer).get<string>();
+    if (id == string("G53.1"))
+    {
+      EXPECT_TRUE(true);
+      gotControllerDataItem = true;
+    }   
+  };
+  createClient(options, move(handler));
+  ASSERT_TRUE(startClient());
+
+  createAgent("/samples/data_set.xml");
+  auto service = m_agentTestHelper->getMqttService();
+  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+  auto time = chrono::system_clock::now();
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 "
+      "Y=8.0 Z=9 U=10.0}");
+
+  m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/Path/WORK_OFFSET[wpo]");
+
+  waitFor(3s, [&gotControllerDataItem]() { return gotControllerDataItem; });
+}
