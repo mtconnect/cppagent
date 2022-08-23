@@ -56,7 +56,9 @@ class CppAgentConan(ConanFile):
                 self.settings.compiler.runtime = 'MTd'
             else:
                 self.settings.compiler.runtime = 'MT'
-            self.settings.compiler.version = '16'
+                
+            if not self.settings.compiler.version:
+                self.settings.compiler.version = '16'
         
         if "libcxx" in self.settings.compiler.fields and self.settings.compiler.libcxx == "libstdc++":
             raise Exception("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")
