@@ -819,7 +819,7 @@ TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
 
     Properties sndp1 {{"id", "1"s}, {"VALUE", 1_i64}};
     auto se1 = secondsFact->create("second", sndp1);
-    EntityList list { se1 };
+    EntityList list {se1};
 
     if (s)
     {
@@ -852,7 +852,7 @@ TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
   EXPECT_EQ(2, list2->size());
 
   ASSERT_TRUE(v1->reviseTo(v2));
-  //EXPECT_EQ(2, list1->size());
+  // EXPECT_EQ(2, list1->size());
 
   auto const &list3 = v1->getList("seconds");
   EXPECT_EQ(2, list3->size());
@@ -864,7 +864,6 @@ TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
 
   EXPECT_EQ(*(v1.get()), *(v2.get()));
 }
-
 
 TEST_F(EntityTest, should_remove_missing_entities)
 {
