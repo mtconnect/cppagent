@@ -17,8 +17,8 @@ class CppAgentConan(ConanFile):
                 "date/2.4.1@#178e4ada4fefd011aaa81ab2bca646db",
                 "nlohmann_json/3.9.1@#a41bc0deaf7f40e7b97e548359ccf14d", 
                 "openssl/1.1.1k@#f40064b74987c778d5c4e0416d75f1f0",
-                "mqtt_cpp/11.0.0",
-]
+                "mqtt_cpp/11.0.0"]
+    
     build_policy = "missing"
     default_options = {
         "run_tests": True,
