@@ -240,7 +240,6 @@ namespace mtconnect::source::adapter::shdr {
   {
     NAMED_SCOPE("Connector::setReceiveTimeout");
 
-    m_receiveTimeout.cancel();
     m_receiveTimeout.expires_from_now(m_receiveTimeLimit);
     m_receiveTimeout.async_wait(asio::bind_executor(m_strand, [this](sys::error_code ec) {
       if (!ec)
