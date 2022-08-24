@@ -199,7 +199,7 @@ TEST_F(DeviceTest, should_create_data_item_topic)
 
   DataItemPtr di = dynamic_pointer_cast<DataItem>(data1);
 
-  ASSERT_EQ("UnivUniqId1/Availability", di->getTopic());
+  ASSERT_EQ("UnivUniqId1/Events/Availability", di->getTopic());
   ASSERT_EQ("Availability", di->getTopicName());
 }
 
@@ -228,6 +228,6 @@ TEST_F(DeviceTest, should_create_component_and_data_item_topic)
   DataItemPtr di = dynamic_pointer_cast<DataItem>(data1);
   di->makeTopic();
 
-  ASSERT_EQ("UnivUniqId1/Axes/Linear[X]/Position.Actual[Xact]", di->getTopic());
+  ASSERT_EQ("UnivUniqId1/Axes/Linear[X]/Samples/Position.Actual[Xact]", di->getTopic());
   ASSERT_EQ("Position.Actual[Xact]", di->getTopicName());
 }
