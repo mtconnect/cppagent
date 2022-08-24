@@ -991,7 +991,7 @@ logger_config {
       cfg << R"DOC(
 MonitorConfigFiles = true
 MonitorInterval = 1
-MonitorDelay = 1
+MinimumConfigReloadAge = 1
 Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
