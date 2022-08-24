@@ -3,7 +3,7 @@ import {
 	Mesh,
 	Plane,
 	Vector3
-} from '../../three.module.js';
+} from '../../three.module.js'
 import { ConvexGeometry } from '../geometries/ConvexGeometry.js';
 
 /**

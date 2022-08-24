@@ -2,7 +2,7 @@ import {
 	MathUtils,
 	Quaternion,
 	Vector3
-} from '../../three.module.js';
+} from '../../three.module.js'
 
 const _va = /*@__PURE__*/ new Vector3(), // from pe to pa
 	_vb = /*@__PURE__*/ new Vector3(), // from pe to pb

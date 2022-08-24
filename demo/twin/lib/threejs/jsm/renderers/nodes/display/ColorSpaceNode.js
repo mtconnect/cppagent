@@ -3,7 +3,7 @@ import CodeNode from '../core/CodeNode.js';
 import * as EncodingFunctions from '../functions/EncodingFunctions.js';
 
 import { LinearEncoding, sRGBEncoding, RGBEEncoding, RGBM7Encoding, RGBM16Encoding,
-	RGBDEncoding, GammaEncoding, LogLuvEncoding } from 'three';
+	RGBDEncoding, GammaEncoding, LogLuvEncoding } from '../../three.module.js'
 
 function getEncodingComponents ( encoding ) {
 
