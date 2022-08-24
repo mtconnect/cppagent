@@ -49,21 +49,14 @@ namespace mtconnect {
 
         GetOptions(config, m_options, options);
         AddOptions(config, m_options,
-                   {{configuration::UUID, string()},
-                    {configuration::Manufacturer, string()},
-                    {configuration::Station, string()},
-                    {configuration::Url, string()},
-                    {configuration::MqttCaCert, string()}});
+                   {{configuration::MqttCaCert, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
                              {configuration::DeviceTopic, "MTConnect/Device/"s},
                              {configuration::AssetTopic, "MTConnect/Asset/"s},
                              {configuration::ObservationTopic, "MTConnect/Observation/"s},
                              {configuration::MqttPort, 1883},
-                             {configuration::MqttTls, false},
-                             {configuration::AutoAvailable, false},
-                             {configuration::RealTime, false},
-                             {configuration::RelativeTime, false}});
+                             {configuration::MqttTls, false}});
 
         auto clientHandler = make_unique<ClientHandler>();
         clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
