@@ -95,7 +95,10 @@ namespace mtconnect::source::adapter::shdr {
       m_reconnectInterval = *intv;
     
     if (m_reconnectInterval < 500ms)
+    {
+      LOG(warning) << "Reconnection interval set to " << m_reconnectInterval.count() << "ms, limiting it to 500ms";
       m_reconnectInterval = 500ms;
+    }
   }
 
   void ShdrAdapter::processData(const string &data)
