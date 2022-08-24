@@ -8,8 +8,10 @@ port = 7878
 scenario = false
 $verbose = false
 fast = nil
-server = '0.0.0.0'
+host = '0.0.0.0'
 max = nil
+$heartbeat = 10000
+$chaos = false
 
 OptionParser.new do |opts|
   opts.banner = 'Usage: run_scenrio.rb [-lfh] [-s server] [-p port] <file>'
@@ -25,6 +27,10 @@ OptionParser.new do |opts|
   opts.on('-h', '--help', 'Show help') do
     puts opts
     exit 1
+  end
+
+  opts.on('--heartbeat [interval]', OptionParser::DecimalInteger, "Heartbeat Frequency") do |v|
+    $heartbeat = v.to_f / 1000.0
   end
 
   opts.on('-t', '--[no-]scenario', 'Run scenario or log') do |v|
@@ -45,8 +51,14 @@ OptionParser.new do |opts|
   end
   
   opts.on('-s', '--server [server]', String, 'Server IP port to bind to (default: 0.0.0.0)') do |v|
-    server = v
+    host = v
   end
+
+  opts.on('-c', '--chaos', 'Random behavior of adapter') do |v|
+    puts "Adding chaos to the stream to cause random disconnects"
+    $chaos = v
+  end
+                                                              
   
   opts.parse!
   if ARGV.length < 1
@@ -61,9 +73,13 @@ def heartbeat(socket)
     begin
       while (select([socket], nil, nil))
         if (r = socket.read_nonblock(256)) =~ /\* PING/
+          if $chaos
+            sleep rand * $heartbeat * 3.0
+          end
+
           puts "Received #{r.strip}, responding with pong" if $verbose
           $mutex.synchronize {
-            socket.puts "* PONG 60000"
+            socket.puts "* PONG #{($heartbeat * 1000).to_i}"
             socket.flush
           }
         else
@@ -76,7 +92,7 @@ def heartbeat(socket)
   end
 end
 
-server = TCPServer.new(server, port)
+server = TCPServer.new(host, port)
 sockets = []
 $mutex = Mutex.new
 
@@ -136,6 +152,10 @@ begin
         line = l
       end
       
+      if $chaos
+        sleep 6.0 if (rand * 10.0) < 0.5
+      end
+
       $mutex.synchronize {
         sockets.each do |socket|
           begin
