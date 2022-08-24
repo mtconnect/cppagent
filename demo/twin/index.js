@@ -11,19 +11,19 @@ let conditions = new Map();
 let displayElements = [];
 
 document.onreadystatechange = function() {
-	if (document.readyState !== "complete") {
-		document.querySelector("#loader").style.visibility = "visible";
-		document.querySelector("#loader_text").style.visibility = "visible";
-	}
+  if (document.readyState !== "complete") {
+    document.querySelector("#loader").style.visibility = "visible";
+    document.querySelector("#loader_text").style.visibility = "visible";
+  }
 };
 
-let deviceName = 'Mazak';
+let deviceName = '';
 if (window.location.search.length > 1)
 {
-	const fields = Object.fromEntries([window.location.search.substr(1).split('=')]);
-	if (fields.device) {
-		deviceName = fields.device;
-	}
+  const fields = Object.fromEntries([window.location.search.substr(1).split('=')]);
+  if (fields.device) {
+    deviceName = fields.device;
+  }
 }
 
 init();
@@ -33,242 +33,242 @@ loadAndStreamData();
 onWindowResize()
 
 function init() {
-	document.title = "MTConnect Demo by Metalogi.io";
+  document.title = "MTConnect Demo by Metalogi.io";
 
-	THREE.Object3D.DefaultUp = new THREE.Vector3(0,0,1);
+  THREE.Object3D.DefaultUp = new THREE.Vector3(0,0,1);
 
-	const container = document.createElement( 'div' );
-	document.body.appendChild( container );
+  const container = document.createElement( 'div' );
+  document.body.appendChild( container );
 
-	setupCustomData();
+  setupCustomData();
 
-	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
-	camera.position.set( 0.9, -5.5, 3.5 );
+  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 100 );
+  camera.position.set( 0.9, -5.5, 3.5 );
 
-	scene = new THREE.Scene();
-	scene.background = new THREE.Color( 0xa0a0a0 );
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color( 0xa0a0a0 );
 
-	const ambientLight = new THREE.AmbientLight( 0x222222 );
-	scene.add( ambientLight );
+  const ambientLight = new THREE.AmbientLight( 0x222222 );
+  scene.add( ambientLight );
 
-	const light1 = new THREE.DirectionalLight( 0x505050 );
-	light1.position.set( 0, -20, 10 );
-	scene.add( light1 );
+  const light1 = new THREE.DirectionalLight( 0x505050 );
+  light1.position.set( 0, -20, 10 );
+  scene.add( light1 );
 
-	const grid = new THREE.GridHelper( 10, 50, 0x000000, 0x000000 );
-	grid.rotateX(Math.PI / 2); 
-	grid.material.opacity = 0.3;
-	grid.material.transparent = true;
-	scene.add( grid );
+  const grid = new THREE.GridHelper( 10, 50, 0x000000, 0x000000 );
+  grid.rotateX(Math.PI / 2); 
+  grid.material.opacity = 0.3;
+  grid.material.transparent = true;
+  scene.add( grid );
 
-	renderer = new THREE.WebGLRenderer( { antialias: true } );
-	renderer.setPixelRatio( window.devicePixelRatio );
-	renderer.setSize( window.innerWidth, window.innerHeight );
-	setInterval(() => requestAnimationFrame( animate ), 34);
-	renderer.outputEncoding = THREE.sRGBEncoding;
-	renderer.toneMapping = THREE.ACESFilmicToneMapping;
-	container.appendChild( renderer.domElement );
+  renderer = new THREE.WebGLRenderer( { antialias: true } );
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  setInterval(() => requestAnimationFrame( animate ), 34);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  container.appendChild( renderer.domElement );
 
-	const controls = new OrbitControls( camera, renderer.domElement );
-	controls.target.set( 0.0, 0.0, 1.0);
-	controls.update();
+  const controls = new OrbitControls( camera, renderer.domElement );
+  controls.target.set( 0.0, 0.0, 1.0);
+  controls.update();
 
-	window.addEventListener( 'resize', onWindowResize );
+  window.addEventListener( 'resize', onWindowResize );  
 }
 
 async function loadAndStreamData() {
-	const protocol = new RestProtocol(`/${deviceName}`, values => {
-		for (let [dataItem, obs] of values) {
-			const [k, data] = Object.entries(obs)[0];
-			const did = dataItem.id;
-			let v = data.value;
-			let ele = document.getElementById(did);
-			if (typeof v == 'number')
-			  v = v.toFixed(3);
+  const protocol = new RestProtocol(`/${deviceName}`, values => {
+    for (let [dataItem, obs] of values) {
+      const [k, data] = Object.entries(obs)[0];
+      const did = dataItem.id;
+      let v = data.value;
+      let ele = document.getElementById(did);
+      if (typeof v == 'number')
+        v = v.toFixed(3);
 
-			if (ele) 
-				ele.textContent=k + ": " + v;
+      if (ele) 
+        ele.textContent=k + ": " + v;
 
-			let cell = customData.get(did);
-			if (cell)
-				cell.nodeValue = v;
+      let cell = customData.get(did);
+      if (cell)
+        cell.nodeValue = v;
 
-			// Active Alarms in dataItem.value
-			let obj = conditions.get(did);
-			if (obj) {
-				var span = obj.span;
-				if (Array.isArray(dataItem.value) && dataItem.value.length == 0) {
-					if (span.textContent != '') {
-						span.textContent = obj.label+': Normal';
-						span.setAttribute('style', 'padding-left:25px; color: white');
-					}
-				} else if (Array.isArray(dataItem.value)) {
-					const text = dataItem.value.map ( alarm => {
-						const [level, info] = Object.entries(alarm)[0];
-						return level + (info.value ? ': "' + info.value + '"' : '');
-					}).join(', ');
-					span.textContent = obj.label + ': ' + text;
-					span.setAttribute('style', 'padding-left:25px; color: yellow');
-				}
-			}
-		}
-	});
+      // Active Alarms in dataItem.value
+      let obj = conditions.get(did);
+      if (obj) {
+        var span = obj.span;
+        if (Array.isArray(dataItem.value) && dataItem.value.length == 0) {
+          if (span.textContent != '') {
+            span.textContent = obj.label+': Normal';
+            span.setAttribute('style', 'padding-left:25px; color: white');
+          }
+        } else if (Array.isArray(dataItem.value)) {
+          const text = dataItem.value.map ( alarm => {
+            const [level, info] = Object.entries(alarm)[0];
+            return level + (info.value ? ': "' + info.value + '"' : '');
+          }).join(', ');
+          span.textContent = obj.label + ': ' + text;
+          span.setAttribute('style', 'padding-left:25px; color: yellow');
+        }
+      }
+    }
+  });
 
-	const device = await protocol.probeMachine();
-	const machineCS = device.findCoordinateSystem('MACHINE')[0];
+  const device = await protocol.probeMachine();
+  const machineCS = device.findCoordinateSystem('MACHINE')[0];
 
-	const dataItems = device.findDataItems(di => {
-		return (((di.type == 'POSITION' || di.type == 'ANGLE') && di.subType == 'ACTUAL') && di.coordinateSystemIdRef == machineCS.id) ||
-			customData.has(di.id) || 
-			di.category == 'CONDITION' ||
-		        di.type == 'AVAILABILITY' || di.type == 'CONTROLLER_MODE' || di.type == 'EXECUTION' || 
-						(di.type == 'PROGRAM' && di.subType == 'MAIN');
-	});
+  const dataItems = device.findDataItems(di => {
+    return (((di.type == 'POSITION' || di.type == 'ANGLE') && di.subType == 'ACTUAL') && di.coordinateSystemIdRef == machineCS.id) ||
+      customData.has(di.id) || 
+      di.category == 'CONDITION' ||
+            di.type == 'AVAILABILITY' || di.type == 'CONTROLLER_MODE' || di.type == 'EXECUTION' || 
+            (di.type == 'PROGRAM' && di.subType == 'MAIN');
+  });
 
-	const conditionDataItems = device.findDataItems(di => {
-		return (di.category == 'CONDITION');
-	});
+  const conditionDataItems = device.findDataItems(di => {
+    return (di.category == 'CONDITION');
+  });
 
-	setupConditionDisplay(conditionDataItems);
-	protocol.loadModel(obj => {
-		const enc = device.findComponent('Enclosure');
-		const material = new THREE.MeshPhongMaterial( { color: 0x0A0A0A, specular: 0x111111, shininess: 200, opacity: 0.5, transparent: true } );
+  setupConditionDisplay(conditionDataItems);
+  protocol.loadModel(obj => {
+    const enc = device.findComponent('Enclosure');
+    const material = new THREE.MeshPhongMaterial( { color: 0x0A0A0A, specular: 0x111111, shininess: 200, opacity: 0.5, transparent: true } );
                 if (enc)
-			enc.geometry.model.material = material;
-		
-		protocol.streamData(dataItems.concat(conditionDataItems));
+      enc.geometry.model.material = material;
+    
+    protocol.streamData(dataItems.concat(conditionDataItems));
 
-		scene.add( obj.model );
+    scene.add( obj.model );
 
-		document.querySelector("#loader").style.display = "none";
-		document.querySelector("#loader_text").style.display = "none";
-	});		
+    document.querySelector("#loader").style.display = "none";
+    document.querySelector("#loader_text").style.display = "none";
+  });   
 }
 
 function determineSize() {
-	let size = Math.floor(window.innerWidth / 100);
-	console.log('size', size);
-	return size;
+  let size = Math.floor(window.innerWidth / 100);
+  console.log('size', size);
+  return size;
 }
 
 function onWindowResize() {
 
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
 
-	renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.setSize( window.innerWidth, window.innerHeight );
 
-	let size = determineSize();
-	displayElements.forEach(row => {
-		row.setAttribute('style', 'line-height: '+size+'px; font-size: '+size+'px;');
-	})
+  let size = determineSize();
+  displayElements.forEach(row => {
+    row.setAttribute('style', 'line-height: '+size+'px; font-size: '+size+'px;');
+  })
 
-	size *= 3;
-	let title = document.getElementById("title");
-	title.textContent = 'Demo by Metalogi.io';
-	title.setAttribute("style", "font-size: " + size + "px;");
+  size *= 3;
+  let title = document.getElementById("title");
+  title.textContent = 'Demo by Metalogi.io';
+  title.setAttribute("style", "font-size: " + size + "px;");
 }
 
 function animate() {
-	renderer.render( scene, camera )
+  renderer.render( scene, camera )
 }
 
 function setupCustomData() {
-	fetch('./data.txt')
-	  .then( resp => resp.text())
-		.then( text => {
-		// avoid load the data more than once
-		if (customData.size > 0)
-			return;
+  fetch('./data.txt')
+    .then( resp => resp.text())
+    .then( text => {
+    // avoid load the data more than once
+    if (customData.size > 0)
+      return;
 
-		let size = determineSize();
-  	var body = document.getElementsByTagName('body')[0];
+    let size = determineSize();
+    var body = document.getElementsByTagName('body')[0];
 
-  		// creates a <table> element and a <tbody> element
-  	var tbl = document.createElement('table');
-  	var tblBody = document.createElement('tbody');
-		for (const line of text.split('\n').map( l => l.trim())) {
-			if (line.startsWith('#'))
-				continue;
-			
-			var pair = line.split('|');
-			var dataId = pair[0].trim();
-			if (dataId == '')
-				continue;
+      // creates a <table> element and a <tbody> element
+    var tbl = document.createElement('table');
+    var tblBody = document.createElement('tbody');
+    for (const line of text.split('\n').map( l => l.trim())) {
+      if (line.startsWith('#'))
+        continue;
+      
+      var pair = line.split('|');
+      var dataId = pair[0].trim();
+      if (dataId == '')
+        continue;
 
-			if (pair.length == 1)
-				pair.push(pair[0]);
+      if (pair.length == 1)
+        pair.push(pair[0]);
 
-			if (pair.length >= 2) {
-				// creates a table row
-				var row = document.createElement('tr');
+      if (pair.length >= 2) {
+        // creates a table row
+        var row = document.createElement('tr');
 
-				let r
-				for (var j = 0; j < 2; j++) {
+        let r
+        for (var j = 0; j < 2; j++) {
 
-					// col 0 - label text
-					// col 1 - real-time data
-					var cell = document.createElement('td');
-					var displayLabel = pair[1].trim();
-					if (j == 0) {
-						var displayLabel = pair[1].trim();
-						if (displayLabel == '') displayLabel = dataId;
+          // col 0 - label text
+          // col 1 - real-time data
+          var cell = document.createElement('td');
+          var displayLabel = pair[1].trim();
+          if (j == 0) {
+            var displayLabel = pair[1].trim();
+            if (displayLabel == '') displayLabel = dataId;
 
-						var cellText = document.createTextNode(displayLabel); 
-						cell.appendChild(cellText);
-					} else {
-						var cellText = document.createTextNode(''); 
-						cell.appendChild(cellText);
-						customData.set(dataId, cellText);
-						cell.style.color = 'yellow';
-					}
-					row.appendChild(cell);
-				}
+            var cellText = document.createTextNode(displayLabel); 
+            cell.appendChild(cellText);
+          } else {
+            var cellText = document.createTextNode(''); 
+            cell.appendChild(cellText);
+            customData.set(dataId, cellText);
+            cell.style.color = 'yellow';
+          }
+          row.appendChild(cell);
+        }
 
-				row.setAttribute('style', 'line-height: '+size+'px; font-size: '+size+'px;');
-				displayElements.push(row);
-				// add the row to the end of the table body
-				tblBody.appendChild(row);
-			}
-		}
+        row.setAttribute('style', 'line-height: '+size+'px; font-size: '+size+'px;');
+        displayElements.push(row);
+        // add the row to the end of the table body
+        tblBody.appendChild(row);
+      }
+    }
 
-  		// put the <tbody> in the <table>
-  		tbl.appendChild(tblBody);
+      // put the <tbody> in the <table>
+      tbl.appendChild(tblBody);
 
-  		// appends <table> into <body>
-  		body.appendChild(tbl);
-  		tbl.setAttribute('class', 'data_table');
-	});
+      // appends <table> into <body>
+      body.appendChild(tbl);
+      tbl.setAttribute('class', 'data_table');
+  });
 }
 
 function PascalCase(str) {
-	return  (" " + str).toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, function(match, chr) {
-		return chr.toUpperCase();
-	});
+  return  (" " + str).toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, function(match, chr) {
+    return chr.toUpperCase();
+  });
 }
 
 function setupConditionDisplay(conditionDataItems) {
   var body = document.getElementsByTagName('body')[0];
 
-	var alarms = document.createElement('p');
-	alarms.setAttribute('class', 'marquee');
+  var alarms = document.createElement('p');
+  alarms.setAttribute('class', 'marquee');
 
-	const container = document.createElement( 'div' );
+  const container = document.createElement( 'div' );
   container.setAttribute('style', 'padding-left: 100%; animation: marquee 20s linear infinite');
 
-	// create a span for each condition
-	conditionDataItems.forEach(data => {
+  // create a span for each condition
+  conditionDataItems.forEach(data => {
     var child = document.createElement('span');
-		child.setAttribute('id', 'span_' + data.id);
+    child.setAttribute('id', 'span_' + data.id);
 
-		var subtype = data.subtype ? PascalCase(data.subtype) : '';
-		var name = data.name? '['+data.name+']' : '';
-		if (name == '')
-		    name = '[' + data.id + ']';
-		conditions.set(data.id, { label: subtype+PascalCase(data.type)+name, span: child });
-  		container.appendChild(child);
-	});
+    var subtype = data.subtype ? PascalCase(data.subtype) : '';
+    var name = data.name? '['+data.name+']' : '';
+    if (name == '')
+        name = '[' + data.id + ']';
+    conditions.set(data.id, { label: subtype+PascalCase(data.type)+name, span: child });
+      container.appendChild(child);
+  });
 
-	alarms.appendChild(container);
-	body.appendChild(alarms);
+  alarms.appendChild(container);
+  body.appendChild(alarms);
 }

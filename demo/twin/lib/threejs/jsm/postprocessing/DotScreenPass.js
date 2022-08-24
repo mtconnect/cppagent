@@ -1,8 +1,8 @@
 import {
 	ShaderMaterial,
 	UniformsUtils
-} from '../../three.module.js';
-import { Pass, FullScreenQuad } from '../postprocessing/Pass.js';
+} from '../../three.module.js'
+import { Pass, FullScreenQuad } from './Pass.js';
 import { DotScreenShader } from '../shaders/DotScreenShader.js';
 
 class DotScreenPass extends Pass {
@@ -13,7 +13,7 @@ class DotScreenPass extends Pass {
 
 		if ( DotScreenShader === undefined ) console.error( 'THREE.DotScreenPass relies on DotScreenShader' );
 
-		var shader = DotScreenShader;
+		const shader = DotScreenShader;
 
 		this.uniforms = UniformsUtils.clone( shader.uniforms );
 

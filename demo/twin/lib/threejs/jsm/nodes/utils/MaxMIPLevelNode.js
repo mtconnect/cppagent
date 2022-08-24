@@ -1,56 +1,33 @@
-import { FloatNode } from '../inputs/FloatNode.js';
+import UniformNode from '../core/UniformNode.js';
+import { NodeUpdateType } from '../core/constants.js';
 
-class MaxMIPLevelNode extends FloatNode {
+class MaxMipLevelNode extends UniformNode {
 
 	constructor( texture ) {
 
-		super();
+		super( 0 );
 
 		this.texture = texture;
 
-		this.maxMIPLevel = 0;
+		this.updateType = NodeUpdateType.Frame;
 
 	}
 
-	get value() {
+	update() {
 
-		if ( this.maxMIPLevel === 0 ) {
+		const images = this.texture.images;
+		const image = ( images && images.length > 0 ) ? ( images[ 0 ]?.image || images[ 0 ] ) : this.texture.image;
 
-			var image = this.texture.value.image;
+		if ( image?.width !== undefined ) {
 
-			if ( Array.isArray( image ) ) image = image[ 0 ];
+			const { width, height } = image;
 
-			this.maxMIPLevel = image !== undefined ? Math.log( Math.max( image.width, image.height ) ) * Math.LOG2E : 0;
+			this.value = Math.log2( Math.max( width, height ) );
 
 		}
-
-		return this.maxMIPLevel;
-
-	}
-
-	set value( val ) {
-
-
-	}
-
-	toJSON( meta ) {
-
-		let data = this.getJSONNode( meta );
-
-		if ( ! data ) {
-
-			data = this.createJSONNode( meta );
-
-			data.texture = this.texture.uuid;
-
-		}
-
-		return data;
 
 	}
 
 }
 
-MaxMIPLevelNode.prototype.nodeType = 'MaxMIPLevel';
-
-export { MaxMIPLevelNode };
+export default MaxMipLevelNode;

@@ -1,7 +1,7 @@
 import {
 	Color,
 	Vector3
-} from '../../three.module.js';
+} from '../../three.module.js'
 
 /**
  * Currently contains:

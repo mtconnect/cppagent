@@ -215,7 +215,7 @@ namespace mtconnect {
     else
       device = defaultDevice();
 
-    if (device)
+    if (device && device->getAssetChanged() && device->getAssetRemoved())
     {
       if (asset->getDeviceUuid() && *asset->getDeviceUuid() != *device->getUuid())
       {
@@ -470,7 +470,7 @@ namespace mtconnect {
         if (it != m_deviceUuidMap.end())
           dev = it->second;
       }
-      if (dev)
+      if (dev && dev->getAssetRemoved())
       {
         m_loopback->receive(dev->getAssetRemoved(),
                             {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});

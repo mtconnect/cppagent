@@ -86,7 +86,7 @@ protected:
                         {configuration::MqttHost, "127.0.0.1"s}});
     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
     addAdapter();
-    
+
     m_agentTestHelper->getAgent()->start();
   }
 
@@ -161,13 +161,13 @@ protected:
     }
     return started;
   }
-  
+
   void addAdapter(ConfigOptions options = ConfigOptions {})
   {
     m_agentTestHelper->addAdapter(options, "localhost", 7878,
                                   m_agentTestHelper->m_agent->defaultDevice()->getName());
   }
-  
+
   std::unique_ptr<printer::JsonPrinter> m_jsonPrinter;
   std::shared_ptr<mtconnect::mqtt_server::MqttServer> m_server;
   std::shared_ptr<MqttClient> m_client;
@@ -209,8 +209,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_device)
 
   auto handler = make_unique<ClientHandler>();
   bool gotDevice = false;
-  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client, const std::string &topic,
-                                             const std::string &payload) {
+  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
+                                             const std::string &topic, const std::string &payload) {
     EXPECT_EQ("MTConnect/Device/000", topic);
 
     ErrorList list;
@@ -219,7 +219,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_device)
     auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
     EXPECT_TRUE(dev);
     EXPECT_EQ("LinuxCNC", dev->getComponentName());
-    EXPECT_EQ("000", *dev->getUuid());   
+    EXPECT_EQ("000", *dev->getUuid());
 
     gotDevice = true;
   };
@@ -229,7 +229,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_device)
   m_client->subscribe("MTConnect/Device/000");
 
   createAgent();
-  
+
   auto service = m_agentTestHelper->getMqttService();
 
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
@@ -238,7 +238,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_device)
 }
 
 TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
-{  
+{
   ConfigOptions options;
   createServer(options);
   startServer();
@@ -249,11 +249,10 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
   auto handler = make_unique<ClientHandler>();
   bool foundLineDataItem = false;
   handler->m_receive = [&foundLineDataItem, &parser](std::shared_ptr<MqttClient> client,
-                                                 const std::string &topic,
-                                             const std::string &payload) {
-
+                                                     const std::string &topic,
+                                                     const std::string &payload) {
     EXPECT_EQ("MTConnect/Observation/000/Controller[Controller]/Path/Line[line]", topic);
-   
+
     auto jdoc = json::parse(payload);
     string value = jdoc.at("/value"_json_pointer).get<string>();
     if (value == string("204"))
@@ -261,17 +260,16 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
       EXPECT_TRUE(true);
       foundLineDataItem = true;
     }
-    //this below code not working currently
+    // this below code not working currently
     /*ErrorList list;
     auto ptr = parser.parse(device_model::data_item::DataItem::getRoot(), payload, "2.0", list);
     auto dataItem = dynamic_pointer_cast<device_model::data_item::DataItem>(ptr);
     if (dataItem)
         EXPECT_EQ(string("204"),dataItem->getValue<string>());*/
-
   };
   createClient(options, move(handler));
   ASSERT_TRUE(startClient());
- 
+
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
@@ -279,10 +277,10 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
 
   m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/Path/Line[line]");
- 
-  //m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|lp|NORMAL||||");
 
-  //m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/LogicProgram");
+  // m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|lp|NORMAL||||");
+
+  // m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/LogicProgram");
 
   waitFor(2s, [&foundLineDataItem]() { return foundLineDataItem; });
 }
@@ -300,7 +298,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Asset)
   bool gotControllerDataItem = false;
   handler->m_receive = [&gotControllerDataItem, &parser](std::shared_ptr<MqttClient>,
                                                          const std::string &topic,
-                                             const std::string &payload) {
+                                                         const std::string &payload) {
     EXPECT_EQ("MTConnect/Asset/0001", topic);
     auto jdoc = json::parse(payload);
     string id = jdoc.at("/Part/assetId"_json_pointer).get<string>();
@@ -312,9 +310,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Asset)
     /*ErrorList list;
     auto ptr = parser.parse(Asset::getRoot(), payload, "2.0", list);
     EXPECT_EQ(0, list.size());
-    auto asset = dynamic_cast<Asset *>(ptr.get());  
+    auto asset = dynamic_cast<Asset *>(ptr.get());
     EXPECT_TRUE(asset);*/
-
   };
   createClient(options, move(handler));
   ASSERT_TRUE(startClient());
@@ -323,7 +320,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Asset)
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
   auto time = chrono::system_clock::now();
-  
+
   m_agentTestHelper->m_adapter->processData(
       "2021-02-01T12:00:00Z|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");
 

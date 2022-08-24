@@ -151,7 +151,7 @@ namespace mtconnect {
             auto &idx = m_subs.get<tag_con>();
             auto r = idx.equal_range(con);
             idx.erase(r.first, r.second);
-            
+
             return true;
           });
 
@@ -167,7 +167,7 @@ namespace mtconnect {
             auto &idx = m_subs.get<tag_con>();
             auto r = idx.equal_range(con);
             idx.erase(r.first, r.second);
-            
+
             return true;
           });
 

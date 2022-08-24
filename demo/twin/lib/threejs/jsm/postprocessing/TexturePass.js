@@ -1,8 +1,8 @@
 import {
 	ShaderMaterial,
 	UniformsUtils
-} from '../../three.module.js';
-import { Pass, FullScreenQuad } from '../postprocessing/Pass.js';
+} from '../../three.module.js'
+import { Pass, FullScreenQuad } from './Pass.js';
 import { CopyShader } from '../shaders/CopyShader.js';
 
 class TexturePass extends Pass {

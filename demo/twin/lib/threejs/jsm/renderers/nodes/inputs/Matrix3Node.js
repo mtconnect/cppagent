@@ -1,5 +1,5 @@
 import InputNode from '../core/InputNode.js';
-import { Matrix3 } from 'three';
+import { Matrix3 } from '../../three.module.js'
 
 class Matrix3Node extends InputNode {
 

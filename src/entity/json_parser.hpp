@@ -36,7 +36,7 @@ namespace mtconnect {
 
       EntityPtr parse(FactoryPtr factory, const std::string &document, const std::string &version,
                       ErrorList &errors);
-      
+
     protected:
       uint32_t m_version;
     };

@@ -12,10 +12,64 @@ class CoordinateSystem {
     Object.assign(this, doc);
     this.component = comp;
     comp.entities[this.id] = this;
+
+    if (this.Transformation) {
+      if (this.Transformation.Rotation) {
+        const rot = this.Transformation.Rotation;
+        this.rotatation = new THREE.Euler(rot[0], rot[1], rot[3], 'ZYX');
+      }
+      
+      if (this.Transformation.Translation) {
+        const trans = new THREE.Vector3().fromArray(this.Transformation.Translation);
+        this.translation = trans;
+      }
+    }
   }
 
   translate(vector) {
+    if (this.translation) {
+      vector.add(this.translation);
+    }
+    return vector;
+  }
 
+  rotate(vector) {
+    if (this.rotation) {
+      vector.applyEuler(this.rotation);
+    }
+    return vector;
+  }
+
+  shape() {
+    if (!this.obj3d) {
+      this.geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1 );
+      const m1 =  new THREE.Vector3(this.translation.x / 1000.0,
+                                    this.translation.y / 1000.0,
+                                    this.translation.z / 1000.0);
+      const m2 = new THREE.Vector3().copy(m1).negate();
+      if (this.translation) {
+        //this.geometry.translate(m2.x, m2.y, m2.z);
+      }
+
+      this.vector = m1;
+
+      this.matrix = new THREE.Matrix4();
+      if (this.rotation) {
+        this.matrix.makeRotationFromEuler(this.rotation);
+      }
+      if (this.translation) {
+        this.matrix.setPosition(m1.x, m1.y, m1.z);
+      }
+      this.geometry.applyMatrix4(this.matrix);
+      const edges = new THREE.EdgesGeometry( this.geometry );
+      this.obj3d = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0xFF0000 } ) );
+    }
+    return this.obj3d;
+  }
+
+  geometry() {
+    //shape();
+    return this.geometry;
   }
 
   resolve() {
@@ -51,7 +105,27 @@ class Motion {
           break;
       }
     }
+
+    this.transform();
   }
+
+  transform() {
+    this.rotation = null;
+    this.translation = null;
+    
+    if (this.Transformation) {
+      if (this.Transformation.Rotation) {
+        const rot = this.Transformation.Rotation;
+        this.rotatation = new THREE.Euler(rot[0], rot[1], rot[3], 'ZYX');
+      }
+      
+      if (this.Transformation.Translation) {
+        const trans = new THREE.Vector3().fromArray(this.Transformation.Translation);        
+        this.translation = trans;
+      }
+    }
+  }
+
 
   resolve() {
     if (this.parentIdRef) {
@@ -71,9 +145,16 @@ class Geometry {
     comp.entities[this.id] = this;
 
     this.scale = new THREE.Vector3(1.0, 1.0, 1.0);
+    if (this.nativeUnits)
+    {
+      const units = this.nativeUnits.split(':').pop();
+      if (units == 'METER') {
+        //this.scale = new THREE.Vector3().copy(_meters);
+      }
+    }
     if (this.Scale) {
-      this.scale.fromArray(this.Scale);
-      this.scale.multiply(_meters);
+      const v = new THREE.Vector3().fromArray(this.Scale);
+      this.scale.multiply(v);
     }
   }
 
@@ -123,6 +204,11 @@ class Geometry {
         const trans = new THREE.Vector3().fromArray(this.Transformation.Translation);        
         this.position(trans);
       }
+
+      const geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01 );
+      const edges = new THREE.EdgesGeometry( geometry );
+      const line = new THREE.LineSegments( edges, new THREE.LineBasicMaterial( { color: 0x000000 } ) );
+      this.model.add( line );        
     }
   }
 
@@ -196,11 +282,13 @@ class DataItem {
     this.component = comp;
     comp.entities[this.id] = this;
     this.value = null;
+    this.machine = false;
   }
 
   resolve() {
     if (this.coordinateSystemIdRef) {
       this.coordinateSystem = this.component.entities[this.coordinateSystemIdRef];
+      this.machine = this.coordinateSystem.type == 'MACHINE';
     }
     if (this.component.motion) {
       this.motion = this.component.motion.type;
@@ -254,11 +342,15 @@ class DataItem {
       this.value = obs;
       const value = obs[key].value;
 
-      if (((this.type == 'POSITION' || this.type == 'ANGLE') && this.subType == 'ACTUAL') &&
+      if (this.machine && ((this.type == 'POSITION' || this.type == 'ANGLE') && this.subType == 'ACTUAL') &&
           typeof value == 'number') {
         const child = this.component.attachChild;
         if (child && child.geometry && this.axis) {
           const vec = this.axis.clone().multiplyScalar(value);
+          if (this.type == 'POSITION' && this.component.motion.coordinateSystem) {
+            const comp = this.component.motion.coordinateSystem.translation.clone().negate().multiply(this.axis);
+            vec.add(comp);
+          }
           if (this.motion == 'REVOLUTE') {
             child.geometry.rotate(vec);
           } else if (this.motion == 'PRISMATIC') {
@@ -279,6 +371,8 @@ class DataItem {
 class Component {
   constructor(type, doc, parent = null) {
     Object.assign(this, doc);
+    this.link = false;
+    this.joint = false;
     this.type = type;
     this.parent = parent;
     this.parse(doc);
@@ -315,8 +409,8 @@ class Component {
       const config = this.Configuration;
       if (config.SolidModel) {
         this.geometry = new Geometry(config.SolidModel, this);
-      } 
-      
+      }
+
       if (config.Relationships) {
         for (const rel of config.Relationships) {
           if (rel.ComponentRelationship) {
@@ -350,7 +444,9 @@ class Component {
       c.resolve();
     }
     if (this.attachChildId) {
-      this.attachChild = this.entities[this.attachChildId]
+      this.attachChild = this.entities[this.attachChildId];
+      this.attachChild.link = true;
+      this.joint = true;
     }
     if (this.attachParentId) {
       this.attachParent = this.entities[this.attachParentId];
@@ -381,7 +477,31 @@ class Component {
 
   attach() {
     if (this.attachParent && this.attachParent.geometry && this.attachChild && this.attachChild.geometry) {
+      // Determine if this is the first axis in a geometric chain. This will occur when the parent does
+      // not have motion.
+      if (!this.attachParent.link) {  
+        this.rootAxis = true;
+      }
+      
+      if (this.motion && this.motion.translation && this.motion.type == 'REVOLUTE' &&
+          (this.motion.translation.x != 0 || this.motion.translation.y != 0 || this.motion.translation.z != 0)) {
+        const mod = this.attachChild.geometry.model;
+        const geo = mod.geometry;
+        
+        const v = new THREE.Vector3(this.motion.translation.x / 1000.0,
+                                    this.motion.translation.y / 1000.0,
+                                    this.motion.translation.z / 1000.0);
+        const vt = new THREE.Vector3().copy(v).negate();
+        geo.translate(vt.x, vt.y, vt.z);
+        mod.translateX(v.x).translateY(v.y).translateZ(v.z);
+      }
+      
       const pg = this.attachParent.geometry.model;
+      if (this.rootAxis && this.motion.coordinateSystem)
+      {
+        // const shape = this.motion.coordinateSystem.shape();
+        // pg.attach(shape);
+      }
       pg.attach(this.attachChild.geometry.model);
     }
     this.children.forEach(c => c.attach());

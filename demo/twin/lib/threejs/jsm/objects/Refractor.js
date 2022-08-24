@@ -1,19 +1,16 @@
 import {
 	Color,
-	LinearFilter,
-	MathUtils,
 	Matrix4,
 	Mesh,
 	PerspectiveCamera,
 	Plane,
 	Quaternion,
-	RGBFormat,
 	ShaderMaterial,
 	UniformsUtils,
 	Vector3,
 	Vector4,
 	WebGLRenderTarget
-} from '../../three.module.js';
+} from '../../three.module.js'
 
 class Refractor extends Mesh {
 
@@ -21,7 +18,10 @@ class Refractor extends Mesh {
 
 		super( geometry );
 
+		this.isRefractor = true;
+
 		this.type = 'Refractor';
+		this.camera = new PerspectiveCamera();
 
 		const scope = this;
 
@@ -30,10 +30,11 @@ class Refractor extends Mesh {
 		const textureHeight = options.textureHeight || 512;
 		const clipBias = options.clipBias || 0;
 		const shader = options.shader || Refractor.RefractorShader;
+		const multisample = ( options.multisample !== undefined ) ? options.multisample : 4;
 
 		//
 
-		const virtualCamera = new PerspectiveCamera();
+		const virtualCamera = this.camera;
 		virtualCamera.matrixAutoUpdate = false;
 		virtualCamera.userData.refractor = true;
 
@@ -44,19 +45,7 @@ class Refractor extends Mesh {
 
 		// render target
 
-		const parameters = {
-			minFilter: LinearFilter,
-			magFilter: LinearFilter,
-			format: RGBFormat
-		};
-
-		const renderTarget = new WebGLRenderTarget( textureWidth, textureHeight, parameters );
-
-		if ( ! MathUtils.isPowerOfTwo( textureWidth ) || ! MathUtils.isPowerOfTwo( textureHeight ) ) {
-
-			renderTarget.texture.generateMipmaps = false;
-
-		}
+		const renderTarget = new WebGLRenderTarget( textureWidth, textureHeight, { samples: multisample } );
 
 		// material
 
@@ -262,11 +251,16 @@ class Refractor extends Mesh {
 
 		};
 
+		this.dispose = function () {
+
+			renderTarget.dispose();
+			scope.material.dispose();
+
+		};
+
 	}
 
 }
-
-Refractor.prototype.isRefractor = true;
 
 Refractor.RefractorShader = {
 
@@ -322,6 +316,8 @@ Refractor.RefractorShader = {
 
 			vec4 base = texture2DProj( tDiffuse, vUv );
 			gl_FragColor = vec4( blendOverlay( base.rgb, color ), 1.0 );
+
+			#include <encodings_fragment>
 
 		}`
 
