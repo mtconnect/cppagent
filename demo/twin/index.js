@@ -2,6 +2,8 @@ import * as THREE from './lib/threejs/three.module.js';
 
 import { OrbitControls } from './lib/threejs/jsm/controls/OrbitControls.js';
 import { RestProtocol } from './lib/mtconnect/protocol.js';
+import { VRButton } from './lib/threejs/jsm/webxr/VRButton.js';
+
 
 let camera, scene, renderer, stats;
 
@@ -9,6 +11,7 @@ let camera, scene, renderer, stats;
 let customData = new Map();
 let conditions = new Map();
 let displayElements = [];
+let deviceName = '';
 
 document.onreadystatechange = function() {
   if (document.readyState !== "complete") {
@@ -17,7 +20,6 @@ document.onreadystatechange = function() {
   }
 };
 
-let deviceName = '';
 if (window.location.search.length > 1)
 {
   const fields = Object.fromEntries([window.location.search.substr(1).split('=')]);
@@ -67,17 +69,23 @@ function init() {
   setInterval(() => requestAnimationFrame( animate ), 34);
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.xr.enabled = true;
   container.appendChild( renderer.domElement );
+  container.appendChild( VRButton.createButton( renderer ) );
 
   const controls = new OrbitControls( camera, renderer.domElement );
   controls.target.set( 0.0, 0.0, 1.0);
   controls.update();
 
   window.addEventListener( 'resize', onWindowResize );  
+
+  renderer.setAnimationLoop( function () {
+    renderer.render( scene, camera );
+  });
 }
 
 async function loadAndStreamData() {
-  const protocol = new RestProtocol(`/${deviceName}`, values => {
+  const protocol = new RestProtocol('/' + deviceName, values => {
     for (let [dataItem, obs] of values) {
       const [k, data] = Object.entries(obs)[0];
       const did = dataItem.id;
@@ -174,7 +182,7 @@ function animate() {
 }
 
 function setupCustomData() {
-  fetch('./data.txt')
+  fetch('./data_' + deviceName + '.txt')
     .then( resp => resp.text())
     .then( text => {
     // avoid load the data more than once
@@ -196,9 +204,7 @@ function setupCustomData() {
       if (dataId == '')
         continue;
 
-      if (pair.length == 1)
-        pair.push(pair[0]);
-
+      // must be a pair
       if (pair.length >= 2) {
         // creates a table row
         var row = document.createElement('tr');
