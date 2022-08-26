@@ -304,7 +304,7 @@ namespace mtconnect {
 
       path(pth, comp);
       pth.push_back(m_categoryText);
-      
+
       stringstream name;
       name << getObservationName();
       optional<string> opt;

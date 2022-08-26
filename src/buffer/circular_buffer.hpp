@@ -27,7 +27,7 @@
 #include "observation/observation.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect::sink::rest_sink {
+namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;
 
   class CircularBuffer
@@ -245,4 +245,4 @@ namespace mtconnect::sink::rest_sink {
     Checkpoint m_first;
     boost::circular_buffer<std::unique_ptr<Checkpoint>> m_checkpoints;
   };
-}  // namespace mtconnect::sink::rest_sink
+}  // namespace mtconnect::buffer

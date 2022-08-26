@@ -36,6 +36,8 @@ namespace mtconnect {
   using namespace asset;
   using namespace device_model;
   using namespace printer;
+  using namespace buffer;
+
   namespace sink::rest_sink {
     RestService::RestService(asio::io_context &context, SinkContractPtr &&contract,
                              const ConfigOptions &options, const ptree &config)
@@ -44,8 +46,6 @@ namespace mtconnect {
         m_strand(context),
         m_version(GetOption<string>(options, config::SchemaVersion).value_or("x.y")),
         m_options(options),
-        m_circularBuffer(GetOption<int>(options, config::BufferSize).value_or(17),
-                         GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
         m_logStreamData(GetOption<bool>(options, config::LogStreams).value_or(false))
     {
       auto maxSize =
@@ -120,20 +120,29 @@ namespace mtconnect {
     // Observation management
     observation::ObservationPtr RestService::getFromBuffer(uint64_t seq) const
     {
-      return m_circularBuffer.getFromBuffer(seq);
+      return m_sinkContract->getCircularBuffer().getFromBuffer(seq);
     }
 
-    SequenceNumber_t RestService::getSequence() const { return m_circularBuffer.getSequence(); }
+    SequenceNumber_t RestService::getSequence() const
+    {
+      return m_sinkContract->getCircularBuffer().getSequence();
+    }
 
-    unsigned int RestService::getBufferSize() const { return m_circularBuffer.getBufferSize(); }
+    unsigned int RestService::getBufferSize() const
+    {
+      return m_sinkContract->getCircularBuffer().getBufferSize();
+    }
 
     SequenceNumber_t RestService::getFirstSequence() const
     {
-      return m_circularBuffer.getFirstSequence();
+      return m_sinkContract->getCircularBuffer().getFirstSequence();
     }
 
     // For testing...
-    void RestService::setSequence(uint64_t seq) { m_circularBuffer.setSequence(seq); }
+    void RestService::setSequence(uint64_t seq)
+    {
+      m_sinkContract->getCircularBuffer().setSequence(seq);
+    }
 
     // Configuration
     void RestService::loadNamespace(const ptree &tree, const char *namespaceType,
@@ -609,23 +618,12 @@ namespace mtconnect {
     // Observation Add Method
     // ----------------------------------------------------
 
-    SequenceNumber_t RestService::publish(ObservationPtr &observation)
+    bool RestService::publish(ObservationPtr &observation)
     {
-      std::lock_guard<CircularBuffer> lock(m_circularBuffer);
-
       auto dataItem = observation->getDataItem();
-      if (!dataItem->isDiscrete())
-      {
-        if (!observation->isUnavailable() && dataItem->isDataSet() &&
-            !m_circularBuffer.getLatest().dataSetDifference(observation))
-        {
-          return 0;
-        }
-      }
-
-      auto seqNum = m_circularBuffer.addToBuffer(observation);
+      auto seqNum = observation->getSequence();
       dataItem->signalObservers(seqNum);
-      return seqNum;
+      return true;
     }
 
     // -------------------------------------------
@@ -653,8 +651,8 @@ namespace mtconnect {
 
       return make_unique<Response>(
           rest_sink::status::ok,
-          printer->printProbe(m_instanceId, m_circularBuffer.getBufferSize(),
-                              m_circularBuffer.getSequence(),
+          printer->printProbe(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
+                              m_sinkContract->getCircularBuffer().getSequence(),
                               m_sinkContract->getAssetStorage()->getMaxAssets(),
                               m_sinkContract->getAssetStorage()->getCount(), deviceList, &counts),
           printer->mimeType());
@@ -782,7 +780,7 @@ namespace mtconnect {
       else
         asyncResponse->m_sequence = *from;
 
-      asyncResponse->m_endOfBuffer = from >= m_circularBuffer.getSequence();
+      asyncResponse->m_endOfBuffer = from >= m_sinkContract->getCircularBuffer().getSequence();
 
       asyncResponse->m_interval = chrono::milliseconds(interval);
       asyncResponse->m_logStreamData = m_logStreamData;
@@ -838,7 +836,7 @@ namespace mtconnect {
       }
 
       {
-        std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+        std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
 
         if (!asyncResponse->m_endOfBuffer)
         {
@@ -854,7 +852,7 @@ namespace mtconnect {
           // was signaled between the time the wait timed out and the mutex was locked.
           // Otherwise, nothing has arrived and we set to the next sequence number to
           // the next sequence number to be allocated and continue.
-          asyncResponse->m_sequence = m_circularBuffer.getSequence();
+          asyncResponse->m_sequence = m_sinkContract->getCircularBuffer().getSequence();
         }
         else
         {
@@ -1070,8 +1068,8 @@ namespace mtconnect {
         }
         return make_unique<Response>(
             status::bad_request,
-            printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
-                                 m_circularBuffer.getSequence(), errorResp),
+            printer->printErrors(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
+                                 m_sinkContract->getCircularBuffer().getSequence(), errorResp),
             printer->mimeType());
       }
 
@@ -1191,8 +1189,8 @@ namespace mtconnect {
       {
         return make_unique<Response>(
             status::not_found,
-            printer->printErrors(m_instanceId, m_circularBuffer.getBufferSize(),
-                                 m_circularBuffer.getSequence(), errorResp),
+            printer->printErrors(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
+                                 m_sinkContract->getCircularBuffer().getSequence(), errorResp),
             printer->mimeType());
       }
     }
@@ -1226,8 +1224,9 @@ namespace mtconnect {
     {
       LOG(debug) << "Returning error " << errorCode << ": " << text;
       if (printer)
-        return printer->printError(m_instanceId, m_circularBuffer.getBufferSize(),
-                                   m_circularBuffer.getSequence(), errorCode, text);
+        return printer->printError(
+            m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
+            m_sinkContract->getCircularBuffer().getSequence(), errorCode, text);
       else
         return errorCode + ": " + text;
     }
@@ -1308,25 +1307,25 @@ namespace mtconnect {
       SequenceNumber_t firstSeq, seq;
 
       {
-        std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+        std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
 
         firstSeq = getFirstSequence();
-        seq = m_circularBuffer.getSequence();
+        seq = m_sinkContract->getCircularBuffer().getSequence();
         if (at)
         {
           checkRange(printer, *at, firstSeq - 1, seq, "at");
 
-          auto check = m_circularBuffer.getCheckpointAt(*at, filterSet);
+          auto check = m_sinkContract->getCircularBuffer().getCheckpointAt(*at, filterSet);
           check->getObservations(observations);
         }
         else
         {
-          m_circularBuffer.getLatest().getObservations(observations, filterSet);
+          m_sinkContract->getCircularBuffer().getLatest().getObservations(observations, filterSet);
         }
       }
 
-      return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), seq, firstSeq,
-                                  seq - 1, observations);
+      return printer->printSample(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
+                                  seq, firstSeq, seq - 1, observations);
     }
 
     string RestService::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet,
@@ -1339,11 +1338,11 @@ namespace mtconnect {
       SequenceNumber_t firstSeq, lastSeq;
 
       {
-        std::lock_guard<CircularBuffer> lock(m_circularBuffer);
+        std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
         firstSeq = getFirstSequence();
-        auto seq = m_circularBuffer.getSequence();
+        auto seq = m_sinkContract->getCircularBuffer().getSequence();
         lastSeq = seq - 1;
-        int upperCountLimit = m_circularBuffer.getBufferSize() + 1;
+        int upperCountLimit = m_sinkContract->getCircularBuffer().getBufferSize() + 1;
         int lowerCountLimit = -upperCountLimit;
 
         if (from)
@@ -1358,15 +1357,15 @@ namespace mtconnect {
         }
         checkRange(printer, count, lowerCountLimit, upperCountLimit, "count", true);
 
-        observations = m_circularBuffer.getObservations(count, filterSet, from, to, end, firstSeq,
-                                                        endOfBuffer);
+        observations = m_sinkContract->getCircularBuffer().getObservations(
+            count, filterSet, from, to, end, firstSeq, endOfBuffer);
 
         if (observer)
           observer->reset();
       }
 
-      return printer->printSample(m_instanceId, m_circularBuffer.getBufferSize(), end, firstSeq,
-                                  lastSeq, *observations);
+      return printer->printSample(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
+                                  end, firstSeq, lastSeq, *observations);
     }
 
   }  // namespace sink::rest_sink

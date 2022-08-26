@@ -34,6 +34,7 @@
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::buffer;
 using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;

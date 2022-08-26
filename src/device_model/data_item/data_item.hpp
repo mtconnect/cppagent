@@ -149,6 +149,7 @@ namespace mtconnect {
 
         const std::optional<std::string> &getDataSource() const { return m_dataSource; }
         void setDataSource(const std::string &source) { m_dataSource = source; }
+        void setTopic(const std::string &topic) { m_topic = topic; }
 
         bool operator<(const DataItem &another) const;
         bool operator==(const DataItem &another) const { return m_id == another.m_id; }

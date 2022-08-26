@@ -20,13 +20,13 @@
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
+#include "buffer/checkpoint.hpp"
 #include "configuration/agent_config.hpp"
 #include "entity/json_printer.hpp"
 #include "mqtt/mqtt_client.hpp"
 #include "observation/observation.hpp"
 #include "printer/printer.hpp"
 #include "printer/xml_printer_helper.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
 #include "sink/sink.hpp"
 #include "utilities.hpp"
 
@@ -54,7 +54,7 @@ namespace mtconnect {
 
         void stop() override;
 
-        uint64_t publish(observation::ObservationPtr &observation) override;
+        bool publish(observation::ObservationPtr &observation) override;
 
         bool publish(asset::AssetPtr asset) override;
 
@@ -78,8 +78,6 @@ namespace mtconnect {
         ConfigOptions m_options;
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
         std::shared_ptr<MqttClient> m_client;
-
-        rest_sink::Checkpoint m_latest;
       };
 
     }  // namespace mqtt_sink

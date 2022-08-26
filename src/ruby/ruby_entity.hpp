@@ -538,6 +538,25 @@ namespace mtconnect::ruby {
             return mrb_str_new_cstr(mrb, di->getSubType().c_str());
           },
           MRB_ARGS_NONE());
+      mrb_define_method(
+          mrb, dataItemClass, "topic",
+          [](mrb_state *mrb, mrb_value self) {
+            auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
+            return mrb_str_new_cstr(mrb, di->getTopic().c_str());
+          },
+          MRB_ARGS_NONE());
+      mrb_define_method(
+          mrb, dataItemClass, "topic=",
+          [](mrb_state *mrb, mrb_value self) {
+            auto di = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, self);
+            char *val;
+            mrb_get_args(mrb, "z", &val);
+
+            di->setTopic(val);
+
+            return mrb_str_new_cstr(mrb, val);
+          },
+          MRB_ARGS_REQ(1));
 
       auto tokensClass = mrb_define_class_under(mrb, module, "Tokens", entityClass);
       MRB_SET_INSTANCE_TT(tokensClass, MRB_TT_DATA);
