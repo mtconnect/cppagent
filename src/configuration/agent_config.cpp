@@ -615,9 +615,8 @@ namespace mtconnect::configuration {
                 {configuration::FilterDuplicates, false},
                 {configuration::MonitorConfigFiles, false},
                 {configuration::MonitorInterval, 10s},
-                {configuration::MonitorDelay, 30s},
                 {configuration::VersionDeviceXmlUpdates, false},
-                {configuration::MinimumConfigReloadAge, 15},
+                {configuration::MinimumConfigReloadAge, 15s},
                 {configuration::Pretty, false},
                 {configuration::PidFile, "agent.pid"s},
                 {configuration::Port, 5000},
@@ -643,7 +642,7 @@ namespace mtconnect::configuration {
     m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
     m_monitorFiles = *GetOption<bool>(options, configuration::MonitorConfigFiles);
     m_monitorInterval = *GetOption<Seconds>(options, configuration::MonitorInterval);
-    m_monitorDelay = *GetOption<Seconds>(options, configuration::MonitorDelay);
+    m_monitorDelay = *GetOption<Seconds>(options, configuration::MinimumConfigReloadAge);
 
     auto devices = config.get_optional<string>(configuration::Devices);
     if (devices)

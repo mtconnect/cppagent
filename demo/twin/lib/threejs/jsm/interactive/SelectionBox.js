@@ -3,7 +3,7 @@ import {
 	Vector3,
 	Matrix4,
 	Quaternion,
-} from '../../three.module.js';
+} from '../../three.module.js'
 
 /**
  * This is a class to check whether objects are in a selection area in 3D space
@@ -182,6 +182,7 @@ class SelectionBox {
 
 					object.getMatrixAt( instanceId, _matrix );
 					_matrix.decompose( _center, _quaternion, _scale );
+					_center.applyMatrix4( object.matrixWorld );
 
 					if ( frustum.containsPoint( _center ) ) {
 

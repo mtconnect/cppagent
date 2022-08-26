@@ -12,13 +12,13 @@ class CppAgentConan(ConanFile):
                "with_python": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
-    requires = ["boost/1.77.0@#2852c576d24f6707a0c44aa0a820a337",
+    requires = ["boost/1.79.0@#3249d9bd2b863a9489767bf9c8a05b4b",
                 "libxml2/2.9.10@#9133e645e934381d3cc4f6a0bf563fbe",
                 "date/2.4.1@#178e4ada4fefd011aaa81ab2bca646db",
                 "nlohmann_json/3.9.1@#a41bc0deaf7f40e7b97e548359ccf14d", 
                 "openssl/1.1.1k@#f40064b74987c778d5c4e0416d75f1f0",
-                "mqtt_cpp/11.0.0",
-]
+                "mqtt_cpp/11.0.0"]
+    
     build_policy = "missing"
     default_options = {
         "run_tests": True,
@@ -56,7 +56,9 @@ class CppAgentConan(ConanFile):
                 self.settings.compiler.runtime = 'MTd'
             else:
                 self.settings.compiler.runtime = 'MT'
-            self.settings.compiler.version = '16'
+                
+            if not self.settings.compiler.version:
+                self.settings.compiler.version = '16'
         
         if "libcxx" in self.settings.compiler.fields and self.settings.compiler.libcxx == "libstdc++":
             raise Exception("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")

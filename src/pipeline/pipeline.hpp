@@ -17,10 +17,11 @@
 
 #pragma once
 
+#include <future>
+
 #include "pipeline_context.hpp"
 #include "pipeline_contract.hpp"
 #include "transform.hpp"
-#include <future>
 
 namespace mtconnect {
   class Agent;
@@ -74,7 +75,7 @@ namespace mtconnect {
               clearTransforms();
               p.set_value();
             });
-            
+
             while (f.wait_for(1ms) != std::future_status::ready)
             {
               m_strand.context().run_for(10ms);
@@ -242,7 +243,7 @@ namespace mtconnect {
           return entity::EntityPtr();
         }
       };
-      
+
       void clearTransforms()
       {
         m_start->stop();

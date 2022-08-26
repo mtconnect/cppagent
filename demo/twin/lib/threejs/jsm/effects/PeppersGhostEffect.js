@@ -2,7 +2,7 @@ import {
 	PerspectiveCamera,
 	Quaternion,
 	Vector3
-} from '../../three.module.js';
+} from '../../three.module.js'
 
 /**
  * peppers ghost effect based on http://www.instructables.com/id/Reflective-Prism/?ALLSTEPS

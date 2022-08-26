@@ -4,7 +4,7 @@ import {
 	LineBasicMaterial,
 	Line,
 	MathUtils
-} from '../../three.module.js';
+} from '../../three.module.js'
 
 class PositionalAudioHelper extends Line {
 

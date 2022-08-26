@@ -39,7 +39,6 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MinimumConfigReloadAge);
     DECLARE_CONFIGURATION(MonitorConfigFiles);
     DECLARE_CONFIGURATION(MonitorInterval);
-    DECLARE_CONFIGURATION(MonitorDelay);
     DECLARE_CONFIGURATION(PidFile);
     DECLARE_CONFIGURATION(Port);
     DECLARE_CONFIGURATION(Pretty);

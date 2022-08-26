@@ -1,0 +1,14 @@
+#
+# data Item id | display label-optional
+#
+Lpmode|Controller Mode
+Lpexecution|Execution
+Lpprogram|Program/Main
+Lp1CurrentTool|Tool ID
+LS2speed|RPM
+LX1actm|X
+LYI1actm|Y
+LZ1actm|Z1
+LZ4actm|Z2
+LB1actw|B
+

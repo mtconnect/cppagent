@@ -6,7 +6,7 @@ import NodeCode from './NodeCode.js';
 import NodeKeywords from './NodeKeywords.js';
 import { NodeUpdateType } from './constants.js';
 
-import { LinearEncoding } from 'three';
+import { LinearEncoding } from '../../three.module.js'
 
 class NodeBuilder {
 

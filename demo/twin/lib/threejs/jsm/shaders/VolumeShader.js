@@ -1,7 +1,7 @@
 import {
 	Vector2,
 	Vector3
-} from '../../three.module.js';
+} from '../../three.module.js'
 
 /**
  * Shaders to render 3D volumes using raycasting.

@@ -8,7 +8,7 @@ import TempNode from '../core/TempNode.js';
 import FunctionNode from '../core/FunctionNode.js';
 import ModelNode from '../accessors/ModelNode.js';
 
-import { TangentSpaceNormalMap, ObjectSpaceNormalMap } from 'three';
+import { TangentSpaceNormalMap, ObjectSpaceNormalMap } from '../../three.module.js'
 
 // Normal Mapping Without Precomputed Tangents
 // http://www.thetenthplanet.de/archives/1180

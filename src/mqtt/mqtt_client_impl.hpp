@@ -94,19 +94,21 @@ namespace mtconnect {
         client->clean_session();
         client->set_keep_alive_sec(10);
 
-        client->set_connack_handler([this](bool sp, mqtt::connect_return_code connack_return_code) {
+        client->set_connack_handler([this](bool sp, mqtt::connect_return_code ec) {
           if (!m_running)
           {
             return false;
           }
-          else if (connack_return_code == mqtt::connect_return_code::accepted)
+          else if (ec == mqtt::connect_return_code::accepted)
           {
+            LOG(info) << "MQTT Connected";
             m_connected = true;
             if (m_handler && m_handler->m_connected)
               m_handler->m_connected(shared_from_this());
           }
           else
           {
+            LOG(info) << "MQTT connection failed: " << ec;
             reconnect();
           }
           return true;
