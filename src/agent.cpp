@@ -205,19 +205,11 @@ namespace mtconnect {
   void Agent::receiveObservation(observation::ObservationPtr observation)
   {
     std::lock_guard<buffer::CircularBuffer> lock(m_circularBuffer);
-    auto dataItem = observation->getDataItem();
-    if (!dataItem->isDiscrete())
+    if (m_circularBuffer.addToBuffer(observation) != 0)
     {
-      if (!observation->isUnavailable() && dataItem->isDataSet() &&
-          !m_circularBuffer.getLatest().dataSetDifference(observation))
-      {
-        return;
-      }
+      for (auto &sink : m_sinks)
+        sink->publish(observation);
     }
-
-    m_circularBuffer.addToBuffer(observation);
-    for (auto &sink : m_sinks)
-      sink->publish(observation);
   }
 
   void Agent::receiveAsset(asset::AssetPtr asset)
