@@ -40,7 +40,11 @@ namespace mtconnect {
             Requirements {Requirement("id", true), Requirement("uuid", false),
                           Requirement("name", false), Requirement("type", true),
                           Requirement("Description", ENTITY, Description::getFactory(), false),
-                          Requirement("Configuration", ENTITY, config, false)});
+                          Requirement("Configuration", ENTITY, config, false)},
+            [](const std::string &name, Properties &props) -> EntityPtr {
+              auto ptr = make_shared<Composition>(name, props);
+              return dynamic_pointer_cast<Entity>(ptr);
+            });
 
         compositions = make_shared<Factory>(Requirements {
             Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
