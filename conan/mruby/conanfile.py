@@ -43,6 +43,9 @@ class MRubyConan(ConanFile):
   # include the default GEMs
   conf.gembox 'full-core'
 
+  # Add regexp support
+  conf.gem :github => 'mattn/mruby-onig-regexp', :checksum_hash => '20ba3325d6fa504cbbf193e1b2a90e20fdab544f'
+
   # C compiler settings
   conf.compilers.each do |c|
     c.defines << 'MRB_USE_DEBUG_HOOK'

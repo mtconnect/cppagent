@@ -437,7 +437,7 @@ namespace mtconnect::ruby {
               {
                 ComponentPtr cmp = dynamic_pointer_cast<Component>(c);
                 if (cmp)
-                  mrb_ary_push(mrb, ary, MRubySharedPtr<Component>::wrap(mrb, klass, cmp));
+                  mrb_ary_push(mrb, ary, MRubySharedPtr<Entity>::wrap(mrb, klass, cmp));
               }
             }
 
