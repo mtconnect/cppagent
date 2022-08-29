@@ -8,7 +8,7 @@ import glob
 
 class MRubyConan(ConanFile):
     name = "mruby"
-    version = "3.1.0"
+    version = "3.1.1"
     license = "https://github.com/mruby/mruby/blob/master/LICENSE"
     author = "Yukihiro “Matz” Matsumoto"
     homepage = "https://mruby.org/"
