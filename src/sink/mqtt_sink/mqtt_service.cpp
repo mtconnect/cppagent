@@ -48,8 +48,7 @@ namespace mtconnect {
         m_jsonPrinter = make_unique<entity::JsonPrinter>(jsonPrinter->getJsonVersion());
 
         GetOptions(config, m_options, options);
-        AddOptions(config, m_options,
-                   {{configuration::MqttCaCert, string()}});
+        AddOptions(config, m_options, {{configuration::MqttCaCert, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
                              {configuration::DeviceTopic, "MTConnect/Device/"s},
@@ -66,9 +65,10 @@ namespace mtconnect {
             publish(dev);
           }
 
-          for (auto &obs : m_latest.getObservations())
+          for (auto &obs : m_sinkContract->getCircularBuffer().getLatest().getObservations())
           {
-            pub(obs.second);
+            observation::ObservationPtr p {obs.second};
+            publish(p);
           }
 
           AssetList list;
@@ -111,7 +111,7 @@ namespace mtconnect {
 
       std::shared_ptr<MqttClient> MqttService::getClient() { return m_client; }
 
-      void MqttService::pub(const observation::ObservationPtr &observation)
+      bool MqttService::publish(observation::ObservationPtr &observation)
       {
         // get the data item from observation
         DataItemPtr dataItem = observation->getDataItem();
@@ -127,17 +127,8 @@ namespace mtconnect {
 
         if (m_client)
           m_client->publish(topic, buffer.str());
-      }
 
-      uint64_t MqttService::publish(observation::ObservationPtr &observation)
-      {
-        // add obsrvations to the checkpoint. We may want to publish the checkpoint
-        // observation vs the delta. The complete observation can be obtained by getting
-        // the observation from the checkpoint.
-        m_latest.addObservation(observation);
-        pub(observation);
-
-        return 0;
+        return true;
       }
 
       bool MqttService::publish(device_model::DevicePtr device)

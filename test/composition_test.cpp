@@ -152,3 +152,17 @@ TEST_F(CompositionTest, JsonPrinting)
     EXPECT_EQ(1000.0, cfields["Nominal"]);
   }
 }
+
+TEST_F(CompositionTest, should_create_topic)
+{
+  using namespace mtconnect::entity;
+  using namespace mtconnect::device_model;
+  ASSERT_NE(nullptr, m_component);
+
+  const auto &compositions = m_component->getList("Compositions");
+  ASSERT_TRUE(compositions);
+
+  auto composition = dynamic_pointer_cast<Composition>(compositions->front());
+  ASSERT_TRUE(composition);
+  ASSERT_EQ("Motor[motor_name]", composition->getTopicName());
+}

@@ -26,6 +26,7 @@
 #include <string>
 
 #include "asset/asset_storage.hpp"
+#include "buffer/circular_buffer.hpp"
 #include "device_model/device.hpp"
 #include "observation/observation.hpp"
 #include "printer/printer.hpp"
@@ -40,6 +41,9 @@ namespace mtconnect {
   using PrinterMap = std::map<std::string, std::unique_ptr<printer::Printer>>;
   namespace pipeline {
     class PipelineContext;
+  }
+  namespace buffer {
+    class CircularBuffer;
   }
 
   namespace sink {
@@ -60,6 +64,7 @@ namespace mtconnect {
                                        const std::optional<std::string> &path,
                                        FilterSet &filter) const = 0;
       virtual void addSource(std::shared_ptr<source::Source> source) = 0;
+      virtual buffer::CircularBuffer &getCircularBuffer() = 0;
 
       // Asset information
       virtual const asset::AssetStorage *getAssetStorage() = 0;
@@ -85,7 +90,7 @@ namespace mtconnect {
       virtual void start() = 0;
       virtual void stop() = 0;
 
-      virtual uint64_t publish(observation::ObservationPtr &observation) = 0;
+      virtual bool publish(observation::ObservationPtr &observation) = 0;
       virtual bool publish(asset::AssetPtr asset) = 0;
       virtual bool publish(device_model::DevicePtr device) { return false; }
 

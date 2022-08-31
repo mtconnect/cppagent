@@ -31,6 +31,15 @@ set(AGENT_SOURCES
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/raw_material.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/qif_document.cpp"
         
+# src/buffer HEADER_FILES_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/checkpoint.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/circular_buffer.hpp"
+
+# src/buffer SOURCE_FILES_ONLY
+
+        "${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/checkpoint.cpp"
+
 # src/configuration HEADER_FILE_ONLY
 
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/agent_config.hpp"
@@ -236,8 +245,6 @@ set(AGENT_SOURCES
 # src/sink/rest_sink HEADER_FILE_ONLY
         
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/cached_file.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/checkpoint.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/circular_buffer.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/file_cache.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/parameter.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/request.hpp"
@@ -251,7 +258,6 @@ set(AGENT_SOURCES
   
 # src/sink/rest_sink SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/checkpoint.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/file_cache.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/rest_service.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/server.cpp"

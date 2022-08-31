@@ -68,7 +68,7 @@ namespace mtconnect::source::adapter::shdr {
       m_socket.cancel();
       m_socket.close();
     }
-    
+
     if (m_reconnectInterval < 500ms)
       m_reconnectInterval = 500ms;
   }

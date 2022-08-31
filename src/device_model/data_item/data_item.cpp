@@ -303,8 +303,13 @@ namespace mtconnect {
       auto comp = m_component.lock();
 
       path(pth, comp);
+      {
+        auto cp = m_composition.lock();
+        if (cp)
+          pth.push_back(cp->getTopicName());
+      }
       pth.push_back(m_categoryText);
-      
+
       stringstream name;
       name << getObservationName();
       optional<string> opt;

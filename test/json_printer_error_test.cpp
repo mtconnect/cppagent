@@ -27,12 +27,12 @@
 
 #include <nlohmann/json.hpp>
 
+#include "buffer/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "json_helper.hpp"
 #include "observation/observation.hpp"
 #include "printer/json_printer.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
 using namespace std;

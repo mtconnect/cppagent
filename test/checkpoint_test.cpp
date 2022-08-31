@@ -20,10 +20,11 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "agent_test_helper.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
+#include "buffer/checkpoint.hpp"
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::buffer;
 using namespace mtconnect::observation;
 using namespace mtconnect::source::adapter;
 using namespace mtconnect::sink::rest_sink;

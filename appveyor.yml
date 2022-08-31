@@ -24,10 +24,10 @@ configuration:
 #C:\  - x86
 
 cache:
-  - c:\.conan\ -> conanfile.py
-  - c:\conan\ -> conanfile.py
-  - /home/appveyor/.conan -> conanfile.py
-  - /Users/appveyor/.conan -> conanfile.py
+  - c:\.conan\ -> **\conanfile.py
+  - c:\conan\ -> **\conanfile.py
+  - /home/appveyor/.conan -> **/conanfile.py
+  - /Users/appveyor/.conan -> **/conanfile.py
 
 matrix:
   fast_finish: true
