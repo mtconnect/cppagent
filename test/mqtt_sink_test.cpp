@@ -75,16 +75,13 @@ protected:
     m_jsonPrinter.reset();
   }
 
-  void createAgent(std::string testFile = {}, ConfigOptions options = {})
+  void createAgent(const std::string &testFile = "/samples/test_config.xml", ConfigOptions options = {})
   {
-    if (testFile == "")
-      testFile = "/samples/test_config.xml";
-
     ConfigOptions opts(options);
     MergeOptions(opts, {{"MqttSink", true},
                         {configuration::MqttPort, m_port},
                         {configuration::MqttHost, "127.0.0.1"s}});
-    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
+    m_agentTestHelper->createAgent(testFile, 8, 4, "2.0", 25, false, true, opts);
     addAdapter();
     
     m_agentTestHelper->getAgent()->start();
@@ -402,6 +399,46 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_PathPosition)
   m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/Path/PathPosition[Ppos]");
 
   waitFor(3s, [&gotPathPosition]() { return gotPathPosition; });
+}
+
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_RotaryMode)
+{
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+
+  entity::JsonParser parser;
+
+  auto handler = make_unique<ClientHandler>();
+  bool gotRotaryMode = false;
+  handler->m_receive = [&gotRotaryMode, &parser](std::shared_ptr<MqttClient>,
+                                                 const std::string &topic,
+                                                 const std::string &payload) {
+    EXPECT_EQ("MTConnect/Observation/000/Axes[Axes]/Rotary[C]/Events/RotaryMode[Smode]", topic);
+    auto jdoc = json::parse(payload);
+
+    string id = jdoc.at("/value"_json_pointer).get<string>();
+    if (id == string("SPINDLE"))
+    {
+      EXPECT_TRUE(true);
+      gotRotaryMode = true;
+    }
+  };
+
+  createClient(options, move(handler));
+  ASSERT_TRUE(startClient());
+
+  createAgent("/samples/discrete_example.xml");
+  auto service = m_agentTestHelper->getMqttService();
+  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|block|G01X00|Smode|INDEX|line|204");
+
+  m_client->subscribe("MTConnect/Observation/000/Axes[Axes]/Rotary[C]/Events/RotaryMode[Smode]");
+
+  waitFor(3s, [&gotRotaryMode]() { return gotRotaryMode; });
 }
 
 TEST_F(MqttSinkTest, mqtt_sink_should_publish_Dataset)
