@@ -716,7 +716,7 @@ TEST_F(AgentTest, AddToBuffer)
   auto di2 = agent->getDataItemForDevice(device, key);
   seqNum = m_agentTestHelper->addToBuffer(di2, {{"VALUE", value}}, chrono::system_clock::now());
   auto event2 = rest->getFromBuffer(seqNum);
-  ASSERT_EQ(4, event2.use_count());
+  ASSERT_EQ(3, event2.use_count());
 
   {
     PARSE_XML_RESPONSE("/current");

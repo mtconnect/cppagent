@@ -27,7 +27,7 @@
 #include "observation/observation.hpp"
 #include "utilities.hpp"
 
-namespace mtconnect::sink::rest_sink {
+namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;
 
   class CircularBuffer
@@ -69,19 +69,29 @@ namespace mtconnect::sink::rest_sink {
         m_firstSequence = seq - m_slidingBuffer.size();
     }
 
-    SequenceNumber_t addToBuffer(observation::ObservationPtr &event)
+    SequenceNumber_t addToBuffer(observation::ObservationPtr &observation)
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
+      auto dataItem = observation->getDataItem();
+      if (!dataItem->isDiscrete())
+      {
+        if (!observation->isUnavailable() && dataItem->isDataSet() &&
+            !m_latest.dataSetDifference(observation))
+        {
+          return 0;
+        }
+      }
+
       auto seq = m_sequence;
 
-      event->setSequence(seq);
-      m_slidingBuffer.push_back(event);
-      m_latest.addObservation(event);
+      observation->setSequence(seq);
+      m_slidingBuffer.push_back(observation);
+      m_latest.addObservation(observation);
 
       // Special case for the first event in the series to prime the first checkpoint.
       if (seq == 1)
-        m_first.addObservation(event);
+        m_first.addObservation(observation);
       else if (m_slidingBuffer.full())
       {
         observation::ObservationPtr old = m_slidingBuffer.front();
@@ -245,4 +255,4 @@ namespace mtconnect::sink::rest_sink {
     Checkpoint m_first;
     boost::circular_buffer<std::unique_ptr<Checkpoint>> m_checkpoints;
   };
-}  // namespace mtconnect::sink::rest_sink
+}  // namespace mtconnect::buffer

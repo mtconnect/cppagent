@@ -24,7 +24,7 @@ using namespace std;
 namespace mtconnect {
   using namespace observation;
   using namespace entity;
-  namespace sink::rest_sink {
+  namespace buffer {
     Checkpoint::Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet)
     {
       FilterSetOpt filter;
@@ -267,5 +267,5 @@ namespace mtconnect {
       return true;
     }
 
-  }  // namespace sink::rest_sink
+  }  // namespace buffer
 }  // namespace mtconnect

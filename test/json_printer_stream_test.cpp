@@ -27,6 +27,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "buffer/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "json_helper.hpp"
@@ -34,16 +35,15 @@
 #include "parser/xml_parser.hpp"
 #include "printer/json_printer.hpp"
 #include "printer/xml_printer.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::buffer;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
-using namespace mtconnect::sink::rest_sink;
 
 class JsonPrinterStreamTest : public testing::Test
 {
@@ -260,7 +260,7 @@ TEST_F(JsonPrinterStreamTest, TwoDevices)
 
 TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem)
 {
-  mtconnect::sink::rest_sink::Checkpoint checkpoint;
+  mtconnect::buffer::Checkpoint checkpoint;
   Timestamp now = chrono::system_clock::now();
   addObservationToCheckpoint(checkpoint, "if36ff60", 10254804, "AUTOMATIC"_value,
                              now);  // Controller Mode

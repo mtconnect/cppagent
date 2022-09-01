@@ -23,13 +23,13 @@
 #include <nlohmann/json.hpp>
 
 #include "agent_test_helper.hpp"
+#include "buffer/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "entity/json_parser.hpp"
 #include "mqtt/mqtt_client_impl.hpp"
 #include "mqtt/mqtt_server_impl.hpp"
 #include "printer/json_printer.hpp"
 #include "sink/mqtt_sink/mqtt_service.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
 
 using namespace std;
 using namespace mtconnect;

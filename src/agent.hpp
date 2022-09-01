@@ -28,6 +28,8 @@
 #include <vector>
 
 #include "asset/asset_buffer.hpp"
+#include "buffer/checkpoint.hpp"
+#include "buffer/circular_buffer.hpp"
 #include "configuration/service.hpp"
 #include "device_model/agent_device.hpp"
 #include "device_model/device.hpp"
@@ -35,8 +37,6 @@
 #include "pipeline/pipeline.hpp"
 #include "pipeline/pipeline_contract.hpp"
 #include "printer/printer.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
-#include "sink/rest_sink/circular_buffer.hpp"
 #include "sink/rest_sink/rest_service.hpp"
 #include "sink/rest_sink/server.hpp"
 #include "sink/sink.hpp"
@@ -88,6 +88,8 @@ namespace mtconnect {
     // Sink Contract
     sink::SinkContractPtr makeSinkContract();
     const auto &getXmlParser() const { return m_xmlParser; }
+
+    auto &getCircularBuffer() { return m_circularBuffer; }
 
     // Add an adapter to the agent
     void addSource(source::SourcePtr adapter, bool start = false);
@@ -210,11 +212,7 @@ namespace mtconnect {
 
     observation::ObservationPtr getLatest(const std::string &id)
     {
-      auto o = m_latest.find(id);
-      if (o != m_latest.end())
-        return o->second;
-      else
-        return nullptr;
+      return m_circularBuffer.getLatest().getObservation(id);
     }
 
     observation::ObservationPtr getLatest(const DataItemPtr &di) { return getLatest(di->getId()); }
@@ -225,7 +223,6 @@ namespace mtconnect {
     boost::asio::io_context::strand m_strand;
 
     std::shared_ptr<source::LoopbackSource> m_loopback;
-    std::unordered_map<std::string, observation::ObservationPtr> m_latest;
 
     // Asset Management
     std::unique_ptr<asset::AssetStorage> m_assetStorage;
@@ -258,6 +255,9 @@ namespace mtconnect {
     std::string m_version;
     std::string m_deviceXmlPath;
     bool m_versionDeviceXml = false;
+
+    // Circular Buffer
+    buffer::CircularBuffer m_circularBuffer;
 
     // For debugging
     bool m_pretty;
@@ -350,6 +350,8 @@ namespace mtconnect {
       const auto &parser = m_agent->getXmlParser();
       parser->getDataItems(filter, dataPath);
     }
+
+    buffer::CircularBuffer &getCircularBuffer() override { return m_agent->getCircularBuffer(); }
 
   protected:
     Agent *m_agent;

@@ -24,10 +24,10 @@
 #include <libxml/tree.h>
 
 #include "asset/cutting_tool.hpp"
+#include "buffer/checkpoint.hpp"
 #include "device_model/component.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
 #include "utilities.hpp"
 
 namespace mtconnect::printer {

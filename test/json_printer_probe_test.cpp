@@ -29,6 +29,7 @@
 
 #include "agent.hpp"
 #include "agent_test_helper.hpp"
+#include "buffer/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "json_helper.hpp"
@@ -36,7 +37,6 @@
 #include "parser/xml_parser.hpp"
 #include "printer/json_printer.hpp"
 #include "printer/xml_printer.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
 

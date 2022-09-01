@@ -54,6 +54,16 @@ namespace mtconnect {
       }
     }
 
+    void Component::connectCompositions()
+    {
+      auto comps = getList("Compositions");
+      if (comps)
+      {
+        for (auto &comp : *comps)
+          dynamic_pointer_cast<Composition>(comp)->setComponent(getptr());
+      }
+    }
+
     void Component::buildDeviceMaps(DevicePtr device)
     {
       device->registerComponent(getptr());

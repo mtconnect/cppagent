@@ -8,7 +8,7 @@ import glob
 
 class MRubyConan(ConanFile):
     name = "mruby"
-    version = "3.1.0"
+    version = "3.1.1"
     license = "https://github.com/mruby/mruby/blob/master/LICENSE"
     author = "Yukihiro “Matz” Matsumoto"
     homepage = "https://mruby.org/"
@@ -42,6 +42,9 @@ class MRubyConan(ConanFile):
             f.write('''
   # include the default GEMs
   conf.gembox 'full-core'
+
+  # Add regexp support
+  conf.gem :github => 'mtconnect/mruby-onig-regexp', :branch => 'windows_porting'
 
   # C compiler settings
   conf.compilers.each do |c|

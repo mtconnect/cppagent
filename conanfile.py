@@ -84,7 +84,7 @@ class CppAgentConan(ConanFile):
         if not self.windows_xp:
             self.requires("gtest/1.10.0")
         if self.options.with_ruby:
-            self.requires("mruby/3.1.0")
+            self.requires("mruby/3.1.1")
         
     def build(self):
         cmake = CMake(self)
@@ -118,6 +118,4 @@ class CppAgentConan(ConanFile):
         self.copy("*.so*", "bin", "lib")
         self.copy("*.dylib", "bin", "lib")
 
-        
-    
     

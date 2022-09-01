@@ -21,10 +21,41 @@
 
 namespace mtconnect {
   namespace device_model {
-    struct Composition
+    class Component;
+    class Composition : public entity::Entity
     {
+    public:
+      using entity::Entity::Entity;
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
+
+      const std::string getTopicName() const
+      {
+        using namespace std;
+        using namespace entity;
+        if (!m_topicName)
+        {
+          optional<string> opt;
+          string topicName = pascalize(get<string>("type"), opt);
+          auto name = maybeGet<std::string>("name");
+          if (name)
+            topicName.append("[").append(*name).append("]");
+
+          auto *self = const_cast<Composition *>(this);
+          self->m_topicName.emplace(topicName);
+        }
+        return *m_topicName;
+      }
+
+      void setComponent(std::shared_ptr<Component> component) { m_component = component; }
+      std::shared_ptr<Component> getComponent() const { return m_component.lock(); }
+      auto getParent() const { return getComponent(); }
+
+    protected:
+      std::optional<std::string> m_topicName;
+      std::weak_ptr<Component> m_component;
     };
+
+    using CompositionPtr = std::shared_ptr<Composition>;
   }  // namespace device_model
 }  // namespace mtconnect

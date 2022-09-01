@@ -38,6 +38,8 @@ namespace mtconnect {
     class Adapter;
   }
   namespace device_model {
+    class Composition;
+
     namespace data_item {
       class DataItem : public entity::Entity, public observation::ChangeSignaler
       {
@@ -141,14 +143,24 @@ namespace mtconnect {
         }
 
         // Set/get component that data item is associated with
-        void setComponent(ComponentPtr component) { m_component = component; }
+        void setComponent(ComponentPtr component)
+        {
+          m_component = component;
+          auto cid = maybeGet<std::string>("compositionId");
+          if (cid)
+          {
+            m_composition = component->getComposition(*cid);
+          }
+        }
         ComponentPtr getComponent() const { return m_component.lock(); }
+        CompositionPtr getComposition() const { return m_composition.lock(); }
 
         // Get the name for the adapter feed
         const std::string &getSourceOrName() const { return m_preferredName; }
 
         const std::optional<std::string> &getDataSource() const { return m_dataSource; }
         void setDataSource(const std::string &source) { m_dataSource = source; }
+        void setTopic(const std::string &topic) { m_topic = topic; }
 
         bool operator<(const DataItem &another) const;
         bool operator==(const DataItem &another) const { return m_id == another.m_id; }
@@ -195,6 +207,7 @@ namespace mtconnect {
 
         // Component that data item is associated with
         std::weak_ptr<Component> m_component;
+        std::weak_ptr<Composition> m_composition;
 
         // The data source for this data item
         std::optional<std::string> m_dataSource;

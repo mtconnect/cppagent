@@ -231,3 +231,47 @@ TEST_F(DeviceTest, should_create_component_and_data_item_topic)
   ASSERT_EQ("UnivUniqId1/Axes/Linear[X]/Samples/Position.Actual[Xact]", di->getTopic());
   ASSERT_EQ("Position.Actual[Xact]", di->getTopicName());
 }
+
+TEST_F(DeviceTest, should_create_topic_with_composition)
+{
+  ErrorList errors;
+  auto axes = Component::make("Axes", {{"id", "ax"s}}, errors);
+  ASSERT_TRUE(errors.empty());
+  m_devA->addChild(axes, errors);
+  ASSERT_TRUE(errors.empty());
+
+  auto linear = Component::make("Linear", {{"id", "ax"s}, {"name", "X"s}}, errors);
+  ASSERT_TRUE(errors.empty());
+  axes->addChild(linear, errors);
+  ASSERT_TRUE(errors.empty());
+
+  auto motor = Composition::getFactory()->create(
+      "Composition", {{"id", "mtr"s}, {"name", "mot"s}, {"type", "MOTOR"s}}, errors);
+  ASSERT_TRUE(motor);
+  ASSERT_TRUE(errors.empty());
+  linear->addToList("Compositions", Component::getFactory(), motor, errors);
+  ASSERT_TRUE(errors.empty());
+
+  auto data1 = DataItem::make({{"id", "id"s},
+                               {"name", "Xact"s},
+                               {"type", "POSITION"s},
+                               {"subType", "ACTUAL"s},
+                               {"category", "SAMPLE"s},
+                               {"compositionId", "mtr"s}},
+                              errors);
+
+  ASSERT_TRUE(errors.empty());
+  linear->addDataItem(data1, errors);
+  linear->initialize();
+
+  auto mtr = linear->getComposition("mtr");
+  ASSERT_TRUE(mtr);
+  ASSERT_TRUE(mtr->getComponent());
+
+  ASSERT_TRUE(data1->getComposition());
+
+  DataItemPtr di = dynamic_pointer_cast<DataItem>(data1);
+  di->makeTopic();
+
+  ASSERT_EQ("UnivUniqId1/Axes/Linear[X]/Motor[mot]/Samples/Position.Actual[Xact]", di->getTopic());
+}
