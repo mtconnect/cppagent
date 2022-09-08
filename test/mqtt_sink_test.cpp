@@ -570,8 +570,6 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Dataset)
 
 TEST_F(MqttSinkTest, mqtt_sink_should_publish_Table)
 {
-  GTEST_SKIP();
-
   ConfigOptions options;
   createServer(options);
   startServer();
@@ -586,12 +584,43 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Table)
                                                          const std::string &payload) {
     EXPECT_EQ("MTConnect/Observation/000/Controller[Controller]/Path[path]/Events/WorkOffsetTable[wpo]", topic);
     auto jdoc = json::parse(payload);
-
-    string id = jdoc.at("/EntryDefinition/key"_json_pointer).get<string>();
-    if (id == string("G53.1"))
+    auto jValue = jdoc.at("/value"_json_pointer);
+    int count = 0;
+    if (jValue.is_object())
     {
-      EXPECT_TRUE(true);
-      gotControllerDataItem = true;
+      for (auto &[key, value] : jValue.items())
+      {
+        if (key == "G53.1" || key == "G53.2" || key == "G53.3")
+        {
+          for (auto &[subKey, subValue] : value.items())
+          {
+            if (key == "G53.1" && (subKey == "X" && subValue.get<float>() == 1 ||
+                subKey == "Y" && subValue.get<float>() == 2 ||
+                subKey == "Z" && subValue.get<float>() == 3))
+            {
+              count++;
+            }
+            else if (key == "G53.2" && (subKey == "X" && subValue.get<float>() == 4 ||
+                subKey == "Y" && subValue.get<float>() == 5 ||
+                subKey == "Z" && subValue.get<float>() == 6))
+            {
+              count++;
+            }
+            else if (key == "G53.3" && (subKey == "X" && subValue.get<float>() == 7.0 ||
+                                        subKey == "Y" && subValue.get<float>() == 8.0 ||
+                                        subKey == "Z" && subValue.get<float>() == 9.0 ||
+                                        subKey == "U" && subValue.get<float>() == 10.0))
+            {
+              count++;
+            }
+          }
+        }
+      }
+      if (count == 10)
+      {
+        EXPECT_TRUE(true);
+        gotControllerDataItem = true;
+      }
     }
   };
   createClient(options, move(handler));
@@ -603,8 +632,8 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Table)
   auto time = chrono::system_clock::now();
 
   m_agentTestHelper->m_adapter->processData(
-      "2021-02-01T12:00:00Z|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0} G53.3={X=7.0 "
-      "Y=8.0 Z=9 U=10.0}");
+      "2021-02-01T12:00:00Z|wpo|G53.1={X=1.0 Y=2.0 Z=3.0} G53.2={X=4.0 Y=5.0 Z=6.0}"
+      "G53.3={X=7.0 Y=8.0 Z=9 U=10.0}");
 
   m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/Path[path]/Events/WorkOffsetTable[wpo]");
 
