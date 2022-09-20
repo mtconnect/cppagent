@@ -600,6 +600,7 @@ namespace mtconnect::configuration {
     ConfigOptions options;
     GetOptions(config, options,
                {{configuration::PreserveUUID, true},
+                {configuration::DisableAgentDevice, false},
                 {configuration::WorkingDirectory, m_working.string()},
                 {configuration::ExecDirectory, m_exePath.string()},
                 {configuration::ServerIp, "0.0.0.0"s},

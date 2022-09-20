@@ -1328,4 +1328,39 @@ Port = 0
 
     m_config->start();
   }
+  
+  TEST_F(ConfigTest, should_disable_agent_device)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    string streams("SchemaVersion = 2.0\nDisableAgentDevice = true\n");
+
+    m_config->loadConfig(streams);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+    
+    auto devices = agent->getDevices();
+    ASSERT_EQ(1, devices.size());
+    
+    auto device = devices.front();
+    ASSERT_EQ("Device", device->getName());
+  }
+
+  TEST_F(ConfigTest, should_default_not_disable_agent_device)
+  {
+    chdir(TEST_BIN_ROOT_DIR);
+    m_config->updateWorkingDirectory();
+    string streams("SchemaVersion = 2.0\n");
+
+    m_config->loadConfig(streams);
+    auto agent = const_cast<mtconnect::Agent *>(m_config->getAgent());
+    ASSERT_TRUE(agent);
+    
+    auto devices = agent->getDevices();
+    ASSERT_EQ(2, devices.size());
+    
+    auto device = devices.front();
+    ASSERT_EQ("Agent", device->getName());
+  }
+
 }  // namespace
