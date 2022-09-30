@@ -572,11 +572,6 @@ Configuration Parameters
 
     *Default*: 17 -> 2^17 = 131,072 slots.
 
-* `MaxAssets` - The maximum number of assets the agent can hold in its buffer. The
-  number is the actual count, not an exponent.
-
-    *Default*: 1024
-
 * `CheckpointFrequency` - The frequency checkpoints are created in the
   stream. This is used for current with the at argument. This is an
   advanced configuration item and should not be changed unless you
@@ -589,6 +584,11 @@ Configuration Parameters
   the defaults are tried.
 
     *Defaults*: probe.xml or Devices.xml 
+    
+* `DisableAgentDevice` - When the schema version is >= 1.7, disable the 
+  creation of the Agent device.
+  
+    *Default*: false
 
 * `PidFile` - UNIX only. The full path of the file that contains the
   process id of the daemon. This is not supported in Windows.
@@ -656,6 +656,11 @@ Configuration Parameters
 * `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
 
     *Default*: true
+
+* `MaxAssets` - The maximum number of assets the agent can hold in its buffer. The
+  number is the actual count, not an exponent.
+
+    *Default*: 1024
 
 * `MonitorConfigFiles` - Monitor agent.cfg and Devices.xml files and restart agent if they change.
 

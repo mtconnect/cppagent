@@ -25,6 +25,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(WorkingDirectory);
 
     // Agent Configuration
+    DECLARE_CONFIGURATION(DisableAgentDevice);
     DECLARE_CONFIGURATION(AllowPut);
     DECLARE_CONFIGURATION(AllowPutFrom);
     DECLARE_CONFIGURATION(BufferSize);
