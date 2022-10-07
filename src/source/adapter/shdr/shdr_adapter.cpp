@@ -104,6 +104,8 @@ namespace mtconnect::source::adapter::shdr {
 
   void ShdrAdapter::processData(const string &data)
   {
+    NAMED_SCOPE("ShdrAdapter::processData");
+
     try
     {
       if (m_terminator)
@@ -146,7 +148,7 @@ namespace mtconnect::source::adapter::shdr {
 
   void ShdrAdapter::stop()
   {
-    NAMED_SCOPE("input.adapter.stop");
+    NAMED_SCOPE("ShdrAdapter::stop");
     // Will stop threaded object gracefully Adapter::thread()
     LOG(debug) << "Waiting for adapter to stop: " << m_name;
     m_running = false;
@@ -160,6 +162,8 @@ namespace mtconnect::source::adapter::shdr {
 
   void ShdrAdapter::protocolCommand(const std::string &data)
   {
+    NAMED_SCOPE("ShdrAdapter::protocolCommand");
+
     static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
     smatch match;
 

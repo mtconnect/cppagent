@@ -90,6 +90,8 @@ namespace mtconnect::source::adapter::shdr {
     void close();
     void reconnect();
     void asyncTryConnect();
+    void resolved(const boost::system::error_code &error,
+                  boost::asio::ip::tcp::resolver::results_type results);
     void connected(const boost::system::error_code &error,
                    boost::asio::ip::tcp::resolver::iterator it);
     void writer(boost::system::error_code ec, std::size_t length);
@@ -109,6 +111,7 @@ namespace mtconnect::source::adapter::shdr {
     boost::asio::ip::tcp::socket m_socket;
     boost::asio::ip::tcp::endpoint m_endpoint;
     boost::asio::ip::tcp::resolver::results_type m_results;
+    boost::asio::ip::tcp::resolver m_resolver;
 
     // For reentry
     boost::asio::coroutine m_coroutine;

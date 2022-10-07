@@ -433,18 +433,18 @@ $source.pipeline.splice_after('Start', $trans)
   TEST_F(EmbeddedRubyTest, should_change_data_item_topic)
   {
     load("should_rename_data_item_topic.rb");
-    
+
     auto mrb = RubyVM::rubyVM().state();
     ASSERT_NE(nullptr, mrb);
-    
+
     auto agent = m_config->getAgent();
     auto device = agent->defaultDevice();
     ASSERT_TRUE(device);
-    
+
     auto di = agent->getDataItemForDevice("000", "a");
     ASSERT_TRUE(di);
     ASSERT_EQ("000/States/Alarm[alarm]", di->getTopic());
-    
+
     di = agent->getDataItemForDevice("000", "block");
     ASSERT_TRUE(di);
     ASSERT_EQ("000/Controller[Controller]/Path/States/Block[block]", di->getTopic());

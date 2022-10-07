@@ -108,7 +108,7 @@ namespace mtconnect {
     char c;
     stringstream vstr(m_version);
     vstr >> major >> c >> minor;
-    
+
     auto disableAgentDevice = GetOption<bool>(m_options, config::DisableAgentDevice);
     if (!(disableAgentDevice && *disableAgentDevice) && (major > 1 || (major == 1 && minor >= 7)))
     {
