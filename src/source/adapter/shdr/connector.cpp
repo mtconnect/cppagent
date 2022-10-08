@@ -47,6 +47,7 @@ namespace mtconnect::source::adapter::shdr {
     : m_server(std::move(server)),
       m_strand(strand),
       m_socket(strand.context()),
+      m_resolver(m_strand.context()),
       m_port(port),
       m_localPort(0),
       m_incoming(1024 * 1024),
@@ -73,24 +74,47 @@ namespace mtconnect::source::adapter::shdr {
       m_reconnectInterval = 500ms;
   }
 
-  bool Connector::start() { return resolve() && connect(); }
+  bool Connector::start() { return resolve(); }
 
   bool Connector::resolve()
   {
     NAMED_SCOPE("Connector::resolve");
 
-    boost::system::error_code ec;
+    using boost::placeholders::_1;
+    using boost::placeholders::_2;
 
-    ip::tcp::resolver resolve(m_strand.context());
-    m_results = resolve.resolve(m_server, to_string(m_port), ec);
+    m_resolver.async_resolve(m_server, to_string(m_port),
+                             boost::bind(&Connector::resolved, this, _1, _2));
+
+    return true;
+  }
+
+  void Connector::resolved(const boost::system::error_code &ec,
+                           asio::ip::tcp::resolver::results_type results)
+  {
+    NAMED_SCOPE("Connector::resolved");
+
     if (ec)
     {
       LOG(error) << "Cannot resolve address: " << m_server << ":" << m_port;
       LOG(error) << ec.category().message(ec.value()) << ": " << ec.message();
-      return false;
-    }
+      LOG(error) << "Will retry resolution of " << m_server << " in " << m_reconnectInterval.count()
+                 << " milliseconds";
 
-    return true;
+      m_timer.expires_from_now(m_reconnectInterval);
+      m_timer.async_wait(asio::bind_executor(m_strand, [this](boost::system::error_code ec) {
+        if (ec != boost::asio::error::operation_aborted)
+        {
+          LOG(info) << "reconnect: retrying connection";
+          resolve();
+        }
+      }));
+    }
+    else
+    {
+      m_results = results;
+      connect();
+    }
   }
 
   bool Connector::connect()
