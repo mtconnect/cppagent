@@ -48,7 +48,10 @@ namespace mtconnect {
         m_jsonPrinter = make_unique<entity::JsonPrinter>(jsonPrinter->getJsonVersion());
 
         GetOptions(config, m_options, options);
-        AddOptions(config, m_options, {{configuration::MqttCaCert, string()}});
+        AddOptions(config, m_options,
+                   {{configuration::MqttCaCert, string()},
+                    {configuration::MqttPrivateKey, string()},
+                    {configuration::MqttCert, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
                              {configuration::DeviceTopic, "MTConnect/Device/"s},
