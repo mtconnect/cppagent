@@ -68,12 +68,13 @@ protected:
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_device);
-    m_xform = make_shared<MTConnectXmlTransform>(m_context, "XmlTransformFeedback");
+    m_xform = make_shared<MTConnectXmlTransform>(m_context,m_feedback);
     m_xform->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
 
   void TearDown() override { m_xform.reset(); }
 
+  pipeline::XmlTransformFeedback m_feedback;
   DevicePtr m_device;
   shared_ptr<MTConnectXmlTransform> m_xform;
   shared_ptr<PipelineContext> m_context;
@@ -92,9 +93,8 @@ TEST_F(MTConnectXmlTransformTest, should_add_next_to_the_context)
 
   auto res1 = (*m_xform)(entity);
 
-  auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-  ASSERT_EQ(1649989201, feedback->m_instanceId);
-  ASSERT_EQ(4992049, feedback->m_next);
+  ASSERT_EQ(1649989201, m_feedback.m_instanceId);
+  ASSERT_EQ(4992049, m_feedback.m_next);
 }
 
 TEST_F(MTConnectXmlTransformTest, should_return_errors)
@@ -111,10 +111,8 @@ TEST_F(MTConnectXmlTransformTest, should_return_errors)
 
   EXPECT_THROW((*m_xform)(entity), std::system_error);
 
-  auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-
-  ASSERT_EQ(1, feedback->m_errors.size());
-  auto &error = feedback->m_errors.front();
+  ASSERT_EQ(1, m_feedback.m_errors.size());
+  auto &error = m_feedback.m_errors.front();
   ASSERT_EQ("OUT_OF_RANGE", error.m_code);
   ASSERT_EQ("'at' must be greater than 4871368", error.m_message);
 }
@@ -132,9 +130,8 @@ TEST_F(MTConnectXmlTransformTest, should_throw_when_instances_change)
 
   auto res1 = (*m_xform)(entity);
 
-  auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-  ASSERT_EQ(1649989201, feedback->m_instanceId);
-  ASSERT_EQ(4992049, feedback->m_next);
+  ASSERT_EQ(1649989201, m_feedback.m_instanceId);
+  ASSERT_EQ(4992049, m_feedback.m_next);
 
   string recover {R"(<?xml version="1.0" encoding="UTF-8"?>
 <MTConnectStreams xmlns:m="urn:mtconnect.org:MTConnectStreams:1.7" xmlns="urn:mtconnect.org:MTConnectStreams:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectStreams:1.7 /schemas/MTConnectStreams_1.7.xsd">
@@ -146,6 +143,6 @@ TEST_F(MTConnectXmlTransformTest, should_throw_when_instances_change)
   entity = make_shared<Entity>("Data", Properties {{"VALUE", recover}, {"source", "adapter"s}});
 
   EXPECT_THROW((*m_xform)(entity), std::system_error);
-  ASSERT_EQ(1649989201, feedback->m_instanceId);
-  ASSERT_EQ(4992049, feedback->m_next);
+  ASSERT_EQ(1649989201, m_feedback.m_instanceId);
+  ASSERT_EQ(4992049, m_feedback.m_next);
 }

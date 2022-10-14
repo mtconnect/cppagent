@@ -34,10 +34,14 @@ namespace mtconnect::source::adapter::agent_adapter {
   class AgentAdapterPipeline : public AdapterPipeline
   {
   public:
-    using AdapterPipeline::AdapterPipeline;
+    AgentAdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st,
+                         pipeline::XmlTransformFeedback &feedback           )
+      : AdapterPipeline(context, st), m_feedback(feedback)
+    {}
     void build(const ConfigOptions &options) override;
 
     Handler *m_handler = nullptr;
+    pipeline::XmlTransformFeedback &m_feedback;
   };
 
   class AgentAdapter : public Adapter
@@ -61,7 +65,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     const std::string &getHost() const override { return m_host; }
 
     unsigned int getPort() const override { return 0; }
-    const std::string &getFeedbackId() const { return m_feedbackId; }
+    auto &getFeedback() { return m_feedback; }
 
     ~AgentAdapter() override;
 
@@ -88,21 +92,16 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     auto instanceId()
     {
-      const auto &feedback =
-          m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>(
-              m_feedbackId);
-      return feedback->m_instanceId;
+      return m_feedback.m_instanceId;
     }
 
     bool canRecover()
     {
-      const auto &feedback =
-          m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>(
-                                                                                  m_feedbackId);
-      return feedback->m_instanceId != 0 && feedback->m_next != 0;
+      return m_feedback.m_instanceId != 0 && m_feedback.m_next != 0;
     }
 
   protected:
+    pipeline::XmlTransformFeedback m_feedback;
     AgentAdapterPipeline m_pipeline;
     Url m_url;
     int m_count = 1000;
@@ -125,7 +124,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     std::unique_ptr<boost::asio::ssl::context> m_streamContext;
     std::unique_ptr<boost::asio::ssl::context> m_assetContext;
-
+    
     // Current and Asset Request
     std::optional<Session::Request> m_streamRequest;
     std::optional<Session::Request> m_assetRequest;
