@@ -68,7 +68,7 @@ protected:
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_device);
-    m_xform = make_shared<MTConnectXmlTransform>(m_context);
+    m_xform = make_shared<MTConnectXmlTransform>(m_context, "XmlTransformFeedback");
     m_xform->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
 

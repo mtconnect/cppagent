@@ -298,7 +298,9 @@ TEST_F(AgentAdapterTest, should_receive_sample)
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
-    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    auto fid = adapter->getFeedbackId();
+    
+    auto seq = m_context->getSharedState<XmlTransformFeedback>(fid);
     seq->m_next = rd.m_next;
   };
   handler->m_connecting = [&](const string id) {};
@@ -359,7 +361,7 @@ TEST_F(AgentAdapterTest, should_reconnect)
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
-    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback:" );
     seq->m_next = rd.m_next;
     seq->m_instanceId = rd.m_instanceId;
   };
@@ -425,7 +427,9 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
-    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    auto fid = adapter->getFeedbackId();
+
+    auto seq = m_context->getSharedState<XmlTransformFeedback>(fid);
     seq->m_next = rd.m_next;
   };
   handler->m_connecting = [&](const string id) {};
@@ -491,7 +495,9 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
     if (rd.m_next != 0)
       response = true;
 
-    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    auto fid = adapter->getFeedbackId();
+
+    auto seq = m_context->getSharedState<XmlTransformFeedback>(fid);
     if (rd.m_next != 0)
       seq->m_next = rd.m_next;
     if (recovering)
@@ -606,7 +612,8 @@ TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
     ResponseDocument::parse(d, rd, m_context);
     rc++;
 
-    auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+    auto fid = adapter->getFeedbackId();
+    auto seq = m_context->getSharedState<XmlTransformFeedback>(fid);
     seq->m_next = rd.m_next;
   };
   handler->m_connecting = [&](const string id) {};
@@ -629,7 +636,8 @@ TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
   }
   ASSERT_EQ(2, rc);
 
-  auto seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+  auto fid = adapter->getFeedbackId();
+  auto seq = m_context->getSharedState<XmlTransformFeedback>(fid);
   auto next = seq->m_next;
 
   ASSERT_EQ(32, rd.m_entities.size());
@@ -648,7 +656,7 @@ TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
   }
 
   ASSERT_EQ(1, rd.m_entities.size());
-  seq = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+  seq = m_context->getSharedState<XmlTransformFeedback>(fid);
   ASSERT_GT(seq->m_next, next);
 
   auto obs = rd.m_entities.front();

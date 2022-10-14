@@ -46,8 +46,10 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_options = options;
     buildDeviceList();
     buildCommandAndStatusDelivery();
-
-    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_device));
+    
+    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context,
+                                    "XmlTransformFeedback:" + m_identity,
+                                                                m_device));
     std::optional<string> obsMetrics;
     obsMetrics = m_identity + "_observation_update_rate";
     next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
@@ -132,7 +134,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_identity = string("_") + (identity.str()).substr(0, 10);
 
     m_options.insert_or_assign(configuration::AdapterIdentity, m_identity);
-
+    m_feedbackId = "XmlTransformFeedback:" + m_identity;
+    
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
   }
@@ -205,7 +208,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_assetSession->stop();
 
     const auto &feedback =
-        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>(m_feedbackId);
     feedback->m_instanceId = 0;
     feedback->m_next = 0;
   }
@@ -374,7 +377,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       return false;
 
     const auto &feedback =
-        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>(m_feedbackId);
 
     if (m_usePolling)
     {
@@ -434,7 +437,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapter::updateAssets()
   {
     const auto &feedback =
-        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>(m_feedbackId);
 
     std::vector<string> idList;
     std::transform(feedback->m_assetEvents.begin(), feedback->m_assetEvents.end(),

@@ -40,8 +40,9 @@ namespace mtconnect::pipeline {
   public:
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
     MTConnectXmlTransform(PipelineContextPtr context,
+                          const std::string &feedbackId,
                           const std::optional<std::string> &device = std::nullopt)
-      : Transform("MTConnectXmlTransform"), m_context(context), m_defaultDevice(device)
+      : Transform("MTConnectXmlTransform"), m_context(context), m_defaultDevice(device), m_feedbackId(feedbackId)
     {
       m_guard = EntityNameGuard("Data", RUN);
     }
@@ -56,7 +57,7 @@ namespace mtconnect::pipeline {
       ResponseDocument rd;
       ResponseDocument::parse(data, rd, m_context, m_defaultDevice);
 
-      auto feedback = m_context->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
+      auto feedback = m_context->getSharedState<XmlTransformFeedback>(m_feedbackId);
 
       if (feedback->m_instanceId != 0 && feedback->m_instanceId != rd.m_instanceId)
       {
@@ -89,5 +90,6 @@ namespace mtconnect::pipeline {
   protected:
     PipelineContextPtr m_context;
     std::optional<std::string> m_defaultDevice;
+    std::string m_feedbackId;
   };
 }  // namespace mtconnect::pipeline

@@ -61,6 +61,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     const std::string &getHost() const override { return m_host; }
 
     unsigned int getPort() const override { return 0; }
+    const std::string &getFeedbackId() const { return m_feedbackId; }
 
     ~AgentAdapter() override;
 
@@ -89,7 +90,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       const auto &feedback =
           m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>(
-              "XmlTransformFeedback");
+              m_feedbackId);
       return feedback->m_instanceId;
     }
 
@@ -97,7 +98,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       const auto &feedback =
           m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>(
-              "XmlTransformFeedback");
+                                                                                  m_feedbackId);
       return feedback->m_instanceId != 0 && feedback->m_next != 0;
     }
 
@@ -115,6 +116,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::chrono::milliseconds m_pollingInterval;
     std::string m_host;
     std::string m_sourceDevice;
+    std::string m_feedbackId;
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;
     boost::asio::steady_timer m_reconnectTimer;
