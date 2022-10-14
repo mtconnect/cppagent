@@ -644,7 +644,7 @@ TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
   }
 
   ASSERT_EQ(1, rd.m_entities.size());
-  
+
   seq = &adapter->getFeedback();
   ASSERT_GT(seq->m_next, next);
 

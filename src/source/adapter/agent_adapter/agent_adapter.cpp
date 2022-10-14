@@ -46,10 +46,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_options = options;
     buildDeviceList();
     buildCommandAndStatusDelivery();
-    
-    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context,
-                                    m_feedback,
-                                                                m_device));
+
+    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_feedback, m_device));
     std::optional<string> obsMetrics;
     obsMetrics = m_identity + "_observation_update_rate";
     next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
@@ -135,7 +133,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     m_options.insert_or_assign(configuration::AdapterIdentity, m_identity);
     m_feedbackId = "XmlTransformFeedback:" + m_identity;
-    
+
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
   }

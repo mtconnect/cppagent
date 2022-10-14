@@ -39,10 +39,12 @@ namespace mtconnect::pipeline {
   {
   public:
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
-    MTConnectXmlTransform(PipelineContextPtr context,
-                          XmlTransformFeedback &feedback,
+    MTConnectXmlTransform(PipelineContextPtr context, XmlTransformFeedback &feedback,
                           const std::optional<std::string> &device = std::nullopt)
-      : Transform("MTConnectXmlTransform"), m_context(context), m_defaultDevice(device), m_feedback(feedback)
+      : Transform("MTConnectXmlTransform"),
+        m_context(context),
+        m_defaultDevice(device),
+        m_feedback(feedback)
     {
       m_guard = EntityNameGuard("Data", RUN);
     }
@@ -62,8 +64,8 @@ namespace mtconnect::pipeline {
         m_feedback.m_assetEvents.clear();
         m_feedback.m_errors.clear();
 
-        LOG(warning) << "MTConnectXmlTransform: instance id changed from " << m_feedback.m_instanceId
-                     << " to " << rd.m_instanceId;
+        LOG(warning) << "MTConnectXmlTransform: instance id changed from "
+                     << m_feedback.m_instanceId << " to " << rd.m_instanceId;
         throw std::system_error(make_error_code(ErrorCode::INSTANCE_ID_CHANGED));
       }
 

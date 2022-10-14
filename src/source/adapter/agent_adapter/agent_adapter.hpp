@@ -35,7 +35,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   {
   public:
     AgentAdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st,
-                         pipeline::XmlTransformFeedback &feedback           )
+                         pipeline::XmlTransformFeedback &feedback)
       : AdapterPipeline(context, st), m_feedback(feedback)
     {}
     void build(const ConfigOptions &options) override;
@@ -90,15 +90,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void clear();
 
-    auto instanceId()
-    {
-      return m_feedback.m_instanceId;
-    }
+    auto instanceId() { return m_feedback.m_instanceId; }
 
-    bool canRecover()
-    {
-      return m_feedback.m_instanceId != 0 && m_feedback.m_next != 0;
-    }
+    bool canRecover() { return m_feedback.m_instanceId != 0 && m_feedback.m_next != 0; }
 
   protected:
     pipeline::XmlTransformFeedback m_feedback;
@@ -124,7 +118,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     std::unique_ptr<boost::asio::ssl::context> m_streamContext;
     std::unique_ptr<boost::asio::ssl::context> m_assetContext;
-    
+
     // Current and Asset Request
     std::optional<Session::Request> m_streamRequest;
     std::optional<Session::Request> m_assetRequest;
