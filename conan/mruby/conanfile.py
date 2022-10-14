@@ -8,7 +8,7 @@ import glob
 
 class MRubyConan(ConanFile):
     name = "mruby"
-    version = "3.1.1"
+    version = "3.1.0"
     license = "https://github.com/mruby/mruby/blob/master/LICENSE"
     author = "Yukihiro “Matz” Matsumoto"
     homepage = "https://mruby.org/"
@@ -32,6 +32,12 @@ class MRubyConan(ConanFile):
         self.build_config = os.path.join(self.build_folder, self._mruby_source, "build_config", "mtconnect.rb")
         
         with open(self.build_config, "w") as f:
+            if self.settings.os == 'Windows':
+                if self.settings.arch == 'x86':
+                    f.write("ENV['PROCESSOR_ARCHITECTURE'] = 'AMD32'\n")
+                else:
+                    f.write("ENV['PROCESSOR_ARCHITECTURE'] = 'AMD64'\n")                    
+            
             f.write("MRuby::Build.new do |conf|\n")
             
             if self.settings.os == 'Windows':
