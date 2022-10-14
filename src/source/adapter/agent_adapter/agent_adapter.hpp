@@ -34,10 +34,14 @@ namespace mtconnect::source::adapter::agent_adapter {
   class AgentAdapterPipeline : public AdapterPipeline
   {
   public:
-    using AdapterPipeline::AdapterPipeline;
+    AgentAdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st,
+                         pipeline::XmlTransformFeedback &feedback)
+      : AdapterPipeline(context, st), m_feedback(feedback)
+    {}
     void build(const ConfigOptions &options) override;
 
     Handler *m_handler = nullptr;
+    pipeline::XmlTransformFeedback &m_feedback;
   };
 
   class AgentAdapter : public Adapter
@@ -61,6 +65,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     const std::string &getHost() const override { return m_host; }
 
     unsigned int getPort() const override { return 0; }
+    auto &getFeedback() { return m_feedback; }
 
     ~AgentAdapter() override;
 
@@ -85,23 +90,12 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     void clear();
 
-    auto instanceId()
-    {
-      const auto &feedback =
-          m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>(
-              "XmlTransformFeedback");
-      return feedback->m_instanceId;
-    }
+    auto instanceId() { return m_feedback.m_instanceId; }
 
-    bool canRecover()
-    {
-      const auto &feedback =
-          m_pipeline.getContext()->getSharedState<pipeline::XmlTransformFeedback>(
-              "XmlTransformFeedback");
-      return feedback->m_instanceId != 0 && feedback->m_next != 0;
-    }
+    bool canRecover() { return m_feedback.m_instanceId != 0 && m_feedback.m_next != 0; }
 
   protected:
+    pipeline::XmlTransformFeedback m_feedback;
     AgentAdapterPipeline m_pipeline;
     Url m_url;
     int m_count = 1000;
@@ -115,6 +109,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::chrono::milliseconds m_pollingInterval;
     std::string m_host;
     std::string m_sourceDevice;
+    std::string m_feedbackId;
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;
     boost::asio::steady_timer m_reconnectTimer;

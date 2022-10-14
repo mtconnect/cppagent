@@ -121,9 +121,12 @@ namespace mtconnect::pipeline {
       out.m_instanceId =
           boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "instanceId"));
 
-      auto next = attributeValue(header, "nextSequence", false);
-      if (!next.empty())
-        out.m_next = boost::lexical_cast<SequenceNumber_t>(next);
+      if (xmlStrcmp(root->name, BAD_CAST "MTConnectStreams") == 0)
+      {
+        auto next = attributeValue(header, "nextSequence", false);
+        if (!next.empty())
+          out.m_next = boost::lexical_cast<SequenceNumber_t>(next);
+      }
       return true;
     }
 
