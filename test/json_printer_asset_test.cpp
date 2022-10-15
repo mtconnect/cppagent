@@ -29,6 +29,7 @@
 
 #include "asset/cutting_tool.hpp"
 #include "asset/file_asset.hpp"
+#include "buffer/checkpoint.hpp"
 #include "device_model/data_item/data_item.hpp"
 #include "device_model/device.hpp"
 #include "entity/xml_parser.hpp"
@@ -37,14 +38,13 @@
 #include "parser/xml_parser.hpp"
 #include "printer/json_printer.hpp"
 #include "printer/xml_printer.hpp"
-#include "sink/rest_sink/checkpoint.hpp"
 #include "test_utilities.hpp"
 #include "utilities.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::sink::rest_sink;
+using namespace mtconnect::buffer;
 using namespace mtconnect::asset;
 
 class JsonPrinterAssetTest : public testing::Test

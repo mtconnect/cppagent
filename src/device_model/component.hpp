@@ -57,7 +57,11 @@ namespace mtconnect {
       static entity::FactoryPtr getFactory();
       auto getptr() const { return std::dynamic_pointer_cast<Component>(Entity::getptr()); }
 
-      virtual void initialize() { connectDataItems(); }
+      virtual void initialize()
+      {
+        connectCompositions();
+        connectDataItems();
+      }
 
       // Virtual destructor
       virtual ~Component();
@@ -69,12 +73,16 @@ namespace mtconnect {
 
       virtual const std::string getTopicName() const
       {
-        std::string topic {getName()};
-        if (m_name)
+        if (!m_topicName)
         {
-          topic.append("[").append(*m_name).append("]");
+          auto *self = const_cast<Component *>(this);
+          self->m_topicName.emplace(getName());
+          if (m_name)
+          {
+            self->m_topicName->append("[").append(*m_name).append("]");
+          }
         }
-        return topic;
+        return *m_topicName;
       }
 
       entity::EntityPtr getDescription()
@@ -169,7 +177,24 @@ namespace mtconnect {
 
       // Connect data items
       void connectDataItems();
+      void connectCompositions();
       void buildDeviceMaps(DevicePtr device);
+
+      CompositionPtr getComposition(const std::string &id) const
+      {
+        auto comps = getList("Compositions");
+        if (comps)
+        {
+          for (auto &comp : *comps)
+          {
+            const auto cid = comp->get<std::string>("id");
+            if (cid == id)
+              return std::dynamic_pointer_cast<Composition>(comp);
+          }
+        }
+
+        return nullptr;
+      }
 
     protected:
       void setParent(ComponentPtr parent) { m_parent = parent; }
@@ -189,6 +214,9 @@ namespace mtconnect {
       // Pointer to the parent component
       std::weak_ptr<Component> m_parent;
       std::weak_ptr<Device> m_device;
+
+      // Topic
+      std::optional<std::string> m_topicName;
     };
 
     struct ComponentComp

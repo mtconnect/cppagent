@@ -32,6 +32,12 @@ class MRubyConan(ConanFile):
         self.build_config = os.path.join(self.build_folder, self._mruby_source, "build_config", "mtconnect.rb")
         
         with open(self.build_config, "w") as f:
+            if self.settings.os == 'Windows':
+                if self.settings.arch == 'x86':
+                    f.write("ENV['PROCESSOR_ARCHITECTURE'] = 'AMD32'\n")
+                else:
+                    f.write("ENV['PROCESSOR_ARCHITECTURE'] = 'AMD64'\n")                    
+            
             f.write("MRuby::Build.new do |conf|\n")
             
             if self.settings.os == 'Windows':
@@ -42,6 +48,9 @@ class MRubyConan(ConanFile):
             f.write('''
   # include the default GEMs
   conf.gembox 'full-core'
+
+  # Add regexp support
+  conf.gem :github => 'mtconnect/mruby-onig-regexp', :branch => 'windows_porting'
 
   # C compiler settings
   conf.compilers.each do |c|

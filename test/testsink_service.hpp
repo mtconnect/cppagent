@@ -38,7 +38,7 @@ namespace mtconnect {
     void start() override {}
     void stop() override {}
 
-    uint64_t publish(observation::ObservationPtr &observation) override { return 0; }
+    bool publish(observation::ObservationPtr &observation) override { return false; }
     bool publish(asset::AssetPtr asset) override { return false; }
 
     static sink::SinkPtr create(const std::string &name, boost::asio::io_context &io,

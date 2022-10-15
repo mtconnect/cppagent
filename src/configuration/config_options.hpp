@@ -25,6 +25,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(WorkingDirectory);
 
     // Agent Configuration
+    DECLARE_CONFIGURATION(DisableAgentDevice);
     DECLARE_CONFIGURATION(AllowPut);
     DECLARE_CONFIGURATION(AllowPutFrom);
     DECLARE_CONFIGURATION(BufferSize);
@@ -60,6 +61,8 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(AssetTopic);
     DECLARE_CONFIGURATION(ObservationTopic);
     DECLARE_CONFIGURATION(MqttCaCert);
+    DECLARE_CONFIGURATION(MqttCert);
+    DECLARE_CONFIGURATION(MqttPrivateKey);
     DECLARE_CONFIGURATION(MqttTls);
     DECLARE_CONFIGURATION(MqttPort);
     DECLARE_CONFIGURATION(MqttHost);

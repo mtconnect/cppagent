@@ -186,15 +186,19 @@ namespace mtconnect {
       bool subscribe(const std::string &topic) override
       {
         NAMED_SCOPE("MqttClientImpl::subscribe");
-        if (!m_running)
+        if (!m_connected)
+        {
+          LOG(debug) << "Not connected, cannot publish to " << topic;
           return false;
+        }
 
         m_clientId = derived().getClient()->acquire_unique_packet_id();
         derived().getClient()->async_subscribe(
-            m_clientId, topic.c_str(), mqtt::qos::at_least_once, [](mqtt::error_code ec) {
+            m_clientId, topic.c_str(), mqtt::qos::at_least_once, [topic](mqtt::error_code ec) {
               if (ec)
               {
-                LOG(error) << "Subscribe failed: " << ec.message();
+                LOG(error) << "MqttClientImpl::subscribe: Subscribe failed: " << topic << ": "
+                           << ec.message();
                 return false;
               }
               return true;
@@ -206,18 +210,22 @@ namespace mtconnect {
       bool publish(const std::string &topic, const std::string &payload) override
       {
         NAMED_SCOPE("MqttClientImpl::publish");
-        if (!m_running)
+        if (!m_connected)
+        {
+          LOG(debug) << "Not connected, cannot publish to " << topic;
           return false;
+        }
 
         m_clientId = derived().getClient()->acquire_unique_packet_id();
-        derived().getClient()->async_publish(m_clientId, topic, payload,
-                                             mqtt::qos::at_least_once | mqtt::retain::yes,
-                                             [](mqtt::error_code ec) {
-                                               if (ec)
-                                               {
-                                                 LOG(error) << "Publish failed: " << ec.message();
-                                               }
-                                             });
+        derived().getClient()->async_publish(
+            m_clientId, topic, payload, mqtt::qos::at_least_once | mqtt::retain::yes,
+            [topic](mqtt::error_code ec) {
+              if (ec)
+              {
+                LOG(error) << "MqttClientImpl::publish: Publish failed to topic " << topic << ": "
+                           << ec.message();
+              }
+            });
 
         return true;
       }
@@ -242,7 +250,7 @@ namespace mtconnect {
       /// </summary>
       void reconnect()
       {
-        NAMED_SCOPE("Mqtt_Client::reconnect");
+        NAMED_SCOPE("MqttClientImpl::reconnect");
 
         if (!m_running)
           return;
@@ -255,11 +263,11 @@ namespace mtconnect {
         m_reconnectTimer.async_wait([this](const boost::system::error_code &error) {
           if (error != boost::asio::error::operation_aborted)
           {
-            LOG(info) << "Reconnect now !!";
+            LOG(info) << "MqttClientImpl::reconnect: reconnect now";
 
             // Connect
             derived().getClient()->async_connect([this](mqtt::error_code ec) {
-              LOG(info) << "async_connect callback: " << ec.message();
+              LOG(info) << "MqttClientImpl::reconnect async_connect callback: " << ec.message();
               if (ec && ec != boost::asio::error::operation_aborted)
               {
                 reconnect();
@@ -316,6 +324,14 @@ namespace mtconnect {
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
+          }
+          auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
+          auto cert = GetOption<string>(m_options, configuration::MqttCert);
+          if (private_key && cert)
+          {
+            m_client->get_ssl_context().use_certificate_chain_file(*cert);
+            m_client->get_ssl_context().use_private_key_file(*private_key,
+                                                             boost::asio::ssl::context::pem);
           }
         }
 

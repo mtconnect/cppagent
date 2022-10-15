@@ -47,7 +47,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     buildDeviceList();
     buildCommandAndStatusDelivery();
 
-    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_device));
+    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_feedback, m_device));
     std::optional<string> obsMetrics;
     obsMetrics = m_identity + "_observation_update_rate";
     next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
@@ -58,7 +58,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
                              const ConfigOptions &options, const boost::property_tree::ptree &block)
     : Adapter("AgentAdapter", io, options),
-      m_pipeline(context, Source::m_strand),
+      m_pipeline(context, Source::m_strand, m_feedback),
       m_reconnectTimer(io),
       m_pollingTimer(io),
       m_assetRetryTimer(io)
@@ -132,6 +132,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_identity = string("_") + (identity.str()).substr(0, 10);
 
     m_options.insert_or_assign(configuration::AdapterIdentity, m_identity);
+    m_feedbackId = "XmlTransformFeedback:" + m_identity;
 
     m_pipeline.m_handler = m_handler.get();
     m_pipeline.build(m_options);
@@ -204,10 +205,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_assetSession)
       m_assetSession->stop();
 
-    const auto &feedback =
-        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-    feedback->m_instanceId = 0;
-    feedback->m_next = 0;
+    m_feedback.m_instanceId = 0;
+    m_feedback.m_next = 0;
   }
 
   void AgentAdapter::recoverStreams()
@@ -373,13 +372,10 @@ namespace mtconnect::source::adapter::agent_adapter {
     if (m_stopped)
       return false;
 
-    const auto &feedback =
-        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-
     if (m_usePolling)
     {
       using namespace boost;
-      UrlQuery query({{"from", lexical_cast<string>(feedback->m_next)},
+      UrlQuery query({{"from", lexical_cast<string>(m_feedback.m_next)},
                       {"count", lexical_cast<string>(m_count)}});
       m_streamRequest.emplace(m_sourceDevice, "sample", query, false, [this]() {
         m_pollingTimer.expires_after(m_pollingInterval);
@@ -397,7 +393,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     else
     {
       using namespace boost;
-      UrlQuery query({{"from", lexical_cast<string>(feedback->m_next)},
+      UrlQuery query({{"from", lexical_cast<string>(m_feedback.m_next)},
                       {"count", lexical_cast<string>(m_count)},
                       {"heartbeat", lexical_cast<string>(m_heartbeat.count())},
                       {"interval", lexical_cast<string>(m_pollingInterval.count())}});
@@ -433,11 +429,8 @@ namespace mtconnect::source::adapter::agent_adapter {
 
   void AgentAdapter::updateAssets()
   {
-    const auto &feedback =
-        m_pipeline.getContext()->getSharedState<XmlTransformFeedback>("XmlTransformFeedback");
-
     std::vector<string> idList;
-    std::transform(feedback->m_assetEvents.begin(), feedback->m_assetEvents.end(),
+    std::transform(m_feedback.m_assetEvents.begin(), m_feedback.m_assetEvents.end(),
                    back_inserter(idList),
                    [](const EntityPtr entity) { return entity->getValue<string>(); });
     string ids = boost::join(idList, ";");

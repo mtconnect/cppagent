@@ -19,7 +19,7 @@
 
 #include "boost/asio/io_context.hpp"
 
-#include "circular_buffer.hpp"
+#include "buffer/circular_buffer.hpp"
 #include "request.hpp"
 #include "response.hpp"
 #include "server.hpp"
@@ -60,7 +60,7 @@ namespace mtconnect {
 
       void stop() override;
 
-      uint64_t publish(observation::ObservationPtr &observation) override;
+      bool publish(observation::ObservationPtr &observation) override;
 
       bool publish(asset::AssetPtr asset) override { return false; }
 
@@ -220,8 +220,6 @@ namespace mtconnect {
 
       // Buffers
       FileCache m_fileCache;
-
-      CircularBuffer m_circularBuffer;
 
       bool m_logStreamData {false};
     };

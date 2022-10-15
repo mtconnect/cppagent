@@ -216,7 +216,7 @@ namespace mtconnect {
       if (hasProperty("nativeUnits"))
       {
         if (!hasProperty("units"))
-          throw PropertyError("nativeUnits given, but no units");
+          throw PropertyError("nativeUnits given, but no units for " + m_id);
         m_converter = UnitConversion::make(get<string>("nativeUnits"), get<string>("units"));
       }
       if (hasProperty("nativeScale"))
@@ -303,8 +303,13 @@ namespace mtconnect {
       auto comp = m_component.lock();
 
       path(pth, comp);
+      {
+        auto cp = m_composition.lock();
+        if (cp)
+          pth.push_back(cp->getTopicName());
+      }
       pth.push_back(m_categoryText);
-      
+
       stringstream name;
       name << getObservationName();
       optional<string> opt;

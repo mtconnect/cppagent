@@ -54,6 +54,7 @@ namespace mtconnect {
   using namespace sink::rest_sink;
   namespace net = boost::asio;
   namespace fs = boost::filesystem;
+  namespace config = mtconnect::configuration;
 
   static const string g_unavailable("UNAVAILABLE");
   static const string g_available("AVAILABLE");
@@ -66,9 +67,11 @@ namespace mtconnect {
       m_strand(m_context),
       m_xmlParser(make_unique<parser::XmlParser>()),
       m_version(
-          GetOption<string>(options, mtconnect::configuration::SchemaVersion)
+          GetOption<string>(options, config::SchemaVersion)
               .value_or(to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR))),
       m_deviceXmlPath(deviceXmlPath),
+      m_circularBuffer(GetOption<int>(options, config::BufferSize).value_or(17),
+                       GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
       m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
   {
     using namespace asset;
@@ -105,7 +108,9 @@ namespace mtconnect {
     char c;
     stringstream vstr(m_version);
     vstr >> major >> c >> minor;
-    if (major > 1 || (major == 1 && minor >= 7))
+
+    auto disableAgentDevice = GetOption<bool>(m_options, config::DisableAgentDevice);
+    if (!(disableAgentDevice && *disableAgentDevice) && (major > 1 || (major == 1 && minor >= 7)))
     {
       createAgentDevice();
     }
@@ -201,9 +206,12 @@ namespace mtconnect {
   // ---------------------------------------
   void Agent::receiveObservation(observation::ObservationPtr observation)
   {
-    m_latest[observation->getDataItem()->getId()] = observation;
-    for (auto &sink : m_sinks)
-      sink->publish(observation);
+    std::lock_guard<buffer::CircularBuffer> lock(m_circularBuffer);
+    if (m_circularBuffer.addToBuffer(observation) != 0)
+    {
+      for (auto &sink : m_sinks)
+        sink->publish(observation);
+    }
   }
 
   void Agent::receiveAsset(asset::AssetPtr asset)

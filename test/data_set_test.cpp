@@ -33,6 +33,7 @@ using namespace mtconnect;
 using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
 using namespace mtconnect::sink::rest_sink;
+using namespace mtconnect::buffer;
 
 class DataSetTest : public testing::Test
 {
@@ -98,7 +99,7 @@ TEST_F(DataSetTest, InitialSet)
   ASSERT_EQ(4, get<int64_t>(ds.find("d"_E)->m_value));
 
   m_checkpoint->addObservation(ce);
-  auto ce2 = m_checkpoint->getEventPtr("v1");
+  auto ce2 = m_checkpoint->getObservation("v1");
   auto ds2 = ce2->getValue<DataSet>();
 
   ASSERT_EQ(4, ce2->get<int64_t>("count"));
@@ -204,14 +205,14 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
-  auto cecp = m_checkpoint->getEventPtr("v1");
+  auto cecp = m_checkpoint->getObservation("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
   auto ce2 = Observation::make(m_dataItem1, Properties {{"VALUE", "c=5"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
-  auto ce3 = m_checkpoint->getEventPtr("v1");
+  auto ce3 = m_checkpoint->getObservation("v1");
   ASSERT_EQ(4, ce3->getValue<DataSet>().size());
 
   auto map1 = ce3->getValue<DataSet>();
@@ -224,7 +225,7 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
-  auto ce5 = m_checkpoint->getEventPtr("v1");
+  auto ce5 = m_checkpoint->getObservation("v1");
   ASSERT_EQ(5, ce5->getValue<DataSet>().size());
 
   auto map2 = ce5->getValue<DataSet>();
@@ -245,14 +246,14 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
-  auto cecp = m_checkpoint->getEventPtr("v1");
+  auto cecp = m_checkpoint->getObservation("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
   auto ce2 = Observation::make(m_dataItem1, Properties {{"VALUE", "c=5 e=6"s}}, time, errors);
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
-  auto ce3 = m_checkpoint->getEventPtr("v1");
+  auto ce3 = m_checkpoint->getObservation("v1");
 
   auto map1 = ce3->getValue<DataSet>();
   ASSERT_EQ(5, map1.size());
@@ -267,7 +268,7 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
-  auto ce5 = m_checkpoint->getEventPtr("v1");
+  auto ce5 = m_checkpoint->getObservation("v1");
 
   auto map2 = ce5->getValue<DataSet>();
   ASSERT_EQ(6, map2.size());
@@ -290,7 +291,7 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
-  auto cecp = m_checkpoint->getEventPtr("v1");
+  auto cecp = m_checkpoint->getObservation("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
   auto ce2 = Observation::make(
@@ -298,7 +299,7 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce2);
 
-  auto ce3 = m_checkpoint->getEventPtr("v1");
+  auto ce3 = m_checkpoint->getObservation("v1");
   auto map1 = ce3->getValue<DataSet>();
   ASSERT_EQ(2, map1.size());
 
@@ -309,7 +310,7 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce4);
 
-  auto ce5 = m_checkpoint->getEventPtr("v1");
+  auto ce5 = m_checkpoint->getObservation("v1");
   auto map2 = ce5->getValue<DataSet>();
   ASSERT_EQ(4, map2.size());
 
@@ -560,7 +561,7 @@ TEST_F(DataSetTest, DeleteKey)
   ASSERT_EQ(0, errors.size());
   m_checkpoint->addObservation(ce);
 
-  auto cecp = m_checkpoint->getEventPtr("v1");
+  auto cecp = m_checkpoint->getObservation("v1");
   ASSERT_EQ(4, cecp->getValue<DataSet>().size());
 
   auto ce2 = Observation::make(m_dataItem1, Properties {{"VALUE", "c e=6 a"s}}, time, errors);
@@ -571,7 +572,7 @@ TEST_F(DataSetTest, DeleteKey)
   ASSERT_TRUE(ds.find("a"_E)->m_removed);
   ASSERT_TRUE(ds.find("c"_E)->m_removed);
 
-  auto ce3 = m_checkpoint->getEventPtr("v1");
+  auto ce3 = m_checkpoint->getObservation("v1");
   auto &map1 = ce3->getValue<DataSet>();
   ASSERT_EQ(3, map1.size());
 

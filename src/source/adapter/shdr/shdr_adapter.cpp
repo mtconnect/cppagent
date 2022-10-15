@@ -93,16 +93,19 @@ namespace mtconnect::source::adapter::shdr {
     auto intv = GetOption<Milliseconds>(options, configuration::ReconnectInterval);
     if (intv)
       m_reconnectInterval = *intv;
-    
+
     if (m_reconnectInterval < 500ms)
     {
-      LOG(warning) << "Reconnection interval set to " << m_reconnectInterval.count() << "ms, limiting it to 500ms";
+      LOG(warning) << "Reconnection interval set to " << m_reconnectInterval.count()
+                   << "ms, limiting it to 500ms";
       m_reconnectInterval = 500ms;
     }
   }
 
   void ShdrAdapter::processData(const string &data)
   {
+    NAMED_SCOPE("ShdrAdapter::processData");
+
     try
     {
       if (m_terminator)
@@ -145,7 +148,7 @@ namespace mtconnect::source::adapter::shdr {
 
   void ShdrAdapter::stop()
   {
-    NAMED_SCOPE("input.adapter.stop");
+    NAMED_SCOPE("ShdrAdapter::stop");
     // Will stop threaded object gracefully Adapter::thread()
     LOG(debug) << "Waiting for adapter to stop: " << m_name;
     m_running = false;
@@ -159,6 +162,8 @@ namespace mtconnect::source::adapter::shdr {
 
   void ShdrAdapter::protocolCommand(const std::string &data)
   {
+    NAMED_SCOPE("ShdrAdapter::protocolCommand");
+
     static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
     smatch match;
 

@@ -118,6 +118,4 @@ class CppAgentConan(ConanFile):
         self.copy("*.so*", "bin", "lib")
         self.copy("*.dylib", "bin", "lib")
 
-        
-    
     
