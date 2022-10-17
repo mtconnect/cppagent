@@ -389,8 +389,11 @@ namespace mtconnect {
         if (version)
           versionDeviceXml();
 
-        auto d = m_agentDevice->getDeviceDataItem("device_changed");
-        m_loopback->receive(d, *uuid);
+        if (m_agentDevice)
+        {
+          auto d = m_agentDevice->getDeviceDataItem("device_changed");
+          m_loopback->receive(d, *uuid);
+        }
 
         return true;
       }
