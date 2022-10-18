@@ -250,9 +250,18 @@ namespace mtconnect {
     bool DataItem::operator<(const DataItem &another) const
     {
       auto component = m_component.lock();
-      auto otherComponent = another.getComponent();
-      auto otherDev = otherComponent->getDevice();
+      if (component == nullptr)
+        return true;
       auto dev = component->getDevice();
+      if (dev == nullptr)
+        return true;
+
+      auto otherComponent = another.getComponent();
+      if (otherComponent == nullptr)
+        return false;
+      auto otherDev = otherComponent->getDevice();
+      if (otherDev == nullptr)
+        return false;
 
       if (dev->getId() < otherDev->getId())
         return true;
