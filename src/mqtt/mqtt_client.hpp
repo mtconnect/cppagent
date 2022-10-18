@@ -51,6 +51,7 @@ namespace mtconnect {
       virtual bool publish(const std::string &topic, const std::string &payload) = 0;
       auto isConnected() { return m_connected; }
       auto isRunning() { return m_running; }
+      void connectComplete() { m_connected = true; }
 
     protected:
       boost::asio::io_context &m_ioContext;
