@@ -78,6 +78,11 @@ namespace mtconnect {
         identity.str("");
         identity << std::hex << digest[0] << digest[1] << digest[2];
         m_identity = std::string("_") + (identity.str()).substr(0, 10);
+        
+        auto ci = GetOption<Seconds>(options, configuration::MqttConnectInterval);
+        if (ci)
+          m_connectInterval = *ci;
+
       }
 
       ~MqttClientImpl() { stop(); }
@@ -236,7 +241,25 @@ namespace mtconnect {
         if (m_handler && m_handler->m_connecting)
           m_handler->m_connecting(shared_from_this());
 
-        derived().getClient()->async_connect();
+        derived().getClient()->async_connect([this](mqtt::error_code ec) {
+          if (ec)
+          {
+            LOG(warning) << "MqttClientImpl::connect: cannot connect: "
+            << ec.message() << ", will retry";
+            
+            m_reconnectTimer.expires_after(m_connectInterval);
+            m_reconnectTimer.async_wait([this](const boost::system::error_code &error) {
+              if (error != boost::asio::error::operation_aborted)
+              {
+                connect();
+              }
+            });
+          }
+          else
+          {
+            LOG(info) << "MqttClientImpl::connect: connected";
+          }
+        });
       }
 
       void receive(mqtt::buffer &topic, mqtt::buffer &contents)
@@ -258,7 +281,7 @@ namespace mtconnect {
         LOG(info) << "Start reconnect timer";
 
         // Set an expiry time relative to now.
-        m_reconnectTimer.expires_after(std::chrono::seconds(5));
+        m_reconnectTimer.expires_after(m_connectInterval);
 
         m_reconnectTimer.async_wait([this](const boost::system::error_code &error) {
           if (error != boost::asio::error::operation_aborted)

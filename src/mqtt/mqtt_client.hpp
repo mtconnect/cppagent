@@ -40,7 +40,7 @@ namespace mtconnect {
     {
     public:
       MqttClient(boost::asio::io_context &ioc, std::unique_ptr<ClientHandler> &&handler)
-        : m_ioContext(ioc), m_handler(std::move(handler))
+        : m_ioContext(ioc), m_handler(std::move(handler)), m_connectInterval(5000)
       {}
       virtual ~MqttClient() = default;
       const auto &getIdentity() const { return m_identity; }
@@ -57,6 +57,7 @@ namespace mtconnect {
       std::string m_url;
       std::string m_identity;
       std::unique_ptr<ClientHandler> m_handler;
+      std::chrono::milliseconds m_connectInterval;
 
       bool m_running {false};
       bool m_connected {false};
