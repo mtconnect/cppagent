@@ -78,6 +78,10 @@ namespace mtconnect {
         identity.str("");
         identity << std::hex << digest[0] << digest[1] << digest[2];
         m_identity = std::string("_") + (identity.str()).substr(0, 10);
+
+        auto ci = GetOption<Seconds>(options, configuration::MqttConnectInterval);
+        if (ci)
+          m_connectInterval = *ci;
       }
 
       ~MqttClientImpl() { stop(); }
@@ -101,14 +105,21 @@ namespace mtconnect {
           }
           else if (ec == mqtt::connect_return_code::accepted)
           {
-            LOG(info) << "MQTT Connected";
-            m_connected = true;
+            LOG(info) << "MQTT ConnAck: MQTT Connected";
+
             if (m_handler && m_handler->m_connected)
+            {
               m_handler->m_connected(shared_from_this());
+            }
+            else
+            {
+              LOG(debug) << "No connect handler, setting connected";
+              m_connected = true;
+            }
           }
           else
           {
-            LOG(info) << "MQTT connection failed: " << ec;
+            LOG(info) << "MQTT ConnAck: MQTT connection failed: " << ec;
             reconnect();
           }
           return true;
@@ -236,7 +247,18 @@ namespace mtconnect {
         if (m_handler && m_handler->m_connecting)
           m_handler->m_connecting(shared_from_this());
 
-        derived().getClient()->async_connect();
+        derived().getClient()->async_connect([this](mqtt::error_code ec) {
+          if (ec)
+          {
+            LOG(warning) << "MqttClientImpl::connect: cannot connect: " << ec.message()
+                         << ", will retry";
+            reconnect();
+          }
+          else
+          {
+            LOG(info) << "MqttClientImpl::connect: connected";
+          }
+        });
       }
 
       void receive(mqtt::buffer &topic, mqtt::buffer &contents)
@@ -258,23 +280,24 @@ namespace mtconnect {
         LOG(info) << "Start reconnect timer";
 
         // Set an expiry time relative to now.
-        m_reconnectTimer.expires_after(std::chrono::seconds(5));
+        m_reconnectTimer.expires_after(m_connectInterval);
 
-        m_reconnectTimer.async_wait([this](const boost::system::error_code &error) {
-          if (error != boost::asio::error::operation_aborted)
-          {
-            LOG(info) << "MqttClientImpl::reconnect: reconnect now";
-
-            // Connect
-            derived().getClient()->async_connect([this](mqtt::error_code ec) {
-              LOG(info) << "MqttClientImpl::reconnect async_connect callback: " << ec.message();
-              if (ec && ec != boost::asio::error::operation_aborted)
+        m_reconnectTimer.async_wait(boost::asio::bind_executor(
+            derived().getClient()->get_executor(), [this](const boost::system::error_code &error) {
+              if (error != boost::asio::error::operation_aborted)
               {
-                reconnect();
+                LOG(info) << "MqttClientImpl::reconnect: reconnect now";
+
+                // Connect
+                derived().getClient()->async_connect([this](mqtt::error_code ec) {
+                  LOG(info) << "MqttClientImpl::reconnect async_connect callback: " << ec.message();
+                  if (ec && ec != boost::asio::error::operation_aborted)
+                  {
+                    reconnect();
+                  }
+                });
               }
-            });
-          }
-        });
+            }));
       }
 
     protected:
