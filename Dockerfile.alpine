@@ -72,6 +72,7 @@ RUN  cd ~/agent \
   && conan export conan/mruby \
   && conan install . -if build --build=missing \
        -pr $CONAN_PROFILE \
+       -o build_tests=$WITH_TESTS \
        -o run_tests=$WITH_TESTS \
        -o with_ruby=$WITH_RUBY
 

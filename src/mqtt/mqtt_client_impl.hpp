@@ -325,6 +325,14 @@ namespace mtconnect {
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
           }
+          auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
+          auto cert = GetOption<string>(m_options, configuration::MqttCert);
+          if (private_key && cert)
+          {
+            m_client->get_ssl_context().use_certificate_chain_file(*cert);
+            m_client->get_ssl_context().use_private_key_file(*private_key,
+                                                             boost::asio::ssl::context::pem);
+          }
         }
 
         return m_client;

@@ -1,41 +1,22 @@
-# MTConnect C++ Public Agent Docker image build instructions
+# MTConnect Public C++ Agent Docker image build instructions
 
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
-#
-# to build an image locally and run it
-#
-#   docker build --tag agent-image .
-#   docker run -it --rm --init --name agent-container -p5001:5000 agent-image
 #
 # to build a cross-platform image, push to docker hub, and run it -
 # (see CMakeLists.txt for current version number) -
 #
 #   docker buildx build \
 #     --platform linux/amd64,linux/arm64 \
-#     --tag mtconnect/agent:2.0.0.7 \
-#     --tag mtconnect/agent:latest \
+#     --tag mtconnect/agent:2.0.0.12_RC18 \
 #     --push \
 #     .
-#   docker run -it --rm --init --name agent -p5001:5000 mtconnect/agent
-#
-# visit http://localhost:5001 to see the demo output.
-#
-# to use a different configuration, use a volume mount point -
-#
-# eg on Windows,
-#
-#   docker run -it --rm --init --name agent -p5001:5000 ^
-#     -v %cd%:/foo mtconnect/agent ^
-#     /bin/sh -c "cd /foo/simulator && agent run agent.cfg"
-#
-# or on Mac/Linux,
 #
 #   docker run -it --rm --init --name agent -p5001:5000 \
-#     -v "$(pwd)":/foo mtconnect/agent \
-#     /bin/sh -c "cd /foo/simulator && agent run agent.cfg"
-
+#     mtconnect/agent:2.0.0.12_RC18
+#
+# then visit http://localhost:5001 to see the demo output.
 
 # ---------------------------------------------------------------------
 # os
@@ -72,10 +53,11 @@ COPY . .
 ENV PATH=$HOME/venv3.9/bin:$PATH
 ENV CONAN_PROFILE=conan/profiles/docker
 ENV WITH_RUBY=True
+ENV WITH_TESTS=False
 
 # limit cpus so don't run out of memory on local machine
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
-# could turn off if building in cloud
+# can turn off if building in cloud
 ENV CONAN_CPU_COUNT=1
 
 # make installer
@@ -83,7 +65,8 @@ RUN conan export conan/mqtt_cpp \
   && conan export conan/mruby \
   && conan install . -if build --build=missing \
   -pr $CONAN_PROFILE \
-  -o run_tests=False \
+  -o build_tests=$WITH_TESTS \
+  -o run_tests=$WITH_TESTS \
   -o with_ruby=$WITH_RUBY
 
 # compile source (~20mins - 4hrs for qemu)
@@ -95,7 +78,7 @@ RUN conan build . -bf build
 
 FROM os AS release
 
-LABEL author="mtconnect" description="Docker image for MTConnect C++ Agent"
+LABEL author="mtconnect" description="Docker image for the latest Production MTConnect C++ Agent"
 
 # install ruby for simulator
 RUN apt-get update && apt-get install -y ruby
