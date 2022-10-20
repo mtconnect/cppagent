@@ -19,6 +19,9 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -503,11 +506,55 @@ namespace mtconnect {
   void Agent::createAgentDevice()
   {
     NAMED_SCOPE("Agent::createAgentDevice");
-
+    
+    using namespace boost;
+    using namespace asio;
+    using res = ip::udp::resolver;
+    
+    auto port = GetOption<int>(m_options, mtconnect::configuration::Port).value_or(5000);
+    auto service = boost::lexical_cast<string>(port);
+    string address;
+    
+    boost::system::error_code ec;
+    res resolver(m_context);
+    auto iter = resolver.resolve(ip::host_name(),
+                                 service,
+                                 res::flags::address_configured, ec);
+    if (ec)
+    {
+      LOG(warning) << "Cannot find IP address: " << ec.message();
+      address = "127.0.0.1";
+    }
+    else
+    {
+      res::iterator end;
+      while (iter != end)
+      {
+        const auto &ep = iter->endpoint();
+        const auto &ad = ep.address();
+        if (!ad.is_unspecified() && !ad.is_loopback())
+        {
+          auto ads { ad.to_string() };
+          if (ads.length() > address.length() ||
+              (ads.length() == address.length() && ads > address))
+          {
+            address = ads;
+          }
+        }
+        iter++;
+      }
+    }
+    
+    address.append(":").append(service);
+    
+    uuids::name_generator_latest gen(uuids::ns::dns());
+    auto uuid = uuids::to_string(gen(address));
+    auto id = "agent_"s + uuid.substr(0, uuid.find_first_of('-'));
+    
     // Create the Agent Device
     ErrorList errors;
-    Properties ps {{"uuid", "0b49a3a0-18ca-0139-8748-2cde48001122"s},
-                   {"id", "agent_2cde48001122"s},
+    Properties ps {{"uuid", uuid},
+                   {"id", id},
                    {"name", "Agent"s},
                    {"mtconnectVersion", m_version}};
     m_agentDevice =
