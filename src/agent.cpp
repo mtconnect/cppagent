@@ -506,20 +506,18 @@ namespace mtconnect {
   void Agent::createAgentDevice()
   {
     NAMED_SCOPE("Agent::createAgentDevice");
-    
+
     using namespace boost;
     using namespace asio;
     using res = ip::udp::resolver;
-    
+
     auto port = GetOption<int>(m_options, mtconnect::configuration::Port).value_or(5000);
     auto service = boost::lexical_cast<string>(port);
     string address;
-    
+
     boost::system::error_code ec;
     res resolver(m_context);
-    auto iter = resolver.resolve(ip::host_name(),
-                                 service,
-                                 res::flags::address_configured, ec);
+    auto iter = resolver.resolve(ip::host_name(), service, res::flags::address_configured, ec);
     if (ec)
     {
       LOG(warning) << "Cannot find IP address: " << ec.message();
@@ -534,7 +532,7 @@ namespace mtconnect {
         const auto &ad = ep.address();
         if (!ad.is_unspecified() && !ad.is_loopback())
         {
-          auto ads { ad.to_string() };
+          auto ads {ad.to_string()};
           if (ads.length() > address.length() ||
               (ads.length() == address.length() && ads > address))
           {
@@ -544,19 +542,16 @@ namespace mtconnect {
         iter++;
       }
     }
-    
+
     address.append(":").append(service);
-    
+
     uuids::name_generator_latest gen(uuids::ns::dns());
     auto uuid = uuids::to_string(gen(address));
     auto id = "agent_"s + uuid.substr(0, uuid.find_first_of('-'));
-    
+
     // Create the Agent Device
     ErrorList errors;
-    Properties ps {{"uuid", uuid},
-                   {"id", id},
-                   {"name", "Agent"s},
-                   {"mtconnectVersion", m_version}};
+    Properties ps {{"uuid", uuid}, {"id", id}, {"name", "Agent"s}, {"mtconnectVersion", m_version}};
     m_agentDevice =
         dynamic_pointer_cast<AgentDevice>(AgentDevice::getFactory()->make("Agent", ps, errors));
     if (!errors.empty())
