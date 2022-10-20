@@ -312,7 +312,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
 
 TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 {
-  //GTEST_SKIP();
+  GTEST_SKIP();
 
   ConfigOptions options {
       {configuration::Host, "localhost"s}, {configuration::Port, 0},
@@ -336,6 +336,8 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 
 TEST_F(MqttIsolatedUnitTest, mqtt_tls_client_should_receive_loopback_publication)
 {
+  GTEST_SKIP();
+	
   ConfigOptions options {
       {configuration::Host, "localhost"s}, {configuration::Port, 0},
       {configuration::MqttTls, true},     {configuration::AutoAvailable, false},
