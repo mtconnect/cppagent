@@ -298,6 +298,8 @@ namespace mtconnect {
         if (!m_server)
         {
           boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
+          ctx.set_options(boost::asio::ssl::context::default_workarounds |
+                          boost::asio::ssl::context::single_dh_use);
           m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
                            std::move(ctx), m_ioContext);
         }
