@@ -63,12 +63,16 @@ namespace mtconnect {
         auto clientHandler = make_unique<ClientHandler>();
         clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
           // Publish latest devices, assets, and observations
+          auto &circ = m_sinkContract->getCircularBuffer();
+          std::lock_guard<buffer::CircularBuffer> lock(circ);
+          client->connectComplete();
+
           for (auto &dev : m_sinkContract->getDevices())
           {
             publish(dev);
           }
 
-          for (auto &obs : m_sinkContract->getCircularBuffer().getLatest().getObservations())
+          for (auto &obs : circ.getLatest().getObservations())
           {
             observation::ObservationPtr p {obs.second};
             publish(p);

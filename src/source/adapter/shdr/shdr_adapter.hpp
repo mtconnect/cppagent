@@ -108,7 +108,7 @@ namespace mtconnect {
         for (auto &o : options)
           m_options.insert_or_assign(o.first, o.second);
         m_pipeline.build(m_options);
-        if (m_pipeline.started())
+        if (!m_pipeline.started())
           m_pipeline.start();
       }
 
