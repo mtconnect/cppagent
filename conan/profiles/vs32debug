@@ -1,6 +1,7 @@
 include(default)
 
 [settings]
+compiler=Visual Studio
 build_type=Debug
 arch=x86
 arch_build=x86
