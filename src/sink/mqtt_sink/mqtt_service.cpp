@@ -72,7 +72,8 @@ namespace mtconnect {
             publish(dev);
           }
 
-          for (auto &obs : circ.getLatest().getObservations())
+          auto obsList {circ.getLatest().getObservations()};
+          for (auto &obs : obsList)
           {
             observation::ObservationPtr p {obs.second};
             publish(p);

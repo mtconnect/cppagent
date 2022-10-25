@@ -179,19 +179,21 @@ namespace mtconnect {
       for (const auto &event : m_observations)
       {
         auto e = event.second;
-
-        if (!filterSet || (e && filterSet->count(e->getDataItem()->getId()) > 0))
+        if (!e->isOrphan())
         {
-          if (e->getDataItem()->isCondition())
+          if (!filterSet || (e && filterSet->count(e->getDataItem()->getId()) > 0))
           {
-            for (auto ev = dynamic_pointer_cast<Condition>(e); ev; ev = ev->getPrev())
+            if (e->getDataItem()->isCondition())
             {
-              list.push_back(ev);
+              for (auto ev = dynamic_pointer_cast<Condition>(e); ev; ev = ev->getPrev())
+              {
+                list.push_back(ev);
+              }
             }
-          }
-          else
-          {
-            list.push_back(e);
+            else
+            {
+              list.push_back(e);
+            }
           }
         }
       }

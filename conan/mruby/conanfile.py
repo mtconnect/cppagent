@@ -32,6 +32,38 @@ class MRubyConan(ConanFile):
         self.build_config = os.path.join(self.build_folder, self._mruby_source, "build_config", "mtconnect.rb")
         
         with open(self.build_config, "w") as f:
+            f.write('''
+
+module MRuby
+  module Gem
+    class Specification
+      alias orig_initialize initialize
+      def initialize(name, &block)
+        if name =~ /onig-regexp/
+          puts "!!! Removing methods from #{name}"
+          class << self
+            def search_package(name, version_query=nil); puts "!!!! Not searching for package #{name}"; false; end
+          end
+        end
+        orig_initialize(name, &block)
+      end
+
+      alias orig_setup setup
+      def setup
+        orig_setup
+        if @name =~ /onig-regexp/
+          class << @build.cc
+            def search_header_path(name); puts "!!!! Not checking for header #{name}"; false; end
+          end
+        end
+      end
+    end
+  end
+end
+
+''')
+
+            
             if self.settings.os == 'Windows':
                 if self.settings.arch == 'x86':
                     f.write("ENV['PROCESSOR_ARCHITECTURE'] = 'AMD32'\n")

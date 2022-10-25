@@ -100,6 +100,13 @@ namespace mtconnect {
           return false;
       }
 
+      bool isOrphan()
+      {
+        auto comp = m_dataItem->getComponent();
+        return (!comp ||
+                (m_dataItem->hasProperty("compositionId") && m_dataItem->getComposition()));
+      }
+
       void clearResetTriggered() { m_properties.erase("resetTriggered"); }
 
     protected:

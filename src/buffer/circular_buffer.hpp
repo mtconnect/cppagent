@@ -209,11 +209,14 @@ namespace mtconnect::buffer {
       {
         // Filter out according to if it exists in the list
         auto &event = m_slidingBuffer[i];
-        const std::string &dataId = event->getDataItem()->getId();
-        if (!filterSet || filterSet->count(dataId) > 0)
+        if (!event->isOrphan())
         {
-          results->push_back(event);
-          added++;
+          const std::string &dataId = event->getDataItem()->getId();
+          if (!filterSet || filterSet->count(dataId) > 0)
+          {
+            results->push_back(event);
+            added++;
+          }
         }
       }
 
