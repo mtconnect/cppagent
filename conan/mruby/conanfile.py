@@ -33,6 +33,7 @@ class MRubyConan(ConanFile):
         
         with open(self.build_config, "w") as f:
             f.write('''
+# Work around possible onigmo regex package already installed somewhere
 
 module MRuby
   module Gem
@@ -78,8 +79,17 @@ end
                 f.write("  conf.toolchain\n")
                     
             f.write('''
-  # include the default GEMs
-  conf.gembox 'full-core'
+  # Set up flags for cross compiler and conan packages
+  
+  conf.linker.flags.unshift(ENV['LDFLAGS'].split).flatten!
+  conf.cc.flags.unshift(ENV['CPPFLAGS'].split).flatten!
+
+  Dir.glob("#{root}/mrbgems/mruby-*/mrbgem.rake") do |x|
+    g = File.basename File.dirname x
+    unless g =~ /^mruby-(?:bin-(debugger|mirb)|test)$/
+      conf.gem :core => g
+    end
+  end
 
   # Add regexp support
   conf.gem :github => 'mtconnect/mruby-onig-regexp', :branch => 'windows_porting'
@@ -114,7 +124,7 @@ end
         git.clone("https://github.com/mruby/mruby.git", "3.1.0")
         
     def build(self):
-        self.run("rake MRUBY_CONFIG=%s" % self.build_config,
+        self.run("env; rake MRUBY_CONFIG=%s" % self.build_config,
                  cwd=self._mruby_source)
 
     def package(self):
