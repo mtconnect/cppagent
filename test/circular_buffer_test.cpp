@@ -48,11 +48,20 @@ protected:
     Properties d1 {
         {"id", "1"s}, {"name", "DeviceTest1"s}, {"uuid", "UnivUniqId1"s}, {"iso841Class", "4"s}};
     m_device = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", d1, errors));
+    
+    Properties c1 {{"id", "2"s}, {"name", "Comp1"s}};
+    m_comp1 = Component::make("Comp1",
+                              {{"id", "2"s}, {"name", "Comp1"s}}, errors);
+    m_device->addChild(m_comp1, errors);
+
+    m_comp2 = Component::make("Comp2",
+                              {{"id", "3"s}, {"name", "Comp2"s}}, errors);
+    m_device->addChild(m_comp2, errors);
 
     m_dataItem1 = DataItem::make(
         {{"id", "1"s}, {"type", "LOAD"s}, {"category", "CONDITION"s}, {"name", "DataItemTest1"s}},
         errors);
-    m_dataItem1->setComponent(m_device);
+    m_comp1->addDataItem(m_dataItem1, errors);
 
     m_dataItem2 = DataItem::make({{"id", "3"s},
                                   {"type", "POSITION"s},
@@ -62,7 +71,7 @@ protected:
                                   {"units", "MILLIMETER"s},
                                   {"nativeUnits", "MILLIMETER"s}},
                                  errors);
-    m_dataItem2->setComponent(m_device);
+    m_comp2->addDataItem(m_dataItem2, errors);
   }
 
   void TearDown() override
@@ -115,6 +124,8 @@ protected:
   DataItemPtr m_dataItem1;
   DataItemPtr m_dataItem2;
   DevicePtr m_device;
+  ComponentPtr m_comp1;
+  ComponentPtr m_comp2;
 };
 
 TEST_F(CircularBufferTest, should_add_observations_and_get_list)
@@ -151,5 +162,27 @@ TEST_F(CircularBufferTest, should_add_observations_and_get_limited)
   ASSERT_EQ(1, first);
   ASSERT_EQ(5, end);
   ASSERT_FALSE(eob);
+}
+
+TEST_F(CircularBufferTest, should_skip_orphaned_observations)
+{
+  addSomeObservations();
+  
+  ASSERT_EQ(7, m_circularBuffer->getSequence());
+  
+  ASSERT_TRUE(m_device->removeFromList("Components", m_comp1));
+  m_comp1.reset();
+  ASSERT_EQ(1, m_device->getChildren()->size());
+  
+  std::optional<SequenceNumber_t> start { 1 }, stop;
+  SequenceNumber_t first, end;
+  bool eob = false;
+  FilterSetOpt opt;
+  auto list { m_circularBuffer->getObservations(100, opt, start, stop, end, first, eob) };
+  
+  ASSERT_EQ(2, list->size());
+  ASSERT_EQ(1, first);
+  ASSERT_EQ(7, end);
+  ASSERT_TRUE(eob);
 }
 
