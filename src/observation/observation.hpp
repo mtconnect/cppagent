@@ -104,7 +104,7 @@ namespace mtconnect {
       {
         auto comp = m_dataItem->getComponent();
         return (!comp ||
-                (m_dataItem->hasProperty("compositionId") && m_dataItem->getComposition()));
+                (m_dataItem->hasProperty("compositionId") && !m_dataItem->getComposition()));
       }
 
       void clearResetTriggered() { m_properties.erase("resetTriggered"); }

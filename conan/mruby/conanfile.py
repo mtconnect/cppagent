@@ -124,7 +124,7 @@ end
         git.clone("https://github.com/mruby/mruby.git", "3.1.0")
         
     def build(self):
-        self.run("env; rake MRUBY_CONFIG=%s" % self.build_config,
+        self.run("rake MRUBY_CONFIG=%s" % self.build_config,
                  cwd=self._mruby_source)
 
     def package(self):
