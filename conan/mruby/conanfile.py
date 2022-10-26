@@ -80,9 +80,10 @@ end
                     
             f.write('''
   # Set up flags for cross compiler and conan packages
-  
-  conf.linker.flags.unshift(ENV['LDFLAGS'].split).flatten!
-  conf.cc.flags.unshift(ENV['CPPFLAGS'].split).flatten!
+  ldflags = ENV['LDFLAGS']
+  conf.linker.flags.unshift(ldflags.split).flatten! if ldflags
+  cppflags = ENV['CPPFLAGS']
+  conf.cc.flags.unshift(cppflags.split).flatten! if cppflags
 
   Dir.glob("#{root}/mrbgems/mruby-*/mrbgem.rake") do |x|
     g = File.basename File.dirname x
