@@ -51,7 +51,7 @@ protected:
     m_dataItem1 = DataItem::make(
         {{"id", "1"s}, {"type", "LOAD"s}, {"category", "CONDITION"s}, {"name", "DataItemTest1"s}},
         errors);
-    m_dataItem1->setComponent(m_device);
+    m_device->addDataItem(m_dataItem1, errors);
 
     m_dataItem2 = DataItem::make({{"id", "3"s},
                                   {"type", "POSITION"s},
@@ -61,7 +61,7 @@ protected:
                                   {"units", "MILLIMETER"s},
                                   {"nativeUnits", "MILLIMETER"s}},
                                  errors);
-    m_dataItem2->setComponent(m_device);
+    m_device->addDataItem(m_dataItem2, errors);
   }
 
   void TearDown() override
@@ -552,7 +552,7 @@ TEST_F(CheckpointTest, orphaned_observations_should_be_skipped)
                             {"units", "MILLIMETER"s},
                             {"nativeUnits", "MILLIMETER"s}},
                            errors);
-  d1->setComponent(m_device);
+  m_device->addDataItem(d1, errors);
   
   filter.insert(d1->getId());
 
@@ -564,6 +564,9 @@ TEST_F(CheckpointTest, orphaned_observations_should_be_skipped)
 
   ASSERT_EQ(4, list.size());
 
+  m_dataItem1.reset();
+  m_dataItem2.reset();
+  d1.reset();
   m_device.reset();
   ObservationList list2;
   m_checkpoint->getObservations(list2, filter);

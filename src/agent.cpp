@@ -195,7 +195,9 @@ namespace mtconnect {
     LOG(info) << "Signaling observers to close sessions";
     for (auto di : m_dataItemMap)
     {
-      di.second->signalObservers(0);
+      auto ldi = di.second.lock();
+      if (ldi)
+        ldi->signalObservers(0);
     }
 
     LOG(info) << "Shutting down completed";
@@ -634,7 +636,8 @@ namespace mtconnect {
       auto d = item.second.lock();
       if (m_dataItemMap.count(d->getId()) > 0)
       {
-        if (m_dataItemMap[d->getId()] != d)
+        auto di = m_dataItemMap[d->getId()].lock();        
+        if (di && di != d)
         {
           LOG(fatal) << "Duplicate DataItem id " << d->getId()
                      << " for device: " << *device->getComponentName();

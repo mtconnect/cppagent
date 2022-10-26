@@ -170,6 +170,7 @@ TEST_F(CircularBufferTest, should_skip_orphaned_observations)
   
   ASSERT_EQ(7, m_circularBuffer->getSequence());
   
+  m_dataItem1.reset();
   ASSERT_TRUE(m_device->removeFromList("Components", m_comp1));
   m_comp1.reset();
   ASSERT_EQ(1, m_device->getChildren()->size());

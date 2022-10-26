@@ -71,9 +71,12 @@ namespace mtconnect::buffer {
 
     SequenceNumber_t addToBuffer(observation::ObservationPtr &observation)
     {
-      std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
+      if (observation->isOrphan())
+        return 0;
 
+      std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       auto dataItem = observation->getDataItem();
+        
       if (!dataItem->isDiscrete())
       {
         if (!observation->isUnavailable() && dataItem->isDataSet() &&

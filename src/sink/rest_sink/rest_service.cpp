@@ -620,6 +620,9 @@ namespace mtconnect {
 
     bool RestService::publish(ObservationPtr &observation)
     {
+      if (observation->isOrphan())
+        return false;
+      
       auto dataItem = observation->getDataItem();
       auto seqNum = observation->getSequence();
       dataItem->signalObservers(seqNum);

@@ -122,14 +122,14 @@ namespace mtconnect {
       }
     }
 
-    void Checkpoint::addObservation(ObservationPtr event)
+    void Checkpoint::addObservation(ObservationPtr obs)
     {
-      if (m_filter && m_filter->count(event->getDataItem()->getId()) == 0)
+      if (obs->isOrphan() || (m_filter && m_filter->count(obs->getDataItem()->getId()) == 0))
       {
         return;
       }
 
-      auto item = event->getDataItem();
+      auto item = obs->getDataItem();
       const auto &id = item->getId();
       auto old = m_observations.find(id);
 
@@ -137,24 +137,24 @@ namespace mtconnect {
       {
         if (item->isCondition())
         {
-          auto cond = dynamic_pointer_cast<Condition>(event);
+          auto cond = dynamic_pointer_cast<Condition>(obs);
           // Chain event only if it is normal or unavailable and the
           // previous condition was not normal or unavailable
           addObservation(cond, std::forward<ObservationPtr>(old->second));
         }
         else if (item->isDataSet())
         {
-          auto set = dynamic_pointer_cast<DataSetEvent>(event);
+          auto set = dynamic_pointer_cast<DataSetEvent>(obs);
           addObservation(set, std::forward<ObservationPtr>(old->second));
         }
         else
         {
-          old->second = event;
+          old->second = obs;
         }
       }
       else
       {
-        m_observations[id] = dynamic_pointer_cast<Observation>(event->getptr());
+        m_observations[id] = dynamic_pointer_cast<Observation>(obs->getptr());
       }
     }
 
@@ -176,9 +176,9 @@ namespace mtconnect {
 
     void Checkpoint::getObservations(ObservationList &list, const FilterSetOpt &filterSet) const
     {
-      for (const auto &event : m_observations)
+      for (const auto &obs : m_observations)
       {
-        auto e = event.second;
+        auto e = obs.second;
         if (!e->isOrphan())
         {
           if (!filterSet || (e && filterSet->count(e->getDataItem()->getId()) > 0))
@@ -225,12 +225,15 @@ namespace mtconnect {
       }
     }
 
-    bool Checkpoint::dataSetDifference(ObservationPtr event) const
+    bool Checkpoint::dataSetDifference(ObservationPtr obs) const
     {
-      auto setEvent = dynamic_pointer_cast<DataSetEvent>(event);
-      auto item = event->getDataItem();
+      if (obs->isOrphan())
+        return false;
+      
+      auto setEvent = dynamic_pointer_cast<DataSetEvent>(obs);
+      auto item = obs->getDataItem();
       if (item->isDataSet() && !setEvent->getDataSet().empty() &&
-          !event->hasProperty("resetTriggered"))
+          !obs->hasProperty("resetTriggered"))
       {
         const auto &id = item->getId();
         const auto ptr = m_observations.find(id);

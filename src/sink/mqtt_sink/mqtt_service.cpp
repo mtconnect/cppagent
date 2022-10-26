@@ -122,6 +122,9 @@ namespace mtconnect {
       bool MqttService::publish(observation::ObservationPtr &observation)
       {
         // get the data item from observation
+        if (observation->isOrphan())
+          return false;
+        
         DataItemPtr dataItem = observation->getDataItem();
 
         auto topic = m_observationPrefix + dataItem->getTopic();  // client asyn topic

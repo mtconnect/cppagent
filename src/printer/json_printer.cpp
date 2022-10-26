@@ -388,17 +388,20 @@ namespace mtconnect::printer {
 
       for (auto &observation : observations)
       {
-        const auto dataItem = observation->getDataItem();
-        const auto component = dataItem->getComponent();
-        const auto device = component->getDevice();
-
-        if (!deviceRef || !deviceRef->isDevice(device))
+        if (!observation->isOrphan())
         {
-          devices.emplace_back(device, m_jsonVersion);
-          deviceRef = &devices.back();
+          const auto dataItem = observation->getDataItem();
+          const auto component = dataItem->getComponent();
+          const auto device = component->getDevice();
+          
+          if (!deviceRef || !deviceRef->isDevice(device))
+          {
+            devices.emplace_back(device, m_jsonVersion);
+            deviceRef = &devices.back();
+          }
+          
+          deviceRef->addObservation(observation, device, component, dataItem);
         }
-
-        deviceRef->addObservation(observation, device, component, dataItem);
       }
 
       streams = json::array();
