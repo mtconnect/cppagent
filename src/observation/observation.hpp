@@ -112,8 +112,7 @@ namespace mtconnect {
 
       bool isOrphan() const
       {
-        if (m_dataItem.expired()) return true;
-        auto di = m_dataItem.lock();
+        return m_dataItem.expired();
       }
 
       void clearResetTriggered() { m_properties.erase("resetTriggered"); }
