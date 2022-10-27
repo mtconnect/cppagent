@@ -81,8 +81,6 @@ class CppAgentConan(ConanFile):
             self.options["boost"].visibility = "hidden"
         
     def requirements(self):
-        if self.settings.os == 'Windows':
-            self.requires("nasm/2.15.05", override=True)
         if not self.windows_xp:
             self.requires("gtest/1.10.0")
         if self.options.with_ruby:
