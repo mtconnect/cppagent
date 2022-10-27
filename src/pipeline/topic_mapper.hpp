@@ -140,7 +140,7 @@ namespace mtconnect {
           }
           if (auto it = m_resolved.find(*topic); it != m_resolved.end())
           {
-            dataItem = it->second;
+            dataItem = it->second.lock();
           }
           if (!dataItem && !device)
           {
@@ -167,7 +167,7 @@ namespace mtconnect {
     protected:
       PipelineContextPtr m_context;
       std::optional<std::string> m_defaultDevice;
-      std::unordered_map<std::string, DataItemPtr> m_resolved;
+      std::unordered_map<std::string, std::weak_ptr<device_model::data_item::DataItem>> m_resolved;
       std::unordered_map<std::string, DevicePtr> m_devices;
     };
   }  // namespace pipeline

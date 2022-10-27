@@ -92,7 +92,10 @@ namespace mtconnect::ruby {
           mrb, observationClass, "data_item",
           [](mrb_state *mrb, mrb_value self) {
             ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
-            return MRubySharedPtr<Entity>::wrap(mrb, "DataItem", obs->getDataItem());
+            if (obs->isOrphan())
+              return mrb_nil_value();
+            else
+              return MRubySharedPtr<Entity>::wrap(mrb, "DataItem", obs->getDataItem());
           },
           MRB_ARGS_NONE());
 

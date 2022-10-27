@@ -21,8 +21,7 @@
 
 using namespace std;
 
-namespace mtconnect {
-  namespace entity {
+namespace mtconnect::entity {
     bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
                            ErrorList &errors)
     {
@@ -51,5 +50,26 @@ namespace mtconnect {
 
       return true;
     }
-  }  // namespace entity
+    
+  bool Entity::removeFromList(const std::string &name, EntityPtr entity)
+  {
+    auto &v = getProperty_(name);
+    auto *p = std::get_if<EntityPtr>(&v);
+    if (p)
+    {
+      auto &lv = (*p)->getProperty_("LIST");
+      auto *l = std::get_if<EntityList>(&lv);
+      if (l)
+      {
+        auto it = std::find(l->begin(), l->end(), entity);
+        if (it != l->end())
+        {
+          l->erase(it);
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
 }  // namespace mtconnect

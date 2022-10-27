@@ -211,7 +211,10 @@ add_agent_test(config FALSE configuration)
 add_agent_test(observation TRUE observation)
 add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)
-add_agent_test(checkpoint FALSE observation)
+
+add_agent_test(checkpoint FALSE buffer)
+add_agent_test(circular_buffer FALSE buffer)
+
 
 if (WITH_RUBY)
   add_agent_test(embedded_ruby TRUE ruby)

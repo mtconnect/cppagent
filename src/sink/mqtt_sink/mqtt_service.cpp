@@ -72,7 +72,8 @@ namespace mtconnect {
             publish(dev);
           }
 
-          for (auto &obs : circ.getLatest().getObservations())
+          auto obsList {circ.getLatest().getObservations()};
+          for (auto &obs : obsList)
           {
             observation::ObservationPtr p {obs.second};
             publish(p);
@@ -121,6 +122,9 @@ namespace mtconnect {
       bool MqttService::publish(observation::ObservationPtr &observation)
       {
         // get the data item from observation
+        if (observation->isOrphan())
+          return false;
+        
         DataItemPtr dataItem = observation->getDataItem();
 
         auto topic = m_observationPrefix + dataItem->getTopic();  // client asyn topic
