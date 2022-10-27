@@ -52,8 +52,6 @@ class CppAgentConan(ConanFile):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
-            self.requires("nasm/2.15.05@#aedc0cf872aaa93c6ed9dc4a7119918c", override=True)
-
             if self.settings.build_type and self.settings.build_type == 'Debug':
                 self.settings.compiler.runtime = 'MTd'
             else:
@@ -83,6 +81,8 @@ class CppAgentConan(ConanFile):
             self.options["boost"].visibility = "hidden"
         
     def requirements(self):
+        if self.settings.os == 'Windows':
+            self.requires("nasm/2.15.05@#aedc0cf872aaa93c6ed9dc4a7119918c", override=True)
         if not self.windows_xp:
             self.requires("gtest/1.10.0")
         if self.options.with_ruby:
