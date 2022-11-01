@@ -57,7 +57,7 @@ namespace mtconnect {
         auto o = std::dynamic_pointer_cast<Observation>(entity);
         if (o->isOrphan())
           return EntityPtr();
-        auto di = o->getDataItem();        
+        auto di = o->getDataItem();
         auto &id = di->getId();
 
         if (o->isUnavailable())

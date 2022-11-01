@@ -22,6 +22,13 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/range/adaptor/sliced.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm_ext.hpp>
+#include <boost/range/any_range.hpp>
+#include <boost/range/functions.hpp>
+#include <boost/range/metafunctions.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -265,7 +272,7 @@ namespace mtconnect {
       {
         m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
       }
-      
+
       updateAssetCounts(device, asset->getType());
     }
   }
@@ -357,21 +364,48 @@ namespace mtconnect {
         LOG(error) << "Device does not have a name" << *device->getUuid();
         return false;
       }
+      
+      ErrorList errors;
+      for (auto &id : ids)
+      {
+        if (auto di = device->getDeviceDataItem(id); !di)
+        {
+          device->addDataItem(oldDev->getDeviceDataItem(id), errors);
+        }
+      }
+      
+      vector<string> keys;
+      boost::push_back(keys, oldDev->getDeviceDataItems() | boost::adaptors::map_keys);
 
       LOG(info) << "Updating device " << *uuid << " to new device model";
-      if (oldDev->reviseTo(device, ids))
+      if (*device != *oldDev)
       {
+        device.reset();
+        
         LOG(info) << "Device " << *uuid << " changed, updating mappings";
 
         // Remove the old data items
-        for (auto di : oldDev->getDeviceDataItems())
-          m_dataItemMap.erase(di.first);
+        for (auto &k : keys)
+          m_dataItemMap.erase(k);
 
         // Reinitialize data item maps
         oldDev->initialize();
 
-        for (auto di : oldDev->getDeviceDataItems())
-          m_dataItemMap.emplace(di.first, di.second);
+        for (auto &di : oldDev->getDeviceDataItems())
+        {
+          if (di.second.lock()->isOrphan())
+          {
+            LOG(warning) << "Orphaned Data Item in data item map: " << di.second.lock()->getTopic();
+          }
+          else
+          {
+            auto [it, added] = m_dataItemMap.emplace(di.first, di.second);
+            if (!added)
+            {
+              LOG(error) << "Could not update data item map with new data item: " << di.second.lock()->getTopic();
+            }
+          }
+        }
 
         if (oldDev->get<string>("name") != *name)
         {
@@ -438,7 +472,7 @@ namespace mtconnect {
         sink->publish(asset);
 
       notifyAssetRemoved(device, asset);
-      
+
       return true;
     }
     else
@@ -461,13 +495,13 @@ namespace mtconnect {
       else
         uuid = device;
     }
-    
+
     auto count = m_assetStorage->removeAll(list, uuid, type, time);
     for (auto &asset : list)
     {
       notifyAssetRemoved(nullptr, asset);
     }
-    
+
     if (dev)
     {
       updateAssetCounts(dev, type);
@@ -684,7 +718,7 @@ namespace mtconnect {
       auto d = item.second.lock();
       if (m_dataItemMap.count(d->getId()) > 0)
       {
-        auto di = m_dataItemMap[d->getId()].lock();        
+        auto di = m_dataItemMap[d->getId()].lock();
         if (di && di != d)
         {
           LOG(fatal) << "Duplicate DataItem id " << d->getId()
@@ -1148,27 +1182,25 @@ namespace mtconnect {
       LOG(error) << "Invalid assent command: " << cmd;
     }
   }
-  
-  void Agent::updateAssetCounts(const DevicePtr &device,
-                                const std::optional<std::string> type)
+
+  void Agent::updateAssetCounts(const DevicePtr &device, const std::optional<std::string> type)
   {
     if (!device)
       return;
-    
+
     auto dc = device->getAssetCount();
     if (dc)
     {
       if (type)
       {
         auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
-        
+
         DataSet set {DataSetEntry(*type, int64_t(count))};
         m_loopback->receive(dc, {{"VALUE", set}});
       }
       else
       {
         auto types = m_assetStorage->getCountsByType();
-        
       }
     }
   }

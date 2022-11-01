@@ -622,7 +622,7 @@ namespace mtconnect {
     {
       if (observation->isOrphan())
         return false;
-      
+
       auto dataItem = observation->getDataItem();
       auto seqNum = observation->getSequence();
       dataItem->signalObservers(seqNum);

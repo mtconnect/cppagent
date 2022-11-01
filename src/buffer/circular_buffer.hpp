@@ -76,7 +76,7 @@ namespace mtconnect::buffer {
 
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       auto dataItem = observation->getDataItem();
-        
+
       if (!dataItem->isDiscrete())
       {
         if (!observation->isUnavailable() && dataItem->isDataSet() &&

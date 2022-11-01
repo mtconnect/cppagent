@@ -98,10 +98,12 @@ namespace mtconnect {
       bool operator<(const Observation &another) const
       {
         auto di = m_dataItem.lock();
-        if (!di) return false;
+        if (!di)
+          return false;
         auto odi = another.m_dataItem.lock();
-        if (!odi) return true;
-        
+        if (!odi)
+          return true;
+
         if ((*di) < (*odi))
           return true;
         else if (*di == *odi)
@@ -112,7 +114,19 @@ namespace mtconnect {
 
       bool isOrphan() const
       {
-        return m_dataItem.expired();
+#ifdef NDEBUG
+        return m_dataItem.expired() || m_dataItem.lock()->isOrphan();
+#else
+        if (m_dataItem.expired())
+          return true;
+        if (m_dataItem.lock()->isOrphan())
+        {
+          auto di = m_dataItem.lock();
+          LOG(trace) << "!!! DataItem " << di->getTopicName() << " orphaned";
+          return true;
+        }
+        return false;
+#endif
       }
 
       void clearResetTriggered() { m_properties.erase("resetTriggered"); }

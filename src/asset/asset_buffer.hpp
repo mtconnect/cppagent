@@ -17,28 +17,29 @@
 
 #pragma once
 
+#include <boost/lambda/lambda.hpp>
+#include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/key.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/range/adaptor/sliced.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm_ext.hpp>
+#include <boost/range/any_range.hpp>
+#include <boost/range/functions.hpp>
+#include <boost/range/metafunctions.hpp>
+
 #include <list>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 
-#include <boost/lambda/lambda.hpp>
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/identity.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index/mem_fun.hpp>
-#include <boost/multi_index/composite_key.hpp>
-#include <boost/multi_index/key.hpp>
-#include <boost/range/adaptors.hpp>
-#include <boost/range/adaptor/sliced.hpp>
-#include <boost/range/algorithm.hpp>
-#include <boost/range/any_range.hpp>
-#include <boost/range/functions.hpp>
-#include <boost/range/metafunctions.hpp>
-#include <boost/range/algorithm_ext.hpp>
 #include "asset.hpp"
 #include "asset_storage.hpp"
 #include "utilities.hpp"
@@ -49,17 +50,18 @@ namespace mtconnect::asset {
   class AssetBuffer : public AssetStorage
   {
   public:
-    struct AssetNode {
-      AssetNode(AssetPtr &asset) : m_asset(asset),
-      m_identity(asset->getAssetId()) {}
+    struct AssetNode
+    {
+      AssetNode(AssetPtr &asset) : m_asset(asset), m_identity(asset->getAssetId()) {}
       ~AssetNode() = default;
-      
+
       using element_type = AssetPtr;
-      
+
       const std::string &getAssetId() const { return m_identity; }
       const std::string &getType() const { return m_asset->getType(); }
-      const std::string &getDeviceUuid() const {
-        static const std::string unknown { "UNKNOWN" };
+      const std::string &getDeviceUuid() const
+      {
+        static const std::string unknown {"UNKNOWN"};
         const auto &dev = m_asset->getProperty("deviceUuid");
         if (std::holds_alternative<std::string>(dev))
           return std::get<std::string>(dev);
@@ -67,41 +69,39 @@ namespace mtconnect::asset {
           return unknown;
       }
       bool isRemoved() const { return m_asset->isRemoved(); }
-      
-      bool operator<(const AssetNode &o) const
-      {
-        return m_identity < o.m_identity;
-      }
-      
+
+      bool operator<(const AssetNode &o) const { return m_identity < o.m_identity; }
+
       AssetPtr operator*() const { return m_asset; }
 
       AssetPtr m_asset;
       std::string m_identity;
     };
-    
+
   public:
     using AssetId = std::string;
     using AssetType = std::string;
     using DeviceUuid = std::string;
     using RemoveCountByType = std::unordered_map<AssetType, size_t>;
     using RemoveCountByDeviceAndType = std::unordered_map<DeviceUuid, RemoveCountByType>;
-    
-    struct ByFifo {};
-    struct ByAssetId {};
-    struct ByDeviceAndType {};
-    struct ByType {};
+
+    struct ByFifo
+    {};
+    struct ByAssetId
+    {};
+    struct ByDeviceAndType
+    {};
+    struct ByType
+    {};
 
     using AssetIndex = mic::multi_index_container<
-      AssetNode,
-      mic::indexed_by<
-        mic::sequenced<mic::tag<ByFifo>>,
-        mic::hashed_unique<mic::tag<ByAssetId>, mic::key<&AssetNode::m_identity> >,
-        mic::ordered_non_unique<mic::tag<ByDeviceAndType>,
-          mic::key<&AssetNode::getDeviceUuid, &AssetNode::getType>
-        >,
-        mic::hashed_non_unique<mic::tag<ByType>, mic::key<&AssetNode::getType> >
-      >
-    >;
+        AssetNode,
+        mic::indexed_by<
+            mic::sequenced<mic::tag<ByFifo>>,
+            mic::hashed_unique<mic::tag<ByAssetId>, mic::key<&AssetNode::m_identity>>,
+            mic::ordered_non_unique<mic::tag<ByDeviceAndType>,
+                                    mic::key<&AssetNode::getDeviceUuid, &AssetNode::getType>>,
+            mic::hashed_non_unique<mic::tag<ByType>, mic::key<&AssetNode::getType>>>>;
 
     AssetBuffer(size_t max) : AssetStorage(max) {}
     ~AssetBuffer() = default;
@@ -118,7 +118,7 @@ namespace mtconnect::asset {
     {
       AssetPtr old {};
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      
+
       if (!asset->getTimestamp())
       {
         asset->setProperty("timestamp", getCurrentTime(GMT_UV_SEC));
@@ -128,9 +128,9 @@ namespace mtconnect::asset {
       {
         throw entity::PropertyError("Asset does not have an asset id");
       }
-      
+
       auto added = m_index.emplace_front(asset);
-      
+
       // Is duplicate
       if (!added.second)
       {
@@ -148,10 +148,10 @@ namespace mtconnect::asset {
           adjustCount(old, -1);
         }
       }
-      
+
       return old;
     }
-    
+
     AssetPtr removeAsset(const std::string &id,
                          const std::optional<Timestamp> &time = std::nullopt) override
     {
@@ -171,7 +171,7 @@ namespace mtconnect::asset {
           adjustCount(asset, 1);
         }
       }
-      
+
       return asset;
     }
 
@@ -190,12 +190,9 @@ namespace mtconnect::asset {
                              const std::optional<std::string> device = std::nullopt,
                              const std::optional<std::string> type = std::nullopt) const override
     {
-      using namespace boost::adaptors;
-
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      
       boost::any_range<AssetNode, boost::forward_traversal_tag> range;
-      
+
       if (device)
       {
         if (type)
@@ -212,7 +209,7 @@ namespace mtconnect::asset {
         auto &idx = m_index.get<ByFifo>();
         range = std::make_pair(idx.begin(), idx.end());
       }
-      
+
       for (auto &a : range)
       {
         if (removed || !a.isRemoved())
@@ -235,38 +232,35 @@ namespace mtconnect::asset {
       return list.size();
     }
 
-    size_t getCountForDeviceAndType(const std::string &device,
-                                    const std::string &type,
+    size_t getCountForDeviceAndType(const std::string &device, const std::string &type,
                                     bool active = true) const override
     {
       using namespace boost::adaptors;
 
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      
-      return boost::count_if(m_index.get<ByDeviceAndType>().equal_range(std::make_tuple(device, type)),
-                             activePredicate(active));
+
+      return boost::count_if(
+          m_index.get<ByDeviceAndType>().equal_range(std::make_tuple(device, type)),
+          activePredicate(active));
     }
 
-    size_t getCountForType(const std::string &type,
-                           bool active = true) const override
+    size_t getCountForType(const std::string &type, bool active = true) const override
     {
       using namespace boost::adaptors;
 
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
-      
-      return boost::count_if(m_index.get<ByType>().equal_range(type),
-                             activePredicate(active));
+
+      return boost::count_if(m_index.get<ByType>().equal_range(type), activePredicate(active));
     }
 
-    size_t getCountForDevice(const std::string &device,
-                             bool active = true) const override
+    size_t getCountForDevice(const std::string &device, bool active = true) const override
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
 
       return boost::count_if(m_index.get<ByDeviceAndType>().equal_range(std::make_tuple(device)),
                              activePredicate(active));
     }
-    
+
     TypeCount getCountsByType(bool active = true) const override
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
@@ -290,15 +284,14 @@ namespace mtconnect::asset {
       return res;
     }
 
-    TypeCount getCountsByType(const std::string &device,
-                              bool active = true) const override
+    TypeCount getCountsByType(const std::string &device, bool active = true) const override
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       TypeCount res;
       auto &idx = m_index.get<ByDeviceAndType>();
       auto removes = m_deviceRemoveCount.find(device);
-      const auto *ridx { removes == m_deviceRemoveCount.end() ? nullptr : &removes->second };
-      
+      const auto *ridx {removes == m_deviceRemoveCount.end() ? nullptr : &removes->second};
+
       auto range = idx.equal_range(std::make_tuple(device));
       auto it = range.first;
       while (it != range.second)
@@ -317,7 +310,7 @@ namespace mtconnect::asset {
 
       return res;
     }
-    
+
     size_t removeAll(AssetList &list, const std::optional<std::string> device = std::nullopt,
                      const std::optional<std::string> type = std::nullopt,
                      const std::optional<Timestamp> &time = std::nullopt) override
@@ -340,17 +333,17 @@ namespace mtconnect::asset {
         auto pos = mic::project<ByFifo>(m_index, it);
         return std::distance(fifo.begin(), pos);
       }
-            
+
       return -1;
     }
-    
+
   protected:
     void adjustCount(AssetPtr asset, int delta)
     {
       const auto &type = asset->getType();
       const auto &dev = asset->getDeviceUuid();
       bool found = false;
-      
+
       if (dev)
       {
         auto it = m_deviceRemoveCount.find(*dev);
@@ -363,15 +356,15 @@ namespace mtconnect::asset {
             found = true;
           }
         }
-        
+
         if (!found && delta > 0)
         {
           m_deviceRemoveCount[*dev][type] = delta;
         }
-        
+
         m_removedAssets += delta;
       }
-      
+
       if (auto it = m_typeRemoveCount.find(type); it != m_typeRemoveCount.end())
       {
         it->second += delta;
@@ -389,12 +382,12 @@ namespace mtconnect::asset {
       else
         return [](const AssetNode &a) -> bool { return true; };
     }
-        
+
   protected:
     size_t m_removedAssets {0};
     AssetIndex m_index;
-    
+
     RemoveCountByDeviceAndType m_deviceRemoveCount;
     RemoveCountByType m_typeRemoveCount;
   };
-}  // namespace mtconnect
+}  // namespace mtconnect::asset

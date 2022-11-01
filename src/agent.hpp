@@ -210,7 +210,7 @@ namespace mtconnect {
     void initializeDataItems(DevicePtr device);
     void loadCachedProbe();
     void versionDeviceXml();
-    
+
     // Asset count management
     void updateAssetCounts(const DevicePtr &device, const std::optional<std::string> type);
 

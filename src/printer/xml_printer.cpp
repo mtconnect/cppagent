@@ -453,30 +453,30 @@ namespace mtconnect::printer {
                 const auto &dataItem = observation->getDataItem();
                 const auto &component = dataItem->getComponent();
                 const auto &device = component->getDevice();
-                
+
                 if (deviceElement.key() != device->getId())
                 {
                   categoryElement.reset("");
                   componentStreamElement.reset("");
-                  
+
                   deviceElement.reset("DeviceStream", device->getId());
                   addAttribute(writer, "name", *device->getComponentName());
                   addAttribute(writer, "uuid", *device->getUuid());
                 }
-                
+
                 if (componentStreamElement.key() != component->getId())
                 {
                   categoryElement.reset("");
-                  
+
                   componentStreamElement.reset("ComponentStream", component->getId());
                   addAttribute(writer, "component", component->getName());
                   if (component->getComponentName())
                     addAttribute(writer, "name", *component->getComponentName());
                   addAttribute(writer, "componentId", component->getId());
                 }
-                
+
                 categoryElement.reset(dataItem->getCategoryText());
-                
+
                 addObservation(writer, observation);
               }
             }

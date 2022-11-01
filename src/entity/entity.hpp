@@ -136,7 +136,7 @@ namespace mtconnect {
       bool addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
                      ErrorList &errors);
       bool removeFromList(const std::string &name, EntityPtr entity);
-      
+
       void setValue(const Value &v) { setProperty("VALUE", v); }
       void erase(const std::string &name) { m_properties.erase(name); }
 
@@ -316,31 +316,42 @@ namespace mtconnect {
           if (const auto &id = o->getIdentity(); !std::holds_alternative<std::monostate>(id))
           {
             auto it = boost::find_if(list, [&id](auto &e) { return e->getIdentity() == id; });
-
+            LOG(trace) << " ... Merging " << o->getName() << " with identity: ";
+            if (std::holds_alternative<std::string>(id))
+                LOG(trace) << std::get<std::string>(id);
+                
             if (it != list.end())
             {
               if ((*it)->reviseTo(o, m_protect))
+              {
+                LOG(trace) << " ... ... List item: " << o->getName() << " changed";
                 changed = true;
+              }
               revised.push_back(*it);
               list.erase(it);
             }
             else
             {
+              LOG(trace) << " ... ... List item: " << o->getName() << " added";
               revised.push_back(o);
               changed = true;
             }
           }
           else
           {
+            LOG(trace) << " ... Merging " << o->getName() << " with no identity";
+
             auto it = boost::find_if(list, [&o](auto &e) { return *(o.get()) == *(e.get()); });
 
             if (it != list.end())
             {
+              LOG(trace) << " ... ... List item: " << o->getName() << " found and replacing";
               revised.push_back(*it);
               list.erase(it);
             }
             else
             {
+              LOG(trace) << " ... ... List item: " << o->getName() << " added";
               revised.push_back(o);
               changed = true;
             }
@@ -382,6 +393,7 @@ namespace mtconnect {
       bool changed = false;
       if (m_name != other->m_name)
       {
+        LOG(trace) << "Entity: " << m_name << "Changed name to: " << other->m_name;
         m_name = other->m_name;
         changed = true;
       }
@@ -394,17 +406,22 @@ namespace mtconnect {
         {
           if (value.index() != op->second.index())
           {
+            LOG(trace) << m_name << " Property: " << key << " changed value type";
             value = op->second;
             changed = true;
           }
           else
           {
             if (std::visit(ValueMergeVisitor(value, protect), op->second))
+            {
+              LOG(trace) << m_name << " Property: " << key << " changed value";
               changed = true;
+            }
           }
         }
         else
         {
+          LOG(trace) << m_name << " Property: " << key << " removed";
           removed.push_back(key);
           changed = true;
         }
