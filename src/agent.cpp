@@ -265,15 +265,8 @@ namespace mtconnect {
       {
         m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
       }
-
-      auto dc = device->getAssetCount();
-      if (dc)
-      {
-        auto count = m_assetStorage->getCountForType(asset->getType());
-
-        DataSet set {DataSetEntry(asset->getType(), int64_t(count))};
-        m_loopback->receive(dc, {{"VALUE", set}});
-      }
+      
+      updateAssetCounts(device, asset->getType());
     }
   }
 
@@ -445,6 +438,7 @@ namespace mtconnect {
         sink->publish(asset);
 
       notifyAssetRemoved(device, asset);
+      
       return true;
     }
     else
@@ -458,20 +452,32 @@ namespace mtconnect {
                               const std::optional<Timestamp> time, asset::AssetList &list)
   {
     std::optional<std::string> uuid;
+    DevicePtr dev;
     if (device)
     {
-      auto dev = findDeviceByUUIDorName(*device);
+      dev = findDeviceByUUIDorName(*device);
       if (dev)
         uuid = dev->getUuid();
       else
         uuid = device;
     }
-
+    
     auto count = m_assetStorage->removeAll(list, uuid, type, time);
     for (auto &asset : list)
     {
       notifyAssetRemoved(nullptr, asset);
     }
+    
+    if (dev)
+    {
+      updateAssetCounts(dev, type);
+    }
+    else
+    {
+      for (auto d : m_devices)
+        updateAssetCounts(d, type);
+    }
+
     return count > 0;
   }
 
@@ -1140,6 +1146,30 @@ namespace mtconnect {
     else
     {
       LOG(error) << "Invalid assent command: " << cmd;
+    }
+  }
+  
+  void Agent::updateAssetCounts(const DevicePtr &device,
+                                const std::optional<std::string> type)
+  {
+    if (!device)
+      return;
+    
+    auto dc = device->getAssetCount();
+    if (dc)
+    {
+      if (type)
+      {
+        auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
+        
+        DataSet set {DataSetEntry(*type, int64_t(count))};
+        m_loopback->receive(dc, {{"VALUE", set}});
+      }
+      else
+      {
+        auto types = m_assetStorage->getCountsByType();
+        
+      }
     }
   }
 
