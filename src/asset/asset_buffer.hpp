@@ -137,6 +137,10 @@ namespace mtconnect::asset {
         old = added.first->m_asset;
         m_index.modify(added.first, [&asset](AssetNode &n) { n.m_asset = asset; });
         m_index.relocate(m_index.begin(), added.first);
+        if (asset->isRemoved() && !old->isRemoved())
+          adjustCount(asset, 1);
+        else if (!asset->isRemoved() && old->isRemoved())
+          adjustCount(old, -1);
       }
       else if (m_index.size() > m_maxAssets)
       {

@@ -212,10 +212,26 @@ namespace mtconnect {
         const auto &list = std::get<EntityList>(m_this);
         if (list.size() != other.size())
           return false;
-        for (auto it1 = list.cbegin(), it2 = other.cbegin(); it1 != list.cend(); it1++, it2++)
+
+        auto it = list.cbegin();
+        if (!std::holds_alternative<std::monostate>((*it)->getIdentity()))
         {
-          if (*(it1->get()) != *(it2->get()))
-            return false;
+          for (; it != list.cend(); it++)
+          {
+            auto id = (*it)->getIdentity();
+            auto oit =
+                boost::find_if(other, [&id](const auto &e) { return id == e->getIdentity(); });
+            if (oit == other.end() || *(it->get()) != *(oit->get()))
+              return false;
+          }
+        }
+        else
+        {
+          for (auto oit = other.cbegin(); it != list.cend(); it++, oit++)
+          {
+            if (*(it->get()) != *(oit->get()))
+              return false;
+          }
         }
 
         return true;
