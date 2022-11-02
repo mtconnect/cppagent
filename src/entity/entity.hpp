@@ -318,8 +318,8 @@ namespace mtconnect {
             auto it = boost::find_if(list, [&id](auto &e) { return e->getIdentity() == id; });
             LOG(trace) << " ... Merging " << o->getName() << " with identity: ";
             if (std::holds_alternative<std::string>(id))
-                LOG(trace) << std::get<std::string>(id);
-                
+              LOG(trace) << std::get<std::string>(id);
+
             if (it != list.end())
             {
               if ((*it)->reviseTo(o, m_protect))

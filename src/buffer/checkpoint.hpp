@@ -53,7 +53,7 @@ namespace mtconnect::buffer {
         o.second->updateDataItem(diMap);
       }
     }
-    
+
     void getObservations(observation::ObservationList &list,
                          const FilterSetOpt &filter = std::nullopt) const;
 

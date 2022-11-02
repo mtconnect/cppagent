@@ -61,17 +61,17 @@ namespace mtconnect::buffer {
     unsigned int getBufferSize() const { return m_slidingBufferSize; }
 
     SequenceNumber_t getFirstSequence() const { return m_firstSequence; }
-    
+
     void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
     {
       for (auto &o : m_slidingBuffer)
       {
         o->updateDataItem(diMap);
       }
-      
+
       m_first.updateDataItems(diMap);
       m_latest.updateDataItems(diMap);
-      
+
       for (auto &cp : m_checkpoints)
       {
         cp->updateDataItems(diMap);

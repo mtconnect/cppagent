@@ -1308,7 +1308,7 @@ Port = 0
         EXPECT_TRUE(last);
         EXPECT_EQ("001", last->getUuid());
 
-        auto dis = last->getDeviceDataItems();
+        const auto &dis = last->getDeviceDataItems();
         EXPECT_EQ(5, dis.size());
 
         EXPECT_TRUE(last->getDeviceDataItem("xd1"));

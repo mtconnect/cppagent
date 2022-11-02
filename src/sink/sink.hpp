@@ -57,7 +57,7 @@ namespace mtconnect {
       // Get device from device map
       virtual DevicePtr getDeviceByName(const std::string &name) const = 0;
       virtual DevicePtr findDeviceByUUIDorName(const std::string &idOrName) const = 0;
-      virtual const std::list<DevicePtr> &getDevices() const = 0;
+      virtual const std::list<DevicePtr> getDevices() const = 0;
       virtual DevicePtr defaultDevice() const = 0;
       virtual DataItemPtr getDataItemById(const std::string &id) const = 0;
       virtual void getDataItemsForPath(const DevicePtr device,
