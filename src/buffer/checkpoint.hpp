@@ -46,6 +46,14 @@ namespace mtconnect::buffer {
       return m_observations;
     }
 
+    void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
+    {
+      for (auto &o : m_observations)
+      {
+        o.second->updateDataItem(diMap);
+      }
+    }
+    
     void getObservations(observation::ObservationList &list,
                          const FilterSetOpt &filter = std::nullopt) const;
 

@@ -346,18 +346,6 @@ namespace mtconnect {
     }
     else
     {
-      // if different,  and revise to new device leaving in place
-      // the asset changed, removed, and availability data items
-      std::set<std::string> ids;
-      if (oldDev->getAssetChanged())
-        ids.insert(oldDev->getAssetChanged()->getId());
-      if (oldDev->getAssetRemoved())
-        ids.insert(oldDev->getAssetRemoved()->getId());
-      if (oldDev->getAvailability())
-        ids.insert(oldDev->getAvailability()->getId());
-      if (oldDev->getAssetCount())
-        ids.insert(oldDev->getAssetCount()->getId());
-
       auto name = device->getComponentName();
       if (!name)
       {
@@ -365,59 +353,48 @@ namespace mtconnect {
         return false;
       }
       
+      // if different,  and revise to new device leaving in place
+      // the asset changed, removed, and availability data items
       ErrorList errors;
-      for (auto &id : ids)
-      {
-        if (auto di = device->getDeviceDataItem(id); !di)
-        {
-          device->addDataItem(oldDev->getDeviceDataItem(id), errors);
-        }
-      }
-      
-      vector<string> keys;
-      boost::push_back(keys, oldDev->getDeviceDataItems() | boost::adaptors::map_keys);
+      if (auto odi = oldDev->getAssetChanged(), ndi = device->getAssetChanged(); odi && !ndi)
+        device->addDataItem(odi, errors);
+      if (auto odi = oldDev->getAssetRemoved(), ndi = device->getAssetRemoved(); odi && !ndi)
+        device->addDataItem(odi, errors);
+      if (auto odi = oldDev->getAvailability(), ndi = device->getAvailability(); odi && !ndi)
+        device->addDataItem(odi, errors);
+      if (auto odi = oldDev->getAssetCount(), ndi = device->getAssetCount(); odi && !ndi)
+        device->addDataItem(odi, errors);
 
-      LOG(info) << "Updating device " << *uuid << " to new device model";
+      LOG(info) << "Checking if device " << *uuid << " has changed";
       if (*device != *oldDev)
       {
-        device.reset();
-        
-        LOG(info) << "Device " << *uuid << " changed, updating mappings";
+        LOG(info) << "Device " << *uuid << " changed, updating model";
 
         // Remove the old data items
-        for (auto &k : keys)
+        for (auto &k : oldDev->getDeviceDataItems() | boost::adaptors::map_keys)
           m_dataItemMap.erase(k);
 
-        // Reinitialize data item maps
-        oldDev->initialize();
-
-        for (auto &di : oldDev->getDeviceDataItems())
+        // Replace device in device maps
+        auto it = find(m_devices.begin(), m_devices.end(), oldDev);
+        if (it != m_devices.end())
+          *it = device;
+        else
         {
-          if (di.second.lock()->isOrphan())
-          {
-            LOG(warning) << "Orphaned Data Item in data item map: " << di.second.lock()->getTopic();
-          }
-          else
-          {
-            auto [it, added] = m_dataItemMap.emplace(di.first, di.second);
-            if (!added)
-            {
-              LOG(error) << "Could not update data item map with new data item: " << di.second.lock()->getTopic();
-            }
-          }
+          LOG(error) << "Cannot find Device " << *uuid << " in devices";
+          return false;
         }
-
-        if (oldDev->get<string>("name") != *name)
+        
+        m_deviceNameMap[*device->getComponentName()] = device;
+        m_deviceUuidMap[*device->getUuid()] = device;
+        
+        for (auto &di : device->getDeviceDataItems())
         {
-          m_deviceNameMap.erase(*name);
-          m_deviceNameMap[oldDev->get<string>("name")] = oldDev;
+          m_dataItemMap[di.first] = di.second;
         }
-        if (oldDev->get<string>("uuid") != *uuid)
-        {
-          m_deviceUuidMap.erase(*uuid);
-          m_deviceUuidMap[oldDev->get<string>("uuid")] = oldDev;
-        }
-
+        
+        LOG(info) << "Device " << *uuid << " updating circular buffer";
+        m_circularBuffer.updateDataItems(m_dataItemMap);
+        
         if (version)
           versionDeviceXml();
 

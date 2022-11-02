@@ -67,6 +67,14 @@ namespace mtconnect {
 
       const auto getDataItem() const { return m_dataItem.lock(); }
       auto getSequence() const { return m_sequence; }
+      
+      void updateDataItem(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
+      {
+        auto old = m_dataItem.lock();
+        auto ndi = diMap.find(old->getId());
+        if (ndi != diMap.end())
+          m_dataItem = ndi->second;
+      }
 
       void setTimestamp(const Timestamp &ts)
       {
@@ -115,7 +123,7 @@ namespace mtconnect {
       bool isOrphan() const
       {
 #ifdef NDEBUG
-        return m_dataItem.expired() || m_dataItem.lock()->isOrphan();
+        return m_dataItem.expired();
 #else
         if (m_dataItem.expired())
           return true;

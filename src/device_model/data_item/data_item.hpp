@@ -221,5 +221,6 @@ namespace mtconnect {
     }  // namespace data_item
   }    // namespace device_model
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+  using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
 
 }  // namespace mtconnect
