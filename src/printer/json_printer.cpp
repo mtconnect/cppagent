@@ -110,11 +110,10 @@ namespace mtconnect::printer {
     return doc;
   }
 
-  inline json streamHeader(const string &version, const string &hostname,
-                           const uint64_t instanceId, const unsigned int bufferSize,
-                           const uint64_t nextSequence, const uint64_t firstSequence,
-                           const uint64_t lastSequence, const string &schemaVersion,
-                           const string modelChangeTime)
+  inline json streamHeader(const string &version, const string &hostname, const uint64_t instanceId,
+                           const unsigned int bufferSize, const uint64_t nextSequence,
+                           const uint64_t firstSequence, const uint64_t lastSequence,
+                           const string &schemaVersion, const string modelChangeTime)
   {
     json doc = header(version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime);
     doc["nextSequence"] = nextSequence;

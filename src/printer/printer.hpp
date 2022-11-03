@@ -56,7 +56,7 @@ namespace mtconnect {
                                       const uint64_t nextSeq, const ProtoErrorList &list) const = 0;
 
       virtual std::string printProbe(
-                                     const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
+          const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
           const unsigned int assetBufferSize, const unsigned int assetCount,
           const std::list<DevicePtr> &devices,
           const std::map<std::string, size_t> *count = nullptr) const = 0;
@@ -65,8 +65,8 @@ namespace mtconnect {
                                       const uint64_t nextSeq, const uint64_t firstSeq,
                                       const uint64_t lastSeq,
                                       observation::ObservationList &results) const = 0;
-      virtual std::string printAssets(const uint64_t anInstanceId,
-                                      const unsigned int bufferSize, const unsigned int assetCount,
+      virtual std::string printAssets(const uint64_t anInstanceId, const unsigned int bufferSize,
+                                      const unsigned int assetCount,
                                       asset::AssetList const &asset) const = 0;
       virtual std::string mimeType() const = 0;
 

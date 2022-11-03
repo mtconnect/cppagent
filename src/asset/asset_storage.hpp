@@ -59,7 +59,8 @@ namespace mtconnect {
       virtual size_t getCountForType(const std::string &type, bool active = true) const = 0;
       virtual size_t getCountForDevice(const std::string &device, bool active = true) const = 0;
 
-      virtual TypeCount getCountsByTypeForDevice(const std::string &device, bool active = true) const = 0;
+      virtual TypeCount getCountsByTypeForDevice(const std::string &device,
+                                                 bool active = true) const = 0;
 
       // Bulk remove
       virtual size_t removeAll(AssetList &list,

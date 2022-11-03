@@ -700,7 +700,7 @@ TEST_F(AgentTest, AddToBuffer)
   QueryMap query;
 
   string device("LinuxCNC"), key("badKey"), value("ON");
-  SequenceNumber_t seqNum { 0 };
+  SequenceNumber_t seqNum {0};
   auto rest = m_agentTestHelper->getRestService();
   auto event1 = rest->getFromBuffer(seqNum);
   ASSERT_FALSE(event1);

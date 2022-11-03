@@ -657,7 +657,8 @@ namespace mtconnect {
           printer->printProbe(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
                               m_sinkContract->getCircularBuffer().getSequence(),
                               uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
-                              uint32_t(m_sinkContract->getAssetStorage()->getCount()), deviceList, &counts),
+                              uint32_t(m_sinkContract->getAssetStorage()->getCount()), deviceList,
+                              &counts),
           printer->mimeType());
     }
 
@@ -1015,7 +1016,8 @@ namespace mtconnect {
       m_sinkContract->getAssetStorage()->getAssets(list, count, !removed, uuid, type);
       return make_unique<Response>(
           status::ok,
-          printer->printAssets(m_instanceId, uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+          printer->printAssets(m_instanceId,
+                               uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
                                uint32_t(m_sinkContract->getAssetStorage()->getCount()), list),
           printer->mimeType());
     }
@@ -1042,7 +1044,8 @@ namespace mtconnect {
       {
         return make_unique<Response>(
             status::ok,
-            printer->printAssets(m_instanceId, uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+            printer->printAssets(m_instanceId,
+                                 uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
                                  uint32_t(m_sinkContract->getAssetStorage()->getCount()), list),
             printer->mimeType());
       }
@@ -1079,7 +1082,8 @@ namespace mtconnect {
       AssetList list {ap};
       return make_unique<Response>(
           status::ok,
-          printer->printAssets(m_instanceId, uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+          printer->printAssets(m_instanceId,
+                               uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
                                uint32_t(m_sinkContract->getAssetStorage()->getCount()), list),
           printer->mimeType());
     }
@@ -1098,7 +1102,8 @@ namespace mtconnect {
 
         return make_unique<Response>(
             status::ok,
-            printer->printAssets(m_instanceId, uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+            printer->printAssets(m_instanceId,
+                                 uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
                                  uint32_t(m_sinkContract->getAssetStorage()->getCount()), list),
             printer->mimeType());
       }

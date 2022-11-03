@@ -279,7 +279,7 @@ namespace mtconnect::asset {
         if (active)
         {
           auto cit = m_typeRemoveCount.find(type);
-          delta = cit != m_typeRemoveCount.end() ? (int32_t) cit->second : 0;
+          delta = cit != m_typeRemoveCount.end() ? (int32_t)cit->second : 0;
         }
         auto count = distance(rng.first, rng.second) - delta;
         if (count > 0)

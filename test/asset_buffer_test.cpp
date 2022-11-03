@@ -56,62 +56,51 @@ protected:
     auto asset = Asset::getFactory()->make(type, props, errors);
     return dynamic_pointer_cast<Asset>(asset);
   }
-  
+
   void makeTypeAssets()
   {
     ErrorList errors;
-    auto asset = makeAsset("Asset1", "A1", "D1", "2020-12-01T12:00:00Z",
-                           errors);
+    auto asset = makeAsset("Asset1", "A1", "D1", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset1", "A2", "D1", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset1", "A2", "D1", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset1", "A3", "D2", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset1", "A3", "D2", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset1", "A4", "D2", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset1", "A4", "D2", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset1", "A5", "D2", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset1", "A5", "D2", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset2", "A6", "D1", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset2", "A6", "D1", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset2", "A7", "D2", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset2", "A7", "D2", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset2", "A8", "D2", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset2", "A8", "D2", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset2", "A9", "D2", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset2", "A9", "D2", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset2", "A10", "D2", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset2", "A10", "D2", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
 
-    asset = makeAsset("Asset2", "A11", "D2", "2020-12-01T12:00:00Z",
-                           errors);
+    asset = makeAsset("Asset2", "A11", "D2", "2020-12-01T12:00:00Z", errors);
     ASSERT_EQ(0, errors.size());
     m_assetBuffer->addAsset(asset);
   }
@@ -228,14 +217,14 @@ TEST_F(AssetBufferTest, verify_asset_counts_by_type)
 {
   m_assetBuffer = make_unique<AssetBuffer>(12);
   makeTypeAssets();
-  
+
   ASSERT_EQ(11, m_assetBuffer->getCount());
   ASSERT_EQ(5, m_assetBuffer->getCountForType("Asset1"));
   ASSERT_EQ(6, m_assetBuffer->getCountForType("Asset2"));
 
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D1"));
   ASSERT_EQ(8, m_assetBuffer->getCountForDevice("D2"));
-  
+
   auto counts1 = m_assetBuffer->getCountsByType();
   ASSERT_EQ(2, counts1.size());
   ASSERT_EQ(5, counts1["Asset1"]);
@@ -256,7 +245,7 @@ TEST_F(AssetBufferTest, verify_asset_counts_with_removal)
 {
   m_assetBuffer = make_unique<AssetBuffer>(12);
   makeTypeAssets();
-  
+
   m_assetBuffer->removeAsset("A2");
   auto counts1 = m_assetBuffer->getCountsByTypeForDevice("D1");
   ASSERT_EQ(2, counts1.size());
@@ -288,27 +277,25 @@ TEST_F(AssetBufferTest, verify_asset_counts_with_removal)
   ASSERT_EQ(2, counts6.size());
   ASSERT_EQ(2, counts6["Asset1"]);
   ASSERT_EQ(1, counts6["Asset2"]);
-  
+
   ErrorList errors;
-  auto asset = makeAsset("Asset3", "A20", "D1", "2020-12-01T12:00:00Z",
-                         errors);
+  auto asset = makeAsset("Asset3", "A20", "D1", "2020-12-01T12:00:00Z", errors);
   ASSERT_EQ(0, errors.size());
   m_assetBuffer->addAsset(asset);
 
-  asset = makeAsset("Asset3", "A21", "D2", "2020-12-01T12:00:00Z",
-                    errors);
+  asset = makeAsset("Asset3", "A21", "D2", "2020-12-01T12:00:00Z", errors);
   ASSERT_EQ(0, errors.size());
   m_assetBuffer->addAsset(asset);
 
   ASSERT_EQ(10, m_assetBuffer->getCount());
   ASSERT_EQ(12, m_assetBuffer->getCount(false));
-  
+
   AssetList list;
   m_assetBuffer->getAssets(list, 20);
   ASSERT_EQ(10, list.size());
   ASSERT_EQ(list.back()->getAssetId(), "A3");
   ASSERT_EQ(list.front()->getAssetId(), "A21");
-  
+
   list.clear();
   m_assetBuffer->getAssets(list, 20, false);
   ASSERT_EQ(12, list.size());
@@ -325,7 +312,7 @@ TEST_F(AssetBufferTest, verify_asset_counts_with_removal)
   ASSERT_EQ(3, counts8["Asset1"]);
   ASSERT_EQ(4, counts8["Asset2"]);
   ASSERT_EQ(1, counts8["Asset3"]);
-  
+
   auto counts9 = m_assetBuffer->getCountsByType();
   ASSERT_EQ(3, counts9.size());
   ASSERT_EQ(3, counts9["Asset1"]);
@@ -337,5 +324,4 @@ TEST_F(AssetBufferTest, verify_asset_counts_with_removal)
   ASSERT_EQ(4, counts10["Asset1"]);
   ASSERT_EQ(6, counts10["Asset2"]);
   ASSERT_EQ(2, counts10["Asset3"]);
-
 }
