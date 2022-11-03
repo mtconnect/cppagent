@@ -190,7 +190,7 @@ namespace mtconnect::asset {
         return nullptr;
     }
 
-    virtual size_t getAssets(AssetList &list, size_t max, const bool removed = false,
+    virtual size_t getAssets(AssetList &list, size_t max, const bool active = true,
                              const std::optional<std::string> device = std::nullopt,
                              const std::optional<std::string> type = std::nullopt) const override
     {
@@ -216,7 +216,7 @@ namespace mtconnect::asset {
 
       for (auto &a : range)
       {
-        if (removed || !a.isRemoved())
+        if (!active || !a.isRemoved())
           list.push_back(a.m_asset);
         if (list.size() >= max)
           break;
@@ -279,16 +279,18 @@ namespace mtconnect::asset {
         if (active)
         {
           auto cit = m_typeRemoveCount.find(type);
-          delta = cit != m_typeRemoveCount.end() ? cit->second : 0;
+          delta = cit != m_typeRemoveCount.end() ? (int32_t) cit->second : 0;
         }
-        res[type] = distance(rng.first, rng.second) - delta;
+        auto count = distance(rng.first, rng.second) - delta;
+        if (count > 0)
+          res[type] = count;
         it = rng.second;
       }
 
       return res;
     }
 
-    TypeCount getCountsByType(const std::string &device, bool active = true) const override
+    TypeCount getCountsByTypeForDevice(const std::string &device, bool active = true) const override
     {
       std::lock_guard<std::recursive_mutex> lock(m_bufferLock);
       TypeCount res;
@@ -306,9 +308,11 @@ namespace mtconnect::asset {
         if (ridx != nullptr && active)
         {
           auto cit = ridx->find(type);
-          delta = cit != ridx->end() ? cit->second : 0;
+          delta = cit != ridx->end() ? int32_t(cit->second) : 0;
         }
-        res[type] = distance(rng.first, rng.second) - delta;
+        auto count = distance(rng.first, rng.second) - delta;
+        if (count > 0)
+          res[type] = count;
         it = rng.second;
       }
 
@@ -327,7 +331,7 @@ namespace mtconnect::asset {
       return list.size();
     }
 
-    int getIndex(const std::string &id) const
+    int32_t getIndex(const std::string &id) const
     {
       auto &idx = m_index.get<ByAssetId>();
       auto it = idx.find(id);
@@ -335,7 +339,7 @@ namespace mtconnect::asset {
       {
         auto &fifo = m_index.get<ByFifo>();
         auto pos = mic::project<ByFifo>(m_index, it);
-        return std::distance(fifo.begin(), pos);
+        return int32_t(std::distance(fifo.begin(), pos));
       }
 
       return -1;

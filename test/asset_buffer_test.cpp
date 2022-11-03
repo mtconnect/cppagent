@@ -56,6 +56,65 @@ protected:
     auto asset = Asset::getFactory()->make(type, props, errors);
     return dynamic_pointer_cast<Asset>(asset);
   }
+  
+  void makeTypeAssets()
+  {
+    ErrorList errors;
+    auto asset = makeAsset("Asset1", "A1", "D1", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset1", "A2", "D1", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset1", "A3", "D2", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset1", "A4", "D2", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset1", "A5", "D2", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset2", "A6", "D1", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset2", "A7", "D2", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset2", "A8", "D2", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset2", "A9", "D2", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset2", "A10", "D2", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+
+    asset = makeAsset("Asset2", "A11", "D2", "2020-12-01T12:00:00Z",
+                           errors);
+    ASSERT_EQ(0, errors.size());
+    m_assetBuffer->addAsset(asset);
+  }
 
 public:
   std::unique_ptr<AssetBuffer> m_assetBuffer;
@@ -163,4 +222,120 @@ TEST_F(AssetBufferTest, RemovedAsset)
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D1"));
   ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D2"));
   ASSERT_EQ(1, m_assetBuffer->getCountForDevice("D3"));
+}
+
+TEST_F(AssetBufferTest, verify_asset_counts_by_type)
+{
+  m_assetBuffer = make_unique<AssetBuffer>(12);
+  makeTypeAssets();
+  
+  ASSERT_EQ(11, m_assetBuffer->getCount());
+  ASSERT_EQ(5, m_assetBuffer->getCountForType("Asset1"));
+  ASSERT_EQ(6, m_assetBuffer->getCountForType("Asset2"));
+
+  ASSERT_EQ(3, m_assetBuffer->getCountForDevice("D1"));
+  ASSERT_EQ(8, m_assetBuffer->getCountForDevice("D2"));
+  
+  auto counts1 = m_assetBuffer->getCountsByType();
+  ASSERT_EQ(2, counts1.size());
+  ASSERT_EQ(5, counts1["Asset1"]);
+  ASSERT_EQ(6, counts1["Asset2"]);
+
+  auto counts2 = m_assetBuffer->getCountsByTypeForDevice("D1");
+  ASSERT_EQ(2, counts2.size());
+  ASSERT_EQ(2, counts2["Asset1"]);
+  ASSERT_EQ(1, counts2["Asset2"]);
+
+  auto counts3 = m_assetBuffer->getCountsByTypeForDevice("D2");
+  ASSERT_EQ(2, counts3.size());
+  ASSERT_EQ(3, counts3["Asset1"]);
+  ASSERT_EQ(5, counts3["Asset2"]);
+}
+
+TEST_F(AssetBufferTest, verify_asset_counts_with_removal)
+{
+  m_assetBuffer = make_unique<AssetBuffer>(12);
+  makeTypeAssets();
+  
+  m_assetBuffer->removeAsset("A2");
+  auto counts1 = m_assetBuffer->getCountsByTypeForDevice("D1");
+  ASSERT_EQ(2, counts1.size());
+  ASSERT_EQ(1, counts1["Asset1"]);
+  ASSERT_EQ(1, counts1["Asset2"]);
+
+  auto counts2 = m_assetBuffer->getCountsByTypeForDevice("D1", false);
+  ASSERT_EQ(2, counts1.size());
+  ASSERT_EQ(1, counts1["Asset1"]);
+  ASSERT_EQ(1, counts1["Asset2"]);
+
+  m_assetBuffer->removeAsset("A7");
+  auto counts3 = m_assetBuffer->getCountsByTypeForDevice("D2");
+  ASSERT_EQ(2, counts3.size());
+  ASSERT_EQ(3, counts3["Asset1"]);
+  ASSERT_EQ(4, counts3["Asset2"]);
+
+  auto counts4 = m_assetBuffer->getCountsByTypeForDevice("D2", false);
+  ASSERT_EQ(2, counts4.size());
+  ASSERT_EQ(3, counts4["Asset1"]);
+  ASSERT_EQ(5, counts4["Asset2"]);
+
+  m_assetBuffer->removeAsset("A1");
+  auto counts5 = m_assetBuffer->getCountsByTypeForDevice("D1");
+  ASSERT_EQ(1, counts5.size());
+  ASSERT_EQ(1, counts5["Asset2"]);
+
+  auto counts6 = m_assetBuffer->getCountsByTypeForDevice("D1", false);
+  ASSERT_EQ(2, counts6.size());
+  ASSERT_EQ(2, counts6["Asset1"]);
+  ASSERT_EQ(1, counts6["Asset2"]);
+  
+  ErrorList errors;
+  auto asset = makeAsset("Asset3", "A20", "D1", "2020-12-01T12:00:00Z",
+                         errors);
+  ASSERT_EQ(0, errors.size());
+  m_assetBuffer->addAsset(asset);
+
+  asset = makeAsset("Asset3", "A21", "D2", "2020-12-01T12:00:00Z",
+                    errors);
+  ASSERT_EQ(0, errors.size());
+  m_assetBuffer->addAsset(asset);
+
+  ASSERT_EQ(10, m_assetBuffer->getCount());
+  ASSERT_EQ(12, m_assetBuffer->getCount(false));
+  
+  AssetList list;
+  m_assetBuffer->getAssets(list, 20);
+  ASSERT_EQ(10, list.size());
+  ASSERT_EQ(list.back()->getAssetId(), "A3");
+  ASSERT_EQ(list.front()->getAssetId(), "A21");
+  
+  list.clear();
+  m_assetBuffer->getAssets(list, 20, false);
+  ASSERT_EQ(12, list.size());
+  ASSERT_EQ(list.back()->getAssetId(), "A2");
+  ASSERT_EQ(list.front()->getAssetId(), "A21");
+
+  auto counts7 = m_assetBuffer->getCountsByTypeForDevice("D1");
+  ASSERT_EQ(2, counts7.size());
+  ASSERT_EQ(1, counts7["Asset2"]);
+  ASSERT_EQ(1, counts7["Asset3"]);
+
+  auto counts8 = m_assetBuffer->getCountsByTypeForDevice("D2");
+  ASSERT_EQ(3, counts8.size());
+  ASSERT_EQ(3, counts8["Asset1"]);
+  ASSERT_EQ(4, counts8["Asset2"]);
+  ASSERT_EQ(1, counts8["Asset3"]);
+  
+  auto counts9 = m_assetBuffer->getCountsByType();
+  ASSERT_EQ(3, counts9.size());
+  ASSERT_EQ(3, counts9["Asset1"]);
+  ASSERT_EQ(5, counts9["Asset2"]);
+  ASSERT_EQ(2, counts9["Asset3"]);
+
+  auto counts10 = m_assetBuffer->getCountsByType(false);
+  ASSERT_EQ(3, counts10.size());
+  ASSERT_EQ(4, counts10["Asset1"]);
+  ASSERT_EQ(6, counts10["Asset2"]);
+  ASSERT_EQ(2, counts10["Asset3"]);
+
 }

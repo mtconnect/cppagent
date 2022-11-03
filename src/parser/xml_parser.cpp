@@ -262,7 +262,7 @@ namespace mtconnect::parser {
       xmlXPathInit();
       xmlSetGenericErrorFunc(nullptr, agentXMLErrorFunc);
 
-      THROW_IF_XML2_NULL(m_doc = xmlReadMemory(doc.c_str(), doc.length(), "Devices.xml", nullptr,
+      THROW_IF_XML2_NULL(m_doc = xmlReadMemory(doc.c_str(), int32_t(doc.length()), "Devices.xml", nullptr,
                                                XML_PARSE_NOBLANKS));
     }
 

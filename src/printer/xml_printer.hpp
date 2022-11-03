@@ -41,19 +41,19 @@ namespace mtconnect {
       XmlPrinter(const std::string version = "", bool pretty = false);
       ~XmlPrinter() override = default;
 
-      std::string printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+      std::string printErrors(const uint64_t instanceId, const unsigned int bufferSize,
                               const uint64_t nextSeq, const ProtoErrorList &list) const override;
 
-      std::string printProbe(const unsigned int instanceId, const unsigned int bufferSize,
+      std::string printProbe(const uint64_t instanceId, const unsigned int bufferSize,
                              const uint64_t nextSeq, const unsigned int assetBufferSize,
                              const unsigned int assetCount, const std::list<DevicePtr> &devices,
                              const std::map<std::string, size_t> *count = nullptr) const override;
 
-      std::string printSample(const unsigned int instanceId, const unsigned int bufferSize,
+      std::string printSample(const uint64_t instanceId, const unsigned int bufferSize,
                               const uint64_t nextSeq, const uint64_t firstSeq,
                               const uint64_t lastSeq,
                               observation::ObservationList &results) const override;
-      std::string printAssets(const unsigned int anInstanceId, const unsigned int bufferSize,
+      std::string printAssets(const uint64_t anInstanceId, const unsigned int bufferSize,
                               const unsigned int assetCount,
                               const asset::AssetList &asset) const override;
       std::string mimeType() const override { return "text/xml"; }
@@ -107,7 +107,7 @@ namespace mtconnect {
       };
 
       // Initiate all documents
-      void initXmlDoc(xmlTextWriterPtr writer, EDocumentType docType, const unsigned int instanceId,
+      void initXmlDoc(xmlTextWriterPtr writer, EDocumentType docType, const uint64_t instanceId,
                       const unsigned int bufferSize, const unsigned int assetBufferSize,
                       const unsigned int assetCount, const uint64_t nextSeq,
                       const uint64_t firstSeq = 0, const uint64_t lastSeq = 0,

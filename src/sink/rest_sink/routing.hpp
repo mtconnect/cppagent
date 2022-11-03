@@ -215,7 +215,7 @@ namespace mtconnect::sink::rest_sink {
         {
           char *ep = nullptr;
           const char *sp = s.c_str();
-          int32_t r = strtoll(sp, &ep, 10);
+          int32_t r = int32_t(strtoll(sp, &ep, 10));
           if (ep == sp)
             throw ParameterError("cannot convert string '" + s + "' to integer");
 

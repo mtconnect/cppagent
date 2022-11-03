@@ -77,7 +77,7 @@ namespace mtconnect::printer {
     return buffer.str();
   }
 
-  inline json header(const string &version, const string &hostname, const unsigned int instanceId,
+  inline json header(const string &version, const string &hostname, const uint64_t instanceId,
                      const unsigned int bufferSize, const string &schemaVersion,
                      const string modelChangeTime)
   {
@@ -99,7 +99,7 @@ namespace mtconnect::printer {
   }
 
   inline json probeAssetHeader(const string &version, const string &hostname,
-                               const unsigned int instanceId, const unsigned int bufferSize,
+                               const uint64_t instanceId, const unsigned int bufferSize,
                                const unsigned int assetBufferSize, const unsigned int assetCount,
                                const string &schemaVersion, const string modelChangeTime)
   {
@@ -111,7 +111,7 @@ namespace mtconnect::printer {
   }
 
   inline json streamHeader(const string &version, const string &hostname,
-                           const unsigned int instanceId, const unsigned int bufferSize,
+                           const uint64_t instanceId, const unsigned int bufferSize,
                            const uint64_t nextSequence, const uint64_t firstSequence,
                            const uint64_t lastSequence, const string &schemaVersion,
                            const string modelChangeTime)
@@ -123,7 +123,7 @@ namespace mtconnect::printer {
     return doc;
   }
 
-  std::string JsonPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+  std::string JsonPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const ProtoErrorList &list) const
   {
     json errors = json::array();
@@ -158,7 +158,7 @@ namespace mtconnect::printer {
     }
   }
 
-  std::string JsonPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
+  std::string JsonPrinter::printProbe(const uint64_t instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const unsigned int assetBufferSize,
                                       const unsigned int assetCount,
                                       const std::list<DevicePtr> &devices,
@@ -373,7 +373,7 @@ namespace mtconnect::printer {
     uint32_t m_version;
   };
 
-  std::string JsonPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
+  std::string JsonPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const uint64_t firstSeq,
                                        const uint64_t lastSeq, ObservationList &observations) const
   {
@@ -431,7 +431,7 @@ namespace mtconnect::printer {
     return print(doc, m_pretty);
   }
 
-  std::string JsonPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
+  std::string JsonPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
                                        const unsigned int assetCount,
                                        const asset::AssetList &asset) const
   {

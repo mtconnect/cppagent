@@ -355,10 +355,6 @@ if(WITH_RUBY)
     agent_lib
     PUBLIC
     CONAN_PKG::mruby)
-  target_link_directories(
-    agent_lib
-    PUBLIC
-    ${CONAN_LIB_DIRS_MRUBY})
 endif()
 
 target_compile_definitions(
