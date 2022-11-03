@@ -1166,19 +1166,17 @@ namespace mtconnect {
       return;
 
     auto dc = device->getAssetCount();
-    if (dc)
+    if (dc && type)
     {
-      if (type)
-      {
-        auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
-
-        DataSet set {DataSetEntry(*type, int64_t(count))};
-        m_loopback->receive(dc, {{"VALUE", set}});
-      }
+      auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
+      
+      DataSet set;
+      if (count > 0)
+        set.emplace(*type, int64_t(count));
       else
-      {
-        auto types = m_assetStorage->getCountsByType();
-      }
+        set.emplace(*type, DataSetValue(), true);
+
+      m_loopback->receive(dc, {{"VALUE", set}});
     }
   }
 
