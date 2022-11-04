@@ -43,7 +43,8 @@ Usage
        help           Prints this message
        install        Installs the service
        remove         Remove the service
-       debug          Runs the agent on the command line with verbose logging
+       debug          Runs the agent on the command line with verbose logging -
+                      sets logging_level to debug
        run            Runs the agent on the command line
        config_file    The configuration file to load
                       Default: agent.cfg in current directory
@@ -889,6 +890,8 @@ logger_config configuration items
         `error`, or `fatal`.
 
         *Default*: `info`
+
+        Note: when running Agent with `agent debug`, `logging_level` will be set to `debug`.
 
     * `output` - The output file or stream. If using a file, specify
       as: `"file <filename>"`. cout and cerr can be used to specify the
