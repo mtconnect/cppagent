@@ -2495,6 +2495,83 @@ TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
   }
 }
 
+TEST_F(AgentTest, update_asset_count_data_item_v2_0)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 10, "2.0", 4, true);
+  addAdapter();
+  const auto &storage = agent->getAssetStorage();
+  
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry@key", "Part");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
+  }
+  
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 1</Part>");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry@key", "Part");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "2");
+  }
+  
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|T1|Tool|<Tool assetId='T1'>TEST 1</Tool>");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "1");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|T2|Tool|<Tool assetId='T2'>TEST 1</Tool>");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "2");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|T3|Tool|<Tool assetId='T3'>TEST 1</Tool>");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "3");
+  }
+
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P1");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "3");
+  }
+
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P2");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_COUNT(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "3");
+  }
+  
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ALL_ASSETS@|");
+
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_COUNT(doc, "//m:AssetCountDataSet/*", 0);
+  }
+
+}
+
 //  ---------------- Srreaming Tests ---------------------
 
 TEST_F(AgentTest, BadInterval)

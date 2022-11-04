@@ -453,6 +453,7 @@ namespace mtconnect {
         sink->publish(asset);
 
       notifyAssetRemoved(device, asset);
+      updateAssetCounts(device, asset->getType());
 
       return true;
     }
@@ -1166,17 +1167,37 @@ namespace mtconnect {
       return;
 
     auto dc = device->getAssetCount();
-    if (dc && type)
+    if (dc)
     {
-      auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
-      
-      DataSet set;
-      if (count > 0)
-        set.emplace(*type, int64_t(count));
+      if (type)
+      {
+        auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
+        
+        DataSet set;
+        if (count > 0)
+          set.emplace(*type, int64_t(count));
+        else
+          set.emplace(*type, DataSetValue(), true);
+        
+        m_loopback->receive(dc, {{"VALUE", set}});
+      }
       else
-        set.emplace(*type, DataSetValue(), true);
-
-      m_loopback->receive(dc, {{"VALUE", set}});
+      {
+        auto counts = m_assetStorage->getCountsByTypeForDevice(*device->getUuid());
+        
+        DataSet set;
+        
+        for (auto &[t, count] : counts)
+        {
+          if (count > 0)
+            set.emplace(t, int64_t(count));
+          else
+            set.emplace(t, DataSetValue(), true);
+        }
+        
+        m_loopback->receive(dc, {{"resetTriggered", "RESET_COUNTS"s},
+          {"VALUE", set}});
+      }
     }
   }
 
