@@ -22,35 +22,35 @@
 using namespace std;
 
 namespace mtconnect::entity {
-    bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
-                           ErrorList &errors)
+  bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
+                         ErrorList &errors)
+  {
+    if (!hasProperty(name))
     {
-      if (!hasProperty(name))
+      entity::EntityList list {entity};
+      auto entities = factory->create(name, list, errors);
+      if (errors.empty())
+        setProperty(name, entities);
+      else
+        return false;
+    }
+    else
+    {
+      auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
+      if (entities)
       {
-        entity::EntityList list {entity};
-        auto entities = factory->create(name, list, errors);
-        if (errors.empty())
-          setProperty(name, entities);
-        else
-          return false;
+        std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
       }
       else
       {
-        auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
-        if (entities)
-        {
-          std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
-        }
-        else
-        {
-          errors.emplace_back(new EntityError("Cannont find list for: " + name));
-          return false;
-        }
+        errors.emplace_back(new EntityError("Cannont find list for: " + name));
+        return false;
       }
-
-      return true;
     }
-    
+
+    return true;
+  }
+
   bool Entity::removeFromList(const std::string &name, EntityPtr entity)
   {
     auto &v = getProperty_(name);
@@ -72,4 +72,4 @@ namespace mtconnect::entity {
 
     return false;
   }
-}  // namespace mtconnect
+}  // namespace mtconnect::entity

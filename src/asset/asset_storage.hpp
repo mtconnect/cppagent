@@ -48,14 +48,19 @@ namespace mtconnect {
 
       // Retrival
       virtual AssetPtr getAsset(const std::string &id) const = 0;
-      virtual size_t getAssets(AssetList &list, size_t max, const bool removed = false,
+      virtual size_t getAssets(AssetList &list, size_t max, const bool active = true,
                                const std::optional<std::string> device = std::nullopt,
                                const std::optional<std::string> type = std::nullopt) const = 0;
       virtual size_t getAssets(AssetList &list, const std::list<std::string> &ids) const = 0;
 
       // Count
+      virtual size_t getCountForDeviceAndType(const std::string &device, const std::string &type,
+                                              bool active = true) const = 0;
       virtual size_t getCountForType(const std::string &type, bool active = true) const = 0;
       virtual size_t getCountForDevice(const std::string &device, bool active = true) const = 0;
+
+      virtual TypeCount getCountsByTypeForDevice(const std::string &device,
+                                                 bool active = true) const = 0;
 
       // Bulk remove
       virtual size_t removeAll(AssetList &list,

@@ -25,7 +25,6 @@ set(AGENT_SOURCES
 # src/asset SOURCE_FILES_ONLY
   
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.cpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset_buffer.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/cutting_tool.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/file_asset.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/raw_material.cpp"
@@ -356,10 +355,6 @@ if(WITH_RUBY)
     agent_lib
     PUBLIC
     CONAN_PKG::mruby)
-  target_link_directories(
-    agent_lib
-    PUBLIC
-    ${CONAN_LIB_DIRS_MRUBY})
 endif()
 
 target_compile_definitions(

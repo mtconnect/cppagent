@@ -61,7 +61,7 @@ void AgentTestHelper::responseHelper(const char *file, int line, const QueryMap 
                                      xmlDocPtr *doc, const char *path, const char *accepts)
 {
   makeRequest(file, line, http::verb::get, "", aQueries, path, accepts);
-  *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
+  *doc = xmlParseMemory(m_session->m_body.c_str(), int32_t(m_session->m_body.size()));
 }
 
 void AgentTestHelper::responseStreamHelper(const char *file, int line, const QueryMap &aQueries,
@@ -76,7 +76,7 @@ void AgentTestHelper::putResponseHelper(const char *file, int line, const string
 {
   makeRequest(file, line, http::verb::put, body, aQueries, path, accepts);
   if (ends_with(m_session->m_mimeType, "xml"))
-    *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
+    *doc = xmlParseMemory(m_session->m_body.c_str(), int32_t(m_session->m_body.size()));
 }
 
 void AgentTestHelper::deleteResponseHelper(const char *file, int line, const QueryMap &aQueries,
@@ -84,12 +84,12 @@ void AgentTestHelper::deleteResponseHelper(const char *file, int line, const Que
 {
   makeRequest(file, line, http::verb::delete_, "", aQueries, path, accepts);
   if (ends_with(m_session->m_mimeType, "xml"))
-    *doc = xmlParseMemory(m_session->m_body.c_str(), m_session->m_body.size());
+    *doc = xmlParseMemory(m_session->m_body.c_str(), int32_t(m_session->m_body.size()));
 }
 
 void AgentTestHelper::chunkStreamHelper(const char *file, int line, xmlDocPtr *doc)
 {
-  *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), m_session->m_chunkBody.size());
+  *doc = xmlParseMemory(m_session->m_chunkBody.c_str(), int32_t(m_session->m_chunkBody.size()));
 }
 
 void AgentTestHelper::responseHelper(const char *file, int line, const QueryMap &aQueries,
