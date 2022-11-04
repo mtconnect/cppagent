@@ -63,12 +63,17 @@ namespace mtconnect {
         auto clientHandler = make_unique<ClientHandler>();
         clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
           // Publish latest devices, assets, and observations
+          auto &circ = m_sinkContract->getCircularBuffer();
+          std::lock_guard<buffer::CircularBuffer> lock(circ);
+          client->connectComplete();
+
           for (auto &dev : m_sinkContract->getDevices())
           {
             publish(dev);
           }
 
-          for (auto &obs : m_sinkContract->getCircularBuffer().getLatest().getObservations())
+          auto obsList {circ.getLatest().getObservations()};
+          for (auto &obs : obsList)
           {
             observation::ObservationPtr p {obs.second};
             publish(p);
@@ -117,6 +122,9 @@ namespace mtconnect {
       bool MqttService::publish(observation::ObservationPtr &observation)
       {
         // get the data item from observation
+        if (observation->isOrphan())
+          return false;
+        
         DataItemPtr dataItem = observation->getDataItem();
 
         auto topic = m_observationPrefix + dataItem->getTopic();  // client asyn topic

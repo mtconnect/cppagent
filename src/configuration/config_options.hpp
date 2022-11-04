@@ -66,6 +66,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttTls);
     DECLARE_CONFIGURATION(MqttPort);
     DECLARE_CONFIGURATION(MqttHost);
+    DECLARE_CONFIGURATION(MqttConnectInterval);
 
     // Adapter Configuration
     DECLARE_CONFIGURATION(AdapterIdentity);

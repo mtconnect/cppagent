@@ -36,7 +36,7 @@ namespace mtconnect {
         using namespace observation;
         using namespace entity;
         auto sample = std::dynamic_pointer_cast<Sample>(entity);
-        if (sample && !sample->isUnavailable())
+        if (sample && !sample->isOrphan() && !sample->isUnavailable())
         {
           auto &converter = sample->getDataItem()->getConverter();
           if (converter)

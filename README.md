@@ -1295,6 +1295,7 @@ Make a build subdirectory of `cppagent`
     cd cppagent
     conan export conan\mqtt_cpp
     conan export conan\mruby
+    conan export conan\nasm
 	
 ####  To build for 64 bit Windows
 	

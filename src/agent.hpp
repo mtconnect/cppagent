@@ -59,6 +59,7 @@ namespace mtconnect {
     }
   };  // namespace device_model
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+  using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
@@ -163,7 +164,7 @@ namespace mtconnect {
     {
       auto diPos = m_dataItemMap.find(id);
       if (diPos != m_dataItemMap.end())
-        return diPos->second;
+        return diPos->second.lock();
       return nullptr;
     }
 
@@ -249,7 +250,7 @@ namespace mtconnect {
     std::list<DevicePtr> m_devices;
     std::unordered_map<std::string, DevicePtr> m_deviceNameMap;
     std::unordered_map<std::string, DevicePtr> m_deviceUuidMap;
-    std::unordered_map<std::string, DataItemPtr> m_dataItemMap;
+    std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
 
     // Xml Config
     std::string m_version;
@@ -286,7 +287,9 @@ namespace mtconnect {
     {
       for (auto &di : m_agent->m_dataItemMap)
       {
-        fun(di.second);
+        auto ldi = di.second.lock();
+        if (ldi)
+          fun(ldi);
       }
     }
     void deliverObservation(observation::ObservationPtr obs) override

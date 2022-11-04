@@ -65,7 +65,7 @@ namespace mtconnect {
         setProperties(dataItem, m_properties);
       }
 
-      const auto getDataItem() const { return m_dataItem; }
+      const auto getDataItem() const { return m_dataItem.lock(); }
       auto getSequence() const { return m_sequence; }
 
       void setTimestamp(const Timestamp &ts)
@@ -88,16 +88,31 @@ namespace mtconnect {
         setProperty("VALUE", "UNAVAILABLE"s);
       }
       bool isUnavailable() const { return m_unavailable; }
-      virtual void setEntityName() { Entity::setQName(m_dataItem->getObservationName()); }
+      virtual void setEntityName()
+      {
+        auto di = m_dataItem.lock();
+        if (di)
+          Entity::setQName(di->getObservationName());
+      }
 
       bool operator<(const Observation &another) const
       {
-        if ((*m_dataItem) < (*another.m_dataItem))
+        auto di = m_dataItem.lock();
+        if (!di) return false;
+        auto odi = another.m_dataItem.lock();
+        if (!odi) return true;
+        
+        if ((*di) < (*odi))
           return true;
-        else if (*m_dataItem == *another.m_dataItem)
+        else if (*di == *odi)
           return m_sequence < another.m_sequence;
         else
           return false;
+      }
+
+      bool isOrphan() const
+      {
+        return m_dataItem.expired();
       }
 
       void clearResetTriggered() { m_properties.erase("resetTriggered"); }
@@ -105,7 +120,7 @@ namespace mtconnect {
     protected:
       Timestamp m_timestamp;
       bool m_unavailable {false};
-      DataItemPtr m_dataItem {nullptr};
+      std::weak_ptr<device_model::data_item::DataItem> m_dataItem;
       uint64_t m_sequence {0};
     };
 

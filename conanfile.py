@@ -16,8 +16,8 @@ class CppAgentConan(ConanFile):
                 "libxml2/2.9.10@#9133e645e934381d3cc4f6a0bf563fbe",
                 "date/2.4.1@#178e4ada4fefd011aaa81ab2bca646db",
                 "nlohmann_json/3.9.1@#a41bc0deaf7f40e7b97e548359ccf14d", 
-                "openssl/1.1.1k@#f40064b74987c778d5c4e0416d75f1f0",
-                "mqtt_cpp/11.0.0"]
+                "openssl/3.0.5@#40f4488f02b36c1193b68f585131e8ef",
+                "mqtt_cpp/13.1.0"]
     
     build_policy = "missing"
     default_options = {

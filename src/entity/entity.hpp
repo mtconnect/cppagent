@@ -135,7 +135,8 @@ namespace mtconnect {
 
       bool addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
                      ErrorList &errors);
-
+      bool removeFromList(const std::string &name, EntityPtr entity);
+      
       void setValue(const Value &v) { setProperty("VALUE", v); }
       void erase(const std::string &name) { m_properties.erase(name); }
 
