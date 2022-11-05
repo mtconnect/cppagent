@@ -229,7 +229,7 @@ namespace mtconnect {
     {
       if (obs->isOrphan())
         return false;
-      
+
       auto setEvent = dynamic_pointer_cast<DataSetEvent>(obs);
       auto item = obs->getDataItem();
       if (item->isDataSet() && !setEvent->getDataSet().empty() &&

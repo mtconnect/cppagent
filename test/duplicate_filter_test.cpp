@@ -65,6 +65,9 @@ class DuplicateFilterTest : public testing::Test
 protected:
   void SetUp() override
   {
+    ErrorList errors;
+    m_component = Component::make("Linear", {{"id", "x"s}, {"name", "X"s}}, errors);
+
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
     m_mapper = make_shared<ShdrTokenMapper>(m_context);
@@ -78,6 +81,7 @@ protected:
     ErrorList errors;
     auto di = DataItem::make(attributes, errors);
     m_dataItems.emplace(di->getId(), di);
+    m_component->addDataItem(di, errors);
 
     return di;
   }
@@ -95,6 +99,7 @@ protected:
   shared_ptr<ShdrTokenMapper> m_mapper;
   std::map<string, DataItemPtr> m_dataItems;
   shared_ptr<PipelineContext> m_context;
+  ComponentPtr m_component;
 };
 
 TEST_F(DuplicateFilterTest, test_simple_event)

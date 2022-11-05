@@ -233,7 +233,7 @@ TEST_F(AgentTest, CurrentAt)
 
   // Get the current position
   auto rest = m_agentTestHelper->getRestService();
-  int seq = rest->getSequence();
+  auto seq = rest->getSequence();
   char line[80] = {0};
 
   // Add many events
@@ -274,7 +274,7 @@ TEST_F(AgentTest, CurrentAt)
   // Check the first couple of items in the list
   for (int j = 0; j < 10; j++)
   {
-    int i = rest->getSequence() - rest->getBufferSize() - seq + j;
+    auto i = rest->getSequence() - rest->getBufferSize() - seq + j;
     query["at"] = to_string(i + seq);
     ;
     PARSE_XML_RESPONSE_QUERY("/current", query);
@@ -283,8 +283,8 @@ TEST_F(AgentTest, CurrentAt)
 
   // Test out of range...
   {
-    int i = rest->getSequence() - rest->getBufferSize() - seq - 1;
-    sprintf(line, "'at' must be greater than %d", i + seq);
+    auto i = rest->getSequence() - rest->getBufferSize() - seq - 1;
+    sprintf(line, "'at' must be greater than %d", int32_t(i + seq));
     query["at"] = to_string(i + seq);
     ;
     PARSE_XML_RESPONSE_QUERY("/current", query);
@@ -341,11 +341,11 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
   }
 
   auto rest = m_agentTestHelper->getRestService();
-  int seq = rest->getSequence();
+  auto seq = rest->getSequence();
 
   {
     query["at"] = to_string(seq);
-    sprintf(line, "'at' must be less than %d", seq);
+    sprintf(line, "'at' must be less than %d", int32_t(seq));
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
@@ -355,7 +355,7 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
 
   {
     query["at"] = to_string(seq);
-    sprintf(line, "'at' must be greater than %d", seq);
+    sprintf(line, "'at' must be greater than %d", int32_t(seq));
     PARSE_XML_RESPONSE_QUERY("/current", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
@@ -529,7 +529,7 @@ TEST_F(AgentTest, SampleAtNextSeq)
   }
 
   auto rest = m_agentTestHelper->getRestService();
-  int seq = rest->getSequence();
+  auto seq = rest->getSequence();
   {
     query["from"] = to_string(seq);
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -638,7 +638,7 @@ TEST_F(AgentTest, SampleToParameter)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 10);
 
     // Make sure we got 10 lines
-    int start = seq - 20;
+    auto start = seq - 20;
     for (int j = 0; j < 10; j++)
     {
       sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
@@ -658,7 +658,7 @@ TEST_F(AgentTest, SampleToParameter)
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream//m:Position", 5);
 
     // Make sure we got 10 lines
-    int start = seq - 10;
+    auto start = seq - 10;
     for (int j = 0; j < 5; j++)
     {
       sprintf(line, "//m:DeviceStream//m:Position[%d]@sequence", j + 1);
@@ -700,7 +700,7 @@ TEST_F(AgentTest, AddToBuffer)
   QueryMap query;
 
   string device("LinuxCNC"), key("badKey"), value("ON");
-  auto seqNum = 0;
+  SequenceNumber_t seqNum {0};
   auto rest = m_agentTestHelper->getRestService();
   auto event1 = rest->getFromBuffer(seqNum);
   ASSERT_FALSE(event1);
@@ -2493,6 +2493,83 @@ TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
     ASSERT_XML_PATH_EQUAL(doc, "//m:MTConnectError/m:Errors/m:Error[7]",
                           "CuttingToolLifeCycle: Invalid element 'Measurements'");
   }
+}
+
+TEST_F(AgentTest, update_asset_count_data_item_v2_0)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 10, "2.0", 4, true);
+  addAdapter();
+  const auto &storage = agent->getAssetStorage();
+  
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P1|Part|<Part assetId='P1'>TEST 1</Part>");
+  
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry@key", "Part");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
+  }
+  
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|P2|Part|<Part assetId='P2'>TEST 1</Part>");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry@key", "Part");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "2");
+  }
+  
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|T1|Tool|<Tool assetId='T1'>TEST 1</Tool>");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "1");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|T2|Tool|<Tool assetId='T2'>TEST 1</Tool>");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "2");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|@ASSET@|T3|Tool|<Tool assetId='T3'>TEST 1</Tool>");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "2");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "3");
+  }
+
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P1");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", "1");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "3");
+  }
+
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ASSET@|P2");
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_COUNT(doc, "//m:AssetCountDataSet/m:Entry[@key='Part']", 0);
+    ASSERT_XML_PATH_EQUAL(doc, "//m:AssetCountDataSet/m:Entry[@key='Tool']", "3");
+  }
+  
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|@REMOVE_ALL_ASSETS@|");
+
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/current");
+    ASSERT_XML_PATH_COUNT(doc, "//m:AssetCountDataSet/*", 0);
+  }
+
 }
 
 //  ---------------- Srreaming Tests ---------------------

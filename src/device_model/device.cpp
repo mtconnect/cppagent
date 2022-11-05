@@ -55,14 +55,7 @@ namespace mtconnect {
       return factory;
     }
 
-    void Device::registerDataItem(DataItemPtr di)
-    {
-      m_deviceDataItemsById[di->getId()] = di;
-      if (di->hasProperty("name"))
-        m_deviceDataItemsByName[di->get<string>("name")] = di;
-      if (di->hasProperty("Source") && di->get<EntityPtr>("Source")->hasValue())
-        m_deviceDataItemsBySource[di->get<EntityPtr>("Source")->getValue<string>()] = di;
-    }
+    void Device::registerDataItem(DataItemPtr di) { m_dataItems.emplace(di); }
 
     Device::Device(const std::string &name, entity::Properties &props) : Component(name, props)
     {
@@ -87,19 +80,12 @@ namespace mtconnect {
     // TODO: Clean up these initialization methods for data items
     void Device::addDeviceDataItem(DataItemPtr dataItem)
     {
-      if (dataItem->hasProperty("Source") && dataItem->getSource()->hasValue())
-        m_deviceDataItemsBySource[dataItem->getSource()->getValue<string>()] = dataItem;
-
-      if (dataItem->getName())
-        m_deviceDataItemsByName[*dataItem->getName()] = dataItem;
-
-      if (m_deviceDataItemsById.find(dataItem->getId()) != m_deviceDataItemsById.end())
+      auto [id, added] = m_dataItems.emplace(dataItem);
+      if (!added)
       {
         LOG(error) << "Duplicate data item id: " << dataItem->getId() << " for device "
                    << get<string>("name") << ", skipping";
       }
-      else
-        m_deviceDataItemsById[dataItem->getId()] = dataItem;
     }
 
     void Device::addDataItem(DataItemPtr dataItem, entity::ErrorList &errors)
@@ -122,17 +108,14 @@ namespace mtconnect {
 
     DataItemPtr Device::getDeviceDataItem(const std::string &name) const
     {
-      const auto sourcePos = m_deviceDataItemsBySource.find(name);
-      if (sourcePos != m_deviceDataItemsBySource.end())
-        return sourcePos->second.lock();
+      if (auto it = m_dataItems.get<BySource>().find(name); it != m_dataItems.get<BySource>().end())
+        return it->lock();
 
-      const auto namePos = m_deviceDataItemsByName.find(name);
-      if (namePos != m_deviceDataItemsByName.end())
-        return namePos->second.lock();
+      if (auto it = m_dataItems.get<ByName>().find(name); it != m_dataItems.get<ByName>().end())
+        return it->lock();
 
-      const auto &idPos = m_deviceDataItemsById.find(name);
-      if (idPos != m_deviceDataItemsById.end())
-        return idPos->second.lock();
+      if (auto it = m_dataItems.get<ById>().find(name); it != m_dataItems.get<ById>().end())
+        return it->lock();
 
       return nullptr;
     }

@@ -102,7 +102,7 @@ TEST_F(XmlParserTest, GetDevices)
   const auto &dataItemsMap = device->getDeviceDataItems();
 
   for (auto const &mapItem : dataItemsMap)
-    dataItems.emplace_back(mapItem.second);
+    dataItems.emplace_back(mapItem.lock());
 
   bool hasExec = false, hasZcom = false;
 
@@ -124,9 +124,8 @@ TEST_F(XmlParserTest, Condition)
   ASSERT_EQ((size_t)1, m_devices.size());
 
   const auto device = m_devices.front();
-  auto dataItemsMap = device->getDeviceDataItems();
-
-  const auto item = dataItemsMap.at("clc").lock();
+  const auto &dataItemsMap = device->getDeviceDataItems();
+  const auto item = dataItemsMap.find("clc")->lock();
   ASSERT_TRUE(item);
 
   ASSERT_EQ((string) "clc", item->getId());
@@ -448,9 +447,9 @@ TEST_F(XmlParserTest, DataItemRelationships)
       m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", printer.get());
 
   const auto &device = m_devices.front();
-  auto &dataItemsMap = device->getDeviceDataItems();
+  const auto &dataItemsMap = device->getDeviceDataItems();
 
-  const auto item1 = dataItemsMap.at("xlc").lock();
+  const auto item1 = dataItemsMap.find("xlc")->lock();
   ASSERT_TRUE(item1 != nullptr);
 
   const auto &relations = item1->getList("Relationships");
@@ -470,7 +469,7 @@ TEST_F(XmlParserTest, DataItemRelationships)
   ASSERT_FALSE((*rel)->maybeGet<string>("name"));
   ASSERT_EQ(string("spec1"), (*rel)->get<string>("idRef"));
 
-  const auto item2 = dataItemsMap.at("xlcpl").lock();
+  const auto item2 = dataItemsMap.find("xlcpl")->lock();
   ASSERT_TRUE(item2 != nullptr);
 
   const auto &relations2 = item2->getList("Relationships");

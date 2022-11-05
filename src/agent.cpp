@@ -19,6 +19,13 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/range/adaptor/sliced.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm_ext.hpp>
+#include <boost/range/any_range.hpp>
+#include <boost/range/functions.hpp>
+#include <boost/range/metafunctions.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -129,12 +136,12 @@ namespace mtconnect {
 
     if (!m_observationsInitialized)
     {
-      for (auto device : m_devices)
+      for (auto device : m_deviceIndex)
         initializeDataItems(device);
 
       if (m_agentDevice)
       {
-        for (auto device : m_devices)
+        for (auto device : m_deviceIndex)
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
           string uuid = *device->getUuid();
@@ -266,14 +273,7 @@ namespace mtconnect {
         m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
       }
 
-      auto dc = device->getAssetCount();
-      if (dc)
-      {
-        auto count = m_assetStorage->getCountForType(asset->getType());
-
-        DataSet set {DataSetEntry(asset->getType(), int64_t(count))};
-        m_loopback->receive(dc, {{"VALUE", set}});
-      }
+      updateAssetCounts(device, asset->getType());
     }
   }
 
@@ -346,18 +346,6 @@ namespace mtconnect {
     }
     else
     {
-      // if different,  and revise to new device leaving in place
-      // the asset changed, removed, and availability data items
-      std::set<std::string> ids;
-      if (oldDev->getAssetChanged())
-        ids.insert(oldDev->getAssetChanged()->getId());
-      if (oldDev->getAssetRemoved())
-        ids.insert(oldDev->getAssetRemoved()->getId());
-      if (oldDev->getAvailability())
-        ids.insert(oldDev->getAvailability()->getId());
-      if (oldDev->getAssetCount())
-        ids.insert(oldDev->getAssetCount()->getId());
-
       auto name = device->getComponentName();
       if (!name)
       {
@@ -365,31 +353,50 @@ namespace mtconnect {
         return false;
       }
 
-      LOG(info) << "Updating device " << *uuid << " to new device model";
-      if (oldDev->reviseTo(device, ids))
+      // if different,  and revise to new device leaving in place
+      // the asset changed, removed, and availability data items
+      ErrorList errors;
+      if (auto odi = oldDev->getAssetChanged(), ndi = device->getAssetChanged(); odi && !ndi)
+        device->addDataItem(odi, errors);
+      if (auto odi = oldDev->getAssetRemoved(), ndi = device->getAssetRemoved(); odi && !ndi)
+        device->addDataItem(odi, errors);
+      if (auto odi = oldDev->getAvailability(), ndi = device->getAvailability(); odi && !ndi)
+        device->addDataItem(odi, errors);
+      if (auto odi = oldDev->getAssetCount(), ndi = device->getAssetCount(); odi && !ndi)
+        device->addDataItem(odi, errors);
+
+      verifyDevice(device);
+
+      LOG(info) << "Checking if device " << *uuid << " has changed";
+      if (*device != *oldDev)
       {
-        LOG(info) << "Device " << *uuid << " changed, updating mappings";
+        LOG(info) << "Device " << *uuid << " changed, updating model";
 
         // Remove the old data items
-        for (auto di : oldDev->getDeviceDataItems())
-          m_dataItemMap.erase(di.first);
-
-        // Reinitialize data item maps
-        oldDev->initialize();
-
-        for (auto di : oldDev->getDeviceDataItems())
-          m_dataItemMap.emplace(di.first, di.second);
-
-        if (oldDev->get<string>("name") != *name)
+        set<string> skip;
+        for (auto &di : oldDev->getDeviceDataItems())
         {
-          m_deviceNameMap.erase(*name);
-          m_deviceNameMap[oldDev->get<string>("name")] = oldDev;
+          if (!di.expired())
+          {
+            m_dataItemMap.erase(di.lock()->getId());
+            skip.insert(di.lock()->getId());
+          }
         }
-        if (oldDev->get<string>("uuid") != *uuid)
+
+        // Replace device in device maps
+        auto it = find(m_deviceIndex.begin(), m_deviceIndex.end(), oldDev);
+        if (it != m_deviceIndex.end())
+          m_deviceIndex.replace(it, device);
+        else
         {
-          m_deviceUuidMap.erase(*uuid);
-          m_deviceUuidMap[oldDev->get<string>("uuid")] = oldDev;
+          LOG(error) << "Cannot find Device " << *uuid << " in devices";
+          return false;
         }
+
+        initializeDataItems(device, skip);
+
+        LOG(info) << "Device " << *uuid << " updating circular buffer";
+        m_circularBuffer.updateDataItems(m_dataItemMap);
 
         if (version)
           versionDeviceXml();
@@ -424,8 +431,9 @@ namespace mtconnect {
         fs::rename(file, backup);
 
       printer::XmlPrinter printer(m_version, true);
-      decltype(m_devices) list;
-      copy_if(m_devices.begin(), m_devices.end(), back_inserter(list),
+
+      std::list<DevicePtr> list;
+      copy_if(m_deviceIndex.begin(), m_deviceIndex.end(), back_inserter(list),
               [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
       auto probe = printer.printProbe(0, 0, 0, 0, 0, list);
 
@@ -445,6 +453,8 @@ namespace mtconnect {
         sink->publish(asset);
 
       notifyAssetRemoved(device, asset);
+      updateAssetCounts(device, asset->getType());
+
       return true;
     }
     else
@@ -458,9 +468,10 @@ namespace mtconnect {
                               const std::optional<Timestamp> time, asset::AssetList &list)
   {
     std::optional<std::string> uuid;
+    DevicePtr dev;
     if (device)
     {
-      auto dev = findDeviceByUUIDorName(*device);
+      dev = findDeviceByUUIDorName(*device);
       if (dev)
         uuid = dev->getUuid();
       else
@@ -472,6 +483,17 @@ namespace mtconnect {
     {
       notifyAssetRemoved(nullptr, asset);
     }
+
+    if (dev)
+    {
+      updateAssetCounts(dev, type);
+    }
+    else
+    {
+      for (auto d : m_deviceIndex)
+        updateAssetCounts(d, type);
+    }
+
     return count > 0;
   }
 
@@ -482,9 +504,10 @@ namespace mtconnect {
       auto dev = device;
       if (!device)
       {
-        auto it = m_deviceUuidMap.find(*asset->getDeviceUuid());
-        if (it != m_deviceUuidMap.end())
-          dev = it->second;
+        auto &idx = m_deviceIndex.get<ByUuid>();
+        auto it = idx.find(*asset->getDeviceUuid());
+        if (it != idx.end())
+          dev = *it;
       }
       if (dev && dev->getAssetRemoved())
       {
@@ -639,7 +662,8 @@ namespace mtconnect {
     if (device->getAssetChanged() && (major > 1 || (major == 1 && minor >= 5)))
     {
       auto di = device->getAssetChanged();
-      di->makeDiscrete();
+      if (!di->isDiscrete())
+        di->makeDiscrete();
     }
 
     if (!device->getAssetRemoved() && (major > 1 || (major == 1 && minor >= 3)))
@@ -665,7 +689,7 @@ namespace mtconnect {
     }
   }
 
-  void Agent::initializeDataItems(DevicePtr device)
+  void Agent::initializeDataItems(DevicePtr device, std::optional<std::set<std::string>> skip)
   {
     NAMED_SCOPE("Agent::initializeDataItems");
 
@@ -675,10 +699,13 @@ namespace mtconnect {
     // Initialize the id mapping for the devices and set all data items to UNAVAILABLE
     for (auto item : device->getDeviceDataItems())
     {
-      auto d = item.second.lock();
-      if (m_dataItemMap.count(d->getId()) > 0)
+      if (item.expired())
+        continue;
+
+      auto d = item.lock();
+      if ((!skip || skip->count(d->getId()) > 0) && m_dataItemMap.count(d->getId()) > 0)
       {
-        auto di = m_dataItemMap[d->getId()].lock();        
+        auto di = m_dataItemMap[d->getId()].lock();
         if (di && di != d)
         {
           LOG(fatal) << "Duplicate DataItem id " << d->getId()
@@ -708,8 +735,9 @@ namespace mtconnect {
 
     // Check if device already exists
     string uuid = *device->getUuid();
-    auto old = m_deviceUuidMap.find(uuid);
-    if (old != m_deviceUuidMap.end())
+    auto &idx = m_deviceIndex.get<ByUuid>();
+    auto old = idx.find(uuid);
+    if (old != idx.end())
     {
       // Update existing device
       LOG(fatal) << "Device " << *device->getUuid() << " already exists. "
@@ -722,9 +750,7 @@ namespace mtconnect {
       // verified, additional data items added, and initial values set.
       // if (!m_initialized)
       {
-        m_devices.push_back(device);
-        m_deviceNameMap[device->get<string>("name")] = device;
-        m_deviceUuidMap[uuid] = device;
+        m_deviceIndex.push_back(device);
 
         // TODO: Redo Resolve Reference  with entity
         // device->resolveReferences();
@@ -766,15 +792,11 @@ namespace mtconnect {
         if (d)
           m_loopback->receive(d, oldUuid);
       }
-      m_deviceUuidMap.erase(oldUuid);
-      m_deviceUuidMap[uuid] = device;
     }
 
     if (*device->getComponentName() != oldName)
     {
       changed = true;
-      m_deviceNameMap.erase(oldName);
-      m_deviceNameMap[device->get<string>("name")] = device;
     }
 
     if (changed)
@@ -809,7 +831,7 @@ namespace mtconnect {
 
     // Reload the document for path resolution
     auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
-    m_xmlParser->loadDocument(xmlPrinter->printProbe(0, 0, 0, 0, 0, m_devices));
+    m_xmlParser->loadDocument(xmlPrinter->printProbe(0, 0, 0, 0, 0, getDevices()));
 
     for (auto &printer : m_printers)
       printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
@@ -824,9 +846,10 @@ namespace mtconnect {
     if (name.empty())
       return defaultDevice();
 
-    auto devPos = m_deviceNameMap.find(name);
-    if (devPos != m_deviceNameMap.end())
-      return devPos->second;
+    auto &idx = m_deviceIndex.get<ByName>();
+    auto devPos = idx.find(name);
+    if (devPos != idx.end())
+      return *devPos;
 
     return nullptr;
   }
@@ -836,9 +859,10 @@ namespace mtconnect {
     if (name.empty())
       return defaultDevice();
 
-    auto devPos = m_deviceNameMap.find(name);
-    if (devPos != m_deviceNameMap.end())
-      return devPos->second;
+    auto &idx = m_deviceIndex.get<ByName>();
+    auto devPos = idx.find(name);
+    if (devPos != idx.end())
+      return *devPos;
 
     return nullptr;
   }
@@ -848,19 +872,14 @@ namespace mtconnect {
     if (idOrName.empty())
       return defaultDevice();
 
-    auto di = m_deviceUuidMap.find(idOrName);
-    if (di == m_deviceUuidMap.end())
-    {
-      di = m_deviceNameMap.find(idOrName);
-      if (di != m_deviceNameMap.end())
-        return di->second;
-    }
-    else
-    {
-      return di->second;
-    }
+    DevicePtr res;
+    if (auto d = m_deviceIndex.get<ByUuid>().find(idOrName); d != m_deviceIndex.get<ByUuid>().end())
+      res = *d;
+    else if (auto d = m_deviceIndex.get<ByName>().find(idOrName);
+             d != m_deviceIndex.get<ByName>().end())
+      res = *d;
 
-    return nullptr;
+    return res;
   }
 
   // ----------------------------------------------------
@@ -982,10 +1001,9 @@ namespace mtconnect {
         continue;
       }
 
-      const auto &dataItems = device->getDeviceDataItems();
-      for (const auto &dataItemAssoc : dataItems)
+      for (auto di : device->getDeviceDataItems())
       {
-        auto dataItem = dataItemAssoc.second.lock();
+        auto dataItem = di.lock();
         if (dataItem && ((dataItem->getDataSource() && *dataItem->getDataSource() == adapter) ||
                          (autoAvailable && !dataItem->getDataSource() &&
                           dataItem->getType() == "AVAILABILITY")))
@@ -1005,7 +1023,7 @@ namespace mtconnect {
           }
         }
         else if (!dataItem)
-          LOG(warning) << "No data Item for " << dataItemAssoc.first;
+          LOG(warning) << "Free data item found in device data items";
       }
     }
   }
@@ -1143,6 +1161,46 @@ namespace mtconnect {
     }
   }
 
+  void Agent::updateAssetCounts(const DevicePtr &device, const std::optional<std::string> type)
+  {
+    if (!device)
+      return;
+
+    auto dc = device->getAssetCount();
+    if (dc)
+    {
+      if (type)
+      {
+        auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
+        
+        DataSet set;
+        if (count > 0)
+          set.emplace(*type, int64_t(count));
+        else
+          set.emplace(*type, DataSetValue(), true);
+        
+        m_loopback->receive(dc, {{"VALUE", set}});
+      }
+      else
+      {
+        auto counts = m_assetStorage->getCountsByTypeForDevice(*device->getUuid());
+        
+        DataSet set;
+        
+        for (auto &[t, count] : counts)
+        {
+          if (count > 0)
+            set.emplace(t, int64_t(count));
+          else
+            set.emplace(t, DataSetValue(), true);
+        }
+        
+        m_loopback->receive(dc, {{"resetTriggered", "RESET_COUNTS"s},
+          {"VALUE", set}});
+      }
+    }
+  }
+
   void Agent::receiveCommand(const std::string &deviceName, const std::string &command,
                              const std::string &value, const std::string &source)
   {
@@ -1158,11 +1216,6 @@ namespace mtconnect {
 
     static std::unordered_map<string, function<void(DevicePtr, const string &value)>>
         deviceCommands {
-            {"uuid",
-             [](DevicePtr device, const string &uuid) {
-               if (!device->preserveUuid())
-                 device->setUuid(uuid);
-             }},
             {"manufacturer", mem_fn(&Device::setManufacturer)},
             {"station", mem_fn(&Device::setStation)},
             {"serialnumber", mem_fn(&Device::setSerialNumber)},
@@ -1199,31 +1252,47 @@ namespace mtconnect {
         {"mtconnectversion", "_mtconnect_version"},
     };
 
-    auto action = deviceCommands.find(command);
-    if (action == deviceCommands.end())
+    if (command == "uuid")
     {
-      auto agentDi = adapterDataItems.find(command);
-      if (agentDi == adapterDataItems.end())
+      if (!device->preserveUuid())
       {
-        LOG(warning) << "Unknown command '" << command << "' for device '" << deviceName;
-      }
-      else
-      {
-        auto id = source + agentDi->second;
-        auto di = getDataItemForDevice("Agent", id);
-        if (di)
-          m_loopback->receive(di, value);
-        else
+        auto &idx = m_deviceIndex.get<ByUuid>();
+        auto it = idx.find(oldUuid);
+        if (it != idx.end())
         {
-          LOG(warning) << "Cannot find data item for the Agent device when processing command "
-                       << command << " with value " << value << " for adapter " << source;
+          idx.modify(it, [&value](DevicePtr &ptr) { ptr->setUuid(value); });
         }
+        deviceChanged(device, oldUuid, oldName);
       }
     }
     else
     {
-      action->second(device, value);
-      deviceChanged(device, oldUuid, oldName);
+      auto action = deviceCommands.find(command);
+      if (action == deviceCommands.end())
+      {
+        auto agentDi = adapterDataItems.find(command);
+        if (agentDi == adapterDataItems.end())
+        {
+          LOG(warning) << "Unknown command '" << command << "' for device '" << deviceName;
+        }
+        else
+        {
+          auto id = source + agentDi->second;
+          auto di = getDataItemForDevice("Agent", id);
+          if (di)
+            m_loopback->receive(di, value);
+          else
+          {
+            LOG(warning) << "Cannot find data item for the Agent device when processing command "
+                         << command << " with value " << value << " for adapter " << source;
+          }
+        }
+      }
+      else
+      {
+        action->second(device, value);
+        deviceChanged(device, oldUuid, oldName);
+      }
     }
   }
 

@@ -303,7 +303,11 @@ namespace mtconnect {
           ac->setName("AssetCommand");
           ac->setValue("RemoveAll"s);
           if (token != end)
-            ac->setProperty("type", *token++);
+          {
+            if (!token->empty())
+              ac->setProperty("type", *token);
+            token++;
+          }
           if (m_defaultDevice)
             ac->setProperty("device", *m_defaultDevice);
         }

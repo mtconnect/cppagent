@@ -214,7 +214,7 @@ TEST_F(CheckpointTest, GetObservations)
                             {"nativeUnits", "MILLIMETER"s}},
                            errors);
   d1->setComponent(m_device);
-  
+
   filter.insert(d1->getId());
 
   p = observation::Observation::make(d1, value, time, errors);
@@ -553,7 +553,7 @@ TEST_F(CheckpointTest, orphaned_observations_should_be_skipped)
                             {"nativeUnits", "MILLIMETER"s}},
                            errors);
   m_device->addDataItem(d1, errors);
-  
+
   filter.insert(d1->getId());
 
   p = observation::Observation::make(d1, value, time, errors);
@@ -570,6 +570,6 @@ TEST_F(CheckpointTest, orphaned_observations_should_be_skipped)
   m_device.reset();
   ObservationList list2;
   m_checkpoint->getObservations(list2, filter);
-  
+
   ASSERT_EQ(0, list2.size());
 }

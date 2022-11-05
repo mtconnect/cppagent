@@ -62,6 +62,22 @@ namespace mtconnect::buffer {
 
     SequenceNumber_t getFirstSequence() const { return m_firstSequence; }
 
+    void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
+    {
+      for (auto &o : m_slidingBuffer)
+      {
+        o->updateDataItem(diMap);
+      }
+
+      m_first.updateDataItems(diMap);
+      m_latest.updateDataItems(diMap);
+
+      for (auto &cp : m_checkpoints)
+      {
+        cp->updateDataItems(diMap);
+      }
+    }
+
     void setSequence(SequenceNumber_t seq)
     {
       m_sequence = seq;
@@ -76,7 +92,7 @@ namespace mtconnect::buffer {
 
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       auto dataItem = observation->getDataItem();
-        
+
       if (!dataItem->isDiscrete())
       {
         if (!observation->isUnavailable() && dataItem->isDataSet() &&
