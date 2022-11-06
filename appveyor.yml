@@ -50,7 +50,6 @@ before_build:
       pip install conan
       conan export conan/mqtt_cpp
       conan export conan/mruby
-      conan export conan/nasm
       conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False -o with_ruby=%WITH_RUBY%
   - sh: |-
       export PATH=$HOME/venv3.10/bin:$PATH

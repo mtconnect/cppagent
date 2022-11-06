@@ -88,7 +88,8 @@ namespace mtconnect {
 
     void AdapterPipeline::buildDeviceList()
     {
-      m_devices = GetOption<StringList>(m_options, configuration::AdditionalDevices).value_or(StringList());
+      m_devices =
+          GetOption<StringList>(m_options, configuration::AdditionalDevices).value_or(StringList());
       m_device = GetOption<string>(m_options, configuration::Device);
       if (m_device)
       {

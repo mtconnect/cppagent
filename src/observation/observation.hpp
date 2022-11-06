@@ -68,6 +68,16 @@ namespace mtconnect {
       const auto getDataItem() const { return m_dataItem.lock(); }
       auto getSequence() const { return m_sequence; }
 
+      void updateDataItem(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
+      {
+        auto old = m_dataItem.lock();
+        auto ndi = diMap.find(old->getId());
+        if (ndi != diMap.end())
+          m_dataItem = ndi->second;
+        else
+          LOG(trace) << "Observation cannot find data item: " << old->getId();
+      }
+
       void setTimestamp(const Timestamp &ts)
       {
         m_timestamp = ts;
@@ -98,10 +108,12 @@ namespace mtconnect {
       bool operator<(const Observation &another) const
       {
         auto di = m_dataItem.lock();
-        if (!di) return false;
+        if (!di)
+          return false;
         auto odi = another.m_dataItem.lock();
-        if (!odi) return true;
-        
+        if (!odi)
+          return true;
+
         if ((*di) < (*odi))
           return true;
         else if (*di == *odi)
@@ -112,7 +124,19 @@ namespace mtconnect {
 
       bool isOrphan() const
       {
+#ifdef NDEBUG
         return m_dataItem.expired();
+#else
+        if (m_dataItem.expired())
+          return true;
+        if (m_dataItem.lock()->isOrphan())
+        {
+          auto di = m_dataItem.lock();
+          LOG(trace) << "!!! DataItem " << di->getTopicName() << " orphaned";
+          return true;
+        }
+        return false;
+#endif
       }
 
       void clearResetTriggered() { m_properties.erase("resetTriggered"); }
