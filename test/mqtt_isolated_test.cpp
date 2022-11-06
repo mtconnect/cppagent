@@ -39,6 +39,10 @@ using namespace mtconnect::sink::rest_sink;
 
 using json = nlohmann::json;
 
+const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+const string MqttCCert(PROJECT_ROOT_DIR "/test/resources/client.crt");
+const string MqttCPrivateKey(PROJECT_ROOT_DIR "/test/resources/client.key");
+
 class MqttIsolatedUnitTest : public testing::Test
 {
 protected:
@@ -77,6 +81,9 @@ protected:
                         {MqttPort, 0},
                         {MqttTls, withTlsOption},
                         {AutoAvailable, false},
+                        {MqttCaCert, MqttCACert},
+                        {MqttCert, MqttCCert},
+                        {MqttPrivateKey, MqttCPrivateKey},
                         {RealTime, false}});
 
     if (withTlsOption)
@@ -137,6 +144,9 @@ protected:
                         {MqttPort, m_port},
                         {MqttTls, withTlsOption},
                         {AutoAvailable, false},
+                        {MqttCaCert, MqttCACert},
+                        {MqttCert, MqttCCert},
+                        {MqttPrivateKey, MqttCPrivateKey},
                         {RealTime, false}});
 
     if (withTlsOption)
@@ -169,15 +179,10 @@ protected:
   uint16_t m_port {0};
 };
 
-const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
 TEST_F(MqttIsolatedUnitTest, mqtt_client_should_connect_to_broker)
 {
-  ConfigOptions options {
-      {configuration::Host, "localhost"s}, {configuration::Port, 0},
-      {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
-      {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
-
+  ConfigOptions options;
   createServer(options);
 
   startServer();
@@ -195,10 +200,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_client_should_connect_to_broker)
 
 TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication)
 {
-  ConfigOptions options {
-      {configuration::Host, "localhost"s}, {configuration::Port, 0},
-      {configuration::MqttTls, false},     {configuration::AutoAvailable, false},
-      {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
+  ConfigOptions options;
 
   createServer(options);
   startServer();
@@ -312,12 +314,9 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
 
 TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 {
-  GTEST_SKIP();
+  //GTEST_SKIP();
 
-  ConfigOptions options {
-      {configuration::Host, "localhost"s}, {configuration::Port, 0},
-      {configuration::MqttTls, true},      {configuration::AutoAvailable, false},
-      {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
+  ConfigOptions options {{configuration::MqttTls, true}};
 
   createServer(options);
 
@@ -332,127 +331,6 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
   ASSERT_TRUE(startClient());
 
   ASSERT_TRUE(m_client->isConnected());
-}
-
-TEST_F(MqttIsolatedUnitTest, mqtt_tls_client_should_receive_loopback_publication)
-{
-  GTEST_SKIP();
-	
-  ConfigOptions options {
-      {configuration::Host, "localhost"s}, {configuration::Port, 0},
-      {configuration::MqttTls, true},     {configuration::AutoAvailable, false},
-      {configuration::RealTime, false},    {configuration::MqttCaCert, MqttCACert}};
-
-  createServer(options);
-  startServer();
-
-  ASSERT_NE(0, m_port);
-
-  std::uint16_t pid_sub1;
-
-  auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext, "localhost", m_port);
-
-  client->set_client_id("cliendId1");
-  client->set_clean_session(true);
-  client->set_keep_alive_sec(30);
-
-  client->set_connack_handler([&client, &pid_sub1](bool sp,
-                                                   mqtt::connect_return_code connack_return_code) {
-    std::cout << "Connack handler called" << std::endl;
-    std::cout << "Session Present: " << std::boolalpha << sp << std::endl;
-    std::cout << "Connack Return Code: " << connack_return_code << std::endl;
-    if (connack_return_code == mqtt::connect_return_code::accepted)
-    {
-      pid_sub1 = client->acquire_unique_packet_id();
-
-      client->async_subscribe(pid_sub1, "mqtt_tls_client_cpp/topic1", MQTT_NS::qos::at_most_once,
-                              //[optional] checking async_subscribe completion code
-                              [](MQTT_NS::error_code ec) {
-                                EXPECT_FALSE(ec);
-                                std::cout << "async_tcp_subscribe callback: " << ec.message()
-                                          << std::endl;
-                              });
-    }
-    return true;
-  });
-  client->set_close_handler([] { std::cout << "closed" << std::endl; });
-
-  client->set_suback_handler(
-      [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
-        std::cout << "suback received. packet_id: " << packet_id << std::endl;
-        for (auto const &e : results)
-        {
-          std::cout << "subscribe result: " << e << std::endl;
-        }
-
-        if (packet_id == pid_sub1)
-        {
-          client->async_publish("mqtt_tls_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
-                                //[optional] checking async_publish completion code
-                                [](MQTT_NS::error_code ec) {
-                                  EXPECT_FALSE(ec);
-
-                                  std::cout << "async_tls_publish callback: " << ec.message()
-                                            << std::endl;
-                                  EXPECT_EQ(ec.message(), "Success");
-                                });
-          return true;
-        }
-
-        return true;
-      });
-
-  client->set_close_handler([] { std::cout << "closed" << std::endl; });
-
-  client->set_suback_handler(
-      [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
-        std::cout << "suback received. packet_id: " << packet_id << std::endl;
-        for (auto const &e : results)
-        {
-          std::cout << "subscribe result: " << e << std::endl;
-        }
-
-        if (packet_id == pid_sub1)
-        {
-          client->async_publish("mqtt_tls_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
-                                //[optional] checking async_publish completion code
-                                [packet_id](MQTT_NS::error_code ec) {
-                                  EXPECT_FALSE(ec);
-
-                                  std::cout << "async_tls_publish callback: " << ec.message()
-                                            << std::endl;
-                                  ASSERT_TRUE(packet_id);
-                                });
-        }
-
-        return true;
-      });
-
-  bool received = false;
-  client->set_publish_handler([&client, &received](mqtt::optional<std::uint16_t> packet_id,
-                                                   mqtt::publish_options pubopts,
-                                                   mqtt::buffer topic_name, mqtt::buffer contents) {
-    std::cout << "publish received."
-              << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
-              << " retain: " << pubopts.get_retain() << std::endl;
-    if (packet_id)
-      std::cout << "packet_id: " << *packet_id << std::endl;
-    std::cout << "topic_name: " << topic_name << std::endl;
-    std::cout << "contents: " << contents << std::endl;
-
-    EXPECT_EQ("mqtt_tls_client_cpp/topic1", topic_name);
-    EXPECT_EQ("test1", contents);
-
-    client->async_disconnect();
-    received = true;
-    return true;
-  });
-
-  client->async_connect();
-
-  m_agentTestHelper->m_ioContext.run();
-
-  ASSERT_TRUE(received);
 }
 
 TEST_F(MqttIsolatedUnitTest, should_conenct_using_authentication) { GTEST_SKIP(); }

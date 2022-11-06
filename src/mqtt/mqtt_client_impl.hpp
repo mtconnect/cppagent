@@ -50,6 +50,8 @@ namespace mtconnect {
                                         mqtt::protocol_version>;
     using mqtt_tls_client = mqtt_tls_client_ptr<boost::asio::io_context &, std::string,
                                                 std::uint16_t, mqtt::protocol_version>;
+    using mqtt_tls_client_ws = mqtt_tls_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t, std::string,
+                               mqtt::protocol_version>;
 
     template <typename Derived>
     class MqttClientImpl : public MqttClient
@@ -342,7 +344,7 @@ namespace mtconnect {
       {
         if (!m_client)
         {
-          m_client = mqtt::make_tls_async_client(m_ioContext, m_host, m_port);
+          m_client = mqtt::make_tls_async_client_ws(m_ioContext, m_host, m_port);
           auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
           {
@@ -362,7 +364,7 @@ namespace mtconnect {
       }
 
     protected:
-      mqtt_tls_client m_client;
+      mqtt_tls_client_ws m_client;
     };
 
   }  // namespace mqtt_client
