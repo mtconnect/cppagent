@@ -620,6 +620,9 @@ namespace mtconnect {
 
     bool RestService::publish(ObservationPtr &observation)
     {
+      if (observation->isOrphan())
+        return false;
+
       auto dataItem = observation->getDataItem();
       auto seqNum = observation->getSequence();
       dataItem->signalObservers(seqNum);
@@ -653,8 +656,9 @@ namespace mtconnect {
           rest_sink::status::ok,
           printer->printProbe(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
                               m_sinkContract->getCircularBuffer().getSequence(),
-                              m_sinkContract->getAssetStorage()->getMaxAssets(),
-                              m_sinkContract->getAssetStorage()->getCount(), deviceList, &counts),
+                              uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+                              uint32_t(m_sinkContract->getAssetStorage()->getCount()), deviceList,
+                              &counts),
           printer->mimeType());
     }
 
@@ -1009,11 +1013,12 @@ namespace mtconnect {
           uuid = d->getUuid();
       }
 
-      m_sinkContract->getAssetStorage()->getAssets(list, count, removed, uuid, type);
+      m_sinkContract->getAssetStorage()->getAssets(list, count, !removed, uuid, type);
       return make_unique<Response>(
           status::ok,
-          printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                               m_sinkContract->getAssetStorage()->getCount(), list),
+          printer->printAssets(m_instanceId,
+                               uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+                               uint32_t(m_sinkContract->getAssetStorage()->getCount()), list),
           printer->mimeType());
     }
 
@@ -1039,8 +1044,9 @@ namespace mtconnect {
       {
         return make_unique<Response>(
             status::ok,
-            printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                                 m_sinkContract->getAssetStorage()->getCount(), list),
+            printer->printAssets(m_instanceId,
+                                 uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+                                 uint32_t(m_sinkContract->getAssetStorage()->getCount()), list),
             printer->mimeType());
       }
     }
@@ -1076,8 +1082,9 @@ namespace mtconnect {
       AssetList list {ap};
       return make_unique<Response>(
           status::ok,
-          printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                               m_sinkContract->getAssetStorage()->getCount(), list),
+          printer->printAssets(m_instanceId,
+                               uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+                               uint32_t(m_sinkContract->getAssetStorage()->getCount()), list),
           printer->mimeType());
     }
 
@@ -1095,8 +1102,9 @@ namespace mtconnect {
 
         return make_unique<Response>(
             status::ok,
-            printer->printAssets(m_instanceId, m_sinkContract->getAssetStorage()->getMaxAssets(),
-                                 m_sinkContract->getAssetStorage()->getCount(), list),
+            printer->printAssets(m_instanceId,
+                                 uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
+                                 uint32_t(m_sinkContract->getAssetStorage()->getCount()), list),
             printer->mimeType());
       }
       else
@@ -1113,7 +1121,7 @@ namespace mtconnect {
     {
       AssetList list;
       if (m_sinkContract->getAssetStorage()->getAssets(list, std::numeric_limits<size_t>().max(),
-                                                       false, device, type) == 0)
+                                                       true, device, type) == 0)
       {
         return make_unique<Response>(status::not_found,
                                      printError(printer, "ASSET_NOT_FOUND", "Cannot find assets"),

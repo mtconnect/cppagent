@@ -246,7 +246,7 @@ namespace mtconnect::entity {
       xmlSetGenericErrorFunc(nullptr, entityXMLErrorFunc);
 
       unique_ptr<xmlDoc, function<void(xmlDocPtr)>> doc(
-          xmlReadMemory(document.c_str(), document.length(), "document.xml", nullptr,
+          xmlReadMemory(document.c_str(), int32_t(document.length()), "document.xml", nullptr,
                         XML_PARSE_NOBLANKS),
           [](xmlDocPtr d) { xmlFreeDoc(d); });
       xmlNodePtr root = xmlDocGetRootElement(doc.get());

@@ -237,7 +237,7 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 
 TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
 {
-  srand(chrono::system_clock::now().time_since_epoch().count());
+  srand(int32_t(chrono::system_clock::now().time_since_epoch().count()));
   m_port = rand() % 10000 + 5000;
   addAdapter();
 

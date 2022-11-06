@@ -21,35 +21,55 @@
 
 using namespace std;
 
-namespace mtconnect {
-  namespace entity {
-    bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
-                           ErrorList &errors)
+namespace mtconnect::entity {
+  bool Entity::addToList(const std::string &name, FactoryPtr factory, EntityPtr entity,
+                         ErrorList &errors)
+  {
+    if (!hasProperty(name))
     {
-      if (!hasProperty(name))
+      entity::EntityList list {entity};
+      auto entities = factory->create(name, list, errors);
+      if (errors.empty())
+        setProperty(name, entities);
+      else
+        return false;
+    }
+    else
+    {
+      auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
+      if (entities)
       {
-        entity::EntityList list {entity};
-        auto entities = factory->create(name, list, errors);
-        if (errors.empty())
-          setProperty(name, entities);
-        else
-          return false;
+        std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
       }
       else
       {
-        auto *entities = std::get_if<EntityPtr>(&getProperty_(name));
-        if (entities)
+        errors.emplace_back(new EntityError("Cannont find list for: " + name));
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool Entity::removeFromList(const std::string &name, EntityPtr entity)
+  {
+    auto &v = getProperty_(name);
+    auto *p = std::get_if<EntityPtr>(&v);
+    if (p)
+    {
+      auto &lv = (*p)->getProperty_("LIST");
+      auto *l = std::get_if<EntityList>(&lv);
+      if (l)
+      {
+        auto it = std::find(l->begin(), l->end(), entity);
+        if (it != l->end())
         {
-          std::get<EntityList>((*entities)->getProperty_("LIST")).emplace_back(entity);
-        }
-        else
-        {
-          errors.emplace_back(new EntityError("Cannont find list for: " + name));
-          return false;
+          l->erase(it);
+          return true;
         }
       }
-
-      return true;
     }
-  }  // namespace entity
-}  // namespace mtconnect
+
+    return false;
+  }
+}  // namespace mtconnect::entity

@@ -16,6 +16,16 @@
 //
 
 #pragma once
+
+#include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/key.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
+
 #include <map>
 #include <unordered_map>
 
@@ -24,6 +34,8 @@
 #include "utilities.hpp"
 
 namespace mtconnect {
+  namespace mic = boost::multi_index;
+
   namespace source::adapter {
     class Adapter;
   }
@@ -32,6 +44,64 @@ namespace mtconnect {
     class Device : public Component
     {
     public:
+      struct ByName
+      {};
+      struct ById
+      {};
+      struct BySource
+      {};
+
+      struct ExtractId
+      {
+        using result_type = std::string;
+        const result_type &operator()(const WeakDataItemPtr d) const { return d.lock()->getId(); }
+      };
+
+      struct ExtractName
+      {
+        using result_type = std::string;
+        const result_type operator()(const WeakDataItemPtr &d) const
+        {
+          const static result_type none {};
+          if (d.expired())
+            return none;
+          else
+          {
+            auto di = d.lock();
+            auto name = di->getName();
+            if (name)
+              return *name;
+            else
+              return di->getId();
+          }
+        }
+      };
+
+      struct ExtractSource
+      {
+        using result_type = std::string;
+        const result_type &operator()(const WeakDataItemPtr &d) const
+        {
+          const static result_type none {};
+          if (d.expired())
+            return none;
+          else
+          {
+            auto di = d.lock();
+            if (di->hasProperty("Source") && di->getSource()->hasValue())
+              return di->getSource()->getValue<std::string>();
+            else
+              return di->getId();
+          }
+        }
+      };
+
+      // Mapping of device names to data items
+      using DataItemIndex = mic::multi_index_container<
+          WeakDataItemPtr, mic::indexed_by<mic::hashed_unique<mic::tag<ById>, ExtractId>,
+                                           mic::hashed_unique<mic::tag<BySource>, ExtractName>,
+                                           mic::hashed_unique<mic::tag<ByName>, ExtractSource>>>;
+
       // Constructor that sets variables from an attribute map
       Device(const std::string &name, entity::Properties &props);
       ~Device() override = default;
@@ -40,9 +110,7 @@ namespace mtconnect {
 
       void initialize() override
       {
-        m_deviceDataItemsById.clear();
-        m_deviceDataItemsByName.clear();
-        m_deviceDataItemsBySource.clear();
+        m_dataItems.clear();
         m_componentsById.clear();
 
         Component::initialize();
@@ -76,7 +144,7 @@ namespace mtconnect {
       DevicePtr getDevice() const override { return getptr(); }
 
       // Return the mapping of Device to data items
-      const auto &getDeviceDataItems() const { return m_deviceDataItemsById; }
+      const auto &getDeviceDataItems() const { return m_dataItems.get<ById>(); }
 
       void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors) override;
 
@@ -109,10 +177,7 @@ namespace mtconnect {
       DataItemPtr m_assetRemoved;
       DataItemPtr m_assetCount;
 
-      // Mapping of device names to data items
-      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsByName;
-      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsById;
-      std::unordered_map<std::string, std::weak_ptr<data_item::DataItem>> m_deviceDataItemsBySource;
+      DataItemIndex m_dataItems;
       std::unordered_map<std::string, std::weak_ptr<Component>> m_componentsById;
     };
 

@@ -62,6 +62,22 @@ namespace mtconnect::buffer {
 
     SequenceNumber_t getFirstSequence() const { return m_firstSequence; }
 
+    void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
+    {
+      for (auto &o : m_slidingBuffer)
+      {
+        o->updateDataItem(diMap);
+      }
+
+      m_first.updateDataItems(diMap);
+      m_latest.updateDataItems(diMap);
+
+      for (auto &cp : m_checkpoints)
+      {
+        cp->updateDataItems(diMap);
+      }
+    }
+
     void setSequence(SequenceNumber_t seq)
     {
       m_sequence = seq;
@@ -71,9 +87,12 @@ namespace mtconnect::buffer {
 
     SequenceNumber_t addToBuffer(observation::ObservationPtr &observation)
     {
-      std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
+      if (observation->isOrphan())
+        return 0;
 
+      std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       auto dataItem = observation->getDataItem();
+
       if (!dataItem->isDiscrete())
       {
         if (!observation->isUnavailable() && dataItem->isDataSet() &&
@@ -209,11 +228,14 @@ namespace mtconnect::buffer {
       {
         // Filter out according to if it exists in the list
         auto &event = m_slidingBuffer[i];
-        const std::string &dataId = event->getDataItem()->getId();
-        if (!filterSet || filterSet->count(dataId) > 0)
+        if (!event->isOrphan())
         {
-          results->push_back(event);
-          added++;
+          const std::string &dataId = event->getDataItem()->getId();
+          if (!filterSet || filterSet->count(dataId) > 0)
+          {
+            results->push_back(event);
+            added++;
+          }
         }
       }
 

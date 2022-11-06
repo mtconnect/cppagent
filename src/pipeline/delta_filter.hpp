@@ -38,7 +38,7 @@ namespace mtconnect {
       {
         using namespace observation;
         constexpr static auto lambda = [](const Sample &s) {
-          return bool(s.getDataItem()->getMinimumDelta());
+          return bool(!s.isOrphan() && s.getDataItem()->getMinimumDelta());
         };
         m_guard = LambdaGuard<Sample, ExactTypeGuard<Sample>>(lambda, RUN) ||
                   TypeGuard<Observation>(SKIP);
@@ -55,6 +55,8 @@ namespace mtconnect {
         std::lock_guard<TransformState> guard(*m_state);
 
         auto o = std::dynamic_pointer_cast<Observation>(entity);
+        if (o->isOrphan())
+          return EntityPtr();
         auto di = o->getDataItem();
         auto &id = di->getId();
 

@@ -30,8 +30,6 @@
 #include "transform.hpp"
 
 namespace mtconnect {
-  class Device;
-
   namespace pipeline {
     class PipelineMessage : public Entity
     {
@@ -40,7 +38,7 @@ namespace mtconnect {
       ~PipelineMessage() = default;
 
       DataItemPtr m_dataItem;
-      DevicePtr m_device;
+      std::weak_ptr<device_model::Device> m_device;
     };
     using PipelineMessagePtr = std::shared_ptr<PipelineMessage>;
 
@@ -136,11 +134,11 @@ namespace mtconnect {
         {
           if (auto it = m_devices.find(*topic); it != m_devices.end())
           {
-            device = it->second;
+            device = it->second.lock();
           }
           if (auto it = m_resolved.find(*topic); it != m_resolved.end())
           {
-            dataItem = it->second;
+            dataItem = it->second.lock();
           }
           if (!dataItem && !device)
           {
@@ -167,8 +165,8 @@ namespace mtconnect {
     protected:
       PipelineContextPtr m_context;
       std::optional<std::string> m_defaultDevice;
-      std::unordered_map<std::string, DataItemPtr> m_resolved;
-      std::unordered_map<std::string, DevicePtr> m_devices;
+      std::unordered_map<std::string, std::weak_ptr<device_model::data_item::DataItem>> m_resolved;
+      std::unordered_map<std::string, std::weak_ptr<device_model::Device>> m_devices;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

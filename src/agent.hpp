@@ -17,6 +17,15 @@
 
 #pragma once
 
+#include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/key.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
+
 #include <chrono>
 #include <list>
 #include <map>
@@ -45,6 +54,8 @@
 #include "source/source.hpp"
 
 namespace mtconnect {
+  namespace mic = boost::multi_index;
+
   namespace source::adapter {
     class Adapter;
   }
@@ -59,6 +70,7 @@ namespace mtconnect {
     }
   };  // namespace device_model
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+  using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
@@ -121,12 +133,17 @@ namespace mtconnect {
     DevicePtr getDeviceByName(const std::string &name);
     DevicePtr getDeviceByName(const std::string &name) const;
     DevicePtr findDeviceByUUIDorName(const std::string &idOrName) const;
-    const auto &getDevices() const { return m_devices; }
+    const auto getDevices() const
+    {
+      std::list<DevicePtr> list;
+      boost::push_back(list, m_deviceIndex);
+      return list;
+    }
     DevicePtr defaultDevice() const
     {
-      if (m_devices.size() > 0)
+      if (m_deviceIndex.size() > 0)
       {
-        for (auto device : m_devices)
+        for (auto device : m_deviceIndex)
           if (device->getName() != "Agent")
             return device;
       }
@@ -163,7 +180,7 @@ namespace mtconnect {
     {
       auto diPos = m_dataItemMap.find(id);
       if (diPos != m_dataItemMap.end())
-        return diPos->second;
+        return diPos->second.lock();
       return nullptr;
     }
 
@@ -206,9 +223,13 @@ namespace mtconnect {
     void createAgentDevice();
     void loadXMLDeviceFile(const std::string &config);
     void verifyDevice(DevicePtr device);
-    void initializeDataItems(DevicePtr device);
+    void initializeDataItems(DevicePtr device,
+                             std::optional<std::set<std::string>> skip = std::nullopt);
     void loadCachedProbe();
     void versionDeviceXml();
+
+    // Asset count management
+    void updateAssetCounts(const DevicePtr &device, const std::optional<std::string> type);
 
     observation::ObservationPtr getLatest(const std::string &id)
     {
@@ -245,11 +266,34 @@ namespace mtconnect {
     // Agent Device
     device_model::AgentDevicePtr m_agentDevice;
 
+    struct BySeq
+    {};
+    struct ByName
+    {};
+    struct ByUuid
+    {};
+
+    struct ExtractDeviceUuid
+    {
+      using result_type = std::string;
+      const result_type &operator()(const DevicePtr &d) const { return *d->getUuid(); }
+      result_type operator()(const DevicePtr &d) { return *d->getUuid(); }
+    };
+    struct ExtractDeviceName
+    {
+      using result_type = std::string;
+      const result_type &operator()(const DevicePtr &d) const { return *d->getComponentName(); }
+      result_type operator()(DevicePtr &d) { return *d->getComponentName(); }
+    };
+
     // Data containers
-    std::list<DevicePtr> m_devices;
-    std::unordered_map<std::string, DevicePtr> m_deviceNameMap;
-    std::unordered_map<std::string, DevicePtr> m_deviceUuidMap;
-    std::unordered_map<std::string, DataItemPtr> m_dataItemMap;
+    using DeviceIndex = mic::multi_index_container<
+        DevicePtr, mic::indexed_by<mic::sequenced<mic::tag<BySeq>>,
+                                   mic::hashed_unique<mic::tag<ByUuid>, ExtractDeviceUuid>,
+                                   mic::hashed_unique<mic::tag<ByName>, ExtractDeviceName>>>;
+
+    DeviceIndex m_deviceIndex;
+    std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
 
     // Xml Config
     std::string m_version;
@@ -286,7 +330,9 @@ namespace mtconnect {
     {
       for (auto &di : m_agent->m_dataItemMap)
       {
-        fun(di.second);
+        auto ldi = di.second.lock();
+        if (ldi)
+          fun(ldi);
       }
     }
     void deliverObservation(observation::ObservationPtr obs) override
@@ -331,7 +377,7 @@ namespace mtconnect {
     {
       return m_agent->findDeviceByUUIDorName(idOrName);
     }
-    const std::list<DevicePtr> &getDevices() const override { return m_agent->getDevices(); }
+    const std::list<DevicePtr> getDevices() const override { return m_agent->getDevices(); }
     DevicePtr defaultDevice() const override { return m_agent->defaultDevice(); }
     DataItemPtr getDataItemById(const std::string &id) const override
     {

@@ -349,7 +349,7 @@ namespace mtconnect::printer {
     }
   }
 
-  std::string XmlPrinter::printErrors(const unsigned int instanceId, const unsigned int bufferSize,
+  std::string XmlPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const ProtoErrorList &list) const
   {
     string ret;
@@ -384,7 +384,7 @@ namespace mtconnect::printer {
     return ret;
   }
 
-  string XmlPrinter::printProbe(const unsigned int instanceId, const unsigned int bufferSize,
+  string XmlPrinter::printProbe(const uint64_t instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
                                 const unsigned int assetCount, const list<DevicePtr> &deviceList,
                                 const std::map<std::string, size_t> *count) const
@@ -421,7 +421,7 @@ namespace mtconnect::printer {
     return ret;
   }
 
-  string XmlPrinter::printSample(const unsigned int instanceId, const unsigned int bufferSize,
+  string XmlPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
                                  const uint64_t lastSeq, ObservationList &observations) const
   {
@@ -448,34 +448,37 @@ namespace mtconnect::printer {
 
             for (auto &observation : observations)
             {
-              const auto &dataItem = observation->getDataItem();
-              const auto &component = dataItem->getComponent();
-              const auto &device = component->getDevice();
-
-              if (deviceElement.key() != device->getId())
+              if (!observation->isOrphan())
               {
-                categoryElement.reset("");
-                componentStreamElement.reset("");
+                const auto &dataItem = observation->getDataItem();
+                const auto &component = dataItem->getComponent();
+                const auto &device = component->getDevice();
 
-                deviceElement.reset("DeviceStream", device->getId());
-                addAttribute(writer, "name", *device->getComponentName());
-                addAttribute(writer, "uuid", *device->getUuid());
+                if (deviceElement.key() != device->getId())
+                {
+                  categoryElement.reset("");
+                  componentStreamElement.reset("");
+
+                  deviceElement.reset("DeviceStream", device->getId());
+                  addAttribute(writer, "name", *device->getComponentName());
+                  addAttribute(writer, "uuid", *device->getUuid());
+                }
+
+                if (componentStreamElement.key() != component->getId())
+                {
+                  categoryElement.reset("");
+
+                  componentStreamElement.reset("ComponentStream", component->getId());
+                  addAttribute(writer, "component", component->getName());
+                  if (component->getComponentName())
+                    addAttribute(writer, "name", *component->getComponentName());
+                  addAttribute(writer, "componentId", component->getId());
+                }
+
+                categoryElement.reset(dataItem->getCategoryText());
+
+                addObservation(writer, observation);
               }
-
-              if (componentStreamElement.key() != component->getId())
-              {
-                categoryElement.reset("");
-
-                componentStreamElement.reset("ComponentStream", component->getId());
-                addAttribute(writer, "component", component->getName());
-                if (component->getComponentName())
-                  addAttribute(writer, "name", *component->getComponentName());
-                addAttribute(writer, "componentId", component->getId());
-              }
-
-              categoryElement.reset(dataItem->getCategoryText());
-
-              addObservation(writer, observation);
             }
           }
         }
@@ -498,7 +501,7 @@ namespace mtconnect::printer {
     return ret;
   }
 
-  string XmlPrinter::printAssets(const unsigned int instanceId, const unsigned int bufferSize,
+  string XmlPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
                                  const unsigned int assetCount, const AssetList &asset) const
   {
     string ret;
@@ -538,7 +541,7 @@ namespace mtconnect::printer {
   }
 
   void XmlPrinter::initXmlDoc(xmlTextWriterPtr writer, EDocumentType aType,
-                              const unsigned int instanceId, const unsigned int bufferSize,
+                              const uint64_t instanceId, const unsigned int bufferSize,
                               const unsigned int assetBufferSize, const unsigned int assetCount,
                               const uint64_t nextSeq, const uint64_t firstSeq,
                               const uint64_t lastSeq, const map<string, size_t> *count) const

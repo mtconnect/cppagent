@@ -35,7 +35,7 @@ if (APPLE)
   set_target_properties(sink_plugin_test PROPERTIES
     FRAMEWORK TRUE
     FRAMEWORK_VERSION A
-    MACOSX_FRAMEWORK_IDENTIFIER sink_plugin_test
+    MACOSX_FRAMEWORK_IDENTIFIER sink-plugin-test
     VERSION 16.4.0
     SOVERSION 1.0.0)
 endif()
@@ -62,7 +62,7 @@ if (APPLE)
   set_target_properties(adapter_plugin_test PROPERTIES
     FRAMEWORK TRUE
     FRAMEWORK_VERSION A
-    MACOSX_FRAMEWORK_IDENTIFIER adapter_plugin_test
+    MACOSX_FRAMEWORK_IDENTIFIER adapter-plugin-test
     VERSION 16.4.0
     SOVERSION 1.0.0)
 endif()
@@ -143,6 +143,7 @@ add_agent_test(file_asset TRUE asset)
 add_agent_test(cutting_tool TRUE asset)
 add_agent_test(raw_material TRUE asset)
 add_agent_test(qif_document TRUE asset)
+add_agent_test(asset_buffer TRUE asset)
 
 add_agent_test(agent_device TRUE device_model)
 add_agent_test(component FALSE device_model)
@@ -201,7 +202,6 @@ add_agent_test(mtconnect_xml_transform FALSE pipeline)
 add_agent_test(response_document FALSE pipeline)
 
 add_agent_test(agent TRUE core)
-add_agent_test(asset_buffer TRUE core)
 add_agent_test(change_observer FALSE core)
 add_agent_test(globals FALSE core)
 
@@ -211,7 +211,10 @@ add_agent_test(config FALSE configuration)
 add_agent_test(observation TRUE observation)
 add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)
-add_agent_test(checkpoint FALSE observation)
+
+add_agent_test(checkpoint FALSE buffer)
+add_agent_test(circular_buffer FALSE buffer)
+
 
 if (WITH_RUBY)
   add_agent_test(embedded_ruby TRUE ruby)

@@ -126,6 +126,7 @@ namespace mtconnect {
         bool isDataSet() const { return m_representation == DATA_SET || isTable(); }
         bool isDiscrete() const { return m_discrete; }
         bool isThreeSpace() const { return m_specialClass == THREE_SPACE_CLS; }
+        bool isOrphan() const { return m_component.expired(); }
 
         void makeDiscrete()
         {
@@ -220,5 +221,6 @@ namespace mtconnect {
     }  // namespace data_item
   }    // namespace device_model
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
+  using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
 
 }  // namespace mtconnect

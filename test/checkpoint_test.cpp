@@ -44,9 +44,15 @@ protected:
     m_checkpoint = make_unique<Checkpoint>();
 
     ErrorList errors;
+    Properties d1 {
+        {"id", "1"s}, {"name", "DeviceTest1"s}, {"uuid", "UnivUniqId1"s}, {"iso841Class", "4"s}};
+    m_device = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", d1, errors));
+
     m_dataItem1 = DataItem::make(
         {{"id", "1"s}, {"type", "LOAD"s}, {"category", "CONDITION"s}, {"name", "DataItemTest1"s}},
         errors);
+    m_device->addDataItem(m_dataItem1, errors);
+
     m_dataItem2 = DataItem::make({{"id", "3"s},
                                   {"type", "POSITION"s},
                                   {"category", "SAMPLE"s},
@@ -55,6 +61,7 @@ protected:
                                   {"units", "MILLIMETER"s},
                                   {"nativeUnits", "MILLIMETER"s}},
                                  errors);
+    m_device->addDataItem(m_dataItem2, errors);
   }
 
   void TearDown() override
@@ -67,6 +74,7 @@ protected:
   std::unique_ptr<Checkpoint> m_checkpoint;
   DataItemPtr m_dataItem1;
   DataItemPtr m_dataItem2;
+  DevicePtr m_device;
 };
 
 TEST_F(CheckpointTest, AddObservations)
@@ -205,6 +213,7 @@ TEST_F(CheckpointTest, GetObservations)
                             {"units", "MILLIMETER"s},
                             {"nativeUnits", "MILLIMETER"s}},
                            errors);
+  d1->setComponent(m_device);
 
   filter.insert(d1->getId());
 
@@ -260,6 +269,8 @@ TEST_F(CheckpointTest, Filter)
                             {"units", "MILLIMETER"s},
                             {"nativeUnits", "MILLIMETER"s}},
                            errors);
+  d1->setComponent(m_device);
+
   auto p4 = observation::Observation::make(d1, value, time, errors);
   m_checkpoint->addObservation(p4);
 
@@ -317,6 +328,7 @@ TEST_F(CheckpointTest, CopyAndFilter)
                             {"units", "MILLIMETER"s},
                             {"nativeUnits", "MILLIMETER"s}},
                            errors);
+  d1->setComponent(m_device);
 
   auto p4 = observation::Observation::make(d1, value, time, errors);
   m_checkpoint->addObservation(p4);
@@ -502,4 +514,62 @@ TEST_F(CheckpointTest, LastConditionNormal)
   auto p3 = Cond(list.front());
   ASSERT_EQ(Condition::NORMAL, p3->getLevel());
   ASSERT_EQ(string(""), p3->getCode());
+}
+
+TEST_F(CheckpointTest, orphaned_observations_should_be_skipped)
+{
+  entity::ErrorList errors;
+  Timestamp time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
+  auto warning1 = entity::Properties {
+      {"level", "WARNING"s},
+      {"nativeCode", "CODE1"s},
+      {"qualifier", "HIGH"s},
+      {"VALUE", "Over..."s},
+  };
+  auto warning2 = entity::Properties {
+      {"level", "WARNING"s},
+      {"nativeCode", "CODE2"s},
+      {"qualifier", "HIGH"s},
+      {"VALUE", "Over..."s},
+  };
+  auto value = entity::Properties {{"VALUE", "123"s}};
+  FilterSet filter;
+  filter.insert(m_dataItem1->getId());
+  filter.insert(m_dataItem2->getId());
+
+  auto p = observation::Observation::make(m_dataItem1, warning1, time, errors);
+  m_checkpoint->addObservation(p);
+  p = observation::Observation::make(m_dataItem1, warning2, time, errors);
+  m_checkpoint->addObservation(p);
+  p = observation::Observation::make(m_dataItem2, value, time, errors);
+  m_checkpoint->addObservation(p);
+
+  auto d1 = DataItem::make({{"id", "4"s},
+                            {"type", "POSITION"s},
+                            {"category", "SAMPLE"s},
+                            {"name", "DataItemTest2"s},
+                            {"subType", "ACTUAL"s},
+                            {"units", "MILLIMETER"s},
+                            {"nativeUnits", "MILLIMETER"s}},
+                           errors);
+  m_device->addDataItem(d1, errors);
+
+  filter.insert(d1->getId());
+
+  p = observation::Observation::make(d1, value, time, errors);
+  m_checkpoint->addObservation(p);
+
+  ObservationList list;
+  m_checkpoint->getObservations(list, filter);
+
+  ASSERT_EQ(4, list.size());
+
+  m_dataItem1.reset();
+  m_dataItem2.reset();
+  d1.reset();
+  m_device.reset();
+  ObservationList list2;
+  m_checkpoint->getObservations(list2, filter);
+
+  ASSERT_EQ(0, list2.size());
 }

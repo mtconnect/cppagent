@@ -96,7 +96,10 @@ protected:
     ps["nativeUnits"] = nativeUnits;
     ps["units"] = units;
 
+    ComponentPtr comp = Component::make("Component", {{"id", "a"}}, errors);
+
     auto dataItem = DataItem::make(ps, errors);
+    comp->addDataItem(dataItem, errors);
     ObservationPtr sample = Observation::make(dataItem, {{"VALUE", value}}, m_time, errors);
     auto converted = m_converter(sample);
 

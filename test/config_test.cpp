@@ -1020,20 +1020,19 @@ Port = 0
     ASSERT_TRUE(dataItem);
     ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
 
-    DataItemPtr di;
-
     boost::asio::steady_timer timer1(context.getContext());
     timer1.expires_from_now(1s);
-    timer1.async_wait([this, &devices, &di, agent](boost::system::error_code ec) {
+    timer1.async_wait([this, &devices, agent](boost::system::error_code ec) {
       if (ec)
       {
         m_config->stop();
       }
       else
       {
-        di = agent->getDataItemById("c1");
+        auto di = agent->getDataItemById("c1");
         EXPECT_TRUE(di);
         EXPECT_EQ("SPINDLE_SPEED", di->getType());
+        di.reset();
 
         // Modify devices
         ifstream is {devices.string(), ios::binary | ios::ate};
@@ -1055,18 +1054,15 @@ Port = 0
 
     boost::asio::steady_timer timer2(context.getContext());
     timer2.expires_from_now(6s);
-    timer2.async_wait([this, agent, &di, &chg](boost::system::error_code ec) {
+    timer2.async_wait([this, agent, &chg](boost::system::error_code ec) {
       if (!ec)
       {
         auto device = agent->getDeviceByName("LinuxCNC");
         auto dataItem = agent->getDataItemById("c1");
-        EXPECT_EQ("ROTARY_VELOCITY", dataItem->getType());
-
-        dataItem = agent->getDataItemById("c1");
         EXPECT_TRUE(dataItem);
         EXPECT_EQ("ROTARY_VELOCITY", dataItem->getType());
 
-        EXPECT_EQ(di.get(), dataItem.get());
+        EXPECT_FALSE(dataItem->isOrphan());
 
         auto agent = m_config->getAgent();
         const auto &printer = agent->getPrinter("xml");
@@ -1308,7 +1304,7 @@ Port = 0
         EXPECT_TRUE(last);
         EXPECT_EQ("001", last->getUuid());
 
-        auto dis = last->getDeviceDataItems();
+        const auto &dis = last->getDeviceDataItems();
         EXPECT_EQ(5, dis.size());
 
         EXPECT_TRUE(last->getDeviceDataItem("xd1"));
