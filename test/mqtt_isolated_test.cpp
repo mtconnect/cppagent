@@ -39,9 +39,9 @@ using namespace mtconnect::sink::rest_sink;
 
 using json = nlohmann::json;
 
-const string MqttCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
-const string MqttCCert(PROJECT_ROOT_DIR "/test/resources/client.crt");
-const string MqttCPrivateKey(PROJECT_ROOT_DIR "/test/resources/client.key");
+const string MqttClientCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+const string MqttClientCert(PROJECT_ROOT_DIR "/test/resources/client.crt");
+const string MqttClientKey(PROJECT_ROOT_DIR "/test/resources/client.key");
 
 class MqttIsolatedUnitTest : public testing::Test
 {
@@ -81,9 +81,9 @@ protected:
                         {MqttPort, 0},
                         {MqttTls, withTlsOption},
                         {AutoAvailable, false},
-                        {MqttCaCert, MqttCACert},
+                       /* {MqttCaCert, MqttCACert},
                         {MqttCert, MqttCCert},
-                        {MqttPrivateKey, MqttCPrivateKey},
+                        {MqttPrivateKey, MqttCPrivateKey},*/
                         {RealTime, false}});
 
     if (withTlsOption)
@@ -144,9 +144,9 @@ protected:
                         {MqttPort, m_port},
                         {MqttTls, withTlsOption},
                         {AutoAvailable, false},
-                        {MqttCaCert, MqttCACert},
-                        {MqttCert, MqttCCert},
-                        {MqttPrivateKey, MqttCPrivateKey},
+                        {MqttCaCert, MqttClientCACert},
+                        {MqttCert, MqttClientCert},
+                        {MqttPrivateKey, MqttClientKey},
                         {RealTime, false}});
 
     if (withTlsOption)
