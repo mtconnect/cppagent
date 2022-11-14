@@ -25,6 +25,7 @@
 #include "asset/asset.hpp"
 #include "observation/observation.hpp"
 #include "utilities.hpp"
+#include "version.h"
 
 namespace mtconnect {
   namespace device_model {
@@ -72,10 +73,23 @@ namespace mtconnect {
 
       void setModelChangeTime(const std::string &t) { m_modelChangeTime = t; }
       const std::string &getModelChangeTime() { return m_modelChangeTime; }
+      
+      void setSchemaVersion(const std::string &s) { m_schemaVersion = s; }
+      const auto &getSchemaVersion() const { return m_schemaVersion; }
+      
+      void defaultSchemaVersion() const {
+        if (!m_schemaVersion)
+        {
+          std::string ver = std::to_string(AGENT_VERSION_MAJOR) + "."
+          + std::to_string(AGENT_VERSION_MINOR);
+          const_cast<Printer*>(this)->m_schemaVersion.emplace(ver);
+        }
+      }
 
     protected:
       bool m_pretty;
       std::string m_modelChangeTime;
+      std::optional<std::string> m_schemaVersion;
     };
   }  // namespace printer
 }  // namespace mtconnect

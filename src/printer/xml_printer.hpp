@@ -38,7 +38,7 @@ namespace mtconnect {
     class XmlPrinter : public Printer
     {
     public:
-      XmlPrinter(const std::string version = "", bool pretty = false);
+      XmlPrinter(bool pretty = false);
       ~XmlPrinter() override = default;
 
       std::string printErrors(const uint64_t instanceId, const unsigned int bufferSize,
@@ -66,9 +66,6 @@ namespace mtconnect {
                                const std::string &prefix);
       void addAssetsNamespace(const std::string &urn, const std::string &location,
                               const std::string &prefix);
-
-      void setSchemaVersion(const std::string &version);
-      const std::string &getSchemaVersion();
 
       void setDevicesStyle(const std::string &style);
       void setStreamStyle(const std::string &style);
@@ -130,7 +127,6 @@ namespace mtconnect {
       std::unordered_set<std::string> m_errorNsSet;
       std::unordered_set<std::string> m_assetNsSet;
 
-      std::string m_schemaVersion;
       std::string m_streamsStyle;
       std::string m_devicesStyle;
       std::string m_errorStyle;

@@ -129,6 +129,8 @@ namespace mtconnect {
     const auto &getSources() const { return m_sources; }
     const auto &getSinks() const { return m_sinks; }
 
+    const auto &getSchemaVersion() const { return m_schemaVersion; }
+    
     // Get device from device map
     DevicePtr getDeviceByName(const std::string &name);
     DevicePtr getDeviceByName(const std::string &name) const;
@@ -157,7 +159,7 @@ namespace mtconnect {
     // Add the a device from a configuration file
     void addDevice(DevicePtr device);
     void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
-    void reloadDevices(const std::string &deviceFile);
+    bool reloadDevices(const std::string &deviceFile);
 
     // Message when adapter has connected and disconnected
     void connecting(const std::string &adapter);
@@ -296,7 +298,8 @@ namespace mtconnect {
     std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
 
     // Xml Config
-    std::string m_version;
+    std::optional<std::string> m_schemaVersion;
+    int m_version { 0 };
     std::string m_deviceXmlPath;
     bool m_versionDeviceXml = false;
 
