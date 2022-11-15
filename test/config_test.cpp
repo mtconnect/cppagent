@@ -1290,7 +1290,7 @@ Port = 0
     auto devices = agent->getDevices();
     ASSERT_EQ(2, devices.size());
 
-    auto device = devices.back();
+    auto device = devices.front();
     ASSERT_EQ("Agent", device->getName());
   }
   

@@ -51,7 +51,7 @@ protected:
   void SetUp() override
   {
     m_xmlPrinter = std::make_unique<printer::XmlPrinter>("1.5");
-    m_printer = std::make_unique<printer::JsonPrinter>(1, "1.5", true);
+    m_printer = std::make_unique<printer::JsonPrinter>(1, true);
     m_config = std::make_unique<parser::XmlParser>();
     m_devices =
         m_config->parseFile(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", m_xmlPrinter.get());
@@ -208,7 +208,7 @@ TEST_F(JsonPrinterStreamTest, ComponentStreamTwoComponents)
 
 TEST_F(JsonPrinterStreamTest, two_components_version_2)
 {
-  m_printer = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
+  m_printer = std::make_unique<printer::JsonPrinter>(2, true);
 
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Xpos", 10254804, 100_value);
@@ -306,7 +306,7 @@ TEST_F(JsonPrinterStreamTest, SampleAndEventDataItem)
 
 TEST_F(JsonPrinterStreamTest, samples_and_events_version_2)
 {
-  m_printer = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
+  m_printer = std::make_unique<printer::JsonPrinter>(2, true);
 
   ObservationList list;
   Timestamp now = chrono::system_clock::now();

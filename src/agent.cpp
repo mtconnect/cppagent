@@ -125,7 +125,7 @@ namespace mtconnect {
     m_loopback =
         std::make_shared<source::LoopbackSource>("AgentSource", m_strand, context, m_options);
 
-    loadXMLDeviceFile(m_deviceXmlPath);
+    auto devices = loadXMLDeviceFile(m_deviceXmlPath);
     if (!m_schemaVersion)
     {
       m_schemaVersion.emplace(to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
@@ -144,8 +144,12 @@ namespace mtconnect {
     {
       createAgentDevice();
     }
-    loadCachedProbe();
+    
+    // For the DeviceAdded event for each device
+    for (auto device : devices)
+      addDevice(device);
 
+    loadCachedProbe();
     m_initialized = true;
   }
 
@@ -622,7 +626,7 @@ namespace mtconnect {
   // Device management and Initialization
   // ----------------------------------------------
 
-  void Agent::loadXMLDeviceFile(const std::string &configXmlPath)
+  std::list<device_model::DevicePtr>  Agent::loadXMLDeviceFile(const std::string &configXmlPath)
   {
     NAMED_SCOPE("Agent::loadXMLDeviceFile");
 
@@ -641,10 +645,8 @@ namespace mtconnect {
       {
         m_version = AGENT_VERSION_MAJOR * 100 + AGENT_VERSION_MINOR;
       }
-      
-      // Fir the DeviceAdded event for each device
-      for (auto device : devices)
-        addDevice(device);
+     
+      return devices;
     }
     catch (runtime_error &e)
     {
@@ -660,6 +662,8 @@ namespace mtconnect {
       cerr << f.what() << endl;
       throw f;
     }
+    
+    return {};
   }
 
   void Agent::verifyDevice(DevicePtr device)

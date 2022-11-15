@@ -223,7 +223,7 @@ namespace mtconnect {
 
     // Initialization methods
     void createAgentDevice();
-    void loadXMLDeviceFile(const std::string &config);
+    std::list<device_model::DevicePtr> loadXMLDeviceFile(const std::string &config);
     void verifyDevice(DevicePtr device);
     void initializeDataItems(DevicePtr device,
                              std::optional<std::set<std::string>> skip = std::nullopt);
