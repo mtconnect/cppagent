@@ -28,7 +28,7 @@
 namespace mtconnect::pipeline {
   struct XmlTransformFeedback
   {
-    int m_instanceId = 0;
+    uint64_t m_instanceId = 0;
     SequenceNumber_t m_next = 0;
     entity::EntityList m_assetEvents;
     ResponseDocument::Errors m_errors;

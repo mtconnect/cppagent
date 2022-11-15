@@ -439,7 +439,7 @@ namespace mtconnect::pipeline {
     // xmlInitParser();
     // xmlXPathInit();
     unique_ptr<xmlDoc, function<void(xmlDocPtr)>> doc(
-        xmlReadMemory(content.data(), content.length(), "incoming.xml", nullptr,
+        xmlReadMemory(content.data(), static_cast<int>(content.length()), "incoming.xml", nullptr,
                       XML_PARSE_NOBLANKS),
         [](xmlDocPtr d) { xmlFreeDoc(d); });
     xmlNodePtr root = xmlDocGetRootElement(doc.get());
