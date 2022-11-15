@@ -338,10 +338,21 @@ namespace mtconnect::configuration {
 
         m_context->pause([this](AsyncContext &context) {
           if (!m_agent->reloadDevices(m_devicesFile))
+          {
             m_configTime.emplace(m_configTime->min());
+            using namespace chrono;
+            using namespace chrono_literals;
+
+            using boost::placeholders::_1;
+
+            m_monitorTimer.expires_from_now(100ms);
+            m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
+          }
           else
+          {
             m_deviceTime.reset();
-          scheduleMonitorTimer();
+            scheduleMonitorTimer();
+          }
         });
       }
     }
