@@ -137,15 +137,7 @@ namespace mtconnect::parser {
         {
           auto version = ns.substr(colon + 1);
           LOG(info) << "MTConnect Schema Version of file: " << filePath << " = " << version;
-          m_schemaVersion.emplace(version);
-          
-          int major, minor;
-          char c;
-          stringstream vstr(*m_schemaVersion);
-          vstr >> major >> c >> minor;
-          m_version = major * 100 + minor;
-          
-          LOG(debug) << "Numeric schema version: " << m_version;
+          m_schemaVersion.emplace(version);          
         }
       }
 

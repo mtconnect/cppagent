@@ -107,11 +107,6 @@ namespace mtconnect {
     
     if (m_schemaVersion)
     {
-      int major, minor;
-      char c;
-      stringstream vstr(*m_schemaVersion);
-      vstr >> major >> c >> minor;
-      m_version = major * 100 + minor;
       for (auto &[k, pr] : m_printers)
         pr->setSchemaVersion(*m_schemaVersion);
     }
@@ -128,19 +123,15 @@ namespace mtconnect {
     auto devices = loadXMLDeviceFile(m_deviceXmlPath);
     if (!m_schemaVersion)
     {
-      m_schemaVersion.emplace(to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR));
+      m_schemaVersion.emplace(StrDefaultSchemaVersion());
     }
+    
+    auto version = IntSchemaVersion(*m_schemaVersion);
     for (auto &[k, pr] : m_printers)
       pr->setSchemaVersion(*m_schemaVersion);
-    
-    int major, minor;
-    char c;
-    stringstream vstr(*m_schemaVersion);
-    vstr >> major >> c >> minor;
-    m_version = major * 100 + minor;
 
     auto disableAgentDevice = GetOption<bool>(m_options, config::DisableAgentDevice);
-    if (!(disableAgentDevice && *disableAgentDevice) && m_version >= 107)
+    if (!(disableAgentDevice && *disableAgentDevice) && version >= SCHEMA_VERSION(1, 7))
     {
       createAgentDevice();
     }
@@ -309,13 +300,12 @@ namespace mtconnect {
           deviceFile, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
       
       if (m_xmlParser->getSchemaVersion() &&
-          m_xmlParser->getVersion() != m_version)
+         IntSchemaVersion(*m_xmlParser->getSchemaVersion()) != IntSchemaVersion(*m_schemaVersion))
       {
         LOG(info) << "Got version: " << *(m_xmlParser->getSchemaVersion());
         LOG(warning) << "Schema version does not match agent schema version, restarting the agent";
         return false;
       }
-      
 
       // Fir the DeviceAdded event for each device
       bool changed = false;
@@ -639,11 +629,10 @@ namespace mtconnect {
       if (!m_schemaVersion && m_xmlParser->getSchemaVersion())
       {
         m_schemaVersion = m_xmlParser->getSchemaVersion();
-        m_version = m_xmlParser->getVersion();
       }
       else if (!m_schemaVersion && !m_xmlParser->getSchemaVersion())
       {
-        m_version = AGENT_VERSION_MAJOR * 100 + AGENT_VERSION_MINOR;
+        m_schemaVersion = StrDefaultSchemaVersion();
       }
      
       return devices;
@@ -669,8 +658,8 @@ namespace mtconnect {
   void Agent::verifyDevice(DevicePtr device)
   {
     NAMED_SCOPE("Agent::verifyDevice");
-
-    auto xmlPrinter = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
+    
+    auto version = IntSchemaVersion(*m_schemaVersion);
 
     // Add the devices to the device map and create availability and
     // asset changed events if they don't exist
@@ -687,7 +676,7 @@ namespace mtconnect {
       device->addDataItem(di, errors);
     }
 
-    if (!device->getAssetChanged() && m_version >= 102)
+    if (!device->getAssetChanged() && version >= SCHEMA_VERSION(1, 2))
     {
       entity::ErrorList errors;
       // Create asset change data item and add it to the device.
@@ -698,14 +687,14 @@ namespace mtconnect {
       device->addDataItem(di, errors);
     }
 
-    if (device->getAssetChanged() && m_version >= 105)
+    if (device->getAssetChanged() && version >= SCHEMA_VERSION(1, 5))
     {
       auto di = device->getAssetChanged();
       if (!di->isDiscrete())
         di->makeDiscrete();
     }
 
-    if (!device->getAssetRemoved() && m_version >= 103)
+    if (!device->getAssetRemoved() && version >= SCHEMA_VERSION(1, 3))
     {
       // Create asset removed data item and add it to the device.
       entity::ErrorList errors;
@@ -716,7 +705,7 @@ namespace mtconnect {
       device->addDataItem(di, errors);
     }
 
-    if (!device->getAssetCount() && m_version >= 200)
+    if (!device->getAssetCount() && version >= SCHEMA_VERSION(2, 0))
     {
       entity::ErrorList errors;
       auto di = DataItem::make({{"type", "ASSET_COUNT"s},

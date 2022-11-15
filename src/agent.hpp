@@ -299,7 +299,6 @@ namespace mtconnect {
 
     // Xml Config
     std::optional<std::string> m_schemaVersion;
-    int m_version { 0 };
     std::string m_deviceXmlPath;
     bool m_versionDeviceXml = false;
 
