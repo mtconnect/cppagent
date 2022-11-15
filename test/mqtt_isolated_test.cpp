@@ -33,6 +33,7 @@
 
 using namespace std;
 using namespace mtconnect;
+using namespace mtconnect::configuration;
 using namespace mtconnect::device_model::data_item;
 using namespace mtconnect::sink::mqtt_sink;
 using namespace mtconnect::sink::rest_sink;
@@ -41,7 +42,12 @@ using json = nlohmann::json;
 
 const string MqttClientCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 const string MqttClientCert(PROJECT_ROOT_DIR "/test/resources/client.crt");
-const string MqttClientKey(PROJECT_ROOT_DIR "/test/resources/client.key");
+const string MqttClientKey {PROJECT_ROOT_DIR "/test/resources/client.key"};
+
+const string ServerCertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
+const string ServerKeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
+const string ServerDhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+const string ServerRootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
 
 class MqttIsolatedUnitTest : public testing::Test
 {
@@ -71,19 +77,19 @@ protected:
   }
 
   void createServer(const ConfigOptions &options)
-  {
-    using namespace mtconnect::configuration;
-
+  {    
     bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
 
     ConfigOptions opts(options);
     MergeOptions(opts, {{ServerIp, "127.0.0.1"s},
                         {MqttPort, 0},
                         {MqttTls, withTlsOption},
-                        {AutoAvailable, false},
-                       /* {MqttCaCert, MqttCACert},
-                        {MqttCert, MqttCCert},
-                        {MqttPrivateKey, MqttCPrivateKey},*/
+                        {AutoAvailable, false},                       
+                        {TlsCertificateChain, ServerCertFile},
+                        {TlsPrivateKey, ServerKeyFile},
+                        {TlsDHKey, ServerDhFile},
+                        {TlsVerifyClientCertificate, true},
+                        {MqttCaCert, MqttClientCACert},
                         {RealTime, false}});
 
     if (withTlsOption)
@@ -135,9 +141,7 @@ protected:
 
   void createClient(const ConfigOptions &options, unique_ptr<ClientHandler> &&handler)
   {
-    using namespace mtconnect::configuration;
-
-    bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
+     bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
 
     ConfigOptions opts(options);
     MergeOptions(opts, {{MqttHost, "127.0.0.1"s},
@@ -319,6 +323,38 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
   ConfigOptions options {{configuration::MqttTls, true}};
 
   createServer(options);
+
+  startServer();
+
+  ASSERT_NE(0, m_port);
+
+  auto handler = make_unique<ClientHandler>();
+
+  createClient(options, move(handler));
+
+  ASSERT_TRUE(startClient());
+
+  ASSERT_TRUE(m_client->isConnected());
+}
+
+TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
+{
+  // GTEST_SKIP();
+
+  ConfigOptions options;
+  MergeOptions(options, {{ServerIp, "127.0.0.1"s},
+                         {MqttPort, 0},
+                         {MqttTls, true},
+                         {AutoAvailable, false},
+                         {TlsCertificateChain, ServerCertFile},
+                         {TlsPrivateKey, ServerKeyFile},
+                         {TlsDHKey, ServerDhFile},
+                         {TlsVerifyClientCertificate, true},
+                         {MqttCaCert, MqttClientCACert},
+                         {RealTime, false}});
+
+  m_server =
+      make_shared<mtconnect::mqtt_server::MqttTlsWSServer>(m_agentTestHelper->m_ioContext, options);
 
   startServer();
 

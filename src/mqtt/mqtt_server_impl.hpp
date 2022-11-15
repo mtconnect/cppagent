@@ -289,6 +289,45 @@ namespace mtconnect {
       }
 
       using base::base;
+      using server = MQTT_NS::server_tls<>;
+
+      auto &getServer() { return m_server; }
+
+      auto &createServer()
+      {
+        if (!m_server)
+        {
+          boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
+          ctx.set_options(boost::asio::ssl::context::default_workarounds |                          
+                          boost::asio::ssl::context::single_dh_use);
+          auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);  
+          auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);         
+          ctx.use_certificate_chain_file(*serverCert);
+          ctx.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
+          ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);  
+              
+          m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
+                           std::move(ctx), m_ioContext);
+        }
+
+        return *m_server;
+      }
+
+    protected:
+      std::optional<server> m_server;
+    };
+
+    class MqttTlsWSServer : public MqttServerImpl<MqttTlsWSServer>
+    {
+    public:
+      using base = MqttServerImpl<MqttTlsWSServer>;
+      MqttTlsWSServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
+        : base(ioContext, options)
+      {
+        m_port = GetOption<int>(options, configuration::Port).value_or(8883);
+      }
+
+      using base::base;
       using server = MQTT_NS::server_tls_ws<>;
 
       auto &getServer() { return m_server; }
@@ -300,6 +339,25 @@ namespace mtconnect {
           boost::asio::ssl::context ctx(boost::asio::ssl::context::tlsv12);
           ctx.set_options(boost::asio::ssl::context::default_workarounds |
                           boost::asio::ssl::context::single_dh_use);
+          auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
+          auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
+          ctx.use_certificate_chain_file(*serverCert);
+          //ctx.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
+          ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
+
+          if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
+          {
+            LOG(info) << "Will only accept client connections with valid certificates";
+
+            ctx.set_verify_mode(boost::asio::ssl::verify_peer |
+                                boost::asio::ssl::verify_fail_if_no_peer_cert);
+            if (HasOption(m_options, configuration::MqttCaCert))
+            {
+              LOG(info) << "Adding Client Certificates.";
+              ctx.load_verify_file(*GetOption<string>(m_options, configuration::MqttCaCert));
+            }
+          }
+
           m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
                            std::move(ctx), m_ioContext);
         }
