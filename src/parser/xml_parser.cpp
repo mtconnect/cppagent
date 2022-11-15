@@ -17,6 +17,15 @@
 
 #include "xml_parser.hpp"
 
+#include <boost/algorithm/string.hpp>
+#include <boost/range/adaptors.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/range/algorithm_ext.hpp>
+#include <boost/range/any_range.hpp>
+#include <boost/range/functions.hpp>
+#include <boost/range/metafunctions.hpp>
+#include <boost/range/numeric.hpp>
+
 #include <stdexcept>
 
 #include <libxml/parser.h>
@@ -87,6 +96,9 @@ namespace mtconnect::parser {
 
   std::list<DevicePtr> XmlParser::parseFile(const std::string &filePath, XmlPrinter *aPrinter)
   {
+    using namespace boost::adaptors;
+    using namespace boost::range;
+
     std::unique_lock lock(m_mutex);
 
     if (m_doc)
@@ -118,20 +130,14 @@ namespace mtconnect::parser {
         THROW_IF_XML2_ERROR(xmlXPathRegisterNs(xpathCtx, BAD_CAST "m", root->ns->href));
 
         // Get schema version from Devices.xml
-        if (aPrinter->getSchemaVersion().empty())
+        string ns((const char *)root->ns->href);
+        size_t colon = string::npos;
+        if (ns.find_first_of("urn:mtconnect.org:MTConnectDevices") == 0 &&
+            (colon = ns.find_last_of(':')) != string::npos)
         {
-          string ns((const char *)root->ns->href);
-
-          if (!ns.find_first_of("urn:mtconnect.org:MTConnectDevices"))
-          {
-            auto last = ns.find_last_of(':');
-
-            if (last != string::npos)
-            {
-              string version = ns.substr(last + 1);
-              aPrinter->setSchemaVersion(version);
-            }
-          }
+          auto version = ns.substr(colon + 1);
+          LOG(info) << "MTConnect Schema Version of file: " << filePath << " = " << version;
+          m_schemaVersion.emplace(version);          
         }
       }
 

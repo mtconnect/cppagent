@@ -144,7 +144,9 @@ TEST_F(AgentDeviceTest, VerifyRequiredDataItems)
 TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 {
   auto agent = m_agentTestHelper->getAgent();
-  auto &uuid = agent->getDevices().back()->getUuid();
+  auto device = agent->findDeviceByUUIDorName("000");
+  ASSERT_TRUE(device);
+  auto uuid = *device->getUuid();
   ASSERT_EQ("000", uuid);
   auto found = false;
 

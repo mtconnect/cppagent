@@ -45,7 +45,7 @@ protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_jsonPrinter = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
+    m_jsonPrinter = std::make_unique<printer::JsonPrinter>(2, true);
   }
 
   void TearDown() override

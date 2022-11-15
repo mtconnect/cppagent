@@ -48,8 +48,8 @@ protected:
   void SetUp() override
   {
     m_config = new XmlParser();
-    m_printer = new printer::XmlPrinter("1.7", true);
-    m_printer->setSchemaVersion("");
+    m_printer = new printer::XmlPrinter(true);
+    m_printer->setSchemaVersion("1.2");
     m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", m_printer);
   }
 
@@ -239,7 +239,8 @@ TEST_F(XmlPrinterTest, ChangeDevicesNamespace)
 {
   // Devices
   m_printer->clearDevicesNamespaces();
-
+  
+  
   {
     PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
     ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation",
@@ -766,7 +767,8 @@ TEST_F(XmlPrinterTest, LegacyReferences)
 
 TEST_F(XmlPrinterTest, CheckDeviceChangeTime)
 {
-  m_printer = new XmlPrinter("1.7", true);
+  m_printer = new XmlPrinter(true);
+  m_printer->setSchemaVersion("1.7");
   m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", m_printer);
   m_printer->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
   ASSERT_FALSE(m_printer->getModelChangeTime().empty());

@@ -40,7 +40,7 @@ namespace mtconnect::pipeline {
 
     // Parsed data
     SequenceNumber_t m_next;
-    int m_instanceId;
+    uint64_t m_instanceId;
     entity::EntityList m_entities;
     entity::EntityList m_assetEvents;
     Errors m_errors;

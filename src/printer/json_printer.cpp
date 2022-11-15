@@ -40,8 +40,8 @@ namespace mtconnect::printer {
   using namespace observation;
   using namespace device_model;
 
-  JsonPrinter::JsonPrinter(uint32_t jsonVersion, const string version, bool pretty)
-    : Printer(pretty), m_schemaVersion(version), m_jsonVersion(jsonVersion)
+  JsonPrinter::JsonPrinter(uint32_t jsonVersion, bool pretty)
+    : Printer(pretty), m_jsonVersion(jsonVersion)
   {
     NAMED_SCOPE("JsonPrinter::JsonPrinter");
     char appVersion[32] = {0};
@@ -125,6 +125,8 @@ namespace mtconnect::printer {
   std::string JsonPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const ProtoErrorList &list) const
   {
+    defaultSchemaVersion();
+
     json errors = json::array();
     for (auto &e : list)
     {
@@ -137,7 +139,7 @@ namespace mtconnect::printer {
     json doc = json::object({{"MTConnectError",
                               {{"jsonVersion", m_jsonVersion},
                                {"Header", header(m_version, hostname(), instanceId, bufferSize,
-                                                 m_schemaVersion, m_modelChangeTime)},
+                                                 *m_schemaVersion, m_modelChangeTime)},
                                {"Errors", errors}}}});
 
     return print(doc, m_pretty);
@@ -163,6 +165,8 @@ namespace mtconnect::printer {
                                       const std::list<DevicePtr> &devices,
                                       const std::map<std::string, size_t> *count) const
   {
+    defaultSchemaVersion();
+
     entity::JsonPrinter printer(m_jsonVersion);
 
     json devicesDoc;
@@ -190,7 +194,7 @@ namespace mtconnect::printer {
                               {{"jsonVersion", m_jsonVersion},
                                {"Header", probeAssetHeader(m_version, hostname(), instanceId,
                                                            bufferSize, assetBufferSize, assetCount,
-                                                           m_schemaVersion, m_modelChangeTime)},
+                                                           *m_schemaVersion, m_modelChangeTime)},
                                {"Devices", devicesDoc}}}});
 
     return print(doc, m_pretty);
@@ -376,6 +380,8 @@ namespace mtconnect::printer {
                                        const uint64_t nextSeq, const uint64_t firstSeq,
                                        const uint64_t lastSeq, ObservationList &observations) const
   {
+    defaultSchemaVersion();
+
     json streams;
 
     if (observations.size() > 0)
@@ -424,7 +430,7 @@ namespace mtconnect::printer {
         {{"MTConnectStreams",
           {{"jsonVersion", m_jsonVersion},
            {"Header", streamHeader(m_version, hostname(), instanceId, bufferSize, nextSeq, firstSeq,
-                                   lastSeq, m_schemaVersion, m_modelChangeTime)},
+                                   lastSeq, *m_schemaVersion, m_modelChangeTime)},
            {"Streams", streams}}}});
 
     return print(doc, m_pretty);
@@ -434,6 +440,8 @@ namespace mtconnect::printer {
                                        const unsigned int assetCount,
                                        const asset::AssetList &asset) const
   {
+    defaultSchemaVersion();
+    
     entity::JsonPrinter printer(m_jsonVersion);
     json assetDoc;
     if (m_jsonVersion == 1)
@@ -459,7 +467,7 @@ namespace mtconnect::printer {
         {{"MTConnectAssets",
           {{"jsonVersion", m_jsonVersion},
            {"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize, assetCount,
-                                       m_schemaVersion, m_modelChangeTime)},
+                                       *m_schemaVersion, m_modelChangeTime)},
            {"Assets", assetDoc}}}});
 
     return print(doc, m_pretty);

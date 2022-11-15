@@ -44,7 +44,7 @@ namespace mtconnect {
       : Sink("RestService", move(contract)),
         m_context(context),
         m_strand(context),
-        m_version(GetOption<string>(options, config::SchemaVersion).value_or("x.y")),
+        m_schemaVersion(GetOption<string>(options, config::SchemaVersion).value_or("x.y")),
         m_options(options),
         m_logStreamData(GetOption<bool>(options, config::LogStreams).value_or(false))
     {
@@ -166,7 +166,7 @@ namespace mtconnect {
             auto path = block.second.get_optional<string>("Path");
             if (path && !location.empty())
             {
-              auto xns = m_fileCache.registerFile(location, *path, m_version);
+              auto xns = m_fileCache.registerFile(location, *path, m_schemaVersion);
               if (!xns)
               {
                 LOG(debug) << "Cannot register " << urn << " at " << location << " and path "
@@ -194,7 +194,7 @@ namespace mtconnect {
           }
           else
           {
-            auto namespaces = m_fileCache.registerFiles(*location, *path, m_version);
+            auto namespaces = m_fileCache.registerFiles(*location, *path, m_schemaVersion);
             for (auto &ns : namespaces)
             {
               if (ns.first.find(::config::Devices) != string::npos)
@@ -272,7 +272,7 @@ namespace mtconnect {
           auto path = style->get_optional<string>("Path");
           if (path)
           {
-            m_fileCache.registerFile(*location, *path, m_version);
+            m_fileCache.registerFile(*location, *path, m_schemaVersion);
           }
         }
       }

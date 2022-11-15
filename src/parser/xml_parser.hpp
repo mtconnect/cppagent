@@ -52,10 +52,12 @@ namespace mtconnect::parser {
 
     // Get std::list of data items in path
     void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
-
+    const auto &getSchemaVersion() const { return m_schemaVersion; }
+    
   protected:
     // LibXML XML Doc
     xmlDocPtr m_doc = nullptr;
+    std::optional<std::string> m_schemaVersion;
     mutable std::shared_mutex m_mutex;
   };
 }  // namespace mtconnect::parser

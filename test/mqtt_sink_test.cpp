@@ -48,7 +48,7 @@ protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_jsonPrinter = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
+    m_jsonPrinter = std::make_unique<printer::JsonPrinter>(2, true);
   }
 
   void TearDown() override
@@ -248,7 +248,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
 
   auto handler = make_unique<ClientHandler>();
   bool foundLineDataItem = false;
-  handler->m_receive = [&foundLineDataItem, &parser](std::shared_ptr<MqttClient> client,
+  handler->m_receive = [&foundLineDataItem](std::shared_ptr<MqttClient> client,
                                                      const std::string &topic,
                                                      const std::string &payload) {
     EXPECT_EQ("MTConnect/Observation/000/Controller[Controller]/Path/Line[line]", topic);
@@ -296,7 +296,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Asset)
 
   auto handler = make_unique<ClientHandler>();
   bool gotControllerDataItem = false;
-  handler->m_receive = [&gotControllerDataItem, &parser](std::shared_ptr<MqttClient>,
+  handler->m_receive = [&gotControllerDataItem](std::shared_ptr<MqttClient>,
                                                          const std::string &topic,
                                                          const std::string &payload) {
     EXPECT_EQ("MTConnect/Asset/0001", topic);
@@ -319,7 +319,6 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Asset)
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
-  auto time = chrono::system_clock::now();
 
   m_agentTestHelper->m_adapter->processData(
       "2021-02-01T12:00:00Z|@ASSET@|@1|Part|<Part assetId='1'>TEST 1</Part>");

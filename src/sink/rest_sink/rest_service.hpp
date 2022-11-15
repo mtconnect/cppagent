@@ -208,7 +208,7 @@ namespace mtconnect {
 
       boost::asio::io_context::strand m_strand;
 
-      std::string m_version;
+      std::string m_schemaVersion;
 
       ConfigOptions m_options;
 

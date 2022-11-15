@@ -30,6 +30,7 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
+#include <boost/filesystem.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -85,6 +86,7 @@
 
 using namespace std;
 namespace fs = std::filesystem;
+namespace bfs = boost::filesystem;
 namespace pt = boost::property_tree;
 namespace logr = boost::log;
 namespace dll = boost::dll;
@@ -276,18 +278,34 @@ namespace mtconnect::configuration {
     LOG(warning)
         << "Detected change in configuration files. Will reload when youngest file is at least "
         << m_monitorDelay.count() << " seconds old";
+    
+    if (devTime != *m_deviceTime)
+    {
+      auto t = bfs::last_write_time(m_devicesFile);
+      LOG(warning) << "Dected change in Devices file: " << m_devicesFile;
+      LOG(warning) << "... File changed at: " << put_time(localtime(&t), "%F %T");
+    }
+
+    if (cfgTime != *m_configTime)
+    {
+      auto t = bfs::last_write_time(m_devicesFile);
+      LOG(warning) << "Dected change in Config file: " << m_configFile;
+      LOG(warning) << "... File changed at: " << put_time(localtime(&t), "%F %T");
+    }
 
     auto delta = min(now - cfgTime, now - devTime);
     if (delta < m_monitorDelay)
     {
-      LOG(warning) << "Changed, waiting " << int32_t((m_monitorDelay - delta).count());
+      LOG(warning) << "... Waiting " << int32_t((m_monitorDelay - delta).count()) << " seconds";
+      scheduleMonitorTimer();
     }
     else
     {
       if (cfgTime != *m_configTime)
       {
         LOG(warning)
-            << "Monitor thread has detected change in configuration files, restarting agent.";
+            << "Monitor thread has detected change in configuration files.";
+        LOG(warning) << ".... Restarting agent: " << m_configFile;
 
         m_agent->stop();
 
@@ -311,21 +329,34 @@ namespace mtconnect::configuration {
               }
             },
             true);
-
-        return;
       }
-
-      // Handle device changed by delivering the device file to the agent
-      if (devTime != *m_deviceTime)
+      else if (devTime != *m_deviceTime)
       {
+        // Handle device changed by delivering the device file to the agent
+        LOG(warning) << "Monitor thread has detected change in devices files.";
+        LOG(warning) << "... Reloading Devices File: " << m_devicesFile;
+
         m_context->pause([this](AsyncContext &context) {
-          m_agent->reloadDevices(m_devicesFile);
-          m_deviceTime.reset();
+          if (!m_agent->reloadDevices(m_devicesFile))
+          {
+            m_configTime.emplace(m_configTime->min());
+            using namespace chrono;
+            using namespace chrono_literals;
+
+            using boost::placeholders::_1;
+
+            m_monitorTimer.expires_from_now(100ms);
+            m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
+          }
+          else
+          {
+            m_deviceTime.reset();
+            scheduleMonitorTimer();
+          }
         });
       }
     }
 
-    scheduleMonitorTimer();
     return;
   }
 
@@ -624,8 +655,7 @@ namespace mtconnect::configuration {
                 {configuration::MaxCachedFileSize, "20k"s},
                 {configuration::MinCompressFileSize, "100k"s},
                 {configuration::ServiceName, "MTConnect Agent"s},
-                {configuration::SchemaVersion,
-                 to_string(AGENT_VERSION_MAJOR) + "."s + to_string(AGENT_VERSION_MINOR)},
+                {configuration::SchemaVersion, ""s},
                 {configuration::LogStreams, false},
                 {configuration::ShdrVersion, 1},
                 {configuration::WorkerThreads, 1},
@@ -685,13 +715,12 @@ namespace mtconnect::configuration {
     }
 
     // Check for schema version
-    m_version = get<string>(options[configuration::SchemaVersion]);
     auto port = get<int>(options[configuration::Port]);
     LOG(info) << "Starting agent on port " << int(port);
 
     // Make the Agent
     m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
-
+    
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
     m_pipelineContext->m_contract = m_agent->makePipelineContract();
@@ -699,6 +728,7 @@ namespace mtconnect::configuration {
     loadSinks(config, options);
 
     m_agent->initialize(m_pipelineContext);
+    m_version = *m_agent->getSchemaVersion();
 
     DevicePtr device;
     if (get<bool>(options[configuration::PreserveUUID]))
