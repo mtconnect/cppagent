@@ -57,7 +57,7 @@ protected:
     FileArchetypeAsset::registerAsset();
     FileAsset::registerAsset();
 
-    m_printer = std::make_unique<printer::JsonPrinter>(1, "1.5", true);
+    m_printer = std::make_unique<printer::JsonPrinter>(1, true);
     m_parser = std::make_unique<entity::XmlParser>();
   }
 
@@ -257,7 +257,7 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
 
 TEST_F(JsonPrinterAssetTest, json_printer_version_2_with_multiple_assets)
 {
-  m_printer = std::make_unique<printer::JsonPrinter>(2, "1.5", true);
+  m_printer = std::make_unique<printer::JsonPrinter>(2, true);
 
   AssetList assetList;
 

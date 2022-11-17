@@ -74,6 +74,8 @@ typedef unsigned __int64 uint64_t;
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
 
+#include <version.h>
+
 //####### CONSTANTS #######
 
 // Port number to put server on
@@ -573,5 +575,27 @@ namespace mtconnect {
     } while (!done);
 
     return camel;
+  }
+    
+#define SCHEMA_VERSION(major, minor) (major * 100 + minor)
+  
+  inline std::string StrDefaultSchemaVersion()
+  {
+    return std::to_string(AGENT_VERSION_MAJOR) + "." + std::to_string(AGENT_VERSION_MINOR);
+  }
+  
+  inline constexpr int32_t IntDefaultSchemaVersion()
+  {
+    return SCHEMA_VERSION(AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR);
+  }
+  
+  inline int32_t IntSchemaVersion(const std::string &s)
+  {
+    int major, minor;
+    char c;
+    std::stringstream vstr(s);
+    vstr >> major >> c >> minor;
+    return SCHEMA_VERSION(major, minor);
+    
   }
 }  // namespace mtconnect

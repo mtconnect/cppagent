@@ -100,12 +100,10 @@ namespace mtconnect::printer {
     xmlBufferPtr m_buf;
   };
 
-  XmlPrinter::XmlPrinter(const string version, bool pretty)
-    : Printer(pretty), m_schemaVersion(version)
+  XmlPrinter::XmlPrinter(bool pretty)
+    : Printer(pretty)
   {
     NAMED_SCOPE("xml.printer");
-    if (m_schemaVersion.empty())
-      m_schemaVersion = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
   }
 
   void XmlPrinter::addDevicesNamespace(const std::string &urn, const std::string &location,
@@ -188,10 +186,6 @@ namespace mtconnect::printer {
   }
 
   void XmlPrinter::clearStreamsNamespaces() { m_streamsNamespaces.clear(); }
-
-  void XmlPrinter::setSchemaVersion(const std::string &version) { m_schemaVersion = version; }
-
-  const std::string &XmlPrinter::getSchemaVersion() { return m_schemaVersion; }
 
   string XmlPrinter::getStreamsUrn(const std::string &prefix)
   {
@@ -588,7 +582,7 @@ namespace mtconnect::printer {
     }
 
     string rootName = "MTConnect" + xmlType;
-    string xmlns = "urn:mtconnect.org:" + rootName + ":" + m_schemaVersion;
+    string xmlns = "urn:mtconnect.org:" + rootName + ":" + *m_schemaVersion;
     string location;
 
     openElement(writer, rootName.c_str());
@@ -623,13 +617,15 @@ namespace mtconnect::printer {
         mtcLocation = xmlns + " " + ns.second.mSchemaLocation;
       }
     }
+    
+    
 
     // Write the schema location
     if (location.empty() && !mtcLocation.empty())
       location = mtcLocation;
     else if (location.empty())
       location = xmlns + " http://schemas.mtconnect.org/schemas/" + rootName + "_" +
-                 m_schemaVersion + ".xsd";
+                 *m_schemaVersion + ".xsd";
 
     addAttribute(writer, "xsi:schemaLocation", location);
 
@@ -656,7 +652,7 @@ namespace mtconnect::printer {
 
     int major, minor;
     char c;
-    stringstream v(m_schemaVersion);
+    stringstream v(*m_schemaVersion);
     v >> major >> c >> minor;
 
     if (major > 1 || (major == 1 && minor >= 7))

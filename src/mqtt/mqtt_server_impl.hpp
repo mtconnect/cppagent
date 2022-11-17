@@ -114,7 +114,7 @@ namespace mtconnect {
           // It makes sure wp.lock() never return nullptr in the handlers below
           // including close_handler and error_handler.
           ep.start_session(std::make_tuple(std::move(spep), std::move(g)));
-          ep.set_connect_handler([this, &server, wp](MQTT_NS::buffer client_id,
+          ep.set_connect_handler([this, wp](MQTT_NS::buffer client_id,
                                                      MQTT_NS::optional<MQTT_NS::buffer> username,
                                                      MQTT_NS::optional<MQTT_NS::buffer> password,
                                                      MQTT_NS::optional<MQTT_NS::will>,

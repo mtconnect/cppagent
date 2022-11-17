@@ -19,6 +19,8 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
+#include <boost/algorithm/string.hpp>
+
 #include <chrono>
 #include <filesystem>
 #include <string>
@@ -41,6 +43,7 @@ using namespace mtconnect;
 using namespace mtconnect::configuration;
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
+using namespace boost::algorithm;
 
 namespace {
   class ConfigTest : public testing::Test
@@ -51,12 +54,58 @@ namespace {
       m_config = std::make_unique<AgentConfiguration>();
       m_config->setDebug(true);
       m_cwd = std::filesystem::current_path();
+      
+      chdir(TEST_BIN_ROOT_DIR);
+      m_config->updateWorkingDirectory();
     }
 
     void TearDown() override
     {
       m_config.reset();
       chdir(m_cwd.string().c_str());
+    }
+    
+    fs::path createTempDirectory(const string &ext)
+    {
+      fs::path root { fs::path(TEST_BIN_ROOT_DIR) / ("config_test_" + ext) };
+      if (!fs::exists(root))
+        fs::create_directory(root);
+      chdir(root.string().c_str());
+      m_config->updateWorkingDirectory();
+      //m_config->setDebug(false);
+
+      return root;
+    }
+    
+    fs::path copyFile(const std::string &src,
+                      fs::path target,
+                      chrono::seconds delta)
+    {
+      fs::path file { fs::path(PROJECT_ROOT_DIR) / "samples" / src };
+
+      fs::copy_file(file, target, fs::copy_options::overwrite_existing);
+      auto t = fs::last_write_time(target);
+      if (delta.count() != 0)
+        fs::last_write_time(target, t - delta);
+      
+      return target;
+    }
+    
+    void replaceTextInFile(fs::path file, const std::string &from,
+                           const std::string &to)
+    {
+      ifstream is {file.string(), ios::binary | ios::ate};
+      auto size = is.tellg();
+      string str(size, '\0');  // construct string to stream size
+      is.seekg(0);
+      is.read(&str[0], size);
+      is.close();
+
+      replace_all(str, from, to);
+
+      ofstream os(file.string());
+      os << str;
+      os.close();
     }
 
     std::unique_ptr<AgentConfiguration> m_config;
@@ -65,19 +114,16 @@ namespace {
 
   TEST_F(ConfigTest, BlankConfig)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->loadConfig("");
 
     const auto agent = m_config->getAgent();
     ASSERT_TRUE(agent);
-    ASSERT_EQ(size_t(2), agent->getDevices().size());
+    ASSERT_EQ(size_t(1), agent->getDevices().size());
+    ASSERT_EQ("1.1", *agent->getSchemaVersion());
   }
 
   TEST_F(ConfigTest, BufferSize)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->loadConfig("BufferSize = 4\n");
 
     const auto agent = m_config->getAgent();
@@ -231,8 +277,6 @@ namespace {
 
   TEST_F(ConfigTest, Namespaces)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     string streams(
         "StreamsNamespaces {\n"
         "x {\n"
@@ -353,8 +397,6 @@ namespace {
 
   TEST_F(ConfigTest, SpecifyMTCNamespace)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     string streams(
         "StreamsNamespaces {\n"
         "m {\n"
@@ -379,8 +421,6 @@ namespace {
 
   TEST_F(ConfigTest, SetSchemaVersion)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     string streams("SchemaVersion = 1.4\n");
 
     m_config->loadConfig(streams);
@@ -441,9 +481,6 @@ namespace {
 
   TEST_F(ConfigTest, check_http_headers)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(
         "HttpHeaders {\n"
         "  Access-Control-Allow-Origin = *\n"
@@ -471,9 +508,6 @@ namespace {
 
   TEST_F(ConfigTest, dynamic_load_sinks_bad)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 Plugins {
     TestBADService {
@@ -495,10 +529,6 @@ Sinks {
 
   TEST_F(ConfigTest, dynamic_load_sinks_simple)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 Sinks {
       sink_plugin_test {
@@ -517,10 +547,6 @@ Sinks {
 
   TEST_F(ConfigTest, dynamic_load_sinks_with_plugin_block)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 Plugins {
    sink_plugin_test {
@@ -543,10 +569,6 @@ Sinks {
 
   TEST_F(ConfigTest, dynamic_load_sinks_assigned_name)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 Sinks {
       sink_plugin_test:Sink1 {
@@ -567,10 +589,6 @@ Sinks {
 
   TEST_F(ConfigTest, dynamic_load_sinks_assigned_name_tag)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 Sinks {
       sink_plugin_test {
@@ -593,9 +611,6 @@ Sinks {
   //
   TEST_F(ConfigTest, dynamic_load_adapter_bad)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 Adapters {
   BadAdapter:Test {
@@ -615,9 +630,6 @@ Adapters {
 
   TEST_F(ConfigTest, dynamic_load_adapter_simple)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 Adapters {
     adapter_plugin_test:Test {
@@ -637,9 +649,6 @@ Adapters {
 
   TEST_F(ConfigTest, dynamic_load_adapter_with_plugin_block)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 Plugins {
     adapter_plugin_test {
@@ -664,9 +673,6 @@ Adapters {
 
   TEST_F(ConfigTest, max_cache_size_in_no_units)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 MaxCachedFileSize = 2000
 )");
@@ -685,9 +691,6 @@ MaxCachedFileSize = 2000
 
   TEST_F(ConfigTest, max_cache_size_in_kb)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 MaxCachedFileSize = 2k
 )");
@@ -706,9 +709,6 @@ MaxCachedFileSize = 2k
 
   TEST_F(ConfigTest, max_cache_size_in_Kb_in_uppercase)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 MaxCachedFileSize = 2K
 )");
@@ -727,9 +727,6 @@ MaxCachedFileSize = 2K
 
   TEST_F(ConfigTest, max_cache_size_in_mb)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 MaxCachedFileSize = 2m
 )");
@@ -748,9 +745,6 @@ MaxCachedFileSize = 2m
 
   TEST_F(ConfigTest, max_cache_size_in_gb)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
-
     string str(R"(
 MaxCachedFileSize = 2g
 )");
@@ -772,8 +766,6 @@ MaxCachedFileSize = 2g
 
   TEST_F(ConfigTest, log_output_should_set_archive_file_pattern)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->setDebug(false);
 
     string str(R"(
@@ -794,8 +786,6 @@ logger_config {
 
   TEST_F(ConfigTest, log_output_should_configure_file_name)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->setDebug(false);
 
     string str(R"(
@@ -816,8 +806,6 @@ logger_config {
 
   TEST_F(ConfigTest, log_should_configure_file_name)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->setDebug(false);
 
     string str(R"(
@@ -839,8 +827,6 @@ logger_config {
 
   TEST_F(ConfigTest, log_should_specify_relative_directory)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->setDebug(false);
 
     string str(R"(
@@ -864,8 +850,6 @@ logger_config {
 
   TEST_F(ConfigTest, log_should_specify_relative_directory_with_active_in_parent)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->setDebug(false);
 
     string str(R"(
@@ -889,8 +873,6 @@ logger_config {
 
   TEST_F(ConfigTest, log_should_specify_max_file_and_rotation_size)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->setDebug(false);
     using namespace boost::log::trivial;
 
@@ -913,8 +895,6 @@ logger_config {
 
   TEST_F(ConfigTest, log_should_configure_logging_level)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     m_config->setDebug(false);
 
     using namespace boost::log::trivial;
@@ -974,16 +954,13 @@ logger_config {
     m_config->setLoggingLevel("FATAL");
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
   }
+  
+  
 
   TEST_F(ConfigTest, should_reload_device_xml_file)
   {
-    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_1");
-    if (!fs::exists(root))
-      fs::create_directory(root);
-    chdir(root.string().c_str());
-    m_config->updateWorkingDirectory();
-    m_config->setDebug(false);
-
+    auto root { createTempDirectory("1") };
+    
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
     {
@@ -996,11 +973,8 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-
-    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
-                  fs::copy_options::overwrite_existing);
-    auto t = fs::last_write_time(devices);
-    fs::last_write_time(devices, t - 60min);
+    
+    copyFile("min_config.xml", devices, 60min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1035,20 +1009,7 @@ Port = 0
         di.reset();
 
         // Modify devices
-        ifstream is {devices.string(), ios::binary | ios::ate};
-        auto size = is.tellg();
-        string str(size, '\0');  // construct string to stream size
-        is.seekg(0);
-        is.read(&str[0], size);
-
-        auto pos = str.find("SPINDLE_SPEED");
-        EXPECT_NE(string::npos, pos);
-
-        str.replace(pos, 13, "ROTARY_VELOCITY");
-        is.close();
-
-        ofstream os(devices.string());
-        os << str;
+        replaceTextInFile(devices, "SPINDLE_SPEED", "ROTARY_VELOCITY");
       }
     });
 
@@ -1077,12 +1038,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_reload_device_xml_and_skip_unchanged_devices)
   {
-    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_2");
-    if (!fs::exists(root))
-      fs::create_directory(root);
-    chdir(root.string().c_str());
-    m_config->updateWorkingDirectory();
-    m_config->setDebug(false);
+    fs::path root { createTempDirectory("2") };
 
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
@@ -1096,11 +1052,8 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-
-    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
-                  fs::copy_options::overwrite_existing);
-    auto t = fs::last_write_time(devices);
-    fs::last_write_time(devices, t - 1min);
+    
+    copyFile("min_config.xml", devices, 1min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1151,12 +1104,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_restart_agent_when_config_file_changes)
   {
-    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_3");
-    if (!fs::exists(root))
-      fs::create_directory(root);
-    chdir(root.string().c_str());
-    m_config->updateWorkingDirectory();
-    m_config->setDebug(false);
+    fs::path root { createTempDirectory("3") };
     auto &context = m_config->getAsyncContext();
 
     fs::path devices(root / "Devices.xml");
@@ -1171,9 +1119,8 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-
-    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
-                  fs::copy_options::overwrite_existing);
+    
+    copyFile("min_config.xml", devices, 0s);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1232,12 +1179,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices)
   {
-    fs::path root(fs::path(TEST_BIN_ROOT_DIR) / "config_test_dir_4");
-    if (!fs::exists(root))
-      fs::create_directory(root);
-    chdir(root.string().c_str());
-    m_config->updateWorkingDirectory();
-    m_config->setDebug(false);
+    fs::path root { createTempDirectory("4") };
 
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
@@ -1251,11 +1193,8 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-
-    fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config.xml", devices,
-                  fs::copy_options::overwrite_existing);
-    auto t = fs::last_write_time(devices);
-    fs::last_write_time(devices, t - 1min);
+    
+    copyFile("min_config.xml", devices, 1min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1327,8 +1266,6 @@ Port = 0
 
   TEST_F(ConfigTest, should_disable_agent_device)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     string streams("SchemaVersion = 2.0\nDisableAgentDevice = true\n");
 
     m_config->loadConfig(streams);
@@ -1344,8 +1281,6 @@ Port = 0
 
   TEST_F(ConfigTest, should_default_not_disable_agent_device)
   {
-    chdir(TEST_BIN_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     string streams("SchemaVersion = 2.0\n");
 
     m_config->loadConfig(streams);
@@ -1358,5 +1293,100 @@ Port = 0
     auto device = devices.front();
     ASSERT_EQ("Agent", device->getName());
   }
+  
+  TEST_F(ConfigTest, should_update_schema_version_when_device_file_updates)
+  {
+    auto root { createTempDirectory("5") };
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+MonitorConfigFiles = true
+MonitorInterval = 1
+MinimumConfigReloadAge = 1
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+    
+    copyFile("min_config.xml", devices, 10min);
+    replaceTextInFile(devices, "2.0", "1.2");
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto agent = m_config->getAgent();
+    auto &context = m_config->getAsyncContext();
+    auto sink = agent->findSink("RestService");
+    auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+    ASSERT_TRUE(rest);
+    
+    auto instance = rest->instanceId();
+    sink.reset();
+    rest.reset();
+
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+    ASSERT_EQ("1.2", *printer->getSchemaVersion());
+
+    boost::asio::steady_timer timer1(context.getContext());
+    timer1.expires_from_now(1s);
+    timer1.async_wait([this, &devices, agent](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        auto di = agent->getDataItemById("c1");
+        EXPECT_TRUE(di);
+        EXPECT_EQ("SPINDLE_SPEED", di->getType());
+        di.reset();
+
+        // Modify devices
+        replaceTextInFile(devices, "SPINDLE_SPEED", "ROTARY_VELOCITY");
+        replaceTextInFile(devices, "1.2", "1.3");
+      }
+    });
+    
+    auto th = thread([this, agent, instance, &context]() {
+      this_thread::sleep_for(5s);
+
+      boost::asio::steady_timer timer1(context.getContext());
+      timer1.expires_from_now(1s);
+      timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
+        if (!ec)
+        {
+          auto agent2 = m_config->getAgent();
+          const auto sink = agent2->findSink("RestService");
+          EXPECT_TRUE(sink);
+          const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
+          EXPECT_TRUE(rest);
+
+          EXPECT_NE(agent, agent2);
+          EXPECT_NE(instance, rest->instanceId());
+          
+          auto dataItem = agent2->getDataItemById("c1");
+          EXPECT_TRUE(dataItem);
+          EXPECT_EQ("ROTARY_VELOCITY", dataItem->getType());
+
+          const auto &printer = agent2->getPrinter("xml");
+          EXPECT_NE(nullptr, printer);
+          ASSERT_EQ("1.3", *printer->getSchemaVersion());
+
+        }
+      });
+      
+      m_config->stop();
+    });
+
+    m_config->start();
+    th.join();
+  }
+
 
 }  // namespace

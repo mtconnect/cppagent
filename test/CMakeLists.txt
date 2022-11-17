@@ -120,7 +120,6 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
     "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:${AGENT_TEST_NAME}_test>/../Resources\"")
-  add_test(NAME ${AGENT_TEST_NAME}_test COMMAND ${AGENT_TEST_NAME}_test)
   target_compile_features(${AGENT_TEST_NAME}_test PUBLIC ${CXX_COMPILE_FEATURES})
 
   # Organize into folders
