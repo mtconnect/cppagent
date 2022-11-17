@@ -40,14 +40,13 @@ using namespace mtconnect::sink::rest_sink;
 
 using json = nlohmann::json;
 
-const string MqttClientCACert(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+const string MqttClientCACert(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
 const string MqttClientCert(PROJECT_ROOT_DIR "/test/resources/client.crt");
 const string MqttClientKey {PROJECT_ROOT_DIR "/test/resources/client.key"};
 
 const string ServerCertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
 const string ServerKeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
 const string ServerDhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
-const string ServerRootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
 
 class MqttIsolatedUnitTest : public testing::Test
 {
@@ -62,14 +61,17 @@ protected:
   {
     if (m_client)
     {
-      m_client->stop();
-      m_agentTestHelper->m_ioContext.run_for(100ms);
-      m_client.reset();
+      if (m_client->isConnected())
+      {
+        m_client->stop();
+        m_agentTestHelper->m_ioContext.run_for(100ms);
+        m_client.reset();
+      }
     }
     if (m_server)
     {
       m_server->stop();
-      m_agentTestHelper->m_ioContext.run_for(500ms);
+      m_agentTestHelper->m_ioContext.run_for(100ms);
       m_server.reset();
     }
     m_agentTestHelper.reset();
@@ -86,10 +88,7 @@ protected:
                         {MqttTls, withTlsOption},
                         {AutoAvailable, false},                       
                         {TlsCertificateChain, ServerCertFile},
-                        {TlsPrivateKey, ServerKeyFile},
-                        {TlsDHKey, ServerDhFile},
-                        {TlsVerifyClientCertificate, true},
-                        {MqttCaCert, MqttClientCACert},
+                        {TlsPrivateKey, ServerKeyFile},                      
                         {RealTime, false}});
 
     if (withTlsOption)
@@ -150,7 +149,7 @@ protected:
                         {AutoAvailable, false},
                         {MqttCaCert, MqttClientCACert},
                         {MqttCert, MqttClientCert},
-                        {MqttPrivateKey, MqttClientKey},
+                        {MqttPrivateKey, MqttClientKey},                        
                         {RealTime, false}});
 
     if (withTlsOption)
@@ -166,7 +165,7 @@ protected:
   }
 
   bool startClient()
-  {
+  {    
     bool started = m_client && m_client->start();
     if (started)
     {
@@ -347,10 +346,7 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
                          {MqttTls, true},
                          {AutoAvailable, false},
                          {TlsCertificateChain, ServerCertFile},
-                         {TlsPrivateKey, ServerKeyFile},
-                         {TlsDHKey, ServerDhFile},
-                         {TlsVerifyClientCertificate, true},
-                         {MqttCaCert, MqttClientCACert},
+                         {TlsPrivateKey, ServerKeyFile},    
                          {RealTime, false}});
 
   m_server =

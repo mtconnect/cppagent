@@ -346,12 +346,14 @@ namespace mtconnect {
         if (!m_client)
         {
           m_client = mqtt::make_tls_async_client(m_ioContext, m_host, m_port);
+
           auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
           }
-         /* auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
+
+          auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
           auto cert = GetOption<string>(m_options, configuration::MqttCert);
           if (private_key && cert)
           {
@@ -359,7 +361,7 @@ namespace mtconnect {
             m_client->get_ssl_context().use_certificate_chain_file(*cert);
             m_client->get_ssl_context().use_private_key_file(*private_key,
                                                              boost::asio::ssl::context::pem);
-          }*/
+          }
         }
 
         return m_client;
@@ -380,6 +382,7 @@ namespace mtconnect {
         if (!m_client)
         {
           m_client = mqtt::make_tls_async_client_ws(m_ioContext, m_host, m_port);
+         
           auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
           {
