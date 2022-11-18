@@ -61,17 +61,14 @@ protected:
   {
     if (m_client)
     {
-      if (m_client->isConnected())
-      {
-        m_client->stop();
-        m_agentTestHelper->m_ioContext.run_for(100ms);
-        m_client.reset();
-      }
+      m_client->stop();
+      m_agentTestHelper->m_ioContext.run_for(100ms);
+      m_client.reset();
     }
     if (m_server)
     {
       m_server->stop();
-      m_agentTestHelper->m_ioContext.run_for(100ms);
+      m_agentTestHelper->m_ioContext.run_for(500ms);
       m_server.reset();
     }
     m_agentTestHelper.reset();
@@ -338,16 +335,16 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 
 TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
 {
-  // GTEST_SKIP();
+  //GTEST_SKIP();
 
   ConfigOptions options;
   MergeOptions(options, {{ServerIp, "127.0.0.1"s},
-                         {MqttPort, 0},
-                         {MqttTls, true},
-                         {AutoAvailable, false},
-                         {TlsCertificateChain, ServerCertFile},
-                         {TlsPrivateKey, ServerKeyFile},    
-                         {RealTime, false}});
+                      {MqttPort, 0},
+                      {MqttTls, true},
+                      {AutoAvailable, false},
+                      {TlsCertificateChain, ServerCertFile},
+                      {TlsPrivateKey, ServerKeyFile},
+                      {RealTime, false}});
 
   m_server =
       make_shared<mtconnect::mqtt_server::MqttTlsWSServer>(m_agentTestHelper->m_ioContext, options);
@@ -358,8 +355,19 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
 
   auto handler = make_unique<ClientHandler>();
 
-  createClient(options, move(handler));
+  ConfigOptions opts;
+  MergeOptions(opts, {{MqttHost, "127.0.0.1"s},
+                      {MqttPort, m_port},
+                      {MqttTls, true},
+                      {AutoAvailable, false},
+                      {MqttCaCert, MqttClientCACert},
+                      {MqttCert, MqttClientCert},
+                      {MqttPrivateKey, MqttClientKey},
+                      {RealTime, false}});
 
+  m_client = make_shared<mtconnect::mqtt_client::MqttTlsWSClient>(m_agentTestHelper->m_ioContext,
+                                                                  opts, move(handler));
+   
   ASSERT_TRUE(startClient());
 
   ASSERT_TRUE(m_client->isConnected());
