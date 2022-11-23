@@ -85,7 +85,8 @@ protected:
                         {MqttTls, withTlsOption},
                         {AutoAvailable, false},                       
                         {TlsCertificateChain, ServerCertFile},
-                        {TlsPrivateKey, ServerKeyFile},                      
+                        {TlsPrivateKey, ServerKeyFile},       
+                        {TlsCertificatePassword, "mtconnect"s},
                         {RealTime, false}});
 
     if (withTlsOption)
@@ -335,7 +336,7 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 
 TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
 {
-  //GTEST_SKIP();
+  GTEST_SKIP();
 
   ConfigOptions options;
   MergeOptions(options, {{ServerIp, "127.0.0.1"s},
