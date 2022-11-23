@@ -83,6 +83,8 @@ protected:
     ConfigOptions opts(options);
     MergeOptions(opts, {{"MqttSink", true},
                         {configuration::MqttPort, m_port},
+                        {configuration::MqttUserName, "MQTT-SINK"s},
+                        {configuration::MqttPassword, "mtconnect"s},
                         {configuration::MqttHost, "127.0.0.1"s}});
     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
     addAdapter();
@@ -98,6 +100,8 @@ protected:
                         {MqttPort, 0},
                         {MqttTls, false},
                         {AutoAvailable, false},
+                        {configuration::MqttUserName, "MQTT-SINK"s},
+                        {configuration::MqttPassword, "mtconnect"s},
                         {RealTime, false}});
 
     m_server =
@@ -147,6 +151,8 @@ protected:
                         {MqttPort, m_port},
                         {MqttTls, false},
                         {AutoAvailable, false},
+                        {MqttUserName, "MQTT-SINK"s},
+                        {MqttPassword, "mtconnect"s},
                         {RealTime, false}});
     m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext,
                                                                   opts, move(handler));
@@ -259,13 +265,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
     {
       EXPECT_TRUE(true);
       foundLineDataItem = true;
-    }
-    // this below code not working currently
-    /*ErrorList list;
-    auto ptr = parser.parse(device_model::data_item::DataItem::getRoot(), payload, "2.0", list);
-    auto dataItem = dynamic_pointer_cast<device_model::data_item::DataItem>(ptr);
-    if (dataItem)
-        EXPECT_EQ(string("204"),dataItem->getValue<string>());*/
+    }   
   };
   createClient(options, move(handler));
   ASSERT_TRUE(startClient());
@@ -277,11 +277,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
 
   m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/Path/Line[line]");
-
-  // m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|lp|NORMAL||||");
-
-  // m_client->subscribe("MTConnect/Observation/000/Controller[Controller]/LogicProgram");
-
+   
   waitFor(2s, [&foundLineDataItem]() { return foundLineDataItem; });
 }
 
@@ -306,12 +302,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Asset)
     {
       EXPECT_TRUE(true);
       gotControllerDataItem = true;
-    }
-    /*ErrorList list;
-    auto ptr = parser.parse(Asset::getRoot(), payload, "2.0", list);
-    EXPECT_EQ(0, list.size());
-    auto asset = dynamic_cast<Asset *>(ptr.get());
-    EXPECT_TRUE(asset);*/
+    }   
   };
   createClient(options, move(handler));
   ASSERT_TRUE(startClient());
