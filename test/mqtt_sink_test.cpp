@@ -36,9 +36,8 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::device_model::data_item;
 using namespace mtconnect::sink::mqtt_sink;
-using namespace mtconnect::sink::rest_sink;
 using namespace mtconnect::asset;
-using namespace mtconnect::entity;
+using namespace mtconnect::configuration;
 
 using json = nlohmann::json;
 
@@ -82,9 +81,7 @@ protected:
 
     ConfigOptions opts(options);
     MergeOptions(opts, {{"MqttSink", true},
-                        {configuration::MqttPort, m_port},
-                        {configuration::MqttUserName, "MQTT-SINK"s},
-                        {configuration::MqttPassword, "mtconnect"s},
+                        {configuration::MqttPort, m_port},                     
                         {configuration::MqttHost, "127.0.0.1"s}});
     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
     addAdapter();
@@ -99,9 +96,7 @@ protected:
     MergeOptions(opts, {{ServerIp, "127.0.0.1"s},
                         {MqttPort, 0},
                         {MqttTls, false},
-                        {AutoAvailable, false},
-                        {configuration::MqttUserName, "MQTT-SINK"s},
-                        {configuration::MqttPassword, "mtconnect"s},
+                        {AutoAvailable, false},                      
                         {RealTime, false}});
 
     m_server =
@@ -144,15 +139,12 @@ protected:
   }
 
   void createClient(const ConfigOptions &options, unique_ptr<ClientHandler> &&handler)
-  {
-    using namespace mtconnect::configuration;
+  {    
     ConfigOptions opts(options);
     MergeOptions(opts, {{MqttHost, "127.0.0.1"s},
                         {MqttPort, m_port},
                         {MqttTls, false},
-                        {AutoAvailable, false},
-                        {MqttUserName, "MQTT-SINK"s},
-                        {MqttPassword, "mtconnect"s},
+                        {AutoAvailable, false},                       
                         {RealTime, false}});
     m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext,
                                                                   opts, move(handler));
@@ -191,6 +183,35 @@ TEST_F(MqttSinkTest, mqtt_sink_should_be_loaded_by_agent)
 }
 
 TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker)
+{
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+
+  ASSERT_NE(0, m_port);
+
+  createAgent();
+  auto service = m_agentTestHelper->getMqttService();
+
+  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+}
+
+TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker_with_UserNameandPassword)
+{
+  ConfigOptions options {{MqttUserName, "MQTT-SINK"s},
+                         {MqttPassword, "mtconnect"s}};
+  createServer(options);
+  startServer();
+
+  ASSERT_NE(0, m_port);
+
+  createAgent("", options);
+  auto service = m_agentTestHelper->getMqttService();
+
+  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+}
+
+TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker_without_UserNameandPassword)
 {
   ConfigOptions options;
   createServer(options);
