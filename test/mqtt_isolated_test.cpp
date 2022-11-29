@@ -315,7 +315,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
 
 TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 {
-  //GTEST_SKIP();
+  GTEST_SKIP();
 
   ConfigOptions options {{configuration::MqttTls, true}};
 
