@@ -67,17 +67,28 @@ namespace mtconnect {
         url << "mqtt://" << m_host << ':' << m_port;
         m_url = url.str();
 
-        std::stringstream identity;
-        identity << '_' << m_host << '_' << m_port;
+        // Some brokers require specific ClientID provided.
+        // If not specified in configuration then generate random one.
+        auto client_id = GetOption<string>(options, configuration::MqttClientId);
+        if (client_id) {
+          m_identity = *client_id;
+        }
+        else
+        {
+          std::stringstream identity;
+          identity << '_' << m_host << '_' << m_port;
 
-        boost::uuids::detail::sha1 sha1;
-        sha1.process_bytes(identity.str().c_str(), identity.str().length());
-        boost::uuids::detail::sha1::digest_type digest;
-        sha1.get_digest(digest);
+          boost::uuids::detail::sha1 sha1;
+          sha1.process_bytes(identity.str().c_str(), identity.str().length());
+          boost::uuids::detail::sha1::digest_type digest;
+          sha1.get_digest(digest);
 
-        identity.str("");
-        identity << std::hex << digest[0] << digest[1] << digest[2];
-        m_identity = std::string("_") + (identity.str()).substr(0, 10);
+          identity.str("");
+          identity << std::hex << digest[0] << digest[1] << digest[2];
+          m_identity = std::string("_") + (identity.str()).substr(0, 10);
+        }
+
+        LOG(debug) << "Using ClientID " << m_identity;
 
         auto ci = GetOption<Seconds>(options, configuration::MqttConnectInterval);
         if (ci)
