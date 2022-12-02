@@ -51,7 +51,8 @@ namespace mtconnect {
                                         mqtt::protocol_version>;
     using mqtt_tls_client = mqtt_tls_client_ptr<boost::asio::io_context &, std::string,
                                                 std::uint16_t, mqtt::protocol_version>;
-    using mqtt_tls_client_ws = mqtt_tls_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t, std::string,
+    using mqtt_tls_client_ws =
+        mqtt_tls_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t, std::string,
                                mqtt::protocol_version>;
 
     template <typename Derived>
@@ -63,13 +64,11 @@ namespace mtconnect {
         : MqttClient(ioContext, move(handler)),
           m_options(options),
           m_host(GetOption<std::string>(options, configuration::MqttHost).value_or("localhost")),
-          m_port(GetOption<int>(options, configuration::MqttPort).value_or(1883)),          
+          m_port(GetOption<int>(options, configuration::MqttPort).value_or(1883)),
           m_reconnectTimer(ioContext)
       {
-        if (auto userName = GetOption<std::string>(options, configuration::MqttUserName))
-          m_username = *userName;
-        if (auto pswd = GetOption<std::string>(options, configuration::MqttPassword))
-          m_password = *pswd;
+        m_username = GetOption<std::string>(options, configuration::MqttUserName);
+        m_password = GetOption<std::string>(options, configuration::MqttPassword);
 
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
@@ -78,7 +77,8 @@ namespace mtconnect {
         // Some brokers require specific ClientID provided.
         // If not specified in configuration then generate random one.
         auto client_id = GetOption<string>(options, configuration::MqttClientId);
-        if (client_id) {
+        if (client_id)
+        {
           m_identity = *client_id;
         }
         else
@@ -328,9 +328,9 @@ namespace mtconnect {
 
       std::uint16_t m_clientId {0};
 
-      std::string m_username = "";
+      std::optional<std::string> m_username;
 
-      std::string m_password = "";
+      std::optional<std::string> m_password;
 
       boost::asio::steady_timer m_reconnectTimer;
     };
@@ -346,10 +346,10 @@ namespace mtconnect {
         if (!m_client)
         {
           m_client = mqtt::make_async_client(m_ioContext, m_host, m_port);
-          if (!m_username.empty())
-            m_client->set_user_name(m_username);
-          if (!m_password.empty())
-            m_client->set_password(m_password);
+          if (m_username)
+            m_client->set_user_name(*m_username);
+          if (m_password)
+            m_client->set_password(*m_password);
         }
 
         return m_client;
@@ -370,10 +370,10 @@ namespace mtconnect {
         if (!m_client)
         {
           m_client = mqtt::make_tls_async_client(m_ioContext, m_host, m_port);
-          if (!m_username.empty())
-            m_client->set_user_name(m_username);
-          if (!m_password.empty())
-            m_client->set_password(m_password);
+          if (m_username)
+            m_client->set_user_name(*m_username);
+          if (m_password)
+            m_client->set_password(*m_password);
 
           auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
@@ -410,10 +410,10 @@ namespace mtconnect {
         if (!m_client)
         {
           m_client = mqtt::make_tls_async_client_ws(m_ioContext, m_host, m_port);
-          if (!m_username.empty())
-            m_client->set_user_name(m_username);
-          if (!m_password.empty())
-            m_client->set_password(m_password);
+          if (m_username)
+            m_client->set_user_name(*m_username);
+          if (m_password)
+            m_client->set_password(*m_password);
 
           auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)

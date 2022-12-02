@@ -239,8 +239,7 @@ TEST_F(XmlPrinterTest, ChangeDevicesNamespace)
 {
   // Devices
   m_printer->clearDevicesNamespaces();
-  
-  
+
   {
     PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
     ASSERT_XML_PATH_EQUAL(doc, "/m:MTConnectDevices@schemaLocation",

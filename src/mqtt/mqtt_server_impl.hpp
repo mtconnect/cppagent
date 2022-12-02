@@ -115,10 +115,10 @@ namespace mtconnect {
           // including close_handler and error_handler.
           ep.start_session(std::make_tuple(std::move(spep), std::move(g)));
           ep.set_connect_handler([this, wp](MQTT_NS::buffer client_id,
-                                                     MQTT_NS::optional<MQTT_NS::buffer> username,
-                                                     MQTT_NS::optional<MQTT_NS::buffer> password,
-                                                     MQTT_NS::optional<MQTT_NS::will>,
-                                                     bool clean_session, std::uint16_t keep_alive) {
+                                            MQTT_NS::optional<MQTT_NS::buffer> username,
+                                            MQTT_NS::optional<MQTT_NS::buffer> password,
+                                            MQTT_NS::optional<MQTT_NS::will>, bool clean_session,
+                                            std::uint16_t keep_alive) {
             using namespace MQTT_NS::literals;
             LOG(info) << "Server: Client_id    : " << client_id << std::endl;
             LOG(info) << "Server: User Name     : " << (username ? username.value() : "none"_mb)
@@ -303,9 +303,9 @@ namespace mtconnect {
           auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
           auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
           ctx.use_certificate_chain_file(*serverCert);
-          //ctx.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
+          // ctx.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
           ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
-         
+
           if (HasOption(m_options, configuration::TlsCertificatePassword))
           {
             ctx.set_password_callback(
@@ -349,7 +349,7 @@ namespace mtconnect {
           auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
           auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
           ctx.use_certificate_chain_file(*serverCert);
-          //ctx.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
+          // ctx.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
           ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
 
           /*if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
