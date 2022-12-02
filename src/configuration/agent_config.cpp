@@ -20,6 +20,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
 #include <boost/dll/import.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/function.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/core.hpp>
@@ -30,7 +31,6 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
-#include <boost/filesystem.hpp>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -278,7 +278,7 @@ namespace mtconnect::configuration {
     LOG(warning)
         << "Detected change in configuration files. Will reload when youngest file is at least "
         << m_monitorDelay.count() << " seconds old";
-    
+
     if (devTime != *m_deviceTime)
     {
       auto t = bfs::last_write_time(m_devicesFile);
@@ -303,8 +303,7 @@ namespace mtconnect::configuration {
     {
       if (cfgTime != *m_configTime)
       {
-        LOG(warning)
-            << "Monitor thread has detected change in configuration files.";
+        LOG(warning) << "Monitor thread has detected change in configuration files.";
         LOG(warning) << ".... Restarting agent: " << m_configFile;
 
         m_agent->stop();
@@ -720,7 +719,7 @@ namespace mtconnect::configuration {
 
     // Make the Agent
     m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
-    
+
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
     m_pipelineContext->m_contract = m_agent->makePipelineContract();

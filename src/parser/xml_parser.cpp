@@ -137,7 +137,7 @@ namespace mtconnect::parser {
         {
           auto version = ns.substr(colon + 1);
           LOG(info) << "MTConnect Schema Version of file: " << filePath << " = " << version;
-          m_schemaVersion.emplace(version);          
+          m_schemaVersion.emplace(version);
         }
       }
 

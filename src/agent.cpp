@@ -77,8 +77,7 @@ namespace mtconnect {
       m_context(context),
       m_strand(m_context),
       m_xmlParser(make_unique<parser::XmlParser>()),
-      m_schemaVersion(
-          GetOption<string>(options, config::SchemaVersion)),
+      m_schemaVersion(GetOption<string>(options, config::SchemaVersion)),
       m_deviceXmlPath(deviceXmlPath),
       m_circularBuffer(GetOption<int>(options, config::BufferSize).value_or(17),
                        GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
@@ -104,7 +103,7 @@ namespace mtconnect {
     // Create the Printers
     m_printers["xml"] = make_unique<printer::XmlPrinter>(m_pretty);
     m_printers["json"] = make_unique<printer::JsonPrinter>(jsonVersion, m_pretty);
-    
+
     if (m_schemaVersion)
     {
       for (auto &[k, pr] : m_printers)
@@ -125,7 +124,7 @@ namespace mtconnect {
     {
       m_schemaVersion.emplace(StrDefaultSchemaVersion());
     }
-    
+
     auto version = IntSchemaVersion(*m_schemaVersion);
     for (auto &[k, pr] : m_printers)
       pr->setSchemaVersion(*m_schemaVersion);
@@ -135,7 +134,7 @@ namespace mtconnect {
     {
       createAgentDevice();
     }
-    
+
     // For the DeviceAdded event for each device
     for (auto device : devices)
       addDevice(device);
@@ -298,9 +297,9 @@ namespace mtconnect {
       // Load the configuration for the Agent
       auto devices = m_xmlParser->parseFile(
           deviceFile, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
-      
+
       if (m_xmlParser->getSchemaVersion() &&
-         IntSchemaVersion(*m_xmlParser->getSchemaVersion()) != IntSchemaVersion(*m_schemaVersion))
+          IntSchemaVersion(*m_xmlParser->getSchemaVersion()) != IntSchemaVersion(*m_schemaVersion))
       {
         LOG(info) << "Got version: " << *(m_xmlParser->getSchemaVersion());
         LOG(warning) << "Schema version does not match agent schema version, restarting the agent";
@@ -315,7 +314,7 @@ namespace mtconnect {
       }
       if (changed)
         loadCachedProbe();
-      
+
       return true;
     }
     catch (runtime_error &e)
@@ -600,7 +599,8 @@ namespace mtconnect {
 
     // Create the Agent Device
     ErrorList errors;
-    Properties ps {{"uuid", uuid}, {"id", id}, {"name", "Agent"s}, {"mtconnectVersion", *m_schemaVersion}};
+    Properties ps {
+        {"uuid", uuid}, {"id", id}, {"name", "Agent"s}, {"mtconnectVersion", *m_schemaVersion}};
     m_agentDevice =
         dynamic_pointer_cast<AgentDevice>(AgentDevice::getFactory()->make("Agent", ps, errors));
     if (!errors.empty())
@@ -616,7 +616,7 @@ namespace mtconnect {
   // Device management and Initialization
   // ----------------------------------------------
 
-  std::list<device_model::DevicePtr>  Agent::loadXMLDeviceFile(const std::string &configXmlPath)
+  std::list<device_model::DevicePtr> Agent::loadXMLDeviceFile(const std::string &configXmlPath)
   {
     NAMED_SCOPE("Agent::loadXMLDeviceFile");
 
@@ -634,7 +634,7 @@ namespace mtconnect {
       {
         m_schemaVersion = StrDefaultSchemaVersion();
       }
-     
+
       return devices;
     }
     catch (runtime_error &e)
@@ -651,14 +651,14 @@ namespace mtconnect {
       cerr << f.what() << endl;
       throw f;
     }
-    
+
     return {};
   }
 
   void Agent::verifyDevice(DevicePtr device)
   {
     NAMED_SCOPE("Agent::verifyDevice");
-    
+
     auto version = IntSchemaVersion(*m_schemaVersion);
 
     // Add the devices to the device map and create availability and
@@ -1200,21 +1200,21 @@ namespace mtconnect {
       if (type)
       {
         auto count = m_assetStorage->getCountForDeviceAndType(*device->getUuid(), *type);
-        
+
         DataSet set;
         if (count > 0)
           set.emplace(*type, int64_t(count));
         else
           set.emplace(*type, DataSetValue(), true);
-        
+
         m_loopback->receive(dc, {{"VALUE", set}});
       }
       else
       {
         auto counts = m_assetStorage->getCountsByTypeForDevice(*device->getUuid());
-        
+
         DataSet set;
-        
+
         for (auto &[t, count] : counts)
         {
           if (count > 0)
@@ -1222,9 +1222,8 @@ namespace mtconnect {
           else
             set.emplace(t, DataSetValue(), true);
         }
-        
-        m_loopback->receive(dc, {{"resetTriggered", "RESET_COUNTS"s},
-          {"VALUE", set}});
+
+        m_loopback->receive(dc, {{"resetTriggered", "RESET_COUNTS"s}, {"VALUE", set}});
       }
     }
   }
