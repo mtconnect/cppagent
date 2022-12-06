@@ -79,25 +79,15 @@ protected:
   {    
     bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
 
-    ConfigOptions opts(options);
-    MergeOptions(opts, {{ServerIp, "127.0.0.1"s},
-                        {MqttPort, 0},
-                        {MqttTls, withTlsOption},
-                        {AutoAvailable, false},                       
-                        {TlsCertificateChain, ServerCertFile},
-                        {TlsPrivateKey, ServerKeyFile},       
-                        {TlsCertificatePassword, "mtconnect"s},
-                        {RealTime, false}});
-
     if (withTlsOption)
     {
-      m_server =
-          make_shared<mtconnect::mqtt_server::MqttTlsServer>(m_agentTestHelper->m_ioContext, opts);
+      m_server = make_shared<mtconnect::mqtt_server::MqttTlsServer>(m_agentTestHelper->m_ioContext,
+                                                                    options);
     }
     else
     {
-      m_server =
-          make_shared<mtconnect::mqtt_server::MqttTcpServer>(m_agentTestHelper->m_ioContext, opts);
+      m_server = make_shared<mtconnect::mqtt_server::MqttTcpServer>(m_agentTestHelper->m_ioContext,
+                                                                    options);
     }
   }
 
@@ -141,14 +131,8 @@ protected:
      bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
 
     ConfigOptions opts(options);
-    MergeOptions(opts, {{MqttHost, "127.0.0.1"s},
-                        {MqttPort, m_port},
-                        {MqttTls, withTlsOption},
-                        {AutoAvailable, false},
-                        {MqttCaCert, MqttClientCACert},
-                        {MqttCert, MqttClientCert},
-                        {MqttPrivateKey, MqttClientKey},                        
-                        {RealTime, false}});
+
+    MergeOptions(opts, {{MqttPort, m_port}});
 
     if (withTlsOption)
     {
@@ -183,7 +167,13 @@ protected:
 
 TEST_F(MqttIsolatedUnitTest, mqtt_client_should_connect_to_broker)
 {
-  ConfigOptions options;
+  ConfigOptions options{{ServerIp, "127.0.0.1"s},
+                         {MqttPort, 0},
+                         {MqttTls, false},
+                         {AutoAvailable, false},  
+                         {MqttCaCert, MqttClientCACert},
+                         {RealTime, false}};
+  
   createServer(options);
 
   startServer();
@@ -201,7 +191,11 @@ TEST_F(MqttIsolatedUnitTest, mqtt_client_should_connect_to_broker)
 
 TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication)
 {
-  ConfigOptions options;
+  ConfigOptions options {{ServerIp, "127.0.0.1"s},
+                         {MqttPort, 0},
+                         {MqttTls, false},
+                         {AutoAvailable, false},
+                         {RealTime, false}};
 
   createServer(options);
   startServer();
@@ -317,7 +311,15 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 {
   GTEST_SKIP();
 
-  ConfigOptions options {{configuration::MqttTls, true}};
+  ConfigOptions options{{ServerIp, "127.0.0.1"s},
+                         {MqttPort, 0},
+                         {MqttTls, true},
+                         {AutoAvailable, false},
+                         {TlsCertificateChain, ServerCertFile},
+                         {TlsPrivateKey, ServerKeyFile},
+                         {TlsDHKey, ServerDhFile},
+                         {MqttCaCert, MqttClientCACert},
+                         {RealTime, false}};
 
   createServer(options);
 
@@ -338,14 +340,15 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
 {
   GTEST_SKIP();
 
-  ConfigOptions options;
-  MergeOptions(options, {{ServerIp, "127.0.0.1"s},
-                      {MqttPort, 0},
-                      {MqttTls, true},
-                      {AutoAvailable, false},
-                      {TlsCertificateChain, ServerCertFile},
-                      {TlsPrivateKey, ServerKeyFile},
-                      {RealTime, false}});
+  ConfigOptions options {{ServerIp, "127.0.0.1"s},
+                         {MqttPort, 0},
+                         {MqttTls, true},
+                         {AutoAvailable, false},
+                         {TlsCertificateChain, ServerCertFile},
+                         {TlsPrivateKey, ServerKeyFile},
+                         {TlsDHKey, ServerDhFile},
+                         {MqttCaCert, MqttClientCACert},
+                         {RealTime, false}};
 
   m_server =
       make_shared<mtconnect::mqtt_server::MqttTlsWSServer>(m_agentTestHelper->m_ioContext, options);
@@ -356,15 +359,8 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
 
   auto handler = make_unique<ClientHandler>();
 
-  ConfigOptions opts;
-  MergeOptions(opts, {{MqttHost, "127.0.0.1"s},
-                      {MqttPort, m_port},
-                      {MqttTls, true},
-                      {AutoAvailable, false},
-                      {MqttCaCert, MqttClientCACert},
-                      {MqttCert, MqttClientCert},
-                      {MqttPrivateKey, MqttClientKey},
-                      {RealTime, false}});
+  ConfigOptions opts(options);
+  MergeOptions(opts, {{MqttPort, m_port}});
 
   m_client = make_shared<mtconnect::mqtt_client::MqttTlsWSClient>(m_agentTestHelper->m_ioContext,
                                                                   opts, move(handler));
