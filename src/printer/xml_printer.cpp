@@ -100,11 +100,7 @@ namespace mtconnect::printer {
     xmlBufferPtr m_buf;
   };
 
-  XmlPrinter::XmlPrinter(bool pretty)
-    : Printer(pretty)
-  {
-    NAMED_SCOPE("xml.printer");
-  }
+  XmlPrinter::XmlPrinter(bool pretty) : Printer(pretty) { NAMED_SCOPE("xml.printer"); }
 
   void XmlPrinter::addDevicesNamespace(const std::string &urn, const std::string &location,
                                        const std::string &prefix)
@@ -617,8 +613,6 @@ namespace mtconnect::printer {
         mtcLocation = xmlns + " " + ns.second.mSchemaLocation;
       }
     }
-    
-    
 
     // Write the schema location
     if (location.empty() && !mtcLocation.empty())
