@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#include <fstream>
+
 #include <boost/beast/ssl.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
@@ -374,18 +376,36 @@ namespace mtconnect {
             m_client->set_user_name(*m_username);
           if (m_password)
             m_client->set_password(*m_password);
-
+                   
           auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
           {
-            m_client->get_ssl_context().load_verify_file(*cacert);
-          }        
+            ifstream root;
+            root.open(*cacert);
+            std::string cert((istreambuf_iterator<char>(root)), (istreambuf_iterator<char>()));
+            m_client->get_ssl_context().add_certificate_authority(
+                boost::asio::buffer(cert.data(), cert.size()));
+            if (HasOption(m_options, configuration::TlsCertificateChain) &&
+                HasOption(m_options, configuration::TlsPrivateKey))
+            {
+              m_client->get_ssl_context().set_verify_mode(boost::asio::ssl::verify_peer);
+              auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
+              auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
+              m_client->get_ssl_context().use_certificate_chain_file(*serverCert);
+              m_client->get_ssl_context().use_private_key_file(*serverPrivateKey,
+                                                               boost::asio::ssl::context::pem);
+            }
+            if (HasOption(m_options, configuration::TlsClientCAs))
+              m_client->get_ssl_context().load_verify_file(
+                  *GetOption<string>(m_options, configuration::TlsClientCAs));
+          } 
         }
 
         return m_client;
       }
 
     protected:
+
       mqtt_tls_client m_client;
     };
 

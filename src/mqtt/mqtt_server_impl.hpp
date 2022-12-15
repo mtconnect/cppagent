@@ -326,10 +326,10 @@ namespace mtconnect {
 
               ctx.set_verify_mode(boost::asio::ssl::verify_peer |
                                   boost::asio::ssl::verify_fail_if_no_peer_cert);
-              if (HasOption(m_options, configuration::MqttCaCert))
+              if (HasOption(m_options, configuration::TlsClientCAs))
               {
                 LOG(info) << "Server: Adding Client Certificates.";
-                ctx.load_verify_file(*GetOption<string>(m_options, configuration::MqttCaCert));
+                ctx.load_verify_file(*GetOption<string>(m_options, configuration::TlsClientCAs));
               }
             }
           }
@@ -392,10 +392,10 @@ namespace mtconnect {
 
               ctx.set_verify_mode(boost::asio::ssl::verify_peer |
                                   boost::asio::ssl::verify_fail_if_no_peer_cert);
-              if (HasOption(m_options, configuration::MqttCaCert))
+              if (HasOption(m_options, configuration::TlsClientCAs))
               {
                 LOG(info) << "Server: Adding Client Certificates.";
-                ctx.load_verify_file(*GetOption<string>(m_options, configuration::MqttCaCert));
+                ctx.load_verify_file(*GetOption<string>(m_options, configuration::TlsClientCAs));
               }
             }
           }

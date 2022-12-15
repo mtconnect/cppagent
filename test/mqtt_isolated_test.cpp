@@ -47,6 +47,7 @@ const string MqttClientKey {PROJECT_ROOT_DIR "/test/resources/client.key"};
 const string ServerCertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
 const string ServerKeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
 const string ServerDhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
+const string ClientCA(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
 class MqttIsolatedUnitTest : public testing::Test
 {
@@ -370,4 +371,34 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
   ASSERT_TRUE(m_client->isConnected());
 }
 
-TEST_F(MqttIsolatedUnitTest, should_conenct_using_authentication) { GTEST_SKIP(); }
+TEST_F(MqttIsolatedUnitTest, should_conenct_using_authentication) 
+{ 
+  //GTEST_SKIP(); 
+    
+  ConfigOptions options {{ServerIp, "127.0.0.1"s},
+                           {MqttPort, 0},
+                           {MqttTls, true},
+                           {AutoAvailable, false},
+                           {TlsCertificateChain, ServerCertFile},
+                           {TlsPrivateKey, ServerKeyFile},
+                           {TlsDHKey, ServerDhFile},
+                           {TlsClientCAs, ClientCA},
+                           {MqttCaCert, MqttClientCACert},
+                           {TlsVerifyClientCertificate, true},
+                           {TlsCertificatePassword, "mtconnect"s},
+                           {RealTime, false}};
+
+    createServer(options);
+
+    startServer();
+
+    ASSERT_NE(0, m_port);
+
+    auto handler = make_unique<ClientHandler>();
+
+    createClient(options, move(handler));
+
+    ASSERT_TRUE(startClient());
+
+    ASSERT_TRUE(m_client->isConnected());
+}
