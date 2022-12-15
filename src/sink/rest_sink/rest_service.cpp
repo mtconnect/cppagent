@@ -504,25 +504,31 @@ namespace mtconnect {
           return true;
         };
 
-        for (const auto &t : list<boost::beast::http::verb> {boost::beast::http::verb::put,
-                                                             boost::beast::http::verb::post})
+        for (const auto &asset : list<string> {"asset", "assets"})
         {
-          m_server->addRouting({t, "/asset/{uuid}?device={string}&type={string}", putHandler});
-          m_server->addRouting({t, "/asset?device={string}&type={string}", putHandler});
-          m_server->addRouting({t, "/{device}/asset/{uuid}?type={string}", putHandler});
-          m_server->addRouting({t, "/{device}/asset?type={string}", putHandler});
-        }
+          for (const auto &t : list<boost::beast::http::verb> {boost::beast::http::verb::put,
+                                                               boost::beast::http::verb::post})
+          {
+            m_server->addRouting(
+                {t, "/" + asset + "/{uuid}?device={string}&type={string}", putHandler});
+            m_server->addRouting({t, "/" + asset + "?device={string}&type={string}", putHandler});
+            m_server->addRouting({t, "/{device}/" + asset + "/{uuid}?type={string}", putHandler});
+            m_server->addRouting({t, "/{device}/" + asset + "?type={string}", putHandler});
+          }
 
-        m_server->addRouting({boost::beast::http::verb::delete_,
-                              "/asset?&device={string}&type={string}", deleteHandler});
-        m_server->addRouting({boost::beast::http::verb::delete_,
-                              "/asset?&device={string}&type={string}", deleteHandler});
-        m_server->addRouting({boost::beast::http::verb::delete_, "/asset/{asset}", deleteHandler});
-        m_server->addRouting({boost::beast::http::verb::delete_, "/asset/{asset}", deleteHandler});
-        m_server->addRouting(
-            {boost::beast::http::verb::delete_, "/{device}/asset?type={string}", deleteHandler});
-        m_server->addRouting(
-            {boost::beast::http::verb::delete_, "/{device}/asset?type={string}", deleteHandler});
+          m_server->addRouting({boost::beast::http::verb::delete_,
+                                "/" + asset + "?&device={string}&type={string}", deleteHandler});
+          m_server->addRouting({boost::beast::http::verb::delete_,
+                                "/" + asset + "?&device={string}&type={string}", deleteHandler});
+          m_server->addRouting(
+              {boost::beast::http::verb::delete_, "/" + asset + "/{asset}", deleteHandler});
+          m_server->addRouting(
+              {boost::beast::http::verb::delete_, "/" + asset + "/{asset}", deleteHandler});
+          m_server->addRouting({boost::beast::http::verb::delete_,
+                                "/{device}/" + asset + "?type={string}", deleteHandler});
+          m_server->addRouting({boost::beast::http::verb::delete_,
+                                "/{device}/" + asset + "?type={string}", deleteHandler});
+        }
       }
     }
 
@@ -1059,7 +1065,11 @@ namespace mtconnect {
       using namespace rest_sink;
 
       entity::ErrorList errors;
-      auto dev = checkDevice(printer, *device);
+      DevicePtr dev;
+      if (device)
+        dev = checkDevice(printer, *device);
+      else
+        dev = m_sinkContract->defaultDevice();
       auto ap = m_loopback->receiveAsset(dev, asset, uuid, type, nullopt, errors);
       if (!ap || errors.size() > 0 || (type && ap->getType() != *type))
       {
