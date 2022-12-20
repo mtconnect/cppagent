@@ -373,7 +373,7 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
 
 TEST_F(MqttIsolatedUnitTest, should_conenct_using_authentication) 
 { 
-  //GTEST_SKIP(); 
+  GTEST_SKIP(); 
     
   ConfigOptions options {{ServerIp, "127.0.0.1"s},
                            {MqttPort, 0},
