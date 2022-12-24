@@ -23,12 +23,12 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
-#include "asset/asset.hpp"
-#include "device_model/device.hpp"
-#include "entity/data_set.hpp"
-#include "entity/xml_parser.hpp"
-#include "observation/observation.hpp"
-#include "pipeline/timestamp_extractor.hpp"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/entity/data_set.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
 
 using namespace std;
 

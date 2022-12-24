@@ -21,7 +21,6 @@
 
 #include "configuration/configuration.hpp"
 #include "description.hpp"
-#include "entity/entity.hpp"
 
 using namespace std;
 

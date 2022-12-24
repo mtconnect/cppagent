@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 #include <chrono>
 #include <cstdio>

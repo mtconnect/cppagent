@@ -25,13 +25,13 @@
 
 #include <nlohmann/json.hpp>
 
-#include "device_model/composition.hpp"
-#include "device_model/configuration/configuration.hpp"
-#include "device_model/device.hpp"
-#include "device_model/reference.hpp"
-#include "entity/json_printer.hpp"
-#include "logging.hpp"
-#include "version.h"
+#include "mtconnect/device_model/composition.hpp"
+#include "mtconnect/device_model/configuration/configuration.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/device_model/reference.hpp"
+#include "mtconnect/entity/json_printer.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/version.h"
 
 using namespace std;
 using json = nlohmann::json;

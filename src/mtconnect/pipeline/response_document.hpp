@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "entity/entity.hpp"
-#include "pipeline/pipeline_context.hpp"
-#include "printer/xml_helper.hpp"
-#include "utilities.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/pipeline/pipeline_context.hpp"
+#include "mtconnect/printer/xml_helper.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::pipeline {
   using namespace mtconnect;

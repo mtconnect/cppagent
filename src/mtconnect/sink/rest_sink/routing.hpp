@@ -27,7 +27,7 @@
 #include <string>
 #include <variant>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 #include "parameter.hpp"
 #include "request.hpp"
 #include "session.hpp"

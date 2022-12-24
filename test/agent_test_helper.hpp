@@ -24,18 +24,18 @@
 
 #include <nlohmann/json.hpp>
 
-#include "agent.hpp"
-#include "configuration/agent_config.hpp"
-#include "configuration/config_options.hpp"
-#include "pipeline/pipeline.hpp"
-#include "sink/mqtt_sink/mqtt_service.hpp"
-#include "sink/rest_sink/response.hpp"
-#include "sink/rest_sink/rest_service.hpp"
-#include "sink/rest_sink/routing.hpp"
-#include "sink/rest_sink/server.hpp"
-#include "sink/rest_sink/session.hpp"
-#include "source/adapter/shdr/shdr_adapter.hpp"
-#include "source/loopback_source.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
+#include "mtconnect/sink/rest_sink/response.hpp"
+#include "mtconnect/sink/rest_sink/rest_service.hpp"
+#include "mtconnect/sink/rest_sink/routing.hpp"
+#include "mtconnect/sink/rest_sink/server.hpp"
+#include "mtconnect/sink/rest_sink/session.hpp"
+#include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
+#include "mtconnect/source/loopback_source.hpp"
 #include "test_utilities.hpp"
 
 namespace mtconnect {

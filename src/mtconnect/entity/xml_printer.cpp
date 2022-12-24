@@ -21,8 +21,8 @@
 
 #include <libxml/xmlwriter.h>
 
-#include "logging.hpp"
-#include "printer/xml_printer_helper.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/printer/xml_printer_helper.hpp"
 
 using namespace std;
 

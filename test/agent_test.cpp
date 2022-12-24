@@ -26,12 +26,12 @@
 #include <stdexcept>
 #include <thread>
 
-#include "agent.hpp"
+#include "mtconnect/agent.hpp"
 #include "agent_test_helper.hpp"
-#include "asset/file_asset.hpp"
-#include "device_model/reference.hpp"
-#include "printer/xml_printer.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/asset/file_asset.hpp"
+#include "mtconnect/device_model/reference.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 #include "test_utilities.hpp"
 
 #if defined(WIN32) && _MSC_VER < 1500

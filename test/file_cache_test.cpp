@@ -30,7 +30,7 @@
 #include <string>
 #include <thread>
 
-#include "sink/rest_sink/file_cache.hpp"
+#include "mtconnect/sink/rest_sink/file_cache.hpp"
 
 #ifndef _WINDOWS
 #include <sys/time.h>

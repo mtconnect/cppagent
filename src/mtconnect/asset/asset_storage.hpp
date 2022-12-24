@@ -23,9 +23,9 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "asset/asset.hpp"
-#include "entity/entity.hpp"
-#include "utilities.hpp"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace asset {

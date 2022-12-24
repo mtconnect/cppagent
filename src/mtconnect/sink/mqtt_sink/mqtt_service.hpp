@@ -20,15 +20,15 @@
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
-#include "buffer/checkpoint.hpp"
-#include "configuration/agent_config.hpp"
-#include "entity/json_printer.hpp"
-#include "mqtt/mqtt_client.hpp"
-#include "observation/observation.hpp"
-#include "printer/printer.hpp"
-#include "printer/xml_printer_helper.hpp"
-#include "sink/sink.hpp"
-#include "utilities.hpp"
+#include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
+#include "mtconnect/entity/json_printer.hpp"
+#include "mtconnect/mqtt/mqtt_client.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/printer/printer.hpp"
+#include "mtconnect/printer/xml_printer_helper.hpp"
+#include "mtconnect/sink/sink.hpp"
+#include "mtconnect/utilities.hpp"
 
 using namespace std;
 using namespace mtconnect::entity;

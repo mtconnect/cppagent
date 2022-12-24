@@ -17,7 +17,7 @@
 
 #include "sink.hpp"
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 namespace mtconnect {
   namespace sink {

@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect::device_model::data_item {
   class Source : public entity::Entity

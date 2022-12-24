@@ -25,8 +25,8 @@
 #include <variant>
 #include <vector>
 
-#include "logging.hpp"
-#include "utilities.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::entity {
   struct DataSetEntry;

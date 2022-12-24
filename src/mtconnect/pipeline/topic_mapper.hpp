@@ -22,9 +22,9 @@
 #include <regex>
 #include <unordered_map>
 
-#include "device_model/device.hpp"
-#include "entity/entity.hpp"
-#include "observation/observation.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/observation/observation.hpp"
 #include "shdr_tokenizer.hpp"
 #include "timestamp_extractor.hpp"
 #include "transform.hpp"

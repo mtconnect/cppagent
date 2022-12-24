@@ -50,23 +50,23 @@
 #include <sys/stat.h>
 #include <vector>
 
-#include "agent.hpp"
-#include "configuration/config_options.hpp"
-#include "device_model/device.hpp"
-#include "printer/xml_printer.hpp"
-#include "sink/mqtt_sink/mqtt_service.hpp"
-#include "sink/rest_sink/rest_service.hpp"
-#include "source/adapter/agent_adapter/agent_adapter.hpp"
-#include "source/adapter/mqtt/mqtt_adapter.hpp"
-#include "source/adapter/shdr/shdr_adapter.hpp"
-#include "version.h"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/printer/xml_printer.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
+#include "mtconnect/sink/rest_sink/rest_service.hpp"
+#include "mtconnect/source/adapter/agent_adapter/agent_adapter.hpp"
+#include "mtconnect/source/adapter/mqtt/mqtt_adapter.hpp"
+#include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
+#include "mtconnect/version.h"
 
 #ifdef WITH_PYTHON
-#include "python/embedded.hpp"
+#include "mtconnect/python/embedded.hpp"
 #endif
 
 #ifdef WITH_RUBY
-#include "ruby/embedded.hpp"
+#include "mtconnect/ruby/embedded.hpp"
 #endif
 
 // If Windows XP

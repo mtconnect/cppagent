@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "asset/file_asset.hpp"
+#include "mtconnect/asset/file_asset.hpp"
 
 namespace mtconnect {
   namespace asset {

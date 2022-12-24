@@ -24,8 +24,8 @@
 #include <mutex>
 
 #include "checkpoint.hpp"
-#include "observation/observation.hpp"
-#include "utilities.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;

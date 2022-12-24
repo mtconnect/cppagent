@@ -22,12 +22,12 @@
 #include <mruby/hash.h>
 #include <mruby/value.h>
 
-#include "device_model/data_item/data_item.hpp"
-#include "device_model/device.hpp"
-#include "entity/data_set.hpp"
-#include "entity/entity.hpp"
-#include "pipeline/shdr_tokenizer.hpp"
-#include "pipeline/timestamp_extractor.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/entity/data_set.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/pipeline/shdr_tokenizer.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "ruby_smart_ptr.hpp"
 #include "ruby_type.hpp"
 

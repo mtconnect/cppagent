@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "agent.hpp"
+#include "mtconnect/agent.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -40,21 +40,21 @@
 #include <sys/stat.h>
 #include <thread>
 
-#include "asset/asset.hpp"
-#include "asset/cutting_tool.hpp"
-#include "asset/file_asset.hpp"
-#include "asset/qif_document.hpp"
-#include "asset/raw_material.hpp"
-#include "configuration/config_options.hpp"
-#include "device_model/agent_device.hpp"
-#include "entity/xml_parser.hpp"
-#include "logging.hpp"
-#include "observation/observation.hpp"
-#include "printer/json_printer.hpp"
-#include "printer/xml_printer.hpp"
-#include "sink/rest_sink/file_cache.hpp"
-#include "sink/rest_sink/session.hpp"
-#include "version.h"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/asset/file_asset.hpp"
+#include "mtconnect/asset/qif_document.hpp"
+#include "mtconnect/asset/raw_material.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/device_model/agent_device.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/printer/json_printer.hpp"
+#include "mtconnect/printer/xml_printer.hpp"
+#include "mtconnect/sink/rest_sink/file_cache.hpp"
+#include "mtconnect/sink/rest_sink/session.hpp"
+#include "mtconnect/version.h"
 
 using namespace std;
 

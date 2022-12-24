@@ -42,7 +42,7 @@
 
 #include "asset.hpp"
 #include "asset_storage.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::asset {
   namespace mic = boost::multi_index;

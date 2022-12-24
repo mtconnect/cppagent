@@ -21,8 +21,8 @@
 
 #include <chrono>
 
-#include "asset/asset.hpp"
-#include "observation/observation.hpp"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
 namespace mtconnect {

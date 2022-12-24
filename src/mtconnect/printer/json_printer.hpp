@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "asset/cutting_tool.hpp"
-#include "printer/printer.hpp"
-#include "utilities.hpp"
+#include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/printer/printer.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::printer {
   class JsonPrinter : public Printer

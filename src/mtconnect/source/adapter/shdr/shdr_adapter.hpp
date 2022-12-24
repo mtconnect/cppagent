@@ -26,11 +26,11 @@
 #include <string>
 
 #include "connector.hpp"
-#include "device_model/data_item/data_item.hpp"
 #include "shdr_pipeline.hpp"
-#include "source/adapter/adapter.hpp"
-#include "source/source.hpp"
-#include "utilities.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/source/source.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   class Agent;

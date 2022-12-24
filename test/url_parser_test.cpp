@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "source/adapter/agent_adapter/url_parser.hpp"
+#include "mtconnect/source/adapter/agent_adapter/url_parser.hpp"
 
 using namespace std;
 using namespace mtconnect;

@@ -26,9 +26,9 @@
 #include <date/date.h>
 #include <string_view>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 #include "factory.hpp"
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 

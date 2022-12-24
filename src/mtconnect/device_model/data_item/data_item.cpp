@@ -24,9 +24,9 @@
 #include <map>
 #include <string>
 
-#include "device_model/device.hpp"
-#include "entity/requirement.hpp"
-#include "logging.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/entity/requirement.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 

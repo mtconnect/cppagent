@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "mqtt/mqtt_client.hpp"
-#include "source/adapter/adapter.hpp"
-#include "source/adapter/adapter_pipeline.hpp"
+#include "mtconnect/mqtt/mqtt_client.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 using namespace mtconnect::mqtt_client;
 

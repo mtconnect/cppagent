@@ -21,10 +21,10 @@
 
 #include <chrono>
 
-#include "observation/observation.hpp"
-#include "pipeline/pipeline_context.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
-#include "pipeline/timestamp_extractor.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/pipeline_context.hpp"
+#include "mtconnect/pipeline/shdr_token_mapper.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;

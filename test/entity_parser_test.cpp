@@ -26,11 +26,11 @@
 #include <sstream>
 #include <string>
 
-#include "agent.hpp"
-#include "entity/entity.hpp"
-#include "entity/xml_parser.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;

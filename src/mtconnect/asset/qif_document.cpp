@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "asset/qif_document.hpp"
+#include "mtconnect/asset/qif_document.hpp"
 
 using namespace std;
 

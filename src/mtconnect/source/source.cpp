@@ -15,9 +15,9 @@
 //    limitations under the License.
 //
 
-#include "source/source.hpp"
+#include "mtconnect/source/source.hpp"
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 namespace mtconnect::source {
   source::SourcePtr SourceFactory::make(const std::string &factoryName, const std::string &sinkName,

@@ -17,12 +17,12 @@
 
 #include "rest_service.hpp"
 
-#include "configuration/config_options.hpp"
-#include "entity/xml_parser.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
-#include "pipeline/shdr_tokenizer.hpp"
-#include "pipeline/timestamp_extractor.hpp"
-#include "printer/xml_printer.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/pipeline/shdr_token_mapper.hpp"
+#include "mtconnect/pipeline/shdr_tokenizer.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
+#include "mtconnect/printer/xml_printer.hpp"
 #include "server.hpp"
 
 namespace asio = boost::asio;

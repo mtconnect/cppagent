@@ -15,18 +15,18 @@
 //    limitations under the License.
 //
 
-#include "source/loopback_source.hpp"
+#include "mtconnect/source/loopback_source.hpp"
 
-#include "configuration/config_options.hpp"
-#include "device_model/device.hpp"
-#include "entity/xml_parser.hpp"
-#include "pipeline/convert_sample.hpp"
-#include "pipeline/deliver.hpp"
-#include "pipeline/delta_filter.hpp"
-#include "pipeline/duplicate_filter.hpp"
-#include "pipeline/period_filter.hpp"
-#include "pipeline/timestamp_extractor.hpp"
-#include "pipeline/upcase_value.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/pipeline/convert_sample.hpp"
+#include "mtconnect/pipeline/deliver.hpp"
+#include "mtconnect/pipeline/delta_filter.hpp"
+#include "mtconnect/pipeline/duplicate_filter.hpp"
+#include "mtconnect/pipeline/period_filter.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
+#include "mtconnect/pipeline/upcase_value.hpp"
 
 using namespace std;
 

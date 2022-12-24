@@ -22,7 +22,7 @@
 
 #include <memory>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 #include "url_parser.hpp"
 
 namespace mtconnect::source::adapter {

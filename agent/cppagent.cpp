@@ -16,11 +16,11 @@
 //
 
 #include <boost/asio.hpp>
-#include "agent.hpp"
-#include "configuration/agent_config.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
 
-#include "fcntl.h"
-#include "sys/stat.h"
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #include <cstring>
 

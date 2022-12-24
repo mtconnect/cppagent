@@ -33,13 +33,13 @@
 #include <thread>
 #include <vector>
 
-#include "configuration/config_options.hpp"
+#include "mtconnect/configuration/config_options.hpp"
 #include "file_cache.hpp"
 #include "response.hpp"
 #include "routing.hpp"
 #include "session.hpp"
 #include "tls_dector.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::sink::rest_sink {
   class Server

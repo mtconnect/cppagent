@@ -23,9 +23,9 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "device_model/reference.hpp"
-#include "parser/xml_parser.hpp"
-#include "printer/xml_printer.hpp"
+#include "mtconnect/device_model/reference.hpp"
+#include "mtconnect/parser/xml_parser.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
 #include "test_utilities.hpp"
 
 using namespace std;

@@ -25,7 +25,7 @@
 
 #include "cached_file.hpp"
 #include "request.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace printer {

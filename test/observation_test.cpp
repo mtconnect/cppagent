@@ -21,13 +21,13 @@
 
 #include <list>
 
-#include "device_model/data_item/data_item.hpp"
-#include "entity/json_printer.hpp"
-#include "entity/xml_parser.hpp"
-#include "entity/xml_printer.hpp"
-#include "observation/observation.hpp"
-#include "pipeline/convert_sample.hpp"
-#include "printer/xml_printer_helper.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/entity/json_printer.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/entity/xml_printer.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/convert_sample.hpp"
+#include "mtconnect/printer//xml_printer_helper.hpp"
 #include "test_utilities.hpp"
 
 using namespace std;

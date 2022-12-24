@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "observation/observation.hpp"
+#include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
 namespace mtconnect {

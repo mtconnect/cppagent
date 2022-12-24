@@ -15,11 +15,11 @@
 //    limitations under the License.
 //
 
-#include "entity/json_parser.hpp"
+#include "mtconnect/entity/json_parser.hpp"
 
 #include <nlohmann/json.hpp>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 using json = nlohmann::json;

@@ -26,8 +26,8 @@
 #include <sstream>
 #include <string>
 
-#include "entity/entity.hpp"
-#include "entity/factory.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/factory.hpp"
 
 using namespace std;
 using namespace std::literals;

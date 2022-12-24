@@ -26,8 +26,8 @@
 #include <sstream>
 #include <string>
 
-#include "sink/rest_sink/response.hpp"
-#include "sink/rest_sink/routing.hpp"
+#include "mtconnect/sink/rest_sink/response.hpp"
+#include "mtconnect/sink/rest_sink/routing.hpp"
 
 using namespace std;
 using namespace mtconnect;

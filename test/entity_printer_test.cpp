@@ -28,12 +28,12 @@
 
 #include <libxml/xmlwriter.h>
 
-#include "agent.hpp"
-#include "entity/entity.hpp"
-#include "entity/xml_parser.hpp"
-#include "entity/xml_printer.hpp"
-#include "printer/xml_printer_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/entity/xml_printer.hpp"
+#include "mtconnect/printer//xml_printer_helper.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;

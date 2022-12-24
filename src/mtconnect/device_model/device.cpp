@@ -17,9 +17,9 @@
 
 #include "device.hpp"
 
-#include "configuration/config_options.hpp"
-#include "entity/factory.hpp"
-#include "logging.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/entity/factory.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 

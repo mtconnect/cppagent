@@ -23,10 +23,10 @@
 
 #include <chrono>
 
-#include "agent.hpp"
-#include "asset/cutting_tool.hpp"
-#include "asset/file_asset.hpp"
-#include "logging.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/asset/file_asset.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std::literals::chrono_literals;
 

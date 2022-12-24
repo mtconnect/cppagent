@@ -20,7 +20,7 @@
 #include <chrono>
 #include <regex>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 #include "transform.hpp"
 
 namespace mtconnect {

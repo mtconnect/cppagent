@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "agent.hpp"
+#include "mtconnect/agent.hpp"
 #include "ruby_smart_ptr.hpp"
-#include "sink/sink.hpp"
-#include "source/source.hpp"
+#include "mtconnect/sink/sink.hpp"
+#include "mtconnect/source/source.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect::device_model;

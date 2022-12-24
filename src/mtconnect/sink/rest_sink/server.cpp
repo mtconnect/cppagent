@@ -29,7 +29,7 @@
 
 #include <thread>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 #include "session_impl.hpp"
 
 namespace mtconnect::sink::rest_sink {

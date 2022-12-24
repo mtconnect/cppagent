@@ -22,7 +22,7 @@
 #include <chrono>
 #include <thread>
 
-#include "observation/change_observer.hpp"
+#include "mtconnect/observation/change_observer.hpp"
 
 using namespace std::chrono_literals;
 

@@ -27,8 +27,8 @@
 #include <string>
 #include <vector>
 
-#include "pipeline/pipeline_context.hpp"
-#include "source/adapter/mqtt/mqtt_adapter.hpp"
+#include "mtconnect/pipeline/pipeline_context.hpp"
+#include "mtconnect/source/adapter/mqtt/mqtt_adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;

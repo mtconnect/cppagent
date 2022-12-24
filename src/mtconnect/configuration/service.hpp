@@ -23,7 +23,7 @@
 #include <filesystem>
 #include <string>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace configuration {

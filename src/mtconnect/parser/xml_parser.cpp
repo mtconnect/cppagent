@@ -32,11 +32,11 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
-#include "asset/cutting_tool.hpp"
-#include "device_model/composition.hpp"
-#include "entity/xml_parser.hpp"
-#include "logging.hpp"
-#include "printer/xml_printer.hpp"
+#include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/device_model/composition.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/printer/xml_printer.hpp"
 
 #if _MSC_VER >= 1900
 #define gets gets_s

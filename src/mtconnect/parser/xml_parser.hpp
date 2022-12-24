@@ -23,12 +23,12 @@
 
 #include <libxml/tree.h>
 
-#include "asset/cutting_tool.hpp"
-#include "buffer/checkpoint.hpp"
-#include "device_model/component.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "device_model/device.hpp"
-#include "utilities.hpp"
+#include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/device_model/component.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::printer {
   class XmlPrinter;

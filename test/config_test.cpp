@@ -25,12 +25,12 @@
 #include <filesystem>
 #include <string>
 
-#include "agent.hpp"
-#include "configuration/agent_config.hpp"
-#include "configuration/config_options.hpp"
-#include "printer/xml_printer.hpp"
-#include "sink/rest_sink/rest_service.hpp"
-#include "source/adapter/shdr/shdr_adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/sink/rest_sink/rest_service.hpp"
+#include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
 
 #ifdef _WIN32
 #include <direct.h>

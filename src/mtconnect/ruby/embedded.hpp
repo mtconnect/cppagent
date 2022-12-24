@@ -21,7 +21,7 @@
 
 #include <memory>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace Rice {
   class Module;

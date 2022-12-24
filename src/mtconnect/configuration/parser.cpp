@@ -20,7 +20,7 @@
 #include <fstream>
 #include <ostream>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 //#define BOOST_SPIRIT_DEBUG 1
 #ifdef BOOST_SPIRIT_DEBUG

@@ -17,12 +17,12 @@
 
 #include "mqtt_service.hpp"
 
-#include "configuration/config_options.hpp"
-#include "entity/entity.hpp"
-#include "entity/factory.hpp"
-#include "entity/json_parser.hpp"
-#include "mqtt/mqtt_client_impl.hpp"
-#include "printer/json_printer.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/factory.hpp"
+#include "mtconnect/entity/json_parser.hpp"
+#include "mtconnect/mqtt/mqtt_client_impl.hpp"
+#include "mtconnect/printer/json_printer.hpp"
 
 using json = nlohmann::json;
 using ptree = boost::property_tree::ptree;

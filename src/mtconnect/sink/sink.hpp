@@ -25,11 +25,11 @@
 #include <memory>
 #include <string>
 
-#include "asset/asset_storage.hpp"
-#include "buffer/circular_buffer.hpp"
-#include "device_model/device.hpp"
-#include "observation/observation.hpp"
-#include "printer/printer.hpp"
+#include "mtconnect/asset/asset_storage.hpp"
+#include "mtconnect/buffer/circular_buffer.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/printer//printer.hpp"
 
 namespace mtconnect {
   namespace printer {

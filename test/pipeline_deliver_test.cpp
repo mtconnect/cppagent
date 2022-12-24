@@ -22,13 +22,13 @@
 #include <chrono>
 
 #include "agent_test_helper.hpp"
-#include "observation/observation.hpp"
-#include "pipeline/deliver.hpp"
-#include "pipeline/delta_filter.hpp"
-#include "pipeline/duplicate_filter.hpp"
-#include "pipeline/pipeline.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/deliver.hpp"
+#include "mtconnect/pipeline/delta_filter.hpp"
+#include "mtconnect/pipeline/duplicate_filter.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/pipeline/shdr_token_mapper.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::source::adapter;

@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "pipeline/guard.hpp"
-#include "pipeline/topic_mapper.hpp"
-#include "pipeline/transform.hpp"
+#include "mtconnect/pipeline/guard.hpp"
+#include "mtconnect/pipeline/topic_mapper.hpp"
+#include "mtconnect/pipeline/transform.hpp"
 #include "ruby_entity.hpp"
 #include "ruby_observation.hpp"
 #include "ruby_pipeline.hpp"

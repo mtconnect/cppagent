@@ -17,12 +17,12 @@
 
 #include "shdr_token_mapper.hpp"
 
-#include "asset/asset.hpp"
-#include "device_model/device.hpp"
-#include "entity/factory.hpp"
-#include "entity/xml_parser.hpp"
-#include "logging.hpp"
-#include "observation/observation.hpp"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/entity/factory.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/observation/observation.hpp"
 #include "upcase_value.hpp"
 
 using namespace std;

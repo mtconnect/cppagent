@@ -20,7 +20,7 @@
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 namespace mtconnect::configuration {
 

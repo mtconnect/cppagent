@@ -19,7 +19,7 @@
 
 #include <libxml/xmlwriter.h>
 
-#include "printer/xml_helper.hpp"
+#include "mtconnect/printer/xml_helper.hpp"
 
 namespace mtconnect::printer {
   class XmlWriter

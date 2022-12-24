@@ -31,7 +31,7 @@
 
 #include "component.hpp"
 #include "data_item/data_item.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace mic = boost::multi_index;

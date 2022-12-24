@@ -17,7 +17,7 @@
 
 #include "checkpoint.hpp"
 
-#include "device_model/data_item/data_item.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
 
 using namespace std;
 

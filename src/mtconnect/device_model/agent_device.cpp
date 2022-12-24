@@ -17,11 +17,11 @@
 
 #include "agent_device.hpp"
 
-#include "configuration/config_options.hpp"
+#include "mtconnect/configuration/config_options.hpp"
 #include "data_item/constraints.hpp"
 #include "data_item/data_item.hpp"
-#include "logging.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace std::literals;

@@ -28,7 +28,7 @@
 #include <sstream>
 #include <thread>
 
-#include "source/adapter/shdr/connector.hpp"
+#include "mtconnect/source/adapter/shdr/connector.hpp"
 
 namespace date {};
 using namespace date;

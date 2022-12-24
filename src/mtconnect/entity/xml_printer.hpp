@@ -19,7 +19,7 @@
 
 #include <unordered_set>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 
 extern "C"
 {

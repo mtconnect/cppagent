@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "device_model/data_item/unit_conversion.hpp"
+#include "mtconnect/device_model/data_item/unit_conversion.hpp"
 
 using namespace std;
 using namespace mtconnect::device_model::data_item;

@@ -29,11 +29,11 @@
 #include <sstream>
 #include <string>
 
-#include "configuration/config_options.hpp"
+#include "mtconnect/configuration/config_options.hpp"
 #include "http_session.hpp"
 #include "https_session.hpp"
-#include "logging.hpp"
-#include "pipeline/deliver.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/pipeline/deliver.hpp"
 #include "session_impl.hpp"
 
 using namespace std;

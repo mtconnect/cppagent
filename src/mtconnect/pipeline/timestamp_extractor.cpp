@@ -20,7 +20,7 @@
 #include <date/date.h>
 #include <optional>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 

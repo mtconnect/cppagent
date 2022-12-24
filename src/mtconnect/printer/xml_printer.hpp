@@ -19,9 +19,9 @@
 
 #include <unordered_set>
 
-#include "asset/asset.hpp"
-#include "printer/printer.hpp"
-#include "utilities.hpp"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/printer/printer.hpp"
+#include "mtconnect/utilities.hpp"
 
 extern "C"
 {

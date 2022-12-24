@@ -23,10 +23,10 @@
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 
-#include "configuration/config_options.hpp"
+#include "mtconnect/configuration/config_options.hpp"
 #include "mqtt_client.hpp"
-#include "source/adapter/adapter.hpp"
-#include "source/adapter/mqtt/mqtt_adapter.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/source/adapter/mqtt/mqtt_adapter.hpp"
 
 using namespace std;
 namespace asio = boost::asio;

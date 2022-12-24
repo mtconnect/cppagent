@@ -19,11 +19,11 @@
 #include <chrono>
 #include <regex>
 
-#include "entity/entity.hpp"
-#include "observation/observation.hpp"
-#include "pipeline/transform.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/transform.hpp"
 #include "response_document.hpp"
-#include "source/error_code.hpp"
+#include "mtconnect/source/error_code.hpp"
 
 namespace mtconnect::pipeline {
   struct XmlTransformFeedback

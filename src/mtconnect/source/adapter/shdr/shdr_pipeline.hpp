@@ -17,7 +17,7 @@
 
 #pragma once
 
-#include "source/adapter/adapter_pipeline.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 namespace mtconnect::source::adapter::shdr {
   class ShdrPipeline : public AdapterPipeline

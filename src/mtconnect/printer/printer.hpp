@@ -22,10 +22,10 @@
 #include <string>
 #include <vector>
 
-#include "asset/asset.hpp"
-#include "observation/observation.hpp"
-#include "utilities.hpp"
-#include "version.h"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/utilities.hpp"
+#include "mtconnect/version.h"
 
 namespace mtconnect {
   namespace device_model {

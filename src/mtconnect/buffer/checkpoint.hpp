@@ -23,8 +23,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "observation/observation.hpp"
-#include "utilities.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::buffer {
   class Checkpoint

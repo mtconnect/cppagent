@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "asset.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace asset {

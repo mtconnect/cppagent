@@ -20,9 +20,9 @@
 #include <mutex>
 #include <regex>
 
-#include "device_model/data_item/data_item.hpp"
-#include "entity/factory.hpp"
-#include "logging.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/entity/factory.hpp"
+#include "mtconnect/logging.hpp"
 
 #ifdef _WINDOWS
 #define strcasecmp stricmp

@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "asset/asset.hpp"
-#include "observation/observation.hpp"
-#include "pipeline/pipeline.hpp"
-#include "pipeline/pipeline_context.hpp"
-#include "source/source.hpp"
-#include "utilities.hpp"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/pipeline/pipeline_context.hpp"
+#include "mtconnect/source/source.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::source {
   class LoopbackPipeline : public pipeline::Pipeline

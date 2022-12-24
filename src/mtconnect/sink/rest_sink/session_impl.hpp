@@ -24,9 +24,9 @@
 #include <memory>
 #include <optional>
 
-#include "configuration/config_options.hpp"
+#include "mtconnect/configuration/config_options.hpp"
 #include "session.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace printer {

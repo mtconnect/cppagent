@@ -21,7 +21,7 @@
 #include <set>
 #include <unordered_map>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect {
   namespace entity {

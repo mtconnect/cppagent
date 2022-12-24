@@ -37,7 +37,7 @@
 #include <vector>
 
 #include "data_set.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace entity {

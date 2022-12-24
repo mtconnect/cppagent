@@ -19,7 +19,7 @@
 
 #include <regex>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect {
   namespace device_model {

@@ -22,7 +22,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "entity/requirement.hpp"
+#include "mtconnect/entity/requirement.hpp"
 
 namespace mtconnect {
   namespace device_model {

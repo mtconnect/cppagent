@@ -19,7 +19,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 
 using json = nlohmann::json;
 

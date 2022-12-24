@@ -25,8 +25,8 @@
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
 
-#include "pipeline/mtconnect_xml_transform.hpp"
-#include "pipeline/response_document.hpp"
+#include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
+#include "mtconnect/pipeline/response_document.hpp"
 #include "session.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {

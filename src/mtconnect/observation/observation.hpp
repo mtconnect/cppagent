@@ -25,10 +25,10 @@
 #include <variant>
 #include <vector>
 
-#include "device_model/component.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "entity/entity.hpp"
-#include "utilities.hpp"
+#include "mtconnect/device_model/component.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace observation {

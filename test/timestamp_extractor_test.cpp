@@ -21,8 +21,8 @@
 
 #include <chrono>
 
-#include "pipeline/shdr_tokenizer.hpp"
-#include "pipeline/timestamp_extractor.hpp"
+#include "mtconnect/pipeline/shdr_tokenizer.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;

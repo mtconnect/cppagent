@@ -39,16 +39,16 @@
 #include <mruby/variable.h>
 #include <string>
 
-#include "agent.hpp"
-#include "configuration/agent_config.hpp"
-#include "configuration/config_options.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "pipeline/shdr_tokenizer.hpp"
-#include "printer/xml_printer.hpp"
-#include "ruby/ruby_smart_ptr.hpp"
-#include "ruby/ruby_vm.hpp"
-#include "sink/rest_sink/rest_service.hpp"
-#include "source/adapter/shdr/shdr_adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/pipeline/shdr_tokenizer.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/ruby/ruby_smart_ptr.hpp"
+#include "mtconnect/ruby/ruby_vm.hpp"
+#include "mtconnect/sink/rest_sink/rest_service.hpp"
+#include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
 
 #ifdef _WIN32
 #include <direct.h>

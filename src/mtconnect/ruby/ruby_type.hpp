@@ -22,7 +22,7 @@
 #include <mruby/hash.h>
 #include <mruby/value.h>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect;

@@ -21,10 +21,10 @@
 #include <utility>
 #include <vector>
 
-#include "entity/entity.hpp"
+#include "mtconnect/entity/entity.hpp"
 #include "factory.hpp"
 #include "requirement.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 struct _xmlNode;
 namespace mtconnect {

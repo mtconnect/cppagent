@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "asset/raw_material.hpp"
+#include "mtconnect/asset/raw_material.hpp"
 
 using namespace std;
 

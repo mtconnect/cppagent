@@ -19,7 +19,7 @@
 
 #include <unordered_set>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 

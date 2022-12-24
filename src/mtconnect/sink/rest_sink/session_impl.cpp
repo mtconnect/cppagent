@@ -30,7 +30,7 @@
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 #include "request.hpp"
 #include "response.hpp"
 #include "tls_dector.hpp"

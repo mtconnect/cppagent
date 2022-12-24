@@ -29,7 +29,7 @@
 #include <functional>
 #include <utility>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 using namespace std::chrono;

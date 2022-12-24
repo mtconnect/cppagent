@@ -20,8 +20,8 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "agent_test_helper.hpp"
-#include "buffer/checkpoint.hpp"
-#include "buffer/circular_buffer.hpp"
+#include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/buffer/circular_buffer.hpp"
 
 using namespace std;
 using namespace mtconnect;

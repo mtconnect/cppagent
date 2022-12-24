@@ -23,9 +23,9 @@
 #include <string>
 #include <utility>
 
-#include "entity/entity.hpp"
-#include "entity/factory.hpp"
-#include "utilities.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/factory.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace device_model {

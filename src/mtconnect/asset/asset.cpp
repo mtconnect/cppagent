@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "asset/asset.hpp"
+#include "mtconnect/asset/asset.hpp"
 
 #include <map>
 #include <utility>

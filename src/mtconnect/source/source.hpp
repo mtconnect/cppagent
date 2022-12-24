@@ -20,7 +20,7 @@
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace pipeline {

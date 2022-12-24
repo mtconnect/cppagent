@@ -23,8 +23,8 @@
 #include <string>
 #include <utility>
 
-#include "entity/entity.hpp"
-#include "utilities.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace device_model {

@@ -18,7 +18,7 @@
 #include "configuration.hpp"
 
 #include "coordinate_systems.hpp"
-#include "entity/factory.hpp"
+#include "mtconnect/entity/factory.hpp"
 #include "motion.hpp"
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"

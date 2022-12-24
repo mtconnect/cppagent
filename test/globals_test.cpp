@@ -22,7 +22,7 @@
 #include <date/date.h>
 #include <thread>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;

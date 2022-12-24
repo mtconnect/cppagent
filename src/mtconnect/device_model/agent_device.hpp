@@ -20,8 +20,8 @@
 
 #include "component.hpp"
 #include "data_item/data_item.hpp"
-#include "device_model/device.hpp"
-#include "utilities.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace source::adapter {

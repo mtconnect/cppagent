@@ -20,14 +20,13 @@
 
 #include "constraints.hpp"
 #include "definition.hpp"
-#include "device_model/component.hpp"
-#include "entity/entity.hpp"
-#include "filter.hpp"
-#include "observation/change_observer.hpp"
 #include "relationships.hpp"
 #include "source.hpp"
 #include "unit_conversion.hpp"
-#include "utilities.hpp"
+#include "filter.hpp"
+#include "mtconnect/device_model/component.hpp"
+#include "mtconnect/observation/change_observer.hpp"
+#include "mtconnect/utilities.hpp"
 
 #ifdef PASCAL
 #undef PASCAL

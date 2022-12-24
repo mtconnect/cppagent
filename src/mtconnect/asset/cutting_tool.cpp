@@ -15,11 +15,10 @@
 //    limitations under the License.
 //
 
-#include "asset/cutting_tool.hpp"
-
 #include <sstream>
 
-#include "printer/printer.hpp"
+#include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/printer//printer.hpp"
 
 using namespace std;
 

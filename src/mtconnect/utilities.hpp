@@ -74,7 +74,7 @@ typedef unsigned __int64 uint64_t;
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
 
-#include <version.h>
+#include <mtconnect/version.h>
 
 //####### CONSTANTS #######
 

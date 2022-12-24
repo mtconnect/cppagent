@@ -15,20 +15,20 @@
 //    limitations under the License.
 //
 
-#include "source/adapter/adapter_pipeline.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
-#include "agent.hpp"
-#include "configuration/agent_config.hpp"
-#include "configuration/config_options.hpp"
-#include "pipeline/convert_sample.hpp"
-#include "pipeline/deliver.hpp"
-#include "pipeline/delta_filter.hpp"
-#include "pipeline/duplicate_filter.hpp"
-#include "pipeline/period_filter.hpp"
-#include "pipeline/timestamp_extractor.hpp"
-#include "pipeline/topic_mapper.hpp"
-#include "pipeline/upcase_value.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/pipeline/convert_sample.hpp"
+#include "mtconnect/pipeline/deliver.hpp"
+#include "mtconnect/pipeline/delta_filter.hpp"
+#include "mtconnect/pipeline/duplicate_filter.hpp"
+#include "mtconnect/pipeline/period_filter.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
+#include "mtconnect/pipeline/topic_mapper.hpp"
+#include "mtconnect/pipeline/upcase_value.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using namespace std;
 using namespace std::literals;

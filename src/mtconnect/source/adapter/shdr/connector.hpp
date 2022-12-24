@@ -24,7 +24,7 @@
 #include <mutex>
 #include <thread>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 #define HEARTBEAT_FREQ 60000
 

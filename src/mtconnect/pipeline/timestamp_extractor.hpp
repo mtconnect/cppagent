@@ -19,7 +19,7 @@
 
 #include "shdr_tokenizer.hpp"
 #include "transform.hpp"
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   class Agent;

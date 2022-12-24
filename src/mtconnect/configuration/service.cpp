@@ -27,9 +27,9 @@
 #include <fstream>
 #include <thread>
 
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 #include "service.hpp"
-#include "version.h"
+#include "mtconnect/version.h"
 
 #ifdef _WINDOWS
 #define stricmp _stricmp

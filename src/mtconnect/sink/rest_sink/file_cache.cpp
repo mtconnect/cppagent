@@ -31,7 +31,7 @@
 #include <thread>
 
 #include "cached_file.hpp"
-#include "logging.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 

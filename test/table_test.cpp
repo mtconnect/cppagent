@@ -26,10 +26,10 @@
 #include <sstream>
 #include <string>
 
-#include "agent.hpp"
+#include "mtconnect/agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;

@@ -17,11 +17,12 @@
 
 #pragma once
 
-#include "pipeline/mtconnect_xml_transform.hpp"
 #include "session.hpp"
-#include "source/adapter/adapter.hpp"
-#include "source/adapter/adapter_pipeline.hpp"
 #include "url_parser.hpp"
+
+#include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 namespace boost::asio::ssl {
   class context;

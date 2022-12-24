@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "source/adapter/adapter_pipeline.hpp"
-#include "source/source.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
+#include "mtconnect/source/source.hpp"
 
 namespace mtconnect::source::adapter {
   class Adapter : public Source

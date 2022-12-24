@@ -27,7 +27,7 @@
 #include <string_view>
 #include <variant>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {
   using UrlQueryPair = std::pair<std::string, std::string>;

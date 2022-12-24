@@ -17,8 +17,8 @@
 
 #pragma once
 
-#include "pipeline/pipeline.hpp"
-#include "pipeline/transform.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/pipeline/transform.hpp"
 
 namespace mtconnect::source::adapter {
   struct Handler

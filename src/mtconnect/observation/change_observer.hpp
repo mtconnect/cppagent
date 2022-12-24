@@ -24,7 +24,7 @@
 #include <mutex>
 #include <vector>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace observation {

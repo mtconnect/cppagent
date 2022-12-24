@@ -27,16 +27,17 @@
 #include <string>
 #include <thread>
 
-#include "agent.hpp"
 #include "async_context.hpp"
 #include "parser.hpp"
 #include "service.hpp"
-#include "sink/rest_sink/file_cache.hpp"
-#include "sink/sink.hpp"
-#include "source/adapter/adapter.hpp"
-#include "source/adapter/shdr/shdr_pipeline.hpp"
-#include "source/source.hpp"
-#include "utilities.hpp"
+
+#include "mtconnect/agent.hpp"
+#include "mtconnect/sink/rest_sink/file_cache.hpp"
+#include "mtconnect/sink/sink.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/source/adapter/shdr/shdr_pipeline.hpp"
+#include "mtconnect/source/source.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace rest_sink {

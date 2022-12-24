@@ -21,10 +21,10 @@
 
 #include <chrono>
 
-#include "agent.hpp"
-#include "entity/entity.hpp"
-#include "pipeline/mtconnect_xml_transform.hpp"
-#include "printer/xml_printer.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;

@@ -36,22 +36,22 @@
 #include <unordered_map>
 #include <vector>
 
-#include "asset/asset_buffer.hpp"
-#include "buffer/checkpoint.hpp"
-#include "buffer/circular_buffer.hpp"
-#include "configuration/service.hpp"
-#include "device_model/agent_device.hpp"
-#include "device_model/device.hpp"
-#include "parser/xml_parser.hpp"
-#include "pipeline/pipeline.hpp"
-#include "pipeline/pipeline_contract.hpp"
-#include "printer/printer.hpp"
-#include "sink/rest_sink/rest_service.hpp"
-#include "sink/rest_sink/server.hpp"
-#include "sink/sink.hpp"
-#include "source/adapter/adapter.hpp"
-#include "source/loopback_source.hpp"
-#include "source/source.hpp"
+#include "mtconnect/asset/asset_buffer.hpp"
+#include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/buffer/circular_buffer.hpp"
+#include "mtconnect/configuration/service.hpp"
+#include "mtconnect/device_model/agent_device.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/parser/xml_parser.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/pipeline/pipeline_contract.hpp"
+#include "mtconnect/printer//printer.hpp"
+#include "mtconnect/sink/rest_sink/rest_service.hpp"
+#include "mtconnect/sink/rest_sink/server.hpp"
+#include "mtconnect/sink/sink.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/source/loopback_source.hpp"
+#include "mtconnect/source/source.hpp"
 
 namespace mtconnect {
   namespace mic = boost::multi_index;

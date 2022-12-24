@@ -22,7 +22,7 @@
 #include <filesystem>
 #include <memory>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace sink {

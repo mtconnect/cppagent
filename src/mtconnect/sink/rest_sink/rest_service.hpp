@@ -17,15 +17,15 @@
 
 #pragma once
 
-#include "boost/asio/io_context.hpp"
+#include <boost/asio/io_context.hpp>
 
-#include "buffer/circular_buffer.hpp"
 #include "request.hpp"
 #include "response.hpp"
 #include "server.hpp"
-#include "sink/sink.hpp"
-#include "source/loopback_source.hpp"
-#include "utilities.hpp"
+#include "mtconnect/buffer/circular_buffer.hpp"
+#include "mtconnect/sink/sink.hpp"
+#include "mtconnect/source/loopback_source.hpp"
+#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   namespace printer {

@@ -24,12 +24,12 @@
 #include <iostream>
 #include <string>
 
-#include "agent.hpp"
-#include "entity/data_set.hpp"
-#include "entity/entity.hpp"
-#include "logging.hpp"
-#include "pipeline/pipeline.hpp"
-#include "utilities.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/entity/data_set.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/utilities.hpp"
 
 #ifdef _WINDOWS
 #undef timezone

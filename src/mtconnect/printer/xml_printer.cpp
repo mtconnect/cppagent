@@ -15,7 +15,7 @@
 //    limitations under the License.
 //
 
-#include "entity/xml_printer.hpp"
+#include "mtconnect/entity/xml_printer.hpp"
 
 #include <boost/asio/ip/host_name.hpp>
 
@@ -26,13 +26,13 @@
 
 #include <libxml/xmlwriter.h>
 
-#include "asset/asset.hpp"
-#include "asset/cutting_tool.hpp"
-#include "device_model/composition.hpp"
-#include "device_model/configuration/configuration.hpp"
-#include "device_model/device.hpp"
-#include "logging.hpp"
-#include "version.h"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/device_model/composition.hpp"
+#include "mtconnect/device_model/configuration/configuration.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/version.h"
 #include "xml_printer.hpp"
 
 #define strfy(line) #line

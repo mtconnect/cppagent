@@ -15,14 +15,14 @@
 //    limitations under the License.
 //
 
-#include "entity/xml_parser.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
-#include "logging.hpp"
-#include "printer/xml_helper.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/printer/xml_helper.hpp"
 
 using namespace std;
 

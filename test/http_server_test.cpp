@@ -32,8 +32,8 @@
 #include <sstream>
 #include <string>
 
-#include "logging.hpp"
-#include "sink/rest_sink/server.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/sink/rest_sink/server.hpp"
 
 using namespace std;
 using namespace mtconnect;

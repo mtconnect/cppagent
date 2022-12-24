@@ -26,9 +26,9 @@
 #include <thread>
 #include <utility>
 
-#include "configuration/config_options.hpp"
-#include "device_model/device.hpp"
-#include "logging.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 using namespace std::literals;
