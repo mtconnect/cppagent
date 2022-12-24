@@ -494,7 +494,6 @@ namespace {
     ASSERT_TRUE(rest);
     const auto server = rest->getServer();
 
-    // TODO: Get headers working again
     const auto &headers = server->getHttpHeaders();
 
     ASSERT_EQ(1, headers.size());

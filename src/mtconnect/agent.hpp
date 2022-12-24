@@ -73,16 +73,25 @@ namespace mtconnect {
   using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
-
+  
   class Agent
   {
   public:
+    using Hook = std::function<void(Agent&)>;
+    using HookList = std::list<Hook>;
+
     // Load agent with the xml configuration
     Agent(boost::asio::io_context &context, const std::string &deviceXmlPath,
           const ConfigOptions &options);
 
     // Virtual destructor
     ~Agent();
+    
+    // Hooks
+    void addPreInitializeHook(Hook &hook) { m_preInitializeHooks.push_back(hook); }
+    void addPostInitializeHook(Hook &hook) { m_postInitializeHooks.push_back(hook); }
+    void addPreStartHook(Hook &hook) { m_preStartHooks.push_back(hook); }
+    void addPreStopHook(Hook &hook) { m_preStopHooks.push_back(hook); }
 
     // Initialize models and pipeline
     void initialize(pipeline::PipelineContextPtr context);
@@ -307,6 +316,12 @@ namespace mtconnect {
 
     // For debugging
     bool m_pretty;
+    
+    // Agent hooks
+    HookList m_preInitializeHooks;
+    HookList m_postInitializeHooks;
+    HookList m_preStartHooks;
+    HookList m_preStopHooks;
   };
 
   class AgentPipelineContract : public pipeline::PipelineContract

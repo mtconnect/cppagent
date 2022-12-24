@@ -2870,3 +2870,70 @@ TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
   }
   
 }
+
+TEST_F(AgentTest, pre_start_hook_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) {
+    called = true;
+  };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->addPreStartHook(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_FALSE(called);
+  agent->start();
+  ASSERT_TRUE(called);
+  agent->stop();
+}
+
+TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) {
+    called = true;
+  };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->addPreInitializeHook(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_TRUE(called);
+}
+
+TEST_F(AgentTest, post_initialize_hooks_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) {
+    called = true;
+  };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->addPostInitializeHook(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_TRUE(called);
+}
+
+TEST_F(AgentTest, pre_stop_hook_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) {
+    called = true;
+  };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->addPreStopHook(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_FALSE(called);
+  agent->start();
+  ASSERT_FALSE(called);
+  agent->stop();
+  ASSERT_TRUE(called);
+}
