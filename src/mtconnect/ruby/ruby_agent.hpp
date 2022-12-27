@@ -18,9 +18,9 @@
 #pragma once
 
 #include "mtconnect/agent.hpp"
-#include "ruby_smart_ptr.hpp"
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/source/source.hpp"
+#include "ruby_smart_ptr.hpp"
 
 namespace mtconnect::ruby {
   using namespace mtconnect::device_model;

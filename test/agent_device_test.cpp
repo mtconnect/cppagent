@@ -22,10 +22,10 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
 
-#include "mtconnect/agent.hpp"
 #include "agent_test_helper.hpp"
-#include "mtconnect/device_model/agent_device.hpp"
 #include "json_helper.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/device_model/agent_device.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/version.h"
 

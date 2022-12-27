@@ -19,13 +19,13 @@
 
 #include <boost/asio/io_context.hpp>
 
-#include "request.hpp"
-#include "response.hpp"
-#include "server.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/source/loopback_source.hpp"
 #include "mtconnect/utilities.hpp"
+#include "request.hpp"
+#include "response.hpp"
+#include "server.hpp"
 
 namespace mtconnect {
   namespace printer {

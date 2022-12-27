@@ -24,8 +24,8 @@
 #include <unordered_map>
 
 #include "cached_file.hpp"
-#include "request.hpp"
 #include "mtconnect/utilities.hpp"
+#include "request.hpp"
 
 namespace mtconnect {
   namespace printer {

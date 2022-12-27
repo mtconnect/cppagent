@@ -29,9 +29,9 @@
 #include <sstream>
 #include <string>
 
-#include "mtconnect/configuration/config_options.hpp"
 #include "http_session.hpp"
 #include "https_session.hpp"
+#include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/logging.hpp"
 #include "mtconnect/pipeline/deliver.hpp"
 #include "session_impl.hpp"

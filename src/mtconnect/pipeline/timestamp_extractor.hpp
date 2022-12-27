@@ -17,9 +17,9 @@
 
 #pragma once
 
+#include "mtconnect/utilities.hpp"
 #include "shdr_tokenizer.hpp"
 #include "transform.hpp"
-#include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
   class Agent;

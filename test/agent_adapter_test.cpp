@@ -26,8 +26,8 @@
 #include <stdexcept>
 #include <thread>
 
-#include "mtconnect/agent.hpp"
 #include "agent_test_helper.hpp"
+#include "mtconnect/agent.hpp"
 #include "mtconnect/device_model/reference.hpp"
 #include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
 #include "mtconnect/pipeline/response_document.hpp"

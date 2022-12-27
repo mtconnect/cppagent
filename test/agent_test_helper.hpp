@@ -114,8 +114,8 @@ namespace observe = mtconnect::observation;
 class AgentTestHelper
 {
 public:
-  using Hook = std::function<void(AgentTestHelper&)>;
-  
+  using Hook = std::function<void(AgentTestHelper &)>;
+
   AgentTestHelper() : m_incomingIp("127.0.0.1"), m_strand(m_ioContext), m_socket(m_ioContext) {}
 
   ~AgentTestHelper()
@@ -129,7 +129,7 @@ public:
   }
 
   auto session() { return m_session; }
-  
+
   void setAgentCreateHook(Hook &hook) { m_agentCreateHook = hook; }
 
   // Helper method to test expected string, given optional query, & run tests
@@ -200,7 +200,7 @@ public:
     m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, PROJECT_ROOT_DIR + file, options);
     if (m_agentCreateHook)
       m_agentCreateHook(*this);
-    
+
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
 
@@ -315,7 +315,7 @@ public:
 
   mtconnect::sink::SinkFactory m_sinkFactory;
   mtconnect::source::SourceFactory m_sourceFactory;
-  
+
   Hook m_agentCreateHook;
 };
 

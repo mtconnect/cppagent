@@ -22,8 +22,8 @@
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/pipeline/transform.hpp"
-#include "response_document.hpp"
 #include "mtconnect/source/error_code.hpp"
+#include "response_document.hpp"
 
 namespace mtconnect::pipeline {
   struct XmlTransformFeedback

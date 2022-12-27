@@ -73,11 +73,11 @@ namespace mtconnect {
   using WeakDataItemPtr = std::weak_ptr<device_model::data_item::DataItem>;
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
-  
+
   class Agent
   {
   public:
-    using Hook = std::function<void(Agent&)>;
+    using Hook = std::function<void(Agent &)>;
     using HookList = std::list<Hook>;
 
     // Load agent with the xml configuration
@@ -86,11 +86,15 @@ namespace mtconnect {
 
     // Virtual destructor
     ~Agent();
-    
+
     // Hooks
+    void addPreInitializeHook(Hook &&hook) { m_preInitializeHooks.push_back(std::move(hook)); }
     void addPreInitializeHook(Hook &hook) { m_preInitializeHooks.push_back(hook); }
+    void addPostInitializeHook(Hook &&hook) { m_postInitializeHooks.push_back(std::move(hook)); }
     void addPostInitializeHook(Hook &hook) { m_postInitializeHooks.push_back(hook); }
+    void addPreStartHook(Hook &&hook) { m_preStartHooks.push_back(std::move(hook)); }
     void addPreStartHook(Hook &hook) { m_preStartHooks.push_back(hook); }
+    void addPreStopHook(Hook &&hook) { m_preStopHooks.push_back(std::move(hook)); }
     void addPreStopHook(Hook &hook) { m_preStopHooks.push_back(hook); }
 
     // Initialize models and pipeline
@@ -316,7 +320,7 @@ namespace mtconnect {
 
     // For debugging
     bool m_pretty;
-    
+
     // Agent hooks
     HookList m_preInitializeHooks;
     HookList m_postInitializeHooks;

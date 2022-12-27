@@ -20,15 +20,13 @@
 #include <cstdlib>
 #include <stdexcept>
 
-#include "mtconnect/agent.hpp"
-#include "mtconnect/device_model/device.hpp"
-
 #include "composition.hpp"
 #include "configuration/configuration.hpp"
 #include "data_item/data_item.hpp"
 #include "description.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/device_model/device.hpp"
 #include "reference.hpp"
-
 
 using namespace std;
 

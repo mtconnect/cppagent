@@ -26,8 +26,8 @@
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/parser/xml_parser.hpp"
 #include "mtconnect/printer//xml_printer.hpp"
-#include "test_utilities.hpp"
 #include "mtconnect/utilities.hpp"
+#include "test_utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;

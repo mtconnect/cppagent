@@ -27,18 +27,18 @@
 
 #include <nlohmann/json.hpp>
 
-#include "mtconnect/agent.hpp"
 #include "agent_test_helper.hpp"
+#include "json_helper.hpp"
+#include "mtconnect/agent.hpp"
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/device_model/device.hpp"
-#include "json_helper.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/parser/xml_parser.hpp"
 #include "mtconnect/printer//json_printer.hpp"
 #include "mtconnect/printer//xml_printer.hpp"
-#include "test_utilities.hpp"
 #include "mtconnect/utilities.hpp"
+#include "test_utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;

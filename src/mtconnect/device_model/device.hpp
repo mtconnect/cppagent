@@ -50,6 +50,8 @@ namespace mtconnect {
       {};
       struct BySource
       {};
+      struct ByType
+      {};
 
       struct ExtractId
       {
@@ -96,11 +98,28 @@ namespace mtconnect {
         }
       };
 
+      struct ExtractType
+      {
+        using result_type = std::string;
+        const result_type &operator()(const WeakDataItemPtr &d) const
+        {
+          const static result_type none {};
+          if (d.expired())
+            return none;
+          else
+          {
+            auto di = d.lock();
+            return di->getType();
+          }
+        }
+      };
+
       // Mapping of device names to data items
       using DataItemIndex = mic::multi_index_container<
           WeakDataItemPtr, mic::indexed_by<mic::hashed_unique<mic::tag<ById>, ExtractId>,
                                            mic::hashed_unique<mic::tag<BySource>, ExtractName>,
-                                           mic::hashed_unique<mic::tag<ByName>, ExtractSource>>>;
+                                           mic::hashed_unique<mic::tag<ByName>, ExtractSource>,
+                                           mic::ordered_non_unique<mic::tag<ByType>, ExtractType>>>;
 
       // Constructor that sets variables from an attribute map
       Device(const std::string &name, entity::Properties &props);
@@ -145,6 +164,7 @@ namespace mtconnect {
 
       // Return the mapping of Device to data items
       const auto &getDeviceDataItems() const { return m_dataItems.get<ById>(); }
+      const auto &getDataItemIndex() const { return m_dataItems; }
 
       void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors) override;
 

@@ -26,8 +26,8 @@
 #include <stdexcept>
 #include <thread>
 
-#include "mtconnect/agent.hpp"
 #include "agent_test_helper.hpp"
+#include "mtconnect/agent.hpp"
 #include "mtconnect/asset/file_asset.hpp"
 #include "mtconnect/device_model/reference.hpp"
 #include "mtconnect/printer//xml_printer.hpp"
@@ -2855,11 +2855,11 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
 TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
-  
+
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
   const auto &storage = agent->getAssetStorage();
-  
+
   {
     PARSE_XML_RESPONSE_PUT("/assets", body, queries);
     ASSERT_EQ((unsigned int)1, storage->getCount());
@@ -2868,15 +2868,12 @@ TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
     PARSE_XML_RESPONSE_PUT("/assets/P2", body, queries);
     ASSERT_EQ((unsigned int)2, storage->getCount());
   }
-  
 }
 
 TEST_F(AgentTest, pre_start_hook_should_be_called)
 {
   bool called = false;
-  Agent::Hook lambda = [&](Agent &agent) {
-    called = true;
-  };
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
   AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
     helper.getAgent()->addPreStartHook(lambda);
   };
@@ -2892,9 +2889,7 @@ TEST_F(AgentTest, pre_start_hook_should_be_called)
 TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
 {
   bool called = false;
-  Agent::Hook lambda = [&](Agent &agent) {
-    called = true;
-  };
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
   AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
     helper.getAgent()->addPreInitializeHook(lambda);
   };
@@ -2907,9 +2902,7 @@ TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
 TEST_F(AgentTest, post_initialize_hooks_should_be_called)
 {
   bool called = false;
-  Agent::Hook lambda = [&](Agent &agent) {
-    called = true;
-  };
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
   AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
     helper.getAgent()->addPostInitializeHook(lambda);
   };
@@ -2922,9 +2915,7 @@ TEST_F(AgentTest, post_initialize_hooks_should_be_called)
 TEST_F(AgentTest, pre_stop_hook_should_be_called)
 {
   bool called = false;
-  Agent::Hook lambda = [&](Agent &agent) {
-    called = true;
-  };
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
   AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
     helper.getAgent()->addPreStopHook(lambda);
   };

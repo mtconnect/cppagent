@@ -47,6 +47,8 @@ namespace mtconnect::source::adapter {
     void build(const ConfigOptions &options) override;
     virtual std::unique_ptr<Handler> makeHandler();
 
+    const auto &getDevice() const { return m_device; }
+
   protected:
     void buildDeviceList();
     void buildCommandAndStatusDelivery();

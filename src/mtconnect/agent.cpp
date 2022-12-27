@@ -114,7 +114,7 @@ namespace mtconnect {
   void Agent::initialize(pipeline::PipelineContextPtr context)
   {
     NAMED_SCOPE("Agent::initialize");
-    
+
     for (auto &hook : m_preInitializeHooks)
       hook(*this);
 
@@ -143,7 +143,7 @@ namespace mtconnect {
       addDevice(device);
 
     loadCachedProbe();
-    
+
     m_initialized = true;
 
     for (auto &hook : m_postInitializeHooks)
@@ -188,7 +188,7 @@ namespace mtconnect {
     {
       for (auto &hook : m_preStartHooks)
         hook(*this);
-      
+
       for (auto sink : m_sinks)
         sink->start();
 

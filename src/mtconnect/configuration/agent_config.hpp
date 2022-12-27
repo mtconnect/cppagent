@@ -28,9 +28,6 @@
 #include <thread>
 
 #include "async_context.hpp"
-#include "parser.hpp"
-#include "service.hpp"
-
 #include "mtconnect/agent.hpp"
 #include "mtconnect/sink/rest_sink/file_cache.hpp"
 #include "mtconnect/sink/sink.hpp"
@@ -38,6 +35,8 @@
 #include "mtconnect/source/adapter/shdr/shdr_pipeline.hpp"
 #include "mtconnect/source/source.hpp"
 #include "mtconnect/utilities.hpp"
+#include "parser.hpp"
+#include "service.hpp"
 
 namespace mtconnect {
   namespace rest_sink {
@@ -65,6 +64,9 @@ namespace mtconnect {
     class AgentConfiguration : public MTConnectService
     {
     public:
+      using Hook = std::function<void(AgentConfiguration &)>;
+      using HookList = std::list<Hook>;
+
       using InitializationFn = void(const boost::property_tree::ptree &, AgentConfiguration &);
       using InitializationFunction = boost::function<InitializationFn>;
 
@@ -72,6 +74,9 @@ namespace mtconnect {
 
       AgentConfiguration();
       virtual ~AgentConfiguration();
+
+      // Hooks
+      void addAfterAgentHook(Hook &&hook) { m_afterAgentHooks.push_back(std::move(hook)); }
 
       // For MTConnectService
       void stop() override;
@@ -177,6 +182,8 @@ namespace mtconnect {
 #ifdef WITH_PYTHON
       std::unique_ptr<python::Embedded> m_python;
 #endif
+
+      HookList m_afterAgentHooks;
     };
   }  // namespace configuration
 }  // namespace mtconnect

@@ -21,10 +21,10 @@
 #include <utility>
 #include <vector>
 
-#include "mtconnect/entity/entity.hpp"
 #include "factory.hpp"
-#include "requirement.hpp"
+#include "mtconnect/entity/entity.hpp"
 #include "mtconnect/utilities.hpp"
+#include "requirement.hpp"
 
 namespace mtconnect {
   namespace entity {

@@ -17,9 +17,9 @@
 
 #include "agent_device.hpp"
 
-#include "mtconnect/configuration/config_options.hpp"
 #include "data_item/constraints.hpp"
 #include "data_item/data_item.hpp"
+#include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/logging.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 

@@ -23,8 +23,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "mtconnect/agent.hpp"
 #include "agent_test_helper.hpp"
+#include "mtconnect/agent.hpp"
 #include "mtconnect/sink/rest_sink/server.hpp"
 
 using namespace std;

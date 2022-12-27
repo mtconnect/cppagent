@@ -21,8 +21,8 @@
 #include <boost/beast/ssl.hpp>
 
 #include "mtconnect/configuration/config_options.hpp"
-#include "session.hpp"
 #include "mtconnect/utilities.hpp"
+#include "session.hpp"
 
 namespace mtconnect::sink::rest_sink {
   class TlsDector : public std::enable_shared_from_this<TlsDector>

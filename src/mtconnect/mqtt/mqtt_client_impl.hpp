@@ -23,8 +23,8 @@
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 
-#include "mtconnect/configuration/config_options.hpp"
 #include "mqtt_client.hpp"
+#include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/mqtt/mqtt_adapter.hpp"
 

@@ -28,8 +28,8 @@
 #include <thread>
 
 #include "mtconnect/logging.hpp"
-#include "service.hpp"
 #include "mtconnect/version.h"
+#include "service.hpp"
 
 #ifdef _WINDOWS
 #define stricmp _stricmp

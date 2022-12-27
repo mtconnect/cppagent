@@ -719,6 +719,8 @@ namespace mtconnect::configuration {
 
     // Make the Agent
     m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
+    for (auto &hook : m_afterAgentHooks)
+      hook(*this);
 
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();
