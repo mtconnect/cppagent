@@ -63,9 +63,6 @@ class MTConnectAgentConan(ConanFile):
 #            git.clone("https://github.com/mtconnect/cppagent")
 
     def configure(self):
-        if self.options.shared:
-            self.options["boost"].shared = True
-        
         if not self.options.without_python:
             self.options["boost"].without_python = False
             
