@@ -323,8 +323,12 @@ if(MSVC)
     PROPERTY COMPILE_FLAGS "/bigobj")
 endif()
 
+if(SHARED_AGENT_LIB)
+  add_library(agent_lib SHARED ${AGENT_SOURCES})
+else()
+  add_library(agent_lib STATIC ${AGENT_SOURCES})
+endif()
 
-add_library(agent_lib STATIC ${AGENT_SOURCES})
 target_include_directories(
   agent_lib
   PUBLIC

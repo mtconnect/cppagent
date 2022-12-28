@@ -36,7 +36,7 @@ endif()
 
 target_link_libraries(
   agent
-  PRIVATE
+  PUBLIC
   agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )

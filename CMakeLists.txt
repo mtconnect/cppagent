@@ -15,6 +15,7 @@ if(POLICY CMP0077)
 endif()
 
 option(AGENT_ENABLE_UNITTESTS "Enables the agent's unit tests" ON)
+option(SHARED_AGENT_LIB "Generate shared agent library. Conan options: shared" OFF)
 set(INSTALL_GTEST OFF FORCE)
 
 project(cppagent LANGUAGES C CXX)
@@ -64,7 +65,11 @@ if(MSVC)
 endif()
 
 if (UNIX)
-  add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
+  if (SHARED_AGENT_LIB)
+    add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden)
+  else()
+    add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
+  endif()
 ENDIF()
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -73,7 +78,11 @@ if (CONAN_USER_MRUBY_mruby)
   set(WITH_RUBY ON FORCE)
 endif()
 
-conan_basic_setup(TARGETS)
+conan_basic_setup(KEEP_RPATHS TARGETS)
+
+if(SHARED_AGENT_LIB)
+  set(CMAKE_BUILD_RPATH "@load_path/;@executable_path/;@load_path/../lib;@executable_path/../lib")
+endif()
 
 if(WITH_PYTHON)
   set(Python_USE_STATIC_LIBS ON)
