@@ -502,7 +502,10 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   handler->m_connecting = [&](const string id) {};
   handler->m_connected = [&](const string id) {};
 
-  handler->m_disconnected = [&](const string id) { disconnected = true; };
+  handler->m_disconnected = [&](const string id)
+  {
+    disconnected = true;
+  };
 
   adapter->setHandler(handler);
   adapter->start();
