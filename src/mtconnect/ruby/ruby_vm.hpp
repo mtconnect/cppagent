@@ -17,8 +17,10 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 namespace mtconnect::ruby {
-  class RubyVM
+  class AGENT_LIB_API RubyVM
   {
   public:
     RubyVM()

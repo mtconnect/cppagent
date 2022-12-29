@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio/ip/address.hpp>
 #include <boost/lexical_cast.hpp>
 

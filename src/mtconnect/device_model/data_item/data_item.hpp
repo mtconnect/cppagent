@@ -16,6 +16,9 @@
 //
 
 #pragma once
+
+#include "mtconnect/config.hpp"
+
 #include <map>
 
 #include "constraints.hpp"
@@ -40,7 +43,7 @@ namespace mtconnect {
     class Composition;
 
     namespace data_item {
-      class DataItem : public entity::Entity, public observation::ChangeSignaler
+      class AGENT_LIB_API DataItem : public entity::Entity, public observation::ChangeSignaler
       {
       public:
         // Enumeration for data item category

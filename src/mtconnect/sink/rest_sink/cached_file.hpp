@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <cstdio>
 #include <cstring>
 #include <filesystem>

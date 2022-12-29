@@ -335,7 +335,7 @@ namespace mtconnect {
       boost::asio::steady_timer m_reconnectTimer;
     };
 
-    class MqttTcpClient : public MqttClientImpl<MqttTcpClient>
+    class AGENT_LIB_API MqttTcpClient : public MqttClientImpl<MqttTcpClient>
     {
     public:
       using base = MqttClientImpl<MqttTcpClient>;
@@ -359,7 +359,7 @@ namespace mtconnect {
       mqtt_client m_client;
     };
 
-    class MqttTlsClient : public MqttClientImpl<MqttTlsClient>
+    class AGENT_LIB_API MqttTlsClient : public MqttClientImpl<MqttTlsClient>
     {
     public:
       using base = MqttClientImpl<MqttTlsClient>;
@@ -399,7 +399,7 @@ namespace mtconnect {
       mqtt_tls_client m_client;
     };
 
-    class MqttTlsWSClient : public MqttClientImpl<MqttTlsWSClient>
+    class AGENT_LIB_API MqttTlsWSClient : public MqttClientImpl<MqttTlsWSClient>
     {
     public:
       using base = MqttClientImpl<MqttTlsWSClient>;

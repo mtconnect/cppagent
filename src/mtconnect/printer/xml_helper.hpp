@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <stdexcept>
 
 #define xml_strfy(line) #line
@@ -32,7 +34,7 @@
   }
 
 namespace mtconnect::printer {
-  class XmlError : public std::logic_error
+  class AGENT_LIB_API XmlError : public std::logic_error
   {
   public:
     using std::logic_error::logic_error;

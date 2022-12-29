@@ -17,12 +17,14 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <libxml/xmlwriter.h>
 
 #include "mtconnect/printer/xml_helper.hpp"
 
 namespace mtconnect::printer {
-  class XmlWriter
+  class AGENT_LIB_API XmlWriter
   {
   public:
     XmlWriter(bool pretty) : m_writer(nullptr), m_buf(nullptr)
@@ -78,7 +80,7 @@ namespace mtconnect::printer {
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
   }
 
-  class AutoElement
+  class AGENT_LIB_API AutoElement
   {
   public:
     AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}

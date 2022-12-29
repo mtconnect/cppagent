@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <functional>
 #include <list>
 #include <string>
@@ -46,7 +48,7 @@ namespace mtconnect {
   }  // namespace entity
 
   namespace pipeline {
-    class PipelineContract
+    class AGENT_LIB_API PipelineContract
     {
     public:
       PipelineContract() = default;

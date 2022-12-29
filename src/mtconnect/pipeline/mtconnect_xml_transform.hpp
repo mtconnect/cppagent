@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <chrono>
 #include <regex>
 
@@ -35,7 +37,7 @@ namespace mtconnect::pipeline {
   };
 
   using namespace mtconnect::entity;
-  class MTConnectXmlTransform : public Transform
+  class AGENT_LIB_API MTConnectXmlTransform : public Transform
   {
   public:
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;

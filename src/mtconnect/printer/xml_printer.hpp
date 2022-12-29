@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <unordered_set>
 
 #include "mtconnect/asset/asset.hpp"
@@ -35,7 +37,7 @@ namespace mtconnect {
   namespace printer {
     class XmlWriter;
 
-    class XmlPrinter : public Printer
+    class AGENT_LIB_API XmlPrinter : public Printer
     {
     public:
       XmlPrinter(bool pretty = false);

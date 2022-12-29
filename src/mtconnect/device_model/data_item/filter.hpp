@@ -17,13 +17,15 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/factory.hpp"
 
 namespace mtconnect {
   namespace device_model {
     namespace data_item {
-      class Filter : public entity::Entity
+      class AGENT_LIB_API Filter : public entity::Entity
       {
       public:
         static entity::FactoryPtr getFactory()

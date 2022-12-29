@@ -17,11 +17,13 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 #include "mtconnect/source/source.hpp"
 
 namespace mtconnect::source::adapter {
-  class Adapter : public Source
+  class AGENT_LIB_API Adapter : public Source
   {
   public:
     Adapter(const std::string &name, boost::asio::io_context &io, const ConfigOptions &options)

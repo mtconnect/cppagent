@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "configuration.hpp"
 
 namespace mtconnect {

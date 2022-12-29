@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <list>
 #include <map>
 #include <sstream>
@@ -42,7 +44,7 @@ namespace mtconnect {
     using DevicePtr = std::shared_ptr<Device>;
 
     using DataItemPtr = std::shared_ptr<data_item::DataItem>;
-    class Component : public entity::Entity
+    class AGENT_LIB_API Component : public entity::Entity
     {
     public:
       Component(const std::string &name, const entity::Properties &props);

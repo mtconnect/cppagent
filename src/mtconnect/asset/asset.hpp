@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <list>
 #include <map>
 #include <string>
@@ -31,7 +33,7 @@ namespace mtconnect {
     using AssetPtr = std::shared_ptr<Asset>;
     using AssetList = std::list<AssetPtr>;
 
-    class Asset : public entity::Entity
+    class AGENT_LIB_API Asset : public entity::Entity
     {
     public:
       Asset(const std::string &name, const entity::Properties &props)
@@ -112,7 +114,7 @@ namespace mtconnect {
       bool m_removed;
     };
 
-    class ExtendedAsset : public Asset
+    class AGENT_LIB_API ExtendedAsset : public Asset
     {
     public:
       static entity::FactoryPtr getFactory();

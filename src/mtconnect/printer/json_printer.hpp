@@ -17,12 +17,14 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/asset/cutting_tool.hpp"
 #include "mtconnect/printer/printer.hpp"
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::printer {
-  class JsonPrinter : public Printer
+  class AGENT_LIB_API JsonPrinter : public Printer
   {
   public:
     JsonPrinter(uint32_t jsonVersion, bool pretty = false);

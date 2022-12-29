@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/mqtt/mqtt_client.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
@@ -25,7 +27,7 @@ using namespace mtconnect::mqtt_client;
 
 namespace mtconnect::source::adapter::mqtt_adapter {
 
-  class MqttPipeline : public AdapterPipeline
+  class AGENT_LIB_API MqttPipeline : public AdapterPipeline
   {
   public:
     MqttPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &strand)
@@ -38,7 +40,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     ConfigOptions m_options;
   };
 
-  class MqttAdapter : public Adapter
+  class AGENT_LIB_API MqttAdapter : public Adapter
   {
   public:
     MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,

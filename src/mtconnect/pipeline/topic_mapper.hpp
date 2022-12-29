@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/algorithm/string.hpp>
 
 #include <chrono>
@@ -31,7 +33,7 @@
 
 namespace mtconnect {
   namespace pipeline {
-    class PipelineMessage : public Entity
+    class AGENT_LIB_API PipelineMessage : public Entity
     {
     public:
       using Entity::Entity;
@@ -42,18 +44,18 @@ namespace mtconnect {
     };
     using PipelineMessagePtr = std::shared_ptr<PipelineMessage>;
 
-    class JsonMessage : public PipelineMessage
+    class AGENT_LIB_API JsonMessage : public PipelineMessage
     {
     public:
       using PipelineMessage::PipelineMessage;
     };
-    class DataMessage : public PipelineMessage
+    class AGENT_LIB_API DataMessage : public PipelineMessage
     {
     public:
       using PipelineMessage::PipelineMessage;
     };
 
-    class TopicMapper : public Transform
+    class AGENT_LIB_API TopicMapper : public Transform
     {
     public:
       TopicMapper(const TopicMapper &) = default;

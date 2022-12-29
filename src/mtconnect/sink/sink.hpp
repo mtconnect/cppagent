@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/function.hpp>
 #include <boost/functional/factory.hpp>
 
@@ -47,7 +49,7 @@ namespace mtconnect {
   }
 
   namespace sink {
-    class SinkContract
+    class AGENT_LIB_API SinkContract
     {
     public:
       virtual ~SinkContract() = default;
@@ -79,7 +81,7 @@ namespace mtconnect {
         const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
         const ConfigOptions &options, const boost::property_tree::ptree &block)>;
 
-    class Sink
+    class AGENT_LIB_API Sink
     {
     public:
       Sink(const std::string &name, SinkContractPtr &&contract)
@@ -101,7 +103,7 @@ namespace mtconnect {
       std::string m_name;
     };
 
-    class SinkFactory
+    class AGENT_LIB_API SinkFactory
     {
     public:
       void registerFactory(const std::string &name, SinkFactoryFn function)

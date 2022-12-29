@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/pipeline/guard.hpp"
 #include "mtconnect/pipeline/topic_mapper.hpp"
 #include "mtconnect/pipeline/transform.hpp"
@@ -31,7 +33,7 @@ namespace mtconnect::ruby {
   using namespace entity;
   using namespace observation;
 
-  class RubyTransform : public pipeline::Transform
+  class AGENT_LIB_API RubyTransform : public pipeline::Transform
   {
   public:
     static void initialize(mrb_state *mrb, RClass *module)

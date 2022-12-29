@@ -54,7 +54,7 @@ namespace mtconnect::printer {
   using namespace asset;
   using namespace device_model::configuration;
 
-  class XmlWriter
+  class AGENT_LIB_API XmlWriter
   {
   public:
     XmlWriter(bool pretty) : m_writer(nullptr), m_buf(nullptr)
@@ -272,7 +272,7 @@ namespace mtconnect::printer {
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
   }
 
-  class AutoElement
+  class AGENT_LIB_API AutoElement
   {
   public:
     AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}

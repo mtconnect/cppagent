@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <memory>
 #include <mutex>
 #include <unordered_map>
@@ -37,7 +39,7 @@ namespace mtconnect {
     };
     using TransformStatePtr = std::shared_ptr<TransformState>;
 
-    class PipelineContext : public std::enable_shared_from_this<PipelineContext>
+    class AGENT_LIB_API PipelineContext : public std::enable_shared_from_this<PipelineContext>
     {
     public:
       auto getptr() { return shared_from_this(); }

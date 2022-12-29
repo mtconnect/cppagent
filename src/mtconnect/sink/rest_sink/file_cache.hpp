@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <filesystem>
 #include <list>
 #include <optional>
@@ -33,7 +35,7 @@ namespace boost {
 namespace mtconnect::sink::rest_sink {
   using XmlNamespace = std::pair<std::string, std::string>;
   using XmlNamespaceList = std::list<XmlNamespace>;
-  class FileCache
+  class AGENT_LIB_API FileCache
   {
   public:
     using Directory = std::pair<std::string, std::pair<std::filesystem::path, std::string>>;

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio/steady_timer.hpp>
 
 #include <chrono>
@@ -63,7 +65,7 @@ namespace mtconnect {
       double m_lastAvg {0.0};
     };
 
-    class MeteredTransform : public Transform
+    class AGENT_LIB_API MeteredTransform : public Transform
     {
     public:
       MeteredTransform(const std::string &name, PipelineContextPtr context,
@@ -107,7 +109,7 @@ namespace mtconnect {
       std::optional<std::string> m_dataItem;
     };
 
-    class DeliverObservation : public MeteredTransform
+    class AGENT_LIB_API DeliverObservation : public MeteredTransform
     {
     public:
       using Deliver = std::function<void(observation::ObservationPtr)>;
@@ -120,7 +122,7 @@ namespace mtconnect {
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
     };
 
-    class DeliverAsset : public MeteredTransform
+    class AGENT_LIB_API DeliverAsset : public MeteredTransform
     {
     public:
       using Deliver = std::function<void(asset::AssetPtr)>;
@@ -133,7 +135,7 @@ namespace mtconnect {
       const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
     };
 
-    class DeliverConnectionStatus : public Transform
+    class AGENT_LIB_API DeliverConnectionStatus : public Transform
     {
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
@@ -154,7 +156,7 @@ namespace mtconnect {
       bool m_autoAvailable;
     };
 
-    class DeliverAssetCommand : public Transform
+    class AGENT_LIB_API DeliverAssetCommand : public Transform
     {
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;
@@ -169,7 +171,7 @@ namespace mtconnect {
       PipelineContract *m_contract;
     };
 
-    class DeliverCommand : public Transform
+    class AGENT_LIB_API DeliverCommand : public Transform
     {
     public:
       using Deliver = std::function<void(entity::EntityPtr)>;

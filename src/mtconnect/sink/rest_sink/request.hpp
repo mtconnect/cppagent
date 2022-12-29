@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/beast/http/status.hpp>
 #include <boost/beast/http/verb.hpp>
 
@@ -25,7 +27,7 @@
 #include "parameter.hpp"
 
 namespace mtconnect::sink::rest_sink {
-  class RequestError : public std::logic_error
+  class AGENT_LIB_API RequestError : public std::logic_error
   {
   public:
     RequestError(const char *w) : std::logic_error::logic_error(w) {}

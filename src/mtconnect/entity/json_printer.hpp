@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <nlohmann/json.hpp>
 
 #include "mtconnect/entity/entity.hpp"
@@ -25,7 +27,7 @@ using json = nlohmann::json;
 
 namespace mtconnect {
   namespace entity {
-    class JsonPrinter
+    class AGENT_LIB_API JsonPrinter
     {
     public:
       JsonPrinter(uint32_t version) : m_version(version) {};

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -26,7 +28,7 @@ namespace mtconnect::configuration {
 
   // Manages the boost asio context and allows for a syncronous
   // callback to execute when all the worker threads have stopped.
-  class AsyncContext
+  class AGENT_LIB_API AsyncContext
   {
   public:
     using SyncCallback = std::function<void(AsyncContext &context)>;

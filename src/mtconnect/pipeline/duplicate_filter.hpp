@@ -17,11 +17,13 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "transform.hpp"
 
 namespace mtconnect {
   namespace pipeline {
-    class DuplicateFilter : public Transform
+    class AGENT_LIB_API DuplicateFilter : public Transform
     {
     public:
       struct State : TransformState

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <map>
 #include <utility>
 #include <vector>
@@ -26,14 +28,14 @@
 
 namespace mtconnect {
   namespace asset {
-    class CuttingToolArchetype : public Asset
+    class AGENT_LIB_API CuttingToolArchetype : public Asset
     {
     public:
       static entity::FactoryPtr getFactory();
       static void registerAsset();
     };
 
-    class CuttingTool : public Asset
+    class AGENT_LIB_API CuttingTool : public Asset
     {
     public:
       static entity::FactoryPtr getFactory();

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <unordered_set>
 
 #include "mtconnect/entity/entity.hpp"
@@ -29,7 +31,7 @@ extern "C"
 
 namespace mtconnect {
   namespace entity {
-    class XmlPrinter
+    class AGENT_LIB_API XmlPrinter
     {
     public:
       XmlPrinter() = default;

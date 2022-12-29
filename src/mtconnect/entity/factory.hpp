@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <map>
 #include <set>
 #include <unordered_map>
@@ -27,7 +29,7 @@ namespace mtconnect {
   namespace entity {
     using Requirements = std::list<Requirement>;
 
-    class Factory : public Matcher, public std::enable_shared_from_this<Factory>
+    class AGENT_LIB_API Factory : public Matcher, public std::enable_shared_from_this<Factory>
     {
     public:
       using Function = std::function<EntityPtr(const std::string &name, Properties &)>;

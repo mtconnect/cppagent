@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <map>
 #include <utility>
 #include <vector>
@@ -28,14 +30,14 @@
 
 namespace mtconnect {
   namespace asset {
-    class FileArchetypeAsset : public entity::Entity
+    class AGENT_LIB_API FileArchetypeAsset : public entity::Entity
     {
     public:
       static entity::FactoryPtr getFactory();
       static void registerAsset();
     };
 
-    class FileAsset : public FileArchetypeAsset
+    class AGENT_LIB_API FileAsset : public FileArchetypeAsset
     {
     public:
       static entity::FactoryPtr getFactory();

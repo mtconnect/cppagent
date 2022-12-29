@@ -17,13 +17,15 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
 namespace mtconnect {
   namespace pipeline {
-    class ConvertSample : public Transform
+    class AGENT_LIB_API ConvertSample : public Transform
     {
     public:
       ConvertSample() : Transform("ConvertSample")

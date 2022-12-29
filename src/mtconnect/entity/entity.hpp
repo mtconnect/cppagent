@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/range/algorithm.hpp>
 
 #include <unordered_map>
@@ -57,7 +59,7 @@ namespace mtconnect {
         return std::nullopt;
     }
 
-    class Entity : public std::enable_shared_from_this<Entity>
+    class AGENT_LIB_API Entity : public std::enable_shared_from_this<Entity>
     {
     public:
       using super = std::nullptr_t;

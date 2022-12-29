@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/beast/core.hpp>

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio.hpp>
 
 #include <memory>
@@ -32,7 +34,7 @@ namespace mtconnect {
   class Agent;
   namespace ruby {
     class RubyVM;
-    class Embedded
+    class AGENT_LIB_API Embedded
     {
     public:
       Embedded(Agent *agent, const ConfigOptions &options);

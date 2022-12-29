@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>
@@ -41,7 +43,7 @@ namespace mtconnect {
   }
 
   namespace device_model {
-    class Device : public Component
+    class AGENT_LIB_API Device : public Component
     {
     public:
       struct ByName

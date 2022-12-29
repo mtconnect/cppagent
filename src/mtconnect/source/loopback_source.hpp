@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/pipeline/pipeline.hpp"
@@ -25,7 +27,7 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::source {
-  class LoopbackPipeline : public pipeline::Pipeline
+  class AGENT_LIB_API LoopbackPipeline : public pipeline::Pipeline
   {
   public:
     LoopbackPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
@@ -37,7 +39,7 @@ namespace mtconnect::source {
     ConfigOptions m_options;
   };
 
-  class LoopbackSource : public Source
+  class AGENT_LIB_API LoopbackSource : public Source
   {
   public:
     LoopbackSource(const std::string &name, boost::asio::io_context::strand &io,

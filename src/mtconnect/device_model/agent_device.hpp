@@ -16,6 +16,8 @@
 //
 
 #pragma once
+
+#include "mtconnect/config.hpp"
 #include <map>
 
 #include "component.hpp"
@@ -30,7 +32,7 @@ namespace mtconnect {
   }  // namespace source::adapter
 
   namespace device_model {
-    class AgentDevice : public Device
+    class AGENT_LIB_API AgentDevice : public Device
     {
     public:
       // Constructor that sets variables from an attribute map

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <future>
 
 #include "pipeline_context.hpp"
@@ -37,7 +39,7 @@ namespace mtconnect {
     class Adapter;
   }  // namespace source::adapter
   namespace pipeline {
-    class Pipeline
+    class AGENT_LIB_API Pipeline
     {
     public:
       using Splice = std::function<void(Pipeline *)>;
@@ -229,7 +231,7 @@ namespace mtconnect {
       const auto &getContract() { return m_context->m_contract; }
 
     protected:
-      class Start : public Transform
+      class AGENT_LIB_API Start : public Transform
       {
       public:
         Start() : Transform("Start")

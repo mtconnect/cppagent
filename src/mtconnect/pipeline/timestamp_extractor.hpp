@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/utilities.hpp"
 #include "shdr_tokenizer.hpp"
 #include "transform.hpp"
@@ -27,7 +29,7 @@ namespace mtconnect {
   namespace pipeline {
     using namespace entity;
 
-    class Timestamped : public Tokens
+    class AGENT_LIB_API Timestamped : public Tokens
     {
     public:
       using Tokens::Tokens;
@@ -42,19 +44,19 @@ namespace mtconnect {
     };
     using TimestampedPtr = std::shared_ptr<Timestamped>;
 
-    class AssetCommand : public Timestamped
+    class AGENT_LIB_API AssetCommand : public Timestamped
     {
     public:
       using Timestamped::Timestamped;
     };
 
-    class Observations : public Timestamped
+    class AGENT_LIB_API Observations : public Timestamped
     {
     public:
       using Timestamped::Timestamped;
     };
 
-    class ExtractTimestamp : public Transform
+    class AGENT_LIB_API ExtractTimestamp : public Transform
     {
     public:
       ExtractTimestamp(const ExtractTimestamp &) = default;
@@ -104,7 +106,7 @@ namespace mtconnect {
       Microseconds m_offset;
     };
 
-    class IgnoreTimestamp : public ExtractTimestamp
+    class AGENT_LIB_API IgnoreTimestamp : public ExtractTimestamp
     {
     public:
       IgnoreTimestamp() : ExtractTimestamp("IgnoreTimestamp") {}

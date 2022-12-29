@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/entity.hpp"

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/pipeline/pipeline_context.hpp"
 #include "mtconnect/printer/xml_helper.hpp"

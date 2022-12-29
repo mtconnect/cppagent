@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <chrono>
 #include <regex>
 
@@ -36,7 +38,7 @@ namespace mtconnect {
       return s;
     }
 
-    class UpcaseValue : public Transform
+    class AGENT_LIB_API UpcaseValue : public Transform
     {
     public:
       UpcaseValue(const UpcaseValue &) = default;

@@ -17,13 +17,15 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <list>
 #include <map>
 #include <set>
 #include <variant>
 
 namespace mtconnect::sink::rest_sink {
-  class ParameterError : public std::logic_error
+  class AGENT_LIB_API ParameterError : public std::logic_error
   {
     using std::logic_error::logic_error;
   };

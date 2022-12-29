@@ -248,7 +248,7 @@ namespace mtconnect {
       std::string m_host;
     };
 
-    class MqttTcpServer : public MqttServerImpl<MqttTcpServer>
+    class AGENT_LIB_API MqttTcpServer : public MqttServerImpl<MqttTcpServer>
     {
     public:
       using base = MqttServerImpl<MqttTcpServer>;
@@ -278,7 +278,7 @@ namespace mtconnect {
       std::optional<server> m_server;
     };
 
-    class MqttTlsServer : public MqttServerImpl<MqttTlsServer>
+    class AGENT_LIB_API MqttTlsServer : public MqttServerImpl<MqttTlsServer>
     {
     public:
       using base = MqttServerImpl<MqttTlsServer>;
@@ -324,7 +324,7 @@ namespace mtconnect {
       std::optional<server> m_server;
     };
 
-    class MqttTlsWSServer : public MqttServerImpl<MqttTlsWSServer>
+    class AGENT_LIB_API MqttTlsWSServer : public MqttServerImpl<MqttTlsWSServer>
     {
     public:
       using base = MqttServerImpl<MqttTlsWSServer>;

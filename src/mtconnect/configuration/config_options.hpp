@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 namespace mtconnect {
   namespace configuration {
 #define DECLARE_CONFIGURATION(name) inline const char *name = #name;

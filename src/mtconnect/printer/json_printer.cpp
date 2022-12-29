@@ -200,7 +200,7 @@ namespace mtconnect::printer {
     return print(doc, m_pretty);
   }
 
-  class CategoryRef
+  class AGENT_LIB_API CategoryRef
   {
   public:
     CategoryRef(const char *cat, uint32_t version) : m_category(cat), m_version(version) {}
@@ -244,7 +244,7 @@ namespace mtconnect::printer {
     uint32_t m_version;
   };
 
-  class ComponentRef
+  class AGENT_LIB_API ComponentRef
   {
   public:
     ComponentRef(const ComponentPtr component, uint32_t version)
@@ -307,7 +307,7 @@ namespace mtconnect::printer {
     uint32_t m_version;
   };
 
-  class DeviceRef
+  class AGENT_LIB_API DeviceRef
   {
   public:
     DeviceRef(const DevicePtr device, uint32_t version) : m_device(device), m_version(version) {}

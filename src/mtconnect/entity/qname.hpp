@@ -17,13 +17,15 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <optional>
 #include <string>
 #include <string_view>
 
 namespace mtconnect {
   namespace entity {
-    class QName : public std::string
+    class AGENT_LIB_API QName : public std::string
     {
     public:
       QName() = default;

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
@@ -39,7 +41,7 @@ namespace mtconnect {
 
   namespace sink {
     namespace mqtt_sink {
-      class MqttService : public sink::Sink
+      class AGENT_LIB_API MqttService : public sink::Sink
       {
         // dynamic loading of sink
 

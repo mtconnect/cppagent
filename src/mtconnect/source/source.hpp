@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 
@@ -36,7 +38,7 @@ namespace mtconnect {
         std::shared_ptr<pipeline::PipelineContext> pipelineContext, const ConfigOptions &options,
         const boost::property_tree::ptree &block)>;
 
-    class Source : public std::enable_shared_from_this<Source>
+    class AGENT_LIB_API Source : public std::enable_shared_from_this<Source>
     {
     public:
       Source(boost::asio::io_context &io) : m_strand(io) {}
@@ -64,7 +66,7 @@ namespace mtconnect {
       boost::asio::io_context::strand m_strand;
     };
 
-    class SourceFactory
+    class AGENT_LIB_API SourceFactory
     {
     public:
       SourcePtr make(const std::string &factoryName, const std::string &sinkName,

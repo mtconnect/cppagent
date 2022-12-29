@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/log/attributes.hpp>
 #include <boost/log/trivial.hpp>
 

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/circular_buffer.hpp>
 
 #include <cassert>
@@ -30,7 +32,7 @@
 namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;
 
-  class CircularBuffer
+  class AGENT_LIB_API CircularBuffer
   {
   public:
     CircularBuffer(unsigned int bufferSize, int checkpointFreq)

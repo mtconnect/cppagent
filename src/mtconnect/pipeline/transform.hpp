@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/io_context_strand.hpp>
 
@@ -46,7 +48,7 @@ namespace mtconnect {
     using EachDataItem = std::function<void(ApplyDataItem)>;
     using FindDataItem = std::function<DataItemPtr(const std::string &, const std::string &)>;
 
-    class Transform : public std::enable_shared_from_this<Transform>
+    class AGENT_LIB_API Transform : public std::enable_shared_from_this<Transform>
     {
     public:
       Transform(const Transform &) = default;
@@ -211,7 +213,7 @@ namespace mtconnect {
       Guard m_guard;
     };
 
-    class NullTransform : public Transform
+    class AGENT_LIB_API NullTransform : public Transform
     {
     public:
       NullTransform(Guard guard) : Transform("NullTransform") { m_guard = guard; }

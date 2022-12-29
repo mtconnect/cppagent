@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/lambda/lambda.hpp>
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/hashed_index.hpp>
@@ -47,7 +49,7 @@
 namespace mtconnect::asset {
   namespace mic = boost::multi_index;
 
-  class AssetBuffer : public AssetStorage
+  class AGENT_LIB_API AssetBuffer : public AssetStorage
   {
   public:
     struct AssetNode

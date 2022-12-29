@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "filter.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/factory.hpp"
@@ -24,7 +26,7 @@
 namespace mtconnect {
   namespace device_model {
     namespace data_item {
-      class Constraints : public entity::Entity
+      class AGENT_LIB_API Constraints : public entity::Entity
       {
       public:
         static entity::FactoryPtr getFactory()

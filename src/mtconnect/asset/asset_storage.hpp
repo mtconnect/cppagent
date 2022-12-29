@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <list>
 #include <map>
 #include <memory>
@@ -29,7 +31,7 @@
 
 namespace mtconnect {
   namespace asset {
-    class AssetStorage
+    class AGENT_LIB_API AssetStorage
     {
     public:
       using TypeCount = std::map<std::string, size_t>;

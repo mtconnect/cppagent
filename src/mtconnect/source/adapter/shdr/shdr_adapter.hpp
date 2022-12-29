@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <chrono>
 #include <date/tz.h>
 #include <optional>
@@ -39,7 +41,7 @@ namespace mtconnect {
   }
 
   namespace source::adapter::shdr {
-    class ShdrAdapter : public adapter::Adapter, public Connector
+    class AGENT_LIB_API ShdrAdapter : public adapter::Adapter, public Connector
     {
     public:
       // Associate adapter with a device & connect to the server & port

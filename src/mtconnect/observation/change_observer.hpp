@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
 
@@ -29,7 +31,7 @@
 namespace mtconnect {
   namespace observation {
     class ChangeSignaler;
-    class ChangeObserver
+    class AGENT_LIB_API ChangeObserver
     {
     public:
       ChangeObserver(boost::asio::io_context::strand &strand)
@@ -90,7 +92,7 @@ namespace mtconnect {
       bool removeSignaler(ChangeSignaler *sig);
     };
 
-    class ChangeSignaler
+    class AGENT_LIB_API ChangeSignaler
     {
     public:
       // Observer Management

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <cmath>
 #include <date/date.h>
 #include <set>
@@ -40,7 +42,7 @@ namespace mtconnect {
     using ObservationPtr = std::shared_ptr<Observation>;
     using ObservationList = std::list<ObservationPtr>;
 
-    class Observation : public entity::Entity
+    class AGENT_LIB_API Observation : public entity::Entity
     {
     public:
       using super = entity::Entity;
@@ -148,7 +150,7 @@ namespace mtconnect {
       uint64_t m_sequence {0};
     };
 
-    class Sample : public Observation
+    class AGENT_LIB_API Sample : public Observation
     {
     public:
       using super = Observation;
@@ -160,7 +162,7 @@ namespace mtconnect {
       ObservationPtr copy() const override { return std::make_shared<Sample>(*this); }
     };
 
-    class ThreeSpaceSample : public Sample
+    class AGENT_LIB_API ThreeSpaceSample : public Sample
     {
     public:
       using super = Sample;
@@ -170,7 +172,7 @@ namespace mtconnect {
       ~ThreeSpaceSample() override = default;
     };
 
-    class Timeseries : public Sample
+    class AGENT_LIB_API Timeseries : public Sample
     {
     public:
       using super = Sample;
@@ -186,7 +188,7 @@ namespace mtconnect {
     using ConditionPtr = std::shared_ptr<Condition>;
     using ConditionList = std::list<ConditionPtr>;
 
-    class Condition : public Observation
+    class AGENT_LIB_API Condition : public Observation
     {
     public:
       using super = Observation;
@@ -309,7 +311,7 @@ namespace mtconnect {
       ConditionPtr m_prev;
     };
 
-    class Event : public Observation
+    class AGENT_LIB_API Event : public Observation
     {
     public:
       using super = Observation;
@@ -320,7 +322,7 @@ namespace mtconnect {
       ObservationPtr copy() const override { return std::make_shared<Event>(*this); }
     };
 
-    class DoubleEvent : public Observation
+    class AGENT_LIB_API DoubleEvent : public Observation
     {
     public:
       using super = Observation;
@@ -331,7 +333,7 @@ namespace mtconnect {
       ObservationPtr copy() const override { return std::make_shared<DoubleEvent>(*this); }
     };
 
-    class IntEvent : public Observation
+    class AGENT_LIB_API IntEvent : public Observation
     {
     public:
       using super = Observation;
@@ -342,7 +344,7 @@ namespace mtconnect {
       ObservationPtr copy() const override { return std::make_shared<IntEvent>(*this); }
     };
 
-    class DataSetEvent : public Event
+    class AGENT_LIB_API DataSetEvent : public Event
     {
     public:
       using super = Event;
@@ -372,7 +374,7 @@ namespace mtconnect {
 
     using DataSetEventPtr = std::shared_ptr<DataSetEvent>;
 
-    class TableEvent : public DataSetEvent
+    class AGENT_LIB_API TableEvent : public DataSetEvent
     {
     public:
       using DataSetEvent::DataSetEvent;
@@ -380,7 +382,7 @@ namespace mtconnect {
       ObservationPtr copy() const override { return std::make_shared<TableEvent>(*this); }
     };
 
-    class AssetEvent : public Event
+    class AGENT_LIB_API AssetEvent : public Event
     {
     public:
       using Event::Event;
@@ -391,7 +393,7 @@ namespace mtconnect {
     protected:
     };
 
-    class Message : public Event
+    class AGENT_LIB_API Message : public Event
     {
     public:
       using super = Event;
@@ -402,7 +404,7 @@ namespace mtconnect {
       ObservationPtr copy() const override { return std::make_shared<Message>(*this); }
     };
 
-    class Alarm : public Event
+    class AGENT_LIB_API Alarm : public Event
     {
     public:
       using super = Event;

@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <chrono>
 #include <regex>
 
@@ -30,7 +32,7 @@ namespace mtconnect {
 
   namespace pipeline {
     using namespace entity;
-    class ShdrTokenMapper : public Transform
+    class AGENT_LIB_API ShdrTokenMapper : public Transform
     {
     public:
       ShdrTokenMapper(const ShdrTokenMapper &) = default;

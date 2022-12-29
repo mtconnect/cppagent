@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <list>
 #include <set>
 #include <shared_mutex>
@@ -35,7 +37,7 @@ namespace mtconnect::printer {
 }
 namespace mtconnect::parser {
 
-  class XmlParser
+  class AGENT_LIB_API XmlParser
   {
   public:
     // Constructor to set the open the correct file

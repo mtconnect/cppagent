@@ -13,12 +13,14 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 namespace mtconnect {
   namespace mqtt_server {
-    class MqttServer : public std::enable_shared_from_this<MqttServer>
+    class AGENT_LIB_API MqttServer : public std::enable_shared_from_this<MqttServer>
     {
     public:
       MqttServer(boost::asio::io_context &ioc) : m_ioContext(ioc), m_port(1883) {}

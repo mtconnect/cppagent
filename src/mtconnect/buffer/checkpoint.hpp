@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <map>
 #include <set>
 #include <string>
@@ -27,7 +29,7 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::buffer {
-  class Checkpoint
+  class AGENT_LIB_API Checkpoint
   {
   public:
     Checkpoint() = default;

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/pipeline/pipeline.hpp"
 #include "mtconnect/pipeline/transform.hpp"
 
@@ -37,7 +39,7 @@ namespace mtconnect::source::adapter {
     Connect m_disconnected;
   };
 
-  class AdapterPipeline : public pipeline::Pipeline
+  class AGENT_LIB_API AdapterPipeline : public pipeline::Pipeline
   {
   public:
     AdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)

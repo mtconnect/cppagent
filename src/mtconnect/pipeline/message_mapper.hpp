@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/algorithm/string.hpp>
 
 #include <chrono>
@@ -36,7 +38,7 @@ namespace mtconnect {
   class Device;
 
   namespace pipeline {
-    class JsonMapper : public Transform
+    class AGENT_LIB_API JsonMapper : public Transform
     {
     public:
       JsonMapper(const JsonMapper &) = default;
@@ -56,7 +58,7 @@ namespace mtconnect {
       PipelineContextPtr m_context;
     };
 
-    class DataMapper : public Transform
+    class AGENT_LIB_API DataMapper : public Transform
     {
     public:
       DataMapper(const DataMapper &) = default;

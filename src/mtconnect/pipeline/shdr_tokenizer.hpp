@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <chrono>
 #include <regex>
 
@@ -28,7 +30,7 @@ namespace mtconnect {
 
   namespace pipeline {
     using TokenList = std::list<std::string>;
-    class Tokens : public entity::Entity
+    class AGENT_LIB_API Tokens : public entity::Entity
     {
     public:
       using entity::Entity::Entity;
@@ -39,7 +41,7 @@ namespace mtconnect {
       TokenList m_tokens;
     };
 
-    class ShdrTokenizer : public Transform
+    class AGENT_LIB_API ShdrTokenizer : public Transform
     {
     public:
       ShdrTokenizer(const ShdrTokenizer &) = default;

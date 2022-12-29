@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <list>
 #include <map>
 #include <string>
@@ -41,7 +43,7 @@ namespace mtconnect {
 
     using ProtoErrorList = std::list<std::pair<std::string, std::string>>;
 
-    class Printer
+    class AGENT_LIB_API Printer
     {
     public:
       Printer(bool pretty = false) : m_pretty(pretty) {}

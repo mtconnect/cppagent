@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio/io_context.hpp>
 
 #include "mtconnect/buffer/circular_buffer.hpp"
@@ -41,7 +43,7 @@ namespace mtconnect {
                                                             const std::string &);
     using StyleFunction = void (printer::XmlPrinter::*)(const std::string &);
 
-    class RestService : public Sink
+    class AGENT_LIB_API RestService : public Sink
     {
     public:
       RestService(boost::asio::io_context &context, SinkContractPtr &&contract,

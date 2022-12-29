@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio.hpp>
 
 #include <chrono>
@@ -29,7 +31,7 @@
 #define HEARTBEAT_FREQ 60000
 
 namespace mtconnect::source::adapter::shdr {
-  class Connector
+  class AGENT_LIB_API Connector
   {
   public:
     // Instantiate the server by assigning it a server and port/

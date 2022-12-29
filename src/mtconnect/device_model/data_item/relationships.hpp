@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <regex>
 
 #include "mtconnect/entity/entity.hpp"
@@ -25,7 +27,7 @@ namespace mtconnect {
   namespace device_model {
     namespace data_item {
       class DataItem;
-      class Relationship : public entity::Entity
+      class AGENT_LIB_API Relationship : public entity::Entity
       {
       public:
         using entity::Entity::Entity;
@@ -73,7 +75,7 @@ namespace mtconnect {
         std::weak_ptr<DataItem> m_target;
       };
 
-      class Relationships : public entity::Entity
+      class AGENT_LIB_API Relationships : public entity::Entity
       {
       public:
         using entity::Entity::Entity;

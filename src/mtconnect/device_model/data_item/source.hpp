@@ -17,10 +17,12 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect::device_model::data_item {
-  class Source : public entity::Entity
+  class AGENT_LIB_API Source : public entity::Entity
   {
   public:
     static entity::FactoryPtr getFactory()

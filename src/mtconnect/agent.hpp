@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>
@@ -74,7 +76,7 @@ namespace mtconnect {
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
-  class Agent
+  class AGENT_LIB_API Agent
   {
   public:
     using Hook = std::function<void(Agent &)>;
@@ -328,7 +330,7 @@ namespace mtconnect {
     HookList m_preStopHooks;
   };
 
-  class AgentPipelineContract : public pipeline::PipelineContract
+  class AGENT_LIB_API AgentPipelineContract : public pipeline::PipelineContract
   {
   public:
     AgentPipelineContract(Agent *agent) : m_agent(agent) {}
@@ -378,7 +380,7 @@ namespace mtconnect {
     return std::make_unique<AgentPipelineContract>(this);
   }
 
-  class AgentSinkContract : public sink::SinkContract
+  class AGENT_LIB_API AgentSinkContract : public sink::SinkContract
   {
   public:
     AgentSinkContract(Agent *agent) : m_agent(agent) {}

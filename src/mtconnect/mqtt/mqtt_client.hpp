@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
@@ -36,7 +38,7 @@ namespace mtconnect {
       Received m_receive;
     };
 
-    class MqttClient : public std::enable_shared_from_this<MqttClient>
+    class AGENT_LIB_API MqttClient : public std::enable_shared_from_this<MqttClient>
     {
     public:
       MqttClient(boost::asio::io_context &ioc, std::unique_ptr<ClientHandler> &&handler)

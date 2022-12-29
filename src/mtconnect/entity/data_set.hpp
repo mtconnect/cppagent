@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <cmath>
 #include <regex>
 #include <set>
@@ -31,7 +33,7 @@
 namespace mtconnect::entity {
   struct DataSetEntry;
 
-  class DataSet : public std::set<DataSetEntry>
+  class AGENT_LIB_API DataSet : public std::set<DataSetEntry>
   {
   public:
     using base = std::set<DataSetEntry>;

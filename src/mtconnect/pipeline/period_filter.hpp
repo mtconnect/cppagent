@@ -17,13 +17,15 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
 namespace mtconnect {
   class Agent;
   namespace pipeline {
-    class PeriodFilter : public Transform
+    class AGENT_LIB_API PeriodFilter : public Transform
     {
     public:
       struct LastObservation

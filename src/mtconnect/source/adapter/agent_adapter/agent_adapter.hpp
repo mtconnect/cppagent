@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
@@ -31,7 +33,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   using namespace mtconnect;
   using namespace source::adapter;
 
-  class AgentAdapterPipeline : public AdapterPipeline
+  class AGENT_LIB_API AgentAdapterPipeline : public AdapterPipeline
   {
   public:
     AgentAdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st,
@@ -44,7 +46,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     pipeline::XmlTransformFeedback &m_feedback;
   };
 
-  class AgentAdapter : public Adapter
+  class AGENT_LIB_API AgentAdapter : public Adapter
   {
   public:
     AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,

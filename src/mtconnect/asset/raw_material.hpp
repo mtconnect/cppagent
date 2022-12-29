@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <map>
 #include <utility>
 #include <vector>
@@ -27,7 +29,7 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::asset {
-  class RawMaterial : public Asset
+  class AGENT_LIB_API RawMaterial : public Asset
   {
   public:
     static entity::FactoryPtr getFactory();

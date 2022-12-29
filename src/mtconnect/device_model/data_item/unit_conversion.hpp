@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -27,7 +29,7 @@
 namespace mtconnect {
   namespace device_model {
     namespace data_item {
-      class UnitConversion
+      class AGENT_LIB_API UnitConversion
       {
       public:
         UnitConversion(double factor = 1.0, double offset = 0.0)

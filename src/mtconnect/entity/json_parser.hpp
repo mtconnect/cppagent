@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <map>
 #include <utility>
 #include <vector>
@@ -28,7 +30,7 @@
 
 namespace mtconnect {
   namespace entity {
-    class JsonParser
+    class AGENT_LIB_API JsonParser
     {
     public:
       JsonParser(uint32_t version = 1) : m_version(version) {}

@@ -17,13 +17,15 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
 
 namespace mtconnect {
   namespace configuration {
-    class ParseError : public std::runtime_error
+    class AGENT_LIB_API ParseError : public std::runtime_error
     {
     public:
       using std::runtime_error::runtime_error;

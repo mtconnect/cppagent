@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <atomic>
 #include <cmath>
 #include <functional>
@@ -77,7 +79,7 @@ namespace mtconnect {
 
     bool ConvertValueToType(Value &value, ValueType type, bool table = false);
 
-    class EntityError : public std::logic_error
+    class AGENT_LIB_API EntityError : public std::logic_error
     {
     public:
       explicit EntityError(const std::string &s, const std::string &e = "")
@@ -112,7 +114,8 @@ namespace mtconnect {
       std::string m_text;
       std::string m_entity;
     };
-    class PropertyError : public EntityError
+    
+    class AGENT_LIB_API PropertyError : public EntityError
     {
     public:
       explicit PropertyError(const std::string &s, const std::string &p = "",
@@ -158,7 +161,7 @@ namespace mtconnect {
 
     using MatcherPtr = std::weak_ptr<Matcher>;
 
-    class Requirement
+    class AGENT_LIB_API Requirement
     {
     public:
       const static auto Infinite {std::numeric_limits<int>::max()};

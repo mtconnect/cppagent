@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/beast/http/verb.hpp>
 
 #include <list>
@@ -36,7 +38,7 @@ namespace mtconnect::sink::rest_sink {
   class Session;
   using SessionPtr = std::shared_ptr<Session>;
 
-  class Routing
+  class AGENT_LIB_API Routing
   {
   public:
     using Function = std::function<bool(SessionPtr, RequestPtr)>;

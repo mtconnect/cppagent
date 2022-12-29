@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <regex>
 
 #include "mtconnect/entity/entity.hpp"
@@ -24,10 +26,10 @@
 namespace mtconnect {
   namespace device_model {
     namespace data_item {
-      class Definition : public entity::Entity
+      class AGENT_LIB_API Definition : public entity::Entity
       {
       public:
-        class Entry : public entity::Entity
+        class AGENT_LIB_API Entry : public entity::Entity
         {
         public:
           using entity::Entity::Entity;

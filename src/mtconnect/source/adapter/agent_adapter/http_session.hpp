@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "session_impl.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {

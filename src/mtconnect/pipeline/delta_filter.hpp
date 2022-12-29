@@ -17,13 +17,15 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
 namespace mtconnect {
   class Agent;
   namespace pipeline {
-    class DeltaFilter : public Transform
+    class AGENT_LIB_API DeltaFilter : public Transform
     {
     public:
       struct State : TransformState

@@ -17,10 +17,12 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 namespace mtconnect::source::adapter::shdr {
-  class ShdrPipeline : public AdapterPipeline
+  class AGENT_LIB_API ShdrPipeline : public AdapterPipeline
   {
   public:
     ShdrPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)

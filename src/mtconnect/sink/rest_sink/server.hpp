@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl.hpp>
@@ -42,7 +44,7 @@
 #include "tls_dector.hpp"
 
 namespace mtconnect::sink::rest_sink {
-  class Server
+  class AGENT_LIB_API Server
   {
   public:
     Server(boost::asio::io_context &context, const ConfigOptions &options = {})

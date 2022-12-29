@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/beast/core/error.hpp>
 
 #include <memory>

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <map>
 #include <utility>
 #include <vector>
@@ -29,7 +31,7 @@
 struct _xmlNode;
 namespace mtconnect {
   namespace entity {
-    class XmlParser
+    class AGENT_LIB_API XmlParser
     {
     public:
       XmlParser() = default;

@@ -17,12 +17,14 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect {
   namespace device_model {
     class Component;
-    class Composition : public entity::Entity
+    class AGENT_LIB_API Composition : public entity::Entity
     {
     public:
       using entity::Entity::Entity;

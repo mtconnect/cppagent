@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <list>
 #include <map>
 #include <optional>
@@ -35,7 +37,7 @@ namespace mtconnect {
     class Device;
     using DevicePtr = std::shared_ptr<Device>;
 
-    class Reference : public entity::Entity
+    class AGENT_LIB_API Reference : public entity::Entity
     {
     public:
       using entity::Entity::Entity;
