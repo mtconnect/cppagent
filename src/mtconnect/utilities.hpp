@@ -17,57 +17,7 @@
 
 #pragma once
 
-#ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS 1
-#endif
-#if _MSC_VER > 1500
-#include <cstdint>
-#else
-#endif
-#ifndef UINT64_MAX
-#define UINT64_MAX 0xFFFFFFFFFFFFFFFFull
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX 1
-#endif
-
-#include <chrono>
-#include <ctime>
-#include <date/date.h>
-#include <fstream>
-#include <iomanip>
-#include <limits>
-#include <list>
-#include <map>
-#include <optional>
-#include <set>
-#include <sstream>
-#include <string>
-#include <time.h>
-#include <unordered_map>
-#include <variant>
-
-#if defined(_WIN32) || defined(_WIN64)
-#ifndef _WINDOWS
-#define _WINDOWS 1
-#endif
-#define ISNAN(x) _isnan(x)
-#if _MSC_VER < 1800
-#define NAN numeric_limits<double>::quiet_NaN()
-#endif
-#if _MSC_VER >= 1900
-#define gets gets_s
-#define timezone _timezone
-#endif
-typedef unsigned __int64 uint64_t;
-#else
-#define O_BINARY 0
-#define ISNAN(x) std::isnan(x)
-#include <cstdint>
-#include <memory>
-#include <sys/resource.h>
-#include <unistd.h>
-#endif
+#include "mtconnect/config.hpp"
 
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>

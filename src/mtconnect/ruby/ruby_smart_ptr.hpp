@@ -17,13 +17,15 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 namespace mtconnect::ruby {
   template <typename T>
   struct MRubySharedPtr
   {
     using SharedPtr = std::shared_ptr<T>;
 
-    __attribute__((visibility("default"))) static mrb_data_type *type()
+    AGENT_SYMBOL_VISIBLE static mrb_data_type *type()
     {
       static mrb_data_type s_type {nullptr, nullptr};
       if (s_type.struct_name == nullptr)
@@ -128,7 +130,7 @@ namespace mtconnect::ruby {
   {
     using Ptr = T *;
 
-    __attribute__((visibility("default"))) static mrb_data_type *type()
+    AGENT_SYMBOL_VISIBLE static mrb_data_type *type()
     {
       static mrb_data_type s_type {nullptr, nullptr};
 
@@ -186,7 +188,7 @@ namespace mtconnect::ruby {
   {
     using UniquePtr = std::unique_ptr<T>;
 
-    __attribute__((visibility("default"))) static mrb_data_type *type()
+    AGENT_SYMBOL_VISIBLE static mrb_data_type *type()
     {
       static mrb_data_type s_type {nullptr, nullptr};
       if (s_type.struct_name == nullptr)

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <iostream>
 #include <string>
 #include <system_error>
@@ -79,7 +81,7 @@ namespace mtconnect::source {
     }
   };
 
-  __attribute__((visibility("default"))) inline const std::error_category &TheErrorCategory()
+  AGENT_SYMBOL_VISIBLE inline const std::error_category &TheErrorCategory()
   {
     static const ErrorCategory theErrorCategory {};
     return theErrorCategory;

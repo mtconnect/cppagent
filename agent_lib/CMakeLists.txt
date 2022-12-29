@@ -4,6 +4,7 @@ set(AGENT_SOURCES
  # src HEADER_FILE_ONLY
         
         "${SOURCE_DIR}/agent.hpp"
+        "${SOURCE_DIR}/config.hpp"
         "${SOURCE_DIR}/logging.hpp"
         "${SOURCE_DIR}/utilities.hpp"
 
@@ -325,6 +326,14 @@ endif()
 
 if(SHARED_AGENT_LIB)
   add_library(agent_lib SHARED ${AGENT_SOURCES})
+  target_compile_definitions(
+    agent_lib
+    PRIVATE
+    AGENT_BUILD_SHARED_LIB)
+  target_compile_definitions(
+    agent_lib
+    PUBLIC
+    SHARED_AGENT_LIB)
 else()
   add_library(agent_lib STATIC ${AGENT_SOURCES})
 endif()

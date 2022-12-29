@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+
 #include <boost/optional.hpp>
 #include <boost/program_options/variables_map.hpp>
 
@@ -27,7 +29,7 @@
 
 namespace mtconnect {
   namespace configuration {
-    class MTConnectService
+    class AGENT_LIB_API MTConnectService
     {
     public:
       MTConnectService() = default;

@@ -61,7 +61,7 @@ namespace mtconnect {
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;
 
-    class AgentConfiguration : public MTConnectService
+    class AGENT_LIB_API AgentConfiguration : public MTConnectService
     {
     public:
       using Hook = std::function<void(AgentConfiguration &)>;
