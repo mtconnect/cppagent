@@ -17,17 +17,17 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <fstream>
 #include <sstream>
 #include <string>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include <libxml/xpath.h>
 #include <libxml/xmlwriter.h>
+#include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
+
+#include "mtconnect/config.hpp"
 
 // Retrieve a sample file, open it, and return it as a string
 inline std::string getFile(std::string file)
@@ -41,59 +41,57 @@ inline std::string getFile(std::string file)
   return stream.str();
 }
 
-
 // Fill the error
-inline void fillErrorText(std::string& errorXml, const std::string& text) 
+inline void fillErrorText(std::string &errorXml, const std::string &text)
 {
-using namespace std;
+  using namespace std;
 
-size_t pos = errorXml.find("</Error>");
+  size_t pos = errorXml.find("</Error>");
 
-// Error in case </Error> was not found
-if (pos == string::npos)
-{
+  // Error in case </Error> was not found
+  if (pos == string::npos)
+  {
     return;
-}
+  }
 
-// Trim everything between >....</Error>
-size_t gT = pos;
+  // Trim everything between >....</Error>
+  size_t gT = pos;
 
-while (errorXml[gT - 1] != '>')
-{
+  while (errorXml[gT - 1] != '>')
+  {
     gT--;
-}
+  }
 
-errorXml.erase(gT, pos - gT);
+  errorXml.erase(gT, pos - gT);
 
-// Insert new text into pos
-pos = errorXml.find("</Error>");
-errorXml.insert(pos, text);
+  // Insert new text into pos
+  pos = errorXml.find("</Error>");
+  errorXml.insert(pos, text);
 }
 
 // Search the xml and insert a value into an attribute (attribute="")
-inline void fillAttribute(std::string & xmlString, const std::string &attribute,
-                        const std::string &value)
+inline void fillAttribute(std::string &xmlString, const std::string &attribute,
+                          const std::string &value)
 {
-using namespace std;
+  using namespace std;
 
-size_t pos = xmlString.find(attribute + "=\"\"");
+  size_t pos = xmlString.find(attribute + "=\"\"");
 
-if (pos == string::npos)
-{
+  if (pos == string::npos)
+  {
     return;
-}
-else
-{
+  }
+  else
+  {
     pos += attribute.length() + 2;
-}
+  }
 
-xmlString.insert(pos, value);
+  xmlString.insert(pos, value);
 }
 
 /// Asserts that two XML strings are equivalent.
 #define ASSERT_XML_PATH_EQUAL(doc, path, expected) \
   xpathTest(doc, path, expected, __FILE__, __LINE__)
-
 
 #define PARSE_XML(expr)                                                         \
   string result = expr;                                                         \
@@ -110,7 +108,7 @@ inline void failIf(bool condition, const std::string &message, const std::string
 }
 
 inline void failNotEqualIf(bool condition, const std::string &expected, const std::string &actual,
-                    const std::string &message, const std::string &file, int line)
+                           const std::string &message, const std::string &file, int line)
 {
   ASSERT_FALSE(condition) << file << "(" << line << "): Failed not equal " << message << "\n"
                           << "  Expected: " << expected << "\n"
@@ -284,7 +282,7 @@ inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
 }
 
 inline void xpathTestCount(xmlDocPtr doc, const char *xpath, int expected, const std::string &file,
-                    int line)
+                           int line)
 
 {
   using namespace std;
