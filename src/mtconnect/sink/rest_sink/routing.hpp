@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/beast/http/verb.hpp>
 
 #include <list>
@@ -29,6 +27,7 @@
 #include <string>
 #include <variant>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
 #include "parameter.hpp"
 #include "request.hpp"

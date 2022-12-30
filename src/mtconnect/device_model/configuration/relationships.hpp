@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include "configuration.hpp"
+#include "mtconnect/config.hpp"
 
 namespace mtconnect {
   using namespace entity;

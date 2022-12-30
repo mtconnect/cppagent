@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/printer/printer.hpp"
 #include "mtconnect/utilities.hpp"
 

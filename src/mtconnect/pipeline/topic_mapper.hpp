@@ -16,14 +16,13 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/algorithm/string.hpp>
 
 #include <chrono>
 #include <regex>
 #include <unordered_map>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/observation/observation.hpp"

@@ -17,12 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/io_context_strand.hpp>
 
 #include "guard.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "pipeline_context.hpp"
 

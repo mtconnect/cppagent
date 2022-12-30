@@ -18,12 +18,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/beast/core/error.hpp>
 
 #include <memory>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "url_parser.hpp"
 

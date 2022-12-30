@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <mruby-time/include/mruby/time.h>
 #include <mruby/array.h>
 #include <mruby/hash.h>
 #include <mruby/value.h>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/data_set.hpp"

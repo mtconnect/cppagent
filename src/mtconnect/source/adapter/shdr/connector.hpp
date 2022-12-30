@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio.hpp>
 
 #include <chrono>
@@ -26,6 +24,7 @@
 #include <mutex>
 #include <thread>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
 #define HEARTBEAT_FREQ 60000

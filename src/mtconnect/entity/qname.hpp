@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <optional>
 #include <string>
 #include <string_view>
+
+#include "mtconnect/config.hpp"
 
 namespace mtconnect {
   namespace entity {

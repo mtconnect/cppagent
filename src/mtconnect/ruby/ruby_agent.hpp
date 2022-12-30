@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include "mtconnect/agent.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/source/source.hpp"
 #include "ruby_smart_ptr.hpp"

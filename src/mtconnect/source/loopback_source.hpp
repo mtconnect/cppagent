@@ -17,9 +17,8 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include "mtconnect/asset/asset.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/pipeline/pipeline.hpp"
 #include "mtconnect/pipeline/pipeline_context.hpp"

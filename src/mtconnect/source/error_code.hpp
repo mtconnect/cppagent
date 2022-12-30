@@ -17,13 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
-#include "mtconnect/config.hpp"
-
 #include <iostream>
 #include <string>
 #include <system_error>
+
+#include "mtconnect/config.hpp"
 
 namespace mtconnect::source {
   enum class ErrorCode

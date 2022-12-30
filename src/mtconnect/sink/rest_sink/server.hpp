@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl.hpp>
@@ -36,6 +34,7 @@
 #include <vector>
 
 #include "file_cache.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/utilities.hpp"
 #include "response.hpp"

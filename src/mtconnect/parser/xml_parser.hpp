@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <list>
 #include <set>
 #include <shared_mutex>
@@ -27,6 +25,7 @@
 
 #include "mtconnect/asset/cutting_tool.hpp"
 #include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/component.hpp"
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/device_model/device.hpp"

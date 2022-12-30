@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
+
+#include "mtconnect/config.hpp"
 
 namespace mtconnect {
   namespace configuration {

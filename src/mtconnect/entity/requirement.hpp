@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <atomic>
 #include <cmath>
 #include <functional>
@@ -39,6 +37,7 @@
 #include <vector>
 
 #include "data_set.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
@@ -114,7 +113,7 @@ namespace mtconnect {
       std::string m_text;
       std::string m_entity;
     };
-    
+
     class AGENT_LIB_API PropertyError : public EntityError
     {
     public:

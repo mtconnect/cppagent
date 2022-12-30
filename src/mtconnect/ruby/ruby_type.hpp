@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <mruby-time/include/mruby/time.h>
 #include <mruby/array.h>
 #include <mruby/hash.h>
 #include <mruby/value.h>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect::ruby {

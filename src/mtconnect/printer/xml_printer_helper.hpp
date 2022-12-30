@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <libxml/xmlwriter.h>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/printer/xml_helper.hpp"
 
 namespace mtconnect::printer {

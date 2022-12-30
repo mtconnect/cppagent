@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
-
 #include "mtconnect/mqtt/mqtt_client.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"

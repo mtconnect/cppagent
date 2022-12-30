@@ -17,14 +17,14 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
 
 #include <mtconnect/version.h>
+
+#include "mtconnect/config.hpp"
 
 //####### CONSTANTS #######
 

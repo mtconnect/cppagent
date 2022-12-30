@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/range/algorithm.hpp>
 
 #include <unordered_map>
 
 #include "data_set.hpp"
+#include "mtconnect/config.hpp"
 #include "qname.hpp"
 #include "requirement.hpp"
 

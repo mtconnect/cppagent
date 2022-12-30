@@ -17,11 +17,10 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio.hpp>
 #include <boost/function.hpp>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect {

@@ -17,12 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <list>
 #include <map>
 #include <string>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/factory.hpp"
 #include "mtconnect/utilities.hpp"

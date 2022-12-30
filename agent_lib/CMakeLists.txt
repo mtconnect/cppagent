@@ -266,14 +266,6 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
   )
 
-if(WITH_PYTHON)
-  set(AGENT_SOURCES ${AGENT_SOURCES}
-    
-    "${SOURCE_DIR}/python/embedded.hpp"
-    "${SOURCE_DIR}/python/embedded.cpp"
-    )
-endif()
-
 if(WITH_RUBY)
   set(AGENT_SOURCES ${AGENT_SOURCES}    
 # HEADER_FILE_ONLY      
@@ -362,13 +354,6 @@ target_link_libraries(
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
   )
-
-if(WITH_PYTHON)
-  target_link_libraries(
-    agent_lib
-    PUBLIC
-    Python3::Python)
-endif()
 
 if(WITH_RUBY)
   target_link_libraries(

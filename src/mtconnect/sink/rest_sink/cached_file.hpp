@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <memory>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect {

@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
-
 #include "mtconnect/observation/observation.hpp"
 #include "ruby_entity.hpp"
 #include "ruby_vm.hpp"

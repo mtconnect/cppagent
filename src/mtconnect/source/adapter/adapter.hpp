@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
-
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 #include "mtconnect/source/source.hpp"
 

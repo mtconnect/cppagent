@@ -80,7 +80,7 @@ target_clangformat_setup(adapter_plugin_test)
 
 ###########
 
-set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp json_helper.hpp)
+set(AGENT_TEST_LIB_SOURCES agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp json_helper.hpp)
 add_library(agent_test_lib STATIC ${AGENT_TEST_LIB_SOURCES})
 target_include_directories(
   agent_test_lib
@@ -93,7 +93,7 @@ target_include_directories(
 target_link_libraries(
   agent_test_lib
   PUBLIC
-  agent_lib
+  agent_lib CONAN_PKG::gtest
 )
 target_compile_definitions(agent_test_lib
   PUBLIC

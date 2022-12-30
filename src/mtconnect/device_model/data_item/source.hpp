@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
-
 #include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect::device_model::data_item {

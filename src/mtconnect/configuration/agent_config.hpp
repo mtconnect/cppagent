@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/log/attributes.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 #include <boost/log/support/date_time.hpp>
@@ -31,6 +29,7 @@
 
 #include "async_context.hpp"
 #include "mtconnect/agent.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/sink/rest_sink/file_cache.hpp"
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"

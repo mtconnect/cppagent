@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <list>
 #include <map>
 #include <memory>
@@ -26,6 +24,7 @@
 #include <unordered_map>
 
 #include "mtconnect/asset/asset.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/utilities.hpp"
 

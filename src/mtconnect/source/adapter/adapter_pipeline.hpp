@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
-
 #include "mtconnect/pipeline/pipeline.hpp"
 #include "mtconnect/pipeline/transform.hpp"
 

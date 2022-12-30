@@ -17,12 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <map>
 #include <set>
 #include <unordered_map>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect {

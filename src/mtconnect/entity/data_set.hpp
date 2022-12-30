@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <cmath>
 #include <regex>
 #include <set>
@@ -27,6 +25,7 @@
 #include <variant>
 #include <vector>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
 #include "mtconnect/utilities.hpp"
 

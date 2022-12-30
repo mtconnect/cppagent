@@ -75,23 +75,21 @@ typedef unsigned __int64 uint64_t;
 #else  // _WINDOWS
 #define AGENT_SYMBOL_EXPORT __attribute__((visibility("default")))
 #define AGENT_SYMBOL_IMPORT __attribute__((visibility("default")))
-#endif // _WINDOWS
+#endif  // _WINDOWS
 
 #ifdef SHARED_AGENT_LIB
 
 #ifdef AGENT_BUILD_SHARED_LIB
 #define AGENT_LIB_API AGENT_SYMBOL_EXPORT
-#else 
+#else
 #define AGENT_LIB_API AGENT_SYMBOL_IMPORT
 #endif
 
 #define AGENT_SYMBOL_VISIBLE AGENT_LIB_API
 
-#else // SHARED_AGENT_LIB
+#else  // SHARED_AGENT_LIB
 
 #define AGENT_LIB_API
 #define AGENT_SYMBOL_VISIBLE
 
 #endif
-
-

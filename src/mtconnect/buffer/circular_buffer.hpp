@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/circular_buffer.hpp>
 
 #include <cassert>
@@ -26,6 +24,7 @@
 #include <mutex>
 
 #include "checkpoint.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/utilities.hpp"
 

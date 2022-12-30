@@ -16,11 +16,10 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <chrono>
 #include <regex>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/pipeline/transform.hpp"

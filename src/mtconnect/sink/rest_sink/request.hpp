@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/beast/http/status.hpp>
 #include <boost/beast/http/verb.hpp>
 
 #include <optional>
 
+#include "mtconnect/config.hpp"
 #include "parameter.hpp"
 
 namespace mtconnect::sink::rest_sink {

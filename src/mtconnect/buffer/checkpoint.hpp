@@ -17,14 +17,13 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <map>
 #include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/utilities.hpp"
 

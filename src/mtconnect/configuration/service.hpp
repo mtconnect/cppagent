@@ -17,14 +17,13 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/optional.hpp>
 #include <boost/program_options/variables_map.hpp>
 
 #include <filesystem>
 #include <string>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect {

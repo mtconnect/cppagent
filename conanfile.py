@@ -14,9 +14,9 @@ class MTConnectAgentConan(ConanFile):
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
-    options = { "run_tests": [True, False], "build_tests": [True, False], "without_python": [True, False],
-               "without_ruby": [True, False], "without_ipv6": [True, False], "with_ruby": [True, False],
-               "with_python": [True, False], "development" : [True, False], "shared": [True, False] }
+    options = { "run_tests": [True, False], "build_tests": [True, False], 
+                "without_ruby": [True, False], "without_ipv6": [True, False], "with_ruby": [True, False],
+                 "development" : [True, False], "shared": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.79.0@#3249d9bd2b863a9489767bf9c8a05b4b",
@@ -30,11 +30,9 @@ class MTConnectAgentConan(ConanFile):
     default_options = {
         "run_tests": True,
         "build_tests": True,
-        "without_python": True,
         "without_ruby": False,
         "without_ipv6": False,
-        "with_python": False,
-        "with_ruby": False,
+        "with_ruby": True,
         "development": False,
         "shared": False,
 
@@ -50,6 +48,8 @@ class MTConnectAgentConan(ConanFile):
         "libxml2:zlib": False,
 
         "gtest:shared": False,
+
+        "openssl:shared": False,
         
         "date:use_system_tz_db": True
         }
@@ -68,9 +68,6 @@ class MTConnectAgentConan(ConanFile):
             raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
 
     def configure(self):
-        if not self.options.without_python:
-            self.options["boost"].without_python = False
-            
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
@@ -97,15 +94,15 @@ class MTConnectAgentConan(ConanFile):
         if not self.options.without_ruby:
             self.options.with_ruby = True
             
-        if not self.options.without_python:
-            self.options.with_python = True
-
         if not self.options.shared and self.settings.os == "Macos":
             self.options["boost"].visibility = "hidden"
 
         # Make sure shared builds use shared boost
         if is_msvc(self) and self.options.shared:
             self.options["boost"].shared = True
+            self.options["libxml2"].shared = True
+            self.options["gtest"].shared = True
+            self.options["openssl"].shared = True
         
     def requirements(self):
         if not self.windows_xp:
@@ -122,11 +119,6 @@ class MTConnectAgentConan(ConanFile):
         if self.options.without_ipv6:
             cmake.definitions['AGENT_WITHOUT_IPV6'] = 'ON'
 
-        if self.options.with_python:
-            cmake.definitions['WITH_PYTHON'] = 'ON'
-        else:
-            cmake.definitions['WITH_PYTHON'] = 'OFF'
-            
         if self.options.with_ruby:
             cmake.definitions['WITH_RUBY'] = 'ON'
         else:

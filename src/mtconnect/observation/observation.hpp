@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <cmath>
 #include <date/date.h>
 #include <set>
@@ -27,6 +25,7 @@
 #include <variant>
 #include <vector>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/component.hpp"
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/entity/entity.hpp"

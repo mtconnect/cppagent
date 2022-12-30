@@ -17,12 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include "boost/asio/io_context.hpp"
 #include <boost/dll/alias.hpp>
 
 #include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/configuration/agent_config.hpp"
 #include "mtconnect/entity/json_printer.hpp"
 #include "mtconnect/mqtt/mqtt_client.hpp"

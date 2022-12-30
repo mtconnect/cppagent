@@ -36,10 +36,15 @@ BOOST_FUSION_ADAPT_STRUCT(mtconnect::source::adapter::agent_adapter::UrlQueryPai
 
 BOOST_FUSION_ADAPT_STRUCT(
     mtconnect::source::adapter::agent_adapter::Url,
-    (std::string, m_protocol)(mtconnect::source::adapter::agent_adapter::Url::Host,
-                              m_host)(std::optional<std::string>, m_username)(
-        std::optional<std::string>, m_password)(std::optional<int>, m_port)(std::string, m_path)(
-        mtconnect::source::adapter::agent_adapter::UrlQuery, m_query)(std::string, m_fragment))
+    (std::string,
+     m_protocol)(mtconnect::source::adapter::agent_adapter::Url::Host,
+                 m_host)(std::optional<std::string>,
+                         m_username)(std::optional<std::string>,
+                                     m_password)(std::optional<int>,
+                                                 m_port)(std::string,
+                                                         m_path)(mtconnect::source::adapter::
+                                                                     agent_adapter::UrlQuery,
+                                                                 m_query)(std::string, m_fragment))
 
 namespace mtconnect::source::adapter::agent_adapter {
 

@@ -18,10 +18,9 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/beast/ssl.hpp>
 
+#include "mtconnect/config.hpp"
 #include "session_impl.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {

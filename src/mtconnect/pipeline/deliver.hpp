@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio/steady_timer.hpp>
 
 #include <chrono>
 
 #include "mtconnect/asset/asset.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 

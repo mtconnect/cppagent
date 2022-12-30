@@ -17,14 +17,13 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <filesystem>
 #include <list>
 #include <optional>
 #include <string>
 
 #include "cached_file.hpp"
+#include "mtconnect/config.hpp"
 
 namespace boost {
   namespace asio {

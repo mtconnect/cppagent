@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <functional>
 #include <list>
 #include <string>
+
+#include "mtconnect/config.hpp"
 
 namespace mtconnect {
   namespace device_model {

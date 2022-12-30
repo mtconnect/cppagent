@@ -18,8 +18,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/algorithm/string.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/beast/core.hpp>
@@ -27,6 +25,7 @@
 #include <boost/beast/ssl.hpp>
 #include <boost/beast/version.hpp>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
 #include "mtconnect/pipeline/response_document.hpp"
 #include "session.hpp"

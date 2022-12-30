@@ -17,11 +17,10 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio.hpp>
 #include <boost/thread/thread.hpp>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/logging.hpp"
 
 namespace mtconnect::configuration {

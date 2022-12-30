@@ -17,11 +17,10 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio/io_context.hpp>
 
 #include "mtconnect/buffer/circular_buffer.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/sink/sink.hpp"
 #include "mtconnect/source/loopback_source.hpp"
 #include "mtconnect/utilities.hpp"

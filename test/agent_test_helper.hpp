@@ -25,6 +25,7 @@
 #include <nlohmann/json.hpp>
 
 #include "mtconnect/agent.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/configuration/agent_config.hpp"
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/pipeline/pipeline.hpp"

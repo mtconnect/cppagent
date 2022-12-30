@@ -96,6 +96,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(named_scope, "Scope", logr::attributes::named_scope:
 BOOST_LOG_ATTRIBUTE_KEYWORD(utc_timestamp, "Timestamp", logr::attributes::utc_clock::value_type);
 
 namespace mtconnect::configuration {
+  AGENT_LIB_API
   boost::log::trivial::logger_type *gAgentLogger = nullptr;
 
   AgentConfiguration::AgentConfiguration()

@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
-
 #include "transform.hpp"
 
 namespace mtconnect {

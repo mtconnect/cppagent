@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <nlohmann/json.hpp>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 
 using json = nlohmann::json;

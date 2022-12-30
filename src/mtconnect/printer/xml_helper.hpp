@@ -17,9 +17,9 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <stdexcept>
+
+#include "mtconnect/config.hpp"
 
 #define xml_strfy(line) #line
 #define THROW_IF_XML2_ERROR(expr)                                                 \

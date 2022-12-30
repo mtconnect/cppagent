@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 
@@ -26,6 +24,7 @@
 #include <memory>
 #include <optional>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/utilities.hpp"
 #include "session.hpp"

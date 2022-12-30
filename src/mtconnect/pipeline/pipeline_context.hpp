@@ -17,12 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <memory>
 #include <mutex>
 #include <unordered_map>
 
+#include "mtconnect/config.hpp"
 #include "pipeline_contract.hpp"
 
 namespace mtconnect {

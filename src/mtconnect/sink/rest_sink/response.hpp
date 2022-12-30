@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/http/status.hpp>
 
@@ -26,6 +24,7 @@
 #include <unordered_map>
 
 #include "cached_file.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 #include "request.hpp"
 

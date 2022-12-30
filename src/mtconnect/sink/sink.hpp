@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/function.hpp>
 #include <boost/functional/factory.hpp>
 
@@ -29,6 +27,7 @@
 
 #include "mtconnect/asset/asset_storage.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/printer//printer.hpp"

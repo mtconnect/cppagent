@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <list>
 #include <map>
 #include <sstream>
@@ -28,6 +26,7 @@
 
 #include "composition.hpp"
 #include "configuration/configuration.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/factory.hpp"
 #include "mtconnect/utilities.hpp"
 

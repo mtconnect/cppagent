@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <unordered_set>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 
 extern "C"

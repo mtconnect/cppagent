@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/multi_index/composite_key.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>
@@ -41,6 +39,7 @@
 #include "mtconnect/asset/asset_buffer.hpp"
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/configuration/service.hpp"
 #include "mtconnect/device_model/agent_device.hpp"
 #include "mtconnect/device_model/device.hpp"

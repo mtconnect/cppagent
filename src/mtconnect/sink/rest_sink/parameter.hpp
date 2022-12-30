@@ -17,12 +17,12 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <list>
 #include <map>
 #include <set>
 #include <variant>
+
+#include "mtconnect/config.hpp"
 
 namespace mtconnect::sink::rest_sink {
   class AGENT_LIB_API ParameterError : public std::logic_error

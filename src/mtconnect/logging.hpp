@@ -17,10 +17,10 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/log/attributes.hpp>
 #include <boost/log/trivial.hpp>
+
+#include "mtconnect/config.hpp"
 
 #define LOG BOOST_LOG_TRIVIAL
 #define NAMED_SCOPE BOOST_LOG_NAMED_SCOPE
@@ -30,8 +30,9 @@
 //    After that, use PLUGIN_LOG(lvl) << ...;
 namespace mtconnect {
   namespace configuration {
+    AGENT_LIB_API
     extern boost::log::trivial::logger_type *gAgentLogger;
-  }
+  }  // namespace configuration
 }  // namespace mtconnect
 
 #define PLUGIN_LOG(lvl)                                                 \

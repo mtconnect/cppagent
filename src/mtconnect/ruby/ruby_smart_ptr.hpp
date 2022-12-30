@@ -19,8 +19,6 @@
 
 #include "mtconnect/config.hpp"
 
-#include "mtconnect/config.hpp"
-
 namespace mtconnect::ruby {
   template <typename T>
   struct MRubySharedPtr

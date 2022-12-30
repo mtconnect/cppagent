@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio/ip/address.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -29,6 +27,7 @@
 #include <string_view>
 #include <variant>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::source::adapter::agent_adapter {

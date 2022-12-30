@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <chrono>
 #include <date/tz.h>
 #include <optional>
@@ -28,6 +26,7 @@
 #include <string>
 
 #include "connector.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/source.hpp"

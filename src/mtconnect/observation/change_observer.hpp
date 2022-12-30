@@ -17,8 +17,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/asio.hpp>
 #include <boost/bind/bind.hpp>
 
@@ -26,6 +24,7 @@
 #include <mutex>
 #include <vector>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect {

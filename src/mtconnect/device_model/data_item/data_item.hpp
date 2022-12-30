@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <map>
 
 #include "constraints.hpp"
 #include "definition.hpp"
 #include "filter.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/component.hpp"
 #include "mtconnect/observation/change_observer.hpp"
 #include "mtconnect/utilities.hpp"

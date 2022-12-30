@@ -16,8 +16,6 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <boost/algorithm/string.hpp>
 
 #include <chrono>
@@ -26,6 +24,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/observation/observation.hpp"

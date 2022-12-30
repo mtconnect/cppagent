@@ -18,7 +18,6 @@
 #pragma once
 
 #include "mtconnect/config.hpp"
-
 #include "mtconnect/utilities.hpp"
 #include "shdr_tokenizer.hpp"
 #include "transform.hpp"

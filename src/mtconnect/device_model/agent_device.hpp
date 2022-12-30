@@ -17,11 +17,11 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
 #include <map>
 
 #include "component.hpp"
 #include "data_item/data_item.hpp"
+#include "mtconnect/config.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/utilities.hpp"
 

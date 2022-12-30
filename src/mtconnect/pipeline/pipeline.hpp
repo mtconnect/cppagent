@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include "mtconnect/config.hpp"
-
 #include <future>
 
+#include "mtconnect/config.hpp"
 #include "pipeline_context.hpp"
 #include "pipeline_contract.hpp"
 #include "transform.hpp"

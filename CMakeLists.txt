@@ -27,8 +27,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_COMPILE_FEATURES cxx_std_17)
 set(SHARED_AGENT_LIB OFF CACHE BOOL "Build Agent Lib as shared library")
 
-set(WITH_PYTHON OFF CACHE STRING "With Python Support")
-set(WITH_RUBY OFF CACHE STRING "With Ruby Support")
+set(WITH_RUBY ON CACHE STRING "With Ruby Support")
 
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
@@ -87,14 +86,6 @@ if(SHARED_AGENT_LIB)
   if (MSVC)
     include(InstallRequiredSystemLibraries)
   endif()
-endif()
-
-if(WITH_PYTHON)
-  set(Python_USE_STATIC_LIBS ON)
-
-  find_package(Python3 COMPONENTS Interpreter Development Development.Embed)
-  message("Include dirs of Python: " ${Python3_INCLUDE_DIRS} )
-  message("Libs of Python: " ${Python3_LIBRARIES} )
 endif()
 
 include(cmake/osx_no_app_or_frameworks.cmake)
