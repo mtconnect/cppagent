@@ -17,6 +17,9 @@
 
 #pragma once
 
+#include "mtconnect/config.hpp"
+#include "mtconnect/utilities.hpp"
+
 #include <fstream>
 #include <sstream>
 #include <string>
