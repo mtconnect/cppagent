@@ -1,10 +1,11 @@
 from conans import ConanFile, CMake, tools
+from conans.errors import ConanInvalidConfiguration
 import os
 import io
 import re
 import itertools as it
 import glob
-
+from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
@@ -62,6 +63,10 @@ class MTConnectAgentConan(ConanFile):
 #        else:
 #            git.clone("https://github.com/mtconnect/cppagent")
 
+    def validate(self):
+        if is_msvc(self) and self.options.shared and not is_msvc_static_runtime(self):
+            raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
+
     def configure(self):
         if not self.options.without_python:
             self.options["boost"].without_python = False
@@ -69,11 +74,12 @@ class MTConnectAgentConan(ConanFile):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
-            if self.settings.build_type and self.settings.build_type == 'Debug':
-                self.settings.compiler.runtime = 'MTd'
-            else:
-                self.settings.compiler.runtime = 'MT'
-                
+            if not self.options.shared:
+                if self.settings.build_type and self.settings.build_type == 'Debug':
+                    self.settings.compiler.runtime = 'MTd'
+                else:
+                    self.settings.compiler.runtime = 'MT'
+                    
             if not self.settings.compiler.version:
                 self.settings.compiler.version = '16'
         
@@ -96,6 +102,10 @@ class MTConnectAgentConan(ConanFile):
 
         if not self.options.shared and self.settings.os == "Macos":
             self.options["boost"].visibility = "hidden"
+
+        # Make sure shared builds use shared boost
+        if is_msvc(self) and self.options.shared:
+            self.options["boost"].shared = True
         
     def requirements(self):
         if not self.windows_xp:
@@ -135,6 +145,8 @@ class MTConnectAgentConan(ConanFile):
 
     def imports(self):
         self.copy("*.dll", "bin", "bin")
+        self.copy("*.pdb", "bin", "bin", keep_path=False)
+        self.copy("*.pdb", "lib", "bin", keep_path=False)
         self.copy("*.so*", "lib", "lib")
         self.copy("*.dylib", "lib", "lib")
 

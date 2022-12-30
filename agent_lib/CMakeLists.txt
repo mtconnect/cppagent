@@ -321,6 +321,14 @@ if(MSVC)
     "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
     "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.cpp"
     "${SOURCE_DIR}/source/adapter/agent_adapter/agent_adapter.cpp"
+    "${SOURCE_DIR}/source/adapter/shdr/shdr_pipeline.cpp"
+    "${SOURCE_DIR}/source/adapter/adapter_pipeline.cpp"
+    "${SOURCE_DIR}/device_model/component.cpp"
+    "${SOURCE_DIR}/configuration/agent_config.cpp"
+    "${SOURCE_DIR}/sink/rest_sink/rest_service.cpp"
+    "${SOURCE_DIR}/ruby/embedded.cpp"
+    "${SOURCE_DIR}/pipeline/deliver.cpp"
+    "${SOURCE_DIR}/agent.cpp"
     PROPERTY COMPILE_FLAGS "/bigobj")
 endif()
 
@@ -346,9 +354,6 @@ target_include_directories(
     "${CMAKE_CURRENT_LIST_DIR}/../src"
     )
 
-set_property(TARGET agent_lib PROPERTY
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-  
 target_link_libraries(
   agent_lib
   PUBLIC

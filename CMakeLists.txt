@@ -82,6 +82,10 @@ conan_basic_setup(KEEP_RPATHS TARGETS)
 
 if(SHARED_AGENT_LIB)
   set(CMAKE_BUILD_RPATH "@load_path/;@executable_path/;@load_path/../lib;@executable_path/../lib")
+
+  if (MSVC)
+    include(InstallRequiredSystemLibraries)
+  endif()
 endif()
 
 if(WITH_PYTHON)
@@ -92,7 +96,6 @@ if(WITH_PYTHON)
   message("Libs of Python: " ${Python3_LIBRARIES} )
 endif()
 
-include(cmake/msvc_use_static_runtime.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)

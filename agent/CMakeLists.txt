@@ -10,9 +10,6 @@ endif()
 
 add_executable(agent ${AGENT_SOURCES})
 
-set_property(TARGET agent PROPERTY
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-
 if(WITH_PYTHON)
   target_compile_definitions(
     agent
@@ -44,3 +41,10 @@ target_link_libraries(
 target_clangtidy_setup(agent_lib)
 
 install(TARGETS agent RUNTIME DESTINATION bin)
+
+
+if(SHARED_AGENT_LIB and MSVC)
+  set(CMAKE_INSTALL_DEBUG_LIBRARIES ON)  
+  include(InstallRequiredSystemLibraries)
+  install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
+endif()
