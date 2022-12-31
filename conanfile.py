@@ -63,9 +63,9 @@ class MTConnectAgentConan(ConanFile):
 #        else:
 #            git.clone("https://github.com/mtconnect/cppagent")
 
-    def validate(self):
-        if is_msvc(self) and self.options.shared and not is_msvc_static_runtime(self):
-            raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
+#    def validate(self):
+#        if is_msvc(self) and self.options.shared and not is_msvc_static_runtime(self):
+#            raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
 
     def configure(self):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
@@ -153,10 +153,13 @@ class MTConnectAgentConan(ConanFile):
             self.cpp_info.defines.append("AGENT_WITHOUT_IPV6=1")
         if self.options.shared:
             self.user_info.SHARED = 'ON'
+            self.cpp_info.defines.append("SHARED_AGENT_LIB=1")
+            self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
 
     def package(self):
         self.copy("*", src=os.path.join(self.build_folder, "bin"), dst="bin", keep_path=False)
         self.copy("*.a", src=os.path.join(self.build_folder, "lib"), dst="lib", keep_path=False)
+        self.copy("*.lib", src=os.path.join(self.build_folder, "lib"), dst="lib", keep_path=False)
         self.copy("*.dylib", src=os.path.join(self.build_folder, "lib"), dst="lib", keep_path=False)
         self.copy("*.so", src=os.path.join(self.build_folder, "lib"), dst="lib", keep_path=False)
         self.copy("*.h", src=os.path.join(self.build_folder, "agent_lib"), dst="include")
