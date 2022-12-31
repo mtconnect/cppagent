@@ -330,11 +330,18 @@ if(SHARED_AGENT_LIB)
     agent_lib
     PRIVATE
     AGENT_BUILD_SHARED_LIB)
-  target_compile_definitions(
-    agent_lib
-    PUBLIC
-    SHARED_AGENT_LIB
-    BOOST_ALL_DYN_LINK)
+  if(MSVC)
+    target_compile_definitions(
+      agent_lib
+      PUBLIC
+      SHARED_AGENT_LIB
+      BOOST_ALL_DYN_LINK)
+  else()
+    target_compile_definitions(
+      agent_lib
+      PUBLIC
+      SHARED_AGENT_LIB)
+  endif()
 else()
   add_library(agent_lib STATIC ${AGENT_SOURCES})
 endif()
