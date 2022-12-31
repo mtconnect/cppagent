@@ -275,7 +275,7 @@ inline void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected,
   xmlXPathFreeObject(obj);
   xmlXPathFreeContext(xpathCtx);
 
-  mtconnect::trim(actual);
+  actual = mtconnect::trim(actual);
   string message = (string) "Incorrect value for path " + xpath;
 
   if (expected[0] != '!')
