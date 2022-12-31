@@ -48,6 +48,13 @@ const string ServerCertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
 const string ServerKeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
 const string ServerDhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class MqttIsolatedUnitTest : public testing::Test
 {
 protected:

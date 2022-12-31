@@ -19,7 +19,7 @@
 
 namespace mtconnect {
   namespace mqtt_server {
-    class AGENT_LIB_API MqttServer : public std::enable_shared_from_this<MqttServer>
+    class MqttServer : public std::enable_shared_from_this<MqttServer>
     {
     public:
       MqttServer(boost::asio::io_context &ioc) : m_ioContext(ioc), m_port(1883) {}

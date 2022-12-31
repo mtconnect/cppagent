@@ -39,6 +39,13 @@ using namespace std;
 using namespace std::literals;
 using namespace std::chrono_literals;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class MockPipelineContract : public PipelineContract
 {
 public:

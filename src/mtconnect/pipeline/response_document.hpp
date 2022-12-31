@@ -26,7 +26,7 @@
 namespace mtconnect::pipeline {
   using namespace mtconnect;
 
-  struct ResponseDocument
+  struct AGENT_LIB_API ResponseDocument
   {
     struct Error
     {

@@ -33,7 +33,7 @@
 namespace mtconnect::source::adapter::agent_adapter {
   using UrlQueryPair = std::pair<std::string, std::string>;
 
-  struct UrlQuery : public std::map<std::string, std::string>
+  struct AGENT_LIB_API UrlQuery : public std::map<std::string, std::string>
   {
     using std::map<std::string, std::string>::map;
     std::string join() const
@@ -62,7 +62,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     }
   };
 
-  struct Url
+  struct AGENT_LIB_API Url
   {
     using Host = std::variant<std::string, boost::asio::ip::address>;
 

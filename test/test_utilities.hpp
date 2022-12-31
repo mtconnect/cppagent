@@ -17,12 +17,17 @@
 
 #pragma once
 
+// Must be first
+#include <gtest/gtest.h>
+// Here
+
 #include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <iostream>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>

@@ -36,6 +36,13 @@ using namespace mtconnect::source::adapter;
 using namespace mtconnect::source::adapter::mqtt_adapter;
 namespace asio = boost::asio;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class MqttAdapterTest : public testing::Test
 {
 protected:

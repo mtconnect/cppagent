@@ -41,6 +41,13 @@ namespace ip = boost::asio::ip;
 namespace sys = boost::system;
 namespace config = mtconnect::configuration;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class AgentDeviceTest : public testing::Test
 {
 protected:

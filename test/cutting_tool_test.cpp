@@ -45,6 +45,13 @@ using namespace mtconnect::entity;
 using namespace mtconnect::source::adapter;
 using namespace mtconnect::asset;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class CuttingToolTest : public testing::Test
 {
 protected:

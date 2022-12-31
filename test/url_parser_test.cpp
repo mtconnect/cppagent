@@ -28,6 +28,13 @@ using namespace std::literals;
 
 using namespace mtconnect::source::adapter::agent_adapter;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 TEST(UrlParserTest, should_parse_url_with_port)
 {
   Url url = Url::parse("http://127.0.0.1:5000/Device");

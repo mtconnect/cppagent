@@ -24,6 +24,13 @@
 using namespace mtconnect::entity;
 using namespace std;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 TEST(QNameTest, should_handle_simple_name_without_prefix)
 {
   QName qname("SomeName");

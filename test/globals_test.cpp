@@ -27,6 +27,13 @@
 using namespace std;
 using namespace mtconnect;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 TEST(GlobalsTest, IntToString)
 {
   ASSERT_EQ((string) "1234", to_string(1234));

@@ -37,6 +37,13 @@ using namespace mtconnect::entity;
 using namespace mtconnect::printer;
 using namespace mtconnect::parser;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 Properties operator"" _value(const char *value, size_t s)
 {
   return Properties {{"VALUE", string(value)}};

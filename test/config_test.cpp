@@ -45,6 +45,13 @@ namespace fs = std::filesystem;
 using namespace std::chrono_literals;
 using namespace boost::algorithm;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 namespace {
   class ConfigTest : public testing::Test
   {

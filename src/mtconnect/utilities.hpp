@@ -153,7 +153,7 @@ namespace mtconnect {
     return true;
   }
 
-  void mt_localtime(const time_t *time, struct tm *buf);
+  AGENT_LIB_API void mt_localtime(const time_t *time, struct tm *buf);
 
   // Get a specified time formatted
   inline std::string getCurrentTime(std::chrono::time_point<std::chrono::system_clock> timePoint,
@@ -202,10 +202,7 @@ namespace mtconnect {
 
   inline uint64_t getCurrentTimeInSec() { return getCurrentTimeIn<std::chrono::seconds>(); }
 
-  // Get the current time in number of seconds as an integer
-  uint64_t getCurrentTimeInSec();
-
-  uint64_t parseTimeMicro(const std::string &aTime);
+  AGENT_LIB_API uint64_t parseTimeMicro(const std::string &aTime);
 
   // Replace illegal XML characters with the correct corresponding characters
   inline void replaceIllegalCharacters(std::string &data)
@@ -231,7 +228,7 @@ namespace mtconnect {
     }
   }
 
-  std::string addNamespace(const std::string aPath, const std::string aPrefix);
+  AGENT_LIB_API std::string addNamespace(const std::string aPath, const std::string aPrefix);
 
   // Ends with
   inline bool ends_with(const std::string &value, const std::string_view &ending)

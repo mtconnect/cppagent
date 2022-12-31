@@ -47,6 +47,13 @@ using namespace mtconnect;
 using namespace mtconnect::buffer;
 using namespace mtconnect::asset;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class JsonPrinterAssetTest : public testing::Test
 {
 protected:

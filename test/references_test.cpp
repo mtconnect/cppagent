@@ -38,6 +38,13 @@ using namespace device_model;
 using namespace mtconnect::source::adapter;
 using namespace entity;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class ReferencesTest : public testing::Test
 {
 protected:

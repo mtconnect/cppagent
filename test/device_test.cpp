@@ -26,6 +26,13 @@ using namespace entity;
 using namespace device_model;
 using namespace data_item;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class DeviceTest : public testing::Test
 {
 protected:

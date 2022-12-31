@@ -28,6 +28,13 @@ using namespace mtconnect::source::adapter;
 using namespace mtconnect::entity;
 using namespace mtconnect::device_model::data_item;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class DataItemTest : public testing::Test
 {
 protected:

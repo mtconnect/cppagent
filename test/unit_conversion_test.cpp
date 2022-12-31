@@ -25,6 +25,13 @@ using namespace std;
 using namespace mtconnect::device_model::data_item;
 using namespace mtconnect::entity;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 TEST(UnitConversionTest, check_inch_3d)
 {
   auto conv = UnitConversion::make("INCH_3D", "MILLIMETER_3D");

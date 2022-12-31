@@ -359,7 +359,7 @@ namespace mtconnect {
       mqtt_client m_client;
     };
 
-    class AGENT_LIB_API MqttTlsClient : public MqttClientImpl<MqttTlsClient>
+    class MqttTlsClient : public MqttClientImpl<MqttTlsClient>
     {
     public:
       using base = MqttClientImpl<MqttTlsClient>;
@@ -399,7 +399,7 @@ namespace mtconnect {
       mqtt_tls_client m_client;
     };
 
-    class AGENT_LIB_API MqttTlsWSClient : public MqttClientImpl<MqttTlsWSClient>
+    class MqttTlsWSClient : public MqttClientImpl<MqttTlsWSClient>
     {
     public:
       using base = MqttClientImpl<MqttTlsWSClient>;

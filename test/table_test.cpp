@@ -43,6 +43,13 @@ using namespace std::literals;
 using namespace chrono_literals;
 using namespace date::literals;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class TableTest : public testing::Test
 {
 protected:

@@ -44,6 +44,13 @@ namespace beast = boost::beast;
 namespace http = boost::beast::http;
 using tcp = boost::asio::ip::tcp;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class Client
 {
 public:

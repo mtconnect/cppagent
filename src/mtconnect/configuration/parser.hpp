@@ -31,7 +31,7 @@ namespace mtconnect {
       using std::runtime_error::runtime_error;
     };
 
-    struct Parser
+    struct AGENT_LIB_API Parser
     {
       static boost::property_tree::ptree parse(const std::string &text);
       static boost::property_tree::ptree parse(const std::filesystem::path &path);

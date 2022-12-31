@@ -37,7 +37,7 @@ namespace mtconnect {
       Received m_receive;
     };
 
-    class AGENT_LIB_API MqttClient : public std::enable_shared_from_this<MqttClient>
+    class MqttClient : public std::enable_shared_from_this<MqttClient>
     {
     public:
       MqttClient(boost::asio::io_context &ioc, std::unique_ptr<ClientHandler> &&handler)

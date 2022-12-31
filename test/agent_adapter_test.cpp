@@ -52,6 +52,14 @@ using namespace mtconnect::observation;
 using status = boost::beast::http::status;
 namespace asio = boost::asio;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
+
 struct MockPipelineContract : public PipelineContract
 {
   MockPipelineContract(DevicePtr &device) : m_device(device) {}

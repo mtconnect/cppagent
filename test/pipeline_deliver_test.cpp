@@ -39,6 +39,13 @@ using namespace std::literals;
 using namespace std::chrono_literals;
 using namespace mtconnect::sink::rest_sink;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class PipelineDeliverTest : public testing::Test
 {
 protected:

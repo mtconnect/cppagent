@@ -37,6 +37,13 @@ using namespace mtconnect;
 using namespace mtconnect::source::adapter;
 using namespace entity;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class CoordinateSystemTest : public testing::Test
 {
 protected:

@@ -48,6 +48,13 @@ using namespace mtconnect::source::adapter;
 using namespace mtconnect::asset;
 using namespace mtconnect::printer;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class RawMaterialTest : public testing::Test
 {
 protected:

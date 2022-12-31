@@ -40,6 +40,13 @@ using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::sink::rest_sink;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 #define RESOURCE_ROOT PROJECT_ROOT_DIR "/test/resources"
 
 class FileCacheTest : public testing::Test

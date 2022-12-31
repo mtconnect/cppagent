@@ -44,6 +44,13 @@ using tcp = boost::asio::ip::tcp;
 namespace ip = boost::asio::ip;
 namespace sys = boost::system;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class TestConnector : public Connector
 {
 public:

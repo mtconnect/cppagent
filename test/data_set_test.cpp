@@ -35,6 +35,13 @@ using namespace mtconnect::observation;
 using namespace mtconnect::sink::rest_sink;
 using namespace mtconnect::buffer;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class DataSetTest : public testing::Test
 {
 protected:

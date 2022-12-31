@@ -45,9 +45,9 @@ using namespace std;
 using namespace std::chrono;
 
 namespace mtconnect {
-  void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
+  AGENT_LIB_API void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
 
-  uint64_t parseTimeMicro(const std::string &aTime)
+  AGENT_LIB_API uint64_t parseTimeMicro(const std::string &aTime)
   {
     struct tm timeinfo;
     memset(&timeinfo, 0, sizeof(timeinfo));
@@ -119,7 +119,7 @@ namespace mtconnect {
     return false;
   }
 
-  string addNamespace(const string aPath, const string aPrefix)
+  AGENT_LIB_API string addNamespace(const string aPath, const string aPrefix)
   {
     if (aPrefix.empty())
       return aPath;

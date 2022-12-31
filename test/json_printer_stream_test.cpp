@@ -45,6 +45,13 @@ using namespace mtconnect::buffer;
 using namespace mtconnect::observation;
 using namespace mtconnect::entity;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class JsonPrinterStreamTest : public testing::Test
 {
 protected:

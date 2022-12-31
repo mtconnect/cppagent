@@ -1,5 +1,6 @@
 
 include(GoogleTest)
+enable_testing()
 
 add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
@@ -124,7 +125,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
     message(info ": Setting /bigobj for ${_sources}")
     set_property(SOURCE
       ${_sources}
-      PROPERTY COMPILE_FLAGS "/bigobj")    
+      PROPERTY COMPILE_FLAGS "/bigobj")   
   endif()
 
   target_clangformat_setup(${AGENT_TEST_NAME}_test)  

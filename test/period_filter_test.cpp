@@ -40,6 +40,13 @@ using namespace std;
 using namespace std::literals;
 using namespace std::chrono_literals;
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 struct MockPipelineContract : public PipelineContract
 {
   MockPipelineContract(std::map<string, DataItemPtr> &items) : m_dataItems(items) {}
