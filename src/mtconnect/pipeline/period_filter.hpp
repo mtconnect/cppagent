@@ -196,8 +196,10 @@ namespace mtconnect {
 
         // Bind the strand so we do not have races. Use the data item id so there are
         // no race conditions due to LastObservation lifecycle.
-        last.m_timer.async_wait(boost::asio::bind_executor(
-            m_strand, boost::bind(&PeriodFilter::sendObservation, this, id, _1)));
+        last.m_timer.async_wait([this, id](boost::system::error_code ec) {
+          boost::asio::dispatch(m_strand,
+                                boost::bind(&PeriodFilter::sendObservation, this, id, ec));
+        });
       }
 
       void sendObservation(const std::string id, boost::system::error_code ec)

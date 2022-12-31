@@ -76,7 +76,9 @@ public:
   void connecting() override {}
 
   void disconnected() override { m_disconnected = true; }
-  void connected() override { m_disconnected = false; }
+  void connected() override {
+      m_disconnected = false; 
+  }
   bool heartbeats() { return m_heartbeats; }
 
   void startHeartbeats(std::string &aString) { Connector::startHeartbeats(aString); }
@@ -135,7 +137,8 @@ protected:
   template <typename Rep, typename Period>
   void runUntil(chrono::duration<Rep, Period> to, function<bool()> pred)
   {
-    for (int runs = 0; runs < 10 && !pred(); runs++)
+    int runs;
+    for (runs = 0; runs < 50 && !pred(); runs++)
     {
       if (m_context.run_one_for(to) == 0)
         break;
@@ -200,7 +203,10 @@ TEST_F(ConnectorTest, Connection)
 
   m_connector->start(m_port);
 
-  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
+  runUntil(5s, [this]() -> bool 
+      { 
+          return m_connected && m_connector->isConnected(); 
+      });
 
   EXPECT_FALSE(m_connector->m_disconnected);
   auto line = read(1s);

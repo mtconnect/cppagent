@@ -333,7 +333,8 @@ if(SHARED_AGENT_LIB)
   target_compile_definitions(
     agent_lib
     PUBLIC
-    SHARED_AGENT_LIB)
+    SHARED_AGENT_LIB
+    BOOST_ALL_DYN_LINK)
 else()
   add_library(agent_lib STATIC ${AGENT_SOURCES})
 endif()
