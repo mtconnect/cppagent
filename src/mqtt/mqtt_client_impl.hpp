@@ -268,6 +268,7 @@ namespace mtconnect {
         if (m_handler && m_handler->m_connecting)
           m_handler->m_connecting(shared_from_this());
 
+        derived().getClient()->set_clean_session(true);
         derived().getClient()->async_connect([this](mqtt::error_code ec) {
           if (ec)
           {
