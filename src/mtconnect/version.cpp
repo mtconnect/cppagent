@@ -34,3 +34,10 @@ void PrintMTConnectAgentVersion()
 {
   printf("%s - built on " __TIMESTAMP__ "\n", GetAgentVersion().c_str());
 }
+
+#ifdef AGENT_BUILD_SHARED_LIB
+#ifdef _WINDOWS
+  template class std::allocator<char>;
+  template class std::basic_string<char>;
+#endif
+#endif

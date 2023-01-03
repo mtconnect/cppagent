@@ -81,6 +81,10 @@ typedef unsigned __int64 uint64_t;
 
 #ifdef AGENT_BUILD_SHARED_LIB
 #define AGENT_LIB_API AGENT_SYMBOL_EXPORT
+#ifdef _WINDOWS
+  extern template class std::allocator<char>;
+  extern template class std::basic_string<char>;
+#endif
 #else
 #define AGENT_LIB_API AGENT_SYMBOL_IMPORT
 #endif
