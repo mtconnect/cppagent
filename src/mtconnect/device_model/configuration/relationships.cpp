@@ -39,18 +39,30 @@ namespace mtconnect {
               Requirement("deviceUuidRef", true),
               Requirement("role", ControlledVocab {"SYSTEM", "AUXILIARY"}, false),
               Requirement("href", false),
-              Requirement("xlink:type", false),
+              Requirement("xlink:type", false)
           });
 
           auto componentRelationship = make_shared<Factory>(*relationship);
 
           componentRelationship->addRequirements(Requirements {Requirement("idRef", true)});
 
+          auto assetRelationship = make_shared<Factory>(*relationship);
+
+          assetRelationship->addRequirements(Requirements {
+            Requirement("assetIdRef", true),
+            Requirement("assetType", true),
+            Requirement("href", false),
+            Requirement("xlink:type", false)
+          });
+
           relationships = make_shared<Factory>(
               Requirements {Requirement("ComponentRelationship", ENTITY, componentRelationship, 0,
                                         Requirement::Infinite),
                             Requirement("DeviceRelationship", ENTITY, deviceRelationship, 0,
-                                        Requirement::Infinite)});
+                                        Requirement::Infinite),
+                            Requirement("AssetRelationship", ENTITY, assetRelationship, 0,
+                                        Requirement::Infinite)
+              });
 
           relationships->registerMatchers();
 
