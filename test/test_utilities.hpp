@@ -44,8 +44,8 @@ std::string &trim(std::string &str);
 void xpathTest(xmlDocPtr doc, const char *xpath, const char *expected, const std::string &file,
                int line);
 
-#define PARSE_XML(expr)                                       \
-  string result = expr;                                       \
+#define PARSE_XML(expr)                                                         \
+  string result = expr;                                                         \
   auto doc = xmlParseMemory(result.c_str(), static_cast<int>(result.length())); \
   ASSERT_TRUE(doc);
 

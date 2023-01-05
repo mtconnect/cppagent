@@ -73,16 +73,17 @@ namespace mtconnect {
 
       void setModelChangeTime(const std::string &t) { m_modelChangeTime = t; }
       const std::string &getModelChangeTime() { return m_modelChangeTime; }
-      
+
       void setSchemaVersion(const std::string &s) { m_schemaVersion = s; }
       const auto &getSchemaVersion() const { return m_schemaVersion; }
-      
-      void defaultSchemaVersion() const {
+
+      void defaultSchemaVersion() const
+      {
         if (!m_schemaVersion)
         {
-          std::string ver = std::to_string(AGENT_VERSION_MAJOR) + "."
-          + std::to_string(AGENT_VERSION_MINOR);
-          const_cast<Printer*>(this)->m_schemaVersion.emplace(ver);
+          std::string ver =
+              std::to_string(AGENT_VERSION_MAJOR) + "." + std::to_string(AGENT_VERSION_MINOR);
+          const_cast<Printer *>(this)->m_schemaVersion.emplace(ver);
         }
       }
 

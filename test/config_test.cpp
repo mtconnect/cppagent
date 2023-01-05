@@ -54,7 +54,7 @@ namespace {
       m_config = std::make_unique<AgentConfiguration>();
       m_config->setDebug(true);
       m_cwd = std::filesystem::current_path();
-      
+
       chdir(TEST_BIN_ROOT_DIR);
       m_config->updateWorkingDirectory();
     }
@@ -64,35 +64,32 @@ namespace {
       m_config.reset();
       chdir(m_cwd.string().c_str());
     }
-    
+
     fs::path createTempDirectory(const string &ext)
     {
-      fs::path root { fs::path(TEST_BIN_ROOT_DIR) / ("config_test_" + ext) };
+      fs::path root {fs::path(TEST_BIN_ROOT_DIR) / ("config_test_" + ext)};
       if (!fs::exists(root))
         fs::create_directory(root);
       chdir(root.string().c_str());
       m_config->updateWorkingDirectory();
-      //m_config->setDebug(false);
+      // m_config->setDebug(false);
 
       return root;
     }
-    
-    fs::path copyFile(const std::string &src,
-                      fs::path target,
-                      chrono::seconds delta)
+
+    fs::path copyFile(const std::string &src, fs::path target, chrono::seconds delta)
     {
-      fs::path file { fs::path(PROJECT_ROOT_DIR) / "samples" / src };
+      fs::path file {fs::path(PROJECT_ROOT_DIR) / "samples" / src};
 
       fs::copy_file(file, target, fs::copy_options::overwrite_existing);
       auto t = fs::last_write_time(target);
       if (delta.count() != 0)
         fs::last_write_time(target, t - delta);
-      
+
       return target;
     }
-    
-    void replaceTextInFile(fs::path file, const std::string &from,
-                           const std::string &to)
+
+    void replaceTextInFile(fs::path file, const std::string &from, const std::string &to)
     {
       ifstream is {file.string(), ios::binary | ios::ate};
       auto size = is.tellg();
@@ -954,13 +951,11 @@ logger_config {
     m_config->setLoggingLevel("FATAL");
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
   }
-  
-  
 
   TEST_F(ConfigTest, should_reload_device_xml_file)
   {
-    auto root { createTempDirectory("1") };
-    
+    auto root {createTempDirectory("1")};
+
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
     {
@@ -973,7 +968,7 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-    
+
     copyFile("min_config.xml", devices, 60min);
 
     boost::program_options::variables_map options;
@@ -1038,7 +1033,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_reload_device_xml_and_skip_unchanged_devices)
   {
-    fs::path root { createTempDirectory("2") };
+    fs::path root {createTempDirectory("2")};
 
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
@@ -1052,7 +1047,7 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-    
+
     copyFile("min_config.xml", devices, 1min);
 
     boost::program_options::variables_map options;
@@ -1104,7 +1099,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_restart_agent_when_config_file_changes)
   {
-    fs::path root { createTempDirectory("3") };
+    fs::path root {createTempDirectory("3")};
     auto &context = m_config->getAsyncContext();
 
     fs::path devices(root / "Devices.xml");
@@ -1119,7 +1114,7 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-    
+
     copyFile("min_config.xml", devices, 0s);
 
     boost::program_options::variables_map options;
@@ -1179,7 +1174,7 @@ Port = 0
 
   TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices)
   {
-    fs::path root { createTempDirectory("4") };
+    fs::path root {createTempDirectory("4")};
 
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
@@ -1193,7 +1188,7 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-    
+
     copyFile("min_config.xml", devices, 1min);
 
     boost::program_options::variables_map options;
@@ -1293,10 +1288,10 @@ Port = 0
     auto device = devices.front();
     ASSERT_EQ("Agent", device->getName());
   }
-  
+
   TEST_F(ConfigTest, should_update_schema_version_when_device_file_updates)
   {
-    auto root { createTempDirectory("5") };
+    auto root {createTempDirectory("5")};
 
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
@@ -1310,7 +1305,7 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-    
+
     copyFile("min_config.xml", devices, 10min);
     replaceTextInFile(devices, "2.0", "1.2");
 
@@ -1324,7 +1319,7 @@ Port = 0
     auto sink = agent->findSink("RestService");
     auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     ASSERT_TRUE(rest);
-    
+
     auto instance = rest->instanceId();
     sink.reset();
     rest.reset();
@@ -1352,7 +1347,7 @@ Port = 0
         replaceTextInFile(devices, "1.2", "1.3");
       }
     });
-    
+
     auto th = thread([this, agent, instance, &context]() {
       this_thread::sleep_for(5s);
 
@@ -1369,7 +1364,7 @@ Port = 0
 
           EXPECT_NE(agent, agent2);
           EXPECT_NE(instance, rest->instanceId());
-          
+
           auto dataItem = agent2->getDataItemById("c1");
           EXPECT_TRUE(dataItem);
           EXPECT_EQ("ROTARY_VELOCITY", dataItem->getType());
@@ -1377,16 +1372,14 @@ Port = 0
           const auto &printer = agent2->getPrinter("xml");
           EXPECT_NE(nullptr, printer);
           ASSERT_EQ("1.3", *printer->getSchemaVersion());
-
         }
       });
-      
+
       m_config->stop();
     });
 
     m_config->start();
     th.join();
   }
-
 
 }  // namespace

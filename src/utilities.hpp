@@ -576,19 +576,19 @@ namespace mtconnect {
 
     return camel;
   }
-    
+
 #define SCHEMA_VERSION(major, minor) (major * 100 + minor)
-  
+
   inline std::string StrDefaultSchemaVersion()
   {
     return std::to_string(AGENT_VERSION_MAJOR) + "." + std::to_string(AGENT_VERSION_MINOR);
   }
-  
+
   inline constexpr int32_t IntDefaultSchemaVersion()
   {
     return SCHEMA_VERSION(AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR);
   }
-  
+
   inline int32_t IntSchemaVersion(const std::string &s)
   {
     int major, minor;
@@ -596,6 +596,5 @@ namespace mtconnect {
     std::stringstream vstr(s);
     vstr >> major >> c >> minor;
     return SCHEMA_VERSION(major, minor);
-    
   }
 }  // namespace mtconnect

@@ -441,7 +441,7 @@ namespace mtconnect::printer {
                                        const asset::AssetList &asset) const
   {
     defaultSchemaVersion();
-    
+
     entity::JsonPrinter printer(m_jsonVersion);
     json assetDoc;
     if (m_jsonVersion == 1)
