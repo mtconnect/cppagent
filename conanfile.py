@@ -63,20 +63,26 @@ class MTConnectAgentConan(ConanFile):
 #        else:
 #            git.clone("https://github.com/mtconnect/cppagent")
 
-#    def validate(self):
-#        if is_msvc(self) and self.options.shared and not is_msvc_static_runtime(self):
-#            raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
+    def validate(self):
+        if self.settings.os == 'Windows' and self.options.shared and
+           str(self.settings.compiler.runtime).startswith('MT'):
+            raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
 
     def configure(self):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
-            if not self.options.shared:
+            if self.options.shared:
+                if self.settings.build_type and self.settings.build_type == 'Debug':
+                    self.settings.compiler.runtime = 'MDd'
+                else:
+                    self.settings.compiler.runtime = 'MD'
+            else:
                 if self.settings.build_type and self.settings.build_type == 'Debug':
                     self.settings.compiler.runtime = 'MTd'
                 else:
                     self.settings.compiler.runtime = 'MT'
-                    
+                                
             if not self.settings.compiler.version:
                 self.settings.compiler.version = '16'
         
