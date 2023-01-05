@@ -28,6 +28,7 @@
 #include <thread>
 
 #include "async_context.hpp"
+#include "hook_manager.hpp"
 #include "mtconnect/agent.hpp"
 #include "mtconnect/config.hpp"
 #include "mtconnect/sink/rest_sink/file_cache.hpp"
@@ -65,9 +66,6 @@ namespace mtconnect {
     class AGENT_LIB_API AgentConfiguration : public MTConnectService
     {
     public:
-      using Hook = std::function<void(AgentConfiguration &)>;
-      using HookList = std::list<Hook>;
-
       using InitializationFn = void(const boost::property_tree::ptree &, AgentConfiguration &);
       using InitializationFunction = boost::function<InitializationFn>;
 
@@ -77,7 +75,9 @@ namespace mtconnect {
       virtual ~AgentConfiguration();
 
       // Hooks
-      void addAfterAgentHook(Hook &&hook) { m_afterAgentHooks.push_back(std::move(hook)); }
+      auto &afterAgentHooks() { return m_afterAgentHooks; }
+      auto &beforeStartHooks() { return m_beforeStartHooks; }
+      auto &beforeStopHooks() { return m_beforeStopHooks; }
 
       // For MTConnectService
       void stop() override;
@@ -184,7 +184,9 @@ namespace mtconnect {
       std::unique_ptr<python::Embedded> m_python;
 #endif
 
-      HookList m_afterAgentHooks;
+      HookManager<AgentConfiguration> m_afterAgentHooks;
+      HookManager<AgentConfiguration> m_beforeStartHooks;
+      HookManager<AgentConfiguration> m_beforeStopHooks;
     };
   }  // namespace configuration
 }  // namespace mtconnect

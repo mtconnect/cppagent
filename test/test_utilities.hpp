@@ -21,13 +21,10 @@
 #include <gtest/gtest.h>
 // Here
 
-#include "mtconnect/config.hpp"
-#include "mtconnect/utilities.hpp"
-
 #include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
-#include <iostream>
 
 #include <libxml/parser.h>
 #include <libxml/tree.h>
@@ -36,6 +33,7 @@
 #include <libxml/xpathInternals.h>
 
 #include "mtconnect/config.hpp"
+#include "mtconnect/utilities.hpp"
 
 // Retrieve a sample file, open it, and return it as a string
 inline std::string getFile(std::string file)

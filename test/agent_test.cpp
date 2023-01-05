@@ -2882,7 +2882,7 @@ TEST_F(AgentTest, pre_start_hook_should_be_called)
   bool called = false;
   Agent::Hook lambda = [&](Agent &agent) { called = true; };
   AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
-    helper.getAgent()->addPreStartHook(lambda);
+    helper.getAgent()->beforeStartHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
@@ -2898,7 +2898,7 @@ TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
   bool called = false;
   Agent::Hook lambda = [&](Agent &agent) { called = true; };
   AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
-    helper.getAgent()->addPreInitializeHook(lambda);
+    helper.getAgent()->beforeInitializeHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
@@ -2911,7 +2911,7 @@ TEST_F(AgentTest, post_initialize_hooks_should_be_called)
   bool called = false;
   Agent::Hook lambda = [&](Agent &agent) { called = true; };
   AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
-    helper.getAgent()->addPostInitializeHook(lambda);
+    helper.getAgent()->afterInitializeHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
@@ -2924,7 +2924,7 @@ TEST_F(AgentTest, pre_stop_hook_should_be_called)
   bool called = false;
   Agent::Hook lambda = [&](Agent &agent) { called = true; };
   AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
-    helper.getAgent()->addPreStopHook(lambda);
+    helper.getAgent()->beforeStopHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);

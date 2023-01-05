@@ -40,6 +40,7 @@
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/configuration/hook_manager.hpp"
 #include "mtconnect/configuration/service.hpp"
 #include "mtconnect/device_model/agent_device.hpp"
 #include "mtconnect/device_model/device.hpp"
@@ -89,14 +90,10 @@ namespace mtconnect {
     ~Agent();
 
     // Hooks
-    void addPreInitializeHook(Hook &&hook) { m_preInitializeHooks.push_back(std::move(hook)); }
-    void addPreInitializeHook(Hook &hook) { m_preInitializeHooks.push_back(hook); }
-    void addPostInitializeHook(Hook &&hook) { m_postInitializeHooks.push_back(std::move(hook)); }
-    void addPostInitializeHook(Hook &hook) { m_postInitializeHooks.push_back(hook); }
-    void addPreStartHook(Hook &&hook) { m_preStartHooks.push_back(std::move(hook)); }
-    void addPreStartHook(Hook &hook) { m_preStartHooks.push_back(hook); }
-    void addPreStopHook(Hook &&hook) { m_preStopHooks.push_back(std::move(hook)); }
-    void addPreStopHook(Hook &hook) { m_preStopHooks.push_back(hook); }
+    auto &beforeInitializeHooks() { return m_beforeInitializeHooks; }
+    auto &afterInitializeHooks() { return m_afterInitializeHooks; }
+    auto &beforeStartHooks() { return m_beforeStartHooks; }
+    auto &beforeStopHooks() { return m_beforeStopHooks; }
 
     // Initialize models and pipeline
     void initialize(pipeline::PipelineContextPtr context);
@@ -323,10 +320,10 @@ namespace mtconnect {
     bool m_pretty;
 
     // Agent hooks
-    HookList m_preInitializeHooks;
-    HookList m_postInitializeHooks;
-    HookList m_preStartHooks;
-    HookList m_preStopHooks;
+    configuration::HookManager<Agent> m_beforeInitializeHooks;
+    configuration::HookManager<Agent> m_afterInitializeHooks;
+    configuration::HookManager<Agent> m_beforeStartHooks;
+    configuration::HookManager<Agent> m_beforeStopHooks;
   };
 
   class AGENT_LIB_API AgentPipelineContract : public pipeline::PipelineContract

@@ -115,8 +115,7 @@ namespace mtconnect {
   {
     NAMED_SCOPE("Agent::initialize");
 
-    for (auto &hook : m_preInitializeHooks)
-      hook(*this);
+    m_beforeInitializeHooks.exec(*this);
 
     m_pipelineContext = context;
     m_loopback =
@@ -146,8 +145,7 @@ namespace mtconnect {
 
     m_initialized = true;
 
-    for (auto &hook : m_postInitializeHooks)
-      hook(*this);
+    m_afterInitializeHooks.exec(*this);
   }
 
   void Agent::initialDataItemObservations()
@@ -186,8 +184,7 @@ namespace mtconnect {
     NAMED_SCOPE("Agent::start");
     try
     {
-      for (auto &hook : m_preStartHooks)
-        hook(*this);
+      m_beforeStartHooks.exec(*this);
 
       for (auto sink : m_sinks)
         sink->start();
@@ -215,8 +212,7 @@ namespace mtconnect {
   {
     NAMED_SCOPE("Agent::stop");
 
-    for (auto &hook : m_preStopHooks)
-      hook(*this);
+    m_beforeStopHooks.exec(*this);
 
     // Stop all adapter threads...
     LOG(info) << "Shutting down sources";

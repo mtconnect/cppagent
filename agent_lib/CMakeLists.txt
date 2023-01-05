@@ -47,6 +47,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/configuration/agent_config.hpp"
         "${SOURCE_DIR}/configuration/async_context.hpp"
         "${SOURCE_DIR}/configuration/config_options.hpp"
+        "${SOURCE_DIR}/configuration/hook_manager.hpp"
         "${SOURCE_DIR}/configuration/parser.hpp"
         "${SOURCE_DIR}/configuration/service.hpp"
 

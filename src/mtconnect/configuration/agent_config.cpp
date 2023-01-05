@@ -307,6 +307,7 @@ namespace mtconnect::configuration {
         LOG(warning) << "Monitor thread has detected change in configuration files.";
         LOG(warning) << ".... Restarting agent: " << m_configFile;
 
+        m_beforeStopHooks.exec(*this);
         m_agent->stop();
 
         m_context->pause(
@@ -321,6 +322,7 @@ namespace mtconnect::configuration {
                   boost::optional<string>(m_configFile.string()), false);
               options.insert(make_pair("config-file"s, value));
               initialize(options);
+              m_beforeStartHooks.exec(*this);
               m_agent->start();
 
               if (m_monitorFiles)
@@ -383,6 +385,7 @@ namespace mtconnect::configuration {
     }
 
     m_context->setThreadCount(m_workerThreadCount);
+    m_beforeStartHooks.exec(*this);
     m_agent->start();
     m_context->start();
   }
@@ -390,6 +393,7 @@ namespace mtconnect::configuration {
   void AgentConfiguration::stop()
   {
     LOG(info) << "Agent stopping";
+    m_beforeStopHooks.exec(*this);
     m_monitorTimer.cancel();
     m_restart = false;
     if (m_agent)
@@ -720,8 +724,7 @@ namespace mtconnect::configuration {
 
     // Make the Agent
     m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
-    for (auto &hook : m_afterAgentHooks)
-      hook(*this);
+    m_afterAgentHooks.exec(*this);
 
     // Make the PipelineContext
     m_pipelineContext = std::make_shared<pipeline::PipelineContext>();

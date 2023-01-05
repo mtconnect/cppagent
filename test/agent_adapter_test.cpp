@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-
 struct MockPipelineContract : public PipelineContract
 {
   MockPipelineContract(DevicePtr &device) : m_device(device) {}

@@ -129,7 +129,8 @@ namespace mtconnect::source::adapter::shdr {
     // Using a smart pointer to ensure connection is deleted if exception thrown
     LOG(debug) << "Connecting to data source: " << m_server << " on port: " << m_port;
 
-    asio::async_connect(m_socket, m_results.begin(), m_results.end(),
+    asio::async_connect(
+        m_socket, m_results.begin(), m_results.end(),
         [this](const boost::system::error_code &ec, ip::tcp::resolver::iterator it) {
           asio::dispatch(m_strand, boost::bind(&Connector::connected, this, ec, it));
         });
@@ -235,10 +236,9 @@ namespace mtconnect::source::adapter::shdr {
         }
       });
 
-     asio::async_read_until(m_socket, m_incoming, '\n',
-                             [this](sys::error_code ec, size_t len) {
+      asio::async_read_until(m_socket, m_incoming, '\n', [this](sys::error_code ec, size_t len) {
         asio::dispatch(m_strand, boost::bind(&Connector::reader, this, ec, len));
-            });
+      });
     }
   }
 
@@ -376,10 +376,9 @@ namespace mtconnect::source::adapter::shdr {
                  << "Sending " << command;
       ostream os(&m_outgoing);
       os << "* " << command << "\n";
-      asio::async_write(m_socket, m_outgoing,
-                        [this](sys::error_code ec, size_t length) {
-          asio::dispatch(m_strand, boost::bind(&Connector::writer, this, ec, length));
-    });
+      asio::async_write(m_socket, m_outgoing, [this](sys::error_code ec, size_t length) {
+        asio::dispatch(m_strand, boost::bind(&Connector::writer, this, ec, length));
+      });
     }
   }
 
@@ -423,10 +422,9 @@ namespace mtconnect::source::adapter::shdr {
         setReceiveTimeout();
 
         m_heartbeatTimer.expires_from_now(m_heartbeatFrequency);
-        m_heartbeatTimer.async_wait(
-            [this](boost::system::error_code ec) {
+        m_heartbeatTimer.async_wait([this](boost::system::error_code ec) {
           asio::dispatch(m_strand, boost::bind(&Connector::heartbeat, this, ec));
-      });
+        });
       }
       else
       {
