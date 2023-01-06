@@ -15,6 +15,7 @@
 //    limitations under the License.
 //
 
+#include <boost/beast/ssl.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
 
@@ -50,6 +51,9 @@ namespace mtconnect {
                                         mqtt::protocol_version>;
     using mqtt_tls_client = mqtt_tls_client_ptr<boost::asio::io_context &, std::string,
                                                 std::uint16_t, mqtt::protocol_version>;
+    using mqtt_tls_client_ws =
+        mqtt_tls_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t, std::string,
+                               mqtt::protocol_version>;
 
     template <typename Derived>
     class MqttClientImpl : public MqttClient
@@ -63,21 +67,36 @@ namespace mtconnect {
           m_port(GetOption<int>(options, configuration::MqttPort).value_or(1883)),
           m_reconnectTimer(ioContext)
       {
+        m_username = GetOption<std::string>(options, configuration::MqttUserName);
+        m_password = GetOption<std::string>(options, configuration::MqttPassword);
+
         std::stringstream url;
         url << "mqtt://" << m_host << ':' << m_port;
         m_url = url.str();
 
-        std::stringstream identity;
-        identity << '_' << m_host << '_' << m_port;
+        // Some brokers require specific ClientID provided.
+        // If not specified in configuration then generate random one.
+        auto client_id = GetOption<string>(options, configuration::MqttClientId);
+        if (client_id)
+        {
+          m_identity = *client_id;
+        }
+        else
+        {
+          std::stringstream identity;
+          identity << '_' << m_host << '_' << m_port;
 
-        boost::uuids::detail::sha1 sha1;
-        sha1.process_bytes(identity.str().c_str(), identity.str().length());
-        boost::uuids::detail::sha1::digest_type digest;
-        sha1.get_digest(digest);
+          boost::uuids::detail::sha1 sha1;
+          sha1.process_bytes(identity.str().c_str(), identity.str().length());
+          boost::uuids::detail::sha1::digest_type digest;
+          sha1.get_digest(digest);
 
-        identity.str("");
-        identity << std::hex << digest[0] << digest[1] << digest[2];
-        m_identity = std::string("_") + (identity.str()).substr(0, 10);
+          identity.str("");
+          identity << std::hex << digest[0] << digest[1] << digest[2];
+          m_identity = std::string("_") + (identity.str()).substr(0, 10);
+        }
+
+        LOG(debug) << "Using ClientID " << m_identity;
 
         auto ci = GetOption<Seconds>(options, configuration::MqttConnectInterval);
         if (ci)
@@ -247,6 +266,7 @@ namespace mtconnect {
         if (m_handler && m_handler->m_connecting)
           m_handler->m_connecting(shared_from_this());
 
+        derived().getClient()->set_clean_session(true);
         derived().getClient()->async_connect([this](mqtt::error_code ec) {
           if (ec)
           {
@@ -309,6 +329,10 @@ namespace mtconnect {
 
       std::uint16_t m_clientId {0};
 
+      std::optional<std::string> m_username;
+
+      std::optional<std::string> m_password;
+
       boost::asio::steady_timer m_reconnectTimer;
     };
 
@@ -323,6 +347,10 @@ namespace mtconnect {
         if (!m_client)
         {
           m_client = mqtt::make_async_client(m_ioContext, m_host, m_port);
+          if (m_username)
+            m_client->set_user_name(*m_username);
+          if (m_password)
+            m_client->set_password(*m_password);
         }
 
         return m_client;
@@ -343,15 +371,22 @@ namespace mtconnect {
         if (!m_client)
         {
           m_client = mqtt::make_tls_async_client(m_ioContext, m_host, m_port);
+          if (m_username)
+            m_client->set_user_name(*m_username);
+          if (m_password)
+            m_client->set_password(*m_password);
+
           auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
           }
+
           auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
           auto cert = GetOption<string>(m_options, configuration::MqttCert);
           if (private_key && cert)
           {
+            m_client->get_ssl_context().set_verify_mode(boost::asio::ssl::verify_peer);
             m_client->get_ssl_context().use_certificate_chain_file(*cert);
             m_client->get_ssl_context().use_private_key_file(*private_key,
                                                              boost::asio::ssl::context::pem);
@@ -363,6 +398,45 @@ namespace mtconnect {
 
     protected:
       mqtt_tls_client m_client;
+    };
+
+    class MqttTlsWSClient : public MqttClientImpl<MqttTlsWSClient>
+    {
+    public:
+      using base = MqttClientImpl<MqttTlsWSClient>;
+      using base::base;
+
+      auto &getClient()
+      {
+        if (!m_client)
+        {
+          m_client = mqtt::make_tls_async_client_ws(m_ioContext, m_host, m_port);
+          if (m_username)
+            m_client->set_user_name(*m_username);
+          if (m_password)
+            m_client->set_password(*m_password);
+
+          auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
+          if (cacert)
+          {
+            m_client->get_ssl_context().load_verify_file(*cacert);
+          }
+          auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
+          auto cert = GetOption<string>(m_options, configuration::MqttCert);
+          if (private_key && cert)
+          {
+            m_client->get_ssl_context().set_verify_mode(boost::asio::ssl::verify_peer);
+            m_client->get_ssl_context().use_certificate_chain_file(*cert);
+            m_client->get_ssl_context().use_private_key_file(*private_key,
+                                                             boost::asio::ssl::context::pem);
+          }
+        }
+
+        return m_client;
+      }
+
+    protected:
+      mqtt_tls_client_ws m_client;
     };
 
   }  // namespace mqtt_client

@@ -130,7 +130,7 @@ namespace mtconnect {
     const auto &getSinks() const { return m_sinks; }
 
     const auto &getSchemaVersion() const { return m_schemaVersion; }
-    
+
     // Get device from device map
     DevicePtr getDeviceByName(const std::string &name);
     DevicePtr getDeviceByName(const std::string &name) const;
