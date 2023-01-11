@@ -35,12 +35,10 @@ namespace mtconnect {
 
           auto deviceRelationship = make_shared<Factory>(*relationship);
 
-          deviceRelationship->addRequirements(Requirements {
-              Requirement("deviceUuidRef", true),
-              Requirement("role", ControlledVocab {"SYSTEM", "AUXILIARY"}, false),
-              Requirement("href", false),
-              Requirement("xlink:type", false)
-          });
+          deviceRelationship->addRequirements(
+              Requirements {Requirement("deviceUuidRef", true),
+                            Requirement("role", ControlledVocab {"SYSTEM", "AUXILIARY"}, false),
+                            Requirement("href", false), Requirement("xlink:type", false)});
 
           auto componentRelationship = make_shared<Factory>(*relationship);
 
@@ -48,12 +46,9 @@ namespace mtconnect {
 
           auto assetRelationship = make_shared<Factory>(*relationship);
 
-          assetRelationship->addRequirements(Requirements {
-            Requirement("assetIdRef", true),
-            Requirement("assetType", true),
-            Requirement("href", false),
-            Requirement("xlink:type", false)
-          });
+          assetRelationship->addRequirements(
+              Requirements {Requirement("assetIdRef", true), Requirement("assetType", true),
+                            Requirement("href", false), Requirement("xlink:type", false)});
 
           relationships = make_shared<Factory>(
               Requirements {Requirement("ComponentRelationship", ENTITY, componentRelationship, 0,
@@ -61,8 +56,7 @@ namespace mtconnect {
                             Requirement("DeviceRelationship", ENTITY, deviceRelationship, 0,
                                         Requirement::Infinite),
                             Requirement("AssetRelationship", ENTITY, assetRelationship, 0,
-                                        Requirement::Infinite)
-              });
+                                        Requirement::Infinite)});
 
           relationships->registerMatchers();
 

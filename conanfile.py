@@ -64,7 +64,7 @@ class MTConnectAgentConan(ConanFile):
 #            git.clone("https://github.com/mtconnect/cppagent")
 
     def validate(self):
-        if self.settings.os == 'Windows' and self.options.shared and
+        if self.settings.os == 'Windows' and self.options.shared and \
            str(self.settings.compiler.runtime).startswith('MT'):
             raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
 

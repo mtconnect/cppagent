@@ -105,7 +105,7 @@ namespace mtconnect::entity {
     if (v == end())
       return std::nullopt;
     else
-      return get<T>(v->m_value);
+      return std::get<T>(v->m_value);
   }
 
   inline bool DataSetValueSame::operator()(const DataSet &v)
