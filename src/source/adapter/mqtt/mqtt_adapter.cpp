@@ -63,7 +63,7 @@ namespace mtconnect {
                   {configuration::Manufacturer, string()},
                   {configuration::Station, string()},
                   {configuration::Url, string()},
-                  {configuration::MqttCaCert, string()}});
+                  {configuration::MqttClientCaCert, string()}});
 
       AddDefaultedOptions(block, m_options,
                           {{configuration::MqttHost, "localhost"s},

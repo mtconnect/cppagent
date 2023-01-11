@@ -377,31 +377,23 @@ namespace mtconnect {
             m_client->set_user_name(*m_username);
           if (m_password)
             m_client->set_password(*m_password);
-                   
-          auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
+
+          auto cacert = GetOption<string>(m_options, configuration::MqttClientCaCert);
           if (cacert)
           {
-            ifstream root;
-            root.open(*cacert);
-            std::string cert((istreambuf_iterator<char>(root)), (istreambuf_iterator<char>()));
-            m_client->get_ssl_context().add_certificate_authority(
-                boost::asio::buffer(cert.data(), cert.size()));
-            if (HasOption(m_options, configuration::TlsCertificateChain) &&
-                HasOption(m_options, configuration::TlsPrivateKey))
+            if (HasOption(m_options, configuration::MqttClientCrt) &&
+                HasOption(m_options, configuration::MqttClientPrivateKey))
             {
-              m_client->get_ssl_context().set_verify_mode(boost::asio::ssl::verify_peer);
-              auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
-              auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
-              m_client->get_ssl_context().use_certificate_chain_file(*serverCert);
-              m_client->get_ssl_context().use_private_key_file(*serverPrivateKey,
+              auto clientPrivateKey =
+                  GetOption<string>(m_options, configuration::MqttClientPrivateKey);
+              auto clientCrt = GetOption<string>(m_options, configuration::MqttClientCrt);
+              m_client->get_ssl_context().use_certificate_chain_file(*clientCrt);
+              m_client->get_ssl_context().use_private_key_file(*clientPrivateKey,
                                                                boost::asio::ssl::context::pem);
             }
-            if (HasOption(m_options, configuration::TlsClientCAs))
-              m_client->get_ssl_context().load_verify_file(
-                  *GetOption<string>(m_options, configuration::TlsClientCAs));
-          } 
+            m_client->get_ssl_context().load_verify_file(*cacert);
+          }
         }
-
         return m_client;
       }
 
@@ -426,7 +418,18 @@ namespace mtconnect {
           if (m_password)
             m_client->set_password(*m_password);
 
-          auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
+          if (HasOption(m_options, configuration::MqttClientCrt) &&
+              HasOption(m_options, configuration::MqttClientPrivateKey))
+          {
+            auto clientPrivateKey =
+                GetOption<string>(m_options, configuration::MqttClientPrivateKey);
+            auto clientCrt = GetOption<string>(m_options, configuration::MqttClientCrt);
+            m_client->get_ssl_context().use_certificate_chain_file(*clientCrt);
+            m_client->get_ssl_context().use_private_key_file(*clientPrivateKey,
+                                                             boost::asio::ssl::context::pem);
+          }
+
+          auto cacert = GetOption<string>(m_options, configuration::MqttClientCaCert);
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);

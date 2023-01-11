@@ -49,9 +49,9 @@ namespace mtconnect {
 
         GetOptions(config, m_options, options);
         AddOptions(config, m_options,
-                   {{configuration::MqttCaCert, string()},
-                    {configuration::MqttPrivateKey, string()},
-                    {configuration::MqttCert, string()},
+                   {{configuration::MqttClientCaCert, string()},
+                    {configuration::MqttClientPrivateKey, string()},
+                    {configuration::MqttClientCrt, string()},
                     {configuration::MqttClientId, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},

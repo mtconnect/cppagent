@@ -131,6 +131,7 @@ set(AGENT_SOURCES
 
 # src/mqtt HEADER_FILE_ONLY
 
+	"${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_authorization.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_client.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_server.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_client_impl.hpp"

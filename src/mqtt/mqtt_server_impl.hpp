@@ -302,30 +302,27 @@ namespace mtconnect {
                           boost::asio::ssl::context::single_dh_use);
 
           if (HasOption(m_options, configuration::TlsCertificateChain) &&
-              HasOption(m_options, configuration::TlsPrivateKey) &&
-              HasOption(m_options, configuration::TlsDHKey))
+              HasOption(m_options, configuration::TlsPrivateKey))
           {
             LOG(info) << "Server: Initializing TLS support";
-            if (HasOption(m_options, configuration::TlsCertificatePassword))
+            /*if (HasOption(m_options, configuration::TlsCertificatePassword))
             {
               ctx.set_password_callback(
                   [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
                     return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
                   });
-            }
+            }*/
 
             auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
             auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
             ctx.use_certificate_chain_file(*serverCert);
-            ctx.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
             ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
 
             if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
             {
               LOG(info) << "Server: Will only accept client connections with valid certificates";
 
-              ctx.set_verify_mode(boost::asio::ssl::verify_peer |
-                                  boost::asio::ssl::verify_fail_if_no_peer_cert);
+              ctx.set_verify_mode(boost::asio::ssl::verify_peer);
               if (HasOption(m_options, configuration::TlsClientCAs))
               {
                 LOG(info) << "Server: Adding Client Certificates.";

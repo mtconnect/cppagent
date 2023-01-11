@@ -172,7 +172,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_client_should_connect_to_broker)
                          {MqttPort, 0},
                          {MqttTls, false},
                          {AutoAvailable, false},  
-                         {MqttCaCert, MqttClientCACert},
+                         {MqttClientCaCert, MqttClientCACert},
                          {RealTime, false}};
   
   createServer(options);
@@ -317,9 +317,8 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
                          {MqttTls, true},
                          {AutoAvailable, false},
                          {TlsCertificateChain, ServerCertFile},
-                         {TlsPrivateKey, ServerKeyFile},
-                         {TlsDHKey, ServerDhFile},
-                         {MqttCaCert, MqttClientCACert},
+                         {TlsPrivateKey, ServerKeyFile},                         
+                         {MqttClientCaCert, MqttClientCACert},                      
                          {RealTime, false}};
 
   createServer(options);
@@ -346,9 +345,8 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
                          {MqttTls, true},
                          {AutoAvailable, false},
                          {TlsCertificateChain, ServerCertFile},
-                         {TlsPrivateKey, ServerKeyFile},
-                         {TlsDHKey, ServerDhFile},
-                         {MqttCaCert, MqttClientCACert},
+                         {TlsPrivateKey, ServerKeyFile},                         
+                         {MqttClientCaCert, MqttClientCACert},
                          {RealTime, false}};
 
   m_server =
@@ -371,22 +369,20 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
   ASSERT_TRUE(m_client->isConnected());
 }
 
-TEST_F(MqttIsolatedUnitTest, should_conenct_using_authentication) 
+TEST_F(MqttIsolatedUnitTest, should_conenct_using_tls_authentication) 
 { 
   GTEST_SKIP(); 
     
   ConfigOptions options {{ServerIp, "127.0.0.1"s},
-                           {MqttPort, 0},
-                           {MqttTls, true},
-                           {AutoAvailable, false},
-                           {TlsCertificateChain, ServerCertFile},
-                           {TlsPrivateKey, ServerKeyFile},
-                           {TlsDHKey, ServerDhFile},
-                           {TlsClientCAs, ClientCA},
-                           {MqttCaCert, MqttClientCACert},
-                           {TlsVerifyClientCertificate, true},
-                           {TlsCertificatePassword, "mtconnect"s},
-                           {RealTime, false}};
+                         {MqttPort, 0},
+                         {MqttTls, true},
+                         {AutoAvailable, false},
+                         {TlsCertificateChain, ServerCertFile},
+                         {TlsPrivateKey, ServerKeyFile},
+                         {MqttClientCaCert, MqttClientCACert},
+                         {MqttClientCrt, MqttClientCert},
+                         {MqttClientPrivateKey, MqttClientKey},
+                         {RealTime, false}};
 
     createServer(options);
 
