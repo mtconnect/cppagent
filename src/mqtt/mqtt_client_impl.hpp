@@ -15,6 +15,7 @@
 //    limitations under the License.
 //
 
+#include <boost/algorithm/string.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
@@ -222,16 +223,20 @@ namespace mtconnect {
           return false;
         }
 
+        LOG(debug) << "Subscribing to topic: " << topic;
         m_clientId = derived().getClient()->acquire_unique_packet_id();
         derived().getClient()->async_subscribe(
             m_clientId, topic.c_str(), mqtt::qos::at_least_once, [topic](mqtt::error_code ec) {
               if (ec)
               {
-                LOG(error) << "MqttClientImpl::subscribe: Subscribe failed: " << topic << ": "
-                           << ec.message();
+                LOG(error) << "Subscribe failed: " << topic << ": " << ec.message();
                 return false;
               }
-              return true;
+              else
+              {
+                LOG(debug) << "Subscribed to: " << topic;
+                return true;
+              }
             });
 
         return true;

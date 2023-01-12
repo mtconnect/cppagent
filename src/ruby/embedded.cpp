@@ -76,8 +76,13 @@ namespace mtconnect::ruby {
     NAMED_SCOPE("Ruby::Embedded");
 
     // Load the ruby module in the configuration
-    auto module = GetOption<string>(m_options, "module");
-    auto initialization = GetOption<string>(m_options, "initialization");
+    auto module = GetOption<string>(m_options, "Module");
+    auto initialization = GetOption<string>(m_options, "Initialization");
+
+    if (!module)
+      module = GetOption<string>(m_options, "module");
+    if (!initialization)
+      initialization = GetOption<string>(m_options, "initialization");
 
     if (!m_rubyVM)
     {

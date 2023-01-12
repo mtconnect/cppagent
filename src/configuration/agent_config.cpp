@@ -911,7 +911,11 @@ namespace mtconnect::configuration {
     if (ruby)
     {
       GetOptions(*ruby, rubyOptions, options);
-      AddOptions(*ruby, rubyOptions, {{"module", string()}, {"initialization", string()}});
+      AddOptions(*ruby, rubyOptions,
+                 {{"Module", string()},
+                  {"Initialization", string()},
+                  {"module", string()},
+                  {"initialization", string()}});
     }
     m_ruby = make_unique<ruby::Embedded>(m_agent.get(), rubyOptions);
   }

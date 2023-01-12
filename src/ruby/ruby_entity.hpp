@@ -561,6 +561,23 @@ namespace mtconnect::ruby {
       auto tokensClass = mrb_define_class_under(mrb, module, "Tokens", entityClass);
       MRB_SET_INSTANCE_TT(tokensClass, MRB_TT_DATA);
       mrb_define_method(
+          mrb, tokensClass, "initialize",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+            mrb_value properties;
+            mrb_get_args(mrb, "zo", &name, &properties);
+
+            Properties props;
+            fromRuby(mrb, properties, props);
+
+            auto entity = make_shared<pipeline::Tokens>(name, props);
+            MRubySharedPtr<Entity>::replace(mrb, self, entity);
+
+            return self;
+          },
+          MRB_ARGS_REQ(2));
+
+      mrb_define_method(
           mrb, tokensClass, "tokens",
           [](mrb_state *mrb, mrb_value self) {
             auto tokens = MRubySharedPtr<Entity>::unwrap<pipeline::Tokens>(mrb, self);
@@ -596,6 +613,22 @@ namespace mtconnect::ruby {
 
       auto timestampedClass = mrb_define_class_under(mrb, module, "Timestamped", tokensClass);
       MRB_SET_INSTANCE_TT(timestampedClass, MRB_TT_DATA);
+      mrb_define_method(
+          mrb, timestampedClass, "initialize",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+            mrb_value properties;
+            mrb_get_args(mrb, "zo", &name, &properties);
+
+            Properties props;
+            fromRuby(mrb, properties, props);
+
+            auto entity = make_shared<pipeline::Timestamped>(name, props);
+            MRubySharedPtr<Entity>::replace(mrb, self, entity);
+
+            return self;
+          },
+          MRB_ARGS_REQ(2));
 
       mrb_define_method(
           mrb, tokensClass, "timestamp",
