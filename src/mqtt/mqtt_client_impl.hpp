@@ -15,8 +15,7 @@
 //    limitations under the License.
 //
 
-#include <fstream>
-
+#include <boost/algorithm/string.hpp>
 #include <boost/beast/ssl.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
@@ -224,16 +223,20 @@ namespace mtconnect {
           return false;
         }
 
+        LOG(debug) << "Subscribing to topic: " << topic;
         m_clientId = derived().getClient()->acquire_unique_packet_id();
         derived().getClient()->async_subscribe(
             m_clientId, topic.c_str(), mqtt::qos::at_least_once, [topic](mqtt::error_code ec) {
               if (ec)
               {
-                LOG(error) << "MqttClientImpl::subscribe: Subscribe failed: " << topic << ": "
-                           << ec.message();
+                LOG(error) << "Subscribe failed: " << topic << ": " << ec.message();
                 return false;
               }
-              return true;
+              else
+              {
+                LOG(debug) << "Subscribed to: " << topic;
+                return true;
+              }
             });
 
         return true;
@@ -378,27 +381,27 @@ namespace mtconnect {
           if (m_password)
             m_client->set_password(*m_password);
 
-          auto cacert = GetOption<string>(m_options, configuration::MqttClientCaCert);
+          auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
           {
-            if (HasOption(m_options, configuration::MqttClientCrt) &&
-                HasOption(m_options, configuration::MqttClientPrivateKey))
-            {
-              auto clientPrivateKey =
-                  GetOption<string>(m_options, configuration::MqttClientPrivateKey);
-              auto clientCrt = GetOption<string>(m_options, configuration::MqttClientCrt);
-              m_client->get_ssl_context().use_certificate_chain_file(*clientCrt);
-              m_client->get_ssl_context().use_private_key_file(*clientPrivateKey,
-                                                               boost::asio::ssl::context::pem);
-            }
             m_client->get_ssl_context().load_verify_file(*cacert);
           }
+
+          auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
+          auto cert = GetOption<string>(m_options, configuration::MqttCert);
+          if (private_key && cert)
+          {
+            m_client->get_ssl_context().set_verify_mode(boost::asio::ssl::verify_peer);
+            m_client->get_ssl_context().use_certificate_chain_file(*cert);
+            m_client->get_ssl_context().use_private_key_file(*private_key,
+                                                             boost::asio::ssl::context::pem);
+          }
         }
+
         return m_client;
       }
 
     protected:
-
       mqtt_tls_client m_client;
     };
 
@@ -418,22 +421,20 @@ namespace mtconnect {
           if (m_password)
             m_client->set_password(*m_password);
 
-          if (HasOption(m_options, configuration::MqttClientCrt) &&
-              HasOption(m_options, configuration::MqttClientPrivateKey))
-          {
-            auto clientPrivateKey =
-                GetOption<string>(m_options, configuration::MqttClientPrivateKey);
-            auto clientCrt = GetOption<string>(m_options, configuration::MqttClientCrt);
-            m_client->get_ssl_context().use_certificate_chain_file(*clientCrt);
-            m_client->get_ssl_context().use_private_key_file(*clientPrivateKey,
-                                                             boost::asio::ssl::context::pem);
-          }
-
-          auto cacert = GetOption<string>(m_options, configuration::MqttClientCaCert);
+          auto cacert = GetOption<string>(m_options, configuration::MqttCaCert);
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
-          }         
+          }
+          auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
+          auto cert = GetOption<string>(m_options, configuration::MqttCert);
+          if (private_key && cert)
+          {
+            m_client->get_ssl_context().set_verify_mode(boost::asio::ssl::verify_peer);
+            m_client->get_ssl_context().use_certificate_chain_file(*cert);
+            m_client->get_ssl_context().use_private_key_file(*private_key,
+                                                             boost::asio::ssl::context::pem);
+          }
         }
 
         return m_client;

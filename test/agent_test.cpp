@@ -2855,11 +2855,11 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
 TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
-  
+
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
   const auto &storage = agent->getAssetStorage();
-  
+
   {
     PARSE_XML_RESPONSE_PUT("/assets", body, queries);
     ASSERT_EQ((unsigned int)1, storage->getCount());
@@ -2868,5 +2868,4 @@ TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
     PARSE_XML_RESPONSE_PUT("/assets/P2", body, queries);
     ASSERT_EQ((unsigned int)2, storage->getCount());
   }
-  
 }

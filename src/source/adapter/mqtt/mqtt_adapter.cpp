@@ -63,7 +63,10 @@ namespace mtconnect {
                   {configuration::Manufacturer, string()},
                   {configuration::Station, string()},
                   {configuration::Url, string()},
-                  {configuration::MqttClientCaCert, string()}});
+                  {configuration::MqttCaCert, string()},
+                  {configuration::MqttPrivateKey, string()},
+                  {configuration::MqttCert, string()},
+                  {configuration::MqttClientId, string()}});
 
       AddDefaultedOptions(block, m_options,
                           {{configuration::MqttHost, "localhost"s},
@@ -77,12 +80,16 @@ namespace mtconnect {
       m_handler = m_pipeline.makeHandler();
       auto clientHandler = make_unique<ClientHandler>();
 
+      m_pipeline.m_handler = m_handler.get();
+
       clientHandler->m_connecting = [this](shared_ptr<MqttClient> client) {
         m_handler->m_connecting(client->getIdentity());
       };
 
       clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
+        client->connectComplete();
         m_handler->m_connected(client->getIdentity());
+        subscribeToTopics();
       };
 
       clientHandler->m_disconnected = [this](shared_ptr<MqttClient> client) {
@@ -116,16 +123,23 @@ namespace mtconnect {
         StringList list;
         if (topics->size() == 0)
         {
-          list.emplace_back(":" + topics->get_value<string>());
+          boost::split(list, topics->get_value<string>(), boost::is_any_of(":"),
+                       boost::token_compress_on);
         }
         else
         {
           for (auto &f : *topics)
           {
-            list.emplace_back(f.first + ":" + f.second.data());
+            list.emplace_back(f.second.data());
           }
         }
         options[configuration::Topics] = list;
+      }
+      else
+      {
+        LOG(error) << "MQTT Adapter requires at least one topic to subscribe to. Provide 'Topics = "
+                      "' or Topics block";
+        exit(1);
       }
     }
     /// <summary>
@@ -159,6 +173,22 @@ namespace mtconnect {
       m_pipeline.clear();
     }
 
+    void MqttAdapter::subscribeToTopics()
+    {
+      // If we have topics, subscribe
+      auto topics = GetOption<StringList>(m_options, configuration::Topics);
+      LOG(info) << "MqttClientImpl::connect: subscribing to topics";
+      if (topics)
+      {
+        for (const auto &topic : *topics)
+        {
+          vector<string> parts;
+          boost::split(parts, topic, boost::is_any_of(":"), boost::token_compress_on);
+          m_client->subscribe(parts[1]);
+        }
+      }
+    }
+
     mtconnect::pipeline::Pipeline *MqttAdapter::getPipeline() { return &m_pipeline; }
 
     void MqttPipeline::build(const ConfigOptions &options)
@@ -168,18 +198,39 @@ namespace mtconnect {
       buildDeviceList();
       buildCommandAndStatusDelivery();
 
+      // SHDR Parsing Branch, if Data is sent down...
+      auto tokenizer = bind(make_shared<ShdrTokenizer>());
+      auto shdr = tokenizer;
+
+      auto extract =
+          make_shared<ExtractTimestamp>(IsOptionSet(m_options, configuration::RelativeTime));
+      shdr = shdr->bind(extract);
+
+      // Token mapping to data items and asset
+      auto mapper = make_shared<ShdrTokenMapper>(
+          m_context, m_device.value_or(""),
+          GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
+
+      buildAssetDelivery(mapper);
+      mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
+      shdr = shdr->bind(mapper);
+
+      // Build topic mapper pipeline
       auto next = bind(make_shared<TopicMapper>(
           m_context, GetOption<string>(m_options, configuration::Device).value_or("")));
 
       auto map1 = next->bind(make_shared<JsonMapper>(m_context));
-      auto map2 = next->bind(make_shared<DataMapper>(m_context));
+      auto map2 = next->bind(make_shared<DataMapper>(m_context, m_handler));
+      map2->bind(tokenizer);
 
       next = make_shared<NullTransform>(TypeGuard<Observation, asset::Asset>(SKIP));
 
       map1->bind(next);
       map2->bind(next);
 
-      buildAssetDelivery(next);
+      // Merge the pipelines
+      shdr->bind(next);
+
       buildObservationDelivery(next);
       applySplices();
     }

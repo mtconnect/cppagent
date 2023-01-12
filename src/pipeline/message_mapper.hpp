@@ -60,7 +60,8 @@ namespace mtconnect {
     {
     public:
       DataMapper(const DataMapper &) = default;
-      DataMapper(PipelineContextPtr context) : Transform("DataMapper"), m_context(context)
+      DataMapper(PipelineContextPtr context, source::adapter::Handler *handler)
+        : Transform("DataMapper"), m_context(context), m_handler(handler)
       {
         m_guard = TypeGuard<DataMessage>(RUN);
       }
@@ -92,19 +93,30 @@ namespace mtconnect {
         }
         else
         {
-          std::string msg;
-          if (auto topic = data->maybeGet<std::string>("topic"); topic)
-            msg = *topic;
+          if (std::holds_alternative<std::string>(data->getValue()))
+          {
+            // Try processing as shdr data
+            auto entity = make_shared<Entity>(
+                "Data", Properties {{"VALUE", data->getValue()}, {"source", string("")}});
+            next(entity);
+          }
           else
-            msg = "unknown topic";
-          LOG(error) << "Cannot find data item for topic: " << msg
-                     << " and data: " << data->getValue<std::string>();
+          {
+            std::string msg;
+            if (auto topic = data->maybeGet<std::string>("topic"); topic)
+              msg = *topic;
+            else
+              msg = "unknown topic";
+            LOG(error) << "Cannot find data item for topic: " << msg
+                       << " and data: " << data->getValue<std::string>();
+          }
           return nullptr;
         }
       }
 
     protected:
       PipelineContextPtr m_context;
+      source::adapter::Handler *m_handler;
     };
   }  // namespace pipeline
 }  // namespace mtconnect
