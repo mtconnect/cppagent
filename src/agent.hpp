@@ -152,6 +152,7 @@ namespace mtconnect {
 
       return nullptr;
     }
+    DevicePtr getDefaultDevice() const { return defaultDevice(); }
 
     // Asset information
     asset::AssetStorage *getAssetStorage() { return m_assetStorage.get(); }

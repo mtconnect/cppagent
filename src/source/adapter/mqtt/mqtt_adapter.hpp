@@ -33,6 +33,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     {}
 
     void build(const ConfigOptions &options) override;
+    Handler *m_handler {nullptr};
 
   protected:
     ConfigOptions m_options;
@@ -54,6 +55,8 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     bool start() override;
 
     void stop() override;
+
+    void subscribeToTopics();
 
     pipeline::Pipeline *getPipeline() override;
 

@@ -61,7 +61,7 @@ namespace mtconnect {
                   const std::optional<std::string> &device = std::nullopt)
         : Transform("TopicMapper"), m_context(context), m_defaultDevice(device)
       {
-        m_guard = TypeGuard<PipelineMessage>(RUN);
+        m_guard = EntityNameGuard("Message", RUN);
       }
 
       auto resolve(const std::string &topic)
