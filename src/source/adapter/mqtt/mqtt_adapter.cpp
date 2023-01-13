@@ -77,7 +77,8 @@ namespace mtconnect {
                            {configuration::RelativeTime, false}});
       loadTopics(block, m_options);
 
-      if (!HasOption(m_options, configuration::MqttHost) && HasOption(m_options, configuration::Host))
+      if (!HasOption(m_options, configuration::MqttHost) &&
+          HasOption(m_options, configuration::Host))
       {
         m_options[configuration::MqttHost] = m_options[configuration::Host];
       }
