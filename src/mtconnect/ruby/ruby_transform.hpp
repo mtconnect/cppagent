@@ -97,6 +97,18 @@ namespace mtconnect::ruby {
           MRB_ARGS_REQ(1));
 
       mrb_define_method(
+          mrb, rubyTrans, "bind",
+          [](mrb_state *mrb, mrb_value self) {
+            auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
+
+            TransformPtr *to;
+            mrb_get_args(mrb, "d", &to, MRubySharedPtr<Transform>::type());
+            auto nxt = trans->bind(*to);
+            return MRubySharedPtr<Transform>::wrap(mrb, "Transform", nxt);
+          },
+          MRB_ARGS_REQ(1));
+
+      mrb_define_method(
           mrb, rubyTrans, "guard=",
           [](mrb_state *mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);

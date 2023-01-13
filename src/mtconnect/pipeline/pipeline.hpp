@@ -95,6 +95,13 @@ namespace mtconnect {
         }
       }
 
+      Transform::ListOfTransforms find(const std::string &target)
+      {
+        Transform::ListOfTransforms xforms;
+        m_start->find(target, xforms);
+        return xforms;
+      }
+
       bool spliceBefore(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;

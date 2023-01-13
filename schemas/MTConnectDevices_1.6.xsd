@@ -1714,6 +1714,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:enumeration>
+      <xs:enumeration value='ACTIVE'>
+        <xs:annotation>
+          <xs:documentation>
+            relating to logic or motion program currently executing.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:enumeration>
       <xs:enumeration value='MAXIMUM'>
         <xs:annotation>
           <xs:documentation>

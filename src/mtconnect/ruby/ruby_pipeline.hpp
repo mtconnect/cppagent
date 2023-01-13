@@ -41,6 +41,26 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(contextClass, MRB_TT_DATA);
 
       mrb_define_method(
+          mrb, pipelineClass, "find",
+          [](mrb_state *mrb, mrb_value self) {
+            const char *name;
+            TransformPtr transform;
+            auto pipeline = MRubyPtr<Pipeline>::unwrap(self);
+            mrb_get_args(mrb, "z", &name);
+
+            auto transforms = pipeline->find(name);
+            mrb_value ary = mrb_ary_new_capa(mrb, transforms.size());
+            for (auto &trans : transforms)
+            {
+              mrb_ary_push(mrb, ary,
+                           MRubySharedPtr<Transform>::wrap(mrb, "Transform", trans.second));
+            }
+
+            return ary;
+          },
+          MRB_ARGS_REQ(1));
+
+      mrb_define_method(
           mrb, pipelineClass, "splice_before",
           [](mrb_state *mrb, mrb_value self) {
             const char *name;

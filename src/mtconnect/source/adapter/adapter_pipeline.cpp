@@ -65,7 +65,7 @@ namespace mtconnect {
       };
       handler->m_processMessage = [this](const std::string &topic, const std::string &data,
                                          const std::string &source) {
-        auto entity = make_shared<PipelineMessage>(
+        auto entity = make_shared<Entity>(
             "Message", Properties {{"VALUE", data}, {"topic", topic}, {"source", source}});
         run(entity);
       };
