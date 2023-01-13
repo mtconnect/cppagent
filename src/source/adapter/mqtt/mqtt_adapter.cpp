@@ -66,16 +66,22 @@ namespace mtconnect {
                   {configuration::MqttCaCert, string()},
                   {configuration::MqttPrivateKey, string()},
                   {configuration::MqttCert, string()},
-                  {configuration::MqttClientId, string()}});
+                  {configuration::MqttClientId, string()},
+                  {configuration::MqttHost, string()}});
 
       AddDefaultedOptions(block, m_options,
-                          {{configuration::MqttHost, "localhost"s},
-                           {configuration::MqttPort, 1883},
+                          {{configuration::MqttPort, 1883},
                            {configuration::MqttTls, false},
                            {configuration::AutoAvailable, false},
                            {configuration::RealTime, false},
                            {configuration::RelativeTime, false}});
       loadTopics(block, m_options);
+
+      if (!HasOption(m_options, configuration::MqttHost) &&
+          HasOption(m_options, configuration::Host))
+      {
+        m_options[configuration::MqttHost] = m_options[configuration::Host];
+      }
 
       m_handler = m_pipeline.makeHandler();
       auto clientHandler = make_unique<ClientHandler>();
@@ -182,9 +188,7 @@ namespace mtconnect {
       {
         for (const auto &topic : *topics)
         {
-          vector<string> parts;
-          boost::split(parts, topic, boost::is_any_of(":"), boost::token_compress_on);
-          m_client->subscribe(parts[1]);
+          m_client->subscribe(topic);
         }
       }
     }
