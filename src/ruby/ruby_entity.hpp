@@ -395,7 +395,8 @@ namespace mtconnect::ruby {
           [](mrb_state *mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
             const char *key;
-            mrb_get_args(mrb, "s", &key);
+            
+            mrb_get_args(mrb, "z", &key);
 
             auto props = entity->getProperties();
             auto it = props.find(key);
@@ -411,7 +412,7 @@ namespace mtconnect::ruby {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
             const char *key;
             mrb_value value;
-            mrb_get_args(mrb, "so", &key, &value);
+            mrb_get_args(mrb, "zo", &key, &value);
 
             entity->setProperty(key, valueFromRuby(mrb, value));
 

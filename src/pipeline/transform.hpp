@@ -181,7 +181,7 @@ namespace mtconnect {
           if (it->get() == old.get())
           {
             *it = xform;
-            for (auto nxt = old->m_next.begin(); it != old->m_next.end(); it++)
+            for (auto nxt = old->m_next.begin(); nxt != old->m_next.end(); nxt++)
             {
               xform->bind(*nxt);
             }
@@ -196,7 +196,7 @@ namespace mtconnect {
           if (it->get() == old.get())
           {
             m_next.erase(it);
-            for (auto nxt = old->m_next.begin(); it != old->m_next.end(); it++)
+            for (auto nxt = old->m_next.begin(); nxt != old->m_next.end(); nxt++)
             {
               bind(*nxt);
             }

@@ -63,10 +63,22 @@ namespace mtconnect::ruby {
   inline Timestamp timestampFromRuby(mrb_state *mrb, mrb_value value)
   {
     using namespace std::chrono;
-
-    auto tm = static_cast<mrb_time *>(DATA_PTR(value));
-    auto dur = duration_cast<microseconds>(seconds {tm->sec} + microseconds {tm->usec});
-    return time_point<system_clock> {duration_cast<system_clock::duration>(dur)};
+    if (mrb_string_p(value))
+    {
+      auto text = std::string(mrb_str_to_cstr(mrb, value));
+      return parseTimestamp(text);
+    }
+    auto dp = DATA_TYPE(value);
+    if (strncmp(dp->struct_name, "Time", 4) == 0)
+    {
+      auto tm = static_cast<mrb_time *>(DATA_PTR(value));
+      auto dur = duration_cast<microseconds>(seconds {tm->sec} + microseconds {tm->usec});
+      return time_point<system_clock> {duration_cast<system_clock::duration>(dur)};      
+    }
+    else
+    {
+      return Timestamp();
+    }
   }
 
   inline mrb_value toRuby(mrb_state *mrb, const Timestamp &ts)

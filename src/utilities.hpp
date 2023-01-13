@@ -74,6 +74,9 @@ typedef unsigned __int64 uint64_t;
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
 
+#include <date/date.h>
+#include <chrono>
+
 #include <version.h>
 
 //####### CONSTANTS #######
@@ -576,6 +579,24 @@ namespace mtconnect {
 
     return camel;
   }
+  
+  inline Timestamp parseTimestamp(const std::string &timestamp)
+  {
+    using namespace date;
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+    using namespace date::literals;
+    
+    Timestamp ts;
+    std::istringstream in(timestamp);
+    in >> std::setw(6) >> parse("%FT%T", ts);
+    if (!in.good())
+    {
+      ts = std::chrono::system_clock::now();
+    }
+    return ts;
+  }
+
 
 #define SCHEMA_VERSION(major, minor) (major * 100 + minor)
 
