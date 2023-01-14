@@ -76,7 +76,7 @@ namespace mtconnect {
     using Pattern = std::optional<std::regex>;
     using VocabSet = std::optional<std::unordered_set<std::string>>;
 
-    bool ConvertValueToType(Value &value, ValueType type, bool table = false);
+    bool AGENT_LIB_API ConvertValueToType(Value &value, ValueType type, bool table = false);
 
     class AGENT_LIB_API EntityError : public std::logic_error
     {

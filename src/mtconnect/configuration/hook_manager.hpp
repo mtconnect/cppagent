@@ -25,7 +25,7 @@
 
 namespace mtconnect::configuration {
   template <typename T>
-  class AGENT_LIB_API HookManager
+  class HookManager
   {
   public:
     using Hook = std::function<void(T &)>;
