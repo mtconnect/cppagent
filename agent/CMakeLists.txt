@@ -47,4 +47,6 @@ if(SHARED_AGENT_LIB AND MSVC)
   set(CMAKE_INSTALL_DEBUG_LIBRARIES ON)  
   include(InstallRequiredSystemLibraries)
   install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
+  install(DIRECTORY "${PROJECT_BINARY_DIR}/bin/" DESTINATION bin COMPONENT Libraries
+           FILES_MATCHING PATTERN "*.dll")
 endif()
