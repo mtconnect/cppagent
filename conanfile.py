@@ -161,6 +161,8 @@ class MTConnectAgentConan(ConanFile):
             self.user_info.SHARED = 'ON'
             self.cpp_info.defines.append("SHARED_AGENT_LIB=1")
             if self.settings.os == 'Windows':
+                self.cpp_info.defines.append("WINVER=0x0600")
+                self.cpp_info.defines.append("_WIN32_WINNT=0x0600")
                 self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
 
     def package(self):
