@@ -16,7 +16,7 @@ class MTConnectAgentConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False], "build_tests": [True, False], 
                 "without_ruby": [True, False], "without_ipv6": [True, False], "with_ruby": [True, False],
-                 "development" : [True, False], "shared": [True, False] }
+                 "development" : [True, False], "shared": [True, False], "winver": "ANY" }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.79.0@#3249d9bd2b863a9489767bf9c8a05b4b",
@@ -35,6 +35,7 @@ class MTConnectAgentConan(ConanFile):
         "with_ruby": True,
         "development": False,
         "shared": False,
+        "winver": "0x600",
 
         "boost:shared": False,
         "boost:without_python": True,
@@ -72,6 +73,10 @@ class MTConnectAgentConan(ConanFile):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
+            if self.windows_xp:
+                self.options.build_tests = False
+                self.options.winver == '0x501'
+                
             if self.options.shared:
                 if self.settings.build_type and self.settings.build_type == 'Debug':
                     self.settings.compiler.runtime = 'MDd'
@@ -91,8 +96,6 @@ class MTConnectAgentConan(ConanFile):
         
         self.settings.compiler.cppstd = 17
 
-        if self.windows_xp:
-            self.options.build_tests = False
 
         if not self.options.build_tests:
             self.options.run_tests = False
@@ -129,9 +132,9 @@ class MTConnectAgentConan(ConanFile):
             cmake.definitions['WITH_RUBY'] = 'ON'
         else:
             cmake.definitions['WITH_RUBY'] = 'OFF'
-            
-        if self.windows_xp:
-            cmake.definitions['WINVER'] = '0x0501'
+
+        if self.settings.os == 'Windows':
+            cmake.definitions['WINVER'] = self.options.winver
 
         if self.options.shared:
             cmake.definitions['SHARED_AGENT_LIB'] = 'ON'
@@ -160,10 +163,11 @@ class MTConnectAgentConan(ConanFile):
         if self.options.shared:
             self.user_info.SHARED = 'ON'
             self.cpp_info.defines.append("SHARED_AGENT_LIB=1")
-            if self.settings.os == 'Windows':
-                self.cpp_info.defines.append("WINVER=0x0600")
-                self.cpp_info.defines.append("_WIN32_WINNT=0x0600")
-                self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
+            self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
+            
+        if self.settings.os == 'Windows':
+            self.cpp_info.defines.append("WINVER=" + self.options.winver)
+            self.cpp_info.defines.append("_WIN32_WINNT=" + self.options..winver)
 
     def package(self):
         self.copy("*", src=os.path.join(self.build_folder, "bin"), dst="bin", keep_path=False)
