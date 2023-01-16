@@ -106,14 +106,14 @@ namespace mtconnect {
                           {"id", true},
                           {"name", false},
                           {"nativeName", false},
-                          {"sampleRate", DOUBLE, false},
-                          {"sampleInterval", DOUBLE, false},
+                          {"sampleRate", ValueType::DOUBLE, false},
+                          {"sampleInterval", ValueType::DOUBLE, false},
                           {"uuid", false},
-                          {"Description", ENTITY, description, false},
-                          {"DataItems", ENTITY_LIST, dataItems, false},
-                          {"Compositions", ENTITY_LIST, compositions, false},
-                          {"References", ENTITY_LIST, references, false},
-                          {"Configuration", ENTITY, configuration, false}},
+                          {"Description", ValueType::ENTITY, description, false},
+                          {"DataItems", ValueType::ENTITY_LIST, dataItems, false},
+                          {"Compositions", ValueType::ENTITY_LIST, compositions, false},
+                          {"References", ValueType::ENTITY_LIST, references, false},
+                          {"Configuration", ValueType::ENTITY, configuration, false}},
             [](const std::string &name, Properties &props) -> EntityPtr {
               auto ptr = make_shared<Component>(name, props);
               ptr->initialize();
@@ -122,10 +122,11 @@ namespace mtconnect {
         factory->setOrder(
             {"Description", "Configuration", "DataItems", "Compositions", "References"});
         auto component = make_shared<Factory>(
-            Requirements {{"Component", ENTITY, factory, 1, Requirement::Infinite}});
+            Requirements {{"Component", ValueType::ENTITY, factory, 1, Requirement::Infinite}});
         component->registerFactory(regex(".+"), factory);
         component->registerMatchers();
-        factory->addRequirements(Requirements {{"Components", ENTITY_LIST, component, false}});
+        factory->addRequirements(
+            Requirements {{"Components", ValueType::ENTITY_LIST, component, false}});
       }
       return factory;
     }

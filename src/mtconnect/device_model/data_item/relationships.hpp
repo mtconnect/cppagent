@@ -90,8 +90,8 @@ namespace mtconnect {
             auto di = Relationship::getDataItemFactory();
             auto spec = Relationship::getSpecificationFactory();
             relationships = make_shared<Factory>(
-                Requirements {{"SpecificationRelationship", ENTITY, spec, 0, Requirement::Infinite},
-                              {"DataItemRelationship", ENTITY, di, 0, Requirement::Infinite}});
+                Requirements {{"SpecificationRelationship", ValueType::ENTITY, spec, 0, Requirement::Infinite},
+                {"DataItemRelationship", ValueType::ENTITY, di, 0, Requirement::Infinite}});
             relationships->setMinListSize(1);
             relationships->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               return std::make_shared<Relationships>(name, props);

@@ -15,6 +15,8 @@
 //    limitations under the License.
 //
 
+#include "mtconnect/config.hpp"
+
 #include "agent_config.hpp"
 
 #include <boost/algorithm/string.hpp>
@@ -802,7 +804,7 @@ namespace mtconnect::configuration {
                    {{configuration::Url, string()}, {configuration::Device, string()}});
 
         auto qname = entity::QName(block.first);
-        auto [factory, name] = qname.getPair();
+	auto [factory, name] = qname.getPair();
 
         auto deviceName = GetOption<string>(adapterOptions, configuration::Device).value_or(name);
         device = m_agent->getDeviceByName(deviceName);
@@ -855,9 +857,8 @@ namespace mtconnect::configuration {
         }
 
         // Override if protocol if not specified
-        string protocol;
         AddDefaultedOptions(block.second, adapterOptions, {{configuration::Protocol, "shdr"s}});
-        protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
+        auto protocol = *GetOption<string>(adapterOptions, configuration::Protocol);
 
         if (factory.empty())
           factory = protocol;

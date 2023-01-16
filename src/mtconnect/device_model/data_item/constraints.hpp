@@ -34,16 +34,17 @@ namespace mtconnect {
           static FactoryPtr factory;
           if (!factory)
           {
-            auto limit = std::make_shared<Factory>(Requirements {{"VALUE", DOUBLE, true}});
+            auto limit =
+                std::make_shared<Factory>(Requirements {{"VALUE", ValueType::DOUBLE, true}});
             auto value = std::make_shared<Factory>(Requirements {{"VALUE", true}});
             auto filter = Filter::getFactory()->factoryFor("Filter")->deepCopy();
             filter->getRequirement("type")->setMultiplicity(0, 1);
             factory = std::make_shared<Factory>(
-                Requirements {{"Minimum", ENTITY, limit, 0, 1},
-                              {"Maximum", ENTITY, limit, 0, 1},
-                              {"Nominal", ENTITY, limit, 0, 1},
-                              {"Value", ENTITY, value, 0, Requirement::Infinite},
-                              {"Filter", ENTITY, filter, 0, Requirement::Infinite}});
+                Requirements {{"Minimum", ValueType::ENTITY, limit, 0, 1},
+                              {"Maximum", ValueType::ENTITY, limit, 0, 1},
+                              {"Nominal", ValueType::ENTITY, limit, 0, 1},
+                              {"Value", ValueType::ENTITY, value, 0, Requirement::Infinite},
+                              {"Filter", ValueType::ENTITY, filter, 0, Requirement::Infinite}});
           }
           return factory;
         }

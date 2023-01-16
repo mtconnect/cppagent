@@ -15,7 +15,7 @@ class MTConnectAgentConan(ConanFile):
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False], "build_tests": [True, False], 
-                "without_ruby": [True, False], "without_ipv6": [True, False], "with_ruby": [True, False],
+                "without_ipv6": [True, False], "with_ruby": [True, False],
                  "development" : [True, False], "shared": [True, False], "winver": "ANY" }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
@@ -30,7 +30,6 @@ class MTConnectAgentConan(ConanFile):
     default_options = {
         "run_tests": True,
         "build_tests": True,
-        "without_ruby": False,
         "without_ipv6": False,
         "with_ruby": True,
         "development": False,
@@ -100,9 +99,6 @@ class MTConnectAgentConan(ConanFile):
         if not self.options.build_tests:
             self.options.run_tests = False
 
-        if not self.options.without_ruby:
-            self.options.with_ruby = True
-            
         if not self.options.shared and self.settings.os == "Macos":
             self.options["boost"].visibility = "hidden"
 
@@ -167,7 +163,7 @@ class MTConnectAgentConan(ConanFile):
             
         if self.settings.os == 'Windows':
             self.cpp_info.defines.append("WINVER=" + self.options.winver)
-            self.cpp_info.defines.append("_WIN32_WINNT=" + self.options..winver)
+            self.cpp_info.defines.append("_WIN32_WINNT=" + self.options.winver)
 
     def package(self):
         self.copy("*", src=os.path.join(self.build_folder, "bin"), dst="bin", keep_path=False)

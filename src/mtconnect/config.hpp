@@ -17,6 +17,10 @@
 //    limitations under the License.
 //
 
+#pragma once
+
+#include <boost/config.hpp>
+
 #ifndef __STDC_LIMIT_MACROS
 #define __STDC_LIMIT_MACROS 1
 #endif
