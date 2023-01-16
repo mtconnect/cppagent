@@ -31,10 +31,10 @@ namespace mtconnect {
         {
           using namespace mtconnect::entity;
           using namespace std;
-          static auto filter = make_shared<Factory>(Requirements {{"type", ControlledVocab {"PERIOD", "MINIMUM_DELTA"}},
-                            {"VALUE", ValueType::DOUBLE, true}});
+          static auto filter = make_shared<Factory>(Requirements {
+              {"type", ControlledVocab {"PERIOD", "MINIMUM_DELTA"}}, {"VALUE", DOUBLE, true}});
           static auto filters = make_shared<Factory>(
-              Requirements {{"Filter", ValueType::ENTITY, filter, 1, Requirement::Infinite}});
+              Requirements {{"Filter", ENTITY, filter, 1, Requirement::Infinite}});
           return filters;
         }
       };

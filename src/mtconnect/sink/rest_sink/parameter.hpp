@@ -30,7 +30,7 @@ namespace mtconnect::sink::rest_sink {
     using std::logic_error::logic_error;
   };
 
-  enum ParameterType
+  enum ParameterType : uint8_t
   {
     NONE = 0,
     STRING = 1,

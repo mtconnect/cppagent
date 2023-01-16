@@ -50,7 +50,7 @@ namespace mtconnect {
     using Value = std::variant<std::monostate, EntityPtr, EntityList, std::string, int64_t, double,
                                bool, Vector, DataSet, Timestamp, std::nullptr_t>;
 
-    enum class ValueType : int16_t
+    enum ValueType : std::uint16_t
     {
       EMPTY = 0x0,
       ENTITY = 0x1,
@@ -169,7 +169,7 @@ namespace mtconnect {
       Requirement(const std::string &name, ValueType type, bool required = true)
         : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
       {}
-      Requirement(const std::string &name, bool required, ValueType type = ValueType::STRING)
+      Requirement(const std::string &name, bool required, ValueType type = STRING)
         : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
       {}
       Requirement(const std::string &name, ValueType type, int lower, int upper)
@@ -188,7 +188,7 @@ namespace mtconnect {
         : m_name(name),
           m_upperMultiplicity(1),
           m_lowerMultiplicity(required ? 1 : 0),
-          m_type(ValueType::STRING)
+          m_type(STRING)
       {
         m_vocabulary.emplace();
         for (auto &s : vocab)
@@ -198,7 +198,7 @@ namespace mtconnect {
         : m_name(name),
           m_upperMultiplicity(1),
           m_lowerMultiplicity(required ? 1 : 0),
-          m_type(ValueType::STRING),
+          m_type(STRING),
           m_pattern(pattern)
       {}
 

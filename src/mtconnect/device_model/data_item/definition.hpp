@@ -56,8 +56,8 @@ namespace mtconnect {
                                                            {"subType", false},
                                                            {"units", false}});
 
-            auto cells = make_shared<Factory>(Requirements {
-                {"CellDefinition", ValueType::ENTITY, cell, 1, Requirement::Infinite}});
+            auto cells = make_shared<Factory>(
+                Requirements {{"CellDefinition", ENTITY, cell, 1, Requirement::Infinite}});
             cells->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               auto ptr = make_shared<Entry>(name, props);
               return dynamic_pointer_cast<entity::Entity>(ptr);
@@ -70,19 +70,19 @@ namespace mtconnect {
                                                    {"type", false},
                                                    {"subType", false},
                                                    {"units", false},
-                              {"CellDefinitions", ValueType::ENTITY_LIST, cells, false}});
+                                                   {"CellDefinitions", ENTITY_LIST, cells, false}});
             entry->setOrder({"Description", "CellDefinitions"});
             entry->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
               auto ptr = make_shared<Entry>(name, props);
               return dynamic_pointer_cast<entity::Entity>(ptr);
             });
 
-            auto entries = make_shared<Factory>(Requirements {
-                {"EntryDefinition", ValueType::ENTITY, entry, 1, Requirement::Infinite}});
+            auto entries = make_shared<Factory>(
+                Requirements {{"EntryDefinition", ENTITY, entry, 1, Requirement::Infinite}});
             definition = make_shared<Factory>(
                 Requirements {{"Description", false},
-                              {"EntryDefinitions", ValueType::ENTITY_LIST, entries, false},
-                              {"CellDefinitions", ValueType::ENTITY_LIST, cells, false}});
+                              {"EntryDefinitions", ENTITY_LIST, entries, false},
+                              {"CellDefinitions", ENTITY_LIST, cells, false}});
             definition->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
           }
 

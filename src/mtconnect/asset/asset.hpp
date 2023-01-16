@@ -56,7 +56,7 @@ namespace mtconnect {
           if (std::holds_alternative<bool>(r))
             m_removed = std::get<bool>(r);
           else
-            entity::ConvertValueToType(r, entity::ValueType::BOOL);
+            entity::ConvertValueToType(r, entity::BOOL);
         }
 
         m_properties.insert_or_assign(key, r);

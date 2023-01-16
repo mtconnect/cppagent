@@ -22,11 +22,11 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
 
-#include <mtconnect/version.h>
-#include "mtconnect/config.hpp"
-
 #include <chrono>
 #include <date/date.h>
+#include <mtconnect/version.h>
+
+#include "mtconnect/config.hpp"
 
 //####### CONSTANTS #######
 

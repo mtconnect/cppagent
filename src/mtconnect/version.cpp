@@ -34,4 +34,3 @@ void PrintMTConnectAgentVersion()
 {
   printf("%s - built on " __TIMESTAMP__ "\n", GetAgentVersion().c_str());
 }
-
