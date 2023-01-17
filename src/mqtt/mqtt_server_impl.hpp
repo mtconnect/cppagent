@@ -115,10 +115,10 @@ namespace mtconnect {
           // including close_handler and error_handler.
           ep.start_session(std::make_tuple(std::move(spep), std::move(g)));
           ep.set_connect_handler([this, wp](MQTT_NS::buffer client_id,
-                                                     MQTT_NS::optional<MQTT_NS::buffer> username,
-                                                     MQTT_NS::optional<MQTT_NS::buffer> password,
-                                                     MQTT_NS::optional<MQTT_NS::will>,
-                                                     bool clean_session, std::uint16_t keep_alive) {
+                                            MQTT_NS::optional<MQTT_NS::buffer> username,
+                                            MQTT_NS::optional<MQTT_NS::buffer> password,
+                                            MQTT_NS::optional<MQTT_NS::will>, bool clean_session,
+                                            std::uint16_t keep_alive) {
             using namespace MQTT_NS::literals;
             LOG(info) << "Server: Client_id    : " << client_id << std::endl;
             LOG(info) << "Server: User Name     : " << (username ? username.value() : "none"_mb)
@@ -365,37 +365,14 @@ namespace mtconnect {
                           boost::asio::ssl::context::single_dh_use);
 
           if (HasOption(m_options, configuration::TlsCertificateChain) &&
-              HasOption(m_options, configuration::TlsPrivateKey) &&
-              HasOption(m_options, configuration::TlsDHKey))
+              HasOption(m_options, configuration::TlsPrivateKey))
           {
-            LOG(info) << "Server: Initializing TLS WS support";
-            if (HasOption(m_options, configuration::TlsCertificatePassword))
-            {
-              ctx.set_password_callback(
-                  [this](size_t, boost::asio::ssl::context_base::password_purpose) -> string {
-                    return *GetOption<string>(m_options, configuration::TlsCertificatePassword);
-                  });
-            }
-
             auto serverPrivateKey = GetOption<string>(m_options, configuration::TlsPrivateKey);
             auto serverCert = GetOption<string>(m_options, configuration::TlsCertificateChain);
             ctx.use_certificate_chain_file(*serverCert);
-            ctx.use_tmp_dh_file(*GetOption<string>(m_options, configuration::TlsDHKey));
             ctx.use_private_key_file(*serverPrivateKey, boost::asio::ssl::context::pem);
-
-            if (IsOptionSet(m_options, configuration::TlsVerifyClientCertificate))
-            {
-              LOG(info) << "Server: Will only accept client connections with valid certificates";
-
-              ctx.set_verify_mode(boost::asio::ssl::verify_peer |
-                                  boost::asio::ssl::verify_fail_if_no_peer_cert);
-              if (HasOption(m_options, configuration::TlsClientCAs))
-              {
-                LOG(info) << "Server: Adding Client Certificates.";
-                ctx.load_verify_file(*GetOption<string>(m_options, configuration::TlsClientCAs));
-              }
-            }
           }
+
           m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
                            std::move(ctx), m_ioContext);
         }

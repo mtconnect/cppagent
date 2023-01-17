@@ -134,7 +134,7 @@ namespace mtconnect {
             else
             {
               LOG(debug) << "No connect handler, setting connected";
-              m_connected = true;
+              m_connected = true;              
             }
           }
           else
@@ -425,16 +425,7 @@ namespace mtconnect {
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
-          }
-          auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
-          auto cert = GetOption<string>(m_options, configuration::MqttCert);
-          if (private_key && cert)
-          {
-            m_client->get_ssl_context().set_verify_mode(boost::asio::ssl::verify_peer);
-            m_client->get_ssl_context().use_certificate_chain_file(*cert);
-            m_client->get_ssl_context().use_private_key_file(*private_key,
-                                                             boost::asio::ssl::context::pem);
-          }
+          }         
         }
 
         return m_client;
