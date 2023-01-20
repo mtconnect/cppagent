@@ -314,7 +314,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
 
 TEST_F(MqttIsolatedUnitTest, mqtt_tls_client_should_receive_loopback_publication)
 { 
-    GTEST_SKIP();
+  GTEST_SKIP();
   
   ConfigOptions options {{ServerIp, "127.0.0.1"s},
                          {MqttPort, 0},
@@ -322,6 +322,8 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tls_client_should_receive_loopback_publication
                          {AutoAvailable, false},
                          {TlsCertificateChain, ServerCertFile},
                          {TlsPrivateKey, ServerKeyFile},
+                         {TlsDHKey, ServerDhFile},
+                         {TlsVerifyClientCertificate,true},
                          {TlsClientCAs, MqttClientCACert},
                          {MqttCaCert, MqttClientCACert},
                          {MqttCert, MqttClientCert},
@@ -458,16 +460,18 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 {
   GTEST_SKIP();
 
-  ConfigOptions options{{ServerIp, "127.0.0.1"s},
+  ConfigOptions options {{ServerIp, "127.0.0.1"s},
                          {MqttPort, 0},
                          {MqttTls, true},
                          {AutoAvailable, false},
                          {TlsCertificateChain, ServerCertFile},
                          {TlsPrivateKey, ServerKeyFile},
-                         {TlsClientCAs, MqttClientCACert},
+                         {TlsDHKey, ServerDhFile},
+                         /*{TlsVerifyClientCertificate, true},
+                         {TlsClientCAs, ClientCA},*/
                          {MqttCaCert, MqttClientCACert},
-                         {MqttCert, MqttClientCert},
-                         {MqttPrivateKey, MqttClientKey},                   
+                        /* {MqttCert, MqttClientCert},
+                         {MqttPrivateKey, MqttClientKey},*/
                          {RealTime, false}};
 
   createServer(options);
@@ -494,7 +498,7 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
                          {MqttTls, true},
                          {AutoAvailable, false},
                          {TlsCertificateChain, ServerCertFile},
-                         {TlsPrivateKey, ServerKeyFile},                         
+                         {TlsPrivateKey, ServerKeyFile},
                          {MqttCaCert, MqttClientCACert},
                          {RealTime, false}};
 
@@ -512,41 +516,44 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
 
   m_client = make_shared<mtconnect::mqtt_client::MqttTlsWSClient>(m_agentTestHelper->m_ioContext,
                                                                   opts, move(handler));
-   
+
   ASSERT_TRUE(startClient());
 
   ASSERT_TRUE(m_client->isConnected());
 }
 
-TEST_F(MqttIsolatedUnitTest, should_conenct_using_tls_authentication) 
-{ 
-  GTEST_SKIP(); 
-    
+TEST_F(MqttIsolatedUnitTest, should_conenct_using_tls_authentication)
+{
+  GTEST_SKIP();
+
   ConfigOptions options {{ServerIp, "127.0.0.1"s},
                          {MqttPort, 0},
                          {MqttTls, true},
                          {AutoAvailable, false},
                          {TlsCertificateChain, ServerCertFile},
                          {TlsPrivateKey, ServerKeyFile},
+                         {TlsDHKey, ServerDhFile},
+                         {TlsVerifyClientCertificate, true},
+                         {TlsClientCAs, ClientCA},
                          {MqttCaCert, MqttClientCACert},
                          {MqttCert, MqttClientCert},
                          {MqttPrivateKey, MqttClientKey},
                          {RealTime, false}};
 
-    createServer(options);
+  createServer(options);
 
-    startServer();
+  startServer();
 
-    ASSERT_NE(0, m_port);
+  ASSERT_NE(0, m_port);
 
-    auto handler = make_unique<ClientHandler>();
+  auto handler = make_unique<ClientHandler>();
 
-    ConfigOptions opts(options);
-    MergeOptions(opts, {{MqttPort, m_port}});
+  ConfigOptions opts(options);
+  MergeOptions(opts, {{MqttPort, m_port}});
 
-    createClient(opts, move(handler));
+  createClient(opts, move(handler));
 
-    ASSERT_TRUE(startClient());
+  ASSERT_TRUE(startClient());
 
-    ASSERT_TRUE(m_client->isConnected());
+  ASSERT_TRUE(m_client->isConnected());
 }
