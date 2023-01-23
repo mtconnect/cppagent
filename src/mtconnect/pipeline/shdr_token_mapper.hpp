@@ -31,6 +31,12 @@ namespace mtconnect {
 
   namespace pipeline {
     using namespace entity;
+    class AGENT_LIB_API Observations : public Timestamped
+    {
+    public:
+      using Timestamped::Timestamped;
+    };
+    
     class AGENT_LIB_API ShdrTokenMapper : public Transform
     {
     public:

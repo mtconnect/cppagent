@@ -49,12 +49,6 @@ namespace mtconnect {
       using Timestamped::Timestamped;
     };
 
-    class AGENT_LIB_API Observations : public Timestamped
-    {
-    public:
-      using Timestamped::Timestamped;
-    };
-
     class AGENT_LIB_API ExtractTimestamp : public Transform
     {
     public:
