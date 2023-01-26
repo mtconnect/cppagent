@@ -44,7 +44,7 @@ before_build:
       set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;C:\Ruby30\bin;%PATH%
       "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
       if not exist C:\conan mkdir C:\conan
-      if %SHARED%==True set CONAN_PROFILE=conan/profiles/vs64shared else set CONAN_PROFILE=conan/profiles/vs64
+      if %SHARED%==True (set CONAN_PROFILE=conan/profiles/vs64shared) else (set CONAN_PROFILE=conan/profiles/vs64)
       set CONAN_USER_HOME=C:\conan
       set
       pip install conan
