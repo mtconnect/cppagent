@@ -36,7 +36,7 @@ namespace mtconnect {
     public:
       using Timestamped::Timestamped;
     };
-    
+
     class AGENT_LIB_API ShdrTokenMapper : public Transform
     {
     public:

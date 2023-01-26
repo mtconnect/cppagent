@@ -134,7 +134,7 @@ namespace mtconnect {
             else
             {
               LOG(debug) << "No connect handler, setting connected";
-              m_connected = true;              
+              m_connected = true;
             }
           }
           else
@@ -425,7 +425,7 @@ namespace mtconnect {
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
-          }         
+          }
         }
 
         return m_client;

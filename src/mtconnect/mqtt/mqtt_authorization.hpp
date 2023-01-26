@@ -42,7 +42,7 @@ namespace mtconnect {
         Both
       };
 
-      void MqttTopicPermission(const std::string &topic, const std::string& clientId) 
+      void MqttTopicPermission(const std::string& topic, const std::string& clientId)
       {
         m_topic = topic;
         m_clientId = clientId;
@@ -51,7 +51,7 @@ namespace mtconnect {
       }
 
       void MqttTopicPermission(const std::string& topic, const std::string& clientId,
-          AuthorizationType type)
+                               AuthorizationType type)
       {
         m_topic = topic;
         m_clientId = clientId;
@@ -60,7 +60,7 @@ namespace mtconnect {
       }
 
       void MqttTopicPermission(const std::string& topic, const std::string& clientId,
-          AuthorizationType type, TopicMode mode)
+                               AuthorizationType type, TopicMode mode)
       {
         m_topic = topic;
         m_clientId = clientId;
@@ -78,7 +78,7 @@ namespace mtconnect {
     class MqttAuthorization : public std::enable_shared_from_this<MqttAuthorization>
     {
     public:
-      MqttAuthorization(const ConfigOptions &options) : m_options(options)
+      MqttAuthorization(const ConfigOptions& options) : m_options(options)
       {
         m_clientId = GetOption<std::string>(options, configuration::MqttClientId);
         m_username = GetOption<std::string>(options, configuration::MqttUserName);
@@ -86,16 +86,16 @@ namespace mtconnect {
       }
 
       virtual ~MqttAuthorization() = default;
-      
-      bool checkCredentials() 
-      {          
+
+      bool checkCredentials()
+      {
         if (!m_username && !m_password)
         {
           LOG(error) << "MQTT USERNAME_OR_PASSWORD are Not Available";
           return false;
         }
 
-        return true;          
+        return true;
       }
 
     protected:
@@ -104,5 +104,5 @@ namespace mtconnect {
       std::string m_clientId;
       ConfigOptions m_options;
     };
-  }  // namespace MqttAuthorization
+  }  // namespace mqtt_client
 }  // namespace mtconnect
