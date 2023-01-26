@@ -134,7 +134,7 @@ namespace mtconnect {
             else
             {
               LOG(debug) << "No connect handler, setting connected";
-              m_connected = true;
+              m_connected = true;              
             }
           }
           else
@@ -224,9 +224,9 @@ namespace mtconnect {
         }
 
         LOG(debug) << "Subscribing to topic: " << topic;
-        m_clientId = derived().getClient()->acquire_unique_packet_id();
+        m_packetId = derived().getClient()->acquire_unique_packet_id();
         derived().getClient()->async_subscribe(
-            m_clientId, topic.c_str(), mqtt::qos::at_least_once, [topic](mqtt::error_code ec) {
+            m_packetId, topic.c_str(), mqtt::qos::at_least_once, [topic](mqtt::error_code ec) {
               if (ec)
               {
                 LOG(error) << "Subscribe failed: " << topic << ": " << ec.message();
@@ -251,9 +251,9 @@ namespace mtconnect {
           return false;
         }
 
-        m_clientId = derived().getClient()->acquire_unique_packet_id();
+        m_packetId = derived().getClient()->acquire_unique_packet_id();
         derived().getClient()->async_publish(
-            m_clientId, topic, payload, mqtt::qos::at_least_once | mqtt::retain::yes,
+            m_packetId, topic, payload, mqtt::qos::at_least_once | mqtt::retain::yes,
             [topic](mqtt::error_code ec) {
               if (ec)
               {
@@ -332,7 +332,7 @@ namespace mtconnect {
 
       unsigned int m_port {1883};
 
-      std::uint16_t m_clientId {0};
+      std::uint16_t m_packetId {0};
 
       std::optional<std::string> m_username;
 
@@ -425,16 +425,7 @@ namespace mtconnect {
           if (cacert)
           {
             m_client->get_ssl_context().load_verify_file(*cacert);
-          }
-          auto private_key = GetOption<string>(m_options, configuration::MqttPrivateKey);
-          auto cert = GetOption<string>(m_options, configuration::MqttCert);
-          if (private_key && cert)
-          {
-            m_client->get_ssl_context().set_verify_mode(boost::asio::ssl::verify_peer);
-            m_client->get_ssl_context().use_certificate_chain_file(*cert);
-            m_client->get_ssl_context().use_private_key_file(*private_key,
-                                                             boost::asio::ssl::context::pem);
-          }
+          }         
         }
 
         return m_client;

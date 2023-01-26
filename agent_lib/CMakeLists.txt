@@ -135,6 +135,7 @@ set(AGENT_SOURCES
 
 # src/mqtt HEADER_FILE_ONLY
 
+        "${SOURCE_DIR}/mqtt/mqtt_authorization.hpp"
         "${SOURCE_DIR}/mqtt/mqtt_client.hpp"
         "${SOURCE_DIR}/mqtt/mqtt_server.hpp"
         "${SOURCE_DIR}/mqtt/mqtt_client_impl.hpp"
