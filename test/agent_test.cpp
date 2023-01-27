@@ -2891,6 +2891,8 @@ TEST_F(AgentTest, pre_start_hook_should_be_called)
   agent->start();
   ASSERT_TRUE(called);
   agent->stop();
+  
+  m_agentTestHelper->m_ioContext.run_for(100ms);
 }
 
 TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
@@ -2934,4 +2936,6 @@ TEST_F(AgentTest, pre_stop_hook_should_be_called)
   ASSERT_FALSE(called);
   agent->stop();
   ASSERT_TRUE(called);
+  
+  m_agentTestHelper->m_ioContext.run_for(100ms);
 }
