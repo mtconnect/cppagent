@@ -196,6 +196,7 @@ public:
     options.emplace(configuration::SchemaVersion, version);
     options.emplace(configuration::Pretty, true);
     options.emplace(configuration::Port, 0);
+    options.emplace(configuration::ServerIp, std::string("127.0.0.1"));
     options.emplace(configuration::JsonVersion, 1);
 
     m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, PROJECT_ROOT_DIR + file, options);
