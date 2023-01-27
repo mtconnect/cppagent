@@ -22,12 +22,12 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "device_model/agent_device.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
-#include "version.h"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/device_model/agent_device.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/version.h"
 
 using namespace std;
 using namespace mtconnect;
@@ -40,6 +40,13 @@ using tcp = boost::asio::ip::tcp;
 namespace ip = boost::asio::ip;
 namespace sys = boost::system;
 namespace config = mtconnect::configuration;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class AgentDeviceTest : public testing::Test
 {

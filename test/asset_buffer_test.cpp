@@ -26,9 +26,9 @@
 #include <thread>
 
 #include "agent_test_helper.hpp"
-#include "asset/asset_buffer.hpp"
-#include "entity/entity.hpp"
-#include "printer/xml_printer.hpp"
+#include "mtconnect/asset/asset_buffer.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
 #include "test_utilities.hpp"
 
 #if defined(WIN32) && _MSC_VER < 1500
@@ -41,6 +41,13 @@ using namespace std::chrono;
 using namespace mtconnect;
 using namespace mtconnect::entity;
 using namespace mtconnect::asset;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class AssetBufferTest : public testing::Test
 {

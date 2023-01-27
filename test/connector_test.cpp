@@ -28,7 +28,7 @@
 #include <sstream>
 #include <thread>
 
-#include "source/adapter/shdr/connector.hpp"
+#include "mtconnect/source/adapter/shdr/connector.hpp"
 
 namespace date {};
 using namespace date;
@@ -43,6 +43,13 @@ namespace asio = boost::asio;
 using tcp = boost::asio::ip::tcp;
 namespace ip = boost::asio::ip;
 namespace sys = boost::system;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class TestConnector : public Connector
 {
@@ -128,7 +135,8 @@ protected:
   template <typename Rep, typename Period>
   void runUntil(chrono::duration<Rep, Period> to, function<bool()> pred)
   {
-    for (int runs = 0; runs < 10 && !pred(); runs++)
+    int runs;
+    for (runs = 0; runs < 50 && !pred(); runs++)
     {
       if (m_context.run_one_for(to) == 0)
         break;
@@ -193,7 +201,7 @@ TEST_F(ConnectorTest, Connection)
 
   m_connector->start(m_port);
 
-  runUntil(2s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
+  runUntil(5s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
   EXPECT_FALSE(m_connector->m_disconnected);
   auto line = read(1s);

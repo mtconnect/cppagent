@@ -39,6 +39,7 @@
                 <Relationships>
                   <ComponentRelationship id="ref1" name="Power" type="PEER" criticality="CRITICAL" idRef="power"/>
                   <DeviceRelationship id="ref2" name="coffee" type="PARENT" criticality="NON_CRITICAL" role="AUXILIARY" href="http://127.0.0.1:2000/coffee" deviceUuidRef="bfccbfb0-5111-0138-6cd5-0c85909298d9"/>
+                  <AssetRelationship id="ref3" name="asset" assetType="CuttingTool" type="PEER" criticality="NON_CRITICAL" href="http://127.0.0.1:2000/asset/f7de7350-6f7a-013b-ca4c-4e7f553bbb76" assetIdRef="f7de7350-6f7a-013b-ca4c-4e7f553bbb76" />
                 </Relationships>
                 <Specifications>
                   <Specification id="spec" type="ROTARY_VELOCITY" subType="ACTUAL" dataItemIdRef="c1" units="REVOLUTION/MINUTE" compositionIdRef="cmotor" name="speed_limit" coordinateSystemIdRef="machine">

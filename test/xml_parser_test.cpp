@@ -23,9 +23,9 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "device_model/reference.hpp"
-#include "parser/xml_parser.hpp"
-#include "printer/xml_printer.hpp"
+#include "mtconnect/device_model/reference.hpp"
+#include "mtconnect/parser/xml_parser.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
 #include "test_utilities.hpp"
 
 using namespace std;
@@ -34,6 +34,13 @@ using namespace mtconnect;
 using namespace entity;
 using namespace device_model;
 using namespace data_item;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class XmlParserTest : public testing::Test
 {

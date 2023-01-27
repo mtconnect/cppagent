@@ -26,11 +26,11 @@
 #include <sstream>
 #include <string>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "entity/json_printer.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/entity/json_printer.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -38,6 +38,13 @@ using namespace mtconnect;
 using namespace mtconnect::source::adapter;
 using namespace entity;
 using namespace device_model;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class RelationshipTest : public testing::Test
 {
@@ -70,10 +77,11 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 
   auto rels = clc->getList("Relationships");
 
-  ASSERT_EQ(2, rels->size());
+  ASSERT_EQ(3, rels->size());
 
   auto it = rels->begin();
 
+  EXPECT_EQ("ComponentRelationship", (*it)->getName());
   EXPECT_EQ("ref1", (*it)->get<string>("id"));
   EXPECT_EQ("Power", (*it)->get<string>("name"));
   EXPECT_EQ("PEER", (*it)->get<string>("type"));
@@ -82,6 +90,7 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 
   it++;
 
+  EXPECT_EQ("DeviceRelationship", (*it)->getName());
   EXPECT_EQ("ref2", (*it)->get<string>("id"));
   EXPECT_EQ("coffee", (*it)->get<string>("name"));
   EXPECT_EQ("PARENT", (*it)->get<string>("type"));
@@ -89,6 +98,18 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("AUXILIARY", (*it)->get<string>("role"));
   EXPECT_EQ("http://127.0.0.1:2000/coffee", (*it)->get<string>("href"));
   EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", (*it)->get<string>("deviceUuidRef"));
+
+  it++;
+
+  EXPECT_EQ("AssetRelationship", (*it)->getName());
+  EXPECT_EQ("ref3", (*it)->get<string>("id"));
+  EXPECT_EQ("asset", (*it)->get<string>("name"));
+  EXPECT_EQ("CuttingTool", (*it)->get<string>("assetType"));
+  EXPECT_EQ("PEER", (*it)->get<string>("type"));
+  EXPECT_EQ("NON_CRITICAL", (*it)->get<string>("criticality"));
+  EXPECT_EQ("http://127.0.0.1:2000/asset/f7de7350-6f7a-013b-ca4c-4e7f553bbb76",
+            (*it)->get<string>("href"));
+  EXPECT_EQ("f7de7350-6f7a-013b-ca4c-4e7f553bbb76", (*it)->get<string>("assetIdRef"));
 }
 
 #define CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
@@ -100,7 +121,7 @@ TEST_F(RelationshipTest, XmlPrinting)
     PARSE_XML_RESPONSE("/probe");
 
     ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH, 1);
-    ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH "/*", 2);
+    ASSERT_XML_PATH_COUNT(doc, RELATIONSHIPS_PATH "/*", 3);
 
     ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@id", "ref1");
     ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:ComponentRelationship@name", "Power");
@@ -119,6 +140,17 @@ TEST_F(RelationshipTest, XmlPrinting)
                           "http://127.0.0.1:2000/coffee");
     ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:DeviceRelationship@deviceUuidRef",
                           "bfccbfb0-5111-0138-6cd5-0c85909298d9");
+
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:AssetRelationship@id", "ref3");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:AssetRelationship@name", "asset");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:AssetRelationship@type", "PEER");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:AssetRelationship@assetType", "CuttingTool");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:AssetRelationship@criticality",
+                          "NON_CRITICAL");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:AssetRelationship@assetIdRef",
+                          "f7de7350-6f7a-013b-ca4c-4e7f553bbb76");
+    ASSERT_XML_PATH_EQUAL(doc, RELATIONSHIPS_PATH "/m:AssetRelationship@href",
+                          "http://127.0.0.1:2000/asset/f7de7350-6f7a-013b-ca4c-4e7f553bbb76");
   }
 }
 
@@ -134,7 +166,7 @@ TEST_F(RelationshipTest, JsonPrinting)
 
     auto relationships = rotary.at("/Configuration/Relationships"_json_pointer);
     ASSERT_TRUE(relationships.is_array());
-    ASSERT_EQ(2_S, relationships.size());
+    ASSERT_EQ(3_S, relationships.size());
 
     auto crel = relationships.at(0);
     auto cfields = crel.at("/ComponentRelationship"_json_pointer);
@@ -153,5 +185,15 @@ TEST_F(RelationshipTest, JsonPrinting)
     EXPECT_EQ("AUXILIARY", dfields["role"]);
     EXPECT_EQ("http://127.0.0.1:2000/coffee", dfields["href"]);
     EXPECT_EQ("bfccbfb0-5111-0138-6cd5-0c85909298d9", dfields["deviceUuidRef"]);
+
+    auto arel = relationships.at(2);
+    auto afields = arel.at("/AssetRelationship"_json_pointer);
+    EXPECT_EQ("ref3", afields["id"]);
+    EXPECT_EQ("asset", afields["name"]);
+    EXPECT_EQ("PEER", afields["type"]);
+    EXPECT_EQ("CuttingTool", afields["assetType"]);
+    EXPECT_EQ("NON_CRITICAL", afields["criticality"]);
+    EXPECT_EQ("http://127.0.0.1:2000/asset/f7de7350-6f7a-013b-ca4c-4e7f553bbb76", afields["href"]);
+    EXPECT_EQ("f7de7350-6f7a-013b-ca4c-4e7f553bbb76", afields["assetIdRef"]);
   }
 }

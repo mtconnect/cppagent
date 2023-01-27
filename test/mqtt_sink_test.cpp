@@ -23,14 +23,14 @@
 #include <nlohmann/json.hpp>
 
 #include "agent_test_helper.hpp"
-#include "buffer/checkpoint.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "entity/entity.hpp"
-#include "entity/json_parser.hpp"
-#include "mqtt/mqtt_client_impl.hpp"
-#include "mqtt/mqtt_server_impl.hpp"
-#include "printer/json_printer.hpp"
-#include "sink/mqtt_sink/mqtt_service.hpp"
+#include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/json_parser.hpp"
+#include "mtconnect/mqtt/mqtt_client_impl.hpp"
+#include "mtconnect/mqtt/mqtt_server_impl.hpp"
+#include "mtconnect/printer//json_printer.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -38,6 +38,13 @@ using namespace mtconnect::device_model::data_item;
 using namespace mtconnect::sink::mqtt_sink;
 using namespace mtconnect::asset;
 using namespace mtconnect::configuration;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 using json = nlohmann::json;
 

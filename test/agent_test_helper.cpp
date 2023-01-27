@@ -23,9 +23,9 @@
 
 #include <nlohmann/json.hpp>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "sink/rest_sink/server.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/sink/rest_sink/server.hpp"
 
 using namespace std;
 using namespace std::chrono;
