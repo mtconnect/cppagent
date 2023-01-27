@@ -728,6 +728,7 @@ namespace mtconnect {
           m_timer(strand.context())
       {}
 
+      std::weak_ptr<Sink> m_service;
       rest_sink::SessionPtr m_session;
       ofstream m_log;
       SequenceNumber_t m_sequence {0};
@@ -767,7 +768,8 @@ namespace mtconnect {
       asyncResponse->m_count = count;
       asyncResponse->m_printer = printer;
       asyncResponse->m_heartbeat = std::chrono::milliseconds(heartbeatIn);
-
+      asyncResponse->m_service = getptr();
+      
       checkPath(asyncResponse->m_printer, path, dev, asyncResponse->m_filter);
 
       if (m_logStreamData)
@@ -829,10 +831,16 @@ namespace mtconnect {
       using boost::placeholders::_1;
       using boost::placeholders::_2;
 
-      if (!m_server->isRunning())
+      auto service = asyncResponse->m_service.lock();
+      
+      if (!service || !m_server || !m_server->isRunning())
       {
-        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                       "Agent shutting down, aborting stream");
+        LOG(warning) << "Trying to send chunk when service has stopped";
+        if (service)
+        {
+          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                         "Agent shutting down, aborting stream");
+        }
         return;
       }
 
@@ -938,7 +946,8 @@ namespace mtconnect {
       AsyncCurrentResponse(rest_sink::SessionPtr session, asio::io_context &context)
         : m_session(session), m_timer(context)
       {}
-
+      
+      std::weak_ptr<Sink> m_service;
       rest_sink::SessionPtr m_session;
       chrono::milliseconds m_interval;
       const Printer *m_printer {nullptr};
@@ -966,6 +975,7 @@ namespace mtconnect {
       }
       asyncResponse->m_interval = chrono::milliseconds {interval};
       asyncResponse->m_printer = printer;
+      asyncResponse->m_service = getptr();
 
       asyncResponse->m_session->beginStreaming(
           printer->mimeType(), boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
@@ -978,10 +988,16 @@ namespace mtconnect {
     {
       using boost::placeholders::_1;
 
-      if (!m_server->isRunning())
+      auto service = asyncResponse->m_service.lock();
+      
+      if (!service || !m_server || !m_server->isRunning())
       {
-        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                       "Agent shutting down, aborting stream");
+        LOG(warning) << "Trying to send chunk when service has stopped";
+        if (service)
+        {
+          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                         "Agent shutting down, aborting stream");
+        }
         return;
       }
 

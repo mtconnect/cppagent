@@ -258,6 +258,8 @@ namespace mtconnect {
     boost::asio::io_context::strand m_strand;
 
     std::shared_ptr<source::LoopbackSource> m_loopback;
+    
+    bool m_started { false };
 
     // Asset Management
     std::unique_ptr<asset::AssetStorage> m_assetStorage;

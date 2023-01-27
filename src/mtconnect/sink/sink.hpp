@@ -80,13 +80,15 @@ namespace mtconnect {
         const std::string &name, boost::asio::io_context &io, SinkContractPtr &&contract,
         const ConfigOptions &options, const boost::property_tree::ptree &block)>;
 
-    class AGENT_LIB_API Sink
+    class AGENT_LIB_API Sink : public std::enable_shared_from_this<Sink>
     {
     public:
       Sink(const std::string &name, SinkContractPtr &&contract)
         : m_sinkContract(std::move(contract)), m_name(name)
       {}
       virtual ~Sink() = default;
+
+      SinkPtr getptr() const { return const_cast<Sink *>(this)->shared_from_this(); }
 
       virtual void start() = 0;
       virtual void stop() = 0;
