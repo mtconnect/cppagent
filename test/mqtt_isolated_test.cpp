@@ -23,13 +23,13 @@
 #include <nlohmann/json.hpp>
 
 #include "agent_test_helper.hpp"
-#include "buffer/checkpoint.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "entity/json_parser.hpp"
-#include "mqtt/mqtt_client_impl.hpp"
-#include "mqtt/mqtt_server_impl.hpp"
-#include "printer/json_printer.hpp"
-#include "sink/mqtt_sink/mqtt_service.hpp"
+#include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/entity/json_parser.hpp"
+#include "mtconnect/mqtt/mqtt_client_impl.hpp"
+#include "mtconnect/mqtt/mqtt_server_impl.hpp"
+#include "mtconnect/printer//json_printer.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -49,6 +49,13 @@ const string ServerKeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
 const string ServerDhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
 const string ClientCA(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
 
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 class MqttIsolatedUnitTest : public testing::Test
 {
 protected:
@@ -59,10 +66,9 @@ protected:
   }
 
   void TearDown() override
-  {   
+  {
     if (m_client)
     {
-
       m_client->stop();
       while (m_agentTestHelper->m_ioContext.run_one_for(10ms))
         ;
@@ -75,13 +81,13 @@ protected:
       m_agentTestHelper->m_ioContext.run_for(500ms);
       m_server.reset();
     }
-    
+
     m_agentTestHelper.reset();
     m_jsonPrinter.reset();
   }
 
   void createServer(const ConfigOptions &options)
-  {    
+  {
     bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
 
     if (withTlsOption)
@@ -133,7 +139,7 @@ protected:
 
   void createClient(const ConfigOptions &options, unique_ptr<ClientHandler> &&handler)
   {
-     bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
+    bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
 
     ConfigOptions opts(options);
 
@@ -152,7 +158,7 @@ protected:
   }
 
   bool startClient()
-  {    
+  {
     bool started = m_client && m_client->start();
     if (started)
     {
@@ -169,16 +175,12 @@ protected:
   uint16_t m_port {0};
 };
 
-
 TEST_F(MqttIsolatedUnitTest, mqtt_client_should_connect_to_broker)
 {
-  ConfigOptions options{{ServerIp, "127.0.0.1"s},
-                         {MqttPort, 0},
-                         {MqttTls, false},
-                         {AutoAvailable, false},  
-                         {MqttCaCert, MqttClientCACert},
-                         {RealTime, false}};
-  
+  ConfigOptions options {
+      {ServerIp, "127.0.0.1"s},       {MqttPort, 0},    {MqttTls, false}, {AutoAvailable, false},
+      {MqttCaCert, MqttClientCACert}, {RealTime, false}};
+
   createServer(options);
 
   startServer();
@@ -215,75 +217,77 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
   client->set_clean_session(true);
   client->set_keep_alive_sec(30);
 
-  client->set_connack_handler(
-      [&client, &pid_sub1](bool sp, mqtt::connect_return_code connack_return_code) {
-        std::cout << "Connack handler called" << std::endl;
-        std::cout << "Session Present: " << std::boolalpha << sp << std::endl;
-        std::cout << "Connack Return Code: " << connack_return_code << std::endl;
-        if (connack_return_code == mqtt::connect_return_code::accepted)
-        {
-          pid_sub1 = client->acquire_unique_packet_id();
+  client->set_connack_handler([&client, &pid_sub1](bool sp,
+                                                   mqtt::connect_return_code connack_return_code) {
+    std::cout << "Connack handler called" << std::endl;
+    std::cout << "Session Present: " << std::boolalpha << sp << std::endl;
+    std::cout << "Connack Return Code: " << connack_return_code << std::endl;
+    if (connack_return_code == mqtt::connect_return_code::accepted)
+    {
+      pid_sub1 = client->acquire_unique_packet_id();
 
-          client->async_subscribe(pid_sub1, "mqtt_tcp_client_cpp/topic1", MQTT_NS::qos::at_most_once,
-                                  //[optional] checking async_subscribe completion code
-                                  [](MQTT_NS::error_code ec) {
-                                    EXPECT_FALSE(ec);
-                                    std::cout << "async_tcp_subscribe callback: " << ec.message()
-                                              << std::endl;
-                                  });
+      client->async_subscribe(pid_sub1, "mqtt_tcp_client_cpp/topic1", MQTT_NS::qos::at_most_once,
+                              //[optional] checking async_subscribe completion code
+                              [](MQTT_NS::error_code ec) {
+                                EXPECT_FALSE(ec);
+                                std::cout << "async_tcp_subscribe callback: " << ec.message()
+                                          << std::endl;
+                              });
+    }
+    return true;
+  });
+  client->set_close_handler([] { std::cout << "closed" << std::endl; });
+
+  client->set_suback_handler(
+      [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
+        std::cout << "suback received. packet_id: " << packet_id << std::endl;
+        for (auto const &e : results)
+        {
+          std::cout << "subscribe result: " << e << std::endl;
         }
+
+        if (packet_id == pid_sub1)
+        {
+          client->async_publish("mqtt_tcp_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
+                                //[optional] checking async_publish completion code
+                                [](MQTT_NS::error_code ec) {
+                                  EXPECT_FALSE(ec);
+
+                                  std::cout << "async_tcp_publish callback: " << ec.message()
+                                            << std::endl;
+                                  EXPECT_EQ(ec.message(), "Success");
+                                });
+          return true;
+        }
+
         return true;
       });
-  client->set_close_handler([] { std::cout << "closed" << std::endl; });
-
-  client->set_suback_handler([&client, &pid_sub1](std::uint16_t packet_id,
-                                                  std::vector<mqtt::suback_return_code> results) {
-    std::cout << "suback received. packet_id: " << packet_id << std::endl;
-    for (auto const &e : results)
-    {
-      std::cout << "subscribe result: " << e << std::endl;
-    }
-
-    if (packet_id == pid_sub1)
-    {
-      client->async_publish("mqtt_tcp_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
-                            //[optional] checking async_publish completion code
-                            [](MQTT_NS::error_code ec) {
-                              EXPECT_FALSE(ec);
-
-                              std::cout << "async_tcp_publish callback: " << ec.message() << std::endl;
-                              EXPECT_EQ(ec.message(), "Success");
-                            });
-      return true;
-    }
-
-    return true;
-  });
 
   client->set_close_handler([] { std::cout << "closed" << std::endl; });
 
-  client->set_suback_handler([&client, &pid_sub1](std::uint16_t packet_id,
-                                                  std::vector<mqtt::suback_return_code> results) {
-    std::cout << "suback received. packet_id: " << packet_id << std::endl;
-    for (auto const &e : results)
-    {
-      std::cout << "subscribe result: " << e << std::endl;
-    }
+  client->set_suback_handler(
+      [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
+        std::cout << "suback received. packet_id: " << packet_id << std::endl;
+        for (auto const &e : results)
+        {
+          std::cout << "subscribe result: " << e << std::endl;
+        }
 
-    if (packet_id == pid_sub1)
-    {
-      client->async_publish("mqtt_tcp_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
-                            //[optional] checking async_publish completion code
-                            [packet_id](MQTT_NS::error_code ec) {
-                              EXPECT_FALSE(ec);
+        if (packet_id == pid_sub1)
+        {
+          client->async_publish("mqtt_tcp_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
+                                //[optional] checking async_publish completion code
+                                [packet_id](MQTT_NS::error_code ec) {
+                                  EXPECT_FALSE(ec);
 
-                              std::cout << "async_tcp_publish callback: " << ec.message() << std::endl;
-                              ASSERT_TRUE(packet_id);
-                            });
-    }
+                                  std::cout << "async_tcp_publish callback: " << ec.message()
+                                            << std::endl;
+                                  ASSERT_TRUE(packet_id);
+                                });
+        }
 
-    return true;
-  });
+        return true;
+      });
 
   bool received = false;
   client->set_publish_handler([&client, &received](mqtt::optional<std::uint16_t> packet_id,
@@ -313,9 +317,9 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
 }
 
 TEST_F(MqttIsolatedUnitTest, mqtt_tls_client_should_receive_loopback_publication)
-{ 
+{
   GTEST_SKIP();
-  
+
   ConfigOptions options {{ServerIp, "127.0.0.1"s},
                          {MqttPort, 0},
                          {MqttTls, true},
@@ -323,7 +327,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tls_client_should_receive_loopback_publication
                          {TlsCertificateChain, ServerCertFile},
                          {TlsPrivateKey, ServerKeyFile},
                          {TlsDHKey, ServerDhFile},
-                         {TlsVerifyClientCertificate,true},
+                         {TlsVerifyClientCertificate, true},
                          {TlsClientCAs, MqttClientCACert},
                          {MqttCaCert, MqttClientCACert},
                          {MqttCert, MqttClientCert},
@@ -470,8 +474,8 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
                          /*{TlsVerifyClientCertificate, true},
                          {TlsClientCAs, ClientCA},*/
                          {MqttCaCert, MqttClientCACert},
-                        /* {MqttCert, MqttClientCert},
-                         {MqttPrivateKey, MqttClientKey},*/
+                         /* {MqttCert, MqttClientCert},
+                          {MqttPrivateKey, MqttClientKey},*/
                          {RealTime, false}};
 
   createServer(options);

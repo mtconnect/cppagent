@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/styles/Streams.xsl"?>
+<MTConnectStreams xmlns:m="urn:mtconnect.org:MTConnectStreams:1.3" xmlns="urn:mtconnect.org:MTConnectStreams:1.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:nist.gov:NistStreams:1.3 /schemas/NistStreams_1.3.xsd">
+  <Header creationTime="2021-02-11T21:32:35Z" sender="77db98a08829" instanceId="1596156369" version="1.4.0.10" bufferSize="1048576" nextSequence="367946996" firstSequence="366898420" lastSequence="367946995"/>
+  <Streams>
+    <DeviceStream name="GFAgie01" uuid="mtc_adapter001">
+      <ComponentStream component="Device" name="GFAgie01" componentId="GFAgie01">
+        <Events>
+          <Availability dataItemId="GFAgie01-dtop_1" timestamp="2021-02-11T20:45:18.484534" name="avail" sequence="367897220">AVAILABLE</Availability>
+          <EmergencyStop dataItemId="GFAgie01-dtop_2" timestamp="2021-02-11T20:45:18.484636" name="estop" sequence="367897221">ARMED</EmergencyStop>
+          <AssetChanged dataItemId="GFAgie01_asset_chg" timestamp="2021-02-11T17:44:26.591551" sequence="367845597" assetType="">UNAVAILABLE</AssetChanged>
+          <AssetRemoved dataItemId="GFAgie01_asset_rem" timestamp="2021-02-11T17:44:26.591674" sequence="367845598" assetType="">UNAVAILABLE</AssetRemoved>
+        </Events>
+        <Condition>
+          <Fault dataItemId="GFAgie01-dtop_3" timestamp="2021-02-11T21:10:36.290052" name="system" sequence="367917330" nativeCode="3AA" type="SYSTEM">Key non-functional</Fault>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="A" componentId="GFAgie01-A_1">
+        <Samples>
+          <Angle dataItemId="GFAgie01-A_2" timestamp="2021-02-11T21:28:13.633439" name="Aposition" sequence="367943076" subType="ACTUAL">-0.0001</Angle>
+        </Samples>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="GFAgie01-C_1">
+        <Samples>
+          <Angle dataItemId="GFAgie01-C_2" timestamp="2021-02-11T21:27:45.234822" name="Cposition" sequence="367942301" subType="ACTUAL">0</Angle>
+        </Samples>
+      </ComponentStream>
+      <ComponentStream component="Linear" name="X" componentId="GFAgie01-X_1">
+        <Samples>
+          <Position dataItemId="GFAgie01-X_2" timestamp="2021-02-11T21:32:21.366572" name="Xposition" sequence="367946892" subType="ACTUAL">6.39211</Position>
+        </Samples>
+      </ComponentStream>
+      <ComponentStream component="Linear" name="Y" componentId="GFAgie01-Y_1">
+        <Samples>
+          <Position dataItemId="GFAgie01-Y_2" timestamp="2021-02-11T21:30:25.100467" name="Yposition" sequence="367945972" subType="ACTUAL">-26.3065</Position>
+        </Samples>
+      </ComponentStream>
+      <ComponentStream component="Linear" name="Z" componentId="GFAgie01-Z_1">
+        <Samples>
+          <Position dataItemId="GFAgie01-Z_2" timestamp="2021-02-11T21:31:58.785125" name="Zposition" sequence="367946720" subType="ACTUAL">23.19091</Position>
+        </Samples>
+      </ComponentStream>
+      <ComponentStream component="Controller" name="controller_basic" componentId="GFAgie01-controller_basic_1">
+        <Events>
+          <PathFeedrateOverride dataItemId="GFAgie01-controller_basic_2" timestamp="2021-02-11T21:26:49.173175" name="Fovr" sequence="367940733" subType="OVERRIDE">99.25</PathFeedrateOverride>
+          <RotaryVelocityOverride dataItemId="GFAgie01-controller_basic_3" timestamp="2021-02-11T21:17:50.704909" name="Sovr" sequence="367926920">100.75</RotaryVelocityOverride>
+        </Events>
+        <Condition>
+          <Normal dataItemId="GFAgie01-controller_basic_10" timestamp="2021-02-11T20:45:18.485063" name="cnc_temp" sequence="367897227" type="TEMPERATURE"/>
+          <Normal dataItemId="GFAgie01-controller_basic_4" timestamp="2021-02-11T20:45:18.484732" name="servo" sequence="367897222" type="ACTUATOR"/>
+          <Normal dataItemId="GFAgie01-controller_basic_5" timestamp="2021-02-11T20:45:18.484804" name="comms" sequence="367897223" type="COMMUNICATIONS"/>
+          <Normal dataItemId="GFAgie01-controller_basic_6" timestamp="2021-02-11T20:45:18.484934" name="pneumatic" sequence="367897225" type="COMMUNICATIONS"/>
+          <Normal dataItemId="GFAgie01-controller_basic_7" timestamp="2021-02-11T20:45:18.485000" name="hydraulic" sequence="367897226" type="COMMUNICATIONS"/>
+          <Normal dataItemId="GFAgie01-controller_basic_8" timestamp="2021-02-11T21:22:34.926114" name="logic" sequence="367932615" type="LOGIC_PROGRAM"/>
+          <Normal dataItemId="GFAgie01-controller_basic_9" timestamp="2021-02-11T20:45:18.485135" name="motion" sequence="367897228" type="MOTION_PROGRAM"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Path" name="path_basic" componentId="GFAgie01-path_basic_1">
+        <Samples>
+          <PathPosition dataItemId="GFAgie01-path_basic_7" timestamp="2021-02-11T21:32:34.683263" name="path_pos" sequence="367946988">-11.4562500000 -7.3124000000 21.2179700000</PathPosition>
+        </Samples>
+        <Events>
+          <Execution dataItemId="GFAgie01-path_basic_2" timestamp="2021-02-11T21:30:29.969649" name="execution" sequence="367946048">READY</Execution>
+          <ControllerMode dataItemId="GFAgie01-path_basic_3" timestamp="2021-02-11T21:14:19.486350" name="mode" sequence="367920270">AUTOMATIC</ControllerMode>
+          <Program dataItemId="GFAgie01-path_basic_4" timestamp="2021-02-11T21:14:19.283643" name="program" sequence="367920269">TNC:\BRIAN\FACE BOTTOM.H</Program>
+          <Line dataItemId="GFAgie01-path_basic_5" timestamp="2021-02-11T21:30:29.973066" name="line" sequence="367946049">0</Line>
+          <x:Motion dataItemId="GFAgie01-path_basic_6" timestamp="2021-02-11T20:45:18.485550" name="move" sequence="367897234">NORMAL</x:Motion>
+        </Events>
+      </ComponentStream>
+    </DeviceStream>
+    <DeviceStream name="Hurco01" uuid="mtc_adapter005">
+      <ComponentStream component="Device" name="Hurco01" componentId="Hurco01">
+        <Events>
+          <Availability dataItemId="Hurco01-dtop_1" timestamp="2020-07-31T01:00:04.018151" name="avail" sequence="448">UNAVAILABLE</Availability>
+          <AssetChanged dataItemId="Hurco01_asset_chg" timestamp="2020-07-31T01:00:04.018871" sequence="467" assetType="">UNAVAILABLE</AssetChanged>
+          <AssetRemoved dataItemId="Hurco01_asset_rem" timestamp="2020-07-31T01:00:04.018928" sequence="469" assetType="">UNAVAILABLE</AssetRemoved>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="Hurco01-C">
+        <Samples>
+          <RotaryVelocity dataItemId="Hurco01-C_1" timestamp="2020-07-31T01:00:04.017904" name="Spindle_Speed" sequence="442" subType="ACTUAL">UNAVAILABLE</RotaryVelocity>
+        </Samples>
+        <Events>
+          <RotaryVelocityOverride dataItemId="Hurco01-C_2" timestamp="2020-07-31T01:00:04.018012" name="Spindle_Override" sequence="444">UNAVAILABLE</RotaryVelocityOverride>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Controller" name="controller" componentId="Hurco01-controller">
+        <Events>
+          <EmergencyStop dataItemId="Hurco01-controller_1" timestamp="2020-07-31T01:00:04.018084" name="EStop_State" sequence="446">UNAVAILABLE</EmergencyStop>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Path" name="Path" componentId="Hurco01-path">
+        <Samples>
+          <PathFeedrateOverride dataItemId="Hurco01-path_10" timestamp="2020-07-31T01:00:04.018280" name="Feed_Override" sequence="451">UNAVAILABLE</PathFeedrateOverride>
+          <PathFeedrateOverride dataItemId="Hurco01-path_11" timestamp="2020-07-31T01:00:04.018343" name="Rapid_Override" sequence="453" subType="RAPID">UNAVAILABLE</PathFeedrateOverride>
+          <AccumulatedTime dataItemId="Hurco01-path_7" timestamp="2020-07-31T01:00:04.018700" name="Program_Runtime_Seconds" sequence="463">UNAVAILABLE</AccumulatedTime>
+          <AccumulatedTime dataItemId="Hurco01-path_8" timestamp="2020-07-31T01:00:04.018757" name="Spindle_Time" sequence="464">UNAVAILABLE</AccumulatedTime>
+          <PathFeedrate dataItemId="Hurco01-path_9" timestamp="2020-07-31T01:00:04.018813" name="Feed_Rate" sequence="466" subType="ACTUAL">UNAVAILABLE</PathFeedrate>
+        </Samples>
+        <Events>
+          <Line dataItemId="Hurco01-path_1" timestamp="2020-07-31T01:00:04.018216" name="Block_Number" sequence="449">UNAVAILABLE</Line>
+          <Program dataItemId="Hurco01-path_2" timestamp="2020-07-31T01:00:04.018406" name="Program_Name_Running" sequence="454">UNAVAILABLE</Program>
+          <ProgramEditName dataItemId="Hurco01-path_3" timestamp="2020-07-31T01:00:04.018468" name="Program_Name_Editing" sequence="456">UNAVAILABLE</ProgramEditName>
+          <PartCount dataItemId="Hurco01-path_4" timestamp="2020-07-31T01:00:04.018526" name="Part_Count" sequence="458" subType="ALL">UNAVAILABLE</PartCount>
+          <Execution dataItemId="Hurco01-path_5" timestamp="2020-07-31T01:00:04.018586" name="Program_Status" sequence="459">UNAVAILABLE</Execution>
+          <ToolNumber dataItemId="Hurco01-path_6" timestamp="2020-07-31T01:00:04.018643" name="Current_Tool" sequence="461">UNAVAILABLE</ToolNumber>
+        </Events>
+      </ComponentStream>
+    </DeviceStream>
+    <DeviceStream name="Hurco02" uuid="mtc_adapter006">
+      <ComponentStream component="Device" name="Hurco02" componentId="Hurco02">
+        <Events>
+          <Availability dataItemId="Hurco02-dtop_1" timestamp="2021-02-11T07:24:18.293100Z" name="avail" sequence="366552535">UNAVAILABLE</Availability>
+          <AssetChanged dataItemId="Hurco02_asset_chg" timestamp="2020-07-31T01:00:04.012793" sequence="335" assetType="">UNAVAILABLE</AssetChanged>
+          <AssetRemoved dataItemId="Hurco02_asset_rem" timestamp="2020-07-31T01:00:04.012866" sequence="336" assetType="">UNAVAILABLE</AssetRemoved>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="Hurco02-C">
+        <Samples>
+          <RotaryVelocity dataItemId="Hurco02-C_1" timestamp="2021-02-11T15:09:23.693010Z" name="Spindle_Speed" sequence="367575509" subType="ACTUAL">UNAVAILABLE</RotaryVelocity>
+        </Samples>
+        <Events>
+          <RotaryVelocityOverride dataItemId="Hurco02-C_2" timestamp="2021-02-11T15:09:23.693010Z" name="Spindle_Override" sequence="367575510">UNAVAILABLE</RotaryVelocityOverride>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Controller" name="controller" componentId="Hurco02-controller">
+        <Events>
+          <EmergencyStop dataItemId="Hurco02-controller_1" timestamp="2021-02-11T07:24:18.293100Z" name="EStop_State" sequence="366552534">UNAVAILABLE</EmergencyStop>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Path" name="Path" componentId="Hurco02-path">
+        <Samples>
+          <PathFeedrateOverride dataItemId="Hurco02-path_10" timestamp="2021-02-11T15:09:23.693010Z" name="Feed_Override" sequence="367575512">UNAVAILABLE</PathFeedrateOverride>
+          <PathFeedrateOverride dataItemId="Hurco02-path_11" timestamp="2021-02-11T14:19:47.837137Z" name="Rapid_Override" sequence="367471725" subType="RAPID">UNAVAILABLE</PathFeedrateOverride>
+          <AccumulatedTime dataItemId="Hurco02-path_7" timestamp="2021-02-11T15:09:23.693010Z" name="Program_Runtime_Seconds" sequence="367575517">UNAVAILABLE</AccumulatedTime>
+          <AccumulatedTime dataItemId="Hurco02-path_8" timestamp="2021-02-11T15:09:23.693010Z" name="Spindle_Time" sequence="367575518">UNAVAILABLE</AccumulatedTime>
+          <PathFeedrate dataItemId="Hurco02-path_9" timestamp="2021-02-11T15:09:23.693010Z" name="Feed_Rate" sequence="367575519" subType="ACTUAL">UNAVAILABLE</PathFeedrate>
+        </Samples>
+        <Events>
+          <Line dataItemId="Hurco02-path_1" timestamp="2021-02-11T15:09:23.693010Z" name="Block_Number" sequence="367575511">UNAVAILABLE</Line>
+          <Program dataItemId="Hurco02-path_2" timestamp="2021-02-11T13:17:50.917038Z" name="Program_Name_Running" sequence="367310615">UNAVAILABLE</Program>
+          <ProgramEditName dataItemId="Hurco02-path_3" timestamp="2021-02-11T15:09:23.693010Z" name="Program_Name_Editing" sequence="367575513">UNAVAILABLE</ProgramEditName>
+          <PartCount dataItemId="Hurco02-path_4" timestamp="2021-02-11T15:09:23.693010Z" name="Part_Count" sequence="367575514" subType="ALL">UNAVAILABLE</PartCount>
+          <Execution dataItemId="Hurco02-path_5" timestamp="2021-02-11T15:09:23.693010Z" name="Program_Status" sequence="367575515">UNAVAILABLE</Execution>
+          <ToolNumber dataItemId="Hurco02-path_6" timestamp="2021-02-11T15:09:23.693010Z" name="Current_Tool" sequence="367575516">UNAVAILABLE</ToolNumber>
+        </Events>
+      </ComponentStream>
+    </DeviceStream>
+    <DeviceStream name="Hurco03" uuid="mtc_adapter007">
+      <ComponentStream component="Device" name="Hurco03" componentId="Hurco03">
+        <Events>
+          <Availability dataItemId="Hurco03-dtop_1" timestamp="2020-07-31T01:00:04.012258" name="avail" sequence="301">UNAVAILABLE</Availability>
+          <AssetChanged dataItemId="Hurco03_asset_chg" timestamp="2020-07-31T01:00:04.013378" sequence="359" assetType="">UNAVAILABLE</AssetChanged>
+          <AssetRemoved dataItemId="Hurco03_asset_rem" timestamp="2020-07-31T01:00:04.013458" sequence="364" assetType="">UNAVAILABLE</AssetRemoved>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="Hurco03-C">
+        <Samples>
+          <RotaryVelocity dataItemId="Hurco03-C_1" timestamp="2021-02-11T16:17:22.613122Z" name="Spindle_Speed" sequence="367700164" subType="ACTUAL">UNAVAILABLE</RotaryVelocity>
+        </Samples>
+        <Events>
+          <RotaryVelocityOverride dataItemId="Hurco03-C_2" timestamp="2021-02-11T16:17:22.613122Z" name="Spindle_Override" sequence="367700165">UNAVAILABLE</RotaryVelocityOverride>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Controller" name="controller" componentId="Hurco03-controller">
+        <Events>
+          <EmergencyStop dataItemId="Hurco03-controller_1" timestamp="2020-07-31T01:00:04.012144" name="EStop_State" sequence="299">UNAVAILABLE</EmergencyStop>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Path" name="Path" componentId="Hurco03-path">
+        <Samples>
+          <PathFeedrateOverride dataItemId="Hurco03-path_10" timestamp="2021-02-11T16:17:22.613122Z" name="Feed_Override" sequence="367700167">UNAVAILABLE</PathFeedrateOverride>
+          <PathFeedrateOverride dataItemId="Hurco03-path_11" timestamp="2021-02-11T16:17:22.613122Z" name="Rapid_Override" sequence="367700168" subType="RAPID">UNAVAILABLE</PathFeedrateOverride>
+          <AccumulatedTime dataItemId="Hurco03-path_7" timestamp="2021-02-11T16:17:22.613122Z" name="Program_Runtime_Seconds" sequence="367700171">UNAVAILABLE</AccumulatedTime>
+          <AccumulatedTime dataItemId="Hurco03-path_8" timestamp="2021-02-11T16:17:22.613122Z" name="Spindle_Time" sequence="367700172">UNAVAILABLE</AccumulatedTime>
+          <PathFeedrate dataItemId="Hurco03-path_9" timestamp="2021-02-11T16:17:22.613122Z" name="Feed_Rate" sequence="367700173" subType="ACTUAL">UNAVAILABLE</PathFeedrate>
+        </Samples>
+        <Events>
+          <Line dataItemId="Hurco03-path_1" timestamp="2021-02-11T16:17:22.613122Z" name="Block_Number" sequence="367700166">UNAVAILABLE</Line>
+          <Program dataItemId="Hurco03-path_2" timestamp="2021-02-11T14:59:46.308703Z" name="Program_Name_Running" sequence="367568444">UNAVAILABLE</Program>
+          <ProgramEditName dataItemId="Hurco03-path_3" timestamp="2021-02-11T16:17:22.613122Z" name="Program_Name_Editing" sequence="367700169">UNAVAILABLE</ProgramEditName>
+          <PartCount dataItemId="Hurco03-path_4" timestamp="2020-07-31T01:00:04.012887" name="Part_Count" sequence="344" subType="ALL">UNAVAILABLE</PartCount>
+          <Execution dataItemId="Hurco03-path_5" timestamp="2021-02-11T16:17:22.613122Z" name="Program_Status" sequence="367700170">UNAVAILABLE</Execution>
+          <ToolNumber dataItemId="Hurco03-path_6" timestamp="2021-02-11T14:59:46.308703Z" name="Current_Tool" sequence="367568447">UNAVAILABLE</ToolNumber>
+        </Events>
+      </ComponentStream>
+    </DeviceStream>
+    <DeviceStream name="Hurco04" uuid="mtc_adapter008">
+      <ComponentStream component="Device" name="Hurco04" componentId="Hurco04">
+        <Events>
+          <Availability dataItemId="Hurco04-dtop_1" timestamp="2020-07-31T01:00:04.013698" name="avail" sequence="352">UNAVAILABLE</Availability>
+          <AssetChanged dataItemId="Hurco04_asset_chg" timestamp="2020-07-31T00:46:09.057116Z" sequence="224" assetType="">UNAVAILABLE</AssetChanged>
+          <AssetRemoved dataItemId="Hurco04_asset_rem" timestamp="2020-07-31T00:46:09.057116Z" sequence="225" assetType="">UNAVAILABLE</AssetRemoved>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="Hurco04-C">
+        <Samples>
+          <RotaryVelocity dataItemId="Hurco04-C_1" timestamp="2021-02-11T16:17:07.036705Z" name="Spindle_Speed" sequence="367699675" subType="ACTUAL">UNAVAILABLE</RotaryVelocity>
+        </Samples>
+        <Events>
+          <RotaryVelocityOverride dataItemId="Hurco04-C_2" timestamp="2021-02-11T13:06:56.700896Z" name="Spindle_Override" sequence="367287495">UNAVAILABLE</RotaryVelocityOverride>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Controller" name="controller" componentId="Hurco04-controller">
+        <Events>
+          <EmergencyStop dataItemId="Hurco04-controller_1" timestamp="2020-07-31T00:46:09.057116Z" name="EStop_State" sequence="211">UNAVAILABLE</EmergencyStop>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Path" name="Path" componentId="Hurco04-path">
+        <Samples>
+          <PathFeedrateOverride dataItemId="Hurco04-path_10" timestamp="2021-02-11T13:06:56.700896Z" name="Feed_Override" sequence="367287497">UNAVAILABLE</PathFeedrateOverride>
+          <PathFeedrateOverride dataItemId="Hurco04-path_11" timestamp="2021-02-11T16:17:07.036705Z" name="Rapid_Override" sequence="367699677" subType="RAPID">UNAVAILABLE</PathFeedrateOverride>
+          <AccumulatedTime dataItemId="Hurco04-path_7" timestamp="2021-02-11T16:17:07.036705Z" name="Program_Runtime_Seconds" sequence="367699683">UNAVAILABLE</AccumulatedTime>
+          <AccumulatedTime dataItemId="Hurco04-path_8" timestamp="2021-02-11T16:17:07.036705Z" name="Spindle_Time" sequence="367699684">UNAVAILABLE</AccumulatedTime>
+          <PathFeedrate dataItemId="Hurco04-path_9" timestamp="2021-02-11T16:17:07.036705Z" name="Feed_Rate" sequence="367699685" subType="ACTUAL">UNAVAILABLE</PathFeedrate>
+        </Samples>
+        <Events>
+          <Line dataItemId="Hurco04-path_1" timestamp="2021-02-11T16:17:07.036705Z" name="Block_Number" sequence="367699676">UNAVAILABLE</Line>
+          <Program dataItemId="Hurco04-path_2" timestamp="2021-02-11T16:17:07.036705Z" name="Program_Name_Running" sequence="367699678">UNAVAILABLE</Program>
+          <ProgramEditName dataItemId="Hurco04-path_3" timestamp="2021-02-11T16:17:07.036705Z" name="Program_Name_Editing" sequence="367699679">UNAVAILABLE</ProgramEditName>
+          <PartCount dataItemId="Hurco04-path_4" timestamp="2021-02-11T16:17:07.036705Z" name="Part_Count" sequence="367699680" subType="ALL">UNAVAILABLE</PartCount>
+          <Execution dataItemId="Hurco04-path_5" timestamp="2021-02-11T16:17:07.036705Z" name="Program_Status" sequence="367699681">UNAVAILABLE</Execution>
+          <ToolNumber dataItemId="Hurco04-path_6" timestamp="2021-02-11T16:17:07.036705Z" name="Current_Tool" sequence="367699682">UNAVAILABLE</ToolNumber>
+        </Events>
+      </ComponentStream>
+    </DeviceStream>
+    <DeviceStream name="Hurco06" uuid="mtc_adapter010">
+      <ComponentStream component="Device" name="Hurco06" componentId="Hurco06">
+        <Events>
+          <Availability dataItemId="Hurco06-dtop_1" timestamp="2020-07-31T00:46:09.102627" name="avail" sequence="246">UNAVAILABLE</Availability>
+          <AssetChanged dataItemId="Hurco06_asset_chg" timestamp="2020-07-31T00:46:09.104383" sequence="258" assetType="">UNAVAILABLE</AssetChanged>
+          <AssetRemoved dataItemId="Hurco06_asset_rem" timestamp="2020-07-31T00:46:09.104530" sequence="259" assetType="">UNAVAILABLE</AssetRemoved>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="Hurco06-C">
+        <Samples>
+          <RotaryVelocity dataItemId="Hurco06-C_1" timestamp="2020-07-31T00:46:09.102097" name="Spindle_Speed" sequence="243" subType="ACTUAL">UNAVAILABLE</RotaryVelocity>
+        </Samples>
+        <Events>
+          <RotaryVelocityOverride dataItemId="Hurco06-C_2" timestamp="2020-07-31T00:46:09.102318" name="Spindle_Override" sequence="244">UNAVAILABLE</RotaryVelocityOverride>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Controller" name="controller" componentId="Hurco06-controller">
+        <Events>
+          <EmergencyStop dataItemId="Hurco06-controller_1" timestamp="2020-07-31T00:46:09.102474" name="EStop_State" sequence="245">UNAVAILABLE</EmergencyStop>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Path" name="Path" componentId="Hurco06-path">
+        <Samples>
+          <PathFeedrateOverride dataItemId="Hurco06-path_10" timestamp="2020-07-31T00:46:09.102919" name="Feed_Override" sequence="248">UNAVAILABLE</PathFeedrateOverride>
+          <PathFeedrateOverride dataItemId="Hurco06-path_11" timestamp="2020-07-31T00:46:09.103062" name="Rapid_Override" sequence="249" subType="RAPID">UNAVAILABLE</PathFeedrateOverride>
+          <AccumulatedTime dataItemId="Hurco06-path_7" timestamp="2020-07-31T00:46:09.103938" name="Program_Runtime_Seconds" sequence="255">UNAVAILABLE</AccumulatedTime>
+          <AccumulatedTime dataItemId="Hurco06-path_8" timestamp="2020-07-31T00:46:09.104089" name="Spindle_Time" sequence="256">UNAVAILABLE</AccumulatedTime>
+          <PathFeedrate dataItemId="Hurco06-path_9" timestamp="2020-07-31T00:46:09.104235" name="Feed_Rate" sequence="257" subType="ACTUAL">UNAVAILABLE</PathFeedrate>
+        </Samples>
+        <Events>
+          <Line dataItemId="Hurco06-path_1" timestamp="2020-07-31T00:46:09.102775" name="Block_Number" sequence="247">UNAVAILABLE</Line>
+          <Program dataItemId="Hurco06-path_2" timestamp="2020-07-31T00:46:09.103201" name="Program_Name_Running" sequence="250">UNAVAILABLE</Program>
+          <ProgramEditName dataItemId="Hurco06-path_3" timestamp="2020-07-31T00:46:09.103343" name="Program_Name_Editing" sequence="251">UNAVAILABLE</ProgramEditName>
+          <PartCount dataItemId="Hurco06-path_4" timestamp="2020-07-31T00:46:09.103493" name="Part_Count" sequence="252" subType="ALL">UNAVAILABLE</PartCount>
+          <Execution dataItemId="Hurco06-path_5" timestamp="2020-07-31T00:46:09.103642" name="Program_Status" sequence="253">UNAVAILABLE</Execution>
+          <ToolNumber dataItemId="Hurco06-path_6" timestamp="2020-07-31T00:46:09.103790" name="Current_Tool" sequence="254">UNAVAILABLE</ToolNumber>
+        </Events>
+      </ComponentStream>
+    </DeviceStream>
+    <DeviceStream name="Mazak01" uuid="mtc_adapter002">
+      <ComponentStream component="Device" name="Mazak01" componentId="Mazak01">
+        <Events>
+          <Availability dataItemId="Mazak01-dtop_1" timestamp="2021-02-11T01:00:04.181818" name="avail" sequence="366372988">UNAVAILABLE</Availability>
+          <AssetChanged dataItemId="Mazak01_asset_chg" timestamp="2021-02-11T01:00:04.181874" sequence="366372989" assetType="">UNAVAILABLE</AssetChanged>
+          <AssetRemoved dataItemId="Mazak01_asset_rem" timestamp="2021-02-11T01:00:04.181931" sequence="366372990" assetType="">UNAVAILABLE</AssetRemoved>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="B" componentId="Mazak01-B">
+        <Samples>
+          <Load dataItemId="Mazak01-B_1" timestamp="2021-02-11T21:30:02.683271" name="Bload" sequence="367945443">0</Load>
+          <AngularVelocity dataItemId="Mazak01-B_2" timestamp="2021-02-11T21:19:28.056740" name="Bfrt" sequence="367928640">0</AngularVelocity>
+          <Angle dataItemId="Mazak01-B_4" timestamp="2021-02-11T21:19:26.927948" name="Bdeg" sequence="367928613" subType="ACTUAL">90</Angle>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak01-B_3" timestamp="2021-02-11T20:52:10.807168" name="Btravel" sequence="367902832" type="ANGLE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="Mazak01-C">
+        <Samples>
+          <Load dataItemId="Mazak01-C_1" timestamp="2021-02-11T20:52:10.889517" name="Cload" sequence="367902839">0</Load>
+          <Load dataItemId="Mazak01-C_2" timestamp="2021-02-11T21:17:52.094063" name="Sload" sequence="367926958">0</Load>
+          <AngularVelocity dataItemId="Mazak01-C_4" timestamp="2021-02-11T21:30:02.706296" name="Cfrt" sequence="367945445">0</AngularVelocity>
+          <RotaryVelocity dataItemId="Mazak01-C_5" timestamp="2021-02-11T21:30:01.603145" name="Srpm" sequence="367945418" subType="ACTUAL">2852</RotaryVelocity>
+          <Temperature dataItemId="Mazak01-C_7" timestamp="2021-02-11T21:32:08.149637" name="Stemp" sequence="367946793">47</Temperature>
+          <Angle dataItemId="Mazak01-C_8" timestamp="2021-02-11T21:30:02.689420" name="Cdeg" sequence="367945444" subType="ACTUAL">270</Angle>
+        </Samples>
+        <Events>
+          <RotaryVelocityOverride dataItemId="Mazak01-C_6" timestamp="2021-02-11T20:52:10.892117" name="Sovr" sequence="367902859">100</RotaryVelocityOverride>
+        </Events>
+        <Condition>
+          <Normal dataItemId="Mazak01-C_10" timestamp="2021-02-11T20:52:10.890487" name="Stemp_cond" sequence="367902844" type="TEMPERATURE"/>
+          <Normal dataItemId="Mazak01-C_3" timestamp="2021-02-11T20:52:10.889184" name="Ctravel" sequence="367902836" type="ANGLE"/>
+          <Normal dataItemId="Mazak01-C_9" timestamp="2021-02-11T20:52:10.889912" name="Sload_cond" sequence="367902843" type="LOAD"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="Mazak01-C2">
+        <Samples>
+          <Load dataItemId="Mazak01-C2_1" timestamp="2021-02-11T20:52:10.890811" name="S2load" sequence="367902846">0</Load>
+          <RotaryVelocity dataItemId="Mazak01-C2_2" timestamp="2021-02-11T20:52:10.890622" name="S2rpm" sequence="367902845" subType="ACTUAL">0</RotaryVelocity>
+          <Temperature dataItemId="Mazak01-C2_3" timestamp="2021-02-11T21:31:30.338527" name="S2temp" sequence="367946511">37</Temperature>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak01-C2_4" timestamp="2021-02-11T20:52:10.891152" name="S2load_cond" sequence="367902848" type="LOAD"/>
+          <Normal dataItemId="Mazak01-C2_5" timestamp="2021-02-11T20:52:10.891267" name="S2temp_cond" sequence="367902849" type="TEMPERATURE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Linear" name="X" componentId="Mazak01-X">
+        <Samples>
+          <Position dataItemId="Mazak01-X_1" timestamp="2021-02-11T21:32:32.968301" name="Xabs" sequence="367946973" subType="ACTUAL">-4.61264</Position>
+          <Load dataItemId="Mazak01-X_3" timestamp="2021-02-11T21:32:32.977747" name="Xload" sequence="367946975">28</Load>
+          <AxisFeedrate dataItemId="Mazak01-X_4" timestamp="2021-02-11T21:32:35.123208" name="Xfrt" sequence="367946990">1.507067</AxisFeedrate>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak01-X_2" timestamp="2021-02-11T20:52:10.731320" name="Xtravel" sequence="367902820" type="POSITION"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Linear" name="Y" componentId="Mazak01-Y">
+        <Samples>
+          <Position dataItemId="Mazak01-Y_1" timestamp="2021-02-11T21:32:35.124493" name="Yabs" sequence="367946991" subType="ACTUAL">6.933057</Position>
+          <Load dataItemId="Mazak01-Y_3" timestamp="2021-02-11T21:30:13.623672" name="Yload" sequence="367945717">7</Load>
+          <AxisFeedrate dataItemId="Mazak01-Y_4" timestamp="2021-02-11T21:32:35.133620" name="Yfrt" sequence="367946992">3.0099</AxisFeedrate>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak01-Y_2" timestamp="2021-02-11T20:52:10.744833" name="Ytravel" sequence="367902824" type="POSITION"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Linear" name="Z" componentId="Mazak01-Z">
+        <Samples>
+          <Position dataItemId="Mazak01-Z_1" timestamp="2021-02-11T21:32:30.807369" name="Zabs" sequence="367946959" subType="ACTUAL">-1.8542</Position>
+          <Load dataItemId="Mazak01-Z_3" timestamp="2021-02-11T21:32:00.587201" name="Zload" sequence="367946740">3</Load>
+          <AxisFeedrate dataItemId="Mazak01-Z_4" timestamp="2021-02-11T21:32:00.587087" name="Zfrt" sequence="367946739">0</AxisFeedrate>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak01-Z_2" timestamp="2021-02-11T20:52:10.771870" name="Ztravel" sequence="367902828" type="POSITION"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Axes" name="base" componentId="Mazak01-base">
+        <Condition>
+          <Normal dataItemId="Mazak01-base_1" timestamp="2021-02-11T20:52:10.710724" name="servo_cond" sequence="367902809" type="ACTUATOR"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Controller" name="controller" componentId="Mazak01-controller">
+        <Events>
+          <EmergencyStop dataItemId="Mazak01-controller_4" timestamp="2021-02-11T20:52:10.729343" name="estop" sequence="367902818">ARMED</EmergencyStop>
+        </Events>
+        <Condition>
+          <Normal dataItemId="Mazak01-controller_1" timestamp="2021-02-11T20:52:10.716053" name="comms_cond" sequence="367902810" type="COMMUNICATIONS"/>
+          <Normal dataItemId="Mazak01-controller_2" timestamp="2021-02-11T20:52:10.716211" name="logic_cond" sequence="367902811" type="LOGIC_PROGRAM"/>
+          <Normal dataItemId="Mazak01-controller_3" timestamp="2021-02-11T20:52:10.720926" name="system_cond" sequence="367902812" type="SYSTEM"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Coolant" name="coolant" componentId="Mazak01-coolant">
+        <Condition>
+          <Normal dataItemId="Mazak01-coolant_1" timestamp="2021-02-11T20:52:10.726407" name="coolant_pres" sequence="367902817" type="PRESSURE"/>
+          <Normal dataItemId="Mazak01-coolant_2" timestamp="2021-02-11T20:52:10.725218" name="coolant_temp" sequence="367902816" type="TEMPERATURE"/>
+          <Normal dataItemId="Mazak01-coolant_3" timestamp="2021-02-11T20:52:10.724336" name="coolant_level" sequence="367902815" type="LEVEL"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Electric" name="electric" componentId="Mazak01-electric">
+        <Events>
+          <PowerState dataItemId="Mazak01-electric_1" timestamp="2021-02-11T20:52:10.699441" name="power" sequence="367902808">ON</PowerState>
+        </Events>
+        <Condition>
+          <Normal dataItemId="Mazak01-electric_2" timestamp="2021-02-11T20:52:10.729461" name="electric_temp" sequence="367902819" type="TEMPERATURE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Hydraulic" name="hydraulic" componentId="Mazak01-hydraulic">
+        <Condition>
+          <Normal dataItemId="Mazak01-hydraulic_1" timestamp="2021-02-11T20:52:10.724221" name="hydra_cond" sequence="367902814" type="PRESSURE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Path" name="path" componentId="Mazak01-path">
+        <Samples>
+          <AccumulatedTime dataItemId="Mazak01-path_17" timestamp="2021-02-11T21:32:35.134113" name="auto_time" sequence="367946993" subType="x:AUTO">8328015</AccumulatedTime>
+          <AccumulatedTime dataItemId="Mazak01-path_18" timestamp="2021-02-11T21:32:35.134405" name="total_time" sequence="367946995" subType="x:TOTAL">41700838</AccumulatedTime>
+          <AccumulatedTime dataItemId="Mazak01-path_19" timestamp="2021-02-11T21:32:35.134259" name="cut_time" sequence="367946994" subType="x:CUT">4253246</AccumulatedTime>
+          <PathFeedrate dataItemId="Mazak01-path_7" timestamp="2021-02-11T21:32:00.587316" name="Fact" sequence="367946741" subType="ACTUAL">67.29623</PathFeedrate>
+        </Samples>
+        <Events>
+          <Program dataItemId="Mazak01-path_1" timestamp="2021-02-11T21:29:48.844388" name="program" sequence="367945164">1006</Program>
+          <ToolNumber dataItemId="Mazak01-path_10" timestamp="2021-02-11T21:19:23.706030" name="Tool_number" sequence="367928539">16</ToolNumber>
+          <x:ToolGroup dataItemId="Mazak01-path_11" timestamp="2021-02-11T20:52:10.892431" name="Tool_group" sequence="367902863">0</x:ToolGroup>
+          <x:ToolSuffix dataItemId="Mazak01-path_12" timestamp="2021-02-11T21:19:23.706112" name="Tool_suffix" sequence="367928540">C</x:ToolSuffix>
+          <Execution dataItemId="Mazak01-path_13" timestamp="2021-02-11T21:30:12.510305" name="execution" sequence="367945688">ACTIVE</Execution>
+          <ControllerMode dataItemId="Mazak01-path_14" timestamp="2021-02-11T20:52:10.892200" name="mode" sequence="367902860">AUTOMATIC</ControllerMode>
+          <x:ProgramComment dataItemId="Mazak01-path_15" timestamp="2021-02-11T21:29:48.846214" name="program_cmt" sequence="367945165"/>
+          <x:ProgramComment dataItemId="Mazak01-path_16" timestamp="2021-02-11T20:52:10.891581" name="subprogram_cmt" sequence="367902853" subType="x:SUB"/>
+          <Program dataItemId="Mazak01-path_2" timestamp="2021-02-11T20:52:10.891434" name="subprogram" sequence="367902851" subType="x:SUB"/>
+          <Line dataItemId="Mazak01-path_3" timestamp="2021-02-11T21:30:00.500029" name="line" sequence="367945395">1</Line>
+          <x:Unit dataItemId="Mazak01-path_4" timestamp="2021-02-11T20:52:10.892627" name="unitNum" sequence="367902865">0</x:Unit>
+          <x:SequenceNumber dataItemId="Mazak01-path_5" timestamp="2021-02-11T21:30:00.500130" name="sequenceNum" sequence="367945396">1</x:SequenceNumber>
+          <PartCount dataItemId="Mazak01-path_6" timestamp="2021-02-11T20:52:10.949335" name="PartCountAct" sequence="367902866">0</PartCount>
+          <PathFeedrateOverride dataItemId="Mazak01-path_8" timestamp="2021-02-11T20:52:10.892018" name="Frapidovr" sequence="367902858" subType="RAPID">25</PathFeedrateOverride>
+          <PathFeedrateOverride dataItemId="Mazak01-path_9" timestamp="2021-02-11T20:52:10.891928" name="Fovr" sequence="367902857" subType="PROGRAMMED">100</PathFeedrateOverride>
+        </Events>
+        <Condition>
+          <Normal dataItemId="Mazak01-path_20" timestamp="2021-02-11T20:52:11.037584" name="motion_cond" sequence="367902870" type="MOTION_PROGRAM"/>
+          <Normal dataItemId="Mazak01-path_21" timestamp="2021-02-11T20:52:11.115927" name="path_system" sequence="367902871" type="SYSTEM"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Pneumatic" name="pneumatic" componentId="Mazak01-pneumatic">
+        <Condition>
+          <Normal dataItemId="Mazak01-pneumatic_1" timestamp="2021-02-11T20:52:10.723882" name="pneu_cond" sequence="367902813" type="PRESSURE"/>
+        </Condition>
+      </ComponentStream>
+    </DeviceStream>
+    <DeviceStream name="Mazak03" uuid="mtc_adapter004">
+      <ComponentStream component="Device" name="Mazak03" componentId="Mazak03">
+        <Events>
+          <Availability dataItemId="Mazak03-dtop_1" timestamp="2021-02-11T21:12:39.212847" name="avail" sequence="367918702">AVAILABLE</Availability>
+          <AssetChanged dataItemId="Mazak03_asset_chg" timestamp="2021-02-11T16:58:20.155520" sequence="367775950" assetType="">UNAVAILABLE</AssetChanged>
+          <AssetRemoved dataItemId="Mazak03_asset_rem" timestamp="2021-02-11T16:58:20.155651" sequence="367775951" assetType="">UNAVAILABLE</AssetRemoved>
+        </Events>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="C" componentId="Mazak03-C_1">
+        <Samples>
+          <Load dataItemId="Mazak03-C_2" timestamp="2021-02-11T21:12:39.254765" name="Cload" sequence="367918725">0</Load>
+          <AngularVelocity dataItemId="Mazak03-C_3" timestamp="2021-02-11T21:25:32.056005" name="Cfrt" sequence="367938558">0</AngularVelocity>
+          <Angle dataItemId="Mazak03-C_4" timestamp="2021-02-11T21:25:32.054321" name="Cdeg" sequence="367938557" subType="ACTUAL">180</Angle>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak03-C_5" timestamp="2021-02-11T21:12:39.237501" name="Ctravel" sequence="367918722" type="ANGLE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="S2" componentId="Mazak03-S2_1">
+        <Samples>
+          <RotaryVelocity dataItemId="Mazak03-S2_2" timestamp="2021-02-11T21:12:39.255139" name="S2rpm" sequence="367918726" subType="ACTUAL">0</RotaryVelocity>
+          <Load dataItemId="Mazak03-S2_3" timestamp="2021-02-11T21:12:39.259999" name="S2load" sequence="367918727">0</Load>
+          <Temperature dataItemId="Mazak03-S2_4" timestamp="2021-02-11T21:32:31.140479" name="S2temp" sequence="367946963">51</Temperature>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak03-S2_5" timestamp="2021-02-11T21:12:39.260261" name="S2load_cond" sequence="367918729" type="LOAD"/>
+          <Normal dataItemId="Mazak03-S2_6" timestamp="2021-02-11T21:12:39.261769" name="S2temp_cond" sequence="367918730" type="TEMPERATURE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Rotary" name="S" componentId="Mazak03-S_1">
+        <Samples>
+          <RotaryVelocity dataItemId="Mazak03-S_2" timestamp="2021-02-11T21:12:39.265114" name="Srpm" sequence="367918731" subType="ACTUAL">750</RotaryVelocity>
+          <Load dataItemId="Mazak03-S_3" timestamp="2021-02-11T21:12:39.265255" name="S1load" sequence="367918732">1</Load>
+          <Temperature dataItemId="Mazak03-S_4" timestamp="2021-02-11T21:20:53.309960" name="Stemp" sequence="367930437">40</Temperature>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak03-S_5" timestamp="2021-02-11T21:12:39.267308" name="Sload_cond" sequence="367918734" type="LOAD"/>
+          <Normal dataItemId="Mazak03-S_6" timestamp="2021-02-11T21:12:39.268460" name="Stemp_cond" sequence="367918735" type="TEMPERATURE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Linear" name="X" componentId="Mazak03-X_1">
+        <Samples>
+          <Position dataItemId="Mazak03-X_2" timestamp="2021-02-11T21:12:39.214245" name="Xabs" sequence="367918715" subType="ACTUAL">15.35684</Position>
+          <Load dataItemId="Mazak03-X_4" timestamp="2021-02-11T21:31:47.640310" name="Xload" sequence="367946636">44</Load>
+          <AxisFeedrate dataItemId="Mazak03-X_5" timestamp="2021-02-11T21:12:39.214330" name="Xfrt" sequence="367918716">0</AxisFeedrate>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak03-X_3" timestamp="2021-02-11T21:12:39.214147" name="Xtravel" sequence="367918714" type="POSITION"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Linear" name="Z" componentId="Mazak03-Z_1">
+        <Samples>
+          <Position dataItemId="Mazak03-Z_2" timestamp="2021-02-11T21:25:32.054076" name="Zabs" sequence="367938556" subType="ACTUAL">-216.6747</Position>
+          <Load dataItemId="Mazak03-Z_4" timestamp="2021-02-11T21:25:53.157700" name="Zload" sequence="367939155">1</Load>
+          <AxisFeedrate dataItemId="Mazak03-Z_5" timestamp="2021-02-11T21:25:27.564853" name="Zfrt" sequence="367938411">0</AxisFeedrate>
+        </Samples>
+        <Condition>
+          <Normal dataItemId="Mazak03-Z_3" timestamp="2021-02-11T21:12:39.215382" name="Ztravel" sequence="367918718" type="POSITION"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Axes" name="base" componentId="Mazak03-base_1">
+        <Condition>
+          <Normal dataItemId="Mazak03-base_2" timestamp="2021-02-11T21:12:39.212992" name="servo_cond" sequence="367918703" type="ACTUATOR"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Controller" name="controller" componentId="Mazak03-controller_1">
+        <Events>
+          <x:PalletNumber dataItemId="Mazak03-controller_5" timestamp="2021-02-11T21:12:39.214061" name="pallet_num" sequence="367918713">0</x:PalletNumber>
+        </Events>
+        <Condition>
+          <Normal dataItemId="Mazak03-controller_2" timestamp="2021-02-11T21:12:39.213112" name="comms_cond" sequence="367918704" type="COMMUNICATIONS"/>
+          <Normal dataItemId="Mazak03-controller_3" timestamp="2021-02-11T21:12:39.213249" name="logic_cond" sequence="367918705" type="LOGIC_PROGRAM"/>
+          <Normal dataItemId="Mazak03-controller_4" timestamp="2021-02-11T21:12:39.213366" name="system_cond" sequence="367918706" type="SYSTEM"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Coolant" name="coolant" componentId="Mazak03-coolant_1">
+        <Condition>
+          <Normal dataItemId="Mazak03-coolant_2" timestamp="2021-02-11T21:12:39.213885" name="coolant_pres" sequence="367918711" type="PRESSURE"/>
+          <Normal dataItemId="Mazak03-coolant_3" timestamp="2021-02-11T21:12:39.213773" name="coolant_temp" sequence="367918710" type="TEMPERATURE"/>
+          <Normal dataItemId="Mazak03-coolant_4" timestamp="2021-02-11T21:12:39.213678" name="coolant_level" sequence="367918709" type="LEVEL"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Electric" name="electric" componentId="Mazak03-electric_1">
+        <Events>
+          <PowerState dataItemId="Mazak03-electric_2" timestamp="2021-02-11T21:12:39.212628" name="power" sequence="367918701">ON</PowerState>
+        </Events>
+        <Condition>
+          <Normal dataItemId="Mazak03-electric_3" timestamp="2021-02-11T21:12:39.213972" name="electric_temp" sequence="367918712" type="TEMPERATURE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Hydraulic" name="hydraulic" componentId="Mazak03-hydraulic_1">
+        <Condition>
+          <Normal dataItemId="Mazak03-hydraulic_2" timestamp="2021-02-11T21:12:39.213567" name="hydra_cond" sequence="367918708" type="PRESSURE"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Path" name="path" componentId="Mazak03-path_1">
+        <Samples>
+          <AccumulatedTime dataItemId="Mazak03-path_14" timestamp="2021-02-11T21:25:32.061056" name="auto_time" sequence="367938562" subType="x:AUTO">2706723</AccumulatedTime>
+          <AccumulatedTime dataItemId="Mazak03-path_15" timestamp="2021-02-11T21:32:35.100401" name="total_time" sequence="367946989" subType="x:TOTAL">14110123</AccumulatedTime>
+          <AccumulatedTime dataItemId="Mazak03-path_16" timestamp="2021-02-11T21:25:32.061425" name="cut_time" sequence="367938563" subType="x:CUT">1824843</AccumulatedTime>
+          <PathFeedrate dataItemId="Mazak03-path_7" timestamp="2021-02-11T21:25:32.060889" name="Fact" sequence="367938561" subType="ACTUAL">0</PathFeedrate>
+        </Samples>
+        <Events>
+          <Execution dataItemId="Mazak03-path_10" timestamp="2021-02-11T21:12:39.299492" name="execution" sequence="367918740">ACTIVE</Execution>
+          <ControllerMode dataItemId="Mazak03-path_11" timestamp="2021-02-11T21:12:39.325455" name="mode" sequence="367918746">AUTOMATIC</ControllerMode>
+          <ProgramComment dataItemId="Mazak03-path_12" timestamp="2021-02-11T21:12:39.299237" name="program_cmt" sequence="367918738"/>
+          <ProgramComment dataItemId="Mazak03-path_13" timestamp="2021-02-11T21:12:39.299384" name="subprogram_cmt" sequence="367918739" subType="x:SUB_PROGRAM"/>
+          <RotaryVelocityOverride dataItemId="Mazak03-path_2" timestamp="2021-02-11T21:12:39.325340" name="Sovr" sequence="367918745">100</RotaryVelocityOverride>
+          <ToolAssetId dataItemId="Mazak03-path_25" timestamp="2021-02-11T21:12:39.328770" name="Tool_number" sequence="367918747">9</ToolAssetId>
+          <x:ToolGroup dataItemId="Mazak03-path_26" timestamp="2021-02-11T21:12:39.329007" name="Tool_group" sequence="367918749">0</x:ToolGroup>
+          <x:ToolSuffix dataItemId="Mazak03-path_27" timestamp="2021-02-11T21:12:39.328911" name="Tool_suffix" sequence="367918748">A</x:ToolSuffix>
+          <Program dataItemId="Mazak03-path_3" timestamp="2021-02-11T21:12:39.283246" name="program" sequence="367918736">31</Program>
+          <Program dataItemId="Mazak03-path_4" timestamp="2021-02-11T21:12:39.293792" name="subprogram" sequence="367918737" subType="x:SUB"/>
+          <Line dataItemId="Mazak03-path_5" timestamp="2021-02-11T21:12:39.302910" name="line" sequence="367918741">9</Line>
+          <x:Unit dataItemId="Mazak03-path_6" timestamp="2021-02-11T21:12:39.329214" name="unitNum" sequence="367918751">0</x:Unit>
+          <PathFeedrateOverride dataItemId="Mazak03-path_8" timestamp="2021-02-11T21:12:39.325215" name="Frapidovr" sequence="367918744" subType="RAPID">25</PathFeedrateOverride>
+          <PathFeedrateOverride dataItemId="Mazak03-path_9" timestamp="2021-02-11T21:12:39.320130" name="Fovr" sequence="367918743" subType="PROGRAMMED">80</PathFeedrateOverride>
+          <x:SequenceNumber dataItemId="Mazak03-path_95" timestamp="2021-02-11T21:12:39.329105" name="sequenceNum" sequence="367918750">9</x:SequenceNumber>
+          <PartCount dataItemId="Mazak03-path_96" timestamp="2021-02-11T21:12:39.329302" name="PartCountAct" sequence="367918752">0</PartCount>
+        </Events>
+        <Condition>
+          <Fault dataItemId="Mazak03-path_17" timestamp="2021-02-11T21:25:32.061668" name="motion_cond" sequence="367938565" nativeCode="809" type="MOTION_PROGRAM">ILLEGAL NUMBER INPUT</Fault>
+          <Unavailable dataItemId="Mazak03-path_18" timestamp="2021-02-11T21:12:39.386538" name="motion_cond2" sequence="367918758" subType="x:MOTION_PROGRAM_2" type="MOTION_PROGRAM"/>
+          <Unavailable dataItemId="Mazak03-path_19" timestamp="2021-02-11T21:12:39.395034" name="motion_cond3" sequence="367918760" subType="x:MOTION_PROGRAM_3" type="MOTION_PROGRAM"/>
+          <Unavailable dataItemId="Mazak03-path_20" timestamp="2021-02-11T21:12:39.416845" name="motion_cond4" sequence="367918762" subType="x:MOTION_PROGRAM_4" type="MOTION_PROGRAM"/>
+          <Normal dataItemId="Mazak03-path_21" timestamp="2021-02-11T21:12:39.365452" name="path_system" sequence="367918757" type="SYSTEM"/>
+          <Unavailable dataItemId="Mazak03-path_22" timestamp="2021-02-11T21:12:39.387069" name="path_system2" sequence="367918759" subType="x:SYSTEM_1" type="SYSTEM"/>
+          <Unavailable dataItemId="Mazak03-path_23" timestamp="2021-02-11T21:12:39.409528" name="path_system3" sequence="367918761" subType="x:SYSTEM_2" type="SYSTEM"/>
+          <Unavailable dataItemId="Mazak03-path_24" timestamp="2021-02-11T21:12:39.421461" name="path_system4" sequence="367918763" subType="x:SYSTEM_3" type="SYSTEM"/>
+        </Condition>
+      </ComponentStream>
+      <ComponentStream component="Pneumatic" name="pneumatic" componentId="Mazak03-pneumatic_1">
+        <Condition>
+          <Normal dataItemId="Mazak03-pneumatic_2" timestamp="2021-02-11T21:12:39.213464" name="pneu_cond" sequence="367918707" type="PRESSURE"/>
+        </Condition>
+      </ComponentStream>
+    </DeviceStream>
+  </Streams>
+</MTConnectStreams>

@@ -27,9 +27,9 @@
 #include <string>
 #include <vector>
 
-#include "configuration/config_options.hpp"
-#include "pipeline/pipeline_context.hpp"
-#include "source/adapter/shdr/shdr_adapter.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/pipeline/pipeline_context.hpp"
+#include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -37,6 +37,13 @@ using namespace mtconnect::source::adapter;
 using namespace mtconnect::source::adapter::shdr;
 namespace asio = boost::asio;
 using namespace std::literals;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 TEST(AdapterTest, MultilineData)
 {

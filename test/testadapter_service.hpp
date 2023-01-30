@@ -19,11 +19,11 @@
 
 #include <boost/dll/alias.hpp>
 
-#include "configuration/agent_config.hpp"
-#include "pipeline/pipeline.hpp"
-#include "source/adapter/adapter.hpp"
-#include "source/adapter/adapter_pipeline.hpp"
-#include "source/source.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/source/adapter/adapter_pipeline.hpp"
+#include "mtconnect/source/source.hpp"
 
 using namespace std;
 

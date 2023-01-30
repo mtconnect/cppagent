@@ -26,12 +26,12 @@
 #include <stdexcept>
 #include <thread>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "asset/file_asset.hpp"
-#include "device_model/reference.hpp"
-#include "printer/xml_printer.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/asset/file_asset.hpp"
+#include "mtconnect/device_model/reference.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 #include "test_utilities.hpp"
 
 #if defined(WIN32) && _MSC_VER < 1500
@@ -47,6 +47,13 @@ using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
 
 using status = boost::beast::http::status;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class AgentTest : public testing::Test
 {
@@ -2868,4 +2875,63 @@ TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
     PARSE_XML_RESPONSE_PUT("/assets/P2", body, queries);
     ASSERT_EQ((unsigned int)2, storage->getCount());
   }
+}
+
+TEST_F(AgentTest, pre_start_hook_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->beforeStartHooks().add(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_FALSE(called);
+  agent->start();
+  ASSERT_TRUE(called);
+  agent->stop();
+}
+
+TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->beforeInitializeHooks().add(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_TRUE(called);
+}
+
+TEST_F(AgentTest, post_initialize_hooks_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->afterInitializeHooks().add(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_TRUE(called);
+}
+
+TEST_F(AgentTest, pre_stop_hook_should_be_called)
+{
+  static bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&lambda](AgentTestHelper &helper) {
+    helper.getAgent()->beforeStopHooks().add(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_FALSE(called);
+  agent->start();
+  ASSERT_FALSE(called);
+  agent->stop();
+  ASSERT_TRUE(called);
 }

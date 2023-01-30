@@ -21,10 +21,10 @@
 
 #include <chrono>
 
-#include "observation/observation.hpp"
-#include "pipeline/pipeline_context.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
-#include "pipeline/timestamp_extractor.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/pipeline_context.hpp"
+#include "mtconnect/pipeline/shdr_token_mapper.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -33,6 +33,13 @@ using namespace mtconnect::asset;
 using namespace device_model;
 using namespace data_item;
 using namespace std;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class MockPipelineContract : public PipelineContract
 {

@@ -19,11 +19,18 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "configuration/parser.hpp"
+#include "mtconnect/configuration/parser.hpp"
 
 using namespace mtconnect;
 using namespace configuration;
 using namespace std;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 TEST(ConfigParserTest, parse_simple_properties)
 {

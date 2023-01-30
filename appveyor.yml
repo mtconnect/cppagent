@@ -7,15 +7,14 @@ branches:
 
 
 image:
-  - Ubuntu2004
-  - Visual Studio 2019
   - macOS
+  - Visual Studio 2019
+  - Ubuntu2004
 
 environment:
   matrix:
-    - WITH_RUBY: True
-
-#    - WITH_RUBY: False
+    - SHARED: True
+    - SHARED: False
 
 configuration:
   - Release
@@ -43,18 +42,21 @@ init:
 before_build:
   - cmd: |-
       set PATH=C:\Python39-x64\;C:\Python39-x64\Scripts;C:\Ruby30\bin;%PATH%
-      "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
-      set
+      "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
       if not exist C:\conan mkdir C:\conan
+      if %SHARED%==True (set CONAN_PROFILE=conan/profiles/vs64shared) else (set CONAN_PROFILE=conan/profiles/vs64)
       set CONAN_USER_HOME=C:\conan
+      set
       pip install conan
       conan export conan/mqtt_cpp
       conan export conan/mruby
-      conan install . -if build --build=missing -pr conan/profiles/vs32 -o run_tests=False -o with_ruby=%WITH_RUBY%
+      conan install . -if build --build=missing -pr %CONAN_PROFILE% -o run_tests=False -o shared=%SHARED%
   - sh: |-
       export PATH=$HOME/venv3.10/bin:$PATH
       if [[ $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
       then
+        sudo apt update
+        sudo apt install -y build-essential cmake gcc-11 g++-11 python3
         export CONAN_PROFILE=conan/profiles/gcc-appveyor
       elif [[ $APPVEYOR_BUILD_WORKER_IMAGE = "macOS" ]]
       then
@@ -66,7 +68,7 @@ before_build:
       pip install conan
       conan export conan/mqtt_cpp
       conan export conan/mruby
-      conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o with_ruby=$WITH_RUBY
+      conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o shared=$SHARED
 
 build:
   verbosity: minimal

@@ -33,8 +33,8 @@
 #include <sstream>
 #include <string>
 
-#include "logging.hpp"
-#include "sink/rest_sink/server.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/sink/rest_sink/server.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -45,6 +45,13 @@ namespace beast = boost::beast;
 namespace http = boost::beast::http;
 namespace ssl = boost::asio::ssl;
 using tcp = boost::asio::ip::tcp;
+
+// main
+int main(int argc, char* argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class Client
 {
