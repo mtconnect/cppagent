@@ -493,6 +493,7 @@ namespace mtconnect {
     configuration::HookManager<Agent> m_beforeStopHooks;
   };
 
+  /// @brief Association of the pipeline's interface to the `Agent`
   class AGENT_LIB_API AgentPipelineContract : public pipeline::PipelineContract
   {
   public:
@@ -543,6 +544,7 @@ namespace mtconnect {
     return std::make_unique<AgentPipelineContract>(this);
   }
 
+  /// @brief The sinks interface to the `Agent`
   class AGENT_LIB_API AgentSinkContract : public sink::SinkContract
   {
   public:
