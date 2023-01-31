@@ -446,19 +446,25 @@ namespace mtconnect {
     // Agent Device
     device_model::AgentDevicePtr m_agentDevice;
 
+    /// @brief tag for Device multi-index unsorted
     struct BySeq
     {};
+    /// @brief tag for Device multi-index by Name
     struct ByName
     {};
+    /// @brief tag for Device multi-index by UUID
     struct ByUuid
     {};
 
+    /// @brief Device UUID extractor for multi-index
     struct ExtractDeviceUuid
     {
       using result_type = std::string;
       const result_type &operator()(const DevicePtr &d) const { return *d->getUuid(); }
       result_type operator()(const DevicePtr &d) { return *d->getUuid(); }
     };
+
+    /// @brief Device name extractor for multi-index
     struct ExtractDeviceName
     {
       using result_type = std::string;
@@ -466,7 +472,7 @@ namespace mtconnect {
       result_type operator()(DevicePtr &d) { return *d->getComponentName(); }
     };
 
-    // Data containers
+    /// @brief Devuce multi-index
     using DeviceIndex = mic::multi_index_container<
         DevicePtr, mic::indexed_by<mic::sequenced<mic::tag<BySeq>>,
                                    mic::hashed_unique<mic::tag<ByUuid>, ExtractDeviceUuid>,

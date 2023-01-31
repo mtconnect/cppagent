@@ -40,20 +40,25 @@ const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 const unsigned int DEFAULT_MAX_ASSETS = 1024;
 
+/// @brief MTConnect namespace
+///
+/// Top level mtconnect namespace
 namespace mtconnect {
   // Message for when enumerations do not exist in an array/enumeration
   const int ENUM_MISS = -1;
 
-  // Time format
+  /// @brief Time formats
   enum TimeFormat
   {
-    HUM_READ,
-    GMT,
-    GMT_UV_SEC,
-    LOCAL
+    HUM_READ, ///< Human readable
+    GMT, ///< GMT or UTC with second resolution
+    GMT_UV_SEC, ///< GMT with microsecond resolution
+    LOCAL ///< Time using local time zone 
   };
 
-  //####### METHODS #######
+  /// @brief Converts string to floating point numberss
+  /// @param[in] text the number
+  /// @return the converted value or 0.0 if incorrect.
   inline double stringToFloat(const std::string &text)
   {
     double value = 0.0;
@@ -72,6 +77,9 @@ namespace mtconnect {
     return value;
   }
 
+  /// @brief Converts string to integer
+  /// @param[in] text the number
+  /// @return the converted value or 0 if incorrect.
   inline int stringToInt(const std::string &text, int outOfRangeDefault)
   {
     int value = 0;
@@ -90,7 +98,9 @@ namespace mtconnect {
     return value;
   }
 
-  // Convert a float to string
+  /// @brief converts a double to a string
+  /// @param[in] value the double
+  /// @return the string representation of the double (10 places max)
   inline std::string format(double value)
   {
     std::stringstream s;
@@ -99,14 +109,23 @@ namespace mtconnect {
     return s.str();
   }
 
+  /// @brief inline formattor support for doubles
   class format_double_stream
   {
   protected:
     double val;
 
   public:
+    /// @brief create a formatter
+    /// @param[in] v the value
     format_double_stream(double v) { val = v; }
 
+    /// @brief writes a double to an output stream with up to 10 digits of precision
+    /// @tparam _CharT from std::basic_ostream
+    /// @tparam _Traits from std::basic_ostream
+    /// @param[in,out] os output stream
+    /// @param[in] fmter reference to this formatter
+    /// @return reference to the output stream
     template <class _CharT, class _Traits>
     inline friend std::basic_ostream<_CharT, _Traits> &operator<<(
         std::basic_ostream<_CharT, _Traits> &os, const format_double_stream &fmter)
@@ -117,9 +136,14 @@ namespace mtconnect {
     }
   };
 
+  /// @brief create a `format_doulble_stream`
+  /// @param[in] v the value
+  /// @return the format_double_stream 
   inline format_double_stream formatted(double v) { return format_double_stream(v); }
 
-  // Convert a string to the same string with all upper case letters
+  /// @brief Convert text to upper case
+  /// @param[in,out] text text
+  /// @return upper-case of text as string
   inline std::string toUpperCase(std::string &text)
   {
     std::transform(text.begin(), text.end(), text.begin(),
@@ -267,6 +291,11 @@ namespace mtconnect {
     return std::equal(beginning.begin(), beginning.end(), value.begin());
   }
 
+  /// @public
+  /// @brief Case insensitive equals
+  /// @param a first string
+  /// @param b second string
+  /// @return `true` if equal
   inline bool iequals(const std::string &a, const std::string_view &b)
   {
     if (a.size() != b.size())
@@ -279,6 +308,8 @@ namespace mtconnect {
 
   using Attributes = std::map<std::string, std::string>;
 
+  /// @brief overloaded pattern for variant visitors using list of lambdas
+  /// @tparam ...Ts list of lambda classes
   template <class... Ts>
   struct overloaded : Ts...
   {
@@ -287,6 +318,8 @@ namespace mtconnect {
   template <class... Ts>
   overloaded(Ts...) -> overloaded<Ts...>;
 
+  /// @brief Reverse an iterable
+  /// @tparam T The iterable type
   template <typename T>
   class reverse
   {

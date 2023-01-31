@@ -37,20 +37,42 @@ namespace mtconnect {
   namespace source::adapter {
     class Adapter;
   }  // namespace source::adapter
+
+  /// @brief mtconnect pipelines and transformations
+  ///
+  /// Contains all classes pertaining to pipeline transformations
   namespace pipeline {
+    /// @brief Abstract Pipeline class
+    ///
+    /// Must be subclassed and the `build()` method must be provided
     class AGENT_LIB_API Pipeline
     {
     public:
+      /// @brief A splice function type for resplicing the pipeline after it is rebuilt
       using Splice = std::function<void(Pipeline *)>;
+
+      /// @brief Pipeline constructor
+      /// @param context The pipeline context
+      /// @param st boost asio strand for for setting timers and running async operations
+      /// @note All pipelines run in a single strand (thread) and therefor all operations are 
+      ///       thread-safe in one pipeline.
 
       Pipeline(PipelineContextPtr context, boost::asio::io_context::strand &st)
         : m_start(std::make_shared<Start>()), m_context(context), m_strand(st)
       {}
+      /// @brief Destructor stops the pipeline
       virtual ~Pipeline() { m_start->stop(); }
+      /// @brief Build the pipeline
+      /// @param options A set of configuration options
       virtual void build(const ConfigOptions &options) = 0;
+      /// @brief Has the pipeline started?
+      /// @return `true` if started
       bool started() const { return m_started; }
+      /// @brief Get a reference to the strand
+      /// @return the strand
       boost::asio::io_context::strand &getStrand() { return m_strand; }
 
+      /// @brief Apply the splices after rebuilding
       void applySplices()
       {
         for (auto &splice : m_splices)
