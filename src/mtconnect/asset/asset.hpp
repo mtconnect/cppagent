@@ -27,6 +27,7 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect {
+  /// @brief Asset namespace
   namespace asset {
     class Asset;
     using AssetPtr = std::shared_ptr<Asset>;

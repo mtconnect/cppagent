@@ -27,6 +27,7 @@
 #include "requirement.hpp"
 
 namespace mtconnect {
+  /// @brief Entity namespace
   namespace entity {
     struct PropertyKey : public QName
     {

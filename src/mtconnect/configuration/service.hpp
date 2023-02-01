@@ -28,6 +28,7 @@
 
 namespace mtconnect {
   namespace configuration {
+    /// @brief methods supporting running the agent as a daemon
     class AGENT_LIB_API MTConnectService
     {
     public:

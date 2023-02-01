@@ -17,6 +17,9 @@
 //    limitations under the License.
 //
 
+/// @file config.hpp
+/// @brief common includes and cross platform requirements
+
 #include <boost/config.hpp>
 
 #ifndef __STDC_LIMIT_MACROS

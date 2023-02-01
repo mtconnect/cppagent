@@ -60,9 +60,13 @@ namespace mtconnect {
 #endif
 
   class XmlPrinter;
+
+  /// @brief Configuration namespace
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;
 
+    /// @brief Parses the configuration file and creates the `Agent`. Manages config 
+    ///        file tracking and restarting of the agent.
     class AGENT_LIB_API AgentConfiguration : public MTConnectService
     {
     public:
@@ -71,13 +75,23 @@ namespace mtconnect {
 
       using ptree = boost::property_tree::ptree;
 
+      /// @brief Construct the agent configuration
       AgentConfiguration();
       virtual ~AgentConfiguration();
 
-      // Hooks
+      /// @name Callbacks for initialization phases
+      ///@{
+
+      /// @brief Get the callback manager after the agent is created
+      /// @return the callback manager
       auto &afterAgentHooks() { return m_afterAgentHooks; }
+      /// @brief Get the callback manager after the agent is started
+      /// @return the callback manager
       auto &beforeStartHooks() { return m_beforeStartHooks; }
+      /// @brief Get the callback manager after the agent is stopped
+      /// @return the callback manager
       auto &beforeStopHooks() { return m_beforeStopHooks; }
+      ///@}
 
       // For MTConnectService
       void stop() override;
