@@ -769,7 +769,7 @@ namespace mtconnect {
       asyncResponse->m_printer = printer;
       asyncResponse->m_heartbeat = std::chrono::milliseconds(heartbeatIn);
       asyncResponse->m_service = getptr();
-      
+
       checkPath(asyncResponse->m_printer, path, dev, asyncResponse->m_filter);
 
       if (m_logStreamData)
@@ -832,7 +832,7 @@ namespace mtconnect {
       using boost::placeholders::_2;
 
       auto service = asyncResponse->m_service.lock();
-      
+
       if (!service || !m_server || !m_server->isRunning())
       {
         LOG(warning) << "Trying to send chunk when service has stopped";
@@ -946,7 +946,7 @@ namespace mtconnect {
       AsyncCurrentResponse(rest_sink::SessionPtr session, asio::io_context &context)
         : m_session(session), m_timer(context)
       {}
-      
+
       std::weak_ptr<Sink> m_service;
       rest_sink::SessionPtr m_session;
       chrono::milliseconds m_interval;
@@ -989,7 +989,7 @@ namespace mtconnect {
       using boost::placeholders::_1;
 
       auto service = asyncResponse->m_service.lock();
-      
+
       if (!service || !m_server || !m_server->isRunning())
       {
         LOG(warning) << "Trying to send chunk when service has stopped";

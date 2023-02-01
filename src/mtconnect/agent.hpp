@@ -92,7 +92,7 @@ namespace mtconnect {
     ///     - DisableAgentDevice
     Agent(boost::asio::io_context &context, const std::string &deviceXmlPath,
           const ConfigOptions &options);
-    
+
     /// Destructor for the Agent.
     /// > Note: Does not stop the agent.
     ~Agent();
@@ -103,15 +103,15 @@ namespace mtconnect {
     /// @brief Functions to run before the agent begins the initialization process.
     /// @return configuration::HookManager<Agent>&
     auto &beforeInitializeHooks() { return m_beforeInitializeHooks; }
-    
+
     /// @brief Function that run after all agent initialization is complete
     /// @return configuration::HookManager<Agent>&
     auto &afterInitializeHooks() { return m_afterInitializeHooks; }
-    
+
     /// @brief Hooks to run when before the agent starts all the soures and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStartHooks() { return m_beforeStartHooks; }
-    
+
     /// @brief Hooks before the agent stops all the sources and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStopHooks() { return m_beforeStopHooks; }
@@ -119,7 +119,7 @@ namespace mtconnect {
     /// @brief the agent given a pipeline context
     /// @param context: the pipeline context shared between all pipelines
     void initialize(pipeline::PipelineContextPtr context);
-    
+
     /// @brief initial UNAVAILABLE observations for all data items
     ///        unless they have constant values.
     void initialDataItemObservations();
@@ -129,9 +129,9 @@ namespace mtconnect {
     void start();
     /// @brief Stops all the sources and syncs.
     void stop();
-    
+
     /// @brief Get the boost asio io context
-    /// @return boost::asio::io_context 
+    /// @return boost::asio::io_context
     auto &getContext() { return m_context; }
 
     /// @brief Create a contract for pipelines to access agent information
@@ -147,9 +147,9 @@ namespace mtconnect {
     /// @brief Get a reference to the XML parser
     /// @return The XML parser
     const auto &getXmlParser() const { return m_xmlParser; }
-    /// @brief Get a reference to the circular buffer. Used by sinks to 
+    /// @brief Get a reference to the circular buffer. Used by sinks to
     ///        get latest and historical data.
-    /// @return A reference to the circular buffer 
+    /// @return A reference to the circular buffer
     auto &getCircularBuffer() { return m_circularBuffer; }
 
     /// @brief Adds an adapter to the agent
@@ -256,7 +256,7 @@ namespace mtconnect {
     bool reloadDevices(const std::string &deviceFile);
 
     /// @name Message when source has connected and disconnected
-    ///@{ 
+    ///@{
 
     /// @brief Called when source begins trying to connect
     /// @param source The source identity
@@ -264,18 +264,20 @@ namespace mtconnect {
     /// @brief Called when source is disconnected
     /// @param[in] source The source identity
     /// @param[in] devices The list of devices associated with this source
-    /// @param[in] autoAvailable `true` if the source should automatically set available to `UNAVAILABLE`
+    /// @param[in] autoAvailable `true` if the source should automatically set available to
+    /// `UNAVAILABLE`
     void disconnected(const std::string &source, const StringList &devices, bool autoAvailable);
     /// @brief Called when source is connected
     /// @param source The source identity
     /// @param[in] devices The list of devices associated with this source
-    /// @param[in] autoAvailable `true` if the source should automatically set available to `AVAILABLE`
+    /// @param[in] autoAvailable `true` if the source should automatically set available to
+    /// `AVAILABLE`
     void connected(const std::string &source, const StringList &devices, bool autoAvailable);
 
     ///@}
 
     /// @brief Called when a source receives a command from a data source
-    /// @param[in] device The device name associated with this source 
+    /// @param[in] device The device name associated with this source
     /// @param[in] command The command being sent
     /// @param[in] value The value of the command
     /// @param[in] source The identity of the source
@@ -286,7 +288,8 @@ namespace mtconnect {
     /// @param[in] deviceName The name or uuid of the device
     /// @param[in] dataItemName The name or id of the data item
     /// @return Shared pointer to the data item if found
-    /// @note Cover method for `findDeviceByUUIDorName()` and `DataItem::getDeviceDataItem()` from the device.
+    /// @note Cover method for `findDeviceByUUIDorName()` and `DataItem::getDeviceDataItem()` from
+    /// the device.
     DataItemPtr getDataItemForDevice(const std::string &deviceName,
                                      const std::string &dataItemName) const
     {
@@ -306,7 +309,7 @@ namespace mtconnect {
     }
 
     /// @name Pipeline related methods to receive data from sources
-    ///@{ 
+    ///@{
 
     /// @brief Receive an observation
     /// @param[in] observation A shared pointer to the observation
@@ -316,7 +319,7 @@ namespace mtconnect {
     void receiveAsset(asset::AssetPtr asset);
     /// @brief Receive a device
     /// @param[in] device A shared pointer to the device
-    /// @param[in] version If the DeviceXML should be versioned 
+    /// @param[in] version If the DeviceXML should be versioned
     /// @return If the device could be updated or added
     bool receiveDevice(device_model::DevicePtr device, bool version = true);
     /// @brief Received an instruction from the source to remove an asset
@@ -378,11 +381,11 @@ namespace mtconnect {
     ///        paths by repeating the prefix. The resulting path is valid
     ///        XPath.
     ///
-    /// For example: a Device with a uuid="AAABBB" with the path 
+    /// For example: a Device with a uuid="AAABBB" with the path
     /// ```
     /// //DataItem[@type='EXECUTION']|//DataItem[@type='CONTROLLER_MODE']
     /// ```
-    /// 
+    ///
     /// Is rewritten:
     /// ```
     /// //Devices/Device[@uuid="AAABBB"]//DataItem[@type='EXECUTION']|//Devices/Device[@uuid="AAABBB"]//DataItem[@type='CONTROLLER_MODE']
@@ -422,8 +425,8 @@ namespace mtconnect {
     boost::asio::io_context::strand m_strand;
 
     std::shared_ptr<source::LoopbackSource> m_loopback;
-    
-    bool m_started { false };
+
+    bool m_started {false};
 
     // Asset Management
     std::unique_ptr<asset::AssetStorage> m_assetStorage;

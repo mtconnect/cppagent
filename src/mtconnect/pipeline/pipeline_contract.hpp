@@ -50,7 +50,7 @@ namespace mtconnect {
   namespace pipeline {
     /// @brief The interface required by a pipeline to deliver and get information
     ///
-    /// Provides the necessary methods for the pipeline to deliver entities and 
+    /// Provides the necessary methods for the pipeline to deliver entities and
     /// retrieve information about devices
     class AGENT_LIB_API PipelineContract
     {

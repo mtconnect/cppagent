@@ -99,7 +99,7 @@ namespace mtconnect {
       virtual buffer::CircularBuffer &getCircularBuffer() = 0;
 
       /// @brief Get a pointer to the asset storage
-      /// @return a pointer to the asset storage. 
+      /// @return a pointer to the asset storage.
       virtual const asset::AssetStorage *getAssetStorage() = 0;
 
       /// @brief Shared pointer to the pipeline context
@@ -181,7 +181,7 @@ namespace mtconnect {
       /// @param io a reference to the boost::asio io_context
       /// @param contract The SinkContract to give to the Sink
       /// @param options Configuration options for the sink
-      /// @param block Additional configuration options for the Sink as a boost property tree. 
+      /// @param block Additional configuration options for the Sink as a boost property tree.
       ///        These options need to be interpreted by the sink
       /// @return A shared pointer to the sink.
       SinkPtr make(const std::string &factoryName, const std::string &sinkName,

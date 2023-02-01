@@ -182,13 +182,13 @@ namespace mtconnect {
   void Agent::start()
   {
     NAMED_SCOPE("Agent::start");
-    
+
     if (m_started)
     {
       LOG(warning) << "Agent already started.";
       return;
     }
-    
+
     try
     {
       m_beforeStartHooks.exec(*this);
@@ -213,20 +213,20 @@ namespace mtconnect {
       LOG(fatal) << "Cannot start server: " << e.what();
       std::exit(1);
     }
-    
+
     m_started = true;
   }
 
   void Agent::stop()
   {
     NAMED_SCOPE("Agent::stop");
-    
+
     if (!m_started)
     {
       LOG(warning) << "Agent already stopped.";
       return;
     }
-    
+
     m_beforeStopHooks.exec(*this);
 
     // Stop all adapter threads...
@@ -248,7 +248,7 @@ namespace mtconnect {
     }
 
     LOG(info) << "Shutting down completed";
-    
+
     m_started = false;
   }
 

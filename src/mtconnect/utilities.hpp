@@ -53,10 +53,10 @@ namespace mtconnect {
   /// @brief Time formats
   enum TimeFormat
   {
-    HUM_READ, ///< Human readable
-    GMT, ///< GMT or UTC with second resolution
-    GMT_UV_SEC, ///< GMT with microsecond resolution
-    LOCAL ///< Time using local time zone 
+    HUM_READ,    ///< Human readable
+    GMT,         ///< GMT or UTC with second resolution
+    GMT_UV_SEC,  ///< GMT with microsecond resolution
+    LOCAL        ///< Time using local time zone
   };
 
   /// @brief Converts string to floating point numberss
@@ -141,7 +141,7 @@ namespace mtconnect {
 
   /// @brief create a `format_doulble_stream`
   /// @param[in] v the value
-  /// @return the format_double_stream 
+  /// @return the format_double_stream
   inline format_double_stream formatted(double v) { return format_double_stream(v); }
 
   /// @brief Convert text to upper case
@@ -187,7 +187,7 @@ namespace mtconnect {
     return true;
   }
 
-  /// @brief Gets the local time 
+  /// @brief Gets the local time
   /// @param[in] time the time
   /// @param[out] buf struct tm
   AGENT_LIB_API void mt_localtime(const time_t *time, struct tm *buf);
@@ -245,7 +245,7 @@ namespace mtconnect {
         .count();
   }
 
-  /// @brief Current time in microseconds since epoch 
+  /// @brief Current time in microseconds since epoch
   /// @return the time as uns64 in microsecnods
   inline uint64_t getCurrentTimeInMicros() { return getCurrentTimeIn<std::chrono::microseconds>(); }
 
@@ -434,7 +434,7 @@ namespace mtconnect {
   }
 
   /// @brief convert an option from a string to a typed option
-  /// @param[in] s the 
+  /// @param[in] s the
   /// @param[in] def template for the option
   /// @return a typed option matching `def`
   inline auto ConvertOption(const std::string &s, const ConfigOption &def)
@@ -462,7 +462,7 @@ namespace mtconnect {
   /// - [Gg]: Gigabytes
   /// - [Mm]: Megabytes
   /// - [Kk]: Kilobytes
-  /// 
+  ///
   /// @param[in] options A set of options
   /// @param[in] name the name of the options
   /// @param[in] size the default size (0)
@@ -627,7 +627,8 @@ namespace mtconnect {
     }
   }
 
-  /// @brief creates an upper-camel-case string from words separated by an underscore (`_`) with optional prefix
+  /// @brief creates an upper-camel-case string from words separated by an underscore (`_`) with
+  /// optional prefix
   ///
   /// Uses `capitalize()` method to capitalize words.
   ///

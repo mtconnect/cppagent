@@ -55,7 +55,8 @@ namespace mtconnect {
       auto getptr() { return shared_from_this(); }
 
       /// @brief Retrieves the shared state for a given name.
-      /// @tparam T the type of the shared state. Must be a subclass of TransformState or a lockable object.
+      /// @tparam T the type of the shared state. Must be a subclass of TransformState or a lockable
+      /// object.
       /// @param[in] name the name of the shared state
       /// @return a shared pointer to the shared state.
       template <typename T>

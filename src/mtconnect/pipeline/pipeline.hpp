@@ -54,7 +54,7 @@ namespace mtconnect {
       /// @brief Pipeline constructor
       /// @param context The pipeline context
       /// @param st boost asio strand for for setting timers and running async operations
-      /// @note All pipelines run in a single strand (thread) and therefor all operations are 
+      /// @note All pipelines run in a single strand (thread) and therefor all operations are
       ///       thread-safe in one pipeline.
 
       Pipeline(PipelineContextPtr context, boost::asio::io_context::strand &st)
