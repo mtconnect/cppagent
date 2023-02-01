@@ -32,6 +32,7 @@
 namespace mtconnect::entity {
   struct DataSetEntry;
 
+  /// @brief A set of data set entries
   class AGENT_LIB_API DataSet : public std::set<DataSetEntry>
   {
   public:
@@ -46,6 +47,7 @@ namespace mtconnect::entity {
     bool parse(const std::string &s, bool table);
   };
 
+  /// @brief Data set value variant
   using DataSetValue = std::variant<std::monostate, DataSet, std::string, int64_t, double>;
 
   struct DataSetValueSame

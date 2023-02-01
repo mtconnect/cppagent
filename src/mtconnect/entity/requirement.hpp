@@ -339,7 +339,7 @@ namespace mtconnect {
       /// @param value the value
       /// @return `true` if the requirement is met
       bool isMetBy(const Value &value) const;
-      /// @brief checks if a string matches the matcher
+      /// @brief checks if a string matches
       /// @param s the string to check
       /// @return `true` if it matches
       bool matches(const std::string &s) const
