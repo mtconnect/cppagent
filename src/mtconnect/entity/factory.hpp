@@ -28,6 +28,7 @@ namespace mtconnect {
   namespace entity {
     using Requirements = std::list<Requirement>;
 
+    /// @brief Factory for creating entities
     class AGENT_LIB_API Factory : public Matcher, public std::enable_shared_from_this<Factory>
     {
     public:

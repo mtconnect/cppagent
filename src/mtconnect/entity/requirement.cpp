@@ -57,7 +57,7 @@ namespace mtconnect {
       m_factory = f;
     }
 
-    bool Requirement::isMetBy(const Value &value, bool isList) const
+    bool Requirement::isMetBy(const Value &value) const
     {
       // Is this a multiple entry
       if ((m_type == ENTITY || m_type == ENTITY_LIST))

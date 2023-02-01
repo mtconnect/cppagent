@@ -216,6 +216,8 @@ namespace mtconnect {
       boost::push_back(list, m_deviceIndex);
       return list;
     }
+
+    /// @deprecated use `getDefaultDevice()` instead
     /// @brief Get a pointer to the default device
     ///
     /// The default device is the first device that is not the Agent device.
