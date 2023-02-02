@@ -84,6 +84,11 @@ namespace mtconnect {
     using Pattern = std::optional<std::regex>;
     using VocabSet = std::optional<std::unordered_set<std::string>>;
 
+    /// @brief Convert a `Value` to a given type
+    /// @param value The value to convert
+    /// @param type the target type
+    /// @param table special treatment if a table (data sets of data set)
+    /// @return `true` if conversion was successful
     bool AGENT_LIB_API ConvertValueToType(Value &value, ValueType type, bool table = false);
 
     /// @brief Error class when an error occurred
