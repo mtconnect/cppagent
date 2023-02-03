@@ -5,6 +5,7 @@ import io
 import re
 import itertools as it
 import glob
+import subprocess
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 
 class MTConnectAgentConan(ConanFile):
@@ -26,8 +27,6 @@ class MTConnectAgentConan(ConanFile):
                 "openssl/3.0.5@#40f4488f02b36c1193b68f585131e8ef",
                 "mqtt_cpp/13.1.0"]
 
-    tool_requires = ["doxygen/1.9.4@#19fe2ac34109f3119190869a4d0ffbcb"]
-    
     build_policy = "missing"
     default_options = {
         "run_tests": True,
@@ -111,6 +110,11 @@ class MTConnectAgentConan(ConanFile):
             self.options["gtest"].shared = True
             self.options["openssl"].shared = True
         
+    def build_requirements(self):
+        res = subprocess.run(["doxygen --version"], shell=True, text=True, capture_output=True)
+        if (res.returncode != 0 or not res.stdout.startswith('1.9')):
+            self.tool_requires("doxygen/1.9.4@#19fe2ac34109f3119190869a4d0ffbcb")
+
     def requirements(self):
         if not self.windows_xp:
             self.requires("gtest/1.10.0")
