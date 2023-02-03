@@ -17,14 +17,15 @@
 
 #pragma once
 
-#include "source/adapter/adapter.hpp"
-#include "source/adapter/adapter_pipeline.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/utilities.hpp"
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 using namespace mtconnect;
-using namespace mtconnect::configuration;
 
 namespace mtconnect {
+
   namespace mqtt_client {
 
     class MqttTopicPermission
@@ -42,28 +43,24 @@ namespace mtconnect {
         Both
       };
 
-      void MqttTopicPermission(const std::string& topic, const std::string& clientId)
+    public:
+      MqttTopicPermission(const std::string& topic)
       {
         m_topic = topic;
-        m_clientId = clientId;
         m_type = AuthorizationType::Allow;
         m_mode = TopicMode::Subscribe;
       }
 
-      void MqttTopicPermission(const std::string& topic, const std::string& clientId,
-                               AuthorizationType type)
+      MqttTopicPermission(const std::string& topic, AuthorizationType type)
       {
         m_topic = topic;
-        m_clientId = clientId;
         m_type = type;
         m_mode = TopicMode::Subscribe;
       }
 
-      void MqttTopicPermission(const std::string& topic, const std::string& clientId,
-                               AuthorizationType type, TopicMode mode)
+      MqttTopicPermission(const std::string& topic, AuthorizationType type, TopicMode mode)
       {
         m_topic = topic;
-        m_clientId = clientId;
         m_type = type;
         m_mode = mode;
       }
@@ -71,21 +68,59 @@ namespace mtconnect {
     protected:
       TopicMode m_mode;
       AuthorizationType m_type;
-      std::string m_clientId;
       std::string m_topic;
-    };
 
-    class MqttAuthorization : public std::enable_shared_from_this<MqttAuthorization>
+    };  // namespace MqttTopicPermission
+
+    class MqttAuthorization
     {
     public:
       MqttAuthorization(const ConfigOptions& options) : m_options(options)
       {
-        m_clientId = GetOption<std::string>(options, configuration::MqttClientId);
+        m_clientId = *GetOption<std::string>(options, configuration::MqttClientId);
         m_username = GetOption<std::string>(options, configuration::MqttUserName);
         m_password = GetOption<std::string>(options, configuration::MqttPassword);
       }
 
       virtual ~MqttAuthorization() = default;
+
+      MqttTopicPermission getPermissionsForClient(const std::string& topic)
+      {
+        MqttTopicPermission mqttTopicPerm = *new MqttTopicPermission(topic);
+        return mqttTopicPerm;
+      }
+
+      list<MqttTopicPermission> getPermissionsForClient(const std::list<std::string>& topics)
+      {
+        list<MqttTopicPermission> mqttTopicPermissions;
+
+        for (auto& topic : topics)
+        {
+          mqttTopicPermissions.push_back(*new MqttTopicPermission(topic));
+        }
+
+        return mqttTopicPermissions;
+      }
+
+    protected:
+      std::optional<std::string> m_username;
+      std::optional<std::string> m_password;
+      std::string m_clientId;
+      ConfigOptions m_options;
+
+    };  // namespace MqttAuthorization
+
+    class MqttAuthentication
+    {
+    public:
+      MqttAuthentication(const ConfigOptions& options) : m_options(options)
+      {
+        m_clientId = *GetOption<std::string>(options, configuration::MqttClientId);
+        m_username = GetOption<std::string>(options, configuration::MqttUserName);
+        m_password = GetOption<std::string>(options, configuration::MqttPassword);
+      }
+
+      virtual ~MqttAuthentication() = default;
 
       bool checkCredentials()
       {
@@ -103,6 +138,8 @@ namespace mtconnect {
       std::optional<std::string> m_password;
       std::string m_clientId;
       ConfigOptions m_options;
-    };
+
+    };  // namespace MqttAuthentication
+
   }  // namespace mqtt_client
 }  // namespace mtconnect
