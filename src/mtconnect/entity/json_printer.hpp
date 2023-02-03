@@ -26,15 +26,29 @@ using json = nlohmann::json;
 
 namespace mtconnect {
   namespace entity {
+    /// @brief Serializes entities as JSON text
     class AGENT_LIB_API JsonPrinter
     {
     public:
+      /// @brief Create a json printer
+      /// @param version the supported MTConnect serialization version
+      /// - Version 1 has a repreated objects in arrays for collections of objects
+      /// - Version 2 combines arrays of objects by type
       JsonPrinter(uint32_t version) : m_version(version) {};
 
+      /// @brief create a json object from an entity
+      ///
+      /// Cover method for `printEntity()`
+      ///
+      /// @param entity the entity
+      /// @return json object
       json print(const EntityPtr entity) const
       {
         return json::object({{entity->getName(), printEntity(entity)}});
       }
+      /// @brief Convert properties of an entity into a json object
+      /// @param entity the entity
+      /// @return json object
       json printEntity(const EntityPtr entity) const;
 
     protected:

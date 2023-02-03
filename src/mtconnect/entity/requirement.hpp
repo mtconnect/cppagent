@@ -265,6 +265,9 @@ namespace mtconnect {
       Requirement(const Requirement &o) = default;
       ~Requirement() = default;
 
+      /// @brief Check if two requires are the same
+      /// @param o another requirement
+      /// @return `true` if they are equal
       Requirement &operator=(const Requirement &o)
       {
         m_type = o.m_type;

@@ -302,7 +302,6 @@ namespace mtconnect {
       /// @return `true` if successful
       bool reviseTo(const EntityPtr other, const std::set<std::string> protect = {});
 
-      // Entity Factory
     protected:
       Value &getProperty_(const std::string &name)
       {

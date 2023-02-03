@@ -27,26 +27,57 @@
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/utilities.hpp"
 
+/// @brief Internal storage of observations
 namespace mtconnect::buffer {
+  /// @brief A point in time snapshot of all data items with a optional filter
   class AGENT_LIB_API Checkpoint
   {
   public:
+    /// @brief create an empty checkpoint
     Checkpoint() = default;
+    
+    /// @brief Copy constructor for a checkpoint
+    /// @param[in] checkpoint the previous checkpoint
+    /// @param[in] filterSet an optional set of data item ids for filtering
     Checkpoint(const Checkpoint &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
     ~Checkpoint();
 
-    void addObservation(observation::ObservationPtr event);
-    bool dataSetDifference(observation::ObservationPtr event) const;
+    /// @brief Add an observation to the checkpoint
+    /// @param[in] observation an observation
+    void addObservation(observation::ObservationPtr observation);
+    
+    /// @brief If this is a data set event, diff the value
+    /// @param[in] observation the data set observation
+    /// @return `true` if the data set changed
+    bool dataSetDifference(observation::ObservationPtr observation) const;
+
+    /// @brief copy another checkpoint to this checkpoint
+    /// @param[in] checkpoint a checkpoint to copy
+    /// @param[in] filterSet an optional filter set
     void copy(Checkpoint const &checkpoint, const FilterSetOpt &filterSet = std::nullopt);
+
+    /// @brief clear the contents of this checkpoint
     void clear();
+
+    /// @brief Add a filter to the checkpoint
     void filter(const FilterSet &filterSet);
+    /// @brief does this checkpoint have a filter?
+    /// @return `true` if a checkpoint exists
     bool hasFilter() const { return bool(m_filter); }
 
+    /// @brief get a map of data item id to observation shared pointers
+    /// @return a map of ids to observations
     const std::unordered_map<std::string, observation::ObservationPtr> &getObservations() const
     {
       return m_observations;
     }
 
+    /// @brief updates the data item reference of an observation in a checkpoint
+    ///
+    /// Used when the device model is modified and data items may have been removed or 
+    /// changed. The new data item shared pointer will replace the old.
+    /// 
+    /// @param[in] diMap the map of data ids to data item pointers
     void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
     {
       for (auto &o : m_observations)
@@ -55,10 +86,16 @@ namespace mtconnect::buffer {
       }
     }
 
+    /// @brief Get a list of observations from the checkpoint
+    /// @param[in,out] list the list to add the observations to
+    /// @param[in] filter an optional filter for the observations
     void getObservations(observation::ObservationList &list,
                          const FilterSetOpt &filter = std::nullopt) const;
 
-    observation::ObservationPtr getObservation(const std::string &id)
+    /// @brief Get an observation for a data item id
+    /// @param[in] id the data item id
+    /// @return shared pointer to the observation if it exists
+    observation::ObservationPtr getObservation(const std::string &id) const
     {
       auto pos = m_observations.find(id);
       if (pos != m_observations.end())
