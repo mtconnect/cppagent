@@ -155,6 +155,8 @@ namespace mtconnect {
       return true;
     }
 
+    /// @brief Internal visitor to convert a value from one type to another.
+    /// @throws PropertyError if the value cannot be converted
     struct ValueConverter
     {
       ValueConverter(ValueType type, bool table) : m_type(type), m_table(table) {}

@@ -31,6 +31,7 @@
 namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;
 
+  /// @brief Limited epherimal in-memory storage of observations and checkpoint management
   class AGENT_LIB_API CircularBuffer
   {
   public:

@@ -245,7 +245,7 @@ namespace mtconnect {
 
     /// @brief Add a device to the agent
     /// @param[in] device The device to add.
-    /// @note This method is not fully implemented and assumes the agent is idle.
+    /// @note This method is not fully implemented after agent initialization
     void addDevice(DevicePtr device);
     /// @brief Updates a device's UUID and/or its name
     /// @param[in] device The modified device
