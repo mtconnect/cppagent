@@ -26,7 +26,7 @@ namespace mtconnect::pipeline {
   class AGENT_LIB_API PeriodFilter : public Transform
   {
   public:
-    /// @brief Helper class to save the last observation
+    /// @brief Helper class to save information about the last observation for the period filter
     struct LastObservation
     {
       /// @brief Construct a Last Observation

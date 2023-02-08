@@ -36,6 +36,7 @@ namespace mtconnect {
   namespace printer {
     class XmlWriter;
 
+    /// @brief Printer to generate XML Documents
     class AGENT_LIB_API XmlPrinter : public Printer
     {
     public:
@@ -59,34 +60,89 @@ namespace mtconnect {
                               const asset::AssetList &asset) const override;
       std::string mimeType() const override { return "text/xml"; }
 
+      /// @brief Add a Devices XML device namespace
+      /// @param urn the namespace URN
+      /// @param location the location of the schema file
+      /// @param prefix the namespace prefix
       void addDevicesNamespace(const std::string &urn, const std::string &location,
                                const std::string &prefix);
+      /// @brief Add a Error XML device namespace
+      /// @param urn the namespace URN
+      /// @param location the location of the schema file
+      /// @param prefix the namespace prefix
       void addErrorNamespace(const std::string &urn, const std::string &location,
                              const std::string &prefix);
+      /// @brief Add a Streams XML device namespace
+      /// @param urn the namespace URN
+      /// @param location the location of the schema file
+      /// @param prefix the namespace prefix
       void addStreamsNamespace(const std::string &urn, const std::string &location,
                                const std::string &prefix);
+      /// @brief Add a Assets XML device namespace
+      /// @param urn the namespace URN
+      /// @param location the location of the schema file
+      /// @param prefix the namespace prefix
       void addAssetsNamespace(const std::string &urn, const std::string &location,
                               const std::string &prefix);
 
+      /// @brief Set the Devices style sheet to add as a processing instruction
+      /// @param style the stype sheet
       void setDevicesStyle(const std::string &style);
+      /// @brief Set the Streams style sheet to add as a processing instruction
+      /// @param style the stype sheet
       void setStreamStyle(const std::string &style);
+      /// @brief Set the Assets style sheet to add as a processing instruction
+      /// @param style the stype sheet
       void setAssetsStyle(const std::string &style);
+      /// @brief Set the Error style sheet to add as a processing instruction
+      /// @param style the stype sheet
       void setErrorStyle(const std::string &style);
 
-      // For testing
-      void clearDevicesNamespaces();
-      void clearErrorNamespaces();
-      void clearStreamsNamespaces();
-      void clearAssetsNamespaces();
+      /// @name For testing
+      ///@{
 
+      /// @brief remove all Devices namespaces
+      void clearDevicesNamespaces();
+      /// @brief remove all Error namespaces
+      void clearErrorNamespaces();
+      /// @brief remove all Streams namespaces
+      void clearStreamsNamespaces();
+      /// @brief remove all Assets namespaces
+      void clearAssetsNamespaces();
+      ///@}
+
+      /// @brief Get the Devices URN for a prefix
+      /// @param[in] prefix the prefix
+      /// @return the URN
       std::string getDevicesUrn(const std::string &prefix);
+      /// @brief Get the Error URN for a prefix
+      /// @param[in] prefix the prefix
+      /// @return the URN
       std::string getErrorUrn(const std::string &prefix);
+      /// @brief Get the Streams URN for a prefix
+      /// @param[in] prefix the prefix
+      /// @return the URN
       std::string getStreamsUrn(const std::string &prefix);
+      /// @brief Get the Assets URN for a prefix
+      /// @param[in] prefix the prefix
+      /// @return the URN
       std::string getAssetsUrn(const std::string &prefix);
 
+      /// @brief Get the Devices location for a prefix
+      /// @param[in] prefix the prefix
+      /// @return the location
       std::string getDevicesLocation(const std::string &prefix);
+      /// @brief Get the Error location for a prefix
+      /// @param[in] prefix the prefix
+      /// @return the location
       std::string getErrorLocation(const std::string &prefix);
+      /// @brief Get the Streams location for a prefix
+      /// @param[in] prefix the prefix
+      /// @return the location
       std::string getStreamsLocation(const std::string &prefix);
+      /// @brief Get the Assets location for a prefix
+      /// @param[in] prefix the prefix
+      /// @return the location
       std::string getAssetsLocation(const std::string &prefix);
 
     protected:
