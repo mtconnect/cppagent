@@ -268,6 +268,7 @@ namespace mtconnect {
       std::optional<std::string> m_topicName;
     };
 
+    /// @brief Comparison lambda to sort components
     struct ComponentComp
     {
       bool operator()(const Component *lhs, const Component *rhs) const { return *lhs < *rhs; }

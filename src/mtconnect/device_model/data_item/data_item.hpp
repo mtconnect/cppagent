@@ -43,6 +43,7 @@ namespace mtconnect {
 
     /// @brief DataItem related entities
     namespace data_item {
+      /// @brief Data Item entity
       class AGENT_LIB_API DataItem : public entity::Entity, public observation::ChangeSignaler
       {
       public:

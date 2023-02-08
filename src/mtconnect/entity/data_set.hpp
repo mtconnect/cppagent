@@ -39,11 +39,22 @@ namespace mtconnect::entity {
     using base = std::set<DataSetEntry>;
     using base::base;
 
+    /// @brief Get a entry for a key
+    /// @tparam T the entry type
+    /// @param key the key
+    /// @return the typed value of the entry
     template <typename T>
     const T &get(const std::string &key) const;
+
+    /// @brief Get a entry for a key if it exists
+    /// @tparam T the entry type
+    /// @param key the key
+    /// @return optional typed value of the entry
     template <typename T>
     const std::optional<T> maybeGet(const std::string &key) const;
 
+    /// @brief Split the data set entries by space delimiters and account for the
+    /// use of single and double quotes as well as curly braces
     bool parse(const std::string &s, bool table);
   };
 
@@ -71,7 +82,7 @@ namespace mtconnect::entity {
     const DataSetValue &m_other;
   };
 
-  /// @brief
+  /// @brief One entry in a data set. Has necessary interface to be work with maps.
   struct DataSetEntry
   {
     /// @brief Create an entry with a key and value

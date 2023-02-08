@@ -33,91 +33,90 @@
 #include "topic_mapper.hpp"
 #include "transform.hpp"
 
-namespace mtconnect {
-  class Device;
-
-  namespace pipeline {
-    class AGENT_LIB_API JsonMapper : public Transform
+namespace mtconnect::pipeline {
+  /// @brief JsonMapper does nothing, it is a placeholder for a json interpreter
+  class AGENT_LIB_API JsonMapper : public Transform
+  {
+  public:
+    JsonMapper(const JsonMapper &) = default;
+    JsonMapper(PipelineContextPtr context) : Transform("JsonMapper"), m_context(context)
     {
-    public:
-      JsonMapper(const JsonMapper &) = default;
-      JsonMapper(PipelineContextPtr context) : Transform("JsonMapper"), m_context(context)
-      {
-        m_guard = TypeGuard<JsonMessage>(RUN);
-      }
+      m_guard = TypeGuard<JsonMessage>(RUN);
+    }
 
-      const EntityPtr operator()(const EntityPtr entity) override
+    const EntityPtr operator()(const EntityPtr entity) override
+    {
+      auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
+
+      return nullptr;
+    }
+
+  protected:
+    PipelineContextPtr m_context;
+  };
+
+  /// @brief Attempt to find a data item associated with a topic from a pub/sub message
+  ///        system
+  class AGENT_LIB_API DataMapper : public Transform
+  {
+  public:
+    DataMapper(const DataMapper &) = default;
+    DataMapper(PipelineContextPtr context, source::adapter::Handler *handler)
+      : Transform("DataMapper"), m_context(context), m_handler(handler)
+    {
+      m_guard = TypeGuard<DataMessage>(RUN);
+    }
+
+    const EntityPtr operator()(const EntityPtr entity) override
+    {
+      auto data = std::dynamic_pointer_cast<DataMessage>(entity);
+      if (data->m_dataItem)
       {
-        auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
+        entity::Properties props {{"VALUE", data->getValue()}};
+        entity::ErrorList errors;
+        try
+        {
+          auto obs = observation::Observation::make(data->m_dataItem, props,
+                                                    std::chrono::system_clock::now(), errors);
+          if (errors.empty())
+            return next(obs);
+        }
+        catch (entity::EntityError &e)
+        {
+          LOG(error) << "Could not create observation: " << e.what();
+        }
+        for (auto &e : errors)
+        {
+          LOG(warning) << "Error while parsing message data: " << e->what();
+        }
 
         return nullptr;
       }
-
-    protected:
-      PipelineContextPtr m_context;
-    };
-
-    class AGENT_LIB_API DataMapper : public Transform
-    {
-    public:
-      DataMapper(const DataMapper &) = default;
-      DataMapper(PipelineContextPtr context, source::adapter::Handler *handler)
-        : Transform("DataMapper"), m_context(context), m_handler(handler)
+      else
       {
-        m_guard = TypeGuard<DataMessage>(RUN);
-      }
-
-      const EntityPtr operator()(const EntityPtr entity) override
-      {
-        auto data = std::dynamic_pointer_cast<DataMessage>(entity);
-        if (data->m_dataItem)
+        if (std::holds_alternative<std::string>(data->getValue()))
         {
-          entity::Properties props {{"VALUE", data->getValue()}};
-          entity::ErrorList errors;
-          try
-          {
-            auto obs = observation::Observation::make(data->m_dataItem, props,
-                                                      std::chrono::system_clock::now(), errors);
-            if (errors.empty())
-              return next(obs);
-          }
-          catch (entity::EntityError &e)
-          {
-            LOG(error) << "Could not create observation: " << e.what();
-          }
-          for (auto &e : errors)
-          {
-            LOG(warning) << "Error while parsing message data: " << e->what();
-          }
-
-          return nullptr;
+          // Try processing as shdr data
+          auto entity = make_shared<Entity>(
+              "Data", Properties {{"VALUE", data->getValue()}, {"source", string("")}});
+          next(entity);
         }
         else
         {
-          if (std::holds_alternative<std::string>(data->getValue()))
-          {
-            // Try processing as shdr data
-            auto entity = make_shared<Entity>(
-                "Data", Properties {{"VALUE", data->getValue()}, {"source", string("")}});
-            next(entity);
-          }
+          std::string msg;
+          if (auto topic = data->maybeGet<std::string>("topic"); topic)
+            msg = *topic;
           else
-          {
-            std::string msg;
-            if (auto topic = data->maybeGet<std::string>("topic"); topic)
-              msg = *topic;
-            else
-              msg = "unknown topic";
-            LOG(error) << "Cannot find data item for topic: " << msg
-                       << " and data: " << data->getValue<std::string>();
-          }
-          return nullptr;
+            msg = "unknown topic";
+          LOG(error) << "Cannot find data item for topic: " << msg
+                     << " and data: " << data->getValue<std::string>();
         }
+        return nullptr;
       }
+    }
 
-    protected:
-      PipelineContextPtr m_context;
-      source::adapter::Handler *m_handler;
-    };
-  }  // namespace pipeline
-}  // namespace mtconnect
+  protected:
+    PipelineContextPtr m_context;
+    source::adapter::Handler *m_handler;
+  };
+}  // namespace mtconnect::pipeline

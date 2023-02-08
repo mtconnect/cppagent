@@ -26,8 +26,10 @@
 namespace mtconnect::pipeline {
   using namespace mtconnect;
 
+  /// @brief Utility class for parsing XML response document
   struct AGENT_LIB_API ResponseDocument
   {
+    /// @brief An error document response from the agent
     struct Error
     {
       std::string m_code;
@@ -35,16 +37,21 @@ namespace mtconnect::pipeline {
     };
     using Errors = std::list<Error>;
 
+    /// @brief parse the content of the XML document
+    /// @param[in] content XML document
+    /// @param[out] doc the created response document
+    /// @param[in] context pipeline context
+    /// @param[in] device optional device uuid
+    /// @return `true` if successful
     static bool parse(const std::string_view &content, ResponseDocument &doc,
                       pipeline::PipelineContextPtr context,
                       const std::optional<std::string> &device = std::nullopt);
 
     // Parsed data
-    SequenceNumber_t m_next;
-    uint64_t m_instanceId;
-    entity::EntityList m_entities;
-    entity::EntityList m_assetEvents;
-    Errors m_errors;
+    SequenceNumber_t m_next;           ///< Next sequence number
+    uint64_t m_instanceId;             ///< Agent instance id
+    entity::EntityList m_entities;     ///< List of entities
+    entity::EntityList m_assetEvents;  ///< List of asset events
+    Errors m_errors;                   ///< List of Errors
   };
-
 }  // namespace mtconnect::pipeline

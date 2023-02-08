@@ -22,7 +22,7 @@
 #include "mtconnect/entity/factory.hpp"
 
 namespace mtconnect::device_model::data_item {
-  /// @brief DAta Item Filter
+  /// @brief Data Item Filter
   class AGENT_LIB_API Filter : public entity::Entity
   {
   public:

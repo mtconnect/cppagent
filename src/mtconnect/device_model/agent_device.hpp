@@ -32,14 +32,18 @@ namespace mtconnect {
   }  // namespace source::adapter
 
   namespace device_model {
+    /// @brief Agent Device entity
     class AGENT_LIB_API AgentDevice : public Device
     {
     public:
-      // Constructor that sets variables from an attribute map
+      /// @brief Constructor that sets variables from an attribute map
+      ///
+      /// Should not be used directly, always create using the factory
       AgentDevice(const std::string &name, entity::Properties &props);
       ~AgentDevice() override = default;
       static entity::FactoryPtr getFactory();
 
+      /// @brief initialize the agent device and add the device changed and removed data items
       void initialize() override
       {
         addRequiredDataItems();
@@ -48,12 +52,19 @@ namespace mtconnect {
         Device::initialize();
       }
 
+      /// @brief Add an adapter and create a component to track it
+      /// @param adapter the adapter
       void addAdapter(const source::adapter::AdapterPtr adapter);
 
+      /// @brief get the connection status data item for an addapter
+      /// @param adapter the adapter name
+      /// @return shared pointer to the data item
       DataItemPtr getConnectionStatus(const std::string &adapter)
       {
         return getDeviceDataItem(adapter + "_connection_status");
       }
+      /// @brief Get all the adapter components
+      /// @return shared pointer to the adapters component
       auto &getAdapters() { return m_adapters; }
 
     protected:
