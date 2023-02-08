@@ -27,7 +27,7 @@ namespace mtconnect {
   namespace entity {
     /// @brief Qualified name
     ///
-    /// The qname uses the underlying string for storage and keeps a position 
+    /// The qname uses the underlying string for storage and keeps a position
     /// to the namespace position
     class AGENT_LIB_API QName : public std::string
     {
@@ -46,10 +46,10 @@ namespace mtconnect {
       /// @param qname the name
       QName(const std::string &qname) { setQName(qname); }
 
-      /// @brief Set the qualified name. Parses the qname and looks for a colon and splits the 
+      /// @brief Set the qualified name. Parses the qname and looks for a colon and splits the
       ///        name into the namespace prefix and the name
-      /// @param qname 
-      /// @param ns 
+      /// @param qname
+      /// @param ns
       void setQName(const std::string &qname, const std::optional<std::string> &ns = std::nullopt)
       {
         if (ns)
@@ -71,7 +71,6 @@ namespace mtconnect {
         }
       }
 
-
       /// @brief copy constructor
       /// @param other the source
       QName(const QName &other) = default;
@@ -87,7 +86,7 @@ namespace mtconnect {
       }
 
       /// @brief set the name portion
-      /// @param name 
+      /// @param name
       void setName(const std::string &name)
       {
         if (m_nsLen == 0)

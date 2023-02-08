@@ -37,7 +37,7 @@ namespace mtconnect {
       XmlPrinter() = default;
 
       /// @brief convert an entity to a XML document using `libxml2`
-      /// @param writer libxml2 `xmlTextWriterPtr` 
+      /// @param writer libxml2 `xmlTextWriterPtr`
       /// @param entity the entity
       /// @param namespaces a set of namespaces to use in the document
       void print(xmlTextWriterPtr writer, const EntityPtr entity,

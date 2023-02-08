@@ -76,7 +76,7 @@ namespace mtconnect {
       /// @return the default device
       ///
       /// This is the first device that is not the agent device
-      virtual DevicePtr defaultDevice() const = 0;
+      virtual DevicePtr getDefaultDevice() const = 0;
       /// @brief get a data item by its unique id
       /// @param[in] id a unique id
       /// @return shared pointer to the data item if found

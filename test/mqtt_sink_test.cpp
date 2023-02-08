@@ -170,7 +170,7 @@ protected:
   void addAdapter(ConfigOptions options = ConfigOptions {})
   {
     m_agentTestHelper->addAdapter(options, "localhost", 7878,
-                                  m_agentTestHelper->m_agent->defaultDevice()->getName());
+                                  m_agentTestHelper->m_agent->getDefaultDevice()->getName());
   }
 
   std::unique_ptr<printer::JsonPrinter> m_jsonPrinter;

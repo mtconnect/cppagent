@@ -59,20 +59,20 @@ namespace mtconnect {
     /// @brief Value type enumeration
     enum ValueType : std::uint16_t
     {
-      EMPTY = 0x0, ///< monostate for no value
-      ENTITY = 0x1, ///< shared entity pointer
-      ENTITY_LIST = 0x2, ///< list of entities
-      STRING = 0x3, ///< string value
-      INTEGER = 0x4, ///< int64 value
-      DOUBLE = 0x5, ///< double value
-      BOOL = 0x6, ///< bool value
-      VECTOR = 0x7, ///< Vector of doubles
-      DATA_SET = 0x8, ///< DataSet of key value pairs
-      TIMESTAMP = 0x9, ///< Timestamp in microseconds
-      NULL_VALUE = 0xA, ///< null pointer
-      USTRING = 0x10 | STRING, ///< Upper case string (represented as string)
-      QSTRING = 0x20 | STRING, ///< Qualified Name String (represented as string)
-      TABLE = 0x10 | DATA_SET ///< Table (represented as data set)
+      EMPTY = 0x0,              ///< monostate for no value
+      ENTITY = 0x1,             ///< shared entity pointer
+      ENTITY_LIST = 0x2,        ///< list of entities
+      STRING = 0x3,             ///< string value
+      INTEGER = 0x4,            ///< int64 value
+      DOUBLE = 0x5,             ///< double value
+      BOOL = 0x6,               ///< bool value
+      VECTOR = 0x7,             ///< Vector of doubles
+      DATA_SET = 0x8,           ///< DataSet of key value pairs
+      TIMESTAMP = 0x9,          ///< Timestamp in microseconds
+      NULL_VALUE = 0xA,         ///< null pointer
+      USTRING = 0x10 | STRING,  ///< Upper case string (represented as string)
+      QSTRING = 0x20 | STRING,  ///< Qualified Name String (represented as string)
+      TABLE = 0x10 | DATA_SET   ///< Table (represented as data set)
     };
 
     /// @brief Mask for value types
@@ -205,7 +205,7 @@ namespace mtconnect {
       /// @brief property that can occur mode than once
       /// @param name the property key
       /// @param type they data type
-      /// @param lower a lower bound occurrence 
+      /// @param lower a lower bound occurrence
       /// @param upper an upper bound occurrence
       Requirement(const std::string &name, ValueType type, int lower, int upper)
         : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
@@ -285,7 +285,7 @@ namespace mtconnect {
       /// @brief get optional state
       /// @return `true` if property is options
       bool isOptional() const { return !isRequired(); }
-      /// @brief gets the upper multiplicity 
+      /// @brief gets the upper multiplicity
       /// @return upper multiplicity
       int getUpperMultiplicity() const { return m_upperMultiplicity; }
       /// @brief gets the lower multiplicity
@@ -322,7 +322,7 @@ namespace mtconnect {
       }
       /// @brief makes this requirement required
       void makeRequired() { m_lowerMultiplicity = 1; }
-      
+
       /// @brief convert a given value to the requirement type
       /// @param v the value
       /// @param table if this is a table conversion

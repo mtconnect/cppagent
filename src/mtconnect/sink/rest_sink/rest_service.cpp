@@ -1085,7 +1085,7 @@ namespace mtconnect {
       if (device)
         dev = checkDevice(printer, *device);
       else
-        dev = m_sinkContract->defaultDevice();
+        dev = m_sinkContract->getDefaultDevice();
       auto ap = m_loopback->receiveAsset(dev, asset, uuid, type, nullopt, errors);
       if (!ap || errors.size() > 0 || (type && ap->getType() != *type))
       {

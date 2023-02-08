@@ -20,14 +20,10 @@
 #include "configuration.hpp"
 #include "mtconnect/config.hpp"
 
-namespace mtconnect {
-  using namespace entity;
-  namespace device_model {
-    namespace configuration {
-      struct SolidModel
-      {
-        static FactoryPtr getFactory();
-      };
-    }  // namespace configuration
-  }    // namespace device_model
-}  // namespace mtconnect
+namespace mtconnect::device_model::configuration {
+  /// @brief Solid Model/3D Geometry for the component
+  struct SolidModel
+  {
+    static entity::FactoryPtr getFactory();
+  };
+}  // namespace mtconnect::device_model::configuration

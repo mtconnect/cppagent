@@ -30,6 +30,7 @@
 
 namespace mtconnect {
   namespace device_model {
+    /// @brief Component Description Entity
     struct Description
     {
       static entity::FactoryPtr getFactory();

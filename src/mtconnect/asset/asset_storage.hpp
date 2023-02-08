@@ -32,9 +32,15 @@ namespace mtconnect {
   namespace asset {
     /// @brief Abstract asset storage
     ///
-    /// Assets can be stored in memory or persisted. The agent uses 
-    /// the `AssetStorage` to abstract storage and retrieval of 
+    /// Assets can be stored in memory or persisted. The agent uses
+    /// the `AssetStorage` to abstract storage and retrieval of
     /// assets by assetId, type, and device.
+    ///
+    /// When an asset it is added or updated it moves to the beginning of the asset list.
+    /// Assets are deleted from storage when there are `max` assets in the buffer and another
+    /// is added. The oldest assets are removed first.
+    ///
+    /// Removal does not change the asset position and marks the asset as removed.
     class AGENT_LIB_API AssetStorage
     {
     public:
@@ -112,7 +118,7 @@ namespace mtconnect {
 
       /// @name Count related methods
       ///@{
-      
+
       /// @brief gets counts of assets by device and type
       /// @param[in] device a device uuid
       /// @param[in] type the type of asset
@@ -141,15 +147,15 @@ namespace mtconnect {
 
       /// @name For mutex locking
       ///@{
-      
+
       /// @brief lock the storage
       auto lock() { return m_bufferLock.lock(); }
       /// @brief unlock the storage
       auto unlock() { return m_bufferLock.unlock(); }
       /// @brief try to lock the storage
-      auto try_lock() { return m_bufferLock.try_lock(); }      
+      auto try_lock() { return m_bufferLock.try_lock(); }
       ///@}
-      
+
     protected:
       // Access control to the buffer
       mutable std::recursive_mutex m_bufferLock;

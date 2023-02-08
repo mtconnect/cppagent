@@ -217,13 +217,12 @@ namespace mtconnect {
       return list;
     }
 
-    /// @deprecated use `getDefaultDevice()` instead
     /// @brief Get a pointer to the default device
     ///
     /// The default device is the first device that is not the Agent device.
     ///
     /// @return A shared pointer to the default device
-    DevicePtr defaultDevice() const
+    DevicePtr getDefaultDevice() const
     {
       if (m_deviceIndex.size() > 0)
       {
@@ -234,10 +233,11 @@ namespace mtconnect {
 
       return nullptr;
     }
+    /// @deprecated use `getDefaultDevice()` instead
     /// @brief Get a pointer to the default device
     /// @return A shared pointer to the default device
-    /// @note Cover method for `defaultDevice()`
-    DevicePtr getDefaultDevice() const { return defaultDevice(); }
+    /// @note Cover method for `getDefaultDevice()`
+    DevicePtr defaultDevice() const { return getDefaultDevice(); }
 
     /// @brief Get a pointer to the asset storage object
     /// @return A pointer to the asset storage object
@@ -577,7 +577,7 @@ namespace mtconnect {
       return m_agent->findDeviceByUUIDorName(idOrName);
     }
     const std::list<DevicePtr> getDevices() const override { return m_agent->getDevices(); }
-    DevicePtr defaultDevice() const override { return m_agent->defaultDevice(); }
+    DevicePtr getDefaultDevice() const override { return m_agent->getDefaultDevice(); }
     DataItemPtr getDataItemById(const std::string &id) const override
     {
       return m_agent->getDataItemById(id);

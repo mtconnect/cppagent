@@ -35,8 +35,8 @@ namespace mtconnect {
 
     /// @brief An abstract MTConnect Asset
     ///
-    /// The asset provides a common factory to create all known asset types. It can 
-    /// support raw assets and convert unknown XML documents to entities. 
+    /// The asset provides a common factory to create all known asset types. It can
+    /// support raw assets and convert unknown XML documents to entities.
     ///
     /// Each known asset type must register itself with the asset factory.
     class AGENT_LIB_API Asset : public entity::Entity
@@ -65,7 +65,7 @@ namespace mtconnect {
       static entity::FactoryPtr getRoot();
 
       /// @brief Sets a property of the asset
-      /// 
+      ///
       /// Special handling of `removed`. If `true` sets the asset state to removed.
       /// @param key property `key`
       /// @param v property value
@@ -90,7 +90,7 @@ namespace mtconnect {
       const auto &getType() const { return getName(); }
 
       /// @brief gets the asset id
-      /// 
+      ///
       /// Every asset must have an asset id.
       /// @return the assets identity
       /// @throws PropertyError if there is no assetId
@@ -115,7 +115,7 @@ namespace mtconnect {
       }
 
       /// @brief get the device uuid
-      /// 
+      ///
       /// In version 1.8 and later, all assets must have a device uuid.
       /// @return optional device uuid
       const std::optional<std::string> getDeviceUuid() const
@@ -149,7 +149,7 @@ namespace mtconnect {
       static void registerAssetType(const std::string &t, entity::FactoryPtr factory);
 
       /// @brief compares two asset ids
-      /// @param another other asset      
+      /// @param another other asset
       /// @return `true` if they have the same asset id
       bool operator==(const Asset &another) const { return getAssetId() == another.getAssetId(); }
 
@@ -158,7 +158,7 @@ namespace mtconnect {
       bool m_removed;
     };
 
-    /// @brief A simple `RAW` asset that just carries the data associated 
+    /// @brief A simple `RAW` asset that just carries the data associated
     ///        with the top node.
     class AGENT_LIB_API ExtendedAsset : public Asset
     {

@@ -21,17 +21,14 @@
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/factory.hpp"
 
-namespace mtconnect {
-  namespace device_model {
-    namespace configuration {
-      struct Configuration
-      {
-        static entity::FactoryPtr getFactory();
-        static entity::FactoryPtr getRoot();
-      };
+/// @brief Configuration namespace
+namespace mtconnect::device_model::configuration {
+  /// @brief Configuration Entity
+  struct Configuration
+  {
+    static entity::FactoryPtr getFactory();
+    static entity::FactoryPtr getRoot();
+  };
 
-      // TODO: Need to support extended configuration
-
-    }  // namespace configuration
-  }    // namespace device_model
-}  // namespace mtconnect
+  // TODO: Need to support extended configuration
+}  // namespace mtconnect::device_model::configuration

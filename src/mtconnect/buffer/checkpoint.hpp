@@ -35,7 +35,7 @@ namespace mtconnect::buffer {
   public:
     /// @brief create an empty checkpoint
     Checkpoint() = default;
-    
+
     /// @brief Copy constructor for a checkpoint
     /// @param[in] checkpoint the previous checkpoint
     /// @param[in] filterSet an optional set of data item ids for filtering
@@ -45,7 +45,7 @@ namespace mtconnect::buffer {
     /// @brief Add an observation to the checkpoint
     /// @param[in] observation an observation
     void addObservation(observation::ObservationPtr observation);
-    
+
     /// @brief If this is a data set event, diff the value
     /// @param[in] observation the data set observation
     /// @return `true` if the data set changed
@@ -74,9 +74,9 @@ namespace mtconnect::buffer {
 
     /// @brief updates the data item reference of an observation in a checkpoint
     ///
-    /// Used when the device model is modified and data items may have been removed or 
+    /// Used when the device model is modified and data items may have been removed or
     /// changed. The new data item shared pointer will replace the old.
-    /// 
+    ///
     /// @param[in] diMap the map of data ids to data item pointers
     void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
     {

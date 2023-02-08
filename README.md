@@ -769,7 +769,6 @@ The following parameters must be present to enable https requests. If there is n
         not found the default device if only one device is specified
         in the devices file.
 
-
     * `Host` - The host the adapter is located on.
 
         *Default*: localhost
@@ -849,12 +848,16 @@ The following parameters must be present to enable https requests. If there is n
 
         *Default*: Top Level Setting
 
-	* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. Applies to only this adapter.
+    * `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one 
+      (1), allows  multiple complex observations, like `Condition` and `Message` on the same line. 
+      If it equials one (1), then any observation requiring more than a key/value pair need to be on 
+      separate lines. Applies to only this adapter.
 
 	    *Default*: 1
 
-	* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names.
-		*Default*: false
+    * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names.
+      
+        *Default*: false
 
 
 ### Agent Adapter Configuration

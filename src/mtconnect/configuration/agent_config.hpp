@@ -179,9 +179,9 @@ namespace mtconnect {
       /// @brief get a pointer to the logger
       boost::log::trivial::logger_type *getLogger() { return m_logger; }
       ///@}
-      
+
     protected:
-      DevicePtr defaultDevice();
+      DevicePtr getDefaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
       void loadSinks(const ptree &sinks, ConfigOptions &options);
 

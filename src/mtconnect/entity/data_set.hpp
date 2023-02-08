@@ -71,7 +71,7 @@ namespace mtconnect::entity {
     const DataSetValue &m_other;
   };
 
-  /// @brief 
+  /// @brief
   struct DataSetEntry
   {
     /// @brief Create an entry with a key and value
@@ -97,7 +97,7 @@ namespace mtconnect::entity {
       : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {}
     /// @brief Create a data set entry with just a key (used for search)
-    /// @param key 
+    /// @param key
     DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
     DataSetEntry(const DataSetEntry &other) = default;
     DataSetEntry() : m_removed(false) {}

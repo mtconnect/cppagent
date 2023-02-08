@@ -43,9 +43,14 @@ namespace mtconnect {
     using DevicePtr = std::shared_ptr<Device>;
 
     using DataItemPtr = std::shared_ptr<data_item::DataItem>;
+
+    /// @brief MTConnect Component Entity
     class AGENT_LIB_API Component : public entity::Entity
     {
     public:
+      /// @brief Create a component with a type and properties
+      /// @param[in] name the name of the component (o type)
+      /// @param[in] props properties of the component
       Component(const std::string &name, const entity::Properties &props);
       static ComponentPtr make(const std::string &name, const entity::Properties &props,
                                entity::ErrorList &errors)
@@ -56,22 +61,32 @@ namespace mtconnect {
       }
 
       static entity::FactoryPtr getFactory();
+
+      /// @brief get the shared pointer for the component
+      /// @return shared pointer
       auto getptr() const { return std::dynamic_pointer_cast<Component>(Entity::getptr()); }
 
+      /// @brief associate compositions and data items with the component
       virtual void initialize()
       {
         connectCompositions();
         connectDataItems();
       }
 
-      // Virtual destructor
       virtual ~Component();
 
-      // Getter methods for the component ID/Name
+      /// @brief get the component id
+      /// @return component id
       const auto &getId() const { return m_id; }
+      /// @brief get the name property of the component
+      /// @return name if it exists
       const auto &getComponentName() const { return m_name; }
+      /// @brief get the component uuid
+      /// @return uuid if it exists
       const auto &getUuid() const { return m_uuid; }
 
+      /// @brief Get the topic name for the component
+      /// @return topic name
       virtual const std::string getTopicName() const
       {
         if (!m_topicName)
@@ -86,6 +101,8 @@ namespace mtconnect {
         return *m_topicName;
       }
 
+      /// @brief get the description entity
+      /// @return shared pointer description
       entity::EntityPtr getDescription()
       {
         if (hasProperty("Description"))
@@ -100,43 +117,55 @@ namespace mtconnect {
         }
       }
 
+      /// @brief set the manufacturer in the description
+      /// @param value the manufacturer
       void setManufacturer(const std::string &value)
       {
         auto desc = getDescription();
         desc->setProperty("manufacturer", value);
       }
 
+      /// @brief set the station in the description
+      /// @param value the description
       void setStation(const std::string &value)
       {
         auto desc = getDescription();
         desc->setProperty("station", value);
       }
 
+      /// @brief set the serial number in the description
+      /// @param value the serial number
       void setSerialNumber(const std::string &value)
       {
         auto desc = getDescription();
         desc->setProperty("serialNumber", value);
       }
 
+      /// @brief set the description value in the description
+      /// @param value the description value
       void setDescriptionValue(const std::string &value)
       {
         auto desc = getDescription();
         desc->setValue(value);
       }
 
-      // Setter methods
+      /// @brief set the uuid
+      /// @param uuid the uuid
       void setUuid(const std::string &uuid)
       {
         m_uuid = uuid;
         setProperty("uuid", uuid);
       }
+      /// @brief set the compoent name property, not the compoent type
+      /// @param name name property
       void setComponentName(const std::string &name)
       {
         m_name = name;
         setProperty("name", name);
       }
 
-      // Get the device that any component is associated with
+      /// @brief get the device (top level component)
+      /// @return shared pointer to the device
       virtual DevicePtr getDevice() const
       {
         DevicePtr device = m_device.lock();
@@ -152,11 +181,16 @@ namespace mtconnect {
         return device;
       }
 
-      // Set/Get the component's parent component
+      /// @brief get the parent component
+      /// @return shared pointer to the parent component
       ComponentPtr getParent() const { return m_parent.lock(); }
 
-      // Add to/get the component's std::list of children
+      /// @brief get the children of this component
+      /// @return list of component pointers
       auto getChildren() const { return getList("Components"); }
+      /// @brief add a child to this component
+      /// @param[in] child the child component
+      /// @param[in,out] errors errors that occurred when adding the child
       void addChild(ComponentPtr child, entity::ErrorList &errors)
       {
         addToList("Components", Component::getFactory(), child, errors);
@@ -166,21 +200,35 @@ namespace mtconnect {
           child->buildDeviceMaps(device);
       }
 
-      // Add to/get the component's std::list of data items
+      /// @brief add a data item to the component
+      /// @param[in] dataItem the data item
+      /// @param[in,out] errors errors that occurred when adding the data item
       virtual void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors);
+      /// @brief get the list of data items
+      /// @return the data item list
       auto getDataItems() const { return getList("DataItems"); }
 
       bool operator<(const Component &comp) const { return m_id < comp.getId(); }
       bool operator==(const Component &comp) const { return m_id == comp.getId(); }
 
-      // References
+      /// @brief connected references by looking them up in the device
+      /// @param device the device to use as an index
       void resolveReferences(DevicePtr device);
 
-      // Connect data items
+      /// @brief connect data items to this component
       void connectDataItems();
+      /// @brief connect compositions to this component
       void connectCompositions();
+      /// @brief index components to data items in the device
+      ///
+      /// Also builds the topics.
+      ///
+      /// @param device the device
       void buildDeviceMaps(DevicePtr device);
 
+      /// @brief get the composition by its id
+      /// @param id the composition id
+      /// @return shared pointer to the composition
       CompositionPtr getComposition(const std::string &id) const
       {
         auto comps = getList("Compositions");

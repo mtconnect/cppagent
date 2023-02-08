@@ -30,7 +30,7 @@ namespace mtconnect {
   /// @brief Entity namespace
   namespace entity {
     /// @brief The key for a prpoerty in a property set
-    /// 
+    ///
     /// A qname with a mark that allows the property to be checked for requirements
     struct PropertyKey : public QName
     {
@@ -74,9 +74,9 @@ namespace mtconnect {
 
     /// @brief The base entity class
     ///
-    /// The Entity is the foundation of the all information models used by the agent. An entity can 
-    /// be parsed or serialized as XML or JSON. The entity provides a factory and requirement capability 
-    /// to validate the model.
+    /// The Entity is the foundation of the all information models used by the agent. An entity can
+    /// be parsed or serialized as XML or JSON. The entity provides a factory and requirement
+    /// capability to validate the model.
     class AGENT_LIB_API Entity : public std::enable_shared_from_this<Entity>
     {
     public:
@@ -272,7 +272,7 @@ namespace mtconnect {
       }
       /// @brief get the property order map
       const OrderMapPtr getOrder() const { return m_order; }
-      /// @brief get an iterator to the property 
+      /// @brief get an iterator to the property
       /// @param[in] name the key
       /// @return an iterator to the property
       auto find(const std::string &name) { return m_properties.find(name); }
@@ -291,7 +291,7 @@ namespace mtconnect {
       /// @param other the other entity
       /// @return `true` if they have equal name and properties
       bool operator==(const Entity &other) const;
-      /// @brief compare two entities for inequality 
+      /// @brief compare two entities for inequality
       /// @param other the other entity
       /// @return `true` if they have unequal name and properties
       bool operator!=(const Entity &other) const { return !(*this == other); }

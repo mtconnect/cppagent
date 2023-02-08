@@ -117,11 +117,11 @@ namespace mtconnect {
 
       m_observationName.setQName(obs, pre);
 
-      const static unordered_map<string, ERepresentation> reps = {{"VALUE", VALUE},
-                                                                  {"TIME_SERIES", TIME_SERIES},
-                                                                  {"DISCRETE", DISCRETE},
-                                                                  {"DATA_SET", DATA_SET},
-                                                                  {"TABLE", TABLE}};
+      const static unordered_map<string, Representation> reps = {{"VALUE", VALUE},
+                                                                 {"TIME_SERIES", TIME_SERIES},
+                                                                 {"DISCRETE", DISCRETE},
+                                                                 {"DATA_SET", DATA_SET},
+                                                                 {"TABLE", TABLE}};
       auto rep = maybeGet<string>("representation");
       if (rep)
         m_representation = reps.find(*rep)->second;

@@ -96,7 +96,7 @@ namespace mtconnect::buffer {
       }
     }
 
-    /// @brief Set the sequence number 
+    /// @brief Set the sequence number
     ///
     /// recomputes the first sequence if the sequence is larger than the circular buffer size.
     ///
@@ -163,7 +163,7 @@ namespace mtconnect::buffer {
 
     /// @name Checkpoint methods
     ///@{
-    
+
     /// @brief Get the checkpoint at the end of the circular buffer
     /// @return reference to the checkpoint
     const Checkpoint &getLatest() const { return m_latest; }
@@ -177,7 +177,8 @@ namespace mtconnect::buffer {
     /// @param at the sequence number to get the checkpoint at
     /// @param filterSet the filter to apply to the new checkpoint
     /// @return a unique point to a new checkpoint
-    std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at, const FilterSetOpt &filterSet) const
+    std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at,
+                                                const FilterSetOpt &filterSet) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
@@ -304,7 +305,7 @@ namespace mtconnect::buffer {
     /// @name Mutex lock  management
     ///@{
 
-    /// @brief lock the mutex 
+    /// @brief lock the mutex
     auto lock() { return m_sequenceLock.lock(); }
     /// @brief unlock the mutex
     auto unlock() { return m_sequenceLock.unlock(); }

@@ -53,7 +53,7 @@ namespace mtconnect {
       ~Factory() = default;
 
       /// @brief create a factory with a set of requirements
-      /// @param r 
+      /// @param r
       Factory(const Requirements r) : m_requirements(r), m_function(createEntity)
       {
         registerEntityRequirements();
@@ -125,9 +125,10 @@ namespace mtconnect {
       /// @param name the property key
       /// @return `true` if there is a requirement
       bool isProperty(const std::string &name) const { return m_properties.count(name) > 0; }
-      /// @brief checks if this is a property set 
+      /// @brief checks if this is a property set
       /// @param name the property key
-      /// @return `true` if this is a property with ENTITY or ENTITY_SET with multiplicity more than 0
+      /// @return `true` if this is a property with ENTITY or ENTITY_SET with multiplicity more than
+      /// 0
       bool isPropertySet(const std::string &name) const { return m_propertySets.count(name) > 0; }
       /// @brief is there a requirement with a simple value
       /// @param name the property key

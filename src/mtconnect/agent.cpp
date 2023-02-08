@@ -272,7 +272,7 @@ namespace mtconnect {
     if (uuid)
       device = findDeviceByUUIDorName(*uuid);
     else
-      device = defaultDevice();
+      device = getDefaultDevice();
 
     if (device && device->getAssetChanged() && device->getAssetRemoved())
     {
@@ -898,7 +898,7 @@ namespace mtconnect {
   DevicePtr Agent::getDeviceByName(const std::string &name) const
   {
     if (name.empty())
-      return defaultDevice();
+      return getDefaultDevice();
 
     auto &idx = m_deviceIndex.get<ByName>();
     auto devPos = idx.find(name);
@@ -911,7 +911,7 @@ namespace mtconnect {
   DevicePtr Agent::getDeviceByName(const std::string &name)
   {
     if (name.empty())
-      return defaultDevice();
+      return getDefaultDevice();
 
     auto &idx = m_deviceIndex.get<ByName>();
     auto devPos = idx.find(name);
@@ -924,7 +924,7 @@ namespace mtconnect {
   DevicePtr Agent::findDeviceByUUIDorName(const std::string &idOrName) const
   {
     if (idOrName.empty())
-      return defaultDevice();
+      return getDefaultDevice();
 
     DevicePtr res;
     if (auto d = m_deviceIndex.get<ByUuid>().find(idOrName); d != m_deviceIndex.get<ByUuid>().end())
