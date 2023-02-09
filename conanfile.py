@@ -17,7 +17,8 @@ class MTConnectAgentConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False], "build_tests": [True, False], 
                 "without_ipv6": [True, False], "with_ruby": [True, False],
-                 "development" : [True, False], "shared": [True, False], "winver": "ANY" }
+                 "development" : [True, False], "shared": [True, False], "winver": "ANY",
+                 "with_docs" : [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.79.0@#3249d9bd2b863a9489767bf9c8a05b4b",
@@ -36,6 +37,7 @@ class MTConnectAgentConan(ConanFile):
         "development": False,
         "shared": False,
         "winver": "0x600",
+        "with_docs": True,
 
         "boost:shared": False,
         "boost:without_python": True,
@@ -111,9 +113,10 @@ class MTConnectAgentConan(ConanFile):
             self.options["openssl"].shared = True
         
     def build_requirements(self):
-        res = subprocess.run(["doxygen --version"], shell=True, text=True, capture_output=True)
-        if (res.returncode != 0 or not res.stdout.startswith('1.9')):
-            self.tool_requires("doxygen/1.9.4@#19fe2ac34109f3119190869a4d0ffbcb")
+        if self.options.with_docs:
+            res = subprocess.run(["doxygen --version"], shell=True, text=True, capture_output=True)
+            if (res.returncode != 0 or not res.stdout.startswith('1.9')):
+                self.tool_requires("doxygen/1.9.4@#19fe2ac34109f3119190869a4d0ffbcb")
 
     def requirements(self):
         if not self.windows_xp:
