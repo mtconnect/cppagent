@@ -348,6 +348,7 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
   ASSERT_TRUE(startClient());
 
   ASSERT_TRUE(m_client->isConnected());
+  
 }
 
 TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
@@ -443,18 +444,31 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
   client->set_client_id("cliendId1");
   client->set_clean_session(true);
   client->set_keep_alive_sec(30);
-
+  
   MqttAuthorization *mqttAuct = new MqttAuthorization(options);
   mqttAuct->getPermissionsForClient("mqtt_tcp_client_cpp/topic1");
 
-  client->set_connack_handler([&client, &pid_sub1](bool sp,
-                                                   mqtt::connect_return_code connack_return_code) {
+  client->set_connack_handler([&](bool sp, mqtt::connect_return_code connack_return_code) {
     std::cout << "Connack handler called" << std::endl;
     std::cout << "Session Present: " << std::boolalpha << sp << std::endl;
     std::cout << "Connack Return Code: " << connack_return_code << std::endl;
     if (connack_return_code == mqtt::connect_return_code::accepted)
     {
       pid_sub1 = client->acquire_unique_packet_id();
+
+      MqttAuthentication *mqttAuth = new MqttAuthentication(options);
+
+      if (!mqttAuth->checkCredentials())
+      {
+        std::cout << "MqttAuthentication Failed. packet_id: " << pid_sub1 << std::endl;
+        client->async_force_disconnect();
+        return false;
+      }
+      else
+      {
+        client->set_user_name("MQTT-SINK");
+        client->set_password("mtconnect");
+      }
 
       client->async_subscribe(pid_sub1, "mqtt_tcp_client_cpp/topic1", MQTT_NS::qos::at_most_once,
                               //[optional] checking async_subscribe completion code
