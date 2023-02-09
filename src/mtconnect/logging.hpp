@@ -27,6 +27,7 @@
 
 /// @brief synonym for `BOOST_LOG_TRIVIAL`
 #define LOG BOOST_LOG_TRIVIAL
+
 /// @brief synonym for `BOOST_LOG_NAMED_SCOPE`
 #define NAMED_SCOPE BOOST_LOG_NAMED_SCOPE
 

@@ -151,6 +151,10 @@ namespace mtconnect {
     ///        get latest and historical data.
     /// @return A reference to the circular buffer
     auto &getCircularBuffer() { return m_circularBuffer; }
+    /// @brief Get a const reference to the circular buffer. Used by sinks to
+    ///        get latest and historical data.
+    /// @return A const reference to the circular buffer
+    const auto &getCircularBuffer() const { return m_circularBuffer; }
 
     /// @brief Adds an adapter to the agent
     /// @param[in] source: shared pointer to the source being added

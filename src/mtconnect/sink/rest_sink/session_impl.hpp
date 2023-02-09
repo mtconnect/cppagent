@@ -35,29 +35,44 @@ namespace mtconnect {
   }
 
   namespace sink::rest_sink {
+    /// @brief A session implementation `Derived` subclass pattern
+    /// @tparam subclass of this class to use the same methods with http or https protocol streams
     template <class Derived>
     class SessionImpl : public Session
     {
     public:
+      /// @brief Create a Session
+      /// @param buffer buffer (takes ownership)
+      /// @param list http fields
+      /// @param dispatch dispatch method
+      /// @param error error function
       SessionImpl(boost::beast::flat_buffer &&buffer, const FieldList &list, Dispatch dispatch,
                   ErrorFunction error)
         : Session(dispatch, error), m_fields(list), m_buffer(std::move(buffer))
       {}
+      /// @brief Sessions cannot be copied
       SessionImpl(const SessionImpl &) = delete;
       virtual ~SessionImpl() {}
+
+      /// @brief get a shared pointer to this
+      /// @return shared session impl
       std::shared_ptr<SessionImpl> shared_ptr()
       {
         return std::dynamic_pointer_cast<SessionImpl>(shared_from_this());
       }
+      /// @brief get this as the `Derived` type
+      /// @return 
       Derived &derived() { return static_cast<Derived &>(*this); }
 
+      /// @name Session Interface
+      ///@{
       void run() override;
       void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override;
       void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override;
       void beginStreaming(const std::string &mimeType, Complete complete) override;
       void writeChunk(const std::string &chunk, Complete complete) override;
       void closeStream() override;
-
+      ///@}
     protected:
       template <typename T>
       void addHeaders(const Response &response, T &res);
@@ -91,23 +106,35 @@ namespace mtconnect {
       ResponsePtr m_outgoing;
     };
 
+    /// @brief An HTTP Session for communication without TLS
     class HttpSession : public SessionImpl<HttpSession>
     {
     public:
+      /// @brief Create an http session with a plain tcp stream
+      /// @param stream the stream (takes ownership)
+      /// @param buffer the communiction buffer (takes ownership)
+      /// @param list list of fields
+      /// @param dispatch dispatch function
+      /// @param error error format function
       HttpSession(boost::beast::tcp_stream &&stream, boost::beast::flat_buffer &&buffer,
                   const FieldList &list, Dispatch dispatch, ErrorFunction error)
         : SessionImpl<HttpSession>(move(buffer), list, dispatch, error), m_stream(std::move(stream))
       {
         m_remote = m_stream.socket().remote_endpoint();
       }
+      /// @brief Get a pointer cast as an HTTP Session
+      /// @return shared pointer to an http session
       std::shared_ptr<HttpSession> shared_ptr()
       {
         return std::dynamic_pointer_cast<HttpSession>(shared_from_this());
       }
+      /// @brief destruct and close the session
       virtual ~HttpSession() { close(); }
-
+      /// @brief get the stream
+      /// @return the stream
       auto &stream() { return m_stream; }
 
+      /// @brief close the session and shutdown the socket
       void close() override
       {
         NAMED_SCOPE("HttpSession::close");

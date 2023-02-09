@@ -37,12 +37,20 @@ namespace mtconnect::sink::rest_sink {
   class Session;
   using SessionPtr = std::shared_ptr<Session>;
 
+  /// @brief A REST routing that parses a URI pattern and associates a lambda when it is matched
+  /// against a request
   class AGENT_LIB_API Routing
   {
   public:
     using Function = std::function<bool(SessionPtr, RequestPtr)>;
 
     Routing(const Routing &r) = default;
+    /// @brief Create a routing
+    ///
+    /// Creates a REGEXP to match against the path
+    /// @param verb The `GET`, `PUT`, `POST`, and `DELETE` version of the HTTP request
+    /// @param pattern the URI pattern to parse and match
+    /// @param function the function to call if matches
     Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function)
       : m_verb(verb), m_function(function)
     {
@@ -59,13 +67,27 @@ namespace mtconnect::sink::rest_sink {
 
       pathParameters(s);
     }
+    /// @brief
+    /// @param verb
+    /// @param pattern
+    /// @param function
     Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function)
       : m_verb(verb), m_pattern(pattern), m_function(function)
     {}
 
+    /// @brief Get the list of path position in order
+    /// @return the parameter list
     const ParameterList &getPathParameters() const { return m_pathParameters; }
+    /// @brief get the unordered set of query parameters
     const QuerySet &getQueryParameters() const { return m_queryParameters; }
 
+    /// @brief match the session's request against the this routing
+    ///
+    /// Call the associated lambda when matched
+    ///
+    /// @param[in] session the session making the request to pass to the Routing if matched
+    /// @param[in,out] request the incoming request with a verb and a path
+    /// @return `true` if the request was matched
     bool matches(SessionPtr session, RequestPtr request)
     {
       try

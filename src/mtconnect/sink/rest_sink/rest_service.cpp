@@ -117,33 +117,6 @@ namespace mtconnect {
 
     void RestService::stop() { m_server->stop(); }
 
-    // Observation management
-    observation::ObservationPtr RestService::getFromBuffer(uint64_t seq) const
-    {
-      return m_sinkContract->getCircularBuffer().getFromBuffer(seq);
-    }
-
-    SequenceNumber_t RestService::getSequence() const
-    {
-      return m_sinkContract->getCircularBuffer().getSequence();
-    }
-
-    unsigned int RestService::getBufferSize() const
-    {
-      return m_sinkContract->getCircularBuffer().getBufferSize();
-    }
-
-    SequenceNumber_t RestService::getFirstSequence() const
-    {
-      return m_sinkContract->getCircularBuffer().getFirstSequence();
-    }
-
-    // For testing...
-    void RestService::setSequence(uint64_t seq)
-    {
-      m_sinkContract->getCircularBuffer().setSequence(seq);
-    }
-
     // Configuration
     void RestService::loadNamespace(const ptree &tree, const char *namespaceType,
                                     XmlPrinter *xmlPrinter, NamespaceFunction callback)
@@ -786,7 +759,8 @@ namespace mtconnect {
         m_sinkContract->getDataItemById(item)->addObserver(&asyncResponse->m_observer);
 
       chrono::milliseconds interMilli {interval};
-      SequenceNumber_t firstSeq = getFirstSequence();
+      SequenceNumber_t firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
+      ;
       if (!from || *from < firstSeq)
         asyncResponse->m_sequence = firstSeq;
       else
@@ -904,7 +878,7 @@ namespace mtconnect {
 
         // Check if we're falling too far behind. If we are, generate an
         // MTConnectError and return.
-        if (asyncResponse->m_sequence < getFirstSequence())
+        if (asyncResponse->m_sequence < m_sinkContract->getCircularBuffer().getFirstSequence())
         {
           LOG(warning) << "Client fell too far behind, disconnecting";
           asyncResponse->m_session->fail(boost::beast::http::status::not_found,
@@ -1343,7 +1317,7 @@ namespace mtconnect {
       {
         std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
 
-        firstSeq = getFirstSequence();
+        firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
         seq = m_sinkContract->getCircularBuffer().getSequence();
         if (at)
         {
@@ -1373,7 +1347,7 @@ namespace mtconnect {
 
       {
         std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
-        firstSeq = getFirstSequence();
+        firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
         auto seq = m_sinkContract->getCircularBuffer().getSequence();
         lastSeq = seq - 1;
         int upperCountLimit = m_sinkContract->getCircularBuffer().getBufferSize() + 1;

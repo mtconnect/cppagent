@@ -47,6 +47,7 @@ namespace mtconnect {
     class CircularBuffer;
   }
 
+  /// @brief The Sink namespace for outgoing data from the agent
   namespace sink {
     /// @brief Interface required by sinks
     class AGENT_LIB_API SinkContract
