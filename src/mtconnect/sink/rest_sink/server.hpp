@@ -135,7 +135,7 @@ namespace mtconnect::sink::rest_sink {
     /// @return `true` if puts are allowed
     bool allowPutFrom(const std::string &host);
     /// @brief sets the allow puts flag
-    /// @param[in] allow 
+    /// @param[in] allow
     void allowPuts(bool allow = true) { m_allowPuts = allow; }
     /// @brief can one put from an ip address
     /// @param[in] addr the ip address
@@ -148,7 +148,8 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief Entry point for all requests
     ///
-    /// Search routings for a match, if a match is found, then dispatch the request, otherwise return an error.
+    /// Search routings for a match, if a match is found, then dispatch the request, otherwise
+    /// return an error.
     /// @param[in] session the client session
     /// @param[in] request the incoming request
     /// @return `true` if the request was matched and dispatched

@@ -61,7 +61,7 @@ namespace mtconnect {
         return std::dynamic_pointer_cast<SessionImpl>(shared_from_this());
       }
       /// @brief get this as the `Derived` type
-      /// @return 
+      /// @return
       Derived &derived() { return static_cast<Derived &>(*this); }
 
       /// @name Session Interface

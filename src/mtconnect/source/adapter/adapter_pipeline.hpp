@@ -22,6 +22,7 @@
 #include "mtconnect/pipeline/transform.hpp"
 
 namespace mtconnect::source::adapter {
+  /// @brief Handler functions for handling data and connection status
   struct Handler
   {
     using ProcessData = std::function<void(const std::string &data, const std::string &source)>;
@@ -29,25 +30,42 @@ namespace mtconnect::source::adapter {
                                               const std::string &source)>;
     using Connect = std::function<void(const std::string &source)>;
 
+    /// @brief Process Data Messages
     ProcessData m_processData;
+    /// @brief Process an adapter command
     ProcessData m_command;
+    /// @brief Process a message with a topic
     ProcessMessage m_processMessage;
 
+    /// @brief method to call when connecting
     Connect m_connecting;
+    /// @brief method to call when connected
     Connect m_connected;
+    /// @brief method to call when disconnected
     Connect m_disconnected;
   };
 
+  /// @brief The adapter pipeline with common pipeline construction methods. This class
+  ///        is subclassed for particular adapters
   class AGENT_LIB_API AdapterPipeline : public pipeline::Pipeline
   {
   public:
+    /// @brief Create and adapter pipeline
+    /// @param context the pipeline context
+    /// @param st boost asio strand
     AdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
       : Pipeline(context, st)
     {}
 
+    /// @brief build the pipeline
+    /// @param options the configuration options
     void build(const ConfigOptions &options) override;
+    /// @brief Create a handler
+    /// @return the handler handing over ownership 
     virtual std::unique_ptr<Handler> makeHandler();
 
+    /// @brief get the associated device
+    /// @return the device
     const auto &getDevice() const { return m_device; }
 
   protected:

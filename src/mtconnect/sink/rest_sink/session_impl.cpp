@@ -461,7 +461,7 @@ namespace mtconnect::sink::rest_sink {
     }
   }
 
-  /// @brief A secure https session 
+  /// @brief A secure https session
   class HttpsSession : public SessionImpl<HttpsSession>
   {
   public:

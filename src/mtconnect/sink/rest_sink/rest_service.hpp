@@ -136,7 +136,7 @@ namespace mtconnect {
                                const std::optional<SequenceNumber_t> &from = std::nullopt,
                                const std::optional<std::string> &path = std::nullopt);
 
-      /// @brief Handler for a streaming current 
+      /// @brief Handler for a streaming current
       /// @param session session to stream data to
       /// @param p printer for doc generation
       /// @param interval the minimum interval between sending documents in ms
@@ -152,8 +152,8 @@ namespace mtconnect {
       /// @param time optional timestamp
       /// @return `<success/>` if succeeds
       ResponsePtr putObservationRequest(const printer::Printer *p, const std::string &device,
-                                  const QueryMap observations,
-                                  const std::optional<std::string> &time = std::nullopt);
+                                        const QueryMap observations,
+                                        const std::optional<std::string> &time = std::nullopt);
 
       ///@}
 
@@ -161,17 +161,17 @@ namespace mtconnect {
       ///@{
 
       /// @brief Callback when the async write completes
-      /// @param asyncResponse shared pointer to response referencing the session 
+      /// @param asyncResponse shared pointer to response referencing the session
       void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
 
       /// @brief After the write complete, send the next chunk of data
-      /// @param asyncResponse shared pointer to async response referencing the session 
+      /// @param asyncResponse shared pointer to async response referencing the session
       /// @param ec an async error code
       void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
                                  boost::system::error_code ec);
 
       /// @brief Callback to stream another current chunk
-      /// @param asyncResponse shared pointer to async response referencing the session 
+      /// @param asyncResponse shared pointer to async response referencing the session
       /// @param ec an async error code
       void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
                              boost::system::error_code ec);

@@ -30,22 +30,30 @@
 #define HEARTBEAT_FREQ 60000
 
 namespace mtconnect::source::adapter::shdr {
+  /// @brief Connection to an adapter socket
   class AGENT_LIB_API Connector
   {
   public:
-    // Instantiate the server by assigning it a server and port/
+    /// @brief Instantiate the server by assigning it a server and port
+    /// @param strand boost asio strand
+    /// @param server server to connect to
+    /// @param port port to connect to
+    /// @param legacyTimout connection timeout (defaulted to 5 minutes)
+    /// @param reconnectInterval time between reconnection attempts (defaults to 10 seconds)
     Connector(boost::asio::io_context::strand &strand, std::string server, unsigned int port,
               std::chrono::seconds legacyTimout = std::chrono::seconds {600},
               std::chrono::seconds reconnectInterval = std::chrono::seconds {10});
 
-    // Virtual desctructor
     virtual ~Connector();
 
-    // Blocking call to connect to the server/port
-    // Put data from the socket in the string buffer
-    //
+    /// @brief Blocking call to connect to the server/port
+    ///        Put data from the socket in the string buffer
     virtual bool start();
+    /// @brief resolve the adapter host address
+    /// @return `bool` if it can b resolved
     virtual bool resolve();
+    /// @brief connect to the adapter
+    /// @return `true` if it can connect
     virtual bool connect();
 
     // Abstract method to handle what to do with each line of data from Socket

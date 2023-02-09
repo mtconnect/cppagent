@@ -39,7 +39,7 @@ namespace mtconnect::sink::rest_sink {
   using Complete = std::function<void()>;
   using FieldList = std::list<std::pair<std::string, std::string>>;
 
-  /// @brief An abstract Session for an HTTP connection to a client 
+  /// @brief An abstract Session for an HTTP connection to a client
   ///
   /// The HTTP or HTTPS connections are subclasses of the session
   class Session : public std::enable_shared_from_this<Session>
