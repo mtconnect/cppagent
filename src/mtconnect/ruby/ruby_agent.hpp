@@ -125,7 +125,7 @@ namespace mtconnect::ruby {
           mrb, agentClass, "default_device",
           [](mrb_state *mrb, mrb_value self) {
             auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
-            auto dev = agent->defaultDevice();
+            auto dev = agent->getDefaultDevice();
 
             auto mod = mrb_module_get(mrb, "MTConnect");
             auto klass = mrb_class_get_under(mrb, mod, "Device");

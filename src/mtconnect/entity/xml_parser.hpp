@@ -30,6 +30,7 @@
 struct _xmlNode;
 namespace mtconnect {
   namespace entity {
+    /// @brief  Parse an XML document to an entity
     class AGENT_LIB_API XmlParser
     {
     public:
@@ -37,8 +38,21 @@ namespace mtconnect {
       ~XmlParser() = default;
       using xmlNodePtr = _xmlNode *;
 
+      /// @brief Parse an xmlNodePointer (libxml2) to an entity
+      /// @param factory The factory to use to create the top level entity
+      /// @param node an libxml2 node
+      /// @param errors errors that occurred during the parsing
+      /// @param parseNamespaces `true` if namespaces should be parsed
+      /// @return a shared pointer to an entity if successful
       static EntityPtr parseXmlNode(FactoryPtr factory, xmlNodePtr node, ErrorList &errors,
                                     bool parseNamespaces = true);
+      /// @brief Parse a string document to an entity
+      /// @param factory The factory to use to create the top level entity
+      /// @param document the document as a string
+      /// @param version version to parse
+      /// @param errors errors that occurred during the parsing
+      /// @param parseNamespaces `true` if namespaces should be parsed
+      /// @return a shared pointer to an entity if successful
       static EntityPtr parse(FactoryPtr factory, const std::string &document,
                              const std::string &version, ErrorList &errors,
                              bool parseNamespaces = true);

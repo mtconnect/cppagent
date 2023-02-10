@@ -20,8 +20,8 @@
 #include "mtconnect/logging.hpp"
 
 namespace mtconnect::source {
-  source::SourcePtr SourceFactory::make(const std::string &factoryName, const std::string &sinkName,
-                                        boost::asio::io_context &io,
+  source::SourcePtr SourceFactory::make(const std::string &factoryName,
+                                        const std::string &sourceName, boost::asio::io_context &io,
                                         std::shared_ptr<pipeline::PipelineContext> context,
                                         const ConfigOptions &options,
                                         const boost::property_tree::ptree &block)
@@ -29,7 +29,7 @@ namespace mtconnect::source {
     auto factory = m_factories.find(factoryName);
     if (factory != m_factories.end())
     {
-      return factory->second(sinkName, io, context, options, block);
+      return factory->second(sourceName, io, context, options, block);
     }
     else
     {

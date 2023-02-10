@@ -256,7 +256,7 @@ public:
 
     if (!IsOptionSet(options, configuration::Device))
     {
-      options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
+      options[configuration::Device] = *m_agent->getDefaultDevice()->getComponentName();
     }
     boost::property_tree::ptree tree;
     tree.put(configuration::Host, host);

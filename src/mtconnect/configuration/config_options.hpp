@@ -17,16 +17,29 @@
 
 #pragma once
 
+/// @file config_options.hpp
+/// @brief Contains all the known configuration options
+
 #include "mtconnect/config.hpp"
 
 namespace mtconnect {
   namespace configuration {
+
+/// @brief creates an const char * from the name as a string
+///
+///   stringizes `name`
+///
+/// @param name name of configuration parameter
 #define DECLARE_CONFIGURATION(name) inline const char *name = #name;
-    // Global
+
+    /// @name Global Configuration Options
+    ///@{
     DECLARE_CONFIGURATION(ExecDirectory);
     DECLARE_CONFIGURATION(WorkingDirectory);
+    ///@}
 
-    // Agent Configuration
+    /// @name Agent Configuration
+    ///@{
     DECLARE_CONFIGURATION(DisableAgentDevice);
     DECLARE_CONFIGURATION(AllowPut);
     DECLARE_CONFIGURATION(AllowPutFrom);
@@ -57,8 +70,10 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(TlsVerifyClientCertificate);
     DECLARE_CONFIGURATION(VersionDeviceXmlUpdates);
     DECLARE_CONFIGURATION(WorkerThreads);
+    ///@}
 
-    // MQTT Configuration
+    /// @name MQTT Configuration
+    ///@{
     DECLARE_CONFIGURATION(DeviceTopic);
     DECLARE_CONFIGURATION(AssetTopic);
     DECLARE_CONFIGURATION(ObservationTopic);
@@ -72,8 +87,10 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttConnectInterval);
     DECLARE_CONFIGURATION(MqttUserName);
     DECLARE_CONFIGURATION(MqttPassword);
+    ///@}
 
-    // Adapter Configuration
+    /// @name Adapter Configuration
+    ///@{
     DECLARE_CONFIGURATION(AdapterIdentity);
     DECLARE_CONFIGURATION(AdditionalDevices);
     DECLARE_CONFIGURATION(AutoAvailable);
@@ -103,6 +120,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(UpcaseDataItemValue);
     DECLARE_CONFIGURATION(Url);
     DECLARE_CONFIGURATION(UsePolling);
+    ///@}
 
   }  // namespace configuration
 }  // namespace mtconnect

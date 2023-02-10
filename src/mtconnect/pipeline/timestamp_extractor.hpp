@@ -22,109 +22,111 @@
 #include "shdr_tokenizer.hpp"
 #include "transform.hpp"
 
-namespace mtconnect {
-  class Agent;
+namespace mtconnect::pipeline {
+  using namespace entity;
 
-  namespace pipeline {
-    using namespace entity;
+  /// @brief An entity that carries a timestamp and a token list
+  class AGENT_LIB_API Timestamped : public Tokens
+  {
+  public:
+    using Tokens::Tokens;
+    Timestamped(const Timestamped &ts) = default;
+    Timestamped(const Tokens &ptr) : Tokens(ptr) {}
+    Timestamped(const Timestamped &ts, TokenList list)
+      : Tokens(ts, list), m_timestamp(ts.m_timestamp), m_duration(ts.m_duration)
+    {}
+    ~Timestamped() = default;
+    Timestamp m_timestamp;
+    std::optional<double> m_duration;  ///< Optional duration
+  };
+  using TimestampedPtr = std::shared_ptr<Timestamped>;
 
-    class AGENT_LIB_API Timestamped : public Tokens
+  /// @brief A timestamped asset command
+  class AGENT_LIB_API AssetCommand : public Timestamped
+  {
+  public:
+    using Timestamped::Timestamped;
+  };
+
+  /// @brief A transform to extract the timestamp
+  class AGENT_LIB_API ExtractTimestamp : public Transform
+  {
+  public:
+    ExtractTimestamp(const ExtractTimestamp &) = default;
+    /// @brief Construct a timestamp extractor
+    /// @param relativeTime `true` if using realtive time stamps
+    ExtractTimestamp(bool relativeTime)
+      : Transform("ExtractTimestamp"), m_relativeTime(relativeTime)
     {
-    public:
-      using Tokens::Tokens;
-      Timestamped(const Timestamped &ts) = default;
-      Timestamped(const Tokens &ptr) : Tokens(ptr) {}
-      Timestamped(const Timestamped &ts, TokenList list)
-        : Tokens(ts, list), m_timestamp(ts.m_timestamp), m_duration(ts.m_duration)
-      {}
-      ~Timestamped() = default;
-      Timestamp m_timestamp;
-      std::optional<double> m_duration;
-    };
-    using TimestampedPtr = std::shared_ptr<Timestamped>;
+      m_guard = TypeGuard<Tokens>(RUN);
+    }
+    ~ExtractTimestamp() override = default;
 
-    class AGENT_LIB_API AssetCommand : public Timestamped
+    using Now = std::function<Timestamp()>;
+    const EntityPtr operator()(const EntityPtr ptr) override
     {
-    public:
-      using Timestamped::Timestamped;
-    };
-
-    class AGENT_LIB_API ExtractTimestamp : public Transform
-    {
-    public:
-      ExtractTimestamp(const ExtractTimestamp &) = default;
-      ExtractTimestamp(bool relativeTime)
-        : Transform("ExtractTimestamp"), m_relativeTime(relativeTime)
+      TimestampedPtr res;
+      std::optional<std::string> token;
+      if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr);
+          tokens && tokens->m_tokens.size() > 0)
       {
-        m_guard = TypeGuard<Tokens>(RUN);
+        res = std::make_shared<Timestamped>(*tokens);
+        token = res->m_tokens.front();
+        res->m_tokens.pop_front();
       }
-      ~ExtractTimestamp() override = default;
-
-      using Now = std::function<Timestamp()>;
-      const EntityPtr operator()(const EntityPtr ptr) override
+      else if (ptr->hasProperty("timestamp"))
       {
-        TimestampedPtr res;
-        std::optional<std::string> token;
-        if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr);
-            tokens && tokens->m_tokens.size() > 0)
-        {
-          res = std::make_shared<Timestamped>(*tokens);
-          token = res->m_tokens.front();
-          res->m_tokens.pop_front();
-        }
-        else if (ptr->hasProperty("timestamp"))
-        {
-          token = res->maybeGet<std::string>("timestamp");
-          if (token)
-            res->erase("timestamp");
-        }
-
+        token = res->maybeGet<std::string>("timestamp");
         if (token)
-          extractTimestamp(*token, res);
-        else
-          res->m_timestamp = now();
-
-        res->setProperty("timestamp", res->m_timestamp);
-        return next(res);
-      }
-
-      void extractTimestamp(const std::string &token, TimestampedPtr &ts);
-      inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
-
-      Now m_now;
-
-    protected:
-      bool m_relativeTime {false};
-      std::optional<Timestamp> m_base;
-      Microseconds m_offset;
-    };
-
-    class AGENT_LIB_API IgnoreTimestamp : public ExtractTimestamp
-    {
-    public:
-      IgnoreTimestamp() : ExtractTimestamp("IgnoreTimestamp") {}
-      IgnoreTimestamp(const IgnoreTimestamp &) = default;
-      ~IgnoreTimestamp() override = default;
-
-      const EntityPtr operator()(const EntityPtr ptr) override
-      {
-        TimestampedPtr res;
-        std::optional<std::string> token;
-        if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr);
-            tokens && tokens->m_tokens.size() > 0)
-        {
-          res = std::make_shared<Timestamped>(*tokens);
-          res->m_tokens.pop_front();
-        }
-        else if (res->hasProperty("timestamp"))
-        {
           res->erase("timestamp");
-        }
-        res->m_timestamp = now();
-        res->setProperty("timestamp", res->m_timestamp);
-
-        return next(res);
       }
-    };
-  }  // namespace pipeline
-}  // namespace mtconnect
+
+      if (token)
+        extractTimestamp(*token, res);
+      else
+        res->m_timestamp = now();
+
+      res->setProperty("timestamp", res->m_timestamp);
+      return next(res);
+    }
+
+    void extractTimestamp(const std::string &token, TimestampedPtr &ts);
+    inline Timestamp now() { return m_now ? m_now() : std::chrono::system_clock::now(); }
+
+    Now m_now;
+
+  protected:
+    bool m_relativeTime {false};
+    std::optional<Timestamp> m_base;
+    Microseconds m_offset;
+  };
+
+  /// @brief Always use agent time and remove first token
+  class AGENT_LIB_API IgnoreTimestamp : public ExtractTimestamp
+  {
+  public:
+    IgnoreTimestamp() : ExtractTimestamp("IgnoreTimestamp") {}
+    IgnoreTimestamp(const IgnoreTimestamp &) = default;
+    ~IgnoreTimestamp() override = default;
+
+    const EntityPtr operator()(const EntityPtr ptr) override
+    {
+      TimestampedPtr res;
+      std::optional<std::string> token;
+      if (auto tokens = std::dynamic_pointer_cast<Tokens>(ptr);
+          tokens && tokens->m_tokens.size() > 0)
+      {
+        res = std::make_shared<Timestamped>(*tokens);
+        res->m_tokens.pop_front();
+      }
+      else if (res->hasProperty("timestamp"))
+      {
+        res->erase("timestamp");
+      }
+      res->m_timestamp = now();
+      res->setProperty("timestamp", res->m_timestamp);
+
+      return next(res);
+    }
+  };
+}  // namespace mtconnect::pipeline

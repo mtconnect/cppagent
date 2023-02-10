@@ -23,6 +23,7 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::printer {
+  /// @brief Printer to generate JSON Documents
   class AGENT_LIB_API JsonPrinter : public Printer
   {
   public:

@@ -130,13 +130,11 @@ namespace {
   {
     m_config->loadConfig("BufferSize = 4\n");
 
-    const auto agent = m_config->getAgent();
+    auto agent = m_config->getAgent();
+    auto &circ = agent->getCircularBuffer();
+
     ASSERT_TRUE(agent);
-    const auto sink = agent->findSink("RestService");
-    ASSERT_TRUE(sink);
-    const auto rest = dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
-    ASSERT_TRUE(rest);
-    ASSERT_EQ(16U, rest->getBufferSize());
+    ASSERT_EQ(16U, circ.getBufferSize());
   }
 
   TEST_F(ConfigTest, Device)

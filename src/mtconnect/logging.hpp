@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file logging.hpp
+/// @brief common logging macros based on boost trivial log
+
 #pragma once
 
 #include <boost/log/attributes.hpp>
@@ -22,7 +25,10 @@
 
 #include "mtconnect/config.hpp"
 
+/// @brief synonym for `BOOST_LOG_TRIVIAL`
 #define LOG BOOST_LOG_TRIVIAL
+
+/// @brief synonym for `BOOST_LOG_NAMED_SCOPE`
 #define NAMED_SCOPE BOOST_LOG_NAMED_SCOPE
 
 // Must be initialized in the plugin before callign log as follows:
@@ -35,6 +41,7 @@ namespace mtconnect {
   }  // namespace configuration
 }  // namespace mtconnect
 
+/// @brief Used when static using static agent_lib in a plugin shared object
 #define PLUGIN_LOG(lvl)                                                 \
   BOOST_LOG_STREAM_WITH_PARAMS(*mtconnect::configuration::gAgentLogger, \
                                (::boost::log::keywords::severity = ::boost::log::trivial::lvl))

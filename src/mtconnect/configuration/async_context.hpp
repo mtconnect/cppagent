@@ -25,23 +25,32 @@
 
 namespace mtconnect::configuration {
 
-  // Manages the boost asio context and allows for a syncronous
-  // callback to execute when all the worker threads have stopped.
+  /// @brief Manages the boost asio context and allows for a syncronous
+  ///        callback to execute when all the worker threads have stopped.
   class AGENT_LIB_API AsyncContext
   {
   public:
     using SyncCallback = std::function<void(AsyncContext &context)>;
     using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
 
+    /// @brief creates an asio context and a guard to prevent it from
+    ///        stopping
     AsyncContext() { m_guard.emplace(m_context.get_executor()); }
+    /// @brief removes the copy constructor
     AsyncContext(const AsyncContext &) = delete;
     ~AsyncContext() {}
 
+    /// @brief get the boost asio context reference
     auto &getContext() { return m_context; }
+    /// @brief operator() returns a reference to the io context
+    /// @return the io context
     operator boost::asio::io_context &() { return m_context; }
 
+    /// @brief sets the number of theads for asio thread pool
+    /// @param[in] threads number of threads
     void setThreadCount(int threads) { m_threadCount = threads; }
 
+    /// @brief start `m_threadCount` worker threads
     void start()
     {
       m_running = true;
@@ -84,6 +93,10 @@ namespace mtconnect::configuration {
       } while (m_running);
     }
 
+    /// @brief pause the worker threads. Sets a callback when the threads are paused.
+    /// @param[in] callback the callback to call
+    /// @param[in] safeStop stops by resetting the the guard, otherwise stop the
+    ///            io context
     void pause(SyncCallback callback, bool safeStop = false)
     {
       m_paused = true;
@@ -94,6 +107,8 @@ namespace mtconnect::configuration {
         m_context.stop();
     }
 
+    /// @brief stop the worker threads
+    /// @param safeStop if `true` resets the guard or stops the context
     void stop(bool safeStop = true)
     {
       m_running = false;
@@ -103,6 +118,7 @@ namespace mtconnect::configuration {
         m_context.stop();
     }
 
+    /// @brief restarts the worker threads when paused
     void restart()
     {
       m_paused = false;

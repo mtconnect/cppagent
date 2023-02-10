@@ -27,6 +27,7 @@
 #include "response_document.hpp"
 
 namespace mtconnect::pipeline {
+  /// @brief Used to manage Agent streaming protocol from upstream agent
   struct XmlTransformFeedback
   {
     uint64_t m_instanceId = 0;
@@ -36,10 +37,17 @@ namespace mtconnect::pipeline {
   };
 
   using namespace mtconnect::entity;
+
+  /// @brief Transform, parse, and map the XML documents extracting the data for feedback
   class AGENT_LIB_API MTConnectXmlTransform : public Transform
   {
   public:
     MTConnectXmlTransform(const MTConnectXmlTransform &) = default;
+
+    /// @brief Construct a transfor,
+    /// @param context the pipeline context
+    /// @param feedback a feedback object to pass back protocol info
+    /// @param device an associated device
     MTConnectXmlTransform(PipelineContextPtr context, XmlTransformFeedback &feedback,
                           const std::optional<std::string> &device = std::nullopt)
       : Transform("MTConnectXmlTransform"),

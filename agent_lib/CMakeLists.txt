@@ -406,3 +406,8 @@ endif()
 target_compile_features(agent_lib PUBLIC ${CXX_COMPILE_FEATURES})
 target_clangformat_setup(agent_lib)
 target_clangtidy_setup(agent_lib)
+
+include(../cmake/document.cmake)
+if (DOXYGEN_FOUND)
+  doxygen_add_docs(docs ../README.md ${AGENT_SOURCES})
+endif()

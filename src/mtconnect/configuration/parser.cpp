@@ -77,6 +77,7 @@ using namespace std;
 
 namespace mtconnect {
   namespace configuration {
+    /// @brief Actions for the configuration parser in reductions
     namespace ConfigurationParserActions {
       inline static void property(pair<std::string, std::string> &t, const std::string &f,
                                   const std::string &s)
@@ -115,6 +116,9 @@ namespace mtconnect {
     BOOST_PHOENIX_ADAPT_FUNCTION(void, start, ConfigurationParserActions::start, 2);
     BOOST_PHOENIX_ADAPT_FUNCTION(size_t, pos, ConfigurationParserActions::pos, 1);
 
+    /// @brief boost Spirit parser
+    /// @tparam It iterator type for consuming text
+    /// @tparam Skipper skip whitespace by default
     template <typename It, typename Skipper = ascii::space_type>
     class ConfigParser : public qi::grammar<It, pt::ptree(), Skipper>
     {

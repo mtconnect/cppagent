@@ -23,6 +23,8 @@
 namespace mtconnect {
   namespace device_model {
     class Component;
+
+    /// @brief Composition entity
     class AGENT_LIB_API Composition : public entity::Entity
     {
     public:
@@ -30,6 +32,8 @@ namespace mtconnect {
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
 
+      /// @brief create a topic name from the component
+      /// @return topic name
       const std::string getTopicName() const
       {
         using namespace std;
@@ -48,8 +52,14 @@ namespace mtconnect {
         return *m_topicName;
       }
 
+      /// @brief component this composition is a part of
+      /// @param[in] component the component
       void setComponent(std::shared_ptr<Component> component) { m_component = component; }
+      /// @brief get the component this is a part of
+      /// @return shared pointer to the component
       std::shared_ptr<Component> getComponent() const { return m_component.lock(); }
+      /// @brief cover method for getComponent
+      /// @return shared pointer to the component
       auto getParent() const { return getComponent(); }
 
     protected:

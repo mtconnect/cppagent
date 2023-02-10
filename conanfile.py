@@ -5,6 +5,7 @@ import io
 import re
 import itertools as it
 import glob
+import subprocess
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 
 class MTConnectAgentConan(ConanFile):
@@ -16,7 +17,8 @@ class MTConnectAgentConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type", "arch_build"
     options = { "run_tests": [True, False], "build_tests": [True, False], 
                 "without_ipv6": [True, False], "with_ruby": [True, False],
-                 "development" : [True, False], "shared": [True, False], "winver": "ANY" }
+                 "development" : [True, False], "shared": [True, False], "winver": "ANY",
+                 "with_docs" : [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.79.0@#3249d9bd2b863a9489767bf9c8a05b4b",
@@ -25,7 +27,7 @@ class MTConnectAgentConan(ConanFile):
                 "nlohmann_json/3.9.1@#a41bc0deaf7f40e7b97e548359ccf14d", 
                 "openssl/3.0.5@#40f4488f02b36c1193b68f585131e8ef",
                 "mqtt_cpp/13.1.0"]
-    
+
     build_policy = "missing"
     default_options = {
         "run_tests": True,
@@ -35,6 +37,7 @@ class MTConnectAgentConan(ConanFile):
         "development": False,
         "shared": False,
         "winver": "0x600",
+        "with_docs": True,
 
         "boost:shared": False,
         "boost:without_python": True,
@@ -109,6 +112,12 @@ class MTConnectAgentConan(ConanFile):
             self.options["gtest"].shared = True
             self.options["openssl"].shared = True
         
+    def build_requirements(self):
+        if self.options.with_docs:
+            res = subprocess.run(["doxygen --version"], shell=True, text=True, capture_output=True)
+            if (res.returncode != 0 or not res.stdout.startswith('1.9')):
+                self.tool_requires("doxygen/1.9.4@#19fe2ac34109f3119190869a4d0ffbcb")
+
     def requirements(self):
         if not self.windows_xp:
             self.requires("gtest/1.10.0")

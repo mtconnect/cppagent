@@ -21,6 +21,7 @@
 #include "mtconnect/entity/entity.hpp"
 
 namespace mtconnect::device_model::data_item {
+  /// @brief Data item source
   class AGENT_LIB_API Source : public entity::Entity
   {
   public:

@@ -28,6 +28,9 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::asset {
+  /// @brief QIF Document Wrapper
+  ///
+  /// Contains a QIF Document without validating the contents.
   class AGENT_LIB_API QIFDocumentWrapper : public Asset
   {
   public:

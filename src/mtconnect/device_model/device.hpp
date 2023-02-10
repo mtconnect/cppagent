@@ -41,25 +41,34 @@ namespace mtconnect {
     class Adapter;
   }
 
+  /// @brief Namespace for all Device Model Related entities
   namespace device_model {
+    /// @brief Compenent entity representing a `Device`
     class AGENT_LIB_API Device : public Component
     {
     public:
+      /// @brief multi-index tag: Data items indexed by name
       struct ByName
       {};
+      /// @brief multi-index tag: Data items indexed by id
       struct ById
       {};
+      /// @brief multi-index tag: Data items index by Source
       struct BySource
       {};
+      /// @brief multi-index tag: Data items indexed by type
       struct ByType
       {};
 
+      /// @brief multi-index data item id extractor
       struct ExtractId
       {
         using result_type = std::string;
         const result_type &operator()(const WeakDataItemPtr d) const { return d.lock()->getId(); }
       };
-
+      /// @brief multi-index data item name extractor
+      ///
+      /// falls back to id if name is not given
       struct ExtractName
       {
         using result_type = std::string;
@@ -79,7 +88,9 @@ namespace mtconnect {
           }
         }
       };
-
+      /// @brief multi-index data item source extractor
+      ///
+      /// falls back to id if name is not given
       struct ExtractSource
       {
         using result_type = std::string;
@@ -98,7 +109,7 @@ namespace mtconnect {
           }
         }
       };
-
+      /// @brief multi-index data item type extractor
       struct ExtractType
       {
         using result_type = std::string;
@@ -115,19 +126,23 @@ namespace mtconnect {
         }
       };
 
-      // Mapping of device names to data items
+      /// @brief Mapping of device names to data items
       using DataItemIndex = mic::multi_index_container<
           WeakDataItemPtr, mic::indexed_by<mic::hashed_unique<mic::tag<ById>, ExtractId>,
                                            mic::hashed_unique<mic::tag<BySource>, ExtractName>,
                                            mic::hashed_unique<mic::tag<ByName>, ExtractSource>,
                                            mic::ordered_non_unique<mic::tag<ByType>, ExtractType>>>;
 
-      // Constructor that sets variables from an attribute map
+      /// @brief Constructor that sets variables from an attribute map
+      /// @param[in] name the name of the device
+      /// @param[in] props the device properties
       Device(const std::string &name, entity::Properties &props);
       ~Device() override = default;
 
+      /// @brief get a shared pointer to the device
       auto getptr() const { return std::dynamic_pointer_cast<Device>(Entity::getptr()); }
 
+      /// @brief Indexes all the entities in this device
       void initialize() override
       {
         m_dataItems.clear();
@@ -141,13 +156,25 @@ namespace mtconnect {
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
 
+      /// @brief set any configuration options related to this device
+      /// @param[in] options the options
+      /// - `PreserveUUID` can be set to lock the uuid of this device
       void setOptions(const ConfigOptions &options);
 
-      // Add/get items to/from the device name to data item mapping
+      /// @brief Add a data item to the device
+      /// @param[in] dataItem shared pointer to the data item
       void addDeviceDataItem(DataItemPtr dataItem);
+      /// @brief get a data item by source, name, and id
+      /// @param[in] name the source, name, or id of the data item
+      /// @return shared pointer to the data item if found
       DataItemPtr getDeviceDataItem(const std::string &name) const;
 
+      /// @brief associate an adapter with the device
+      /// @param[in] anAdapter an adapter
       void addAdapter(source::adapter::Adapter *anAdapter) { m_adapters.emplace_back(anAdapter); }
+      /// @brief get a component by id
+      /// @param[in] aId the component id
+      /// @return shared pointer to the component if found
       ComponentPtr getComponentById(const std::string &aId) const
       {
         auto comp = m_componentsById.find(aId);
@@ -156,35 +183,56 @@ namespace mtconnect {
         else
           return nullptr;
       }
-      void addComponent(ComponentPtr aComponent)
+      /// @brief Add a component to the device
+      /// @param[in] component the component
+      void addComponent(ComponentPtr component)
       {
-        m_componentsById.insert(make_pair(aComponent->getId(), aComponent));
+        m_componentsById.insert(make_pair(component->getId(), component));
       }
-
+      /// @brief get device returns itself
+      /// @return shared pointer to this entity
       DevicePtr getDevice() const override { return getptr(); }
 
-      // Return the mapping of Device to data items
+      /// @brief get the data item index by id
+      /// @return data item index by id
       const auto &getDeviceDataItems() const { return m_dataItems.get<ById>(); }
+      /// @brief get the multi-index for data items
+      /// @return data item multi-index
       const auto &getDataItemIndex() const { return m_dataItems; }
 
+      /// @brief
+      /// @param[in] dataItem
+      /// @param[in,out] errors
       void addDataItem(DataItemPtr dataItem, entity::ErrorList &errors) override;
 
-      std::vector<source::adapter::Adapter *> m_adapters;
-
+      /// @brief get the version of this device
+      /// @return mtconnet version
       auto getMTConnectVersion() const { maybeGet<std::string>("mtconnectVersion"); }
 
-      // Cached data items
+      /// @name Cached data items
+      ///@{
       DataItemPtr getAvailability() const { return m_availability; }
       DataItemPtr getAssetChanged() const { return m_assetChanged; }
       DataItemPtr getAssetRemoved() const { return m_assetRemoved; }
       DataItemPtr getAssetCount() const { return m_assetCount; }
+      ///@}
 
+      /// @brief set the state of the preserve uuid flag
+      /// @param v preserve uuid state
       void setPreserveUuid(bool v) { m_preserveUuid = v; }
+      /// @brief get the preserve uuid state
+      /// @return `true` if uuids are preserved
       bool preserveUuid() const { return m_preserveUuid; }
 
+      /// @brief associate a data item with this device
+      /// @param di the data item
       void registerDataItem(DataItemPtr di);
+      /// @brief associate a component with the device
+      /// @param c the component
       void registerComponent(ComponentPtr c) { m_componentsById[c->getId()] = c; }
 
+      /// @brief get the topic for this device
+      /// @return the uuid of the device
       const std::string getTopicName() const override { return *m_uuid; }
 
     protected:
@@ -200,6 +248,7 @@ namespace mtconnect {
 
       DataItemIndex m_dataItems;
       std::unordered_map<std::string, std::weak_ptr<Component>> m_componentsById;
+      std::vector<source::adapter::Adapter *> m_adapters;
     };
 
     using DevicePtr = std::shared_ptr<Device>;

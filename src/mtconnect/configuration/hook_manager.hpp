@@ -24,6 +24,9 @@
 #include "mtconnect/config.hpp"
 
 namespace mtconnect::configuration {
+
+  /// @brief Manages a list of callbacks. Callbacks can be named.
+  /// @tparam The type of the object reference to pass to the callback.
   template <typename T>
   class HookManager
   {
@@ -32,44 +35,64 @@ namespace mtconnect::configuration {
     using HookEntry = std::pair<std::optional<std::string>, Hook>;
     using HookList = std::list<HookEntry>;
 
+    /// @brief Create a hook manager
     HookManager() {}
     ~HookManager() {}
 
-    // Add hooks without name, cannot be removed
+    /// @brief Add a hook to the end of the list as a rvalue without a name
+    /// @param[in] hook The callback
     void add(Hook &hook) { m_hooks.emplace_back(std::make_pair(std::nullopt, hook)); }
+    /// @brief Add a hook to the end of the list as a lvalue without a name
+    /// @param[in] hook The callback
     void add(Hook &&hook) { m_hooks.emplace_back(std::make_pair(std::nullopt, std::move(hook))); }
+    /// @brief Add a hook to the beginning of the list as a rvalue without a name
+    /// @param[in] hook The callback
     void addFirst(Hook &hook) { m_hooks.emplace_front(std::make_pair(std::nullopt, hook)); }
+    /// @brief Add a hook to the beginning of the list as a lvalue without a name
+    /// @param[in] hook The callback
     void addFirst(Hook &&hook)
     {
       m_hooks.emplace_front(std::make_pair(std::nullopt, std::move(hook)));
     }
 
-    // Add by name
+    /// @brief Add a hook to the end of the list as a rvalue
+    /// @param[in] name The name of the callback
+    /// @param[in] hook The callback
     void add(std::string &name, Hook &hook)
     {
       m_hooks.emplace_back(std::make_pair(std::nullopt, hook));
     }
+    /// @brief Add a hook to the end of the list as a rvalue
+    /// @param[in] name The name of the callback
+    /// @param[in] hook The callback
     void add(std::string &name, Hook &&hook)
     {
       m_hooks.emplace_back(std::make_pair(std::nullopt, std::move(hook)));
     }
+    /// @brief Add a hook to the beginning of the list as a rvalue
+    /// @param[in] name The name of the callback
+    /// @param[in] hook The callback
     void addFirst(std::string &name, Hook &hook)
     {
       m_hooks.emplace_front(std::make_pair(std::nullopt, hook));
     }
+    /// @brief Add a hook to the beginning of the list as a lvalue
+    /// @param[in] name The name of the callback
+    /// @param[in] hook The callback
     void addFirst(std::string &name, Hook &&hook)
     {
       m_hooks.emplace_front(std::make_pair(std::nullopt, std::move(hook)));
     }
 
-    // Remove by name
+    /// @brief remove a named callback from the list
     bool remove(const std::string &name)
     {
       auto v = m_hooks.remove_if([&name](const auto &v) { return v.first && *v.first == name; });
       return v > 0;
     }
 
-    // Execute hooks9i
+    /// @brief call each of the hooks in order with an object
+    /// @param obj the object to pass to each callback
     void exec(T &obj) const
     {
       for (const auto &h : m_hooks)

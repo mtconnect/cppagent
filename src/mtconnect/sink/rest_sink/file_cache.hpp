@@ -34,33 +34,73 @@ namespace boost {
 namespace mtconnect::sink::rest_sink {
   using XmlNamespace = std::pair<std::string, std::string>;
   using XmlNamespaceList = std::list<XmlNamespace>;
+  /// @brief Class to manage file caching for the REST service
   class AGENT_LIB_API FileCache
   {
   public:
+    /// @brief Directory mapping from the server path to the file system
     using Directory = std::pair<std::string, std::pair<std::filesystem::path, std::string>>;
 
+    /// @brief Create a file cache
+    /// @param max optional maxumimum size of the cache, defaults to 20k.
     FileCache(size_t max = 20 * 1024);
 
+    /// @brief register files to be served by the agent.
+    /// @note Cover method for `registerDirectory()`.
+    /// @param uri the uri to the file
+    /// @param path the path on the file system
+    /// @param version schema version when registering MTConnect files
+    /// @return A namespace list associated with the files
     XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
-                                   const std::string &version);
+                                   const std::string &version)
+    {
+      return registerDirectory(uri, path, version);
+    }
+    /// @brief register all files in a directory to be served by the agent
+    /// @param uri the uri to the file
+    /// @param path the path on the file system
+    /// @param version schema version when registering MTConnect files
+    /// @return A namespace list associated with the files
     XmlNamespaceList registerDirectory(const std::string &uri, const std::string &path,
                                        const std::string &version);
+    /// @brief Register a single file
+    /// @note Cover method for `registerFile()` with a filesystem path
+    /// @param uri the uri for the file
+    /// @param pathName the path of file on the files system as a string
+    /// @param version the schema version when registering MTConnect files
+    /// @return an optional XmlNamespace if successful
     std::optional<XmlNamespace> registerFile(const std::string &uri, const std::string &pathName,
                                              const std::string &version)
     {
       std::filesystem::path path(pathName);
       return registerFile(uri, path, version);
     }
+    /// @brief Register a single file
+    /// @param uri the uri for the file
+    /// @param pathName the std filesystem path of file
+    /// @param version the schema version when registering MTConnect files
+    /// @return an optional XmlNamespace if successful
     std::optional<XmlNamespace> registerFile(const std::string &uri,
                                              const std::filesystem::path &path,
                                              const std::string &version);
+    /// @brief get a cached file given a filename and optional encoding
+    /// @param name the name of the file from the server
+    /// @param acceptEncoding optional accepted encodings
+    /// @param context optional context to perform async io
+    /// @return shared pointer to the cached file
     CachedFilePtr getFile(const std::string &name,
                           const std::optional<std::string> acceptEncoding = std::nullopt,
                           boost::asio::io_context *context = nullptr);
+    /// @brief check if the file is cached
+    /// @param name the name of the file from the server
+    /// @return `true` if the file is cached
     bool hasFile(const std::string &name) const
     {
       return (m_fileCache.count(name) > 0) || (m_fileMap.count(name) > 0);
     }
+    /// @brief Register an file name extension with a mime type
+    /// @param ext the extension (will insert a leading dot if one is not provided)
+    /// @param type the mime type
     void addMimeType(const std::string &ext, const std::string &type)
     {
       std::string s(ext);
@@ -68,17 +108,36 @@ namespace mtconnect::sink::rest_sink {
         s.insert(0, ".");
       m_mimeTypes[s] = type;
     }
+
+    /// @brief Add a directory mapping to the local files system
+    /// @param uri the server uri to the directory
+    /// @param path the path on the files system
+    /// @param index the default file to return for the directory if one is not given. For example,
+    /// `index.html`
     void addDirectory(const std::string &uri, const std::string &path, const std::string &index);
 
+    /// @brief Set the maximum size of the cache
+    /// @param s the maximum size
     void setMaxCachedFileSize(size_t s) { m_maxCachedFileSize = s; }
+    /// @brief Get the maximum size of the file cache
+    /// @return the maxumum size
     auto getMaxCachedFileSize() const { return m_maxCachedFileSize; }
 
+    /// @brief Set the file size where they are returned compressed
+    ///
+    /// Any file larger than the size will be returned gzipped if the user agent supports
+    /// compression.
+    /// @param s the mimum size
     void setMinCompressedFileSize(size_t s) { m_minCompressedFileSize = s; }
+    /// @brief Get the minimum file size for compression
+    /// @return the size
     auto getMinCompressedFileSize() const { return m_minCompressedFileSize; }
 
-    // For testing
+    /// @name Only used for testing
+    ///@{
+    /// @brief clean the file cache
     void clear() { m_fileCache.clear(); }
-
+    ///@}
   protected:
     CachedFilePtr findFileInDirectories(const std::string &name);
     const std::string &getMimeType(std::string ext)

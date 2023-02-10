@@ -25,9 +25,21 @@
 #include "session.hpp"
 
 namespace mtconnect::sink::rest_sink {
+  /// @brief Helper class to detect when a connection is using Transport Layer Security
+  ///
+  /// This class checks the protocol and then creates a TLS session or a regular HTTP session.
   class TlsDector : public std::enable_shared_from_this<TlsDector>
   {
   public:
+    /// @brief Create a TLS detector to create the asynconously check for a secure connection
+    /// @param[in] socket incoming socket connection (takes ownership)
+    /// @param[in] context asio context
+    /// @param[in] tlsOnly only allow TLS connects, reject otherwise
+    /// @param[in] allowPuts allow puts
+    /// @param[in] allowPutsFrom allow puts from an address
+    /// @param[in] list the header fields
+    /// @param[in] dispatch a dispatcher function
+    /// @param[in] error an error function
     TlsDector(boost::asio::ip::tcp::socket &&socket, boost::asio::ssl::context &context,
               bool tlsOnly, bool allowPuts, const std::set<boost::asio::ip::address> &allowPutsFrom,
               const FieldList &list, Dispatch dispatch, ErrorFunction error)
@@ -43,6 +55,9 @@ namespace mtconnect::sink::rest_sink {
 
     ~TlsDector() {}
 
+    /// @brief Method to call when TLS operation fails
+    /// @param[in] ec the erro code
+    /// @param[in] message the message
     void fail(boost::system::error_code ec, const std::string &message)
     {
       NAMED_SCOPE("TlsDector::fail");
@@ -54,8 +69,14 @@ namespace mtconnect::sink::rest_sink {
       }
     }
 
+    /// @brief ensure the detection is done in the streams executor
     void run();
+    /// @brief asyncronously detect an SSL connection.
+    /// @note times out after 30 seconds
     void detect();
+    /// @brief the detection async callback
+    /// @param[in] ec an error code
+    /// @param[in] isTls `true` if this is a TLS connection
     void detected(boost::beast::error_code ec, bool isTls);
 
   protected:

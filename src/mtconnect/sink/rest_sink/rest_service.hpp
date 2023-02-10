@@ -33,30 +33,44 @@ namespace mtconnect {
     class XmlPrinter;
   }
 
+  /// @brief MTConnect REST normative implemention namespace
   namespace sink::rest_sink {
     struct AsyncSampleResponse;
     struct AsyncCurrentResponse;
 
+    /// @brief Callback fundtion for setting namespaces
     using NamespaceFunction = void (printer::XmlPrinter::*)(const std::string &,
                                                             const std::string &,
                                                             const std::string &);
+    /// @brief Callback fundtion for setting stylesheet
     using StyleFunction = void (printer::XmlPrinter::*)(const std::string &);
 
+    /// @brief The Sink for the MTConnect normative REST Service
     class AGENT_LIB_API RestService : public Sink
     {
     public:
+      /// @brief Create a Rest Service sink
+      /// @param context the boost asio io_context
+      /// @param contract the Sink Contract from the agent
+      /// @param options configuration options
+      /// @param config additional configuration options if specified directly as a sink
       RestService(boost::asio::io_context &context, SinkContractPtr &&contract,
                   const ConfigOptions &options, const boost::property_tree::ptree &config);
 
       ~RestService() = default;
 
-      // Register the service with the sink factory
+      /// @brief Register the Sink factory to create this sink
+      /// @param factory
       static void registerFactory(SinkFactory &factory);
 
+      /// @brief Make a loopback source to handle PUT, POST, and DELETE
+      /// @param context the pipeline context
+      /// @return shared pointer to a loopback source
       std::shared_ptr<source::LoopbackSource> makeLoopbackSource(
           pipeline::PipelineContextPtr context);
 
-      // Sink Methods
+      /// @name Interface methods
+      ///@{
       void start() override;
 
       void stop() override;
@@ -64,94 +78,177 @@ namespace mtconnect {
       bool publish(observation::ObservationPtr &observation) override;
 
       bool publish(asset::AssetPtr asset) override { return false; }
+      ///@}
 
+      /// @brief Get the HTTP server
+      /// @return pointer to the HTTP server
       auto getServer() { return m_server.get(); }
-
+      /// @brief Get the file cache
+      /// @return pointer to the file cache
       auto getFileCache() { return &m_fileCache; }
 
-      // Observation management
-      observation::ObservationPtr getFromBuffer(uint64_t seq) const;
+      /// @name MTConnect Request Handlers
+      ///@{
 
-      SequenceNumber_t getSequence() const;
-
-      unsigned int getBufferSize() const;
-
-      SequenceNumber_t getFirstSequence() const;
-
-      // For testing...
-      void setSequence(uint64_t seq);
-
-      // MTConnect Requests
-      ResponsePtr probeRequest(const printer::Printer *,
+      /// @brief Handler for a probe request
+      /// @param  p printer for doc generation
+      /// @param device optional device name or uuid
+      /// @return MTConnect Devices response
+      ResponsePtr probeRequest(const printer::Printer *p,
                                const std::optional<std::string> &device = std::nullopt);
 
-      ResponsePtr currentRequest(const printer::Printer *,
+      /// @brief Handler for a current request
+      /// @param  p printer for doc generation
+      /// @param device optional device name or uuid
+      /// @param at optional sequence number to take the snapshot
+      /// @param path an xpath to filter
+      /// @return MTConnect Streams response
+      ResponsePtr currentRequest(const printer::Printer *p,
                                  const std::optional<std::string> &device = std::nullopt,
                                  const std::optional<SequenceNumber_t> &at = std::nullopt,
                                  const std::optional<std::string> &path = std::nullopt);
 
-      ResponsePtr sampleRequest(const printer::Printer *, const int count = 100,
+      /// @brief Handler for a sample request
+      /// @param p printer for doc generation
+      /// @param count maximum number of observations
+      /// @param device optional device name or uuid
+      /// @param from optional starting sequence number
+      /// @param to optional ending sequence number
+      /// @param path an xpath for filtering
+      /// @return MTConnect Streams response
+      ResponsePtr sampleRequest(const printer::Printer *p, const int count = 100,
                                 const std::optional<std::string> &device = std::nullopt,
                                 const std::optional<SequenceNumber_t> &from = std::nullopt,
                                 const std::optional<SequenceNumber_t> &to = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt);
-
-      void streamSampleRequest(SessionPtr session, const printer::Printer *, const int interval,
+      /// @brief Handler for a streaming sample
+      /// @param session session to stream data to
+      /// @param p printer for doc generation
+      /// @param interval the minimum interval between sending documents in ms
+      /// @param heartbeat how often to send an empty document if no activity in ms
+      /// @param count the maxumum number of observations
+      /// @param device optional device name or uuid
+      /// @param from optional starting sequence number
+      /// @param path optional path for filtering
+      void streamSampleRequest(SessionPtr session, const printer::Printer *p, const int interval,
                                const int heartbeat, const int count = 100,
                                const std::optional<std::string> &device = std::nullopt,
                                const std::optional<SequenceNumber_t> &from = std::nullopt,
                                const std::optional<std::string> &path = std::nullopt);
 
-      // Async stream method
-      void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
-
-      void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
-                                 boost::system::error_code ec);
-
-      void streamCurrentRequest(SessionPtr session, const printer::Printer *, const int interval,
+      /// @brief Handler for a streaming current
+      /// @param session session to stream data to
+      /// @param p printer for doc generation
+      /// @param interval the minimum interval between sending documents in ms
+      /// @param device optional device name or uuid
+      /// @param path optional path for filtering
+      void streamCurrentRequest(SessionPtr session, const printer::Printer *p, const int interval,
                                 const std::optional<std::string> &device = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt);
-
-      void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
-                             boost::system::error_code ec);
-
-      // Asset requests
-      ResponsePtr assetRequest(const printer::Printer *, const int32_t count, const bool removed,
-                               const std::optional<std::string> &type = std::nullopt,
-                               const std::optional<std::string> &device = std::nullopt);
-
-      ResponsePtr assetIdsRequest(const printer::Printer *, const std::list<std::string> &ids);
-
-      ResponsePtr putAssetRequest(const printer::Printer *, const std::string &asset,
-                                  const std::optional<std::string> &type,
-                                  const std::optional<std::string> &device = std::nullopt,
-                                  const std::optional<std::string> &uuid = std::nullopt);
-
-      ResponsePtr deleteAssetRequest(const printer::Printer *, const std::list<std::string> &ids);
-
-      ResponsePtr deleteAllAssetsRequest(const printer::Printer *,
-                                         const std::optional<std::string> &device = std::nullopt,
-                                         const std::optional<std::string> &type = std::nullopt);
-
-      ResponsePtr putObservationRequest(const printer::Printer *, const std::string &device,
+      /// @brief Handler for put/post observation
+      /// @param p printer for response generation
+      /// @param device device
+      /// @param observations key/value pairs for the observations
+      /// @param time optional timestamp
+      /// @return `<success/>` if succeeds
+      ResponsePtr putObservationRequest(const printer::Printer *p, const std::string &device,
                                         const QueryMap observations,
                                         const std::optional<std::string> &time = std::nullopt);
 
-      // For debugging
+      ///@}
+
+      /// @name Async stream method
+      ///@{
+
+      /// @brief Callback when the async write completes
+      /// @param asyncResponse shared pointer to response referencing the session
+      void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
+
+      /// @brief After the write complete, send the next chunk of data
+      /// @param asyncResponse shared pointer to async response referencing the session
+      /// @param ec an async error code
+      void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
+                                 boost::system::error_code ec);
+
+      /// @brief Callback to stream another current chunk
+      /// @param asyncResponse shared pointer to async response referencing the session
+      /// @param ec an async error code
+      void streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
+                             boost::system::error_code ec);
+      ///@}
+
+      /// @name Asset Request Handler
+      ///@{
+
+      /// @brief Asset request handler for assets by type or device
+      /// @param p printer for the response document
+      /// @param count maximum number of assets to return
+      /// @param removed `true` if response should include removed assets
+      /// @param type optional type of asset to filter
+      /// @param device optional device name or uuid
+      /// @return MTConnect Assets response document
+      ResponsePtr assetRequest(const printer::Printer *p, const int32_t count, const bool removed,
+                               const std::optional<std::string> &type = std::nullopt,
+                               const std::optional<std::string> &device = std::nullopt);
+
+      /// @brief Asset request handler using a list of asset ids
+      /// @param p printer for the response document
+      /// @param ids list of asset ids
+      /// @return MTConnect Assets response document
+      ResponsePtr assetIdsRequest(const printer::Printer *p, const std::list<std::string> &ids);
+
+      /// @brief Asset request handler to update an asset
+      /// @param p printer for the response document
+      /// @param asset the asset body
+      /// @param type optional type, if not given will derive from `asset`
+      /// @param device option device, if not given will derive from `asset`
+      /// @param uuid optional asset id, if not given will derive from the `asset`
+      /// @return MTConnect Assets response document
+      ResponsePtr putAssetRequest(const printer::Printer *p, const std::string &asset,
+                                  const std::optional<std::string> &type,
+                                  const std::optional<std::string> &device = std::nullopt,
+                                  const std::optional<std::string> &uuid = std::nullopt);
+      /// @brief Asset request handler to delete a a list of asset ids
+      /// @param p printer for the response document
+      /// @param ids the list of ids
+      /// @return MTConnect Assets response document
+      ResponsePtr deleteAssetRequest(const printer::Printer *p, const std::list<std::string> &ids);
+      /// @brief Asset request handler to delete all assets by device and/or type
+      /// @param p printer for the response document
+      /// @param device optional device
+      /// @param type optonal type
+      /// @return number of assets removed as response
+      ResponsePtr deleteAllAssetsRequest(const printer::Printer *p,
+                                         const std::optional<std::string> &device = std::nullopt,
+                                         const std::optional<std::string> &type = std::nullopt);
+      ///@}
+
+      /// @brief For debugging: turn on stream data logging
+      /// @note This is only for debuging
       void setLogStreamData(bool log);
 
-      // Get the printer for a type
+      /// @brief Check the accepts header for a matching printer key
+      /// @param accepts the accepts header
+      /// @return printer key or `xml` if one is not found
       const std::string acceptFormat(const std::string &accepts) const;
-
+      /// @brief get a printer given a list of formats from the Accepts header
+      /// @param accepts the accepts header
+      /// @return pointer to a printer
       const printer::Printer *printerForAccepts(const std::string &accepts) const;
 
-      // Output an XML Error
+      /// @brief Generate an MTConnect Error document
+      /// @param printer printer to generate error
+      /// @param errorCode an error code
+      /// @param text descriptive error text
+      /// @return MTConnect Error document
       std::string printError(const printer::Printer *printer, const std::string &errorCode,
                              const std::string &text) const;
 
-      // For testing
+      /// @name For testing only
+      ///@{
       auto instanceId() const { return m_instanceId; }
       void setInstanceId(uint64_t id) { m_instanceId = id; }
+      ///@}
 
     protected:
       // Configuration
