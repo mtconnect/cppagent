@@ -80,10 +80,10 @@ build_script:
 test_script:
   - cmd: |-
       cd %APPVEYOR_BUILD_FOLDER%/build
-      ctest -C Release --output-on-failure -j 2
+      ctest -C Release --output-on-failure
   - sh: |-
       cd ${APPVEYOR_BUILD_FOLDER}/build
-      ctest --output-on-failure -j 2
+      ctest --output-on-failure
 
 #on_finish:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
