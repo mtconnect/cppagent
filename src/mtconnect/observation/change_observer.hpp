@@ -30,7 +30,7 @@
 namespace mtconnect::observation {
   class ChangeSignaler;
 
-  /// @brief A class to observe a data item and singal when data changes
+  /// @brief A class to observe a data item and signal when data changes
   class AGENT_LIB_API ChangeObserver
   {
   public:

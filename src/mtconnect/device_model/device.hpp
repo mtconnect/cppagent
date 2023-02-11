@@ -43,7 +43,7 @@ namespace mtconnect {
 
   /// @brief Namespace for all Device Model Related entities
   namespace device_model {
-    /// @brief Compenent entity representing a `Device`
+    /// @brief Component entity representing a `Device`
     class AGENT_LIB_API Device : public Component
     {
     public:

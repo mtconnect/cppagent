@@ -62,7 +62,7 @@ namespace mtconnect::buffer {
         return observation::ObservationPtr();
     }
 
-    /// @brief get index into underlying curcular buffer at a sequence number
+    /// @brief get index into underlying circular buffer at a sequence number
     /// @param at the sequence number
     /// @return the index into the circular buffer
     auto getIndexAt(uint64_t at) const { return at - m_firstSequence; }
@@ -225,7 +225,7 @@ namespace mtconnect::buffer {
     }
     ///@}
 
-    /// @brief Get a list of observations from the curcular buffer
+    /// @brief Get a list of observations from the circular buffer
     /// @param[in] count maximum number of observations to get
     /// @param[in] filterSet optional filter set of data item ids
     /// @param[in] start optional starting sequence
