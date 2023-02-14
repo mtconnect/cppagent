@@ -118,7 +118,7 @@ namespace mtconnect {
       /// @brief get a pointer to the async io manager
       auto &getAsyncContext() { return *m_context.get(); }
 
-      /// @brief sets the path for the working directory to the crrent path
+      /// @brief sets the path for the working directory to the current path
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
       /// @name Configuration factories
@@ -150,7 +150,7 @@ namespace mtconnect {
       /// @return log archive pattern
       const auto &getLogArchivePattern() const { return m_logArchivePattern; }
       /// @brief Get the maximum size of all the log files
-      /// @return the maxumum size of all log files
+      /// @return the maximum size of all log files
       auto getMaxLogFileSize() const { return m_maxLogFileSize; }
       /// @brief the maximum size of a log file when it triggers rolling over
       /// @return the maxumum site of a log file

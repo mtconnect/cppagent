@@ -101,7 +101,7 @@ namespace mtconnect {
       virtual AssetPtr getAsset(const std::string &id) const = 0;
       /// @brief get a list of assets with optional filters
       /// @param[out] list returned list of assets
-      /// @param[in] max maximum number of assets to dind
+      /// @param[in] max maximum number of assets to find
       /// @param[in] active `false` to skip removed assets
       /// @param[in] device optional device uuid to select
       /// @param[in] type optional type to select

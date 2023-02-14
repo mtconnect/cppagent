@@ -176,7 +176,7 @@ namespace mtconnect::pipeline {
       else
       {
         // If this observation is after the period has expired and there
-        // is an existing obsrvation, then we send the last observation.
+        // is an existing observation, then we send the last observation.
         if (last.m_observation)
         {
           last.m_timer.cancel();

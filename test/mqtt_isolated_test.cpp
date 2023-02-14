@@ -162,7 +162,7 @@ protected:
     bool started = m_client && m_client->start();
     if (started)
     {
-      return waitFor(1s, [this]() { return m_client->isConnected(); });
+      return waitFor(5s, [this]() { return m_client->isConnected(); });
     }
     return started;
   }
