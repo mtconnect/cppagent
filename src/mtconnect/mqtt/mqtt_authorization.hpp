@@ -65,6 +65,15 @@ namespace mtconnect {
         m_mode = mode;
       }
 
+      bool hasAuthorization()
+      {
+        if (m_type == AuthorizationType::Allow)
+          return true;
+
+        //AuthorizationType::Deny
+        return false;
+      }
+
     protected:
       TopicMode m_mode;
       AuthorizationType m_type;

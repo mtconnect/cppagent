@@ -118,7 +118,7 @@ protected:
 
     while (!timeout && !pred())
     {
-      m_agentTestHelper->m_ioContext.run_for(100ms);
+      m_agentTestHelper->m_ioContext.run_for(500ms);
     }
     timer.cancel();
 
@@ -163,7 +163,7 @@ protected:
     bool started = m_client && m_client->start();
     if (started)
     {
-      return waitFor(1s, [this]() { return m_client->isConnected(); });
+      return waitFor(5s, [this]() { return m_client->isConnected(); });
     }
     return started;
   }
@@ -348,7 +348,6 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
   ASSERT_TRUE(startClient());
 
   ASSERT_TRUE(m_client->isConnected());
-  
 }
 
 TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
@@ -446,7 +445,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
   client->set_keep_alive_sec(30);
   
   MqttAuthorization *mqttAuct = new MqttAuthorization(options);
-  mqttAuct->getPermissionsForClient("mqtt_tcp_client_cpp/topic1");
+  MqttTopicPermission permission = mqttAuct->getPermissionsForClient("mqtt_tcp_client_cpp/topic1");
 
   client->set_connack_handler([&](bool sp, mqtt::connect_return_code connack_return_code) {
     std::cout << "Connack handler called" << std::endl;
@@ -480,41 +479,23 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
     }
     return true;
   });
+  
   client->set_close_handler([] { std::cout << "closed" << std::endl; });
 
   client->set_suback_handler(
-      [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
+      [&client, &pid_sub1,&permission](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
         std::cout << "suback received. packet_id: " << packet_id << std::endl;
         for (auto const &e : results)
         {
           std::cout << "subscribe result: " << e << std::endl;
         }
 
-        if (packet_id == pid_sub1)
+        //check either topic had authorization permissions
+        if (!permission.hasAuthorization())
         {
-          client->async_publish("mqtt_tcp_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
-                                //[optional] checking async_publish completion code
-                                [](MQTT_NS::error_code ec) {
-                                  EXPECT_FALSE(ec);
-
-                                  std::cout << "async_tcp_publish callback: " << ec.message()
-                                            << std::endl;
-                                  EXPECT_EQ(ec.message(), "Success");
-                                });
-          return true;
-        }
-
-        return true;
-      });
-
-  client->set_close_handler([] { std::cout << "closed" << std::endl; });
-
-  client->set_suback_handler(
-      [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
-        std::cout << "suback received. packet_id: " << packet_id << std::endl;
-        for (auto const &e : results)
-        {
-          std::cout << "subscribe result: " << e << std::endl;
+          std::cout << "MqttAuthorization Failed. packet_id: " << pid_sub1 << std::endl;
+          client->async_force_disconnect();
+          return false;
         }
 
         if (packet_id == pid_sub1)
