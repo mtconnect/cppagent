@@ -21,23 +21,20 @@
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/factory.hpp"
 
-namespace mtconnect {
-  namespace device_model {
-    namespace data_item {
-      class AGENT_LIB_API Filter : public entity::Entity
-      {
-      public:
-        static entity::FactoryPtr getFactory()
-        {
-          using namespace mtconnect::entity;
-          using namespace std;
-          static auto filter = make_shared<Factory>(Requirements {
-              {"type", ControlledVocab {"PERIOD", "MINIMUM_DELTA"}}, {"VALUE", DOUBLE, true}});
-          static auto filters = make_shared<Factory>(
-              Requirements {{"Filter", ENTITY, filter, 1, Requirement::Infinite}});
-          return filters;
-        }
-      };
-    }  // namespace data_item
-  }    // namespace device_model
-}  // namespace mtconnect
+namespace mtconnect::device_model::data_item {
+  /// @brief Data Item Filter
+  class AGENT_LIB_API Filter : public entity::Entity
+  {
+  public:
+    static entity::FactoryPtr getFactory()
+    {
+      using namespace mtconnect::entity;
+      using namespace std;
+      static auto filter = make_shared<Factory>(Requirements {
+          {"type", ControlledVocab {"PERIOD", "MINIMUM_DELTA"}}, {"VALUE", DOUBLE, true}});
+      static auto filters =
+          make_shared<Factory>(Requirements {{"Filter", ENTITY, filter, 1, Requirement::Infinite}});
+      return filters;
+    }
+  };
+}  // namespace mtconnect::device_model::data_item

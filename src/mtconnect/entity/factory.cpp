@@ -150,7 +150,7 @@ namespace mtconnect {
           p->first.setMark();
           try
           {
-            if (!r.isMetBy(p->second, m_isList))
+            if (!r.isMetBy(p->second))
             {
               success = false;
             }

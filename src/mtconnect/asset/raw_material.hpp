@@ -28,6 +28,7 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::asset {
+  /// @brief A raw material asset
   class AGENT_LIB_API RawMaterial : public Asset
   {
   public:

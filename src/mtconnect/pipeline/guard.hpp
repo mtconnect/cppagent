@@ -22,24 +22,38 @@
 
 namespace mtconnect {
   namespace pipeline {
+    /// @brief Actions for taken for the guard
     enum GuardAction
     {
-      CONTINUE,
-      RUN,
-      SKIP
+      CONTINUE,  ///< Continue on to the next transform in the list
+      RUN,       ///< Run this transform
+      SKIP       ///< Skip the transform and move to the next
     };
 
+    /// @brief Guard is a lambda function returning a `GuardAction` taking an entity
     using Guard = std::function<GuardAction(const entity::EntityPtr entity)>;
+
+    /// @brief A simple GuardClass returning a simple match
+    ///
+    /// allows for chaining of guards
     class GuardCls
     {
     public:
+      /// @brief Construct a GuardCls
+      /// @param match the match to return if matched
       GuardCls(GuardAction match) : m_match(match) {}
       GuardCls(const GuardCls &) = default;
 
       GuardAction operator()(const entity::EntityPtr entity) { return m_match; }
 
+      /// @brief set the alternative guard
+      /// @param alt alternative
       void setAlternative(Guard &alt) { m_alternative = alt; }
 
+      /// @brief check the matched state and if matched then return action.
+      /// @param matched if `true` return the action otherwise check an alternative
+      /// @param entity an entity
+      /// @return the guard action
       GuardAction check(bool matched, const entity::EntityPtr entity)
       {
         if (matched)
@@ -50,12 +64,17 @@ namespace mtconnect {
           return CONTINUE;
       }
 
+      /// @brief set the alternative to the other
+      /// @param other a guard
+      /// @return this
       auto &operator||(Guard other)
       {
         m_alternative = other;
         return *this;
       }
-
+      /// @brief Set the alternative to a static action
+      /// @param other the guard action
+      /// @return this
       auto &operator||(GuardAction other)
       {
         m_alternative = GuardCls(other);
@@ -67,12 +86,21 @@ namespace mtconnect {
       GuardAction m_match;
     };
 
+    /// @brief A guard that checks if the entity is one of the types or sub-types
+    /// @tparam ...Ts the list of types
     template <typename... Ts>
     class TypeGuard : public GuardCls
     {
     public:
       using GuardCls::GuardCls;
 
+      /// @brief recursive match
+      ///
+      /// Uses dynamic cast to check if entity can be cast as one of the types
+      /// @tparam T the type
+      /// @tparam ...R the rest of the types
+      /// @param ti the type info we're checking
+      /// @return `true` if matches
       template <typename T, typename... R>
       constexpr bool match(const entity::Entity *ep)
       {
@@ -82,6 +110,9 @@ namespace mtconnect {
           return dynamic_cast<const T *>(ep) != nullptr || match<R...>(ep);
       }
 
+      /// @brief constexpr expanded type match
+      /// @param entity the entity
+      /// @return `true` if matches
       constexpr bool matches(const entity::EntityPtr &entity) { return match<Ts...>(entity.get()); }
 
       GuardAction operator()(const entity::EntityPtr entity)
@@ -96,12 +127,19 @@ namespace mtconnect {
       }
     };
 
+    /// @brief A guard that checks if the entity that matches one of the types
+    /// @tparam ...Ts the list of types
     template <typename... Ts>
     class ExactTypeGuard : public GuardCls
     {
     public:
       using GuardCls::GuardCls;
 
+      /// @brief recursive match
+      /// @tparam T the type
+      /// @tparam ...R the rest of the types
+      /// @param ti the type info we're checking
+      /// @return `true` if matches
       template <typename T, typename... R>
       constexpr bool match(const std::type_info &ti)
       {
@@ -111,6 +149,9 @@ namespace mtconnect {
           return typeid(T) == ti || match<R...>(ti);
       }
 
+      /// @brief constexpr expanded type match
+      /// @param entity the entity
+      /// @return `true` if matches
       constexpr bool matches(const entity::EntityPtr &entity)
       {
         auto &e = *entity.get();
@@ -129,6 +170,7 @@ namespace mtconnect {
       }
     };
 
+    /// @brief Match on the entity name
     class EntityNameGuard : public GuardCls
     {
     public:
@@ -150,16 +192,25 @@ namespace mtconnect {
       std::string m_name;
     };
 
+    /// @brief Use a lambda expression to match lambda
+    /// @tparam L lamba argument type
+    /// @tparam B class with a matches method to match the entity
     template <typename L, typename B>
     class LambdaGuard : public B
     {
     public:
       using Lambda = std::function<bool(const L &)>;
 
+      /// @brief Construct a lambda guard with a function returning bool and an action
+      /// @param guard the lambda function
+      /// @param match the action if the lambda returns true
       LambdaGuard(Lambda guard, GuardAction match) : B(match), m_lambda(guard) {}
       LambdaGuard(const LambdaGuard &) = default;
       ~LambdaGuard() = default;
 
+      /// @brief call the `B::matches()` method with the entity
+      /// @param entity the entity
+      /// @return `true` if matched
       bool matches(const entity::EntityPtr &entity)
       {
         bool matched = B::matches(entity);

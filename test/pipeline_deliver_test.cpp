@@ -67,11 +67,11 @@ protected:
 TEST_F(PipelineDeliverTest, test_simple_flow)
 {
   m_agentTestHelper->addAdapter();
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
-  ASSERT_EQ(seq + 1, rest->getSequence());
-  auto obs = rest->getFromBuffer(seq);
+  ASSERT_EQ(seq + 1, circ.getSequence());
+  auto obs = circ.getFromBuffer(seq);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Xpos", obs->getDataItem()->getName());
   ASSERT_EQ(100.0, obs->getValue<double>());
@@ -82,22 +82,22 @@ TEST_F(PipelineDeliverTest, filter_duplicates)
 {
   ConfigOptions options {{configuration::FilterDuplicates, true}};
   m_agentTestHelper->addAdapter(options);
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
-  ASSERT_EQ(seq + 1, rest->getSequence());
+  ASSERT_EQ(seq + 1, circ.getSequence());
 
-  auto obs = rest->getFromBuffer(seq);
+  auto obs = circ.getFromBuffer(seq);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Xpos", obs->getDataItem()->getName());
   ASSERT_EQ(100.0, obs->getValue<double>());
 
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|100.0");
-  ASSERT_EQ(seq + 1, rest->getSequence());
+  ASSERT_EQ(seq + 1, circ.getSequence());
 
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|101.0");
-  ASSERT_EQ(seq + 2, rest->getSequence());
-  auto obs2 = rest->getFromBuffer(seq + 1);
+  ASSERT_EQ(seq + 2, circ.getSequence());
+  auto obs2 = circ.getFromBuffer(seq + 1);
   ASSERT_EQ(101.0, obs2->getValue<double>());
 }
 
@@ -106,18 +106,18 @@ TEST_F(PipelineDeliverTest, filter_upcase)
 {
   ConfigOptions options {{configuration::UpcaseDataItemValue, true}};
   m_agentTestHelper->addAdapter(options);
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|a01c7f30|active");
-  ASSERT_EQ(seq + 1, rest->getSequence());
+  ASSERT_EQ(seq + 1, circ.getSequence());
 
-  auto obs = rest->getFromBuffer(seq);
+  auto obs = circ.getFromBuffer(seq);
   ASSERT_TRUE(obs);
   ASSERT_EQ("a01c7f30", obs->getDataItem()->getId());
   ASSERT_EQ("ACTIVE", obs->getValue<string>());
 
   m_agentTestHelper->m_adapter->processData("2021-01-22T12:33:45.123Z|Xpos|101.0");
-  ASSERT_EQ(seq + 2, rest->getSequence());
-  auto obs2 = rest->getFromBuffer(seq + 1);
+  ASSERT_EQ(seq + 2, circ.getSequence());
+  auto obs2 = circ.getFromBuffer(seq + 1);
   ASSERT_EQ(101.0, obs2->getValue<double>());
 }

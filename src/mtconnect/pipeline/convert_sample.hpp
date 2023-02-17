@@ -22,33 +22,32 @@
 #include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
-namespace mtconnect {
-  namespace pipeline {
-    class AGENT_LIB_API ConvertSample : public Transform
+namespace mtconnect::pipeline {
+  /// @brief Transform that converts units if necessary
+  class AGENT_LIB_API ConvertSample : public Transform
+  {
+  public:
+    ConvertSample() : Transform("ConvertSample")
     {
-    public:
-      ConvertSample() : Transform("ConvertSample")
+      using namespace observation;
+      m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
+    }
+    const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+    {
+      using namespace observation;
+      using namespace entity;
+      auto sample = std::dynamic_pointer_cast<Sample>(entity);
+      if (sample && !sample->isOrphan() && !sample->isUnavailable())
       {
-        using namespace observation;
-        m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
-      }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-      {
-        using namespace observation;
-        using namespace entity;
-        auto sample = std::dynamic_pointer_cast<Sample>(entity);
-        if (sample && !sample->isOrphan() && !sample->isUnavailable())
+        auto &converter = sample->getDataItem()->getConverter();
+        if (converter)
         {
-          auto &converter = sample->getDataItem()->getConverter();
-          if (converter)
-          {
-            auto ns = sample->copy();
-            converter->convertValue(ns->getValue());
-            return next(ns);
-          }
+          auto ns = sample->copy();
+          converter->convertValue(ns->getValue());
+          return next(ns);
         }
-        return next(entity);
       }
-    };
-  }  // namespace pipeline
-}  // namespace mtconnect
+      return next(entity);
+    }
+  };
+}  // namespace mtconnect::pipeline

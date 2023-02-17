@@ -25,15 +25,22 @@
 
 namespace mtconnect {
   namespace configuration {
+
+    /// @brief Error from configuration file parser. Just a runtime error.
     class AGENT_LIB_API ParseError : public std::runtime_error
     {
     public:
       using std::runtime_error::runtime_error;
     };
 
+    /// @brief Configuration file parser
     struct AGENT_LIB_API Parser
     {
+      /// @brief Parse text string to a property tree
+      /// @param[in] text text to be parsed
       static boost::property_tree::ptree parse(const std::string &text);
+      /// @brief Parse file to a property tree
+      /// @param[in] path file to be parsed
       static boost::property_tree::ptree parse(const std::filesystem::path &path);
     };
   }  // namespace configuration

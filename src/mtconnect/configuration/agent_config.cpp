@@ -404,7 +404,7 @@ namespace mtconnect::configuration {
     LOG(info) << "Agent Configuration stopped";
   }
 
-  DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
+  DevicePtr AgentConfiguration::getDefaultDevice() { return m_agent->getDefaultDevice(); }
 
   void AgentConfiguration::setLoggingLevel(const logr::trivial::severity_level level)
   {
@@ -812,7 +812,7 @@ namespace mtconnect::configuration {
         if (!device)
         {
           LOG(warning) << "Cannot locate device name '" << deviceName << "', trying default";
-          device = defaultDevice();
+          device = getDefaultDevice();
           if (device)
           {
             deviceName = *device->getComponentName();
@@ -884,7 +884,7 @@ namespace mtconnect::configuration {
         }
       }
     }
-    else if ((device = defaultDevice()))
+    else if ((device = getDefaultDevice()))
     {
       ConfigOptions adapterOptions {options};
 

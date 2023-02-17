@@ -2,7 +2,7 @@
 set(AGENT_VERSION_MAJOR 2)
 set(AGENT_VERSION_MINOR 1)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 2)
+set(AGENT_VERSION_BUILD 4)
 set(AGENT_VERSION_RC "_RC1")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
@@ -25,7 +25,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_COMPILE_FEATURES cxx_std_17)
-set(SHARED_AGENT_LIB OFF CACHE BOOL "Build Agent Lib as shared library")
+
 
 set(WITH_RUBY ON CACHE STRING "With Ruby Support")
 
@@ -85,6 +85,14 @@ if(SHARED_AGENT_LIB)
 
   if (MSVC)
     include(InstallRequiredSystemLibraries)
+  endif()
+endif()
+
+if (MSVC)
+  if (CONAN_SETTINGS_COMPILER_RUNTIME MATCHES "MT")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  else()
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
   endif()
 endif()
 

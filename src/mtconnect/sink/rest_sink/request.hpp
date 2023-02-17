@@ -26,10 +26,17 @@
 #include "parameter.hpp"
 
 namespace mtconnect::sink::rest_sink {
+  /// @brief An error that occurred during a request
   class AGENT_LIB_API RequestError : public std::logic_error
   {
   public:
+    /// @brief Create a simple error message related to a request
     RequestError(const char *w) : std::logic_error::logic_error(w) {}
+    /// @brief Create a request error
+    /// @param w the message
+    /// @param body the body of the request
+    /// @param type the request type
+    /// @param code the boost status code
     RequestError(const char *w, const std::string &body, const std::string &type,
                  boost::beast::http::status code)
       : std::logic_error::logic_error(w), m_contentType(type), m_body(body), m_code(code)
@@ -45,19 +52,26 @@ namespace mtconnect::sink::rest_sink {
   class Session;
   using SessionPtr = std::shared_ptr<Session>;
 
+  /// @brief A wrapper around an incoming HTTP request
+  ///
+  /// The request can be a simple reply response or streaming request
   struct Request
   {
-    boost::beast::http::verb m_verb;
-    std::string m_body;
-    std::string m_accepts;
-    std::string m_acceptsEncoding;
-    std::string m_contentType;
-    std::string m_path;
-    std::string m_foreignIp;
-    uint16_t m_foreignPort;
-    QueryMap m_query;
-    ParameterMap m_parameters;
+    boost::beast::http::verb m_verb;  ///< GET, PUT, POST, or DELETE
+    std::string m_body;               ///< The body of the request
+    std::string m_accepts;            ///< The accepts header
+    std::string m_acceptsEncoding;    ///< Encodings that can be returned
+    std::string m_contentType;        ///< The content type for the body
+    std::string m_path;               ///< The URI for the request
+    std::string m_foreignIp;          ///< The requestors IP Address
+    uint16_t m_foreignPort;           ///< The requestors Port
+    QueryMap m_query;                 ///< The parsed query parameters
+    ParameterMap m_parameters;        ///< The parsed path parameters
 
+    /// @brief Find a parameter by type
+    /// @tparam T the type of the parameter
+    /// @param s the name of the parameter
+    /// @return an option type `T` if the parameter is found
     template <typename T>
     std::optional<T> parameter(const std::string &s) const
     {

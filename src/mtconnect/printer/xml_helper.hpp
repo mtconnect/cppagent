@@ -22,11 +22,17 @@
 #include "mtconnect/config.hpp"
 
 #define xml_strfy(line) #line
+/// @brief macro to throw an error from XML parsing based on the result of a libxml2 function
+/// returning an int
+/// @param expr the expression
 #define THROW_IF_XML2_ERROR(expr)                                                 \
   if ((expr) < 0)                                                                 \
   {                                                                               \
     throw XmlError("XML Error at " __FILE__ "(" xml_strfy(__LINE__) "): " #expr); \
   }
+/// @brief macro to throw an error from XML parsing based on the result of a libxml2 function
+/// returning a pointer
+/// @param expr the expression
 #define THROW_IF_XML2_NULL(expr)                                                  \
   if (!(expr))                                                                    \
   {                                                                               \
@@ -34,6 +40,7 @@
   }
 
 namespace mtconnect::printer {
+  /// @brief Error class for catching parsing errors
   class AGENT_LIB_API XmlError : public std::logic_error
   {
   public:

@@ -117,33 +117,6 @@ namespace mtconnect {
 
     void RestService::stop() { m_server->stop(); }
 
-    // Observation management
-    observation::ObservationPtr RestService::getFromBuffer(uint64_t seq) const
-    {
-      return m_sinkContract->getCircularBuffer().getFromBuffer(seq);
-    }
-
-    SequenceNumber_t RestService::getSequence() const
-    {
-      return m_sinkContract->getCircularBuffer().getSequence();
-    }
-
-    unsigned int RestService::getBufferSize() const
-    {
-      return m_sinkContract->getCircularBuffer().getBufferSize();
-    }
-
-    SequenceNumber_t RestService::getFirstSequence() const
-    {
-      return m_sinkContract->getCircularBuffer().getFirstSequence();
-    }
-
-    // For testing...
-    void RestService::setSequence(uint64_t seq)
-    {
-      m_sinkContract->getCircularBuffer().setSequence(seq);
-    }
-
     // Configuration
     void RestService::loadNamespace(const ptree &tree, const char *namespaceType,
                                     XmlPrinter *xmlPrinter, NamespaceFunction callback)
@@ -769,7 +742,7 @@ namespace mtconnect {
       asyncResponse->m_printer = printer;
       asyncResponse->m_heartbeat = std::chrono::milliseconds(heartbeatIn);
       asyncResponse->m_service = getptr();
-      
+
       checkPath(asyncResponse->m_printer, path, dev, asyncResponse->m_filter);
 
       if (m_logStreamData)
@@ -786,7 +759,8 @@ namespace mtconnect {
         m_sinkContract->getDataItemById(item)->addObserver(&asyncResponse->m_observer);
 
       chrono::milliseconds interMilli {interval};
-      SequenceNumber_t firstSeq = getFirstSequence();
+      SequenceNumber_t firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
+      ;
       if (!from || *from < firstSeq)
         asyncResponse->m_sequence = firstSeq;
       else
@@ -832,7 +806,7 @@ namespace mtconnect {
       using boost::placeholders::_2;
 
       auto service = asyncResponse->m_service.lock();
-      
+
       if (!service || !m_server || !m_server->isRunning())
       {
         LOG(warning) << "Trying to send chunk when service has stopped";
@@ -904,7 +878,7 @@ namespace mtconnect {
 
         // Check if we're falling too far behind. If we are, generate an
         // MTConnectError and return.
-        if (asyncResponse->m_sequence < getFirstSequence())
+        if (asyncResponse->m_sequence < m_sinkContract->getCircularBuffer().getFirstSequence())
         {
           LOG(warning) << "Client fell too far behind, disconnecting";
           asyncResponse->m_session->fail(boost::beast::http::status::not_found,
@@ -946,7 +920,7 @@ namespace mtconnect {
       AsyncCurrentResponse(rest_sink::SessionPtr session, asio::io_context &context)
         : m_session(session), m_timer(context)
       {}
-      
+
       std::weak_ptr<Sink> m_service;
       rest_sink::SessionPtr m_session;
       chrono::milliseconds m_interval;
@@ -989,7 +963,7 @@ namespace mtconnect {
       using boost::placeholders::_1;
 
       auto service = asyncResponse->m_service.lock();
-      
+
       if (!service || !m_server || !m_server->isRunning())
       {
         LOG(warning) << "Trying to send chunk when service has stopped";
@@ -1085,7 +1059,7 @@ namespace mtconnect {
       if (device)
         dev = checkDevice(printer, *device);
       else
-        dev = m_sinkContract->defaultDevice();
+        dev = m_sinkContract->getDefaultDevice();
       auto ap = m_loopback->receiveAsset(dev, asset, uuid, type, nullopt, errors);
       if (!ap || errors.size() > 0 || (type && ap->getType() != *type))
       {
@@ -1343,7 +1317,7 @@ namespace mtconnect {
       {
         std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
 
-        firstSeq = getFirstSequence();
+        firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
         seq = m_sinkContract->getCircularBuffer().getSequence();
         if (at)
         {
@@ -1373,7 +1347,7 @@ namespace mtconnect {
 
       {
         std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
-        firstSeq = getFirstSequence();
+        firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
         auto seq = m_sinkContract->getCircularBuffer().getSequence();
         lastSeq = seq - 1;
         int upperCountLimit = m_sinkContract->getCircularBuffer().getBufferSize() + 1;

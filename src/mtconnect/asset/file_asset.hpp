@@ -29,6 +29,7 @@
 
 namespace mtconnect {
   namespace asset {
+    /// @brief File Archetype Asset
     class AGENT_LIB_API FileArchetypeAsset : public entity::Entity
     {
     public:
@@ -36,6 +37,7 @@ namespace mtconnect {
       static void registerAsset();
     };
 
+    /// @brief File Asset
     class AGENT_LIB_API FileAsset : public FileArchetypeAsset
     {
     public:

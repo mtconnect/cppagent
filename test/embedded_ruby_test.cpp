@@ -445,7 +445,7 @@ $source.pipeline.splice_after('Start', $trans)
     ASSERT_NE(nullptr, mrb);
 
     auto agent = m_config->getAgent();
-    auto device = agent->defaultDevice();
+    auto device = agent->getDefaultDevice();
     ASSERT_TRUE(device);
 
     auto di = agent->getDataItemForDevice("000", "a");

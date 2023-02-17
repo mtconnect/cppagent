@@ -43,9 +43,17 @@
 #include "tls_dector.hpp"
 
 namespace mtconnect::sink::rest_sink {
+  /// @brief An HTTP Server for REST
   class AGENT_LIB_API Server
   {
   public:
+    /// @brief Create an HTTP server with an asio context and options
+    /// @param context a boost asio context
+    /// @param options configuration options
+    /// - Port, defaults to 5000
+    /// - AllowPut, defaults to false
+    /// - ServerIp, defaults to 0.0.0.0
+    /// - HttpHeaders
     Server(boost::asio::io_context &context, const ConfigOptions &options = {})
       : m_context(context),
         m_port(GetOption<int>(options, configuration::Port).value_or(5000)),
@@ -76,18 +84,21 @@ namespace mtconnect::sink::rest_sink {
       loadTlsCertificate();
     }
 
-    // Start the http server
+    /// @brief Start the http server
     void start();
 
-    // Shutdown
+    /// @brief Shutdown the http server
     void stop()
     {
       m_run = false;
       m_acceptor.close();
     };
 
+    /// @brief Listen for async connections
     void listen();
 
+    /// @brief Add additional HTTP headers
+    /// @param[in] fields the header fields as `<field>: <value>`
     void setHttpHeaders(const StringList &fields)
     {
       for (auto &f : fields)
@@ -100,21 +111,48 @@ namespace mtconnect::sink::rest_sink {
       }
     }
 
+    /// @brief Get the list of header fields
+    /// @return header fields
     const auto &getHttpHeaders() const { return m_fields; }
-
+    /// @brief get the bind port
+    /// @return the port being bound
     auto getPort() const { return m_port; }
 
-    // PUT and POST handling
+    /// @name PUT and POST handling
+    ///@{
+
+    /// @brief is the server listening for new connections
+    /// @return `true` if it is listening
     bool isListening() const { return m_listening; }
+    /// @brief is the server running
+    /// @return `false` when shutting down
     bool isRunning() const { return m_run; }
+    /// @brief are puts allowed?
+    /// @return `true` if one can put to the server
     bool arePutsAllowed() const { return m_allowPuts; }
+    /// @brief can one put from a particular IP address or host
+    /// @param[in] host the host
+    /// @return `true` if puts are allowed
     bool allowPutFrom(const std::string &host);
+    /// @brief sets the allow puts flag
+    /// @param[in] allow
     void allowPuts(bool allow = true) { m_allowPuts = allow; }
+    /// @brief can one put from an ip address
+    /// @param[in] addr the ip address
+    /// @return `true` if puts are accepted from that address
     bool isPutAllowedFrom(boost::asio::ip::address &addr) const
     {
       return m_allowPutsFrom.find(addr) != m_allowPutsFrom.end();
     }
+    ///@}
 
+    /// @brief Entry point for all requests
+    ///
+    /// Search routings for a match, if a match is found, then dispatch the request, otherwise
+    /// return an error.
+    /// @param[in] session the client session
+    /// @param[in] request the incoming request
+    /// @return `true` if the request was matched and dispatched
     bool dispatch(SessionPtr session, RequestPtr request)
     {
       try
@@ -161,14 +199,29 @@ namespace mtconnect::sink::rest_sink {
       return false;
     }
 
+    /// @brief accept a connection from a client
+    /// @param[in] ec an error code
+    /// @param[in] soc the incoming connection socket
     void accept(boost::system::error_code ec, boost::asio::ip::tcp::socket soc);
+    /// @brief Method that generates an MTConnect Error document
+    /// @param[in] ec an error code
+    /// @param[in] what the description why the request failed
     void fail(boost::system::error_code ec, char const *what);
+    /// @brief Add a routing to the server
+    /// @param[in] routing the routing
     void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
+    /// @brief Set the error function to format the error during failure
+    /// @param func the error function
     void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
+    /// @brief get the error funciton
+    /// @return the error function
     ErrorFunction getErrorFunction() const { return m_errorFunction; }
 
-    // Callback for testing. Allows test to grab the last session dispatched.
+    /// @name Only for testing
+    ///@{
+    /// @brief Callback for testing. Allows test to grab the last session dispatched.
     std::function<void(SessionPtr)> m_lastSession;
+    ///@}
 
   protected:
     void loadTlsCertificate();

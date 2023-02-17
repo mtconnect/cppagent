@@ -51,6 +51,7 @@ namespace mtconnect::asset {
   class AGENT_LIB_API AssetBuffer : public AssetStorage
   {
   public:
+    /// @brief Structure to store asset for boost multi index container
     struct AssetNode
     {
       AssetNode(AssetPtr &asset) : m_asset(asset), m_identity(asset->getAssetId()) {}
@@ -86,15 +87,20 @@ namespace mtconnect::asset {
     using RemoveCountByType = std::unordered_map<AssetType, size_t>;
     using RemoveCountByDeviceAndType = std::unordered_map<DeviceUuid, RemoveCountByType>;
 
+    /// @brief Index by first in/first out sequence
     struct ByFifo
     {};
+    /// @brief Index by assetId
     struct ByAssetId
     {};
+    /// @brief Index by Device and Type
     struct ByDeviceAndType
     {};
+    /// @brief Index by type
     struct ByType
     {};
 
+    /// @brief The Multi-Index Container type
     using AssetIndex = mic::multi_index_container<
         AssetNode,
         mic::indexed_by<
@@ -104,6 +110,8 @@ namespace mtconnect::asset {
                                     mic::key<&AssetNode::getDeviceUuid, &AssetNode::getType>>,
             mic::hashed_non_unique<mic::tag<ByType>, mic::key<&AssetNode::getType>>>>;
 
+    /// @brief Create an asset buffer with a maximum size
+    /// @param max the maximum size
     AssetBuffer(size_t max) : AssetStorage(max) {}
     ~AssetBuffer() = default;
 

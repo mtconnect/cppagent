@@ -20,15 +20,10 @@
 #include "configuration.hpp"
 #include "mtconnect/config.hpp"
 
-namespace mtconnect {
-  using namespace entity;
-  namespace device_model {
-    namespace configuration {
-      struct SensorConfiguration
-      {
-        static FactoryPtr getFactory();
-      };
-    }  // namespace configuration
-  }    // namespace device_model
-
-}  // namespace mtconnect
+namespace mtconnect::device_model::configuration {
+  /// @brief Sensor Configuration for the component
+  struct SensorConfiguration
+  {
+    static entity::FactoryPtr getFactory();
+  };
+}  // namespace mtconnect::device_model::configuration

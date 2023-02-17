@@ -50,7 +50,7 @@ before_build:
       pip install conan
       conan export conan/mqtt_cpp
       conan export conan/mruby
-      conan install . -if build --build=missing -pr %CONAN_PROFILE% -o run_tests=False -o shared=%SHARED%
+      conan install . -if build --build=missing -pr %CONAN_PROFILE% -o run_tests=False -o shared=%SHARED% -o with_docs=False
   - sh: |-
       export PATH=$HOME/venv3.10/bin:$PATH
       if [[ $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
@@ -68,7 +68,7 @@ before_build:
       pip install conan
       conan export conan/mqtt_cpp
       conan export conan/mruby
-      conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o shared=$SHARED
+      conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o shared=$SHARED -o with_docs=False
 
 build:
   verbosity: minimal
@@ -80,10 +80,10 @@ build_script:
 test_script:
   - cmd: |-
       cd %APPVEYOR_BUILD_FOLDER%/build
-      ctest -C Release --output-on-failure -j 2
+      ctest -C Release --output-on-failure
   - sh: |-
       cd ${APPVEYOR_BUILD_FOLDER}/build
-      ctest --output-on-failure -j 2
+      ctest --output-on-failure
 
 #on_finish:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

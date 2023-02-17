@@ -41,19 +41,22 @@ namespace mtconnect {
   namespace device_model {
     class Composition;
 
+    /// @brief DataItem related entities
     namespace data_item {
+      /// @brief Data Item entity
       class AGENT_LIB_API DataItem : public entity::Entity, public observation::ChangeSignaler
       {
       public:
-        // Enumeration for data item category
-        enum ECategory
+        /// @brief MTConnect DataItem Enumeration for category
+        enum Category
         {
           SAMPLE,
           EVENT,
           CONDITION
         };
 
-        enum ERepresentation
+        /// @brief MTConnect DataItem Enumeration for representation
+        enum Representation
         {
           VALUE,
           TIME_SERIES,
@@ -62,6 +65,7 @@ namespace mtconnect {
           TABLE
         };
 
+        /// @brief MTConnect DataItem classifications
         enum SpecialClass
         {
           CONDITION_CLS,
@@ -74,10 +78,17 @@ namespace mtconnect {
         };
 
       public:
-        // Construct a data item with appropriate attributes mapping
+        /// @brief constructor for a data item. name is always `DataItem`.
+        ///
+        /// @note Do not use this method directly. Use the `make()` method.
         DataItem(const std::string &name, const entity::Properties &props);
         static entity::FactoryPtr getFactory();
         static entity::FactoryPtr getRoot();
+
+        /// @brief make method to create
+        /// @param[in] props data item properties
+        /// @param[in,out] errors list of errors creating the data item
+        /// @return shared pointer to DataItem
         static std::shared_ptr<DataItem> make(const entity::Properties &props,
                                               entity::ErrorList &errors)
         {
@@ -89,31 +100,52 @@ namespace mtconnect {
         // Destructor
         ~DataItem() override = default;
 
-        // Getter methods for data item specs
+        /// @name Cached transformed and derived property access methods
+        ///@{
         const auto &getId() const { return m_id; }
         const auto &getName() const { return m_name; }
         const auto &getSource() const { return get<entity::EntityPtr>("Source"); }
+
+        /// @brief get the name or the id of the data item
+        /// @return the preferred name
         const auto &getPreferredName() const { return m_preferredName; }
-        const auto &getObservationName() const { return m_observationName; }
-        const auto &getObservationProperties() const { return m_observatonProperties; }
         const auto &getMinimumDelta() const { return m_minimumDelta; }
         const auto &getMinimumPeriod() const { return m_minimumPeriod; }
-        bool hasName(const std::string &name) const;
+        /// @brief get a key related to the data item for creating observations
+        /// @return a key
         const auto &getKey() const { return m_key; }
-
         const auto &getType() { return get<std::string>("type"); }
         const auto &getSubType() { return get<std::string>("subType"); }
+
+        /// @brief get the pascalized name for the data item when represented as a observation
+        /// @return observation name
+        const auto &getObservationName() const { return m_observationName; }
+        /// @brief get the properties to build an observation
+        /// @return observation properties
+        const auto &getObservationProperties() const { return m_observatonProperties; }
+
+        /// @brief get the topic with the path
+        /// @return data item topic
         const auto &getTopic() const { return m_topic; }
+        /// @brief get the topic name leaf node for this data item
+        /// @return the topic name
         const auto &getTopicName() const { return m_topicName; }
 
-        ECategory getCategory() const { return m_category; }
-        ERepresentation getRepresentation() const { return m_representation; }
+        Category getCategory() const { return m_category; }
+        Representation getRepresentation() const { return m_representation; }
         SpecialClass getSpecialClass() const { return m_specialClass; }
 
         const auto &getConstantValue() const { return m_constantValue; }
+        ///@}
+
+        /// @brief make this data item a constant
+        /// @param[in] value constant value
         void setConstantValue(const std::string &value);
 
-        // Returns true if data item is a sample
+        /// @name boolean methods to interigate the data item
+        ///@{
+
+        bool hasName(const std::string &name) const;
         bool isSample() const { return m_category == SAMPLE; }
         bool isEvent() const { return m_category == EVENT; }
         bool isCondition() const { return m_category == CONDITION; }
@@ -128,6 +160,7 @@ namespace mtconnect {
         bool isDiscrete() const { return m_discrete; }
         bool isThreeSpace() const { return m_specialClass == THREE_SPACE_CLS; }
         bool isOrphan() const { return m_component.expired(); }
+        ///@}
 
         void makeDiscrete()
         {
@@ -135,6 +168,7 @@ namespace mtconnect {
           m_discrete = true;
         }
 
+        /// @brief Build the topic
         void makeTopic();
 
         // Value converter
@@ -144,7 +178,8 @@ namespace mtconnect {
           m_converter = std::make_unique<UnitConversion>(conv);
         }
 
-        // Set/get component that data item is associated with
+        /// @brief Set the associated component
+        /// @param[in] the component
         void setComponent(ComponentPtr component)
         {
           m_component = component;
@@ -154,14 +189,25 @@ namespace mtconnect {
             m_composition = component->getComposition(*cid);
           }
         }
+        /// @brief get the associated component
+        /// @return shared pointer to the component
         ComponentPtr getComponent() const { return m_component.lock(); }
+        /// @brief get the associated composition
+        /// @return shared pointer to the composition
         CompositionPtr getComposition() const { return m_composition.lock(); }
 
-        // Get the name for the adapter feed
+        /// @brief get the preferred name
+        /// @return the preferred name
         const std::string &getSourceOrName() const { return m_preferredName; }
 
+        /// @brief get the source
+        /// @return source if available
         const std::optional<std::string> &getDataSource() const { return m_dataSource; }
+        /// @brief set the data source
+        /// @param[in] source the source
         void setDataSource(const std::string &source) { m_dataSource = source; }
+        /// @brief set the topic for the data item
+        /// @param[in] topic the topic
         void setTopic(const std::string &topic) { m_topic = topic; }
 
         bool operator<(const DataItem &another) const;
@@ -189,7 +235,7 @@ namespace mtconnect {
         std::string m_topicName;
 
         // Category of data item
-        ECategory m_category;
+        Category m_category;
         const char *m_categoryText;
 
         // Type for observation
@@ -197,7 +243,7 @@ namespace mtconnect {
         entity::Properties m_observatonProperties;
 
         // Representation of data item
-        ERepresentation m_representation {VALUE};
+        Representation m_representation {VALUE};
         SpecialClass m_specialClass {NONE_CLS};
         bool m_discrete;
 

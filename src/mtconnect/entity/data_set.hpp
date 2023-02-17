@@ -32,27 +32,46 @@
 namespace mtconnect::entity {
   struct DataSetEntry;
 
+  /// @brief A set of data set entries
   class AGENT_LIB_API DataSet : public std::set<DataSetEntry>
   {
   public:
     using base = std::set<DataSetEntry>;
     using base::base;
 
+    /// @brief Get a entry for a key
+    /// @tparam T the entry type
+    /// @param key the key
+    /// @return the typed value of the entry
     template <typename T>
     const T &get(const std::string &key) const;
+
+    /// @brief Get a entry for a key if it exists
+    /// @tparam T the entry type
+    /// @param key the key
+    /// @return optional typed value of the entry
     template <typename T>
     const std::optional<T> maybeGet(const std::string &key) const;
 
+    /// @brief Split the data set entries by space delimiters and account for the
+    /// use of single and double quotes as well as curly braces
     bool parse(const std::string &s, bool table);
   };
 
+  /// @brief Data set value variant
   using DataSetValue = std::variant<std::monostate, DataSet, std::string, int64_t, double>;
 
+  /// @brief Equality visitor for a DataSetValue
   struct DataSetValueSame
   {
     DataSetValueSame(const DataSetValue &other) : m_other(other) {}
 
     bool operator()(const DataSet &v);
+
+    /// @brief Compare the types are the same and the values are the same
+    /// @tparam T the data type
+    /// @param v the other value
+    /// @return `true` if they are the same
     template <class T>
     bool operator()(const T &v)
     {
@@ -63,17 +82,33 @@ namespace mtconnect::entity {
     const DataSetValue &m_other;
   };
 
+  /// @brief One entry in a data set. Has necessary interface to be work with maps.
   struct DataSetEntry
   {
+    /// @brief Create an entry with a key and value
+    /// @param key the key
+    /// @param value the value as a string
+    /// @param removed `true` if the key has been removed
     DataSetEntry(std::string key, std::string &value, bool removed = false)
       : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {}
+
+    /// @brief Create an entry for a table with a data set value
+    /// @param key the key
+    /// @param value the value as a DataSet
+    /// @param removed `true` if the key has been removed
     DataSetEntry(std::string key, DataSet &value, bool removed = false)
       : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {}
+    /// @brief Create an entry for a data set
+    /// @param key the key
+    /// @param value the a data set variant
+    /// @param removed `true` if the key has been removed
     DataSetEntry(std::string key, DataSetValue value, bool removed = false)
       : m_key(std::move(key)), m_value(std::move(value)), m_removed(removed)
     {}
+    /// @brief Create a data set entry with just a key (used for search)
+    /// @param key
     DataSetEntry(std::string key) : m_key(std::move(key)), m_value(""), m_removed(false) {}
     DataSetEntry(const DataSetEntry &other) = default;
     DataSetEntry() : m_removed(false) {}
@@ -92,12 +127,21 @@ namespace mtconnect::entity {
     }
   };
 
+  /// @brief Get a typed value from a data set
+  /// @tparam T the data type
+  /// @param key the key to search for
+  /// @return a typed value reference
+  /// @throws  std::bad_variant_access when type is incorrect
   template <typename T>
   const T &DataSet::get(const std::string &key) const
   {
     return std::get<T>(find(DataSetEntry(key))->m_value);
   }
 
+  /// @brief Get a typed value if available
+  /// @tparam T they type
+  /// @param key the key to search for
+  /// @return an opton typed result
   template <typename T>
   const std::optional<T> DataSet::maybeGet(const std::string &key) const
   {

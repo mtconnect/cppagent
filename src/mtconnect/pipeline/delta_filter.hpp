@@ -24,16 +24,20 @@
 namespace mtconnect {
   class Agent;
   namespace pipeline {
+    /// @brief Provide MTConnect DataItem delta filter behavior
     class AGENT_LIB_API DeltaFilter : public Transform
     {
     public:
+      /// @brief shared values associated with data items
       struct State : TransformState
       {
         std::unordered_map<std::string, double> m_lastSampleValue;
       };
 
+      /// @brief Construct a delta filter
+      /// @param[in] context the context for shared state
       DeltaFilter(PipelineContextPtr context)
-        : Transform("RateFilter"),
+        : Transform("DeltaFilter"),
           m_state(context->getSharedState<State>(m_name)),
           m_contract(context->m_contract.get())
       {

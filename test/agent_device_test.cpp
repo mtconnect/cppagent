@@ -152,6 +152,7 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 {
   auto agent = m_agentTestHelper->getAgent();
   auto device = agent->findDeviceByUUIDorName("000");
+  auto &circ = agent->getCircularBuffer();
   ASSERT_TRUE(device);
   auto uuid = *device->getUuid();
   ASSERT_EQ("000", uuid);
@@ -159,9 +160,9 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 
   auto rest = m_agentTestHelper->getRestService();
 
-  for (auto seq = rest->getSequence() - 1; !found && seq > 0ull; seq--)
+  for (auto seq = circ.getSequence() - 1; !found && seq > 0ull; seq--)
   {
-    auto event = rest->getFromBuffer(seq);
+    auto event = circ.getFromBuffer(seq);
     if (event->getDataItem()->getType() == "DEVICE_ADDED" && uuid == event->getValue<string>())
     {
       found = true;

@@ -24,15 +24,16 @@
 #include "mtconnect/config.hpp"
 
 namespace mtconnect::source {
+  /// @brief Reasons why the source failed
   enum class ErrorCode
   {
     OK = 0,
-    ADAPTER_FAILED,
-    STREAM_CLOSED,
-    INSTANCE_ID_CHANGED,
-    RESTART_STREAM,
-    RETRY_REQUEST,
-    MULTIPART_STREAM_FAILED
+    ADAPTER_FAILED, ///< The adapter failed
+    STREAM_CLOSED, ///< The stream closed
+    INSTANCE_ID_CHANGED, ///< The source instance id changed
+    RESTART_STREAM, ///< The stream needed to be restarted
+    RETRY_REQUEST, ///< The request needs to be retried
+    MULTIPART_STREAM_FAILED ///< The multipart stream failed
   };
 }
 
@@ -47,6 +48,7 @@ namespace std {
 }  // namespace std
 
 namespace mtconnect::source {
+  /// @brief Error categories for error reporting using std:error_code and std::error_condition
   struct ErrorCategory : std::error_category
   {
     const char *name() const noexcept override { return "MTConnect::Error"; }
