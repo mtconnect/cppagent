@@ -77,7 +77,7 @@ class MTConnectAgentConan(ConanFile):
         if self.settings.os == 'Windows':
             if self.windows_xp:
                 self.options.build_tests = False
-                self.options.winver == '0x501'
+                self.options.winver = '0x501'
                 
             if self.options.shared:
                 if self.settings.build_type and self.settings.build_type == 'Debug':
@@ -171,8 +171,9 @@ class MTConnectAgentConan(ConanFile):
             self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
             
         if self.settings.os == 'Windows':
-            self.cpp_info.defines.append("WINVER=" + self.options.winver)
-            self.cpp_info.defines.append("_WIN32_WINNT=" + self.options.winver)
+            winver=str(self.options.winver)
+            self.cpp_info.defines.append("WINVER=" + winver)
+            self.cpp_info.defines.append("_WIN32_WINNT=" + winver)
 
     def package(self):
         self.copy("*", src=os.path.join(self.build_folder, "bin"), dst="bin", keep_path=False)
