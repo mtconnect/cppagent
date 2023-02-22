@@ -112,6 +112,10 @@ class MTConnectAgentConan(ConanFile):
             self.options["gtest"].shared = True
             self.options["openssl"].shared = True
         
+        self.run("conan export conan/mqtt_cpp")
+        if self.options.with_ruby:
+          self.run("conan export conan/mruby")
+
     def build_requirements(self):
         if self.options.with_docs:
             res = subprocess.run(["doxygen --version"], shell=True, text=True, capture_output=True)
