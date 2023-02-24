@@ -47,7 +47,7 @@ before_build:
       if %SHARED%==True (set CONAN_PROFILE=conan/profiles/vs64shared) else (set CONAN_PROFILE=conan/profiles/vs64)
       set CONAN_USER_HOME=C:\conan
       set
-      pip install conan
+      pip install --force-reinstall -v “conan==1.59.0”
       conan export conan/mqtt_cpp
       conan export conan/mruby
       conan install . -if build --build=missing -pr %CONAN_PROFILE% -o run_tests=False -o shared=%SHARED% -o with_docs=False
