@@ -65,7 +65,7 @@ before_build:
         echo "*NIX Operating System" $APPVEYOR_BUILD_WORKER_IMAGE " Not Supported"
         exit 99
       fi
-      pip install conan
+      pip install --force-reinstall -v “conan==1.59.0”
       conan export conan/mqtt_cpp
       conan export conan/mruby
       conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o shared=$SHARED -o with_docs=False
