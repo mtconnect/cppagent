@@ -47,8 +47,7 @@ before_build:
       if %SHARED%==True (set CONAN_PROFILE=conan/profiles/vs64shared) else (set CONAN_PROFILE=conan/profiles/vs64)
       set CONAN_USER_HOME=C:\conan
       set
-      python -m ensurepip --upgrade
-      pip install --force-reinstall -v “conan==1.59.0”
+      pip install --force-reinstall -v "conan==1.59.0"
       conan export conan/mqtt_cpp
       conan export conan/mruby
       conan install . -if build --build=missing -pr %CONAN_PROFILE% -o run_tests=False -o shared=%SHARED% -o with_docs=False
@@ -66,8 +65,7 @@ before_build:
         echo "*NIX Operating System" $APPVEYOR_BUILD_WORKER_IMAGE " Not Supported"
         exit 99
       fi
-      python -m ensurepip --upgrade
-      pip install --force-reinstall -v “conan==1.59.0”
+      pip install --force-reinstall -v "conan==1.59.0"
       conan export conan/mqtt_cpp
       conan export conan/mruby
       conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o shared=$SHARED -o with_docs=False
