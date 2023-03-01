@@ -1,12 +1,17 @@
-from conans import ConanFile, CMake, tools
-from conans.errors import ConanInvalidConfiguration
+from conan import ConanFile
+from conan.tools.files import save, load
+from conan.tools.gnu import AutotoolsToolchain, AutotoolsDeps
+from conan.tools.microsoft import unix_path, VCVars, is_msvc, is_msvc_static_runtime
+from conan.errors import ConanInvalidConfiguration
+from conan.errors import ConanException
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
+
 import os
 import io
 import re
 import itertools as it
 import glob
 import subprocess
-from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
@@ -14,19 +19,19 @@ class MTConnectAgentConan(ConanFile):
     generators = "cmake"
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
-    settings = "os", "compiler", "arch", "build_type", "arch_build"
+    settings = "os", "compiler", "arch", "build_type"
     options = { "run_tests": [True, False], "build_tests": [True, False], 
                 "without_ipv6": [True, False], "with_ruby": [True, False],
-                 "development" : [True, False], "shared": [True, False], "winver": "ANY",
+                 "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
                  "with_docs" : [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
-    requires = ["boost/1.79.0@#3249d9bd2b863a9489767bf9c8a05b4b",
-                "libxml2/2.9.10@#9133e645e934381d3cc4f6a0bf563fbe",
-                "date/2.4.1@#178e4ada4fefd011aaa81ab2bca646db",
-                "nlohmann_json/3.9.1@#a41bc0deaf7f40e7b97e548359ccf14d", 
-                "openssl/3.0.5@#40f4488f02b36c1193b68f585131e8ef",
-                "mqtt_cpp/13.1.0"]
+    requires = ["boost/1.79.0",
+                "libxml2/2.9.10",
+                "date/2.4.1",
+                "nlohmann_json/3.9.1",
+                "openssl/1.1.1t",
+                "redboltz-mqtt_cpp/13.0.0"]
 
     build_policy = "missing"
     default_options = {
@@ -39,22 +44,22 @@ class MTConnectAgentConan(ConanFile):
         "winver": "0x600",
         "with_docs": True,
 
-        "boost:shared": False,
-        "boost:without_python": True,
-        "boost:without_test": True,
+        "boost*:shared": False,
+        "boost*:without_python": True,
+        "boost*:without_test": True,
 
-        "libxml2:shared": False,
-        "libxml2:include_utils": False,
-        "libxml2:http": False,
-        "libxml2:ftp": False,
-        "libxml2:iconv": False,
-        "libxml2:zlib": False,
+        "libxml2*:shared": False,
+        "libxml2*:include_utils": False,
+        "libxml2*:http": False,
+        "libxml2*:ftp": False,
+        "libxml2*:iconv": False,
+        "libxml2*:zlib": False,
 
-        "gtest:shared": False,
+        "gtest*:shared": False,
 
-        "openssl:shared": False,
+        "openssl*:shared": False,
         
-        "date:use_system_tz_db": True
+        "date*:use_system_tz_db": True
         }
 
     exports_sources = "*"
@@ -112,10 +117,6 @@ class MTConnectAgentConan(ConanFile):
             self.options["gtest"].shared = True
             self.options["openssl"].shared = True
         
-        self.run("conan export conan/mqtt_cpp")
-        if self.options.with_ruby:
-          self.run("conan export conan/mruby")
-
     def build_requirements(self):
         if self.options.with_docs:
             res = subprocess.run(["doxygen --version"], shell=True, text=True, capture_output=True)
