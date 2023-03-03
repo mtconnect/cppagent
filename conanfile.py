@@ -31,7 +31,7 @@ class MTConnectAgentConan(ConanFile):
                 "date/2.4.1",
                 "nlohmann_json/3.9.1",
                 "openssl/1.1.1t",
-                "redboltz-mqtt_cpp/13.0.0"]
+                "mqtt_cpp/13.1.0"]
 
     build_policy = "missing"
     default_options = {

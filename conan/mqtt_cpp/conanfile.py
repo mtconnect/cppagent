@@ -1,7 +1,6 @@
-from conans import ConanFile
-from conan.tools.files import copy
-from conan.tools.scm import Git, Version
-
+from conan import ConanFile
+from conan.tools.files import copy, get
+import os
 
 class MqttcppConan(ConanFile):
     name = "mqtt_cpp"
@@ -12,14 +11,14 @@ class MqttcppConan(ConanFile):
     description = "MQTT client/server for C++14 based on Boost.Asio"
     topics = ("mqtt")
     settings = "os", "compiler", "build_type", "arch"
-    requires = "boost/1.79.0@#3249d9bd2b863a9489767bf9c8a05b4b"
+    requires = ["boost/1.79.0"]
 
     def source(self):
-        git = tools.Git("repo")
-        git.clone("https://github.com/redboltz/mqtt_cpp.git", branch="v" + self.version, shallow=True)
+        get(self, "https://github.com/redboltz/mqtt_cpp/archive/refs/tags/v%s.zip" % self.version, \
+            strip_root=True, destination=self.source_folder)
 
     def build(self):
         pass
 
     def package(self):
-        self.copy("*.hpp", dst="include", src="repo/include")
+        copy(self, "*.hpp", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include"))

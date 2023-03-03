@@ -1,7 +1,6 @@
 from conan import ConanFile
-from conan.tools.files import save, load
-from conan.tools.gnu import AutotoolsToolchain, AutotoolsDeps
-from conan.tools.microsoft import unix_path, VCVars, is_msvc
+from conan.tools.files import get, copy
+from conan.tools.layout import basic_layout
 from conan.errors import ConanInvalidConfiguration
 from conan.errors import ConanException
 import os
@@ -28,12 +27,11 @@ class MRubyConan(ConanFile):
         }
 
     _autotools = None
-    _mruby_source = "mruby_source"
     _major, _minor, _patch = version.split('.')
     _ruby_version_dir = "ruby-{}.{}.0".format(_major, _minor)
 
     def generate(self):
-        self.build_config = os.path.join(self.build_folder, self._mruby_source, "build_config", "mtconnect.rb")
+        self.build_config = os.path.join(self.build_folder, self.source_folder, "build_config", "mtconnect.rb")
         
         with open(self.build_config, "w") as f:
             f.write('''
@@ -124,20 +122,22 @@ end
             
             f.write("end\n")
 
+    def layout(self):
+        basic_layout(self, src_folder="source")
+
     def source(self):
-        git = tools.Git(self._mruby_source)
-        git.clone("https://github.com/mruby/mruby.git", "3.1.0")
+        get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.1.0.zip", strip_root=True, destination=self.source_folder)
         
     def build(self):
-        self.run("rake MRUBY_CONFIG=%s" % self.build_config,
-                 cwd=self._mruby_source)
+        self.run("rake MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (self.build_config, self.build_folder),
+                 cwd=self.source_folder)
 
     def package(self):
-        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "bin"), dst="bin")
-        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "lib"), dst="lib")
-        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "include"), dst="include")
-        self.copy("*", src=os.path.join(self._mruby_source, "include"), dst="include")
-        self.copy("*.h", src=os.path.join(self._mruby_source, "mrbgems"), dst="include")
+        copy(self, "*", os.path.join(self.build_folder, "host", "bin"), os.path.join(self.package_folder, "bin"))
+        copy(self, "*", os.path.join(self.build_folder, "host", "lib"), os.path.join(self.package_folder, "lib"))
+        copy(self, "*", os.path.join(self.build_folder, "host", "include"), os.path.join(self.package_folder, "include"))
+        copy(self, "*", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include"))
+        copy(self, "*.h", os.path.join(self.source_folder, "mrbgems"), os.path.join(self.package_folder, "include"))
         
     def package_info(self):        
         self.cpp_info.includedirs = ["include"]
@@ -146,12 +146,12 @@ end
             ruby = os.path.join(self.package_folder, "bin", "mruby-config")
         else:
             ruby = os.path.join(self.package_folder, "bin", "mruby-config.bat")
-        
+
         buf = io.StringIO()
-        self.run([ruby, "--cflags"], output=buf)
+        self.run([ruby, "--cflags"], stdout=buf, shell=True)
         self.cpp_info.defines = [d[2:] for d in buf.getvalue().split(' ') if d.startswith('/D') or d.startswith('-D')]
 
-        self.user_info.mruby = 'ON'
+        self.conf_info.define('mruby', 'ON')
 
         self.cpp_info.bindirs = ["bin"]
         if self.settings.os == 'Windows':
