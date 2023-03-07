@@ -1,6 +1,7 @@
 from conan import ConanFile
 from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
+from conan.tools.files import copy
 
 import os
 import io
@@ -74,6 +75,7 @@ class MTConnectAgentConan(ConanFile):
             raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
 
     def layout(self):
+        self.folders.build_folder_vars = ["options.shared"]
         cmake_layout(self)
 
     def configure(self):
@@ -120,12 +122,12 @@ class MTConnectAgentConan(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
 
-        tc.variables['SHARED_AGENT_LIB'] = self.options.shared
-        tc.variables['WITH_RUBY'] = self.options.with_ruby
-        tc.variables['AGENT_ENABLE_UNITTESTS'] = self.options.build_tests
-        tc.variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6
+        tc.cache_variables['SHARED_AGENT_LIB'] = self.options.shared.__bool__()
+        tc.cache_variables['WITH_RUBY'] = self.options.with_ruby.__bool__()
+        tc.cache_variables['AGENT_ENABLE_UNITTESTS'] = self.options.build_tests.__bool__()
+        tc.cache_variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6.__bool__()
         if self.settings.os == 'Windows':
-            tc.variables['WINVER'] = self.options.winver
+            tc.cache_variables['WINVER'] = self.options.winver
 
         tc.generate()
         deps = CMakeDeps(self)
@@ -151,15 +153,10 @@ class MTConnectAgentConan(ConanFile):
         if self.options.run_tests:
             cmake.test()
 
-    def imports(self):
-        copy(self, "*.dll", "bin", "bin")
-        copy(self, "*.pdb", "bin", "bin", keep_path=False)
-        copy(self, "*.pdb", "lib", "bin", keep_path=False)
-        copy(self, "*.so*", "lib", "lib")
-        copy(self, "*.dylib", "lib", "lib")
-
     def package_info(self):
         self.cpp_info.includedirs = ['include']
+        self.cpp_info.libdirs = ['lib']
+        self.cpp_info.bindirs = ['bin']
         self.cpp_info.libs = ['agent_lib']
 
         self.cpp_info.defines = []
@@ -168,7 +165,6 @@ class MTConnectAgentConan(ConanFile):
         if self.options.without_ipv6:
             self.cpp_info.defines.append("AGENT_WITHOUT_IPV6=1")
         if self.options.shared:
-            self.user_info.SHARED = 'ON'
             self.cpp_info.defines.append("SHARED_AGENT_LIB=1")
             self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
             
@@ -178,13 +174,8 @@ class MTConnectAgentConan(ConanFile):
             self.cpp_info.defines.append("_WIN32_WINNT=" + winver)
 
     def package(self):
-        copy(self, "*", os.path.join(self.build_folder, "bin"), os.path.join(self.package_folder, "bin"), keep_path=False)
-        copy(self, "*.a", os.path.join(self.build_folder, "lib"), os.path.join(self.package_folder, "lib"), keep_path=False)
-        copy(self, "*.lib", os.path.join(self.build_folder, "lib"), os.path.join(self.package_folder, "lib"), keep_path=False)
-        copy(self, "*.dylib", os.path.join(self.build_folder, "lib"), os.path.join(self.package_folder, "lib"), keep_path=False)
-        copy(self, "*.so", os.path.join(self.build_folder, "lib"), os.path.join(self.package_folder, "lib"), keep_path=False)
-        copy(self, "*.h", os.path.join(self.build_folder, "agent_lib"), os.path.join(self.package_folder, "include"))
-        copy(self, "*.h", os.path.join(self.build_folder, "src"), os.path.join(self.package_folder, "include"))
-        copy(self, "*.hpp", os.path.join(self.build_folder, "src"), os.path.join(self.package_folder, "include"))
+        cmake = CMake(self)
+        cmake.install()
+
 
     

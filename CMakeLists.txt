@@ -18,6 +18,8 @@ option(AGENT_ENABLE_UNITTESTS "Enables the agent's unit tests" ON)
 option(SHARED_AGENT_LIB "Generate shared agent library. Conan options: shared" OFF)
 set(INSTALL_GTEST OFF FORCE)
 
+message(INFO " Shared build: ${SHARED_AGENT_LIB}")
+
 project(cppagent LANGUAGES C CXX)
 
 # We will define these properties by default for each CMake target to be created.
