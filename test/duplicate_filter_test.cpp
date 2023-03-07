@@ -21,12 +21,12 @@
 
 #include <chrono>
 
-#include "observation/observation.hpp"
-#include "pipeline/delta_filter.hpp"
-#include "pipeline/duplicate_filter.hpp"
-#include "pipeline/period_filter.hpp"
-#include "pipeline/pipeline.hpp"
-#include "pipeline/shdr_token_mapper.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/delta_filter.hpp"
+#include "mtconnect/pipeline/duplicate_filter.hpp"
+#include "mtconnect/pipeline/period_filter.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/pipeline/shdr_token_mapper.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -38,6 +38,13 @@ using namespace entity;
 using namespace std;
 using namespace std::literals;
 using namespace std::chrono_literals;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class MockPipelineContract : public PipelineContract
 {

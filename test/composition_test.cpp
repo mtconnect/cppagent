@@ -27,17 +27,24 @@
 #include <sstream>
 #include <string>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "device_model/composition.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/device_model/composition.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace device_model;
 using namespace entity;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class CompositionTest : public testing::Test
 {

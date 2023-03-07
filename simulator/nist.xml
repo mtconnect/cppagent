@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="/styles/Devices.xsl"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.3" xmlns="urn:mtconnect.org:MTConnectDevices:1.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:1.3 /schemas/MTConnectDevices_1.3.xsd">
+  <Header creationTime="2019-07-06T01:07:46Z" sender="db40e833ff89" instanceId="1562028337" version="1.4.0.10" assetBufferSize="1024" assetCount="0" bufferSize="1048576"/>
+  <Devices>
+    <Device id="GFAgie01" name="GFAgie01" uuid="mtc_adapter001">
+      <Description manufacturer="Agie Charmilles" model="HPM600U">Agie Mikron HPM600U - GF Agie Charmilles HPM600U</Description>
+      <DataItems>
+        <DataItem category="EVENT" id="GFAgie01-dtop_1" name="avail" type="AVAILABILITY"/>
+        <DataItem category="EVENT" id="GFAgie01-dtop_2" name="estop" type="EMERGENCY_STOP"/>
+        <DataItem category="CONDITION" id="GFAgie01-dtop_3" name="system" type="SYSTEM"/>
+        <DataItem category="EVENT" id="GFAgie01_asset_chg" type="ASSET_CHANGED"/>
+        <DataItem category="EVENT" id="GFAgie01_asset_rem" type="ASSET_REMOVED"/>
+      </DataItems>
+      <Components>
+        <Axes id="GFAgie01-axes_1" name="axes">
+          <Components>
+            <Linear id="GFAgie01-X_1" name="X">
+              <DataItems>
+                <DataItem category="SAMPLE" id="GFAgie01-X_2" name="Xposition" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+              </DataItems>
+            </Linear>
+            <Linear id="GFAgie01-Y_1" name="Y">
+              <DataItems>
+                <DataItem category="SAMPLE" id="GFAgie01-Y_2" name="Yposition" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+              </DataItems>
+            </Linear>
+            <Linear id="GFAgie01-Z_1" name="Z">
+              <DataItems>
+                <DataItem category="SAMPLE" id="GFAgie01-Z_2" name="Zposition" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+              </DataItems>
+            </Linear>
+            <Rotary id="GFAgie01-C_1" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="GFAgie01-C_2" name="Cposition" nativeUnits="DEGREE" subType="ACTUAL" type="ANGLE" units="DEGREE"/>
+              </DataItems>
+            </Rotary>
+            <Rotary id="GFAgie01-A_1" name="A">
+              <DataItems>
+                <DataItem category="SAMPLE" id="GFAgie01-A_2" name="Aposition" nativeUnits="DEGREE" subType="ACTUAL" type="ANGLE" units="DEGREE"/>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="GFAgie01-controller_basic_1" name="controller_basic">
+          <DataItems>
+            <DataItem category="EVENT" id="GFAgie01-controller_basic_2" name="Fovr" nativeUnits="PERCENT" subType="OVERRIDE" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+            <DataItem category="EVENT" id="GFAgie01-controller_basic_3" name="Sovr" nativeUnits="PERCENT" type="ROTARY_VELOCITY_OVERRIDE" units="PERCENT"/>
+            <DataItem category="CONDITION" id="GFAgie01-controller_basic_4" name="servo" type="ACTUATOR"/>
+            <DataItem category="CONDITION" id="GFAgie01-controller_basic_5" name="comms" type="COMMUNICATIONS"/>
+            <DataItem category="CONDITION" id="GFAgie01-controller_basic_6" name="pneumatic" type="COMMUNICATIONS"/>
+            <DataItem category="CONDITION" id="GFAgie01-controller_basic_7" name="hydraulic" type="COMMUNICATIONS"/>
+            <DataItem category="CONDITION" id="GFAgie01-controller_basic_8" name="logic" type="LOGIC_PROGRAM"/>
+            <DataItem category="CONDITION" id="GFAgie01-controller_basic_9" name="motion" type="MOTION_PROGRAM"/>
+            <DataItem category="CONDITION" id="GFAgie01-controller_basic_10" name="cnc_temp" type="TEMPERATURE"/>
+          </DataItems>
+          <Components>
+            <Path id="GFAgie01-path_basic_1" name="path_basic">
+              <DataItems>
+                <DataItem category="EVENT" id="GFAgie01-path_basic_2" name="execution" type="EXECUTION"/>
+                <DataItem category="EVENT" id="GFAgie01-path_basic_3" name="mode" type="CONTROLLER_MODE"/>
+                <DataItem category="EVENT" id="GFAgie01-path_basic_4" name="program" type="PROGRAM"/>
+                <DataItem category="EVENT" id="GFAgie01-path_basic_5" name="line" type="LINE"/>
+                <DataItem category="EVENT" id="GFAgie01-path_basic_6" name="move" type="x:MOTION"/>
+                <DataItem category="SAMPLE" id="GFAgie01-path_basic_7" name="path_pos" nativeUnits="MILLIMETER_3D" type="PATH_POSITION" units="MILLIMETER_3D"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+      </Components>
+    </Device>
+    <Device id="Mazak01" name="Mazak01" uuid="mtc_adapter002">
+      <Description manufacturer="Mazak" model="Integrex" serialNumber="M7303290458">Mazak Integrex 100-IV</Description>
+      <DataItems>
+        <DataItem category="EVENT" id="Mazak01-dtop_1" name="avail" type="AVAILABILITY"/>
+        <DataItem category="EVENT" id="Mazak01_asset_chg" type="ASSET_CHANGED"/>
+        <DataItem category="EVENT" id="Mazak01_asset_rem" type="ASSET_REMOVED"/>
+      </DataItems>
+      <Components>
+        <Axes id="Mazak01-base" name="base">
+          <DataItems>
+            <DataItem category="CONDITION" id="Mazak01-base_1" name="servo_cond" type="ACTUATOR"/>
+          </DataItems>
+          <Components>
+            <Linear id="Mazak01-X" name="X">
+              <DataItems>
+                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="Mazak01-X_1" name="Xabs" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+                <DataItem category="CONDITION" id="Mazak01-X_2" name="Xtravel" type="POSITION"/>
+                <DataItem category="SAMPLE" id="Mazak01-X_3" name="Xload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak01-X_4" name="Xfrt" nativeUnits="MILLIMETER/SECOND" type="AXIS_FEEDRATE" units="MILLIMETER/SECOND"/>
+              </DataItems>
+            </Linear>
+            <Linear id="Mazak01-Y" name="Y">
+              <DataItems>
+                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="Mazak01-Y_1" name="Yabs" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+                <DataItem category="CONDITION" id="Mazak01-Y_2" name="Ytravel" type="POSITION"/>
+                <DataItem category="SAMPLE" id="Mazak01-Y_3" name="Yload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak01-Y_4" name="Yfrt" nativeUnits="MILLIMETER/SECOND" type="AXIS_FEEDRATE" units="MILLIMETER/SECOND"/>
+              </DataItems>
+            </Linear>
+            <Linear id="Mazak01-Z" name="Z">
+              <DataItems>
+                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="Mazak01-Z_1" name="Zabs" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+                <DataItem category="CONDITION" id="Mazak01-Z_2" name="Ztravel" type="POSITION"/>
+                <DataItem category="SAMPLE" id="Mazak01-Z_3" name="Zload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak01-Z_4" name="Zfrt" nativeUnits="MILLIMETER/SECOND" type="AXIS_FEEDRATE" units="MILLIMETER/SECOND"/>
+              </DataItems>
+            </Linear>
+            <Rotary id="Mazak01-B" name="B">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Mazak01-B_1" name="Bload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak01-B_2" name="Bfrt" nativeUnits="DEGREE/MINUTE" type="ANGULAR_VELOCITY" units="DEGREE/SECOND"/>
+                <DataItem category="CONDITION" id="Mazak01-B_3" name="Btravel" type="ANGLE"/>
+                <DataItem category="SAMPLE" id="Mazak01-B_4" name="Bdeg" nativeUnits="DEGREE" subType="ACTUAL" type="ANGLE" units="DEGREE"/>
+              </DataItems>
+            </Rotary>
+            <Rotary id="Mazak01-C" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Mazak01-C_1" name="Cload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak01-C_2" name="Sload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="CONDITION" id="Mazak01-C_3" name="Ctravel" type="ANGLE"/>
+                <DataItem category="SAMPLE" id="Mazak01-C_4" name="Cfrt" nativeUnits="DEGREE/MINUTE" type="ANGULAR_VELOCITY" units="DEGREE/SECOND"/>
+                <DataItem category="SAMPLE" id="Mazak01-C_5" name="Srpm" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE"/>
+                <DataItem category="EVENT" id="Mazak01-C_6" name="Sovr" nativeUnits="PERCENT" type="ROTARY_VELOCITY_OVERRIDE" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak01-C_7" name="Stemp" nativeUnits="CELSIUS" type="TEMPERATURE" units="CELSIUS"/>
+                <DataItem category="SAMPLE" id="Mazak01-C_8" name="Cdeg" nativeUnits="DEGREE" subType="ACTUAL" type="ANGLE" units="DEGREE"/>
+                <DataItem category="CONDITION" id="Mazak01-C_9" name="Sload_cond" type="LOAD"/>
+                <DataItem category="CONDITION" id="Mazak01-C_10" name="Stemp_cond" type="TEMPERATURE"/>
+              </DataItems>
+            </Rotary>
+            <Rotary id="Mazak01-C2" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Mazak01-C2_1" name="S2load" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak01-C2_2" name="S2rpm" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE"/>
+                <DataItem category="SAMPLE" id="Mazak01-C2_3" name="S2temp" nativeUnits="CELSIUS" type="TEMPERATURE" units="CELSIUS"/>
+                <DataItem category="CONDITION" id="Mazak01-C2_4" name="S2load_cond" type="LOAD"/>
+                <DataItem category="CONDITION" id="Mazak01-C2_5" name="S2temp_cond" type="TEMPERATURE"/>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="Mazak01-controller" name="controller">
+          <DataItems>
+            <DataItem category="CONDITION" id="Mazak01-controller_1" name="comms_cond" type="COMMUNICATIONS"/>
+            <DataItem category="CONDITION" id="Mazak01-controller_2" name="logic_cond" type="LOGIC_PROGRAM"/>
+            <DataItem category="CONDITION" id="Mazak01-controller_3" name="system_cond" type="SYSTEM"/>
+            <DataItem category="EVENT" id="Mazak01-controller_4" name="estop" type="EMERGENCY_STOP"/>
+          </DataItems>
+          <Components>
+            <Path id="Mazak01-path" name="path">
+              <DataItems>
+                <DataItem category="EVENT" id="Mazak01-path_1" name="program" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Mazak01-path_2" name="subprogram" subType="x:SUB" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Mazak01-path_3" name="line" type="LINE"/>
+                <DataItem category="EVENT" id="Mazak01-path_4" name="unitNum" type="x:UNIT"/>
+                <DataItem category="EVENT" id="Mazak01-path_5" name="sequenceNum" type="x:SEQUENCE_NUMBER"/>
+                <DataItem category="EVENT" id="Mazak01-path_6" name="PartCountAct" type="PART_COUNT"/>
+                <DataItem category="SAMPLE" coordinateSystem="WORK" id="Mazak01-path_7" name="Fact" nativeUnits="FOOT/MINUTE" subType="ACTUAL" type="PATH_FEEDRATE" units="MILLIMETER/SECOND"/>
+                <DataItem category="EVENT" id="Mazak01-path_8" name="Frapidovr" nativeUnits="PERCENT" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="EVENT" id="Mazak01-path_9" name="Fovr" nativeUnits="PERCENT" subType="PROGRAMMED" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="EVENT" id="Mazak01-path_10" name="Tool_number" type="TOOL_NUMBER"/>
+                <DataItem category="EVENT" id="Mazak01-path_11" name="Tool_group" type="x:TOOL_GROUP"/>
+                <DataItem category="EVENT" id="Mazak01-path_12" name="Tool_suffix" type="x:TOOL_SUFFIX"/>
+                <DataItem category="EVENT" id="Mazak01-path_13" name="execution" type="EXECUTION"/>
+                <DataItem category="EVENT" id="Mazak01-path_14" name="mode" type="CONTROLLER_MODE"/>
+                <DataItem category="EVENT" id="Mazak01-path_15" name="program_cmt" type="x:PROGRAM_COMMENT"/>
+                <DataItem category="EVENT" id="Mazak01-path_16" name="subprogram_cmt" subType="x:SUB" type="x:PROGRAM_COMMENT"/>
+                <DataItem category="SAMPLE" id="Mazak01-path_17" name="auto_time" subType="x:AUTO" type="ACCUMULATED_TIME"/>
+                <DataItem category="SAMPLE" id="Mazak01-path_18" name="total_time" subType="x:TOTAL" type="ACCUMULATED_TIME"/>
+                <DataItem category="SAMPLE" id="Mazak01-path_19" name="cut_time" subType="x:CUT" type="ACCUMULATED_TIME"/>
+                <DataItem category="CONDITION" id="Mazak01-path_20" name="motion_cond" type="MOTION_PROGRAM"/>
+                <DataItem category="CONDITION" id="Mazak01-path_21" name="path_system" type="SYSTEM"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+        <Systems id="Mazak01-systems" name="systems">
+          <Components>
+            <Electric id="Mazak01-electric" name="electric">
+              <DataItems>
+                <DataItem category="EVENT" id="Mazak01-electric_1" name="power" type="POWER_STATE"/>
+                <DataItem category="CONDITION" id="Mazak01-electric_2" name="electric_temp" type="TEMPERATURE"/>
+              </DataItems>
+            </Electric>
+            <Hydraulic id="Mazak01-hydraulic" name="hydraulic">
+              <DataItems>
+                <DataItem category="CONDITION" id="Mazak01-hydraulic_1" name="hydra_cond" type="PRESSURE"/>
+              </DataItems>
+            </Hydraulic>
+            <Coolant id="Mazak01-coolant" name="coolant">
+              <DataItems>
+                <DataItem category="CONDITION" id="Mazak01-coolant_1" name="coolant_pres" type="PRESSURE"/>
+                <DataItem category="CONDITION" id="Mazak01-coolant_2" name="coolant_temp" type="TEMPERATURE"/>
+                <DataItem category="CONDITION" id="Mazak01-coolant_3" name="coolant_level" type="LEVEL"/>
+              </DataItems>
+            </Coolant>
+            <Pneumatic id="Mazak01-pneumatic" name="pneumatic">
+              <DataItems>
+                <DataItem category="CONDITION" id="Mazak01-pneumatic_1" name="pneu_cond" type="PRESSURE"/>
+              </DataItems>
+            </Pneumatic>
+          </Components>
+        </Systems>
+      </Components>
+    </Device>
+    <Device id="Mazak03" name="Mazak03" uuid="mtc_adapter004">
+      <Description manufacturer="Mazak" model="QTN">Mazak QuickTurn - Mazak QuickTurn Nexus 300</Description>
+      <DataItems>
+        <DataItem category="EVENT" id="Mazak03-dtop_1" name="avail" type="AVAILABILITY"/>
+        <DataItem category="EVENT" id="Mazak03_asset_chg" type="ASSET_CHANGED"/>
+        <DataItem category="EVENT" id="Mazak03_asset_rem" type="ASSET_REMOVED"/>
+      </DataItems>
+      <Components>
+        <Axes id="Mazak03-base_1" name="base">
+          <DataItems>
+            <DataItem category="CONDITION" id="Mazak03-base_2" name="servo_cond" type="ACTUATOR"/>
+          </DataItems>
+          <Components>
+            <Linear id="Mazak03-X_1" name="X">
+              <DataItems>
+                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="Mazak03-X_2" name="Xabs" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+                <DataItem category="CONDITION" id="Mazak03-X_3" name="Xtravel" type="POSITION"/>
+                <DataItem category="SAMPLE" id="Mazak03-X_4" name="Xload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak03-X_5" name="Xfrt" nativeUnits="MILLIMETER/SECOND" type="AXIS_FEEDRATE" units="MILLIMETER/SECOND"/>
+              </DataItems>
+            </Linear>
+            <Linear id="Mazak03-Z_1" name="Z">
+              <DataItems>
+                <DataItem category="SAMPLE" coordinateSystem="MACHINE" id="Mazak03-Z_2" name="Zabs" nativeUnits="MILLIMETER" subType="ACTUAL" type="POSITION" units="MILLIMETER"/>
+                <DataItem category="CONDITION" id="Mazak03-Z_3" name="Ztravel" type="POSITION"/>
+                <DataItem category="SAMPLE" id="Mazak03-Z_4" name="Zload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak03-Z_5" name="Zfrt" nativeUnits="MILLIMETER/SECOND" type="AXIS_FEEDRATE" units="MILLIMETER/SECOND"/>
+              </DataItems>
+            </Linear>
+            <Rotary id="Mazak03-C_1" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Mazak03-C_2" name="Cload" nativeUnits="PERCENT" type="LOAD" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Mazak03-C_3" name="Cfrt" nativeUnits="DEGREE/MINUTE" type="ANGULAR_VELOCITY" units="DEGREE/SECOND"/>
+                <DataItem category="SAMPLE" id="Mazak03-C_4" name="Cdeg" nativeUnits="DEGREE" subType="ACTUAL" type="ANGLE" units="DEGREE"/>
+                <DataItem category="CONDITION" id="Mazak03-C_5" name="Ctravel" type="ANGLE"/>
+              </DataItems>
+            </Rotary>
+            <Rotary id="Mazak03-S_1" name="S" nativeName="S">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Mazak03-S_2" name="Srpm" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE"/>
+                <DataItem category="SAMPLE" id="Mazak03-S_3" name="S1load" nativeUnits="PERCENT" type="LOAD" units="PERCENT">
+                  <Source>Sload</Source>
+                </DataItem>
+                <DataItem category="SAMPLE" id="Mazak03-S_4" name="Stemp" nativeUnits="CELSIUS" type="TEMPERATURE" units="CELSIUS"/>
+                <DataItem category="CONDITION" id="Mazak03-S_5" name="Sload_cond" type="LOAD"/>
+                <DataItem category="CONDITION" id="Mazak03-S_6" name="Stemp_cond" type="TEMPERATURE"/>
+              </DataItems>
+            </Rotary>
+            <Rotary id="Mazak03-S2_1" name="S2" nativeName="S2">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Mazak03-S2_2" name="S2rpm" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE"/>
+                <DataItem category="SAMPLE" id="Mazak03-S2_3" name="S2load" nativeUnits="PERCENT" type="LOAD" units="PERCENT">
+                  <Source>S2load</Source>
+                </DataItem>
+                <DataItem category="SAMPLE" id="Mazak03-S2_4" name="S2temp" nativeUnits="CELSIUS" type="TEMPERATURE" units="CELSIUS"/>
+                <DataItem category="CONDITION" id="Mazak03-S2_5" name="S2load_cond" type="LOAD"/>
+                <DataItem category="CONDITION" id="Mazak03-S2_6" name="S2temp_cond" type="TEMPERATURE"/>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="Mazak03-controller_1" name="controller">
+          <DataItems>
+            <DataItem category="CONDITION" id="Mazak03-controller_2" name="comms_cond" type="COMMUNICATIONS"/>
+            <DataItem category="CONDITION" id="Mazak03-controller_3" name="logic_cond" type="LOGIC_PROGRAM"/>
+            <DataItem category="CONDITION" id="Mazak03-controller_4" name="system_cond" type="SYSTEM"/>
+            <DataItem category="EVENT" id="Mazak03-controller_5" name="pallet_num" type="x:PALLET_NUMBER"/>
+          </DataItems>
+          <Components>
+            <Path id="Mazak03-path_1" name="path">
+              <DataItems>
+                <DataItem category="EVENT" id="Mazak03-path_2" name="Sovr" nativeUnits="PERCENT" type="ROTARY_VELOCITY_OVERRIDE" units="PERCENT"/>
+                <DataItem category="EVENT" id="Mazak03-path_3" name="program" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Mazak03-path_4" name="subprogram" subType="x:SUB" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Mazak03-path_5" name="line" type="LINE"/>
+                <DataItem category="EVENT" id="Mazak03-path_6" name="unitNum" type="x:UNIT"/>
+                <DataItem category="EVENT" id="Mazak03-path_95" name="sequenceNum" type="x:SEQUENCE_NUMBER"/>
+                <DataItem category="EVENT" id="Mazak03-path_96" name="PartCountAct" type="PART_COUNT"/>
+                <DataItem category="SAMPLE" id="Mazak03-path_7" name="Fact" nativeUnits="MILLIMETER/SECOND" subType="ACTUAL" type="PATH_FEEDRATE" units="MILLIMETER/SECOND"/>
+                <DataItem category="EVENT" id="Mazak03-path_8" name="Frapidovr" nativeUnits="PERCENT" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="EVENT" id="Mazak03-path_9" name="Fovr" nativeUnits="PERCENT" subType="PROGRAMMED" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="EVENT" id="Mazak03-path_10" name="execution" type="EXECUTION"/>
+                <DataItem category="EVENT" id="Mazak03-path_11" name="mode" type="CONTROLLER_MODE"/>
+                <DataItem category="EVENT" id="Mazak03-path_12" name="program_cmt" type="PROGRAM_COMMENT"/>
+                <DataItem category="EVENT" id="Mazak03-path_13" name="subprogram_cmt" subType="x:SUB_PROGRAM" type="PROGRAM_COMMENT"/>
+                <DataItem category="SAMPLE" id="Mazak03-path_14" name="auto_time" nativeUnits="SECOND" subType="x:AUTO" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Mazak03-path_15" name="total_time" nativeUnits="SECOND" subType="x:TOTAL" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Mazak03-path_16" name="cut_time" nativeUnits="SECOND" subType="x:CUT" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="CONDITION" id="Mazak03-path_17" name="motion_cond" type="MOTION_PROGRAM"/>
+                <DataItem category="CONDITION" id="Mazak03-path_18" name="motion_cond2" subType="x:MOTION_PROGRAM_2" type="MOTION_PROGRAM"/>
+                <DataItem category="CONDITION" id="Mazak03-path_19" name="motion_cond3" subType="x:MOTION_PROGRAM_3" type="MOTION_PROGRAM"/>
+                <DataItem category="CONDITION" id="Mazak03-path_20" name="motion_cond4" subType="x:MOTION_PROGRAM_4" type="MOTION_PROGRAM"/>
+                <DataItem category="CONDITION" id="Mazak03-path_21" name="path_system" type="SYSTEM"/>
+                <DataItem category="CONDITION" id="Mazak03-path_22" name="path_system2" subType="x:SYSTEM_1" type="SYSTEM"/>
+                <DataItem category="CONDITION" id="Mazak03-path_23" name="path_system3" subType="x:SYSTEM_2" type="SYSTEM"/>
+                <DataItem category="CONDITION" id="Mazak03-path_24" name="path_system4" subType="x:SYSTEM_3" type="SYSTEM"/>
+                <DataItem category="EVENT" id="Mazak03-path_25" name="Tool_number" type="TOOL_ASSET_ID"/>
+                <DataItem category="EVENT" id="Mazak03-path_26" name="Tool_group" type="x:TOOL_GROUP"/>
+                <DataItem category="EVENT" id="Mazak03-path_27" name="Tool_suffix" type="x:TOOL_SUFFIX"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+        <Systems id="Mazak03-systems_1" name="systems">
+          <Components>
+            <Electric id="Mazak03-electric_1" name="electric">
+              <DataItems>
+                <DataItem category="EVENT" id="Mazak03-electric_2" name="power" type="POWER_STATE"/>
+                <DataItem category="CONDITION" id="Mazak03-electric_3" name="electric_temp" type="TEMPERATURE"/>
+              </DataItems>
+            </Electric>
+            <Hydraulic id="Mazak03-hydraulic_1" name="hydraulic">
+              <DataItems>
+                <DataItem category="CONDITION" id="Mazak03-hydraulic_2" name="hydra_cond" type="PRESSURE"/>
+              </DataItems>
+            </Hydraulic>
+            <Coolant id="Mazak03-coolant_1" name="coolant">
+              <DataItems>
+                <DataItem category="CONDITION" id="Mazak03-coolant_2" name="coolant_pres" type="PRESSURE"/>
+                <DataItem category="CONDITION" id="Mazak03-coolant_3" name="coolant_temp" type="TEMPERATURE"/>
+                <DataItem category="CONDITION" id="Mazak03-coolant_4" name="coolant_level" type="LEVEL"/>
+              </DataItems>
+            </Coolant>
+            <Pneumatic id="Mazak03-pneumatic_1" name="pneumatic">
+              <DataItems>
+                <DataItem category="CONDITION" id="Mazak03-pneumatic_2" name="pneu_cond" type="PRESSURE"/>
+              </DataItems>
+            </Pneumatic>
+          </Components>
+        </Systems>
+      </Components>
+    </Device>
+    <Device id="Hurco01" name="Hurco01" uuid="mtc_adapter005">
+      <Description manufacturer="Hurco" model="VMX24">Hurco VMX 24 #1</Description>
+      <DataItems>
+        <DataItem category="EVENT" id="Hurco01-dtop_1" name="avail" type="AVAILABILITY"/>
+        <DataItem category="EVENT" id="Hurco01_asset_chg" type="ASSET_CHANGED"/>
+        <DataItem category="EVENT" id="Hurco01_asset_rem" type="ASSET_REMOVED"/>
+      </DataItems>
+      <Components>
+        <Axes id="Hurco01-axes" name="Axes">
+          <Components>
+            <Rotary id="Hurco01-C" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Hurco01-C_1" name="Spindle_Speed" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+                <DataItem category="EVENT" id="Hurco01-C_2" name="Spindle_Override" nativeUnits="PERCENT" type="ROTARY_VELOCITY_OVERRIDE" units="PERCENT">
+                  <Source>SspeedOvr</Source>
+                </DataItem>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="Hurco01-controller" name="controller">
+          <DataItems>
+            <DataItem category="EVENT" id="Hurco01-controller_1" name="EStop_State" type="EMERGENCY_STOP"/>
+          </DataItems>
+          <Components>
+            <Path id="Hurco01-path" name="Path">
+              <DataItems>
+                <DataItem category="EVENT" id="Hurco01-path_1" name="Block_Number" type="LINE"/>
+                <DataItem category="EVENT" id="Hurco01-path_2" name="Program_Name_Running" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Hurco01-path_3" name="Program_Name_Editing" type="PROGRAM_EDIT_NAME"/>
+                <DataItem category="EVENT" id="Hurco01-path_4" name="Part_Count" subType="ALL" type="PART_COUNT"/>
+                <DataItem category="EVENT" id="Hurco01-path_5" name="Program_Status" type="EXECUTION"/>
+                <DataItem category="EVENT" id="Hurco01-path_6" name="Current_Tool" type="TOOL_NUMBER"/>
+                <DataItem category="SAMPLE" id="Hurco01-path_7" name="Program_Runtime_Seconds" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco01-path_8" name="Spindle_Time" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco01-path_9" name="Feed_Rate" nativeUnits="MILLIMETER/SECOND" subType="ACTUAL" type="PATH_FEEDRATE" units="MILLIMETER/SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco01-path_10" name="Feed_Override" nativeUnits="PERCENT" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Hurco01-path_11" name="Rapid_Override" nativeUnits="PERCENT" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+      </Components>
+    </Device>
+    <Device id="Hurco02" name="Hurco02" uuid="mtc_adapter006">
+      <Description manufacturer="Hurco" model="VMX24">Hurco VMX 24 #2</Description>
+      <DataItems>
+        <DataItem category="EVENT" id="Hurco02-dtop_1" name="avail" type="AVAILABILITY"/>
+        <DataItem category="EVENT" id="Hurco02_asset_chg" type="ASSET_CHANGED"/>
+        <DataItem category="EVENT" id="Hurco02_asset_rem" type="ASSET_REMOVED"/>
+      </DataItems>
+      <Components>
+        <Axes id="Hurco02-axes" name="Axes">
+          <Components>
+            <Rotary id="Hurco02-C" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Hurco02-C_1" name="Spindle_Speed" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+                <DataItem category="EVENT" id="Hurco02-C_2" name="Spindle_Override" nativeUnits="PERCENT" type="ROTARY_VELOCITY_OVERRIDE" units="PERCENT">
+                  <Source>SspeedOvr</Source>
+                </DataItem>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="Hurco02-controller" name="controller">
+          <DataItems>
+            <DataItem category="EVENT" id="Hurco02-controller_1" name="EStop_State" type="EMERGENCY_STOP"/>
+          </DataItems>
+          <Components>
+            <Path id="Hurco02-path" name="Path">
+              <DataItems>
+                <DataItem category="EVENT" id="Hurco02-path_1" name="Block_Number" type="LINE"/>
+                <DataItem category="EVENT" id="Hurco02-path_2" name="Program_Name_Running" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Hurco02-path_3" name="Program_Name_Editing" type="PROGRAM_EDIT_NAME"/>
+                <DataItem category="EVENT" id="Hurco02-path_4" name="Part_Count" subType="ALL" type="PART_COUNT"/>
+                <DataItem category="EVENT" id="Hurco02-path_5" name="Program_Status" type="EXECUTION"/>
+                <DataItem category="EVENT" id="Hurco02-path_6" name="Current_Tool" type="TOOL_NUMBER"/>
+                <DataItem category="SAMPLE" id="Hurco02-path_7" name="Program_Runtime_Seconds" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco02-path_8" name="Spindle_Time" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco02-path_9" name="Feed_Rate" nativeUnits="MILLIMETER/SECOND" subType="ACTUAL" type="PATH_FEEDRATE" units="MILLIMETER/SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco02-path_10" name="Feed_Override" nativeUnits="PERCENT" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Hurco02-path_11" name="Rapid_Override" nativeUnits="PERCENT" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+      </Components>
+    </Device>
+    <Device id="Hurco03" name="Hurco03" uuid="mtc_adapter007">
+      <Description manufacturer="Hurco" model="VMX24">Hurco VMX 24 #3</Description>
+      <DataItems>
+        <DataItem category="EVENT" id="Hurco03-dtop_1" name="avail" type="AVAILABILITY"/>
+        <DataItem category="EVENT" id="Hurco03_asset_chg" type="ASSET_CHANGED"/>
+        <DataItem category="EVENT" id="Hurco03_asset_rem" type="ASSET_REMOVED"/>
+      </DataItems>
+      <Components>
+        <Axes id="Hurco03-axes" name="Axes">
+          <Components>
+            <Rotary id="Hurco03-C" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Hurco03-C_1" name="Spindle_Speed" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+                <DataItem category="EVENT" id="Hurco03-C_2" name="Spindle_Override" nativeUnits="PERCENT" type="ROTARY_VELOCITY_OVERRIDE" units="PERCENT">
+                  <Source>SspeedOvr</Source>
+                </DataItem>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="Hurco03-controller" name="controller">
+          <DataItems>
+            <DataItem category="EVENT" id="Hurco03-controller_1" name="EStop_State" type="EMERGENCY_STOP"/>
+          </DataItems>
+          <Components>
+            <Path id="Hurco03-path" name="Path">
+              <DataItems>
+                <DataItem category="EVENT" id="Hurco03-path_1" name="Block_Number" type="LINE"/>
+                <DataItem category="EVENT" id="Hurco03-path_2" name="Program_Name_Running" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Hurco03-path_3" name="Program_Name_Editing" type="PROGRAM_EDIT_NAME"/>
+                <DataItem category="EVENT" id="Hurco03-path_4" name="Part_Count" subType="ALL" type="PART_COUNT"/>
+                <DataItem category="EVENT" id="Hurco03-path_5" name="Program_Status" type="EXECUTION"/>
+                <DataItem category="EVENT" id="Hurco03-path_6" name="Current_Tool" type="TOOL_NUMBER"/>
+                <DataItem category="SAMPLE" id="Hurco03-path_7" name="Program_Runtime_Seconds" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco03-path_8" name="Spindle_Time" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco03-path_9" name="Feed_Rate" nativeUnits="MILLIMETER/SECOND" subType="ACTUAL" type="PATH_FEEDRATE" units="MILLIMETER/SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco03-path_10" name="Feed_Override" nativeUnits="PERCENT" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Hurco03-path_11" name="Rapid_Override" nativeUnits="PERCENT" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+      </Components>
+    </Device>
+    <Device id="Hurco04" name="Hurco04" uuid="mtc_adapter008">
+      <Description manufacturer="Hurco" model="VMX24">Hurco VMX 24 #4</Description>
+      <DataItems>
+        <DataItem category="EVENT" id="Hurco04-dtop_1" name="avail" type="AVAILABILITY"/>
+        <DataItem category="EVENT" id="Hurco04_asset_chg" type="ASSET_CHANGED"/>
+        <DataItem category="EVENT" id="Hurco04_asset_rem" type="ASSET_REMOVED"/>
+      </DataItems>
+      <Components>
+        <Axes id="Hurco04-axes" name="Axes">
+          <Components>
+            <Rotary id="Hurco04-C" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Hurco04-C_1" name="Spindle_Speed" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+                <DataItem category="EVENT" id="Hurco04-C_2" name="Spindle_Override" nativeUnits="PERCENT" type="ROTARY_VELOCITY_OVERRIDE" units="PERCENT">
+                  <Source>SspeedOvr</Source>
+                </DataItem>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="Hurco04-controller" name="controller">
+          <DataItems>
+            <DataItem category="EVENT" id="Hurco04-controller_1" name="EStop_State" type="EMERGENCY_STOP"/>
+          </DataItems>
+          <Components>
+            <Path id="Hurco04-path" name="Path">
+              <DataItems>
+                <DataItem category="EVENT" id="Hurco04-path_1" name="Block_Number" type="LINE"/>
+                <DataItem category="EVENT" id="Hurco04-path_2" name="Program_Name_Running" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Hurco04-path_3" name="Program_Name_Editing" type="PROGRAM_EDIT_NAME"/>
+                <DataItem category="EVENT" id="Hurco04-path_4" name="Part_Count" subType="ALL" type="PART_COUNT"/>
+                <DataItem category="EVENT" id="Hurco04-path_5" name="Program_Status" type="EXECUTION"/>
+                <DataItem category="EVENT" id="Hurco04-path_6" name="Current_Tool" type="TOOL_NUMBER"/>
+                <DataItem category="SAMPLE" id="Hurco04-path_7" name="Program_Runtime_Seconds" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco04-path_8" name="Spindle_Time" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco04-path_9" name="Feed_Rate" nativeUnits="MILLIMETER/SECOND" subType="ACTUAL" type="PATH_FEEDRATE" units="MILLIMETER/SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco04-path_10" name="Feed_Override" nativeUnits="PERCENT" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Hurco04-path_11" name="Rapid_Override" nativeUnits="PERCENT" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+      </Components>
+    </Device>
+    <Device id="Hurco06" name="Hurco06" uuid="mtc_adapter010">
+      <Description manufacturer="Hurco" model="VMX64">Hurco VMX 64</Description>
+      <DataItems>
+        <DataItem category="EVENT" id="Hurco06-dtop_1" name="avail" type="AVAILABILITY"/>
+        <DataItem category="EVENT" id="Hurco06_asset_chg" type="ASSET_CHANGED"/>
+        <DataItem category="EVENT" id="Hurco06_asset_rem" type="ASSET_REMOVED"/>
+      </DataItems>
+      <Components>
+        <Axes id="Hurco06-axes" name="Axes">
+          <Components>
+            <Rotary id="Hurco06-C" name="C">
+              <DataItems>
+                <DataItem category="SAMPLE" id="Hurco06-C_1" name="Spindle_Speed" nativeUnits="REVOLUTION/MINUTE" subType="ACTUAL" type="ROTARY_VELOCITY" units="REVOLUTION/MINUTE">
+                  <Source>spindle_speed</Source>
+                </DataItem>
+                <DataItem category="EVENT" id="Hurco06-C_2" name="Spindle_Override" nativeUnits="PERCENT" type="ROTARY_VELOCITY_OVERRIDE" units="PERCENT">
+                  <Source>SspeedOvr</Source>
+                </DataItem>
+              </DataItems>
+            </Rotary>
+          </Components>
+        </Axes>
+        <Controller id="Hurco06-controller" name="controller">
+          <DataItems>
+            <DataItem category="EVENT" id="Hurco06-controller_1" name="EStop_State" type="EMERGENCY_STOP"/>
+          </DataItems>
+          <Components>
+            <Path id="Hurco06-path" name="Path">
+              <DataItems>
+                <DataItem category="EVENT" id="Hurco06-path_1" name="Block_Number" type="LINE"/>
+                <DataItem category="EVENT" id="Hurco06-path_2" name="Program_Name_Running" type="PROGRAM"/>
+                <DataItem category="EVENT" id="Hurco06-path_3" name="Program_Name_Editing" type="PROGRAM_EDIT_NAME"/>
+                <DataItem category="EVENT" id="Hurco06-path_4" name="Part_Count" subType="ALL" type="PART_COUNT"/>
+                <DataItem category="EVENT" id="Hurco06-path_5" name="Program_Status" type="EXECUTION"/>
+                <DataItem category="EVENT" id="Hurco06-path_6" name="Current_Tool" type="TOOL_NUMBER"/>
+                <DataItem category="SAMPLE" id="Hurco06-path_7" name="Program_Runtime_Seconds" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco06-path_8" name="Spindle_Time" nativeUnits="SECOND" type="ACCUMULATED_TIME" units="SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco06-path_9" name="Feed_Rate" nativeUnits="MILLIMETER/SECOND" subType="ACTUAL" type="PATH_FEEDRATE" units="MILLIMETER/SECOND"/>
+                <DataItem category="SAMPLE" id="Hurco06-path_10" name="Feed_Override" nativeUnits="PERCENT" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+                <DataItem category="SAMPLE" id="Hurco06-path_11" name="Rapid_Override" nativeUnits="PERCENT" subType="RAPID" type="PATH_FEEDRATE_OVERRIDE" units="PERCENT"/>
+              </DataItems>
+            </Path>
+          </Components>
+        </Controller>
+      </Components>
+    </Device>
+  </Devices>
+</MTConnectDevices>

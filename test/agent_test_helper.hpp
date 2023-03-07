@@ -24,18 +24,19 @@
 
 #include <nlohmann/json.hpp>
 
-#include "agent.hpp"
-#include "configuration/agent_config.hpp"
-#include "configuration/config_options.hpp"
-#include "pipeline/pipeline.hpp"
-#include "sink/mqtt_sink/mqtt_service.hpp"
-#include "sink/rest_sink/response.hpp"
-#include "sink/rest_sink/rest_service.hpp"
-#include "sink/rest_sink/routing.hpp"
-#include "sink/rest_sink/server.hpp"
-#include "sink/rest_sink/session.hpp"
-#include "source/adapter/shdr/shdr_adapter.hpp"
-#include "source/loopback_source.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/config.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
+#include "mtconnect/configuration/config_options.hpp"
+#include "mtconnect/pipeline/pipeline.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
+#include "mtconnect/sink/rest_sink/response.hpp"
+#include "mtconnect/sink/rest_sink/rest_service.hpp"
+#include "mtconnect/sink/rest_sink/routing.hpp"
+#include "mtconnect/sink/rest_sink/server.hpp"
+#include "mtconnect/sink/rest_sink/session.hpp"
+#include "mtconnect/source/adapter/shdr/shdr_adapter.hpp"
+#include "mtconnect/source/loopback_source.hpp"
 #include "test_utilities.hpp"
 
 namespace mtconnect {
@@ -114,6 +115,8 @@ namespace observe = mtconnect::observation;
 class AgentTestHelper
 {
 public:
+  using Hook = std::function<void(AgentTestHelper &)>;
+
   AgentTestHelper() : m_incomingIp("127.0.0.1"), m_strand(m_ioContext), m_socket(m_ioContext) {}
 
   ~AgentTestHelper()
@@ -127,6 +130,8 @@ public:
   }
 
   auto session() { return m_session; }
+
+  void setAgentCreateHook(Hook &hook) { m_agentCreateHook = hook; }
 
   // Helper method to test expected string, given optional query, & run tests
   void responseHelper(const char *file, int line,
@@ -191,9 +196,13 @@ public:
     options.emplace(configuration::SchemaVersion, version);
     options.emplace(configuration::Pretty, true);
     options.emplace(configuration::Port, 0);
+    options.emplace(configuration::ServerIp, std::string("127.0.0.1"));
     options.emplace(configuration::JsonVersion, 1);
 
     m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, PROJECT_ROOT_DIR + file, options);
+    if (m_agentCreateHook)
+      m_agentCreateHook(*this);
+
     m_context = std::make_shared<pipeline::PipelineContext>();
     m_context->m_contract = m_agent->makePipelineContract();
 
@@ -247,7 +256,7 @@ public:
 
     if (!IsOptionSet(options, configuration::Device))
     {
-      options[configuration::Device] = *m_agent->defaultDevice()->getComponentName();
+      options[configuration::Device] = *m_agent->getDefaultDevice()->getComponentName();
     }
     boost::property_tree::ptree tree;
     tree.put(configuration::Host, host);
@@ -308,6 +317,8 @@ public:
 
   mtconnect::sink::SinkFactory m_sinkFactory;
   mtconnect::source::SourceFactory m_sourceFactory;
+
+  Hook m_agentCreateHook;
 };
 
 struct XmlDocFreer

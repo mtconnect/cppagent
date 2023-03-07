@@ -26,13 +26,20 @@
 #include <sstream>
 #include <string>
 
-#include "sink/rest_sink/response.hpp"
-#include "sink/rest_sink/routing.hpp"
+#include "mtconnect/sink/rest_sink/response.hpp"
+#include "mtconnect/sink/rest_sink/routing.hpp"
 
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::sink::rest_sink;
 using verb = boost::beast::http::verb;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class RoutingTest : public testing::Test
 {

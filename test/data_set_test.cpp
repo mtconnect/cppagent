@@ -21,10 +21,10 @@
 
 #include <cstdio>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -34,6 +34,13 @@ using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
 using namespace mtconnect::sink::rest_sink;
 using namespace mtconnect::buffer;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class DataSetTest : public testing::Test
 {
@@ -473,8 +480,8 @@ TEST_F(DataSetTest, CurrentAt)
   using namespace mtconnect::sink::rest_sink;
   m_agentTestHelper->addAdapter();
 
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
 
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
   m_agentTestHelper->m_adapter->processData("TIME|vars| c=5 ");

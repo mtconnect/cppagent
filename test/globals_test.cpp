@@ -22,10 +22,17 @@
 #include <date/date.h>
 #include <thread>
 
-#include "utilities.hpp"
+#include "mtconnect/utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 TEST(GlobalsTest, IntToString)
 {

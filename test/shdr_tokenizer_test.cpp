@@ -21,9 +21,9 @@
 
 #include <chrono>
 
-#include "entity/entity.hpp"
-#include "pipeline/shdr_tokenizer.hpp"
-#include "pipeline/timestamp_extractor.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/pipeline/shdr_tokenizer.hpp"
+#include "mtconnect/pipeline/timestamp_extractor.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -31,6 +31,13 @@ using namespace mtconnect::observation;
 using namespace std;
 using namespace date::literals;
 using namespace std::literals;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class ShdrTokenizerTest : public testing::Test
 {

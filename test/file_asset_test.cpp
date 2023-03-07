@@ -26,15 +26,15 @@
 #include <sstream>
 #include <string>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "asset/asset.hpp"
-#include "asset/file_asset.hpp"
-#include "entity/xml_parser.hpp"
-#include "entity/xml_printer.hpp"
 #include "json_helper.hpp"
-#include "printer/xml_printer_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/asset/file_asset.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/entity/xml_printer.hpp"
+#include "mtconnect/printer//xml_printer_helper.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -43,6 +43,13 @@ using namespace mtconnect::entity;
 using namespace mtconnect::source::adapter;
 using namespace mtconnect::asset;
 using namespace mtconnect::printer;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class FileAssetTest : public testing::Test
 {
@@ -79,7 +86,7 @@ TEST_F(FileAssetTest, TestMinmalArchetype)
   auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset*>(entity.get());
+  auto asset = dynamic_cast<Asset *>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   ASSERT_EQ("F1", asset->getAssetId());
@@ -137,7 +144,7 @@ TEST_F(FileAssetTest, TestMinmalFile)
   auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
   ASSERT_EQ(0, errors.size());
 
-  auto asset = dynamic_cast<Asset*>(entity.get());
+  auto asset = dynamic_cast<Asset *>(entity.get());
   ASSERT_NE(nullptr, asset);
 
   EXPECT_EQ("F1", asset->getAssetId());

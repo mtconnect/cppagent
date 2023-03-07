@@ -2,7 +2,7 @@
 set(AGENT_VERSION_MAJOR 2)
 set(AGENT_VERSION_MINOR 1)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 2)
+set(AGENT_VERSION_BUILD 5)
 set(AGENT_VERSION_RC "")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
@@ -15,6 +15,7 @@ if(POLICY CMP0077)
 endif()
 
 option(AGENT_ENABLE_UNITTESTS "Enables the agent's unit tests" ON)
+option(SHARED_AGENT_LIB "Generate shared agent library. Conan options: shared" OFF)
 set(INSTALL_GTEST OFF FORCE)
 
 project(cppagent LANGUAGES C CXX)
@@ -25,8 +26,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_COMPILE_FEATURES cxx_std_17)
 
-set(WITH_PYTHON OFF CACHE STRING "With Python Support")
-set(WITH_RUBY OFF CACHE STRING "With Ruby Support")
+
+set(WITH_RUBY ON CACHE STRING "With Ruby Support")
 
 # By default only generate 2 configurations (Debug and Release) for simplicity.
 # The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
@@ -64,7 +65,11 @@ if(MSVC)
 endif()
 
 if (UNIX)
-  add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
+  if (SHARED_AGENT_LIB)
+    add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden)
+  else()
+    add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
+  endif()
 ENDIF()
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -73,17 +78,24 @@ if (CONAN_USER_MRUBY_mruby)
   set(WITH_RUBY ON FORCE)
 endif()
 
-conan_basic_setup(TARGETS)
+conan_basic_setup(KEEP_RPATHS TARGETS)
 
-if(WITH_PYTHON)
-  set(Python_USE_STATIC_LIBS ON)
+if(SHARED_AGENT_LIB)
+  set(CMAKE_BUILD_RPATH "@load_path/;@executable_path/;@load_path/../lib;@executable_path/../lib")
 
-  find_package(Python3 COMPONENTS Interpreter Development Development.Embed)
-  message("Include dirs of Python: " ${Python3_INCLUDE_DIRS} )
-  message("Libs of Python: " ${Python3_LIBRARIES} )
+  if (MSVC)
+    include(InstallRequiredSystemLibraries)
+  endif()
 endif()
 
-include(cmake/msvc_use_static_runtime.cmake)
+if (MSVC)
+  if (CONAN_SETTINGS_COMPILER_RUNTIME MATCHES "MT")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  else()
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+  endif()
+endif()
+
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)

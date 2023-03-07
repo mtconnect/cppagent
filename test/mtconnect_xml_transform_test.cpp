@@ -21,10 +21,10 @@
 
 #include <chrono>
 
-#include "agent.hpp"
-#include "entity/entity.hpp"
-#include "pipeline/mtconnect_xml_transform.hpp"
-#include "printer/xml_printer.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -33,6 +33,13 @@ using namespace mtconnect::asset;
 using namespace std;
 using namespace date::literals;
 using namespace std::literals;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class MockPipelineContract : public PipelineContract
 {

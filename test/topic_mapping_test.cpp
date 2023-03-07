@@ -21,10 +21,10 @@
 
 #include <chrono>
 
-#include "device_model/device.hpp"
-#include "observation/observation.hpp"
-#include "pipeline/pipeline_context.hpp"
-#include "pipeline/topic_mapper.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/pipeline_context.hpp"
+#include "mtconnect/pipeline/topic_mapper.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -33,6 +33,13 @@ using namespace mtconnect::asset;
 using namespace device_model;
 using namespace data_item;
 using namespace std;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class MockPipelineContract : public PipelineContract
 {

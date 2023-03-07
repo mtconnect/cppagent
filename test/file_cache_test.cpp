@@ -30,7 +30,7 @@
 #include <string>
 #include <thread>
 
-#include "sink/rest_sink/file_cache.hpp"
+#include "mtconnect/sink/rest_sink/file_cache.hpp"
 
 #ifndef _WINDOWS
 #include <sys/time.h>
@@ -39,6 +39,13 @@
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::sink::rest_sink;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 #define RESOURCE_ROOT PROJECT_ROOT_DIR "/test/resources"
 

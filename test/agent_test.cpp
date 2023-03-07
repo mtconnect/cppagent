@@ -26,12 +26,12 @@
 #include <stdexcept>
 #include <thread>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "asset/file_asset.hpp"
-#include "device_model/reference.hpp"
-#include "printer/xml_printer.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/asset/file_asset.hpp"
+#include "mtconnect/device_model/reference.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 #include "test_utilities.hpp"
 
 #if defined(WIN32) && _MSC_VER < 1500
@@ -47,6 +47,13 @@ using namespace mtconnect::source::adapter;
 using namespace mtconnect::observation;
 
 using status = boost::beast::http::status;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class AgentTest : public testing::Test
 {
@@ -67,7 +74,7 @@ protected:
   void addAdapter(ConfigOptions options = ConfigOptions {})
   {
     m_agentTestHelper->addAdapter(options, "localhost", 7878,
-                                  m_agentTestHelper->m_agent->defaultDevice()->getName());
+                                  m_agentTestHelper->m_agent->getDefaultDevice()->getName());
   }
 
 public:
@@ -232,8 +239,8 @@ TEST_F(AgentTest, CurrentAt)
   addAdapter();
 
   // Get the current position
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
   char line[80] = {0};
 
   // Add many events
@@ -274,7 +281,7 @@ TEST_F(AgentTest, CurrentAt)
   // Check the first couple of items in the list
   for (int j = 0; j < 10; j++)
   {
-    auto i = rest->getSequence() - rest->getBufferSize() - seq + j;
+    auto i = circ.getSequence() - circ.getBufferSize() - seq + j;
     query["at"] = to_string(i + seq);
     ;
     PARSE_XML_RESPONSE_QUERY("/current", query);
@@ -283,7 +290,7 @@ TEST_F(AgentTest, CurrentAt)
 
   // Test out of range...
   {
-    auto i = rest->getSequence() - rest->getBufferSize() - seq - 1;
+    auto i = circ.getSequence() - circ.getBufferSize() - seq - 1;
     sprintf(line, "'at' must be greater than %d", int32_t(i + seq));
     query["at"] = to_string(i + seq);
     ;
@@ -303,9 +310,10 @@ TEST_F(AgentTest, CurrentAt64)
   char line[80] = {0};
 
   // Initialize the sliding buffer at a very large number.
-  auto rest = m_agentTestHelper->getRestService();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+
   uint64_t start = (((uint64_t)1) << 48) + 1317;
-  rest->setSequence(start);
+  circ.setSequence(start);
 
   // Add many events
   for (int i = 1; i <= 500; i++)
@@ -340,8 +348,8 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
 
   {
     query["at"] = to_string(seq);
@@ -351,7 +359,7 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", line);
   }
 
-  seq = rest->getFirstSequence() - 1;
+  seq = circ.getFirstSequence() - 1;
 
   {
     query["at"] = to_string(seq);
@@ -428,8 +436,8 @@ TEST_F(AgentTest, Composition)
 
 TEST_F(AgentTest, BadCount)
 {
-  auto rest = m_agentTestHelper->getRestService();
-  int size = rest->getBufferSize() + 1;
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  int size = circ.getBufferSize() + 1;
   {
     QueryMap query {{"count", "NON_INTEGER"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -528,8 +536,8 @@ TEST_F(AgentTest, SampleAtNextSeq)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
   {
     query["from"] = to_string(seq);
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -541,8 +549,8 @@ TEST_F(AgentTest, SampleCount)
 {
   QueryMap query;
   addAdapter();
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
 
   // Get the current position
   char line[80] = {0};
@@ -588,8 +596,8 @@ TEST_F(AgentTest, SampleLastCount)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence() - 20;
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence() - 20;
 
   {
     query["path"] = "//DataItem[@name='Xact']";
@@ -624,8 +632,8 @@ TEST_F(AgentTest, SampleToParameter)
     m_agentTestHelper->m_adapter->processData(line);
   }
 
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence() - 20;
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence() - 20;
 
   {
     query["path"] = "//DataItem[@name='Xact']";
@@ -687,8 +695,8 @@ TEST_F(AgentTest, EmptyStream)
   }
 
   {
-    auto rest = m_agentTestHelper->getRestService();
-    QueryMap query {{"from", to_string(rest->getSequence())}};
+    auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+    QueryMap query {{"from", to_string(circ.getSequence())}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
@@ -701,12 +709,12 @@ TEST_F(AgentTest, AddToBuffer)
 
   string device("LinuxCNC"), key("badKey"), value("ON");
   SequenceNumber_t seqNum {0};
-  auto rest = m_agentTestHelper->getRestService();
-  auto event1 = rest->getFromBuffer(seqNum);
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto event1 = circ.getFromBuffer(seqNum);
   ASSERT_FALSE(event1);
 
   {
-    query["from"] = to_string(rest->getSequence());
+    query["from"] = to_string(circ.getSequence());
     PARSE_XML_RESPONSE_QUERY("/sample", query);
     ASSERT_XML_PATH_EQUAL(doc, "//m:Streams", nullptr);
   }
@@ -715,7 +723,7 @@ TEST_F(AgentTest, AddToBuffer)
 
   auto di2 = agent->getDataItemForDevice(device, key);
   seqNum = m_agentTestHelper->addToBuffer(di2, {{"VALUE", value}}, chrono::system_clock::now());
-  auto event2 = rest->getFromBuffer(seqNum);
+  auto event2 = circ.getFromBuffer(seqNum);
   ASSERT_EQ(3, event2.use_count());
 
   {
@@ -737,9 +745,9 @@ TEST_F(AgentTest, SequenceNumberRollover)
   addAdapter();
 
   // Set the sequence number near MAX_UINT32
-  auto rest = m_agentTestHelper->getRestService();
-  rest->setSequence(0xFFFFFFA0);
-  SequenceNumber_t seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  circ.setSequence(0xFFFFFFA0);
+  SequenceNumber_t seq = circ.getSequence();
   ASSERT_EQ((int64_t)0xFFFFFFA0, seq);
 
   // Get the current position
@@ -782,7 +790,7 @@ TEST_F(AgentTest, SequenceNumberRollover)
     }
   }
 
-  ASSERT_EQ(uint64_t(0xFFFFFFA0) + 128ul, rest->getSequence());
+  ASSERT_EQ(uint64_t(0xFFFFFFA0) + 128ul, circ.getSequence());
 #endif
 }
 
@@ -2613,13 +2621,14 @@ TEST_F(AgentTest, StreamData)
   addAdapter();
   auto heartbeatFreq {200ms};
   auto rest = m_agentTestHelper->getRestService();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
   rest->start();
 
   // Start a thread...
   QueryMap query;
   query["interval"] = "50";
   query["heartbeat"] = to_string(heartbeatFreq.count());
-  query["from"] = to_string(rest->getSequence());
+  query["from"] = to_string(circ.getSequence());
 
   // Heartbeat test. Heartbeat should be sent in 200ms. Give
   // 25ms range.
@@ -2681,19 +2690,21 @@ TEST_F(AgentTest, StreamDataObserver)
   auto rest = m_agentTestHelper->getRestService();
   rest->start();
 
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+
   // Start a thread...
   std::map<string, string> query;
   query["interval"] = "100";
   query["heartbeat"] = "1000";
   query["count"] = "10";
-  query["from"] = to_string(rest->getSequence());
+  query["from"] = to_string(circ.getSequence());
   query["path"] = "//DataItem[@name='line']";
 
   // Test to make sure the signal will push the sequence number forward and capture
   // the new data.
   {
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
-    auto seq = to_string(rest->getSequence() + 20ull);
+    auto seq = to_string(circ.getSequence() + 20ull);
     for (int i = 0; i < 20; i++)
     {
       m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|block|" + to_string(i));
@@ -2855,11 +2866,11 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
 TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
-  
+
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
   const auto &storage = agent->getAssetStorage();
-  
+
   {
     PARSE_XML_RESPONSE_PUT("/assets", body, queries);
     ASSERT_EQ((unsigned int)1, storage->getCount());
@@ -2868,5 +2879,63 @@ TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
     PARSE_XML_RESPONSE_PUT("/assets/P2", body, queries);
     ASSERT_EQ((unsigned int)2, storage->getCount());
   }
-  
+}
+
+TEST_F(AgentTest, pre_start_hook_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->beforeStartHooks().add(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_FALSE(called);
+  agent->start();
+  ASSERT_TRUE(called);
+  agent->stop();
+}
+
+TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->beforeInitializeHooks().add(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_TRUE(called);
+}
+
+TEST_F(AgentTest, post_initialize_hooks_should_be_called)
+{
+  bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&](AgentTestHelper &helper) {
+    helper.getAgent()->afterInitializeHooks().add(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_TRUE(called);
+}
+
+TEST_F(AgentTest, pre_stop_hook_should_be_called)
+{
+  static bool called = false;
+  Agent::Hook lambda = [&](Agent &agent) { called = true; };
+  AgentTestHelper::Hook helperHook = [&lambda](AgentTestHelper &helper) {
+    helper.getAgent()->beforeStopHooks().add(lambda);
+  };
+  m_agentTestHelper->setAgentCreateHook(helperHook);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+
+  ASSERT_FALSE(called);
+  agent->start();
+  ASSERT_FALSE(called);
+  agent->stop();
+  ASSERT_TRUE(called);
 }

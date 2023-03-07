@@ -27,17 +27,24 @@
 
 #include <nlohmann/json.hpp>
 
-#include "buffer/checkpoint.hpp"
-#include "device_model/data_item/data_item.hpp"
-#include "device_model/device.hpp"
 #include "json_helper.hpp"
-#include "observation/observation.hpp"
-#include "printer/json_printer.hpp"
-#include "utilities.hpp"
+#include "mtconnect/buffer/checkpoint.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
+#include "mtconnect/device_model/device.hpp"
+#include "mtconnect/observation/observation.hpp"
+#include "mtconnect/printer//json_printer.hpp"
+#include "mtconnect/utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
 using json = nlohmann::json;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class JsonPrinterErrorTest : public testing::Test
 {
