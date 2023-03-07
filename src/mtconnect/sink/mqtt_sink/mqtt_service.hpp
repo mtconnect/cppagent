@@ -39,36 +39,58 @@ namespace mtconnect {
   class XmlPrinter;
 
   namespace sink {
+
+    /// @brief MTConnect Mqtt implemention namespace
+
     namespace mqtt_sink {
       class AGENT_LIB_API MqttService : public sink::Sink
       {
         // dynamic loading of sink
 
       public:
+        /// @brief Create a Mqtt Service sink
+        /// @param context the boost asio io_context
+        /// @param contract the Sink Contract from the agent
+        /// @param options configuration options
+        /// @param config additional configuration options if specified directly as a sink
         MqttService(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
                     const ConfigOptions &options, const boost::property_tree::ptree &config);
 
         ~MqttService() = default;
 
         // Sink Methods
+        /// @brief Start the Mqtt service
         void start() override;
 
+        /// @brief Shutdown the Mqtt service
         void stop() override;
 
+        /// @brief Receive an observation
+        /// @param observation shared pointer to the observation
+        /// @return `true` if the publishing was successful
         bool publish(observation::ObservationPtr &observation) override;
 
+        /// @brief Receive an asset
+        /// @param asset shared point to the asset
+        /// @return `true` if successful
         bool publish(asset::AssetPtr asset) override;
 
+        /// @brief Receive a device
+        /// @param device shared pointer to the device
+        /// @return `true` if successful
         bool publish(device_model::DevicePtr device) override;
 
+        /// @brief Register the Sink factory to create this sink
+        /// @param factory
         static void registerFactory(SinkFactory &factory);
 
+        /// @brief gets a Mqtt Client
+        /// @return MqttClient
         std::shared_ptr<MqttClient> getClient();
 
+        /// @brief Mqtt Client is Connected or not
+        /// @return `true` when the client was connected
         bool isConnected() { return m_client && m_client->isConnected(); }
-
-      protected:
-        void pub(const observation::ObservationPtr &observation);
 
       protected:
         std::string m_devicePrefix;
@@ -80,7 +102,6 @@ namespace mtconnect {
         std::unique_ptr<JsonPrinter> m_jsonPrinter;
         std::shared_ptr<MqttClient> m_client;
       };
-
     }  // namespace mqtt_sink
   }    // namespace sink
 }  // namespace mtconnect
