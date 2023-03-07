@@ -1,10 +1,6 @@
 from conan import ConanFile
-from conan.tools.files import save, load
-from conan.tools.gnu import AutotoolsToolchain, AutotoolsDeps
-from conan.tools.microsoft import unix_path, VCVars, is_msvc, is_msvc_static_runtime
-from conan.errors import ConanInvalidConfiguration
-from conan.errors import ConanException
-from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps
+from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 
 import os
 import io
@@ -16,7 +12,6 @@ import subprocess
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
     version = "2.1"
-    generators = "cmake"
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
@@ -33,6 +28,8 @@ class MTConnectAgentConan(ConanFile):
                 "openssl/1.1.1t",
                 "mqtt_cpp/13.1.0"]
 
+    build_requires = ["cmake/[>3.20.0]"]
+    
     build_policy = "missing"
     default_options = {
         "run_tests": True,
@@ -76,6 +73,9 @@ class MTConnectAgentConan(ConanFile):
            str(self.settings.compiler.runtime).startswith('MT'):
             raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
 
+    def layout(self):
+        cmake_layout(self)
+
     def configure(self):
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
@@ -116,6 +116,20 @@ class MTConnectAgentConan(ConanFile):
             self.options["libxml2"].shared = True
             self.options["gtest"].shared = True
             self.options["openssl"].shared = True
+
+    def generate(self):
+        tc = CMakeToolchain(self)
+
+        tc.variables['SHARED_AGENT_LIB'] = self.options.shared
+        tc.variables['WITH_RUBY'] = self.options.with_ruby
+        tc.variables['AGENT_ENABLE_UNITTESTS'] = self.options.build_tests
+        tc.variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6
+        if self.settings.os == 'Windows':
+            tc.variables['WINVER'] = self.options.winver
+
+        tc.generate()
+        deps = CMakeDeps(self)
+        deps.generate()
         
     def build_requirements(self):
         if self.options.with_docs:
@@ -132,34 +146,17 @@ class MTConnectAgentConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.verbose = True
-        if not self.options.build_tests:
-            cmake.definitions['AGENT_ENABLE_UNITTESTS'] = 'OFF'
-
-        if self.options.without_ipv6:
-            cmake.definitions['AGENT_WITHOUT_IPV6'] = 'ON'
-
-        if self.options.with_ruby:
-            cmake.definitions['WITH_RUBY'] = 'ON'
-        else:
-            cmake.definitions['WITH_RUBY'] = 'OFF'
-
-        if self.settings.os == 'Windows':
-            cmake.definitions['WINVER'] = self.options.winver
-
-        if self.options.shared:
-            cmake.definitions['SHARED_AGENT_LIB'] = 'ON'
-
         cmake.configure()
         cmake.build()
         if self.options.run_tests:
             cmake.test()
 
     def imports(self):
-        self.copy("*.dll", "bin", "bin")
-        self.copy("*.pdb", "bin", "bin", keep_path=False)
-        self.copy("*.pdb", "lib", "bin", keep_path=False)
-        self.copy("*.so*", "lib", "lib")
-        self.copy("*.dylib", "lib", "lib")
+        copy(self, "*.dll", "bin", "bin")
+        copy(self, "*.pdb", "bin", "bin", keep_path=False)
+        copy(self, "*.pdb", "lib", "bin", keep_path=False)
+        copy(self, "*.so*", "lib", "lib")
+        copy(self, "*.dylib", "lib", "lib")
 
     def package_info(self):
         self.cpp_info.includedirs = ['include']
@@ -181,13 +178,13 @@ class MTConnectAgentConan(ConanFile):
             self.cpp_info.defines.append("_WIN32_WINNT=" + winver)
 
     def package(self):
-        self.copy("*", src=os.path.join(self.build_folder, "bin"), dst="bin", keep_path=False)
-        self.copy("*.a", src=os.path.join(self.build_folder, "lib"), dst="lib", keep_path=False)
-        self.copy("*.lib", src=os.path.join(self.build_folder, "lib"), dst="lib", keep_path=False)
-        self.copy("*.dylib", src=os.path.join(self.build_folder, "lib"), dst="lib", keep_path=False)
-        self.copy("*.so", src=os.path.join(self.build_folder, "lib"), dst="lib", keep_path=False)
-        self.copy("*.h", src=os.path.join(self.build_folder, "agent_lib"), dst="include")
-        self.copy("*.h", src="src", dst="include")
-        self.copy("*.hpp", src="src", dst="include")
+        copy(self, "*", os.path.join(self.build_folder, "bin"), os.path.join(self.package_folder, "bin"), keep_path=False)
+        copy(self, "*.a", os.path.join(self.build_folder, "lib"), os.path.join(self.package_folder, "lib"), keep_path=False)
+        copy(self, "*.lib", os.path.join(self.build_folder, "lib"), os.path.join(self.package_folder, "lib"), keep_path=False)
+        copy(self, "*.dylib", os.path.join(self.build_folder, "lib"), os.path.join(self.package_folder, "lib"), keep_path=False)
+        copy(self, "*.so", os.path.join(self.build_folder, "lib"), os.path.join(self.package_folder, "lib"), keep_path=False)
+        copy(self, "*.h", os.path.join(self.build_folder, "agent_lib"), os.path.join(self.package_folder, "include"))
+        copy(self, "*.h", os.path.join(self.build_folder, "src"), os.path.join(self.package_folder, "include"))
+        copy(self, "*.hpp", os.path.join(self.build_folder, "src"), os.path.join(self.package_folder, "include"))
 
     

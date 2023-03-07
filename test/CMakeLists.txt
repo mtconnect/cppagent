@@ -2,6 +2,8 @@
 include(GoogleTest)
 enable_testing()
 
+find_package(GTest REQUIRED)
+
 add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
   sink_plugin_test
@@ -94,7 +96,7 @@ target_include_directories(
 target_link_libraries(
   agent_test_lib
   PUBLIC
-  agent_lib CONAN_PKG::gtest
+  agent_lib GTest::GTest
 )
 target_compile_definitions(agent_test_lib
   PUBLIC
@@ -109,7 +111,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   set(_sources ${AGENT_TEST_NAME}_test.cpp)
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
-  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib agent_test_lib CONAN_PKG::gtest)
+  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib agent_test_lib GTest::GTest)
 
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""

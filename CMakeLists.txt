@@ -6,7 +6,7 @@ set(AGENT_VERSION_BUILD 4)
 set(AGENT_VERSION_RC "_RC1")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
 
 set(USE_FOLDERS ON)
 
@@ -26,33 +26,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CXX_COMPILE_FEATURES cxx_std_17)
 
-
 set(WITH_RUBY ON CACHE STRING "With Ruby Support")
-
-# By default only generate 2 configurations (Debug and Release) for simplicity.
-# The user can change this option if required for the additional ones such as 'RelWithDebInfo'.
-# The first type will be used as the default build type if the user does not specify one.
-set(CMAKE_CONFIGURATION_TYPES "Debug;Release" CACHE STRING "Configs")
-if(NOT CMAKE_BUILD_TYPE)
-  list(GET CMAKE_CONFIGURATION_TYPES 0 _default_build_type)
-  message(STATUS "Setting build type to '${_default_build_type}'.")
-  set(CMAKE_BUILD_TYPE "${_default_build_type}" CACHE STRING "Choose the type of build." FORCE)
-else()
-  # Check if CMAKE_BUILD_TYPE is valid otherwise fail.
-  set(_uppercase_configuration_types)
-  foreach(type ${CMAKE_CONFIGURATION_TYPES})
-    string(TOUPPER "${type}" _uppercase_type)
-    list(APPEND _uppercase_configuration_types ${_uppercase_type})
-  endforeach()
-  string(TOUPPER "${CMAKE_BUILD_TYPE}" _uppercase_build_type)
-
-  list(FIND _uppercase_configuration_types "${_uppercase_build_type}" _is_valid_type)
-  if(${_is_valid_type} EQUAL -1)
-    message(FATAL_ERROR "'${CMAKE_BUILD_TYPE}' is not a valid build type for MTConnect Adapter. "
-      "Valid build types are '${CMAKE_CONFIGURATION_TYPES}'.")
-  endif()
-endif()
-set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${CMAKE_CONFIGURATION_TYPES})
 
 # Add our './cmake' sub-folder to the lists searched when calling functions
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
@@ -71,14 +45,6 @@ if (UNIX)
     add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
   endif()
 ENDIF()
-
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-if (CONAN_USER_MRUBY_mruby)
-  message(INFO ": Turning on Embedded Ruby")
-  set(WITH_RUBY ON FORCE)
-endif()
-
-conan_basic_setup(KEEP_RPATHS TARGETS)
 
 if(SHARED_AGENT_LIB)
   set(CMAKE_BUILD_RPATH "@load_path/;@executable_path/;@load_path/../lib;@executable_path/../lib")

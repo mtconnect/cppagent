@@ -2,3 +2,6 @@ include(default)
 
 [settings]
 compiler.cppstd=17
+
+[system_tools]
+cmake/>3.20.0

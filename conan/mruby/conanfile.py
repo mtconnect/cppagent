@@ -157,5 +157,6 @@ end
         if self.settings.os == 'Windows':
             self.cpp_info.libs = ["libmruby"]
         else:
-            self.cpp_info.libs = ["mruby", "m"]
+            self.cpp_info.libs = ["mruby"]
+            self.cpp_info.system_libs = ["m"]
 

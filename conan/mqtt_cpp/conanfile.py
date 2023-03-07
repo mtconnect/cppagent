@@ -10,15 +10,13 @@ class MqttcppConan(ConanFile):
     url = "https://github.com/redboltz/mqtt_cpp"
     description = "MQTT client/server for C++14 based on Boost.Asio"
     topics = ("mqtt")
-    settings = "os", "compiler", "build_type", "arch"
     requires = ["boost/1.79.0"]
+    no_copy_source = True
+    exports_sources = "include/*"
 
     def source(self):
         get(self, "https://github.com/redboltz/mqtt_cpp/archive/refs/tags/v%s.zip" % self.version, \
             strip_root=True, destination=self.source_folder)
 
-    def build(self):
-        pass
-
     def package(self):
-        copy(self, "*.hpp", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include"))
+        copy(self, "*.hpp", self.source_folder, self.package_folder)
