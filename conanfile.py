@@ -29,7 +29,7 @@ class MTConnectAgentConan(ConanFile):
                 "openssl/1.1.1t",
                 "mqtt_cpp/13.1.0"]
 
-    build_requires = ["cmake/[>3.20.0]"]
+    build_requires = ["cmake/[>3.23.0]"]
     
     build_policy = "missing"
     default_options = {
