@@ -26,16 +26,23 @@
 #include <sstream>
 #include <string>
 
-#include "agent.hpp"
-#include "entity/entity.hpp"
-#include "entity/xml_parser.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class EntityParserTest : public testing::Test
 {

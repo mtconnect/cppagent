@@ -19,14 +19,21 @@
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
-#include "device_model/component.hpp"
-#include "device_model/device.hpp"
+#include "mtconnect/device_model/component.hpp"
+#include "mtconnect/device_model/device.hpp"
 
 using namespace std;
 using namespace mtconnect;
 using namespace device_model;
 using namespace data_item;
 using namespace entity;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class ComponentTest : public testing::Test
 {

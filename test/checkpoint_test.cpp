@@ -20,7 +20,7 @@
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include "agent_test_helper.hpp"
-#include "buffer/checkpoint.hpp"
+#include "mtconnect/buffer/checkpoint.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -33,6 +33,13 @@ using namespace entity;
 using namespace data_item;
 using namespace std::literals;
 using namespace date::literals;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 inline ConditionPtr Cond(ObservationPtr &ptr) { return dynamic_pointer_cast<Condition>(ptr); }
 

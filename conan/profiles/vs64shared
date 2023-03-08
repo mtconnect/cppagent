@@ -1,0 +1,9 @@
+include(default)
+
+[settings]
+compiler=Visual Studio
+arch=x86_64
+arch_build=x86_64
+compiler.runtime=MD
+
+[env]

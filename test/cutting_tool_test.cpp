@@ -26,17 +26,17 @@
 #include <sstream>
 #include <string>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "asset/cutting_tool.hpp"
-#include "entity/entity.hpp"
-#include "entity/json_printer.hpp"
-#include "entity/xml_parser.hpp"
-#include "entity/xml_printer.hpp"
 #include "json_helper.hpp"
-#include "printer/xml_printer.hpp"
-#include "printer/xml_printer_helper.hpp"
-#include "source/adapter/adapter.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/asset/cutting_tool.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/json_printer.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
+#include "mtconnect/entity/xml_printer.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/printer//xml_printer_helper.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
 
 using json = nlohmann::json;
 using namespace std;
@@ -44,6 +44,13 @@ using namespace mtconnect;
 using namespace mtconnect::entity;
 using namespace mtconnect::source::adapter;
 using namespace mtconnect::asset;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class CuttingToolTest : public testing::Test
 {

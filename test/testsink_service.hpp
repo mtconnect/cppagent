@@ -19,7 +19,7 @@
 
 #include <boost/dll/alias.hpp>
 
-#include "configuration/agent_config.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
 
 using namespace std;
 

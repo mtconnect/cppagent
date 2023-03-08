@@ -26,15 +26,15 @@
 #include <stdexcept>
 #include <thread>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "device_model/reference.hpp"
-#include "pipeline/mtconnect_xml_transform.hpp"
-#include "pipeline/response_document.hpp"
-#include "printer/xml_printer.hpp"
-#include "source/adapter/adapter.hpp"
-#include "source/adapter/agent_adapter/agent_adapter.hpp"
-#include "source/adapter/agent_adapter/url_parser.hpp"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/device_model/reference.hpp"
+#include "mtconnect/pipeline/mtconnect_xml_transform.hpp"
+#include "mtconnect/pipeline/response_document.hpp"
+#include "mtconnect/printer//xml_printer.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/source/adapter/agent_adapter/agent_adapter.hpp"
+#include "mtconnect/source/adapter/agent_adapter/url_parser.hpp"
 #include "test_utilities.hpp"
 
 // Registers the fixture into the 'registry'
@@ -51,6 +51,13 @@ using namespace mtconnect::observation;
 
 using status = boost::beast::http::status;
 namespace asio = boost::asio;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 struct MockPipelineContract : public PipelineContract
 {
@@ -152,7 +159,7 @@ protected:
   void addAdapter(ConfigOptions options = ConfigOptions {})
   {
     m_agentTestHelper->addAdapter(options, "localhost", 7878,
-                                  m_agentTestHelper->m_agent->defaultDevice()->getName());
+                                  m_agentTestHelper->m_agent->getDefaultDevice()->getName());
   }
 
 public:

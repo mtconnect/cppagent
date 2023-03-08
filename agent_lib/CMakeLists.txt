@@ -1,296 +1,293 @@
+set(SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../src/mtconnect")
+
 set(AGENT_SOURCES
  # src HEADER_FILE_ONLY
         
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/logging.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.hpp"
+        "${SOURCE_DIR}/agent.hpp"
+        "${SOURCE_DIR}/config.hpp"
+        "${SOURCE_DIR}/logging.hpp"
+        "${SOURCE_DIR}/utilities.hpp"
 
 # src SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/agent.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/utilities.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/version.cpp"  
+        "${SOURCE_DIR}/agent.cpp"
+        "${SOURCE_DIR}/utilities.cpp"
+        "${SOURCE_DIR}/version.cpp"
         
 
 # src/asset HEADER_FILE_ONLY 
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset_buffer.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset_storage.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/cutting_tool.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/file_asset.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/raw_material.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/qif_document.hpp"
+        "${SOURCE_DIR}/asset/asset.hpp"
+        "${SOURCE_DIR}/asset/asset_buffer.hpp"
+        "${SOURCE_DIR}/asset/asset_storage.hpp"
+        "${SOURCE_DIR}/asset/cutting_tool.hpp"
+        "${SOURCE_DIR}/asset/file_asset.hpp"
+        "${SOURCE_DIR}/asset/raw_material.hpp"
+        "${SOURCE_DIR}/asset/qif_document.hpp"
 
 # src/asset SOURCE_FILES_ONLY
   
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/asset.cpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/cutting_tool.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/file_asset.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/raw_material.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/asset/qif_document.cpp"
+        "${SOURCE_DIR}/asset/asset.cpp"
+        "${SOURCE_DIR}/asset/cutting_tool.cpp"
+        "${SOURCE_DIR}/asset/file_asset.cpp"
+        "${SOURCE_DIR}/asset/raw_material.cpp"
+        "${SOURCE_DIR}/asset/qif_document.cpp"
         
 # src/buffer HEADER_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/checkpoint.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/circular_buffer.hpp"
+        "${SOURCE_DIR}/buffer/checkpoint.hpp"
+        "${SOURCE_DIR}/buffer/circular_buffer.hpp"
 
 # src/buffer SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/buffer/checkpoint.cpp"
+        "${SOURCE_DIR}/buffer/checkpoint.cpp"
 
 # src/configuration HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/agent_config.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/async_context.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/config_options.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/parser.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/service.hpp"
+        "${SOURCE_DIR}/configuration/agent_config.hpp"
+        "${SOURCE_DIR}/configuration/async_context.hpp"
+        "${SOURCE_DIR}/configuration/config_options.hpp"
+        "${SOURCE_DIR}/configuration/hook_manager.hpp"
+        "${SOURCE_DIR}/configuration/parser.hpp"
+        "${SOURCE_DIR}/configuration/service.hpp"
 
 # src/configuration SOURCE_FILES_ONLY
   
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/agent_config.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/parser.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/configuration/service.cpp"
+        "${SOURCE_DIR}/configuration/agent_config.cpp"
+        "${SOURCE_DIR}/configuration/parser.cpp"
+        "${SOURCE_DIR}/configuration/service.cpp"
 
 # src/device_model HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/agent_device.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/component.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/composition.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/description.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/device.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/reference.hpp"
+        "${SOURCE_DIR}/device_model/agent_device.hpp"
+        "${SOURCE_DIR}/device_model/component.hpp"
+        "${SOURCE_DIR}/device_model/composition.hpp"
+        "${SOURCE_DIR}/device_model/description.hpp"
+        "${SOURCE_DIR}/device_model/device.hpp"
+        "${SOURCE_DIR}/device_model/reference.hpp"
   
 # src/device_model SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/agent_device.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/component.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/composition.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/description.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/device.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/reference.cpp"
+        "${SOURCE_DIR}/device_model/agent_device.cpp"
+        "${SOURCE_DIR}/device_model/component.cpp"
+        "${SOURCE_DIR}/device_model/composition.cpp"
+        "${SOURCE_DIR}/device_model/description.cpp"
+        "${SOURCE_DIR}/device_model/device.cpp"
+        "${SOURCE_DIR}/device_model/reference.cpp"
   
 # src/device_model/configuration HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/configuration.hpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/coordinate_systems.hpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/motion.hpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/relationships.hpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/sensor_configuration.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/solid_model.hpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/specifications.hpp"       
+        "${SOURCE_DIR}/device_model/configuration/configuration.hpp"
+        "${SOURCE_DIR}/device_model/configuration/coordinate_systems.hpp"
+        "${SOURCE_DIR}/device_model/configuration/motion.hpp"
+        "${SOURCE_DIR}/device_model/configuration/relationships.hpp"
+        "${SOURCE_DIR}/device_model/configuration/sensor_configuration.hpp"
+        "${SOURCE_DIR}/device_model/configuration/solid_model.hpp"
+        "${SOURCE_DIR}/device_model/configuration/specifications.hpp"
         
 # src/device_model/configuration SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/configuration.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/coordinate_systems.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/motion.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/relationships.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/sensor_configuration.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/solid_model.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/configuration/specifications.cpp"      
+        "${SOURCE_DIR}/device_model/configuration/configuration.cpp"
+        "${SOURCE_DIR}/device_model/configuration/coordinate_systems.cpp"
+        "${SOURCE_DIR}/device_model/configuration/motion.cpp"
+        "${SOURCE_DIR}/device_model/configuration/relationships.cpp"
+        "${SOURCE_DIR}/device_model/configuration/sensor_configuration.cpp"
+        "${SOURCE_DIR}/device_model/configuration/solid_model.cpp"
+        "${SOURCE_DIR}/device_model/configuration/specifications.cpp"
         
 # src/device_model/data_item HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/constraints.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/data_item.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/definition.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/filter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/relationships.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/source.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/unit_conversion.hpp"
+        "${SOURCE_DIR}/device_model/data_item/constraints.hpp"
+        "${SOURCE_DIR}/device_model/data_item/data_item.hpp"
+        "${SOURCE_DIR}/device_model/data_item/definition.hpp"
+        "${SOURCE_DIR}/device_model/data_item/filter.hpp"
+        "${SOURCE_DIR}/device_model/data_item/relationships.hpp"
+        "${SOURCE_DIR}/device_model/data_item/source.hpp"
+        "${SOURCE_DIR}/device_model/data_item/unit_conversion.hpp"
 
 # src/device_model/data_item SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/data_item.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/device_model/data_item/unit_conversion.cpp"
+        "${SOURCE_DIR}/device_model/data_item/data_item.cpp"
+        "${SOURCE_DIR}/device_model/data_item/unit_conversion.cpp"
 
 # src/entity HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/data_set.hpp"        
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/entity.hpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/factory.hpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_parser.hpp"     
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_printer.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/qname.hpp"   
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/requirement.hpp"     
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.hpp"      
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.hpp"
+        "${SOURCE_DIR}/entity/data_set.hpp"
+        "${SOURCE_DIR}/entity/entity.hpp"
+        "${SOURCE_DIR}/entity/factory.hpp"
+        "${SOURCE_DIR}/entity/json_parser.hpp"
+        "${SOURCE_DIR}/entity/json_printer.hpp"
+        "${SOURCE_DIR}/entity/qname.hpp"
+        "${SOURCE_DIR}/entity/requirement.hpp"
+        "${SOURCE_DIR}/entity/xml_parser.hpp"
+        "${SOURCE_DIR}/entity/xml_printer.hpp"
   
 # src/entity SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/data_set.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/entity.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/factory.cpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_parser.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/json_printer.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/requirement.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_parser.cpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/entity/xml_printer.cpp"
+        "${SOURCE_DIR}/entity/data_set.cpp"
+        "${SOURCE_DIR}/entity/entity.cpp"
+        "${SOURCE_DIR}/entity/factory.cpp"
+        "${SOURCE_DIR}/entity/json_parser.cpp"
+        "${SOURCE_DIR}/entity/json_printer.cpp"
+        "${SOURCE_DIR}/entity/requirement.cpp"
+        "${SOURCE_DIR}/entity/xml_parser.cpp"
+        "${SOURCE_DIR}/entity/xml_printer.cpp"
 
 # src/mqtt HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_client.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_server.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_client_impl.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/mqtt/mqtt_server_impl.hpp"
+        "${SOURCE_DIR}/mqtt/mqtt_authorization.hpp"
+        "${SOURCE_DIR}/mqtt/mqtt_client.hpp"
+        "${SOURCE_DIR}/mqtt/mqtt_server.hpp"
+        "${SOURCE_DIR}/mqtt/mqtt_client_impl.hpp"
+        "${SOURCE_DIR}/mqtt/mqtt_server_impl.hpp"
   
 # src/observation HEADER_FILE_ONLY 
         
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.hpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.hpp"
+        "${SOURCE_DIR}/observation/change_observer.hpp"
+        "${SOURCE_DIR}/observation/observation.hpp"
    
 #src/observation SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/change_observer.cpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/observation/observation.cpp"        
+        "${SOURCE_DIR}/observation/change_observer.cpp"
+        "${SOURCE_DIR}/observation/observation.cpp"
 
 # src/parser HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/parser/xml_parser.hpp"
+        "${SOURCE_DIR}/parser/xml_parser.hpp"
 
 # src/parser SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/parser/xml_parser.cpp"
+        "${SOURCE_DIR}/parser/xml_parser.cpp"
 
 # src/pipeline HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/convert_sample.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/deliver.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/delta_filter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/duplicate_filter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/guard.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/message_mapper.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/mtconnect_xml_transform.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/period_filter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline_context.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/pipeline_contract.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/response_document.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/shdr_token_mapper.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/shdr_tokenizer.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/timestamp_extractor.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/topic_mapper.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/transform.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/upcase_value.hpp"
+        "${SOURCE_DIR}/pipeline/convert_sample.hpp"
+        "${SOURCE_DIR}/pipeline/deliver.hpp"
+        "${SOURCE_DIR}/pipeline/delta_filter.hpp"
+        "${SOURCE_DIR}/pipeline/duplicate_filter.hpp"
+        "${SOURCE_DIR}/pipeline/guard.hpp"
+        "${SOURCE_DIR}/pipeline/message_mapper.hpp"
+        "${SOURCE_DIR}/pipeline/mtconnect_xml_transform.hpp"
+        "${SOURCE_DIR}/pipeline/period_filter.hpp"
+        "${SOURCE_DIR}/pipeline/pipeline.hpp"
+        "${SOURCE_DIR}/pipeline/pipeline_context.hpp"
+        "${SOURCE_DIR}/pipeline/pipeline_contract.hpp"
+        "${SOURCE_DIR}/pipeline/response_document.hpp"
+        "${SOURCE_DIR}/pipeline/shdr_token_mapper.hpp"
+        "${SOURCE_DIR}/pipeline/shdr_tokenizer.hpp"
+        "${SOURCE_DIR}/pipeline/timestamp_extractor.hpp"
+        "${SOURCE_DIR}/pipeline/topic_mapper.hpp"
+        "${SOURCE_DIR}/pipeline/transform.hpp"
+        "${SOURCE_DIR}/pipeline/upcase_value.hpp"
    
 # src/pipeline SOURCE_FILES_ONLY
    
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/deliver.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/shdr_token_mapper.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/timestamp_extractor.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/pipeline/response_document.cpp"
+        "${SOURCE_DIR}/pipeline/deliver.cpp"
+        "${SOURCE_DIR}/pipeline/shdr_token_mapper.cpp"
+        "${SOURCE_DIR}/pipeline/timestamp_extractor.cpp"
+        "${SOURCE_DIR}/pipeline/response_document.cpp"
 
 # src/printer HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/json_printer.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/printer.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/xml_helper.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/xml_printer.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/xml_printer_helper.hpp"
+        "${SOURCE_DIR}/printer/json_printer.hpp"
+        "${SOURCE_DIR}/printer/printer.hpp"
+        "${SOURCE_DIR}/printer/xml_helper.hpp"
+        "${SOURCE_DIR}/printer/xml_printer.hpp"
+        "${SOURCE_DIR}/printer/xml_printer_helper.hpp"
 
 # src/printer SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/json_printer.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/printer/xml_printer.cpp"
+        "${SOURCE_DIR}/printer/json_printer.cpp"
+        "${SOURCE_DIR}/printer/xml_printer.cpp"
 
 # src/source HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter_pipeline.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/http_session.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/https_session.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/session_impl.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/connector.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_adapter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_pipeline.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/error_code.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.hpp"
+        "${SOURCE_DIR}/source/adapter/adapter.hpp"
+        "${SOURCE_DIR}/source/adapter/adapter_pipeline.hpp"
+        "${SOURCE_DIR}/source/adapter/agent_adapter/agent_adapter.hpp"
+        "${SOURCE_DIR}/source/adapter/agent_adapter/http_session.hpp"
+        "${SOURCE_DIR}/source/adapter/agent_adapter/https_session.hpp"
+        "${SOURCE_DIR}/source/adapter/agent_adapter/session.hpp"
+        "${SOURCE_DIR}/source/adapter/agent_adapter/session_impl.hpp"
+        "${SOURCE_DIR}/source/adapter/agent_adapter/url_parser.hpp"
+        "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.hpp"
+        "${SOURCE_DIR}/source/adapter/shdr/connector.hpp"
+        "${SOURCE_DIR}/source/adapter/shdr/shdr_adapter.hpp"
+        "${SOURCE_DIR}/source/adapter/shdr/shdr_pipeline.hpp"
+        "${SOURCE_DIR}/source/error_code.hpp"
+        "${SOURCE_DIR}/source/loopback_source.hpp"
+        "${SOURCE_DIR}/source/source.hpp"
 
 # src/source SOURCE_FILES_ONLY
         
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/adapter_pipeline.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/connector.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_adapter.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/shdr/shdr_pipeline.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/loopback_source.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/source.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/url_parser.cpp"
+        "${SOURCE_DIR}/source/adapter/adapter_pipeline.cpp"
+        "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.cpp"
+        "${SOURCE_DIR}/source/adapter/shdr/connector.cpp"
+        "${SOURCE_DIR}/source/adapter/shdr/shdr_adapter.cpp"
+        "${SOURCE_DIR}/source/adapter/shdr/shdr_pipeline.cpp"
+        "${SOURCE_DIR}/source/loopback_source.cpp"
+        "${SOURCE_DIR}/source/source.cpp"
+        "${SOURCE_DIR}/source/adapter/agent_adapter/agent_adapter.cpp"
+        "${SOURCE_DIR}/source/adapter/agent_adapter/url_parser.cpp"
 		
 # src/sink HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/sink.hpp"
+        "${SOURCE_DIR}/sink/sink.hpp"
 
 # src/sink SOURCE_FILE_ONLY
         
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/sink.cpp" 
+        "${SOURCE_DIR}/sink/sink.cpp"
 
 # src/sink/mqtt_sink HEADER_FILE_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/mqtt_sink/mqtt_service.hpp"
+        "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.hpp"
 
 #src/sink/mqtt_sink SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/mqtt_sink/mqtt_service.cpp"
+        "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
         
 # src/sink/rest_sink HEADER_FILE_ONLY
         
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/cached_file.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/file_cache.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/parameter.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/request.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/response.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/rest_service.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/routing.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/server.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session.hpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/tls_dector.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/cached_file.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/file_cache.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/parameter.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/request.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/response.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/rest_service.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/routing.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/server.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/session.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/session_impl.hpp"
+        "${SOURCE_DIR}/sink/rest_sink/tls_dector.hpp"
   
 # src/sink/rest_sink SOURCE_FILES_ONLY
 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/file_cache.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/rest_service.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/server.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
+        "${SOURCE_DIR}/sink/rest_sink/file_cache.cpp"
+        "${SOURCE_DIR}/sink/rest_sink/rest_service.cpp"
+        "${SOURCE_DIR}/sink/rest_sink/server.cpp"
+        "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
   )
-
-if(WITH_PYTHON)
-  set(AGENT_SOURCES ${AGENT_SOURCES}
-    
-    "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.hpp"  
-    "${CMAKE_CURRENT_SOURCE_DIR}/../src/python/embedded.cpp"  
-    )
-endif()
 
 if(WITH_RUBY)
   set(AGENT_SOURCES ${AGENT_SOURCES}    
 # HEADER_FILE_ONLY      
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.hpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_agent.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_entity.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_observation.hpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_pipeline.hpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_smart_ptr.hpp"  
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_transform.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_type.hpp" 
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/ruby_vm.hpp"
+        "${SOURCE_DIR}/ruby/embedded.hpp"
+        "${SOURCE_DIR}/ruby/ruby_agent.hpp"
+        "${SOURCE_DIR}/ruby/ruby_entity.hpp"
+        "${SOURCE_DIR}/ruby/ruby_observation.hpp"
+        "${SOURCE_DIR}/ruby/ruby_pipeline.hpp"
+        "${SOURCE_DIR}/ruby/ruby_smart_ptr.hpp"
+        "${SOURCE_DIR}/ruby/ruby_transform.hpp"
+        "${SOURCE_DIR}/ruby/ruby_type.hpp"
+        "${SOURCE_DIR}/ruby/ruby_vm.hpp"
         
 #SOURCE_FILES_ONLY
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/ruby/embedded.cpp"  
+        "${SOURCE_DIR}/ruby/embedded.cpp"
     )
 endif()
 
 ## configure a header file to pass some of the CMake settings to the source code
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/../src/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/version.h")
+configure_file("${SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/mtconnect/version.h")
 
 set(AGENT_LIB_HEADERS ${AGENT_SOURCES})
 list(FILTER AGENT_LIB_HEADERS INCLUDE REGEX "\\.(h|hpp|ipp)$")
@@ -300,29 +297,49 @@ list(FILTER AGENT_LIB_SOURCES INCLUDE REGEX "\\.(c|cpp)$")
 # For IDE Grouping
 source_group("Header Files")
 source_group("Source Files")
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Header Files" FILES ${AGENT_LIB_HEADERS})
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../src" PREFIX "Source Files" FILES ${AGENT_LIB_SOURCES})
+source_group(TREE "${SOURCE_DIR}" PREFIX "Header Files" FILES ${AGENT_LIB_HEADERS})
+source_group(TREE "${SOURCE_DIR}" PREFIX "Source Files" FILES ${AGENT_LIB_SOURCES})
 
 if(MSVC)
   if(CMAKE_GENERATOR_TOOLSET)
     if(${CMAKE_GENERATOR_TOOLSET} MATCHES "v14[01]_xp")
       message(info ": Setting /Ob1 for rest_sink/session_impl.cpp")
-      set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
+      set_property(SOURCE "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
         PROPERTY COMPILE_FLAGS "/Ob1")
     endif()
   endif()
 
   # The modules including Beast required the /bigobj option in Windows
   set_property(SOURCE    
-	"${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/mqtt_sink/mqtt_service.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../src/sink/rest_sink/session_impl.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/mqtt/mqtt_adapter.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../src/source/adapter/agent_adapter/agent_adapter.cpp"
+	"${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
+    "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
+    "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.cpp"
+    "${SOURCE_DIR}/source/adapter/agent_adapter/agent_adapter.cpp"
+    "${SOURCE_DIR}/source/adapter/shdr/shdr_pipeline.cpp"
+    "${SOURCE_DIR}/source/adapter/adapter_pipeline.cpp"
+    "${SOURCE_DIR}/device_model/component.cpp"
+    "${SOURCE_DIR}/configuration/agent_config.cpp"
+    "${SOURCE_DIR}/sink/rest_sink/rest_service.cpp"
+    "${SOURCE_DIR}/ruby/embedded.cpp"
+    "${SOURCE_DIR}/pipeline/deliver.cpp"
+    "${SOURCE_DIR}/agent.cpp"
     PROPERTY COMPILE_FLAGS "/bigobj")
 endif()
 
+if(SHARED_AGENT_LIB)
+  add_library(agent_lib SHARED ${AGENT_SOURCES})
+  target_compile_definitions(
+    agent_lib
+    PRIVATE
+    AGENT_BUILD_SHARED_LIB)
+  target_compile_definitions(
+    agent_lib
+    PUBLIC
+    SHARED_AGENT_LIB)
+else()
+  add_library(agent_lib STATIC ${AGENT_SOURCES})
+endif()
 
-add_library(agent_lib STATIC ${AGENT_SOURCES})
 target_include_directories(
   agent_lib
   PUBLIC
@@ -331,9 +348,6 @@ target_include_directories(
     "${CMAKE_CURRENT_LIST_DIR}/../src"
     )
 
-set_property(TARGET agent_lib PROPERTY
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-  
 target_link_libraries(
   agent_lib
   PUBLIC
@@ -342,13 +356,6 @@ target_link_libraries(
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
   )
-
-if(WITH_PYTHON)
-  target_link_libraries(
-    agent_lib
-    PUBLIC
-    Python3::Python)
-endif()
 
 if(WITH_RUBY)
   target_link_libraries(
@@ -399,3 +406,8 @@ endif()
 target_compile_features(agent_lib PUBLIC ${CXX_COMPILE_FEATURES})
 target_clangformat_setup(agent_lib)
 target_clangtidy_setup(agent_lib)
+
+include(../cmake/document.cmake)
+if (DOXYGEN_FOUND)
+  doxygen_add_docs(docs ../README.md ${AGENT_SOURCES})
+endif()

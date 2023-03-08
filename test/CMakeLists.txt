@@ -1,5 +1,6 @@
 
 include(GoogleTest)
+enable_testing()
 
 add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
@@ -18,8 +19,6 @@ target_compile_definitions(sink_plugin_test
   $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
 
 target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
-set_property(TARGET sink_plugin_test PROPERTY
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
 
 target_link_libraries(
   sink_plugin_test
@@ -68,8 +67,6 @@ if (APPLE)
 endif()
 
 target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
-set_property(TARGET adapter_plugin_test PROPERTY
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
 
 target_link_libraries(
   adapter_plugin_test
@@ -84,7 +81,7 @@ target_clangformat_setup(adapter_plugin_test)
 
 ###########
 
-set(AGENT_TEST_LIB_SOURCES test_utilities.cpp agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp json_helper.hpp)
+set(AGENT_TEST_LIB_SOURCES agent_test_helper.cpp agent_test_helper.hpp test_utilities.hpp json_helper.hpp)
 add_library(agent_test_lib STATIC ${AGENT_TEST_LIB_SOURCES})
 target_include_directories(
   agent_test_lib
@@ -93,12 +90,11 @@ target_include_directories(
     "${PROJECT_BINARY_DIR}/agent_lib"
     "${CMAKE_CURRENT_LIST_DIR}/../src"
     )
-set_property(TARGET agent_test_lib PROPERTY
-  MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 target_link_libraries(
   agent_test_lib
   PUBLIC
-  agent_lib
+  agent_lib CONAN_PKG::gtest
 )
 target_compile_definitions(agent_test_lib
   PUBLIC
@@ -112,8 +108,6 @@ set_target_properties(agent_test_lib PROPERTIES FOLDER "test")
 macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   set(_sources ${AGENT_TEST_NAME}_test.cpp)
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
-  set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY
-    MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" )
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
   target_link_libraries(${AGENT_TEST_NAME}_test agent_lib agent_test_lib CONAN_PKG::gtest)
 
@@ -131,7 +125,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
     message(info ": Setting /bigobj for ${_sources}")
     set_property(SOURCE
       ${_sources}
-      PROPERTY COMPILE_FLAGS "/bigobj")    
+      PROPERTY COMPILE_FLAGS "/bigobj")   
   endif()
 
   target_clangformat_setup(${AGENT_TEST_NAME}_test)  

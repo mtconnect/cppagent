@@ -1,10 +1,17 @@
 include(default)
 
 [settings]
+compiler=Visual Studio
 arch=x86
-arch_build=x86
 compiler.toolset=v141_xp
 compiler.runtime=MT
 
+[options]
+winver=0x0501
+with_ruby=False
+date:header_only=True
+
 [env]
 WINVER=0x0501
+CFLAGS=/DWINVER=0x0501 /D_WIN32_WINNT=0x0501 /DNTDDI_VERSION=0x05010300
+CXXFLAGS=/DWINVER=0x0501 /D_WIN32_WINNT=0x0501 /DNTDDI_VERSION=0x05010300

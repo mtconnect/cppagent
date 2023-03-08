@@ -28,14 +28,21 @@
 
 #include <nlohmann/json.hpp>
 
-#include "entity/entity.hpp"
-#include "entity/json_parser.cpp"
-#include "entity/json_parser.hpp"
+#include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/json_parser.cpp"
+#include "mtconnect/entity/json_parser.hpp"
 
 using json = nlohmann::json;
 using namespace std;
 using namespace mtconnect;
 using namespace mtconnect::entity;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class JsonParserTest : public testing::Test
 {

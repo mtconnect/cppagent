@@ -22,12 +22,12 @@
 #include <boost/asio/read_until.hpp>
 #include <boost/asio/write.hpp>
 
-#include "agent.hpp"
 #include "agent_test_helper.hpp"
-#include "device_model/agent_device.hpp"
 #include "json_helper.hpp"
-#include "source/adapter/adapter.hpp"
-#include "version.h"
+#include "mtconnect/agent.hpp"
+#include "mtconnect/device_model/agent_device.hpp"
+#include "mtconnect/source/adapter/adapter.hpp"
+#include "mtconnect/version.h"
 
 using namespace std;
 using namespace mtconnect;
@@ -40,6 +40,13 @@ using tcp = boost::asio::ip::tcp;
 namespace ip = boost::asio::ip;
 namespace sys = boost::system;
 namespace config = mtconnect::configuration;
+
+// main
+int main(int argc, char *argv[])
+{
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
 
 class AgentDeviceTest : public testing::Test
 {
@@ -145,6 +152,7 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 {
   auto agent = m_agentTestHelper->getAgent();
   auto device = agent->findDeviceByUUIDorName("000");
+  auto &circ = agent->getCircularBuffer();
   ASSERT_TRUE(device);
   auto uuid = *device->getUuid();
   ASSERT_EQ("000", uuid);
@@ -152,9 +160,9 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 
   auto rest = m_agentTestHelper->getRestService();
 
-  for (auto seq = rest->getSequence() - 1; !found && seq > 0ull; seq--)
+  for (auto seq = circ.getSequence() - 1; !found && seq > 0ull; seq--)
   {
-    auto event = rest->getFromBuffer(seq);
+    auto event = circ.getFromBuffer(seq);
     if (event->getDataItem()->getType() == "DEVICE_ADDED" && uuid == event->getValue<string>())
     {
       found = true;
