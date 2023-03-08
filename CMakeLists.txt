@@ -50,6 +50,7 @@ ENDIF()
 
 if(SHARED_AGENT_LIB)
   set(CMAKE_BUILD_RPATH "@load_path/;@executable_path/;@load_path/../lib;@executable_path/../lib")
+  set(CMAKE_INSTALL_RPATH "@load_path/;@executable_path/;@load_path/../lib;@executable_path/../lib")
 
   if (MSVC)
     include(InstallRequiredSystemLibraries)
