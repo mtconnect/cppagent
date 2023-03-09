@@ -40,7 +40,7 @@ class MTConnectAgentConan(ConanFile):
         "development": False,
         "shared": False,
         "winver": "0x600",
-        "with_docs": True,
+        "with_docs": False,
 
         "boost*:shared": False,
         "boost*:without_python": True,
@@ -149,6 +149,8 @@ class MTConnectAgentConan(ConanFile):
         cmake.verbose = True
         cmake.configure()
         cmake.build()
+        if self.options.with_docs:
+            cmake.build(build_type=None, target='docs')
         if self.options.run_tests and self.options.build_tests:
             cmake.test()
 

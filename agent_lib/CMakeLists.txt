@@ -419,6 +419,7 @@ target_clangtidy_setup(agent_lib)
 include(../cmake/document.cmake)
 if (DOXYGEN_FOUND)
   doxygen_add_docs(docs ../README.md ${AGENT_SOURCES})
+  install(DIRECTORY "${PROJECT_BINARY_DIR}/Documentation/" DESTINATION "Documentation")  
 endif()
 
 target_sources(agent_lib PUBLIC FILE_SET headers
