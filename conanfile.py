@@ -83,7 +83,7 @@ class MTConnectAgentConan(ConanFile):
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
             if self.windows_xp:
-                self.options.build_tests = False
+                self.options.build_tests._value = False
                 self.options.winver = '0x501'
                 
             if self.options.shared:
@@ -105,9 +105,8 @@ class MTConnectAgentConan(ConanFile):
         
         self.settings.compiler.cppstd = 17
 
-
         if not self.options.build_tests:
-            self.options.run_tests = False
+            self.options.run_tests._value = False
 
         if not self.options.shared and self.settings.os == "Macos":
             self.options["boost"].visibility = "hidden"
@@ -150,7 +149,7 @@ class MTConnectAgentConan(ConanFile):
         cmake.verbose = True
         cmake.configure()
         cmake.build()
-        if self.options.run_tests:
+        if self.options.run_tests and self.options.build_tests:
             cmake.test()
 
     def package_info(self):

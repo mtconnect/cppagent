@@ -41,7 +41,6 @@ target_link_libraries(
 target_clangtidy_setup(agent_lib)
 
 install(TARGETS agent RUNTIME DESTINATION "bin")
-install(TARGETS agent RUNTIME_DEPENDENCIES DESTINATION "bin")
 
 if(SHARED_AGENT_LIB AND MSVC)
   set(CMAKE_INSTALL_DEBUG_LIBRARIES ON)  
