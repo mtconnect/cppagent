@@ -37,7 +37,7 @@ class MTConnectAgentConan(ConanFile):
         "development": False,
         "shared": False,
         "winver": "0x600",
-        "with_docs": True,
+        "with_docs": False,
 
         "boost:shared": False,
         "boost:without_python": True,
