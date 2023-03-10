@@ -352,6 +352,7 @@ namespace mtconnect::printer {
         }
         else if (m_version == 2)
         {
+          ret = obj;
           if (m_components.size() == 1)
           {
             ret["ComponentStream"] = items.front();

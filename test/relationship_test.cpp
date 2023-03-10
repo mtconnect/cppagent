@@ -71,12 +71,11 @@ protected:
 TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_component);
-
+  
   const auto &clc = m_component->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
-
+  
   auto rels = clc->getList("Relationships");
-
   ASSERT_EQ(3, rels->size());
 
   auto it = rels->begin();
@@ -87,7 +86,7 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("PEER", (*it)->get<string>("type"));
   EXPECT_EQ("CRITICAL", (*it)->get<string>("criticality"));
   EXPECT_EQ("power", (*it)->get<string>("idRef"));
-
+  
   it++;
 
   EXPECT_EQ("DeviceRelationship", (*it)->getName());
@@ -109,6 +108,7 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("NON_CRITICAL", (*it)->get<string>("criticality"));
   EXPECT_EQ("http://127.0.0.1:2000/asset/f7de7350-6f7a-013b-ca4c-4e7f553bbb76",
             (*it)->get<string>("href"));
+  
   EXPECT_EQ("f7de7350-6f7a-013b-ca4c-4e7f553bbb76", (*it)->get<string>("assetIdRef"));
 }
 

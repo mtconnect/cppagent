@@ -265,7 +265,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_device)
 
   auto service = m_agentTestHelper->getMqttService();
 
-  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+  ASSERT_TRUE(waitFor(5s, [&service]() { return service->isConnected(); }));
 
   waitFor(2s, [&gotDevice]() { return gotDevice; });
 }

@@ -22,9 +22,11 @@
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 namespace mtconnect {
+  /// @brief MQTT Cient namespace
   namespace mqtt_client {
     class MqttClient;
 
+    /// @brief MQTT Cient Handler for to know the status of the client connection 
     struct ClientHandler
     {
       using Connect = std::function<void(std::shared_ptr<MqttClient>)>;
@@ -40,18 +42,51 @@ namespace mtconnect {
     class MqttClient : public std::enable_shared_from_this<MqttClient>
     {
     public:
+
+      /// @brief Create an Mqtt Client with an asio context and ClientHandler
+      /// @param context a boost asio context
+      /// @param ClientHandler configuration options
+      /// - ConnectInterval, defaults to 5000
+       
       MqttClient(boost::asio::io_context &ioc, std::unique_ptr<ClientHandler> &&handler)
         : m_ioContext(ioc), m_handler(std::move(handler)), m_connectInterval(5000)
       {}
       virtual ~MqttClient() = default;
+
+      /// @brief get the clientId
+      /// @return the clientId 
       const auto &getIdentity() const { return m_identity; }
+
+       /// @brief get the Url link mqtt://localhost:1883
+      /// @return the Url to access localhost 
       const auto &getUrl() const { return m_url; }
+      
+      /// @brief Start the Mqtt Client
       virtual bool start() = 0;
+
+      /// @brief Stop the Mqtt Client
       virtual void stop() = 0;
+
+      /// @brief Subscribe Topic to the Mqtt Client
+      /// @param topic Subscribing to the topic
+      /// @return boolean either topic sucessfully connected and subscribed        
       virtual bool subscribe(const std::string &topic) = 0;
+      
+      /// @brief Publish Topic to the Mqtt Client
+      /// @param topic Publishing to the topic
+      /// @param payload Publishing to the payload
+      /// @return boolean either topic sucessfully connected and published 
       virtual bool publish(const std::string &topic, const std::string &payload) = 0;
+      
+      /// @brief Mqtt Client is connected 
+      /// @return bool Either Client is sucessfully connected or not      
       auto isConnected() { return m_connected; }
+
+      /// @brief Mqtt Client is Running
+      /// @return bool Either Client is sucessfully running or not      
       auto isRunning() { return m_running; }
+
+      /// @brief set the Mqtt Client is completly connected
       void connectComplete() { m_connected = true; }
 
     protected:
