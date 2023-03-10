@@ -756,11 +756,15 @@ namespace mtconnect {
       // signalers in an exception proof manor.
       // Add observers
       for (const auto &item : asyncResponse->m_filter)
-        m_sinkContract->getDataItemById(item)->addObserver(&asyncResponse->m_observer);
+      {
+        auto di = m_sinkContract->getDataItemById(item);
+        if (di)
+          di->addObserver(&asyncResponse->m_observer);
+      }
 
       chrono::milliseconds interMilli {interval};
       SequenceNumber_t firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
-      ;
+      
       if (!from || *from < firstSeq)
         asyncResponse->m_sequence = firstSeq;
       else
