@@ -504,7 +504,7 @@ namespace mtconnect::configuration {
       else
         out = &std::cout;
 
-      logr::add_console_log(*out, kw::format = formatter, kw::auto_flush=true);
+      logr::add_console_log(*out, kw::format = formatter, kw::auto_flush = true);
 
       if (m_isDebug && level >= severity_level::debug)
         setLoggingLevel(severity_level::debug);
