@@ -149,13 +149,13 @@ namespace mtconnect {
 
     DataItemPtr Device::getDeviceDataItem(const std::string &name) const
     {
-      if (auto it = m_dataItems.get<BySource>().find(name); it != m_dataItems.get<BySource>().end())
+      if (auto it = m_dataItems.get<ById>().find(name); it != m_dataItems.get<ById>().end())
         return it->lock();
 
       if (auto it = m_dataItems.get<ByName>().find(name); it != m_dataItems.get<ByName>().end())
         return it->lock();
 
-      if (auto it = m_dataItems.get<ById>().find(name); it != m_dataItems.get<ById>().end())
+      if (auto it = m_dataItems.get<BySource>().find(name); it != m_dataItems.get<BySource>().end())
         return it->lock();
 
       return nullptr;
