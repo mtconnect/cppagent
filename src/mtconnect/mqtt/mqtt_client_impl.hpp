@@ -67,7 +67,7 @@ namespace mtconnect {
       /// @param options configuration options
       /// - Port, defaults to 1883
       /// - MqttTls, defaults to false
-      /// - MqttHost, defaults to LocalHost     
+      /// - MqttHost, defaults to LocalHost
       MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options,
                      std::unique_ptr<ClientHandler> &&handler)
         : MqttClient(ioContext, move(handler)),
@@ -115,7 +115,7 @@ namespace mtconnect {
       ~MqttClientImpl() { stop(); }
 
       Derived &derived() { return static_cast<Derived &>(*this); }
-      
+
       /// @brief Start the Mqtt Client
       bool start() override
       {
@@ -224,9 +224,9 @@ namespace mtconnect {
         }
       }
 
-      /// @brief Subscribe Topic to the Mqtt Client 
+      /// @brief Subscribe Topic to the Mqtt Client
       /// @param topic Subscribing to the topic
-      /// @return boolean either topic sucessfully connected and subscribed       
+      /// @return boolean either topic sucessfully connected and subscribed
       bool subscribe(const std::string &topic) override
       {
         NAMED_SCOPE("MqttClientImpl::subscribe");
@@ -258,7 +258,7 @@ namespace mtconnect {
       /// @brief Publish Topic to the Mqtt Client
       /// @param topic Publishing to the topic
       /// @param payload Publishing to the payload
-      /// @return boolean either topic sucessfully connected and published 
+      /// @return boolean either topic sucessfully connected and published
       bool publish(const std::string &topic, const std::string &payload) override
       {
         NAMED_SCOPE("MqttClientImpl::publish");

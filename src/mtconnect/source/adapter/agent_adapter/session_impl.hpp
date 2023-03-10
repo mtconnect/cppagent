@@ -39,7 +39,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   using tcp = boost::asio::ip::tcp;
 
   /// @brief A session implementation that where the derived classes can support HTTP or HTTPS
-  /// @tparam Derived 
+  /// @tparam Derived
   template <class Derived>
   class SessionImpl : public Session
   {

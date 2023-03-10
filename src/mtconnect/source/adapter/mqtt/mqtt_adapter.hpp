@@ -56,14 +56,14 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     /// @param io boost asio io context
     /// @param context pipeline context
     /// @param options configation options
-    /// @param block additional configuration options  
+    /// @param block additional configuration options
     MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
                 const ConfigOptions &options, const boost::property_tree::ptree &block);
-    
+
     ~MqttAdapter() override {}
 
-    /// @brief Register the Mqtt adapter with the factory 
-    /// @param factory source factory    
+    /// @brief Register the Mqtt adapter with the factory
+    /// @param factory source factory
     static void registerFactory(SourceFactory &factory);
 
     /// @name Agent Device methods
@@ -73,7 +73,7 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     unsigned int getPort() const override;
     ///@}
 
-     /// @name Source interface
+    /// @name Source interface
     ///@{
     bool start() override;
 
@@ -82,13 +82,12 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     pipeline::Pipeline *getPipeline() override;
     ///@}
 
-    /// @brief subcribe to topics 
+    /// @brief subcribe to topics
     void subscribeToTopics();
 
   protected:
-
-    /// @brief load all topics 
-    /// @param ptree the property tree coming from configuration parser    
+    /// @brief load all topics
+    /// @param ptree the property tree coming from configuration parser
     /// @param options configation options
     void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
 

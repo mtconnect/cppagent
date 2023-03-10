@@ -54,16 +54,20 @@ namespace mtconnect::source::adapter::agent_adapter {
       /// @param next Function to determine what to do on successful read
       Request(const std::optional<std::string> &device, const std::string &operation,
               const UrlQuery &query, bool stream, Next next)
-        : m_sourceDevice(device), m_operation(operation), m_query(query), m_stream(stream), m_next(next)
+        : m_sourceDevice(device),
+          m_operation(operation),
+          m_query(query),
+          m_stream(stream),
+          m_next(next)
       {}
 
       Request(const Request &request) = default;
 
-      std::optional<std::string> m_sourceDevice; ///< optional source device
-      std::string m_operation; ///< The REST operation (probe, current, sample, asset)
-      UrlQuery m_query; ///< URL Query parameters
-      bool m_stream; ///< `true` if using HTTP long pull
-      Next m_next; ///< function to call on successful read
+      std::optional<std::string> m_sourceDevice;  ///< optional source device
+      std::string m_operation;  ///< The REST operation (probe, current, sample, asset)
+      UrlQuery m_query;         ///< URL Query parameters
+      bool m_stream;            ///< `true` if using HTTP long pull
+      Next m_next;              ///< function to call on successful read
 
       /// @brief Given a url, get a formatted target for a given operation
       /// @param url The base url

@@ -18,8 +18,8 @@
 #pragma once
 
 #include "mtconnect/configuration/config_options.hpp"
-#include "mtconnect/utilities.hpp"
 #include "mtconnect/logging.hpp"
+#include "mtconnect/utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -70,7 +70,7 @@ namespace mtconnect {
         if (m_type == AuthorizationType::Allow)
           return true;
 
-        //AuthorizationType::Deny
+        // AuthorizationType::Deny
         return false;
       }
 
