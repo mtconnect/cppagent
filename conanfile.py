@@ -57,6 +57,7 @@ class MTConnectAgentConan(ConanFile):
         "date:use_system_tz_db": True
         }
 
+    exports = "conan/*"
     exports_sources = "*"
 
 #    def source(self):
