@@ -85,7 +85,7 @@ namespace mtconnect {
       /// @param options configuration options
       /// - Port, defaults to 0/1883
       /// - MqttTls, defaults to false
-      /// - ServerIp, defaults to 127.0.0.1/LocalHost     
+      /// - ServerIp, defaults to 127.0.0.1/LocalHost
       MqttServerImpl(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : MqttServer(ioContext),
           m_options(options),
@@ -257,7 +257,7 @@ namespace mtconnect {
       std::string m_host;
     };
 
-    /// @brief Create an Mqtt TCP server       
+    /// @brief Create an Mqtt TCP server
     class MqttTcpServer : public MqttServerImpl<MqttTcpServer>
     {
     public:
@@ -270,7 +270,7 @@ namespace mtconnect {
       /// @param options configuration options
       /// - Port, defaults to 0/1883
       /// - MqttTls, defaults to false
-      /// - ServerIp, defaults to 127.0.0.1/LocalHost     
+      /// - ServerIp, defaults to 127.0.0.1/LocalHost
       MqttTcpServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : base(ioContext, options)
       {
@@ -307,7 +307,7 @@ namespace mtconnect {
       /// @param options configuration options
       /// - Port, defaults to 0/1883
       /// - MqttTls, defaults to True
-      /// - ServerIp, defaults to 127.0.0.1/LocalHost     
+      /// - ServerIp, defaults to 127.0.0.1/LocalHost
       MqttTlsServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : base(ioContext, options)
       {
@@ -384,7 +384,7 @@ namespace mtconnect {
       /// @param options configuration options
       /// - Port, defaults to 0/1883
       /// - MqttTls, defaults to True
-      /// - ServerIp, defaults to 127.0.0.1/LocalHost   
+      /// - ServerIp, defaults to 127.0.0.1/LocalHost
       MqttTlsWSServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : base(ioContext, options)
       {
@@ -416,7 +416,7 @@ namespace mtconnect {
           }
 
           m_server.emplace(boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), m_port),
-                           std::move(ctx), m_ioContext);        
+                           std::move(ctx), m_ioContext);
         }
 
         return *m_server;

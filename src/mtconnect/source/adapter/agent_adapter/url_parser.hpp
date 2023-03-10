@@ -39,7 +39,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     using std::map<std::string, std::string>::map;
 
     /// @brief join the parameters as `<key1>=<value1>&<key2>=<value2>&...`
-    /// @return 
+    /// @return
     std::string join() const
     {
       std::stringstream ss;
@@ -76,13 +76,13 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     std::string m_protocol;  ///< either `http` or `https`
 
-    Host m_host; ///< the host component
-    std::optional<std::string> m_username; ///< optional username 
-    std::optional<std::string> m_password; ///< optional password
-    std::optional<int> m_port; ///< The optional port number (defaults to 5000)
-    std::string m_path = "/"; ///< The path component
-    UrlQuery m_query; ///< Query parameters
-    std::string m_fragment; ///< The component after a `#`
+    Host m_host;                            ///< the host component
+    std::optional<std::string> m_username;  ///< optional username
+    std::optional<std::string> m_password;  ///< optional password
+    std::optional<int> m_port;              ///< The optional port number (defaults to 5000)
+    std::string m_path = "/";               ///< The path component
+    UrlQuery m_query;                       ///< Query parameters
+    std::string m_fragment;                 ///< The component after a `#`
 
     /// @brief Visitor to format the Host as a string
     struct HostVisitor

@@ -39,7 +39,7 @@ namespace mtconnect::source::adapter::agent_adapter {
   public:
     /// @brief Create an adapter pipeline
     ///
-    /// Feedback is used to determine if recovery is possible and when to start a 
+    /// Feedback is used to determine if recovery is possible and when to start a
     /// new http streaming session with the upstream agent
     /// @param context the pipeline context
     /// @param st strand to run in
