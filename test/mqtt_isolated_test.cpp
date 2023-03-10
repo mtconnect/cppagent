@@ -68,23 +68,31 @@ protected:
 
   void TearDown() override
   {
-    if (m_client)
+    try
     {
-      m_client->stop();
-      while (m_agentTestHelper->m_ioContext.run_one_for(10ms))
-        ;
-      m_client.reset();
+      if (m_client)
+      {
+        m_client->stop();
+        while (m_agentTestHelper->m_ioContext.run_one_for(100ms))
+          ;
+        m_client.reset();
+      }
+      
+      if (m_server)
+      {
+        m_server->stop();
+        m_agentTestHelper->m_ioContext.run_for(1000ms);
+        m_server.reset();
+      }
+      
+      m_agentTestHelper.reset();
+      m_jsonPrinter.reset();
     }
-
-    if (m_server)
+    
+    catch(...)
     {
-      m_server->stop();
-      m_agentTestHelper->m_ioContext.run_for(500ms);
-      m_server.reset();
+      cerr << "Exception occurred in TearDown, ignoring" << endl;
     }
-
-    m_agentTestHelper.reset();
-    m_jsonPrinter.reset();
   }
 
   void createServer(const ConfigOptions &options)
