@@ -55,7 +55,40 @@ namespace mtconnect {
       return factory;
     }
 
-    void Device::registerDataItem(DataItemPtr di) { m_dataItems.emplace(di); }
+    void Device::registerDataItem(DataItemPtr di)
+    {
+      if (auto it = m_dataItems.get<ById>().find(di->getId()); it != m_dataItems.get<ById>().end())
+      {
+        LOG(fatal) << "Device " << getName() << ": Duplicatie data item id  '" << di->getId() << "', Exiting";
+        exit(1);
+      }
+      
+      if (di->hasProperty("Source") && di->getSource()->hasValue())
+      {
+        auto source = di->getSource()->getValue<std::string>();
+        if (auto it = m_dataItems.get<BySource>().find(source); it != m_dataItems.get<BySource>().end())
+        {
+          LOG(warning) << "Device " << getName() << ": Duplicate source '" << source << "' found in data item '" << di->getId() << "'. Previous data item: '" << it->lock()->getId() << '\'';
+        }
+      }
+
+      auto name = di->getName();
+      if (name)
+      {
+        if (auto it = m_dataItems.get<ByName>().find(*name); it != m_dataItems.get<ByName>().end())
+        {
+          LOG(warning) << "Device " << getName() << ": Duplicate source '" << *name << "' found in data item '" << di->getId() << "'. Previous data item: '" << it->lock()->getId() << '\'';
+          LOG(warning) << "    Name '" << *name << " may not resolve correctly on incoming streams";
+        }
+      }
+            
+      auto [id, added] = m_dataItems.emplace(di);
+      if (!added)
+      {
+        LOG(fatal) << "Device " << getName() << ": DataItem '" << di->getId() << " could not be added, exiting";
+        exit(1);
+      }
+    }
 
     Device::Device(const std::string &name, entity::Properties &props) : Component(name, props)
     {
