@@ -77,19 +77,19 @@ protected:
           ;
         m_client.reset();
       }
-      
+
       if (m_server)
       {
         m_server->stop();
         m_agentTestHelper->m_ioContext.run_for(1000ms);
         m_server.reset();
       }
-      
+
       m_agentTestHelper.reset();
       m_jsonPrinter.reset();
     }
-    
-    catch(...)
+
+    catch (...)
     {
       cerr << "Exception occurred in TearDown, ignoring" << endl;
     }
