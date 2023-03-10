@@ -128,10 +128,11 @@ namespace mtconnect {
 
       /// @brief Mapping of device names to data items
       using DataItemIndex = mic::multi_index_container<
-          WeakDataItemPtr, mic::indexed_by<mic::hashed_unique<mic::tag<ById>, ExtractId>,
-                                           mic::hashed_non_unique<mic::tag<BySource>, ExtractSource>,
-                                           mic::hashed_non_unique<mic::tag<ByName>, ExtractName>,
-                                           mic::ordered_non_unique<mic::tag<ByType>, ExtractType>>>;
+          WeakDataItemPtr,
+          mic::indexed_by<mic::hashed_unique<mic::tag<ById>, ExtractId>,
+                          mic::hashed_non_unique<mic::tag<BySource>, ExtractSource>,
+                          mic::hashed_non_unique<mic::tag<ByName>, ExtractName>,
+                          mic::ordered_non_unique<mic::tag<ByType>, ExtractType>>>;
 
       /// @brief Constructor that sets variables from an attribute map
       /// @param[in] name the name of the device
