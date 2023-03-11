@@ -167,7 +167,7 @@ namespace mtconnect::configuration {
         if (fs::exists(path))
         {
           LOG(info) << "Loading configuration from: " << path;
-          cerr << "Loading configuration from:" << path;
+          cerr << "Loading configuration from:" << path << endl;
 
           m_configFile = fs::absolute(path);
           ifstream file(m_configFile.c_str());
