@@ -7,7 +7,7 @@ branches:
 
 
 image:
-  - macos-monterey
+  - macOS
   - Visual Studio 2019
   - Ubuntu2004
 
