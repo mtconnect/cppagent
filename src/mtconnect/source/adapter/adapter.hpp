@@ -56,7 +56,7 @@ namespace mtconnect::source::adapter {
     /// @param h the handler (takes ownership)
     void setHandler(std::unique_ptr<Handler> &h) { m_handler = std::move(h); }
     ///@}
-    
+
   protected:
     std::string m_identity;
     std::unique_ptr<Handler> m_handler;

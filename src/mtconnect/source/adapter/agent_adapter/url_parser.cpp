@@ -77,8 +77,8 @@ namespace mtconnect::source::adapter::agent_adapter {
   BOOST_PHOENIX_ADAPT_FUNCTION(boost::asio::ip::address_v4, v4_from_4number, from_four_number, 4)
   BOOST_PHOENIX_ADAPT_FUNCTION(boost::asio::ip::address_v6, v6_from_string, from_v6_string, 1)
 
-  /// @brief The Uri parser spirit qi grammar 
-  /// @tparam Iterator 
+  /// @brief The Uri parser spirit qi grammar
+  /// @tparam Iterator
   template <typename Iterator>
   struct UriGrammar : qi::grammar<Iterator, Url()>
   {

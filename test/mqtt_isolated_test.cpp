@@ -68,23 +68,31 @@ protected:
 
   void TearDown() override
   {
-    if (m_client)
+    try
     {
-      m_client->stop();
-      while (m_agentTestHelper->m_ioContext.run_one_for(10ms))
-        ;
-      m_client.reset();
+      if (m_client)
+      {
+        m_client->stop();
+        while (m_agentTestHelper->m_ioContext.run_one_for(100ms))
+          ;
+        m_client.reset();
+      }
+
+      if (m_server)
+      {
+        m_server->stop();
+        m_agentTestHelper->m_ioContext.run_for(1000ms);
+        m_server.reset();
+      }
+
+      m_agentTestHelper.reset();
+      m_jsonPrinter.reset();
     }
 
-    if (m_server)
+    catch (...)
     {
-      m_server->stop();
-      m_agentTestHelper->m_ioContext.run_for(500ms);
-      m_server.reset();
+      cerr << "Exception occurred in TearDown, ignoring" << endl;
     }
-
-    m_agentTestHelper.reset();
-    m_jsonPrinter.reset();
   }
 
   void createServer(const ConfigOptions &options)
@@ -201,7 +209,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
 {
   ConfigOptions options {{ServerIp, "127.0.0.1"s},
                          {MqttPort, 0},
-                         {MqttTls, false},                       
+                         {MqttTls, false},
                          {AutoAvailable, false},
                          {RealTime, false}};
 
@@ -443,7 +451,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
   client->set_client_id("cliendId1");
   client->set_clean_session(true);
   client->set_keep_alive_sec(30);
-  
+
   MqttAuthorization *mqttAuct = new MqttAuthorization(options);
   MqttTopicPermission permission = mqttAuct->getPermissionsForClient("mqtt_tcp_client_cpp/topic1");
 
@@ -479,18 +487,19 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
     }
     return true;
   });
-  
+
   client->set_close_handler([] { std::cout << "closed" << std::endl; });
 
   client->set_suback_handler(
-      [&client, &pid_sub1,&permission](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
+      [&client, &pid_sub1, &permission](std::uint16_t packet_id,
+                                        std::vector<mqtt::suback_return_code> results) {
         std::cout << "suback received. packet_id: " << packet_id << std::endl;
         for (auto const &e : results)
         {
           std::cout << "subscribe result: " << e << std::endl;
         }
 
-        //check either topic had authorization permissions
+        // check either topic had authorization permissions
         if (!permission.hasAuthorization())
         {
           std::cout << "MqttAuthorization Failed. packet_id: " << pid_sub1 << std::endl;

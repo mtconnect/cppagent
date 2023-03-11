@@ -28,14 +28,14 @@ namespace mtconnect::source {
   enum class ErrorCode
   {
     OK = 0,
-    ADAPTER_FAILED, ///< The adapter failed
-    STREAM_CLOSED, ///< The stream closed
-    INSTANCE_ID_CHANGED, ///< The source instance id changed
-    RESTART_STREAM, ///< The stream needed to be restarted
-    RETRY_REQUEST, ///< The request needs to be retried
-    MULTIPART_STREAM_FAILED ///< The multipart stream failed
+    ADAPTER_FAILED,          ///< The adapter failed
+    STREAM_CLOSED,           ///< The stream closed
+    INSTANCE_ID_CHANGED,     ///< The source instance id changed
+    RESTART_STREAM,          ///< The stream needed to be restarted
+    RETRY_REQUEST,           ///< The request needs to be retried
+    MULTIPART_STREAM_FAILED  ///< The multipart stream failed
   };
-}
+}  // namespace mtconnect::source
 
 namespace std {
   template <>
