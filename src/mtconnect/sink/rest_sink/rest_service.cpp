@@ -764,7 +764,7 @@ namespace mtconnect {
 
       chrono::milliseconds interMilli {interval};
       SequenceNumber_t firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
-      
+
       if (!from || *from < firstSeq)
         asyncResponse->m_sequence = firstSeq;
       else

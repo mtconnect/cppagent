@@ -24,6 +24,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/asset/file_asset.hpp"
         "${SOURCE_DIR}/asset/raw_material.hpp"
         "${SOURCE_DIR}/asset/qif_document.hpp"
+        "${SOURCE_DIR}/asset/component_configuration_parameters.hpp"
 
 # src/asset SOURCE_FILES_ONLY
   
@@ -32,6 +33,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/asset/file_asset.cpp"
         "${SOURCE_DIR}/asset/raw_material.cpp"
         "${SOURCE_DIR}/asset/qif_document.cpp"
+        "${SOURCE_DIR}/asset/component_configuration_parameters.cpp"
         
 # src/buffer HEADER_FILES_ONLY
 
@@ -79,6 +81,7 @@ set(AGENT_SOURCES
 
         "${SOURCE_DIR}/device_model/configuration/configuration.hpp"
         "${SOURCE_DIR}/device_model/configuration/coordinate_systems.hpp"
+        "${SOURCE_DIR}/device_model/configuration/image_file.hpp"
         "${SOURCE_DIR}/device_model/configuration/motion.hpp"
         "${SOURCE_DIR}/device_model/configuration/relationships.hpp"
         "${SOURCE_DIR}/device_model/configuration/sensor_configuration.hpp"
@@ -89,6 +92,7 @@ set(AGENT_SOURCES
 
         "${SOURCE_DIR}/device_model/configuration/configuration.cpp"
         "${SOURCE_DIR}/device_model/configuration/coordinate_systems.cpp"
+        "${SOURCE_DIR}/device_model/configuration/image_file.cpp"
         "${SOURCE_DIR}/device_model/configuration/motion.cpp"
         "${SOURCE_DIR}/device_model/configuration/relationships.cpp"
         "${SOURCE_DIR}/device_model/configuration/sensor_configuration.cpp"

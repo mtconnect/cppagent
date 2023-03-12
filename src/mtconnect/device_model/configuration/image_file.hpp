@@ -17,29 +17,13 @@
 
 #pragma once
 
-#include <map>
-#include <utility>
-#include <vector>
-
-#include "asset.hpp"
+#include "configuration.hpp"
 #include "mtconnect/config.hpp"
-#include "mtconnect/entity/entity.hpp"
-#include "mtconnect/entity/factory.hpp"
 
-namespace mtconnect::asset {
-  /// @brief File Archetype Asset
-  class AGENT_LIB_API FileArchetypeAsset : public Asset
+namespace mtconnect::device_model::configuration {
+  /// @brief Solid Model/3D Geometry for the component
+  struct ImageFile
   {
-  public:
     static entity::FactoryPtr getFactory();
-    static void registerAsset();
   };
-
-  /// @brief File Asset
-  class AGENT_LIB_API FileAsset : public FileArchetypeAsset
-  {
-  public:
-    static entity::FactoryPtr getFactory();
-    static void registerAsset();
-  };
-}  // namespace mtconnect::asset
+}  // namespace mtconnect::device_model::configuration

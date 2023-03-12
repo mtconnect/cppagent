@@ -24,6 +24,7 @@
 #include "sensor_configuration.hpp"
 #include "solid_model.hpp"
 #include "specifications.hpp"
+#include "image_file.hpp"
 
 using namespace std;
 
@@ -37,6 +38,7 @@ namespace mtconnect {
             {"SensorConfiguration", ENTITY, SensorConfiguration::getFactory(), false},
             {"Relationships", ENTITY_LIST, Relationships::getFactory(), false},
             {"SolidModel", ENTITY, SolidModel::getFactory(), false},
+            {"ImageFile", ENTITY, ImageFile::getFactory(), false},
             {"Motion", ENTITY, Motion::getFactory(), false},
             {"CoordinateSystems", ENTITY_LIST, CoordinateSystems::getFactory(), false},
             {"Specifications", ENTITY_LIST, Specifications::getFactory(), false}});
