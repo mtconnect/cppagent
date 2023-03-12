@@ -154,6 +154,13 @@ namespace mtconnect {
       bool operator==(const Asset &another) const { return getAssetId() == another.getAssetId(); }
 
     protected:
+      void hash(boost::uuids::detail::sha1 &sha1) const override
+      {
+        static const boost::unordered_set<std::string> skip { "hash", "timestamp", "removed" };
+        entity::Entity::hash(sha1, skip);
+      }
+
+    protected:
       std::string m_assetId;
       bool m_removed;
     };

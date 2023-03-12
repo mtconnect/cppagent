@@ -17,7 +17,9 @@
 
 #pragma once
 
+#include <boost/beast/core/detail/base64.hpp>
 #include <boost/range/algorithm.hpp>
+#include <boost/unordered_set.hpp>
 #include <boost/uuid/detail/sha1.hpp>
 
 #include <unordered_map>
@@ -306,8 +308,7 @@ namespace mtconnect {
 
       /// @brief Create a consistent entity digest that is independent of representation
       ///
-      /// Do not consider the hash attribute since it will be replaced with a hash code. The
-      /// result is not guaranteed consistent across different hardware architectures.
+      /// The algo uses sha1 to create the digest and then base64 encodes the result.
       ///
       /// @return A hex string of the entity digest
       std::string hash() const
@@ -317,12 +318,11 @@ namespace mtconnect {
 
         unsigned int digest[5];
         sha1.get_digest(digest);
-
-        std::ostringstream buf;
-        for (int i = 0; i < 5; ++i)
-          buf << std::hex << std::setfill('0') << std::setw(8) << digest[i];
-
-        return buf.str();
+        
+        char encoded[32];
+        auto len = boost::beast::detail::base64::encode(encoded, digest, sizeof(digest));
+        
+        return std::string(encoded, len);
       }
 
       void addHash()
@@ -333,7 +333,14 @@ namespace mtconnect {
 
     protected:
       friend struct HashVisitor;
-      void hash(boost::uuids::detail::sha1 &sha1) const;
+      void hash(boost::uuids::detail::sha1 &sha1, const boost::unordered_set<std::string> &skip) const;
+      virtual void hash(boost::uuids::detail::sha1 &sha1) const
+      {
+        // Default do not skip anything, subclasses add skipped
+        // parameters.
+        static const boost::unordered_set<std::string> skip;
+        hash(sha1, skip);
+      }
 
       Value &getProperty_(const std::string &name)
       {
