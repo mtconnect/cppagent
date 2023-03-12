@@ -18,13 +18,13 @@
 #include "configuration.hpp"
 
 #include "coordinate_systems.hpp"
+#include "image_file.hpp"
 #include "motion.hpp"
 #include "mtconnect/entity/factory.hpp"
 #include "relationships.hpp"
 #include "sensor_configuration.hpp"
 #include "solid_model.hpp"
 #include "specifications.hpp"
-#include "image_file.hpp"
 
 using namespace std;
 

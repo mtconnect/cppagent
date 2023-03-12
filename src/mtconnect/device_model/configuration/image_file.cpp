@@ -22,19 +22,15 @@ using namespace std;
 namespace mtconnect {
   using namespace entity;
   namespace device_model::configuration {
-      FactoryPtr ImageFile::getFactory()
+    FactoryPtr ImageFile::getFactory()
+    {
+      static FactoryPtr imageFile;
+      if (!imageFile)
       {
-        static FactoryPtr imageFile;
-        if (!imageFile)
-        {
-          imageFile = make_shared<Factory>(
-              Requirements {{"id", true},
-                            {"href", false},
-                            {"mediaType", true}
-              });
-          
-        }
-        return imageFile;
+        imageFile =
+            make_shared<Factory>(Requirements {{"id", true}, {"href", false}, {"mediaType", true}});
       }
-  }    // namespace device_model
+      return imageFile;
+    }
+  }  // namespace device_model::configuration
 }  // namespace mtconnect

@@ -88,19 +88,19 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
 
   ASSERT_EQ("PARAMS2", asset->getAssetId());
   ASSERT_EQ("XXX", get<string>(asset->getProperty("deviceUuid")));
-  
+
   auto sets = asset->getProperty("ParameterSet");
   auto setList = get<EntityList>(sets);
-  
+
   ASSERT_EQ(1, setList.size());
-  
+
   ASSERT_EQ("SET1", setList.front()->get<string>("name"));
   auto params = setList.front()->get<EntityList>("LIST");
-  
+
   ASSERT_EQ(2, params.size());
-  
+
   auto it = params.begin();
-  
+
   ASSERT_EQ("1", (*it)->get<string>("identifier"));
   ASSERT_EQ("Output Frequency", (*it)->get<string>("name"));
   ASSERT_EQ(-650.0, (*it)->get<double>("minimum"));
@@ -109,7 +109,7 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
   ASSERT_EQ("60.0", (*it)->getValue<string>());
 
   it++;
-  
+
   ASSERT_EQ("2", (*it)->get<string>("identifier"));
   ASSERT_EQ("Motor Ctrl Mode", (*it)->get<string>("name"));
   ASSERT_EQ("InductionVHz", (*it)->getValue<string>());
@@ -148,60 +148,60 @@ TEST_F(ComponentParametersTest, should_parse_two_parameter_sets)
 
   ASSERT_EQ("PARAMS2", asset->getAssetId());
   ASSERT_EQ("XXX", get<string>(asset->getProperty("deviceUuid")));
-  
+
   auto sets = asset->getProperty("ParameterSet");
   auto setList = get<EntityList>(sets);
-  
+
   ASSERT_EQ(2, setList.size());
-  
+
   auto si = setList.begin();
-  
+
   {
     ASSERT_EQ("SET1", (*si)->get<string>("name"));
     auto params = (*si)->get<EntityList>("LIST");
-    
+
     ASSERT_EQ(2, params.size());
-    
+
     auto it = params.begin();
-    
+
     ASSERT_EQ("1", (*it)->get<string>("identifier"));
     ASSERT_EQ("Output Frequency", (*it)->get<string>("name"));
     ASSERT_EQ(-650.0, (*it)->get<double>("minimum"));
     ASSERT_EQ(650.0, (*it)->get<double>("maximum"));
     ASSERT_EQ("HERTZ", (*it)->get<string>("units"));
     ASSERT_EQ("60.0", (*it)->getValue<string>());
-    
+
     it++;
-    
+
     ASSERT_EQ("2", (*it)->get<string>("identifier"));
     ASSERT_EQ("Motor Ctrl Mode", (*it)->get<string>("name"));
     ASSERT_EQ("InductionVHz", (*it)->getValue<string>());
   }
-  
+
   si++;
-  
+
   {
     ASSERT_EQ("SET2", (*si)->get<string>("name"));
     auto params = (*si)->get<EntityList>("LIST");
-    
+
     ASSERT_EQ(2, params.size());
-    
+
     auto it = params.begin();
-    
+
     ASSERT_EQ("1", (*it)->get<string>("identifier"));
     ASSERT_EQ("Output Frequency", (*it)->get<string>("name"));
     ASSERT_EQ(-550.0, (*it)->get<double>("minimum"));
     ASSERT_EQ(550.0, (*it)->get<double>("maximum"));
     ASSERT_EQ("HERTZ", (*it)->get<string>("units"));
     ASSERT_EQ("50.0", (*it)->getValue<string>());
-    
+
     it++;
-    
+
     ASSERT_EQ("2", (*it)->get<string>("identifier"));
     ASSERT_EQ("Motor Ctrl Mode", (*it)->get<string>("name"));
     ASSERT_EQ("InductionVHz-1", (*it)->getValue<string>());
   }
-  
+
   // Round trip test
   entity::XmlPrinter printer;
   printer.print(*m_writer, entity, {});

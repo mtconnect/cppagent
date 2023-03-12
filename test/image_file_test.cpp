@@ -50,7 +50,7 @@ protected:
   void SetUp() override
   {  // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/solid_model.xml", 8, 4, "1.7", 25);
+    m_agentTestHelper->createAgent("/samples/solid_model.xml", 8, 4, "2.2", 25);
     m_agentId = to_string(getCurrentTimeInSec());
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
@@ -63,102 +63,37 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-TEST_F(ImageFileTest, ParseDeviceSolidModel)
+TEST_F(ImageFileTest, should_parse_configuration_with_image_file)
 {
   ASSERT_NE(nullptr, m_device);
 
   auto &clc = m_device->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
-  auto model = clc->get<EntityPtr>("SolidModel");
+  auto model = clc->get<EntityPtr>("ImageFile");
 
-  EXPECT_EQ("SolidModel", model->getName());
+  EXPECT_EQ("ImageFile", model->getName());
 
-  ASSERT_EQ("dm", model->get<string>("id"));
-  ASSERT_EQ("STL", model->get<string>("mediaType"));
-  ASSERT_EQ("/models/foo.stl", model->get<string>("href"));
-  ASSERT_EQ("machine", model->get<string>("coordinateSystemIdRef"));
-
-  auto scale = model->get<Vector>("Scale");
-
-  ASSERT_EQ(2.0, scale[0]);
-  ASSERT_EQ(3.0, scale[1]);
-  ASSERT_EQ(4.0, scale[2]);
-}
-
-TEST_F(ImageFileTest, ParseRotarySolidModel)
-{
-  ASSERT_NE(nullptr, m_device);
-
-  auto rot = m_device->getComponentById("c");
-  auto &clc = rot->get<EntityPtr>("Configuration");
-  ASSERT_TRUE(clc);
-  auto model = clc->get<EntityPtr>("SolidModel");
-
-  ASSERT_EQ("cm", model->get<string>("id"));
-  ASSERT_EQ("dm", model->get<string>("solidModelIdRef"));
-  ASSERT_EQ("spindle", model->get<string>("itemRef"));
-  ASSERT_EQ("STL", model->get<string>("mediaType"));
-  ASSERT_EQ("machine", model->get<string>("coordinateSystemIdRef"));
-  ASSERT_EQ("MILLIMETER", model->get<string>("units"));
-  ASSERT_EQ("METER", model->get<string>("nativeUnits"));
-
-  auto tf = model->maybeGet<EntityPtr>("Transformation");
-  ASSERT_TRUE(tf);
-
-  auto tv = (*tf)->get<Vector>("Translation");
-  ASSERT_EQ(10.0, tv[0]);
-  ASSERT_EQ(20.0, tv[1]);
-  ASSERT_EQ(30.0, tv[2]);
-
-  auto rv = (*tf)->get<Vector>("Rotation");
-  ASSERT_EQ(90.0, rv[0]);
-  ASSERT_EQ(-90.0, rv[1]);
-  ASSERT_EQ(180.0, rv[2]);
-
-  ASSERT_FALSE(model->hasProperty("Scale"));
+  ASSERT_EQ("if", model->get<string>("id"));
+  ASSERT_EQ("PNG", model->get<string>("mediaType"));
+  ASSERT_EQ("/pictures/machine.png", model->get<string>("href"));
 }
 
 #define DEVICE_CONFIGURATION_PATH "//m:Device/m:Configuration"
-#define DEVICE_SOLID_MODEL_PATH DEVICE_CONFIGURATION_PATH "/m:SolidModel"
+#define DEVICE_SOLID_MODEL_PATH DEVICE_CONFIGURATION_PATH "/m:ImageFile"
 
-TEST_F(ImageFileTest, DeviceXmlPrinting)
+TEST_F(ImageFileTest, should_print_configuration_with_image_file)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
 
     ASSERT_XML_PATH_COUNT(doc, DEVICE_SOLID_MODEL_PATH, 1);
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@id", "dm");
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@mediaType", "STL");
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@href", "/models/foo.stl");
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@coordinateSystemIdRef", "machine");
-
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "/m:Scale", "2 3 4");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@id", "if");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@mediaType", "PNG");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@href", "/pictures/machine.png");
   }
 }
 
-#define ROTARY_CONFIGURATION_PATH "//m:Rotary[@id='c']/m:Configuration"
-#define ROTARY_SOLID_MODEL_PATH ROTARY_CONFIGURATION_PATH "/m:SolidModel"
-
-TEST_F(ImageFileTest, RotaryXmlPrinting)
-{
-  {
-    PARSE_XML_RESPONSE("/LinuxCNC/probe");
-
-    ASSERT_XML_PATH_COUNT(doc, ROTARY_SOLID_MODEL_PATH, 1);
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@id", "cm");
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@mediaType", "STL");
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@solidModelIdRef", "dm");
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@itemRef", "spindle");
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "@coordinateSystemIdRef", "machine");
-
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "/m:Transformation/m:Translation",
-                          "10 20 30");
-    ASSERT_XML_PATH_EQUAL(doc, ROTARY_SOLID_MODEL_PATH "/m:Transformation/m:Rotation",
-                          "90 -90 180");
-  }
-}
-
-TEST_F(ImageFileTest, DeviceJsonPrinting)
+TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json)
 {
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
@@ -166,55 +101,12 @@ TEST_F(ImageFileTest, DeviceJsonPrinting)
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
 
-    auto model = device.at("/Configuration/SolidModel"_json_pointer);
+    auto model = device.at("/Configuration/ImageFile"_json_pointer);
     ASSERT_TRUE(model.is_object());
 
-    ASSERT_EQ(5, model.size());
-    EXPECT_EQ("dm", model["id"]);
-    EXPECT_EQ("STL", model["mediaType"]);
-    EXPECT_EQ("/models/foo.stl", model["href"]);
-    EXPECT_EQ("machine", model["coordinateSystemIdRef"]);
-
-    auto scale = model["Scale"];
-    ASSERT_TRUE(scale.is_array());
-    ASSERT_EQ(3, scale.size());
-    ASSERT_EQ(2.0, scale[0].get<double>());
-    ASSERT_EQ(3.0, scale[1].get<double>());
-    ASSERT_EQ(4.0, scale[2].get<double>());
-  }
-}
-
-TEST_F(ImageFileTest, RotaryJsonPrinting)
-{
-  {
-    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
-
-    auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
-    auto device = devices.at(0).at("/Device"_json_pointer);
-    auto rotary = device.at("/Components/0/Axes/Components/0/Rotary"_json_pointer);
-
-    auto model = rotary.at("/Configuration/SolidModel"_json_pointer);
-    ASSERT_TRUE(model.is_object());
-
-    ASSERT_EQ(8, model.size());
-    EXPECT_EQ("cm", model["id"]);
-    EXPECT_EQ("STL", model["mediaType"]);
-    EXPECT_EQ("machine", model["coordinateSystemIdRef"]);
-    EXPECT_EQ("dm", model["solidModelIdRef"]);
-    EXPECT_EQ("spindle", model["itemRef"]);
-
-    auto trans = model.at("/Transformation/Translation"_json_pointer);
-    ASSERT_TRUE(trans.is_array());
-    ASSERT_EQ(3, trans.size());
-    ASSERT_EQ(10.0, trans[0].get<double>());
-    ASSERT_EQ(20.0, trans[1].get<double>());
-    ASSERT_EQ(30.0, trans[2].get<double>());
-
-    auto rot = model.at("/Transformation/Rotation"_json_pointer);
-    ASSERT_TRUE(rot.is_array());
-    ASSERT_EQ(3, rot.size());
-    ASSERT_EQ(90.0, rot[0].get<double>());
-    ASSERT_EQ(-90.0, rot[1].get<double>());
-    ASSERT_EQ(180.0, rot[2].get<double>());
+    ASSERT_EQ(3, model.size());
+    EXPECT_EQ("if", model["id"]);
+    EXPECT_EQ("PNG", model["mediaType"]);
+    EXPECT_EQ("/pictures/machine.png", model["href"]);
   }
 }
