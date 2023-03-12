@@ -140,6 +140,7 @@ add_agent_test(raw_material TRUE asset)
 add_agent_test(qif_document TRUE asset)
 add_agent_test(asset_buffer TRUE asset)
 add_agent_test(component_parameters TRUE asset)
+add_agent_test(asset_hash TRUE asset)
 
 add_agent_test(agent_device TRUE device_model)
 add_agent_test(component FALSE device_model)
