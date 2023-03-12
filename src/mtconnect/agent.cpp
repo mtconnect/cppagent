@@ -297,6 +297,10 @@ namespace mtconnect {
       }
     }
 
+    // Add hash to asset
+    if (m_schemaVersion >= "2.2")
+      asset->addHash();
+
     m_assetStorage->addAsset(asset);
 
     for (auto &sink : m_sinks)
@@ -311,7 +315,18 @@ namespace mtconnect {
         di = device->getAssetChanged();
       if (di)
       {
-        m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
+        entity::Properties props {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}};
+
+        if (m_schemaVersion >= "2.2")
+        {
+          const auto &hash = asset->getProperty("hash");
+          if (hash.index() != EMPTY)
+          {
+            props.insert_or_assign("hash", hash);
+          }
+        }
+
+        m_loopback->receive(di, props);
       }
 
       updateAssetCounts(device, asset->getType());

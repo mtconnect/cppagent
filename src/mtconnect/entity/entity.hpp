@@ -324,7 +324,7 @@ namespace mtconnect {
 
         return buf.str();
       }
-      
+
       void addHash()
       {
         auto hv = hash();
