@@ -18,6 +18,7 @@
 #pragma once
 
 #include <boost/range/algorithm.hpp>
+#include <boost/uuid/detail/sha1.hpp>
 
 #include <unordered_map>
 
@@ -291,6 +292,7 @@ namespace mtconnect {
       /// @param other the other entity
       /// @return `true` if they have equal name and properties
       bool operator==(const Entity &other) const;
+
       /// @brief compare two entities for inequality
       /// @param other the other entity
       /// @return `true` if they have unequal name and properties
@@ -302,7 +304,37 @@ namespace mtconnect {
       /// @return `true` if successful
       bool reviseTo(const EntityPtr other, const std::set<std::string> protect = {});
 
+      /// @brief Create a consistent entity digest that is independent of representation
+      ///
+      /// Do not consider the hash attribute since it will be replaced with a hash code. The
+      /// result is not guaranteed consistent across different hardware architectures.
+      ///
+      /// @return A hex string of the entity digest
+      std::string hash() const
+      {
+        boost::uuids::detail::sha1 sha1;
+        hash(sha1);
+
+        unsigned int digest[5];
+        sha1.get_digest(digest);
+
+        std::ostringstream buf;
+        for (int i = 0; i < 5; ++i)
+          buf << std::hex << std::setfill('0') << std::setw(8) << digest[i];
+
+        return buf.str();
+      }
+      
+      void addHash()
+      {
+        auto hv = hash();
+        setProperty("hash", hv);
+      }
+
     protected:
+      friend struct HashVisitor;
+      void hash(boost::uuids::detail::sha1 &sha1) const;
+
       Value &getProperty_(const std::string &name)
       {
         static Value noValue {std::monostate()};
