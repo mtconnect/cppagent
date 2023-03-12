@@ -494,6 +494,7 @@ namespace mtconnect {
     std::optional<std::string> m_schemaVersion;
     std::string m_deviceXmlPath;
     bool m_versionDeviceXml = false;
+    int32_t m_intSchemaVersion = IntDefaultSchemaVersion();
 
     // Circular Buffer
     buffer::CircularBuffer m_circularBuffer;
