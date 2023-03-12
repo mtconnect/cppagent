@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:1.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:1.7">
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:2.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mtconnect.org:MTConnectDevices:2.2">
   <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993" bufferSize="100000" version="1.7"/>
   <Devices>
     <Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
@@ -19,6 +19,7 @@
 				<SolidModel id="dm" mediaType="STL" href="/models/foo.stl" coordinateSystemIdRef="machine" >
 					<Scale>2.0 3.0 4.0</Scale>
 				</SolidModel>
+				<ImageFile id="if" mediaType="PNG" href="/pictures/machine.png"/>
 			</Configuration>
       <DataItems>
 				<DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>

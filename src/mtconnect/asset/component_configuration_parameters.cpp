@@ -43,7 +43,7 @@ namespace mtconnect::asset {
     if (first)
     {
       factory->addRequirements(Requirements {
-        Requirement("ParameterSet", ENTITY_LIST, parameterSet, 1, Requirement::Infinite)});
+          Requirement("ParameterSet", ENTITY_LIST, parameterSet, 1, Requirement::Infinite)});
 
       auto root = Asset::getRoot();
       root->registerFactory("ComponentConfigurationParameters", factory);
