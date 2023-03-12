@@ -361,7 +361,7 @@ namespace mtconnect {
           }
           return ent;
         });
-        factory->addRequirements(Requirements({{"assetType", false}}));
+        factory->addRequirements(Requirements {{"assetType", false}, {"hash", false}});
       }
       return factory;
     }
