@@ -116,31 +116,31 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
 
   auto hash1 = entity->hash();
   entity->addHash();
-  
+
   auto &hv = entity->getProperty("hash");
-  ASSERT_NE(0, hv.index());
-  
+  ASSERT_NE(EMPTY, hv.index());
+
   auto hash2 = entity->hash();
   ASSERT_EQ(hash1, hash2);
-  
+
   // Round trip test
   entity::XmlPrinter printer;
   printer.print(*m_writer, entity, {});
 
   string content = m_writer->getContent();
-  
+
   string hdoc(doc);
   hdoc.insert(68, string(" hash=\"" + hash1 + "\""));
   ASSERT_EQ(content, hdoc);
-  
+
   auto entity2 = parser.parse(Asset::getRoot(), content, "2.2", errors);
 
   ASSERT_EQ(hash1, entity2->hash());
-  
+
   auto e2 = ComponentConfigurationParameters::getFactory();
   auto it2 = params.begin();
   (*it2)->setValue("XXX");
-  
+
   ASSERT_NE(hash1, entity->hash());
 }
 

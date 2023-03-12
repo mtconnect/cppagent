@@ -72,17 +72,14 @@ namespace mtconnect::entity {
 
     return false;
   }
-  
+
   inline static void hash(boost::uuids::detail::sha1 &sha1, const DataSet &set);
-  
+
   struct HashVisitor
   {
-    HashVisitor(boost::uuids::detail::sha1 &sha1) : m_sha1(sha1) { }
-    
-    void operator()(const EntityPtr &arg)
-    {
-      arg->hash(m_sha1);
-    }
+    HashVisitor(boost::uuids::detail::sha1 &sha1) : m_sha1(sha1) {}
+
+    void operator()(const EntityPtr &arg) { arg->hash(m_sha1); }
     void operator()(const EntityList &arg)
     {
       for (const auto &e : arg)
@@ -94,36 +91,21 @@ namespace mtconnect::entity {
       for (const auto &e : arg)
         m_sha1.process_bytes(&e, sizeof(e));
     }
-    void operator()(const std::string &arg)
-    {
-      m_sha1.process_bytes(arg.c_str(), arg.size());
-    }
-    void operator()(const double arg)
-    {
-      m_sha1.process_bytes(&arg, sizeof(arg));
-    }
-    void operator()(const int64_t arg)
-    {
-      m_sha1.process_bytes(&arg, sizeof(arg));
-    }
-    void operator()(const bool arg)
-    {
-      m_sha1.process_bytes(&arg, sizeof(arg));
-    }
+    void operator()(const std::string &arg) { m_sha1.process_bytes(arg.c_str(), arg.size()); }
+    void operator()(const double arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
+    void operator()(const int64_t arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
+    void operator()(const bool arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
     void operator()(const Timestamp &arg)
     {
       auto c = arg.time_since_epoch().count();
       m_sha1.process_bytes(&c, sizeof(c));
     }
-    void operator()(const DataSet &arg)
-    {
-      hash(m_sha1, arg);
-    }
+    void operator()(const DataSet &arg) { hash(m_sha1, arg); }
     void operator()(const std::nullptr_t &arg) { m_sha1.process_bytes("NULL", 4); }
 
     boost::uuids::detail::sha1 &m_sha1;
   };
-  
+
   inline static void hash(boost::uuids::detail::sha1 &sha1, const DataSet &set)
   {
     for (auto &e : set)
@@ -140,11 +122,11 @@ namespace mtconnect::entity {
       }
     }
   }
-  
+
   void Entity::hash(boost::uuids::detail::sha1 &sha1) const
   {
     sha1.process_bytes(m_name.c_str(), m_name.size());
-    
+
     for (const auto &e : m_properties)
     {
       // Skip hash
