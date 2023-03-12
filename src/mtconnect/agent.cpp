@@ -41,6 +41,7 @@
 #include <thread>
 
 #include "mtconnect/asset/asset.hpp"
+#include "mtconnect/asset/component_configuration_parameters.hpp"
 #include "mtconnect/asset/cutting_tool.hpp"
 #include "mtconnect/asset/file_asset.hpp"
 #include "mtconnect/asset/qif_document.hpp"
@@ -91,6 +92,7 @@ namespace mtconnect {
     FileAsset::registerAsset();
     RawMaterial::registerAsset();
     QIFDocumentWrapper::registerAsset();
+    ComponentConfigurationParameters::registerAsset();
 
     m_assetStorage = make_unique<AssetBuffer>(
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
