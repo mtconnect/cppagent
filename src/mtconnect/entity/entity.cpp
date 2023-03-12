@@ -123,14 +123,14 @@ namespace mtconnect::entity {
     }
   }
 
-  void Entity::hash(boost::uuids::detail::sha1 &sha1) const
+  void Entity::hash(boost::uuids::detail::sha1 &sha1, const boost::unordered_set<string> &skip) const
   {
     sha1.process_bytes(m_name.c_str(), m_name.size());
 
     for (const auto &e : m_properties)
     {
       // Skip hash
-      if (e.first != "hash")
+      if (!skip.contains(e.first))
       {
         const auto &value = e.second;
         sha1.process_bytes(e.first.c_str(), e.first.size());
