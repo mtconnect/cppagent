@@ -67,7 +67,6 @@ namespace mtconnect::ruby {
   std::recursive_mutex RubyVM::m_mutex;
   RubyVM *RubyVM::m_vm = nullptr;
 
-  // These are static wrapper classes that add types to the Ruby instance
   Embedded::Embedded(Agent *agent, const ConfigOptions &options)
     : m_agent(agent), m_options(options)
   {

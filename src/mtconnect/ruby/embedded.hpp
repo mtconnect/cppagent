@@ -24,18 +24,16 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
-namespace Rice {
-  class Module;
-  class Class;
-}  // namespace Rice
-
 namespace mtconnect {
   class Agent;
+  /// @brief Embedded MRuby namespace
   namespace ruby {
     class RubyVM;
+    /// @brief Static wrapper classes that add types to the Ruby instance
     class AGENT_LIB_API Embedded
     {
     public:
+      /// @brief Create an embedded mruby instance
       Embedded(Agent *agent, const ConfigOptions &options);
       ~Embedded();
 

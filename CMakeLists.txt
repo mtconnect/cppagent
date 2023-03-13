@@ -1,9 +1,9 @@
 # The version number.
 set(AGENT_VERSION_MAJOR 2)
-set(AGENT_VERSION_MINOR 1)
+set(AGENT_VERSION_MINOR 2)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 6)
-set(AGENT_VERSION_RC "")
+set(AGENT_VERSION_BUILD 1)
+set(AGENT_VERSION_RC "_RC1")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)

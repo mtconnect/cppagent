@@ -72,4 +72,73 @@ namespace mtconnect::entity {
 
     return false;
   }
+
+  inline static void hash(boost::uuids::detail::sha1 &sha1, const DataSet &set);
+
+  struct HashVisitor
+  {
+    HashVisitor(boost::uuids::detail::sha1 &sha1) : m_sha1(sha1) {}
+
+    void operator()(const EntityPtr &arg) { arg->hash(m_sha1); }
+    void operator()(const EntityList &arg)
+    {
+      for (const auto &e : arg)
+        e->hash(m_sha1);
+    }
+    void operator()(const std::monostate &arg) { m_sha1.process_bytes("NIL", 4); }
+    void operator()(const Vector &arg)
+    {
+      for (const auto &e : arg)
+        m_sha1.process_bytes(&e, sizeof(e));
+    }
+    void operator()(const std::string &arg) { m_sha1.process_bytes(arg.c_str(), arg.size()); }
+    void operator()(const double arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
+    void operator()(const int64_t arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
+    void operator()(const bool arg) { m_sha1.process_bytes(&arg, sizeof(arg)); }
+    void operator()(const Timestamp &arg)
+    {
+      auto c = arg.time_since_epoch().count();
+      m_sha1.process_bytes(&c, sizeof(c));
+    }
+    void operator()(const DataSet &arg) { hash(m_sha1, arg); }
+    void operator()(const std::nullptr_t &arg) { m_sha1.process_bytes("NULL", 4); }
+
+    boost::uuids::detail::sha1 &m_sha1;
+  };
+
+  inline static void hash(boost::uuids::detail::sha1 &sha1, const DataSet &set)
+  {
+    for (auto &e : set)
+    {
+      sha1.process_bytes(e.m_key.c_str(), e.m_key.size());
+      if (e.m_removed)
+      {
+        sha1.process_bytes("REMOVED", 7);
+      }
+      else
+      {
+        HashVisitor visitor(sha1);
+        visit(visitor, e.m_value);
+      }
+    }
+  }
+
+  void Entity::hash(boost::uuids::detail::sha1 &sha1,
+                    const boost::unordered_set<string> &skip) const
+  {
+    sha1.process_bytes(m_name.c_str(), m_name.size());
+
+    for (const auto &e : m_properties)
+    {
+      // Skip hash
+      if (!skip.contains(e.first))
+      {
+        const auto &value = e.second;
+        sha1.process_bytes(e.first.c_str(), e.first.size());
+        HashVisitor visitor(sha1);
+        visit(visitor, value);
+      }
+    }
+  }
+
 }  // namespace mtconnect::entity

@@ -29,7 +29,7 @@ namespace mtconnect {
     {
       static auto asset = make_shared<Factory>(
           Requirements({Requirement("assetId", false), Requirement("deviceUuid", false),
-                        Requirement("timestamp", TIMESTAMP, false),
+                        Requirement("timestamp", TIMESTAMP, false), Requirement("hash", false),
                         Requirement("removed", BOOL, false)}),
           [](const std::string &name, Properties &props) -> EntityPtr {
             return make_shared<Asset>(name, props);

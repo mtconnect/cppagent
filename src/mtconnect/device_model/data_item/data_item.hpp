@@ -102,8 +102,12 @@ namespace mtconnect {
 
         /// @name Cached transformed and derived property access methods
         ///@{
+
+        /// @brief get the data item id
         const auto &getId() const { return m_id; }
+        /// @brief get the data item name
         const auto &getName() const { return m_name; }
+        /// @brief get the data item source
         const auto &getSource() const { return get<entity::EntityPtr>("Source"); }
 
         /// @brief get the name or the id of the data item
@@ -114,7 +118,11 @@ namespace mtconnect {
         /// @brief get a key related to the data item for creating observations
         /// @return a key
         const auto &getKey() const { return m_key; }
+        /// @brief Return the type property
+        /// @return the type property
         const auto &getType() { return get<std::string>("type"); }
+        /// @brief Return the sub-type property
+        /// @return The sub-type
         const auto &getSubType() { return get<std::string>("subType"); }
 
         /// @brief get the pascalized name for the data item when represented as a observation
