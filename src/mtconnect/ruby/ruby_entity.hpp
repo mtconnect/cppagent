@@ -40,6 +40,10 @@ namespace mtconnect::ruby {
   using namespace std;
 
   inline mrb_value toRuby(mrb_state *mrb, const DataSet &value);
+  /// @brief Convert a data set value to a ruby hash element. Recursive in the case of tables.
+  /// @param[in] mrb the mruby state
+  /// @param[in] value the data set value
+  /// @returns an mruby value
   inline mrb_value toRuby(mrb_state *mrb, const DataSetValue &value)
   {
     mrb_value rv;
@@ -56,6 +60,13 @@ namespace mtconnect::ruby {
     return rv;
   }
 
+  /// @brief Convert data set to ruby hash
+  ///
+  /// Recurses for tables.
+  ///
+  /// @param[in] mrb the mruby state
+  /// @param[in] value the data set
+  /// @returns an mruby value
   inline mrb_value toRuby(mrb_state *mrb, const DataSet &set)
   {
     mrb_value hash = mrb_hash_new(mrb);
@@ -73,6 +84,10 @@ namespace mtconnect::ruby {
   }
 
   inline void dataSetFromRuby(mrb_state *mrb, mrb_value value, DataSet &dataSet);
+  /// @brief Convert a Ruby hash value to an MTConect DataSet
+  /// @param[in] mrb mruby state
+  /// @param[in] value the hash value to convert
+  /// @returns true if succesful
   inline bool dataSetValueFromRuby(mrb_state *mrb, mrb_value value, DataSetValue &dsv)
   {
     bool res = true;
@@ -110,6 +125,10 @@ namespace mtconnect::ruby {
     return res;
   }
 
+  /// @brief Convert a Ruby hash  to an MTConect DataSet
+  /// @param[in] mrb mruby state
+  /// @param[in] value the hash value to convert
+  /// @param[out] dataSet the data set to populate
   inline void dataSetFromRuby(mrb_state *mrb, mrb_value value, DataSet &dataSet)
   {
     auto hash = mrb_hash_ptr(value);
@@ -127,6 +146,10 @@ namespace mtconnect::ruby {
         &dataSet);
   }
 
+  /// @brief Translate an mruby type to a Entity property
+  /// @param[in] mrb mruby state
+  /// @param[in] value  the mruby typed value
+  /// @returns an Entity Value
   inline Value valueFromRuby(mrb_state *mrb, mrb_value value)
   {
     Value res;
@@ -254,6 +277,10 @@ namespace mtconnect::ruby {
     return res;
   }
 
+  /// @brief Convert property value to ruby
+  /// @param[in] mrb MRuby state
+  /// @param[in] value Value to convert
+  /// @return MRuby value
   inline mrb_value toRuby(mrb_state *mrb, const Value &value)
   {
     mrb_value res = visit(
@@ -292,6 +319,12 @@ namespace mtconnect::ruby {
     return res;
   }
 
+  /// @brief Convert  ruby Hash or Value to properties
+  /// @param[in] mrb MRuby state
+  /// @param[in] value Ruby value to convert
+  ///   If Hash, then convert to MTConnect properties, otherwise set the Properties VALUE
+  /// @param[out] props converted properties
+  /// @return `true` if successful
   inline bool fromRuby(mrb_state *mrb, mrb_value value, Properties &props)
   {
     if (mrb_type(value) != MRB_TT_HASH)
@@ -319,6 +352,10 @@ namespace mtconnect::ruby {
     return true;
   }
 
+  /// @brief Convert properties to ruby Hash
+  /// @param[in] mrb MRuby state
+  /// @param[in] props  properties
+  /// @return mruby Hash representing the properties
   inline mrb_value toRuby(mrb_state *mrb, const Properties &props)
   {
     mrb_value hash = mrb_hash_new(mrb);
@@ -333,8 +370,10 @@ namespace mtconnect::ruby {
     return hash;
   }
 
+  /// @brief Ruby Entity wrapper
   struct RubyEntity
   {
+    /// @brief Create Ruby Entity class and method wrappers
     static void initialize(mrb_state *mrb, RClass *module)
     {
       auto entityClass = mrb_define_class_under(mrb, module, "Entity", mrb->object_class);
@@ -362,6 +401,13 @@ namespace mtconnect::ruby {
           [](mrb_state *mrb, mrb_value self) {
             auto entity = MRubySharedPtr<Entity>::unwrap(self);
             return mrb_str_new_cstr(mrb, entity->getName().c_str());
+          },
+          MRB_ARGS_NONE());
+      mrb_define_method(
+          mrb, entityClass, "hash",
+          [](mrb_state *mrb, mrb_value self) {
+            auto entity = MRubySharedPtr<Entity>::unwrap(self);
+            return mrb_str_new_cstr(mrb, entity->hash().c_str());
           },
           MRB_ARGS_NONE());
       mrb_define_method(
@@ -679,4 +725,20 @@ namespace mtconnect::ruby {
           MRB_ARGS_REQ(1));
     }
   };
+  
+  /// @struct RubyEntity
+  /// @remark Ruby Entity Wrapper
+  /// @code
+  /// class Entity -> mtconnect::entity::Entity
+  ///   def initialize(name, properties) -> mtconnect::entity::Entity::Entity(name, properties)
+  ///   def name -> mtconnect::entity::Entity::getName()
+  ///   def hash -> mtconnect::entity::Entity::hash()
+  ///   def value -> mtconnect::entity::Entity::getValue()
+  ///   def value=(v) -> mtconnect::entity::Entity::setValue(v)
+  ///   def properties -> mtconnect::entity::Entity::getProperties()
+  ///   def [](n) -> mtconnect::entity::Entity::getProperty(n)
+  ///   def []=(n, v) -> mtconnect::entity::Entity::setProperty(n, v)
+  /// end
+  /// @endcode
+
 }  // namespace mtconnect::ruby
