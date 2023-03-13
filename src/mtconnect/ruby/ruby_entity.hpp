@@ -531,7 +531,7 @@ namespace mtconnect::ruby {
       MRB_SET_INSTANCE_TT(deviceClass, MRB_TT_DATA);
 
       mrb_define_method(
-          mrb, componentClass, "data_item",
+          mrb, deviceClass, "data_item",
           [](mrb_state *mrb, mrb_value self) {
             auto dev = MRubySharedPtr<Entity>::unwrap<Device>(mrb, self);
             const char *name;
@@ -727,7 +727,7 @@ namespace mtconnect::ruby {
   };
   
   /// @struct RubyEntity
-  /// @remark Ruby Entity Wrapper
+  /// @remark Ruby Entity wrapper
   /// @code
   /// class Entity -> mtconnect::entity::Entity
   ///   def initialize(name, properties) -> mtconnect::entity::Entity::Entity(name, properties)
@@ -740,5 +740,38 @@ namespace mtconnect::ruby {
   ///   def []=(n, v) -> mtconnect::entity::Entity::setProperty(n, v)
   /// end
   /// @endcode
+  ///
+  /// @remark Ruby Component wrapper
+  /// @code
+  /// class Component < Entity -> mtconnect::device_model::Component
+  ///   def id -> mtconnect::device_model::Component::getId()
+  ///   def uuid -> mtconnect::device_model::Component::getUuid()
+  ///   def children -> mtconnect::device_model::Component::getChildren()
+  ///   def data_items -> mtconnect::device_model::Component::getDataItems()
+  /// end
+  /// @endcode
+  ///
+  /// @remark Ruby Device wrapper
+  /// @code
+  /// class Device < Component -> mtconnect::device_model::Device
+  ///   def data_item(name) -> mtconnect::device_model::Component::getDeviceDataItem(name)
+  /// end
+  /// @endcode
+  ///
+  /// @remark Ruby DataItem wrapper
+  /// @code
+  /// class DataItem < Event -> mtconnect::device_model::data_item::DataItem
+  ///   def observation_name -> mtconnect::device_model::data_item::DataItem::getObservationName()
+  ///   def id -> mtconnect::device_model::data_item::DataItem::getId()
+  ///   def name -> mtconnect::device_model::data_item::DataItem::getName()
+  ///   def type -> mtconnect::device_model::data_item::DataItem::getType()
+  ///   def sub_type -> mtconnect::device_model::data_item::DataItem::getSubType()
+  ///   def topic -> mtconnect::device_model::data_item::DataItem::getTopic()
+  ///   def topic=(v) -> mtconnect::device_model::data_item::DataItem::setTopic()
+  /// end
+  /// @endcode
+
+
+
 
 }  // namespace mtconnect::ruby
