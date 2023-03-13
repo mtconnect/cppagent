@@ -308,9 +308,12 @@ namespace mtconnect {
 
       /// @brief Create a consistent entity digest that is independent of representation
       ///
-      /// The algo uses sha1 to create the digest and then base64 encodes the result.
+      /// The algo uses sha1 to create the digest and then base64 encodes the result. This calls
+      /// the protected virtual method`hash(boost::uuids::detail::sha1 &sha1)`
+      /// which iterates all the properties and skips properties that should not be taken into
+      /// consideration.
       ///
-      /// @return A hex string of the entity digest
+      /// @return A base64 string digest of the entity's content
       std::string hash() const
       {
         boost::uuids::detail::sha1 sha1;
@@ -325,6 +328,7 @@ namespace mtconnect {
         return std::string(encoded, len);
       }
 
+      /// @brief Compute the hash of the entity and add a `hash` property.
       void addHash()
       {
         auto hv = hash();
@@ -333,7 +337,18 @@ namespace mtconnect {
 
     protected:
       friend struct HashVisitor;
+      
+      /// @brief Computes the sha1 hash of the entity skipping properties in `skip`
+      /// @param[in,out] sha1 The boost sha1 accumulator
+      /// @param[in] skip A set of parameters to skip–not recursive
       void hash(boost::uuids::detail::sha1 &sha1, const boost::unordered_set<std::string> &skip) const;
+      
+      /// @brief The virtual method that covers `hash(boost::uuids::detail::sha1&, boost::unordered_set<std::string> skip)`
+      ///
+      /// Overload this methid in sub-classes to provide the set of properties to skip. Such as
+      /// {"hash", "timestamp"} that should not be included in the unique hash of the entity.
+      ///
+      /// @param[in,out] sha1 The boost sha1 accumulator
       virtual void hash(boost::uuids::detail::sha1 &sha1) const
       {
         // Default do not skip anything, subclasses add skipped
