@@ -102,7 +102,7 @@ namespace mtconnect {
 
         /// @name Cached transformed and derived property access methods
         ///@{
-        
+
         /// @brief get the data item id
         const auto &getId() const { return m_id; }
         /// @brief get the data item name

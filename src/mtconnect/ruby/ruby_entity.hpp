@@ -725,7 +725,7 @@ namespace mtconnect::ruby {
           MRB_ARGS_REQ(1));
     }
   };
-  
+
   /// @struct RubyEntity
   /// @remark Ruby Entity wrapper
   /// @code
@@ -770,8 +770,5 @@ namespace mtconnect::ruby {
   ///   def topic=(v) -> mtconnect::device_model::data_item::DataItem::setTopic()
   /// end
   /// @endcode
-
-
-
 
 }  // namespace mtconnect::ruby
