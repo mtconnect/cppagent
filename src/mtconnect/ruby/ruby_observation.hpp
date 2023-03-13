@@ -25,7 +25,6 @@
 namespace mtconnect::ruby {
   using namespace mtconnect::observation;
   using namespace std;
-  using namespace Rice;
 
   struct RubyObservation
   {
