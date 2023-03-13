@@ -123,7 +123,8 @@ namespace mtconnect::entity {
     }
   }
 
-  void Entity::hash(boost::uuids::detail::sha1 &sha1, const boost::unordered_set<string> &skip) const
+  void Entity::hash(boost::uuids::detail::sha1 &sha1,
+                    const boost::unordered_set<string> &skip) const
   {
     sha1.process_bytes(m_name.c_str(), m_name.size());
 
