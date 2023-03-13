@@ -680,7 +680,7 @@ namespace mtconnect {
         m_schemaVersion = StrDefaultSchemaVersion();
         m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
       }
-      
+
       return devices;
     }
     catch (runtime_error &e)

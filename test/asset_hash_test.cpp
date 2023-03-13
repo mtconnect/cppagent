@@ -56,7 +56,7 @@ protected:
   }
 
   void TearDown() override { m_agentTestHelper.reset(); }
-  
+
   void addAdapter(ConfigOptions options = ConfigOptions {})
   {
     m_agentTestHelper->addAdapter(options, "localhost", 7878,
@@ -86,10 +86,10 @@ TEST_F(AssetHashTest, should_assign_hash_when_receiving_asset)
 )");
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
   ASSERT_EQ((unsigned int)1, storage->getCount());
-  
+
   auto asset = storage->getAsset("P1");
   auto hash = asset->get<string>("hash");
-  
+
   {
     PARSE_XML_RESPONSE("/asset/P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
@@ -105,7 +105,7 @@ TEST_F(AssetHashTest, should_assign_hash_when_receiving_asset)
     PARSE_XML_RESPONSE("/LinuxCNC/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@hash", hash.c_str());
   }
-  
+
   m_agentTestHelper->m_adapter->parseBuffer(
       R"("2023-02-01T12:00:00Z|@ASSET@|P1|Part|--multiline--AAAA
 <Part assetId='P1'>
@@ -115,18 +115,18 @@ TEST_F(AssetHashTest, should_assign_hash_when_receiving_asset)
 </Part>
 --multiline--AAAA
 )");
-  
+
   auto asset2 = storage->getAsset("P1");
   auto hash2 = asset2->get<string>("hash");
 
   ASSERT_EQ(hash, hash2);
-  
+
   {
     PARSE_XML_RESPONSE("/asset/P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "2023-02-01T12:00:00Z");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@hash", hash.c_str());
   }
-  
+
   {
     PARSE_XML_RESPONSE("/LinuxCNC/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@hash", hash.c_str());
@@ -150,10 +150,10 @@ TEST_F(AssetHashTest, hash_should_change_when_doc_changes)
 )");
   ASSERT_EQ((unsigned int)4, storage->getMaxAssets());
   ASSERT_EQ((unsigned int)1, storage->getCount());
-  
+
   auto asset = storage->getAsset("P1");
   auto hash = asset->get<string>("hash");
-  
+
   {
     PARSE_XML_RESPONSE("/asset/P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "1");
@@ -169,7 +169,7 @@ TEST_F(AssetHashTest, hash_should_change_when_doc_changes)
     PARSE_XML_RESPONSE("/LinuxCNC/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@hash", hash.c_str());
   }
-  
+
   m_agentTestHelper->m_adapter->parseBuffer(
       R"("2023-02-01T12:00:00Z|@ASSET@|P1|Part|--multiline--AAAA
 <Part assetId='P1'>
@@ -179,22 +179,20 @@ TEST_F(AssetHashTest, hash_should_change_when_doc_changes)
 </Part>
 --multiline--AAAA
 )");
-  
+
   auto asset2 = storage->getAsset("P1");
   auto hash2 = asset2->get<string>("hash");
 
   ASSERT_NE(hash, hash2);
-  
+
   {
     PARSE_XML_RESPONSE("/asset/P1");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@timestamp", "2023-02-01T12:00:00Z");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Part@hash", hash2.c_str());
   }
-  
+
   {
     PARSE_XML_RESPONSE("/LinuxCNC/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@hash", hash2.c_str());
   }
-
 }
-
