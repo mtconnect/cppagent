@@ -182,7 +182,7 @@ namespace mtconnect::ruby {
           MRB_ARGS_REQ(1));
     }
   };
-  
+
   /// @struct RubyAgent
   /// @remark Ruby Agent Wrapper
   /// @code
@@ -191,8 +191,8 @@ namespace mtconnect::ruby {
   ///   def sinks -> mtconnect::Agent::getSinks()
   ///   def devices -> mtconnect::Agent::getDevices()
   ///   def default_device -> mtconnect::Agent::getDefaultDevice()
-  ///   def data_item_for_device(device, name) -> mtconnect::Agent::getDataItemForDevice(device, name)
-  ///   def device(name) -> mtconnect::Agent::findDeviceByUUIDorName(name)
+  ///   def data_item_for_device(device, name) -> mtconnect::Agent::getDataItemForDevice(device,
+  ///   name) def device(name) -> mtconnect::Agent::findDeviceByUUIDorName(name)
   /// end
   /// @endcode
   ///
