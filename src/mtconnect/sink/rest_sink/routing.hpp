@@ -45,14 +45,16 @@ namespace mtconnect::sink::rest_sink {
     using Function = std::function<bool(SessionPtr, RequestPtr)>;
 
     Routing(const Routing &r) = default;
-    /// @brief Create a routing
+    /// @brief Create a routing with a string
     ///
-    /// Creates a REGEXP to match against the path
-    /// @param verb The `GET`, `PUT`, `POST`, and `DELETE` version of the HTTP request
-    /// @param pattern the URI pattern to parse and match
-    /// @param function the function to call if matches
-    Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function)
-      : m_verb(verb), m_function(function)
+    /// Creates a routing with a regular expression from the string to match against the path
+    /// @param[in] verb The `GET`, `PUT`, `POST`, and `DELETE` version of the HTTP request
+    /// @param[in] pattern the URI pattern to parse and match
+    /// @param[in] function the function to call if matches
+    /// @param[in] swagger `true` if swagger related
+    Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function,
+            bool swagger = false)
+      : m_verb(verb), m_function(function), m_swagger(swagger)
     {
       std::string s(pattern);
 
@@ -65,14 +67,20 @@ namespace mtconnect::sink::rest_sink {
         queryParameters(query);
       }
 
+      m_path.emplace(s);
       pathParameters(s);
     }
-    /// @brief
-    /// @param verb
-    /// @param pattern
-    /// @param function
-    Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function)
-      : m_verb(verb), m_pattern(pattern), m_function(function)
+
+    /// @brief Create a routing with a regular expression
+    ///
+    /// Creates a routing from the regular expression to match against the path
+    /// @param[in] verb The `GET`, `PUT`, `POST`, and `DELETE` version of the HTTP request
+    /// @param[in] pattern the URI pattern to parse and match
+    /// @param[in] function the function to call if matches
+    /// @param[in] swagger `true` if swagger related
+    Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function,
+            bool swagger = false)
+      : m_verb(verb), m_pattern(pattern), m_function(function), m_swagger(swagger)
     {}
 
     /// @brief Get the list of path position in order
@@ -142,6 +150,15 @@ namespace mtconnect::sink::rest_sink {
 
       return false;
     }
+
+    /// @brief check if this is related to a swagger API
+    /// @returns `true` if related to swagger
+    auto isSwagger() const { return m_swagger; }
+
+    /// @brief Get the path component of the routing pattern
+    const auto &getPath() const { return m_path; }
+    /// @brief Get the routing `verb`
+    const auto &getVerb() const { return m_verb; }
 
   protected:
     void pathParameters(std::string s)
@@ -266,8 +283,11 @@ namespace mtconnect::sink::rest_sink {
     boost::beast::http::verb m_verb;
     std::regex m_pattern;
     std::string m_patternText;
+    std::optional<std::string> m_path;
     ParameterList m_pathParameters;
     QuerySet m_queryParameters;
     Function m_function;
+
+    bool m_swagger = false;
   };
 }  // namespace mtconnect::sink::rest_sink

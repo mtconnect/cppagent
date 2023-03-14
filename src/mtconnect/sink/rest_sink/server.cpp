@@ -18,6 +18,7 @@
 #include "server.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
 #include <boost/beast.hpp>
@@ -27,6 +28,10 @@
 #include <boost/beast/version.hpp>
 #include <boost/tokenizer.hpp>
 
+#include <rapidjson/document.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <thread>
 
 #include "mtconnect/logging.hpp"
@@ -43,6 +48,7 @@ namespace mtconnect::sink::rest_sink {
   namespace ssl = boost::asio::ssl;
 
   using namespace std;
+  using namespace rapidjson;
   using boost::placeholders::_1;
   using boost::placeholders::_2;
 
@@ -224,6 +230,268 @@ namespace mtconnect::sink::rest_sink {
   void Server::fail(beast::error_code ec, char const *what)
   {
     LOG(error) << " error: " << ec.message();
+  }
+
+  template <typename T>
+  struct JsonHelper
+  {
+    JsonHelper(T &writer) : m_writer(writer) {}
+
+    void Key(const char *s) { m_writer.Key(s); }
+
+    void StartObject() { m_writer.StartObject(); }
+
+    void EndObject() { m_writer.EndObject(); }
+
+    void StartArray() { m_writer.StartArray(); }
+
+    void EndArray() { m_writer.EndArray(); }
+
+    void Add(double v) { m_writer.Double(v); }
+
+    void Add(bool v) { m_writer.Bool(v); }
+
+    void Add(int32_t i) { m_writer.Int(i); }
+
+    void Add(uint32_t i) { m_writer.Uint(i); }
+
+    void Add(int64_t i) { m_writer.Int64(i); }
+
+    void Add(uint64_t i) { m_writer.Uint64(i); }
+
+    void Add(const char *s) { m_writer.String(s); }
+
+    void Add(const string &s) { m_writer.String(s.data(), SizeType(s.size())); }
+
+    T &m_writer;
+  };
+
+  //----------------
+  template <typename T>
+  struct AutoJsonObject : JsonHelper<T>
+  {
+    using base = JsonHelper<T>;
+    AutoJsonObject(T &writer) : JsonHelper<T>(writer) { base::StartObject(); }
+
+    ~AutoJsonObject() { base::EndObject(); }
+
+    template <typename T1, typename T2, typename... R>
+    void AddPairs(const T1 &v1, const T2 &v2, R... rest)
+    {
+      base::Key(v1);
+      base::Add(v2);
+
+      AddPairs(rest...);
+    }
+
+    template <typename T1, typename T2, typename... R>
+    void AddPairs(const T1 &v1, const T2 &v2)
+    {
+      base::m_writer.Key(v1);
+      base::Add(v2);
+    }
+  };
+
+  template <typename T>
+  struct AutoJsonArray : JsonHelper<T>
+  {
+    using base = JsonHelper<T>;
+    AutoJsonArray(T &writer) : JsonHelper<T>(writer) { base::StartArray(); }
+
+    ~AutoJsonArray() { base::EndArray(); }
+  };
+
+  template <typename T>
+  void AddParameter(T &writer, const Parameter &param)
+  {
+    AutoJsonObject<T> obj(writer);
+
+    obj.AddPairs("name", param.m_name, "in", param.m_part == PATH ? "path" : "query", "required",
+                 param.m_part == PATH);
+
+    writer.Key("schema");
+    {
+      AutoJsonObject<T> obj(writer);
+      switch (param.m_type)
+      {
+        case ParameterType::STRING:
+          obj.AddPairs("type", "string", "format", "string");
+          break;
+
+        case ParameterType::INTEGER:
+          obj.AddPairs("type", "integer", "format", "int64");
+          break;
+
+        case ParameterType::UNSIGNED_INTEGER:
+          obj.AddPairs("type", "integer", "format", "uint64");
+          break;
+
+        case ParameterType::DOUBLE:
+          obj.AddPairs("type", "double", "format", "double");
+          break;
+
+        case ParameterType::NONE:
+          obj.AddPairs("type", "unknown", "format", "unknown");
+          break;
+      }
+      if (param.m_default.index() != NONE)
+      {
+        obj.Key("default");
+        visit(
+            overloaded {[](const std::monostate &) {}, [&obj](const std::string &s) { obj.Add(s); },
+                        [&obj](int32_t i) { obj.Add(i); }, [&obj](uint64_t i) { obj.Add(i); },
+                        [&obj](double d) { obj.Add(d); }},
+            param.m_default);
+      }
+    }
+  }
+
+  template <typename T>
+  void AddRouting(T &writer, const Routing &routing)
+  {
+    writer.Key(routing.getPath()->c_str());
+    {
+      AutoJsonObject<T> obj(writer);
+
+      string verb {to_string(routing.getVerb())};
+      boost::to_lower(verb);
+
+      writer.Key(verb.data(), SizeType(verb.length()));
+      {
+        AutoJsonObject<T> obj(writer);
+        if (!routing.getPathParameters().empty() || !routing.getQueryParameters().empty())
+        {
+          writer.Key("parameters");
+          {
+            AutoJsonArray<T> ary(writer);
+            {
+              for (const auto &param : routing.getPathParameters())
+              {
+                AddParameter(writer, param);
+              }
+              for (const auto &param : routing.getQueryParameters())
+              {
+                AddParameter(writer, param);
+              }
+            }
+          }
+        }
+
+        writer.Key("responses");
+        {
+          AutoJsonObject<T> obj(writer);
+          writer.Key("200");
+          {
+            AutoJsonObject<T> obj(writer);
+            obj.AddPairs("description", "OK");
+          }
+        }
+      }
+    }
+  }
+
+  // Swagger stuff
+  template <typename T>
+  const std::string &Server::renderSwaggerResponse(const std::string &format)
+  {
+    auto it = m_swaggerAPI.find(format);
+    if (it != m_swaggerAPI.end())
+      return it->second;
+
+    StringBuffer output;
+    unique_ptr<T> writer = make_unique<T>(output);
+    {
+      AutoJsonObject<T> obj(*writer);
+
+      obj.AddPairs("openapi", "3.1.0");
+
+      writer->Key("info");
+      {
+        AutoJsonObject<T> obj(*writer);
+
+        obj.AddPairs("title", "MTConnect – REST API", "description", "MTConnect REST API ");
+
+        writer->Key("contact");
+        {
+          AutoJsonObject<T> obj(*writer);
+
+          obj.AddPairs("email", "will@metalogi.io");
+        }
+
+        writer->Key("license");
+        {
+          AutoJsonObject<T> obj(*writer);
+
+          obj.AddPairs("name", "Apache 2.0", "url",
+                       "http://www.apache.org/licenses/LICENSE-2.0.html");
+        }
+
+        obj.AddPairs("version", GetAgentVersion());
+      }
+
+      writer->Key("externalDocs");
+      {
+        AutoJsonObject<T> obj(*writer);
+
+        obj.AddPairs("description", "For information related to MTConnect", "url",
+                     "http://mtconnect.org");
+      }
+
+      writer->Key("Servers");
+      {
+        AutoJsonArray<T> ary(*writer);
+        {
+          AutoJsonObject<T> obj(*writer);
+
+          stringstream str;
+          if (m_tlsEnabled)
+            str << "https://";
+          else
+            str << "http://";
+          str << m_address.to_string() << ':' << m_port;
+
+          obj.AddPairs("url", str.str());
+        }
+      }
+
+      writer->Key("paths");
+      {
+        AutoJsonObject<T> obj(*writer);
+        for (const auto &routing : m_routings)
+        {
+          if (!routing.isSwagger() && routing.getPath())
+            AddRouting<T>(*writer, routing);
+        }
+      }
+    }
+
+    static string error = R"({"error": "API Generation Failed"})";
+    auto [n, b] = m_swaggerAPI.insert_or_assign(format, string(output.GetString()));
+    if (b)
+      return n->second;
+    else
+      return error;
+  }
+
+  void Server::addSwaggerRoutings()
+  {
+    auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
+      if (m_pretty)
+      {
+        const string &response = renderSwaggerResponse<PrettyWriter<StringBuffer>>("json");
+        session->writeResponse(make_unique<Response>(status::ok, response, "application/json"));
+      }
+      else
+      {
+        //       const string &response = renderSwaggerResponse<Writer<StringBuffer>>("json");
+        //      session->writeResponse(make_unique<Response>(status::ok, response,
+        //      "application/json"));
+      }
+      return true;
+    };
+
+    addRouting({boost::beast::http::verb::get, "/swagger.json", handler, true});
+    // addRouting({boost::beast::http::verb::get, "/swagger.yaml", handler, true});
   }
 
 }  // namespace mtconnect::sink::rest_sink

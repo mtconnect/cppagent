@@ -82,6 +82,8 @@ namespace mtconnect::sink::rest_sink {
       };
 
       loadTlsCertificate();
+
+      addSwaggerRoutings();
     }
 
     /// @brief Start the http server
@@ -226,6 +228,19 @@ namespace mtconnect::sink::rest_sink {
   protected:
     void loadTlsCertificate();
 
+    /// @name Swagger Support
+    /// @{
+    /// @brief Add swagger routings to the Agent
+    void addSwaggerRoutings();
+    /// @brief generate swagger API from routings
+    /// @param[in] format The mime format of the response ("json" or "yaml")
+    ///
+    /// Caches the API document based on the response type requested. Cache cleared whenever a new
+    /// routing is added.
+    template <typename T>
+    const std::string &renderSwaggerResponse(const std::string &format);
+    /// @}
+
   protected:
     boost::asio::io_context &m_context;
 
@@ -249,5 +264,8 @@ namespace mtconnect::sink::rest_sink {
     boost::asio::ssl::context m_sslContext;
     bool m_tlsEnabled {false};
     bool m_tlsOnly {false};
+
+    std::map<std::string, std::string> m_swaggerAPI;
+    bool m_pretty = true;
   };
 }  // namespace mtconnect::sink::rest_sink
