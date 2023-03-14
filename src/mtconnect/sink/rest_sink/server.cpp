@@ -448,8 +448,8 @@ namespace mtconnect::sink::rest_sink {
             str << "https://";
           else
             str << "http://";
-          str << m_address.to_string() << ':' << m_port;
-
+          
+          str << GetBestHostAddress(m_context, true) << ':' << m_port << '/';
           obj.AddPairs("url", str.str());
         }
       }

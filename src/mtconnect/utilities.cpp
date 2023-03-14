@@ -16,6 +16,7 @@
 //
 
 #include "mtconnect/utilities.hpp"
+#include <boost/asio.hpp>
 
 #include <chrono>
 #include <cstdio>
@@ -29,6 +30,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include "logging.hpp"
 
 // Don't include WinSock.h when processing <windows.h>
 #ifdef _WINDOWS
@@ -157,5 +160,45 @@ namespace mtconnect {
     }
 
     return newPath;
+  }
+  
+  std::string GetBestHostAddress(boost::asio::io_context &context, bool onlyV4)
+  {
+    using namespace boost;
+    using namespace asio;
+    using res = ip::udp::resolver;
+
+    string address;
+
+    boost::system::error_code ec;
+    res resolver(context);
+    auto iter = resolver.resolve(ip::host_name(), "5000",
+                                 res::flags::address_configured, ec);
+    if (ec)
+    {
+      LOG(warning) << "Cannot find IP address: " << ec.message();
+      address = "127.0.0.1";
+    }
+    else
+    {
+      res::iterator end;
+      while (iter != end)
+      {
+        const auto &ep = iter->endpoint();
+        const auto &ad = ep.address();
+        if (!ad.is_unspecified() && !ad.is_loopback() && (!onlyV4 || !ad.is_v6()))
+        {
+          auto ads {ad.to_string()};
+          if (ads.length() > address.length() ||
+              (ads.length() == address.length() && ads > address))
+          {
+            address = ads;
+          }
+        }
+        iter++;
+      }
+    }
+    
+    return address;
   }
 }  // namespace mtconnect
