@@ -38,7 +38,8 @@ namespace mtconnect::sink::rest_sink {
     STRING = 1,            ///< A string
     INTEGER = 2,           ///< A signed integer
     UNSIGNED_INTEGER = 3,  ///< An unsigned integer
-    DOUBLE = 4             ///< A double
+    DOUBLE = 4,            ///< A double
+    BOOL = 5               ///< A boolean
   };
 
   /// @brief The part of the path the parameter is related to
@@ -49,7 +50,7 @@ namespace mtconnect::sink::rest_sink {
   };
 
   /// @brief The variant for query parameters
-  using ParameterValue = std::variant<std::monostate, std::string, int32_t, uint64_t, double>;
+  using ParameterValue = std::variant<std::monostate, std::string, int32_t, uint64_t, double, bool>;
   /// @brief A struct to hold a parameter template for matching portions of a REST URI
   struct Parameter
   {
@@ -71,7 +72,30 @@ namespace mtconnect::sink::rest_sink {
 
     /// @brief to support std::set interface
     bool operator<(const Parameter &o) const { return m_name < o.m_name; }
+
+    std::optional<std::string> m_description;
   };
+
+  /// @brief A reusable documentation holder to assign to multiple parameters after they are parsed
+  struct ParameterDoc
+  {
+    /// @brief create reusable documentation for parameters with a name and a URL part
+    /// @param[in] name name of the parameter
+    /// @param[in] part part of the URL: `PATH` or `QUERY`
+    /// @param[in] summary brief description of the parameter
+    /// @param[in] description detailed description of the parameter
+    ParameterDoc(const std::string &name, UrlPart part,
+                 const std::optional<std::string> description)
+      : m_name(name), m_part(part), m_description(description)
+    {}
+
+    std::string m_name;
+    UrlPart m_part;
+    std::optional<std::string> m_description;
+  };
+
+  /// @brief Documentation List
+  using ParameterDocList = std::list<ParameterDoc>;
 
   /// @brief Ordered list of path parameters as they appear in the URI
   using ParameterList = std::list<Parameter>;

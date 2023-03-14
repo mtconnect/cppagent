@@ -91,6 +91,23 @@ namespace mtconnect {
       loadTypes(config);
       loadAllowPut();
 
+      m_server->addParameterDocumentation(
+          {{"device", PATH, "Device UUID or name"},
+           {"device", QUERY, "Device UUID or name"},
+           {"assetIds", PATH, "Semi-colon (;) separated list of assetIds"},
+           {"removed", QUERY, "Boolean indicating if removed assets are included in results"},
+           {"type", QUERY, "Only include assets of type `type` in the results"},
+           {"count", QUERY, "Maximum number of entities to include in results"},
+           {"assetId", QUERY, "An assetId to select"},
+           {"assetId", PATH, "An assetId to select"},
+           {"path", QUERY, "XPath to filter DataItems matched against the probe document"},
+           {"at", QUERY, "Sequence number at which the observation snapshot is taken"},
+           {"to", QUERY, "Sequence number at to stop reporting observations"},
+           {"from", QUERY, "Sequence number at to start reporting observations"},
+           {"interval", QUERY, "Time in ms between publishing data–starts streaming"},
+           {"heartbeat", QUERY,
+            "Time in ms between publishing a empty document when no data has changed"}});
+
       createProbeRoutings();
       createCurrentRoutings();
       createSampleRoutings();
@@ -344,7 +361,7 @@ namespace mtconnect {
     }
 
     // -----------------------------------------------------------
-    // Request Routing
+    // Request Routings
     // -----------------------------------------------------------
 
     static inline void respond(rest_sink::SessionPtr session, rest_sink::ResponsePtr &&response)
@@ -393,18 +410,31 @@ namespace mtconnect {
         return true;
       };
 
-      m_server->addRouting({boost::beast::http::verb::get, "/probe", handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/probe", handler});
+      m_server->addRouting({boost::beast::http::verb::get, "/probe", handler})
+          .document("MTConnect probe request",
+                    "Provides metadata service for the MTConnect Devices information model for all "
+                    "devices.");
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/probe", handler})
+          .document("MTConnect probe request",
+                    "Provides metadata service for the MTConnect Devices information model for "
+                    "device identified by `device` matching `name` or `uuid`.");
+
       // Must be last
-      m_server->addRouting({boost::beast::http::verb::get, "/", handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}", handler});
+      m_server->addRouting({boost::beast::http::verb::get, "/", handler})
+          .document("MTConnect probe request",
+                    "Provides metadata service for the MTConnect Devices information model for all "
+                    "devices.");
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}", handler})
+          .document("MTConnect probe request",
+                    "Provides metadata service for the MTConnect Devices information model for "
+                    "device identified by `device` matching `name` or `uuid`.");
     }
 
     void RestService::createAssetRoutings()
     {
       using namespace rest_sink;
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto removed = *request->parameter<string>("removed") == "true";
+        auto removed = *request->parameter<bool>("removed");
         auto count = *request->parameter<int32_t>("count");
         auto printer = printerForAccepts(request->m_accepts);
 
@@ -414,7 +444,7 @@ namespace mtconnect {
       };
 
       auto idHandler = [&](SessionPtr session, RequestPtr request) -> bool {
-        auto asset = request->parameter<string>("asset");
+        auto asset = request->parameter<string>("assetIds");
         if (asset)
         {
           auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts));
@@ -436,13 +466,23 @@ namespace mtconnect {
         return true;
       };
 
-      string qp("type={string}&removed={string:false}&count={integer:100}&device={string}");
-      m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/assets/{asset}", idHandler});
-      m_server->addRouting({boost::beast::http::verb::get, "/asset/{asset}", idHandler});
+      string qp("type={string}&removed={bool:false}&count={integer:100}&device={string}");
+      m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
+          .document("MTConnect assets request", "Returns up to `count` assets");
+      m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
+          .document("MTConnect asset request", "Returns up to `count` assets");
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/assets?" + qp, handler})
+          .document("MTConnect assets request", "Returns up to `count` assets for deivce `device`");
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/asset?" + qp, handler})
+          .document("MTConnect asset request", "Returns up to `count` assets for deivce `device`");
+      m_server->addRouting({boost::beast::http::verb::get, "/assets/{assetIds}", idHandler})
+          .document(
+              "MTConnect assets request",
+              "Returns a set assets identified by asset ids `asset` separated by semi-colon (;)");
+      m_server->addRouting({boost::beast::http::verb::get, "/asset/{assetIds}", idHandler})
+          .document("MTConnect asset request",
+                    "Returns a set of assets identified by asset ids `asset` separated by "
+                    "semi-colon (;)");
 
       if (m_server->arePutsAllowed())
       {
@@ -451,12 +491,12 @@ namespace mtconnect {
           respond(session,
                   putAssetRequest(printer, request->m_body, request->parameter<string>("type"),
                                   request->parameter<string>("device"),
-                                  request->parameter<string>("uuid")));
+                                  request->parameter<string>("assetId")));
           return true;
         };
 
         auto deleteHandler = [&](SessionPtr session, RequestPtr request) -> bool {
-          auto asset = request->parameter<string>("asset");
+          auto asset = request->parameter<string>("assetId");
           if (asset)
           {
             list<string> ids;
@@ -482,25 +522,39 @@ namespace mtconnect {
           for (const auto &t : list<boost::beast::http::verb> {boost::beast::http::verb::put,
                                                                boost::beast::http::verb::post})
           {
-            m_server->addRouting(
-                {t, "/" + asset + "/{uuid}?device={string}&type={string}", putHandler});
-            m_server->addRouting({t, "/" + asset + "?device={string}&type={string}", putHandler});
-            m_server->addRouting({t, "/{device}/" + asset + "/{uuid}?type={string}", putHandler});
-            m_server->addRouting({t, "/{device}/" + asset + "?type={string}", putHandler});
+            m_server
+                ->addRouting(
+                    {t, "/" + asset + "/{assetId}?device={string}&type={string}", putHandler})
+                .document("Upload an asset by identified by `assetId`",
+                          "Updates or adds an asset with the asset XML in the body");
+            m_server->addRouting({t, "/" + asset + "?device={string}&type={string}", putHandler})
+                .document("Upload an asset by identified by `assetId`",
+                          "Updates or adds an asset with the asset XML in the body");
+            m_server->addRouting({t, "/{device}/" + asset + "/{assetId}?type={string}", putHandler})
+                .document("Upload an asset by identified by `assetId`",
+                          "Updates or adds an asset with the asset XML in the body");
+            m_server->addRouting({t, "/{device}/" + asset + "?type={string}", putHandler})
+                .document("Upload an asset by identified by `assetId`",
+                          "Updates or adds an asset with the asset XML in the body");
           }
 
-          m_server->addRouting({boost::beast::http::verb::delete_,
-                                "/" + asset + "?&device={string}&type={string}", deleteHandler});
-          m_server->addRouting({boost::beast::http::verb::delete_,
-                                "/" + asset + "?&device={string}&type={string}", deleteHandler});
-          m_server->addRouting(
-              {boost::beast::http::verb::delete_, "/" + asset + "/{asset}", deleteHandler});
-          m_server->addRouting(
-              {boost::beast::http::verb::delete_, "/" + asset + "/{asset}", deleteHandler});
-          m_server->addRouting({boost::beast::http::verb::delete_,
-                                "/{device}/" + asset + "?type={string}", deleteHandler});
-          m_server->addRouting({boost::beast::http::verb::delete_,
-                                "/{device}/" + asset + "?type={string}", deleteHandler});
+          m_server
+              ->addRouting({boost::beast::http::verb::delete_,
+                            "/" + asset + "?device={string}&type={string}", deleteHandler})
+              .document("Delete all assets for a device and type",
+                        "Device and type are optional. If they are not given, it assumes there is "
+                        "no constraint");
+          m_server
+              ->addRouting(
+                  {boost::beast::http::verb::delete_, "/" + asset + "/{assetId}", deleteHandler})
+              .document("Delete asset identified by `assetId`",
+                        "Marks the asset as removed and creates an AssetRemoved event");
+          m_server
+              ->addRouting({boost::beast::http::verb::delete_,
+                            "/{device}/" + asset + "?type={string}", deleteHandler})
+              .document("Delete all assets for a device and type",
+                        "Device and type are optional. If they are not given, it assumes there is "
+                        "no constraint");
         }
       }
     }
@@ -527,8 +581,14 @@ namespace mtconnect {
       };
 
       string qp("path={string}&at={unsigned_integer}&interval={integer}");
-      m_server->addRouting({boost::beast::http::verb::get, "/current?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/current?" + qp, handler});
+      m_server->addRouting({boost::beast::http::verb::get, "/current?" + qp, handler})
+          .document("MTConnect current request",
+                    "Gets a stapshot of the state of all the observations for all devices "
+                    "optionally filtered by the `path`");
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/current?" + qp, handler})
+          .document("MTConnect current request",
+                    "Gets a stapshot of the state of all the observations for device `device` "
+                    "optionally filtered by the `path`");
     }
 
     void RestService::createSampleRoutings()
@@ -559,8 +619,16 @@ namespace mtconnect {
           "path={string}&from={unsigned_integer}&"
           "interval={integer}&count={integer:100}&"
           "heartbeat={integer:10000}&to={unsigned_integer}");
-      m_server->addRouting({boost::beast::http::verb::get, "/sample?" + qp, handler});
-      m_server->addRouting({boost::beast::http::verb::get, "/{device}/sample?" + qp, handler});
+      m_server->addRouting({boost::beast::http::verb::get, "/sample?" + qp, handler})
+          .document("MTConnect sample request",
+                    "Gets a time series of at maximum `count` observations for all devices "
+                    "optionally filtered by the `path` and starting at `from`. By default, from is "
+                    "the first available observation known to the agent");
+      m_server->addRouting({boost::beast::http::verb::get, "/{device}/sample?" + qp, handler})
+          .document("MTConnect sample request",
+                    "Gets a time series of at maximum `count` observations for device `device` "
+                    "optionally filtered by the `path` and starting at `from`. By default, from is "
+                    "the first available observation known to the agent");
     }
 
     void RestService::createPutObservationRoutings()
@@ -588,8 +656,12 @@ namespace mtconnect {
           }
         };
 
-        m_server->addRouting({boost::beast::http::verb::put, "/{device}?time={string}", handler});
-        m_server->addRouting({boost::beast::http::verb::post, "/{device}?time={string}", handler});
+        m_server->addRouting({boost::beast::http::verb::put, "/{device}?time={string}", handler})
+            .document("Non-normative PUT to update a value in the agent",
+                      "The data of the PUT contains the dataItem=value observation data");
+        m_server->addRouting({boost::beast::http::verb::post, "/{device}?time={string}", handler})
+            .document("Non-normative POST to update a value in the agent",
+                      "The data of the POST contains the dataItem=value observation data");
       }
     }
 

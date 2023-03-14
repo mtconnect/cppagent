@@ -308,7 +308,6 @@ namespace mtconnect::sink::rest_sink {
 
     obj.AddPairs("name", param.m_name, "in", param.m_part == PATH ? "path" : "query", "required",
                  param.m_part == PATH);
-
     writer.Key("schema");
     {
       AutoJsonObject<T> obj(writer);
@@ -330,6 +329,10 @@ namespace mtconnect::sink::rest_sink {
           obj.AddPairs("type", "double", "format", "double");
           break;
 
+        case ParameterType::BOOL:
+          obj.AddPairs("type", "boolean", "format", "bool");
+          break;
+
         case ParameterType::NONE:
           obj.AddPairs("type", "unknown", "format", "unknown");
           break;
@@ -344,47 +347,50 @@ namespace mtconnect::sink::rest_sink {
             param.m_default);
       }
     }
+    if (param.m_description)
+      obj.AddPairs("description", *param.m_description);
   }
 
   template <typename T>
   void AddRouting(T &writer, const Routing &routing)
   {
-    writer.Key(routing.getPath()->c_str());
+    string verb {to_string(routing.getVerb())};
+    boost::to_lower(verb);
+
+    writer.Key(verb.data(), SizeType(verb.length()));
     {
       AutoJsonObject<T> obj(writer);
 
-      string verb {to_string(routing.getVerb())};
-      boost::to_lower(verb);
+      if (routing.getSummary())
+        obj.AddPairs("summary", *routing.getSummary());
+      if (routing.getDescription())
+        obj.AddPairs("description", *routing.getDescription());
 
-      writer.Key(verb.data(), SizeType(verb.length()));
+      if (!routing.getPathParameters().empty() || !routing.getQueryParameters().empty())
       {
-        AutoJsonObject<T> obj(writer);
-        if (!routing.getPathParameters().empty() || !routing.getQueryParameters().empty())
+        writer.Key("parameters");
         {
-          writer.Key("parameters");
+          AutoJsonArray<T> ary(writer);
           {
-            AutoJsonArray<T> ary(writer);
+            for (const auto &param : routing.getPathParameters())
             {
-              for (const auto &param : routing.getPathParameters())
-              {
-                AddParameter(writer, param);
-              }
-              for (const auto &param : routing.getQueryParameters())
-              {
-                AddParameter(writer, param);
-              }
+              AddParameter(writer, param);
+            }
+            for (const auto &param : routing.getQueryParameters())
+            {
+              AddParameter(writer, param);
             }
           }
         }
+      }
 
-        writer.Key("responses");
+      writer.Key("responses");
+      {
+        AutoJsonObject<T> obj(writer);
+        writer.Key("200");
         {
           AutoJsonObject<T> obj(writer);
-          writer.Key("200");
-          {
-            AutoJsonObject<T> obj(writer);
-            obj.AddPairs("description", "OK");
-          }
+          obj.AddPairs("description", "OK");
         }
       }
     }
@@ -392,35 +398,29 @@ namespace mtconnect::sink::rest_sink {
 
   // Swagger stuff
   template <typename T>
-  const std::string &Server::renderSwaggerResponse(const std::string &format)
+  const void Server::renderSwaggerResponse(T &writer)
   {
-    auto it = m_swaggerAPI.find(format);
-    if (it != m_swaggerAPI.end())
-      return it->second;
-
-    StringBuffer output;
-    unique_ptr<T> writer = make_unique<T>(output);
     {
-      AutoJsonObject<T> obj(*writer);
+      AutoJsonObject<T> obj(writer);
 
-      obj.AddPairs("openapi", "3.1.0");
+      obj.AddPairs("openapi", "3.0.0");
 
-      writer->Key("info");
+      writer.Key("info");
       {
-        AutoJsonObject<T> obj(*writer);
+        AutoJsonObject<T> obj(writer);
 
         obj.AddPairs("title", "MTConnect – REST API", "description", "MTConnect REST API ");
 
-        writer->Key("contact");
+        writer.Key("contact");
         {
-          AutoJsonObject<T> obj(*writer);
+          AutoJsonObject<T> obj(writer);
 
           obj.AddPairs("email", "will@metalogi.io");
         }
 
-        writer->Key("license");
+        writer.Key("license");
         {
-          AutoJsonObject<T> obj(*writer);
+          AutoJsonObject<T> obj(writer);
 
           obj.AddPairs("name", "Apache 2.0", "url",
                        "http://www.apache.org/licenses/LICENSE-2.0.html");
@@ -429,19 +429,19 @@ namespace mtconnect::sink::rest_sink {
         obj.AddPairs("version", GetAgentVersion());
       }
 
-      writer->Key("externalDocs");
+      writer.Key("externalDocs");
       {
-        AutoJsonObject<T> obj(*writer);
+        AutoJsonObject<T> obj(writer);
 
         obj.AddPairs("description", "For information related to MTConnect", "url",
                      "http://mtconnect.org");
       }
 
-      writer->Key("Servers");
+      writer.Key("servers");
       {
-        AutoJsonArray<T> ary(*writer);
+        AutoJsonArray<T> ary(writer);
         {
-          AutoJsonObject<T> obj(*writer);
+          AutoJsonObject<T> obj(writer);
 
           stringstream str;
           if (m_tlsEnabled)
@@ -454,43 +454,62 @@ namespace mtconnect::sink::rest_sink {
         }
       }
 
-      writer->Key("paths");
+      writer.Key("paths");
       {
-        AutoJsonObject<T> obj(*writer);
+        AutoJsonObject<T> obj(writer);
+
+        multimap<string, const Routing *> routings;
         for (const auto &routing : m_routings)
         {
           if (!routing.isSwagger() && routing.getPath())
-            AddRouting<T>(*writer, routing);
+            routings.emplace(make_pair(*routing.getPath(), &routing));
         }
+
+        string last;
+        for (const auto &[path, routing] : routings)
+        {
+          if (path != last)
+          {
+            if (!last.empty())
+              writer.EndObject();
+
+            last = path;
+            writer.Key(path.c_str());
+            writer.StartObject();
+          }
+
+          AddRouting<T>(writer, *routing);
+        }
+        writer.EndObject();
       }
     }
-
-    static string error = R"({"error": "API Generation Failed"})";
-    auto [n, b] = m_swaggerAPI.insert_or_assign(format, string(output.GetString()));
-    if (b)
-      return n->second;
-    else
-      return error;
   }
 
   void Server::addSwaggerRoutings()
   {
     auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
-      if (m_pretty)
+      auto pretty = *request->parameter<bool>("pretty");
+
+      StringBuffer output;
+      if (pretty)
       {
-        const string &response = renderSwaggerResponse<PrettyWriter<StringBuffer>>("json");
-        session->writeResponse(make_unique<Response>(status::ok, response, "application/json"));
+        PrettyWriter<StringBuffer> writer(output);
+        writer.SetIndent(' ', 2);
+        renderSwaggerResponse<PrettyWriter<StringBuffer>>(writer);
       }
       else
       {
-        //       const string &response = renderSwaggerResponse<Writer<StringBuffer>>("json");
-        //      session->writeResponse(make_unique<Response>(status::ok, response,
-        //      "application/json"));
+        Writer<StringBuffer> writer(output);
+        renderSwaggerResponse<Writer<StringBuffer>>(writer);
       }
+
+      session->writeResponse(
+          make_unique<Response>(status::ok, string(output.GetString()), "application/json"));
+
       return true;
     };
 
-    addRouting({boost::beast::http::verb::get, "/swagger.json", handler, true});
+    addRouting({boost::beast::http::verb::get, "/swagger?pretty={bool:false}", handler, true});
     // addRouting({boost::beast::http::verb::get, "/swagger.yaml", handler, true});
   }
 
