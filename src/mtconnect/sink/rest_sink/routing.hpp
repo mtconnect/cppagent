@@ -83,6 +83,71 @@ namespace mtconnect::sink::rest_sink {
       : m_verb(verb), m_pattern(pattern), m_function(function), m_swagger(swagger)
     {}
 
+    /// @brief Added summary and description to the routing
+    /// @param[in] summary optional summary
+    /// @param[in] description optional description of the routing
+    Routing &document(std::optional<std::string> summary,
+                      std::optional<std::string> description = std::nullopt)
+    {
+      m_summary = summary;
+      m_description = description;
+      return *this;
+    }
+
+    /// @brief Added summary and description to the routing
+    /// @param[in] summary optional summary
+    /// @param[in] description optional description of the routing
+    Routing &documentParameter(const std::string &name, UrlPart part,
+                               std::optional<std::string> description)
+    {
+      Parameter *param {nullptr};
+      if (part == PATH)
+      {
+        for (auto &p : m_pathParameters)
+        {
+          if (p.m_name == name)
+          {
+            param = &p;
+            break;
+          }
+        }
+      }
+      else
+      {
+        for (auto &p : m_queryParameters)
+        {
+          if (p.m_name == name)
+          {
+            param = const_cast<Parameter *>(&p);
+            break;
+          }
+        }
+      }
+
+      if (param != nullptr)
+        param->m_description = description;
+
+      return *this;
+    }
+
+    /// @brief Document using common parameter documentation
+    /// @param[in] docs common documentation for parameters
+    Routing &documentParameters(const ParameterDocList &docs)
+    {
+      for (const auto &doc : docs)
+      {
+        documentParameter(doc.m_name, doc.m_part, doc.m_description);
+      }
+      return *this;
+    }
+
+    /// @brief Get the description of the REST call for Swagger
+    /// @returns optional string if description is givem
+    const auto &getDescription() const { return m_description; }
+    /// @brief Get the brief summary fo the REST call for Swagger
+    /// @returns optional string if summary is givem
+    const auto &getSummary() const { return m_summary; }
+
     /// @brief Get the list of path position in order
     /// @return the parameter list
     const ParameterList &getPathParameters() const { return m_pathParameters; }
@@ -224,6 +289,10 @@ namespace mtconnect::sink::rest_sink {
       {
         par.m_type = DOUBLE;
       }
+      else if (t == "bool")
+      {
+        par.m_type = BOOL;
+      }
 
       if (!def.empty())
       {
@@ -272,6 +341,11 @@ namespace mtconnect::sink::rest_sink {
 
           return r;
         }
+
+        case BOOL:
+        {
+          return bool(s == "true" || s == "yes");
+        }
       }
 
       throw ParameterError("Unknown type for conversion: " + std::to_string(int(t)));
@@ -287,6 +361,9 @@ namespace mtconnect::sink::rest_sink {
     ParameterList m_pathParameters;
     QuerySet m_queryParameters;
     Function m_function;
+
+    std::optional<std::string> m_summary;
+    std::optional<std::string> m_description;
 
     bool m_swagger = false;
   };

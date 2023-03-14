@@ -209,9 +209,24 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] ec an error code
     /// @param[in] what the description why the request failed
     void fail(boost::system::error_code ec, char const *what);
+
     /// @brief Add a routing to the server
     /// @param[in] routing the routing
-    void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
+    Routing &addRouting(const Routing &routing)
+    {
+      auto &route = m_routings.emplace_back(routing);
+      if (m_parameterDocumentation)
+        route.documentParameters(*m_parameterDocumentation);
+      return route;
+    }
+
+    /// @brief Add common set of documentation for all rest routings
+    /// @param[in] docs Parameter documentation
+    void addParameterDocumentation(const ParameterDocList &docs)
+    {
+      m_parameterDocumentation.emplace(docs);
+    }
+
     /// @brief Set the error function to format the error during failure
     /// @param func the error function
     void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
@@ -238,7 +253,7 @@ namespace mtconnect::sink::rest_sink {
     /// Caches the API document based on the response type requested. Cache cleared whenever a new
     /// routing is added.
     template <typename T>
-    const std::string &renderSwaggerResponse(const std::string &format);
+    const void renderSwaggerResponse(T &format);
     /// @}
 
   protected:
@@ -260,12 +275,11 @@ namespace mtconnect::sink::rest_sink {
     ErrorFunction m_errorFunction;
     FieldList m_fields;
 
+    std::optional<ParameterDocList> m_parameterDocumentation;
+
     boost::asio::ip::tcp::acceptor m_acceptor;
     boost::asio::ssl::context m_sslContext;
     bool m_tlsEnabled {false};
     bool m_tlsOnly {false};
-
-    std::map<std::string, std::string> m_swaggerAPI;
-    bool m_pretty = true;
   };
 }  // namespace mtconnect::sink::rest_sink
