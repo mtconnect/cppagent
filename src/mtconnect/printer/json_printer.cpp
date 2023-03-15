@@ -25,6 +25,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "mtconnect/printer/json_printer_helper.hpp"
+
 #include "mtconnect/device_model/composition.hpp"
 #include "mtconnect/device_model/configuration/configuration.hpp"
 #include "mtconnect/device_model/device.hpp"
@@ -39,6 +41,7 @@ using json = nlohmann::json;
 namespace mtconnect::printer {
   using namespace observation;
   using namespace device_model;
+  using namespace rapidjson;
 
   JsonPrinter::JsonPrinter(uint32_t jsonVersion, bool pretty)
     : Printer(pretty), m_jsonVersion(jsonVersion)
@@ -166,38 +169,40 @@ namespace mtconnect::printer {
                                       const std::map<std::string, size_t> *count) const
   {
     defaultSchemaVersion();
+    
+    StringBuffer output;
+    RenderJson(output, m_pretty, [&](auto &writer) {
+      AutoJsonObject outer(writer);
+      AutoJsonObject obj(writer, "MTConnectDevices");
+      obj.AddPairs("jsonVersion", m_jsonVersion,
+                   "schemaVersion", *m_schemaVersion);
+      {
+        AutoJsonObject obj(writer, "Header");
+        obj.AddPairs("version", m_version,
+                     "creationTime", getCurrentTime(GMT),
+                     "testIndicator", false,
+                     "instanceId", instanceId,
+                     "sender", hostname());
 
-    entity::JsonPrinter printer(m_jsonVersion);
+        if (*m_schemaVersion >= "1.7")
+          obj.AddPairs("deviceModelChangeTime", m_modelChangeTime);
 
-    json devicesDoc;
+        obj.AddPairs("bufferSize", bufferSize);
+        if (assetBufferSize > 0)
+        {
+          obj.AddPairs("assetBufferSize", bufferSize,
+                       "assetCount", assetCount);
+        }
+      }
+      {
+        AutoJsonArray ary(writer, "Devices");
+        //for (const auto &device : devices)
+        //  printer.print(writer, m_jsonVersion, device);
+      }
+    });
 
-    if (m_jsonVersion == 1)
-    {
-      devicesDoc = json::array();
-      for (const auto &device : devices)
-        devicesDoc.emplace_back(printer.print(device));
-    }
-    else if (m_jsonVersion == 2)
-    {
-      entity::EntityList list;
-      copy(devices.begin(), devices.end(), back_inserter(list));
-      entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
-      entity->setProperty("LIST", list);
-      devicesDoc = printer.printEntity(entity);
-    }
-    else
-    {
-      throw runtime_error("invalid json printer version");
-    }
 
-    json doc = json::object({{"MTConnectDevices",
-                              {{"jsonVersion", m_jsonVersion},
-                               {"Header", probeAssetHeader(m_version, hostname(), instanceId,
-                                                           bufferSize, assetBufferSize, assetCount,
-                                                           *m_schemaVersion, m_modelChangeTime)},
-                               {"Devices", devicesDoc}}}});
-
-    return print(doc, m_pretty);
+    return string(output.GetString());
   }
 
   class AGENT_LIB_API CategoryRef

@@ -391,17 +391,9 @@ namespace mtconnect::sink::rest_sink {
       auto pretty = *request->parameter<bool>("pretty");
 
       StringBuffer output;
-      if (pretty)
-      {
-        PrettyWriter<StringBuffer> writer(output);
-        writer.SetIndent(' ', 2);
-        renderSwaggerResponse<PrettyWriter<StringBuffer>>(writer);
-      }
-      else
-      {
-        Writer<StringBuffer> writer(output);
-        renderSwaggerResponse<Writer<StringBuffer>>(writer);
-      }
+      RenderJson(output, pretty, [this](auto &writer) {
+        renderSwaggerResponse(writer);
+      });
 
       session->writeResponse(
           make_unique<Response>(status::ok, string(output.GetString()), "application/json"));

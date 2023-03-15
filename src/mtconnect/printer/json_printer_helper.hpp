@@ -163,4 +163,20 @@ namespace mtconnect::printer {
     
     bool m_ended { false };
   };
+  
+  template<typename T, typename T2>
+  void RenderJson(T &output, bool pretty, T2 &&func)
+  {
+    if (pretty)
+    {
+      rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(output);
+      writer.SetIndent(' ', 2);
+      func(writer);
+    }
+    else
+    {
+      rapidjson::Writer<rapidjson::StringBuffer> writer(output);
+      func(writer);
+    }
+  }
 }

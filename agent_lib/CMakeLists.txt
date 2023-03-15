@@ -202,7 +202,6 @@ set(AGENT_SOURCES
 
 # src/printer SOURCE_FILES_ONLY
 
-        "${SOURCE_DIR}/printer/json_printer.cpp"
         "${SOURCE_DIR}/printer/xml_printer.cpp"
 
 # src/source HEADER_FILE_ONLY
