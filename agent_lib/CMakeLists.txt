@@ -194,6 +194,7 @@ set(AGENT_SOURCES
 # src/printer HEADER_FILE_ONLY
 
         "${SOURCE_DIR}/printer/json_printer.hpp"
+        "${SOURCE_DIR}/printer/json_printer_helper.hpp"
         "${SOURCE_DIR}/printer/printer.hpp"
         "${SOURCE_DIR}/printer/xml_helper.hpp"
         "${SOURCE_DIR}/printer/xml_printer.hpp"
