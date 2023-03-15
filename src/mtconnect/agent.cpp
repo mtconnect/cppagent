@@ -40,6 +40,7 @@
 #include <sys/stat.h>
 #include <thread>
 
+#include "mtconnect/utilities.hpp"
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/asset/component_configuration_parameters.hpp"
 #include "mtconnect/asset/cutting_tool.hpp"
@@ -598,43 +599,13 @@ namespace mtconnect {
   void Agent::createAgentDevice()
   {
     NAMED_SCOPE("Agent::createAgentDevice");
-
+    
     using namespace boost;
-    using namespace asio;
-    using res = ip::udp::resolver;
+    
+    auto address = GetBestHostAddress(m_context);
 
     auto port = GetOption<int>(m_options, mtconnect::configuration::Port).value_or(5000);
     auto service = boost::lexical_cast<string>(port);
-    string address;
-
-    boost::system::error_code ec;
-    res resolver(m_context);
-    auto iter = resolver.resolve(ip::host_name(), service, res::flags::address_configured, ec);
-    if (ec)
-    {
-      LOG(warning) << "Cannot find IP address: " << ec.message();
-      address = "127.0.0.1";
-    }
-    else
-    {
-      res::iterator end;
-      while (iter != end)
-      {
-        const auto &ep = iter->endpoint();
-        const auto &ad = ep.address();
-        if (!ad.is_unspecified() && !ad.is_loopback())
-        {
-          auto ads {ad.to_string()};
-          if (ads.length() > address.length() ||
-              (ads.length() == address.length() && ads > address))
-          {
-            address = ads;
-          }
-        }
-        iter++;
-      }
-    }
-
     address.append(":").append(service);
 
     uuids::name_generator_latest gen(uuids::ns::dns());

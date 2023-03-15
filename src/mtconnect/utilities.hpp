@@ -43,6 +43,10 @@ const unsigned int DEFAULT_SLIDING_BUFFER_SIZE = 131072;
 const unsigned int DEFAULT_SLIDING_BUFFER_EXP = 17;
 const unsigned int DEFAULT_MAX_ASSETS = 1024;
 
+namespace boost::asio {
+  class io_context;
+}
+
 /// @brief MTConnect namespace
 ///
 /// Top level mtconnect namespace
@@ -716,4 +720,9 @@ namespace mtconnect {
     vstr >> major >> c >> minor;
     return SCHEMA_VERSION(major, minor);
   }
+  
+  /// @brief Retrieve the best Host IP address from the network interfaces.
+  /// @param[in] context the boost asio io_context for resolving the address
+  /// @param[in] onlyV4 only consider IPV4 addresses if `true`
+  std::string GetBestHostAddress(boost::asio::io_context &context, bool onlyV4 = false);
 }  // namespace mtconnect
