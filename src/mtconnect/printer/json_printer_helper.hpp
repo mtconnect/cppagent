@@ -30,6 +30,8 @@ namespace mtconnect::printer {
     JsonHelper(T &writer) : m_writer(writer) {}
 
     void Key(const char *s) { m_writer.Key(s); }
+    void Key(const std::string &s) { m_writer.Key(s.data(), rapidjson::SizeType(s.size())); }
+    void Key(const std::string_view &s) { m_writer.Key(s.data(), rapidjson::SizeType(s.size())); }
 
     void StartObject() { m_writer.StartObject(); }
 
@@ -52,6 +54,8 @@ namespace mtconnect::printer {
     void Add(uint64_t i) { m_writer.Uint64(i); }
 
     void Add(const char *s) { m_writer.String(s); }
+
+    void Add(const std::string_view &s) { m_writer.String(s.data(), rapidjson::SizeType(s.size())); }
 
     void Add(const std::string &s) { m_writer.String(s.data(), rapidjson::SizeType(s.size())); }
 
@@ -102,7 +106,7 @@ namespace mtconnect::printer {
     template <typename T1, typename T2, typename... R>
     void AddPairs(const T1 &v1, const T2 &v2)
     {
-      base::m_writer.Key(v1);
+      base::Key(v1);
       base::Add(v2);
     }
     

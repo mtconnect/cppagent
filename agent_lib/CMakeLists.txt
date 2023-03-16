@@ -132,7 +132,6 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/entity/entity.cpp"
         "${SOURCE_DIR}/entity/factory.cpp"
         "${SOURCE_DIR}/entity/json_parser.cpp"
-        "${SOURCE_DIR}/entity/json_printer.cpp"
         "${SOURCE_DIR}/entity/requirement.cpp"
         "${SOURCE_DIR}/entity/xml_parser.cpp"
         "${SOURCE_DIR}/entity/xml_printer.cpp"
@@ -203,6 +202,7 @@ set(AGENT_SOURCES
 # src/printer SOURCE_FILES_ONLY
 
         "${SOURCE_DIR}/printer/xml_printer.cpp"
+        "${SOURCE_DIR}/printer/json_printer.cpp"
 
 # src/source HEADER_FILE_ONLY
 

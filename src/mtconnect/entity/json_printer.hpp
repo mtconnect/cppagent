@@ -23,6 +23,8 @@
 #include "mtconnect/printer/json_printer_helper.hpp"
 
 namespace mtconnect::entity {
+  using namespace mtconnect::printer;
+  
   /// @brief Serializes entities as JSON text
   template<typename T>
   class AGENT_LIB_API JsonPrinter
@@ -32,7 +34,7 @@ namespace mtconnect::entity {
     /// @param version the supported MTConnect serialization version
     /// - Version 1 has a repreated objects in arrays for collections of objects
     /// - Version 2 combines arrays of objects by type
-    JsonPrinter(T &writer, uint32_t version) : m_writer(writer), m_version(version) {};
+    JsonPrinter(T &writer, uint32_t version) : m_version(version), m_writer(writer) {};
 
     /// @brief create a json object from an entity
     ///
@@ -42,7 +44,8 @@ namespace mtconnect::entity {
     /// @return json object
     void print(const EntityPtr entity)
     {
-      m_writer.Key(entity->getName());
+      AutoJsonObject obj(m_writer);
+      obj.Key(entity->getName());
       printEntity(entity);
     }
     /// @brief Convert properties of an entity into a json object
@@ -50,22 +53,23 @@ namespace mtconnect::entity {
     /// @return json object
     void printEntity(const EntityPtr entity)
     {
-      AutoJsonObject obj(m_writer);
+      std::optional<AutoJsonObject<T>> obj;
+      if (!entity->isSimpleList())
+        obj.emplace(m_writer);
 
       for (auto &e : entity->getProperties())
       {
         visit(overloaded {[&](const EntityPtr &arg) {
-                            m_writer.Key(e.first);
+                            m_writer.Key(e.first.c_str());
                             printEntity(arg);
                           },
                           [&](const EntityList &arg) {
-                            bool isPropertyList = e.first != "LIST";
                             if (entity->hasListWithAttribute())
-                              obj.Key("list");
-                            else if (isPropertyList)
-                              obj.Key(e.first);
+                              obj->Key("list");
+                            else if (obj)
+                              obj->Key(e.first.str());
 
-                            if (isPropertyList)
+                            if (!entity->isList())
                             {
                               AutoJsonArray ary(m_writer);
                               for (auto &ei : arg)
@@ -81,104 +85,168 @@ namespace mtconnect::entity {
                                 throw std::runtime_error("Invalid json printer version");
                             }
                           },
+                          [&](const std::monostate &arg) {},
+                          [&](const std::nullptr_t &arg) {},
+                          [&](const Vector &v)
+                          {
+                            obj->Key(e.first.str());
+                            AutoJsonArray ary(m_writer);
+                            for (auto &d : v)
+                              obj->Add(d);
+                          },
+                          [&](const DataSet &v)
+                          {
+                            printKey(*obj, e.first);
+                            print(v);
+                          },
+                          [&](const Timestamp &v)
+                          {
+                            printKey(*obj, e.first);
+                            print(v);
+                          },
                           [&](const auto &arg) {
-                            if (e.first == "VALUE" || e.first == "RAW")
-                              obj.AddPairs("value", getValue(arg));
-                            else
-                              obj.AddPairs(e.first, getValue(arg));
+                            printKey(*obj, e.first);
+                            obj->Add(arg);
                           }},
               e.second);
       }
     }
 
   protected:
+    void printKey(AutoJsonObject<T> &obj, const PropertyKey &key)
+    {
+      if (key == "VALUE" || key == "RAW")
+        obj.Key("value");
+      else
+        obj.Key(key);
+    }
+    
     void printEntityList1(const EntityList &list)
     {
       AutoJsonArray ary(m_writer);
       for (auto &ei : list)
       {
-        AutoJsonObject obj(m_writer, ei->getName());
+        AutoJsonObject obj(m_writer);
+        obj.Key(ei->getName());
         printEntity(ei);
       }
     }
     
     void printEntityList2(const EntityList &list)
     {
-      for (auto &ei : list)
+      AutoJsonObject obj(m_writer);
+      std::multimap<std::string_view, EntityPtr> entities;
+      for (auto &e : list)
+        entities.emplace(std::string_view(e->getName()), e);
+      
+      for (auto it = entities.begin(); it != entities.end(); )
       {
-        auto eo = printEntity(ei);
-        auto it = items.find(ei->getName());
-        if (it == items.end())
-        {
-          items.insert_or_assign(ei->getName(), eo);
-        }
-        else if (!it->second.is_array())
-        {
-          auto f = json::array();
-          it->second.swap(f);
-          it->second.emplace_back(f);
-          it->second.emplace_back(eo);
-        }
-        else
-        {
-          it->second.emplace_back(printEntity(ei));
-        }
-      }
+        auto next = std::upper_bound(it, entities.end(), it->first,
+                                     [](const auto &a,
+                                        const auto &b) {
+          return a.compare(b.first) < 0;
+        });
+        
+        obj.Key(it->first);
 
-      for (auto &me : items)
-      {
-        obj[me.first] = me.second;
-      }
+        AutoJsonArray ary(m_writer);
+        for (auto it2 = it; it2 != next; it2++)
+        {
+          printEntity(it2->second);
+        }
+        
+        it = next;
+      }      
     }
     
-    void getValue(const Value &value)
+    void print(const DataSet &set)
     {
-      JsonHelper hlp(m_writer);
-      visit(overloaded {[](const EntityPtr &) { return nullptr; },
-                               [](const std::monostate &) { },
-                               [](const EntityList &) { },
-                               [](const DataSet &v) { return toJson(v); },
-                               [](const Timestamp &v) { return toJson(v); },
-                               [](const auto &arg) { return hlp.Add(arg); }},
-                   value);
-    }
-    void toJson(const DataSet &set)
-    {
+      AutoJsonObject obj(m_writer);
       for (auto &e : set)
       {
         if (e.m_removed)
         {
-          value[e.m_key] = json::object({{"removed", true}});
+          obj.Key(e.m_key);
+          AutoJsonObject rem(m_writer);
+          rem.AddPairs("removed", true);
         }
         else
         {
-          visit(overloaded {[](const monostate &) {},
-                            [&value, &e](const std::string &st) { value[e.m_key] = st; },
-                            [&value, &e](const int64_t &i) { value[e.m_key] = i; },
-                            [&value, &e](const double &d) { value[e.m_key] = d; },
-                            [&value, &e](const DataSet &arg) {
-                              auto row = json::object();
+          visit(overloaded {[](const std::monostate &) {},
+                            [&obj, &e](const std::string &st) { obj.AddPairs(e.m_key, st); },
+                            [&obj, &e](const int64_t &i) { obj.AddPairs(e.m_key, i); },
+                            [&obj, &e](const double &d) { obj.AddPairs(e.m_key, d); },
+                            [&e, this](const DataSet &arg) {
+                              AutoJsonObject row(m_writer, e.m_key);
                               for (auto &c : arg)
                               {
                                 visit(overloaded {
-                                          [&row, &c](const std::string &st) { row[c.m_key] = st; },
-                                          [&row, &c](const int64_t &i) { row[c.m_key] = i; },
-                                          [&row, &c](const double &d) { row[c.m_key] = d; },
+                                          [&row, &c](const std::string &st) { row.AddPairs(c.m_key, st); },
+                                          [&row, &c](const int64_t &i) {  row.AddPairs(c.m_key, i); },
+                                          [&row, &c](const double &d) {  row.AddPairs(c.m_key, d); },
                                           [](auto &a) {
                                             LOG(error) << "Invalid  variant type for table cell";
                                           }},
                                       c.m_value);
                               }
-                              value[e.m_key] = row;
                             }},
                 e.m_value);
         }
       }
     }
-    void toJson(const Timestamp &t) { m_writer.String(format(t).c_str()); }
+    void print(const Timestamp &t) { m_writer.String(format(t).c_str()); }
 
   protected:
     uint32_t m_version;
     T &m_writer;
+  };
+  
+  /// @brief Serialization wrapper to turn an entity into a json string.
+  class AGENT_LIB_API JsonEntityPrinter
+  {
+  public:
+    /// @brief Create a printer for with a JSON vesion and flag to pretty print
+    JsonEntityPrinter(uint32_t version, bool pretty = false)
+    : m_version(version), m_pretty(pretty)
+    {
+    }
+    
+    /// @brief wrapper around the JsonPrinter print method that creates the correct printer depending on pretty flag
+    /// @param[in] entity the entity to print
+    /// @returns string representation  of the json
+    std::string printEntity(const EntityPtr entity)
+    {
+      using namespace rapidjson;
+      StringBuffer output;
+      RenderJson(output, m_pretty, [&](auto &writer) {
+        JsonPrinter printer(writer, m_version);
+        printer.printEntity(entity);
+      });
+
+      return std::string(output.GetString(), output.GetLength());
+    }
+    
+    /// @brief wrapper around the JsonPrinter print method that creates the correct printer depending on pretty flag
+    ///
+    /// This method creates a wrapper object with a Key using the entity's name.
+    ///
+    /// @param[in] entity the entity to print
+    /// @returns string representation  of the json
+    std::string print(const EntityPtr entity)
+    {
+      using namespace rapidjson;
+      StringBuffer output;
+      RenderJson(output, m_pretty, [&](auto &writer) {
+        JsonPrinter printer(writer, m_version);
+        printer.print(entity);
+      });
+
+      return std::string(output.GetString(), output.GetLength());
+    }
+
+    
+  protected:
+    uint32_t m_version;
+    bool m_pretty;
   };
 }  // namespace mtconnect::entity

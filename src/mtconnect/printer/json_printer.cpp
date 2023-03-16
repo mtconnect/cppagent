@@ -202,7 +202,7 @@ namespace mtconnect::printer {
     });
 
 
-    return string(output.GetString());
+    return string(output.GetString(), output.GetLength());
   }
 
   class AGENT_LIB_API CategoryRef
@@ -221,8 +221,9 @@ namespace mtconnect::printer {
 
     pair<string_view, json> toJson()
     {
-      entity::JsonPrinter printer(m_version);
+//      entity::JsonPrinter printer(m_version);
       pair<string_view, json> ret(m_category, json::object());
+#if 0
       if (!m_category.empty())
       {
         if (m_version == 1)
@@ -240,9 +241,9 @@ namespace mtconnect::printer {
           ret.second = printer.printEntity(entity);
         }
       }
+#endif
       return ret;
     }
-
   protected:
     string_view m_category;
     list<ObservationPtr> m_events;
@@ -448,8 +449,9 @@ namespace mtconnect::printer {
   {
     defaultSchemaVersion();
 
-    entity::JsonPrinter printer(m_jsonVersion);
+    //entity::JsonPrinter printer(m_jsonVersion);
     json assetDoc;
+#if 0
     if (m_jsonVersion == 1)
     {
       assetDoc = json::array();
@@ -468,7 +470,7 @@ namespace mtconnect::printer {
     {
       throw runtime_error("invalid json printer version");
     }
-
+#endif
     json doc = json::object(
         {{"MTConnectAssets",
           {{"jsonVersion", m_jsonVersion},
