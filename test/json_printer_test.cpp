@@ -173,7 +173,7 @@ TEST_F(JsonPrinterTest, Header)
   entity::JsonEntityPrinter jprinter(1, true);
 
   auto sdoc = jprinter.print(entity);
-  json jdoc { json::parse(sdoc) };
+  json jdoc {json::parse(sdoc)};
 
   auto header = jdoc.at("/MTConnectDevices/Header"_json_pointer);
 
@@ -195,7 +195,7 @@ TEST_F(JsonPrinterTest, Devices)
 
   entity::JsonEntityPrinter jprinter(1, true);
 
-  json jdoc { json::parse(jprinter.print(entity)) };
+  json jdoc {json::parse(jprinter.print(entity))};
 
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
 
@@ -217,7 +217,7 @@ TEST_F(JsonPrinterTest, Components)
 
   entity::JsonEntityPrinter jprinter(1, true);
 
-  json jdoc { json::parse(jprinter.print(entity)) };
+  json jdoc {json::parse(jprinter.print(entity))};
 
   auto components = jdoc.at("/MTConnectDevices/Devices/0/Device/Components"_json_pointer);
 
@@ -248,7 +248,7 @@ TEST_F(JsonPrinterTest, TopLevelDataItems)
 
   entity::JsonEntityPrinter jprinter(1, true);
 
-  json jdoc { json::parse(jprinter.print(entity)) };
+  json jdoc {json::parse(jprinter.print(entity))};
 
   auto dataitems = jdoc.at("/MTConnectDevices/Devices/0/Device/DataItems"_json_pointer);
   ASSERT_EQ("AVAILABILITY", dataitems.at("/0/DataItem/type"_json_pointer).get<string>());
@@ -271,7 +271,7 @@ TEST_F(JsonPrinterTest, data_items_using_version_2)
   entity::JsonEntityPrinter jprinter(2, true);
 
   auto sdoc = jprinter.print(entity);
-  json jdoc { json::parse(sdoc) };
+  json jdoc {json::parse(sdoc)};
 
   auto dataitems = jdoc.at("/MTConnectDevices/Devices/Device/0/DataItems/DataItem"_json_pointer);
   ASSERT_EQ("AVAILABILITY", dataitems.at("/0/type"_json_pointer).get<string>());
@@ -308,7 +308,7 @@ TEST_F(JsonPrinterTest, ElementListWithProperty)
   entity::JsonEntityPrinter jprinter(1, true);
 
   auto sdoc = jprinter.print(entity);
-  json jdoc { json::parse(sdoc) };
+  json jdoc {json::parse(sdoc)};
 
   ASSERT_EQ(2, jdoc.at("/Root/CuttingItems/count"_json_pointer).get<int>());
   ASSERT_EQ("1",
@@ -346,7 +346,7 @@ TEST_F(JsonPrinterTest, elements_with_property_list_version_2)
   entity::JsonEntityPrinter jprinter(2, true);
 
   auto sdoc = jprinter.print(entity);
-  json jdoc { json::parse(sdoc) };
+  json jdoc {json::parse(sdoc)};
 
   ASSERT_EQ(2, jdoc.at("/Root/CuttingItems/count"_json_pointer).get<int>());
   ASSERT_EQ("1",

@@ -233,13 +233,8 @@ TEST_F(QIFDocumentTest, should_generate_json)
   auto asset = dynamic_cast<Asset *>(entity.get());
   ASSERT_NE(nullptr, asset);
 
-  entity::JsonPrinter jsonPrinter(1);
-  auto json = jsonPrinter.print(entity);
-
-  stringstream buffer;
-  buffer << std::setw(2);
-  buffer << json;
-  string res = buffer.str();
+  entity::JsonEntityPrinter jsonPrinter(1, true);
+  auto jdoc = jsonPrinter.print(entity);
 
   ASSERT_EQ(R"DOC({
   "QIFDocumentWrapper": {
@@ -270,5 +265,5 @@ TEST_F(QIFDocumentTest, should_generate_json)
     "qifDocumentType": "PLAN"
   }
 })DOC"s,
-            res);
+            jdoc);
 }

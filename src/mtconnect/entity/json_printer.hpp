@@ -19,14 +19,13 @@
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
-
 #include "mtconnect/printer/json_printer_helper.hpp"
 
 namespace mtconnect::entity {
   using namespace mtconnect::printer;
-  
+
   /// @brief Serializes entities as JSON text
-  template<typename T>
+  template <typename T>
   class AGENT_LIB_API JsonPrinter
   {
   public:
@@ -64,43 +63,33 @@ namespace mtconnect::entity {
                             printEntity(arg);
                           },
                           [&](const EntityList &arg) {
+                            bool isPropertyList = e.first != "LIST";
                             if (entity->hasListWithAttribute())
                               obj->Key("list");
-                            else if (obj)
-                              obj->Key(e.first.str());
-
-                            if (!entity->isList())
+                            else if (isPropertyList)
                             {
+                              obj->Key(e.first.str());
                               AutoJsonArray ary(m_writer);
                               for (auto &ei : arg)
                                 printEntity(ei);
                             }
                             else
                             {
-                              if (m_version == 1)
-                                printEntityList1(arg);
-                              else if (m_version == 2)
-                                printEntityList2(arg);
-                              else
-                                throw std::runtime_error("Invalid json printer version");
+                              printEntityList(arg);
                             }
                           },
-                          [&](const std::monostate &arg) {},
-                          [&](const std::nullptr_t &arg) {},
-                          [&](const Vector &v)
-                          {
-                            obj->Key(e.first.str());
+                          [&](const std::monostate &arg) {}, [&](const std::nullptr_t &arg) {},
+                          [&](const Vector &v) {
+                            printKey(*obj, e.first);
                             AutoJsonArray ary(m_writer);
                             for (auto &d : v)
                               obj->Add(d);
                           },
-                          [&](const DataSet &v)
-                          {
+                          [&](const DataSet &v) {
                             printKey(*obj, e.first);
                             print(v);
                           },
-                          [&](const Timestamp &v)
-                          {
+                          [&](const Timestamp &v) {
                             printKey(*obj, e.first);
                             print(v);
                           },
@@ -112,16 +101,29 @@ namespace mtconnect::entity {
       }
     }
 
-  protected:
-    void printKey(AutoJsonObject<T> &obj, const PropertyKey &key)
+    /// @brief Helper method to serialize a list entity list using json version 1 format
+    /// @param[in] list a list of EntityPtr objects
+    /// @tparam T2 Type of iterable collection must contain Entity subclass
+    template <typename T2>
+    void printEntityList(const T2 &list)
     {
-      if (key == "VALUE" || key == "RAW")
-        obj.Key("value");
+      if (m_version == 1)
+        printEntityList1(list);
+      else if (m_version == 2)
+        printEntityList2(list);
       else
-        obj.Key(key);
+        throw std::runtime_error("Invalid json printer version");
     }
-    
-    void printEntityList1(const EntityList &list)
+
+    /// @brief Helper method to serialize a list entity list using json version 1 format
+    ///
+    /// A simple array is created holding entities with the key being the object name and properties
+    /// as an object. The keys are repeated for each entity.
+    ///
+    /// @param[in] list a list of EntityPtr objects
+    /// @tparam T2 Type of iterable collection must contain Entity subclass
+    template <typename T2>
+    void printEntityList1(const T2 &list)
     {
       AutoJsonArray ary(m_writer);
       for (auto &ei : list)
@@ -131,22 +133,30 @@ namespace mtconnect::entity {
         printEntity(ei);
       }
     }
-    
-    void printEntityList2(const EntityList &list)
+
+    /// @brief Helper method to serialize a list entity list using json version 2 format
+    ///
+    /// Groups entities by their name and uses the names as keys. The properties of the entites are
+    /// then serialized in objects contained in a list. The entitiy name is only given once.
+    ///
+    /// @param[in] list a list of EntityPtr objects
+    /// @tparam T2 Type of iterable collection must contain Entity subclass
+    template <typename T2>
+    void printEntityList2(const T2 &list)
     {
       AutoJsonObject obj(m_writer);
+      // Sort the entities by name, use a string view so we don't copy
       std::multimap<std::string_view, EntityPtr> entities;
       for (auto &e : list)
         entities.emplace(std::string_view(e->getName()), e);
-      
-      for (auto it = entities.begin(); it != entities.end(); )
+
+      /// Group the entities by name
+      for (auto it = entities.begin(); it != entities.end();)
       {
-        auto next = std::upper_bound(it, entities.end(), it->first,
-                                     [](const auto &a,
-                                        const auto &b) {
-          return a.compare(b.first) < 0;
-        });
-        
+        auto next =
+            std::upper_bound(it, entities.end(), it->first,
+                             [](const auto &a, const auto &b) { return a.compare(b.first) < 0; });
+
         obj.Key(it->first);
 
         AutoJsonArray ary(m_writer);
@@ -154,11 +164,20 @@ namespace mtconnect::entity {
         {
           printEntity(it2->second);
         }
-        
+
         it = next;
-      }      
+      }
     }
-    
+
+  protected:
+    void printKey(AutoJsonObject<T> &obj, const PropertyKey &key)
+    {
+      if (key == "VALUE" || key == "RAW")
+        obj.Key("value");
+      else
+        obj.Key(key);
+    }
+
     void print(const DataSet &set)
     {
       AutoJsonObject obj(m_writer);
@@ -172,24 +191,25 @@ namespace mtconnect::entity {
         }
         else
         {
-          visit(overloaded {[](const std::monostate &) {},
-                            [&obj, &e](const std::string &st) { obj.AddPairs(e.m_key, st); },
-                            [&obj, &e](const int64_t &i) { obj.AddPairs(e.m_key, i); },
-                            [&obj, &e](const double &d) { obj.AddPairs(e.m_key, d); },
-                            [&e, this](const DataSet &arg) {
-                              AutoJsonObject row(m_writer, e.m_key);
-                              for (auto &c : arg)
-                              {
-                                visit(overloaded {
-                                          [&row, &c](const std::string &st) { row.AddPairs(c.m_key, st); },
-                                          [&row, &c](const int64_t &i) {  row.AddPairs(c.m_key, i); },
-                                          [&row, &c](const double &d) {  row.AddPairs(c.m_key, d); },
-                                          [](auto &a) {
-                                            LOG(error) << "Invalid  variant type for table cell";
-                                          }},
-                                      c.m_value);
-                              }
-                            }},
+          visit(overloaded {
+                    [](const std::monostate &) {},
+                    [&obj, &e](const std::string &st) { obj.AddPairs(e.m_key, st); },
+                    [&obj, &e](const int64_t &i) { obj.AddPairs(e.m_key, i); },
+                    [&obj, &e](const double &d) { obj.AddPairs(e.m_key, d); },
+                    [&e, this](const DataSet &arg) {
+                      AutoJsonObject row(m_writer, e.m_key);
+                      for (auto &c : arg)
+                      {
+                        visit(overloaded {
+                                  [&row, &c](const std::string &st) { row.AddPairs(c.m_key, st); },
+                                  [&row, &c](const int64_t &i) { row.AddPairs(c.m_key, i); },
+                                  [&row, &c](const double &d) { row.AddPairs(c.m_key, d); },
+                                  [](auto &a) {
+                                    LOG(error) << "Invalid  variant type for table cell";
+                                  }},
+                              c.m_value);
+                      }
+                    }},
                 e.m_value);
         }
       }
@@ -200,18 +220,17 @@ namespace mtconnect::entity {
     uint32_t m_version;
     T &m_writer;
   };
-  
+
   /// @brief Serialization wrapper to turn an entity into a json string.
   class AGENT_LIB_API JsonEntityPrinter
   {
   public:
     /// @brief Create a printer for with a JSON vesion and flag to pretty print
-    JsonEntityPrinter(uint32_t version, bool pretty = false)
-    : m_version(version), m_pretty(pretty)
-    {
-    }
-    
-    /// @brief wrapper around the JsonPrinter print method that creates the correct printer depending on pretty flag
+    JsonEntityPrinter(uint32_t version, bool pretty = false) : m_version(version), m_pretty(pretty)
+    {}
+
+    /// @brief wrapper around the JsonPrinter print method that creates the correct printer
+    /// depending on pretty flag
     /// @param[in] entity the entity to print
     /// @returns string representation  of the json
     std::string printEntity(const EntityPtr entity)
@@ -225,8 +244,9 @@ namespace mtconnect::entity {
 
       return std::string(output.GetString(), output.GetLength());
     }
-    
-    /// @brief wrapper around the JsonPrinter print method that creates the correct printer depending on pretty flag
+
+    /// @brief wrapper around the JsonPrinter print method that creates the correct printer
+    /// depending on pretty flag
     ///
     /// This method creates a wrapper object with a Key using the entity's name.
     ///
@@ -244,7 +264,6 @@ namespace mtconnect::entity {
       return std::string(output.GetString(), output.GetLength());
     }
 
-    
   protected:
     uint32_t m_version;
     bool m_pretty;

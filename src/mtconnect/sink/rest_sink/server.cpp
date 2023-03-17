@@ -28,10 +28,10 @@
 #include <boost/beast/version.hpp>
 #include <boost/tokenizer.hpp>
 
-#include "mtconnect/printer/json_printer_helper.hpp"
 #include <thread>
 
 #include "mtconnect/logging.hpp"
+#include "mtconnect/printer/json_printer_helper.hpp"
 #include "session_impl.hpp"
 
 namespace mtconnect::sink::rest_sink {
@@ -228,9 +228,9 @@ namespace mtconnect::sink::rest_sink {
   {
     LOG(error) << " error: " << ec.message();
   }
-  
+
   using namespace mtconnect::printer;
-  
+
   template <typename T>
   void AddParameter(T &writer, const Parameter &param)
   {
@@ -359,7 +359,7 @@ namespace mtconnect::sink::rest_sink {
             str << "https://";
           else
             str << "http://";
-          
+
           str << GetBestHostAddress(m_context, true) << ':' << m_port << '/';
           obj.AddPairs("url", str.str());
         }
@@ -391,9 +391,7 @@ namespace mtconnect::sink::rest_sink {
       auto pretty = *request->parameter<bool>("pretty");
 
       StringBuffer output;
-      RenderJson(output, pretty, [this](auto &writer) {
-        renderSwaggerResponse(writer);
-      });
+      RenderJson(output, pretty, [this](auto &writer) { renderSwaggerResponse(writer); });
 
       session->writeResponse(
           make_unique<Response>(status::ok, string(output.GetString()), "application/json"));

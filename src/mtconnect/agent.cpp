@@ -40,7 +40,6 @@
 #include <sys/stat.h>
 #include <thread>
 
-#include "mtconnect/utilities.hpp"
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/asset/component_configuration_parameters.hpp"
 #include "mtconnect/asset/cutting_tool.hpp"
@@ -56,6 +55,7 @@
 #include "mtconnect/printer/xml_printer.hpp"
 #include "mtconnect/sink/rest_sink/file_cache.hpp"
 #include "mtconnect/sink/rest_sink/session.hpp"
+#include "mtconnect/utilities.hpp"
 #include "mtconnect/version.h"
 
 using namespace std;
@@ -599,9 +599,9 @@ namespace mtconnect {
   void Agent::createAgentDevice()
   {
     NAMED_SCOPE("Agent::createAgentDevice");
-    
+
     using namespace boost;
-    
+
     auto address = GetBestHostAddress(m_context);
 
     auto port = GetOption<int>(m_options, mtconnect::configuration::Port).value_or(5000);

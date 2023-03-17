@@ -26,6 +26,8 @@
 #include <sstream>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 #include "mtconnect/agent.hpp"
@@ -562,12 +564,9 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
 
-  entity::JsonPrinter jsonPrinter(1);
-  auto json = jsonPrinter.print(entity);
+  entity::JsonEntityPrinter jprinter(1, true);
 
-  stringstream buffer;
-  buffer << std::setw(2);
-  buffer << json;
+  auto sdoc = jprinter.print(entity);
 
   EXPECT_EQ(R"({
   "CuttingTool": {
@@ -633,7 +632,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
     "toolId": "123456"
   }
 })",
-            buffer.str());
+            sdoc);
 }
 
 TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)

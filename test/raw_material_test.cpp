@@ -236,12 +236,8 @@ TEST_F(RawMaterialTest, should_generate_json)
   auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jsonPrinter(1);
+  entity::JsonEntityPrinter jsonPrinter(1);
   auto json = jsonPrinter.print(entity);
-
-  stringstream buffer;
-  buffer << std::setw(2);
-  buffer << json;
 
   ASSERT_EQ(R"({
   "RawMaterial": {
@@ -273,5 +269,5 @@ TEST_F(RawMaterialTest, should_generate_json)
     "serialNumber": "21345"
   }
 })",
-            buffer.str());
+            json);
 }
