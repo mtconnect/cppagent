@@ -443,9 +443,8 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
   client->set_client_id("cliendId1");
   client->set_clean_session(true);
   client->set_keep_alive_sec(30);
-  
+
   MqttAuthorization *mqttAuct = new MqttAuthorization(options);
-  MqttTopicPermission permission = mqttAuct->getPermissionsForClient("mqtt_tcp_client_cpp/topic1");
 
   client->set_connack_handler([&](bool sp, mqtt::connect_return_code connack_return_code) {
     std::cout << "Connack handler called" << std::endl;
@@ -479,24 +478,20 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
     }
     return true;
   });
-  
+
   client->set_close_handler([] { std::cout << "closed" << std::endl; });
 
   client->set_suback_handler(
-      [&client, &pid_sub1,&permission](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
+      [&client, &pid_sub1, &mqttAuct](std::uint16_t packet_id,
+                                      std::vector<mqtt::suback_return_code> results) {
         std::cout << "suback received. packet_id: " << packet_id << std::endl;
         for (auto const &e : results)
         {
           std::cout << "subscribe result: " << e << std::endl;
         }
 
-        //check either topic had authorization permissions
-        if (!permission.hasAuthorization())
-        {
-          std::cout << "MqttAuthorization Failed. packet_id: " << pid_sub1 << std::endl;
-          client->async_force_disconnect();
-          return false;
-        }
+        mqttAuct->addTopicPermissionForClient(boost::lexical_cast<std::string>(packet_id),
+                                              "mqtt_tcp_client_cpp/topic1");
 
         if (packet_id == pid_sub1)
         {
@@ -515,24 +510,37 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
       });
 
   bool received = false;
-  client->set_publish_handler([&client, &received](mqtt::optional<std::uint16_t> packet_id,
-                                                   mqtt::publish_options pubopts,
-                                                   mqtt::buffer topic_name, mqtt::buffer contents) {
-    std::cout << "publish received."
-              << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
-              << " retain: " << pubopts.get_retain() << std::endl;
-    if (packet_id)
-      std::cout << "packet_id: " << *packet_id << std::endl;
-    std::cout << "topic_name: " << topic_name << std::endl;
-    std::cout << "contents: " << contents << std::endl;
+  client->set_publish_handler(
+      [&client, &pid_sub1, &received, &mqttAuct](mqtt::optional<std::uint16_t> packet_id,
+                                      mqtt::publish_options pubopts, mqtt::buffer topic_name,
+                                      mqtt::buffer contents) {
+        // check either topic had authorization permissions
+        if (pid_sub1)
+        {
+          string pacValue(boost::lexical_cast<std::string>(pid_sub1));
+          string topicName(boost::lexical_cast<std::string>(topic_name));
+          if (!mqttAuct->hasAuthorization(pacValue, topicName))
+          {
+            std::cout << "MqttAuthorization Failed. client packet_id: " << pacValue << std::endl;
+            client->async_force_disconnect();
+            return false;
+          }
+        }
+        std::cout << "publish received."
+                  << " dup: " << pubopts.get_dup() << " qos: " << pubopts.get_qos()
+                  << " retain: " << pubopts.get_retain() << std::endl;
+        if (packet_id)
+          std::cout << "packet_id: " << *packet_id << std::endl;
+        std::cout << "topic_name: " << topic_name << std::endl;
+        std::cout << "contents: " << contents << std::endl;
 
-    EXPECT_EQ("mqtt_tcp_client_cpp/topic1", topic_name);
-    EXPECT_EQ("test1", contents);
+        EXPECT_EQ("mqtt_tcp_client_cpp/topic1", topic_name);
+        EXPECT_EQ("test1", contents);
 
-    client->async_disconnect();
-    received = true;
-    return true;
-  });
+        client->async_disconnect();
+        received = true;
+        return true;
+      });
 
   client->async_connect();
 
