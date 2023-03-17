@@ -41,7 +41,7 @@ RUN apt-get clean \
   && apt-get update \
   && apt-get install -y \
   build-essential python3.9 python3-pip git cmake make ruby rake \
-  && pip install conan
+  && pip install conan -v "conan==1.59.0"
 
 # make an agent directory and cd into it
 WORKDIR /root/agent

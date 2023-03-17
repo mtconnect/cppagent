@@ -28,7 +28,6 @@ namespace mtconnect::ruby {
   using namespace pipeline;
   using namespace entity;
   using namespace std;
-  using namespace Rice;
 
   struct RubyPipeline
   {

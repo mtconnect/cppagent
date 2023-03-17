@@ -61,7 +61,7 @@ namespace mtconnect::source::adapter {
     /// @param options the configuration options
     void build(const ConfigOptions &options) override;
     /// @brief Create a handler
-    /// @return the handler handing over ownership 
+    /// @return the handler handing over ownership
     virtual std::unique_ptr<Handler> makeHandler();
 
     /// @brief get the associated device

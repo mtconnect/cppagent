@@ -27,19 +27,13 @@
 #include "mtconnect/entity/factory.hpp"
 
 namespace mtconnect::asset {
-  /// @brief File Archetype Asset
-  class AGENT_LIB_API FileArchetypeAsset : public Asset
+  /// @brief ComponentConfigurationParameters Asset
+  class AGENT_LIB_API ComponentConfigurationParameters : public Asset
   {
   public:
+    /// @brief Get the factory
     static entity::FactoryPtr getFactory();
-    static void registerAsset();
-  };
-
-  /// @brief File Asset
-  class AGENT_LIB_API FileAsset : public FileArchetypeAsset
-  {
-  public:
-    static entity::FactoryPtr getFactory();
+    /// @brief register the factory to create this asset
     static void registerAsset();
   };
 }  // namespace mtconnect::asset

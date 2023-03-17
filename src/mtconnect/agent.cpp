@@ -40,7 +40,9 @@
 #include <sys/stat.h>
 #include <thread>
 
+#include "mtconnect/utilities.hpp"
 #include "mtconnect/asset/asset.hpp"
+#include "mtconnect/asset/component_configuration_parameters.hpp"
 #include "mtconnect/asset/cutting_tool.hpp"
 #include "mtconnect/asset/file_asset.hpp"
 #include "mtconnect/asset/qif_document.hpp"
@@ -91,6 +93,7 @@ namespace mtconnect {
     FileAsset::registerAsset();
     RawMaterial::registerAsset();
     QIFDocumentWrapper::registerAsset();
+    ComponentConfigurationParameters::registerAsset();
 
     m_assetStorage = make_unique<AssetBuffer>(
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
@@ -106,6 +109,7 @@ namespace mtconnect {
 
     if (m_schemaVersion)
     {
+      m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
       for (auto &[k, pr] : m_printers)
         pr->setSchemaVersion(*m_schemaVersion);
     }
@@ -127,12 +131,12 @@ namespace mtconnect {
       m_schemaVersion.emplace(StrDefaultSchemaVersion());
     }
 
-    auto version = IntSchemaVersion(*m_schemaVersion);
+    m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
     for (auto &[k, pr] : m_printers)
       pr->setSchemaVersion(*m_schemaVersion);
 
     auto disableAgentDevice = GetOption<bool>(m_options, config::DisableAgentDevice);
-    if (!(disableAgentDevice && *disableAgentDevice) && version >= SCHEMA_VERSION(1, 7))
+    if (!(disableAgentDevice && *disableAgentDevice) && m_intSchemaVersion >= SCHEMA_VERSION(1, 7))
     {
       createAgentDevice();
     }
@@ -295,6 +299,10 @@ namespace mtconnect {
       }
     }
 
+    // Add hash to asset
+    if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
+      asset->addHash();
+
     m_assetStorage->addAsset(asset);
 
     for (auto &sink : m_sinks)
@@ -309,7 +317,18 @@ namespace mtconnect {
         di = device->getAssetChanged();
       if (di)
       {
-        m_loopback->receive(di, {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}});
+        entity::Properties props {{"assetType", asset->getName()}, {"VALUE", asset->getAssetId()}};
+
+        if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
+        {
+          const auto &hash = asset->getProperty("hash");
+          if (hash.index() != EMPTY)
+          {
+            props.insert_or_assign("hash", hash);
+          }
+        }
+
+        m_loopback->receive(di, props);
       }
 
       updateAssetCounts(device, asset->getType());
@@ -325,7 +344,7 @@ namespace mtconnect {
           deviceFile, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
 
       if (m_xmlParser->getSchemaVersion() &&
-          IntSchemaVersion(*m_xmlParser->getSchemaVersion()) != IntSchemaVersion(*m_schemaVersion))
+          IntSchemaVersion(*m_xmlParser->getSchemaVersion()) != m_intSchemaVersion)
       {
         LOG(info) << "Got version: " << *(m_xmlParser->getSchemaVersion());
         LOG(warning) << "Schema version does not match agent schema version, restarting the agent";
@@ -580,43 +599,13 @@ namespace mtconnect {
   void Agent::createAgentDevice()
   {
     NAMED_SCOPE("Agent::createAgentDevice");
-
+    
     using namespace boost;
-    using namespace asio;
-    using res = ip::udp::resolver;
+    
+    auto address = GetBestHostAddress(m_context);
 
     auto port = GetOption<int>(m_options, mtconnect::configuration::Port).value_or(5000);
     auto service = boost::lexical_cast<string>(port);
-    string address;
-
-    boost::system::error_code ec;
-    res resolver(m_context);
-    auto iter = resolver.resolve(ip::host_name(), service, res::flags::address_configured, ec);
-    if (ec)
-    {
-      LOG(warning) << "Cannot find IP address: " << ec.message();
-      address = "127.0.0.1";
-    }
-    else
-    {
-      res::iterator end;
-      while (iter != end)
-      {
-        const auto &ep = iter->endpoint();
-        const auto &ad = ep.address();
-        if (!ad.is_unspecified() && !ad.is_loopback())
-        {
-          auto ads {ad.to_string()};
-          if (ads.length() > address.length() ||
-              (ads.length() == address.length() && ads > address))
-          {
-            address = ads;
-          }
-        }
-        iter++;
-      }
-    }
-
     address.append(":").append(service);
 
     uuids::name_generator_latest gen(uuids::ns::dns());
@@ -655,10 +644,12 @@ namespace mtconnect {
       if (!m_schemaVersion && m_xmlParser->getSchemaVersion())
       {
         m_schemaVersion = m_xmlParser->getSchemaVersion();
+        m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
       }
       else if (!m_schemaVersion && !m_xmlParser->getSchemaVersion())
       {
         m_schemaVersion = StrDefaultSchemaVersion();
+        m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
       }
 
       return devices;
@@ -685,8 +676,6 @@ namespace mtconnect {
   {
     NAMED_SCOPE("Agent::verifyDevice");
 
-    auto version = IntSchemaVersion(*m_schemaVersion);
-
     // Add the devices to the device map and create availability and
     // asset changed events if they don't exist
     // Make sure we have two device level data items:
@@ -702,7 +691,7 @@ namespace mtconnect {
       device->addDataItem(di, errors);
     }
 
-    if (!device->getAssetChanged() && version >= SCHEMA_VERSION(1, 2))
+    if (!device->getAssetChanged() && m_intSchemaVersion >= SCHEMA_VERSION(1, 2))
     {
       entity::ErrorList errors;
       // Create asset change data item and add it to the device.
@@ -713,14 +702,14 @@ namespace mtconnect {
       device->addDataItem(di, errors);
     }
 
-    if (device->getAssetChanged() && version >= SCHEMA_VERSION(1, 5))
+    if (device->getAssetChanged() && m_intSchemaVersion >= SCHEMA_VERSION(1, 5))
     {
       auto di = device->getAssetChanged();
       if (!di->isDiscrete())
         di->makeDiscrete();
     }
 
-    if (!device->getAssetRemoved() && version >= SCHEMA_VERSION(1, 3))
+    if (!device->getAssetRemoved() && m_intSchemaVersion >= SCHEMA_VERSION(1, 3))
     {
       // Create asset removed data item and add it to the device.
       entity::ErrorList errors;
@@ -731,7 +720,7 @@ namespace mtconnect {
       device->addDataItem(di, errors);
     }
 
-    if (!device->getAssetCount() && version >= SCHEMA_VERSION(2, 0))
+    if (!device->getAssetCount() && m_intSchemaVersion >= SCHEMA_VERSION(2, 0))
     {
       entity::ErrorList errors;
       auto di = DataItem::make({{"type", "ASSET_COUNT"s},

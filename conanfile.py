@@ -26,7 +26,8 @@ class MTConnectAgentConan(ConanFile):
                 "date/2.4.1@#178e4ada4fefd011aaa81ab2bca646db",
                 "nlohmann_json/3.9.1@#a41bc0deaf7f40e7b97e548359ccf14d", 
                 "openssl/3.0.5@#40f4488f02b36c1193b68f585131e8ef",
-                "mqtt_cpp/13.1.0"]
+                "mqtt_cpp/13.1.0",
+                "rapidjson/cci.20220822"]
 
     build_policy = "missing"
     default_options = {
@@ -37,7 +38,7 @@ class MTConnectAgentConan(ConanFile):
         "development": False,
         "shared": False,
         "winver": "0x600",
-        "with_docs": True,
+        "with_docs": False,
 
         "boost:shared": False,
         "boost:without_python": True,
@@ -57,6 +58,7 @@ class MTConnectAgentConan(ConanFile):
         "date:use_system_tz_db": True
         }
 
+    exports = "conan/*"
     exports_sources = "*"
 
 #    def source(self):
@@ -112,9 +114,9 @@ class MTConnectAgentConan(ConanFile):
             self.options["gtest"].shared = True
             self.options["openssl"].shared = True
         
-        self.run("conan export conan/mqtt_cpp")
+        self.run("conan export conan/mqtt_cpp", cwd=os.path.dirname(__file__))
         if self.options.with_ruby:
-          self.run("conan export conan/mruby")
+          self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))
 
     def build_requirements(self):
         if self.options.with_docs:
