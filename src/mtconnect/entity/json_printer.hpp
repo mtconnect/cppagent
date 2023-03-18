@@ -28,6 +28,80 @@ namespace mtconnect::entity {
   template <typename T>
   class AGENT_LIB_API JsonPrinter
   {
+  protected:
+    struct PropertyVisitor
+    {
+      void operator()(const EntityPtr &arg)
+      {
+        m_obj->Key(m_key->c_str());
+        m_printer.printEntity(arg);
+      }
+      
+      void operator()(const EntityList &arg)
+      {
+        bool isPropertyList = *m_key != "LIST";
+        if (m_entity->hasListWithAttribute())
+        {
+          m_obj->Key("list");
+          m_printer.printEntityList(arg);
+        }
+        else if (isPropertyList)
+        {
+          m_obj->Key(m_key->str());
+          AutoJsonArray ary(m_writer);
+          for (auto &ei : arg)
+            m_printer.printEntity(ei);
+        }
+        else
+        {
+          m_printer.printEntityList(arg);
+        }
+      }
+      
+      void operator()(const std::monostate &arg) {}
+      void operator()(const std::nullptr_t &arg) {}
+      
+      void operator()(const Vector &v)
+      {
+        m_printer.printKey(*m_obj, *m_key);
+        AutoJsonArray ary(m_writer);
+        for (auto &d : v)
+          m_obj->Add(d);
+      }
+       
+      void operator()(const DataSet &v)
+      {
+        m_printer.printKey(*m_obj, *m_key);
+        m_printer.print(v);
+      }
+      
+      void operator()(const Timestamp &v)
+      {
+        m_printer.printKey(*m_obj, *m_key);
+        m_printer.print(v);
+      }
+      
+      template<typename A>
+      void operator()(const A &arg) {
+        m_printer.printKey(*m_obj, *m_key);
+        m_obj->Add(arg);
+      }
+      
+      PropertyVisitor(T &writer, JsonPrinter<T> &printer,
+                      std::optional<AutoJsonObject<T>> &obj,
+                      const EntityPtr &entity)
+      : m_obj(obj), m_printer(printer), m_entity(entity), m_writer(writer)
+      {
+      }
+      
+      std::optional<AutoJsonObject<T>> &m_obj;
+      JsonPrinter<T> &m_printer;
+      const EntityPtr &m_entity;
+      T &m_writer;
+
+      const PropertyKey *m_key { nullptr };
+    };
+    
   public:
     /// @brief Create a json printer
     /// @param version the supported MTConnect serialization version
@@ -47,6 +121,7 @@ namespace mtconnect::entity {
       obj.Key(entity->getName());
       printEntity(entity);
     }
+    
     /// @brief Convert properties of an entity into a json object
     /// @param entity the entity
     /// @return json object
@@ -55,52 +130,13 @@ namespace mtconnect::entity {
       std::optional<AutoJsonObject<T>> obj;
       if (!entity->isSimpleList())
         obj.emplace(m_writer);
+      
+      PropertyVisitor visitor { m_writer, *this, obj, entity };
 
-      for (auto &e : entity->getProperties())
+      for (auto &prop : entity->getProperties())
       {
-        visit(overloaded {[&](const EntityPtr &arg) {
-                            m_writer.Key(e.first.c_str());
-                            printEntity(arg);
-                          },
-                          [&](const EntityList &arg) {
-                            bool isPropertyList = e.first != "LIST";
-                            if (entity->hasListWithAttribute())
-                            {
-                              obj->Key("list");
-                              printEntityList(arg);
-                            }
-                            else if (isPropertyList)
-                            {
-                              obj->Key(e.first.str());
-                              AutoJsonArray ary(m_writer);
-                              for (auto &ei : arg)
-                                printEntity(ei);
-                            }
-                            else
-                            {
-                              printEntityList(arg);
-                            }
-                          },
-                          [&](const std::monostate &arg) {}, [&](const std::nullptr_t &arg) {},
-                          [&](const Vector &v) {
-                            printKey(*obj, e.first);
-                            AutoJsonArray ary(m_writer);
-                            for (auto &d : v)
-                              obj->Add(d);
-                          },
-                          [&](const DataSet &v) {
-                            printKey(*obj, e.first);
-                            print(v);
-                          },
-                          [&](const Timestamp &v) {
-                            printKey(*obj, e.first);
-                            print(v);
-                          },
-                          [&](const auto &arg) {
-                            printKey(*obj, e.first);
-                            obj->Add(arg);
-                          }},
-              e.second);
+        visitor.m_key = &prop.first;
+        visit(visitor, prop.second);
       }
     }
 
@@ -180,10 +216,39 @@ namespace mtconnect::entity {
       else
         obj.Key(key);
     }
+    
+    struct DataSetVisitor
+    {
+      void operator()(const std::monostate &) {}
+      void operator()(const std::string &st) { m_obj.AddPairs(*m_key, st); }
+      void operator()(const int64_t &i) { m_obj.AddPairs(*m_key, i); }
+      void operator()(const double &d) { m_obj.AddPairs(*m_key, d); }
+      void operator()(const DataSet &arg) {
+        AutoJsonObject<T> row(m_writer, *m_key);
+        DataSetVisitor visitor(m_writer, m_printer, row);
+        
+        for (auto &c : arg)
+        {
+          visitor.m_key = &c.m_key;
+          visit(visitor, c.m_value);
+        }
+      }
+      
+      DataSetVisitor(T &writer, JsonPrinter &printer, AutoJsonObject<T> &obj)
+      : m_writer(writer), m_printer(printer), m_obj(obj)
+      {
+      }
+
+      T &m_writer;
+      JsonPrinter &m_printer;
+      AutoJsonObject<T> &m_obj;
+      const std::string *m_key { nullptr };
+    };
 
     void print(const DataSet &set)
     {
       AutoJsonObject obj(m_writer);
+      DataSetVisitor visitor(m_writer, *this, obj);
       for (auto &e : set)
       {
         if (e.m_removed)
@@ -194,26 +259,8 @@ namespace mtconnect::entity {
         }
         else
         {
-          visit(overloaded {
-                    [](const std::monostate &) {},
-                    [&obj, &e](const std::string &st) { obj.AddPairs(e.m_key, st); },
-                    [&obj, &e](const int64_t &i) { obj.AddPairs(e.m_key, i); },
-                    [&obj, &e](const double &d) { obj.AddPairs(e.m_key, d); },
-                    [&e, this](const DataSet &arg) {
-                      AutoJsonObject<T> row(m_writer, e.m_key);
-                      for (auto &c : arg)
-                      {
-                        visit(overloaded {
-                                  [&row, &c](const std::string &st) { row.AddPairs(c.m_key, st); },
-                                  [&row, &c](const int64_t &i) { row.AddPairs(c.m_key, i); },
-                                  [&row, &c](const double &d) { row.AddPairs(c.m_key, d); },
-                                  [](auto &a) {
-                                    LOG(error) << "Invalid  variant type for table cell";
-                                  }},
-                              c.m_value);
-                      }
-                    }},
-                e.m_value);
+          visitor.m_key = &e.m_key;
+          visit(visitor, e.m_value);
         }
       }
     }
