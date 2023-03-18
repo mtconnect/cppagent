@@ -200,7 +200,7 @@ namespace mtconnect::entity {
                     [&obj, &e](const int64_t &i) { obj.AddPairs(e.m_key, i); },
                     [&obj, &e](const double &d) { obj.AddPairs(e.m_key, d); },
                     [&e, this](const DataSet &arg) {
-                      AutoJsonObject row(m_writer, e.m_key);
+                      AutoJsonObject<T> row(m_writer, e.m_key);
                       for (auto &c : arg)
                       {
                         visit(overloaded {
