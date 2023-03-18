@@ -360,46 +360,22 @@ namespace mtconnect::printer {
     /// @brief alias of the AutoJsonArray type for the WriterType
     using ArrayType = AutoJsonArray<WriterType>;
     /// @brief alias for a smart pointer to an AutoJsonObject type for the WriterType
-    using ObjectPtr = std::unique_ptr<ObjectType>;
+    using ObjectPtr = std::optional<ObjectType>;
     /// @brief alias for a smart pointer to an AutoJsonArray type for the WriterType
-    using ArrayPtr = std::unique_ptr<ArrayType>;
+    using ArrayPtr = std::optional<ArrayType>;
+    
     /// @brief alias for the variant that can be either an Object or an Array
-    using StackMember = std::variant<ObjectPtr, ArrayPtr>;
-    /// @brief alias for a vector of variants
-    using Stack = std::vector<StackMember>;
-
-    /// @brief Enumeration to create an Object or an Array
-    enum EntryType
-    {
-      OBJECT = 0,  //< Create an object
-      ARRAY = 1    //< Create an array
+    struct StackMember {
+      ObjectPtr m_object;
+      ArrayPtr m_array;
     };
+    
+    /// @brief alias for a vector of variants
+    using Stack = std::list<StackMember>;
 
     /// @brief Create a stack for a rapidjson writer
     /// @param[in] writer the rapidjson writer
     JsonStack(W &writer) : base(writer) {}
-
-    /// @brief Add a new entry to the stack of given `type` with an optiona key
-    /// @param[in] type `OBJECT` or `ARRAY` to add
-    /// @param[in] key optional key for the parent object
-    void add(EntryType type, const std::string_view key = "")
-    {
-      if (!key.empty())
-        base::Key(key);
-
-      switch (type)
-      {
-        case OBJECT:
-        {
-          m_stack.emplace_back(std::move(std::make_unique<ObjectType>(base::m_writer)));
-        }
-
-        case ARRAY:
-        {
-          m_stack.emplace_back(std::move(std::make_unique<ArrayType>(base::m_writer)));
-        }
-      }
-    }
 
     /// @brief Add a new object to the stack
     /// @param[in] key optional key for the parent object
@@ -408,7 +384,8 @@ namespace mtconnect::printer {
       if (!key.empty())
         base::Key(key);
 
-      m_stack.emplace_back(std::move(std::make_unique<ObjectType>(base::m_writer)));
+      auto &member = m_stack.emplace_back();
+      member.m_object.emplace(base::m_writer);
     }
 
     /// @brief Add a new array to the stack
@@ -418,32 +395,10 @@ namespace mtconnect::printer {
       if (!key.empty())
         base::Key(key);
 
-      m_stack.emplace_back(std::move(std::make_unique<ArrayType>(base::m_writer)));
+      auto &member = m_stack.emplace_back();
+      member.m_array.emplace(base::m_writer);
     }
-
     
-    /// @brief Add a unique pointer to an object
-    /// @param[in] obj an rvalue to a unique object pointer that is moved into the stack
-    void add(ObjectPtr &&obj)
-    {
-      m_stack.emplace_back(std::move(obj));
-    }
-
-    /// @brief Add a unique pointer to an array
-    /// @param[in] obj an rvalue to a unique array pointer that is moved into the stack
-    void add(ArrayPtr &&obj)
-    {
-      m_stack.emplace_back(std::move(obj));
-    }
-
-    /// @brief Get a `StackMember` variant at an index
-    /// @param[in] i the index
-    StackMember &operator[](size_t i)
-    {
-      auto &res = m_stack[i];
-      return *res;
-    }
-
     /// @brief Closes open objects and arrays, stopping when the size is `<=` to `to`
     /// @param[in] to stop when the size of the stack is equal to `to`, defaults to `0`
     void clear(size_t to = 0)
