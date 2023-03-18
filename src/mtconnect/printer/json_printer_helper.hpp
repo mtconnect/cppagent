@@ -403,18 +403,16 @@ namespace mtconnect::printer {
 
     /// @brief Add a unique pointer to an object
     /// @param[in] obj an rvalue to a unique object pointer that is moved into the stack
-    auto &add(ObjectPtr &&obj)
+    void add(ObjectPtr &&obj)
     {
-      auto &res = m_stack.emplace_back(std::move(obj));
-      return *std::get<ObjectPtr>(res);
+      m_stack.emplace_back(std::move(obj));
     }
 
     /// @brief Add a unique pointer to an array
     /// @param[in] obj an rvalue to a unique array pointer that is moved into the stack
-    auto &add(ArrayPtr &&obj)
+    void add(ArrayPtr &&obj)
     {
-      auto &res = m_stack.emplace_back(std::move(obj));
-      return *std::get<ObjectPtr>(res);
+      m_stack.emplace_back(std::move(obj));
     }
 
     /// @brief Get a `StackMember` variant at an index
