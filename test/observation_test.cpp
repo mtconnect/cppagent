@@ -295,7 +295,7 @@ TEST_F(ObservationTest, should_treat_events_with_non_count_units_as_doubles)
   entity::JsonEntityPrinter jprinter(1, true);
 
   auto sdoc = jprinter.print(event);
-  json jdoc {json::parse(sdoc)};
+  json jdoc = json::parse(sdoc);
 
   ASSERT_EQ(123.555, jdoc.at("/FeedrateOverride/value"_json_pointer).get<double>());
 
@@ -336,7 +336,7 @@ TEST_F(ObservationTest, should_treat_events_with_count_as_integer)
   entity::JsonEntityPrinter jprinter(1, true);
 
   auto sdoc = jprinter.print(event);
-  json jdoc {json::parse(sdoc)};
+  json jdoc = json::parse(sdoc);
 
   ASSERT_EQ(123.0, jdoc.at("/PartCount/value"_json_pointer).get<double>());
 
@@ -385,7 +385,7 @@ TEST_F(ObservationTest, should_use_three_space_sample_for_3_space_events)
   entity::JsonEntityPrinter jprinter(1, true);
 
   auto sdoc = jprinter.print(event);
-  json jdoc {json::parse(sdoc)};
+  json jdoc = json::parse(sdoc);
 
   auto node = jdoc.at("/WorkpieceOffset/value"_json_pointer);
   ASSERT_TRUE(node.is_array());
