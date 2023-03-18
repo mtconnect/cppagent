@@ -167,7 +167,16 @@ namespace mtconnect {
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
           string uuid = *device->getUuid();
-          m_loopback->receive(d, uuid);
+          
+          entity::Properties props {{"VALUE", uuid}};
+          if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
+          {
+            const auto &hash = device->getProperty("hash");
+            if (hash.index() != EMPTY)
+              props.insert_or_assign("hash", hash);
+          }
+
+          m_loopback->receive(d, props);
         }
       }
 
@@ -466,13 +475,24 @@ namespace mtconnect {
         LOG(info) << "Device " << *uuid << " updating circular buffer";
         m_circularBuffer.updateDataItems(m_dataItemMap);
 
+        if (m_intSchemaVersion > SCHEMA_VERSION(2,2))
+          device->addHash();
+
         if (version)
           versionDeviceXml();
 
         if (m_agentDevice)
         {
+          entity::Properties props {{"VALUE", *uuid}};
+          if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
+          {
+            const auto &hash = device->getProperty("hash");
+            if (hash.index() != EMPTY)
+              props.insert_or_assign("hash", hash);
+          }
+
           auto d = m_agentDevice->getDeviceDataItem("device_changed");
-          m_loopback->receive(d, *uuid);
+          m_loopback->receive(d, props);
         }
 
         return true;
@@ -806,14 +826,25 @@ namespace mtconnect {
           // Check for single valued constrained data items.
           if (m_agentDevice && device != m_agentDevice)
           {
+            entity::Properties props {{"VALUE", uuid}};
+            if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
+            {
+              const auto &hash = device->getProperty("hash");
+              if (hash.index() != EMPTY)
+                props.insert_or_assign("hash", hash);
+            }
+            
             auto d = m_agentDevice->getDeviceDataItem("device_added");
-            m_loopback->receive(d, uuid);
+            m_loopback->receive(d, props);
           }
         }
       }
       // else
       //   LOG(warning) << "Adding device " << uuid << " after initialialization not supported yet";
     }
+    
+    if (m_intSchemaVersion >= SCHEMA_VERSION(2,2))
+      device->addHash();
 
     for (auto &printer : m_printers)
       printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
@@ -844,6 +875,9 @@ namespace mtconnect {
 
     if (changed)
     {
+      if (m_intSchemaVersion >= SCHEMA_VERSION(2,2))
+        device->addHash();
+
       versionDeviceXml();
       loadCachedProbe();
 
@@ -852,17 +886,25 @@ namespace mtconnect {
         for (auto &printer : m_printers)
           printer.second->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
 
+        entity::Properties props {{"VALUE", uuid}};
+        if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
+        {
+          const auto &hash = device->getProperty("hash");
+          if (hash.index() != EMPTY)
+            props.insert_or_assign("hash", hash);
+        }
+
         if (device->getUuid() != oldUuid)
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
           if (d)
-            m_loopback->receive(d, uuid);
+            m_loopback->receive(d, props);
         }
         else
         {
           auto d = m_agentDevice->getDeviceDataItem("device_changed");
           if (d)
-            m_loopback->receive(d, uuid);
+            m_loopback->receive(d, props);
         }
       }
     }

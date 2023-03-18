@@ -2939,3 +2939,14 @@ TEST_F(AgentTest, pre_stop_hook_should_be_called)
   agent->stop();
   ASSERT_TRUE(called);
 }
+
+TEST_F(AgentTest, device_should_have_hash_for_2_2)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.2", 4, true);
+  
+  auto device = m_agentTestHelper->getAgent()->getDeviceByName("LinuxCNC");
+  ASSERT_TRUE(device);
+  
+  auto hash = device->get<string>("hash");
+  ASSERT_NE("", hash);  
+}

@@ -412,9 +412,6 @@ namespace mtconnect::printer {
 
     StringBuffer output;
     RenderJson(output, m_pretty, [&](auto &writer) {
-      using WriterType = decltype(writer);
-      using StackType = JsonStack<WriterType>;
-
       AutoJsonObject top(writer);
       AutoJsonObject obj(writer, "MTConnectStreams");
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
