@@ -2948,5 +2948,20 @@ TEST_F(AgentTest, device_should_have_hash_for_2_2)
   ASSERT_TRUE(device);
   
   auto hash = device->get<string>("hash");
-  ASSERT_NE("", hash);  
+  ASSERT_EQ(28, hash.length());
+  
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Device@hash", hash.c_str());
+  }
+  
+  auto devices = m_agentTestHelper->getAgent()->getDevices();
+  auto di = devices.begin();
+  
+  {
+    PARSE_XML_RESPONSE("/Agent/sample");
+    
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceAdded[2]@hash", (*di++)->get<string>("hash").c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceAdded[3]@hash", (*di)->get<string>("hash").c_str());
+  }
 }
