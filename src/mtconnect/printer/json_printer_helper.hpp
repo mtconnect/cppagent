@@ -401,6 +401,27 @@ namespace mtconnect::printer {
       }
     }
 
+    /// @brief Add a new object to the stack
+    /// @param[in] key optional key for the parent object
+    void addObject(const std::string_view key = "")
+    {
+      if (!key.empty())
+        base::Key(key);
+
+      m_stack.emplace_back(std::make_unique<ObjectType>(base::m_writer));
+    }
+
+    /// @brief Add a new array to the stack
+    /// @param[in] key optional key for the parent object
+    void addArray(const std::string_view key = "")
+    {
+      if (!key.empty())
+        base::Key(key);
+
+      m_stack.emplace_back(std::make_unique<ArrayType>(base::m_writer));
+    }
+
+    
     /// @brief Add a unique pointer to an object
     /// @param[in] obj an rvalue to a unique object pointer that is moved into the stack
     void add(ObjectPtr &&obj)

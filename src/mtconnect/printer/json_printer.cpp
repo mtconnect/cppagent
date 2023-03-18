@@ -294,13 +294,13 @@ namespace mtconnect::printer {
         componentId = "";
         category = -1;
 
-        stack.add(StackType::OBJECT);
-        stack.add(StackType::OBJECT, "DeviceStream");
+        stack.addObject();
+        stack.addObject("DeviceStream");
 
         deviceId = ref.getDeviceId();
         auto device = ref.m_device;
         stack.AddPairs("name", *(device->getComponentName()), "uuid", *(device->getUuid()));
-        stack.add(StackType::ARRAY, "ComponentStreams");
+        stack.addArray("ComponentStreams");
       }
 
       if (ref.getComponentId() != componentId)
@@ -308,8 +308,8 @@ namespace mtconnect::printer {
         stack.clear(3);
         category = -1;
 
-        stack.add(StackType::OBJECT);
-        stack.add(StackType::OBJECT, "ComponentStream");
+        stack.addObject();
+        stack.addObject("ComponentStream");
 
         componentId = ref.getComponentId();
         auto component = ref.m_component;
@@ -323,7 +323,7 @@ namespace mtconnect::printer {
         stack.clear(5);
 
         category = ref.getCategory();
-        stack.add(StackType::ARRAY, ref.m_dataItem->getCategoryText());
+        stack.addArray(ref.m_dataItem->getCategoryText());
       }
 
       printer.print(ref.m_observation);
@@ -357,14 +357,14 @@ namespace mtconnect::printer {
         category = -1;
         obsType = "";
 
-        stack.add(StackType::OBJECT);
+        stack.addObject();
 
         deviceId = ref.getDeviceId();
 
         auto device = ref.m_device;
         stack.AddPairs("name", *(device->getComponentName()), "uuid", *(device->getUuid()));
 
-        stack.add(StackType::ARRAY, "ComponentStream");
+        stack.addArray("ComponentStream");
       }
 
       if (ref.getComponentId() != componentId)
@@ -373,7 +373,7 @@ namespace mtconnect::printer {
         category = -1;
         obsType = "";
 
-        stack.add(StackType::OBJECT);
+        stack.addObject();
 
         componentId = ref.getComponentId();
         auto component = ref.m_component;
@@ -388,14 +388,14 @@ namespace mtconnect::printer {
         obsType = "";
 
         category = ref.getCategory();
-        stack.add(StackType::OBJECT, ref.m_dataItem->getCategoryText());
+        stack.addObject(ref.m_dataItem->getCategoryText());
       }
 
       if (ref.m_observation->getName() != obsType)
       {
         stack.clear(4);
         obsType = ref.m_observation->getName();
-        stack.add(StackType::ARRAY, obsType);
+        stack.addArray(obsType);
       }
 
       printer.printEntity(ref.m_observation);
