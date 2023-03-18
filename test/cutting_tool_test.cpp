@@ -579,31 +579,30 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
         }
       ],
       "CuttingItems": {
-        "count": 12,
         "list": [
           {
             "CuttingItem": {
               "ItemLife": [
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "PART_COUNT",
-                  "value": 0.0
+                  "type": "PART_COUNT"
                 },
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "MINUTES",
-                  "value": 0.0
+                  "type": "MINUTES"
                 },
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "WEAR",
-                  "value": 0.0
+                  "type": "WEAR"
                 }
               ],
               "indices": "1",
@@ -617,13 +616,14 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
               }
             }
           }
-        ]
+        ],
+        "count": 12
       },
       "Location": {
+        "value": "13",
         "negativeOverlap": 0,
         "positiveOverlap": 0,
-        "type": "POT",
-        "value": "13"
+        "type": "POT"
       },
       "ProgramToolNumber": "10"
     },

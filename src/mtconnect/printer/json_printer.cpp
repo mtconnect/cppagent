@@ -197,7 +197,7 @@ namespace mtconnect::printer {
                          assetCount, *m_schemaVersion, m_modelChangeTime);
       }
       {
-        AutoJsonObject obj(writer, "Devices");
+        obj.Key("Devices");
         printer.printEntityList(devices);
       }
     });
@@ -224,7 +224,7 @@ namespace mtconnect::printer {
                          *m_schemaVersion, m_modelChangeTime);
       }
       {
-        AutoJsonObject obj(writer, "Assets");
+        obj.Key("Assets");
         printer.printEntityList(asset);
       }
     });

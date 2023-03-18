@@ -65,7 +65,10 @@ namespace mtconnect::entity {
                           [&](const EntityList &arg) {
                             bool isPropertyList = e.first != "LIST";
                             if (entity->hasListWithAttribute())
+                            {
                               obj->Key("list");
+                              printEntityList(arg);
+                            }
                             else if (isPropertyList)
                             {
                               obj->Key(e.first.str());
