@@ -382,7 +382,7 @@ namespace mtconnect::printer {
     /// @brief Add a new entry to the stack of given `type` with an optiona key
     /// @param[in] type `OBJECT` or `ARRAY` to add
     /// @param[in] key optional key for the parent object
-    StackMember &add(EntryType type, const std::string_view key = "")
+    void add(EntryType type, const std::string_view key = "")
     {
       if (!key.empty())
         base::Key(key);
@@ -391,14 +391,12 @@ namespace mtconnect::printer {
       {
         case OBJECT:
         {
-          auto &res = m_stack.emplace_back(std::make_unique<ObjectType>(base::m_writer));
-          return res;
+          m_stack.emplace_back(std::make_unique<ObjectType>(base::m_writer));
         }
 
         case ARRAY:
         {
-          auto &res = m_stack.emplace_back(std::make_unique<ArrayType>(base::m_writer));
-          return res;
+          m_stack.emplace_back(std::make_unique<ArrayType>(base::m_writer));
         }
       }
     }
