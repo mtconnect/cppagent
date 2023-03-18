@@ -27,14 +27,11 @@ namespace mtconnect {
       static FactoryPtr imageFiles;
       if (!imageFiles)
       {
-        auto imageFile =
-            make_shared<Factory>(Requirements {{"id", true},
-              {"name", false},
-              {"href", true}, {"mediaType", true}});
-        
-        imageFiles = make_shared<Factory>(Requirements {
-            Requirement("ImageFile", ENTITY, imageFile, 1, Requirement::Infinite)});
+        auto imageFile = make_shared<Factory>(
+            Requirements {{"id", true}, {"name", false}, {"href", true}, {"mediaType", true}});
 
+        imageFiles = make_shared<Factory>(
+            Requirements {Requirement("ImageFile", ENTITY, imageFile, 1, Requirement::Infinite)});
       }
       return imageFiles;
     }

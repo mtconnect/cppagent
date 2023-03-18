@@ -41,7 +41,7 @@ namespace mtconnect::printer {
 
     /// @name Key methods
     /// @{
-    
+
     /// @brief Wrapper around the rapidjson Key writer methods
     /// @param[in] s string for the key
     void Key(const char *s) { m_writer.Key(s); }
@@ -104,7 +104,7 @@ namespace mtconnect::printer {
     /// @param[in] s a string
     void Add(const std::string &s) { m_writer.String(s.data(), rapidjson::SizeType(s.size())); }
     /// @}
-    
+
     /// @brief Add pairs of values
     ///
     /// Paris are key, value pairs that using parameter packs as follows:
@@ -150,7 +150,8 @@ namespace mtconnect::printer {
     T &m_writer;
   };
 
-  /// @brief Provides rapidjson automatic StartObject and EndObject when the object goes out of scope
+  /// @brief Provides rapidjson automatic StartObject and EndObject when the object goes out of
+  /// scope
   /// @tparam T the writer type
   template <typename T>
   class AGENT_LIB_API AutoJsonObject : public JsonHelper<T>
@@ -206,7 +207,8 @@ namespace mtconnect::printer {
 
     /// @brief Check if the key has changed and end an open object and start a new one
     /// @param[in] key key to check
-    /// @param[in] addKey if `true`, add an object as the value of the parent object using key as the key
+    /// @param[in] addKey if `true`, add an object as the value of the parent object using key as
+    /// the key
     bool reset(const std::string_view &key, bool addKey = true)
     {
       if (m_key != key)
@@ -238,7 +240,7 @@ namespace mtconnect::printer {
     {
       if (!m_ended)
         base::EndObject();
-      
+
       m_key = "";
       m_ended = true;
     }
@@ -256,7 +258,7 @@ namespace mtconnect::printer {
   public:
     /// @brief Aliased type for the base helper type
     using base = JsonHelper<T>;
-    
+
     /// @brief Create a array, but only start it if `start` is true
     /// @param[in] writer the rapidjson writer
     /// @param[in] start flag to start the array
@@ -285,7 +287,7 @@ namespace mtconnect::printer {
       base::Key(key.data());
       base::StartArray();
     }
-    
+
     /// @brief destructor the ends the array if it is still open
     ~AutoJsonArray()
     {
@@ -313,12 +315,15 @@ namespace mtconnect::printer {
     bool m_ended {false};
   };
 
-  /// @brief Helper function that creates a rapidjson PrettyWriter or Writer depending on the pretty flag.
+  /// @brief Helper function that creates a rapidjson PrettyWriter or Writer depending on the pretty
+  /// flag.
   ///
-  /// Calls func with the writer allowing the correct templates to be instantiated depending on pretty printing.
+  /// Calls func with the writer allowing the correct templates to be instantiated depending on
+  /// pretty printing.
   ///
   /// @param[in] output the rapidjson output object, like `StringBuffer`
-  /// @param[in] pretty `true` creates a `rapidjson::PrettyWriter` and `false` creates a `rapidjson::Writer`
+  /// @param[in] pretty `true` creates a `rapidjson::PrettyWriter` and `false` creates a
+  /// `rapidjson::Writer`
   /// @param[in] func the lambda to callback with the writer
   /// @tparam T the type of the output buffer
   /// @tparam T2 the type of the lambda
@@ -338,7 +343,8 @@ namespace mtconnect::printer {
     }
   }
 
-  /// @brief A hierarchy of Json Objects and Arrays that are automatically managed so the opens and closes always match.
+  /// @brief A hierarchy of Json Objects and Arrays that are automatically managed so the opens and
+  /// closes always match.
   /// @tparam W the writer type
   template <typename W>
   class AGENT_LIB_API JsonStack : public JsonHelper<W>
@@ -365,8 +371,8 @@ namespace mtconnect::printer {
     /// @brief Enumeration to create an Object or an Array
     enum EntryType
     {
-      OBJECT = 0, //< Create an object
-      ARRAY = 1 //< Create an array
+      OBJECT = 0,  //< Create an object
+      ARRAY = 1    //< Create an array
     };
 
     /// @brief Create a stack for a rapidjson writer
@@ -412,7 +418,7 @@ namespace mtconnect::printer {
       auto &res = m_stack.emplace_back(std::move(obj));
       return *std::get<ObjectPtr>(res);
     }
-    
+
     /// @brief Get a `StackMember` variant at an index
     /// @param[in] i the index
     StackMember &operator[](size_t i)

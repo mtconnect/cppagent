@@ -69,7 +69,7 @@ TEST_F(ImageFileTest, should_parse_configuration_with_image_file)
 
   auto &clc = m_device->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
-  
+
   const auto &ifs = clc->getList("ImageFiles");
   ASSERT_TRUE(ifs);
   ASSERT_EQ(2, ifs->size());
@@ -79,7 +79,7 @@ TEST_F(ImageFileTest, should_parse_configuration_with_image_file)
   ASSERT_EQ("fif", (*it)->get<string>("id"));
   ASSERT_EQ("PNG", (*it)->get<string>("mediaType"));
   ASSERT_EQ("/pictures/front.png", (*it)->get<string>("href"));
-  
+
   it++;
   ASSERT_EQ("back", (*it)->get<string>("name"));
   ASSERT_EQ("bif", (*it)->get<string>("id"));
@@ -97,7 +97,7 @@ TEST_F(ImageFileTest, should_print_configuration_with_image_file)
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
 
     ASSERT_XML_PATH_COUNT(doc, DEVICE_CONFIGURATION_PATH "/*", 2);
-    
+
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_1 "@name", "front");
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_1 "@id", "fif");
     ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_1 "@mediaType", "PNG");
@@ -123,7 +123,7 @@ TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json)
 
     ASSERT_EQ(2, files.size());
     auto it = files.begin();
-    
+
     auto image = it->at("ImageFile");
     EXPECT_EQ("fif", image["id"]);
     EXPECT_EQ("front", image["name"]);
@@ -141,7 +141,8 @@ TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json)
 
 TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json_v2)
 {
-  m_agentTestHelper->createAgent("/samples/solid_model.xml", 8, 4, "2.2", 25, false, false, {{configuration::JsonVersion, 2}});
+  m_agentTestHelper->createAgent("/samples/solid_model.xml", 8, 4, "2.2", 25, false, false,
+                                 {{configuration::JsonVersion, 2}});
 
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");
@@ -154,7 +155,7 @@ TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json_v2)
 
     ASSERT_EQ(2, files.size());
     auto it = files.begin();
-    
+
     auto image = *it;
     EXPECT_EQ("fif", image["id"]);
     EXPECT_EQ("front", image["name"]);

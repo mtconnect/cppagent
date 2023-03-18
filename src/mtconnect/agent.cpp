@@ -167,7 +167,7 @@ namespace mtconnect {
         {
           auto d = m_agentDevice->getDeviceDataItem("device_added");
           string uuid = *device->getUuid();
-          
+
           entity::Properties props {{"VALUE", uuid}};
           if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
@@ -475,7 +475,7 @@ namespace mtconnect {
         LOG(info) << "Device " << *uuid << " updating circular buffer";
         m_circularBuffer.updateDataItems(m_dataItemMap);
 
-        if (m_intSchemaVersion > SCHEMA_VERSION(2,2))
+        if (m_intSchemaVersion > SCHEMA_VERSION(2, 2))
           device->addHash();
 
         if (version)
@@ -833,7 +833,7 @@ namespace mtconnect {
               if (hash.index() != EMPTY)
                 props.insert_or_assign("hash", hash);
             }
-            
+
             auto d = m_agentDevice->getDeviceDataItem("device_added");
             m_loopback->receive(d, props);
           }
@@ -842,8 +842,8 @@ namespace mtconnect {
       // else
       //   LOG(warning) << "Adding device " << uuid << " after initialialization not supported yet";
     }
-    
-    if (m_intSchemaVersion >= SCHEMA_VERSION(2,2))
+
+    if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
       device->addHash();
 
     for (auto &printer : m_printers)
@@ -875,7 +875,7 @@ namespace mtconnect {
 
     if (changed)
     {
-      if (m_intSchemaVersion >= SCHEMA_VERSION(2,2))
+      if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
         device->addHash();
 
       versionDeviceXml();
