@@ -364,13 +364,13 @@ namespace mtconnect::printer {
     /// @brief alias for a smart pointer to an AutoJsonArray type for the WriterType
     using ArrayPtr = std::optional<ArrayType>;
     
-    /// @brief alias for the variant that can be either an Object or an Array
+    /// @brief Structure that holds either an object or an array
     struct StackMember {
       ObjectPtr m_object;
       ArrayPtr m_array;
     };
     
-    /// @brief alias for a vector of variants
+    /// @brief alias for a list of variants
     using Stack = std::list<StackMember>;
 
     /// @brief Create a stack for a rapidjson writer
