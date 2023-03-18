@@ -391,12 +391,12 @@ namespace mtconnect::printer {
       {
         case OBJECT:
         {
-          m_stack.emplace_back(std::make_unique<ObjectType>(base::m_writer));
+          m_stack.emplace_back(std::move(std::make_unique<ObjectType>(base::m_writer)));
         }
 
         case ARRAY:
         {
-          m_stack.emplace_back(std::make_unique<ArrayType>(base::m_writer));
+          m_stack.emplace_back(std::move(std::make_unique<ArrayType>(base::m_writer)));
         }
       }
     }
@@ -408,7 +408,7 @@ namespace mtconnect::printer {
       if (!key.empty())
         base::Key(key);
 
-      m_stack.emplace_back(std::make_unique<ObjectType>(base::m_writer));
+      m_stack.emplace_back(std::move(std::make_unique<ObjectType>(base::m_writer)));
     }
 
     /// @brief Add a new array to the stack
@@ -418,7 +418,7 @@ namespace mtconnect::printer {
       if (!key.empty())
         base::Key(key);
 
-      m_stack.emplace_back(std::make_unique<ArrayType>(base::m_writer));
+      m_stack.emplace_back(std::move(std::make_unique<ArrayType>(base::m_writer)));
     }
 
     
