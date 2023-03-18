@@ -328,7 +328,7 @@ namespace mtconnect::printer {
   /// @tparam T the type of the output buffer
   /// @tparam T2 the type of the lambda
   template <typename T, typename T2>
-  void AGENT_LIB_API RenderJson(T &output, bool pretty, T2 &&func)
+  inline void RenderJson(T &output, bool pretty, T2 &&func)
   {
     if (pretty)
     {
