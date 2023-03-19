@@ -7,9 +7,9 @@ branches:
 
 
 image:
-  - macos-monterey
-  - Visual Studio 2019
   - Ubuntu2004
+  - Visual Studio 2019
+  - macos-monterey
 
 environment:
   matrix:

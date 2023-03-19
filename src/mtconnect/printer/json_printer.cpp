@@ -18,12 +18,18 @@
 #include "json_printer.hpp"
 
 #include <boost/asio/ip/host_name.hpp>
+#include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/key.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index_container.hpp>
+#include <boost/range/algorithm/sort.hpp>
 
 #include <cstdlib>
 #include <set>
 #include <sstream>
-
-#include <nlohmann/json.hpp>
 
 #include "mtconnect/device_model/composition.hpp"
 #include "mtconnect/device_model/configuration/configuration.hpp"
@@ -31,14 +37,15 @@
 #include "mtconnect/device_model/reference.hpp"
 #include "mtconnect/entity/json_printer.hpp"
 #include "mtconnect/logging.hpp"
+#include "mtconnect/printer/json_printer_helper.hpp"
 #include "mtconnect/version.h"
 
 using namespace std;
-using json = nlohmann::json;
 
 namespace mtconnect::printer {
   using namespace observation;
   using namespace device_model;
+  using namespace rapidjson;
 
   JsonPrinter::JsonPrinter(uint32_t jsonVersion, bool pretty)
     : Printer(pretty), m_jsonVersion(jsonVersion)
@@ -66,60 +73,54 @@ namespace mtconnect::printer {
     return m_hostname;
   }
 
-  inline std::string print(json &doc, bool pretty)
+  template <typename T>
+  inline void header(AutoJsonObject<T> &obj, const string &version, const string &hostname,
+                     const uint64_t instanceId, const unsigned int bufferSize,
+                     const string &schemaVersion, const string modelChangeTime)
   {
-    stringstream buffer;
-    if (pretty)
-      buffer << std::setw(2);
-    buffer << doc;
-    if (pretty)
-      buffer << "\n";
-    return buffer.str();
-  }
-
-  inline json header(const string &version, const string &hostname, const uint64_t instanceId,
-                     const unsigned int bufferSize, const string &schemaVersion,
-                     const string modelChangeTime)
-  {
-    json doc = json::object({{"version", version},
-                             {"creationTime", getCurrentTime(GMT)},
-                             {"testIndicator", false},
-                             {"instanceId", instanceId},
-                             {"sender", hostname},
-                             {"schemaVersion", schemaVersion}});
+    obj.AddPairs("version", version, "creationTime", getCurrentTime(GMT), "testIndicator", false,
+                 "instanceId", instanceId, "sender", hostname, "schemaVersion", schemaVersion);
 
     if (schemaVersion >= "1.7")
-    {
-      doc["deviceModelChangeTime"] = modelChangeTime;
-    }
-
+      obj.AddPairs("deviceModelChangeTime", modelChangeTime);
     if (bufferSize > 0)
-      doc["bufferSize"] = bufferSize;
-    return doc;
+      obj.AddPairs("bufferSize", bufferSize);
   }
 
-  inline json probeAssetHeader(const string &version, const string &hostname,
-                               const uint64_t instanceId, const unsigned int bufferSize,
-                               const unsigned int assetBufferSize, const unsigned int assetCount,
-                               const string &schemaVersion, const string modelChangeTime)
+  template <typename T>
+  inline void probeAssetHeader(AutoJsonObject<T> &obj, const string &version,
+                               const string &hostname, const uint64_t instanceId,
+                               const unsigned int bufferSize, const unsigned int assetBufferSize,
+                               const unsigned int assetCount, const string &schemaVersion,
+                               const string modelChangeTime)
   {
-    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime);
-    doc["assetBufferSize"] = assetBufferSize;
-    doc["assetCount"] = assetCount;
-
-    return doc;
+    header(obj, version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime);
+    obj.AddPairs("assetBufferSize", assetBufferSize, "assetCount", assetCount);
   }
 
-  inline json streamHeader(const string &version, const string &hostname, const uint64_t instanceId,
-                           const unsigned int bufferSize, const uint64_t nextSequence,
-                           const uint64_t firstSequence, const uint64_t lastSequence,
-                           const string &schemaVersion, const string modelChangeTime)
+  template <typename T>
+  inline void streamHeader(AutoJsonObject<T> &obj, const string &version, const string &hostname,
+                           const uint64_t instanceId, const unsigned int bufferSize,
+                           const uint64_t nextSequence, const uint64_t firstSequence,
+                           const uint64_t lastSequence, const string &schemaVersion,
+                           const string modelChangeTime)
   {
-    json doc = header(version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime);
-    doc["nextSequence"] = nextSequence;
-    doc["lastSequence"] = lastSequence;
-    doc["firstSequence"] = firstSequence;
-    return doc;
+    header(obj, version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime);
+    obj.AddPairs("nextSequence", nextSequence, "lastSequence", lastSequence, "firstSequence",
+                 firstSequence);
+  }
+
+  template <typename T1, class T2>
+  inline void toJson(T1 &writer, const string &collection, T2 &list)
+  {
+    if (!list.empty())
+    {
+      AutoJsonArray<T1> ary(writer, collection);
+      for (auto &item : list)
+      {
+        // items.emplace_back(toJson(item));
+      }
+    }
   }
 
   std::string JsonPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
@@ -127,36 +128,52 @@ namespace mtconnect::printer {
   {
     defaultSchemaVersion();
 
-    json errors = json::array();
-    for (auto &e : list)
-    {
-      string s(e.second);
-      errors.push_back({{"Error", {{"errorCode", e.first}, {"value", trim(s)}}
+    StringBuffer output;
+    RenderJson(output, m_pretty, [&](auto &writer) {
+      AutoJsonObject obj(writer);
+      {
+        AutoJsonObject obj(writer, "MTConnectError");
+        obj.AddPairs("jsonVersion", m_jsonVersion);
 
-      }});
-    }
+        {
+          AutoJsonObject obj(writer, "Header");
+          header(obj, m_version, hostname(), instanceId, bufferSize, *m_schemaVersion,
+                 m_modelChangeTime);
+        }
+        {
+          if (m_jsonVersion > 1)
+          {
+            AutoJsonObject obj(writer, "Errors");
+            {
+              AutoJsonArray ary(writer, "Error");
+              for (auto &e : list)
+              {
+                AutoJsonObject obj(writer);
+                string s(e.second);
+                obj.AddPairs("errorCode", e.first, "value", trim(s));
+              }
+            }
+          }
+          else
+          {
+            AutoJsonArray obj(writer, "Errors");
+            {
+              for (auto &e : list)
+              {
+                AutoJsonObject obj(writer);
+                {
+                  AutoJsonObject obj(writer, "Error");
+                  string s(e.second);
+                  obj.AddPairs("errorCode", e.first, "value", trim(s));
+                }
+              }
+            }
+          }
+        }
+      }
+    });
 
-    json doc = json::object({{"MTConnectError",
-                              {{"jsonVersion", m_jsonVersion},
-                               {"Header", header(m_version, hostname(), instanceId, bufferSize,
-                                                 *m_schemaVersion, m_modelChangeTime)},
-                               {"Errors", errors}}}});
-
-    return print(doc, m_pretty);
-  }
-
-  template <class T>
-  inline void toJson(json &parent, const string &collection, T &list)
-  {
-    json obj;
-    if (!list.empty())
-    {
-      json items = json::array();
-      for (auto &item : list)
-        items.emplace_back(toJson(item));
-
-      parent[collection] = items;
-    }
+    return string(output.GetString(), output.GetLength());
   }
 
   std::string JsonPrinter::printProbe(const uint64_t instanceId, const unsigned int bufferSize,
@@ -167,274 +184,25 @@ namespace mtconnect::printer {
   {
     defaultSchemaVersion();
 
-    entity::JsonPrinter printer(m_jsonVersion);
+    StringBuffer output;
+    RenderJson(output, m_pretty, [&](auto &writer) {
+      entity::JsonPrinter printer(writer, m_jsonVersion);
 
-    json devicesDoc;
-
-    if (m_jsonVersion == 1)
-    {
-      devicesDoc = json::array();
-      for (const auto &device : devices)
-        devicesDoc.emplace_back(printer.print(device));
-    }
-    else if (m_jsonVersion == 2)
-    {
-      entity::EntityList list;
-      copy(devices.begin(), devices.end(), back_inserter(list));
-      entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
-      entity->setProperty("LIST", list);
-      devicesDoc = printer.printEntity(entity);
-    }
-    else
-    {
-      throw runtime_error("invalid json printer version");
-    }
-
-    json doc = json::object({{"MTConnectDevices",
-                              {{"jsonVersion", m_jsonVersion},
-                               {"Header", probeAssetHeader(m_version, hostname(), instanceId,
-                                                           bufferSize, assetBufferSize, assetCount,
-                                                           *m_schemaVersion, m_modelChangeTime)},
-                               {"Devices", devicesDoc}}}});
-
-    return print(doc, m_pretty);
-  }
-
-  class AGENT_LIB_API CategoryRef
-  {
-  public:
-    CategoryRef(const char *cat, uint32_t version) : m_category(cat), m_version(version) {}
-    CategoryRef(const CategoryRef &other) = default;
-
-    bool addObservation(const ObservationPtr &observation)
-    {
-      m_events.emplace_back(observation);
-      return true;
-    }
-
-    bool isCategory(const char *cat) { return m_category == cat; }
-
-    pair<string_view, json> toJson()
-    {
-      entity::JsonPrinter printer(m_version);
-      pair<string_view, json> ret(m_category, json::object());
-      if (!m_category.empty())
+      AutoJsonObject top(writer);
+      AutoJsonObject obj(writer, "MTConnectDevices");
+      obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {
-        if (m_version == 1)
-        {
-          ret.second = json::array();
-          for (auto &event : m_events)
-            ret.second.emplace_back(printer.print(event));
-        }
-        else if (m_version == 2)
-        {
-          entity::EntityList list;
-          copy(m_events.begin(), m_events.end(), back_inserter(list));
-          entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
-          entity->setProperty("LIST", list);
-          ret.second = printer.printEntity(entity);
-        }
+        AutoJsonObject obj(writer, "Header");
+        probeAssetHeader(obj, m_version, hostname(), instanceId, bufferSize, assetBufferSize,
+                         assetCount, *m_schemaVersion, m_modelChangeTime);
       }
-      return ret;
-    }
-
-  protected:
-    string_view m_category;
-    list<ObservationPtr> m_events;
-    uint32_t m_version;
-  };
-
-  class AGENT_LIB_API ComponentRef
-  {
-  public:
-    ComponentRef(const ComponentPtr component, uint32_t version)
-      : m_component(component), m_version(version)
-    {}
-    ComponentRef(const ComponentRef &other)
-      : m_component(other.m_component), m_categories(other.m_categories), m_version(other.m_version)
-    {}
-
-    bool isComponent(const ComponentPtr &component) { return m_component == component; }
-
-    bool addObservation(const ObservationPtr &observation, const ComponentPtr &component,
-                        const DataItemPtr dataItem)
-    {
-      if (m_component == component)
       {
-        auto cat = dataItem->getCategoryText();
-        if (!m_categoryRef || !(*m_categoryRef)->isCategory(cat))
-        {
-          m_categories.emplace_back(cat, m_version);
-          m_categoryRef.emplace(&m_categories.back());
-        }
-
-        if (m_categoryRef)
-          return (*m_categoryRef)->addObservation(observation);
+        obj.Key("Devices");
+        printer.printEntityList(devices);
       }
-      return false;
-    }
+    });
 
-    json toJson()
-    {
-      json ret;
-      if (m_component && !m_categories.empty())
-      {
-        json obj = json::object(
-            {{"component", m_component->getName()}, {"componentId", m_component->getId()}});
-
-        if (m_component->getComponentName())
-          obj["name"] = *m_component->getComponentName();
-
-        for (auto &cat : m_categories)
-        {
-          auto c = cat.toJson();
-          if (!c.first.empty())
-            obj[string(c.first)] = c.second;
-        }
-
-        if (m_version == 1)
-          ret = json::object({{"ComponentStream", obj}});
-        else if (m_version == 2)
-          ret = obj;
-      }
-      return ret;
-    }
-
-  protected:
-    const ComponentPtr m_component;
-    vector<CategoryRef> m_categories;
-    optional<CategoryRef *> m_categoryRef;
-    uint32_t m_version;
-  };
-
-  class AGENT_LIB_API DeviceRef
-  {
-  public:
-    DeviceRef(const DevicePtr device, uint32_t version) : m_device(device), m_version(version) {}
-    DeviceRef(const DeviceRef &other)
-      : m_device(other.m_device), m_components(other.m_components), m_version(other.m_version)
-    {}
-
-    bool isDevice(const DevicePtr device) { return device == m_device; }
-
-    bool addObservation(const ObservationPtr &observation, const DevicePtr device,
-                        const ComponentPtr component, const DataItemPtr dataItem)
-    {
-      if (m_device == device)
-      {
-        if (!m_componentRef || !(*m_componentRef)->isComponent(component))
-        {
-          m_components.emplace_back(component, m_version);
-          m_componentRef.emplace(&m_components.back());
-        }
-
-        if (m_componentRef)
-          return (*m_componentRef)->addObservation(observation, component, dataItem);
-      }
-      return false;
-    }
-
-    json toJson()
-    {
-      json ret;
-      if (m_device && !m_components.empty())
-      {
-        json obj =
-            json::object({{"name", *m_device->getComponentName()}, {"uuid", *m_device->getUuid()}});
-        json items = json::array();
-        for (auto &comp : m_components)
-          items.emplace_back(comp.toJson());
-
-        if (m_version == 1)
-        {
-          obj["ComponentStreams"] = items;
-          ret = json::object({{"DeviceStream", obj}});
-        }
-        else if (m_version == 2)
-        {
-          ret = obj;
-          if (m_components.size() == 1)
-          {
-            ret["ComponentStream"] = items.front();
-          }
-          else
-          {
-            ret["ComponentStream"] = items;
-          }
-        }
-        else
-        {
-          throw runtime_error("Invalid json printer version");
-        }
-      }
-      return ret;
-    }
-
-  protected:
-    const DevicePtr m_device;
-    vector<ComponentRef> m_components;
-    optional<ComponentRef *> m_componentRef;
-    uint32_t m_version;
-  };
-
-  std::string JsonPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
-                                       const uint64_t nextSeq, const uint64_t firstSeq,
-                                       const uint64_t lastSeq, ObservationList &observations) const
-  {
-    defaultSchemaVersion();
-
-    json streams;
-
-    if (observations.size() > 0)
-    {
-      observations.sort(ObservationCompare);
-
-      vector<DeviceRef> devices;
-      DeviceRef *deviceRef = nullptr;
-
-      for (auto &observation : observations)
-      {
-        if (!observation->isOrphan())
-        {
-          const auto dataItem = observation->getDataItem();
-          const auto component = dataItem->getComponent();
-          const auto device = component->getDevice();
-
-          if (!deviceRef || !deviceRef->isDevice(device))
-          {
-            devices.emplace_back(device, m_jsonVersion);
-            deviceRef = &devices.back();
-          }
-
-          deviceRef->addObservation(observation, device, component, dataItem);
-        }
-      }
-
-      streams = json::array();
-      for (auto &ref : devices)
-        streams.emplace_back(ref.toJson());
-
-      if (m_jsonVersion == 2)
-      {
-        if (devices.size() == 1)
-        {
-          streams = json::object({{"DeviceStream", streams.front()}});
-        }
-        else
-        {
-          streams = json::object({{"DeviceStream", streams}});
-        }
-      }
-    }
-
-    json doc = json::object(
-        {{"MTConnectStreams",
-          {{"jsonVersion", m_jsonVersion},
-           {"Header", streamHeader(m_version, hostname(), instanceId, bufferSize, nextSeq, firstSeq,
-                                   lastSeq, *m_schemaVersion, m_modelChangeTime)},
-           {"Streams", streams}}}});
-
-    return print(doc, m_pretty);
+    return string(output.GetString(), output.GetLength());
   }
 
   std::string JsonPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
@@ -443,34 +211,239 @@ namespace mtconnect::printer {
   {
     defaultSchemaVersion();
 
-    entity::JsonPrinter printer(m_jsonVersion);
-    json assetDoc;
-    if (m_jsonVersion == 1)
+    StringBuffer output;
+    RenderJson(output, m_pretty, [&](auto &writer) {
+      entity::JsonPrinter printer(writer, m_jsonVersion);
+
+      AutoJsonObject top(writer);
+      AutoJsonObject obj(writer, "MTConnectAssets");
+      obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
+      {
+        AutoJsonObject obj(writer, "Header");
+        probeAssetHeader(obj, m_version, hostname(), instanceId, 0, bufferSize, assetCount,
+                         *m_schemaVersion, m_modelChangeTime);
+      }
+      {
+        obj.Key("Assets");
+        printer.printEntityList(asset);
+      }
+    });
+    return string(output.GetString(), output.GetLength());
+  }
+
+  using namespace boost;
+  using namespace multi_index;
+  using namespace device_model::data_item;
+
+  /// @brief A structure used by the multimap to create a composite key for a list of observations.
+  ///
+  /// Caches the data item, component, category, and device associated with the observation
+  struct ObservationRef
+  {
+    ObservationRef(const ObservationPtr &obs) : m_observation(obs)
     {
-      assetDoc = json::array();
-      for (const auto &asset : asset)
-        assetDoc.emplace_back(printer.print(asset));
-    }
-    else if (m_jsonVersion == 2)
-    {
-      entity::EntityList list;
-      copy(asset.begin(), asset.end(), back_inserter(list));
-      entity::EntityPtr entity = make_shared<entity::Entity>("LIST");
-      entity->setProperty("LIST", list);
-      assetDoc = printer.printEntity(entity);
-    }
-    else
-    {
-      throw runtime_error("invalid json printer version");
+      m_dataItem = obs->getDataItem();
+      m_category = m_dataItem->getCategory();
+      m_component = m_dataItem->getComponent();
+      m_device = m_component->getDevice();
     }
 
-    json doc = json::object(
-        {{"MTConnectAssets",
-          {{"jsonVersion", m_jsonVersion},
-           {"Header", probeAssetHeader(m_version, hostname(), instanceId, 0, bufferSize, assetCount,
-                                       *m_schemaVersion, m_modelChangeTime)},
-           {"Assets", assetDoc}}}});
+    std::string_view getDeviceId() const { return m_device->getId(); }
+    std::string_view getComponentId() const { return m_component->getId(); }
+    auto getCategory() const { return m_category; }
+    auto getSequence() const { return m_observation->getSequence(); }
+    std::string_view getType() const { return m_observation->getName().str(); }
 
-    return print(doc, m_pretty);
+    ObservationPtr m_observation;
+    ComponentPtr m_component;
+    DataItemPtr m_dataItem;
+    DevicePtr m_device;
+    DataItem::Category m_category;
+  };
+
+  using ObservationMap = multi_index_container<
+      ObservationRef,
+      indexed_by<ordered_non_unique<composite_key<
+          ObservationRef,
+          const_mem_fun<ObservationRef, std::string_view, &ObservationRef::getDeviceId>,
+          const_mem_fun<ObservationRef, std::string_view, &ObservationRef::getComponentId>,
+          const_mem_fun<ObservationRef, DataItem::Category, &ObservationRef::getCategory>,
+          const_mem_fun<ObservationRef, std::string_view, &ObservationRef::getType>,
+          const_mem_fun<ObservationRef, SequenceNumber_t, &ObservationRef::getSequence>>>>>;
+
+  template <typename T>
+  void printSampleVersion1(T &writer, uint32_t jsonVersion, ObservationMap &observations)
+  {
+    using WriterType = decltype(writer);
+    using StackType = JsonStack<WriterType>;
+
+    StackType stack(writer);
+    entity::JsonPrinter printer(writer, jsonVersion);
+
+    AutoJsonArray streams(writer, "Streams");
+
+    std::string_view deviceId;
+    std::string_view componentId;
+    int32_t category = -1;
+
+    for (auto &ref : observations)
+    {
+      if (ref.getDeviceId() != deviceId)
+      {
+        stack.clear();
+        componentId = "";
+        category = -1;
+
+        stack.addObject();
+        stack.addObject("DeviceStream");
+
+        deviceId = ref.getDeviceId();
+        auto device = ref.m_device;
+        stack.AddPairs("name", *(device->getComponentName()), "uuid", *(device->getUuid()));
+        stack.addArray("ComponentStreams");
+      }
+
+      if (ref.getComponentId() != componentId)
+      {
+        stack.clear(3);
+        category = -1;
+
+        stack.addObject();
+        stack.addObject("ComponentStream");
+
+        componentId = ref.getComponentId();
+        auto component = ref.m_component;
+        stack.AddPairs("component", component->getName(), "componentId", component->getId());
+        if (component->getComponentName())
+          stack.AddPairs("name", *(component->getComponentName()));
+      }
+
+      if (ref.getCategory() != category)
+      {
+        stack.clear(5);
+
+        category = ref.getCategory();
+        stack.addArray(ref.m_dataItem->getCategoryText());
+      }
+
+      printer.print(ref.m_observation);
+    }
+
+    stack.clear();
+  }
+
+  template <typename T>
+  void printSampleVersion2(T &writer, uint32_t jsonVersion, ObservationMap &observations)
+  {
+    using WriterType = decltype(writer);
+    using StackType = JsonStack<WriterType>;
+
+    AutoJsonObject streams(writer, "Streams");
+    AutoJsonArray devStream(writer, "DeviceStream");
+    StackType stack(writer);
+    entity::JsonPrinter printer(writer, jsonVersion);
+
+    std::string_view deviceId;
+    std::string_view componentId;
+    int32_t category = -1;
+    std::string_view obsType;
+
+    for (auto &ref : observations)
+    {
+      if (ref.getDeviceId() != deviceId)
+      {
+        stack.clear();
+        componentId = "";
+        category = -1;
+        obsType = "";
+
+        stack.addObject();
+
+        deviceId = ref.getDeviceId();
+
+        auto device = ref.m_device;
+        stack.AddPairs("name", *(device->getComponentName()), "uuid", *(device->getUuid()));
+
+        stack.addArray("ComponentStream");
+      }
+
+      if (ref.getComponentId() != componentId)
+      {
+        stack.clear(2);
+        category = -1;
+        obsType = "";
+
+        stack.addObject();
+
+        componentId = ref.getComponentId();
+        auto component = ref.m_component;
+        stack.AddPairs("component", component->getName(), "componentId", component->getId());
+        if (component->getComponentName())
+          stack.AddPairs("name", *(component->getComponentName()));
+      }
+
+      if (ref.getCategory() != category)
+      {
+        stack.clear(3);
+        obsType = "";
+
+        category = ref.getCategory();
+        stack.addObject(ref.m_dataItem->getCategoryText());
+      }
+
+      if (ref.m_observation->getName() != obsType)
+      {
+        stack.clear(4);
+        obsType = ref.m_observation->getName();
+        stack.addArray(obsType);
+      }
+
+      printer.printEntity(ref.m_observation);
+    }
+
+    stack.clear();
+  }
+
+  std::string JsonPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
+                                       const uint64_t nextSeq, const uint64_t firstSeq,
+                                       const uint64_t lastSeq, ObservationList &observations) const
+  {
+    defaultSchemaVersion();
+
+    StringBuffer output;
+    RenderJson(output, m_pretty, [&](auto &writer) {
+      AutoJsonObject top(writer);
+      AutoJsonObject obj(writer, "MTConnectStreams");
+      obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
+      {
+        AutoJsonObject obj(writer, "Header");
+        streamHeader(obj, m_version, hostname(), instanceId, bufferSize, nextSeq, firstSeq, lastSeq,
+                     *m_schemaVersion, m_modelChangeTime);
+      }
+
+      {
+        if (!observations.empty())
+        {
+          // Order the observations by Device, Component, Category, Observation Type, and Sequence
+          ObservationMap obs;
+          for (const auto &o : observations)
+          {
+            if (!o->isOrphan())
+              obs.emplace(o);
+          }
+
+          if (m_jsonVersion == 1)
+            printSampleVersion1(writer, m_jsonVersion, obs);
+          else if (m_jsonVersion == 2)
+            printSampleVersion2(writer, m_jsonVersion, obs);
+        }
+        else
+        {
+          AutoJsonObject streams(writer, "Streams");
+        }
+      }
+    });
+
+    return string(output.GetString(), output.GetLength());
   }
 }  // namespace mtconnect::printer

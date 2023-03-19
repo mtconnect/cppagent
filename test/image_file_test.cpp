@@ -69,27 +69,44 @@ TEST_F(ImageFileTest, should_parse_configuration_with_image_file)
 
   auto &clc = m_device->get<EntityPtr>("Configuration");
   ASSERT_TRUE(clc);
-  auto model = clc->get<EntityPtr>("ImageFile");
 
-  EXPECT_EQ("ImageFile", model->getName());
+  const auto &ifs = clc->getList("ImageFiles");
+  ASSERT_TRUE(ifs);
+  ASSERT_EQ(2, ifs->size());
 
-  ASSERT_EQ("if", model->get<string>("id"));
-  ASSERT_EQ("PNG", model->get<string>("mediaType"));
-  ASSERT_EQ("/pictures/machine.png", model->get<string>("href"));
+  auto it = ifs->begin();
+  ASSERT_EQ("front", (*it)->get<string>("name"));
+  ASSERT_EQ("fif", (*it)->get<string>("id"));
+  ASSERT_EQ("PNG", (*it)->get<string>("mediaType"));
+  ASSERT_EQ("/pictures/front.png", (*it)->get<string>("href"));
+
+  it++;
+  ASSERT_EQ("back", (*it)->get<string>("name"));
+  ASSERT_EQ("bif", (*it)->get<string>("id"));
+  ASSERT_EQ("PNG", (*it)->get<string>("mediaType"));
+  ASSERT_EQ("/pictures/back.png", (*it)->get<string>("href"));
 }
 
-#define DEVICE_CONFIGURATION_PATH "//m:Device/m:Configuration"
-#define DEVICE_SOLID_MODEL_PATH DEVICE_CONFIGURATION_PATH "/m:ImageFile"
+#define DEVICE_CONFIGURATION_PATH "//m:Device/m:Configuration/m:ImageFiles"
+#define DEVICE_IMAGE_FILE_PATH_1 DEVICE_CONFIGURATION_PATH "/m:ImageFile[@id='fif']"
+#define DEVICE_IMAGE_FILE_PATH_2 DEVICE_CONFIGURATION_PATH "/m:ImageFile[@id='bif']"
 
 TEST_F(ImageFileTest, should_print_configuration_with_image_file)
 {
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
 
-    ASSERT_XML_PATH_COUNT(doc, DEVICE_SOLID_MODEL_PATH, 1);
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@id", "if");
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@mediaType", "PNG");
-    ASSERT_XML_PATH_EQUAL(doc, DEVICE_SOLID_MODEL_PATH "@href", "/pictures/machine.png");
+    ASSERT_XML_PATH_COUNT(doc, DEVICE_CONFIGURATION_PATH "/*", 2);
+
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_1 "@name", "front");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_1 "@id", "fif");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_1 "@mediaType", "PNG");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_1 "@href", "/pictures/front.png");
+
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_2 "@name", "back");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_2 "@id", "bif");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_2 "@mediaType", "PNG");
+    ASSERT_XML_PATH_EQUAL(doc, DEVICE_IMAGE_FILE_PATH_2 "@href", "/pictures/back.png");
   }
 }
 
@@ -101,12 +118,55 @@ TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json)
     auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
     auto device = devices.at(0).at("/Device"_json_pointer);
 
-    auto model = device.at("/Configuration/ImageFile"_json_pointer);
-    ASSERT_TRUE(model.is_object());
+    auto files = device.at("/Configuration/ImageFiles"_json_pointer);
+    ASSERT_TRUE(files.is_array());
 
-    ASSERT_EQ(3, model.size());
-    EXPECT_EQ("if", model["id"]);
-    EXPECT_EQ("PNG", model["mediaType"]);
-    EXPECT_EQ("/pictures/machine.png", model["href"]);
+    ASSERT_EQ(2, files.size());
+    auto it = files.begin();
+
+    auto image = it->at("ImageFile");
+    EXPECT_EQ("fif", image["id"]);
+    EXPECT_EQ("front", image["name"]);
+    EXPECT_EQ("PNG", image["mediaType"]);
+    EXPECT_EQ("/pictures/front.png", image["href"]);
+
+    it++;
+    image = it->at("ImageFile");
+    EXPECT_EQ("bif", image["id"]);
+    EXPECT_EQ("back", image["name"]);
+    EXPECT_EQ("PNG", image["mediaType"]);
+    EXPECT_EQ("/pictures/back.png", image["href"]);
+  }
+}
+
+TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json_v2)
+{
+  m_agentTestHelper->createAgent("/samples/solid_model.xml", 8, 4, "2.2", 25, false, false,
+                                 {{configuration::JsonVersion, 2}});
+
+  {
+    PARSE_JSON_RESPONSE("/LinuxCNC/probe");
+
+    auto devices = doc.at("/MTConnectDevices/Devices"_json_pointer);
+    auto device = devices.at("/Device/0"_json_pointer);
+
+    auto files = device.at("/Configuration/ImageFiles/ImageFile"_json_pointer);
+    ASSERT_TRUE(files.is_array());
+
+    ASSERT_EQ(2, files.size());
+    auto it = files.begin();
+
+    auto image = *it;
+    EXPECT_EQ("fif", image["id"]);
+    EXPECT_EQ("front", image["name"]);
+    EXPECT_EQ("PNG", image["mediaType"]);
+    EXPECT_EQ("/pictures/front.png", image["href"]);
+
+    it++;
+    image = *it;
+    EXPECT_EQ("bif", image["id"]);
+    EXPECT_EQ("back", image["name"]);
+    EXPECT_EQ("PNG", image["mediaType"]);
+    EXPECT_EQ("/pictures/back.png", image["href"]);
   }
 }

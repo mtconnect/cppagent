@@ -19,7 +19,10 @@
 				<SolidModel id="dm" mediaType="STL" href="/models/foo.stl" coordinateSystemIdRef="machine" >
 					<Scale>2.0 3.0 4.0</Scale>
 				</SolidModel>
-				<ImageFile id="if" mediaType="PNG" href="/pictures/machine.png"/>
+        <ImageFiles>
+				  <ImageFile name="front" id="fif" mediaType="PNG" href="/pictures/front.png"/>
+				  <ImageFile name="back" id="bif" mediaType="PNG" href="/pictures/back.png"/>
+        </ImageFiles>
 			</Configuration>
       <DataItems>
 				<DataItem type="ALARM" category="EVENT" id="a" name="alarm"/>

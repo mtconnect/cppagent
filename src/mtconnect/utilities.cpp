@@ -16,6 +16,7 @@
 //
 
 #include "mtconnect/utilities.hpp"
+
 #include <boost/asio.hpp>
 
 #include <chrono>
@@ -161,7 +162,7 @@ namespace mtconnect {
 
     return newPath;
   }
-  
+
   std::string GetBestHostAddress(boost::asio::io_context &context, bool onlyV4)
   {
     using namespace boost;
@@ -172,8 +173,7 @@ namespace mtconnect {
 
     boost::system::error_code ec;
     res resolver(context);
-    auto iter = resolver.resolve(ip::host_name(), "5000",
-                                 res::flags::address_configured, ec);
+    auto iter = resolver.resolve(ip::host_name(), "5000", res::flags::address_configured, ec);
     if (ec)
     {
       LOG(warning) << "Cannot find IP address: " << ec.message();
@@ -198,7 +198,7 @@ namespace mtconnect {
         iter++;
       }
     }
-    
+
     return address;
   }
 }  // namespace mtconnect

@@ -475,6 +475,18 @@ namespace mtconnect::observation {
   protected:
   };
 
+  /// @brief Agent Device events for added, changed, and removed
+  class AGENT_LIB_API DeviceEvent : public Event
+  {
+  public:
+    using Event::Event;
+    static entity::FactoryPtr getFactory();
+    ~DeviceEvent() override = default;
+    ObservationPtr copy() const override { return std::make_shared<DeviceEvent>(*this); }
+
+  protected:
+  };
+
   /// @brief A Message Event
   class AGENT_LIB_API Message : public Event
   {
