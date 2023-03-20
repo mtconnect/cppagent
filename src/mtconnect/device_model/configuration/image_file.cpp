@@ -24,13 +24,16 @@ namespace mtconnect {
   namespace device_model::configuration {
     FactoryPtr ImageFile::getFactory()
     {
-      static FactoryPtr imageFile;
-      if (!imageFile)
+      static FactoryPtr imageFiles;
+      if (!imageFiles)
       {
-        imageFile =
-            make_shared<Factory>(Requirements {{"id", true}, {"href", false}, {"mediaType", true}});
+        auto imageFile = make_shared<Factory>(
+            Requirements {{"id", true}, {"name", false}, {"href", true}, {"mediaType", true}});
+
+        imageFiles = make_shared<Factory>(
+            Requirements {Requirement("ImageFile", ENTITY, imageFile, 1, Requirement::Infinite)});
       }
-      return imageFile;
+      return imageFiles;
     }
   }  // namespace device_model::configuration
 }  // namespace mtconnect

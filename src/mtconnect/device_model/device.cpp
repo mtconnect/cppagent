@@ -36,7 +36,8 @@ namespace mtconnect {
         factory = make_shared<Factory>(*Component::getFactory());
         factory->getRequirement("name")->setMultiplicity(1, 1);
         factory->getRequirement("uuid")->setMultiplicity(1, 1);
-        factory->addRequirements({{"iso841Class", false}, {"mtconnectVersion", false}});
+        factory->addRequirements(
+            {{"iso841Class", false}, {"mtconnectVersion", false}, {"hash", false}});
         factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr {
           auto device = make_shared<Device>("Device"s, ps);
           device->initialize();

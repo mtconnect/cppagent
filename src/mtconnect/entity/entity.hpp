@@ -106,12 +106,22 @@ namespace mtconnect {
       /// @return the identity
       virtual const entity::Value &getIdentity() const { return getProperty("id"); }
 
-      /// @brief checks if there is entity is a list
-      /// @return `true` if there is a LIST attribute
+      /// @brief checks if there is entity is a list that has additional properties
+      /// @return `true` if this a a list with additional attributes
       bool hasListWithAttribute() const
       {
         return (m_properties.count("LIST") > 0 && m_properties.size() > 1);
       }
+      /// @brief checkis if this is an entity only containing a list of entities with no other
+      /// properties
+      /// @returns `true` if this entity only contains a list
+      bool isSimpleList() const
+      {
+        return (m_properties.count("LIST") > 0 && m_properties.size() == 1);
+      }
+      /// @brief checkis if this is an entity only containing a list
+      /// @returns `true` if this entity contains a list
+      bool isList() const { return m_properties.count("LIST") > 0; }
       /// @brief get the name of the entity
       /// @return name
       const auto &getName() const { return m_name; }
