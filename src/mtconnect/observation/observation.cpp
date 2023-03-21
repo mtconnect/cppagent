@@ -55,6 +55,9 @@ namespace mtconnect {
         factory->registerFactory("Events:MessageDiscrete", Message::getFactory());
         factory->registerFactory("Events:AssetChanged", AssetEvent::getFactory());
         factory->registerFactory("Events:AssetRemoved", AssetEvent::getFactory());
+        factory->registerFactory("Events:DeviceAdded", DeviceEvent::getFactory());
+        factory->registerFactory("Events:DeviceRemoved", DeviceEvent::getFactory());
+        factory->registerFactory("Events:DeviceChanged", DeviceEvent::getFactory());
         factory->registerFactory("Events:Alarm", Alarm::getFactory());
 
         // regex(".+TimeSeries$")
@@ -362,6 +365,20 @@ namespace mtconnect {
           return ent;
         });
         factory->addRequirements(Requirements {{"assetType", false}, {"hash", false}});
+      }
+      return factory;
+    }
+
+    FactoryPtr DeviceEvent::getFactory()
+    {
+      static FactoryPtr factory;
+      if (!factory)
+      {
+        factory = make_shared<Factory>(*Event::getFactory());
+        factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
+          return make_shared<DeviceEvent>(name, props);
+        });
+        factory->addRequirements(Requirements {{"hash", false}});
       }
       return factory;
     }
