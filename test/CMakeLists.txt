@@ -171,6 +171,7 @@ add_agent_test(routing FALSE sink/rest_sink)
 
 add_agent_test(mqtt_isolated FALSE mqtt_isolated TRUE)
 add_agent_test(mqtt_sink FALSE sink/mqtt_sink TRUE)
+add_agent_test(mqtt_sink_2 FALSE sink/mqtt_sink_2 TRUE)
 
 add_agent_test(json_printer_asset TRUE json)
 add_agent_test(json_printer_error TRUE json)
