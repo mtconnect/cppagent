@@ -12,7 +12,7 @@ import subprocess
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
-    version = "2.1"
+    version = "2.2"
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
@@ -125,6 +125,7 @@ class MTConnectAgentConan(ConanFile):
 
         tc.cache_variables['SHARED_AGENT_LIB'] = self.options.shared.__bool__()
         tc.cache_variables['WITH_RUBY'] = self.options.with_ruby.__bool__()
+        tc.cache_variables['AGENT_WITH_DOCS'] = self.options.with_docs.__bool__()
         tc.cache_variables['AGENT_ENABLE_UNITTESTS'] = self.options.build_tests.__bool__()
         tc.cache_variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6.__bool__()
         if self.settings.os == 'Windows':

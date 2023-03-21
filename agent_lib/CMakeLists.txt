@@ -423,7 +423,7 @@ target_clangformat_setup(agent_lib)
 target_clangtidy_setup(agent_lib)
 
 include(../cmake/document.cmake)
-if (DOXYGEN_FOUND)
+if (AGENT_WITH_DOCS AND DOXYGEN_FOUND)
   doxygen_add_docs(docs ../README.md ${AGENT_SOURCES})
   install(DIRECTORY "${PROJECT_BINARY_DIR}/Documentation/" DESTINATION "Documentation")  
 endif()
