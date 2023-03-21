@@ -7,9 +7,9 @@ branches:
 
 
 image:
-  - macos-monterey
-  - Visual Studio 2019
   - Ubuntu2004
+  - Visual Studio 2019
+  - macos-monterey
 
 environment:
   matrix:
@@ -56,7 +56,7 @@ before_build:
       if [[ $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
       then
         sudo apt update
-        sudo apt install -y build-essential cmake gcc-11 g++-11 python3
+        sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
         export CONAN_PROFILE=conan/profiles/gcc-appveyor
       elif [[ $APPVEYOR_BUILD_WORKER_IMAGE = "macOS-Monterey" ]]
       then

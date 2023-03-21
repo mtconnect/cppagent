@@ -26,6 +26,8 @@
 #include <sstream>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 #include "mtconnect/agent.hpp"
@@ -562,12 +564,9 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
 
-  entity::JsonPrinter jsonPrinter(1);
-  auto json = jsonPrinter.print(entity);
+  entity::JsonEntityPrinter jprinter(1, true);
 
-  stringstream buffer;
-  buffer << std::setw(2);
-  buffer << json;
+  auto sdoc = jprinter.print(entity);
 
   EXPECT_EQ(R"({
   "CuttingTool": {
@@ -580,31 +579,30 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
         }
       ],
       "CuttingItems": {
-        "count": 12,
         "list": [
           {
             "CuttingItem": {
               "ItemLife": [
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "PART_COUNT",
-                  "value": 0.0
+                  "type": "PART_COUNT"
                 },
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "MINUTES",
-                  "value": 0.0
+                  "type": "MINUTES"
                 },
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "WEAR",
-                  "value": 0.0
+                  "type": "WEAR"
                 }
               ],
               "indices": "1",
@@ -618,13 +616,14 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
               }
             }
           }
-        ]
+        ],
+        "count": 12
       },
       "Location": {
+        "value": "13",
         "negativeOverlap": 0,
         "positiveOverlap": 0,
-        "type": "POT",
-        "value": "13"
+        "type": "POT"
       },
       "ProgramToolNumber": "10"
     },
@@ -633,7 +632,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
     "toolId": "123456"
   }
 })",
-            buffer.str());
+            sdoc);
 }
 
 TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
