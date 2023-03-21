@@ -364,7 +364,8 @@ target_link_libraries(
   agent_lib
   PUBLIC
   boost::boost LibXml2::LibXml2 date::date-tz openssl::openssl
-  nlohmann_json::nlohmann_json mqtt_cpp::mqtt_cpp
+  nlohmann_json::nlohmann_json mqtt_cpp::mqtt_cpp 
+  rapidjson
   
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
