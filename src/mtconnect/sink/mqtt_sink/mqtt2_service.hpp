@@ -99,7 +99,7 @@
 
           boost::asio::io_context &m_context;
           ConfigOptions m_options;
-          std::unique_ptr<JsonPrinter> m_jsonPrinter;
+          std::unique_ptr<JsonEntityPrinter> m_jsonPrinter;
           std::shared_ptr<MqttClient> m_client;
         };
       }  // namespace mqtt_sink

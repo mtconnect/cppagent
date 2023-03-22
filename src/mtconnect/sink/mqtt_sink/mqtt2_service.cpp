@@ -24,7 +24,6 @@
   #include "mtconnect/mqtt/mqtt_client_impl.hpp"
   #include "mtconnect/printer/json_printer.hpp"
 
-  using json = nlohmann::json;
   using ptree = boost::property_tree::ptree;
 
   using namespace std;
@@ -45,7 +44,7 @@
           : Sink("Mqtt2Service", move(contract)), m_context(context), m_options(options)
         {
           auto jsonPrinter = dynamic_cast<printer::JsonPrinter *>(m_sinkContract->getPrinter("json"));
-          m_jsonPrinter = make_unique<entity::JsonPrinter>(jsonPrinter->getJsonVersion());
+          m_jsonPrinter = make_unique<entity::JsonEntityPrinter>(jsonPrinter->getJsonVersion());
 
           GetOptions(config, m_options, options);
           AddOptions(config, m_options,
@@ -132,13 +131,9 @@
           auto content = dataItem->getTopicName();                  // client asyn content
 
           // We may want to use the observation from the checkpoint.
-          auto jsonDoc = m_jsonPrinter->printEntity(observation);
-
-          stringstream buffer;
-          buffer << jsonDoc;
-
+          auto doc = m_jsonPrinter->printEntity(observation);
           if (m_client)
-            m_client->publish(topic, buffer.str());
+            m_client->publish(topic, doc);
 
           return true;
         }
