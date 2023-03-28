@@ -23,10 +23,10 @@ class MTConnectAgentConan(ConanFile):
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     requires = ["boost/1.79.0",
-                "libxml2/2.9.10",
+                "libxml2/2.10.3",
                 "date/2.4.1",
                 "nlohmann_json/3.9.1",
-                "openssl/1.1.1t",
+                "openssl/3.0.8",
                 "mqtt_cpp/13.1.0",
                 "rapidjson/cci.20220822"]
 
