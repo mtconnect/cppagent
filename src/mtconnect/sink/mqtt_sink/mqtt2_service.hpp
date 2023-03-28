@@ -80,6 +80,12 @@
           /// @return `true` if successful
           bool publish(device_model::DevicePtr device) override;
 
+          bool publish_Probe(device_model::DevicePtr device);
+
+          bool publish_Current(device_model::DevicePtr device);
+
+          bool publish_Samples(device_model::DevicePtr device);
+
           /// @brief Register the Sink factory to create this sink
           /// @param factory
           static void registerFactory(SinkFactory &factory);

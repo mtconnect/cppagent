@@ -147,6 +147,52 @@
           buffer << doc;
 
           if (m_client)
+         
+              m_client->publish(topic, buffer.str());
+
+          return true;
+        }
+
+        bool Mqtt2Service::publish_Probe(device_model::DevicePtr device)
+        {
+          auto topic = m_devicePrefix + *device->getUuid();
+          auto doc = m_jsonPrinter->print(device);
+
+          stringstream buffer;
+          buffer << doc;
+
+          if (m_client)
+
+            m_client->publish(topic, buffer.str());
+
+          return true;
+        }
+
+        bool Mqtt2Service::publish_Current(device_model::DevicePtr device)
+        {
+          auto topic = m_devicePrefix + *device->getUuid();
+          auto doc = m_jsonPrinter->print(device);
+
+          stringstream buffer;
+          buffer << doc;
+
+          if (m_client)
+
+            m_client->publish(topic, buffer.str());
+
+          return true;
+        }
+
+        bool Mqtt2Service::publish_Samples(device_model::DevicePtr device)
+        {
+          auto topic = m_devicePrefix + *device->getUuid();
+          auto doc = m_jsonPrinter->print(device);
+
+          stringstream buffer;
+          buffer << doc;
+
+          if (m_client)
+
             m_client->publish(topic, buffer.str());
 
           return true;
