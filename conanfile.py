@@ -73,7 +73,7 @@ class MTConnectAgentConan(ConanFile):
 
     def validate(self):
         if self.settings.os == 'Windows' and self.options.shared and \
-           str(self.settings.compiler.runtime).startswith('MT'):
+           self.settings.compiler.runtime != 'dynamic':
             raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
 
     def layout(self):
@@ -88,17 +88,6 @@ class MTConnectAgentConan(ConanFile):
                 self.options.build_tests._value = False
                 self.options.winver = '0x501'
                 
-            if self.options.shared:
-                if self.settings.build_type and self.settings.build_type == 'Debug':
-                    self.settings.compiler.runtime = 'MDd'
-                else:
-                    self.settings.compiler.runtime = 'MD'
-            else:
-                if self.settings.build_type and self.settings.build_type == 'Debug':
-                    self.settings.compiler.runtime = 'MTd'
-                else:
-                    self.settings.compiler.runtime = 'MT'
-                                
             if not self.settings.compiler.version:
                 self.settings.compiler.version = '16'
         
@@ -114,11 +103,14 @@ class MTConnectAgentConan(ConanFile):
             self.options["boost"].visibility = "hidden"
 
         # Make sure shared builds use shared boost
+        print("**** Checking if it is shared")
         if is_msvc(self) and self.options.shared:
-            self.options["boost"].shared = True
-            self.options["libxml2"].shared = True
-            self.options["gtest"].shared = True
-            self.options["openssl"].shared = True
+            print("**** Making boost, libxml2, gtest, and openssl shared")
+            self.options["bzip2/*"].shared = True
+            self.options["boost/*"].shared = True
+            self.options["libxml2/*"].shared = True
+            self.options["gtest/*"].shared = True
+            self.options["openssl/*"].shared = True
 
     def generate(self):
         tc = CMakeToolchain(self)
