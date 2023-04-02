@@ -351,6 +351,20 @@ namespace mtconnect::observation {
       return nullptr;
     }
 
+    /// @brief const find a condition by code in the condition list
+    /// @param[in] code te code
+    /// @return shared pointer to the condition if found
+    const ConditionPtr find(const std::string &code) const
+    {
+      if (m_code == code)
+        return std::dynamic_pointer_cast<Condition>(Entity::getptr());
+
+      if (m_prev)
+        return m_prev->find(code);
+
+      return nullptr;
+    }
+
     /// @brief replace a condition with another in the condition list
     /// @param[in] old the condition to be placed
     /// @param[in] _new the replacement condition

@@ -125,14 +125,14 @@ namespace mtconnect {
       if (IsOptionSet(m_options, configuration::UpcaseDataItemValue))
         next = next->bind(make_shared<UpcaseValue>());
 
+      // Convert values
+      if (IsOptionSet(m_options, configuration::ConversionRequired))
+        next = next->bind(make_shared<ConvertSample>());
+
       // Filter dups, by delta, and by period
       next = next->bind(make_shared<DuplicateFilter>(m_context));
       next = next->bind(make_shared<DeltaFilter>(m_context));
       next = next->bind(make_shared<PeriodFilter>(m_context, m_strand));
-
-      // Convert values
-      if (IsOptionSet(m_options, configuration::ConversionRequired))
-        next = next->bind(make_shared<ConvertSample>());
 
       // Deliver
       std::optional<string> obsMetrics;

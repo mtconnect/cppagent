@@ -173,6 +173,15 @@ namespace mtconnect::buffer {
     auto getCheckpointFreq() const { return m_checkpointFreq; }
     auto getCheckpointCount() const { return m_checkpointCount; }
 
+    /// @brief Check if observation is a duplicate by validating against the latest checkpoint
+    /// @param[in] obs the observation to check
+    /// @return `true` if the observation is a duplicate
+    bool isDuplicate(const observation::ObservationPtr &obs) const
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
+      return m_latest.isDuplicate(obs);
+    }
+
     /// @brief Get a checkpoint at a sequence number
     /// @param at the sequence number to get the checkpoint at
     /// @param filterSet the filter to apply to the new checkpoint

@@ -60,6 +60,7 @@ public:
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
   void sourceFailed(const std::string &id) override {}
+  bool isDuplicate(const ObservationPtr &obs) const override { return false; }
 
   std::map<string, DataItemPtr> &m_dataItems;
   std::map<string, DevicePtr> &m_devices;
