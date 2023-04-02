@@ -154,7 +154,7 @@ protected:
                         {AutoAvailable, false},
                         {RealTime, false}});
     m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext,
-                                                                  opts, move(handler));
+                                                                  opts, std::move(handler));
   }
 
   bool startClient()
@@ -257,7 +257,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_device)
     gotDevice = true;
   };
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
   m_client->subscribe("MTConnect/Device/000");
 
@@ -293,7 +293,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Streams)
       foundLineDataItem = true;
     }
   };
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
 
   createAgent();
@@ -330,7 +330,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Asset)
       gotControllerDataItem = true;
     }
   };
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
 
   createAgent();
@@ -369,7 +369,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_RotaryMode)
     }
   };
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
 
   createAgent("/samples/discrete_example.xml");
@@ -406,7 +406,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Dataset)
       gotControllerDataItem = true;
     }
   };
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
   createAgent("/samples/data_set.xml");
   auto service = m_agentTestHelper->getMqttService();
@@ -472,7 +472,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Table)
       }
     }
   };
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
   createAgent("/samples/data_set.xml");
   auto service = m_agentTestHelper->getMqttService();
@@ -520,7 +520,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Temperature)
     }
   };
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
 
   createAgent();
@@ -560,7 +560,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_LinearLoad)
       }
     }
   };
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
@@ -600,7 +600,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_DynamicCalibration)
     }
   };
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
 
   createAgent();

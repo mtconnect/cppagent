@@ -74,7 +74,7 @@ namespace mtconnect {
           }
           else
           {
-            writeResponse(move(response), complete);
+            writeResponse(std::move(response), complete);
           }
         }
         void beginStreaming(const std::string &mimeType, Complete complete) override
@@ -212,8 +212,8 @@ public:
     auto sinkContract = m_agent->makeSinkContract();
     sinkContract->m_pipelineContext = m_context;
 
-    auto sink = m_sinkFactory.make("RestService", "RestService", m_ioContext, move(sinkContract),
-                                   options, ptree {});
+    auto sink = m_sinkFactory.make("RestService", "RestService", m_ioContext,
+                                   std::move(sinkContract), options, ptree {});
     m_restService = std::dynamic_pointer_cast<sink::rest_sink::RestService>(sink);
     m_agent->addSink(m_restService);
 
@@ -222,7 +222,7 @@ public:
       auto mqttContract = m_agent->makeSinkContract();
       mqttContract->m_pipelineContext = m_context;
       auto mqttsink = m_sinkFactory.make("MqttService", "MqttService", m_ioContext,
-                                         move(mqttContract), options, ptree {});
+                                         std::move(mqttContract), options, ptree {});
       m_mqttService = std::dynamic_pointer_cast<sink::mqtt_sink::MqttService>(mqttsink);
       m_agent->addSink(m_mqttService);
     }

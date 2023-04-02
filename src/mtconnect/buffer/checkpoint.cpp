@@ -271,6 +271,5 @@ namespace mtconnect {
 
       return true;
     }
-
   }  // namespace buffer
 }  // namespace mtconnect

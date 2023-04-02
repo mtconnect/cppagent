@@ -51,6 +51,90 @@ namespace mtconnect::buffer {
     /// @return `true` if the data set changed
     bool dataSetDifference(observation::ObservationPtr observation) const;
 
+    /// @brief Checks if the observation is a duplicate with existing observations
+    /// @param[in] obs the observation
+    /// @return `true` if the obsrvation is a duplicate
+    bool isDuplicate(const observation::ObservationPtr &obs) const
+    {
+      using namespace observation;
+      using namespace std;
+
+      auto di = obs->getDataItem();
+      const auto &id = di->getId();
+      auto old = m_observations.find(id);
+
+      if (old != m_observations.end())
+      {
+        auto &oldObs = old->second;
+        if (obs->isUnavailable() != oldObs->isUnavailable())
+          return false;
+
+        if (di->isCondition())
+        {
+          auto *cond = dynamic_cast<Condition *>(obs.get());
+          auto *oldCond = dynamic_cast<Condition *>(oldObs.get());
+
+          // Check for normal resetting all conditions. If there are
+          // no active conditions, then this is a duplicate normal
+          if (cond->getLevel() == Condition::NORMAL && cond->getCode().empty())
+          {
+            if (oldCond->getLevel() == Condition::NORMAL && oldCond->getCode().empty())
+              return true;
+            else
+              return false;
+          }
+
+          // If there is already an active condition with this code,
+          // then check if nothing has changed between activations.
+          if (const auto &e = oldCond->find(cond->getCode()))
+          {
+            if (cond->getLevel() != e->getLevel())
+              return false;
+
+            if ((cond->hasValue() != e->hasValue()) ||
+                (cond->hasValue() && cond->getValue() != e->getValue()))
+              return false;
+
+            if ((cond->hasProperty("qualifier") != e->hasProperty("qualifier")) ||
+                (cond->hasProperty("qualifier") &&
+                 cond->get<string>("qualifier") != e->get<string>("qualifier")))
+              return false;
+
+            if ((cond->hasProperty("nativeSeverity") != e->hasProperty("nativeSeverity")) ||
+                (cond->hasProperty("nativeSeverity") &&
+                 cond->get<string>("nativeSeverity") != e->get<string>("nativeSeverity")))
+              return false;
+
+            return true;
+          }
+          else
+          {
+            return false;
+          }
+        }
+        else if (!di->isDiscrete())
+        {
+          if (di->isDataSet())
+          {
+            auto set = dynamic_pointer_cast<DataSetEvent>(obs);
+            if (!obs->hasProperty("resetTriggered") && !set->getDataSet().empty())
+            {
+              auto oldSet = dynamic_pointer_cast<DataSetEvent>(oldObs);
+              return set->getDataSet() != oldSet->getDataSet();
+            }
+          }
+          else
+          {
+            auto &value = obs->getValue();
+            auto &oldValue = oldObs->getValue();
+
+            return value == oldValue;
+          }
+        }
+      }
+      return false;
+    }
+
     /// @brief copy another checkpoint to this checkpoint
     /// @param[in] checkpoint a checkpoint to copy
     /// @param[in] filterSet an optional filter set

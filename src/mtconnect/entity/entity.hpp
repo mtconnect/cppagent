@@ -386,7 +386,7 @@ namespace mtconnect {
       AttributeSet m_attributes;
     };
 
-    /// @brief variant visitor to compare two entities for equality
+    /// @brief variant visitor to compare two entity parameter values for equality
     struct ValueEqualVisitor
     {
       ValueEqualVisitor(const Value &t) : m_this(t) {}

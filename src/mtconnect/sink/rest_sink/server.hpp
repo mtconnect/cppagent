@@ -77,7 +77,7 @@ namespace mtconnect::sink::rest_sink {
 
       m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
         ResponsePtr response = std::make_unique<Response>(st, msg, "text/plain");
-        session->writeFailureResponse(move(response));
+        session->writeFailureResponse(std::move(response));
         return true;
       };
 
@@ -174,7 +174,7 @@ namespace mtconnect::sink::rest_sink {
       {
         LOG(error) << session->getRemote().address() << ": Error processing request: " << re.what();
         ResponsePtr resp = std::make_unique<Response>(re);
-        session->writeResponse(move(resp));
+        session->writeResponse(std::move(resp));
       }
       catch (ParameterError &pe)
       {

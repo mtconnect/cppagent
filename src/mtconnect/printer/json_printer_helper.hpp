@@ -363,13 +363,14 @@ namespace mtconnect::printer {
     using ObjectPtr = std::optional<ObjectType>;
     /// @brief alias for a smart pointer to an AutoJsonArray type for the WriterType
     using ArrayPtr = std::optional<ArrayType>;
-    
+
     /// @brief Structure that holds either an object or an array
-    struct StackMember {
+    struct StackMember
+    {
       ObjectPtr m_object;
       ArrayPtr m_array;
     };
-    
+
     /// @brief alias for a list of variants
     using Stack = std::list<StackMember>;
 
@@ -398,7 +399,7 @@ namespace mtconnect::printer {
       auto &member = m_stack.emplace_back();
       member.m_array.emplace(base::m_writer);
     }
-    
+
     /// @brief Closes open objects and arrays, stopping when the size is `<=` to `to`
     /// @param[in] to stop when the size of the stack is equal to `to`, defaults to `0`
     void clear(size_t to = 0)

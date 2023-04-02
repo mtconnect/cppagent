@@ -41,7 +41,7 @@ namespace mtconnect {
   namespace sink::rest_sink {
     RestService::RestService(asio::io_context &context, SinkContractPtr &&contract,
                              const ConfigOptions &options, const ptree &config)
-      : Sink("RestService", move(contract)),
+      : Sink("RestService", std::move(contract)),
         m_context(context),
         m_strand(context),
         m_schemaVersion(GetOption<string>(options, config::SchemaVersion).value_or("x.y")),
@@ -68,7 +68,7 @@ namespace mtconnect {
             auto printer = m_sinkContract->getPrinter("xml");
             auto doc = printError(printer, "INVALID_REQUEST", msg);
             ResponsePtr resp = std::make_unique<Response>(st, doc, printer->mimeType());
-            session->writeFailureResponse(move(resp));
+            session->writeFailureResponse(std::move(resp));
           });
 
       auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_sinkContract->getPrinter("xml"));
@@ -366,7 +366,7 @@ namespace mtconnect {
 
     static inline void respond(rest_sink::SessionPtr session, rest_sink::ResponsePtr &&response)
     {
-      session->writeResponse(move(response));
+      session->writeResponse(std::move(response));
     }
 
     void RestService::createFileRoutings()
@@ -381,12 +381,12 @@ namespace mtconnect {
             ResponsePtr response = make_unique<Response>(rest_sink::status::permanent_redirect,
                                                          file->m_buffer, file->m_mimeType);
             response->m_location = *file->m_redirect;
-            session->writeResponse(move(response));
+            session->writeResponse(std::move(response));
           }
           else
           {
             ResponsePtr response = make_unique<Response>(rest_sink::status::ok, file);
-            session->writeResponse(move(response));
+            session->writeResponse(std::move(response));
           }
         }
         return bool(file);
