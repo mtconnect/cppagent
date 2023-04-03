@@ -48,12 +48,16 @@ namespace mtconnect::buffer {
 
     /// @brief If this is a data set event, diff the value
     /// @param[in] observation the data set observation
+    /// @param[in] old the previous value of the data set
     /// @return The observation or a copy  if the data set changed
-    observation::ObservationPtr dataSetDifference(const observation::ObservationPtr &observation) const;
+    observation::ObservationPtr dataSetDifference(
+        const observation::ObservationPtr &observation,
+        const observation::ConstObservationPtr &old) const;
 
     /// @brief Checks if the observation is a duplicate with existing observations
     /// @param[in] obs the observation
-    /// @return `true` if the obsrvation is a duplicate
+    /// @return an observation, possibly changed if it is not a duplicate. `nullptr` if it is a
+    /// duplicate..
     const observation::ObservationPtr checkDuplicate(const observation::ObservationPtr &obs) const
     {
       using namespace observation;
@@ -66,9 +70,11 @@ namespace mtconnect::buffer {
       if (old != m_observations.end())
       {
         auto &oldObs = old->second;
+        // Filter out unavailable duplicates, only allow through changed
+        // state. If both are unavailable, disregard.
         if (obs->isUnavailable() != oldObs->isUnavailable())
           return obs;
-        else  if (obs->isUnavailable())
+        else if (obs->isUnavailable())
           return nullptr;
 
         if (di->isCondition())
@@ -118,7 +124,7 @@ namespace mtconnect::buffer {
         {
           if (di->isDataSet())
           {
-            return dataSetDifference(obs);
+            return dataSetDifference(obs, oldObs);
           }
           else
           {

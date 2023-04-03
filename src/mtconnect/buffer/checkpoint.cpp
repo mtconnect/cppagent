@@ -225,53 +225,47 @@ namespace mtconnect {
       }
     }
 
-    ObservationPtr Checkpoint::dataSetDifference(const ObservationPtr &obs) const
+    ObservationPtr Checkpoint::dataSetDifference(const ObservationPtr &obs,
+                                                 const ConstObservationPtr &old) const
     {
       if (obs->isOrphan())
         return nullptr;
 
       auto setEvent = dynamic_pointer_cast<const DataSetEvent>(obs);
       auto item = obs->getDataItem();
-      if (item->isDataSet() && !setEvent->getDataSet().empty() &&
-          !obs->hasProperty("resetTriggered"))
+      if (!setEvent->getDataSet().empty() && !obs->hasProperty("resetTriggered"))
       {
-        const auto &id = item->getId();
-        const auto ptr = m_observations.find(id);
+        auto oldEvent = dynamic_pointer_cast<const DataSetEvent>(old);
+        auto &oldSet = oldEvent->getDataSet();
+        DataSet eventSet = setEvent->getDataSet();
+        bool changed = false;
 
-        if (ptr != m_observations.end() && !ptr->second->isUnavailable())
+        for (auto it = eventSet.begin(); it != eventSet.end();)
         {
-          const auto old = dynamic_pointer_cast<DataSetEvent>(ptr->second);
-          auto &set = old->getDataSet();
-
-          DataSet eventSet = setEvent->getDataSet();
-          bool changed = false;
-
-          for (auto it = eventSet.begin(); it != eventSet.end();)
+          const auto v = oldSet.find(*it);
+          if (v == oldSet.end() || !v->same(*it))
           {
-            const auto v = set.find(*it);
-            if (v == set.end() || !v->same(*it))
-            {
-              it++;
-            }
-            else
-            {
-              changed = true;
-              eventSet.erase(it++);
-            }
+            it++;
           }
-
-          if (changed)
+          else
           {
-            if (!eventSet.empty())
-            {
-              auto copy = dynamic_pointer_cast<DataSetEvent>(setEvent->copy());
-              copy->setDataSet(eventSet);
-              return copy;
-            }
-            else
-            {
-              return nullptr;
-            }
+            changed = true;
+            eventSet.erase(it++);
+          }
+        }
+
+        // If the data set has changed and been edited by delting it against the current latest.
+        if (changed)
+        {
+          if (!eventSet.empty())
+          {
+            auto copy = dynamic_pointer_cast<DataSetEvent>(setEvent->copy());
+            copy->setDataSet(eventSet);
+            return copy;
+          }
+          else
+          {
+            return nullptr;
           }
         }
       }
