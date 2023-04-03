@@ -225,12 +225,12 @@ namespace mtconnect {
       }
     }
 
-    bool Checkpoint::dataSetDifference(ObservationPtr obs) const
+    ObservationPtr Checkpoint::dataSetDifference(const ObservationPtr &obs) const
     {
       if (obs->isOrphan())
-        return false;
+        return nullptr;
 
-      auto setEvent = dynamic_pointer_cast<DataSetEvent>(obs);
+      auto setEvent = dynamic_pointer_cast<const DataSetEvent>(obs);
       auto item = obs->getDataItem();
       if (item->isDataSet() && !setEvent->getDataSet().empty() &&
           !obs->hasProperty("resetTriggered"))
@@ -262,14 +262,21 @@ namespace mtconnect {
 
           if (changed)
           {
-            setEvent->setDataSet(eventSet);
+            if (!eventSet.empty())
+            {
+              auto copy = dynamic_pointer_cast<DataSetEvent>(setEvent->copy());
+              copy->setDataSet(eventSet);
+              return copy;
+            }
+            else
+            {
+              return nullptr;
+            }
           }
-
-          return !eventSet.empty();
         }
       }
 
-      return true;
+      return obs;
     }
   }  // namespace buffer
 }  // namespace mtconnect

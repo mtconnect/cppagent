@@ -101,7 +101,7 @@ namespace mtconnect {
       /// @param[in] identity the identity of the source
       virtual void sourceFailed(const std::string &identity) = 0;
 
-      virtual bool isDuplicate(const ObservationPtr &obs) const = 0;
+      virtual const ObservationPtr checkDuplicate(const ObservationPtr &obs) const = 0;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

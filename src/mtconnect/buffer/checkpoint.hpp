@@ -48,13 +48,13 @@ namespace mtconnect::buffer {
 
     /// @brief If this is a data set event, diff the value
     /// @param[in] observation the data set observation
-    /// @return `true` if the data set changed
-    bool dataSetDifference(observation::ObservationPtr observation) const;
+    /// @return The observation or a copy  if the data set changed
+    observation::ObservationPtr dataSetDifference(const observation::ObservationPtr &observation) const;
 
     /// @brief Checks if the observation is a duplicate with existing observations
     /// @param[in] obs the observation
     /// @return `true` if the obsrvation is a duplicate
-    bool isDuplicate(const observation::ObservationPtr &obs) const
+    const observation::ObservationPtr checkDuplicate(const observation::ObservationPtr &obs) const
     {
       using namespace observation;
       using namespace std;
@@ -67,7 +67,9 @@ namespace mtconnect::buffer {
       {
         auto &oldObs = old->second;
         if (obs->isUnavailable() != oldObs->isUnavailable())
-          return false;
+          return obs;
+        else  if (obs->isUnavailable())
+          return nullptr;
 
         if (di->isCondition())
         {
@@ -79,9 +81,9 @@ namespace mtconnect::buffer {
           if (cond->getLevel() == Condition::NORMAL && cond->getCode().empty())
           {
             if (oldCond->getLevel() == Condition::NORMAL && oldCond->getCode().empty())
-              return true;
+              return nullptr;
             else
-              return false;
+              return obs;
           }
 
           // If there is already an active condition with this code,
@@ -89,50 +91,48 @@ namespace mtconnect::buffer {
           if (const auto &e = oldCond->find(cond->getCode()))
           {
             if (cond->getLevel() != e->getLevel())
-              return false;
+              return obs;
 
             if ((cond->hasValue() != e->hasValue()) ||
                 (cond->hasValue() && cond->getValue() != e->getValue()))
-              return false;
+              return obs;
 
             if ((cond->hasProperty("qualifier") != e->hasProperty("qualifier")) ||
                 (cond->hasProperty("qualifier") &&
                  cond->get<string>("qualifier") != e->get<string>("qualifier")))
-              return false;
+              return obs;
 
             if ((cond->hasProperty("nativeSeverity") != e->hasProperty("nativeSeverity")) ||
                 (cond->hasProperty("nativeSeverity") &&
                  cond->get<string>("nativeSeverity") != e->get<string>("nativeSeverity")))
-              return false;
+              return obs;
 
-            return true;
+            return nullptr;
           }
           else
           {
-            return false;
+            return obs;
           }
         }
         else if (!di->isDiscrete())
         {
           if (di->isDataSet())
           {
-            auto set = dynamic_pointer_cast<DataSetEvent>(obs);
-            if (!obs->hasProperty("resetTriggered") && !set->getDataSet().empty())
-            {
-              auto oldSet = dynamic_pointer_cast<DataSetEvent>(oldObs);
-              return set->getDataSet() != oldSet->getDataSet();
-            }
+            return dataSetDifference(obs);
           }
           else
           {
             auto &value = obs->getValue();
             auto &oldValue = oldObs->getValue();
 
-            return value == oldValue;
+            if (value == oldValue)
+              return nullptr;
+            else
+              return obs;
           }
         }
       }
-      return false;
+      return obs;
     }
 
     /// @brief copy another checkpoint to this checkpoint
