@@ -115,6 +115,10 @@ namespace mtconnect::buffer {
 
             return nullptr;
           }
+          else if (cond->getLevel() == Condition::NORMAL)
+          {
+            return nullptr;
+          }
           else
           {
             return obs;

@@ -215,6 +215,96 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
   }
 }
 
-TEST_F(DuplicateFilterTest, test_condition_duplicates) { GTEST_SKIP(); }
+TEST_F(DuplicateFilterTest, test_condition_duplicates)
+{
+  auto filter = make_shared<DuplicateFilter>(m_context);
+  m_mapper->bind(filter);
+  filter->bind(make_shared<DeliverObservation>(m_context));
 
-TEST_F(DuplicateFilterTest, test_data_set_duplicates) { GTEST_SKIP(); }
+  auto *contract = dynamic_cast<MockPipelineContract *>(m_context->m_contract.get());
+  makeDataItem({{"id", "c1"s}, {"type", "SYSTEM"s}, {"category", "CONDITION"s}});
+  {
+    auto os = observe({"c1", "warning", "XXX", "100", "HIGH", "XXX Happened"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+  }
+
+  {
+    auto os = observe({"c1", "warning", "XXX", "100", "HIGH", "XXX Happened"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+
+  {
+    auto os = observe({"c1", "warning", "YYY", "100", "HIGH", "XXX Happened"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    auto obs = contract->m_checkpoint.getObservation("c1");
+    ASSERT_TRUE(obs);
+    auto cond = dynamic_pointer_cast<Condition>(obs);
+    ASSERT_TRUE(cond);
+    ASSERT_EQ("YYY", cond->get<string>("nativeCode"));
+    ASSERT_EQ(Condition::WARNING, cond->getLevel());
+    auto prev = cond->getPrev();
+    ASSERT_TRUE(prev);
+    ASSERT_FALSE(prev->getPrev());
+    ASSERT_EQ("XXX", prev->get<string>("nativeCode"));
+    ASSERT_EQ("100", prev->get<string>("nativeSeverity"));
+  }
+
+  {
+    auto os = observe({"c1", "warning", "XXX", "101", "HIGH", "XXX Happened"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = contract->m_checkpoint.getObservation("c1");
+    ASSERT_TRUE(obs);
+    auto cond = dynamic_pointer_cast<Condition>(obs);
+    ASSERT_TRUE(cond);
+    ASSERT_EQ("101", cond->get<string>("nativeSeverity"));
+    ASSERT_EQ("XXX", cond->get<string>("nativeCode"));
+
+    auto prev = cond->getPrev();
+    ASSERT_TRUE(prev);
+    ASSERT_EQ("YYY", prev->get<string>("nativeCode"));
+    ASSERT_FALSE(prev->getPrev());
+  }
+
+  {
+    auto os = observe({"c1", "normal", "XXX", "", "", "Normal"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = contract->m_checkpoint.getObservation("c1");
+    ASSERT_TRUE(obs);
+    auto cond = dynamic_pointer_cast<Condition>(obs);
+    ASSERT_EQ("YYY", cond->get<string>("nativeCode"));
+    ASSERT_TRUE(cond);
+    ASSERT_FALSE(cond->getPrev());
+  }
+
+  {
+    auto os = observe({"c1", "normal", "XXX", "", "", ""});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+
+  {
+    auto os = observe({"c1", "normal", "", "", "", ""});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = contract->m_checkpoint.getObservation("c1");
+    ASSERT_TRUE(obs);
+    auto cond = dynamic_pointer_cast<Condition>(obs);
+    ASSERT_TRUE(cond);
+    ASSERT_EQ(Condition::NORMAL, cond->getLevel());
+    ASSERT_FALSE(cond->getPrev());
+  }
+
+  {
+    auto os = observe({"c1", "normal", "", "", "", ""});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+}
