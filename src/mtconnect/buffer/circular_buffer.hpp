@@ -121,16 +121,6 @@ namespace mtconnect::buffer {
 
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       auto dataItem = observation->getDataItem();
-
-      if (!dataItem->isDiscrete())
-      {
-        if (!observation->isUnavailable() && dataItem->isDataSet() &&
-            !m_latest.dataSetDifference(observation))
-        {
-          return 0;
-        }
-      }
-
       auto seq = m_sequence;
 
       observation->setSequence(seq);
@@ -176,10 +166,10 @@ namespace mtconnect::buffer {
     /// @brief Check if observation is a duplicate by validating against the latest checkpoint
     /// @param[in] obs the observation to check
     /// @return `true` if the observation is a duplicate
-    bool isDuplicate(const observation::ObservationPtr &obs) const
+    const observation::ObservationPtr checkDuplicate(const observation::ObservationPtr &obs) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
-      return m_latest.isDuplicate(obs);
+      return m_latest.checkDuplicate(obs);
     }
 
     /// @brief Get a checkpoint at a sequence number

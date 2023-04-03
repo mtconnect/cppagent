@@ -36,6 +36,7 @@ namespace mtconnect::observation {
 
   class Observation;
   using ObservationPtr = std::shared_ptr<Observation>;
+  using ConstObservationPtr = std::shared_ptr<const Observation>;
   using ObservationList = std::list<ObservationPtr>;
 
   /// @brief Abstract observation

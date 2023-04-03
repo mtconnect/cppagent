@@ -36,12 +36,7 @@ namespace mtconnect::pipeline {
     /// @param context the context
     DuplicateFilter(PipelineContextPtr context) : Transform("DuplicateFilter"), m_context(context)
     {
-      using namespace observation;
-      static constexpr auto lambda = [](const Observation &o) {
-        return !o.isOrphan() && !o.getDataItem()->isDiscrete() && !o.getDataItem()->isDataSet();
-      };
-      m_guard = LambdaGuard<Observation, TypeGuard<Observation>>(lambda, RUN) ||
-                TypeGuard<Observation>(SKIP);
+      m_guard = TypeGuard<observation::Observation>(RUN);
     }
     ~DuplicateFilter() override = default;
 
@@ -53,10 +48,11 @@ namespace mtconnect::pipeline {
       if (o->isOrphan())
         return entity::EntityPtr();
 
-      if (m_context->m_contract->isDuplicate(o))
+      auto o2 = m_context->m_contract->checkDuplicate(o);
+      if (!o2)
         return entity::EntityPtr();
       else
-        return next(entity);
+        return next(o2);
     }
 
   protected:
