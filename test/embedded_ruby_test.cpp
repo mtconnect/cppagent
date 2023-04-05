@@ -93,6 +93,7 @@ namespace {
     void deliverCommand(entity::EntityPtr c) override { m_command = c; }
     void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
     void sourceFailed(const std::string &id) override {}
+    const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
 
     const Agent *m_agent;
     ObservationPtr m_observation;

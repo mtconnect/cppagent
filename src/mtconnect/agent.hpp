@@ -551,6 +551,11 @@ namespace mtconnect {
 
     void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
 
+    const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override
+    {
+      return m_agent->getCircularBuffer().checkDuplicate(obs);
+    }
+
   protected:
     Agent *m_agent;
   };

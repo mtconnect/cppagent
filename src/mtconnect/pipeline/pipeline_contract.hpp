@@ -34,8 +34,12 @@ namespace mtconnect {
     class Asset;
     using AssetPtr = std::shared_ptr<Asset>;
   }  // namespace asset
+  namespace observation {
+    class Observation;
+  }
   using DataItemPtr = std::shared_ptr<device_model::data_item::DataItem>;
   using DevicePtr = std::shared_ptr<device_model::Device>;
+  using ObservationPtr = std::shared_ptr<observation::Observation>;
   using StringList = std::list<std::string>;
 
   namespace observation {
@@ -96,6 +100,8 @@ namespace mtconnect {
       /// @brief The source is no longer viable, do not try to reconnect
       /// @param[in] identity the identity of the source
       virtual void sourceFailed(const std::string &identity) = 0;
+
+      virtual const ObservationPtr checkDuplicate(const ObservationPtr &obs) const = 0;
     };
   }  // namespace pipeline
 }  // namespace mtconnect

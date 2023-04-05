@@ -58,6 +58,7 @@ public:
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
   void sourceFailed(const std::string &id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
 
   DevicePtr m_device;
 };

@@ -82,6 +82,7 @@ struct MockPipelineContract : public PipelineContract
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &dev, bool flag) override {}
   void sourceFailed(const std::string &id) override { m_failed = true; }
+  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
 
   bool m_failed = false;
   std::string m_result;

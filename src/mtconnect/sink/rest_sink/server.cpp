@@ -197,7 +197,7 @@ namespace mtconnect::sink::rest_sink {
       if (m_tlsEnabled)
       {
         auto dectector =
-            make_shared<TlsDector>(move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
+            make_shared<TlsDector>(std::move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
                                    m_allowPutsFrom, m_fields, dispatcher, m_errorFunction);
 
         dectector->run();
@@ -205,9 +205,9 @@ namespace mtconnect::sink::rest_sink {
       else
       {
         boost::beast::flat_buffer buffer;
-        boost::beast::tcp_stream stream(move(socket));
-        auto session = make_shared<HttpSession>(move(stream), move(buffer), m_fields, dispatcher,
-                                                m_errorFunction);
+        boost::beast::tcp_stream stream(std::move(socket));
+        auto session = make_shared<HttpSession>(std::move(stream), std::move(buffer), m_fields,
+                                                dispatcher, m_errorFunction);
 
         if (!m_allowPutsFrom.empty())
           session->allowPutsFrom(m_allowPutsFrom);

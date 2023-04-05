@@ -34,45 +34,28 @@ namespace mtconnect::pipeline {
     DuplicateFilter(const DuplicateFilter &) = default;
     /// @brief Create a duplicate filter with shared state from the context
     /// @param context the context
-    DuplicateFilter(PipelineContextPtr context)
-      : Transform("DuplicateFilter"), m_state(context->getSharedState<State>(m_name))
+    DuplicateFilter(PipelineContextPtr context) : Transform("DuplicateFilter"), m_context(context)
     {
-      using namespace observation;
-      static constexpr auto lambda = [](const Observation &o) {
-        return !o.isOrphan() && !o.getDataItem()->isDiscrete();
-      };
-      m_guard = LambdaGuard<Observation, ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>>(
-                    lambda, RUN) ||
-                TypeGuard<Observation>(SKIP);
+      m_guard = TypeGuard<observation::Observation>(RUN);
     }
     ~DuplicateFilter() override = default;
 
     const entity::EntityPtr operator()(const entity::EntityPtr entity) override
     {
       using namespace observation;
-      std::lock_guard<TransformState> guard(*m_state);
 
       auto o = std::dynamic_pointer_cast<Observation>(entity);
       if (o->isOrphan())
         return entity::EntityPtr();
 
-      auto di = o->getDataItem();
-      auto &id = di->getId();
-
-      auto &values = m_state->m_values;
-      auto old = values.find(id);
-      if (old != values.end() && old->second == o->getValue())
+      auto o2 = m_context->m_contract->checkDuplicate(o);
+      if (!o2)
         return entity::EntityPtr();
-
-      if (old == values.end())
-        values[id] = o->getValue();
       else
-        old->second = o->getValue();
-
-      return next(entity);
+        return next(o2);
     }
 
   protected:
-    std::shared_ptr<State> m_state;
+    PipelineContextPtr m_context;
   };
 }  // namespace mtconnect::pipeline
