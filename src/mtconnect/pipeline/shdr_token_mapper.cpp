@@ -327,7 +327,7 @@ namespace mtconnect {
       return res;
     }
 
-    const EntityPtr ShdrTokenMapper::operator()(const EntityPtr entity)
+    EntityPtr ShdrTokenMapper::operator()(EntityPtr &&entity)
     {
       NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.operator");
       if (auto timestamped = std::dynamic_pointer_cast<Timestamped>(entity))
@@ -362,7 +362,7 @@ namespace mtconnect {
 
             if (out && errors.empty())
             {
-              auto fwd = next(out);
+              auto fwd = next(std::move(out));
               if (fwd)
                 entities.emplace_back(fwd);
             }

@@ -83,7 +83,7 @@ namespace mtconnect::pipeline {
     }
     ~PeriodFilter() override = default;
 
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace std;
       using namespace observation;

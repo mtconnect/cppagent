@@ -197,7 +197,7 @@ namespace mtconnect::ruby {
             mrb_get_args(mrb, "d", &entity, MRubySharedPtr<Entity>::type());
 
             EntityPtr ptr = *entity;
-            ptr = pipeline->run(ptr);
+            ptr = pipeline->run(std::move(ptr));
 
             return MRubySharedPtr<Entity>::wrap(mrb, "Entity", ptr);
           },

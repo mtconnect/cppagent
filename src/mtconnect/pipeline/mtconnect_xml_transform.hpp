@@ -58,7 +58,7 @@ namespace mtconnect::pipeline {
       m_guard = EntityNameGuard("Data", RUN);
     }
 
-    const EntityPtr operator()(const EntityPtr entity) override
+    EntityPtr operator()(EntityPtr &&entity) override
     {
       using namespace pipeline;
       using namespace entity;
@@ -90,7 +90,7 @@ namespace mtconnect::pipeline {
 
       for (auto &entity : rd.m_entities)
       {
-        next(entity);
+        next(std::move(entity));
       }
 
       return std::make_shared<Entity>("Entities", Properties {{"VALUE", rd.m_entities}});
