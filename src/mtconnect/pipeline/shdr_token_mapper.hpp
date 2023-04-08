@@ -49,7 +49,7 @@ namespace mtconnect::pipeline {
     {
       m_guard = TypeGuard<Timestamped>(RUN);
     }
-    const EntityPtr operator()(const EntityPtr entity) override;
+    EntityPtr operator()(entity::EntityPtr &&entity) override;
 
     /// @brief Takes a tokenized set of fields and maps them data items
     /// @param[in] timestamp the timestamp from prior extraction

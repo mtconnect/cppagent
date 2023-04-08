@@ -245,7 +245,10 @@ namespace mtconnect {
         return true;
       }
 
-      const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
+      const entity::EntityPtr run(entity::EntityPtr &&entity)
+      {
+        return m_start->next(std::move(entity));
+      }
 
       TransformPtr bind(TransformPtr transform)
       {
@@ -264,11 +267,11 @@ namespace mtconnect {
       public:
         Start() : Transform("Start")
         {
-          m_guard = [](const entity::EntityPtr entity) { return SKIP; };
+          m_guard = [](const entity::Entity *entity) { return SKIP; };
         }
         ~Start() override = default;
 
-        const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+        entity::EntityPtr operator()(entity::EntityPtr &&entity) override
         {
           return entity::EntityPtr();
         }

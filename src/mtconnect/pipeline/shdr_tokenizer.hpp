@@ -47,7 +47,7 @@ namespace mtconnect::pipeline {
     ShdrTokenizer() : Transform("ShdrTokenizer") { m_guard = EntityNameGuard("Data", RUN); }
     ~ShdrTokenizer() = default;
 
-    const entity::EntityPtr operator()(const entity::EntityPtr data) override
+    entity::EntityPtr operator()(entity::EntityPtr &&data) override
     {
       auto &body = data->getValue<std::string>();
       entity::Properties props;

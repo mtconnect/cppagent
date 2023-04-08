@@ -31,7 +31,7 @@ namespace mtconnect {
     };
 
     /// @brief Guard is a lambda function returning a `GuardAction` taking an entity
-    using Guard = std::function<GuardAction(const entity::EntityPtr entity)>;
+    using Guard = std::function<GuardAction(const entity::Entity *entity)>;
 
     /// @brief A simple GuardClass returning a simple match
     ///
@@ -44,7 +44,7 @@ namespace mtconnect {
       GuardCls(GuardAction match) : m_match(match) {}
       GuardCls(const GuardCls &) = default;
 
-      GuardAction operator()(const entity::EntityPtr entity) { return m_match; }
+      GuardAction operator()(const entity::Entity *entity) { return m_match; }
 
       /// @brief set the alternative guard
       /// @param alt alternative
@@ -54,7 +54,7 @@ namespace mtconnect {
       /// @param matched if `true` return the action otherwise check an alternative
       /// @param entity an entity
       /// @return the guard action
-      GuardAction check(bool matched, const entity::EntityPtr entity)
+      GuardAction check(bool matched, const entity::Entity *entity)
       {
         if (matched)
           return m_match;
@@ -113,9 +113,9 @@ namespace mtconnect {
       /// @brief constexpr expanded type match
       /// @param entity the entity
       /// @return `true` if matches
-      constexpr bool matches(const entity::EntityPtr &entity) { return match<Ts...>(entity.get()); }
+      constexpr bool matches(const entity::Entity *entity) { return match<Ts...>(entity); }
 
-      GuardAction operator()(const entity::EntityPtr entity)
+      GuardAction operator()(const entity::Entity *entity)
       {
         return check(matches(entity), entity);
       }
@@ -152,14 +152,14 @@ namespace mtconnect {
       /// @brief constexpr expanded type match
       /// @param entity the entity
       /// @return `true` if matches
-      constexpr bool matches(const entity::EntityPtr &entity)
+      constexpr bool matches(const entity::Entity *entity)
       {
-        auto &e = *entity.get();
+        auto &e = *entity;
         auto &ti = typeid(e);
         return match<Ts...>(ti);
       }
 
-      GuardAction operator()(const entity::EntityPtr entity)
+      GuardAction operator()(const entity::Entity *entity)
       {
         return check(matches(entity), entity);
       }
@@ -176,9 +176,9 @@ namespace mtconnect {
     public:
       EntityNameGuard(const std::string &name, GuardAction match) : GuardCls(match), m_name(name) {}
 
-      bool matches(const entity::EntityPtr &entity) { return entity->getName() == m_name; }
+      bool matches(const entity::Entity *entity) { return entity->getName() == m_name; }
 
-      GuardAction operator()(const entity::EntityPtr entity)
+      GuardAction operator()(const entity::Entity *entity)
       {
         return check(matches(entity), entity);
       }
@@ -211,19 +211,19 @@ namespace mtconnect {
       /// @brief call the `B::matches()` method with the entity
       /// @param entity the entity
       /// @return `true` if matched
-      bool matches(const entity::EntityPtr &entity)
+      bool matches(const entity::Entity *entity)
       {
         bool matched = B::matches(entity);
         if (matched)
         {
-          auto o = dynamic_cast<const L *>(entity.get());
+          auto o = dynamic_cast<const L *>(entity);
           matched = o != nullptr && m_lambda(*o);
         }
 
         return matched;
       }
 
-      GuardAction operator()(const entity::EntityPtr entity)
+      GuardAction operator()(const entity::Entity *entity)
       {
         return B::check(matches(entity), entity);
       }

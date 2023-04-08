@@ -90,7 +90,7 @@ namespace mtconnect {
       /// @brief the transform method must be overloaded
       /// @param entity the entity
       /// @return the resulting entity
-      virtual const entity::EntityPtr operator()(const entity::EntityPtr entity) = 0;
+      virtual entity::EntityPtr operator()(entity::EntityPtr &&entity) = 0;
       TransformPtr getptr() { return shared_from_this(); }
 
       /// @brief get the list of next transforms
@@ -100,7 +100,7 @@ namespace mtconnect {
       /// @brief Find the next transform to forward the entity on to
       /// @param entity the entity
       /// @return return the result of the transformation
-      const entity::EntityPtr next(const entity::EntityPtr entity)
+      entity::EntityPtr next(entity::EntityPtr &&entity)
       {
         if (m_next.empty())
           return entity;
@@ -110,13 +110,13 @@ namespace mtconnect {
 
         for (auto &t : m_next)
         {
-          switch (t->check(entity))
+          switch (t->check(entity.get()))
           {
             case RUN:
-              return (*t)(entity);
+              return (*t)(std::move(entity));
 
             case SKIP:
-              return t->next(entity);
+              return t->next(std::move(entity));
 
             case CONTINUE:
               // Move on to the next
@@ -141,7 +141,7 @@ namespace mtconnect {
       /// @brief get the guard action for an entity
       /// @param[in] entity the entity
       /// @return the action to perform
-      GuardAction check(const entity::EntityPtr entity)
+      GuardAction check(const entity::Entity *entity)
       {
         if (!m_guard)
           return RUN;
@@ -271,7 +271,7 @@ namespace mtconnect {
     {
     public:
       NullTransform(Guard guard) : Transform("NullTransform") { m_guard = guard; }
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override { return entity; }
+      entity::EntityPtr operator()(entity::EntityPtr &&entity) override { return entity; }
     };
 
   }  // namespace pipeline

@@ -40,7 +40,7 @@ namespace mtconnect::pipeline {
     }
     ~DuplicateFilter() override = default;
 
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace observation;
 
@@ -52,7 +52,7 @@ namespace mtconnect::pipeline {
       if (!o2)
         return entity::EntityPtr();
       else
-        return next(o2);
+        return next(std::move(o2));
     }
 
   protected:

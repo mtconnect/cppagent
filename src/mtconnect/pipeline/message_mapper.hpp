@@ -44,7 +44,7 @@ namespace mtconnect::pipeline {
       m_guard = TypeGuard<JsonMessage>(RUN);
     }
 
-    const EntityPtr operator()(const EntityPtr entity) override
+    EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
 
@@ -67,7 +67,7 @@ namespace mtconnect::pipeline {
       m_guard = TypeGuard<DataMessage>(RUN);
     }
 
-    const EntityPtr operator()(const EntityPtr entity) override
+    EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       auto data = std::dynamic_pointer_cast<DataMessage>(entity);
       if (data->m_dataItem)
@@ -99,7 +99,7 @@ namespace mtconnect::pipeline {
           // Try processing as shdr data
           auto entity = make_shared<Entity>(
               "Data", Properties {{"VALUE", data->getValue()}, {"source", string("")}});
-          next(entity);
+          next(std::move(entity));
         }
         else
         {
