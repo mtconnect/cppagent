@@ -41,11 +41,7 @@ namespace mtconnect::pipeline {
       {
         auto &converter = sample->getDataItem()->getConverter();
         if (converter)
-        {
-          auto ns = sample->copy();
-          converter->convertValue(ns->getValue());
-          return next(ns);
-        }
+          converter->convertValue(sample->getValue());
       }
       return next(entity);
     }
