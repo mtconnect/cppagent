@@ -101,6 +101,11 @@ namespace mtconnect {
       /// @param[in] identity the identity of the source
       virtual void sourceFailed(const std::string &identity) = 0;
 
+      /// @brief Check the observation with the current cache to determine if this is a
+      /// duplicate
+      /// @param[in] obs the observation to check
+      /// @returns `obs` if it is not a duplicate, `nullptr` if it is. The observation
+      /// may be modified if the observation needs to be subset.
       virtual const ObservationPtr checkDuplicate(const ObservationPtr &obs) const = 0;
     };
   }  // namespace pipeline
