@@ -113,6 +113,12 @@ class MTConnectAgentConan(ConanFile):
             self.options["openssl/*"].shared = True
 
     def generate(self):
+        if self.options.shared:
+            for dep in self.dependencies.values():
+                if dep.cpp_info.bindirs:
+                    print("Copying from " + dep.cpp_info.bindirs[0] + " to " + os.path.join(self.build_folder, "dlls"))
+                    copy(self, "*.dll", dep.cpp_info.bindirs[0], os.path.join(self.build_folder, "dlls"))
+        
         tc = CMakeToolchain(self)
 
         tc.cache_variables['SHARED_AGENT_LIB'] = self.options.shared.__bool__()
@@ -142,7 +148,7 @@ class MTConnectAgentConan(ConanFile):
     def build(self):
         cmake = CMake(self)
         cmake.verbose = True
-        cmake.configure()
+        cmake.configure(cli_args=['--log-level=DEBUG'])
         cmake.build()
         if self.options.with_docs:
             cmake.build(build_type=None, target='docs')

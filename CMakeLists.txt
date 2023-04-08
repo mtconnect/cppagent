@@ -6,7 +6,7 @@ set(AGENT_VERSION_BUILD 1)
 set(AGENT_VERSION_RC "_RC3")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
-cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 set(USE_FOLDERS ON)
 
@@ -46,7 +46,7 @@ if (UNIX)
   else()
     add_compile_options(-fPIC -Wno-psabi -fvisibility-inlines-hidden -fvisibility=hidden)
   endif()
-ENDIF()
+endif()
 
 if(SHARED_AGENT_LIB)
   if (APPLE)
@@ -65,7 +65,7 @@ if(SHARED_AGENT_LIB)
 endif()
 
 if (MSVC)
-  if (CONAN_SETTINGS_COMPILER_RUNTIME MATCHES "MT")
+  if (CONAN_SETTINGS_COMPILER_RUNTIME MATCHES "static")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   else()
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")

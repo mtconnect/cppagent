@@ -255,3 +255,15 @@ elseif(UNIX)
     "$<TARGET_FILE:sink_plugin_test>"
     "$<TARGET_FILE_DIR:config_test>/")
 endif()
+
+if(SHARED_AGENT_LIB AND MSVC)
+  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dll")
+
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${dlls} $<TARGET_FILE_DIR:config_test> 
+    COMMAND_EXPAND_LISTS)
+  add_custom_command(TARGET config_test POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:config_test> $<TARGET_FILE_DIR:config_test> 
+    COMMAND_EXPAND_LISTS)
+endif()
+		     
