@@ -73,5 +73,7 @@ namespace mtconnect::pipeline {
     using SharedState = std::unordered_map<std::string, TransformStatePtr>;
     SharedState m_sharedState;
   };
+  
+  /// @brief Alias for a shared pointer to the pipeline context
   using PipelineContextPtr = std::shared_ptr<PipelineContext>;
 }  // namespace mtconnect::pipeline
