@@ -115,11 +115,15 @@ namespace mtconnect {
       /// @return `true` if matches
       constexpr bool matches(const entity::Entity *entity) { return match<Ts...>(entity); }
 
+      /// @brief Check if the entity matches one of the types
+      /// @param[in] entity pointer to the entity
+      /// @returns the actionn to take if the types match
       GuardAction operator()(const entity::Entity *entity)
       {
         return check(matches(entity), entity);
       }
 
+      /// @brief set the alternative action if this guard does not match
       auto &operator||(Guard other)
       {
         m_alternative = other;
@@ -159,10 +163,15 @@ namespace mtconnect {
         return match<Ts...>(ti);
       }
 
+      /// @brief Check if the entity exactly matches one of the types
+      /// @param[in] entity pointer to the entity
+      /// @returns the action to take if the types match
       GuardAction operator()(const entity::Entity *entity)
       {
         return check(matches(entity), entity);
       }
+      
+      /// @brief set the alternative action if this guard does not match
       auto &operator||(Guard other)
       {
         m_alternative = other;
@@ -178,10 +187,15 @@ namespace mtconnect {
 
       bool matches(const entity::Entity *entity) { return entity->getName() == m_name; }
 
+      /// @brief Check if the entity name matches
+      /// @param[in] entity pointer to the entity
+      /// @returns the action to take if the types match
       GuardAction operator()(const entity::Entity *entity)
       {
         return check(matches(entity), entity);
       }
+      
+      /// @brief set the alternative action if this guard does not match
       auto &operator||(Guard other)
       {
         m_alternative = other;
@@ -223,10 +237,15 @@ namespace mtconnect {
         return matched;
       }
 
+      /// @brief Check if the entity name matches the base guard and the lambda
+      /// @param[in] entity pointer to the entity
+      /// @returns the action to take if the types match
       GuardAction operator()(const entity::Entity *entity)
       {
         return B::check(matches(entity), entity);
       }
+      
+      /// @brief set the alternative action if this guard does not match
       auto &operator||(Guard other)
       {
         B::m_alternative = other;
