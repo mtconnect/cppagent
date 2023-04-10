@@ -40,6 +40,9 @@ namespace mtconnect::pipeline {
     }
     ~DuplicateFilter() override = default;
 
+    /// @brief check if the entity is a duplicate
+    /// @param[in] entity the entity to check
+    /// @return the result of the transform if not a duplicate or an empty entity
     entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace observation;
