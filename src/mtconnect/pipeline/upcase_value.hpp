@@ -45,7 +45,7 @@ namespace mtconnect::pipeline {
       m_guard = ExactTypeGuard<Event>(RUN) || TypeGuard<Observation>(SKIP);
     }
 
-    const EntityPtr operator()(const EntityPtr entity) override
+    EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace observation;
       auto event = std::dynamic_pointer_cast<Event>(entity);

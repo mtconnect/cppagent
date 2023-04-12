@@ -51,7 +51,7 @@ namespace mtconnect::ruby {
 
             EntityPtr *ent;
             mrb_get_args(mrb, "d", &ent, MRubySharedPtr<Entity>::type());
-            auto r = (*trans)(*ent);
+            auto r = (*trans)(std::move(*ent));
             return MRubySharedPtr<Entity>::wrap(mrb, "Entity", r);
           },
           MRB_ARGS_REQ(1));
@@ -91,7 +91,7 @@ namespace mtconnect::ruby {
 
             EntityPtr *ent;
             mrb_get_args(mrb, "d", &ent, MRubySharedPtr<Entity>::type());
-            auto nxt = trans->next(*ent);
+            auto nxt = trans->next(std::move(*ent));
             return MRubySharedPtr<Entity>::wrap(mrb, "Entity", nxt);
           },
           MRB_ARGS_REQ(1));
@@ -179,7 +179,7 @@ namespace mtconnect::ruby {
 
       if (!mrb_nil_p(m_guardBlock))
       {
-        m_guard = [this, old = m_guard](const entity::EntityPtr entity) -> GuardAction {
+        m_guard = [this, old = m_guard](const entity::Entity *entity) -> GuardAction {
           using namespace entity;
           using namespace observation;
           std::lock_guard guard(RubyVM::rubyVM());
@@ -187,7 +187,8 @@ namespace mtconnect::ruby {
           auto mrb = RubyVM::rubyVM().state();
           int save = mrb_gc_arena_save(mrb);
 
-          mrb_value ev = MRubySharedPtr<Entity>::wrap(mrb, "Entity", entity);
+          entity::EntityPtr ptr = entity->getptr();
+          mrb_value ev = MRubySharedPtr<Entity>::wrap(mrb, "Entity", ptr);
 
           mrb_bool state = false;
           mrb_value values[] = {m_guardBlock, ev};
@@ -223,7 +224,7 @@ namespace mtconnect::ruby {
 
     using calldata = pair<RubyTransform *, EntityPtr>;
 
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       NAMED_SCOPE("RubyTransform::operator()");
 
