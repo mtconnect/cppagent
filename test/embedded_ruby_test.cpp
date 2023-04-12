@@ -379,7 +379,7 @@ $source.pipeline.splice_after('Start', $trans)
 )"s}};
     auto entity = make_shared<Entity>("Data", props);
 
-    loopback->getPipeline()->run(entity);
+    loopback->getPipeline()->run(std::move(entity));
 
     auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
     ASSERT_TRUE(contract->m_observation);
@@ -412,7 +412,7 @@ $source.pipeline.splice_after('Start', $trans)
     Properties props {{"VALUE", "PLC1002:MACHINE ON FIRE"s}};
     auto entity = make_shared<Entity>("Data", props);
 
-    loopback->getPipeline()->run(entity);
+    loopback->getPipeline()->run(std::move(entity));
 
     auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
 
@@ -427,7 +427,7 @@ $source.pipeline.splice_after('Start', $trans)
     Properties props2 {{"VALUE", "NC155:SORRY, I DON'T WANT TO"s}};
     entity = make_shared<Entity>("Data", props2);
 
-    loopback->getPipeline()->run(entity);
+    loopback->getPipeline()->run(std::move(entity));
 
     ASSERT_TRUE(contract->m_observation);
     cond = dynamic_pointer_cast<Condition>(contract->m_observation);

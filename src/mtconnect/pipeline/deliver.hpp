@@ -136,7 +136,7 @@ namespace mtconnect::pipeline {
     {
       m_guard = TypeGuard<observation::Observation>(RUN);
     }
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
   };
 
   /// @brief A transform to deliver and meter asset delivery
@@ -150,7 +150,7 @@ namespace mtconnect::pipeline {
     {
       m_guard = TypeGuard<asset::Asset>(RUN);
     }
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
   };
 
   /// @brief deliver the connection status of an adapter
@@ -167,7 +167,7 @@ namespace mtconnect::pipeline {
     {
       m_guard = EntityNameGuard("ConnectionStatus", RUN);
     }
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
 
   protected:
     PipelineContract *m_contract;
@@ -185,7 +185,7 @@ namespace mtconnect::pipeline {
     {
       m_guard = EntityNameGuard("AssetCommand", RUN);
     }
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
 
   protected:
     PipelineContract *m_contract;
@@ -201,7 +201,7 @@ namespace mtconnect::pipeline {
     {
       m_guard = EntityNameGuard("Command", RUN);
     }
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override;
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
 
   protected:
     PipelineContract *m_contract;

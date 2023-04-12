@@ -40,7 +40,10 @@ namespace mtconnect::pipeline {
     }
     ~DuplicateFilter() override = default;
 
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+    /// @brief check if the entity is a duplicate
+    /// @param[in] entity the entity to check
+    /// @return the result of the transform if not a duplicate or an empty entity
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace observation;
 
@@ -52,7 +55,7 @@ namespace mtconnect::pipeline {
       if (!o2)
         return entity::EntityPtr();
       else
-        return next(o2);
+        return next(std::move(o2));
     }
 
   protected:

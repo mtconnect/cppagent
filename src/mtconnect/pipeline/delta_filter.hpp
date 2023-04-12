@@ -51,7 +51,7 @@ namespace mtconnect {
 
       ~DeltaFilter() override = default;
 
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+      entity::EntityPtr operator()(entity::EntityPtr &&entity) override
       {
         using namespace std;
         using namespace observation;
@@ -68,7 +68,7 @@ namespace mtconnect {
         if (o->isUnavailable())
         {
           m_state->m_lastSampleValue.erase(id);
-          return next(entity);
+          return next(std::move(entity));
         }
 
         auto filter = *di->getMinimumDelta();
@@ -76,7 +76,7 @@ namespace mtconnect {
         if (filterMinimumDelta(id, value, filter))
           return EntityPtr();
 
-        return next(entity);
+        return next(std::move(entity));
       }
 
     protected:
