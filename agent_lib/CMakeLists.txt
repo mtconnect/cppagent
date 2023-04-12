@@ -368,6 +368,7 @@ target_link_libraries(
   rapidjson BZip2::BZip2
   
   $<$<PLATFORM_ID:Linux>:pthread>
+  $<$<PLATFORM_ID:Linux>:atomic>
   $<$<PLATFORM_ID:Windows>:bcrypt>
   )
 
