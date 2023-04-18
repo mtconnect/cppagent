@@ -26,6 +26,7 @@ namespace mtconnect::source::adapter {
   struct Handler
   {
     using ProcessData = std::function<void(const std::string &data, const std::string &source)>;
+    using ProcessCommand = std::function<void(const std::string &command, const std::string &value, const std::string &source)>;
     using ProcessMessage = std::function<void(const std::string &topic, const std::string &data,
                                               const std::string &source)>;
     using Connect = std::function<void(const std::string &source)>;
@@ -33,7 +34,7 @@ namespace mtconnect::source::adapter {
     /// @brief Process Data Messages
     ProcessData m_processData;
     /// @brief Process an adapter command
-    ProcessData m_command;
+    ProcessCommand m_command;
     /// @brief Process a message with a topic
     ProcessMessage m_processMessage;
 

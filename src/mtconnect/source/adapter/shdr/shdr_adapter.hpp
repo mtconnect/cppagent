@@ -122,11 +122,12 @@ namespace mtconnect {
       {
         for (auto &o : options)
           m_options.insert_or_assign(o.first, o.second);
+        bool started = m_pipeline.started();
         m_pipeline.build(m_options);
-        if (!m_pipeline.started())
+        if (!m_pipeline.started() && started)
           m_pipeline.start();
       }
-      
+            
     protected:
       void forwardData(const std::string &data)
       {
