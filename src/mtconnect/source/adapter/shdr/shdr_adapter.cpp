@@ -21,6 +21,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
 
+#include <boost/spirit/include/qi.hpp>
+#include <boost/phoenix/core.hpp>
+#include <boost/phoenix/operator.hpp>
+
 #include <algorithm>
 #include <chrono>
 #include <thread>
@@ -112,29 +116,25 @@ namespace mtconnect::source::adapter::shdr {
       {
         if (data == *m_terminator)
         {
-          if (m_handler && m_handler->m_processData)
-            m_handler->m_processData(m_body.str(), getIdentity());
+          forwardData(m_body.str());
           m_terminator.reset();
           m_body.str("");
         }
         else
         {
-          m_body << endl << data;
+          m_body << std::endl << data;
         }
-
-        return;
       }
-
-      if (size_t multi = data.find("--multiline--"); multi != string::npos)
+      else if (size_t multi = data.find("--multiline--"); multi != std::string::npos)
       {
         m_body.str("");
         m_body << data.substr(0, multi);
         m_terminator = data.substr(multi);
-        return;
       }
-
-      if (m_handler && m_handler->m_processData)
-        m_handler->m_processData(data, getIdentity());
+      else
+      {
+        forwardData(data);
+      }
     }
     catch (std::exception &e)
     {
@@ -163,19 +163,34 @@ namespace mtconnect::source::adapter::shdr {
   void ShdrAdapter::protocolCommand(const std::string &data)
   {
     NAMED_SCOPE("ShdrAdapter::protocolCommand");
-
-    static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
-    smatch match;
-
+    
     using namespace boost::algorithm;
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
 
-    if (std::regex_match(data, match, pattern))
+    using qi::char_;
+    using qi::lit;
+    using qi::lexeme;
+    using ascii::space;
+    
+    string command;
+    auto f = [&command](const auto &s) {
+      command = string(s.begin(), s.end());
+    };
+  
+    auto it = data.begin();
+    bool res = qi::phrase_parse(it, data.end(),
+                                ( lit("*") >> lexeme[+(char_ - ':')][f]
+                                  >> ':')
+                                , space);
+    
+    if (res)
     {
-      auto command = to_lower_copy(match[1].str());
-      auto value = match[2].str();
-
+      string value(it, data.end());
+      
       ConfigOptions options;
-
+      
       if (command == "conversionrequired")
         options[configuration::ConversionRequired] = is_true(value);
       else if (command == "relativetime")
@@ -186,11 +201,15 @@ namespace mtconnect::source::adapter::shdr {
         options[configuration::Device] = value;
       else if (command == "shdrversion")
         options[configuration::ShdrVersion] = stringToInt(value, 1);
-
+      
       if (options.size() > 0)
         setOptions(options);
       else if (m_handler && m_handler->m_command)
         m_handler->m_command(data, getIdentity());
+    }
+    else
+    {
+      LOG(warning) << "protocolCommand: Cannot parse command: " << data;
     }
   }
 }  // namespace mtconnect::source::adapter::shdr
