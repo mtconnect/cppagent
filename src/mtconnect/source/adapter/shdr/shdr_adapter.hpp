@@ -126,6 +126,15 @@ namespace mtconnect {
         if (!m_pipeline.started())
           m_pipeline.start();
       }
+      
+    protected:
+      void forwardData(const std::string &data)
+      {
+        if (data[0] == '*')
+          protocolCommand(data);
+        else if (m_handler && m_handler->m_processData)
+          m_handler->m_processData(data, getIdentity());
+      }
 
     protected:
       ShdrPipeline m_pipeline;
