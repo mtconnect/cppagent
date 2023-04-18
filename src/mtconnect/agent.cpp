@@ -1026,30 +1026,20 @@ namespace mtconnect {
 
   void AgentPipelineContract::deliverCommand(entity::EntityPtr entity)
   {
-    static auto pattern = regex("\\*[ ]*([^:]+):[ ]*(.+)");
+    auto command = entity->get<string>("command");
     auto value = entity->getValue<string>();
-    smatch match;
 
-    if (std::regex_match(value, match, pattern))
+    auto device = entity->maybeGet<string>("device");
+    auto source = entity->maybeGet<string>("source");
+
+    if (!device || !source)
     {
-      auto device = entity->maybeGet<string>("device");
-      auto command = boost::algorithm::to_lower_copy(match[1].str());
-      auto param = match[2].str();
-      auto source = entity->maybeGet<string>("source");
-
-      if (!device || !source)
-      {
-        LOG(error) << "Invalid command: " << command << ", device or source not specified";
-      }
-      else
-      {
-        LOG(debug) << "Processing command: " << command << ": " << value;
-        m_agent->receiveCommand(*device, command, param, *source);
-      }
+      LOG(error) << "Invalid command: " << command << ", device or source not specified";
     }
     else
     {
-      LOG(warning) << "Cannot parse command: " << value;
+      LOG(debug) << "Processing command: " << command << ": " << value;
+      m_agent->receiveCommand(*device, command, value, *source);
     }
   }
 

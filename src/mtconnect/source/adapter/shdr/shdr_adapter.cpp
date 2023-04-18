@@ -188,8 +188,9 @@ namespace mtconnect::source::adapter::shdr {
     if (res)
     {
       string value(it, data.end());
-      
       ConfigOptions options;
+      
+      boost::to_lower(command);
       
       if (command == "conversionrequired")
         options[configuration::ConversionRequired] = is_true(value);
@@ -205,7 +206,7 @@ namespace mtconnect::source::adapter::shdr {
       if (options.size() > 0)
         setOptions(options);
       else if (m_handler && m_handler->m_command)
-        m_handler->m_command(data, getIdentity());
+        m_handler->m_command(command, value, getIdentity());
     }
     else
     {
