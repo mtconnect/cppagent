@@ -118,7 +118,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   ASSERT_EQ("FileArchetype", entity->getName());
@@ -163,7 +163,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityLists)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   ASSERT_EQ("Device", entity->getName());
@@ -212,7 +212,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityListFailure)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(1, errors.size());
   ASSERT_FALSE(entity);
   ASSERT_EQ(string("Device(uuid): Property uuid is required and not provided"),
@@ -236,7 +236,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(2, errors.size());
   ASSERT_TRUE(entity);
   ASSERT_EQ(string("Components(Component): Entity list requirement Component must have at least 1 "
@@ -280,7 +280,7 @@ TEST_F(EntityParserTest, TestRawContent)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
 
   auto expected = R"DOC(<SomeContent with="stuff">
     And some text
@@ -310,7 +310,7 @@ TEST_F(EntityParserTest, check_proper_line_truncation)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ("Description", entity->getName());
   ASSERT_EQ("And some text", entity->getValue<string>());
 }

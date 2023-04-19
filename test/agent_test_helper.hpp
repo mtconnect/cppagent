@@ -117,7 +117,9 @@ class AgentTestHelper
 public:
   using Hook = std::function<void(AgentTestHelper &)>;
 
-  AgentTestHelper() : m_incomingIp("127.0.0.1"), m_strand(m_ioContext), m_socket(m_ioContext) {}
+  AgentTestHelper() : m_incomingIp("127.0.0.1"), m_strand(m_ioContext), m_socket(m_ioContext)
+  {
+  }
 
   ~AgentTestHelper()
   {
@@ -127,6 +129,7 @@ public:
     if (m_agent)
       m_agent->stop();
     m_agent.reset();
+    m_ioContext.stop();
   }
 
   auto session() { return m_session; }
@@ -309,7 +312,7 @@ public:
   std::unique_ptr<mtconnect::Agent> m_agent;
   std::stringstream m_out;
   mtconnect::sink::rest_sink::RequestPtr m_request;
-  boost::asio::io_context m_ioContext;
+  mtconnect::configuration::AsyncContext m_ioContext;
   boost::asio::io_context::strand m_strand;
   boost::asio::ip::tcp::socket m_socket;
   mtconnect::sink::rest_sink::Response m_response;

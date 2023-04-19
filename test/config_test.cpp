@@ -993,7 +993,7 @@ Port = 0
     ASSERT_TRUE(dataItem);
     ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices, agent](boost::system::error_code ec) {
       if (ec)
@@ -1012,7 +1012,7 @@ Port = 0
       }
     });
 
-    boost::asio::steady_timer timer2(context.getContext());
+    boost::asio::steady_timer timer2(context.get());
     timer2.expires_from_now(6s);
     timer2.async_wait([this, agent, &chg](boost::system::error_code ec) {
       if (!ec)
@@ -1072,7 +1072,7 @@ Port = 0
     ASSERT_TRUE(dataItem);
     ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices](boost::system::error_code ec) {
       if (ec)
@@ -1085,7 +1085,7 @@ Port = 0
       }
     });
 
-    boost::asio::steady_timer timer2(context.getContext());
+    boost::asio::steady_timer timer2(context.get());
     timer2.expires_from_now(6s);
     timer2.async_wait([this, &chg](boost::system::error_code ec) {
       if (!ec)
@@ -1138,7 +1138,7 @@ Port = 0
 
     auto instance = rest->instanceId();
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &config](boost::system::error_code ec) {
       if (ec)
@@ -1154,7 +1154,7 @@ Port = 0
     auto th = thread([this, agent, instance, &context]() {
       this_thread::sleep_for(5s);
 
-      boost::asio::steady_timer timer1(context.getContext());
+      boost::asio::steady_timer timer1(context.get());
       timer1.expires_from_now(1s);
       timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
         if (!ec)
@@ -1215,7 +1215,7 @@ Port = 0
 
     DataItemPtr di;
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices](boost::system::error_code ec) {
       if (ec)
@@ -1229,7 +1229,7 @@ Port = 0
       }
     });
 
-    boost::asio::steady_timer timer2(context.getContext());
+    boost::asio::steady_timer timer2(context.get());
     timer2.expires_from_now(6s);
     timer2.async_wait([this](boost::system::error_code ec) {
       if (!ec)
@@ -1332,7 +1332,7 @@ Port = 0
     ASSERT_NE(nullptr, printer);
     ASSERT_EQ("1.2", *printer->getSchemaVersion());
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices, agent](boost::system::error_code ec) {
       if (ec)
@@ -1355,7 +1355,7 @@ Port = 0
     auto th = thread([this, agent, instance, &context]() {
       this_thread::sleep_for(5s);
 
-      boost::asio::steady_timer timer1(context.getContext());
+      boost::asio::steady_timer timer1(context.get());
       timer1.expires_from_now(1s);
       timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
         if (!ec)

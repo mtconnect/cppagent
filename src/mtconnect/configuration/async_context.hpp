@@ -39,9 +39,13 @@ namespace mtconnect::configuration {
     /// @brief removes the copy constructor
     AsyncContext(const AsyncContext &) = delete;
     ~AsyncContext() {}
+    
+    /// @brief Testing only: method to remove the run guard from the context
+    void removeGuard() { m_guard.reset(); }
 
     /// @brief get the boost asio context reference
-    auto &getContext() { return m_context; }
+    auto &get() { return m_context; }
+    
     /// @brief operator() returns a reference to the io context
     /// @return the io context
     operator boost::asio::io_context &() { return m_context; }
@@ -126,6 +130,35 @@ namespace mtconnect::configuration {
         m_guard.emplace(m_context.get_executor());
       m_context.restart();
     }
+    
+    /// @brief Cover methods for asio io_context
+    /// @{
+
+    /// @brief io_context::run_for
+    template <typename Rep, typename Period>
+    auto run_for(const std::chrono::duration<Rep, Period>& rel_time) { return m_context.run_for(rel_time); }
+    
+    /// @brief io_context::run
+    auto run() { return m_context.run(); }
+
+    /// @brief io_context::run_one
+    auto run_one() { return m_context.run_one(); }
+
+    /// @brief io_context::run_one_for
+    template <typename Rep, typename Period>
+    auto run_one_for(const std::chrono::duration<Rep, Period>& rel_time) { return m_context.run_one_for(rel_time); }
+
+    /// @brief io_context::run_one_until
+    template <typename Clock, typename Duration>
+    auto run_one_until(const std::chrono::time_point<Clock, Duration>& abs_time) { return m_context.run_one_for(abs_time); }
+    
+    /// @brief io_context::poll
+    auto poll() { return m_context.poll(); }
+    
+    /// @brief io_context::poll
+    auto get_executor() BOOST_ASIO_NOEXCEPT { return m_context.get_executor(); }
+    
+    /// @}
 
   private:
     void operator=(const AsyncContext &) {}

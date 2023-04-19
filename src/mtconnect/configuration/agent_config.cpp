@@ -102,7 +102,7 @@ namespace mtconnect::configuration {
   boost::log::trivial::logger_type *gAgentLogger = nullptr;
 
   AgentConfiguration::AgentConfiguration()
-    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->getContext())
+    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->get())
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
     using namespace source;

@@ -167,7 +167,7 @@ TEST_F(JsonPrinterTest, Header)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::JsonEntityPrinter jprinter(1, true);
@@ -190,7 +190,7 @@ TEST_F(JsonPrinterTest, Devices)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::JsonEntityPrinter jprinter(1, true);
@@ -212,7 +212,7 @@ TEST_F(JsonPrinterTest, Components)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::JsonEntityPrinter jprinter(1, true);
@@ -243,7 +243,7 @@ TEST_F(JsonPrinterTest, TopLevelDataItems)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::JsonEntityPrinter jprinter(1, true);
@@ -265,7 +265,7 @@ TEST_F(JsonPrinterTest, data_items_using_version_2)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::JsonEntityPrinter jprinter(2, true);
@@ -302,7 +302,7 @@ TEST_F(JsonPrinterTest, ElementListWithProperty)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::JsonEntityPrinter jprinter(1, true);
@@ -340,7 +340,7 @@ TEST_F(JsonPrinterTest, elements_with_property_list_version_2)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::JsonEntityPrinter jprinter(2, true);

@@ -114,7 +114,7 @@ namespace mtconnect {
       /// @brief get the agent associated with the configuration
       const Agent *getAgent() const { return m_agent.get(); }
       /// @brief get the boost asio io context
-      auto &getContext() { return m_context->getContext(); }
+      auto &getContext() { return m_context->get(); }
       /// @brief get a pointer to the async io manager
       auto &getAsyncContext() { return *m_context.get(); }
 

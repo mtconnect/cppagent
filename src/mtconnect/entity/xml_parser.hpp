@@ -49,12 +49,11 @@ namespace mtconnect {
       /// @brief Parse a string document to an entity
       /// @param factory The factory to use to create the top level entity
       /// @param document the document as a string
-      /// @param version version to parse
       /// @param errors errors that occurred during the parsing
       /// @param parseNamespaces `true` if namespaces should be parsed
       /// @return a shared pointer to an entity if successful
       static EntityPtr parse(FactoryPtr factory, const std::string &document,
-                             const std::string &version, ErrorList &errors,
+                             ErrorList &errors,
                              bool parseNamespaces = true);
     };
   }  // namespace entity

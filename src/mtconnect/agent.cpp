@@ -73,7 +73,7 @@ namespace mtconnect {
   static const string g_available("AVAILABLE");
 
   // Agent public methods
-  Agent::Agent(boost::asio::io_context &context, const string &deviceXmlPath,
+  Agent::Agent(config::AsyncContext &context, const string &deviceXmlPath,
                const ConfigOptions &options)
     : m_options(options),
       m_context(context),
@@ -360,7 +360,6 @@ namespace mtconnect {
         return false;
       }
 
-      // Fir the DeviceAdded event for each device
       bool changed = false;
       for (auto device : devices)
       {
@@ -385,6 +384,37 @@ namespace mtconnect {
       cerr << f.what() << endl;
       throw f;
     }
+  }
+  
+  DevicePtr Agent::loadDevice(const std::string &deviceXml)
+  {
+    DevicePtr device;
+    
+    try
+    {
+      auto printer = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
+      device = m_xmlParser->parseDevice(deviceXml, printer);
+      
+      bool changed = receiveDevice(device, false);
+      if (changed)
+        loadCachedProbe();      
+    }
+    catch (runtime_error &e)
+    {
+      LOG(fatal) << "Error loading device: " + deviceXml;
+      LOG(fatal) << "Error detail: " << e.what();
+      cerr << e.what() << endl;
+      throw e;
+    }
+    catch (exception &f)
+    {
+      LOG(fatal) << "Error loading device: " + deviceXml;
+      LOG(fatal) << "Error detail: " << f.what();
+      cerr << f.what() << endl;
+      throw f;
+    }
+    
+    return device;
   }
 
   bool Agent::receiveDevice(device_model::DevicePtr device, bool version)
@@ -1032,7 +1062,7 @@ namespace mtconnect {
     auto device = entity->maybeGet<string>("device");
     auto source = entity->maybeGet<string>("source");
 
-    if (!device || !source)
+    if ((command != "devicemodel" && !device) || !source)
     {
       LOG(error) << "Invalid command: " << command << ", device or source not specified";
     }
@@ -1319,6 +1349,9 @@ namespace mtconnect {
                  }
                }
              }},
+          {"devicemodel", [this](DevicePtr device, const string &value) {
+            loadDevice(value);
+          }}
         };
 
     static std::unordered_map<string, string> adapterDataItems {
