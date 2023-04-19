@@ -54,6 +54,7 @@
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/loopback_source.hpp"
 #include "mtconnect/source/source.hpp"
+#include "mtconnect/configuration/async_context.hpp"
 
 namespace mtconnect {
   namespace mic = boost::multi_index;
@@ -90,7 +91,7 @@ namespace mtconnect {
     ///     - VersionDeviceXmlUpdates
     ///     - JsonVersion
     ///     - DisableAgentDevice
-    Agent(boost::asio::io_context &context, const std::string &deviceXmlPath,
+    Agent(configuration::AsyncContext &context, const std::string &deviceXmlPath,
           const ConfigOptions &options);
 
     /// Destructor for the Agent.
@@ -257,9 +258,14 @@ namespace mtconnect {
     /// @param[in] oldName The old name
     void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
     /// @brief Reload the devices from a device file after updates
-    /// @param deviceFile The device file to load
+    /// @param[in] deviceFile The device file to load
     /// @return true if successful
     bool reloadDevices(const std::string &deviceFile);
+    
+    /// @brief receive and parse a single device from a source
+    /// @param[in] deviceXml the device xml as a string
+    /// @return device shared pointer if successful
+    DevicePtr loadDevice(const std::string &deviceXml);
 
     /// @name Message when source has connected and disconnected
     ///@{
@@ -427,7 +433,7 @@ namespace mtconnect {
 
   protected:
     ConfigOptions m_options;
-    boost::asio::io_context &m_context;
+    configuration::AsyncContext &m_context;
     boost::asio::io_context::strand m_strand;
 
     std::shared_ptr<source::LoopbackSource> m_loopback;

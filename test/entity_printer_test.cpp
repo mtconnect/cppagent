@@ -103,7 +103,7 @@ TEST_F(EntityPrinterTest, TestParseSimpleDocument)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::XmlPrinter printer;
@@ -129,7 +129,7 @@ TEST_F(EntityPrinterTest, TestFileArchetypeWithDescription)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::XmlPrinter printer;
@@ -176,7 +176,7 @@ TEST_F(EntityPrinterTest, TestRecursiveEntityLists)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::XmlPrinter printer;
@@ -222,7 +222,7 @@ TEST_F(EntityPrinterTest, TestEntityOrder)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::XmlPrinter printer;
@@ -264,7 +264,7 @@ TEST_F(EntityPrinterTest, TestRawContent)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(root, doc, "1.7", errors);
+  auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::XmlPrinter printer;

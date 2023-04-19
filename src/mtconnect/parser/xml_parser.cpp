@@ -240,6 +240,29 @@ namespace mtconnect::parser {
 
     return deviceList;
   }
+  
+  DevicePtr XmlParser::parseDevice(const std::string &deviceXml, printer::XmlPrinter *aPrinter)
+  {
+    DevicePtr device;
+    
+    using namespace boost::adaptors;
+    using namespace boost::range;
+
+    std::unique_lock lock(m_mutex);
+    
+    try
+    {
+      entity::ErrorList errors;
+      auto entity = entity::XmlParser::parse(Device::getFactory(), deviceXml, errors);
+    }
+    catch (string e)
+    {
+      LOG(fatal) << "Cannot parse XML document: " << e;
+      throw;
+    }
+    
+    return device;
+  }
 
   XmlParser::~XmlParser()
   {

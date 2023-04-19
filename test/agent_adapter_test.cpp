@@ -121,7 +121,8 @@ protected:
     }
 
     m_agentTestHelper->getAgent()->stop();
-    m_agentTestHelper->m_ioContext.run_for(100s);
+    m_agentTestHelper->m_ioContext.removeGuard();
+    m_agentTestHelper->m_ioContext.run_for(10s);
     m_agentTestHelper.reset();
 
     m_adapter.reset();
