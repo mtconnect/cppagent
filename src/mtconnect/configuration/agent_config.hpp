@@ -112,7 +112,7 @@ namespace mtconnect {
       /// @param[in] agent the agent the configuration will take ownership of
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
       /// @brief get the agent associated with the configuration
-      const Agent *getAgent() const { return m_agent.get(); }
+      Agent *getAgent() const { return m_agent.get(); }
       /// @brief get the boost asio io context
       auto &getContext() { return m_context->get(); }
       /// @brief get a pointer to the async io manager

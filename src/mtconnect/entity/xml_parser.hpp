@@ -52,8 +52,7 @@ namespace mtconnect {
       /// @param errors errors that occurred during the parsing
       /// @param parseNamespaces `true` if namespaces should be parsed
       /// @return a shared pointer to an entity if successful
-      static EntityPtr parse(FactoryPtr factory, const std::string &document,
-                             ErrorList &errors,
+      static EntityPtr parse(FactoryPtr factory, const std::string &document, ErrorList &errors,
                              bool parseNamespaces = true);
     };
   }  // namespace entity

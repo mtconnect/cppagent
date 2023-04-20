@@ -117,9 +117,7 @@ class AgentTestHelper
 public:
   using Hook = std::function<void(AgentTestHelper &)>;
 
-  AgentTestHelper() : m_incomingIp("127.0.0.1"), m_strand(m_ioContext), m_socket(m_ioContext)
-  {
-  }
+  AgentTestHelper() : m_incomingIp("127.0.0.1"), m_strand(m_ioContext), m_socket(m_ioContext) {}
 
   ~AgentTestHelper()
   {

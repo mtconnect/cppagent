@@ -385,36 +385,43 @@ namespace mtconnect {
       throw f;
     }
   }
-  
-  DevicePtr Agent::loadDevice(const std::string &deviceXml)
+
+  void Agent::loadDevice(const string &deviceXml,
+                         const optional<string> source)
   {
-    DevicePtr device;
-    
-    try
-    {
-      auto printer = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
-      device = m_xmlParser->parseDevice(deviceXml, printer);
-      
-      bool changed = receiveDevice(device, false);
-      if (changed)
-        loadCachedProbe();      
-    }
-    catch (runtime_error &e)
-    {
-      LOG(fatal) << "Error loading device: " + deviceXml;
-      LOG(fatal) << "Error detail: " << e.what();
-      cerr << e.what() << endl;
-      throw e;
-    }
-    catch (exception &f)
-    {
-      LOG(fatal) << "Error loading device: " + deviceXml;
-      LOG(fatal) << "Error detail: " << f.what();
-      cerr << f.what() << endl;
-      throw f;
-    }
-    
-    return device;
+    m_context.pause([=](config::AsyncContext &context) {
+      try
+      {        
+        auto printer = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
+        auto device = m_xmlParser->parseDevice(deviceXml, printer);
+  
+        if (device)
+        {
+          bool changed = receiveDevice(device, true);
+          if (changed)
+            loadCachedProbe();
+          
+          if (source)
+          {
+            auto s = findSource(*source);
+            if (s)
+              s->setOptions({{ config::Device, device->getName() }});
+          }
+        }
+      }
+      catch (runtime_error &e)
+      {
+        LOG(error) << "Error loading device: " + deviceXml;
+        LOG(error) << "Error detail: " << e.what();
+        cerr << e.what() << endl;
+      }
+      catch (exception &f)
+      {
+        LOG(error) << "Error loading device: " + deviceXml;
+        LOG(error) << "Error detail: " << f.what();
+        cerr << f.what() << endl;
+      }
+    });
   }
 
   bool Agent::receiveDevice(device_model::DevicePtr device, bool version)
@@ -1348,11 +1355,8 @@ namespace mtconnect {
                    di->setConverter(conv);
                  }
                }
-             }},
-          {"devicemodel", [this](DevicePtr device, const string &value) {
-            loadDevice(value);
-          }}
-        };
+             }}
+            };
 
     static std::unordered_map<string, string> adapterDataItems {
         {"adapterversion", "_adapter_software_version"},
@@ -1371,6 +1375,10 @@ namespace mtconnect {
         }
         deviceChanged(device, oldUuid, oldName);
       }
+    }
+    else if (command == "devicemodel")
+    {
+      loadDevice(value, source);
     }
     else
     {

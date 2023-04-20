@@ -19,11 +19,10 @@
 #include "shdr_adapter.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/uuid/name_generator_sha1.hpp>
-
-#include <boost/spirit/include/qi.hpp>
 #include <boost/phoenix/core.hpp>
 #include <boost/phoenix/operator.hpp>
+#include <boost/spirit/include/qi.hpp>
+#include <boost/uuid/name_generator_sha1.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -163,35 +162,31 @@ namespace mtconnect::source::adapter::shdr {
   void ShdrAdapter::protocolCommand(const std::string &data)
   {
     NAMED_SCOPE("ShdrAdapter::protocolCommand");
-    
+
     using namespace boost::algorithm;
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
     namespace phoenix = boost::phoenix;
 
-    using qi::char_;
-    using qi::lit;
-    using qi::lexeme;
     using ascii::space;
-    
+    using qi::char_;
+    using qi::lexeme;
+    using qi::lit;
+
     string command;
-    auto f = [&command](const auto &s) {
-      command = string(s.begin(), s.end());
-    };
-  
+    auto f = [&command](const auto &s) { command = string(s.begin(), s.end()); };
+
     auto it = data.begin();
-    bool res = qi::phrase_parse(it, data.end(),
-                                ( lit("*") >> lexeme[+(char_ - ':')][f]
-                                  >> ':')
-                                , space);
-    
+    bool res =
+        qi::phrase_parse(it, data.end(), (lit("*") >> lexeme[+(char_ - ':')][f] >> ':'), space);
+
     if (res)
     {
       string value(it, data.end());
       ConfigOptions options;
-      
+
       boost::to_lower(command);
-      
+
       if (command == "conversionrequired")
         options[configuration::ConversionRequired] = is_true(value);
       else if (command == "relativetime")
@@ -202,7 +197,7 @@ namespace mtconnect::source::adapter::shdr {
         options[configuration::Device] = value;
       else if (command == "shdrversion")
         options[configuration::ShdrVersion] = stringToInt(value, 1);
-      
+
       if (options.size() > 0)
         setOptions(options);
       else if (m_handler && m_handler->m_command)

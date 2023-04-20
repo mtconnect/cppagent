@@ -190,30 +190,32 @@ namespace mtconnect::parser {
 
       devices = xmlXPathEval(BAD_CAST path.c_str(), xpathCtx);
 
-      if (!devices)
-        throw(string) xpathCtx->lastError.message;
-
-      xmlNodeSetPtr nodeset = devices->nodesetval;
-
-      if (!nodeset || !nodeset->nodeNr)
-        throw(string) "Could not find Device in XML configuration";
-
-      entity::ErrorList errors;
-      for (int i = 0; i != nodeset->nodeNr; ++i)
+      if (!devices || !devices->nodesetval || !devices->nodesetval->nodeNr)
       {
-        auto device =
-            entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
-        if (device)
-          deviceList.emplace_back(dynamic_pointer_cast<Device>(device));
-
-        if (!errors.empty())
+        LOG(warning) << "No devices in Devices.xml file – expecting dynamic configuration";
+      }
+      else
+      {
+        xmlNodeSetPtr nodeset = devices->nodesetval;
+        
+        entity::ErrorList errors;
+        for (int i = 0; i != nodeset->nodeNr; ++i)
         {
-          for (auto &e : errors)
-            LOG(warning) << "Error parsing device: " << e->what();
+          auto device =
+          entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
+          if (device)
+            deviceList.emplace_back(dynamic_pointer_cast<Device>(device));
+          
+          if (!errors.empty())
+          {
+            for (auto &e : errors)
+              LOG(warning) << "Error parsing device: " << e->what();
+          }
         }
       }
 
-      xmlXPathFreeObject(devices);
+      if (devices)
+        xmlXPathFreeObject(devices);
       xmlXPathFreeContext(xpathCtx);
     }
     catch (string e)
@@ -240,27 +242,39 @@ namespace mtconnect::parser {
 
     return deviceList;
   }
-  
+
   DevicePtr XmlParser::parseDevice(const std::string &deviceXml, printer::XmlPrinter *aPrinter)
   {
     DevicePtr device;
-    
+
     using namespace boost::adaptors;
     using namespace boost::range;
 
     std::unique_lock lock(m_mutex);
-    
+
     try
     {
       entity::ErrorList errors;
-      auto entity = entity::XmlParser::parse(Device::getFactory(), deviceXml, errors);
+      auto entity = entity::XmlParser::parse(Device::getRoot(), deviceXml, errors);
+      if (errors.size() > 0)
+      {
+        LOG(warning) << "Errors parsing Device: " << deviceXml;
+        for (auto &e : errors)
+        {
+          LOG(warning) << "   " << e->what();
+        }
+      }
+      else
+      {
+        device = dynamic_pointer_cast<Device>(entity);
+      }
     }
     catch (string e)
     {
       LOG(fatal) << "Cannot parse XML document: " << e;
       throw;
     }
-    
+
     return device;
   }
 
