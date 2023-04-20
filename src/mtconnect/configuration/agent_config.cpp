@@ -896,9 +896,13 @@ namespace mtconnect::configuration {
                                          adapterOptions, ptree {});
       m_agent->addSource(source, false);
     }
-    else
+    else if (m_agent->getDevices().size() > 1)
     {
       throw runtime_error("Adapters must be defined if more than one device is present");
+    }
+    else
+    {
+      LOG(warning) << "Starting with no devices or adapters";
     }
   }
 

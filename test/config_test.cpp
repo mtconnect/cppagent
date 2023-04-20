@@ -1385,5 +1385,95 @@ Port = 0
     m_config->start();
     th.join();
   }
+  
+  TEST_F(ConfigTest, should_add_a_new_device_when_deviceModel_received_from_adapter)
+  {
+    using namespace mtconnect::source::adapter;
+    
+    fs::path root {createTempDirectory("6")};
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+VersionDeviceXmlUpdates = true
+Port = 0
+
+Adapters {
+  Device {
+  }
+}
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    copyFile("empty.xml", devices, 0min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &asyncContext = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+    
+    auto sp = agent->findSource("_localhost_7878");
+    ASSERT_TRUE(sp);
+    
+    auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
+    ASSERT_TRUE(adapter);
+
+    boost::asio::steady_timer timer1(asyncContext.get());
+    timer1.expires_from_now(100ms);
+    timer1.async_wait([this, &adapter](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        adapter->processData("* deviceModel: --multiline--AAAAA");
+        adapter->processData(R"(
+<Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
+  <Description manufacturer="NIST" serialNumber=""/>
+  <DataItems>
+    <DataItem type="AVAILABILITY" category="EVENT" id="a" name="avail"/>
+  </DataItems>
+  <Components>
+    <Controller id="cont">
+      <DataItems>
+        <DataItem type="EXECUTION" category="EVENT" id="exec" name="exec"/>
+        <DataItem type="CONTROLLER_MODE" category="EVENT" id="mode" name="mode"/>
+      </DataItems>
+    </Controller>
+  </Components>
+</Device>
+)");
+        adapter->processData("--multiline--AAAAA");
+      }
+    });
+      
+    m_config->start();
+  }
+
+  TEST_F(ConfigTest, should_update_a_device_when_received_from_adapter)
+  {
+    fs::path root {createTempDirectory("6")};
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+VersionDeviceXmlUpdates = true
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+  }
 
 }  // namespace

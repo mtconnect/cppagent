@@ -40,6 +40,7 @@
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/configuration/async_context.hpp"
 #include "mtconnect/configuration/hook_manager.hpp"
 #include "mtconnect/configuration/service.hpp"
 #include "mtconnect/device_model/agent_device.hpp"
@@ -54,7 +55,6 @@
 #include "mtconnect/source/adapter/adapter.hpp"
 #include "mtconnect/source/loopback_source.hpp"
 #include "mtconnect/source/source.hpp"
-#include "mtconnect/configuration/async_context.hpp"
 
 namespace mtconnect {
   namespace mic = boost::multi_index;
@@ -168,14 +168,15 @@ namespace mtconnect {
 
     // Source and Sink
     /// @brief Find a source by name
-    /// @param[in] name the name to find
+    /// @param[in] name the identity to find
     /// @return A shared pointer to the source if found, otherwise nullptr
     source::SourcePtr findSource(const std::string &name) const
     {
       for (auto &s : m_sources)
-        if (s->getIdentity() == name)
+      {
+        if (s->getIdentity() == name || s->getName() == name)
           return s;
-
+      }
       return nullptr;
     }
     /// @brief Find a sink by name
@@ -261,11 +262,11 @@ namespace mtconnect {
     /// @param[in] deviceFile The device file to load
     /// @return true if successful
     bool reloadDevices(const std::string &deviceFile);
-    
+
     /// @brief receive and parse a single device from a source
     /// @param[in] deviceXml the device xml as a string
-    /// @return device shared pointer if successful
-    DevicePtr loadDevice(const std::string &deviceXml);
+    /// @param[in] source the source loading the device
+    void loadDevice(const std::string &deviceXml, const std::optional<std::string> source = std::nullopt);
 
     /// @name Message when source has connected and disconnected
     ///@{

@@ -87,9 +87,12 @@ TEST(AdapterTest, should_forward_multiline_command)
 
   auto handler = make_unique<Handler>();
   string command, value;
-  handler->m_command = [&](const string &c, const string &v, const string &s) { command = c; value = v; };
+  handler->m_command = [&](const string &c, const string &v, const string &s) {
+    command = c;
+    value = v;
+  };
   adapter->setHandler(handler);
-  
+
   adapter->processData("* deviceModel: --multiline--ABC1234");
   EXPECT_TRUE(adapter->getTerminator());
   EXPECT_EQ("--multiline--ABC1234", *adapter->getTerminator());
@@ -115,7 +118,7 @@ TEST(AdapterTest, should_set_options_from_commands)
   auto adapter = make_unique<ShdrAdapter>(ioc, context, options, tree);
 
   adapter->processData("* shdrVersion: 3");
-  
+
   auto v = GetOption<int>(adapter->getOptions(), "ShdrVersion");
   ASSERT_EQ(int64_t(3), *v);
 }

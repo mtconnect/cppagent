@@ -118,7 +118,7 @@ namespace mtconnect {
 
       /// @brief Change the options for the adapter
       /// @param[in] options the set of options
-      void setOptions(const ConfigOptions &options)
+      void setOptions(const ConfigOptions &options) override
       {
         for (auto &o : options)
           m_options.insert_or_assign(o.first, o.second);
@@ -127,7 +127,7 @@ namespace mtconnect {
         if (!m_pipeline.started() && started)
           m_pipeline.start();
       }
-            
+
     protected:
       void forwardData(const std::string &data)
       {
