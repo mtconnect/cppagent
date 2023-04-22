@@ -75,8 +75,12 @@ namespace {
     fs::path createTempDirectory(const string &ext)
     {
       fs::path root {fs::path(TEST_BIN_ROOT_DIR) / ("config_test_" + ext)};
-      if (!fs::exists(root))
-        fs::create_directory(root);
+      if (fs::exists(root))
+      {
+        fs::remove_all(root);
+      }
+        
+      fs::create_directory(root);
       chdir(root.string().c_str());
       m_config->updateWorkingDirectory();
       // m_config->setDebug(false);
@@ -1385,11 +1389,11 @@ Port = 0
     m_config->start();
     th.join();
   }
-  
+
   TEST_F(ConfigTest, should_add_a_new_device_when_deviceModel_received_from_adapter)
   {
     using namespace mtconnect::source::adapter;
-    
+
     fs::path root {createTempDirectory("6")};
 
     fs::path devices(root / "Devices.xml");
@@ -1420,16 +1424,54 @@ Adapters {
     auto agent = m_config->getAgent();
     const auto &printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
-    
+
     auto sp = agent->findSource("_localhost_7878");
     ASSERT_TRUE(sp);
-    
+
     auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
     ASSERT_TRUE(adapter);
 
-    boost::asio::steady_timer timer1(asyncContext.get());
-    timer1.expires_from_now(100ms);
-    timer1.async_wait([this, &adapter](boost::system::error_code ec) {
+    auto validate = [this, &agent](boost::system::error_code ec) {
+      using namespace std::filesystem;
+      using namespace std::chrono;
+      using namespace boost::algorithm;
+            
+      if (!ec)
+      {
+        // Check for backup file
+        auto ext =  date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
+        auto dit = directory_iterator(".");
+        auto found = false;
+        for (auto &f : dit)
+        {
+          auto fe = f.path().extension().string();
+          if (starts_with(fe, ext))
+          {
+            found = true;
+            break;
+          }
+        }
+        ASSERT_TRUE(found) << "Cannot find backup device file with extension: " << ext << '*';
+            
+        auto device = agent->getDeviceByName("LinuxCNC");
+        ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
+
+        const auto &components = device->getChildren();
+        ASSERT_EQ(1, components->size());
+
+        auto cont = device->getComponentById("cont");
+        ASSERT_TRUE(cont) << "Cannot find Component with id cont";
+        
+        auto exec = device->getDeviceDataItem("exec");
+        ASSERT_TRUE(exec) << "Cannot find DataItem with id exec";
+
+      }
+      m_config->stop();
+    };
+
+    boost::asio::steady_timer timer2(asyncContext.get());
+
+    auto send = [this, &adapter, &timer2, validate](boost::system::error_code ec) {
       if (ec)
       {
         m_config->stop();
@@ -1446,7 +1488,7 @@ Adapters {
   <Components>
     <Controller id="cont">
       <DataItems>
-        <DataItem type="EXECUTION" category="EVENT" id="exec" name="exec"/>
+        <DataItem type="EXECUTION" category="EVENT" id="exec"/>
         <DataItem type="CONTROLLER_MODE" category="EVENT" id="mode" name="mode"/>
       </DataItems>
     </Controller>
@@ -1454,15 +1496,22 @@ Adapters {
 </Device>
 )");
         adapter->processData("--multiline--AAAAA");
+
+        timer2.expires_from_now(500ms);
+        timer2.async_wait(validate);
       }
-    });
-      
+    };
+
+    boost::asio::steady_timer timer1(asyncContext.get());
+    timer1.expires_from_now(100ms);
+    timer1.async_wait(send);
+
     m_config->start();
   }
 
   TEST_F(ConfigTest, should_update_a_device_when_received_from_adapter)
   {
-    fs::path root {createTempDirectory("6")};
+    fs::path root {createTempDirectory("7")};
 
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};

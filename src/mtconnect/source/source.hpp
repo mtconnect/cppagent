@@ -86,10 +86,10 @@ namespace mtconnect {
       /// @brief get the source's strand
       /// @return the asio strand
       boost::asio::io_context::strand &getStrand();
-      
+
       /// @brief changes the options in the source
       /// @param[in] options the options to update
-      virtual void setOptions(const ConfigOptions &options) { }
+      virtual void setOptions(const ConfigOptions &options) {}
 
     protected:
       std::string m_name;

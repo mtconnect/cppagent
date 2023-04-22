@@ -197,15 +197,15 @@ namespace mtconnect::parser {
       else
       {
         xmlNodeSetPtr nodeset = devices->nodesetval;
-        
+
         entity::ErrorList errors;
         for (int i = 0; i != nodeset->nodeNr; ++i)
         {
           auto device =
-          entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
+              entity::XmlParser::parseXmlNode(Device::getRoot(), nodeset->nodeTab[i], errors);
           if (device)
             deviceList.emplace_back(dynamic_pointer_cast<Device>(device));
-          
+
           if (!errors.empty())
           {
             for (auto &e : errors)
