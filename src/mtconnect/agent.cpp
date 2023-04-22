@@ -404,7 +404,10 @@ namespace mtconnect {
           {
             auto s = findSource(*source);
             if (s)
-              s->setOptions({{config::Device, device->getName()}});
+            {
+              const auto &name = device->getComponentName();
+              s->setOptions({{config::Device, *name}});
+            }
           }
         }
       }

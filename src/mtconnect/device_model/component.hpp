@@ -244,6 +244,19 @@ namespace mtconnect {
 
         return nullptr;
       }
+      
+      /// @brief Get the component topic path as a list
+      ///
+      /// Recurses to root and then appends getTopicName
+      /// @param[in,out] pth the path list to append to
+      void path(std::list<std::string> &pth)
+      {
+        auto p = getParent();
+        if (p)
+          p->path(pth);
+
+        pth.push_back(getTopicName());
+      }
 
     protected:
       void setParent(ComponentPtr parent) { m_parent = parent; }
