@@ -386,26 +386,25 @@ namespace mtconnect {
     }
   }
 
-  void Agent::loadDevice(const string &deviceXml,
-                         const optional<string> source)
+  void Agent::loadDevice(const string &deviceXml, const optional<string> source)
   {
     m_context.pause([=](config::AsyncContext &context) {
       try
-      {        
+      {
         auto printer = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
         auto device = m_xmlParser->parseDevice(deviceXml, printer);
-  
+
         if (device)
         {
           bool changed = receiveDevice(device, true);
           if (changed)
             loadCachedProbe();
-          
+
           if (source)
           {
             auto s = findSource(*source);
             if (s)
-              s->setOptions({{ config::Device, device->getName() }});
+              s->setOptions({{config::Device, device->getName()}});
           }
         }
       }
@@ -545,11 +544,14 @@ namespace mtconnect {
 
   void Agent::versionDeviceXml()
   {
+    using namespace std::chrono;
+    
     if (m_versionDeviceXml)
     {
+      
       // update with a new version of the device.xml, saving the old one
       // with a date time stamp
-      auto ext = "."s + getCurrentTime(LOCAL);
+      auto ext =  date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<seconds>(system_clock::now()));      
       fs::path file(m_deviceXmlPath);
       fs::path backup(m_deviceXmlPath + ext);
       if (!fs::exists(backup))
@@ -1333,8 +1335,7 @@ namespace mtconnect {
             {"description", mem_fn(&Device::setDescriptionValue)},
             {"nativename",
              [](DevicePtr device, const string &name) { device->setProperty("nativeName", name); }},
-            {"calibration",
-             [](DevicePtr device, const string &value) {
+            {"calibration", [](DevicePtr device, const string &value) {
                istringstream line(value);
 
                // Look for name|factor|offset triples
@@ -1355,8 +1356,7 @@ namespace mtconnect {
                    di->setConverter(conv);
                  }
                }
-             }}
-            };
+             }}};
 
     static std::unordered_map<string, string> adapterDataItems {
         {"adapterversion", "_adapter_software_version"},

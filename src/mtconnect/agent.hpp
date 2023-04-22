@@ -266,7 +266,8 @@ namespace mtconnect {
     /// @brief receive and parse a single device from a source
     /// @param[in] deviceXml the device xml as a string
     /// @param[in] source the source loading the device
-    void loadDevice(const std::string &deviceXml, const std::optional<std::string> source = std::nullopt);
+    void loadDevice(const std::string &deviceXml,
+                    const std::optional<std::string> source = std::nullopt);
 
     /// @name Message when source has connected and disconnected
     ///@{
