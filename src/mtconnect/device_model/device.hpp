@@ -235,6 +235,12 @@ namespace mtconnect {
       /// @brief get the topic for this device
       /// @return the uuid of the device
       const std::string getTopicName() const override { return *m_uuid; }
+      
+      /// @brief Converts all the ids to unique ids by hasing the topics
+      ///
+      /// Converts the id attribute to a unique value and caches the original value
+      /// in case it is required later
+      
 
     protected:
       void cachePointers(DataItemPtr dataItem);

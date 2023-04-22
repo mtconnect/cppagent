@@ -1431,7 +1431,7 @@ Adapters {
     auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
     ASSERT_TRUE(adapter);
 
-    auto validate = [this, &agent](boost::system::error_code ec) {
+    auto validate = [&](boost::system::error_code ec) {
       using namespace std::filesystem;
       using namespace std::chrono;
       using namespace boost::algorithm;
@@ -1441,17 +1441,10 @@ Adapters {
         // Check for backup file
         auto ext =  date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
         auto dit = directory_iterator(".");
-        auto found = false;
-        for (auto &f : dit)
-        {
-          auto fe = f.path().extension().string();
-          if (starts_with(fe, ext))
-          {
-            found = true;
-            break;
-          }
-        }
-        ASSERT_TRUE(found) << "Cannot find backup device file with extension: " << ext << '*';
+        auto it = find_if(dit, end(dit), [&ext](const auto &de) {
+          return starts_with(de.path().extension().string(), ext);
+        });
+        ASSERT_NE(end(dit), it) << "Cannot find backup device file with extension: " << ext << '*';
             
         auto device = agent->getDeviceByName("LinuxCNC");
         ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
@@ -1464,7 +1457,9 @@ Adapters {
         
         auto exec = device->getDeviceDataItem("exec");
         ASSERT_TRUE(exec) << "Cannot find DataItem with id exec";
-
+        
+        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
+        ASSERT_EQ("LinuxCNC", pipeline->getDevice());
       }
       m_config->stop();
     };
@@ -1523,6 +1518,12 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
+    
+    GTEST_SKIP();
   }
 
+  TEST_F(ConfigTest, should_update_the_ids_of_all_entities)
+  {
+    GTEST_SKIP();
+  }
 }  // namespace

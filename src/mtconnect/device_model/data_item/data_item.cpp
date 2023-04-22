@@ -297,21 +297,12 @@ namespace mtconnect {
       }
     }
 
-    inline void path(std::list<string> &pth, ComponentPtr c)
-    {
-      auto p = c->getParent();
-      if (p)
-        path(pth, p);
-
-      pth.push_back(c->getTopicName());
-    }
-
     void DataItem::makeTopic()
     {
       std::list<string> pth;
       auto comp = m_component.lock();
 
-      path(pth, comp);
+      comp->path(pth);
       {
         auto cp = m_composition.lock();
         if (cp)
