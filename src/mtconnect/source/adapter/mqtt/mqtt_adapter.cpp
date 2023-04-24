@@ -109,10 +109,10 @@ namespace mtconnect {
 
       if (IsOptionSet(m_options, configuration::MqttTls))
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
-                                                                      move(clientHandler));
+                                                                      std::move(clientHandler));
       else
         m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_ioContext, m_options,
-                                                                      move(clientHandler));
+                                                                      std::move(clientHandler));
 
       m_identity = m_client->getIdentity();
       m_name = m_client->getUrl();

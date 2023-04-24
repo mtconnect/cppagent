@@ -10,7 +10,7 @@ from conan.tools.microsoft import is_msvc, is_msvc_static_runtime
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
-    version = "2.1"
+    version = "2.2"
     generators = "cmake"
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"

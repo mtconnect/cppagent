@@ -48,8 +48,102 @@ namespace mtconnect::buffer {
 
     /// @brief If this is a data set event, diff the value
     /// @param[in] observation the data set observation
-    /// @return `true` if the data set changed
-    bool dataSetDifference(observation::ObservationPtr observation) const;
+    /// @param[in] old the previous value of the data set
+    /// @return The observation or a copy  if the data set changed
+    observation::ObservationPtr dataSetDifference(
+        const observation::ObservationPtr &observation,
+        const observation::ConstObservationPtr &old) const;
+
+    /// @brief Checks if the observation is a duplicate with existing observations
+    /// @param[in] obs the observation
+    /// @return an observation, possibly changed if it is not a duplicate. `nullptr` if it is a
+    /// duplicate..
+    const observation::ObservationPtr checkDuplicate(const observation::ObservationPtr &obs) const
+    {
+      using namespace observation;
+      using namespace std;
+
+      auto di = obs->getDataItem();
+      const auto &id = di->getId();
+      auto old = m_observations.find(id);
+
+      if (old != m_observations.end())
+      {
+        auto &oldObs = old->second;
+        // Filter out unavailable duplicates, only allow through changed
+        // state. If both are unavailable, disregard.
+        if (obs->isUnavailable() != oldObs->isUnavailable())
+          return obs;
+        else if (obs->isUnavailable())
+          return nullptr;
+
+        if (di->isCondition())
+        {
+          auto *cond = dynamic_cast<Condition *>(obs.get());
+          auto *oldCond = dynamic_cast<Condition *>(oldObs.get());
+
+          // Check for normal resetting all conditions. If there are
+          // no active conditions, then this is a duplicate normal
+          if (cond->getLevel() == Condition::NORMAL && cond->getCode().empty())
+          {
+            if (oldCond->getLevel() == Condition::NORMAL && oldCond->getCode().empty())
+              return nullptr;
+            else
+              return obs;
+          }
+
+          // If there is already an active condition with this code,
+          // then check if nothing has changed between activations.
+          if (const auto &e = oldCond->find(cond->getCode()))
+          {
+            if (cond->getLevel() != e->getLevel())
+              return obs;
+
+            if ((cond->hasValue() != e->hasValue()) ||
+                (cond->hasValue() && cond->getValue() != e->getValue()))
+              return obs;
+
+            if ((cond->hasProperty("qualifier") != e->hasProperty("qualifier")) ||
+                (cond->hasProperty("qualifier") &&
+                 cond->get<string>("qualifier") != e->get<string>("qualifier")))
+              return obs;
+
+            if ((cond->hasProperty("nativeSeverity") != e->hasProperty("nativeSeverity")) ||
+                (cond->hasProperty("nativeSeverity") &&
+                 cond->get<string>("nativeSeverity") != e->get<string>("nativeSeverity")))
+              return obs;
+
+            return nullptr;
+          }
+          else if (cond->getLevel() == Condition::NORMAL)
+          {
+            return nullptr;
+          }
+          else
+          {
+            return obs;
+          }
+        }
+        else if (!di->isDiscrete())
+        {
+          if (di->isDataSet())
+          {
+            return dataSetDifference(obs, oldObs);
+          }
+          else
+          {
+            auto &value = obs->getValue();
+            auto &oldValue = oldObs->getValue();
+
+            if (value == oldValue)
+              return nullptr;
+            else
+              return obs;
+          }
+        }
+      }
+      return obs;
+    }
 
     /// @brief copy another checkpoint to this checkpoint
     /// @param[in] checkpoint a checkpoint to copy

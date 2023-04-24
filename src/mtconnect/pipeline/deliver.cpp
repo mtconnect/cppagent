@@ -35,7 +35,7 @@ namespace mtconnect {
   using namespace entity;
 
   namespace pipeline {
-    const EntityPtr DeliverObservation::operator()(const EntityPtr entity)
+    EntityPtr DeliverObservation::operator()(entity::EntityPtr &&entity)
     {
       using namespace observation;
       auto o = std::dynamic_pointer_cast<Observation>(entity);
@@ -121,7 +121,7 @@ namespace mtconnect {
       }
     }
 
-    const EntityPtr DeliverAsset::operator()(const EntityPtr entity)
+    EntityPtr DeliverAsset::operator()(entity::EntityPtr &&entity)
     {
       auto a = std::dynamic_pointer_cast<asset::Asset>(entity);
       if (!a)
@@ -135,19 +135,19 @@ namespace mtconnect {
       return entity;
     }
 
-    const entity::EntityPtr DeliverConnectionStatus::operator()(const entity::EntityPtr entity)
+    entity::EntityPtr DeliverConnectionStatus::operator()(entity::EntityPtr &&entity)
     {
       m_contract->deliverConnectStatus(entity, m_devices, m_autoAvailable);
       return entity;
     }
 
-    const entity::EntityPtr DeliverAssetCommand::operator()(const entity::EntityPtr entity)
+    entity::EntityPtr DeliverAssetCommand::operator()(entity::EntityPtr &&entity)
     {
       m_contract->deliverAssetCommand(entity);
       return entity;
     }
 
-    const entity::EntityPtr DeliverCommand::operator()(const entity::EntityPtr entity)
+    entity::EntityPtr DeliverCommand::operator()(entity::EntityPtr &&entity)
     {
       if (m_defaultDevice)
         entity->setProperty("device", *m_defaultDevice);

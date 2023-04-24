@@ -70,7 +70,7 @@ namespace mtconnect {
       /// - MqttHost, defaults to LocalHost
       MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options,
                      std::unique_ptr<ClientHandler> &&handler)
-        : MqttClient(ioContext, move(handler)),
+        : MqttClient(ioContext, std::move(handler)),
           m_options(options),
           m_host(GetOption<std::string>(options, configuration::MqttHost).value_or("localhost")),
           m_port(GetOption<int>(options, configuration::MqttPort).value_or(1883)),

@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-using TransformFun = std::function<const EntityPtr(const EntityPtr entity)>;
+using TransformFun = std::function<EntityPtr(EntityPtr &&entity)>;
 class TestTransform : public Transform
 {
 public:
@@ -59,7 +59,7 @@ public:
   TestTransform(const std::string &name, Guard guard) : Transform(name) { m_guard = guard; }
   TestTransform(const std::string &name) : Transform(name) {}
 
-  const EntityPtr operator()(const EntityPtr ptr) override { return m_function(ptr); }
+  EntityPtr operator()(EntityPtr &&ptr) override { return m_function(std::move(ptr)); }
 
   void setGuard(Guard &guard) { m_guard = guard; }
   TransformFun m_function;
@@ -85,17 +85,17 @@ protected:
     m_pipeline = make_unique<TestPipeline>(m_context, strand);
 
     TestTransformPtr ta = make_shared<TestTransform>("A"s, EntityNameGuard("X", RUN));
-    ta->m_function = [ta](const EntityPtr entity) {
+    ta->m_function = [ta](EntityPtr &&entity) {
       EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
       ret->setValue(ret->getValue<string>() + "A"s);
-      return ta->next(ret);
+      return ta->next(std::move(ret));
     };
 
     TestTransformPtr tb = make_shared<TestTransform>("B"s, EntityNameGuard("X", RUN));
-    tb->m_function = [tb](const EntityPtr entity) {
+    tb->m_function = [tb](EntityPtr &&entity) {
       EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
       ret->setValue(ret->getValue<string>() + "B"s);
-      return tb->next(ret);
+      return tb->next(std::move(ret));
     };
 
     TestTransformPtr tc = make_shared<TestTransform>("C"s, EntityNameGuard("X", RUN));
@@ -124,7 +124,7 @@ protected:
 TEST_F(PipelineEditTest, run_three_transforms)
 {
   auto entity = shared_ptr<Entity>(new Entity("X", Properties {{"VALUE", "S"s}}));
-  auto result = m_pipeline->run(entity);
+  auto result = m_pipeline->run(std::move(entity));
 
   ASSERT_EQ("SABC", result->getValue<string>());
 }
@@ -132,16 +132,16 @@ TEST_F(PipelineEditTest, run_three_transforms)
 TEST_F(PipelineEditTest, insert_R_before_B)
 {
   TestTransformPtr tr = make_shared<TestTransform>("R"s, EntityNameGuard("X", RUN));
-  tr->m_function = [&tr](const EntityPtr entity) {
+  tr->m_function = [&tr](EntityPtr &&entity) {
     EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
     ret->setValue(ret->getValue<string>() + "R"s);
-    return tr->next(ret);
+    return tr->next(std::move(ret));
   };
 
   ASSERT_TRUE(m_pipeline->spliceBefore("B", tr));
 
   auto entity = shared_ptr<Entity>(new Entity("X", Properties {{"VALUE", "S"s}}));
-  auto result = m_pipeline->run(entity);
+  auto result = m_pipeline->run(std::move(entity));
 
   ASSERT_EQ("SARBC", result->getValue<string>());
 }
@@ -149,16 +149,16 @@ TEST_F(PipelineEditTest, insert_R_before_B)
 TEST_F(PipelineEditTest, insert_R_after_B)
 {
   TestTransformPtr tr = make_shared<TestTransform>("R"s, EntityNameGuard("X", RUN));
-  tr->m_function = [&tr](const EntityPtr entity) {
+  tr->m_function = [&tr](EntityPtr &&entity) {
     EntityPtr ret = shared_ptr<Entity>(new Entity(*entity));
     ret->setValue(ret->getValue<string>() + "R"s);
-    return tr->next(ret);
+    return tr->next(std::move(ret));
   };
 
   ASSERT_TRUE(m_pipeline->spliceAfter("B", tr));
 
   auto entity = shared_ptr<Entity>(new Entity("X", Properties {{"VALUE", "S"s}}));
-  auto result = m_pipeline->run(entity);
+  auto result = m_pipeline->run(std::move(entity));
 
   ASSERT_EQ("SABRC", result->getValue<string>());
 }
@@ -175,7 +175,7 @@ TEST_F(PipelineEditTest, append_R_first_after_B)
   ASSERT_TRUE(m_pipeline->firstAfter("B", tr));
 
   auto entity = shared_ptr<Entity>(new Entity("X", Properties {{"VALUE", "S"s}}));
-  auto result = m_pipeline->run(entity);
+  auto result = m_pipeline->run(std::move(entity));
 
   ASSERT_EQ("SABR", result->getValue<string>());
 }
@@ -192,7 +192,7 @@ TEST_F(PipelineEditTest, append_R_last_after_B)
   ASSERT_TRUE(m_pipeline->lastAfter("B"s, tr));
 
   auto entity = shared_ptr<Entity>(new Entity("X", Properties {{"VALUE", "S"s}}));
-  auto result = m_pipeline->run(entity);
+  auto result = m_pipeline->run(std::move(entity));
 
   ASSERT_EQ("SABC", result->getValue<string>());
 }

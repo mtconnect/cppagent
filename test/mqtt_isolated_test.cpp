@@ -149,12 +149,12 @@ protected:
     if (withTlsOption)
     {
       m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_agentTestHelper->m_ioContext,
-                                                                    opts, move(handler));
+                                                                    opts, std::move(handler));
     }
     else
     {
       m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext,
-                                                                    opts, move(handler));
+                                                                    opts, std::move(handler));
     }
   }
 
@@ -190,7 +190,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_client_should_connect_to_broker)
 
   auto handler = make_unique<ClientHandler>();
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
 
   ASSERT_TRUE(startClient());
 
@@ -343,7 +343,7 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
 
   auto handler = make_unique<ClientHandler>();
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
 
   ASSERT_TRUE(startClient());
 
@@ -376,7 +376,7 @@ TEST_F(MqttIsolatedUnitTest, should_connect_using_tls_ws)
   MergeOptions(opts, {{MqttPort, m_port}});
 
   m_client = make_shared<mtconnect::mqtt_client::MqttTlsWSClient>(m_agentTestHelper->m_ioContext,
-                                                                  opts, move(handler));
+                                                                  opts, std::move(handler));
 
   ASSERT_TRUE(startClient());
 
@@ -412,7 +412,7 @@ TEST_F(MqttIsolatedUnitTest, should_conenct_using_tls_authentication)
   ConfigOptions opts(options);
   MergeOptions(opts, {{MqttPort, m_port}});
 
-  createClient(opts, move(handler));
+  createClient(opts, std::move(handler));
 
   ASSERT_TRUE(startClient());
 

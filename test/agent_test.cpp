@@ -1483,7 +1483,8 @@ TEST_F(AgentTest, ConditionSequence)
   }
 
   m_agentTestHelper->m_adapter->processData(
-      "2021-02-01T12:00:00Z|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+      "2021-02-01T12:00:00Z|lp|FAULT|4200|ALARM_D|LOW|4200 ALARM_D Power on effective parameter "
+      "set");
 
   {
     PARSE_XML_RESPONSE("/current");

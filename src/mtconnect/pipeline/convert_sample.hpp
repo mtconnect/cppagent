@@ -32,7 +32,7 @@ namespace mtconnect::pipeline {
       using namespace observation;
       m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Observation>(SKIP);
     }
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace observation;
       using namespace entity;
@@ -41,13 +41,9 @@ namespace mtconnect::pipeline {
       {
         auto &converter = sample->getDataItem()->getConverter();
         if (converter)
-        {
-          auto ns = sample->copy();
-          converter->convertValue(ns->getValue());
-          return next(ns);
-        }
+          converter->convertValue(sample->getValue());
       }
-      return next(entity);
+      return next(std::move(entity));
     }
   };
 }  // namespace mtconnect::pipeline

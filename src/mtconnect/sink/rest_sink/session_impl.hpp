@@ -118,7 +118,8 @@ namespace mtconnect {
       /// @param error error format function
       HttpSession(boost::beast::tcp_stream &&stream, boost::beast::flat_buffer &&buffer,
                   const FieldList &list, Dispatch dispatch, ErrorFunction error)
-        : SessionImpl<HttpSession>(move(buffer), list, dispatch, error), m_stream(std::move(stream))
+        : SessionImpl<HttpSession>(std::move(buffer), list, dispatch, error),
+          m_stream(std::move(stream))
       {
         m_remote = m_stream.socket().remote_endpoint();
       }
