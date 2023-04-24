@@ -219,45 +219,6 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Probe)
   waitFor(1s, [&gotDevice]() { return gotDevice; });
 }
 
-TEST_F(MqttSinkTest, mqtt_sink_should_publish_Current)
-{
-  ConfigOptions options;
-  createServer(options);
-  startServer();
-  ASSERT_NE(0, m_port);
-
-  entity::JsonParser parser;
-
-  auto handler = make_unique<ClientHandler>();
-  bool gotDevice = false;
-  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
-                                             const std::string &topic, const std::string &payload) {
-    EXPECT_EQ("MTConnect/Device/000", topic);
-
-    ErrorList list;
-    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
-    EXPECT_EQ(0, list.size());
-    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
-    EXPECT_TRUE(dev);
-    EXPECT_EQ("LinuxCNC", dev->getComponentName());
-    EXPECT_EQ("000", *dev->getUuid());
-
-    gotDevice = true;
-  };
-
-  createClient(options, move(handler));
-  ASSERT_TRUE(startClient());
-  m_client->subscribe("MTConnect/Device/000");
-
-  createAgent();
-
-  auto service = m_agentTestHelper->getMqtt2Service();
-
-  ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
-
-  waitFor(60s, [&gotDevice]() { return gotDevice; });
-}
-
 TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
 {
   ConfigOptions options;
@@ -268,31 +229,66 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
   entity::JsonParser parser;
 
   auto handler = make_unique<ClientHandler>();
-  bool gotDevice = false;
-  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
-                                             const std::string &topic, const std::string &payload) {
-    EXPECT_EQ("MTConnect/Device/000", topic);
+  bool gotRotaryMode = false;
+  handler->m_receive = [&gotRotaryMode](std::shared_ptr<MqttClient>, const std::string &topic,
+                                        const std::string &payload) {
+    EXPECT_EQ("MTConnect/Observation/000/Axes[Axes]/Rotary[C]/Events/RotaryMode[Smode]", topic);
+    auto jdoc = json::parse(payload);
 
-    ErrorList list;
-    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
-    EXPECT_EQ(0, list.size());
-    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
-    EXPECT_TRUE(dev);
-    EXPECT_EQ("LinuxCNC", dev->getComponentName());
-    EXPECT_EQ("000", *dev->getUuid());
-
-    gotDevice = true;
+    string id = jdoc.at("/value"_json_pointer).get<string>();
+    if (id == string("SPINDLE"))
+    {
+      EXPECT_TRUE(true);
+      gotRotaryMode = true;
+    }
   };
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
-  m_client->subscribe("MTConnect/Device/000");
+  m_client->subscribe("MTConnect/Observation/000/Axes[Axes]/Rotary[C]/Events/RotaryMode[Smode]");
 
-  createAgent();
-
+  createAgent("/samples/discrete_example.xml");
   auto service = m_agentTestHelper->getMqtt2Service();
-
   ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
 
-  waitFor(1s, [&gotDevice]() { return gotDevice; });
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|block|G01X00|Smode|INDEX|line|204");
+
+  waitFor(500ms, [&gotRotaryMode]() { return gotRotaryMode; });
+}
+
+TEST_F(MqttSinkTest, mqtt_sink_should_publish_Current)
+{
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+
+  entity::JsonParser parser;
+
+  auto handler = make_unique<ClientHandler>();
+  bool isDeviceAvailable= false;
+  handler->m_receive = [&isDeviceAvailable](std::shared_ptr<MqttClient>, const std::string &topic,
+                                        const std::string &payload) {
+    EXPECT_EQ("MTConnect/Observation/e481314c-07c4-525f-966f-71dd53b8d717/Events/Availability", topic);
+    auto jdoc = json::parse(payload);
+
+    string id = jdoc.at("/value"_json_pointer).get<string>();
+    if (id == string("AVAILABLE"))
+    {
+      EXPECT_TRUE(true);
+      isDeviceAvailable = true;
+    }
+  };
+
+  createClient(options, std::move(handler));
+  ASSERT_TRUE(startClient());
+  m_client->subscribe(
+      "MTConnect/Observation/e481314c-07c4-525f-966f-71dd53b8d717/Events/Availability");
+
+  createAgent();
+  auto service = m_agentTestHelper->getMqtt2Service();
+  ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
+    
+  waitFor(60s, [&isDeviceAvailable]() { return isDeviceAvailable; });
 }

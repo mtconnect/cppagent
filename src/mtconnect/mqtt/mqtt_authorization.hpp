@@ -146,7 +146,7 @@ namespace mtconnect {
             }
           }
         }
-        return 0;
+        return NULL;
       }
 
       list<MqttTopicPermission> getTopicPermissionsForClient(std::string packetId)
