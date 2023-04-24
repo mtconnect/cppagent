@@ -1345,8 +1345,8 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 
 ### Setup the build
 
-    sudo apt-get install build-essential python3.9 python3-pip git cmake ruby rake
-	python3.9 -m pip install conan
+    sudo apt-get install build-essential python3.9 python3-pip git cmake ruby rake autoconf
+	python3.9 -m pip install conan -v conan==1.59.0
     echo 'export PATH=$HOME/.local/bin:$PATH' >> .bashrc
 
 ### Download the source
