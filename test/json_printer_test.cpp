@@ -354,3 +354,177 @@ TEST_F(JsonPrinterTest, elements_with_property_list_version_2)
   ASSERT_EQ("2",
             jdoc.at("/Root/CuttingItems/list/CuttingItem/1/itemId"_json_pointer).get<string>());
 }
+
+TEST_F(JsonPrinterTest, should_honor_include_hidden_parameter)
+{
+  auto root = createFileArchetypeFactory();
+  auto doc = deviceModel();
+
+  ErrorList errors;
+  entity::XmlParser parser;
+
+  auto entity = parser.parse(root, doc, errors);
+  ASSERT_EQ(0, errors.size());
+
+  boost::uuids::detail::sha1 sha1;
+  unordered_map<string, string> idMap;
+  
+  entity->createUniqueId(idMap, sha1);
+  
+  entity::JsonEntityPrinter jprinter(1, true, false);
+  auto jdoc = jprinter.print(entity);
+    
+  ASSERT_EQ(R"({
+  "MTConnectDevices": {
+    "Devices": [
+      {
+        "Device": {
+          "Components": [
+            {
+              "Systems": {
+                "Components": [
+                  {
+                    "Electric": {
+                      "id": "Pm2JhGKEeAYzVA8c"
+                    }
+                  },
+                  {
+                    "Heating": {
+                      "id": "culKrBObwYWb6x0g"
+                    }
+                  }
+                ],
+                "Description": {
+                  "value": "Hey Will",
+                  "model": "abc"
+                },
+                "id": "_cNZEyq5kGkgppmh"
+              }
+            }
+          ],
+          "DataItems": [
+            {
+              "DataItem": {
+                "category": "EVENT",
+                "id": "FFZeJQRwQvAdUJX4",
+                "name": "avail",
+                "type": "AVAILABILITY"
+              }
+            },
+            {
+              "DataItem": {
+                "category": "EVENT",
+                "id": "T0qItk3igtyip1XX",
+                "type": "ASSET_CHANGED"
+              }
+            },
+            {
+              "DataItem": {
+                "category": "EVENT",
+                "id": "LWOt9yZtpFPWjL7v",
+                "type": "ASSET_REMOVED"
+              }
+            }
+          ],
+          "id": "DFYX7ls4d4to2Lhb",
+          "name": "foo",
+          "uuid": "xxx"
+        }
+      }
+    ],
+    "Header": {
+      "assetBufferSize": 8096,
+      "assetCount": 60,
+      "bufferSize": 131072,
+      "creationTime": "2021-01-07T18:34:15Z",
+      "deviceModelChangeTime": "2021-01-07T18:34:15Z",
+      "instanceId": 1609418103,
+      "sender": "DMZ-MTCNCT",
+      "version": "1.6.0.6"
+    }
+  }
+})", jdoc);
+  
+  entity::JsonEntityPrinter jprinter2(1, true, true);
+  jdoc = jprinter2.print(entity);
+
+  ASSERT_EQ(R"({
+  "MTConnectDevices": {
+    "Devices": [
+      {
+        "Device": {
+          "Components": [
+            {
+              "Systems": {
+                "Components": [
+                  {
+                    "Electric": {
+                      "id": "Pm2JhGKEeAYzVA8c",
+                      "originalId": "e1"
+                    }
+                  },
+                  {
+                    "Heating": {
+                      "id": "culKrBObwYWb6x0g",
+                      "originalId": "h1"
+                    }
+                  }
+                ],
+                "Description": {
+                  "value": "Hey Will",
+                  "model": "abc"
+                },
+                "id": "_cNZEyq5kGkgppmh",
+                "originalId": "s1"
+              }
+            }
+          ],
+          "DataItems": [
+            {
+              "DataItem": {
+                "category": "EVENT",
+                "id": "FFZeJQRwQvAdUJX4",
+                "name": "avail",
+                "originalId": "avail",
+                "type": "AVAILABILITY"
+              }
+            },
+            {
+              "DataItem": {
+                "category": "EVENT",
+                "id": "T0qItk3igtyip1XX",
+                "originalId": "d1_asset_chg",
+                "type": "ASSET_CHANGED"
+              }
+            },
+            {
+              "DataItem": {
+                "category": "EVENT",
+                "id": "LWOt9yZtpFPWjL7v",
+                "originalId": "d1_asset_rem",
+                "type": "ASSET_REMOVED"
+              }
+            }
+          ],
+          "id": "DFYX7ls4d4to2Lhb",
+          "name": "foo",
+          "originalId": "d1",
+          "uuid": "xxx"
+        }
+      }
+    ],
+    "Header": {
+      "assetBufferSize": 8096,
+      "assetCount": 60,
+      "bufferSize": 131072,
+      "creationTime": "2021-01-07T18:34:15Z",
+      "deviceModelChangeTime": "2021-01-07T18:34:15Z",
+      "instanceId": 1609418103,
+      "sender": "DMZ-MTCNCT",
+      "version": "1.6.0.6"
+    }
+  }
+})", jdoc);
+  
+
+}

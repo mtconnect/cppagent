@@ -359,6 +359,10 @@ namespace mtconnect {
       /// @brief scan requirements and register factories refrenced in the requirements
       void registerEntityRequirements()
       {
+        if (!m_simpleProperties.count("originalId"))
+        {
+          m_requirements.emplace_back("originalId", false);
+        }
         for (auto &r : m_requirements)
         {
           m_properties.emplace(r.getName());

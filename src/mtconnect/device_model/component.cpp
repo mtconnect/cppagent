@@ -160,5 +160,12 @@ namespace mtconnect {
           device->registerDataItem(dataItem);
       }
     }
+    
+    std::optional<std::string> Component::createUniqueId(std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &psha1)
+    {
+      auto newId = Entity::createUniqueId(idMap, psha1);
+      m_id = *newId;
+      return newId;
+    }
   }  // namespace device_model
 }  // namespace mtconnect

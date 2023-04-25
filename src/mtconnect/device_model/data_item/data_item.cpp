@@ -243,7 +243,7 @@ namespace mtconnect {
 
     bool DataItem::hasName(const string &name) const
     {
-      return m_id == name || (m_name && *m_name == name) || (m_source && *m_source == name);
+      return m_id == name || (m_name && *m_name == name) || (m_source && *m_source == name) || (m_originalId && *m_originalId == name);
     }
 
     // Sort by: Device, Component, Category, DataItem

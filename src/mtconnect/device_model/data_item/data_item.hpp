@@ -40,6 +40,7 @@ namespace mtconnect {
   }
   namespace device_model {
     class Composition;
+    struct UpdateDataItemId;
 
     /// @brief DataItem related entities
     namespace data_item {
@@ -221,15 +222,45 @@ namespace mtconnect {
         bool operator<(const DataItem &another) const;
         bool operator==(const DataItem &another) const { return m_id == another.m_id; }
 
+        /// @brief Return the category as a char *
         const char *getCategoryText() const { return m_categoryText; }
 
+        /// @brief create unique ids recursively
+        /// @param[in] itemMap data item id to data item map
+        /// @param[in] sha the parents sha1
+        std::optional<std::string> createUniqueId(std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &sha1) override
+        {
+          m_originalId.emplace(m_id);
+          auto pref = m_id == m_preferredName;
+          m_id = *Entity::createUniqueId(idMap, sha1);
+          if (pref)
+            m_preferredName = m_id;
+          m_observatonProperties.insert_or_assign("dataItemId", m_id);
+          return m_id;
+        }
+
+        /// @brief Get a reference to the optional original id
+        /// @returns optional original id
+        const auto &getOriginalId() const { return m_originalId; }
+        
+        void updateReferences(const  std::unordered_map<std::string, std::string> idMap) override
+        {
+          Entity::updateReferences(idMap);
+          if (hasProperty("compositionId"))
+            m_observatonProperties.insert_or_assign("compositionId", get<std::string>("compositionId"));
+        }
+
+        
       protected:
         double simpleFactor(const std::string &units);
         std::map<std::string, std::string> buildAttributes() const;
 
+        friend struct device_model::UpdateDataItemId;
+        
       protected:
         // Unique ID for each component
         std::string m_id;
+        std::optional<std::string> m_originalId;
 
         // Name for itself
         std::optional<std::string> m_name;

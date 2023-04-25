@@ -24,6 +24,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/regex.hpp>
+#include <boost/uuid/detail/sha1.hpp>
+#include <boost/beast/core/detail/base64.hpp>
 
 #include <chrono>
 #include <date/date.h>
@@ -725,4 +727,51 @@ namespace mtconnect {
   /// @param[in] context the boost asio io_context for resolving the address
   /// @param[in] onlyV4 only consider IPV4 addresses if `true`
   std::string GetBestHostAddress(boost::asio::io_context &context, bool onlyV4 = false);
+  
+  /// @brief Function to create a unique id given a sha1 namespace and an id.
+  ///
+  /// Creates a base 64 encoded version of the string and removes any illegal characters
+  /// for an ID. If the first character is not a legal start character, maps the first 2 characters
+  /// to the legal ID start char set.
+  /// 
+  /// @param[in] sha the sha1 namespace to use as context
+  /// @param[in] id the id to use transform
+  /// @returns Returns the first 16 characters of the  base 64 encoded sha1
+  inline std::string makeUniqueId(const boost::uuids::detail::sha1 &sha, const std::string &id)
+  {
+    using namespace std;
+    
+    boost::uuids::detail::sha1 sha1(sha);
+    
+    constexpr string_view startc( "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_");
+    constexpr auto isIDStartChar = [](unsigned char c) -> bool {
+      return isalpha(c) || c == '_';
+    };
+    constexpr auto isIDChar = [isIDStartChar](unsigned char c) -> bool {
+      return isIDStartChar(c) || isdigit(c) || c == '.' || c == '-';
+    };
+
+    sha1.process_bytes(id.data(), id.length());
+    unsigned int digest[5];
+    sha1.get_digest(digest);
+
+    string s(32, ' ');
+    auto len = boost::beast::detail::base64::encode(s.data(), digest, sizeof(digest));
+
+    s.erase(len - 1);
+    std::remove_if(++(s.begin()), s.end(), not_fn(isIDChar));
+
+    // Check if the character is legal.
+    if (!isIDStartChar(s[0]))
+    {
+      // Change the start character to a legal character
+      uint32_t c = s[0] + s[1];
+      s.erase(0, 1);
+      s[0] = startc[c % startc.size()];
+    }
+    
+    s.erase(16);
+    
+    return s;
+  }
 }  // namespace mtconnect

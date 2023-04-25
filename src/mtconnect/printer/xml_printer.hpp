@@ -49,7 +49,8 @@ namespace mtconnect {
       std::string printProbe(const uint64_t instanceId, const unsigned int bufferSize,
                              const uint64_t nextSeq, const unsigned int assetBufferSize,
                              const unsigned int assetCount, const std::list<DevicePtr> &devices,
-                             const std::map<std::string, size_t> *count = nullptr) const override;
+                             const std::map<std::string, size_t> *count = nullptr,
+                             bool includeHidden = false) const override;
 
       std::string printSample(const uint64_t instanceId, const unsigned int bufferSize,
                               const uint64_t nextSeq, const uint64_t firstSeq,

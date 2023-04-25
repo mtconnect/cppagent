@@ -83,7 +83,7 @@ namespace mtconnect {
       m_deviceXmlPath(deviceXmlPath),
       m_circularBuffer(GetOption<int>(options, config::BufferSize).value_or(17),
                        GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
-      m_pretty(GetOption<bool>(options, mtconnect::configuration::Pretty).value_or(false))
+      m_pretty(IsOptionSet(options, mtconnect::configuration::Pretty))
   {
     using namespace asset;
 
@@ -97,8 +97,8 @@ namespace mtconnect {
 
     m_assetStorage = make_unique<AssetBuffer>(
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
-    m_versionDeviceXml =
-        GetOption<bool>(options, mtconnect::configuration::VersionDeviceXmlUpdates).value_or(false);
+    m_versionDeviceXml = IsOptionSet(options, mtconnect::configuration::VersionDeviceXmlUpdates);
+    m_createUniqueIds = IsOptionSet(options, config::CreateUniqueIds);
 
     auto jsonVersion =
         uint32_t(GetOption<int>(options, mtconnect::configuration::JsonVersion).value_or(2));
@@ -145,6 +145,9 @@ namespace mtconnect {
     for (auto device : devices)
       addDevice(device);
 
+    if (m_versionDeviceXml && m_createUniqueIds)
+      versionDeviceXml();
+    
     loadCachedProbe();
 
     m_initialized = true;
@@ -480,7 +483,18 @@ namespace mtconnect {
         device->addDataItem(odi, errors);
       if (auto odi = oldDev->getAssetCount(), ndi = device->getAssetCount(); odi && !ndi)
         device->addDataItem(odi, errors);
+    
+      if (errors.size() > 0)
+      {
+        LOG(error) << "Error adding device required data items for " << *device->getUuid() << ':';
+        for (const auto &e : errors)
+          LOG(error) << "  " << e->what();
+        return false;
+      }
+    
 
+      if (m_createUniqueIds)
+        createUniqueIds(device);
       verifyDevice(device);
 
       LOG(info) << "Checking if device " << *uuid << " has changed";
@@ -565,7 +579,8 @@ namespace mtconnect {
       std::list<DevicePtr> list;
       copy_if(m_deviceIndex.begin(), m_deviceIndex.end(), back_inserter(list),
               [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
-      auto probe = printer.printProbe(0, 0, 0, 0, 0, list);
+      auto probe = printer.printProbe(0, 0, 0, 0, 0, list, nullptr,
+                                      true);
 
       ofstream devices(file.string());
       devices << probe;
@@ -859,6 +874,7 @@ namespace mtconnect {
 
         // TODO: Redo Resolve Reference  with entity
         // device->resolveReferences();
+        createUniqueIds(device);
         verifyDevice(device);
 
         if (m_observationsInitialized)
@@ -917,6 +933,7 @@ namespace mtconnect {
 
     if (changed)
     {
+      createUniqueIds(device);
       if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
         device->addHash();
 
@@ -951,6 +968,16 @@ namespace mtconnect {
       }
     }
   }
+  
+  void Agent::createUniqueIds(DevicePtr device)
+  {
+    if (m_createUniqueIds && !dynamic_pointer_cast<AgentDevice>(device))
+    {
+      device->createUniqueIds(m_idMap);
+      device->updateReferences(m_idMap);
+    }    
+  }
+
 
   void Agent::loadCachedProbe()
   {

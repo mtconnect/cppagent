@@ -43,6 +43,7 @@ namespace mtconnect {
     using DevicePtr = std::shared_ptr<Device>;
 
     using DataItemPtr = std::shared_ptr<data_item::DataItem>;
+    using WeakDataItemPtr = std::weak_ptr<data_item::DataItem>;
 
     /// @brief MTConnect Component Entity
     class AGENT_LIB_API Component : public entity::Entity
@@ -257,6 +258,11 @@ namespace mtconnect {
 
         pth.push_back(getTopicName());
       }
+      
+      /// @brief create unique ids recursively
+      /// @param[in] itemMap data item id to data item map
+      /// @param[in] sha the parents sha1
+      std::optional<std::string>  createUniqueId(std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &sha1) override;
 
     protected:
       void setParent(ComponentPtr parent) { m_parent = parent; }
