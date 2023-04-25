@@ -377,7 +377,8 @@ namespace mtconnect::printer {
   string XmlPrinter::printProbe(const uint64_t instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
                                 const unsigned int assetCount, const list<DevicePtr> &deviceList,
-                                const std::map<std::string, size_t> *count) const
+                                const std::map<std::string, size_t> *count,
+                                bool includeHidden) const
   {
     string ret;
 
@@ -390,7 +391,7 @@ namespace mtconnect::printer {
 
       {
         AutoElement devices(writer, "Devices");
-        entity::XmlPrinter printer;
+        entity::XmlPrinter printer(includeHidden);
 
         for (auto &device : deviceList)
           printer.print(writer, device, m_deviceNsSet);

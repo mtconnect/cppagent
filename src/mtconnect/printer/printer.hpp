@@ -86,7 +86,8 @@ namespace mtconnect {
           const uint64_t instanceId, const unsigned int bufferSize, const uint64_t nextSeq,
           const unsigned int assetBufferSize, const unsigned int assetCount,
           const std::list<DevicePtr> &devices,
-          const std::map<std::string, size_t> *count = nullptr) const = 0;
+          const std::map<std::string, size_t> *count = nullptr,
+                                     bool includeHidden = false) const = 0;
       /// @brief Print a MTConnect Streams document
       /// @param[in] instanceId the instance id
       /// @param[in] bufferSize the buffer size

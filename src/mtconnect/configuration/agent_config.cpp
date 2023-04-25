@@ -645,6 +645,7 @@ namespace mtconnect::configuration {
                 {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
                 {configuration::CheckpointFrequency, 1000},
                 {configuration::LegacyTimeout, 600s},
+                {configuration::CreateUniqueIds, false},
                 {configuration::ReconnectInterval, 10000ms},
                 {configuration::IgnoreTimestamps, false},
                 {configuration::ConversionRequired, true},

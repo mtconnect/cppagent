@@ -180,13 +180,14 @@ namespace mtconnect::printer {
                                       const uint64_t nextSeq, const unsigned int assetBufferSize,
                                       const unsigned int assetCount,
                                       const std::list<DevicePtr> &devices,
-                                      const std::map<std::string, size_t> *count) const
+                                      const std::map<std::string, size_t> *count,
+                                      bool includeHidden) const
   {
     defaultSchemaVersion();
 
     StringBuffer output;
     RenderJson(output, m_pretty, [&](auto &writer) {
-      entity::JsonPrinter printer(writer, m_jsonVersion);
+      entity::JsonPrinter printer(writer, m_jsonVersion, includeHidden);
 
       AutoJsonObject top(writer);
       AutoJsonObject obj(writer, "MTConnectDevices");

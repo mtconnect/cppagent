@@ -131,7 +131,7 @@ namespace mtconnect::configuration {
       m_context.restart();
     }
 
-    /// @brief Cover methods for asio io_context
+    /// @name Cover methods for asio io_context
     /// @{
 
     /// @brief io_context::run_for
