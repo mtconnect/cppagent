@@ -1441,10 +1441,11 @@ Adapters {
         // Check for backup file
         auto ext = date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
         auto dit = directory_iterator(".");
-        auto it = find_if(dit, end(dit), [&ext](const auto &de) {
-          return starts_with(de.path().extension().string(), ext);
+        std::list<directory_entry> entries;
+        copy_if(dit, end(dit), back_inserter(entries), [&ext](const auto &de) {
+          return contains(de.path().string(), ext);
         });
-        ASSERT_NE(end(dit), it) << "Cannot find backup device file with extension: " << ext << '*';
+        ASSERT_EQ(1, entries.size());
 
         auto device = agent->getDeviceByName("LinuxCNC");
         ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
@@ -1552,6 +1553,14 @@ Port = 0
       if (!ec)
       {
         // Check for backup file
+        auto ext = date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
+        auto dit = directory_iterator(".");
+        std::list<directory_entry> entries;
+        copy_if(dit, end(dit), back_inserter(entries), [&ext](const auto &de) {
+          return contains(de.path().string(), ext);
+        });
+        ASSERT_EQ(2, entries.size());
+        
         auto device = agent->getDeviceByName("LinuxCNC");
         ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
 
