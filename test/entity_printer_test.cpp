@@ -283,52 +283,52 @@ TEST_F(EntityPrinterTest, TestRawContent)
 TEST_F(EntityPrinterTest, should_honor_include_hidden_parameter)
 {
   auto component = make_shared<Factory>(Requirements {
-    Requirement("id", true),
-    Requirement("name", false),
-    Requirement("uuid", false),
+      Requirement("id", true),
+      Requirement("name", false),
+      Requirement("uuid", false),
   });
-  
+
   auto components = make_shared<Factory>(
-                                         Requirements({Requirement("Component", ENTITY, component, 1, Requirement::Infinite)}));
+      Requirements({Requirement("Component", ENTITY, component, 1, Requirement::Infinite)}));
   components->registerMatchers();
   components->registerFactory(regex(".+"), component);
-  
+
   component->addRequirements({Requirement("Components", ENTITY_LIST, components, false)});
-  
+
   auto device = make_shared<Factory>(*component);
   device->addRequirements(Requirements {
-    Requirement("name", true),
-    Requirement("uuid", true),
+      Requirement("name", true),
+      Requirement("uuid", true),
   });
-  
+
   auto root = make_shared<Factory>(Requirements {Requirement("Device", ENTITY, device)});
-  
+
   auto doc = string {
-    "<Device id=\"d1\" name=\"foo\" uuid=\"xxx\">\n"
-    "  <Components>\n"
-    "    <Systems id=\"s1\">\n"
-    "      <Components>\n"
-    "        <Electric id=\"e1\"/>\n"
-    "        <Heating id=\"h1\"/>\n"
-    "      </Components>\n"
-    "    </Systems>\n"
-    "  </Components>\n"
-    "</Device>\n"};
-  
+      "<Device id=\"d1\" name=\"foo\" uuid=\"xxx\">\n"
+      "  <Components>\n"
+      "    <Systems id=\"s1\">\n"
+      "      <Components>\n"
+      "        <Electric id=\"e1\"/>\n"
+      "        <Heating id=\"h1\"/>\n"
+      "      </Components>\n"
+      "    </Systems>\n"
+      "  </Components>\n"
+      "</Device>\n"};
+
   ErrorList errors;
   entity::XmlParser parser;
-  
+
   auto entity = parser.parse(root, doc, errors);
   ASSERT_EQ(0, errors.size());
-  
+
   boost::uuids::detail::sha1 sha1;
   unordered_map<string, string> idMap;
-  
+
   entity->createUniqueId(idMap, sha1);
-  
+
   entity::XmlPrinter printer(false);
   printer.print(*m_writer, entity, {});
-  
+
   ASSERT_EQ(R"(<Device id="DFYX7ls4d4to2Lhb" name="foo" uuid="xxx">
   <Components>
     <Systems id="_cNZEyq5kGkgppmh">
@@ -339,12 +339,13 @@ TEST_F(EntityPrinterTest, should_honor_include_hidden_parameter)
     </Systems>
   </Components>
 </Device>
-)", m_writer->getContent());
-  
+)",
+            m_writer->getContent());
+
   m_writer = make_unique<printer::XmlWriter>(true);
   entity::XmlPrinter printer2(true);
   printer2.print(*m_writer, entity, {});
-  
+
   ASSERT_EQ(R"(<Device id="DFYX7ls4d4to2Lhb" name="foo" originalId="d1" uuid="xxx">
   <Components>
     <Systems id="_cNZEyq5kGkgppmh" originalId="s1">
@@ -355,7 +356,8 @@ TEST_F(EntityPrinterTest, should_honor_include_hidden_parameter)
     </Systems>
   </Components>
 </Device>
-)", m_writer->getContent());
+)",
+            m_writer->getContent());
 }
 
 class EntityPrinterNamespaceTest : public EntityPrinterTest

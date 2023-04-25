@@ -83,7 +83,7 @@ namespace mtconnect {
     {
       clear();
       m_options = options;
-      
+
       m_identity = GetOption<string>(m_options, configuration::AdapterIdentity).value_or("unknown");
     }
 

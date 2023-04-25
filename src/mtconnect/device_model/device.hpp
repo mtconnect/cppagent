@@ -151,7 +151,7 @@ namespace mtconnect {
           }
         }
       };
-      
+
       /// @brief Mapping of device names to data items
       using DataItemIndex = mic::multi_index_container<
           WeakDataItemPtr,
@@ -268,7 +268,7 @@ namespace mtconnect {
       /// @brief get the topic for this device
       /// @return the uuid of the device
       const std::string getTopicName() const override { return *m_uuid; }
-      
+
       /// @brief Converts all the ids to unique ids by hasing the topics
       ///
       /// Converts the id attribute to a unique value and caches the original value

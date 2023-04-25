@@ -79,7 +79,7 @@ namespace {
       {
         fs::remove_all(root);
       }
-        
+
       fs::create_directory(root);
       chdir(root.string().c_str());
       m_config->updateWorkingDirectory();
@@ -1435,17 +1435,17 @@ Adapters {
       using namespace std::filesystem;
       using namespace std::chrono;
       using namespace boost::algorithm;
-            
+
       if (!ec)
       {
         // Check for backup file
-        auto ext =  date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
+        auto ext = date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
         auto dit = directory_iterator(".");
         auto it = find_if(dit, end(dit), [&ext](const auto &de) {
           return starts_with(de.path().extension().string(), ext);
         });
         ASSERT_NE(end(dit), it) << "Cannot find backup device file with extension: " << ext << '*';
-            
+
         auto device = agent->getDeviceByName("LinuxCNC");
         ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
 
@@ -1454,11 +1454,11 @@ Adapters {
 
         auto cont = device->getComponentById("cont");
         ASSERT_TRUE(cont) << "Cannot find Component with id cont";
-        
+
         auto exec = device->getDeviceDataItem("exec");
         ASSERT_TRUE(exec) << "Cannot find DataItem with id exec";
-        
-        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
+
+        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
         ASSERT_EQ("LinuxCNC", pipeline->getDevice());
       }
       m_config->stop();
@@ -1534,7 +1534,7 @@ Port = 0
     auto agent = m_config->getAgent();
     auto device = agent->getDeviceByName("LinuxCNC");
     ASSERT_TRUE(device);
-    
+
     const auto &printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
 
@@ -1548,7 +1548,7 @@ Port = 0
       using namespace std::filesystem;
       using namespace std::chrono;
       using namespace boost::algorithm;
-            
+
       if (!ec)
       {
         // Check for backup file
@@ -1560,7 +1560,7 @@ Port = 0
 
         auto cont = device->getComponentById("cont");
         ASSERT_TRUE(cont) << "Cannot find Component with id cont";
-        
+
         auto devDIs = device->getDataItems();
         ASSERT_TRUE(devDIs);
         ASSERT_EQ(5, devDIs->size());
@@ -1568,20 +1568,19 @@ Port = 0
         auto dataItems = cont->getDataItems();
         ASSERT_TRUE(dataItems);
         ASSERT_EQ(2, dataItems->size());
-        
+
         auto it = dataItems->begin();
         ASSERT_EQ("exc", (*it)->get<std::string>("originalId"));
         it++;
         ASSERT_EQ("mode", (*it)->get<std::string>("originalId"));
 
-        
         auto estop = device->getDeviceDataItem("estop");
         ASSERT_TRUE(estop) << "Cannot find DataItem with id estop";
 
         auto exec = device->getDeviceDataItem("exc");
         ASSERT_TRUE(exec) << "Cannot find DataItem with id exc";
 
-        auto pipeline = dynamic_cast<AdapterPipeline*>(adapter->getPipeline());
+        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
         ASSERT_EQ("LinuxCNC", pipeline->getDevice());
       }
       m_config->stop();
@@ -1626,7 +1625,6 @@ Port = 0
     timer1.async_wait(send);
 
     m_config->start();
-
   }
 
   TEST_F(ConfigTest, should_update_the_ids_of_all_entities)
@@ -1675,11 +1673,11 @@ Port = 0
     m_config->initialize(options);
 
     auto agent2 = m_config->getAgent();
-    
+
     auto device2 = agent2->getDeviceByName("LinuxCNC");
     ASSERT_TRUE(device2);
     ASSERT_EQ(deviceId, device2->getId());
-    
+
     auto exec2 = device->getDeviceDataItem("exec");
     ASSERT_TRUE(exec2);
     ASSERT_EQ(exec->getId(), exec2->getId());

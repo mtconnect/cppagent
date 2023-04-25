@@ -152,8 +152,9 @@ namespace mtconnect {
     {
       if (auto it = m_dataItems.get<ById>().find(name); it != m_dataItems.get<ById>().end())
         return it->lock();
-      
-      if (auto it = m_dataItems.get<ByOriginalId>().find(name); it != m_dataItems.get<ByOriginalId>().end())
+
+      if (auto it = m_dataItems.get<ByOriginalId>().find(name);
+          it != m_dataItems.get<ByOriginalId>().end())
         return it->lock();
 
       if (auto it = m_dataItems.get<ByName>().find(name); it != m_dataItems.get<ByName>().end())
@@ -164,25 +165,26 @@ namespace mtconnect {
 
       return nullptr;
     }
-    
-    struct UpdateDataItemId {
+
+    struct UpdateDataItemId
+    {
       const string &m_id;
       UpdateDataItemId(const string &id) : m_id(id) {}
-      
+
       void operator()(WeakDataItemPtr &ptr)
       {
         auto di = ptr.lock();
         di->m_id = m_id;
       }
     };
-    
+
     void Device::createUniqueIds(std::unordered_map<std::string, std::string> &idMap)
     {
       boost::uuids::detail::sha1 sha;
       sha.process_bytes(m_uuid->data(), m_uuid->size());
-      
+
       Component::createUniqueId(idMap, sha);
-              
+
       for (auto it = m_dataItems.begin(); it != m_dataItems.end(); it++)
       {
         auto di = it->lock();
@@ -204,7 +206,7 @@ namespace mtconnect {
           LOG(error) << "DataItem id for " << di->getId() << " was not made unique";
         }
       }
-      
+
       for (auto p : m_componentsById)
       {
         auto comp = p.second.lock();
@@ -220,7 +222,6 @@ namespace mtconnect {
             m_componentsById.emplace(comp->getId(), comp);
           }
         }
-
       }
     }
 
