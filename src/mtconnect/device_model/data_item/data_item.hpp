@@ -225,9 +225,6 @@ namespace mtconnect {
         /// @brief Return the category as a char *
         const char *getCategoryText() const { return m_categoryText; }
 
-        /// @brief create unique ids recursively
-        /// @param[in] itemMap data item id to data item map
-        /// @param[in] sha the parents sha1
         std::optional<std::string> createUniqueId(
             std::unordered_map<std::string, std::string> &idMap,
             const boost::uuids::detail::sha1 &sha1) override

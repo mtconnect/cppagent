@@ -107,8 +107,8 @@ namespace mtconnect {
       virtual const entity::Value &getIdentity() const { return getProperty("id"); }
 
       /// @brief create unique ids recursively
-      /// @param[in,out] idMap data item id to data item map
-      /// @param[in] sha the parents sha1
+      /// @param[in,out] idMap  old entity id to new entity id map
+      /// @param[in] sha the root sha1
       /// @returns optional string value of the new id
       virtual std::optional<std::string> createUniqueId(
           std::unordered_map<std::string, std::string> &idMap,
