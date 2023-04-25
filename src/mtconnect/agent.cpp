@@ -492,9 +492,8 @@ namespace mtconnect {
         return false;
       }
 
-      if (m_createUniqueIds)
-        createUniqueIds(device);
       verifyDevice(device);
+      createUniqueIds(device);
 
       LOG(info) << "Checking if device " << *uuid << " has changed";
       if (*device != *oldDev)
@@ -566,7 +565,8 @@ namespace mtconnect {
     {
       // update with a new version of the device.xml, saving the old one
       // with a date time stamp
-      auto ext = date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<microseconds>(system_clock::now()));
+      auto ext =
+          date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<milliseconds>(system_clock::now()));
       fs::path file(m_deviceXmlPath);
       fs::path backup(m_deviceXmlPath + ext);
       if (!fs::exists(backup))
@@ -863,39 +863,32 @@ namespace mtconnect {
     }
     else
     {
-      // Check if we are already initialized. If so, the device will need to be
-      // verified, additional data items added, and initial values set.
-      // if (!m_initialized)
+      m_deviceIndex.push_back(device);
+
+      // TODO: Redo Resolve Reference  with entity
+      // device->resolveReferences();
+      verifyDevice(device);
+      createUniqueIds(device);
+
+      if (m_observationsInitialized)
       {
-        m_deviceIndex.push_back(device);
+        initializeDataItems(device);
 
-        // TODO: Redo Resolve Reference  with entity
-        // device->resolveReferences();
-        createUniqueIds(device);
-        verifyDevice(device);
-
-        if (m_observationsInitialized)
+        // Check for single valued constrained data items.
+        if (m_agentDevice && device != m_agentDevice)
         {
-          initializeDataItems(device);
-
-          // Check for single valued constrained data items.
-          if (m_agentDevice && device != m_agentDevice)
+          entity::Properties props {{"VALUE", uuid}};
+          if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
-            entity::Properties props {{"VALUE", uuid}};
-            if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
-            {
-              const auto &hash = device->getProperty("hash");
-              if (hash.index() != EMPTY)
-                props.insert_or_assign("hash", hash);
-            }
-
-            auto d = m_agentDevice->getDeviceDataItem("device_added");
-            m_loopback->receive(d, props);
+            const auto &hash = device->getProperty("hash");
+            if (hash.index() != EMPTY)
+              props.insert_or_assign("hash", hash);
           }
+
+          auto d = m_agentDevice->getDeviceDataItem("device_added");
+          m_loopback->receive(d, props);
         }
       }
-      // else
-      //   LOG(warning) << "Adding device " << uuid << " after initialialization not supported yet";
     }
 
     if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
@@ -970,8 +963,21 @@ namespace mtconnect {
   {
     if (m_createUniqueIds && !dynamic_pointer_cast<AgentDevice>(device))
     {
-      device->createUniqueIds(m_idMap);
-      device->updateReferences(m_idMap);
+      std::unordered_map<std::string, std::string> idMap;
+
+      device->createUniqueIds(idMap);
+      device->updateReferences(idMap);
+
+      // Update the data item map.
+      for (auto &id : idMap)
+      {
+        auto di = device->getDeviceDataItem(id.second);
+        if (auto it = m_dataItemMap.find(id.first); it != m_dataItemMap.end())
+        {
+          m_dataItemMap.erase(it);
+          m_dataItemMap.emplace(id.second, di);
+        }
+      }
     }
   }
 

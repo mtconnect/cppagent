@@ -505,7 +505,6 @@ namespace mtconnect {
 
     DeviceIndex m_deviceIndex;
     std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
-    std::unordered_map<std::string, std::string> m_idMap;
 
     // Xml Config
     std::optional<std::string> m_schemaVersion;
