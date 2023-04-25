@@ -566,7 +566,7 @@ namespace mtconnect {
     {
       // update with a new version of the device.xml, saving the old one
       // with a date time stamp
-      auto ext = date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<seconds>(system_clock::now()));
+      auto ext = date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<microseconds>(system_clock::now()));
       fs::path file(m_deviceXmlPath);
       fs::path backup(m_deviceXmlPath + ext);
       if (!fs::exists(backup))
