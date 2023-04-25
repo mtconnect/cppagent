@@ -93,55 +93,55 @@ namespace mtconnect {
     ///     - DisableAgentDevice
     Agent(configuration::AsyncContext &context, const std::string &deviceXmlPath,
           const ConfigOptions &options);
-    
+
     /// Destructor for the Agent.
     /// > Note: Does not stop the agent.
     ~Agent();
-    
+
     /// @brief Hook callback type
     using Hook = std::function<void(Agent &)>;
-    
+
     /// @brief Functions to run before the agent begins the initialization process.
     /// @return configuration::HookManager<Agent>&
     auto &beforeInitializeHooks() { return m_beforeInitializeHooks; }
-    
+
     /// @brief Function that run after all agent initialization is complete
     /// @return configuration::HookManager<Agent>&
     auto &afterInitializeHooks() { return m_afterInitializeHooks; }
-    
+
     /// @brief Hooks to run when before the agent starts all the soures and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStartHooks() { return m_beforeStartHooks; }
-    
+
     /// @brief Hooks before the agent stops all the sources and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStopHooks() { return m_beforeStopHooks; }
-    
+
     /// @brief the agent given a pipeline context
     /// @param context: the pipeline context shared between all pipelines
     void initialize(pipeline::PipelineContextPtr context);
-    
+
     /// @brief initial UNAVAILABLE observations for all data items
     ///        unless they have constant values.
     void initialDataItemObservations();
-    
+
     // Start and stop
     /// @brief Starts all the sources and sinks
     void start();
     /// @brief Stops all the sources and syncs.
     void stop();
-    
+
     /// @brief Get the boost asio io context
     /// @return boost::asio::io_context
     auto &getContext() { return m_context; }
-    
+
     /// @brief Create a contract for pipelines to access agent information
     /// @return A contract between the pipeline and this agent
     std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
     /// @brief Gets the pipe context shared by all pipelines
     /// @return A shared pipeline context
     auto getPipelineContext() { return m_pipelineContext; }
-    
+
     /// @brief Makes a unique sink contract
     /// @return A contract between the sink and the agent
     sink::SinkContractPtr makeSinkContract();
@@ -156,7 +156,7 @@ namespace mtconnect {
     ///        get latest and historical data.
     /// @return A const reference to the circular buffer
     const auto &getCircularBuffer() const { return m_circularBuffer; }
-    
+
     /// @brief Adds an adapter to the agent
     /// @param[in] source: shared pointer to the source being added
     /// @param[in] start: starts the source if start is true, otherwise delayed start
@@ -165,7 +165,7 @@ namespace mtconnect {
     /// @param[in] sink shared pointer to the the sink being added
     /// @param[in] start: starts the source if start is true, otherwise delayed start
     void addSink(sink::SinkPtr sink, bool start = false);
-    
+
     // Source and Sink
     /// @brief Find a source by name
     /// @param[in] name the identity to find
@@ -187,21 +187,21 @@ namespace mtconnect {
       for (auto &s : m_sinks)
         if (s->getName() == name)
           return s;
-      
+
       return nullptr;
     }
-    
+
     /// @brief Get the list of all sources
     /// @return The list of all source in the agent
     const auto &getSources() const { return m_sources; }
     /// @brief Get the list of all sinks
     /// @return The list of all sinks in the agent
     const auto &getSinks() const { return m_sinks; }
-    
+
     /// @brief Get the MTConnect schema version the agent is supporting
     /// @return The MTConnect schema version as a string
     const auto &getSchemaVersion() const { return m_schemaVersion; }
-    
+
     /// @brief Find a device by name
     /// @param[in] name The name of the device to find
     /// @return A shared pointer to the device
@@ -222,7 +222,7 @@ namespace mtconnect {
       boost::push_back(list, m_deviceIndex);
       return list;
     }
-    
+
     /// @brief Get a pointer to the default device
     ///
     /// The default device is the first device that is not the Agent device.
@@ -236,7 +236,7 @@ namespace mtconnect {
           if (device->getName() != "Agent")
             return device;
       }
-      
+
       return nullptr;
     }
     /// @deprecated use `getDefaultDevice()` instead
@@ -244,11 +244,11 @@ namespace mtconnect {
     /// @return A shared pointer to the default device
     /// @note Cover method for `getDefaultDevice()`
     DevicePtr defaultDevice() const { return getDefaultDevice(); }
-    
+
     /// @brief Get a pointer to the asset storage object
     /// @return A pointer to the asset storage object
     asset::AssetStorage *getAssetStorage() { return m_assetStorage.get(); }
-    
+
     /// @brief Add a device to the agent
     /// @param[in] device The device to add.
     /// @note This method is not fully implemented after agent initialization
@@ -262,16 +262,16 @@ namespace mtconnect {
     /// @param[in] deviceFile The device file to load
     /// @return true if successful
     bool reloadDevices(const std::string &deviceFile);
-    
+
     /// @brief receive and parse a single device from a source
     /// @param[in] deviceXml the device xml as a string
     /// @param[in] source the source loading the device
     void loadDevice(const std::string &deviceXml,
                     const std::optional<std::string> source = std::nullopt);
-    
+
     /// @name Message when source has connected and disconnected
     ///@{
-    
+
     /// @brief Called when source begins trying to connect
     /// @param source The source identity
     void connecting(const std::string &source);
@@ -287,9 +287,9 @@ namespace mtconnect {
     /// @param[in] autoAvailable `true` if the source should automatically set available to
     /// `AVAILABLE`
     void connected(const std::string &source, const StringList &devices, bool autoAvailable);
-    
+
     ///@}
-    
+
     /// @brief Called when a source receives a command from a data source
     /// @param[in] device The device name associated with this source
     /// @param[in] command The command being sent
@@ -297,7 +297,7 @@ namespace mtconnect {
     /// @param[in] source The identity of the source
     void receiveCommand(const std::string &device, const std::string &command,
                         const std::string &value, const std::string &source);
-    
+
     /// @brief Method to get a data item for a device
     /// @param[in] deviceName The name or uuid of the device
     /// @param[in] dataItemName The name or id of the data item
@@ -310,7 +310,7 @@ namespace mtconnect {
       auto dev = findDeviceByUUIDorName(deviceName);
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
-    
+
     /// @brief Get a data item by its id.
     /// @param id Unique id of the data item
     /// @return Shared pointer to the data item if found
@@ -321,10 +321,10 @@ namespace mtconnect {
         return diPos->second.lock();
       return nullptr;
     }
-    
+
     /// @name Pipeline related methods to receive data from sources
     ///@{
-    
+
     /// @brief Receive an observation
     /// @param[in] observation A shared pointer to the observation
     void receiveObservation(observation::ObservationPtr observation);
@@ -359,21 +359,21 @@ namespace mtconnect {
     /// @param device The device related to the asset
     /// @param asset The asset
     void notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset);
-    
+
     ///@}
-    
+
     /// @brief Method called by source when it cannot continue
     /// @param identity identity of the source
     void sourceFailed(const std::string &identity);
-    
+
     /// @name For testing
     ///@{
-    
+
     /// @brief Returns a shared pointer to the agent device
     /// @return shared pointer to the agent device
     auto getAgentDevice() { return m_agentDevice; }
     ///@}
-    
+
     /// @brief Get a pointer to the printer for a mime type
     /// @param type The mime type
     /// @return pointer to the printer or nullptr if it does not exist
@@ -386,11 +386,11 @@ namespace mtconnect {
       else
         return nullptr;
     }
-    
+
     /// @brief Get the map of available printers
     /// @return A const reference to the printer map
     const auto &getPrinters() const { return m_printers; }
-    
+
     /// @brief Prefixes the path with the device and rewrites the composed
     ///        paths by repeating the prefix. The resulting path is valid
     ///        XPath.
@@ -410,7 +410,7 @@ namespace mtconnect {
     /// @return The rewritten path properly prefixed
     std::string devicesAndPath(const std::optional<std::string> &path,
                                const DevicePtr device) const;
-    
+
     /// @brief Creates unique ids for the device model and maps to the originals
     ///
     /// Also updates the agents data item map by adding the new ids. Duplicate original
@@ -418,10 +418,10 @@ namespace mtconnect {
     ///
     /// @param[in] device device to modify
     void createUniqueIds(DevicePtr device);
-    
+
   protected:
     friend class AgentPipelineContract;
-    
+
     // Initialization methods
     void createAgentDevice();
     std::list<device_model::DevicePtr> loadXMLDeviceFile(const std::string &config);
@@ -430,47 +430,47 @@ namespace mtconnect {
                              std::optional<std::set<std::string>> skip = std::nullopt);
     void loadCachedProbe();
     void versionDeviceXml();
-    
+
     // Asset count management
     void updateAssetCounts(const DevicePtr &device, const std::optional<std::string> type);
-    
+
     observation::ObservationPtr getLatest(const std::string &id)
     {
       return m_circularBuffer.getLatest().getObservation(id);
     }
-    
+
     observation::ObservationPtr getLatest(const DataItemPtr &di) { return getLatest(di->getId()); }
-    
+
   protected:
     ConfigOptions m_options;
     configuration::AsyncContext &m_context;
     boost::asio::io_context::strand m_strand;
-    
+
     std::shared_ptr<source::LoopbackSource> m_loopback;
-    
+
     bool m_started {false};
-    
+
     // Asset Management
     std::unique_ptr<asset::AssetStorage> m_assetStorage;
-    
+
     // Unique id based on the time of creation
     bool m_initialized {false};
     bool m_observationsInitialized {false};
-    
+
     // Sources and Sinks
     source::SourceList m_sources;
     sink::SinkList m_sinks;
-    
+
     // Pipeline
     pipeline::PipelineContextPtr m_pipelineContext;
-    
+
     // Pointer to the configuration file for node access
     std::unique_ptr<parser::XmlParser> m_xmlParser;
     PrinterMap m_printers;
-    
+
     // Agent Device
     device_model::AgentDevicePtr m_agentDevice;
-    
+
     /// @brief tag for Device multi-index unsorted
     struct BySeq
     {};
@@ -480,7 +480,7 @@ namespace mtconnect {
     /// @brief tag for Device multi-index by UUID
     struct ByUuid
     {};
-    
+
     /// @brief Device UUID extractor for multi-index
     struct ExtractDeviceUuid
     {
@@ -488,7 +488,7 @@ namespace mtconnect {
       const result_type &operator()(const DevicePtr &d) const { return *d->getUuid(); }
       result_type operator()(const DevicePtr &d) { return *d->getUuid(); }
     };
-    
+
     /// @brief Device name extractor for multi-index
     struct ExtractDeviceName
     {
@@ -496,22 +496,22 @@ namespace mtconnect {
       const result_type &operator()(const DevicePtr &d) const { return *d->getComponentName(); }
       result_type operator()(DevicePtr &d) { return *d->getComponentName(); }
     };
-    
+
     /// @brief Devuce multi-index
     using DeviceIndex = mic::multi_index_container<
-    DevicePtr, mic::indexed_by<mic::sequenced<mic::tag<BySeq>>,
-    mic::hashed_unique<mic::tag<ByUuid>, ExtractDeviceUuid>,
-    mic::hashed_unique<mic::tag<ByName>, ExtractDeviceName>>>;
-    
+        DevicePtr, mic::indexed_by<mic::sequenced<mic::tag<BySeq>>,
+                                   mic::hashed_unique<mic::tag<ByUuid>, ExtractDeviceUuid>,
+                                   mic::hashed_unique<mic::tag<ByName>, ExtractDeviceName>>>;
+
     DeviceIndex m_deviceIndex;
     std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
     std::unordered_map<std::string, std::string> m_idMap;
-    
+
     // Xml Config
     std::optional<std::string> m_schemaVersion;
     std::string m_deviceXmlPath;
-    bool m_versionDeviceXml { false };
-    bool m_createUniqueIds { false };
+    bool m_versionDeviceXml {false};
+    bool m_createUniqueIds {false};
     int32_t m_intSchemaVersion = IntDefaultSchemaVersion();
 
     // Circular Buffer

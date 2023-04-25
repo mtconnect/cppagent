@@ -368,12 +368,12 @@ TEST_F(JsonPrinterTest, should_honor_include_hidden_parameter)
 
   boost::uuids::detail::sha1 sha1;
   unordered_map<string, string> idMap;
-  
+
   entity->createUniqueId(idMap, sha1);
-  
+
   entity::JsonEntityPrinter jprinter(1, true, false);
   auto jdoc = jprinter.print(entity);
-    
+
   ASSERT_EQ(R"({
   "MTConnectDevices": {
     "Devices": [
@@ -443,8 +443,9 @@ TEST_F(JsonPrinterTest, should_honor_include_hidden_parameter)
       "version": "1.6.0.6"
     }
   }
-})", jdoc);
-  
+})",
+            jdoc);
+
   entity::JsonEntityPrinter jprinter2(1, true, true);
   jdoc = jprinter2.print(entity);
 
@@ -524,7 +525,6 @@ TEST_F(JsonPrinterTest, should_honor_include_hidden_parameter)
       "version": "1.6.0.6"
     }
   }
-})", jdoc);
-  
-
+})",
+            jdoc);
 }

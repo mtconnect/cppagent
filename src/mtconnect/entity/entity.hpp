@@ -105,16 +105,18 @@ namespace mtconnect {
       /// @brief method to return the entities identity. defaults to `id`.
       /// @return the identity
       virtual const entity::Value &getIdentity() const { return getProperty("id"); }
-      
+
       /// @brief create unique ids recursively
       /// @param[in,out] idMap data item id to data item map
       /// @param[in] sha the parents sha1
       /// @returns optional string value of the new id
-      virtual std::optional<std::string> createUniqueId(std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &sha1);
-      
+      virtual std::optional<std::string> createUniqueId(
+          std::unordered_map<std::string, std::string> &idMap,
+          const boost::uuids::detail::sha1 &sha1);
+
       /// @brief update all id references to the new ids recursively
       /// @param[in] idMap map of old ids to new ids
-      virtual void updateReferences(const  std::unordered_map<std::string, std::string> idMap);
+      virtual void updateReferences(const std::unordered_map<std::string, std::string> idMap);
 
       /// @brief checks if there is entity is a list that has additional properties
       /// @return `true` if this a a list with additional attributes

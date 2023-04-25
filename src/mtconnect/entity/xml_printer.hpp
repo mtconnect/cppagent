@@ -42,9 +42,9 @@ namespace mtconnect {
       /// @param namespaces a set of namespaces to use in the document
       void print(xmlTextWriterPtr writer, const EntityPtr entity,
                  const std::unordered_set<std::string> &namespaces);
-      
+
     protected:
-      bool m_includeHidden { false };
+      bool m_includeHidden {false};
     };
   }  // namespace entity
 }  // namespace mtconnect

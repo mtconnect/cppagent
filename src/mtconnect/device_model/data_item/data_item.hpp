@@ -228,7 +228,9 @@ namespace mtconnect {
         /// @brief create unique ids recursively
         /// @param[in] itemMap data item id to data item map
         /// @param[in] sha the parents sha1
-        std::optional<std::string> createUniqueId(std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &sha1) override
+        std::optional<std::string> createUniqueId(
+            std::unordered_map<std::string, std::string> &idMap,
+            const boost::uuids::detail::sha1 &sha1) override
         {
           m_originalId.emplace(m_id);
           auto pref = m_id == m_preferredName;
@@ -242,21 +244,21 @@ namespace mtconnect {
         /// @brief Get a reference to the optional original id
         /// @returns optional original id
         const auto &getOriginalId() const { return m_originalId; }
-        
-        void updateReferences(const  std::unordered_map<std::string, std::string> idMap) override
+
+        void updateReferences(const std::unordered_map<std::string, std::string> idMap) override
         {
           Entity::updateReferences(idMap);
           if (hasProperty("compositionId"))
-            m_observatonProperties.insert_or_assign("compositionId", get<std::string>("compositionId"));
+            m_observatonProperties.insert_or_assign("compositionId",
+                                                    get<std::string>("compositionId"));
         }
 
-        
       protected:
         double simpleFactor(const std::string &units);
         std::map<std::string, std::string> buildAttributes() const;
 
         friend struct device_model::UpdateDataItemId;
-        
+
       protected:
         // Unique ID for each component
         std::string m_id;

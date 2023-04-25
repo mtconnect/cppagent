@@ -147,7 +147,7 @@ namespace mtconnect {
 
     if (m_versionDeviceXml && m_createUniqueIds)
       versionDeviceXml();
-    
+
     loadCachedProbe();
 
     m_initialized = true;
@@ -483,7 +483,7 @@ namespace mtconnect {
         device->addDataItem(odi, errors);
       if (auto odi = oldDev->getAssetCount(), ndi = device->getAssetCount(); odi && !ndi)
         device->addDataItem(odi, errors);
-    
+
       if (errors.size() > 0)
       {
         LOG(error) << "Error adding device required data items for " << *device->getUuid() << ':';
@@ -491,7 +491,6 @@ namespace mtconnect {
           LOG(error) << "  " << e->what();
         return false;
       }
-    
 
       if (m_createUniqueIds)
         createUniqueIds(device);
@@ -562,13 +561,12 @@ namespace mtconnect {
   void Agent::versionDeviceXml()
   {
     using namespace std::chrono;
-    
+
     if (m_versionDeviceXml)
     {
-      
       // update with a new version of the device.xml, saving the old one
       // with a date time stamp
-      auto ext =  date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<seconds>(system_clock::now()));      
+      auto ext = date::format(".%Y-%m-%dT%H+%M+%SZ", date::floor<seconds>(system_clock::now()));
       fs::path file(m_deviceXmlPath);
       fs::path backup(m_deviceXmlPath + ext);
       if (!fs::exists(backup))
@@ -579,8 +577,7 @@ namespace mtconnect {
       std::list<DevicePtr> list;
       copy_if(m_deviceIndex.begin(), m_deviceIndex.end(), back_inserter(list),
               [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
-      auto probe = printer.printProbe(0, 0, 0, 0, 0, list, nullptr,
-                                      true);
+      auto probe = printer.printProbe(0, 0, 0, 0, 0, list, nullptr, true);
 
       ofstream devices(file.string());
       devices << probe;
@@ -968,16 +965,15 @@ namespace mtconnect {
       }
     }
   }
-  
+
   void Agent::createUniqueIds(DevicePtr device)
   {
     if (m_createUniqueIds && !dynamic_pointer_cast<AgentDevice>(device))
     {
       device->createUniqueIds(m_idMap);
       device->updateReferences(m_idMap);
-    }    
+    }
   }
-
 
   void Agent::loadCachedProbe()
   {

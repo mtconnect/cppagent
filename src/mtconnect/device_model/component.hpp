@@ -245,7 +245,7 @@ namespace mtconnect {
 
         return nullptr;
       }
-      
+
       /// @brief Get the component topic path as a list
       ///
       /// Recurses to root and then appends getTopicName
@@ -258,11 +258,12 @@ namespace mtconnect {
 
         pth.push_back(getTopicName());
       }
-      
+
       /// @brief create unique ids recursively
       /// @param[in] itemMap data item id to data item map
       /// @param[in] sha the parents sha1
-      std::optional<std::string>  createUniqueId(std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &sha1) override;
+      std::optional<std::string> createUniqueId(std::unordered_map<std::string, std::string> &idMap,
+                                                const boost::uuids::detail::sha1 &sha1) override;
 
     protected:
       void setParent(ComponentPtr parent) { m_parent = parent; }

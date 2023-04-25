@@ -15,8 +15,10 @@
 //    limitations under the License.
 //
 
-#include <unordered_set>
 #include <boost/algorithm/string.hpp>
+
+#include <unordered_set>
+
 #include "factory.hpp"
 
 using namespace std;
@@ -140,31 +142,31 @@ namespace mtconnect::entity {
       }
     }
   }
-  
-  struct UniqueIdVisitor {
+
+  struct UniqueIdVisitor
+  {
     std::unordered_map<string, string> &m_idMap;
     const boost::uuids::detail::sha1 &m_sha1;
     UniqueIdVisitor(std::unordered_map<string, string> &idMap,
                     const boost::uuids::detail::sha1 &sha1)
-    : m_idMap(idMap), m_sha1(sha1)
+      : m_idMap(idMap), m_sha1(sha1)
     {}
-    
-    void operator()(EntityPtr &p)
-    {
-      p->createUniqueId(m_idMap, m_sha1);
-    }
-    
+
+    void operator()(EntityPtr &p) { p->createUniqueId(m_idMap, m_sha1); }
+
     void operator()(EntityList &l)
     {
       for (auto &e : l)
         e->createUniqueId(m_idMap, m_sha1);
     }
 
-    template<typename T>
-    void operator()(const T &) {}
+    template <typename T>
+    void operator()(const T &)
+    {}
   };
-  
-  std::optional<std::string> Entity::createUniqueId(std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &sha1)
+
+  std::optional<std::string> Entity::createUniqueId(
+      std::unordered_map<std::string, std::string> &idMap, const boost::uuids::detail::sha1 &sha1)
   {
     optional<string> res;
 
@@ -188,37 +190,34 @@ namespace mtconnect::entity {
       idMap.emplace(oldId, newId);
       res.emplace(newId);
     }
-    
+
     UniqueIdVisitor visitor(idMap, sha1);
-    
+
     // Recurse properties
     for (auto &p : m_properties)
     {
       std::visit(visitor, p.second);
     }
-    
+
     return res;
   }
-  
-  struct ReferenceIdVisitor {
+
+  struct ReferenceIdVisitor
+  {
     const std::unordered_map<string, string> &m_idMap;
-    ReferenceIdVisitor(const std::unordered_map<string, string> &idMap)
-    : m_idMap(idMap)
-    {}
-    
-    void operator()(EntityPtr &p)
-    {
-      p->updateReferences(m_idMap);
-    }
-    
+    ReferenceIdVisitor(const std::unordered_map<string, string> &idMap) : m_idMap(idMap) {}
+
+    void operator()(EntityPtr &p) { p->updateReferences(m_idMap); }
+
     void operator()(EntityList &l)
     {
       for (auto &e : l)
         e->updateReferences(m_idMap);
     }
 
-    template<typename T>
-    void operator()(T &) {}
+    template <typename T>
+    void operator()(T &)
+    {}
   };
 
   void Entity::updateReferences(std::unordered_map<std::string, std::string> idMap)
@@ -226,7 +225,8 @@ namespace mtconnect::entity {
     using namespace boost::algorithm;
     for (auto &prop : m_properties)
     {
-      if (prop.first != "originalId" && (iends_with(prop.first, "idref") || (prop.first.length() > 2 && iends_with(prop.first, "id"))))
+      if (prop.first != "originalId" && (iends_with(prop.first, "idref") ||
+                                         (prop.first.length() > 2 && iends_with(prop.first, "id"))))
       {
         auto it = idMap.find(std::get<string>(prop.second));
         if (it != idMap.end())
@@ -235,14 +235,13 @@ namespace mtconnect::entity {
         }
       }
     }
-    
+
     ReferenceIdVisitor visitor(idMap);
-    
+
     // Recurse all
     for (auto &p : m_properties)
     {
       std::visit(visitor, p.second);
     }
-
   }
 }  // namespace mtconnect::entity

@@ -106,8 +106,8 @@ namespace mtconnect::entity {
     /// @param version the supported MTConnect serialization version
     /// - Version 1 has a repreated objects in arrays for collections of objects
     /// - Version 2 combines arrays of objects by type
-    JsonPrinter(T &writer, uint32_t version,
-                bool includeHidden = false) : m_version(version), m_writer(writer), m_includeHidden(includeHidden) {};
+    JsonPrinter(T &writer, uint32_t version, bool includeHidden = false)
+      : m_version(version), m_writer(writer), m_includeHidden(includeHidden) {};
 
     /// @brief create a json object from an entity
     ///
@@ -272,7 +272,7 @@ namespace mtconnect::entity {
   protected:
     uint32_t m_version;
     T &m_writer;
-    bool m_includeHidden { false };
+    bool m_includeHidden {false};
   };
 
   /// @brief Serialization wrapper to turn an entity into a json string.
@@ -280,8 +280,8 @@ namespace mtconnect::entity {
   {
   public:
     /// @brief Create a printer for with a JSON vesion and flag to pretty print
-    JsonEntityPrinter(uint32_t version, bool pretty = false,
-                      bool includeHidden = false) : m_version(version), m_pretty(pretty), m_includeHidden(includeHidden)
+    JsonEntityPrinter(uint32_t version, bool pretty = false, bool includeHidden = false)
+      : m_version(version), m_pretty(pretty), m_includeHidden(includeHidden)
     {}
 
     /// @brief wrapper around the JsonPrinter print method that creates the correct printer
@@ -322,6 +322,6 @@ namespace mtconnect::entity {
   protected:
     uint32_t m_version;
     bool m_pretty;
-    bool m_includeHidden { false };
+    bool m_includeHidden {false};
   };
 }  // namespace mtconnect::entity
