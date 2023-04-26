@@ -270,9 +270,10 @@ namespace mtconnect::sink::rest_sink {
       {
         obj.Key("default");
         visit(
-            overloaded {[](const std::monostate &) {}, [&obj](const std::string &s) { obj.Add(s); },
-                        [&obj](int32_t i) { obj.Add(i); }, [&obj](uint64_t i) { obj.Add(i); },
-                        [&obj](double d) { obj.Add(d); }},
+              overloaded {[](const std::monostate &) {}, [&obj](const std::string &s) { obj.Add(s); },
+                [&obj](int32_t i) { obj.Add(i); }, [&obj](uint64_t i) { obj.Add(i); },
+                [&obj](double d) { obj.Add(d); },
+                [&obj](bool b) { obj.Add(b); }},
             param.m_default);
       }
     }
