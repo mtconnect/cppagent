@@ -559,6 +559,8 @@ namespace mtconnect {
 
   void Agent::versionDeviceXml()
   {
+    NAMED_SCOPE("Agent::versionDeviceXml");
+
     using namespace std::chrono;
 
     if (m_versionDeviceXml)
@@ -572,16 +574,22 @@ namespace mtconnect {
       if (!fs::exists(backup))
         fs::rename(file, backup);
 
-      printer::XmlPrinter printer(true);
-
-      std::list<DevicePtr> list;
-      copy_if(m_deviceIndex.begin(), m_deviceIndex.end(), back_inserter(list),
-              [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
-      auto probe = printer.printProbe(0, 0, 0, 0, 0, list, nullptr, true);
-
-      ofstream devices(file.string());
-      devices << probe;
-      devices.close();
+      auto printer = getPrinter("xml");
+      if (printer != nullptr)
+      {
+        std::list<DevicePtr> list;
+        copy_if(m_deviceIndex.begin(), m_deviceIndex.end(), back_inserter(list),
+                [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
+        auto probe = printer->printProbe(0, 0, 0, 0, 0, list, nullptr, true);
+        
+        ofstream devices(file.string());
+        devices << probe;
+        devices.close();
+      }
+      else
+      {
+        LOG(error) << "Cannot find xml printer";
+      }
     }
   }
 
@@ -1110,6 +1118,8 @@ namespace mtconnect {
     else
     {
       LOG(debug) << "Processing command: " << command << ": " << value;
+      if (!device)
+        device.emplace("");
       m_agent->receiveCommand(*device, command, value, *source);
     }
   }
