@@ -581,7 +581,7 @@ namespace mtconnect {
         copy_if(m_deviceIndex.begin(), m_deviceIndex.end(), back_inserter(list),
                 [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
         auto probe = printer->printProbe(0, 0, 0, 0, 0, list, nullptr, true, true);
-        
+
         ofstream devices(file.string());
         devices << probe;
         devices.close();
@@ -723,7 +723,8 @@ namespace mtconnect {
       auto devices = m_xmlParser->parseFile(
           configXmlPath, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
 
-      if (!m_schemaVersion && m_xmlParser->getSchemaVersion() && !m_xmlParser->getSchemaVersion()->empty())
+      if (!m_schemaVersion && m_xmlParser->getSchemaVersion() &&
+          !m_xmlParser->getSchemaVersion()->empty())
       {
         m_schemaVersion = m_xmlParser->getSchemaVersion();
         m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);

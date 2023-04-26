@@ -91,65 +91,75 @@ namespace mtconnect {
       ///@{
 
       /// @brief Handler for a probe request
-      /// @param  p printer for doc generation
-      /// @param device optional device name or uuid
+      /// @param[in]  p printer for doc generation
+      /// @param[in] device optional device name or uuid
+      /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Devices response
       ResponsePtr probeRequest(const printer::Printer *p,
-                               const std::optional<std::string> &device = std::nullopt);
+                               const std::optional<std::string> &device = std::nullopt,
+                               bool pretty = false);
 
       /// @brief Handler for a current request
-      /// @param  p printer for doc generation
-      /// @param device optional device name or uuid
-      /// @param at optional sequence number to take the snapshot
-      /// @param path an xpath to filter
+      /// @param[in] p printer for doc generation
+      /// @param[in] device optional device name or uuid
+      /// @param[in] at optional sequence number to take the snapshot
+      /// @param[in] path an xpath to filter
+      /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Streams response
       ResponsePtr currentRequest(const printer::Printer *p,
                                  const std::optional<std::string> &device = std::nullopt,
                                  const std::optional<SequenceNumber_t> &at = std::nullopt,
-                                 const std::optional<std::string> &path = std::nullopt);
+                                 const std::optional<std::string> &path = std::nullopt,
+                                 bool pretty = false);
 
       /// @brief Handler for a sample request
-      /// @param p printer for doc generation
-      /// @param count maximum number of observations
-      /// @param device optional device name or uuid
-      /// @param from optional starting sequence number
-      /// @param to optional ending sequence number
-      /// @param path an xpath for filtering
+      /// @param[in] p printer for doc generation
+      /// @param[in] count maximum number of observations
+      /// @param[in] device optional device name or uuid
+      /// @param[in] from optional starting sequence number
+      /// @param[in] to optional ending sequence number
+      /// @param[in] path an xpath for filtering
+      /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Streams response
       ResponsePtr sampleRequest(const printer::Printer *p, const int count = 100,
                                 const std::optional<std::string> &device = std::nullopt,
                                 const std::optional<SequenceNumber_t> &from = std::nullopt,
                                 const std::optional<SequenceNumber_t> &to = std::nullopt,
-                                const std::optional<std::string> &path = std::nullopt);
+                                const std::optional<std::string> &path = std::nullopt,
+                                bool pretty = false);
       /// @brief Handler for a streaming sample
-      /// @param session session to stream data to
-      /// @param p printer for doc generation
-      /// @param interval the minimum interval between sending documents in ms
-      /// @param heartbeat how often to send an empty document if no activity in ms
-      /// @param count the maxumum number of observations
-      /// @param device optional device name or uuid
-      /// @param from optional starting sequence number
-      /// @param path optional path for filtering
+      /// @param[in] session session to stream data to
+      /// @param[in] p printer for doc generation
+      /// @param[in] interval the minimum interval between sending documents in ms
+      /// @param[in] heartbeat how often to send an empty document if no activity in ms
+      /// @param[in] count the maxumum number of observations
+      /// @param[in] device optional device name or uuid
+      /// @param[in] from optional starting sequence number
+      /// @param[in] path optional path for filtering
+      /// @param[in] pretty `true` to ensure response is formatted
       void streamSampleRequest(SessionPtr session, const printer::Printer *p, const int interval,
                                const int heartbeat, const int count = 100,
                                const std::optional<std::string> &device = std::nullopt,
                                const std::optional<SequenceNumber_t> &from = std::nullopt,
-                               const std::optional<std::string> &path = std::nullopt);
+                               const std::optional<std::string> &path = std::nullopt,
+                               bool pretty = false);
 
       /// @brief Handler for a streaming current
-      /// @param session session to stream data to
-      /// @param p printer for doc generation
-      /// @param interval the minimum interval between sending documents in ms
-      /// @param device optional device name or uuid
-      /// @param path optional path for filtering
+      /// @param[in] session session to stream data to
+      /// @param[in] p printer for doc generation
+      /// @param[in] interval the minimum interval between sending documents in ms
+      /// @param[in] device optional device name or uuid
+      /// @param[in] path optional path for filtering
+      /// @param[in] pretty `true` to ensure response is formatted
       void streamCurrentRequest(SessionPtr session, const printer::Printer *p, const int interval,
                                 const std::optional<std::string> &device = std::nullopt,
-                                const std::optional<std::string> &path = std::nullopt);
+                                const std::optional<std::string> &path = std::nullopt,
+                                bool pretty = false);
       /// @brief Handler for put/post observation
-      /// @param p printer for response generation
-      /// @param device device
-      /// @param observations key/value pairs for the observations
-      /// @param time optional timestamp
+      /// @param[in] p printer for response generation
+      /// @param[in] device device
+      /// @param[in] observations key/value pairs for the observations
+      /// @param[in] time optional timestamp
       /// @return `<success/>` if succeeds
       ResponsePtr putObservationRequest(const printer::Printer *p, const std::string &device,
                                         const QueryMap observations,
@@ -181,21 +191,25 @@ namespace mtconnect {
       ///@{
 
       /// @brief Asset request handler for assets by type or device
-      /// @param p printer for the response document
-      /// @param count maximum number of assets to return
-      /// @param removed `true` if response should include removed assets
-      /// @param type optional type of asset to filter
-      /// @param device optional device name or uuid
+      /// @param[in] p printer for the response document
+      /// @param[in] count maximum number of assets to return
+      /// @param[in] removed `true` if response should include removed assets
+      /// @param[in] type optional type of asset to filter
+      /// @param[in] device optional device name or uuid
+      /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Assets response document
       ResponsePtr assetRequest(const printer::Printer *p, const int32_t count, const bool removed,
                                const std::optional<std::string> &type = std::nullopt,
-                               const std::optional<std::string> &device = std::nullopt);
+                               const std::optional<std::string> &device = std::nullopt,
+                               bool pretty = false);
 
       /// @brief Asset request handler using a list of asset ids
-      /// @param p printer for the response document
-      /// @param ids list of asset ids
+      /// @param[in] p printer for the response document
+      /// @param[in] ids list of asset ids
+      /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Assets response document
-      ResponsePtr assetIdsRequest(const printer::Printer *p, const std::list<std::string> &ids);
+      ResponsePtr assetIdsRequest(const printer::Printer *p, const std::list<std::string> &ids,
+                                  bool pretty = false);
 
       /// @brief Asset request handler to update an asset
       /// @param p printer for the response document
@@ -242,7 +256,7 @@ namespace mtconnect {
       /// @param text descriptive error text
       /// @return MTConnect Error document
       std::string printError(const printer::Printer *printer, const std::string &errorCode,
-                             const std::string &text) const;
+                             const std::string &text, bool pretty = false) const;
 
       /// @name For testing only
       ///@{
@@ -281,14 +295,15 @@ namespace mtconnect {
 
       // Current Data Collection
       std::string fetchCurrentData(const printer::Printer *printer, const FilterSetOpt &filterSet,
-                                   const std::optional<SequenceNumber_t> &at);
+                                   const std::optional<SequenceNumber_t> &at, bool pretty = false);
 
       // Sample data collection
       std::string fetchSampleData(const printer::Printer *printer, const FilterSetOpt &filterSet,
                                   int count, const std::optional<SequenceNumber_t> &from,
                                   const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
                                   bool &endOfBuffer,
-                                  observation::ChangeObserver *observer = nullptr);
+                                  observation::ChangeObserver *observer = nullptr,
+                                  bool pretty = false);
 
       // Verification methods
       template <typename T>

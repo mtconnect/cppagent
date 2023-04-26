@@ -182,8 +182,7 @@ namespace mtconnect::printer {
                                       const unsigned int assetCount,
                                       const std::list<DevicePtr> &devices,
                                       const std::map<std::string, size_t> *count,
-                                      bool includeHidden,
-                                      bool pretty) const
+                                      bool includeHidden, bool pretty) const
   {
     defaultSchemaVersion();
 
@@ -209,8 +208,7 @@ namespace mtconnect::printer {
   }
 
   std::string JsonPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
-                                       const unsigned int assetCount,
-                                       const asset::AssetList &asset,
+                                       const unsigned int assetCount, const asset::AssetList &asset,
                                        bool pretty) const
   {
     defaultSchemaVersion();

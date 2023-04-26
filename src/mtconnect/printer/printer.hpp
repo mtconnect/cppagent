@@ -61,8 +61,7 @@ namespace mtconnect {
       /// @return the error document
       virtual std::string printError(const uint64_t instanceId, const unsigned int bufferSize,
                                      const uint64_t nextSeq, const std::string &errorCode,
-                                     const std::string &errorText,
-                                     bool pretty = false) const
+                                     const std::string &errorText, bool pretty = false) const
       {
         return printErrors(instanceId, bufferSize, nextSeq, {{errorCode, errorText}});
       }
@@ -89,8 +88,7 @@ namespace mtconnect {
                                      const unsigned int assetCount,
                                      const std::list<DevicePtr> &devices,
                                      const std::map<std::string, size_t> *count = nullptr,
-                                     bool includeHidden = false,
-                                     bool pretty = false) const = 0;
+                                     bool includeHidden = false, bool pretty = false) const = 0;
       /// @brief Print a MTConnect Streams document
       /// @param[in] instanceId the instance id
       /// @param[in] bufferSize the buffer size
@@ -101,8 +99,7 @@ namespace mtconnect {
       /// @return the MTConnect Streams document
       virtual std::string printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                       const uint64_t nextSeq, const uint64_t firstSeq,
-                                      const uint64_t lastSeq,
-                                      observation::ObservationList &results,
+                                      const uint64_t lastSeq, observation::ObservationList &results,
                                       bool pretty = false) const = 0;
       /// @brief Generate an MTConnect Assets document
       /// @param[in] anInstanceId the instance id
@@ -111,8 +108,7 @@ namespace mtconnect {
       /// @param[in] asset the list of assets
       /// @return the MTConnect Assets document
       virtual std::string printAssets(const uint64_t anInstanceId, const unsigned int bufferSize,
-                                      const unsigned int assetCount,
-                                      asset::AssetList const &asset,
+                                      const unsigned int assetCount, asset::AssetList const &asset,
                                       bool pretty = false) const = 0;
       /// @brief get the mime type for the documents
       /// @return the mime type

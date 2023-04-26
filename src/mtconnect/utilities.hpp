@@ -716,7 +716,7 @@ namespace mtconnect {
   /// @param s the version
   inline int32_t IntSchemaVersion(const std::string &s)
   {
-    int major { 0 }, minor { 0 };
+    int major {0}, minor {0};
     char c;
     std::stringstream vstr(s);
     vstr >> major >> c >> minor;
