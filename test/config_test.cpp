@@ -1805,14 +1805,8 @@ Port = 0
     m_config->start();
   }
 
-  TEST_F(ConfigTest, should_not_reload_when_monitor_files_is_on)
-  {
-    GTEST_SKIP();
-  }
+  TEST_F(ConfigTest, should_not_reload_when_monitor_files_is_on) { GTEST_SKIP(); }
 
-  TEST_F(ConfigTest, should_map_references_to_new_ids)
-  {
-    GTEST_SKIP();
-  }
+  TEST_F(ConfigTest, should_map_references_to_new_ids) { GTEST_SKIP(); }
 
 }  // namespace

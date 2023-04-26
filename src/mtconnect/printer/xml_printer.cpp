@@ -378,8 +378,7 @@ namespace mtconnect::printer {
   string XmlPrinter::printProbe(const uint64_t instanceId, const unsigned int bufferSize,
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
                                 const unsigned int assetCount, const list<DevicePtr> &deviceList,
-                                const std::map<std::string, size_t> *count,
-                                bool includeHidden,
+                                const std::map<std::string, size_t> *count, bool includeHidden,
                                 bool pretty) const
   {
     string ret;
