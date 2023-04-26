@@ -124,12 +124,13 @@ namespace mtconnect::printer {
   }
 
   std::string JsonPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
-                                       const uint64_t nextSeq, const ProtoErrorList &list) const
+                                       const uint64_t nextSeq, const ProtoErrorList &list,
+                                       bool pretty) const
   {
     defaultSchemaVersion();
 
     StringBuffer output;
-    RenderJson(output, m_pretty, [&](auto &writer) {
+    RenderJson(output, m_pretty || pretty, [&](auto &writer) {
       AutoJsonObject obj(writer);
       {
         AutoJsonObject obj(writer, "MTConnectError");
@@ -181,12 +182,13 @@ namespace mtconnect::printer {
                                       const unsigned int assetCount,
                                       const std::list<DevicePtr> &devices,
                                       const std::map<std::string, size_t> *count,
-                                      bool includeHidden) const
+                                      bool includeHidden,
+                                      bool pretty) const
   {
     defaultSchemaVersion();
 
     StringBuffer output;
-    RenderJson(output, m_pretty, [&](auto &writer) {
+    RenderJson(output, m_pretty || pretty, [&](auto &writer) {
       entity::JsonPrinter printer(writer, m_jsonVersion, includeHidden);
 
       AutoJsonObject top(writer);
@@ -208,12 +210,13 @@ namespace mtconnect::printer {
 
   std::string JsonPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
                                        const unsigned int assetCount,
-                                       const asset::AssetList &asset) const
+                                       const asset::AssetList &asset,
+                                       bool pretty) const
   {
     defaultSchemaVersion();
 
     StringBuffer output;
-    RenderJson(output, m_pretty, [&](auto &writer) {
+    RenderJson(output, m_pretty || pretty, [&](auto &writer) {
       entity::JsonPrinter printer(writer, m_jsonVersion);
 
       AutoJsonObject top(writer);
@@ -407,12 +410,13 @@ namespace mtconnect::printer {
 
   std::string JsonPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const uint64_t firstSeq,
-                                       const uint64_t lastSeq, ObservationList &observations) const
+                                       const uint64_t lastSeq, ObservationList &observations,
+                                       bool pretty) const
   {
     defaultSchemaVersion();
 
     StringBuffer output;
-    RenderJson(output, m_pretty, [&](auto &writer) {
+    RenderJson(output, m_pretty || pretty, [&](auto &writer) {
       AutoJsonObject top(writer);
       AutoJsonObject obj(writer, "MTConnectStreams");
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);

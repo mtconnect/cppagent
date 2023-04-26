@@ -580,7 +580,7 @@ namespace mtconnect {
         std::list<DevicePtr> list;
         copy_if(m_deviceIndex.begin(), m_deviceIndex.end(), back_inserter(list),
                 [](DevicePtr d) { return dynamic_cast<AgentDevice *>(d.get()) == nullptr; });
-        auto probe = printer->printProbe(0, 0, 0, 0, 0, list, nullptr, true);
+        auto probe = printer->printProbe(0, 0, 0, 0, 0, list, nullptr, true, true);
         
         ofstream devices(file.string());
         devices << probe;

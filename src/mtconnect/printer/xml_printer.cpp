@@ -340,13 +340,14 @@ namespace mtconnect::printer {
   }
 
   std::string XmlPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
-                                      const uint64_t nextSeq, const ProtoErrorList &list) const
+                                      const uint64_t nextSeq, const ProtoErrorList &list,
+                                      bool pretty) const
   {
     string ret;
 
     try
     {
-      XmlWriter writer(m_pretty);
+      XmlWriter writer(m_pretty || pretty);
 
       initXmlDoc(writer, eERROR, instanceId, bufferSize, 0, 0, nextSeq, nextSeq - 1);
 
@@ -378,13 +379,14 @@ namespace mtconnect::printer {
                                 const uint64_t nextSeq, const unsigned int assetBufferSize,
                                 const unsigned int assetCount, const list<DevicePtr> &deviceList,
                                 const std::map<std::string, size_t> *count,
-                                bool includeHidden) const
+                                bool includeHidden,
+                                bool pretty) const
   {
     string ret;
 
     try
     {
-      XmlWriter writer(m_pretty);
+      XmlWriter writer(m_pretty || pretty);
 
       initXmlDoc(writer, eDEVICES, instanceId, bufferSize, assetBufferSize, assetCount, nextSeq, 0,
                  nextSeq - 1, count);
@@ -414,13 +416,14 @@ namespace mtconnect::printer {
 
   string XmlPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
-                                 const uint64_t lastSeq, ObservationList &observations) const
+                                 const uint64_t lastSeq, ObservationList &observations,
+                                 bool pretty) const
   {
     string ret;
 
     try
     {
-      XmlWriter writer(m_pretty);
+      XmlWriter writer(m_pretty || pretty);
 
       initXmlDoc(writer, eSTREAMS, instanceId, bufferSize, 0, 0, nextSeq, firstSeq, lastSeq);
 
@@ -493,12 +496,13 @@ namespace mtconnect::printer {
   }
 
   string XmlPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
-                                 const unsigned int assetCount, const AssetList &asset) const
+                                 const unsigned int assetCount, const AssetList &asset,
+                                 bool pretty) const
   {
     string ret;
     try
     {
-      XmlWriter writer(m_pretty);
+      XmlWriter writer(m_pretty || pretty);
       initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull);
 
       {
