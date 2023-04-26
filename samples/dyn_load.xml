@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:" xmlns="urn:mtconnect.org:MTConnectDevices:" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices: http://schemas.mtconnect.org/schemas/MTConnectDevices_.xsd">
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:2.2" xmlns="urn:mtconnect.org:MTConnectDevices:2.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:2.2 http://schemas.mtconnect.org/schemas/MTConnectDevices_2.2.xsd">
   <Header creationTime="2023-04-22T19:36:38Z" sender="myshkin" instanceId="0" version="2.2.0.1" assetBufferSize="0" assetCount="0" bufferSize="0"/>
   <Devices>
     <Device hash="0CZk9hw5r5wZRzoZjN6Z+a8poJw=" id="d" name="LinuxCNC" sampleInterval="10" uuid="000">

@@ -1807,7 +1807,12 @@ Port = 0
 
   TEST_F(ConfigTest, should_not_reload_when_monitor_files_is_on)
   {
-    GTEST_SKIP() << "Need to either disable one or make it work";
+    GTEST_SKIP();
+  }
+
+  TEST_F(ConfigTest, should_map_references_to_new_ids)
+  {
+    GTEST_SKIP();
   }
 
 }  // namespace

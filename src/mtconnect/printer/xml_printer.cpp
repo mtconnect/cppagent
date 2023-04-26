@@ -579,6 +579,8 @@ namespace mtconnect::printer {
     }
 
     string rootName = "MTConnect" + xmlType;
+    if (!m_schemaVersion)
+      defaultSchemaVersion();
     string xmlns = "urn:mtconnect.org:" + rootName + ":" + *m_schemaVersion;
     string location;
 
