@@ -715,7 +715,7 @@ namespace mtconnect {
       auto devices = m_xmlParser->parseFile(
           configXmlPath, dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get()));
 
-      if (!m_schemaVersion && m_xmlParser->getSchemaVersion())
+      if (!m_schemaVersion && m_xmlParser->getSchemaVersion() && !m_xmlParser->getSchemaVersion()->empty())
       {
         m_schemaVersion = m_xmlParser->getSchemaVersion();
         m_intSchemaVersion = IntSchemaVersion(*m_schemaVersion);
