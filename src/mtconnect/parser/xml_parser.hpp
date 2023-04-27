@@ -49,8 +49,15 @@ namespace mtconnect::parser {
     /// @brief Parses a file and returns a list of devices
     /// @param[in] aPath to the file
     /// @param[in] aPrinter the printer to obtain and set namespaces
+    /// @returns a list of device pointers
     std::list<device_model::DevicePtr> parseFile(const std::string &aPath,
                                                  printer::XmlPrinter *aPrinter);
+    /// @brief Parses a single device fragment
+    /// @param[in] deviceXml device xml of a single device
+    /// @param[in] aPrinter the printer to obtain and set namespaces
+    /// @returns a shared device pointer if successful
+    device_model::DevicePtr parseDevice(const std::string &deviceXml,
+                                        printer::XmlPrinter *aPrinter);
 
     /// @brief Just loads the document, assumed it has already been parsed before.
     /// @param aDoc the XML document to parse

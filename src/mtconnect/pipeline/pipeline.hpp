@@ -155,8 +155,7 @@ namespace mtconnect {
 
         return true;
       }
-      
-      
+
       /// @brief add a transform after the target.
       /// @param[in] target the named transforms to insert this transform after
       /// @param[in] transform the transform to add before
@@ -183,7 +182,7 @@ namespace mtconnect {
 
         return true;
       }
-      
+
       /// @brief splices the transform as the first option in targets next list.
       /// @param[in] target the named transforms to insert this transform after
       /// @param[in] transform the transform to add before
@@ -284,10 +283,7 @@ namespace mtconnect {
       /// @brief Sends the entity through the pipeline
       /// @param[in] entity the entity to send through the pipeline
       /// @return the entity returned from the transform
-      entity::EntityPtr run(entity::EntityPtr &&entity)
-      {
-        return m_start->next(std::move(entity));
-      }
+      entity::EntityPtr run(entity::EntityPtr &&entity) { return m_start->next(std::move(entity)); }
 
       /// @brief Bind the transform to the start
       /// @param[in] transform the transform to bind
@@ -301,7 +297,7 @@ namespace mtconnect {
       /// @brief check if the pipeline has a pipeline context
       /// @returns `true` if there is a context
       bool hasContext() const { return bool(m_context); }
-      
+
       /// @brief check if the pipeline has a pipeline contract
       /// @returns `true` if there is a contract
       bool hasContract() const { return bool(m_context) && bool(m_context->m_contract); }

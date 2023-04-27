@@ -75,3 +75,50 @@ Another Line...
 --multiline--ABC---)DOC";
   EXPECT_EQ(exp, data);
 }
+
+TEST(AdapterTest, should_forward_multiline_command)
+{
+  asio::io_context ioc;
+  asio::io_context::strand strand(ioc);
+  ConfigOptions options {{configuration::Host, "localhost"s}, {configuration::Port, 7878}};
+  boost::property_tree::ptree tree;
+  pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
+  auto adapter = make_unique<ShdrAdapter>(ioc, context, options, tree);
+
+  auto handler = make_unique<Handler>();
+  string command, value;
+  handler->m_command = [&](const string &c, const string &v, const string &s) {
+    command = c;
+    value = v;
+  };
+  adapter->setHandler(handler);
+
+  adapter->processData("* deviceModel: --multiline--ABC1234");
+  EXPECT_TRUE(adapter->getTerminator());
+  EXPECT_EQ("--multiline--ABC1234", *adapter->getTerminator());
+  adapter->processData("<Device id='x' uuid='y'>");
+  adapter->processData("  <something/>");
+  adapter->processData("</Device>");
+  adapter->processData("--multiline--ABC1234");
+
+  const auto exp = R"DOC(<Device id='x' uuid='y'>
+  <something/>
+</Device>)DOC";
+  EXPECT_EQ("devicemodel", command);
+  EXPECT_EQ(exp, value);
+}
+
+TEST(AdapterTest, should_set_options_from_commands)
+{
+  asio::io_context ioc;
+  asio::io_context::strand strand(ioc);
+  ConfigOptions options {{configuration::Host, "localhost"s}, {configuration::Port, 7878}};
+  boost::property_tree::ptree tree;
+  pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
+  auto adapter = make_unique<ShdrAdapter>(ioc, context, options, tree);
+
+  adapter->processData("* shdrVersion: 3");
+
+  auto v = GetOption<int>(adapter->getOptions(), "ShdrVersion");
+  ASSERT_EQ(int64_t(3), *v);
+}

@@ -112,7 +112,7 @@ namespace mtconnect::source {
                                         entity::ErrorList &errors)
   {
     // Parse the asset
-    auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, "1.7", errors);
+    auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, errors);
     if (!entity)
     {
       LOG(warning) << "Asset could not be parsed";

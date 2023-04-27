@@ -289,19 +289,12 @@ namespace mtconnect::source::adapter::shdr {
     LOG(trace) << "(" << m_server << ":" << m_port << ") Received line: " << line;
 
     // Check for heartbeats
-    if (line[0] == '*')
+    if (line[0] == '*' && !line.compare(0, 6, "* PONG"))
     {
-      if (!line.compare(0, 6, "* PONG"))
-      {
-        LOG(debug) << "(Port:" << m_localPort << ") Received a PONG for " << m_server << " on port "
-                   << m_port;
-        if (!m_heartbeats)
-          startHeartbeats(line);
-      }
-      else
-      {
-        protocolCommand(line);
-      }
+      LOG(debug) << "(Port:" << m_localPort << ") Received a PONG for " << m_server << " on port "
+                 << m_port;
+      if (!m_heartbeats)
+        startHeartbeats(line);
     }
     else
     {

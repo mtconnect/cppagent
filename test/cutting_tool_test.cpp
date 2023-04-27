@@ -101,7 +101,7 @@ TEST_F(CuttingToolTest, TestMinmalArchetype)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -160,7 +160,7 @@ TEST_F(CuttingToolTest, TestMeasurements)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -235,7 +235,7 @@ TEST_F(CuttingToolTest, TestItems)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -354,7 +354,7 @@ TEST_F(CuttingToolTest, TestMinmalTool)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -410,7 +410,7 @@ TEST_F(CuttingToolTest, TestMinmalToolError)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(2, errors.size());
   ASSERT_EQ(
       "CuttingToolLifeCycle(CutterStatus): Property CutterStatus is required and not provided",
@@ -437,7 +437,7 @@ TEST_F(CuttingToolTest, TestMeasurementsError)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(6, errors.size());
   auto it = errors.begin();
   EXPECT_EQ("FunctionalLength(VALUE): Property VALUE is required and not provided",
@@ -522,7 +522,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -663,7 +663,7 @@ TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   // Round trip test
@@ -728,7 +728,7 @@ TEST_F(CuttingToolTest, element_order_should_place_cutter_status_before_locus)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   // Round trip test
