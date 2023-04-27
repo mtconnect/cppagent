@@ -246,7 +246,7 @@ public:
       auto mqttContract = m_agent->makeSinkContract();
       mqttContract->m_pipelineContext = m_context;
       auto mqtt2sink = m_sinkFactory.make("Mqtt2Service", "Mqtt2Service", m_ioContext,
-                                         move(mqttContract), options, ptree {});
+                                         std::move(mqttContract), options, ptree {});
       m_mqtt2Service = std::dynamic_pointer_cast<sink::mqtt_sink::Mqtt2Service>(mqtt2sink);
       m_agent->addSink(m_mqtt2Service);
     }

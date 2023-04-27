@@ -41,7 +41,7 @@
 
         Mqtt2Service::Mqtt2Service(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
                                  const ConfigOptions &options, const ptree &config)
-          : Sink("Mqtt2Service", move(contract)), m_context(context), m_options(options)
+          : Sink("Mqtt2Service", std::move(contract)), m_context(context), m_options(options)
         {
           auto jsonPrinter = dynamic_cast<printer::JsonPrinter *>(m_sinkContract->getPrinter("json"));
           m_jsonPrinter = make_unique<entity::JsonEntityPrinter>(jsonPrinter->getJsonVersion());
@@ -93,11 +93,11 @@
 
           if (IsOptionSet(m_options, configuration::MqttTls))
           {
-            m_client = make_shared<MqttTlsClient>(m_context, m_options, move(clientHandler));
+            m_client = make_shared<MqttTlsClient>(m_context, m_options, std::move(clientHandler));
           }
           else
           {
-            m_client = make_shared<MqttTcpClient>(m_context, m_options, move(clientHandler));
+            m_client = make_shared<MqttTcpClient>(m_context, m_options, std::move(clientHandler));
           }
         }
 
