@@ -102,7 +102,7 @@ namespace mtconnect::configuration {
   boost::log::trivial::logger_type *gAgentLogger = nullptr;
 
   AgentConfiguration::AgentConfiguration()
-    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->getContext())
+    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->get())
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
     using namespace source;
@@ -645,6 +645,7 @@ namespace mtconnect::configuration {
                 {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
                 {configuration::CheckpointFrequency, 1000},
                 {configuration::LegacyTimeout, 600s},
+                {configuration::CreateUniqueIds, false},
                 {configuration::ReconnectInterval, 10000ms},
                 {configuration::IgnoreTimestamps, false},
                 {configuration::ConversionRequired, true},
@@ -896,9 +897,13 @@ namespace mtconnect::configuration {
                                          adapterOptions, ptree {});
       m_agent->addSource(source, false);
     }
-    else
+    else if (m_agent->getDevices().size() > 1)
     {
       throw runtime_error("Adapters must be defined if more than one device is present");
+    }
+    else
+    {
+      LOG(warning) << "Starting with no devices or adapters";
     }
   }
 

@@ -170,7 +170,7 @@ namespace mtconnect {
       {
         return check(matches(entity), entity);
       }
-      
+
       /// @brief set the alternative action if this guard does not match
       auto &operator||(Guard other)
       {
@@ -194,7 +194,7 @@ namespace mtconnect {
       {
         return check(matches(entity), entity);
       }
-      
+
       /// @brief set the alternative action if this guard does not match
       auto &operator||(Guard other)
       {
@@ -244,7 +244,7 @@ namespace mtconnect {
       {
         return B::check(matches(entity), entity);
       }
-      
+
       /// @brief set the alternative action if this guard does not match
       auto &operator||(Guard other)
       {

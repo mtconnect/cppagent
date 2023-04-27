@@ -75,8 +75,12 @@ namespace {
     fs::path createTempDirectory(const string &ext)
     {
       fs::path root {fs::path(TEST_BIN_ROOT_DIR) / ("config_test_" + ext)};
-      if (!fs::exists(root))
-        fs::create_directory(root);
+      if (fs::exists(root))
+      {
+        fs::remove_all(root);
+      }
+
+      fs::create_directory(root);
       chdir(root.string().c_str());
       m_config->updateWorkingDirectory();
       // m_config->setDebug(false);
@@ -993,7 +997,7 @@ Port = 0
     ASSERT_TRUE(dataItem);
     ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices, agent](boost::system::error_code ec) {
       if (ec)
@@ -1012,7 +1016,7 @@ Port = 0
       }
     });
 
-    boost::asio::steady_timer timer2(context.getContext());
+    boost::asio::steady_timer timer2(context.get());
     timer2.expires_from_now(6s);
     timer2.async_wait([this, agent, &chg](boost::system::error_code ec) {
       if (!ec)
@@ -1072,7 +1076,7 @@ Port = 0
     ASSERT_TRUE(dataItem);
     ASSERT_EQ("SPINDLE_SPEED", dataItem->getType());
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices](boost::system::error_code ec) {
       if (ec)
@@ -1085,7 +1089,7 @@ Port = 0
       }
     });
 
-    boost::asio::steady_timer timer2(context.getContext());
+    boost::asio::steady_timer timer2(context.get());
     timer2.expires_from_now(6s);
     timer2.async_wait([this, &chg](boost::system::error_code ec) {
       if (!ec)
@@ -1138,7 +1142,7 @@ Port = 0
 
     auto instance = rest->instanceId();
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &config](boost::system::error_code ec) {
       if (ec)
@@ -1154,7 +1158,7 @@ Port = 0
     auto th = thread([this, agent, instance, &context]() {
       this_thread::sleep_for(5s);
 
-      boost::asio::steady_timer timer1(context.getContext());
+      boost::asio::steady_timer timer1(context.get());
       timer1.expires_from_now(1s);
       timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
         if (!ec)
@@ -1215,7 +1219,7 @@ Port = 0
 
     DataItemPtr di;
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices](boost::system::error_code ec) {
       if (ec)
@@ -1229,7 +1233,7 @@ Port = 0
       }
     });
 
-    boost::asio::steady_timer timer2(context.getContext());
+    boost::asio::steady_timer timer2(context.get());
     timer2.expires_from_now(6s);
     timer2.async_wait([this](boost::system::error_code ec) {
       if (!ec)
@@ -1332,7 +1336,7 @@ Port = 0
     ASSERT_NE(nullptr, printer);
     ASSERT_EQ("1.2", *printer->getSchemaVersion());
 
-    boost::asio::steady_timer timer1(context.getContext());
+    boost::asio::steady_timer timer1(context.get());
     timer1.expires_from_now(1s);
     timer1.async_wait([this, &devices, agent](boost::system::error_code ec) {
       if (ec)
@@ -1355,7 +1359,7 @@ Port = 0
     auto th = thread([this, agent, instance, &context]() {
       this_thread::sleep_for(5s);
 
-      boost::asio::steady_timer timer1(context.getContext());
+      boost::asio::steady_timer timer1(context.get());
       timer1.expires_from_now(1s);
       timer1.async_wait([this, agent, instance](boost::system::error_code ec) {
         if (!ec)
@@ -1385,5 +1389,424 @@ Port = 0
     m_config->start();
     th.join();
   }
+
+  TEST_F(ConfigTest, should_add_a_new_device_when_deviceModel_received_from_adapter)
+  {
+    using namespace mtconnect::source::adapter;
+
+    fs::path root {createTempDirectory("6")};
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+VersionDeviceXmlUpdates = true
+Port = 0
+
+Adapters {
+  Device {
+  }
+}
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    copyFile("empty.xml", devices, 0min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &asyncContext = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto sp = agent->findSource("_localhost_7878");
+    ASSERT_TRUE(sp);
+
+    auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
+    ASSERT_TRUE(adapter);
+
+    auto validate = [&](boost::system::error_code ec) {
+      using namespace std::filesystem;
+      using namespace std::chrono;
+      using namespace boost::algorithm;
+
+      if (!ec)
+      {
+        // Check for backup file
+        auto ext = date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
+        auto dit = directory_iterator(".");
+        std::list<directory_entry> entries;
+        copy_if(dit, end(dit), back_inserter(entries),
+                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+        ASSERT_EQ(1, entries.size());
+
+        auto device = agent->getDeviceByName("LinuxCNC");
+        ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
+
+        const auto &components = device->getChildren();
+        ASSERT_EQ(1, components->size());
+
+        auto cont = device->getComponentById("cont");
+        ASSERT_TRUE(cont) << "Cannot find Component with id cont";
+
+        auto exec = device->getDeviceDataItem("exec");
+        ASSERT_TRUE(exec) << "Cannot find DataItem with id exec";
+
+        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        ASSERT_EQ("LinuxCNC", pipeline->getDevice());
+      }
+      m_config->stop();
+    };
+
+    boost::asio::steady_timer timer2(asyncContext.get());
+
+    auto send = [this, &adapter, &timer2, validate](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        adapter->processData("* deviceModel: --multiline--AAAAA");
+        adapter->processData(R"(
+<Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
+  <Description manufacturer="NIST" serialNumber=""/>
+  <DataItems>
+    <DataItem type="AVAILABILITY" category="EVENT" id="a" name="avail"/>
+  </DataItems>
+  <Components>
+    <Controller id="cont">
+      <DataItems>
+        <DataItem type="EXECUTION" category="EVENT" id="exec"/>
+        <DataItem type="CONTROLLER_MODE" category="EVENT" id="mode" name="mode"/>
+      </DataItems>
+    </Controller>
+  </Components>
+</Device>
+)");
+        adapter->processData("--multiline--AAAAA");
+
+        timer2.expires_from_now(500ms);
+        timer2.async_wait(validate);
+      }
+    };
+
+    boost::asio::steady_timer timer1(asyncContext.get());
+    timer1.expires_from_now(100ms);
+    timer1.async_wait(send);
+
+    m_config->start();
+  }
+
+  TEST_F(ConfigTest, should_update_a_device_when_received_from_adapter)
+  {
+    using namespace mtconnect::source::adapter;
+
+    fs::path root {createTempDirectory("7")};
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+VersionDeviceXmlUpdates = true
+CreateUniqueIds = true
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    copyFile("dyn_load.xml", devices, 0min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &asyncContext = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    auto device = agent->getDeviceByName("LinuxCNC");
+    ASSERT_TRUE(device);
+
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto sp = agent->findSource("_localhost_7878");
+    ASSERT_TRUE(sp);
+
+    auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
+    ASSERT_TRUE(adapter);
+
+    auto validate = [&](boost::system::error_code ec) {
+      using namespace std::filesystem;
+      using namespace std::chrono;
+      using namespace boost::algorithm;
+
+      if (!ec)
+      {
+        // Check for backup file
+        auto ext = date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
+        auto dit = directory_iterator(".");
+        std::list<directory_entry> entries;
+        copy_if(dit, end(dit), back_inserter(entries),
+                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+        ASSERT_EQ(2, entries.size());
+
+        auto device = agent->getDeviceByName("LinuxCNC");
+        ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
+
+        const auto &components = device->getChildren();
+        ASSERT_EQ(1, components->size());
+
+        auto cont = device->getComponentById("cont");
+        ASSERT_TRUE(cont) << "Cannot find Component with id cont";
+
+        auto devDIs = device->getDataItems();
+        ASSERT_TRUE(devDIs);
+        ASSERT_EQ(5, devDIs->size());
+
+        auto dataItems = cont->getDataItems();
+        ASSERT_TRUE(dataItems);
+        ASSERT_EQ(2, dataItems->size());
+
+        auto it = dataItems->begin();
+        ASSERT_EQ("exc", (*it)->get<std::string>("originalId"));
+        it++;
+        ASSERT_EQ("mode", (*it)->get<std::string>("originalId"));
+
+        auto estop = device->getDeviceDataItem("estop");
+        ASSERT_TRUE(estop) << "Cannot find DataItem with id estop";
+
+        auto exec = device->getDeviceDataItem("exc");
+        ASSERT_TRUE(exec) << "Cannot find DataItem with id exc";
+
+        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        ASSERT_EQ("LinuxCNC", pipeline->getDevice());
+      }
+      m_config->stop();
+    };
+
+    boost::asio::steady_timer timer2(asyncContext.get());
+
+    auto send = [this, &adapter, &timer2, validate](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        adapter->processData("* deviceModel: --multiline--AAAAA");
+        adapter->processData(R"(
+<Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d">
+  <Description manufacturer="NIST" serialNumber=""/>
+  <DataItems>
+    <DataItem type="AVAILABILITY" category="EVENT" id="a" name="avail"/>
+    <DataItem type="EMERGENCY_STOP" category="EVENT" id="estop" name="es"/>
+  </DataItems>
+  <Components>
+    <Controller id="cont">
+      <DataItems>
+        <DataItem type="EXECUTION" category="EVENT" id="exc"/>
+        <DataItem type="CONTROLLER_MODE" category="EVENT" id="mode" name="mode"/>
+      </DataItems>
+    </Controller>
+  </Components>
+</Device>
+)");
+        adapter->processData("--multiline--AAAAA");
+
+        timer2.expires_from_now(500ms);
+        timer2.async_wait(validate);
+      }
+    };
+
+    boost::asio::steady_timer timer1(asyncContext.get());
+    timer1.expires_from_now(100ms);
+    timer1.async_wait(send);
+
+    m_config->start();
+  }
+
+  TEST_F(ConfigTest, should_update_the_ids_of_all_entities)
+  {
+    fs::path root {createTempDirectory("8")};
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+VersionDeviceXmlUpdates = true
+CreateUniqueIds = true
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    copyFile("dyn_load.xml", devices, 0min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+
+    auto agent = m_config->getAgent();
+    auto device = agent->getDeviceByName("LinuxCNC");
+    ASSERT_TRUE(device);
+
+    auto deviceId = device->getId();
+
+    ASSERT_NE("d", deviceId);
+    ASSERT_EQ("d", device->get<string>("originalId"));
+
+    // Get the data item by its old id
+    auto exec = device->getDeviceDataItem("exec");
+    ASSERT_TRUE(exec);
+    ASSERT_TRUE(exec->getOriginalId());
+    ASSERT_EQ("exec", *exec->getOriginalId());
+
+    // Re-initialize the agent with the modified device.xml with the unique ids aready created
+    // This tests if the originalId in the device xml file does the ritght thing when mapping ids
+    m_config = std::make_unique<AgentConfiguration>();
+    m_config->setDebug(true);
+    m_config->initialize(options);
+
+    auto agent2 = m_config->getAgent();
+
+    auto device2 = agent2->getDeviceByName("LinuxCNC");
+    ASSERT_TRUE(device2);
+    ASSERT_EQ(deviceId, device2->getId());
+
+    auto exec2 = device->getDeviceDataItem("exec");
+    ASSERT_TRUE(exec2);
+    ASSERT_EQ(exec->getId(), exec2->getId());
+    ASSERT_TRUE(exec2->getOriginalId());
+    ASSERT_EQ("exec", *exec2->getOriginalId());
+  }
+
+  TEST_F(ConfigTest, should_add_a_new_device_with_duplicate_ids)
+  {
+    using namespace mtconnect::source::adapter;
+
+    fs::path root {createTempDirectory("9")};
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+VersionDeviceXmlUpdates = true
+CreateUniqueIds = true
+Port = 0
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    copyFile("dyn_load.xml", devices, 0min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &asyncContext = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    auto device = agent->getDeviceByName("LinuxCNC");
+    ASSERT_TRUE(device);
+
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto sp = agent->findSource("_localhost_7878");
+    ASSERT_TRUE(sp);
+
+    auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
+    ASSERT_TRUE(adapter);
+
+    auto validate = [&](boost::system::error_code ec) {
+      using namespace std::filesystem;
+      using namespace std::chrono;
+      using namespace boost::algorithm;
+
+      if (!ec)
+      {
+        // Check for backup file
+        auto ext = date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
+        auto dit = directory_iterator(".");
+        std::list<directory_entry> entries;
+        copy_if(dit, end(dit), back_inserter(entries),
+                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+        ASSERT_EQ(2, entries.size());
+
+        ASSERT_EQ(3, agent->getDevices().size());
+
+        auto device1 = agent->getDeviceByName("LinuxCNC");
+        ASSERT_TRUE(device1) << "Cannot find LinuxCNC device";
+
+        auto device2 = agent->getDeviceByName("AnotherCNC");
+        ASSERT_TRUE(device2) << "Cannot find LinuxCNC device";
+
+        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        ASSERT_EQ("AnotherCNC", pipeline->getDevice());
+      }
+      m_config->stop();
+    };
+
+    boost::asio::steady_timer timer2(asyncContext.get());
+
+    auto send = [this, &adapter, &timer2, validate](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
+        ASSERT_EQ("LinuxCNC", pipeline->getDevice());
+
+        adapter->processData("* deviceModel: --multiline--AAAAA");
+        adapter->processData(R"(
+<Device uuid="001" name="AnotherCNC" sampleInterval="10.0" id="d">
+  <Description manufacturer="NIST" serialNumber=""/>
+  <DataItems>
+    <DataItem type="AVAILABILITY" category="EVENT" id="a" name="avail"/>
+    <DataItem type="EMERGENCY_STOP" category="EVENT" id="estop" name="es"/>
+  </DataItems>
+  <Components>
+    <Controller id="cont">
+      <DataItems>
+        <DataItem type="EXECUTION" category="EVENT" id="exec"/>
+        <DataItem type="CONTROLLER_MODE" category="EVENT" id="mode" name="mode"/>
+      </DataItems>
+    </Controller>
+  </Components>
+</Device>
+)");
+        adapter->processData("--multiline--AAAAA");
+
+        timer2.expires_from_now(500ms);
+        timer2.async_wait(validate);
+      }
+    };
+
+    boost::asio::steady_timer timer1(asyncContext.get());
+    timer1.expires_from_now(100ms);
+    timer1.async_wait(send);
+
+    m_config->start();
+  }
+
+  TEST_F(ConfigTest, should_not_reload_when_monitor_files_is_on) { GTEST_SKIP(); }
+
+  TEST_F(ConfigTest, should_map_references_to_new_ids) { GTEST_SKIP(); }
 
 }  // namespace

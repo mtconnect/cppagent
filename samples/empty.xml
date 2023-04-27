@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MTConnectDevices xmlns:m="urn:mtconnect.org:MTConnectDevices:2.2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="urn:mtconnect.org:MTConnectDevices:2.2" 
+  xsi:schemaLocation="urn:mtconnect.org:MTConnectDevices:2.2 ../schemas/MTConnectDevices_2.2.xsd">
+  <Header creationTime="2009-03-22T01:50:29+00:00" sender="localhost" instanceId="1237628993"
+    bufferSize="100000" version="2.2" deviceModelChangeTime="2022-06-01T00:00:00" assetBufferSize="1024" assetCount="0"/>
+  <Devices/>
+</MTConnectDevices>

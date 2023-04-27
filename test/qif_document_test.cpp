@@ -117,7 +117,7 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -183,7 +183,7 @@ TEST_F(QIFDocumentTest, test_qif_xml_round_trip)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -227,7 +227,7 @@ TEST_F(QIFDocumentTest, should_generate_json)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());

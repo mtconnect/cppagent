@@ -234,8 +234,8 @@ namespace mtconnect::entity {
     return nullptr;
   }
 
-  EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, const string &version,
-                             ErrorList &errors, bool parseNamespaces)
+  EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, ErrorList &errors,
+                             bool parseNamespaces)
   {
     NAMED_SCOPE("entity.xml_parser");
     EntityPtr entity;

@@ -80,7 +80,7 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.2", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -133,7 +133,7 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
   hdoc.insert(68, string(" hash=\"" + hash1 + "\""));
   ASSERT_EQ(content, hdoc);
 
-  auto entity2 = parser.parse(Asset::getRoot(), content, "2.2", errors);
+  auto entity2 = parser.parse(Asset::getRoot(), content, errors);
 
   ASSERT_EQ(hash1, entity2->hash());
 
@@ -162,7 +162,7 @@ TEST_F(ComponentParametersTest, should_parse_two_parameter_sets)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.2", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());

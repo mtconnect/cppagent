@@ -243,7 +243,8 @@ namespace mtconnect {
 
     bool DataItem::hasName(const string &name) const
     {
-      return m_id == name || (m_name && *m_name == name) || (m_source && *m_source == name);
+      return m_id == name || (m_name && *m_name == name) || (m_source && *m_source == name) ||
+             (m_originalId && *m_originalId == name);
     }
 
     // Sort by: Device, Component, Category, DataItem
@@ -297,21 +298,12 @@ namespace mtconnect {
       }
     }
 
-    inline void path(std::list<string> &pth, ComponentPtr c)
-    {
-      auto p = c->getParent();
-      if (p)
-        path(pth, p);
-
-      pth.push_back(c->getTopicName());
-    }
-
     void DataItem::makeTopic()
     {
       std::list<string> pth;
       auto comp = m_component.lock();
 
-      path(pth, comp);
+      comp->path(pth);
       {
         auto cp = m_composition.lock();
         if (cp)

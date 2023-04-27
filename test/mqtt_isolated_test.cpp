@@ -220,7 +220,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
 
   std::uint16_t pid_sub1;
 
-  auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext, "localhost", m_port);
+  auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext.get(), "localhost", m_port);
 
   client->set_client_id("cliendId1");
   client->set_clean_session(true);
@@ -320,7 +320,8 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
 
   client->async_connect();
 
-  m_agentTestHelper->m_ioContext.run();
+  m_agentTestHelper->m_ioContext.removeGuard();
+  m_agentTestHelper->m_ioContext.run_for(2s);
 
   ASSERT_TRUE(received);
 }
@@ -446,7 +447,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
 
   std::uint16_t pid_sub1;
 
-  auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext, "localhost", m_port);
+  auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext.get(), "localhost", m_port);
 
   client->set_client_id("cliendId1");
   client->set_clean_session(true);
@@ -545,7 +546,8 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
 
   client->async_connect();
 
-  m_agentTestHelper->m_ioContext.run();
+  m_agentTestHelper->m_ioContext.removeGuard();
+  m_agentTestHelper->m_ioContext.run_for(2s);
 
   ASSERT_TRUE(received);
 }

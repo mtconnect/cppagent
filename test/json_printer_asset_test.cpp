@@ -76,7 +76,7 @@ protected:
 
   AssetPtr parseAsset(const std::string &xml, entity::ErrorList &errors)
   {
-    auto entity = m_parser->parse(Asset::getRoot(), xml, "1.7", errors);
+    auto entity = m_parser->parse(Asset::getRoot(), xml, errors);
     AssetPtr asset;
     for (auto &error : errors)
     {

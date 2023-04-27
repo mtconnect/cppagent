@@ -270,7 +270,7 @@ namespace mtconnect {
         auto body = *token++;
 
         XmlParser parser;
-        res = parser.parse(Asset::getRoot(), body, "2.0", errors);
+        res = parser.parse(Asset::getRoot(), body, errors);
         if (auto asset = dynamic_pointer_cast<Asset>(res))
         {
           asset->setAssetId(assetId);

@@ -245,6 +245,7 @@ namespace mtconnect::sink::rest_sink {
 
     /// @name Swagger Support
     /// @{
+    ///
     /// @brief Add swagger routings to the Agent
     void addSwaggerRoutings();
     /// @brief generate swagger API from routings

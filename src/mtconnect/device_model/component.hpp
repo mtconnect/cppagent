@@ -43,6 +43,7 @@ namespace mtconnect {
     using DevicePtr = std::shared_ptr<Device>;
 
     using DataItemPtr = std::shared_ptr<data_item::DataItem>;
+    using WeakDataItemPtr = std::weak_ptr<data_item::DataItem>;
 
     /// @brief MTConnect Component Entity
     class AGENT_LIB_API Component : public entity::Entity
@@ -243,6 +244,27 @@ namespace mtconnect {
         }
 
         return nullptr;
+      }
+
+      /// @brief Get the component topic path as a list
+      ///
+      /// Recurses to root and then appends getTopicName
+      /// @param[in,out] pth the path list to append to
+      void path(std::list<std::string> &pth)
+      {
+        auto p = getParent();
+        if (p)
+          p->path(pth);
+
+        pth.push_back(getTopicName());
+      }
+
+      std::optional<std::string> createUniqueId(std::unordered_map<std::string, std::string> &idMap,
+                                                const boost::uuids::detail::sha1 &sha1) override
+      {
+        auto newId = Entity::createUniqueId(idMap, sha1);
+        m_id = *newId;
+        return newId;
       }
 
     protected:

@@ -118,13 +118,23 @@ namespace mtconnect {
 
       /// @brief Change the options for the adapter
       /// @param[in] options the set of options
-      void setOptions(const ConfigOptions &options)
+      void setOptions(const ConfigOptions &options) override
       {
         for (auto &o : options)
           m_options.insert_or_assign(o.first, o.second);
+        bool started = m_pipeline.started();
         m_pipeline.build(m_options);
-        if (!m_pipeline.started())
+        if (!m_pipeline.started() && started)
           m_pipeline.start();
+      }
+
+    protected:
+      void forwardData(const std::string &data)
+      {
+        if (data[0] == '*')
+          protocolCommand(data);
+        else if (m_handler && m_handler->m_processData)
+          m_handler->m_processData(data, getIdentity());
       }
 
     protected:

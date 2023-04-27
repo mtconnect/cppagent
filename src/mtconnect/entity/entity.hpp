@@ -106,6 +106,18 @@ namespace mtconnect {
       /// @return the identity
       virtual const entity::Value &getIdentity() const { return getProperty("id"); }
 
+      /// @brief create unique ids recursively
+      /// @param[in,out] idMap  old entity id to new entity id map
+      /// @param[in] sha the root sha1
+      /// @returns optional string value of the new id
+      virtual std::optional<std::string> createUniqueId(
+          std::unordered_map<std::string, std::string> &idMap,
+          const boost::uuids::detail::sha1 &sha1);
+
+      /// @brief update all id references to the new ids recursively
+      /// @param[in] idMap map of old ids to new ids
+      virtual void updateReferences(const std::unordered_map<std::string, std::string> idMap);
+
       /// @brief checks if there is entity is a list that has additional properties
       /// @return `true` if this a a list with additional attributes
       bool hasListWithAttribute() const
@@ -122,6 +134,15 @@ namespace mtconnect {
       /// @brief checkis if this is an entity only containing a list
       /// @returns `true` if this entity contains a list
       bool isList() const { return m_properties.count("LIST") > 0; }
+      /// @brief check if the property is hidden for normal serialization
+      /// @param[in] name the name of the property
+      ///
+      /// Used for serializing properties for configuration purposes where additional attibutes
+      /// may be included in the document. The only property is `originalId` for now.
+      ///
+      /// This may be extended to include a property set in the future.
+      /// @returns `true` if the property is hidden
+      bool isHidden(const std::string &name) const { return name == "originalId"; }
       /// @brief get the name of the entity
       /// @return name
       const auto &getName() const { return m_name; }
