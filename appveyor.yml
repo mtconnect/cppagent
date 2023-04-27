@@ -7,8 +7,8 @@ branches:
 
 
 image:
-  - Ubuntu2004
   - Visual Studio 2019
+  - Ubuntu2004
   - macos-monterey
 
 environment:

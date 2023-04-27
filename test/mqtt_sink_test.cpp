@@ -59,26 +59,34 @@ protected:
 
   void TearDown() override
   {
-    const auto agent = m_agentTestHelper->getAgent();
-    if (agent)
+    try
     {
-      m_agentTestHelper->getAgent()->stop();
-      m_agentTestHelper->m_ioContext.run_for(100ms);
+      const auto agent = m_agentTestHelper->getAgent();
+      if (agent)
+      {
+        m_agentTestHelper->getAgent()->stop();
+        m_agentTestHelper->m_ioContext.run_for(100ms);
+      }
+      if (m_client)
+      {
+        m_client->stop();
+        m_agentTestHelper->m_ioContext.run_for(100ms);
+        m_client.reset();
+      }
+      if (m_server)
+      {
+        m_server->stop();
+        m_agentTestHelper->m_ioContext.run_for(500ms);
+        m_server.reset();
+      }
+      m_agentTestHelper->m_ioContext.stop();
+      m_agentTestHelper.reset();
+      m_jsonPrinter.reset();
     }
-    if (m_client)
+    catch(...)
     {
-      m_client->stop();
-      m_agentTestHelper->m_ioContext.run_for(100ms);
-      m_client.reset();
+      cerr << "Exception thown in TearDown. Ignoring" << endl;
     }
-    if (m_server)
-    {
-      m_server->stop();
-      m_agentTestHelper->m_ioContext.run_for(500ms);
-      m_server.reset();
-    }
-    m_agentTestHelper.reset();
-    m_jsonPrinter.reset();
   }
 
   void createAgent(std::string testFile = {}, ConfigOptions options = {})
