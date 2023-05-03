@@ -354,6 +354,7 @@ target_link_libraries(
   CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl 
   
   $<$<PLATFORM_ID:Linux>:pthread>
+  $<$<PLATFORM_ID:Linux>:atomic>
   $<$<PLATFORM_ID:Windows>:bcrypt>
   )
 
