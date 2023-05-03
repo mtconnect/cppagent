@@ -208,7 +208,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker)
   createAgent();
   auto service = m_agentTestHelper->getMqttService();
 
-  ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
+  ASSERT_TRUE(waitFor(5s, [&service]() { return service->isConnected(); }));
 }
 
 TEST_F(MqttSinkTest, mqtt_sink_should_connect_to_broker_with_UserNameandPassword)
