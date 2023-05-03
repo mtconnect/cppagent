@@ -259,33 +259,6 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
         {
           client->async_publish("mqtt_tcp_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
                                 //[optional] checking async_publish completion code
-                                [](MQTT_NS::error_code ec) {
-                                  EXPECT_FALSE(ec);
-
-                                  std::cout << "async_tcp_publish callback: " << ec.message()
-                                            << std::endl;
-                                  EXPECT_EQ(ec.message(), "Success");
-                                });
-          return true;
-        }
-
-        return true;
-      });
-
-  client->set_close_handler([] { std::cout << "closed" << std::endl; });
-
-  client->set_suback_handler(
-      [&client, &pid_sub1](std::uint16_t packet_id, std::vector<mqtt::suback_return_code> results) {
-        std::cout << "suback received. packet_id: " << packet_id << std::endl;
-        for (auto const &e : results)
-        {
-          std::cout << "subscribe result: " << e << std::endl;
-        }
-
-        if (packet_id == pid_sub1)
-        {
-          client->async_publish("mqtt_tcp_client_cpp/topic1", "test1", MQTT_NS::qos::at_most_once,
-                                //[optional] checking async_publish completion code
                                 [packet_id](MQTT_NS::error_code ec) {
                                   EXPECT_FALSE(ec);
 
@@ -318,12 +291,8 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
     return true;
   });
 
-  client->async_connect();
-
-  m_agentTestHelper->m_ioContext.removeGuard();
-  m_agentTestHelper->m_ioContext.run_for(2s);
-
-  ASSERT_TRUE(received);
+  client->async_connect([](mqtt::error_code ec) { ASSERT_FALSE(ec) << "CAnnot connect";  });
+  ASSERT_TRUE(waitFor(5s, [&received]() { return received; }));
 }
 
 TEST_F(MqttIsolatedUnitTest, should_connect_using_tls)
@@ -446,7 +415,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
   ASSERT_NE(0, m_port);
 
   std::uint16_t pid_sub1;
-
+  
   auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext.get(), "localhost", m_port);
 
   client->set_client_id("cliendId1");
@@ -544,10 +513,6 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
     return true;
   });
 
-  client->async_connect();
-
-  m_agentTestHelper->m_ioContext.removeGuard();
-  m_agentTestHelper->m_ioContext.run_for(2s);
-
-  ASSERT_TRUE(received);
+  client->async_connect([](mqtt::error_code ec) { ASSERT_FALSE(ec) << "CAnnot connect"; });
+  ASSERT_TRUE(waitFor(5s, [&received]() { return received; }));
 }
