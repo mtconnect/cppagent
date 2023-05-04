@@ -20,10 +20,13 @@ class MRubyConan(ConanFile):
     topics = "ruby", "binding", "conan", "mruby"
     settings = "os", "compiler", "build_type", "arch"
 
-    options = { "shared": [True, False] }
+    options = { "shared": [True, False], "trace": [True, False] }
+
+    requires = ["oniguruma/6.9.8"]
 
     default_options = {
-        "shared": False
+        "shared": False,
+        "trace": False
         }
 
     _autotools = None
@@ -31,16 +34,17 @@ class MRubyConan(ConanFile):
     _ruby_version_dir = "ruby-{}.{}.0".format(_major, _minor)
 
     def source(self):
-        get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.1.0.zip", strip_root=True, destination=self.source_folder)
-        get(self, "https://github.com/mtconnect/mruby-onig-regexp/archive/refs/heads/windows_porting.zip",
-            strip_root=True, destination=os.path.join(self.source_folder, 'mruby-onig-regexp'))
+        get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.2.0.zip", strip_root=True, destination=self.source_folder)
+        get(self, "https://github.com/mattn/mruby-onig-regexp/archive/refs/heads/master.zip",
+            strip_root=True, destination=os.path.join(self.source_folder, 'mrbgems', 'mruby-onig-regexp'))
+        
         
     def layout(self):
         basic_layout(self, src_folder="source")
 
     def generate(self):
         self.build_config = os.path.join(self.build_folder, self.source_folder, "build_config", "mtconnect.rb")
-        
+
         with open(self.build_config, "w") as f:
             f.write('''
 # Work around possible onigmo regex package already installed somewhere
@@ -49,11 +53,14 @@ module MRuby
   module Gem
     class Specification
       alias orig_initialize initialize
-      def initialize(name, &block)
+      def initialize(name, &block)        
         if name =~ /onig-regexp/
           puts "!!! Removing methods from #{name}"
           class << self
-            def search_package(name, version_query=nil); puts "!!!! Not searching for package #{name}"; false; end
+            def search_package(name, version_query=nil);
+              puts "!!! Do not allow for search using pkg-config"
+              false
+            end
           end
         end
         orig_initialize(name, &block)
@@ -64,7 +71,13 @@ module MRuby
         orig_setup
         if @name =~ /onig-regexp/
           class << @build.cc
-            def search_header_path(name); puts "!!!! Not checking for header #{name}"; false; end
+            def search_header_path(name)
+              if name == 'oniguruma.h'
+                true
+              else
+                false
+              end
+            end
           end
         end
       end
@@ -73,8 +86,6 @@ module MRuby
 end
 
 ''')
-
-            
             if self.settings.os == 'Windows':
                 if self.settings.arch == 'x86':
                     f.write("ENV['PROCESSOR_ARCHITECTURE'] = 'AMD32'\n")
@@ -87,7 +98,19 @@ end
                 f.write("  conf.toolchain :visualcpp\n")
             else:
                 f.write("  conf.toolchain\n")
-                    
+
+            onig_info = self.dependencies["oniguruma"].cpp_info
+            onig_lib = onig_info.components["onig"].libs[0]
+            onig_libdir = onig_info.libdirs[0]
+            onig_includedir = onig_info.includedirs[0]
+
+            f.write('''
+  # Set up flags for oniguruma
+  conf.cc.include_paths << '{}'
+  conf.linker.libraries << '{}'
+  conf.linker.library_paths << '{}'
+'''.format(onig_includedir, onig_lib, onig_libdir))
+
             f.write('''
   # Set up flags for cross compiler and conan packages
   ldflags = ENV['LDFLAGS']
@@ -102,9 +125,6 @@ end
       conf.gem :core => g
     end
   end
-
-  # Add regexp report
-  conf.gem "#{root}/mruby-onig-regexp"
 
   # C compiler settings
   conf.compilers.each do |c|
@@ -137,7 +157,10 @@ end
             f.write("end\n")
 
     def build(self):
-        self.run("rake MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (self.build_config, self.build_folder),
+        trace = ''
+        if self.options.trace:
+            trace = '--trace'
+        self.run("rake %s MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (trace, self.build_config, self.build_folder),
                  cwd=self.source_folder)
 
     def package(self):
