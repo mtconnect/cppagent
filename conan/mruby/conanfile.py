@@ -90,18 +90,24 @@ end
   Dir.glob("#{root}/mrbgems/mruby-*/mrbgem.rake") do |x|
     g = File.basename File.dirname x
     unless g =~ /^mruby-(?:bin-(debugger|mirb)|test)$/
+      puts "Adding gem: #{g}"
       conf.gem :core => g
     end
   end
 
-  # Add regexp support
-  conf.gem :github => 'mtconnect/mruby-onig-regexp', :branch => 'windows_porting'
+  # Add regexp report
+  conf.gem "#{root}/mruby-onig-regexp"
 
   # C compiler settings
   conf.compilers.each do |c|
     c.defines << 'MRB_USE_DEBUG_HOOK'
     c.defines << 'MRB_WORD_BOXING'
     c.defines << 'MRB_INT64'
+''')
+            if self.settings.os == 'Windows':
+                f.write("    c.defines << 'MRB_FIXED_ARENA'\n")
+  
+            f.write('''
   end
   
   conf.enable_cxx_exception
@@ -127,9 +133,11 @@ end
 
     def source(self):
         get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.1.0.zip", strip_root=True, destination=self.source_folder)
+        get(self, "https://github.com/mtconnect/mruby-onig-regexp/archive/refs/heads/windows_porting.zip",
+            strip_root=True, destination=os.path.join(self.source_folder, 'mruby-onig-regexp'))
         
     def build(self):
-        self.run("rake MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (self.build_config, self.build_folder),
+        self.run("rake --trace MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (self.build_config, self.build_folder),
                  cwd=self.source_folder)
 
     def package(self):

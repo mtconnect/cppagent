@@ -1,9 +1,7 @@
 include(default)
 
 [settings]
-compiler=Visual Studio
+compiler=msvc
 arch=x86_64
-arch_build=x86_64
-compiler.runtime=MT
-
-[env]
+compiler.runtime=dynamic
+compiler.runtime_type=Release
