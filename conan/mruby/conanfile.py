@@ -30,6 +30,14 @@ class MRubyConan(ConanFile):
     _major, _minor, _patch = version.split('.')
     _ruby_version_dir = "ruby-{}.{}.0".format(_major, _minor)
 
+    def source(self):
+        get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.1.0.zip", strip_root=True, destination=self.source_folder)
+        get(self, "https://github.com/mtconnect/mruby-onig-regexp/archive/refs/heads/windows_porting.zip",
+            strip_root=True, destination=os.path.join(self.source_folder, 'mruby-onig-regexp'))
+        
+    def layout(self):
+        basic_layout(self, src_folder="source")
+
     def generate(self):
         self.build_config = os.path.join(self.build_folder, self.source_folder, "build_config", "mtconnect.rb")
         
@@ -128,14 +136,6 @@ end
             
             f.write("end\n")
 
-    def layout(self):
-        basic_layout(self, src_folder="source")
-
-    def source(self):
-        get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.1.0.zip", strip_root=True, destination=self.source_folder)
-        get(self, "https://github.com/mtconnect/mruby-onig-regexp/archive/refs/heads/windows_porting.zip",
-            strip_root=True, destination=os.path.join(self.source_folder, 'mruby-onig-regexp'))
-        
     def build(self):
         self.run("rake MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (self.build_config, self.build_folder),
                  cwd=self.source_folder)
