@@ -111,6 +111,10 @@ class MTConnectAgentConan(ConanFile):
             self.options["libxml2/*"].shared = True
             self.options["gtest/*"].shared = True
             self.options["openssl/*"].shared = True
+            
+        self.run("conan export conan/mqtt_cpp", cwd=os.path.dirname(__file__))
+        if self.options.with_ruby:
+          self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))        
 
     def generate(self):
         if self.options.shared:
