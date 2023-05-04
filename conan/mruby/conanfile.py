@@ -137,7 +137,7 @@ end
             strip_root=True, destination=os.path.join(self.source_folder, 'mruby-onig-regexp'))
         
     def build(self):
-        self.run("rake --trace MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (self.build_config, self.build_folder),
+        self.run("rake MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (self.build_config, self.build_folder),
                  cwd=self.source_folder)
 
     def package(self):
