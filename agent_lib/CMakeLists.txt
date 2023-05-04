@@ -373,10 +373,12 @@ target_link_libraries(
 
 if(WITH_RUBY)
   find_package(mruby REQUIRED)
+  find_package(oniguruma REQUIRED)
   target_link_libraries(
     agent_lib
     PUBLIC
-    mruby::mruby)
+    mruby::mruby
+    oniguruma::onig)
 endif()
 
 target_compile_definitions(

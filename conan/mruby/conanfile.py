@@ -34,7 +34,7 @@ class MRubyConan(ConanFile):
     _ruby_version_dir = "ruby-{}.{}.0".format(_major, _minor)
 
     def source(self):
-        get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.2.0.zip", strip_root=True, destination=self.source_folder)
+        get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.1.0.zip", strip_root=True, destination=self.source_folder)
         get(self, "https://github.com/mattn/mruby-onig-regexp/archive/refs/heads/master.zip",
             strip_root=True, destination=os.path.join(self.source_folder, 'mrbgems', 'mruby-onig-regexp'))
         
