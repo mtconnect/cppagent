@@ -339,21 +339,21 @@ if(MSVC)
 endif()
 
 if(SHARED_AGENT_LIB)
-  add_library(agent_lib SHARED ${AGENT_SOURCES})
+  add_library(mtcagent_lib SHARED ${AGENT_SOURCES})
   target_compile_definitions(
-    agent_lib
+    mtcagent_lib
     PRIVATE
     AGENT_BUILD_SHARED_LIB)
   target_compile_definitions(
-    agent_lib
+    mtcagent_lib
     PUBLIC
     SHARED_AGENT_LIB)
 else()
-  add_library(agent_lib STATIC ${AGENT_SOURCES})
+  add_library(mtcagent_lib STATIC ${AGENT_SOURCES})
 endif()
 
 target_include_directories(
-  agent_lib
+  mtcagent_lib
   PUBLIC
     "${CONAN_INCLUDE_DIRS}"
     "${PROJECT_BINARY_DIR}/agent_lib"
@@ -361,7 +361,7 @@ target_include_directories(
     )
 
 target_link_libraries(
-  agent_lib
+  mtcagent_lib
   PUBLIC
   boost::boost LibXml2::LibXml2 date::date-tz openssl::openssl
   nlohmann_json::nlohmann_json mqtt_cpp::mqtt_cpp 
@@ -375,14 +375,14 @@ if(WITH_RUBY)
   find_package(mruby REQUIRED)
   find_package(oniguruma REQUIRED)
   target_link_libraries(
-    agent_lib
+    mtcagent_lib
     PUBLIC
     mruby::mruby
     oniguruma::onig)
 endif()
 
 target_compile_definitions(
-  agent_lib
+  mtcagent_lib
   PUBLIC
     $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
     $<$<PLATFORM_ID:Windows>:NOMINMAX>
@@ -400,29 +400,29 @@ target_compile_definitions(
 
 if(WITH_PYTHON)
   target_compile_definitions(
-    agent_lib
+    mtcagent_lib
     PUBLIC
     WITH_PYTHON )
 endif()
 
 if(WITH_RUBY)
   target_compile_definitions(
-    agent_lib
+    mtcagent_lib
     PUBLIC
     WITH_RUBY )
 endif()
 
 if(AGENT_WITHOUT_IPV6)
   target_compile_definitions(
-    agent_lib
+    mtcagent_lib
     PUBLIC
     AGENT_WITHOUT_IPV6 )
 endif()
   
 # set_property(SOURCE ${AGENT_SOURCES} PROPERTY COMPILE_FLAGS_DEBUG "${COVERAGE_FLAGS}")
-target_compile_features(agent_lib PUBLIC ${CXX_COMPILE_FEATURES})
-target_clangformat_setup(agent_lib)
-target_clangtidy_setup(agent_lib)
+target_compile_features(mtcagent_lib PUBLIC ${CXX_COMPILE_FEATURES})
+target_clangformat_setup(mtcagent_lib)
+target_clangtidy_setup(mtcagent_lib)
 
 include(../cmake/document.cmake)
 if (AGENT_WITH_DOCS AND DOXYGEN_FOUND)
@@ -430,13 +430,13 @@ if (AGENT_WITH_DOCS AND DOXYGEN_FOUND)
   install(DIRECTORY "${PROJECT_BINARY_DIR}/Documentation/" DESTINATION "Documentation")  
 endif()
 
-target_sources(agent_lib PUBLIC FILE_SET headers
+target_sources(mtcagent_lib PUBLIC FILE_SET headers
   TYPE HEADERS
   BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../src/"
   FILES "${AGENT_LIB_HEADERS}")
 
-install(TARGETS agent_lib LIBRARY DESTINATION "lib")
-install(TARGETS agent_lib ARCHIVE DESTINATION "lib")
-install(TARGETS agent_lib RUNTIME_DEPENDENCIES DESTINATION "lib")
-install(TARGETS agent_lib FILE_SET  headers DESTINATION "include")
+install(TARGETS mtcagent_lib LIBRARY DESTINATION "lib")
+install(TARGETS mtcagent_lib ARCHIVE DESTINATION "lib")
+install(TARGETS mtcagent_lib RUNTIME_DEPENDENCIES DESTINATION "lib")
+install(TARGETS mtcagent_lib FILE_SET  headers DESTINATION "include")
 install(FILES "${PROJECT_BINARY_DIR}/agent_lib/mtconnect/version.h" DESTINATION "include/mtconnect")

@@ -19,16 +19,17 @@ class MTConnectAgentConan(ConanFile):
     options = { "run_tests": [True, False], "build_tests": [True, False], 
                 "without_ipv6": [True, False], "with_ruby": [True, False],
                  "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
-                 "with_docs" : [True, False] }
+                 "with_docs" : [True, False], "cpack": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
-    requires = ["boost/1.79.0",
-                "libxml2/2.10.3",
-                "date/2.4.1",
-                "nlohmann_json/3.9.1",
-                "openssl/3.0.8",
-                "mqtt_cpp/13.1.0",
-                "rapidjson/cci.20220822"]
+    requires = ["boost/1.79.0#862cf349d735a7b844d04134cb260e86",
+                "libxml2/2.10.3#1cbaf81341e07fcb0e61dadee882a193",
+                "date/2.4.1#feee700075047c76e42ab9ce8c243c22",
+                "nlohmann_json/3.9.1#33f50d6c2d838fa96496e4a63737a770",
+                "openssl/3.0.8#394c3c3c0d0d64b9574621b98b7bcda3",
+                "rapidjson/cci.20220822#8ca51918340f3a21127822258e95ec0f",
+                "mqtt_cpp/13.1.0"
+                ]
 
     build_requires = ["cmake/[>3.23.0]"]
     
@@ -42,6 +43,7 @@ class MTConnectAgentConan(ConanFile):
         "shared": False,
         "winver": "0x600",
         "with_docs": False,
+        "cpack": False,
 
         "boost*:shared": False,
         "boost*:without_python": True,
@@ -77,7 +79,7 @@ class MTConnectAgentConan(ConanFile):
             raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
 
     def layout(self):
-        self.folders.build_folder_vars = ["options.shared"]
+        self.folders.build_folder_vars = ["options.shared", "settings.build_type", "settings.arch"]
         cmake_layout(self)
 
     def configure(self):
@@ -141,11 +143,11 @@ class MTConnectAgentConan(ConanFile):
         if self.options.with_docs:
             res = subprocess.run(["doxygen --version"], shell=True, text=True, capture_output=True)
             if (res.returncode != 0 or not res.stdout.startswith('1.9')):
-                self.tool_requires("doxygen/1.9.4@#19fe2ac34109f3119190869a4d0ffbcb")
+                self.tool_requires("doxygen/1.9.4")
 
     def requirements(self):
         if not self.windows_xp:
-            self.requires("gtest/1.10.0")
+            self.requires("gtest/1.10.0#d4f6c05c3724a07e5fc5b05a634ddbe8")
         if self.options.with_ruby:
             self.requires("mruby/3.1.0")
         
@@ -158,6 +160,10 @@ class MTConnectAgentConan(ConanFile):
             cmake.build(build_type=None, target='docs')
         if self.options.run_tests and self.options.build_tests:
             cmake.test()
+
+        if self.options.cpack and self.settings.build_type == 'Release':
+            print("Packaging agent with cpack")
+            self.run("cpack -G ZIP", cwd=self.build_folder)
 
     def package_info(self):
         self.cpp_info.includedirs = ['include']
@@ -182,6 +188,5 @@ class MTConnectAgentConan(ConanFile):
     def package(self):
         cmake = CMake(self)
         cmake.install()
-
 
     
