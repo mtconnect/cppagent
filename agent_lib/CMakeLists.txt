@@ -296,7 +296,7 @@ find_package(date REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(mqtt_cpp REQUIRED)
-find_package(rapidjson REQUIRED)
+find_package(RapidJSON REQUIRED)
 
 ## configure a header file to pass some of the CMake settings to the source code
 configure_file("${SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/mtconnect/version.h")
