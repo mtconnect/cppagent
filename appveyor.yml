@@ -5,7 +5,6 @@ branches:
     - master
     - /.*master.*/
 
-
 image:
   - Ubuntu2004
   - Visual Studio 2019
@@ -49,6 +48,8 @@ before_build:
       set CONAN_USER_HOME=C:\conan
       rem set CPACK=True
       pip install conan
+      conan profile detect -f
+      
   - sh: |-
       export PATH=$HOME/venv3.10/bin:$PATH
       if [[ $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
@@ -64,6 +65,7 @@ before_build:
         exit 99
       fi
       pip install conan
+      conan profile detect -f
 
 build:
   verbosity: minimal
