@@ -149,7 +149,7 @@ class MTConnectAgentConan(ConanFile):
         if not self.windows_xp:
             self.requires("gtest/1.10.0#d4f6c05c3724a07e5fc5b05a634ddbe8")
         if self.options.with_ruby:
-            self.requires("mruby/3.1.0")
+            self.requires("mruby/3.2.0")
         
     def build(self):
         cmake = CMake(self)

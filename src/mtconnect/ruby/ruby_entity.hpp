@@ -21,6 +21,7 @@
 #include <mruby/array.h>
 #include <mruby/hash.h>
 #include <mruby/value.h>
+#include <mruby-bigint/core/bigint.h>
 
 #include "mtconnect/config.hpp"
 #include "mtconnect/device_model/data_item/data_item.hpp"
@@ -99,11 +100,11 @@ namespace mtconnect::ruby {
         break;
 
       case MRB_TT_FIXNUM:
-        dsv.emplace<int64_t>(mrb_fixnum(value));
+        dsv.emplace<int64_t>(mrb_as_int(mrb, value));
         break;
 
       case MRB_TT_FLOAT:
-        dsv.emplace<double>(mrb_to_flo(mrb, value));
+        dsv.emplace<double>(mrb_as_float(mrb, value));
         break;
 
       case MRB_TT_HASH:
@@ -170,14 +171,15 @@ namespace mtconnect::ruby {
         res.emplace<string>(mrb_str_to_cstr(mrb, value));
         break;
 
+      case MRB_TT_BIGINT:
       case MRB_TT_FIXNUM:
-        res.emplace<int64_t>(mrb_fixnum(value));
+        res.emplace<int64_t>(mrb_as_int(mrb, value));
         break;
 
       case MRB_TT_FLOAT:
-        res.emplace<double>(mrb_to_flo(mrb, value));
+        res.emplace<double>(mrb_as_float(mrb, value));
         break;
-
+        
       case MRB_TT_TRUE:
         res.emplace<bool>(true);
         break;

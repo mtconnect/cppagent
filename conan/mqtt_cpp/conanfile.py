@@ -18,5 +18,13 @@ class MqttcppConan(ConanFile):
         get(self, "https://github.com/redboltz/mqtt_cpp/archive/refs/tags/v%s.zip" % self.version, \
             strip_root=True, destination=self.source_folder)
 
+    def package_info(self):
+        self.cpp_info.bindirs = []
+        self.cpp_info.libdirs = []
+
+
     def package(self):
         copy(self, "*.hpp", self.source_folder, self.package_folder)
+
+    def package_id(self):
+        self.info.clear()
