@@ -72,6 +72,7 @@ if (MSVC)
   endif()
 endif()
 
+include(cmake/remove_link_directories.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
 include(cmake/ClangTidy.cmake)

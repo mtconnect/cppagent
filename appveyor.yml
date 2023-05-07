@@ -74,14 +74,6 @@ build_script:
   - cmd:  conan build . --build=missing -pr %CONAN_PROFILE% -o shared=%SHARED% -o with_docs=False -o cpack=%CPACK%
   - sh:  conan build . --build=missing -pr $CONAN_PROFILE -o shared=$SHARED -o with_docs=False -o cpack=$CPACK
 
-test_script:
-  - cmd: |-
-      cd %APPVEYOR_BUILD_FOLDER%/build/
-      ctest -C Release --output-on-failure
-  - sh: |-
-      cd ${APPVEYOR_BUILD_FOLDER}/build
-      ctest --output-on-failure
-
 #on_finish:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   

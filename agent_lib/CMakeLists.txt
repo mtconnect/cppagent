@@ -381,6 +381,8 @@ if(WITH_RUBY)
     oniguruma::onig)
 endif()
 
+remove_link_directories()
+
 target_compile_definitions(
   mtcagent_lib
   PUBLIC
