@@ -99,8 +99,10 @@ target_link_libraries(
   mtcagent_lib GTest::GTest
   )
 
-remove_test_link_directories()
-
+if(NOT MSVC)
+  remove_test_link_directories()
+endif()
+  
 target_compile_definitions(agent_test_lib
   PUBLIC
     "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""

@@ -381,7 +381,9 @@ if(WITH_RUBY)
     oniguruma::onig)
 endif()
 
-remove_link_directories()
+if (NOT MSVC)
+  remove_link_directories()
+endif()
 
 target_compile_definitions(
   mtcagent_lib
