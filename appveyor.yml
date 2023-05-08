@@ -71,8 +71,8 @@ build:
   parallel: true
 
 build_script:
-  - cmd:  conan build . --build=missing -pr %CONAN_PROFILE% -o shared=%SHARED% -o with_docs=False -o cpack=%CPACK%
-  - sh:  conan build . --build=missing -pr $CONAN_PROFILE -o shared=$SHARED -o with_docs=False -o cpack=$CPACK
+  - cmd:  conan build . --build=missing -pr %CONAN_PROFILE% -o shared=%SHARED% -o with_docs=False
+  - sh:  conan build . --build=missing -pr $CONAN_PROFILE -o shared=$SHARED -o with_docs=False
 
 #on_finish:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
