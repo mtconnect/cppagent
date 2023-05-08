@@ -28,7 +28,8 @@ class MTConnectAgentConan(ConanFile):
                 "nlohmann_json/3.9.1",
                 "openssl/3.0.8",
                 "rapidjson/cci.20220822",
-                "mqtt_cpp/13.1.0"
+                "mqtt_cpp/13.1.0",
+                "bzip2/1.0.8"
                 ]
 
     build_requires = ["cmake/[>3.23.0]"]
@@ -120,7 +121,7 @@ class MTConnectAgentConan(ConanFile):
           self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))        
 
     def generate(self):
-        if self.options.shared:
+        if self.options.shared and is_msvc(self):
             for dep in self.dependencies.values():
                 if dep.cpp_info.bindirs:
                     print("Copying from " + dep.cpp_info.bindirs[0] + " to " + os.path.join(self.build_folder, "dlls"))
@@ -161,7 +162,7 @@ class MTConnectAgentConan(ConanFile):
         cmake.build()
         if self.options.with_docs:
             cmake.build(build_type=None, target='docs')
-        if self.options.run_tests and self.options.build_tests:
+        if self.options.run_tests._value:
             cmake.test()
 
         if self.options.cpack and self.settings.build_type == 'Release':

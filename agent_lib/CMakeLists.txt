@@ -385,10 +385,6 @@ if(WITH_RUBY)
     oniguruma::onig)
 endif()
 
-if (NOT MSVC)
-  remove_link_directories()
-endif()
-
 target_compile_definitions(
   agent_lib
   PUBLIC
