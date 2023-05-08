@@ -16,6 +16,7 @@ endif()
 
 option(AGENT_ENABLE_UNITTESTS "Enables the agent's unit tests" ON)
 option(SHARED_AGENT_LIB "Generate shared agent library. Conan options: shared" OFF)
+set(AGENT_PREFIX "" CACHE STRING "Prefix for the name of the agent and the agent library: suggested 'mtc'")
 set(INSTALL_GTEST OFF FORCE)
 
 message(INFO " Shared build: ${SHARED_AGENT_LIB}")
@@ -64,14 +65,6 @@ if(SHARED_AGENT_LIB)
   endif()
 endif()
 
-if (MSVC)
-  if (CONAN_SETTINGS_COMPILER_RUNTIME MATCHES "static")
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-  else()
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-  endif()
-endif()
-
 include(cmake/remove_link_directories.cmake)
 include(cmake/osx_no_app_or_frameworks.cmake)
 include(cmake/ClangFormat.cmake)
@@ -91,7 +84,7 @@ create_clangformat_target()
 
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
 # We will set this to the agent_test project.
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT mtcagent)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT agent)
 
 install(FILES README.md LICENSE.TXT DESTINATION ".")
 install(DIRECTORY schemas/ DESTINATION "schemas")

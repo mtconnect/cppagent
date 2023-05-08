@@ -19,15 +19,15 @@ class MTConnectAgentConan(ConanFile):
     options = { "run_tests": [True, False], "build_tests": [True, False], 
                 "without_ipv6": [True, False], "with_ruby": [True, False],
                  "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
-                 "with_docs" : [True, False], "cpack": [True, False] }
+                 "with_docs" : [True, False], "cpack": [True, False], "agent_prefix": [None, "ANY"] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
-    requires = ["boost/1.79.0#862cf349d735a7b844d04134cb260e86",
-                "libxml2/2.10.3#1cbaf81341e07fcb0e61dadee882a193",
-                "date/2.4.1#feee700075047c76e42ab9ce8c243c22",
-                "nlohmann_json/3.9.1#33f50d6c2d838fa96496e4a63737a770",
-                "openssl/3.0.8#394c3c3c0d0d64b9574621b98b7bcda3",
-                "rapidjson/cci.20220822#8ca51918340f3a21127822258e95ec0f",
+    requires = ["boost/1.79.0",
+                "libxml2/2.10.3",
+                "date/2.4.1",
+                "nlohmann_json/3.9.1",
+                "openssl/3.0.8",
+                "rapidjson/cci.20220822",
                 "mqtt_cpp/13.1.0"
                 ]
 
@@ -44,10 +44,12 @@ class MTConnectAgentConan(ConanFile):
         "winver": "0x600",
         "with_docs": False,
         "cpack": False,
+        "agent_prefix": None,
 
         "boost*:shared": False,
         "boost*:without_python": True,
         "boost*:without_test": True,
+        "boost*:layout": "versioned",
 
         "libxml2*:shared": False,
         "libxml2*:include_utils": False,
@@ -132,6 +134,8 @@ class MTConnectAgentConan(ConanFile):
         tc.cache_variables['AGENT_WITH_DOCS'] = self.options.with_docs.__bool__()
         tc.cache_variables['AGENT_ENABLE_UNITTESTS'] = self.options.build_tests.__bool__()
         tc.cache_variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6.__bool__()
+        if self.options.agent_prefix:
+            tc.cache_variables['AGENT_PREFIX'] = self.options.agent_prefix
         if self.settings.os == 'Windows':
             tc.cache_variables['WINVER'] = self.options.winver
 
@@ -147,7 +151,7 @@ class MTConnectAgentConan(ConanFile):
 
     def requirements(self):
         if not self.windows_xp:
-            self.requires("gtest/1.10.0#d4f6c05c3724a07e5fc5b05a634ddbe8")
+            self.requires("gtest/1.10.0")
         if self.options.with_ruby:
             self.requires("mruby/3.2.0")
         
@@ -169,7 +173,10 @@ class MTConnectAgentConan(ConanFile):
         self.cpp_info.includedirs = ['include']
         self.cpp_info.libdirs = ['lib']
         self.cpp_info.bindirs = ['bin']
-        self.cpp_info.libs = ['agent_lib']
+        output_name = 'agent_lib'
+        if self.options.agent_prefix:
+            output_name = self.options.agent_prefix + output_name
+        self.cpp_info.libs = [output_name]
 
         self.cpp_info.defines = []
         if self.options.with_ruby:
@@ -179,7 +186,7 @@ class MTConnectAgentConan(ConanFile):
         if self.options.shared:
             self.cpp_info.defines.append("SHARED_AGENT_LIB=1")
             self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
-            
+        
         if self.settings.os == 'Windows':
             winver=str(self.options.winver)
             self.cpp_info.defines.append("WINVER=" + winver)

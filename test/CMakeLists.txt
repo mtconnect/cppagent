@@ -25,7 +25,7 @@ target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
 target_link_libraries(
   sink_plugin_test
   PRIVATE
-  mtcagent_lib
+  agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
 target_clangformat_setup(sink_plugin_test)
@@ -73,7 +73,7 @@ target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
 target_link_libraries(
   adapter_plugin_test
   PRIVATE
-  mtcagent_lib
+  agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
 
@@ -96,7 +96,7 @@ target_include_directories(
 target_link_libraries(
   agent_test_lib
   PUBLIC
-  mtcagent_lib GTest::GTest
+  agent_lib GTest::GTest
   )
 
 if(NOT MSVC)
@@ -116,7 +116,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   set(_sources ${AGENT_TEST_NAME}_test.cpp)
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
-  target_link_libraries(${AGENT_TEST_NAME}_test mtcagent_lib agent_test_lib GTest::GTest)
+  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib agent_test_lib GTest::GTest)
 
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""

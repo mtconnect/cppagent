@@ -3,6 +3,8 @@ from conan.tools.files import get, copy
 from conan.tools.layout import basic_layout
 from conan.errors import ConanInvalidConfiguration
 from conan.errors import ConanException
+from conan.tools.microsoft.visual import msvc_runtime_flag, is_msvc
+
 import os
 import io
 import re
@@ -86,7 +88,7 @@ module MRuby
 end
 
 ''')
-            if self.settings.os == 'Windows':
+            if is_msvc(self):
                 if self.settings.arch == 'x86':
                     f.write("ENV['PROCESSOR_ARCHITECTURE'] = 'AMD32'\n")
                 else:
@@ -94,7 +96,7 @@ end
             
             f.write("MRuby::Build.new do |conf|\n")
             
-            if self.settings.os == 'Windows':
+            if is_msvc(self):
                 f.write("  conf.toolchain :visualcpp\n")
             else:
                 f.write("  conf.toolchain\n")
@@ -143,11 +145,11 @@ end
 ''')
             if self.settings.build_type == 'Debug':
                 f.write("  conf.enable_debug\n")
-            if self.settings.os == 'Windows':
+            if is_msvc(self):
                 if self.settings.build_type == 'Debug':
                     f.write("  conf.compilers.each { |c|  c.flags << '/Od' }\n")
                 f.write("  conf.compilers.each { |c| c.flags << '/std:c++17' }\n")
-                f.write("  conf.compilers.each { |c| c.flags << '/%s' }\n" % self.settings.compiler.runtime)
+                f.write("  conf.compilers.each { |c| c.flags << '/%s' }\n" % msvc_runtime_flag(self))
             else:
                 if self.settings.build_type == 'Debug':
                     f.write("  conf.compilers.each { |c| c.flags << '-O0' }\n")

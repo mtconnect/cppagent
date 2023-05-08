@@ -8,52 +8,55 @@ if(WIN32)
   list(APPEND AGENT_SOURCES "${RESOURCE_FILE}")
 endif()
 
-add_executable(mtcagent ${AGENT_SOURCES})
+add_executable(agent ${AGENT_SOURCES})
+if(AGENT_PREFIX)
+  set_target_properties(agent PROPERTIES OUTPUT_NAME "${AGENT_PREFIX}agent")
+endif()
 
 if(WITH_PYTHON)
   target_compile_definitions(
-    mtcagent
+    agent
     PUBLIC
     WITH_PYTHON )
 endif()
 
 if(WITH_RUBY)
   target_compile_definitions(
-    mtcagent
+    agent
     PUBLIC
     WITH_RUBY )
 endif()
 
 if(AGENT_WITHOUT_IPV6)
   target_compile_definitions(
-    mtcagent
+    agent
     PUBLIC
     AGENT_WITHOUT_IPV6 )
 endif()
 
 target_link_libraries(
-  mtcagent
+  agent
   PUBLIC
-  mtcagent_lib
+  agent_lib
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
 
-target_clangtidy_setup(mtcagent)
+target_clangtidy_setup(agent)
 
-install(TARGETS mtcagent RUNTIME DESTINATION "bin")
+install(TARGETS agent RUNTIME DESTINATION "bin")
 
 if(SHARED_AGENT_LIB AND MSVC)
   set(CMAKE_INSTALL_DEBUG_LIBRARIES ON)  
   include(InstallRequiredSystemLibraries)
   install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
-  install(DIRECTORY "$<TARGET_FILE_DIR:mtcagent>" DESTINATION bin COMPONENT Libraries
+  install(DIRECTORY "$<TARGET_FILE_DIR:agent>" DESTINATION bin COMPONENT Libraries
     FILES_MATCHING PATTERN "*.dll")
 
   file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dll")
-  add_custom_command(TARGET mtcagent POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${dlls} $<TARGET_FILE_DIR:mtcagent>
+  add_custom_command(TARGET agent POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${dlls} $<TARGET_FILE_DIR:agent>
     COMMAND_EXPAND_LISTS)		     
-  add_custom_command(TARGET mtcagent POST_BUILD 
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:mtcagent> $<TARGET_FILE_DIR:mtcagent> 
+  add_custom_command(TARGET agent POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:agent> $<TARGET_FILE_DIR:agent> 
     COMMAND_EXPAND_LISTS)
 endif()
