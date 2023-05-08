@@ -46,13 +46,12 @@ target_clangtidy_setup(agent)
 install(TARGETS agent RUNTIME DESTINATION "bin")
 
 if(SHARED_AGENT_LIB AND MSVC)
-  set(CMAKE_INSTALL_DEBUG_LIBRARIES ON)  
+  set(CMAKE_INSTALL_DEBUG_LIBRARIES OFF)
   include(InstallRequiredSystemLibraries)
   install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
-  install(DIRECTORY "$<TARGET_FILE_DIR:agent>" DESTINATION bin COMPONENT Libraries
-    FILES_MATCHING PATTERN "*.dll")
-
   file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dll")
+  install(FILES ${dlls} DESTINATION bin COMPONENT Libraries)
+
   add_custom_command(TARGET agent POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${dlls} $<TARGET_FILE_DIR:agent>
     COMMAND_EXPAND_LISTS)		     

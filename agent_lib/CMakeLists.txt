@@ -445,6 +445,5 @@ target_sources(agent_lib PUBLIC FILE_SET headers
 
 install(TARGETS agent_lib LIBRARY DESTINATION "lib")
 install(TARGETS agent_lib ARCHIVE DESTINATION "lib")
-install(TARGETS agent_lib RUNTIME_DEPENDENCIES DESTINATION "lib")
 install(TARGETS agent_lib FILE_SET  headers DESTINATION "include")
 install(FILES "${PROJECT_BINARY_DIR}/agent_lib/mtconnect/version.h" DESTINATION "include/mtconnect")
