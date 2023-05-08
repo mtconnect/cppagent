@@ -49,7 +49,6 @@ class MTConnectAgentConan(ConanFile):
         "boost*:shared": False,
         "boost*:without_python": True,
         "boost*:without_test": True,
-        "boost*:layout": "versioned",
 
         "libxml2*:shared": False,
         "libxml2*:include_utils": False,
