@@ -58,4 +58,8 @@ if(SHARED_AGENT_LIB AND MSVC)
   add_custom_command(TARGET agent POST_BUILD 
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:agent> $<TARGET_FILE_DIR:agent> 
     COMMAND_EXPAND_LISTS)
+elseif(SHARED_AGENT_LIB)
+  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dylib" "${cppagent_BINARY_DIR}/dlls/*.so")
+  message(STATUS "!!!!! Copying ${dlls} to lib directory")
+  install(FILES ${dlls} DESTINATION lib COMPONENT Libraries)
 endif()

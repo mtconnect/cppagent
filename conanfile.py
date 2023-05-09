@@ -4,11 +4,6 @@ from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import copy
 
 import os
-import io
-import re
-import itertools as it
-import glob
-import subprocess
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
@@ -67,6 +62,8 @@ class MTConnectAgentConan(ConanFile):
 
     exports = "conan/*"
     exports_sources = "*"
+    run_tests = True
+    build_tests = True
 
 #    def source(self):
 #        git = tools.Git(self.source_folder)
@@ -85,11 +82,13 @@ class MTConnectAgentConan(ConanFile):
         cmake_layout(self)
 
     def configure(self):
+        self.run_tests = self.options.run_tests
+        self.build_tests = self.options.build_tests
         self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
                           self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
         if self.settings.os == 'Windows':
             if self.windows_xp:
-                self.options.build_tests._value = False
+                self.build_tests = False
                 self.options.winver = '0x501'
                 
             if not self.settings.compiler.version:
@@ -100,8 +99,8 @@ class MTConnectAgentConan(ConanFile):
         
         self.settings.compiler.cppstd = 17
 
-        if not self.options.build_tests:
-            self.options.run_tests._value = False
+        if not self.build_tests:
+            self.run_tests = False
 
         if not self.options.shared and self.settings.os == "Macos":
             self.options["boost"].visibility = "hidden"
@@ -121,11 +120,16 @@ class MTConnectAgentConan(ConanFile):
           self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))        
 
     def generate(self):
-        if self.options.shared and is_msvc(self):
+        if self.options.shared:
             for dep in self.dependencies.values():
                 if dep.cpp_info.bindirs:
-                    print("Copying from " + dep.cpp_info.bindirs[0] + " to " + os.path.join(self.build_folder, "dlls"))
-                    copy(self, "*.dll", dep.cpp_info.bindirs[0], os.path.join(self.build_folder, "dlls"))
+                    if is_msvc(self):
+                        print("Copying from " + dep.cpp_info.bindirs[0] + " to " + os.path.join(self.build_folder, "dlls"))
+                        copy(self, "*.dll", dep.cpp_info.bindirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)
+                    else:
+                        print("Copying from " + dep.cpp_info.libdirs[0] + " to " + os.path.join(self.build_folder, "dlls"))                        
+                        copy(self, "*.so", dep.cpp_info.libdirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)
+                        copy(self, "*.dylib", dep.cpp_info.libdirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)            
         
         tc = CMakeToolchain(self)
 
@@ -162,7 +166,7 @@ class MTConnectAgentConan(ConanFile):
         cmake.build()
         if self.options.with_docs:
             cmake.build(build_type=None, target='docs')
-        if self.options.run_tests._value:
+        if self.run_tests:
             cmake.test()
 
         if self.options.cpack and self.settings.build_type == 'Release':
