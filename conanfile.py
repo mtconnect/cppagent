@@ -123,10 +123,10 @@ class MTConnectAgentConan(ConanFile):
         if self.options.shared:
             for dep in self.dependencies.values():
                 if dep.cpp_info.bindirs:
-                    if is_msvc(self):
+                    if is_msvc(self) and self.cpp_info.bindirs:
                         print("Copying from " + dep.cpp_info.bindirs[0] + " to " + os.path.join(self.build_folder, "dlls"))
                         copy(self, "*.dll", dep.cpp_info.bindirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)
-                    else:
+                    elif self.cpp_info.libdirs:
                         print("Copying from " + dep.cpp_info.libdirs[0] + " to " + os.path.join(self.build_folder, "dlls"))                        
                         copy(self, "*.so", dep.cpp_info.libdirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)
                         copy(self, "*.dylib", dep.cpp_info.libdirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)            
