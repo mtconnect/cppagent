@@ -128,7 +128,7 @@ class MTConnectAgentConan(ConanFile):
                         copy(self, "*.dll", dep.cpp_info.bindirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)
                     elif self.cpp_info.libdirs:
                         print("Copying from " + dep.cpp_info.libdirs[0] + " to " + os.path.join(self.build_folder, "dlls"))                        
-                        copy(self, "*.so", dep.cpp_info.libdirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)
+                        copy(self, "*.so*", dep.cpp_info.libdirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)
                         copy(self, "*.dylib", dep.cpp_info.libdirs[0], os.path.join(self.build_folder, "dlls"), keep_path=False)            
         
         tc = CMakeToolchain(self)
