@@ -430,7 +430,7 @@ namespace mtconnect {
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
-          ->addRouting({boost::beast::http::verb::get, "/{device}??pretty={bool:false}", handler})
+          ->addRouting({boost::beast::http::verb::get, "/{device}?pretty={bool:false}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");

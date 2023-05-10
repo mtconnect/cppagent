@@ -1,5 +1,10 @@
-from conans import ConanFile, CMake, tools
-from conan.tools.env import Environment
+from conan import ConanFile
+from conan.tools.files import get, copy
+from conan.tools.layout import basic_layout
+from conan.errors import ConanInvalidConfiguration
+from conan.errors import ConanException
+from conan.tools.microsoft.visual import msvc_runtime_flag, is_msvc
+
 import os
 import io
 import re
@@ -8,7 +13,7 @@ import glob
 
 class MRubyConan(ConanFile):
     name = "mruby"
-    version = "3.1.0"
+    version = "3.2.0"
     license = "https://github.com/mruby/mruby/blob/master/LICENSE"
     author = "Yukihiro “Matz” Matsumoto"
     homepage = "https://mruby.org/"
@@ -17,20 +22,31 @@ class MRubyConan(ConanFile):
     topics = "ruby", "binding", "conan", "mruby"
     settings = "os", "compiler", "build_type", "arch"
 
-    options = { "shared": [True, False] }
+    options = { "shared": [True, False], "trace": [True, False] }
+
+    requires = ["oniguruma/6.9.8"]
 
     default_options = {
-        "shared": False
+        "shared": False,
+        "trace": False
         }
 
     _autotools = None
-    _mruby_source = "mruby_source"
     _major, _minor, _patch = version.split('.')
     _ruby_version_dir = "ruby-{}.{}.0".format(_major, _minor)
 
-    def generate(self):
-        self.build_config = os.path.join(self.build_folder, self._mruby_source, "build_config", "mtconnect.rb")
+    def source(self):
+        get(self, "https://github.com/mruby/mruby/archive/refs/tags/3.2.0.zip", strip_root=True, destination=self.source_folder)
+        get(self, "https://github.com/mattn/mruby-onig-regexp/archive/refs/heads/master.zip",
+            strip_root=True, destination=os.path.join(self.source_folder, 'mrbgems', 'mruby-onig-regexp'))
         
+        
+    def layout(self):
+        basic_layout(self, src_folder="source")
+
+    def generate(self):
+        self.build_config = os.path.join(self.build_folder, self.source_folder, "build_config", "mtconnect.rb")
+
         with open(self.build_config, "w") as f:
             f.write('''
 # Work around possible onigmo regex package already installed somewhere
@@ -39,11 +55,14 @@ module MRuby
   module Gem
     class Specification
       alias orig_initialize initialize
-      def initialize(name, &block)
+      def initialize(name, &block)        
         if name =~ /onig-regexp/
           puts "!!! Removing methods from #{name}"
           class << self
-            def search_package(name, version_query=nil); puts "!!!! Not searching for package #{name}"; false; end
+            def search_package(name, version_query=nil);
+              puts "!!! Do not allow for search using pkg-config"
+              false
+            end
           end
         end
         orig_initialize(name, &block)
@@ -54,7 +73,13 @@ module MRuby
         orig_setup
         if @name =~ /onig-regexp/
           class << @build.cc
-            def search_header_path(name); puts "!!!! Not checking for header #{name}"; false; end
+            def search_header_path(name)
+              if name == 'oniguruma.h'
+                true
+              else
+                false
+              end
+            end
           end
         end
       end
@@ -63,9 +88,7 @@ module MRuby
 end
 
 ''')
-
-            
-            if self.settings.os == 'Windows':
+            if is_msvc(self):
                 if self.settings.arch == 'x86':
                     f.write("ENV['PROCESSOR_ARCHITECTURE'] = 'AMD32'\n")
                 else:
@@ -73,11 +96,23 @@ end
             
             f.write("MRuby::Build.new do |conf|\n")
             
-            if self.settings.os == 'Windows':
+            if is_msvc(self):
                 f.write("  conf.toolchain :visualcpp\n")
             else:
                 f.write("  conf.toolchain\n")
-                    
+
+            onig_info = self.dependencies["oniguruma"].cpp_info
+            onig_lib = onig_info.components["onig"].libs[0]
+            onig_libdir = onig_info.libdirs[0]
+            onig_includedir = onig_info.includedirs[0]
+
+            f.write('''
+  # Set up flags for oniguruma
+  conf.cc.include_paths << '{}'
+  conf.linker.libraries << '{}'
+  conf.linker.library_paths << '{}'
+'''.format(onig_includedir, onig_lib, onig_libdir))
+
             f.write('''
   # Set up flags for cross compiler and conan packages
   ldflags = ENV['LDFLAGS']
@@ -88,18 +123,21 @@ end
   Dir.glob("#{root}/mrbgems/mruby-*/mrbgem.rake") do |x|
     g = File.basename File.dirname x
     unless g =~ /^mruby-(?:bin-(debugger|mirb)|test)$/
+      puts "Adding gem: #{g}"
       conf.gem :core => g
     end
   end
-
-  # Add regexp support
-  conf.gem :github => 'mtconnect/mruby-onig-regexp', :branch => 'windows_porting'
 
   # C compiler settings
   conf.compilers.each do |c|
     c.defines << 'MRB_USE_DEBUG_HOOK'
     c.defines << 'MRB_WORD_BOXING'
     c.defines << 'MRB_INT64'
+''')
+            if self.settings.os == 'Windows':
+                f.write("    c.defines << 'MRB_FIXED_ARENA'\n")
+  
+            f.write('''
   end
   
   conf.enable_cxx_exception
@@ -107,11 +145,11 @@ end
 ''')
             if self.settings.build_type == 'Debug':
                 f.write("  conf.enable_debug\n")
-            if self.settings.os == 'Windows':
+            if is_msvc(self):
                 if self.settings.build_type == 'Debug':
                     f.write("  conf.compilers.each { |c|  c.flags << '/Od' }\n")
                 f.write("  conf.compilers.each { |c| c.flags << '/std:c++17' }\n")
-                f.write("  conf.compilers.each { |c| c.flags << '/%s' }\n" % self.settings.compiler.runtime)
+                f.write("  conf.compilers.each { |c| c.flags << '/%s' }\n" % msvc_runtime_flag(self))
             else:
                 if self.settings.build_type == 'Debug':
                     f.write("  conf.compilers.each { |c| c.flags << '-O0' }\n")
@@ -120,20 +158,19 @@ end
             
             f.write("end\n")
 
-    def source(self):
-        git = tools.Git(self._mruby_source)
-        git.clone("https://github.com/mruby/mruby.git", "3.1.0")
-        
     def build(self):
-        self.run("rake MRUBY_CONFIG=%s" % self.build_config,
-                 cwd=self._mruby_source)
+        trace = ''
+        if self.options.trace:
+            trace = '--trace'
+        self.run("rake %s MRUBY_CONFIG=%s MRUBY_BUILD_DIR=%s" % (trace, self.build_config, self.build_folder),
+                 cwd=self.source_folder)
 
     def package(self):
-        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "bin"), dst="bin")
-        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "lib"), dst="lib")
-        self.copy("*", src=os.path.join(self._mruby_source, "build", "host", "include"), dst="include")
-        self.copy("*", src=os.path.join(self._mruby_source, "include"), dst="include")
-        self.copy("*.h", src=os.path.join(self._mruby_source, "mrbgems"), dst="include")
+        copy(self, "*", os.path.join(self.build_folder, "host", "bin"), os.path.join(self.package_folder, "bin"))
+        copy(self, "*", os.path.join(self.build_folder, "host", "lib"), os.path.join(self.package_folder, "lib"))
+        copy(self, "*", os.path.join(self.build_folder, "host", "include"), os.path.join(self.package_folder, "include"))
+        copy(self, "*", os.path.join(self.source_folder, "include"), os.path.join(self.package_folder, "include"))
+        copy(self, "*.h", os.path.join(self.source_folder, "mrbgems"), os.path.join(self.package_folder, "include"))
         
     def package_info(self):        
         self.cpp_info.includedirs = ["include"]
@@ -142,16 +179,17 @@ end
             ruby = os.path.join(self.package_folder, "bin", "mruby-config")
         else:
             ruby = os.path.join(self.package_folder, "bin", "mruby-config.bat")
-        
+
         buf = io.StringIO()
-        self.run([ruby, "--cflags"], output=buf)
+        self.run([ruby, "--cflags"], stdout=buf, shell=True)
         self.cpp_info.defines = [d[2:] for d in buf.getvalue().split(' ') if d.startswith('/D') or d.startswith('-D')]
 
-        self.user_info.mruby = 'ON'
+        self.conf_info.define('mruby', 'ON')
 
         self.cpp_info.bindirs = ["bin"]
         if self.settings.os == 'Windows':
             self.cpp_info.libs = ["libmruby"]
         else:
-            self.cpp_info.libs = ["mruby", "m"]
+            self.cpp_info.libs = ["mruby"]
+            self.cpp_info.system_libs = ["m"]
 

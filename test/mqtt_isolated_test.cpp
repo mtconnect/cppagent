@@ -415,7 +415,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
   ASSERT_NE(0, m_port);
 
   std::uint16_t pid_sub1;
-  
+
   auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext.get(), "localhost", m_port);
 
   client->set_client_id("cliendId1");

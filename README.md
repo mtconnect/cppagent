@@ -1311,25 +1311,16 @@ or
 
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 	
-    conan install . -if build -s build_type=Release --build=missing -pr conan/profiles/vs64
-   	conan build . -bf build
-
+   	conan build . -pr conan/profiles/vs64 --build=missing
 
 #### To build for 32 bit Windows
 
-    conan install . -if build -s build_type=Release --build=missing -pr conan/profiles/vs32
-	conan build . -bf build
+   	conan build . -pr conan/profiles/vs32
 
-#### To build for Windows XP
+### Package the releases
 
-The windows XP 140 XP toolchain needs to be installed under individual component in the Visual Studio 2019 installer. 
-
-    conan install . -s build_type=Release --build=missing -pr conan/profiles/vsxp
-	conan build . -bf build
-
-### Package the release
-
-    cpack -G ZIP
+   	conan build . -pr conan/profiles/vs64 -o cpack=True --build=missing
+   	conan build . -pr conan/profiles/vs32 -o cpack=True --build=missing
 
 ## *NIX Builds
 
@@ -1346,23 +1337,16 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 ### Setup the build
 
     sudo apt-get install build-essential python3.9 python3-pip git cmake ruby rake autoconf
-	python3.9 -m pip install conan -v conan==1.59.0
+	python3.9 -m pip install conan
     echo 'export PATH=$HOME/.local/bin:$PATH' >> .bashrc
 
 ### Download the source
 
 	git clone https://github.com/mtconnect/cppagent.git
 	
-### Install the dependencies
-	
-	cd cppagent
-	conan export conan/mqtt_cpp
-	conan export conan/mruby
-	conan install . -if build --build=missing -pr conan/profiles/gcc
-	
 ### Build the agent
 	
-	conan build . -bf build
+	conan build . -pr conan/profile/gcc --build=missing
 	
 ## Building on Mac OS
 
@@ -1382,21 +1366,13 @@ Install brew and xcode command line tools
 
 	git clone https://github.com/mtconnect/cppagent.git
 	
-### Install the dependencies
-
-    cd cppagent
-    conan export conan/mqtt_cpp
-    conan export conan/mruby
-    conan install . -if build  --build=missing
-	
 ### Build the agent
 	
-	conan build . -bf build
+	conan build . -pr conan/profile/macos --build=missing
+    
+### Generate an xcode project for debugging
 	
-### For XCode
-   
-	mkdir build & cd build
-    cmake -G Xcode ..
+	conan build . -pr conan/profile/xcode -s build_type=Debug --build=missing
 
 ## Building on Fedora Alpine
 
@@ -1414,19 +1390,9 @@ Install brew and xcode command line tools
 	pip3 install conan	
 	git clone https://github.com/mtconnect/cppagent.git
 
-### Export mqtt_cpp package
-
-	cd cppagent
-	conan export conan/mqtt_cpp/
-	conan export conan/mruby/
-
-### Install packages
-
-         conan install . -if build -pr conan/profiles/gcc --build=missing
-	
 ## Build the agent
 
-	conan build . -bf build
+	conan build . -pr conan/profile/gcc --build=missing
 
 # Creating Test Certifications (see resources gen_certs shell script)
 
