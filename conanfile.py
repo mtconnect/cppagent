@@ -61,8 +61,6 @@ class MTConnectAgentConan(ConanFile):
         "date*:use_system_tz_db": True
         }
 
-    exports = "conan/*"
-    exports_sources = "*"
     run_tests = True
     build_tests = True
 
@@ -86,10 +84,6 @@ class MTConnectAgentConan(ConanFile):
     def configure(self):
         self.run_tests = self.options.run_tests
         self.build_tests = self.options.build_tests
-        if is_msvc(self):
-            if not self.settings.compiler.version:
-                self.settings.compiler.version = '16'
-                
         self.settings.compiler.cppstd = 17
 
         if not self.build_tests:
@@ -133,7 +127,7 @@ class MTConnectAgentConan(ConanFile):
         tc.cache_variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6.__bool__()
         if self.options.agent_prefix:
             tc.cache_variables['AGENT_PREFIX'] = self.options.agent_prefix
-        if self.settings.os == 'Windows':
+        if is_msvc(self):
             tc.cache_variables['WINVER'] = self.options.winver
 
         tc.generate()
@@ -182,7 +176,7 @@ class MTConnectAgentConan(ConanFile):
             self.cpp_info.defines.append("SHARED_AGENT_LIB=1")
             self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
         
-        if self.settings.os == 'Windows':
+        if is_msvc(self):
             winver=str(self.options.winver)
             self.cpp_info.defines.append("WINVER=" + winver)
             self.cpp_info.defines.append("_WIN32_WINNT=" + winver)
