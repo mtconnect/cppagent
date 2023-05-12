@@ -78,6 +78,7 @@ namespace mtconnect::pipeline {
     std::set<std::string> m_logOnce;
     PipelineContract *m_contract;
     std::optional<std::string> m_defaultDevice;
+    std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
     int m_shdrVersion {1};
   };
 }  // namespace mtconnect::pipeline

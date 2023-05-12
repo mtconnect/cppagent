@@ -184,27 +184,39 @@ namespace mtconnect {
                                                    ErrorList &errors)
     {
       NAMED_SCOPE("DataItemMapper.ShdrTokenMapper.mapTokensToDataItem");
-      auto dataItemKey = splitKey(*token++);
-      string device = dataItemKey.second.value_or(m_defaultDevice.value_or(""));
-      auto dataItem = m_contract->findDataItem(device, dataItemKey.first);
-
-      if (dataItem == nullptr)
+      auto key = *token++;
+      DataItemPtr dataItem;
+      auto dataItemIt = m_dataItemMap.find(key);
+      if (dataItemIt == m_dataItemMap.end() || !(dataItem = dataItemIt->second.lock()))
       {
-        // resync to next item
-        if (m_logOnce.count(dataItemKey.first) > 0)
-          LOG(trace) << "Could not find data item: " << dataItemKey.first;
-        else
+        auto dataItemKey = splitKey(key);
+        string device = dataItemKey.second.value_or(m_defaultDevice.value_or(""));
+        dataItem = m_contract->findDataItem(device, dataItemKey.first);
+
+        if (dataItem == nullptr)
         {
-          LOG(info) << "Could not find data item: " << dataItemKey.first;
-          m_logOnce.insert(dataItemKey.first);
+          // resync to next item
+          if (m_logOnce.count(dataItemKey.first) > 0)
+            LOG(trace) << "Could not find data item: " << dataItemKey.first;
+          else
+          {
+            LOG(info) << "Could not find data item: " << dataItemKey.first;
+            m_logOnce.insert(dataItemKey.first);
+          }
+          
+          // Skip following tolken if we are in legacy mode
+          if (m_shdrVersion < 2 && token != end)
+            token++;
+          
+          return nullptr;
         }
-
-        // Skip following tolken if we are in legacy mode
-        if (m_shdrVersion < 2 && token != end)
-          token++;
-
-        return nullptr;
+        
+        m_dataItemMap[key] = dataItem;
       }
+//      else
+//      {
+//        LOG(trace) << "Mapped " << key;
+//      }
 
       entity::Requirements *reqs {nullptr};
 
@@ -247,7 +259,7 @@ namespace mtconnect {
       }
       else
       {
-        LOG(warning) << "Cannot find requirements for " << dataItemKey.first;
+        LOG(warning) << "Cannot find requirements for " << key;
         throw entity::PropertyError("Unresolved data item requirements");
       }
 

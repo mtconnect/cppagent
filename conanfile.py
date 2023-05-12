@@ -24,7 +24,8 @@ class MTConnectAgentConan(ConanFile):
                 "openssl/3.0.8",
                 "rapidjson/cci.20220822",
                 "mqtt_cpp/13.1.0",
-                "bzip2/1.0.8"
+                "bzip2/1.0.8",
+                "gtest/1.10.0"
                 ]
 
     build_requires = ["cmake/[>3.23.0]"]
@@ -73,30 +74,22 @@ class MTConnectAgentConan(ConanFile):
 #            git.clone("https://github.com/mtconnect/cppagent")
 
     def validate(self):
-        if self.settings.os == 'Windows' and self.options.shared and \
-           self.settings.compiler.runtime != 'dynamic':
+        if is_msvc(self) and self.options.shared and self.settings.compiler.runtime != 'dynamic':
             raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
+        if "libcxx" in self.settings.compiler.fields and self.settings.compiler.libcxx == "libstdc++":
+            raise ConanInvalidConfiguration("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")
 
     def layout(self):
-        self.folders.build_folder_vars = ["options.shared", "settings.build_type", "settings.arch"]
+        self.folders.build_folder_vars = ["options.shared", "settings.arch"]
         cmake_layout(self)
 
     def configure(self):
         self.run_tests = self.options.run_tests
         self.build_tests = self.options.build_tests
-        self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
-                          self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
-        if self.settings.os == 'Windows':
-            if self.windows_xp:
-                self.build_tests = False
-                self.options.winver = '0x501'
-                
+        if is_msvc(self):
             if not self.settings.compiler.version:
                 self.settings.compiler.version = '16'
-        
-        if "libcxx" in self.settings.compiler.fields and self.settings.compiler.libcxx == "libstdc++":
-            raise Exception("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")
-        
+                
         self.settings.compiler.cppstd = 17
 
         if not self.build_tests:
@@ -154,8 +147,6 @@ class MTConnectAgentConan(ConanFile):
                 self.tool_requires("doxygen/1.9.4")
 
     def requirements(self):
-        if not self.windows_xp:
-            self.requires("gtest/1.10.0")
         if self.options.with_ruby:
             self.requires("mruby/3.2.0")
         
