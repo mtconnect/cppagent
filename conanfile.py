@@ -46,6 +46,15 @@ class MTConnectAgentConan(ConanFile):
         "boost*:shared": False,
         "boost*:without_python": True,
         "boost*:without_test": True,
+        "boost*:without_graph": True,
+        "boost*:without_test": True,
+        "boost*:without_nowide": True,
+        "boost*:without_fiber": True,
+        "boost*:without_math": True,
+        "boost*:without_contract": True,
+        "boost*:without_serialization": True,
+        "boost*:without_wave": True,
+        "boost*:without_graph_parallel": True,
 
         "libxml2*:shared": False,
         "libxml2*:include_utils": False,
@@ -64,12 +73,8 @@ class MTConnectAgentConan(ConanFile):
     run_tests = True
     build_tests = True
 
-#    def source(self):
-#        git = tools.Git(self.source_folder)
-#        if self.options.development:
-#            git.clone("git@github.com:/mtconnect/cppagent_dev")
-#        else:
-#            git.clone("https://github.com/mtconnect/cppagent")
+    exports_sources = "*"
+    exports = "conan/mqtt_cpp/*", "conan/mruby/*"
 
     def validate(self):
         if is_msvc(self) and self.options.shared and self.settings.compiler.runtime != 'dynamic':
@@ -93,7 +98,6 @@ class MTConnectAgentConan(ConanFile):
             self.options["boost"].visibility = "hidden"
 
         # Make sure shared builds use shared boost
-        print("**** Checking if it is shared")
         if is_msvc(self) and self.options.shared:
             print("**** Making boost, libxml2, gtest, and openssl shared")
             self.options["bzip2/*"].shared = True
