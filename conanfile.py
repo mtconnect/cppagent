@@ -86,6 +86,10 @@ class MTConnectAgentConan(ConanFile):
         self.folders.build_folder_vars = ["options.shared", "settings.arch"]
         cmake_layout(self)
 
+    def layout(self):
+        self.folders.build_folder_vars = ["options.shared", "settings.arch"]
+        cmake_layout(self)
+
     def configure(self):
         self.run_tests = self.options.run_tests
         self.build_tests = self.options.build_tests
