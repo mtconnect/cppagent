@@ -24,7 +24,8 @@ class MTConnectAgentConan(ConanFile):
                 "openssl/3.0.8",
                 "rapidjson/cci.20220822",
                 "mqtt_cpp/13.1.0",
-                "bzip2/1.0.8"
+                "bzip2/1.0.8",
+                "gtest/1.10.0"
                 ]
 
     build_requires = ["cmake/[>3.23.0]"]
@@ -45,6 +46,15 @@ class MTConnectAgentConan(ConanFile):
         "boost*:shared": False,
         "boost*:without_python": True,
         "boost*:without_test": True,
+        "boost*:without_graph": True,
+        "boost*:without_test": True,
+        "boost*:without_nowide": True,
+        "boost*:without_fiber": True,
+        "boost*:without_math": True,
+        "boost*:without_contract": True,
+        "boost*:without_serialization": True,
+        "boost*:without_wave": True,
+        "boost*:without_graph_parallel": True,
 
         "libxml2*:shared": False,
         "libxml2*:include_utils": False,
@@ -60,43 +70,29 @@ class MTConnectAgentConan(ConanFile):
         "date*:use_system_tz_db": True
         }
 
-    exports = "conan/*"
-    exports_sources = "*"
     run_tests = True
     build_tests = True
 
-#    def source(self):
-#        git = tools.Git(self.source_folder)
-#        if self.options.development:
-#            git.clone("git@github.com:/mtconnect/cppagent_dev")
-#        else:
-#            git.clone("https://github.com/mtconnect/cppagent")
+    exports_sources = "*"
+    exports = "conan/mqtt_cpp/*", "conan/mruby/*"
 
     def validate(self):
-        if self.settings.os == 'Windows' and self.options.shared and \
-           self.settings.compiler.runtime != 'dynamic':
+        if is_msvc(self) and self.options.shared and self.settings.compiler.runtime != 'dynamic':
             raise ConanInvalidConfiguration("Shared can only be built with DLL runtime.")
+        if "libcxx" in self.settings.compiler.fields and self.settings.compiler.libcxx == "libstdc++":
+            raise ConanInvalidConfiguration("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")
 
     def layout(self):
-        self.folders.build_folder_vars = ["options.shared", "settings.build_type", "settings.arch"]
+        self.folders.build_folder_vars = ["options.shared", "settings.arch"]
+        cmake_layout(self)
+
+    def layout(self):
+        self.folders.build_folder_vars = ["options.shared", "settings.arch"]
         cmake_layout(self)
 
     def configure(self):
         self.run_tests = self.options.run_tests
         self.build_tests = self.options.build_tests
-        self.windows_xp = self.settings.os == 'Windows' and self.settings.compiler.toolset and \
-                          self.settings.compiler.toolset in ('v141_xp', 'v140_xp')
-        if self.settings.os == 'Windows':
-            if self.windows_xp:
-                self.build_tests = False
-                self.options.winver = '0x501'
-                
-            if not self.settings.compiler.version:
-                self.settings.compiler.version = '16'
-        
-        if "libcxx" in self.settings.compiler.fields and self.settings.compiler.libcxx == "libstdc++":
-            raise Exception("This package is only compatible with libstdc++11, add -s compiler.libcxx=libstdc++11")
-        
         self.settings.compiler.cppstd = 17
 
         if not self.build_tests:
@@ -106,7 +102,6 @@ class MTConnectAgentConan(ConanFile):
             self.options["boost"].visibility = "hidden"
 
         # Make sure shared builds use shared boost
-        print("**** Checking if it is shared")
         if is_msvc(self) and self.options.shared:
             print("**** Making boost, libxml2, gtest, and openssl shared")
             self.options["bzip2/*"].shared = True
@@ -140,7 +135,7 @@ class MTConnectAgentConan(ConanFile):
         tc.cache_variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6.__bool__()
         if self.options.agent_prefix:
             tc.cache_variables['AGENT_PREFIX'] = self.options.agent_prefix
-        if self.settings.os == 'Windows':
+        if is_msvc(self):
             tc.cache_variables['WINVER'] = self.options.winver
 
         tc.generate()
@@ -154,8 +149,6 @@ class MTConnectAgentConan(ConanFile):
                 self.tool_requires("doxygen/1.9.4")
 
     def requirements(self):
-        if not self.windows_xp:
-            self.requires("gtest/1.10.0")
         if self.options.with_ruby:
             self.requires("mruby/3.2.0")
         
@@ -191,7 +184,7 @@ class MTConnectAgentConan(ConanFile):
             self.cpp_info.defines.append("SHARED_AGENT_LIB=1")
             self.cpp_info.defines.append("BOOST_ALL_DYN_LINK")
         
-        if self.settings.os == 'Windows':
+        if is_msvc(self):
             winver=str(self.options.winver)
             self.cpp_info.defines.append("WINVER=" + winver)
             self.cpp_info.defines.append("_WIN32_WINNT=" + winver)
