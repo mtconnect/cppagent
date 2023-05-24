@@ -18,8 +18,10 @@
 #include "factory.hpp"
 
 #include <unordered_set>
+#include <boost/algorithm/string.hpp>
 
 #include "mtconnect/logging.hpp"
+
 
 using namespace std;
 
@@ -175,18 +177,38 @@ namespace mtconnect {
 
       if (!m_any && !m_isList)
       {
-        std::list<string> extra;
+        list<PropertyKey> extra;
+        list<PropertyKey> remove;
+        namespace ba = boost::algorithm;
         for (auto &p : properties)
         {
-          // Check that all properties are expected and if they are not, allow
-          // xml attributes through if the namespace portion starts with xml.
-          if (!p.first.m_mark && (!p.first.hasNs() || p.first.getNs().find_first_of("xml") != 0))
+          // Check for extra properties
+          if (!p.first.m_mark)
           {
-            extra.emplace_back(p.first);
+            // If the property is a namespace declaration, then
+            // remove it if it is related to mtconnect, otherwise
+            // allow it to pass through.
+            if (ba::starts_with(p.first.str(), "xmlns"s))
+            {
+              if(holds_alternative<string>(p.second) &&
+                   ba::contains(get<string>(p.second), "mtconnect"s))
+              {
+                remove.push_back(p.first);
+              }
+            }
+            else
+            {
+              // Add this to the list of extra properties.
+              extra.push_back(p.first);
+            }
           }
-        }
-
-        // Check for additional properties
+        };
+        
+        // Remove extranous properties
+        for (auto &p : remove)
+          properties.erase(p);
+        
+        // Check if additional properties exist
         if (!extra.empty())
         {
           std::stringstream os;

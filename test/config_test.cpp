@@ -1401,7 +1401,7 @@ Port = 0
     {
       ofstream cfg(config.string());
       cfg << R"DOC(
-VersionDeviceXmlUpdates = true
+VersionDeviceXml = true
 Port = 0
 
 Adapters {
@@ -1515,7 +1515,7 @@ Adapters {
     {
       ofstream cfg(config.string());
       cfg << R"DOC(
-VersionDeviceXmlUpdates = true
+VersionDeviceXml = true
 CreateUniqueIds = true
 Port = 0
 )DOC";
@@ -1643,7 +1643,7 @@ Port = 0
     {
       ofstream cfg(config.string());
       cfg << R"DOC(
-VersionDeviceXmlUpdates = true
+VersionDeviceXml = true
 CreateUniqueIds = true
 Port = 0
 )DOC";
@@ -1703,7 +1703,7 @@ Port = 0
     {
       ofstream cfg(config.string());
       cfg << R"DOC(
-VersionDeviceXmlUpdates = true
+VersionDeviceXml = true
 CreateUniqueIds = true
 Port = 0
 )DOC";
@@ -1808,5 +1808,112 @@ Port = 0
   TEST_F(ConfigTest, should_not_reload_when_monitor_files_is_on) { GTEST_SKIP(); }
 
   TEST_F(ConfigTest, should_map_references_to_new_ids) { GTEST_SKIP(); }
+
+  
+  TEST_F(ConfigTest, should_ignore_xmlns_when_parsing_device_xml)
+  {
+    using namespace mtconnect::source::adapter;
+
+    fs::path root {createTempDirectory("10")};
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+VersionDeviceXml = true
+Port = 0
+
+Adapters {
+  Device {
+  }
+}
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    copyFile("empty.xml", devices, 0min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &asyncContext = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto sp = agent->findSource("_localhost_7878");
+    ASSERT_TRUE(sp);
+
+    auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
+    ASSERT_TRUE(adapter);
+
+    auto validate = [&](boost::system::error_code ec) {
+      using namespace std::filesystem;
+      using namespace std::chrono;
+      using namespace boost::algorithm;
+
+      if (!ec)
+      {
+        // Check for backup file
+        auto ext = date::format(".%Y-%m-%dT%H+", date::floor<seconds>(system_clock::now()));
+        auto dit = directory_iterator(".");
+        std::list<directory_entry> entries;
+        copy_if(dit, end(dit), back_inserter(entries),
+                [&ext](const auto &de) { return contains(de.path().string(), ext); });
+        ASSERT_EQ(1, entries.size());
+
+        auto device = agent->getDeviceByName("LinuxCNC");
+        ASSERT_TRUE(device) << "Cannot find LinuxCNC device";
+
+        ASSERT_FALSE(device->maybeGet<string>("xmlns"));
+        ASSERT_FALSE(device->maybeGet<string>("xmlns:m"));
+      }
+      m_config->stop();
+    };
+
+    boost::asio::steady_timer timer2(asyncContext.get());
+
+    auto send = [this, &adapter, &timer2, validate](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        adapter->processData("* deviceModel: --multiline--AAAAA");
+        adapter->processData(R"(
+<Device uuid="000" name="LinuxCNC" sampleInterval="10.0" id="d" xmlns:m="urn:mtconnect.org:MTConnectDevices:2.2" xmlns="urn:mtconnect.org:MTConnectDevices:2.2">
+  <Description manufacturer="NIST" serialNumber=""/>
+  <DataItems>
+    <DataItem type="AVAILABILITY" category="EVENT" id="a" name="avail"/>
+  </DataItems>
+  <Components>
+    <Controller id="cont">
+      <DataItems>
+        <DataItem type="EXECUTION" category="EVENT" id="exec"/>
+        <DataItem type="CONTROLLER_MODE" category="EVENT" id="mode" name="mode"/>
+      </DataItems>
+    </Controller>
+  </Components>
+</Device>
+)");
+        adapter->processData("--multiline--AAAAA");
+
+        timer2.expires_from_now(500ms);
+        timer2.async_wait(validate);
+      }
+    };
+
+    boost::asio::steady_timer timer1(asyncContext.get());
+    timer1.expires_from_now(100ms);
+    timer1.async_wait(send);
+
+    m_config->start();
+  }
+
 
 }  // namespace

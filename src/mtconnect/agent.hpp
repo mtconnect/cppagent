@@ -88,7 +88,7 @@ namespace mtconnect {
     ///     - SchemaVersion
     ///     - CheckpointFrequency
     ///     - Pretty
-    ///     - VersionDeviceXmlUpdates
+    ///     - VersionDeviceXml
     ///     - JsonVersion
     ///     - DisableAgentDevice
     Agent(configuration::AsyncContext &context, const std::string &deviceXmlPath,
@@ -116,6 +116,14 @@ namespace mtconnect {
     /// @brief Hooks before the agent stops all the sources and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStopHooks() { return m_beforeStopHooks; }
+      
+    /// @brief Hooks before the agent versions and write the device xml file
+    /// @return configuration::HookManager<Agent>&
+    auto &beforeDeviceXmlUpdateHooks() { return m_beforeDeviceXmlUpdateHooks; }
+    
+    /// @brief Hooks after the agent versions and write the device xml file
+    /// @return configuration::HookManager<Agent>&
+    auto &afterDeviceXmlUpdateHooks() { return m_afterDeviceXmlUpdateHooks; }
 
     /// @brief the agent given a pipeline context
     /// @param context: the pipeline context shared between all pipelines
@@ -524,6 +532,8 @@ namespace mtconnect {
     configuration::HookManager<Agent> m_afterInitializeHooks;
     configuration::HookManager<Agent> m_beforeStartHooks;
     configuration::HookManager<Agent> m_beforeStopHooks;
+    configuration::HookManager<Agent> m_beforeDeviceXmlUpdateHooks;
+    configuration::HookManager<Agent> m_afterDeviceXmlUpdateHooks;
   };
 
   /// @brief Association of the pipeline's interface to the `Agent`

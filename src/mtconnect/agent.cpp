@@ -97,7 +97,7 @@ namespace mtconnect {
 
     m_assetStorage = make_unique<AssetBuffer>(
         GetOption<int>(options, mtconnect::configuration::MaxAssets).value_or(1024));
-    m_versionDeviceXml = IsOptionSet(options, mtconnect::configuration::VersionDeviceXmlUpdates);
+    m_versionDeviceXml = IsOptionSet(options, mtconnect::configuration::VersionDeviceXml);
     m_createUniqueIds = IsOptionSet(options, config::CreateUniqueIds);
 
     auto jsonVersion =
@@ -565,6 +565,8 @@ namespace mtconnect {
 
     if (m_versionDeviceXml)
     {
+      m_beforeDeviceXmlUpdateHooks.exec(*this);
+      
       // update with a new version of the device.xml, saving the old one
       // with a date time stamp
       auto ext =
@@ -585,6 +587,8 @@ namespace mtconnect {
         ofstream devices(file.string());
         devices << probe;
         devices.close();
+        
+        m_afterDeviceXmlUpdateHooks.exec(*this);
       }
       else
       {
