@@ -383,7 +383,7 @@ namespace mtconnect::configuration {
       LOG(debug) << "Waiting for monitor thread to exit to restart agent";
 
       m_agent->beforeDeviceXmlUpdateHooks().add([this](Agent &agent) {
-        LOG(debug) << "Reseting device file time because agent updated the device XML file";
+        LOG(info) << "Reseting device file time because agent updated the device XML file";
         m_deviceTime.reset();
       });
       

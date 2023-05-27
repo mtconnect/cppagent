@@ -397,7 +397,7 @@ namespace mtconnect {
         auto hv = hash();
         setProperty("hash", hv);
       }
-
+      
     protected:
       friend struct HashVisitor;
 
