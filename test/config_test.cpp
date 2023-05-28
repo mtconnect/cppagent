@@ -1565,9 +1565,10 @@ Port = 0
         const auto &components = device->getChildren();
         ASSERT_EQ(1, components->size());
 
-        auto cont = device->getComponentById("cont");
-        ASSERT_TRUE(cont) << "Cannot find Component with id cont";
-
+        auto conts = device->getComponentByType("Controller");
+        ASSERT_EQ(1, conts.size()) << "Cannot find Component with id cont";
+        auto cont = conts.front();
+        
         auto devDIs = device->getDataItems();
         ASSERT_TRUE(devDIs);
         ASSERT_EQ(5, devDIs->size());
@@ -1914,7 +1915,7 @@ Adapters {
   {
     using namespace mtconnect::source::adapter;
     
-    fs::path root {createTempDirectory("9")};
+    fs::path root {createTempDirectory("11")};
     
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
@@ -2040,7 +2041,7 @@ Port = 0
   {
     using namespace mtconnect::source::adapter;
 
-    fs::path root {createTempDirectory("6")};
+    fs::path root {createTempDirectory("12")};
 
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
