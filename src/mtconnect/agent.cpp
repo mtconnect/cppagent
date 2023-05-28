@@ -566,7 +566,7 @@ namespace mtconnect {
     if (m_versionDeviceXml)
     {
       m_beforeDeviceXmlUpdateHooks.exec(*this);
-      
+
       // update with a new version of the device.xml, saving the old one
       // with a date time stamp
       auto ext =
@@ -587,7 +587,7 @@ namespace mtconnect {
         ofstream devices(file.string());
         devices << probe;
         devices.close();
-        
+
         m_afterDeviceXmlUpdateHooks.exec(*this);
       }
       else
@@ -1452,7 +1452,7 @@ namespace mtconnect {
             else
             {
               LOG(warning) << "Cannot find data item for the Agent device when processing command "
-              << command << " with value " << value << " for adapter " << source;
+                           << command << " with value " << value << " for adapter " << source;
             }
           }
         }
@@ -1466,7 +1466,7 @@ namespace mtconnect {
     else
     {
       LOG(error) << source << ":Received protocol command '" << command << "' for device '"
-                 <<  deviceName << "', but the device could not be found";
+                 << deviceName << "', but the device could not be found";
     }
   }
 

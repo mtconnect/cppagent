@@ -218,7 +218,7 @@ namespace mtconnect::entity {
         {
           properties.erase("LIST");
         }
-        
+
         auto entity = ef->make(qname, properties, errors);
         if (entity)
         {

@@ -235,7 +235,7 @@ namespace mtconnect::configuration {
     }
 
     NAMED_SCOPE("AgentConfiguration::monitorThread");
-    
+
     LOG(debug) << "Monitoring files: " << m_configFile << " and " << m_devicesFile
                << ", will warm start if they change.";
 
@@ -281,7 +281,7 @@ namespace mtconnect::configuration {
     LOG(warning)
         << "Detected change in configuration files. Will reload when youngest file is at least "
         << m_monitorDelay.count() << " seconds old";
-    
+
     if (devTime != *m_deviceTime)
     {
       auto t = bfs::last_write_time(m_devicesFile);
@@ -386,7 +386,7 @@ namespace mtconnect::configuration {
         LOG(info) << "Reseting device file time because agent updated the device XML file";
         m_deviceTime.reset();
       });
-      
+
       boost::system::error_code ec;
       AgentConfiguration::monitorFiles(ec);
     }
@@ -395,7 +395,6 @@ namespace mtconnect::configuration {
     m_beforeStartHooks.exec(*this);
     m_agent->start();
     m_context->start();
-    
   }
 
   void AgentConfiguration::stop()

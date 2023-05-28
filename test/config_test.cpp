@@ -1568,7 +1568,7 @@ Port = 0
         auto conts = device->getComponentByType("Controller");
         ASSERT_EQ(1, conts.size()) << "Cannot find Component with id cont";
         auto cont = conts.front();
-        
+
         auto devDIs = device->getDataItems();
         ASSERT_TRUE(devDIs);
         ASSERT_EQ(5, devDIs->size());
@@ -1805,7 +1805,7 @@ Port = 0
 
     m_config->start();
   }
-  
+
   TEST_F(ConfigTest, should_ignore_xmlns_when_parsing_device_xml)
   {
     using namespace mtconnect::source::adapter;
@@ -1914,9 +1914,9 @@ Adapters {
   TEST_F(ConfigTest, should_not_reload_when_monitor_files_is_on)
   {
     using namespace mtconnect::source::adapter;
-    
+
     fs::path root {createTempDirectory("11")};
-    
+
     fs::path devices(root / "Devices.xml");
     fs::path config {root / "agent.cfg"};
     {
@@ -1931,42 +1931,41 @@ Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
     }
-    
+
     copyFile("dyn_load.xml", devices, 0min);
-    
+
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
     options.insert(make_pair("config-file"s, value));
-    
+
     m_config->initialize(options);
     auto &asyncContext = m_config->getAsyncContext();
-    
+
     auto agent = m_config->getAgent();
     auto device = agent->getDeviceByName("LinuxCNC");
     ASSERT_TRUE(device);
-    
+
     const auto &printer = agent->getPrinter("xml");
     ASSERT_NE(nullptr, printer);
-    
+
     auto sp = agent->findSource("_localhost_7878");
     ASSERT_TRUE(sp);
-    
+
     auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
     ASSERT_TRUE(adapter);
-    
+
     boost::asio::steady_timer shutdownTimer(asyncContext.get());
-    
-    auto shudown = [this](boost::system::error_code ec)
-    {
+
+    auto shudown = [this](boost::system::error_code ec) {
       LOG(info) << "Shutting down the configuration";
       m_config->stop();
     };
-    
+
     auto validate = [&](boost::system::error_code ec) {
       using namespace std::filesystem;
       using namespace std::chrono;
       using namespace boost::algorithm;
-      
+
       if (!ec)
       {
         // Check for backup file
@@ -1976,25 +1975,25 @@ Port = 0
         copy_if(dit, end(dit), back_inserter(entries),
                 [&ext](const auto &de) { return contains(de.path().string(), ext); });
         ASSERT_EQ(2, entries.size());
-        
+
         ASSERT_EQ(3, agent->getDevices().size());
-        
+
         auto device1 = agent->getDeviceByName("LinuxCNC");
         ASSERT_TRUE(device1) << "Cannot find LinuxCNC device";
-        
+
         auto device2 = agent->getDeviceByName("AnotherCNC");
         ASSERT_TRUE(device2) << "Cannot find LinuxCNC device";
-        
+
         auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
         ASSERT_EQ("AnotherCNC", pipeline->getDevice());
       }
-      
+
       shutdownTimer.expires_from_now(3s);
       shutdownTimer.async_wait(shudown);
     };
-    
+
     boost::asio::steady_timer timer2(asyncContext.get());
-    
+
     auto send = [this, &adapter, &timer2, validate](boost::system::error_code ec) {
       if (ec)
       {
@@ -2004,7 +2003,7 @@ Port = 0
       {
         auto pipeline = dynamic_cast<AdapterPipeline *>(adapter->getPipeline());
         ASSERT_EQ("LinuxCNC", pipeline->getDevice());
-        
+
         adapter->processData("* deviceModel: --multiline--AAAAA");
         adapter->processData(R"(
 <Device uuid="001" name="AnotherCNC" sampleInterval="10.0" id="d">
@@ -2024,19 +2023,19 @@ Port = 0
 </Device>
 )");
         adapter->processData("--multiline--AAAAA");
-        
+
         timer2.expires_from_now(500ms);
         timer2.async_wait(validate);
       }
     };
-    
+
     boost::asio::steady_timer timer1(asyncContext.get());
     timer1.expires_from_now(100ms);
     timer1.async_wait(send);
-    
+
     m_config->start();
   }
-  
+
   TEST_F(ConfigTest, should_not_crash_when_there_are_no_devices_and_receives_data)
   {
     using namespace mtconnect::source::adapter;
@@ -2084,8 +2083,7 @@ Adapters {
       using namespace boost::algorithm;
 
       if (!ec)
-      {
-      }
+      {}
       m_config->stop();
     };
 
@@ -2112,6 +2110,5 @@ Adapters {
 
     m_config->start();
   }
-
 
 }  // namespace

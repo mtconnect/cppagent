@@ -234,13 +234,13 @@ namespace mtconnect {
 
         return std::nullopt;
       }
-      
+
       /// @brief Get the LIST property if it exists from an entity
       /// @returns a reference to the entity list. Returns an empty list if it does not exist.
       const EntityList &getListProperty() const
       {
         static EntityList null;
-        
+
         auto p = m_properties.find("LIST");
         if (p != m_properties.end())
         {
@@ -256,7 +256,7 @@ namespace mtconnect {
       EntityList &getListProperty()
       {
         static EntityList null;
-        
+
         auto p = m_properties.find("LIST");
         if (p != m_properties.end())
         {
@@ -397,7 +397,7 @@ namespace mtconnect {
         auto hv = hash();
         setProperty("hash", hv);
       }
-      
+
     protected:
       friend struct HashVisitor;
 

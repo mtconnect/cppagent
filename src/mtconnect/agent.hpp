@@ -116,11 +116,11 @@ namespace mtconnect {
     /// @brief Hooks before the agent stops all the sources and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStopHooks() { return m_beforeStopHooks; }
-      
+
     /// @brief Hooks before the agent versions and write the device xml file
     /// @return configuration::HookManager<Agent>&
     auto &beforeDeviceXmlUpdateHooks() { return m_beforeDeviceXmlUpdateHooks; }
-    
+
     /// @brief Hooks after the agent versions and write the device xml file
     /// @return configuration::HookManager<Agent>&
     auto &afterDeviceXmlUpdateHooks() { return m_afterDeviceXmlUpdateHooks; }

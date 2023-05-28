@@ -144,12 +144,12 @@ TEST_F(QIFDocumentTest, minimal_qif_definition)
 
   auto product = qif->get<EntityPtr>("Product");
   ASSERT_TRUE(product);
-  
+
   auto partSetList = product->getListProperty();
   ASSERT_EQ(2, partSetList.size());
   auto partSet = *partSetList.begin();
   ASSERT_EQ("1"s, partSet->get<string>("N"));
-  
+
   auto parts = partSet->getListProperty();
   ASSERT_EQ(1, parts.size());
   auto part = *parts.begin();
@@ -341,12 +341,12 @@ TEST_F(QIFDocumentTest, should_parse_document_with_multiple_same_named_elements)
   ASSERT_TRUE(product);
   auto &partSetList = product->getListProperty();
   ASSERT_EQ(2, partSetList.size());
-  
+
   auto &partSet = *partSetList.begin();
   ASSERT_EQ("2"s, partSet->get<string>("N"));
   auto parts = partSet->getListProperty();
   ASSERT_EQ(2, parts.size());
-  
+
   auto part = parts.begin();
   ASSERT_EQ("1"s, (*part)->get<string>("id"));
   ASSERT_EQ("Widget"s, (*part)->get<string>("Name"));

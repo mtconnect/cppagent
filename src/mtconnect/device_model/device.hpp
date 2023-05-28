@@ -160,16 +160,25 @@ namespace mtconnect {
                           mic::hashed_non_unique<mic::tag<BySource>, ExtractSource>,
                           mic::hashed_non_unique<mic::tag<ByName>, ExtractName>,
                           mic::ordered_non_unique<mic::tag<ByType>, ExtractType>>>;
-      
-      struct ExtractComponentId {
+
+      struct ExtractComponentId
+      {
         using result_type = std::string;
-        const result_type &operator()(const std::weak_ptr<Component> &c) const { return c.lock()->getId(); }
+        const result_type &operator()(const std::weak_ptr<Component> &c) const
+        {
+          return c.lock()->getId();
+        }
       };
-      struct ExtractComponentType {
+      struct ExtractComponentType
+      {
         using result_type = std::string;
-        const result_type &operator()(const std::weak_ptr<Component> &c) const { return c.lock()->getName(); }
+        const result_type &operator()(const std::weak_ptr<Component> &c) const
+        {
+          return c.lock()->getName();
+        }
       };
-      struct ExtractComponentName {
+      struct ExtractComponentName
+      {
         using result_type = std::string;
         const result_type operator()(const std::weak_ptr<Component> &c) const
         {
@@ -184,9 +193,8 @@ namespace mtconnect {
       using ComponentIndex = mic::multi_index_container<
           std::weak_ptr<Component>,
           mic::indexed_by<mic::hashed_unique<mic::tag<ById>, ExtractComponentId>,
-          mic::hashed_non_unique<mic::tag<ByType>, ExtractComponentType>,
-          mic::hashed_non_unique<mic::tag<ByName>, ExtractComponentName>>>;
-
+                          mic::hashed_non_unique<mic::tag<ByType>, ExtractComponentType>,
+                          mic::hashed_non_unique<mic::tag<ByName>, ExtractComponentName>>>;
 
       /// @brief Constructor that sets variables from an attribute map
       /// @param[in] name the name of the device
@@ -267,7 +275,7 @@ namespace mtconnect {
           for (; first != last; first++)
             res.push_back(first->lock());
         }
-        
+
         return res;
       }
 

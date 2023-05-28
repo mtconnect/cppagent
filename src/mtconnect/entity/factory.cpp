@@ -17,11 +17,11 @@
 
 #include "factory.hpp"
 
-#include <unordered_set>
 #include <boost/algorithm/string.hpp>
 
-#include "mtconnect/logging.hpp"
+#include <unordered_set>
 
+#include "mtconnect/logging.hpp"
 
 using namespace std;
 
@@ -190,8 +190,8 @@ namespace mtconnect {
             // allow it to pass through.
             if (ba::starts_with(p.first.str(), "xmlns"s))
             {
-              if(holds_alternative<string>(p.second) &&
-                   ba::contains(get<string>(p.second), "mtconnect"s))
+              if (holds_alternative<string>(p.second) &&
+                  ba::contains(get<string>(p.second), "mtconnect"s))
               {
                 remove.push_back(p.first);
               }
@@ -203,11 +203,11 @@ namespace mtconnect {
             }
           }
         };
-        
+
         // Remove extranous properties
         for (auto &p : remove)
           properties.erase(p);
-        
+
         // Check if additional properties exist
         if (!extra.empty())
         {

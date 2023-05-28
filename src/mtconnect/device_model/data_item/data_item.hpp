@@ -227,8 +227,8 @@ namespace mtconnect {
 
         /// @brief create unique ids recursively
         ///
-        /// Replaces the cached `m_id` instance variable and also updates the preferred name if it is the
-        /// `id` of the data item. Also updates the cached observation properties.
+        /// Replaces the cached `m_id` instance variable and also updates the preferred name if it
+        /// is the `id` of the data item. Also updates the cached observation properties.
         ///
         /// @param[in,out] idMap  old entity id to new entity id map
         /// @param[in] sha the root sha1
@@ -262,7 +262,7 @@ namespace mtconnect {
             m_observatonProperties.insert_or_assign("compositionId",
                                                     get<std::string>("compositionId"));
         }
-        
+
       protected:
         double simpleFactor(const std::string &units);
         std::map<std::string, std::string> buildAttributes() const;

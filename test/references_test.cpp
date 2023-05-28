@@ -48,18 +48,16 @@ int main(int argc, char *argv[])
 class ReferencesTest : public testing::Test
 {
 protected:
-  void SetUp() override
-  {
-  }
-  
+  void SetUp() override {}
+
   void createAgent(ConfigOptions options)
   {
     // Create an agent with only 16 slots and 8 data items.
-      m_agentTestHelper = make_unique<AgentTestHelper>();
-      m_agentTestHelper->createAgent("/samples/reference_example.xml", 8, 4, "1.6", 25,
-                                     false, true, options);
-      m_agentId = to_string(getCurrentTimeInSec());
-      m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
+    m_agentTestHelper = make_unique<AgentTestHelper>();
+    m_agentTestHelper->createAgent("/samples/reference_example.xml", 8, 4, "1.6", 25, false, true,
+                                   options);
+    m_agentId = to_string(getCurrentTimeInSec());
+    m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
   }
 
   void TearDown() override
@@ -113,23 +111,23 @@ TEST_F(ReferencesTest, should_map_references_to_new_ids)
   auto di = m_device->getDeviceDataItem("c4");
   ASSERT_TRUE(di);
   ASSERT_NE("c4", di->getId());
-  
+
   EXPECT_EQ(di->getId(), get<string>((*reference)->getProperty("idRef")));
-  
+
   reference++;
-  
+
   EXPECT_EQ("DataItemRef", (*reference)->getName());
 
   EXPECT_EQ("door", get<string>((*reference)->getProperty("name")));
   di = m_device->getDeviceDataItem("d2");
   ASSERT_TRUE(di);
   ASSERT_NE("d2", di->getId());
-  
+
   EXPECT_EQ(di->getId(), get<string>((*reference)->getProperty("idRef")));
-  
+
   reference++;
   auto cref = *reference;
-  
+
   EXPECT_EQ("ComponentRef", cref->getName());
 
   EXPECT_EQ("electric", get<string>(cref->getProperty("name")));
@@ -137,13 +135,13 @@ TEST_F(ReferencesTest, should_map_references_to_new_ids)
   auto comp = m_device->getComponentById(id);
   ASSERT_TRUE(comp);
   ASSERT_EQ("Electric", comp->getName());
-  
+
   di = m_device->getDeviceDataItem("fsys");
   ASSERT_TRUE(di);
-  
+
   auto source = di->getSource();
   ASSERT_TRUE(source);
-  
+
   auto diId = source->get<string>("dataItemId");
   ASSERT_NE("mf", diId);
   di = m_device->getDeviceDataItem("feed");
