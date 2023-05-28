@@ -1373,6 +1373,10 @@ namespace mtconnect {
       oldName = *device->getComponentName();
       oldUuid = *device->getUuid();
     }
+    else
+    {
+      LOG(warning) << source << ": Cannot find device for name " << deviceName;
+    }
 
     static std::unordered_map<string, function<void(DevicePtr, const string &value)>>
         deviceCommands {
@@ -1410,51 +1414,59 @@ namespace mtconnect {
         {"mtconnectversion", "_mtconnect_version"},
     };
 
-    if (command == "uuid")
-    {
-      if (!device->preserveUuid())
-      {
-        auto &idx = m_deviceIndex.get<ByUuid>();
-        auto it = idx.find(oldUuid);
-        if (it != idx.end())
-        {
-          idx.modify(it, [&value](DevicePtr &ptr) { ptr->setUuid(value); });
-        }
-        deviceChanged(device, oldUuid, oldName);
-      }
-    }
-    else if (command == "devicemodel")
+    if (command == "devicemodel")
     {
       loadDevice(value, source);
     }
-    else
+    else if (device)
     {
-      auto action = deviceCommands.find(command);
-      if (action == deviceCommands.end())
+      if (command == "uuid")
       {
-        auto agentDi = adapterDataItems.find(command);
-        if (agentDi == adapterDataItems.end())
+        if (!device->preserveUuid())
         {
-          LOG(warning) << "Unknown command '" << command << "' for device '" << deviceName;
-        }
-        else
-        {
-          auto id = source + agentDi->second;
-          auto di = getDataItemForDevice("Agent", id);
-          if (di)
-            m_loopback->receive(di, value);
-          else
+          auto &idx = m_deviceIndex.get<ByUuid>();
+          auto it = idx.find(oldUuid);
+          if (it != idx.end())
           {
-            LOG(warning) << "Cannot find data item for the Agent device when processing command "
-                         << command << " with value " << value << " for adapter " << source;
+            idx.modify(it, [&value](DevicePtr &ptr) { ptr->setUuid(value); });
           }
+          deviceChanged(device, oldUuid, oldName);
         }
       }
       else
       {
-        action->second(device, value);
-        deviceChanged(device, oldUuid, oldName);
+        auto action = deviceCommands.find(command);
+        if (action == deviceCommands.end())
+        {
+          auto agentDi = adapterDataItems.find(command);
+          if (agentDi == adapterDataItems.end())
+          {
+            LOG(warning) << "Unknown command '" << command << "' for device '" << deviceName;
+          }
+          else
+          {
+            auto id = source + agentDi->second;
+            auto di = getDataItemForDevice("Agent", id);
+            if (di)
+              m_loopback->receive(di, value);
+            else
+            {
+              LOG(warning) << "Cannot find data item for the Agent device when processing command "
+              << command << " with value " << value << " for adapter " << source;
+            }
+          }
+        }
+        else
+        {
+          action->second(device, value);
+          deviceChanged(device, oldUuid, oldName);
+        }
       }
+    }
+    else
+    {
+      LOG(error) << source << ":Received protocol command '" << command << "' for device '"
+                 <<  deviceName << "', but the device could not be found";
     }
   }
 

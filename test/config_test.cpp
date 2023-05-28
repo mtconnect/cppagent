@@ -2035,5 +2035,82 @@ Port = 0
     
     m_config->start();
   }
+  
+  TEST_F(ConfigTest, should_not_crash_when_there_are_no_devices_and_receives_data)
+  {
+    using namespace mtconnect::source::adapter;
+
+    fs::path root {createTempDirectory("6")};
+
+    fs::path devices(root / "Devices.xml");
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+VersionDeviceXml = true
+Port = 0
+
+Adapters {
+  Device {
+  }
+}
+)DOC";
+      cfg << "Devices = " << devices << endl;
+    }
+
+    copyFile("empty.xml", devices, 0min);
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+    auto &asyncContext = m_config->getAsyncContext();
+
+    auto agent = m_config->getAgent();
+    const auto &printer = agent->getPrinter("xml");
+    ASSERT_NE(nullptr, printer);
+
+    auto sp = agent->findSource("_localhost_7878");
+    ASSERT_TRUE(sp);
+
+    auto adapter = dynamic_pointer_cast<shdr::ShdrAdapter>(sp);
+    ASSERT_TRUE(adapter);
+
+    auto validate = [&](boost::system::error_code ec) {
+      using namespace std::filesystem;
+      using namespace std::chrono;
+      using namespace boost::algorithm;
+
+      if (!ec)
+      {
+      }
+      m_config->stop();
+    };
+
+    boost::asio::steady_timer timer2(asyncContext.get());
+
+    auto send = [this, &adapter, &timer2, validate](boost::system::error_code ec) {
+      if (ec)
+      {
+        m_config->stop();
+      }
+      else
+      {
+        adapter->processData("* device: none");
+        adapter->processData("* uuid: 12345");
+
+        timer2.expires_from_now(500ms);
+        timer2.async_wait(validate);
+      }
+    };
+
+    boost::asio::steady_timer timer1(asyncContext.get());
+    timer1.expires_from_now(100ms);
+    timer1.async_wait(send);
+
+    m_config->start();
+  }
+
 
 }  // namespace
