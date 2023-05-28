@@ -4,6 +4,7 @@ from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import copy
 
 import os
+import io
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
@@ -149,8 +150,9 @@ class MTConnectAgentConan(ConanFile):
         
     def build_requirements(self):
         if self.options.with_docs:
-            res = subprocess.run(["doxygen --version"], shell=True, text=True, capture_output=True)
-            if (res.returncode != 0 or not res.stdout.startswith('1.9')):
+            buf = io.StringIO()            
+            res = self.run(["doxygen --version"], shell=True, stdout=buf)
+            if (res != 0 or not buf.getvalue().startswith('1.9')):
                 self.tool_requires("doxygen/1.9.4")
 
     def requirements(self):
