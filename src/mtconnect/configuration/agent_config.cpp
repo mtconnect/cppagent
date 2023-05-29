@@ -382,6 +382,11 @@ namespace mtconnect::configuration {
       // Start the file monitor to check for changes to cfg or devices.
       LOG(debug) << "Waiting for monitor thread to exit to restart agent";
 
+      m_agent->beforeDeviceXmlUpdateHooks().add([this](Agent &agent) {
+        LOG(info) << "Reseting device file time because agent updated the device XML file";
+        m_deviceTime.reset();
+      });
+
       boost::system::error_code ec;
       AgentConfiguration::monitorFiles(ec);
     }
@@ -654,7 +659,7 @@ namespace mtconnect::configuration {
                 {configuration::FilterDuplicates, false},
                 {configuration::MonitorConfigFiles, false},
                 {configuration::MonitorInterval, 10s},
-                {configuration::VersionDeviceXmlUpdates, false},
+                {configuration::VersionDeviceXml, false},
                 {configuration::MinimumConfigReloadAge, 15s},
                 {configuration::Pretty, false},
                 {configuration::PidFile, "agent.pid"s},

@@ -225,6 +225,14 @@ namespace mtconnect {
         /// @brief Return the category as a char *
         const char *getCategoryText() const { return m_categoryText; }
 
+        /// @brief create unique ids recursively
+        ///
+        /// Replaces the cached `m_id` instance variable and also updates the preferred name if it
+        /// is the `id` of the data item. Also updates the cached observation properties.
+        ///
+        /// @param[in,out] idMap  old entity id to new entity id map
+        /// @param[in] sha the root sha1
+        /// @returns optional string value of the new id
         std::optional<std::string> createUniqueId(
             std::unordered_map<std::string, std::string> &idMap,
             const boost::uuids::detail::sha1 &sha1) override
@@ -242,6 +250,11 @@ namespace mtconnect {
         /// @returns optional original id
         const auto &getOriginalId() const { return m_originalId; }
 
+        /// @brief Update all id references associated with this data item
+        ///
+        /// Recurses through the sub-entities of the data item.
+        ///
+        /// @param idMap a map of the old to new idenfifiers.
         void updateReferences(const std::unordered_map<std::string, std::string> idMap) override
         {
           Entity::updateReferences(idMap);

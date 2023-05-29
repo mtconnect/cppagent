@@ -235,6 +235,38 @@ namespace mtconnect {
         return std::nullopt;
       }
 
+      /// @brief Get the LIST property if it exists from an entity
+      /// @returns a reference to the entity list. Returns an empty list if it does not exist.
+      const EntityList &getListProperty() const
+      {
+        static EntityList null;
+
+        auto p = m_properties.find("LIST");
+        if (p != m_properties.end())
+        {
+          auto *l = std::get_if<EntityList>(&p->second);
+          if (l)
+            return *l;
+        }
+        return null;
+      }
+
+      /// @brief Get the LIST property if it exists from an entity
+      /// @returns a reference to the entity list. Returns an empty list if it does not exist.
+      EntityList &getListProperty()
+      {
+        static EntityList null;
+
+        auto p = m_properties.find("LIST");
+        if (p != m_properties.end())
+        {
+          auto *l = std::get_if<EntityList>(&p->second);
+          if (l)
+            return *l;
+        }
+        return null;
+      }
+
       /// @brief Add an entity to an entity list
       /// @param name the property key
       /// @param factory the factory for the entity

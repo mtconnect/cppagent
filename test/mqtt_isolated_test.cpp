@@ -291,7 +291,7 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_should_receive_loopback_publication
     return true;
   });
 
-  client->async_connect([](mqtt::error_code ec) { ASSERT_FALSE(ec) << "CAnnot connect";  });
+  client->async_connect([](mqtt::error_code ec) { ASSERT_FALSE(ec) << "CAnnot connect"; });
   ASSERT_TRUE(waitFor(5s, [&received]() { return received; }));
 }
 

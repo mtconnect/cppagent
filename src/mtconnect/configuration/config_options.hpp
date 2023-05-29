@@ -69,7 +69,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(TlsPrivateKey);
     DECLARE_CONFIGURATION(TlsVerifyClientCertificate);
     DECLARE_CONFIGURATION(CreateUniqueIds);
-    DECLARE_CONFIGURATION(VersionDeviceXmlUpdates);
+    DECLARE_CONFIGURATION(VersionDeviceXml);
     DECLARE_CONFIGURATION(WorkerThreads);
     ///@}
 
