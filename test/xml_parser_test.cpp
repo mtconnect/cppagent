@@ -54,11 +54,11 @@ protected:
       std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
       m_xmlParser = new parser::XmlParser();
       m_devices =
-          m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get());
+          m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/test_config.xml", printer.get());
     }
     catch (exception &)
     {
-      FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << " /samples/test_config.xml";
+      FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << " /test/resources/samples/test_config.xml";
     }
   }
 
@@ -85,13 +85,13 @@ TEST_F(XmlParserTest, Constructor)
 
   std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
   m_xmlParser = new parser::XmlParser();
-  ASSERT_THROW(m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/badPath.xml", printer.get()),
+  ASSERT_THROW(m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/badPath.xml", printer.get()),
                std::runtime_error);
   delete m_xmlParser;
   m_xmlParser = nullptr;
   m_xmlParser = new parser::XmlParser();
   ASSERT_NO_THROW(
-      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/test_config.xml", printer.get()));
+      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/test_config.xml", printer.get()));
 }
 
 TEST_F(XmlParserTest, GetDevices)
@@ -187,11 +187,11 @@ TEST_F(XmlParserTest, GetDataItemsExt)
   {
     std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
     m_xmlParser = new parser::XmlParser();
-    m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", printer.get());
+    m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/extension.xml", printer.get());
   }
   catch (exception &)
   {
-    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/extension.xml";
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/test/resources/samples/extension.xml";
   }
 
   filter.clear();
@@ -215,11 +215,11 @@ TEST_F(XmlParserTest, ExtendedSchema)
   {
     std::unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
     m_xmlParser = new parser::XmlParser();
-    m_devices = m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/extension.xml", printer.get());
+    m_devices = m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/extension.xml", printer.get());
   }
   catch (exception &)
   {
-    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/extension.xml";
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/test/resources/samples/extension.xml";
   }
 
   ASSERT_EQ((size_t)1, m_devices.size());
@@ -288,7 +288,7 @@ TEST_F(XmlParserTest, NoNamespace)
   unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
   m_xmlParser = new parser::XmlParser();
   ASSERT_NO_THROW(
-      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/NoNamespace.xml", printer.get()));
+      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/NoNamespace.xml", printer.get()));
 }
 
 TEST_F(XmlParserTest, FilteredDataItem13)
@@ -300,12 +300,12 @@ TEST_F(XmlParserTest, FilteredDataItem13)
     unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
     m_xmlParser = new parser::XmlParser();
     m_devices =
-        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/filter_example_1.3.xml", printer.get());
+        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/filter_example_1.3.xml", printer.get());
   }
   catch (exception &)
   {
     FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR
-           << "/samples/filter_example_1.3.xml";
+           << "/test/resources/samples/filter_example_1.3.xml";
   }
 
   DevicePtr dev = m_devices.front();
@@ -328,11 +328,11 @@ TEST_F(XmlParserTest, FilteredDataItem)
     unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
     m_xmlParser = new parser::XmlParser();
     m_devices =
-        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/filter_example.xml", printer.get());
+        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/filter_example.xml", printer.get());
   }
   catch (exception &)
   {
-    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/filter_example.xml";
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/test/resources/samples/filter_example.xml";
   }
 
   auto di = m_devices.front()->getDeviceDataItem("c1");
@@ -360,11 +360,11 @@ TEST_F(XmlParserTest, References)
     unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
     m_xmlParser = new parser::XmlParser();
     m_devices =
-        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/reference_example.xml", printer.get());
+        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/reference_example.xml", printer.get());
   }
   catch (exception &)
   {
-    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/reference_example.xml";
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/test/resources/samples/reference_example.xml";
   }
 
   string id = "mf";
@@ -422,11 +422,11 @@ TEST_F(XmlParserTest, SourceReferences)
     unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
     m_xmlParser = new parser::XmlParser();
     m_devices =
-        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/reference_example.xml", printer.get());
+        m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/reference_example.xml", printer.get());
   }
   catch (exception &)
   {
-    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/samples/reference_example.xml";
+    FAIL() << "Could not locate test xml: " << PROJECT_ROOT_DIR << "/test/resources/samples/reference_example.xml";
   }
 
   const auto item = m_devices.front()->getDeviceDataItem("bfc");
@@ -451,7 +451,7 @@ TEST_F(XmlParserTest, DataItemRelationships)
   unique_ptr<printer::XmlPrinter> printer(new printer::XmlPrinter());
   m_xmlParser = new parser::XmlParser();
   m_devices =
-      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/samples/relationship_test.xml", printer.get());
+      m_xmlParser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/relationship_test.xml", printer.get());
 
   const auto &device = m_devices.front();
   const auto &dataItemsMap = device->getDeviceDataItems();

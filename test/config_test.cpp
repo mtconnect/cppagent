@@ -143,7 +143,7 @@ namespace {
 
   TEST_F(ConfigTest, Device)
   {
-    string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n");
+    string str("Devices = " PROJECT_ROOT_DIR "/test/resources/samples/test_config.xml\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -168,7 +168,7 @@ namespace {
     using namespace std::chrono_literals;
 
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "Adapters { LinuxCNC { \n"
                "Port = 23\n"
                "Host = 10.211.55.1\n"
@@ -200,7 +200,7 @@ namespace {
   TEST_F(ConfigTest, DefaultPreserveUUID)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "PreserveUUID = true\n");
     m_config->loadConfig(str);
 
@@ -214,7 +214,7 @@ namespace {
   TEST_F(ConfigTest, DefaultPreserveOverride)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "PreserveUUID = true\n"
                "Adapters { LinuxCNC { \n"
                "PreserveUUID = false\n"
@@ -231,7 +231,7 @@ namespace {
   TEST_F(ConfigTest, DisablePut)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "AllowPut = true\n");
     m_config->loadConfig(str);
 
@@ -247,7 +247,7 @@ namespace {
   TEST_F(ConfigTest, LimitPut)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "AllowPutFrom = localhost\n");
     m_config->loadConfig(str);
 
@@ -265,7 +265,7 @@ namespace {
   TEST_F(ConfigTest, LimitPutFromHosts)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "AllowPutFrom = localhost, 192.168.0.1\n");
     m_config->loadConfig(str);
 
@@ -358,7 +358,7 @@ namespace {
     using namespace std::chrono_literals;
 
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "LegacyTimeout = 2000\n");
     m_config->loadConfig(str);
 
@@ -372,7 +372,7 @@ namespace {
   TEST_F(ConfigTest, IgnoreTimestamps)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "IgnoreTimestamps = true\n");
     m_config->loadConfig(str);
 
@@ -386,7 +386,7 @@ namespace {
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
   {
     string str("Devices = " PROJECT_ROOT_DIR
-               "/samples/test_config.xml\n"
+               "/test/resources/samples/test_config.xml\n"
                "IgnoreTimestamps = true\n"
                "Adapters { LinuxCNC { \n"
                "IgnoreTimestamps = false\n"

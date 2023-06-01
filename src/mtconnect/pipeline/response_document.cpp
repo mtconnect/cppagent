@@ -147,6 +147,40 @@ namespace mtconnect::pipeline {
 
     return "";
   }
+  
+  inline static bool parseDevices(ResponseDocument &out, xmlNodePtr node,
+                                  pipeline::PipelineContextPtr context,
+                                  const std::optional<std::string> &device)
+  {
+    using namespace entity;
+    using namespace device_model;
+
+    auto devices = findChild(node, "Devices");
+    if (devices == nullptr)
+      return false;
+
+    entity::XmlParser parser;
+    eachElement(devices, [&out, &parser, &device](xmlNodePtr n) {
+      ErrorList errors;
+      auto dev = parser.parseXmlNode(Device::getRoot(), n, errors);
+      if (!errors.empty())
+      {
+        LOG(warning) << "Could not parse asset: " << (const char *)n->name;
+        for (auto &e : errors)
+        {
+          LOG(warning) << "    Message: " << e->what();
+        }
+      }
+      
+      if (dev && (!device || *device == dev->get<string>("name")))
+        out.m_entities.emplace_back(dev);
+
+      return true;
+    });
+
+    return true;
+  }
+
 
   inline DataSetValue type(const string &s)
   {
@@ -453,6 +487,10 @@ namespace mtconnect::pipeline {
       if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) == 0)
       {
         return parseObservations(out, root, context, device);
+      }
+      else if (xmlStrcmp(BAD_CAST "MTConnectDevices", root->name) == 0)
+      {
+        return parseDevices(out, root, context, device);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectAssets", root->name) == 0)
       {

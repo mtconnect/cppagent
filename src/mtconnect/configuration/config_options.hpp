@@ -121,6 +121,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(UpcaseDataItemValue);
     DECLARE_CONFIGURATION(Url);
     DECLARE_CONFIGURATION(UsePolling);
+    DECLARE_CONFIGURATION(UpdateDeviceXml);
     ///@}
 
   }  // namespace configuration

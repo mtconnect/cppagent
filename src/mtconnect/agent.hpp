@@ -263,10 +263,16 @@ namespace mtconnect {
     /// @return true if successful
     bool reloadDevices(const std::string &deviceFile);
 
+    /// @brief receive a single device from a source
+    /// @param[in] deviceXml the device xml as a string
+    /// @param[in] source the source loading the device
+    void loadDevice(DevicePtr device,
+                    const std::optional<std::string> source = std::nullopt);
+    
     /// @brief receive and parse a single device from a source
     /// @param[in] deviceXml the device xml as a string
     /// @param[in] source the source loading the device
-    void loadDevice(const std::string &deviceXml,
+    void loadDeviceXml(const std::string &deviceXml,
                     const std::optional<std::string> source = std::nullopt);
 
     /// @name Message when source has connected and disconnected
@@ -564,7 +570,7 @@ namespace mtconnect {
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
     void deliverCommand(entity::EntityPtr) override;
-    void deliverDevice(DevicePtr device) override { m_agent->receiveDevice(device); }
+    void deliverDevice(DevicePtr device) override { m_agent->loadDevice(device); }
 
     void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
 

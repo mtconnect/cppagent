@@ -65,7 +65,7 @@ protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 25, true);
+    m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "1.3", 25, true);
     m_agentId = to_string(getCurrentTimeInSec());
   }
 
@@ -90,7 +90,7 @@ TEST_F(AgentTest, Constructor)
   ConfigOptions options {{BufferSize, 17}, {MaxAssets, 8}, {SchemaVersion, "1.7"s}};
 
   unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
-                                               PROJECT_ROOT_DIR "/samples/badPath.xml", options);
+                                               PROJECT_ROOT_DIR "/test/resources/samples/badPath.xml", options);
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
@@ -98,7 +98,7 @@ TEST_F(AgentTest, Constructor)
   agent.reset();
 
   agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
-                             PROJECT_ROOT_DIR "/samples/test_config.xml", options);
+                             PROJECT_ROOT_DIR "/test/resources/samples/test_config.xml", options);
 
   context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
@@ -134,7 +134,7 @@ TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
   ConfigOptions options {{BufferSize, 17}, {MaxAssets, 8}, {SchemaVersion, "1.5"s}};
 
   unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
-                                               PROJECT_ROOT_DIR "/samples/dup_uuid.xml", options);
+                                               PROJECT_ROOT_DIR "/test/resources/samples/dup_uuid.xml", options);
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
@@ -1051,7 +1051,7 @@ TEST_F(AgentTest, DynamicCalibration)
 
 TEST_F(AgentTest, FilterValues13)
 {
-  m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   addAdapter();
 
   {
@@ -1090,7 +1090,7 @@ TEST_F(AgentTest, FilterValues13)
 
 TEST_F(AgentTest, FilterValues)
 {
-  m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   addAdapter();
 
   {
@@ -1155,7 +1155,7 @@ TEST_F(AgentTest, FilterValues)
 TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
 {
   // Test period filter with ignore timestamps
-  m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   addAdapter({{configuration::IgnoreTimestamps, true}});
 
   {
@@ -1186,7 +1186,7 @@ TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
 TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
 {
   // Test period filter with relative time
-  m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
   addAdapter({{configuration::RelativeTime, true}});
 
   {
@@ -1240,7 +1240,7 @@ TEST_F(AgentTest, References)
 {
   using namespace device_model;
 
-  m_agentTestHelper->createAgent("/samples/reference_example.xml");
+  m_agentTestHelper->createAgent("/test/resources/samples/reference_example.xml");
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
 
@@ -1300,7 +1300,7 @@ TEST_F(AgentTest, References)
 
 TEST_F(AgentTest, Discrete)
 {
-  m_agentTestHelper->createAgent("/samples/discrete_example.xml");
+  m_agentTestHelper->createAgent("/test/resources/samples/discrete_example.xml");
   addAdapter({{configuration::FilterDuplicates, true}});
   auto agent = m_agentTestHelper->getAgent();
 
@@ -1682,7 +1682,7 @@ TEST_F(AgentTest, AdapterCommands)
 
 TEST_F(AgentTest, AdapterDeviceCommand)
 {
-  m_agentTestHelper->createAgent("/samples/two_devices.xml");
+  m_agentTestHelper->createAgent("/test/resources/samples/two_devices.xml");
   auto agent = m_agentTestHelper->getAgent();
 
   auto device1 = agent->getDeviceByName("Device1");
@@ -1713,7 +1713,7 @@ TEST_F(AgentTest, AdapterDeviceCommand)
 
 TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
 {
-  m_agentTestHelper->createAgent("/samples/kinematics.xml", 8, 4, "1.7", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/kinematics.xml", 8, 4, "1.7", 25);
   addAdapter();
 
   auto printer = m_agentTestHelper->m_agent->getPrinter("xml");
@@ -1795,7 +1795,7 @@ TEST_F(AgentTest, UUIDChange)
 
 TEST_F(AgentTest, AssetStorage)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
   auto rest = m_agentTestHelper->getRestService();
   ASSERT_TRUE(rest->getServer()->arePutsAllowed());
@@ -1830,7 +1830,7 @@ TEST_F(AgentTest, AssetStorage)
 
 TEST_F(AgentTest, AssetBuffer)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
 
@@ -2236,7 +2236,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
 
 TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 {
-  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.2", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/min_config.xml", 8, 4, "1.2", 25);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -2248,7 +2248,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 {
-  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.3", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/min_config.xml", 8, 4, "1.3", 25);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -2260,7 +2260,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
 {
-  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.5", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/min_config.xml", 8, 4, "1.5", 25);
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
     ASSERT_XML_PATH_COUNT(doc, "//m:DataItem[@type='ASSET_CHANGED']", 1);
@@ -2320,7 +2320,7 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
 
 TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "1.3", 4, true);
   addAdapter();
   const auto &storage = agent->getAssetStorage();
 
@@ -2417,7 +2417,7 @@ TEST_F(AgentTest, RemoveAllAssets)
 
 TEST_F(AgentTest, AssetProbe)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
   const auto &storage = agent->getAssetStorage();
@@ -2443,7 +2443,7 @@ TEST_F(AgentTest, AssetProbe)
 
 TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
 {
-  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
   const string body {
       R"DOC(<CuttingTool assetId="M8010N9172N:1.0" serialNumber="1234" toolId="CAT">
@@ -2506,7 +2506,7 @@ TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
 
 TEST_F(AgentTest, update_asset_count_data_item_v2_0)
 {
-  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 10, "2.0", 4, true);
+  m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 10, "2.0", 4, true);
   addAdapter();
 
   m_agentTestHelper->m_adapter->processData(
@@ -2722,7 +2722,7 @@ TEST_F(AgentTest, StreamDataObserver)
 
 TEST_F(AgentTest, Put)
 {
-  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
   QueryMap queries;
   string body;
@@ -2745,7 +2745,7 @@ TEST_F(AgentTest, Put)
 
 TEST_F(AgentTest, put_condition_should_parse_condition_data)
 {
-  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
   QueryMap queries;
   string body;
@@ -2768,7 +2768,7 @@ TEST_F(AgentTest, put_condition_should_parse_condition_data)
 
 TEST_F(AgentTest, shound_add_asset_count_when_20)
 {
-  m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "2.0", 25);
+  m_agentTestHelper->createAgent("/test/resources/samples/min_config.xml", 8, 4, "2.0", 25);
 
   {
     PARSE_XML_RESPONSE("/LinuxCNC/probe");
@@ -2782,7 +2782,7 @@ TEST_F(AgentTest, shound_add_asset_count_when_20)
 
 TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
@@ -2808,7 +2808,7 @@ TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
 
 TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
   string body1 = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
@@ -2866,7 +2866,7 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
 
 TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
@@ -2890,7 +2890,7 @@ TEST_F(AgentTest, pre_start_hook_should_be_called)
     helper.getAgent()->beforeStartHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
   ASSERT_FALSE(called);
   agent->start();
@@ -2906,7 +2906,7 @@ TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
     helper.getAgent()->beforeInitializeHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
-  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
   ASSERT_TRUE(called);
 }
@@ -2919,7 +2919,7 @@ TEST_F(AgentTest, post_initialize_hooks_should_be_called)
     helper.getAgent()->afterInitializeHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
-  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
   ASSERT_TRUE(called);
 }
@@ -2932,7 +2932,7 @@ TEST_F(AgentTest, pre_stop_hook_should_be_called)
     helper.getAgent()->beforeStopHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.0", 4, true);
 
   ASSERT_FALSE(called);
   agent->start();
@@ -2943,7 +2943,7 @@ TEST_F(AgentTest, pre_stop_hook_should_be_called)
 
 TEST_F(AgentTest, device_should_have_hash_for_2_2)
 {
-  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.2", 4, true);
+  m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.2", 4, true);
 
   auto device = m_agentTestHelper->getAgent()->getDeviceByName("LinuxCNC");
   ASSERT_TRUE(device);

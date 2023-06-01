@@ -388,15 +388,34 @@ namespace mtconnect {
       throw f;
     }
   }
+  
+  void Agent::loadDeviceXml(const string &deviceXml, const optional<string> source)
+  {
+    try
+    {
+      auto printer = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
+      auto device = m_xmlParser->parseDevice(deviceXml, printer);
+      loadDevice(device, source);
+    }
+    catch (runtime_error &e)
+    {
+      LOG(error) << "Error loading device: " << deviceXml;
+      LOG(error) << "Error detail: " << e.what();
+      cerr << e.what() << endl;
+    }
+    catch (exception &f)
+    {
+      LOG(error) << "Error loading device: " << deviceXml;
+      LOG(error) << "Error detail: " << f.what();
+      cerr << f.what() << endl;
+    }
+  }
 
-  void Agent::loadDevice(const string &deviceXml, const optional<string> source)
+  void Agent::loadDevice(DevicePtr device, const optional<string> source)
   {
     m_context.pause([=](config::AsyncContext &context) {
       try
       {
-        auto printer = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
-        auto device = m_xmlParser->parseDevice(deviceXml, printer);
-
         if (device)
         {
           bool changed = receiveDevice(device, true);
@@ -416,13 +435,13 @@ namespace mtconnect {
       }
       catch (runtime_error &e)
       {
-        LOG(error) << "Error loading device: " + deviceXml;
+        LOG(error) << "Error loading device: " << *device->getComponentName();
         LOG(error) << "Error detail: " << e.what();
         cerr << e.what() << endl;
       }
       catch (exception &f)
       {
-        LOG(error) << "Error loading device: " + deviceXml;
+        LOG(error) << "Error loading device: " << *device->getComponentName();
         LOG(error) << "Error detail: " << f.what();
         cerr << f.what() << endl;
       }
@@ -1421,7 +1440,7 @@ namespace mtconnect {
     }
     else if (command == "devicemodel")
     {
-      loadDevice(value, source);
+      loadDeviceXml(value, source);
     }
     else
     {

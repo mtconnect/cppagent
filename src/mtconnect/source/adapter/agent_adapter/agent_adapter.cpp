@@ -51,8 +51,10 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::optional<string> obsMetrics;
     obsMetrics = m_identity + "_observation_update_rate";
     next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
-
+    buildDeviceDelivery(next);    
     buildAssetDelivery(next);
+    
+    applySplices();
   }
 
   AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
@@ -82,6 +84,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                          {configuration::ReconnectInterval, 10000ms},
                          {configuration::RelativeTime, false},
                          {configuration::UsePolling, false},
+                         {configuration::UpdateDeviceXml, false},
                          {"!CloseConnectionAfterResponse!", false}});
 
     m_handler = m_pipeline.makeHandler();
@@ -107,6 +110,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_usePolling = *GetOption<bool>(m_options, configuration::UsePolling);
     m_reconnectInterval = *GetOption<Milliseconds>(m_options, configuration::ReconnectInterval);
     m_pollingInterval = *GetOption<Milliseconds>(m_options, configuration::PollingInterval);
+    m_probeAgent = *GetOption<bool>(m_options, configuration::UpdateDeviceXml);
+
 
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
 
@@ -344,8 +349,15 @@ namespace mtconnect::source::adapter::agent_adapter {
     clear();
 
     m_reconnecting = false;
-    assets();
-    current();
+    if (m_probeAgent)
+    {
+      probe();
+    }
+    else
+    {
+      assets();
+      current();
+    }
   }
 
   void AgentAdapter::recover()
@@ -356,15 +368,28 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_reconnecting = false;
     sample();
   }
-
-  void AgentAdapter::current()
+  
+  bool AgentAdapter::probe()
   {
     if (m_stopped)
-      return;
+      return false;
+
+    m_streamRequest.emplace(m_sourceDevice, "probe", UrlQuery(), false,
+                            [this]() {
+      assets();
+      return current();
+    });
+    return m_session->makeRequest(*m_streamRequest);
+  }
+
+  bool AgentAdapter::current()
+  {
+    if (m_stopped)
+      return false;
 
     m_streamRequest.emplace(m_sourceDevice, "current", UrlQuery(), false,
                             [this]() { return sample(); });
-    m_session->makeRequest(*m_streamRequest);
+    return m_session->makeRequest(*m_streamRequest);
   }
 
   bool AgentAdapter::sample()

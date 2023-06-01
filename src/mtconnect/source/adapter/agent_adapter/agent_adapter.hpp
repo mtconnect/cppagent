@@ -106,7 +106,8 @@ namespace mtconnect::source::adapter::agent_adapter {
   protected:
     void run();
     void recover();
-    void current();
+    bool probe();
+    bool current();
     bool sample();
     void assets();
     void updateAssets();
@@ -132,6 +133,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     bool m_failed = false;
     bool m_stopped = false;
     bool m_usePolling = false;
+    bool m_probeAgent = false;
 
     std::chrono::milliseconds m_reconnectInterval;
     std::chrono::milliseconds m_pollingInterval;

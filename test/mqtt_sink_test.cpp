@@ -84,13 +84,13 @@ protected:
   void createAgent(std::string testFile = {}, ConfigOptions options = {})
   {
     if (testFile == "")
-      testFile = "/samples/test_config.xml";
+      testFile = "/test/resources/samples/test_config.xml";
 
     ConfigOptions opts(options);
     MergeOptions(opts, {{"MqttSink", true},
                         {configuration::MqttPort, m_port},
                         {configuration::MqttHost, "127.0.0.1"s}});
-    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
+    m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
     addAdapter();
 
     m_agentTestHelper->getAgent()->start();
@@ -372,7 +372,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_RotaryMode)
   createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
 
-  createAgent("/samples/discrete_example.xml");
+  createAgent("/test/resources/samples/discrete_example.xml");
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
 
@@ -408,7 +408,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Dataset)
   };
   createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
-  createAgent("/samples/data_set.xml");
+  createAgent("/test/resources/samples/data_set.xml");
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
@@ -474,7 +474,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Table)
   };
   createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
-  createAgent("/samples/data_set.xml");
+  createAgent("/test/resources/samples/data_set.xml");
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(1s, [&service]() { return service->isConnected(); }));
 

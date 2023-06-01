@@ -135,6 +135,19 @@ namespace mtconnect {
       return entity;
     }
 
+    EntityPtr DeliverDevice::operator()(entity::EntityPtr &&entity)
+    {
+      auto d = std::dynamic_pointer_cast<device_model::Device>(entity);
+      if (!d)
+      {
+        throw EntityError("Unexpected entity type, cannot convert to asset in DeliverAsset");
+      }
+
+      m_contract->deliverDevice(d);
+
+      return entity;
+    }
+
     entity::EntityPtr DeliverConnectionStatus::operator()(entity::EntityPtr &&entity)
     {
       m_contract->deliverConnectStatus(entity, m_devices, m_autoAvailable);
