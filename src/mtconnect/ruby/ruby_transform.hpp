@@ -112,18 +112,38 @@ namespace mtconnect::ruby {
           mrb, rubyTrans, "guard=",
           [](mrb_state *mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
-            mrb_value block;
             const char *guard;
-            if (mrb_get_args(mrb, "z&", &guard, &block) > 0)
+            if (mrb_get_args(mrb, "z", &guard) > 0)
             {
               trans->m_guardString = guard;
             }
 
+            trans->setGuard();
+
+            return self;
+          },
+          MRB_ARGS_OPT(1));
+      
+      mrb_define_method(
+          mrb, rubyTrans, "guard",
+          [](mrb_state *mrb, mrb_value self) {
+            auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
+            const char *guard;
+            mrb_value block = mrb_nil_value();
             if (mrb_block_given_p(mrb))
             {
-              trans->m_guardBlock = block;
-              mrb_gc_register(mrb, block);
+              mrb_get_args(mrb, "&", &block);
+              if (!mrb_nil_p(block))
+              {
+                trans->m_guardBlock = block;
+                mrb_gc_register(mrb, block);
+              }
             }
+            else if (mrb_get_args(mrb, "z", &guard) > 0)
+            {
+              trans->m_guardString = guard;
+            }
+
             trans->setGuard();
 
             return self;
@@ -164,19 +184,6 @@ namespace mtconnect::ruby {
 
     void setGuard()
     {
-      if (m_guardString == "Observation")
-        m_guard = TypeGuard<Observation>(RUN) || TypeGuard<Entity>(SKIP);
-      else if (m_guardString == "Sample")
-        m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Entity>(SKIP);
-      else if (m_guardString == "Event")
-        m_guard = TypeGuard<Event>(RUN) || TypeGuard<Entity>(SKIP);
-      else if (m_guardString == "Tokens")
-        m_guard = TypeGuard<pipeline::Tokens>(RUN) || TypeGuard<Entity>(SKIP);
-      else if (m_guardString == "Message")
-        m_guard = TypeGuard<PipelineMessage>(RUN) || TypeGuard<Entity>(SKIP);
-      else
-        m_guard = TypeGuard<Entity>(RUN);
-
       if (!mrb_nil_p(m_guardBlock))
       {
         m_guard = [this, old = m_guard](const entity::Entity *entity) -> GuardAction {
@@ -212,7 +219,13 @@ namespace mtconnect::ruby {
           mrb_gc_arena_restore(mrb, save);
           if (!mrb_nil_p(rv))
           {
-            return GuardAction(mrb_fixnum(rv));
+            auto s = stringFromRuby(mrb, rv);
+            if (s == "RUN")
+              return GuardAction::RUN;
+            else if (s == "SKIP")
+              return GuardAction::SKIP;
+            else
+              return GuardAction::CONTINUE;
           }
           else
           {
@@ -220,6 +233,20 @@ namespace mtconnect::ruby {
           }
         };
       }
+      else if (m_guardString == "Observation")
+        m_guard = TypeGuard<Observation>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Sample")
+        m_guard = TypeGuard<Sample>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Event")
+        m_guard = TypeGuard<Event>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Condition")
+        m_guard = TypeGuard<Condition>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Tokens")
+        m_guard = TypeGuard<pipeline::Tokens>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Message")
+        m_guard = TypeGuard<PipelineMessage>(RUN) || GuardCls(SKIP);
+      else
+        m_guard = GuardCls(RUN);
     }
 
     using calldata = pair<RubyTransform *, EntityPtr>;

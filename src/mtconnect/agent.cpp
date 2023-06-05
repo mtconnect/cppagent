@@ -391,6 +391,12 @@ namespace mtconnect {
 
   void Agent::loadDevice(const string &deviceXml, const optional<string> source)
   {
+    if (!IsOptionSet(m_options, config::EnableSourceDeviceModels))
+    {
+      LOG(warning) << "Device updates are disabled, skipping update";
+      return;
+    }
+    
     m_context.pause([=](config::AsyncContext &context) {
       try
       {
@@ -412,6 +418,10 @@ namespace mtconnect {
               s->setOptions({{config::Device, *name}});
             }
           }
+        }
+        else
+        {
+          LOG(error) << "Cannot parse device xml: " << deviceXml;
         }
       }
       catch (runtime_error &e)
