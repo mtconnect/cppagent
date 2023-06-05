@@ -112,18 +112,38 @@ namespace mtconnect::ruby {
           mrb, rubyTrans, "guard=",
           [](mrb_state *mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
-            mrb_value block;
             const char *guard;
-            if (mrb_get_args(mrb, "z&", &guard, &block) > 0)
+            if (mrb_get_args(mrb, "z", &guard) > 0)
             {
               trans->m_guardString = guard;
             }
 
+            trans->setGuard();
+
+            return self;
+          },
+          MRB_ARGS_OPT(1));
+      
+      mrb_define_method(
+          mrb, rubyTrans, "guard",
+          [](mrb_state *mrb, mrb_value self) {
+            auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
+            const char *guard;
+            mrb_value block = mrb_nil_value();
             if (mrb_block_given_p(mrb))
             {
-              trans->m_guardBlock = block;
-              mrb_gc_register(mrb, block);
+              mrb_get_args(mrb, "&", &block);
+              if (!mrb_nil_p(block))
+              {
+                trans->m_guardBlock = block;
+                mrb_gc_register(mrb, block);
+              }
             }
+            else if (mrb_get_args(mrb, "z", &guard) > 0)
+            {
+              trans->m_guardString = guard;
+            }
+
             trans->setGuard();
 
             return self;
@@ -212,7 +232,13 @@ namespace mtconnect::ruby {
           mrb_gc_arena_restore(mrb, save);
           if (!mrb_nil_p(rv))
           {
-            return GuardAction(mrb_fixnum(rv));
+            auto s = stringFromRuby(mrb, rv);
+            if (s == "RUN")
+              return GuardAction::RUN;
+            else if (s == "SKIP")
+              return GuardAction::SKIP;
+            else
+              return GuardAction::CONTINUE;
           }
           else
           {

@@ -660,6 +660,7 @@ namespace mtconnect::configuration {
                 {configuration::MonitorConfigFiles, false},
                 {configuration::MonitorInterval, 10s},
                 {configuration::VersionDeviceXml, false},
+                {configuration::DeviceUpdates, false},
                 {configuration::MinimumConfigReloadAge, 15s},
                 {configuration::Pretty, false},
                 {configuration::PidFile, "agent.pid"s},
