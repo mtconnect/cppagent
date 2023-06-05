@@ -391,7 +391,7 @@ namespace mtconnect {
 
   void Agent::loadDevice(const string &deviceXml, const optional<string> source)
   {
-    if (!IsOptionSet(m_options, config::DeviceUpdates))
+    if (!IsOptionSet(m_options, config::SourceDeviceUpdates))
     {
       LOG(warning) << "Device updates are disabled, skipping update";
       return;

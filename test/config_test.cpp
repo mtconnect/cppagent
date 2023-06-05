@@ -1402,6 +1402,7 @@ Port = 0
       ofstream cfg(config.string());
       cfg << R"DOC(
 VersionDeviceXml = true
+SourceDeviceUpdates = true
 Port = 0
 
 Adapters {
@@ -1517,6 +1518,8 @@ Adapters {
       cfg << R"DOC(
 VersionDeviceXml = true
 CreateUniqueIds = true
+SourceDeviceUpdates = true
+
 Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
@@ -1706,6 +1709,8 @@ Port = 0
       cfg << R"DOC(
 VersionDeviceXml = true
 CreateUniqueIds = true
+SourceDeviceUpdates = true
+
 Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
@@ -1818,6 +1823,7 @@ Port = 0
       ofstream cfg(config.string());
       cfg << R"DOC(
 VersionDeviceXml = true
+SourceDeviceUpdates = true
 Port = 0
 
 Adapters {
@@ -1927,6 +1933,7 @@ CreateUniqueIds = true
 MonitorConfigFiles = true
 MonitorInterval = 1
 MinimumConfigReloadAge = 1
+SourceDeviceUpdates = true
 Port = 0
 )DOC";
       cfg << "Devices = " << devices << endl;
@@ -2048,6 +2055,7 @@ Port = 0
       ofstream cfg(config.string());
       cfg << R"DOC(
 VersionDeviceXml = true
+SourceDeviceUpdates = true
 Port = 0
 
 Adapters {
