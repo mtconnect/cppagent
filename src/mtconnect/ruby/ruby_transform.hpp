@@ -123,7 +123,7 @@ namespace mtconnect::ruby {
             return self;
           },
           MRB_ARGS_OPT(1));
-      
+
       mrb_define_method(
           mrb, rubyTrans, "guard",
           [](mrb_state *mrb, mrb_value self) {
@@ -324,6 +324,7 @@ namespace mtconnect::ruby {
         }
         if (state)
         {
+          // auto str = mrb_any_to_s(mrb, rv);
           LOG(error) << "Error in transform: " << mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
           rv = mrb_nil_value();
         }

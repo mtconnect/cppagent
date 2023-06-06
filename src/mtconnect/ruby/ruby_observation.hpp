@@ -28,16 +28,16 @@ namespace mtconnect::ruby {
 
   struct RubyObservation
   {
-    static RClass* m_eventClass;
-    static RClass* m_sampleClass;
-    static RClass* m_conditionClass;
+    static RClass *m_eventClass;
+    static RClass *m_sampleClass;
+    static RClass *m_conditionClass;
 
     static void initialize(mrb_state *mrb, RClass *module)
     {
       auto entityClass = mrb_class_get_under(mrb, module, "Entity");
       auto observationClass = mrb_define_class_under(mrb, module, "Observation", entityClass);
       MRB_SET_INSTANCE_TT(observationClass, MRB_TT_DATA);
-            
+
       m_eventClass = mrb_define_class_under(mrb, module, "Event", observationClass);
       MRB_SET_INSTANCE_TT(m_eventClass, MRB_TT_DATA);
 
@@ -47,44 +47,46 @@ namespace mtconnect::ruby {
       m_conditionClass = mrb_define_class_under(mrb, module, "Condition", observationClass);
       MRB_SET_INSTANCE_TT(m_conditionClass, MRB_TT_DATA);
 
-      mrb_define_class_method(mrb, observationClass, "make",
-                              [](mrb_state *mrb, mrb_value self) {
-        using namespace device_model::data_item;
-        
-        mrb_value di;
-        mrb_value props;
-        mrb_value ts;
-        
-        auto count = mrb_get_args(mrb, "oo|o", &di, &props, &ts);
-        auto dataItem = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, di);
+      mrb_define_class_method(
+          mrb, observationClass, "make",
+          [](mrb_state *mrb, mrb_value self) {
+            using namespace device_model::data_item;
 
-        if (count < 3)
-        {
-          auto time = std::chrono::system_clock::now();
-          ts = toRuby(mrb, time);
-        }
-        
-        struct RClass* klass;
-        switch (dataItem->getCategory())
-        {
-          case DataItem::SAMPLE:
-            klass = m_sampleClass;
-            break;
-            
-          case DataItem::EVENT:
-            klass = m_eventClass;
-            break;
-            
-          case DataItem::CONDITION:
-            klass = m_conditionClass;
-            break;
-        }
-        
-        mrb_value args[] = { di, props, ts };
-        auto res = mrb_obj_new(mrb, klass, 3, args);
-        
-        return res;
-      }, MRB_ARGS_ARG(2, 1));
+            mrb_value di;
+            mrb_value props;
+            mrb_value ts;
+
+            auto count = mrb_get_args(mrb, "oo|o", &di, &props, &ts);
+            auto dataItem = MRubySharedPtr<Entity>::unwrap<DataItem>(mrb, di);
+
+            if (count < 3)
+            {
+              auto time = std::chrono::system_clock::now();
+              ts = toRuby(mrb, time);
+            }
+
+            struct RClass *klass;
+            switch (dataItem->getCategory())
+            {
+              case DataItem::SAMPLE:
+                klass = m_sampleClass;
+                break;
+
+              case DataItem::EVENT:
+                klass = m_eventClass;
+                break;
+
+              case DataItem::CONDITION:
+                klass = m_conditionClass;
+                break;
+            }
+
+            mrb_value args[] = {di, props, ts};
+            auto res = mrb_obj_new(mrb, klass, 3, args);
+
+            return res;
+          },
+          MRB_ARGS_ARG(2, 1));
 
       mrb_define_method(
           mrb, observationClass, "initialize",
@@ -158,48 +160,51 @@ namespace mtconnect::ruby {
             return toRuby(mrb, obs->getTimestamp());
           },
           MRB_ARGS_NONE());
-      
-      mrb_define_method(mrb, m_conditionClass, "level",
-                        [](mrb_state *mrb, mrb_value self) {
-        ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
-        auto cond = std::dynamic_pointer_cast<Condition>(obs);
-        mrb_value level;
-        using namespace observation;
-        switch (cond->getLevel())
-        {
-          case Condition::NORMAL:
-            level = mrb_str_new_cstr(mrb, "normal");
-            break;
-            
-          case Condition::WARNING:
-            level = mrb_str_new_cstr(mrb, "warning");
-            break;
-            
-          case Condition::FAULT:
-            level = mrb_str_new_cstr(mrb, "fault");
-            break;
-            
-          case Condition::UNAVAILABLE:
-            level = mrb_str_new_cstr(mrb, "unavailable");
-            break;
-        }
-        return level;
-      }, MRB_ARGS_NONE());
-      
-      mrb_define_method(mrb, m_conditionClass, "level=",
-                        [](mrb_state *mrb, mrb_value self) {
-        ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
-        auto cond = std::dynamic_pointer_cast<Condition>(obs);
-        const char *arg = nullptr;
-        mrb_get_args(mrb, "z!", &arg);
-        if (arg == nullptr)
-          return mrb_nil_value();
-        
-        cond->setLevel(arg);
 
-        return mrb_str_new_cstr(mrb, arg);
-      }, MRB_ARGS_REQ(1));
+      mrb_define_method(
+          mrb, m_conditionClass, "level",
+          [](mrb_state *mrb, mrb_value self) {
+            ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
+            auto cond = std::dynamic_pointer_cast<Condition>(obs);
+            mrb_value level;
+            using namespace observation;
+            switch (cond->getLevel())
+            {
+              case Condition::NORMAL:
+                level = mrb_str_new_cstr(mrb, "normal");
+                break;
 
+              case Condition::WARNING:
+                level = mrb_str_new_cstr(mrb, "warning");
+                break;
+
+              case Condition::FAULT:
+                level = mrb_str_new_cstr(mrb, "fault");
+                break;
+
+              case Condition::UNAVAILABLE:
+                level = mrb_str_new_cstr(mrb, "unavailable");
+                break;
+            }
+            return level;
+          },
+          MRB_ARGS_NONE());
+
+      mrb_define_method(
+          mrb, m_conditionClass, "level=",
+          [](mrb_state *mrb, mrb_value self) {
+            ObservationPtr obs = MRubySharedPtr<Entity>::unwrap<Observation>(mrb, self);
+            auto cond = std::dynamic_pointer_cast<Condition>(obs);
+            const char *arg = nullptr;
+            mrb_get_args(mrb, "z!", &arg);
+            if (arg == nullptr)
+              return mrb_nil_value();
+
+            cond->setLevel(arg);
+
+            return mrb_str_new_cstr(mrb, arg);
+          },
+          MRB_ARGS_REQ(1));
     }
   };
 }  // namespace mtconnect::ruby

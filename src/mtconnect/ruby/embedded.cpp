@@ -63,13 +63,54 @@ namespace mtconnect::ruby {
   using namespace std::literals;
   using namespace date::literals;
   using namespace observation;
-  
-  RClass* RubyObservation::m_eventClass;
-  RClass* RubyObservation::m_sampleClass;
-  RClass* RubyObservation::m_conditionClass;
+
+  RClass *RubyObservation::m_eventClass;
+  RClass *RubyObservation::m_sampleClass;
+  RClass *RubyObservation::m_conditionClass;
 
   std::recursive_mutex RubyVM::m_mutex;
   RubyVM *RubyVM::m_vm = nullptr;
+
+  static mrb_value LoadModule(mrb_state *mrb, mrb_value &filename)
+  {
+    auto fname = RSTRING_CSTR(mrb, filename);
+    int ai = mrb_gc_arena_save(mrb);
+
+    auto fp = fopen(fname, "r");
+    if (fp == NULL)
+    {
+      LOG(error) << "Cannot open file " << fname << " for read";
+
+      auto mesg = mrb_str_new_cstr(mrb, "cannot load file");
+      mrb_str_cat_lit(mrb, mesg, " -- ");
+      mrb_str_cat_str(mrb, mesg, filename);
+      auto exc = mrb_funcall(mrb, mrb_obj_value(mrb_class_get(mrb, "LoadError")), "new", 1, mesg);
+      mrb_iv_set(mrb, exc, mrb_intern_lit(mrb, "path"), mrb_str_new_cstr(mrb, fname));
+
+      mrb_exc_raise(mrb, exc);
+      return mrb_false_value();
+    }
+
+    auto mrbc_ctx = mrbc_context_new(mrb);
+
+    mrbc_filename(mrb, mrbc_ctx, fname);
+    auto status = mrb_load_file_cxt(mrb, fp, mrbc_ctx);
+    fclose(fp);
+
+    mrb_gc_arena_restore(mrb, ai);
+    mrbc_context_free(mrb, mrbc_ctx);
+
+    if (mrb_nil_p(status))
+    {
+      LOG(error) << "Failed to load module: " << fname;
+      return mrb_false_value();
+    }
+    else
+    {
+      LOG(debug) << "Loaded ruby modeule: " << fname;
+      return mrb_true_value();
+    }
+  }
 
   Embedded::Embedded(Agent *agent, const ConfigOptions &options)
     : m_agent(agent), m_options(options)
@@ -120,13 +161,9 @@ namespace mtconnect::ruby {
           {
             int save = mrb_gc_arena_save(mrb);
             mrb_value file = mrb_str_new_cstr(mrb, mod.string().c_str());
-            mrb_bool state;
+            mrb_bool state = false;
             mrb_value res = mrb_protect(
-                mrb,
-                [](mrb_state *mrb, mrb_value data) {
-                  FILE *fp = fopen(mrb_str_to_cstr(mrb, data), "r");
-                  return mrb_load_file(mrb, fp);
-                },
+                mrb, [](mrb_state *mrb, mrb_value filename) { return LoadModule(mrb, filename); },
                 file, &state);
             mrb_gc_arena_restore(mrb, save);
             if (state)
