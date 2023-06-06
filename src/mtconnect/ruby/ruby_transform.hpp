@@ -123,7 +123,7 @@ namespace mtconnect::ruby {
             return self;
           },
           MRB_ARGS_OPT(1));
-      
+
       mrb_define_method(
           mrb, rubyTrans, "guard",
           [](mrb_state *mrb, mrb_value self) {
@@ -269,8 +269,22 @@ namespace mtconnect::ruby {
         mrb_value ev;
         const char *klass = "Entity";
         Entity *ptr = entity.get();
-        if (dynamic_cast<Observation *>(ptr) != nullptr)
-          klass = "Observation";
+        Observation *obs;
+        if (obs = dynamic_cast<Observation *>(ptr); obs != nullptr)
+        {
+          switch (obs->getDataItem()->getCategory())
+          {
+            case device_model::data_item::DataItem::SAMPLE:
+              klass = "Sample";
+              break;
+            case device_model::data_item::DataItem::EVENT:
+              klass = "Event";
+              break;
+            case device_model::data_item::DataItem::CONDITION:
+              klass = "Condition";
+              break;
+          }
+        }
         else if (dynamic_cast<pipeline::Timestamped *>(ptr) != nullptr)
           klass = "Timestamped";
         else if (dynamic_cast<pipeline::Tokens *>(ptr) != nullptr)
@@ -310,6 +324,7 @@ namespace mtconnect::ruby {
         }
         if (state)
         {
+          // auto str = mrb_any_to_s(mrb, rv);
           LOG(error) << "Error in transform: " << mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
           rv = mrb_nil_value();
         }

@@ -396,7 +396,7 @@ namespace mtconnect {
       LOG(warning) << "Device updates are disabled, skipping update";
       return;
     }
-    
+
     m_context.pause([=](config::AsyncContext &context) {
       try
       {
