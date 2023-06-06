@@ -203,20 +203,20 @@ namespace mtconnect {
             LOG(info) << "Could not find data item: " << dataItemKey.first;
             m_logOnce.insert(dataItemKey.first);
           }
-          
+
           // Skip following tolken if we are in legacy mode
           if (m_shdrVersion < 2 && token != end)
             token++;
-          
+
           return nullptr;
         }
-        
+
         m_dataItemMap[key] = dataItem;
       }
-//      else
-//      {
-//        LOG(trace) << "Mapped " << key;
-//      }
+      //      else
+      //      {
+      //        LOG(trace) << "Mapped " << key;
+      //      }
 
       entity::Requirements *reqs {nullptr};
 

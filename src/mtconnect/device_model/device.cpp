@@ -166,63 +166,14 @@ namespace mtconnect {
       return nullptr;
     }
 
-    struct UpdateDataItemId
-    {
-      const string &m_id;
-      UpdateDataItemId(const string &id) : m_id(id) {}
-
-      void operator()(WeakDataItemPtr &ptr)
-      {
-        auto di = ptr.lock();
-        di->m_id = m_id;
-      }
-    };
-
     void Device::createUniqueIds(std::unordered_map<std::string, std::string> &idMap)
     {
       boost::uuids::detail::sha1 sha;
       sha.process_bytes(m_uuid->data(), m_uuid->size());
 
       Component::createUniqueId(idMap, sha);
-
-      for (auto it = m_dataItems.begin(); it != m_dataItems.end(); it++)
-      {
-        auto di = it->lock();
-        const auto &oldId = di->getOriginalId();
-        if (oldId)
-        {
-          auto id = idMap.find(*oldId);
-          if (id != idMap.end())
-          {
-            m_dataItems.modify(it, UpdateDataItemId(id->second));
-          }
-          else
-          {
-            LOG(error) << "Cannot find id " << *oldId << " in data item map";
-          }
-        }
-        else
-        {
-          LOG(error) << "DataItem id for " << di->getId() << " was not made unique";
-        }
-      }
-
-      for (auto p : m_componentsById)
-      {
-        auto comp = p.second.lock();
-        if (comp)
-        {
-          auto orig = comp->maybeGet<string>("originalId");
-          if (orig && m_componentsById.count(*orig) == 0)
-          {
-            m_componentsById.emplace(*orig, comp);
-          }
-          if (m_componentsById.count(comp->getId()) == 0)
-          {
-            m_componentsById.emplace(comp->getId(), comp);
-          }
-        }
-      }
+      updateReferences(idMap);
+      initialize();
     }
 
   }  // namespace device_model

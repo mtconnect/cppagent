@@ -48,13 +48,16 @@ int main(int argc, char *argv[])
 class ReferencesTest : public testing::Test
 {
 protected:
-  void SetUp() override
-  {  // Create an agent with only 16 slots and 8 data items.
+  void SetUp() override {}
+
+  void createAgent(ConfigOptions options)
+  {
+    // Create an agent with only 16 slots and 8 data items.
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/test/resources/samples/reference_example.xml", 8, 4, "1.6", 25);
+    m_agentTestHelper->createAgent("/test/resources/samples/reference_example.xml", 8, 4, "1.6", 25, false, true,
+                                   options);
     m_agentId = to_string(getCurrentTimeInSec());
     m_device = m_agentTestHelper->m_agent->getDeviceByName("LinuxCNC");
-    m_component = m_device->getComponentById("bf");
   }
 
   void TearDown() override
@@ -73,6 +76,9 @@ protected:
 
 TEST_F(ReferencesTest, References)
 {
+  createAgent({});
+  m_component = m_device->getComponentById("bf");
+
   ASSERT_NE(nullptr, m_component);
 
   const auto &references = m_component->getList("References");
@@ -84,4 +90,69 @@ TEST_F(ReferencesTest, References)
 
   EXPECT_EQ("chuck", get<string>((*reference)->getProperty("name")));
   EXPECT_EQ("c4", get<string>((*reference)->getProperty("idRef")));
+}
+
+TEST_F(ReferencesTest, should_map_references_to_new_ids)
+{
+  using namespace mtconnect::configuration;
+  createAgent({{CreateUniqueIds, true}});
+  m_component = m_device->getComponentByName("barfeeder");
+
+  ASSERT_NE(nullptr, m_component);
+
+  const auto &references = m_component->getList("References");
+  ASSERT_TRUE(references);
+  ASSERT_EQ(3, references->size());
+  auto reference = references->begin();
+
+  EXPECT_EQ("DataItemRef", (*reference)->getName());
+
+  EXPECT_EQ("chuck", get<string>((*reference)->getProperty("name")));
+  auto di = m_device->getDeviceDataItem("c4");
+  ASSERT_TRUE(di);
+  ASSERT_NE("c4", di->getId());
+
+  EXPECT_EQ(di->getId(), get<string>((*reference)->getProperty("idRef")));
+
+  reference++;
+
+  EXPECT_EQ("DataItemRef", (*reference)->getName());
+
+  EXPECT_EQ("door", get<string>((*reference)->getProperty("name")));
+  di = m_device->getDeviceDataItem("d2");
+  ASSERT_TRUE(di);
+  ASSERT_NE("d2", di->getId());
+
+  EXPECT_EQ(di->getId(), get<string>((*reference)->getProperty("idRef")));
+
+  reference++;
+  auto cref = *reference;
+
+  EXPECT_EQ("ComponentRef", cref->getName());
+
+  EXPECT_EQ("electric", get<string>(cref->getProperty("name")));
+  auto id = get<string>(cref->getProperty("idRef"));
+  auto comp = m_device->getComponentById(id);
+  ASSERT_TRUE(comp);
+  ASSERT_EQ("Electric", comp->getName());
+
+  di = m_device->getDeviceDataItem("fsys");
+  ASSERT_TRUE(di);
+
+  auto source = di->getSource();
+  ASSERT_TRUE(source);
+
+  auto diId = source->get<string>("dataItemId");
+  ASSERT_NE("mf", diId);
+  di = m_device->getDeviceDataItem("feed");
+  ASSERT_EQ(di->getId(), diId);
+  di = m_device->getDeviceDataItem(diId);
+  ASSERT_TRUE(di);
+
+  auto compId = source->get<string>("componentId");
+  ASSERT_NE("ele", compId);
+  comp = m_device->getComponentById(compId);
+  ASSERT_TRUE(comp);
+
+  ASSERT_EQ("xxx", source->get<string>("compositionId"));
 }
