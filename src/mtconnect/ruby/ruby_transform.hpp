@@ -269,8 +269,22 @@ namespace mtconnect::ruby {
         mrb_value ev;
         const char *klass = "Entity";
         Entity *ptr = entity.get();
-        if (dynamic_cast<Observation *>(ptr) != nullptr)
-          klass = "Observation";
+        Observation *obs;
+        if (obs = dynamic_cast<Observation *>(ptr); obs != nullptr)
+        {
+          switch (obs->getDataItem()->getCategory())
+          {
+            case device_model::data_item::DataItem::SAMPLE:
+              klass = "Sample";
+              break;
+            case device_model::data_item::DataItem::EVENT:
+              klass = "Event";
+              break;
+            case device_model::data_item::DataItem::CONDITION:
+              klass = "Condition";
+              break;
+          }
+        }
         else if (dynamic_cast<pipeline::Timestamped *>(ptr) != nullptr)
           klass = "Timestamped";
         else if (dynamic_cast<pipeline::Tokens *>(ptr) != nullptr)

@@ -63,6 +63,10 @@ namespace mtconnect::ruby {
   using namespace std::literals;
   using namespace date::literals;
   using namespace observation;
+  
+  RClass* RubyObservation::m_eventClass;
+  RClass* RubyObservation::m_sampleClass;
+  RClass* RubyObservation::m_conditionClass;
 
   std::recursive_mutex RubyVM::m_mutex;
   RubyVM *RubyVM::m_vm = nullptr;
