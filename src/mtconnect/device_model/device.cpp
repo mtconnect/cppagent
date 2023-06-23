@@ -36,7 +36,8 @@ namespace mtconnect {
         factory = make_shared<Factory>(*Component::getFactory());
         factory->getRequirement("name")->setMultiplicity(1, 1);
         factory->getRequirement("uuid")->setMultiplicity(1, 1);
-        factory->addRequirements({{"iso841Class", false}, {"mtconnectVersion", false}});
+        factory->addRequirements(
+            {{"iso841Class", false}, {"mtconnectVersion", false}, {"hash", false}});
         factory->setFunction([](const std::string &name, Properties &ps) -> EntityPtr {
           auto device = make_shared<Device>("Device"s, ps);
           device->initialize();
@@ -55,7 +56,48 @@ namespace mtconnect {
       return factory;
     }
 
-    void Device::registerDataItem(DataItemPtr di) { m_dataItems.emplace(di); }
+    void Device::registerDataItem(DataItemPtr di)
+    {
+      if (auto it = m_dataItems.get<ById>().find(di->getId()); it != m_dataItems.get<ById>().end())
+      {
+        LOG(fatal) << "Device " << getName() << ": Duplicatie data item id  '" << di->getId()
+                   << "', Exiting";
+        exit(1);
+      }
+
+      if (di->hasProperty("Source") && di->getSource()->hasValue())
+      {
+        auto source = di->getSource()->getValue<std::string>();
+        if (auto it = m_dataItems.get<BySource>().find(source);
+            it != m_dataItems.get<BySource>().end())
+        {
+          LOG(warning) << "Device " << getName() << ": Duplicate source '" << source
+                       << "' found in data item '" << di->getId() << "'. Previous data item: '"
+                       << it->lock()->getId() << '\'';
+        }
+      }
+
+      auto name = di->getName();
+      if (name)
+      {
+        if (auto it = m_dataItems.get<ByName>().find(*name); it != m_dataItems.get<ByName>().end())
+        {
+          LOG(warning) << "Device " << getName() << ": Duplicate source '" << *name
+                       << "' found in data item '" << di->getId() << "'. Previous data item: '"
+                       << it->lock()->getId() << '\'';
+          LOG(warning) << "    Name '" << *name
+                       << "' may not resolve correctly on incoming streams";
+        }
+      }
+
+      auto [id, added] = m_dataItems.emplace(di);
+      if (!added)
+      {
+        LOG(fatal) << "Device " << getName() << ": DataItem '" << di->getId()
+                   << " could not be added, exiting";
+        exit(1);
+      }
+    }
 
     Device::Device(const std::string &name, entity::Properties &props) : Component(name, props)
     {
@@ -108,16 +150,31 @@ namespace mtconnect {
 
     DataItemPtr Device::getDeviceDataItem(const std::string &name) const
     {
-      if (auto it = m_dataItems.get<BySource>().find(name); it != m_dataItems.get<BySource>().end())
+      if (auto it = m_dataItems.get<ById>().find(name); it != m_dataItems.get<ById>().end())
+        return it->lock();
+
+      if (auto it = m_dataItems.get<ByOriginalId>().find(name);
+          it != m_dataItems.get<ByOriginalId>().end())
         return it->lock();
 
       if (auto it = m_dataItems.get<ByName>().find(name); it != m_dataItems.get<ByName>().end())
         return it->lock();
 
-      if (auto it = m_dataItems.get<ById>().find(name); it != m_dataItems.get<ById>().end())
+      if (auto it = m_dataItems.get<BySource>().find(name); it != m_dataItems.get<BySource>().end())
         return it->lock();
 
       return nullptr;
     }
+
+    void Device::createUniqueIds(std::unordered_map<std::string, std::string> &idMap)
+    {
+      boost::uuids::detail::sha1 sha;
+      sha.process_bytes(m_uuid->data(), m_uuid->size());
+
+      Component::createUniqueId(idMap, sha);
+      updateReferences(idMap);
+      initialize();
+    }
+
   }  // namespace device_model
 }  // namespace mtconnect

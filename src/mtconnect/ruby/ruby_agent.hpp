@@ -26,10 +26,14 @@
 namespace mtconnect::ruby {
   using namespace mtconnect::device_model;
   using namespace std;
-  using namespace Rice;
 
+  /// @brief Wrapper around the MTConnect Agent class
   struct RubyAgent
   {
+    /// @brief initialize the Ruby Agent class associating the `agent`
+    /// @param[in] mrb The ruby state
+    /// @param[in] module Module to instantiate agent class
+    /// @param[in] agent The agent
     static void initialize(mrb_state *mrb, RClass *module, Agent *agent)
     {
       auto agentClass = mrb_define_class_under(mrb, module, "Agent", mrb->object_class);
@@ -125,7 +129,7 @@ namespace mtconnect::ruby {
           mrb, agentClass, "default_device",
           [](mrb_state *mrb, mrb_value self) {
             auto agent = MRubyPtr<Agent>::unwrap(mrb, self);
-            auto dev = agent->defaultDevice();
+            auto dev = agent->getDefaultDevice();
 
             auto mod = mrb_module_get(mrb, "MTConnect");
             auto klass = mrb_class_get_under(mrb, mod, "Device");
@@ -178,4 +182,32 @@ namespace mtconnect::ruby {
           MRB_ARGS_REQ(1));
     }
   };
+
+  /// @struct RubyAgent
+  /// @remark Ruby Agent Wrapper
+  /// @code
+  /// class Agent -> mtconnect::Agent
+  ///   def sources -> mtconnect::Agent::getSources()
+  ///   def sinks -> mtconnect::Agent::getSinks()
+  ///   def devices -> mtconnect::Agent::getDevices()
+  ///   def default_device -> mtconnect::Agent::getDefaultDevice()
+  ///   def data_item_for_device(device, name) -> mtconnect::Agent::getDataItemForDevice(device,
+  ///   name) def device(name) -> mtconnect::Agent::findDeviceByUUIDorName(name)
+  /// end
+  /// @endcode
+  ///
+  /// @remark Ruby Source Wrapper
+  /// @code
+  /// class Source -> mtconnect::source::Source
+  ///   def name -> mtconnect::source::Source::getName()
+  ///   def pipeline -> mtconnect::source::Source::getPipeline()
+  /// end
+  /// @endcode
+  ///
+  /// @remark Ruby Sink Wrapper
+  /// @code
+  /// class Sink -> mtconnect::sink::Sink
+  /// end
+  /// @endcode
+
 }  // namespace mtconnect::ruby

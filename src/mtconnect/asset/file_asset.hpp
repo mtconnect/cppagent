@@ -25,22 +25,21 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/entity/factory.hpp"
-#include "mtconnect/utilities.hpp"
 
-namespace mtconnect {
-  namespace asset {
-    class AGENT_LIB_API FileArchetypeAsset : public entity::Entity
-    {
-    public:
-      static entity::FactoryPtr getFactory();
-      static void registerAsset();
-    };
+namespace mtconnect::asset {
+  /// @brief File Archetype Asset
+  class AGENT_LIB_API FileArchetypeAsset : public Asset
+  {
+  public:
+    static entity::FactoryPtr getFactory();
+    static void registerAsset();
+  };
 
-    class AGENT_LIB_API FileAsset : public FileArchetypeAsset
-    {
-    public:
-      static entity::FactoryPtr getFactory();
-      static void registerAsset();
-    };
-  }  // namespace asset
-}  // namespace mtconnect
+  /// @brief File Asset
+  class AGENT_LIB_API FileAsset : public FileArchetypeAsset
+  {
+  public:
+    static entity::FactoryPtr getFactory();
+    static void registerAsset();
+  };
+}  // namespace mtconnect::asset

@@ -77,7 +77,7 @@ namespace mtconnect {
         if (comp)
           m_component = comp;
         else
-          LOG(warning) << "Refernce: Cannot find Component for idRef " << get<string>("idRef");
+          LOG(warning) << "Reference: Cannot find Component for idRef " << get<string>("idRef");
       }
       else if (m_type == DATA_ITEM)
       {
@@ -85,7 +85,7 @@ namespace mtconnect {
         if (di)
           m_dataItem = di;
         else
-          LOG(warning) << "Refernce: Cannot find DataItem for idRef " << get<string>("idRef");
+          LOG(warning) << "Reference: Cannot find DataItem for idRef " << get<string>("idRef");
       }
       else
       {

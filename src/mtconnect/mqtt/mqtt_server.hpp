@@ -18,16 +18,30 @@
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 namespace mtconnect {
+  /// @brief MQTT Server namespace
   namespace mqtt_server {
+    /// @brief
     class MqttServer : public std::enable_shared_from_this<MqttServer>
     {
     public:
+      /// @brief Create an Mqtt server with an asio context
+      /// @param ioc a boost asio context
       MqttServer(boost::asio::io_context &ioc) : m_ioContext(ioc), m_port(1883) {}
+
       virtual ~MqttServer() = default;
+
+      /// @brief Get the Mqtt url
+      /// @return Mqtt url
       const auto &getUrl() const { return m_url; }
+
+      /// @brief get the bind port
+      /// @return the port being bound
       auto getPort() const { return m_port; }
 
+      /// @brief Start the Mqtt server
       virtual bool start() = 0;
+
+      /// @brief Shutdown the Mqtt server
       virtual void stop() = 0;
 
     protected:

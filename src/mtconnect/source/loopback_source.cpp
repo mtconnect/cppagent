@@ -94,7 +94,7 @@ namespace mtconnect::source {
   SequenceNumber_t LoopbackSource::receive(const std::string &data)
   {
     auto ent = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", getIdentity()}});
-    auto res = m_pipeline.run(ent);
+    auto res = m_pipeline.run(std::move(ent));
     if (auto obs = std::dynamic_pointer_cast<observation::Observation>(res))
     {
       return obs->getSequence();
@@ -112,7 +112,7 @@ namespace mtconnect::source {
                                         entity::ErrorList &errors)
   {
     // Parse the asset
-    auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, "1.7", errors);
+    auto entity = entity::XmlParser::parse(asset::Asset::getRoot(), document, errors);
     if (!entity)
     {
       LOG(warning) << "Asset could not be parsed";

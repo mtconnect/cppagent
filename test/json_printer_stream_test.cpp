@@ -171,6 +171,51 @@ TEST_F(JsonPrinterStreamTest, DeviceStream)
             stream.at("/uuid"_json_pointer).get<string>());
 }
 
+TEST_F(JsonPrinterStreamTest, DeviceStream_version_2_one_device)
+{
+  m_printer = std::make_unique<printer::JsonPrinter>(2, true);
+
+  Checkpoint checkpoint;
+  addObservationToCheckpoint(checkpoint, "Xpos", 10254804, 100_value);
+  ObservationList list;
+  checkpoint.getObservations(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
+
+  auto jdoc = json::parse(doc);
+  json stream = jdoc.at("/MTConnectStreams/Streams/DeviceStream/0"_json_pointer);
+  ASSERT_TRUE(stream.is_object());
+
+  ASSERT_EQ(string("SimpleCnc"), stream.at("/name"_json_pointer).get<string>());
+  ASSERT_EQ(string("872a3490-bd2d-0136-3eb0-0c85909298d9"),
+            stream.at("/uuid"_json_pointer).get<string>());
+}
+
+TEST_F(JsonPrinterStreamTest, DeviceStream_version_2_two_devices)
+{
+  m_printer = std::make_unique<printer::JsonPrinter>(2, true);
+  m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/min_config2.xml", m_xmlPrinter.get());
+
+  Checkpoint checkpoint;
+  addObservationToCheckpoint(checkpoint, "Sspeed", 10254804, 100_value);
+  addObservationToCheckpoint(checkpoint, "xex", 10254804, "ACTIVE"_value);
+  ObservationList list;
+  checkpoint.getObservations(list);
+  auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
+
+  auto jdoc = json::parse(doc);
+  json stream1 = jdoc.at("/MTConnectStreams/Streams/DeviceStream/0"_json_pointer);
+  ASSERT_TRUE(stream1.is_object());
+
+  ASSERT_EQ(string("LinuxCNC"), stream1.at("/name"_json_pointer).get<string>());
+  ASSERT_EQ(string("000"), stream1.at("/uuid"_json_pointer).get<string>());
+
+  json stream2 = jdoc.at("/MTConnectStreams/Streams/DeviceStream/1"_json_pointer);
+  ASSERT_TRUE(stream2.is_object());
+
+  ASSERT_EQ(string("Other"), stream2.at("/name"_json_pointer).get<string>());
+  ASSERT_EQ(string("001"), stream2.at("/uuid"_json_pointer).get<string>());
+}
+
 TEST_F(JsonPrinterStreamTest, ComponentStream)
 {
   Checkpoint checkpoint;
@@ -225,7 +270,7 @@ TEST_F(JsonPrinterStreamTest, two_components_version_2)
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
 
   auto jdoc = json::parse(doc);
-  auto streams = jdoc.at("/MTConnectStreams/Streams/DeviceStream/ComponentStream"_json_pointer);
+  auto streams = jdoc.at("/MTConnectStreams/Streams/DeviceStream/0/ComponentStream"_json_pointer);
   ASSERT_EQ(2_S, streams.size());
 
   json stream1 = streams[0];
@@ -329,12 +374,12 @@ TEST_F(JsonPrinterStreamTest, samples_and_events_version_2)
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   auto jdoc = json::parse(doc);
 
-  auto stream = jdoc.at("/MTConnectStreams/Streams/DeviceStream/ComponentStream"_json_pointer);
+  auto stream = jdoc.at("/MTConnectStreams/Streams/DeviceStream/0/ComponentStream/0"_json_pointer);
   ASSERT_TRUE(stream.is_object());
 
   ASSERT_EQ(string("a4a7bdf0"), stream.at("/componentId"_json_pointer).get<string>());
 
-  auto mode = stream.at("/Events/ControllerMode"_json_pointer);
+  auto mode = stream.at("/Events/ControllerMode/0"_json_pointer);
   ASSERT_TRUE(mode.is_object());
 
   ASSERT_EQ(string("AUTOMATIC"), mode.at("/value"_json_pointer).get<string>());

@@ -27,6 +27,7 @@
 
 namespace mtconnect {
   namespace asset {
+    /// @brief Cutting Tool Architype Asset
     class AGENT_LIB_API CuttingToolArchetype : public Asset
     {
     public:
@@ -34,6 +35,7 @@ namespace mtconnect {
       static void registerAsset();
     };
 
+    /// @brief Cutting Tool Asset
     class AGENT_LIB_API CuttingTool : public Asset
     {
     public:

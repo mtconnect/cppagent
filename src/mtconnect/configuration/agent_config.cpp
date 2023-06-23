@@ -102,7 +102,7 @@ namespace mtconnect::configuration {
   boost::log::trivial::logger_type *gAgentLogger = nullptr;
 
   AgentConfiguration::AgentConfiguration()
-    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->getContext())
+    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->get())
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
     using namespace source;
@@ -167,7 +167,7 @@ namespace mtconnect::configuration {
         if (fs::exists(path))
         {
           LOG(info) << "Loading configuration from: " << path;
-          cerr << "Loading configuration from:" << path;
+          cerr << "Loading configuration from:" << path << endl;
 
           m_configFile = fs::absolute(path);
           ifstream file(m_configFile.c_str());
@@ -382,6 +382,11 @@ namespace mtconnect::configuration {
       // Start the file monitor to check for changes to cfg or devices.
       LOG(debug) << "Waiting for monitor thread to exit to restart agent";
 
+      m_agent->beforeDeviceXmlUpdateHooks().add([this](Agent &agent) {
+        LOG(info) << "Reseting device file time because agent updated the device XML file";
+        m_deviceTime.reset();
+      });
+
       boost::system::error_code ec;
       AgentConfiguration::monitorFiles(ec);
     }
@@ -404,7 +409,7 @@ namespace mtconnect::configuration {
     LOG(info) << "Agent Configuration stopped";
   }
 
-  DevicePtr AgentConfiguration::defaultDevice() { return m_agent->defaultDevice(); }
+  DevicePtr AgentConfiguration::getDefaultDevice() { return m_agent->getDefaultDevice(); }
 
   void AgentConfiguration::setLoggingLevel(const logr::trivial::severity_level level)
   {
@@ -504,7 +509,7 @@ namespace mtconnect::configuration {
       else
         out = &std::cout;
 
-      logr::add_console_log(*out, kw::format = formatter);
+      logr::add_console_log(*out, kw::format = formatter, kw::auto_flush = true);
 
       if (m_isDebug && level >= severity_level::debug)
         setLoggingLevel(severity_level::debug);
@@ -645,6 +650,7 @@ namespace mtconnect::configuration {
                 {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
                 {configuration::CheckpointFrequency, 1000},
                 {configuration::LegacyTimeout, 600s},
+                {configuration::CreateUniqueIds, false},
                 {configuration::ReconnectInterval, 10000ms},
                 {configuration::IgnoreTimestamps, false},
                 {configuration::ConversionRequired, true},
@@ -653,7 +659,8 @@ namespace mtconnect::configuration {
                 {configuration::FilterDuplicates, false},
                 {configuration::MonitorConfigFiles, false},
                 {configuration::MonitorInterval, 10s},
-                {configuration::VersionDeviceXmlUpdates, false},
+                {configuration::VersionDeviceXml, false},
+                {configuration::EnableSourceDeviceModels, false},
                 {configuration::MinimumConfigReloadAge, 15s},
                 {configuration::Pretty, false},
                 {configuration::PidFile, "agent.pid"s},
@@ -812,7 +819,7 @@ namespace mtconnect::configuration {
         if (!device)
         {
           LOG(warning) << "Cannot locate device name '" << deviceName << "', trying default";
-          device = defaultDevice();
+          device = getDefaultDevice();
           if (device)
           {
             deviceName = *device->getComponentName();
@@ -884,7 +891,7 @@ namespace mtconnect::configuration {
         }
       }
     }
-    else if ((device = defaultDevice()))
+    else if ((device = getDefaultDevice()))
     {
       ConfigOptions adapterOptions {options};
 
@@ -896,9 +903,13 @@ namespace mtconnect::configuration {
                                          adapterOptions, ptree {});
       m_agent->addSource(source, false);
     }
-    else
+    else if (m_agent->getDevices().size() > 1)
     {
       throw runtime_error("Adapters must be defined if more than one device is present");
+    }
+    else
+    {
+      LOG(warning) << "Starting with no devices or adapters";
     }
   }
 

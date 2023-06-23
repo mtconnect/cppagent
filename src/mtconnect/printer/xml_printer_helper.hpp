@@ -23,9 +23,12 @@
 #include "mtconnect/printer/xml_helper.hpp"
 
 namespace mtconnect::printer {
+  /// @brief Helper class for XML document generation. Wraps some common libxml2 functions
   class AGENT_LIB_API XmlWriter
   {
   public:
+    /// @brief Construct an XmlWriter creating setting up the buffer for writing.
+    /// @param pretty `true` if output is formatted with indentation
     XmlWriter(bool pretty) : m_writer(nullptr), m_buf(nullptr)
     {
       THROW_IF_XML2_NULL(m_buf = xmlBufferCreate());
@@ -51,8 +54,12 @@ namespace mtconnect::printer {
       }
     }
 
+    /// @brief cast this object as a xmlTextWriterPtr
+    /// @return the xmlTextWriterPtr
     operator xmlTextWriterPtr() { return m_writer; }
 
+    /// @brief Get the content of the buffer as a string. Free the writer if it is allocated.
+    /// @return content as a string
     std::string getContent()
     {
       if (m_writer != nullptr)
@@ -69,30 +76,50 @@ namespace mtconnect::printer {
     xmlBufferPtr m_buf;
   };
 
+  /// @brief Wrapper to create an XML open element
+  /// @param writer the writer
+  /// @param name the name of the element
   static inline void openElement(xmlTextWriterPtr writer, const char *name)
   {
     THROW_IF_XML2_ERROR(xmlTextWriterStartElement(writer, BAD_CAST name));
   }
 
+  /// @brief Close the last open element
+  /// @param writer the writer
   static inline void closeElement(xmlTextWriterPtr writer)
   {
     THROW_IF_XML2_ERROR(xmlTextWriterEndElement(writer));
   }
 
+  /// @brief Helper class to automatically close an element when the object goes out of scope
   class AGENT_LIB_API AutoElement
   {
   public:
+    /// @brief Constructor where the element name will be filled in later
+    /// @param writer the writer
     AutoElement(xmlTextWriterPtr writer) : m_writer(writer) {}
+    /// @brief Constor where the element is opened
+    /// @param writer the writer
+    /// @param name name of the element
+    /// @param key optional key if the for closing an element and reopening another element
     AutoElement(xmlTextWriterPtr writer, const char *name, std::string key = "")
       : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name);
     }
+    /// @brief Constor where the element is opened
+    /// @param writer the writer
+    /// @param name name of the element
+    /// @param key optional key if the for closing an element and reopening another element
     AutoElement(xmlTextWriterPtr writer, const std::string &name, std::string key = "")
       : m_writer(writer), m_name(name), m_key(std::move(key))
     {
       openElement(writer, name.c_str());
     }
+    /// @brief close the currently open element if the name or the key don't match
+    /// @param name of the element
+    /// @param key optional key if the for closing an element and reopening another element
+    /// @return `true` if the element was closed and reopened
     bool reset(const std::string &name, const std::string &key = "")
     {
       if (name != m_name || m_key != key)
@@ -110,13 +137,18 @@ namespace mtconnect::printer {
         return false;
       }
     }
+    /// @brief Destructor closes the element if it is open
     ~AutoElement()
     {
       if (!m_name.empty())
         xmlTextWriterEndElement(m_writer);
     }
 
+    /// @brief get the key
+    /// @return the key
     const std::string &key() const { return m_key; }
+    /// @brief return the name
+    /// @return the name
     const std::string &name() const { return m_name; }
 
   protected:

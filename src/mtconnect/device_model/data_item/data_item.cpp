@@ -117,11 +117,11 @@ namespace mtconnect {
 
       m_observationName.setQName(obs, pre);
 
-      const static unordered_map<string, ERepresentation> reps = {{"VALUE", VALUE},
-                                                                  {"TIME_SERIES", TIME_SERIES},
-                                                                  {"DISCRETE", DISCRETE},
-                                                                  {"DATA_SET", DATA_SET},
-                                                                  {"TABLE", TABLE}};
+      const static unordered_map<string, Representation> reps = {{"VALUE", VALUE},
+                                                                 {"TIME_SERIES", TIME_SERIES},
+                                                                 {"DISCRETE", DISCRETE},
+                                                                 {"DATA_SET", DATA_SET},
+                                                                 {"TABLE", TABLE}};
       auto rep = maybeGet<string>("representation");
       if (rep)
         m_representation = reps.find(*rep)->second;
@@ -243,7 +243,8 @@ namespace mtconnect {
 
     bool DataItem::hasName(const string &name) const
     {
-      return m_id == name || (m_name && *m_name == name) || (m_source && *m_source == name);
+      return m_id == name || (m_name && *m_name == name) || (m_source && *m_source == name) ||
+             (m_originalId && *m_originalId == name);
     }
 
     // Sort by: Device, Component, Category, DataItem
@@ -297,21 +298,12 @@ namespace mtconnect {
       }
     }
 
-    inline void path(std::list<string> &pth, ComponentPtr c)
-    {
-      auto p = c->getParent();
-      if (p)
-        path(pth, p);
-
-      pth.push_back(c->getTopicName());
-    }
-
     void DataItem::makeTopic()
     {
       std::list<string> pth;
       auto comp = m_component.lock();
 
-      path(pth, comp);
+      comp->path(pth);
       {
         auto cp = m_composition.lock();
         if (cp)

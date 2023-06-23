@@ -214,6 +214,11 @@ namespace mtconnect::entity {
 
       try
       {
+        if (ef->isAny() && l && l->empty())
+        {
+          properties.erase("LIST");
+        }
+
         auto entity = ef->make(qname, properties, errors);
         if (entity)
         {
@@ -234,8 +239,8 @@ namespace mtconnect::entity {
     return nullptr;
   }
 
-  EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, const string &version,
-                             ErrorList &errors, bool parseNamespaces)
+  EntityPtr XmlParser::parse(FactoryPtr factory, const string &document, ErrorList &errors,
+                             bool parseNamespaces)
   {
     NAMED_SCOPE("entity.xml_parser");
     EntityPtr entity;

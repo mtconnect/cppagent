@@ -28,13 +28,22 @@ namespace boost::asio::ssl {
   class context;
 }
 
+/// @brief  @brief the agent adapter namespace
 namespace mtconnect::source::adapter::agent_adapter {
   using namespace mtconnect;
   using namespace source::adapter;
 
+  /// @brief The Agent adapter pipeline
   class AGENT_LIB_API AgentAdapterPipeline : public AdapterPipeline
   {
   public:
+    /// @brief Create an adapter pipeline
+    ///
+    /// Feedback is used to determine if recovery is possible and when to start a
+    /// new http streaming session with the upstream agent
+    /// @param context the pipeline context
+    /// @param st strand to run in
+    /// @param feedback feedback from the pipeline to the adapter when an error occurs
     AgentAdapterPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st,
                          pipeline::XmlTransformFeedback &feedback)
       : AdapterPipeline(context, st), m_feedback(feedback)
@@ -45,12 +54,20 @@ namespace mtconnect::source::adapter::agent_adapter {
     pipeline::XmlTransformFeedback &m_feedback;
   };
 
+  /// @brief An adapter to connnect to another Agent and replicate data
   class AGENT_LIB_API AgentAdapter : public Adapter
   {
   public:
+    /// @brief Create an agent adapter
+    /// @param io boost asio io context
+    /// @param context pipeline context
+    /// @param options configation options
+    /// @param block additional configuration options
     AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
                  const ConfigOptions &options, const boost::property_tree::ptree &block);
 
+    /// @brief Register the agent adapter with the factory for `http` and `https`
+    /// @param factory source factory
     static void registerFactory(SourceFactory &factory)
     {
       auto cb = [](const std::string &name, boost::asio::io_context &io,
@@ -63,17 +80,27 @@ namespace mtconnect::source::adapter::agent_adapter {
       factory.registerFactory("https", cb);
     }
 
+    /// @name Agent Device methods
+    ///@{
     const std::string &getHost() const override { return m_host; }
-
     unsigned int getPort() const override { return 0; }
+    ///@}
+
+    /// @brief get a reference to the transform feedback
+    /// @return reference to the transform feedback
     auto &getFeedback() { return m_feedback; }
 
     ~AgentAdapter() override;
 
+    /// @name Source interface
+    ///@{
     bool start() override;
     void stop() override;
     pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
+    ///@}
 
+    /// @brief get a shared pointer to the source
+    /// @return shared pointer to this
     auto getptr() const { return std::dynamic_pointer_cast<AgentAdapter>(Source::getptr()); }
 
   protected:

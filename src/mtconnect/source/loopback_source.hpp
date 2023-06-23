@@ -26,21 +26,33 @@
 #include "mtconnect/utilities.hpp"
 
 namespace mtconnect::source {
+  /// @brief A pipeline for a loopback source
   class AGENT_LIB_API LoopbackPipeline : public pipeline::Pipeline
   {
   public:
+    /// @brief Create a loopback pipeline
+    /// @param[in] context pipeline context
+    /// @param[in] st boost asio strand
     LoopbackPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
       : pipeline::Pipeline(context, st)
     {}
+    /// @brief build the pipeline
+    /// @param options configuration options
     void build(const ConfigOptions &options) override;
 
   protected:
     ConfigOptions m_options;
   };
 
+  /// @brief Loopback source for sending entities back to the agent
   class AGENT_LIB_API LoopbackSource : public Source
   {
   public:
+    /// @brief Create a loopback source
+    /// @param name the name of the source
+    /// @param io boost asio strand
+    /// @param pipelineContext pipeline context
+    /// @param options loopback source options
     LoopbackSource(const std::string &name, boost::asio::io_context::strand &io,
                    pipeline::PipelineContextPtr pipelineContext, const ConfigOptions &options)
       : Source(name, io), m_pipeline(pipelineContext, Source::m_strand)
@@ -48,6 +60,8 @@ namespace mtconnect::source {
       m_pipeline.build(options);
     }
 
+    /// @brief this is a loopback source
+    /// @return always `true`
     bool isLoopback() override { return true; }
 
     bool start() override
@@ -58,6 +72,9 @@ namespace mtconnect::source {
     void stop() override { m_pipeline.clear(); }
     pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
 
+    /// @brief send an observation running it through the pipeline
+    /// @param observation the observation
+    /// @return the sequence number
     SequenceNumber_t receive(observation::ObservationPtr observation)
     {
       auto res = m_pipeline.run(observation);
@@ -70,17 +87,43 @@ namespace mtconnect::source {
         return 0;
       }
     }
+    /// @brief create and send an observation through the pipeline
+    /// @param dataItem the observation's data item
+    /// @param props observation properties
+    /// @param timestamp optional observation timestamp
+    /// @return the sequence number
     SequenceNumber_t receive(DataItemPtr dataItem, entity::Properties props,
                              std::optional<Timestamp> timestamp = std::nullopt);
+    /// @brief create and send an observation through the pipeline
+    /// @param dataItem the observation's data item
+    /// @param value simple string value
+    /// @param timestamp optional observation timestamp
+    /// @return the sequence number
     SequenceNumber_t receive(DataItemPtr dataItem, const std::string &value,
                              std::optional<Timestamp> timestamp = std::nullopt);
+    /// @brief create and send an observation with shdr through the pipeline
+    /// @param shdr shdr pipe deliminated text
+    /// @return the sequence number
     SequenceNumber_t receive(const std::string &shdr);
 
+    /// @brief send an asset through the pipeline
+    /// @param asset the asset
     void receive(asset::AssetPtr asset) { m_pipeline.run(asset); }
+    /// @brief create and send an asset through the pipeline
+    /// @param device the device associated with the asset
+    /// @param document the asset document
+    /// @param id optional asset id
+    /// @param type optional asset type
+    /// @param time optional asset timestamp
+    /// @param[out] errors errors if any occurred
+    /// @return shared pointer to the asset
     asset::AssetPtr receiveAsset(DevicePtr device, const std::string &document,
                                  const std::optional<std::string> &id,
                                  const std::optional<std::string> &type,
                                  const std::optional<std::string> &time, entity::ErrorList &errors);
+    /// @brief set a remove asset command through the pipeline
+    /// @param device optional device
+    /// @param id the asset id
     void removeAsset(const std::optional<std::string> device, const std::string &id);
 
   protected:

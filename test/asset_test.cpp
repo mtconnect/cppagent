@@ -74,7 +74,7 @@ TEST_F(AssetTest, TestExtendedAsset)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
   auto asset = dynamic_cast<Asset *>(entity.get());
   ASSERT_NE(nullptr, asset);
@@ -102,7 +102,7 @@ TEST_F(AssetTest, asset_should_parse_and_load_if_asset_id_is_missing_from_xml)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
   auto asset = dynamic_cast<Asset *>(entity.get());
   ASSERT_NE(nullptr, asset);

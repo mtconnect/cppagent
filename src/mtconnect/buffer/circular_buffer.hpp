@@ -31,9 +31,13 @@
 namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;
 
+  /// @brief Limited epherimal in-memory storage of observations and checkpoint management
   class AGENT_LIB_API CircularBuffer
   {
   public:
+    /// @brief Create a circular buffer
+    /// @param bufferSize the size of the circular buffer
+    /// @param checkpointFreq how often to create checkpoints
     CircularBuffer(unsigned int bufferSize, int checkpointFreq)
       : m_sequence(1ull),
         m_firstSequence(m_sequence),
@@ -46,6 +50,9 @@ namespace mtconnect::buffer {
 
     ~CircularBuffer() { m_checkpoints.clear(); }
 
+    /// @brief get an observation at a sequence number
+    /// @param seq the sequence number
+    /// @return shared pointer to an obseration at sequence
     observation::ObservationPtr getFromBuffer(uint64_t seq) const
     {
       auto off = seq - m_firstSequence;
@@ -55,14 +62,24 @@ namespace mtconnect::buffer {
         return observation::ObservationPtr();
     }
 
-    auto getIndexAt(uint64_t at) { return at - m_firstSequence; }
+    /// @brief get index into underlying circular buffer at a sequence number
+    /// @param at the sequence number
+    /// @return the index into the circular buffer
+    auto getIndexAt(uint64_t at) const { return at - m_firstSequence; }
 
+    /// @brief Get the current sequence number
+    /// @return sequence number one greater than last observation in circular buffer
     SequenceNumber_t getSequence() const { return m_sequence; }
-
+    /// @brief get the buffer size
+    /// @return the buffer size
     unsigned int getBufferSize() const { return m_slidingBufferSize; }
 
+    /// @brief get the first sequence number in the circular buffer
+    /// @return first sequence
     SequenceNumber_t getFirstSequence() const { return m_firstSequence; }
 
+    /// @brief update the data item references when device model changes
+    /// @param diMap the map of data item ids to new data item entities
     void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
     {
       for (auto &o : m_slidingBuffer)
@@ -79,6 +96,11 @@ namespace mtconnect::buffer {
       }
     }
 
+    /// @brief Set the sequence number
+    ///
+    /// recomputes the first sequence if the sequence is larger than the circular buffer size.
+    ///
+    /// @param seq the new sequence number
     void setSequence(SequenceNumber_t seq)
     {
       m_sequence = seq;
@@ -86,6 +108,12 @@ namespace mtconnect::buffer {
         m_firstSequence = seq - m_slidingBuffer.size();
     }
 
+    /// @brief Add an observation to the circular buffer
+    /// - Diffs the data set if the observation is a data set
+    /// - Sets the observation sequence number
+    ///
+    /// @param observation the observation
+    /// @return the sequence number of the observation
     SequenceNumber_t addToBuffer(observation::ObservationPtr &observation)
     {
       if (observation->isOrphan())
@@ -93,16 +121,6 @@ namespace mtconnect::buffer {
 
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
       auto dataItem = observation->getDataItem();
-
-      if (!dataItem->isDiscrete())
-      {
-        if (!observation->isUnavailable() && dataItem->isDataSet() &&
-            !m_latest.dataSetDifference(observation))
-        {
-          return 0;
-        }
-      }
-
       auto seq = m_sequence;
 
       observation->setSequence(seq);
@@ -133,13 +151,33 @@ namespace mtconnect::buffer {
       return seq;
     }
 
-    // Checkpoint
-    Checkpoint &getLatest() { return m_latest; }
-    Checkpoint &getFirst() { return m_first; }
-    auto getCheckoointFreq() { return m_checkpointFreq; }
-    auto getCheckpointCount() { return m_checkpointCount; }
+    /// @name Checkpoint methods
+    ///@{
 
-    std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at, const FilterSetOpt &filterSet)
+    /// @brief Get the checkpoint at the end of the circular buffer
+    /// @return reference to the checkpoint
+    const Checkpoint &getLatest() const { return m_latest; }
+    /// @brief Get the checkpoint at the beginning of the circular buffer
+    /// @return reference to the checkpoint
+    const Checkpoint &getFirst() const { return m_first; }
+    auto getCheckpointFreq() const { return m_checkpointFreq; }
+    auto getCheckpointCount() const { return m_checkpointCount; }
+
+    /// @brief Check if observation is a duplicate by validating against the latest checkpoint
+    /// @param[in] obs the observation to check
+    /// @return `true` if the observation is a duplicate
+    const observation::ObservationPtr checkDuplicate(const observation::ObservationPtr &obs) const
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
+      return m_latest.checkDuplicate(obs);
+    }
+
+    /// @brief Get a checkpoint at a sequence number
+    /// @param at the sequence number to get the checkpoint at
+    /// @param filterSet the filter to apply to the new checkpoint
+    /// @return a unique point to a new checkpoint
+    std::unique_ptr<Checkpoint> getCheckpointAt(SequenceNumber_t at,
+                                                const FilterSetOpt &filterSet) const
     {
       std::lock_guard<std::recursive_mutex> lock(m_sequenceLock);
 
@@ -184,11 +222,21 @@ namespace mtconnect::buffer {
 
       return check;
     }
+    ///@}
 
+    /// @brief Get a list of observations from the circular buffer
+    /// @param[in] count maximum number of observations to get
+    /// @param[in] filterSet optional filter set of data item ids
+    /// @param[in] start optional starting sequence
+    /// @param[in] to optional ending sequence
+    /// @param[out] end last sequence number in the list
+    /// @param[out] firstSeq first sequence number in the list
+    /// @param[out] endOfBuffer `true` if the last sequence is at the end of the buffer
+    /// @return unique pointer to a list of shared observation pointers
     std::unique_ptr<observation::ObservationList> getObservations(
         int count, const FilterSetOpt &filterSet, const std::optional<SequenceNumber_t> start,
         const std::optional<SequenceNumber_t> to, SequenceNumber_t &end, SequenceNumber_t &firstSeq,
-        bool &endOfBuffer)
+        bool &endOfBuffer) const
     {
       auto results = std::make_unique<observation::ObservationList>();
 
@@ -253,14 +301,20 @@ namespace mtconnect::buffer {
       return results;
     }
 
-    // For mutex locking
+    /// @name Mutex lock  management
+    ///@{
+
+    /// @brief lock the mutex
     auto lock() { return m_sequenceLock.lock(); }
+    /// @brief unlock the mutex
     auto unlock() { return m_sequenceLock.unlock(); }
+    /// @brief try to lock the mutex
     auto try_lock() { return m_sequenceLock.try_lock(); }
+    ///@}
 
   protected:
     // Access control to the buffer
-    std::recursive_mutex m_sequenceLock;
+    mutable std::recursive_mutex m_sequenceLock;
 
     // Sequence number
     SequenceNumber_t m_sequence;

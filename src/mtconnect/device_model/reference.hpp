@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT ï¿½ The Association For Manufacturing Technology (ï¿½AMTï¿½)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,12 +36,14 @@ namespace mtconnect {
     class Device;
     using DevicePtr = std::shared_ptr<Device>;
 
+    /// @brief Reference to a component or data item
     class AGENT_LIB_API Reference : public entity::Entity
     {
     public:
       using entity::Entity::Entity;
       ~Reference() override = default;
 
+      /// @brief Reference relationship for this component
       enum RefernceType
       {
         COMPONENT,
@@ -49,15 +51,25 @@ namespace mtconnect {
         UNKNOWN
       };
 
+      /// @brief The Entity id this component is related to
+      /// @return the `idRef` property
       const entity::Value &getIdentity() const override { return getProperty("idRef"); }
 
       static entity::FactoryPtr getFactory();
       static entity::FactoryPtr getRoot();
 
+      /// @brief resolve the `idRef` using the device
+      /// @param device the device
       void resolve(DevicePtr device);
 
+      /// @brief get component for a component reference
+      /// @return shared pointer to the component
       auto &getComponent() const { return m_component; }
+      /// @brief get data item for a data item reference
+      /// @return shared pointer to the data item
       auto &getDataItem() const { return m_dataItem; }
+      /// @brief get the reference type
+      /// @return data item or component relationship type
       auto getReferenceType() const { return m_type; }
 
     protected:

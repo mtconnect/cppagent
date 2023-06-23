@@ -20,60 +20,45 @@
 #include "mtconnect/config.hpp"
 #include "transform.hpp"
 
-namespace mtconnect {
-  namespace pipeline {
-    class AGENT_LIB_API DuplicateFilter : public Transform
+namespace mtconnect::pipeline {
+  /// @brief Filter duplicates
+  class AGENT_LIB_API DuplicateFilter : public Transform
+  {
+  public:
+    /// @brief Shared states to check for duplicates
+    struct State : TransformState
     {
-    public:
-      struct State : TransformState
-      {
-        std::unordered_map<std::string, entity::Value> m_values;
-      };
-
-      DuplicateFilter(const DuplicateFilter &) = default;
-      DuplicateFilter(PipelineContextPtr context)
-        : Transform("DuplicateFilter"), m_state(context->getSharedState<State>(m_name))
-      {
-        using namespace observation;
-        static constexpr auto lambda = [](const Observation &o) {
-          return !o.isOrphan() && !o.getDataItem()->isDiscrete();
-        };
-        m_guard =
-            LambdaGuard<Observation, ExactTypeGuard<Event, Sample, ThreeSpaceSample, Message>>(
-                lambda, RUN) ||
-            TypeGuard<Observation>(SKIP);
-      }
-      ~DuplicateFilter() override = default;
-
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
-      {
-        using namespace observation;
-        std::lock_guard<TransformState> guard(*m_state);
-
-        auto o = std::dynamic_pointer_cast<Observation>(entity);
-        if (o->isOrphan())
-          return entity::EntityPtr();
-
-        auto di = o->getDataItem();
-        auto &id = di->getId();
-
-        auto &values = m_state->m_values;
-        auto old = values.find(id);
-        if (old != values.end() && old->second == o->getValue())
-          return entity::EntityPtr();
-
-        if (old == values.end())
-          values[id] = o->getValue();
-        else
-          old->second = o->getValue();
-
-        return next(entity);
-      }
-
-    protected:
-      std::shared_ptr<State> m_state;
+      std::unordered_map<std::string, entity::Value> m_values;
     };
 
-  }  // namespace pipeline
+    DuplicateFilter(const DuplicateFilter &) = default;
+    /// @brief Create a duplicate filter with shared state from the context
+    /// @param context the context
+    DuplicateFilter(PipelineContextPtr context) : Transform("DuplicateFilter"), m_context(context)
+    {
+      m_guard = TypeGuard<observation::Observation>(RUN);
+    }
+    ~DuplicateFilter() override = default;
 
-}  // namespace mtconnect
+    /// @brief check if the entity is a duplicate
+    /// @param[in] entity the entity to check
+    /// @return the result of the transform if not a duplicate or an empty entity
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+    {
+      using namespace observation;
+
+      auto o = std::dynamic_pointer_cast<Observation>(entity);
+      if (o->isOrphan())
+        return entity::EntityPtr();
+
+      auto o2 = m_context->m_contract->checkDuplicate(o);
+      if (!o2)
+        return entity::EntityPtr();
+      else
+        return next(std::move(o2));
+    }
+
+  protected:
+    PipelineContextPtr m_context;
+  };
+}  // namespace mtconnect::pipeline

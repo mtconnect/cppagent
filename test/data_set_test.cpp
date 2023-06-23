@@ -480,8 +480,8 @@ TEST_F(DataSetTest, CurrentAt)
   using namespace mtconnect::sink::rest_sink;
   m_agentTestHelper->addAdapter();
 
-  auto rest = m_agentTestHelper->getRestService();
-  auto seq = rest->getSequence();
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+  auto seq = circ.getSequence();
 
   m_agentTestHelper->m_adapter->processData("TIME|vars|a=1 b=2 c=3");
   m_agentTestHelper->m_adapter->processData("TIME|vars| c=5 ");

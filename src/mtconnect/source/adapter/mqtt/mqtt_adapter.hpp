@@ -24,11 +24,18 @@
 
 using namespace mtconnect::mqtt_client;
 
+/// @brief  @brief the Mqtt adapter namespace
 namespace mtconnect::source::adapter::mqtt_adapter {
-
+  /// @brief The Mqtt adapter pipeline
   class AGENT_LIB_API MqttPipeline : public AdapterPipeline
   {
   public:
+    /// @brief Create an adapter pipeline
+    ///
+    /// Feedback is used to determine if recovery is possible and when to start a
+    /// new Mqtt session with the upstream agent
+    /// @param context the pipeline context
+    /// @param st strand to run in
     MqttPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &strand)
       : AdapterPipeline(context, strand)
     {}
@@ -40,28 +47,48 @@ namespace mtconnect::source::adapter::mqtt_adapter {
     ConfigOptions m_options;
   };
 
+  /// @brief An Mqtt adapter to connnect to another Agent and replicate data
+
   class AGENT_LIB_API MqttAdapter : public Adapter
   {
   public:
+    /// @brief Create an Mqtt adapter
+    /// @param io boost asio io context
+    /// @param context pipeline context
+    /// @param options configation options
+    /// @param block additional configuration options
     MqttAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
                 const ConfigOptions &options, const boost::property_tree::ptree &block);
+
     ~MqttAdapter() override {}
 
+    /// @brief Register the Mqtt adapter with the factory
+    /// @param factory source factory
     static void registerFactory(SourceFactory &factory);
 
+    /// @name Agent Device methods
+    ///@{
     const std::string &getHost() const override;
 
     unsigned int getPort() const override;
+    ///@}
 
+    /// @name Source interface
+    ///@{
     bool start() override;
 
     void stop() override;
 
+    pipeline::Pipeline *getPipeline() override;
+    ///@}
+
+    /// @brief subcribe to topics
     void subscribeToTopics();
 
-    pipeline::Pipeline *getPipeline() override;
-
   protected:
+    /// @brief load all topics
+    /// @param ptree the property tree coming from configuration parser
+    /// @param options configation options
     void loadTopics(const boost::property_tree::ptree &tree, ConfigOptions &options);
 
   protected:

@@ -376,9 +376,10 @@ namespace mtconnect::sink::rest_sink {
     using namespace std;
     using namespace http;
     namespace fs = std::filesystem;
+    using std::move;
 
     m_complete = complete;
-    m_outgoing = move(responsePtr);
+    m_outgoing = std::move(responsePtr);
 
     if (m_outgoing->m_file && !m_outgoing->m_file->m_cached)
     {
@@ -452,30 +453,41 @@ namespace mtconnect::sink::rest_sink {
   {
     if (m_streaming)
     {
-      m_outgoing = move(response);
+      m_outgoing = std::move(response);
       writeChunk(m_outgoing->m_body, [this] { closeStream(); });
     }
     else
     {
-      writeResponse(move(response));
+      writeResponse(std::move(response));
     }
   }
 
+  /// @brief A secure https session
   class HttpsSession : public SessionImpl<HttpsSession>
   {
   public:
+    /// @brief Create a secure https session
+    /// @param socket tcp socket (takes ownership)
+    /// @param context the asio ssl context
+    /// @param buffer the buffer (takes ownership)
+    /// @param list the header fieldlist
+    /// @param dispatch dispatch function
+    /// @param error error function
     HttpsSession(boost::beast::tcp_stream &&socket, boost::asio::ssl::context &context,
                  boost::beast::flat_buffer &&buffer, const FieldList &list, Dispatch dispatch,
                  ErrorFunction error)
-      : SessionImpl<HttpsSession>(move(buffer), list, dispatch, error),
+      : SessionImpl<HttpsSession>(std::move(buffer), list, dispatch, error),
         m_stream(std::move(socket), context)
     {
       m_remote = beast::get_lowest_layer(m_stream).socket().remote_endpoint();
     }
+    /// @brief get a shared pointer to the https session
+    /// @return shared pointer
     std::shared_ptr<HttpsSession> shared_ptr()
     {
       return std::dynamic_pointer_cast<HttpsSession>(shared_from_this());
     }
+    /// @brief close this session
     virtual ~HttpsSession() { close(); }
     auto &stream() { return m_stream; }
 
@@ -489,8 +501,11 @@ namespace mtconnect::sink::rest_sink {
                                beast::bind_front_handler(&HttpsSession::handshake, shared_ptr()));
     }
 
+    /// @brief return the stream and hand over ownership
+    /// @return the stream
     beast::ssl_stream<beast::tcp_stream> releaseStream() { return std::move(m_stream); }
 
+    /// @brief shutdown the stream asyncronously closing the secure stream
     void close() override
     {
       if (!m_closing)
@@ -557,14 +572,15 @@ namespace mtconnect::sink::rest_sink {
       {
         LOG(debug) << "Received HTTPS request";
         // Create https session
-        session = std::make_shared<HttpsSession>(move(m_stream), m_tlsContext, move(m_buffer),
-                                                 m_fields, m_dispatch, m_errorFunction);
+        session =
+            std::make_shared<HttpsSession>(std::move(m_stream), m_tlsContext, std::move(m_buffer),
+                                           m_fields, m_dispatch, m_errorFunction);
       }
       else
       {
         LOG(debug) << "Received HTTP request";
         // Create http session
-        session = std::make_shared<HttpSession>(move(m_stream), move(m_buffer), m_fields,
+        session = std::make_shared<HttpSession>(std::move(m_stream), std::move(m_buffer), m_fields,
                                                 m_dispatch, m_errorFunction);
 
         // Start the session, but set

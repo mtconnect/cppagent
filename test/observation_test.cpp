@@ -21,6 +21,8 @@
 
 #include <list>
 
+#include <nlohmann/json.hpp>
+
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/entity/json_printer.hpp"
 #include "mtconnect/entity/xml_parser.hpp"
@@ -39,6 +41,7 @@ using namespace device_model;
 using namespace data_item;
 using namespace std::literals;
 using namespace date::literals;
+using namespace nlohmann;
 
 // main
 int main(int argc, char *argv[])
@@ -289,9 +292,10 @@ TEST_F(ObservationTest, should_treat_events_with_non_count_units_as_doubles)
 
   ASSERT_EQ(expected, writer.getContent());
 
-  entity::JsonPrinter jprinter(1);
-  json jdoc;
-  jdoc = jprinter.print(event);
+  entity::JsonEntityPrinter jprinter(1, true);
+
+  auto sdoc = jprinter.print(event);
+  json jdoc = json::parse(sdoc);
 
   ASSERT_EQ(123.555, jdoc.at("/FeedrateOverride/value"_json_pointer).get<double>());
 
@@ -329,9 +333,10 @@ TEST_F(ObservationTest, should_treat_events_with_count_as_integer)
 
   ASSERT_EQ(expected, writer.getContent());
 
-  entity::JsonPrinter jprinter(1);
-  json jdoc;
-  jdoc = jprinter.print(event);
+  entity::JsonEntityPrinter jprinter(1, true);
+
+  auto sdoc = jprinter.print(event);
+  json jdoc = json::parse(sdoc);
 
   ASSERT_EQ(123.0, jdoc.at("/PartCount/value"_json_pointer).get<double>());
 
@@ -377,9 +382,10 @@ TEST_F(ObservationTest, should_use_three_space_sample_for_3_space_events)
 
   ASSERT_EQ(expected, writer.getContent());
 
-  entity::JsonPrinter jprinter(1);
-  json jdoc;
-  jdoc = jprinter.print(event);
+  entity::JsonEntityPrinter jprinter(1, true);
+
+  auto sdoc = jprinter.print(event);
+  json jdoc = json::parse(sdoc);
 
   auto node = jdoc.at("/WorkpieceOffset/value"_json_pointer);
   ASSERT_TRUE(node.is_array());

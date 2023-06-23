@@ -117,7 +117,7 @@ WORKDIR /home/agent
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
 CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
   /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
-  cd /etc/mtconnect/simulator && agent run agent.cfg
+  cd /etc/mtconnect/simulator && mtcagent run agent.cfg
 
 # ---------------------------------------------------------------------
 # note

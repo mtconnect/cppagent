@@ -1,0 +1,10 @@
+include(default)
+
+[settings]
+compiler.cppstd=17
+
+[system_tools]
+cmake/>3.23.0
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Xcode

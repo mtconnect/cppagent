@@ -18,22 +18,26 @@
 #include "url_parser.hpp"
 
 #include <boost/config/warning_disable.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 namespace qi = boost::spirit::qi;
 
+/// @brief User credentials struct for intermediate parsing
 struct UserCred
 {
   std::string m_username;
   std::string m_password;
 };
 
+/// @brief make the struct available to spirit
 BOOST_FUSION_ADAPT_STRUCT(UserCred, (std::string, m_username)(std::string, m_password))
 
+/// @brief make the struct available to spirit
 BOOST_FUSION_ADAPT_STRUCT(mtconnect::source::adapter::agent_adapter::UrlQueryPair,
                           (std::string, first)(std::string, second))
 
+/// @brief make the struct available to spirit
 BOOST_FUSION_ADAPT_STRUCT(
     mtconnect::source::adapter::agent_adapter::Url,
     (std::string, m_protocol)(mtconnect::source::adapter::agent_adapter::Url::Host,
@@ -43,6 +47,12 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 namespace mtconnect::source::adapter::agent_adapter {
 
+  /// @brief Convert from four uns8s to an ipv4 address
+  /// @param n1 first octet
+  /// @param n2 second octet
+  /// @param n3 third octet
+  /// @param n4 fourth octet
+  /// @return a boost ipv4 address
   static boost::asio::ip::address_v4 from_four_number(unsigned char n1, unsigned char n2,
                                                       unsigned char n3, unsigned char n4)
   {
@@ -56,6 +66,9 @@ namespace mtconnect::source::adapter::agent_adapter {
     return boost::asio::ip::address_v4(bt);
   }
 
+  /// @brief convert a string to an ipv6 address
+  /// @param str the string (as a char vector)
+  /// @return a boost ipv6 address
   static boost::asio::ip::address_v6 from_v6_string(std::vector<char> str)
   {
     return boost::asio::ip::address_v6::from_string(str.data());
@@ -64,6 +77,8 @@ namespace mtconnect::source::adapter::agent_adapter {
   BOOST_PHOENIX_ADAPT_FUNCTION(boost::asio::ip::address_v4, v4_from_4number, from_four_number, 4)
   BOOST_PHOENIX_ADAPT_FUNCTION(boost::asio::ip::address_v6, v6_from_string, from_v6_string, 1)
 
+  /// @brief The Uri parser spirit qi grammar
+  /// @tparam Iterator
   template <typename Iterator>
   struct UriGrammar : qi::grammar<Iterator, Url()>
   {

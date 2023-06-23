@@ -39,15 +39,23 @@ namespace mtconnect {
     class Device;
   }
 
+  /// @brief namespace for shdr adapter sources
   namespace source::adapter::shdr {
+    /// @brief The SHDR adapter client source
     class AGENT_LIB_API ShdrAdapter : public adapter::Adapter, public Connector
     {
     public:
-      // Associate adapter with a device & connect to the server & port
+      /// @brief Associate adapter with a device & connect to the server & port
+      /// @param[in] io boost asio io conext
+      /// @param[in] pipelineContext pipeline context
+      /// @param[in] options configuration options
+      /// @param[in] block additional configuration options not in options
       ShdrAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr pipelineContext,
                   const ConfigOptions &options, const boost::property_tree::ptree &block);
       ShdrAdapter(const ShdrAdapter &) = delete;
 
+      /// @brief Factory registration method associate this source with `shdr`
+      /// @param[in] factory the source factory
       static void registerFactory(SourceFactory &factory)
       {
         factory.registerFactory(
@@ -63,9 +71,12 @@ namespace mtconnect {
       // Virtual destructor
       ~ShdrAdapter() override { stop(); }
 
+      /// @brief The termination text when collecting multi-line data
+      /// @return the termination text
       auto &getTerminator() const { return m_terminator; }
 
-      // Inherited method to incoming data from the server
+      /// @name Source interface
+      ///@{
       void processData(const std::string &data) override;
       void protocolCommand(const std::string &data) override;
 
@@ -85,13 +96,6 @@ namespace mtconnect {
         if (m_handler && m_handler->m_connected)
           m_handler->m_connected(getIdentity());
       }
-
-      // Agent Device methods
-      const std::string &getHost() const override { return m_server; }
-      unsigned int getPort() const override { return m_port; }
-      pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
-
-      // Start and Stop
       void stop() override;
       bool start() override
       {
@@ -103,14 +107,34 @@ namespace mtconnect {
         else
           return false;
       }
+      ///@}
 
-      void setOptions(const ConfigOptions &options)
+      /// @name Agent Device methods
+      ///@{
+      const std::string &getHost() const override { return m_server; }
+      unsigned int getPort() const override { return m_port; }
+      pipeline::Pipeline *getPipeline() override { return &m_pipeline; }
+      ///@}
+
+      /// @brief Change the options for the adapter
+      /// @param[in] options the set of options
+      void setOptions(const ConfigOptions &options) override
       {
         for (auto &o : options)
           m_options.insert_or_assign(o.first, o.second);
+        bool started = m_pipeline.started();
         m_pipeline.build(m_options);
-        if (!m_pipeline.started())
+        if (!m_pipeline.started() && started)
           m_pipeline.start();
+      }
+
+    protected:
+      void forwardData(const std::string &data)
+      {
+        if (data[0] == '*')
+          protocolCommand(data);
+        else if (m_handler && m_handler->m_processData)
+          m_handler->m_processData(data, getIdentity());
       }
 
     protected:

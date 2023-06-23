@@ -37,20 +37,42 @@ namespace mtconnect {
   namespace source::adapter {
     class Adapter;
   }  // namespace source::adapter
+
+  /// @brief mtconnect pipelines and transformations
+  ///
+  /// Contains all classes pertaining to pipeline transformations
   namespace pipeline {
+    /// @brief Abstract Pipeline class
+    ///
+    /// Must be subclassed and the `build()` method must be provided
     class AGENT_LIB_API Pipeline
     {
     public:
+      /// @brief A splice function type for resplicing the pipeline after it is rebuilt
       using Splice = std::function<void(Pipeline *)>;
+
+      /// @brief Pipeline constructor
+      /// @param context The pipeline context
+      /// @param st boost asio strand for for setting timers and running async operations
+      /// @note All pipelines run in a single strand (thread) and therefor all operations are
+      ///       thread-safe in one pipeline.
 
       Pipeline(PipelineContextPtr context, boost::asio::io_context::strand &st)
         : m_start(std::make_shared<Start>()), m_context(context), m_strand(st)
       {}
+      /// @brief Destructor stops the pipeline
       virtual ~Pipeline() { m_start->stop(); }
+      /// @brief Build the pipeline
+      /// @param options A set of configuration options
       virtual void build(const ConfigOptions &options) = 0;
+      /// @brief Has the pipeline started?
+      /// @return `true` if started
       bool started() const { return m_started; }
+      /// @brief Get a reference to the strand
+      /// @return the strand
       boost::asio::io_context::strand &getStrand() { return m_strand; }
 
+      /// @brief Apply the splices after rebuilding
       void applySplices()
       {
         for (auto &splice : m_splices)
@@ -59,6 +81,7 @@ namespace mtconnect {
         }
       }
 
+      /// @brief remove all transforms from the pipeline
       void clear()
       {
         using namespace std::chrono_literals;
@@ -86,6 +109,7 @@ namespace mtconnect {
         }
       }
 
+      /// @brief start all the transforms that require asynchronous operations
       virtual void start()
       {
         if (m_start)
@@ -95,6 +119,9 @@ namespace mtconnect {
         }
       }
 
+      /// @brief Find all transforms that match the target
+      /// @param[in] target the named transforms to find
+      /// @return a list of all matching transforms
       Transform::ListOfTransforms find(const std::string &target)
       {
         Transform::ListOfTransforms xforms;
@@ -102,6 +129,11 @@ namespace mtconnect {
         return xforms;
       }
 
+      /// @brief add a transform before the target.
+      /// @param[in] target the named transforms to insert this transform before
+      /// @param[in] transform the transform to add before
+      /// @param[in] reapplied `true` if the pipeline is being rebuilt
+      /// @returns `true` if the target is found and spliced
       bool spliceBefore(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
@@ -123,6 +155,12 @@ namespace mtconnect {
 
         return true;
       }
+
+      /// @brief add a transform after the target.
+      /// @param[in] target the named transforms to insert this transform after
+      /// @param[in] transform the transform to add before
+      /// @param[in] reapplied `true` if the pipeline is being rebuilt
+      /// @returns `true` if the target is found and spliced
       bool spliceAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
@@ -144,6 +182,12 @@ namespace mtconnect {
 
         return true;
       }
+
+      /// @brief splices the transform as the first option in targets next list.
+      /// @param[in] target the named transforms to insert this transform after
+      /// @param[in] transform the transform to add before
+      /// @param[in] reapplied `true` if the pipeline is being rebuilt
+      /// @returns `true` if the target is found and spliced
       bool firstAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
@@ -164,6 +208,11 @@ namespace mtconnect {
         return true;
       }
 
+      /// @brief splices the transform as the last option in targets next list.
+      /// @param[in] target the named transforms to insert this transform after
+      /// @param[in] transform the transform to add before
+      /// @param[in] reapplied `true` if the pipeline is being rebuilt
+      /// @returns `true` if the target is found and spliced
       bool lastAfter(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
@@ -184,6 +233,11 @@ namespace mtconnect {
         return true;
       }
 
+      /// @brief replaces each occurence of target with transform.
+      /// @param[in] target the named transforms to replace
+      /// @param[in] transform the transform to add before
+      /// @param[in] reapplied `true` if the pipeline is being rebuilt
+      /// @returns `true` if the target is found and spliced
       bool replace(const std::string &target, TransformPtr transform, bool reapplied = false)
       {
         Transform::ListOfTransforms xforms;
@@ -206,6 +260,9 @@ namespace mtconnect {
         return true;
       }
 
+      /// @brief removes the named transform.
+      /// @param[in] target the named transforms to replace
+      /// @returns `true` if the target is found and spliced
       bool remove(const std::string &target)
       {
         Transform::ListOfTransforms xforms;
@@ -223,17 +280,32 @@ namespace mtconnect {
         return true;
       }
 
-      const entity::EntityPtr run(const entity::EntityPtr entity) { return m_start->next(entity); }
+      /// @brief Sends the entity through the pipeline
+      /// @param[in] entity the entity to send through the pipeline
+      /// @return the entity returned from the transform
+      entity::EntityPtr run(entity::EntityPtr &&entity) { return m_start->next(std::move(entity)); }
 
+      /// @brief Bind the transform to the start
+      /// @param[in] transform the transform to bind
+      /// @return returns `transform`
       TransformPtr bind(TransformPtr transform)
       {
         m_start->bind(transform);
         return transform;
       }
 
+      /// @brief check if the pipeline has a pipeline context
+      /// @returns `true` if there is a context
       bool hasContext() const { return bool(m_context); }
+
+      /// @brief check if the pipeline has a pipeline contract
+      /// @returns `true` if there is a contract
       bool hasContract() const { return bool(m_context) && bool(m_context->m_contract); }
+      /// @brief gets the pipeline context
+      /// @returns a shared pointer to the pipeline context
       PipelineContextPtr getContext() { return m_context; }
+      /// @brief gets the pipeline contract
+      /// @returns the pipeline contract
       const auto &getContract() { return m_context->m_contract; }
 
     protected:
@@ -242,11 +314,11 @@ namespace mtconnect {
       public:
         Start() : Transform("Start")
         {
-          m_guard = [](const entity::EntityPtr entity) { return SKIP; };
+          m_guard = [](const entity::Entity *entity) { return SKIP; };
         }
         ~Start() override = default;
 
-        const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+        entity::EntityPtr operator()(entity::EntityPtr &&entity) override
         {
           return entity::EntityPtr();
         }

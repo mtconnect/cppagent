@@ -60,9 +60,13 @@ namespace mtconnect {
 #endif
 
   class XmlPrinter;
+
+  /// @brief Configuration namespace
   namespace configuration {
     using DevicePtr = std::shared_ptr<device_model::Device>;
 
+    /// @brief Parses the configuration file and creates the `Agent`. Manages config
+    ///        file tracking and restarting of the agent.
     class AGENT_LIB_API AgentConfiguration : public MTConnectService
     {
     public:
@@ -71,49 +75,113 @@ namespace mtconnect {
 
       using ptree = boost::property_tree::ptree;
 
+      /// @brief Construct the agent configuration
       AgentConfiguration();
       virtual ~AgentConfiguration();
 
-      // Hooks
-      auto &afterAgentHooks() { return m_afterAgentHooks; }
-      auto &beforeStartHooks() { return m_beforeStartHooks; }
-      auto &beforeStopHooks() { return m_beforeStopHooks; }
+      /// @name Callbacks for initialization phases
+      ///@{
 
-      // For MTConnectService
+      /// @brief Get the callback manager after the agent is created
+      /// @return the callback manager
+      auto &afterAgentHooks() { return m_afterAgentHooks; }
+      /// @brief Get the callback manager after the agent is started
+      /// @return the callback manager
+      auto &beforeStartHooks() { return m_beforeStartHooks; }
+      /// @brief Get the callback manager after the agent is stopped
+      /// @return the callback manager
+      auto &beforeStopHooks() { return m_beforeStopHooks; }
+      ///@}
+
+      /// @brief stops the agent. Used in daemons.
       void stop() override;
+      /// @brief starts the agent. Used in daemons.
       void start() override;
+      /// @brief initializes the configuration of the agent from the command line parameters
+      /// @param[in] options command line parameters
       void initialize(const boost::program_options::variables_map &options) override;
 
+      /// @brief  Configure the logger with the config node from the config file
+      /// @param config the configuration node
       void configureLogger(const ptree &config);
+      /// @brief load a configuration file
+      /// @param[in] file name of the file
       void loadConfig(const std::string &file);
 
+      /// @brief assign the agent associated with this configuration
+      /// @param[in] agent the agent the configuration will take ownership of
       void setAgent(std::unique_ptr<Agent> &agent) { m_agent = std::move(agent); }
-      const Agent *getAgent() const { return m_agent.get(); }
-      auto &getContext() { return m_context->getContext(); }
+      /// @brief get the agent associated with the configuration
+      Agent *getAgent() const { return m_agent.get(); }
+      /// @brief get the boost asio io context
+      auto &getContext() { return m_context->get(); }
+      /// @brief get a pointer to the async io manager
       auto &getAsyncContext() { return *m_context.get(); }
 
+      /// @brief sets the path for the working directory to the current path
       void updateWorkingDirectory() { m_working = std::filesystem::current_path(); }
 
+      /// @name Configuration factories
+      ///@{
+      /// @brief get the factory for creating sinks
+      /// @return the factory
       auto &getSinkFactory() { return m_sinkFactory; }
+      /// @brief get the factory for creating sources
+      /// @return the factory
       auto &getSourceFactory() { return m_sourceFactory; }
+      ///@}
+
+      /// @brief get the pipeline context for this configuration
+      /// @note set after the agent is created
       auto getPipelineContext() { return m_pipelineContext; }
 
+      /// @name Logging methods
+      ///@{
+      /// @brief gets the boost log sink
+      /// @return boost log sink
       const auto &getLoggerSink() const { return m_sink; }
+      /// @brief gets the log directory
+      /// @return log directory
       const auto &getLogDirectory() const { return m_logDirectory; }
+      /// @brief get the logging file name
+      /// @return log file name
       const auto &getLogFileName() const { return m_logFileName; }
+      /// @brief for log rolling, get the log archive pattern
+      /// @return log archive pattern
       const auto &getLogArchivePattern() const { return m_logArchivePattern; }
+      /// @brief Get the maximum size of all the log files
+      /// @return the maximum size of all log files
       auto getMaxLogFileSize() const { return m_maxLogFileSize; }
+      /// @brief the maximum size of a log file when it triggers rolling over
+      /// @return the maxumum site of a log file
       auto getLogRotationSize() const { return m_logRotationSize; }
+      /// @brief How often to roll over the log file
+      ///
+      /// One of:
+      /// - `DAILY`
+      /// - `WEEKLY`
+      /// - `NEVER`
+      ///
+      /// @return the log file interval
       auto getRotationLogInterval() const { return m_rotationLogInterval; }
+      /// @brief Get the current log level
+      /// @return log level
       auto getLogLevel() const { return m_logLevel; }
 
+      /// @brief set the logging level
+      /// @param[in] level the new logging level
       void setLoggingLevel(const boost::log::trivial::severity_level level);
+      /// @brief Set the logging level as a string
+      /// @param level the new logging level
+      /// @return the logging level
       boost::log::trivial::severity_level setLoggingLevel(const std::string &level);
 
+      /// @brief get a pointer to the logger
       boost::log::trivial::logger_type *getLogger() { return m_logger; }
+      ///@}
 
     protected:
-      DevicePtr defaultDevice();
+      DevicePtr getDefaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
       void loadSinks(const ptree &sinks, ConfigOptions &options);
 

@@ -24,16 +24,20 @@
 namespace mtconnect {
   class Agent;
   namespace pipeline {
+    /// @brief Provide MTConnect DataItem delta filter behavior
     class AGENT_LIB_API DeltaFilter : public Transform
     {
     public:
+      /// @brief shared values associated with data items
       struct State : TransformState
       {
         std::unordered_map<std::string, double> m_lastSampleValue;
       };
 
+      /// @brief Construct a delta filter
+      /// @param[in] context the context for shared state
       DeltaFilter(PipelineContextPtr context)
-        : Transform("RateFilter"),
+        : Transform("DeltaFilter"),
           m_state(context->getSharedState<State>(m_name)),
           m_contract(context->m_contract.get())
       {
@@ -47,7 +51,7 @@ namespace mtconnect {
 
       ~DeltaFilter() override = default;
 
-      const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+      entity::EntityPtr operator()(entity::EntityPtr &&entity) override
       {
         using namespace std;
         using namespace observation;
@@ -64,7 +68,7 @@ namespace mtconnect {
         if (o->isUnavailable())
         {
           m_state->m_lastSampleValue.erase(id);
-          return next(entity);
+          return next(std::move(entity));
         }
 
         auto filter = *di->getMinimumDelta();
@@ -72,7 +76,7 @@ namespace mtconnect {
         if (filterMinimumDelta(id, value, filter))
           return EntityPtr();
 
-        return next(entity);
+        return next(std::move(entity));
       }
 
     protected:

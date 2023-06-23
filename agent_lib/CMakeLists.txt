@@ -24,6 +24,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/asset/file_asset.hpp"
         "${SOURCE_DIR}/asset/raw_material.hpp"
         "${SOURCE_DIR}/asset/qif_document.hpp"
+        "${SOURCE_DIR}/asset/component_configuration_parameters.hpp"
 
 # src/asset SOURCE_FILES_ONLY
   
@@ -32,6 +33,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/asset/file_asset.cpp"
         "${SOURCE_DIR}/asset/raw_material.cpp"
         "${SOURCE_DIR}/asset/qif_document.cpp"
+        "${SOURCE_DIR}/asset/component_configuration_parameters.cpp"
         
 # src/buffer HEADER_FILES_ONLY
 
@@ -79,6 +81,7 @@ set(AGENT_SOURCES
 
         "${SOURCE_DIR}/device_model/configuration/configuration.hpp"
         "${SOURCE_DIR}/device_model/configuration/coordinate_systems.hpp"
+        "${SOURCE_DIR}/device_model/configuration/image_file.hpp"
         "${SOURCE_DIR}/device_model/configuration/motion.hpp"
         "${SOURCE_DIR}/device_model/configuration/relationships.hpp"
         "${SOURCE_DIR}/device_model/configuration/sensor_configuration.hpp"
@@ -89,6 +92,7 @@ set(AGENT_SOURCES
 
         "${SOURCE_DIR}/device_model/configuration/configuration.cpp"
         "${SOURCE_DIR}/device_model/configuration/coordinate_systems.cpp"
+        "${SOURCE_DIR}/device_model/configuration/image_file.cpp"
         "${SOURCE_DIR}/device_model/configuration/motion.cpp"
         "${SOURCE_DIR}/device_model/configuration/relationships.cpp"
         "${SOURCE_DIR}/device_model/configuration/sensor_configuration.cpp"
@@ -128,7 +132,6 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/entity/entity.cpp"
         "${SOURCE_DIR}/entity/factory.cpp"
         "${SOURCE_DIR}/entity/json_parser.cpp"
-        "${SOURCE_DIR}/entity/json_printer.cpp"
         "${SOURCE_DIR}/entity/requirement.cpp"
         "${SOURCE_DIR}/entity/xml_parser.cpp"
         "${SOURCE_DIR}/entity/xml_printer.cpp"
@@ -190,6 +193,7 @@ set(AGENT_SOURCES
 # src/printer HEADER_FILE_ONLY
 
         "${SOURCE_DIR}/printer/json_printer.hpp"
+        "${SOURCE_DIR}/printer/json_printer_helper.hpp"
         "${SOURCE_DIR}/printer/printer.hpp"
         "${SOURCE_DIR}/printer/xml_helper.hpp"
         "${SOURCE_DIR}/printer/xml_printer.hpp"
@@ -197,8 +201,8 @@ set(AGENT_SOURCES
 
 # src/printer SOURCE_FILES_ONLY
 
-        "${SOURCE_DIR}/printer/json_printer.cpp"
         "${SOURCE_DIR}/printer/xml_printer.cpp"
+        "${SOURCE_DIR}/printer/json_printer.cpp"
 
 # src/source HEADER_FILE_ONLY
 
@@ -286,6 +290,14 @@ if(WITH_RUBY)
     )
 endif()
 
+find_package(Boost REQUIRED)
+find_package(LibXml2 REQUIRED)
+find_package(date REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(nlohmann_json REQUIRED)
+find_package(mqtt_cpp REQUIRED)
+find_package(RapidJSON REQUIRED)
+
 ## configure a header file to pass some of the CMake settings to the source code
 configure_file("${SOURCE_DIR}/version.h.in" "${PROJECT_BINARY_DIR}/agent_lib/mtconnect/version.h")
 
@@ -340,6 +352,10 @@ else()
   add_library(agent_lib STATIC ${AGENT_SOURCES})
 endif()
 
+if(AGENT_PREFIX)
+  set_target_properties(agent_lib PROPERTIES OUTPUT_NAME "${AGENT_PREFIX}agent_lib")
+endif()
+
 target_include_directories(
   agent_lib
   PUBLIC
@@ -351,17 +367,22 @@ target_include_directories(
 target_link_libraries(
   agent_lib
   PUBLIC
-  CONAN_PKG::boost CONAN_PKG::libxml2 CONAN_PKG::date CONAN_PKG::openssl 
+  boost::boost LibXml2::LibXml2 date::date-tz openssl::openssl
+  nlohmann_json::nlohmann_json mqtt_cpp::mqtt_cpp 
+  rapidjson BZip2::BZip2
   
   $<$<PLATFORM_ID:Linux>:pthread>
   $<$<PLATFORM_ID:Windows>:bcrypt>
   )
 
 if(WITH_RUBY)
+  find_package(mruby REQUIRED)
+  find_package(oniguruma REQUIRED)
   target_link_libraries(
     agent_lib
     PUBLIC
-    CONAN_PKG::mruby)
+    mruby::mruby
+    oniguruma::onig)
 endif()
 
 target_compile_definitions(
@@ -406,3 +427,19 @@ endif()
 target_compile_features(agent_lib PUBLIC ${CXX_COMPILE_FEATURES})
 target_clangformat_setup(agent_lib)
 target_clangtidy_setup(agent_lib)
+
+include(../cmake/document.cmake)
+if (AGENT_WITH_DOCS AND DOXYGEN_FOUND)
+  doxygen_add_docs(docs ../README.md ${AGENT_SOURCES})
+  install(DIRECTORY "${PROJECT_BINARY_DIR}/Documentation/" DESTINATION "Documentation")  
+endif()
+
+target_sources(agent_lib PUBLIC FILE_SET headers
+  TYPE HEADERS
+  BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../src/"
+  FILES "${AGENT_LIB_HEADERS}")
+
+install(TARGETS agent_lib LIBRARY DESTINATION "lib")
+install(TARGETS agent_lib ARCHIVE DESTINATION "lib")
+install(TARGETS agent_lib FILE_SET  headers DESTINATION "include")
+install(FILES "${PROJECT_BINARY_DIR}/agent_lib/mtconnect/version.h" DESTINATION "include/mtconnect")

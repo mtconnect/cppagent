@@ -9,6 +9,8 @@ protocol and data collection framework that will work as a standalone
 server. Once built, you only need to specify the XML description of
 the devices and the location of the adapter.
 
+**NOTE: This version cannot currently be built on Windows XP since there is currently no support for the XP toolchain and C++ 17.**
+
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
 
 Version 2.1.0 Added MQTT Sink, Agent Restart and new JSON format (version 2)
@@ -769,7 +771,6 @@ The following parameters must be present to enable https requests. If there is n
         not found the default device if only one device is specified
         in the devices file.
 
-
     * `Host` - The host the adapter is located on.
 
         *Default*: localhost
@@ -849,12 +850,16 @@ The following parameters must be present to enable https requests. If there is n
 
         *Default*: Top Level Setting
 
-	* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. Applies to only this adapter.
+    * `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one 
+      (1), allows  multiple complex observations, like `Condition` and `Message` on the same line. 
+      If it equials one (1), then any observation requiring more than a key/value pair need to be on 
+      separate lines. Applies to only this adapter.
 
 	    *Default*: 1
 
-	* `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names.
-		*Default*: false
+    * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names.
+      
+        *Default*: false
 
 
 ### Agent Adapter Configuration
@@ -1306,25 +1311,16 @@ or
 
     "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
 	
-    conan install . -if build -s build_type=Release --build=missing -pr conan/profiles/vs64
-   	conan build . -bf build
-
+   	conan build . -pr conan/profiles/vs64 --build=missing
 
 #### To build for 32 bit Windows
 
-    conan install . -if build -s build_type=Release --build=missing -pr conan/profiles/vs32
-	conan build . -bf build
+   	conan build . -pr conan/profiles/vs32
 
-#### To build for Windows XP
+### Package the releases
 
-The windows XP 140 XP toolchain needs to be installed under individual component in the Visual Studio 2019 installer. 
-
-    conan install . -s build_type=Release --build=missing -pr conan/profiles/vsxp
-	conan build . -bf build
-
-### Package the release
-
-    cpack -G ZIP
+   	conan build . -pr conan/profiles/vs64 -o cpack=True --build=missing
+   	conan build . -pr conan/profiles/vs32 -o cpack=True --build=missing
 
 ## *NIX Builds
 
@@ -1340,7 +1336,7 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 
 ### Setup the build
 
-    sudo apt-get install build-essential python3.9 python3-pip git cmake ruby rake
+    sudo apt-get install build-essential python3.9 python3-pip git cmake ruby rake autoconf
 	python3.9 -m pip install conan
     echo 'export PATH=$HOME/.local/bin:$PATH' >> .bashrc
 
@@ -1348,16 +1344,9 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 
 	git clone https://github.com/mtconnect/cppagent.git
 	
-### Install the dependencies
-	
-	cd cppagent
-	conan export conan/mqtt_cpp
-	conan export conan/mruby
-	conan install . -if build --build=missing -pr conan/profiles/gcc
-	
 ### Build the agent
 	
-	conan build . -bf build
+	conan build . -pr conan/profile/gcc --build=missing
 	
 ## Building on Mac OS
 
@@ -1377,21 +1366,13 @@ Install brew and xcode command line tools
 
 	git clone https://github.com/mtconnect/cppagent.git
 	
-### Install the dependencies
-
-    cd cppagent
-    conan export conan/mqtt_cpp
-    conan export conan/mruby
-    conan install . -if build  --build=missing
-	
 ### Build the agent
 	
-	conan build . -bf build
+	conan build . -pr conan/profile/macos --build=missing
+    
+### Generate an xcode project for debugging
 	
-### For XCode
-   
-	mkdir build & cd build
-    cmake -G Xcode ..
+	conan build . -pr conan/profile/xcode -s build_type=Debug --build=missing
 
 ## Building on Fedora Alpine
 
@@ -1409,19 +1390,9 @@ Install brew and xcode command line tools
 	pip3 install conan	
 	git clone https://github.com/mtconnect/cppagent.git
 
-### Export mqtt_cpp package
-
-	cd cppagent
-	conan export conan/mqtt_cpp/
-	conan export conan/mruby/
-
-### Install packages
-
-         conan install . -if build -pr conan/profiles/gcc --build=missing
-	
 ## Build the agent
 
-	conan build . -bf build
+	conan build . -pr conan/profile/gcc --build=missing
 
 # Creating Test Certifications (see resources gen_certs shell script)
 

@@ -38,14 +38,20 @@ namespace mtconnect::source::adapter::agent_adapter {
   namespace ssl = boost::asio::ssl;
   using tcp = boost::asio::ip::tcp;
 
-  // Report a failure
+  /// @brief A session implementation that where the derived classes can support HTTP or HTTPS
+  /// @tparam Derived
   template <class Derived>
   class SessionImpl : public Session
   {
+    /// @brief A list of HTTP requests
     using RequestQueue = std::list<Request>;
 
   public:
+    /// @brief Cast this class as the derived class
+    /// @return reference to the derived class
     Derived &derived() { return static_cast<Derived &>(*this); }
+    /// @brief Immutably cast this class as its derived subclass
+    /// @return const reference to the derived class
     const Derived &derived() const { return static_cast<const Derived &>(*this); }
 
     // Objects are constructed with a strand to
@@ -56,8 +62,15 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     virtual ~SessionImpl() { stop(); }
 
+    /// @brief see if the socket is connected
+    /// @return `true` if the socket is open
     bool isOpen() const override { return derived().lowestLayer().socket().is_open(); }
 
+    /// @brief Method called when a request fails
+    ///
+    /// Closes the socket and resets the request
+    /// @param ec error code to report
+    /// @param what the reason why the failure occurred
     void failed(std::error_code ec, const char *what) override
     {
       derived().lowestLayer().socket().close();
@@ -109,6 +122,8 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
     }
 
+    /// @brief Process data from the remote agent
+    /// @param data the payload from the agent
     void processData(const std::string &data)
     {
       try
@@ -138,7 +153,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
     }
 
-    // Start the asynchronous operation
+    /// @brief Connect to the remote agent
     virtual void connect()
     {
       // If the address is an IP address, we do not need to resolve.
@@ -170,6 +185,9 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
     }
 
+    /// @brief Callback when the host name needs to be resolved
+    /// @param ec error code if resultion fails
+    /// @param results the resolution results
     void onResolve(beast::error_code ec, tcp::resolver::results_type results)
     {
       if (ec)
@@ -201,6 +219,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                                                                            derived().getptr())));
     }
 
+    /// @brief Write a request to the remote agent
     void request()
     {
       if (!m_request)
@@ -226,6 +245,9 @@ namespace mtconnect::source::adapter::agent_adapter {
                         beast::bind_front_handler(&SessionImpl::onWrite, derived().getptr()));
     }
 
+    /// @brief Callback on successful write to the agent
+    /// @param ec error code if something failed
+    /// @param bytes_transferred number of bytes transferred (unused)
     void onWrite(beast::error_code ec, std::size_t bytes_transferred)
     {
       boost::ignore_unused(bytes_transferred);
@@ -252,6 +274,9 @@ namespace mtconnect::source::adapter::agent_adapter {
                               beast::bind_front_handler(&Derived::onHeader, derived().getptr())));
     }
 
+    /// @brief Callback after write to process the message header
+    /// @param ec error code if something failed
+    /// @param bytes_transferred number of bytes transferred
     void onHeader(beast::error_code ec, std::size_t bytes_transferred)
     {
       if (ec)
@@ -299,6 +324,9 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
     }
 
+    /// @brief Callback after header processing to read the body of the response
+    /// @param ec error code if something failed
+    /// @param bytes_transferred number of bytes transferred (unused)
     void onRead(beast::error_code ec, std::size_t bytes_transferred)
     {
       boost::ignore_unused(bytes_transferred);
@@ -343,8 +371,11 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
     }
 
-    // Streaming related methods
+    /// @name Streaming related methods
+    ///@{
 
+    /// @brief Find the x-multipart-replace MIME boundary
+    /// @return the boundary string
     inline string findBoundary()
     {
       auto f = m_headerParser->get().find(http::field::content_type);
@@ -370,6 +401,9 @@ namespace mtconnect::source::adapter::agent_adapter {
       return "";
     }
 
+    /// @brief Create a function to handle the chunk header
+    ///
+    /// Sets the chunk parser on chunk header
     void createChunkHeaderHandler()
     {
       m_chunkHeaderHandler = [this](std::uint64_t size, boost::string_view extensions,
@@ -391,6 +425,8 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_chunkParser->on_chunk_header(m_chunkHeaderHandler);
     }
 
+    /// @brief Parse the header and get the size and type
+    /// @return `true` if successful
     bool parseMimeHeader()
     {
       using namespace boost;
@@ -459,6 +495,9 @@ namespace mtconnect::source::adapter::agent_adapter {
       return true;
     }
 
+    /// @brief Creates the function to handle chunk body
+    ///
+    /// Sets the chunk parse on chunk body.
     void createChunkBodyHandler()
     {
       m_chunkHandler = [this](std::uint64_t remain, boost::string_view body,
@@ -508,6 +547,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_chunkParser->on_chunk_body(m_chunkHandler);
     }
 
+    /// @brief Begins the async chunk reading if the boundry is found
     void onChunkedContent()
     {
       m_boundary = findBoundary();

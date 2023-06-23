@@ -1,7 +1,7 @@
 #pragma once
 
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2022, AMT ï¿½ The Association For Manufacturing Technology (ï¿½AMTï¿½)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,8 @@
 //    limitations under the License.
 //
 
-#pragma once
+/// @file config.hpp
+/// @brief common includes and cross platform requirements
 
 #include <boost/config.hpp>
 

@@ -21,7 +21,9 @@
 
 #include <chrono>
 
+#include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/observation/observation.hpp"
+#include "mtconnect/pipeline/deliver.hpp"
 #include "mtconnect/pipeline/delta_filter.hpp"
 #include "mtconnect/pipeline/duplicate_filter.hpp"
 #include "mtconnect/pipeline/period_filter.hpp"
@@ -56,15 +58,23 @@ public:
     return m_dataItems[name];
   }
   void eachDataItem(EachDataItem fun) override {}
-  void deliverObservation(observation::ObservationPtr obs) override {}
+  void deliverObservation(observation::ObservationPtr obs) override
+  {
+    m_checkpoint.addObservation(obs);
+  }
   void deliverAsset(AssetPtr) override {}
   void deliverDevice(DevicePtr) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
   void sourceFailed(const std::string &id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override
+  {
+    return m_checkpoint.checkDuplicate(obs);
+  }
 
   std::map<string, DataItemPtr> &m_dataItems;
+  buffer::Checkpoint m_checkpoint;
 };
 
 class DuplicateFilterTest : public testing::Test
@@ -115,6 +125,7 @@ TEST_F(DuplicateFilterTest, test_simple_event)
 
   auto filter = make_shared<DuplicateFilter>(m_context);
   m_mapper->bind(filter);
+  filter->bind(make_shared<DeliverObservation>(m_context));
 
   auto os1 = observe({"a", "READY"});
   auto list1 = os1->getValue<EntityList>();
@@ -136,6 +147,7 @@ TEST_F(DuplicateFilterTest, test_simple_sample)
 
   auto filter = make_shared<DuplicateFilter>(m_context);
   m_mapper->bind(filter);
+  filter->bind(make_shared<DeliverObservation>(m_context));
 
   auto os1 = observe({"a", "1.5"});
   auto list1 = os1->getValue<EntityList>();
@@ -169,6 +181,7 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
 
   auto rate = make_shared<DeltaFilter>(m_context);
   filter->bind(rate);
+  rate->bind(make_shared<DeliverObservation>(m_context));
 
   {
     auto os = observe({"a", "1.5"});
@@ -199,5 +212,99 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
     auto os = observe({"a", "1.7"});
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
+  }
+}
+
+TEST_F(DuplicateFilterTest, test_condition_duplicates)
+{
+  auto filter = make_shared<DuplicateFilter>(m_context);
+  m_mapper->bind(filter);
+  filter->bind(make_shared<DeliverObservation>(m_context));
+
+  auto *contract = dynamic_cast<MockPipelineContract *>(m_context->m_contract.get());
+  makeDataItem({{"id", "c1"s}, {"type", "SYSTEM"s}, {"category", "CONDITION"s}});
+  {
+    auto os = observe({"c1", "warning", "XXX", "100", "HIGH", "XXX Happened"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+  }
+
+  {
+    auto os = observe({"c1", "warning", "XXX", "100", "HIGH", "XXX Happened"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+
+  {
+    auto os = observe({"c1", "warning", "YYY", "100", "HIGH", "XXX Happened"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+    auto obs = contract->m_checkpoint.getObservation("c1");
+    ASSERT_TRUE(obs);
+    auto cond = dynamic_pointer_cast<Condition>(obs);
+    ASSERT_TRUE(cond);
+    ASSERT_EQ("YYY", cond->get<string>("nativeCode"));
+    ASSERT_EQ(Condition::WARNING, cond->getLevel());
+    auto prev = cond->getPrev();
+    ASSERT_TRUE(prev);
+    ASSERT_FALSE(prev->getPrev());
+    ASSERT_EQ("XXX", prev->get<string>("nativeCode"));
+    ASSERT_EQ("100", prev->get<string>("nativeSeverity"));
+  }
+
+  {
+    auto os = observe({"c1", "warning", "XXX", "101", "HIGH", "XXX Happened"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = contract->m_checkpoint.getObservation("c1");
+    ASSERT_TRUE(obs);
+    auto cond = dynamic_pointer_cast<Condition>(obs);
+    ASSERT_TRUE(cond);
+    ASSERT_EQ("101", cond->get<string>("nativeSeverity"));
+    ASSERT_EQ("XXX", cond->get<string>("nativeCode"));
+
+    auto prev = cond->getPrev();
+    ASSERT_TRUE(prev);
+    ASSERT_EQ("YYY", prev->get<string>("nativeCode"));
+    ASSERT_FALSE(prev->getPrev());
+  }
+
+  {
+    auto os = observe({"c1", "normal", "XXX", "", "", "Normal"});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = contract->m_checkpoint.getObservation("c1");
+    ASSERT_TRUE(obs);
+    auto cond = dynamic_pointer_cast<Condition>(obs);
+    ASSERT_EQ("YYY", cond->get<string>("nativeCode"));
+    ASSERT_TRUE(cond);
+    ASSERT_FALSE(cond->getPrev());
+  }
+
+  {
+    auto os = observe({"c1", "normal", "XXX", "", "", ""});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+  }
+
+  {
+    auto os = observe({"c1", "normal", "", "", "", ""});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(1, list.size());
+
+    auto obs = contract->m_checkpoint.getObservation("c1");
+    ASSERT_TRUE(obs);
+    auto cond = dynamic_pointer_cast<Condition>(obs);
+    ASSERT_TRUE(cond);
+    ASSERT_EQ(Condition::NORMAL, cond->getLevel());
+    ASSERT_FALSE(cond->getPrev());
+  }
+
+  {
+    auto os = observe({"c1", "normal", "", "", "", ""});
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
   }
 }

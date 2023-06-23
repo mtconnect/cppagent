@@ -25,12 +25,17 @@
 
 namespace mtconnect::source::adapter::agent_adapter {
 
-  // HTTPS Session
+  /// @brief HTTPS Agent Adapter Session
   class HttpsSession : public SessionImpl<HttpsSession>
   {
   public:
+    /// @brief The superclass is using a Derived class pattern
     using super = SessionImpl<HttpsSession>;
 
+    /// @brief Construct an HTTPS Session to securely connect to another agent
+    /// @param ex the strand to run in
+    /// @param url the url to connect to
+    /// @param ctx the TLS context
     explicit HttpsSession(boost::asio::io_context::strand &ex, const Url &url, ssl::context &ctx)
       : super(ex, url), m_stream(ex.context(), ctx)
     {}
@@ -40,8 +45,14 @@ namespace mtconnect::source::adapter::agent_adapter {
         beast::get_lowest_layer(m_stream).close();
     }
 
+    /// @brief Get the boost asio ssl tcp stream
+    /// @return reference to the stream
     auto &stream() { return m_stream; }
+    /// @brief Get the lowest protocol layer to the ssl tcp stream
+    /// @return lowest protocol layer
     auto &lowestLayer() { return beast::get_lowest_layer(m_stream); }
+    /// @brief Get an immutable lowest protocol layer to the ssl tcp stream
+    /// @return const lowest protocol layer
     const auto &lowestLayer() const { return beast::get_lowest_layer(m_stream); }
 
     shared_ptr<HttpsSession> getptr()
@@ -49,7 +60,6 @@ namespace mtconnect::source::adapter::agent_adapter {
       return std::static_pointer_cast<HttpsSession>(shared_from_this());
     }
 
-    // Start the asynchronous operation
     void connect() override
     {
       if (!SSL_set_tlsext_host_name(m_stream.native_handle(), m_url.getHost().c_str()))
@@ -62,6 +72,9 @@ namespace mtconnect::source::adapter::agent_adapter {
       super::connect();
     }
 
+    /// @brief Callback when the async connect completes
+    /// @param ec an error code
+    /// @param  endpoint_type unused
     void onConnect(beast::error_code ec, tcp::resolver::results_type::endpoint_type)
     {
       if (ec)
@@ -88,6 +101,8 @@ namespace mtconnect::source::adapter::agent_adapter {
                               beast::bind_front_handler(&HttpsSession::onHandshake, getptr())));
     }
 
+    /// @brief Callback from the TLS handshake after the connect completes
+    /// @param ec an error code
     void onHandshake(beast::error_code ec)
     {
       if (ec)
@@ -103,6 +118,9 @@ namespace mtconnect::source::adapter::agent_adapter {
       request();
     }
 
+    /// @brief Do a graceful async shutdown of the connection to the server
+    ///
+    /// Times out if no response
     void disconnect()
     {
       // Set a timeout on the operation
@@ -113,6 +131,8 @@ namespace mtconnect::source::adapter::agent_adapter {
           m_strand, beast::bind_front_handler(&HttpsSession::onShutdown, getptr())));
     }
 
+    /// @brief Callback from the shutdown
+    /// @param ec complete the shutdown and close the tcp socket
     void onShutdown(beast::error_code ec)
     {
       if (ec == asio::error::eof)

@@ -29,7 +29,7 @@ namespace mtconnect {
   public:
     sink_plugin_test(const string &name, boost::asio::io_context &context,
                      sink::SinkContractPtr &&contract, const ConfigOptions &config)
-      : sink::Sink(name, move(contract))
+      : sink::Sink(name, std::move(contract))
     {}
 
     ~sink_plugin_test() = default;

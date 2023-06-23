@@ -26,9 +26,7 @@
 // Parser section
 #include <boost/config/warning_disable.hpp>
 #include <boost/lambda/lambda.hpp>
-#include <boost/spirit/include/phoenix.hpp>
-#include <boost/spirit/include/phoenix_function.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_action.hpp>
 #include <boost/spirit/include/support_istream_iterator.hpp>
@@ -74,6 +72,7 @@ namespace std {
 using namespace std;
 
 namespace mtconnect::entity {
+  /// @brief Functions called when parsing data sets
   namespace DataSetParserActions {
     inline static void add_entry_f(DataSet &ds, const DataSetEntry &entry) { ds.emplace(entry); }
     inline static void make_entry_f(DataSetEntry &entry, const string &key,
@@ -98,6 +97,9 @@ namespace mtconnect::entity {
   BOOST_PHOENIX_ADAPT_FUNCTION(void, add_entry, DataSetParserActions::add_entry_f, 2);
   BOOST_PHOENIX_ADAPT_FUNCTION(void, make_entry, DataSetParserActions::make_entry_f, 3);
 
+  /// @brief Parser to turn adapter text in `key=value ...` or `key={col1=value ...}` syntax into a
+  /// data set.
+  /// @tparam It the type of the iterator used by the spirit grammar
   template <typename It>
   class DataSetParser : public qi::grammar<It, DataSet()>
   {
@@ -119,6 +121,8 @@ namespace mtconnect::entity {
     }
 
   public:
+    /// @brief Create a parser
+    /// @param[in] table `true` if we are parsing tables
     DataSetParser(bool table) : DataSetParser::base_type(m_start)
     {
       using namespace qi;
@@ -212,8 +216,6 @@ namespace mtconnect::entity {
     qi::rule<It, DataSetEntry()> m_tableEntry;
   };
 
-  // Split the data set entries by space delimiters and account for the
-  // use of single and double quotes as well as curly braces
   bool DataSet::parse(const std::string &text, bool table)
   {
     using boost::spirit::ascii::space;

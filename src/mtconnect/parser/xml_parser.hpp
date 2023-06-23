@@ -34,25 +34,41 @@
 namespace mtconnect::printer {
   class XmlPrinter;
 }
-namespace mtconnect::parser {
 
+/// @brief MTConnect Device parser namespace
+namespace mtconnect::parser {
+  /// @brief parse an xml document and create a list of devices
   class AGENT_LIB_API XmlParser
   {
   public:
-    // Constructor to set the open the correct file
+    /// @brief Constructor to set the open the correct file
     XmlParser();
 
     virtual ~XmlParser();
 
-    // Parses a file and returns a list of devices
+    /// @brief Parses a file and returns a list of devices
+    /// @param[in] aPath to the file
+    /// @param[in] aPrinter the printer to obtain and set namespaces
+    /// @returns a list of device pointers
     std::list<device_model::DevicePtr> parseFile(const std::string &aPath,
                                                  printer::XmlPrinter *aPrinter);
+    /// @brief Parses a single device fragment
+    /// @param[in] deviceXml device xml of a single device
+    /// @param[in] aPrinter the printer to obtain and set namespaces
+    /// @returns a shared device pointer if successful
+    device_model::DevicePtr parseDevice(const std::string &deviceXml,
+                                        printer::XmlPrinter *aPrinter);
 
-    // Just loads the document, assumed it has already been parsed before.
+    /// @brief Just loads the document, assumed it has already been parsed before.
+    /// @param aDoc the XML document to parse
     void loadDocument(const std::string &aDoc);
-
-    // Get std::list of data items in path
+    /// @brief get data items given a filter set and an xpath
+    /// @param[out] filterSet a filter set to build
+    /// @param[in] path the xpath
+    /// @param[in] node an option node pointer to start from. defaults to the document root.
     void getDataItems(FilterSet &filterSet, const std::string &path, xmlNodePtr node = nullptr);
+    /// @brief get the schema version
+    /// @return the version
     const auto &getSchemaVersion() const { return m_schemaVersion; }
 
   protected:

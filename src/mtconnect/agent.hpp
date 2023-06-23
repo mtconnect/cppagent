@@ -40,6 +40,7 @@
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/configuration/async_context.hpp"
 #include "mtconnect/configuration/hook_manager.hpp"
 #include "mtconnect/configuration/service.hpp"
 #include "mtconnect/device_model/agent_device.hpp"
@@ -47,7 +48,7 @@
 #include "mtconnect/parser/xml_parser.hpp"
 #include "mtconnect/pipeline/pipeline.hpp"
 #include "mtconnect/pipeline/pipeline_contract.hpp"
-#include "mtconnect/printer//printer.hpp"
+#include "mtconnect/printer/printer.hpp"
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
 #include "mtconnect/sink/rest_sink/server.hpp"
 #include "mtconnect/sink/sink.hpp"
@@ -76,58 +77,119 @@ namespace mtconnect {
 
   using AssetChangeList = std::vector<std::pair<std::string, std::string>>;
 
+  /// Agent Class controls message flow and owns all sources and sinks.
   class AGENT_LIB_API Agent
   {
   public:
-    using Hook = std::function<void(Agent &)>;
-    using HookList = std::list<Hook>;
-
-    // Load agent with the xml configuration
-    Agent(boost::asio::io_context &context, const std::string &deviceXmlPath,
+    /// @brief Agent constructor
+    /// @param[in] context boost asio io context
+    /// @param[in] deviceXmlPath Device.xml configuration file path
+    /// @param[in] options Configuration Options
+    ///     - SchemaVersion
+    ///     - CheckpointFrequency
+    ///     - Pretty
+    ///     - VersionDeviceXml
+    ///     - JsonVersion
+    ///     - DisableAgentDevice
+    Agent(configuration::AsyncContext &context, const std::string &deviceXmlPath,
           const ConfigOptions &options);
 
-    // Virtual destructor
+    /// Destructor for the Agent.
+    /// > Note: Does not stop the agent.
     ~Agent();
 
-    // Hooks
+    /// @brief Hook callback type
+    using Hook = std::function<void(Agent &)>;
+
+    /// @brief Functions to run before the agent begins the initialization process.
+    /// @return configuration::HookManager<Agent>&
     auto &beforeInitializeHooks() { return m_beforeInitializeHooks; }
+
+    /// @brief Function that run after all agent initialization is complete
+    /// @return configuration::HookManager<Agent>&
     auto &afterInitializeHooks() { return m_afterInitializeHooks; }
+
+    /// @brief Hooks to run when before the agent starts all the soures and sinks
+    /// @return configuration::HookManager<Agent>&
     auto &beforeStartHooks() { return m_beforeStartHooks; }
+
+    /// @brief Hooks before the agent stops all the sources and sinks
+    /// @return configuration::HookManager<Agent>&
     auto &beforeStopHooks() { return m_beforeStopHooks; }
 
-    // Initialize models and pipeline
+    /// @brief Hooks before the agent versions and write the device xml file
+    /// @return configuration::HookManager<Agent>&
+    auto &beforeDeviceXmlUpdateHooks() { return m_beforeDeviceXmlUpdateHooks; }
+
+    /// @brief Hooks after the agent versions and write the device xml file
+    /// @return configuration::HookManager<Agent>&
+    auto &afterDeviceXmlUpdateHooks() { return m_afterDeviceXmlUpdateHooks; }
+
+    /// @brief the agent given a pipeline context
+    /// @param context: the pipeline context shared between all pipelines
     void initialize(pipeline::PipelineContextPtr context);
+
+    /// @brief initial UNAVAILABLE observations for all data items
+    ///        unless they have constant values.
     void initialDataItemObservations();
 
     // Start and stop
+    /// @brief Starts all the sources and sinks
     void start();
+    /// @brief Stops all the sources and syncs.
     void stop();
+
+    /// @brief Get the boost asio io context
+    /// @return boost::asio::io_context
     auto &getContext() { return m_context; }
 
-    // Pipeline Contract
+    /// @brief Create a contract for pipelines to access agent information
+    /// @return A contract between the pipeline and this agent
     std::unique_ptr<pipeline::PipelineContract> makePipelineContract();
+    /// @brief Gets the pipe context shared by all pipelines
+    /// @return A shared pipeline context
     auto getPipelineContext() { return m_pipelineContext; }
 
-    // Sink Contract
+    /// @brief Makes a unique sink contract
+    /// @return A contract between the sink and the agent
     sink::SinkContractPtr makeSinkContract();
+    /// @brief Get a reference to the XML parser
+    /// @return The XML parser
     const auto &getXmlParser() const { return m_xmlParser; }
-
+    /// @brief Get a reference to the circular buffer. Used by sinks to
+    ///        get latest and historical data.
+    /// @return A reference to the circular buffer
     auto &getCircularBuffer() { return m_circularBuffer; }
+    /// @brief Get a const reference to the circular buffer. Used by sinks to
+    ///        get latest and historical data.
+    /// @return A const reference to the circular buffer
+    const auto &getCircularBuffer() const { return m_circularBuffer; }
 
-    // Add an adapter to the agent
-    void addSource(source::SourcePtr adapter, bool start = false);
+    /// @brief Adds an adapter to the agent
+    /// @param[in] source: shared pointer to the source being added
+    /// @param[in] start: starts the source if start is true, otherwise delayed start
+    void addSource(source::SourcePtr source, bool start = false);
+    /// @brief Adds a sink to the agent
+    /// @param[in] sink shared pointer to the the sink being added
+    /// @param[in] start: starts the source if start is true, otherwise delayed start
     void addSink(sink::SinkPtr sink, bool start = false);
 
     // Source and Sink
+    /// @brief Find a source by name
+    /// @param[in] name the identity to find
+    /// @return A shared pointer to the source if found, otherwise nullptr
     source::SourcePtr findSource(const std::string &name) const
     {
       for (auto &s : m_sources)
-        if (s->getIdentity() == name)
+      {
+        if (s->getIdentity() == name || s->getName() == name)
           return s;
-
+      }
       return nullptr;
     }
-
+    /// @brief Find a sink by name
+    /// @param name the name to find
+    /// @return A shared pointer to the sink if found, otherwise nullptr
     sink::SinkPtr findSink(const std::string &name) const
     {
       for (auto &s : m_sinks)
@@ -137,22 +199,44 @@ namespace mtconnect {
       return nullptr;
     }
 
+    /// @brief Get the list of all sources
+    /// @return The list of all source in the agent
     const auto &getSources() const { return m_sources; }
+    /// @brief Get the list of all sinks
+    /// @return The list of all sinks in the agent
     const auto &getSinks() const { return m_sinks; }
 
+    /// @brief Get the MTConnect schema version the agent is supporting
+    /// @return The MTConnect schema version as a string
     const auto &getSchemaVersion() const { return m_schemaVersion; }
 
-    // Get device from device map
+    /// @brief Find a device by name
+    /// @param[in] name The name of the device to find
+    /// @return A shared pointer to the device
     DevicePtr getDeviceByName(const std::string &name);
+    /// @brief Find a device by name (Const Version)
+    /// @param[in] name The name of the device to find
+    /// @return A shared pointer to the device
     DevicePtr getDeviceByName(const std::string &name) const;
+    /// @brief Finds the device given either its UUID or its name
+    /// @param[in] idOrName The uuid or name of the device
+    /// @return A shared pointer to the device
     DevicePtr findDeviceByUUIDorName(const std::string &idOrName) const;
+    /// @brief Gets the list of devices
+    /// @return The list of devices owned by the caller
     const auto getDevices() const
     {
       std::list<DevicePtr> list;
       boost::push_back(list, m_deviceIndex);
       return list;
     }
-    DevicePtr defaultDevice() const
+
+    /// @brief Get a pointer to the default device
+    ///
+    /// The default device is the first device that is not the Agent device.
+    ///
+    /// @return A shared pointer to the default device
+    DevicePtr getDefaultDevice() const
     {
       if (m_deviceIndex.size() > 0)
       {
@@ -163,25 +247,71 @@ namespace mtconnect {
 
       return nullptr;
     }
-    DevicePtr getDefaultDevice() const { return defaultDevice(); }
+    /// @deprecated use `getDefaultDevice()` instead
+    /// @brief Get a pointer to the default device
+    /// @return A shared pointer to the default device
+    /// @note Cover method for `getDefaultDevice()`
+    DevicePtr defaultDevice() const { return getDefaultDevice(); }
 
-    // Asset information
+    /// @brief Get a pointer to the asset storage object
+    /// @return A pointer to the asset storage object
     asset::AssetStorage *getAssetStorage() { return m_assetStorage.get(); }
 
-    // Add the a device from a configuration file
+    /// @brief Add a device to the agent
+    /// @param[in] device The device to add.
+    /// @note This method is not fully implemented after agent initialization
     void addDevice(DevicePtr device);
+    /// @brief Updates a device's UUID and/or its name
+    /// @param[in] device The modified device
+    /// @param[in] oldUuid The old uuid
+    /// @param[in] oldName The old name
     void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
+    /// @brief Reload the devices from a device file after updates
+    /// @param[in] deviceFile The device file to load
+    /// @return true if successful
     bool reloadDevices(const std::string &deviceFile);
 
-    // Message when adapter has connected and disconnected
-    void connecting(const std::string &adapter);
-    void disconnected(const std::string &adapter, const StringList &devices, bool autoAvailable);
-    void connected(const std::string &adapter, const StringList &devices, bool autoAvailable);
+    /// @brief receive and parse a single device from a source
+    /// @param[in] deviceXml the device xml as a string
+    /// @param[in] source the source loading the device
+    void loadDevice(const std::string &deviceXml,
+                    const std::optional<std::string> source = std::nullopt);
 
-    // Message protocol command
+    /// @name Message when source has connected and disconnected
+    ///@{
+
+    /// @brief Called when source begins trying to connect
+    /// @param source The source identity
+    void connecting(const std::string &source);
+    /// @brief Called when source is disconnected
+    /// @param[in] source The source identity
+    /// @param[in] devices The list of devices associated with this source
+    /// @param[in] autoAvailable `true` if the source should automatically set available to
+    /// `UNAVAILABLE`
+    void disconnected(const std::string &source, const StringList &devices, bool autoAvailable);
+    /// @brief Called when source is connected
+    /// @param source The source identity
+    /// @param[in] devices The list of devices associated with this source
+    /// @param[in] autoAvailable `true` if the source should automatically set available to
+    /// `AVAILABLE`
+    void connected(const std::string &source, const StringList &devices, bool autoAvailable);
+
+    ///@}
+
+    /// @brief Called when a source receives a command from a data source
+    /// @param[in] device The device name associated with this source
+    /// @param[in] command The command being sent
+    /// @param[in] value The value of the command
+    /// @param[in] source The identity of the source
     void receiveCommand(const std::string &device, const std::string &command,
                         const std::string &value, const std::string &source);
 
+    /// @brief Method to get a data item for a device
+    /// @param[in] deviceName The name or uuid of the device
+    /// @param[in] dataItemName The name or id of the data item
+    /// @return Shared pointer to the data item if found
+    /// @note Cover method for `findDeviceByUUIDorName()` and `DataItem::getDeviceDataItem()` from
+    /// the device.
     DataItemPtr getDataItemForDevice(const std::string &deviceName,
                                      const std::string &dataItemName) const
     {
@@ -189,7 +319,9 @@ namespace mtconnect {
       return (dev) ? dev->getDeviceDataItem(dataItemName) : nullptr;
     }
 
-    // Find data items by name/id
+    /// @brief Get a data item by its id.
+    /// @param id Unique id of the data item
+    /// @return Shared pointer to the data item if found
     DataItemPtr getDataItemById(const std::string &id) const
     {
       auto diPos = m_dataItemMap.find(id);
@@ -198,37 +330,102 @@ namespace mtconnect {
       return nullptr;
     }
 
-    // Pipeline methods
+    /// @name Pipeline related methods to receive data from sources
+    ///@{
+
+    /// @brief Receive an observation
+    /// @param[in] observation A shared pointer to the observation
     void receiveObservation(observation::ObservationPtr observation);
+    /// @brief Receive an asset
+    /// @param[in] asset A shared pointer to the asset
     void receiveAsset(asset::AssetPtr asset);
+    /// @brief Receive a device
+    /// @param[in] device A shared pointer to the device
+    /// @param[in] version If the DeviceXML should be versioned
+    /// @return If the device could be updated or added
     bool receiveDevice(device_model::DevicePtr device, bool version = true);
+    /// @brief Received an instruction from the source to remove an asset
+    /// @param[in] device  Device name or uuid the asset belongs to
+    /// @param[in] id The asset id
+    /// @param[in] time The timestamp the remove occurred at
+    /// @return `true` if the asset was found and removed
     bool removeAsset(DevicePtr device, const std::string &id,
                      const std::optional<Timestamp> time = std::nullopt);
+    /// @brief Removes all assets for by device, type, or device and type
+    /// @param[in] device Optional device name or uuid
+    /// @param[in] type Optional type of asset
+    /// @param[in] time Timestamp of the observations
+    /// @param[out] list List of assets removed
+    /// @return `true` if any assets were found
     bool removeAllAssets(const std::optional<std::string> device,
                          const std::optional<std::string> type, const std::optional<Timestamp> time,
                          asset::AssetList &list);
+    /// @brief Send asset removed observation when an asset is removed.
+    ///
+    /// Also sets asset changed to `UNAVAILABLE` if the asset removed asset was the last changed.
+    ///
+    /// @param device The device related to the asset
+    /// @param asset The asset
     void notifyAssetRemoved(DevicePtr device, const asset::AssetPtr &asset);
 
-    // Adapter feedback
+    ///@}
+
+    /// @brief Method called by source when it cannot continue
+    /// @param identity identity of the source
     void sourceFailed(const std::string &identity);
 
-    // For testing
-    auto getAgentDevice() { return m_agentDevice; }
+    /// @name For testing
+    ///@{
 
-    // Printers
-    printer::Printer *getPrinter(const std::string &aType) const
+    /// @brief Returns a shared pointer to the agent device
+    /// @return shared pointer to the agent device
+    auto getAgentDevice() { return m_agentDevice; }
+    ///@}
+
+    /// @brief Get a pointer to the printer for a mime type
+    /// @param type The mime type
+    /// @return pointer to the printer or nullptr if it does not exist
+    /// @note Currently `xml` and `json` are supported.
+    printer::Printer *getPrinter(const std::string &type) const
     {
-      auto printer = m_printers.find(aType);
+      auto printer = m_printers.find(type);
       if (printer != m_printers.end())
         return printer->second.get();
       else
         return nullptr;
     }
+
+    /// @brief Get the map of available printers
+    /// @return A const reference to the printer map
     const auto &getPrinters() const { return m_printers; }
 
-    // Handle the device/path parameters for the xpath search
+    /// @brief Prefixes the path with the device and rewrites the composed
+    ///        paths by repeating the prefix. The resulting path is valid
+    ///        XPath.
+    ///
+    /// For example: a Device with a uuid="AAABBB" with the path
+    /// ```
+    /// //DataItem[@type='EXECUTION']|//DataItem[@type='CONTROLLER_MODE']
+    /// ```
+    ///
+    /// Is rewritten:
+    /// ```
+    /// //Devices/Device[@uuid="AAABBB"]//DataItem[@type='EXECUTION']|//Devices/Device[@uuid="AAABBB"]//DataItem[@type='CONTROLLER_MODE']
+    /// ```
+    ///
+    /// @param[in] path Optional path to prefix
+    /// @param[in] device Optional device if one device is specified
+    /// @return The rewritten path properly prefixed
     std::string devicesAndPath(const std::optional<std::string> &path,
                                const DevicePtr device) const;
+
+    /// @brief Creates unique ids for the device model and maps to the originals
+    ///
+    /// Also updates the agents data item map by adding the new ids. Duplicate original
+    /// ids will be last in wins.
+    ///
+    /// @param[in] device device to modify
+    void createUniqueIds(DevicePtr device);
 
   protected:
     friend class AgentPipelineContract;
@@ -254,12 +451,12 @@ namespace mtconnect {
 
   protected:
     ConfigOptions m_options;
-    boost::asio::io_context &m_context;
+    configuration::AsyncContext &m_context;
     boost::asio::io_context::strand m_strand;
 
     std::shared_ptr<source::LoopbackSource> m_loopback;
-    
-    bool m_started { false };
+
+    bool m_started {false};
 
     // Asset Management
     std::unique_ptr<asset::AssetStorage> m_assetStorage;
@@ -282,19 +479,25 @@ namespace mtconnect {
     // Agent Device
     device_model::AgentDevicePtr m_agentDevice;
 
+    /// @brief tag for Device multi-index unsorted
     struct BySeq
     {};
+    /// @brief tag for Device multi-index by Name
     struct ByName
     {};
+    /// @brief tag for Device multi-index by UUID
     struct ByUuid
     {};
 
+    /// @brief Device UUID extractor for multi-index
     struct ExtractDeviceUuid
     {
       using result_type = std::string;
       const result_type &operator()(const DevicePtr &d) const { return *d->getUuid(); }
       result_type operator()(const DevicePtr &d) { return *d->getUuid(); }
     };
+
+    /// @brief Device name extractor for multi-index
     struct ExtractDeviceName
     {
       using result_type = std::string;
@@ -302,7 +505,7 @@ namespace mtconnect {
       result_type operator()(DevicePtr &d) { return *d->getComponentName(); }
     };
 
-    // Data containers
+    /// @brief Devuce multi-index
     using DeviceIndex = mic::multi_index_container<
         DevicePtr, mic::indexed_by<mic::sequenced<mic::tag<BySeq>>,
                                    mic::hashed_unique<mic::tag<ByUuid>, ExtractDeviceUuid>,
@@ -314,7 +517,9 @@ namespace mtconnect {
     // Xml Config
     std::optional<std::string> m_schemaVersion;
     std::string m_deviceXmlPath;
-    bool m_versionDeviceXml = false;
+    bool m_versionDeviceXml {false};
+    bool m_createUniqueIds {false};
+    int32_t m_intSchemaVersion = IntDefaultSchemaVersion();
 
     // Circular Buffer
     buffer::CircularBuffer m_circularBuffer;
@@ -327,8 +532,11 @@ namespace mtconnect {
     configuration::HookManager<Agent> m_afterInitializeHooks;
     configuration::HookManager<Agent> m_beforeStartHooks;
     configuration::HookManager<Agent> m_beforeStopHooks;
+    configuration::HookManager<Agent> m_beforeDeviceXmlUpdateHooks;
+    configuration::HookManager<Agent> m_afterDeviceXmlUpdateHooks;
   };
 
+  /// @brief Association of the pipeline's interface to the `Agent`
   class AGENT_LIB_API AgentPipelineContract : public pipeline::PipelineContract
   {
   public:
@@ -370,6 +578,11 @@ namespace mtconnect {
 
     void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
 
+    const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override
+    {
+      return m_agent->getCircularBuffer().checkDuplicate(obs);
+    }
+
   protected:
     Agent *m_agent;
   };
@@ -379,6 +592,7 @@ namespace mtconnect {
     return std::make_unique<AgentPipelineContract>(this);
   }
 
+  /// @brief The sinks interface to the `Agent`
   class AGENT_LIB_API AgentSinkContract : public sink::SinkContract
   {
   public:
@@ -400,7 +614,7 @@ namespace mtconnect {
       return m_agent->findDeviceByUUIDorName(idOrName);
     }
     const std::list<DevicePtr> getDevices() const override { return m_agent->getDevices(); }
-    DevicePtr defaultDevice() const override { return m_agent->defaultDevice(); }
+    DevicePtr getDefaultDevice() const override { return m_agent->getDefaultDevice(); }
     DataItemPtr getDataItemById(const std::string &id) const override
     {
       return m_agent->getDataItemById(id);

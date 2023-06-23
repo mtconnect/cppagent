@@ -28,24 +28,47 @@
 
 namespace mtconnect {
   namespace configuration {
+    /// @brief Abstract service supporting running as a Windows service or *NIX daemon
     class AGENT_LIB_API MTConnectService
     {
     public:
       MTConnectService() = default;
       virtual ~MTConnectService() = default;
 
+      /// @brief command line parser and entry point for agent
+      /// @param[in] argc the count of arguments
+      /// @param[in] argv the arguments
       virtual int main(int argc, char const *argv[]);
+      /// @brief initialize the service with the parser command line options
       virtual void initialize(const boost::program_options::variables_map &options) = 0;
+      /// @brief stop the srvice
       virtual void stop() = 0;
+      /// @brief start the service
       virtual void start() = 0;
 
+      /// @brief set the name of the service
+      /// @param[in] name name of the service
       void setName(std::string const &name) { m_name = name; }
+      /// @brief get the name of the service
+      /// @return service name
       std::string const &name() const { return m_name; }
+      /// @brief set the debugging state
+      /// @param debug `true` if debugging
       void setDebug(bool debug) { m_isDebug = debug; }
+      /// @brief get the debugging state
+      /// @return `true` if debugging
       bool getDebug() { return m_isDebug; }
 
+      /// @brief write out usage text to standard out
+      /// @param ec the exit code
       virtual void usage(int ec = 0);
 
+      /// @brief Parse command line options
+      /// @param argc number of optons
+      /// @param argv option values
+      /// @param command optonal command for testing
+      /// @param config optional configration file for testing
+      /// @return boost variable map
       boost::program_options::variables_map parseOptions(int argc, const char *argv[],
                                                          boost::optional<std::string> &command,
                                                          boost::optional<std::string> &config);

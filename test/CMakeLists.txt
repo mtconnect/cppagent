@@ -2,6 +2,8 @@
 include(GoogleTest)
 enable_testing()
 
+find_package(GTest REQUIRED)
+
 add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
   sink_plugin_test
@@ -94,8 +96,9 @@ target_include_directories(
 target_link_libraries(
   agent_test_lib
   PUBLIC
-  agent_lib CONAN_PKG::gtest
-)
+  agent_lib GTest::GTest
+  )
+
 target_compile_definitions(agent_test_lib
   PUBLIC
     "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
@@ -109,7 +112,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   set(_sources ${AGENT_TEST_NAME}_test.cpp)
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
-  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib agent_test_lib CONAN_PKG::gtest)
+  target_link_libraries(${AGENT_TEST_NAME}_test agent_lib agent_test_lib GTest::GTest)
 
   target_compile_definitions(${AGENT_TEST_NAME}_test
     PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
@@ -137,6 +140,8 @@ add_agent_test(cutting_tool TRUE asset)
 add_agent_test(raw_material TRUE asset)
 add_agent_test(qif_document TRUE asset)
 add_agent_test(asset_buffer TRUE asset)
+add_agent_test(component_parameters TRUE asset)
+add_agent_test(asset_hash TRUE asset)
 
 add_agent_test(agent_device TRUE device_model)
 add_agent_test(component FALSE device_model)
@@ -148,6 +153,7 @@ add_agent_test(data_item FALSE device_model/data_item)
 add_agent_test(unit_conversion FALSE device_model/data_item)
 
 add_agent_test(coordinate_system TRUE device_model/configuration)
+add_agent_test(image_file TRUE device_model/configuration)
 add_agent_test(kinematics TRUE device_model/configuration)
 add_agent_test(relationship TRUE device_model/configuration)
 add_agent_test(sensor_configuration TRUE device_model/configuration)
@@ -250,3 +256,15 @@ elseif(UNIX)
     "$<TARGET_FILE:sink_plugin_test>"
     "$<TARGET_FILE_DIR:config_test>/")
 endif()
+
+if(SHARED_AGENT_LIB AND MSVC)
+  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dll")
+
+  add_custom_command(TARGET config_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${dlls} $<TARGET_FILE_DIR:config_test> 
+    COMMAND_EXPAND_LISTS)
+  add_custom_command(TARGET config_test POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:config_test> $<TARGET_FILE_DIR:config_test> 
+    COMMAND_EXPAND_LISTS)
+endif()
+		     

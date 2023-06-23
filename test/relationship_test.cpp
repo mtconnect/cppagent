@@ -76,7 +76,6 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
   ASSERT_TRUE(clc);
 
   auto rels = clc->getList("Relationships");
-
   ASSERT_EQ(3, rels->size());
 
   auto it = rels->begin();
@@ -109,6 +108,7 @@ TEST_F(RelationshipTest, ParseDeviceAndComponentRelationships)
   EXPECT_EQ("NON_CRITICAL", (*it)->get<string>("criticality"));
   EXPECT_EQ("http://127.0.0.1:2000/asset/f7de7350-6f7a-013b-ca4c-4e7f553bbb76",
             (*it)->get<string>("href"));
+
   EXPECT_EQ("f7de7350-6f7a-013b-ca4c-4e7f553bbb76", (*it)->get<string>("assetIdRef"));
 }
 

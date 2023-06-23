@@ -25,23 +25,36 @@
 
 namespace mtconnect::configuration {
 
-  // Manages the boost asio context and allows for a syncronous
-  // callback to execute when all the worker threads have stopped.
+  /// @brief Manages the boost asio context and allows for a syncronous
+  ///        callback to execute when all the worker threads have stopped.
   class AGENT_LIB_API AsyncContext
   {
   public:
     using SyncCallback = std::function<void(AsyncContext &context)>;
     using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
 
+    /// @brief creates an asio context and a guard to prevent it from
+    ///        stopping
     AsyncContext() { m_guard.emplace(m_context.get_executor()); }
+    /// @brief removes the copy constructor
     AsyncContext(const AsyncContext &) = delete;
     ~AsyncContext() {}
 
-    auto &getContext() { return m_context; }
+    /// @brief Testing only: method to remove the run guard from the context
+    void removeGuard() { m_guard.reset(); }
+
+    /// @brief get the boost asio context reference
+    auto &get() { return m_context; }
+
+    /// @brief operator() returns a reference to the io context
+    /// @return the io context
     operator boost::asio::io_context &() { return m_context; }
 
+    /// @brief sets the number of theads for asio thread pool
+    /// @param[in] threads number of threads
     void setThreadCount(int threads) { m_threadCount = threads; }
 
+    /// @brief start `m_threadCount` worker threads
     void start()
     {
       m_running = true;
@@ -84,6 +97,10 @@ namespace mtconnect::configuration {
       } while (m_running);
     }
 
+    /// @brief pause the worker threads. Sets a callback when the threads are paused.
+    /// @param[in] callback the callback to call
+    /// @param[in] safeStop stops by resetting the the guard, otherwise stop the
+    ///            io context
     void pause(SyncCallback callback, bool safeStop = false)
     {
       m_paused = true;
@@ -94,6 +111,8 @@ namespace mtconnect::configuration {
         m_context.stop();
     }
 
+    /// @brief stop the worker threads
+    /// @param safeStop if `true` resets the guard or stops the context
     void stop(bool safeStop = true)
     {
       m_running = false;
@@ -103,6 +122,7 @@ namespace mtconnect::configuration {
         m_context.stop();
     }
 
+    /// @brief restarts the worker threads when paused
     void restart()
     {
       m_paused = false;
@@ -110,6 +130,44 @@ namespace mtconnect::configuration {
         m_guard.emplace(m_context.get_executor());
       m_context.restart();
     }
+
+    /// @name Cover methods for asio io_context
+    /// @{
+
+    /// @brief io_context::run_for
+    template <typename Rep, typename Period>
+    auto run_for(const std::chrono::duration<Rep, Period> &rel_time)
+    {
+      return m_context.run_for(rel_time);
+    }
+
+    /// @brief io_context::run
+    auto run() { return m_context.run(); }
+
+    /// @brief io_context::run_one
+    auto run_one() { return m_context.run_one(); }
+
+    /// @brief io_context::run_one_for
+    template <typename Rep, typename Period>
+    auto run_one_for(const std::chrono::duration<Rep, Period> &rel_time)
+    {
+      return m_context.run_one_for(rel_time);
+    }
+
+    /// @brief io_context::run_one_until
+    template <typename Clock, typename Duration>
+    auto run_one_until(const std::chrono::time_point<Clock, Duration> &abs_time)
+    {
+      return m_context.run_one_for(abs_time);
+    }
+
+    /// @brief io_context::poll
+    auto poll() { return m_context.poll(); }
+
+    /// @brief io_context::poll
+    auto get_executor() BOOST_ASIO_NOEXCEPT { return m_context.get_executor(); }
+
+    /// @}
 
   private:
     void operator=(const AsyncContext &) {}

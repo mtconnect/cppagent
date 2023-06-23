@@ -80,6 +80,12 @@ namespace mtconnect {
     class MqttServerImpl : public MqttServer
     {
     public:
+      /// @brief Create an Mqtt server with an asio context and options
+      /// @param context a boost asio context
+      /// @param options configuration options
+      /// - Port, defaults to 0/1883
+      /// - MqttTls, defaults to false
+      /// - ServerIp, defaults to 127.0.0.1/LocalHost
       MqttServerImpl(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : MqttServer(ioContext),
           m_options(options),
@@ -93,6 +99,8 @@ namespace mtconnect {
       ~MqttServerImpl() { stop(); }
 
       Derived &derived() { return static_cast<Derived &>(*this); }
+
+      /// @brief Start the Mqtt server
 
       bool start() override
       {
@@ -227,6 +235,7 @@ namespace mtconnect {
         return true;
       }
 
+      /// @brief Stop the Mqtt server
       void stop() override
       {
         auto &server = derived().getServer();
@@ -248,6 +257,7 @@ namespace mtconnect {
       std::string m_host;
     };
 
+    /// @brief Create an Mqtt TCP server
     class MqttTcpServer : public MqttServerImpl<MqttTcpServer>
     {
     public:
@@ -255,12 +265,20 @@ namespace mtconnect {
       using base::base;
       using server = MQTT_NS::server<>;
 
+      /// @brief Create an Mqtt TCP Server with an asio context and options
+      /// @param context a boost asio context
+      /// @param options configuration options
+      /// - Port, defaults to 0/1883
+      /// - MqttTls, defaults to false
+      /// - ServerIp, defaults to 127.0.0.1/LocalHost
       MqttTcpServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : base(ioContext, options)
       {
         m_port = GetOption<int>(options, configuration::MqttPort).value_or(1883);
       }
 
+      /// @brief Get the Mqtt TCP Server
+      /// @return pointer to the Mqtt TCP Server
       auto &getServer() { return m_server; }
 
       auto &createServer()
@@ -278,10 +296,18 @@ namespace mtconnect {
       std::optional<server> m_server;
     };
 
+    /// @brief Create an Mqtt TLS server
     class MqttTlsServer : public MqttServerImpl<MqttTlsServer>
     {
     public:
       using base = MqttServerImpl<MqttTlsServer>;
+
+      /// @brief Create an Mqtt TLS Server with an asio context and options
+      /// @param context a boost asio context
+      /// @param options configuration options
+      /// - Port, defaults to 0/1883
+      /// - MqttTls, defaults to True
+      /// - ServerIp, defaults to 127.0.0.1/LocalHost
       MqttTlsServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : base(ioContext, options)
       {
@@ -291,6 +317,8 @@ namespace mtconnect {
       using base::base;
       using server = MQTT_NS::server_tls<>;
 
+      /// @brief Get the Mqtt TLS Server
+      /// @return pointer to the Mqtt TLS Server
       auto &getServer() { return m_server; }
 
       auto &createServer()
@@ -345,10 +373,18 @@ namespace mtconnect {
       std::optional<server> m_server;
     };
 
+    /// @brief Create an Mqtt TLS with WebSocket Server
     class MqttTlsWSServer : public MqttServerImpl<MqttTlsWSServer>
     {
     public:
       using base = MqttServerImpl<MqttTlsWSServer>;
+
+      /// @brief Create an Mqtt TLS WebSocket Server with an asio context and options
+      /// @param context a boost asio context
+      /// @param options configuration options
+      /// - Port, defaults to 0/1883
+      /// - MqttTls, defaults to True
+      /// - ServerIp, defaults to 127.0.0.1/LocalHost
       MqttTlsWSServer(boost::asio::io_context &ioContext, const ConfigOptions &options)
         : base(ioContext, options)
       {
@@ -358,6 +394,8 @@ namespace mtconnect {
       using base::base;
       using server = MQTT_NS::server_tls_ws<>;
 
+      /// @brief Get the Mqtt TLS WebSocket Server
+      /// @return pointer to the Mqtt TLS WebSocket Server
       auto &getServer() { return m_server; }
 
       auto &createServer()

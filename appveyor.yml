@@ -5,13 +5,13 @@ branches:
     - master
     - /.*master.*/
 
-
 image:
-  - macOS
-  - Visual Studio 2019
   - Ubuntu2004
+  - Visual Studio 2019
+  - macos-monterey
 
 environment:
+  CPACK: False
   matrix:
     - SHARED: True
     - SHARED: False
@@ -23,10 +23,10 @@ configuration:
 #C:\  - x86
 
 cache:
-  - c:\.conan\ -> **\conanfile.py
-  - c:\conan\ -> **\conanfile.py
-  - /home/appveyor/.conan -> **/conanfile.py
-  - /Users/appveyor/.conan -> **/conanfile.py
+  - c:\.conan2\ -> **\conanfile.py
+  - c:\conan2\ -> **\conanfile.py
+  - /home/appveyor/.conan2 -> **/conanfile.py
+  - /Users/appveyor/.conan2 -> **/conanfile.py
 
 matrix:
   fast_finish: true
@@ -46,19 +46,17 @@ before_build:
       if not exist C:\conan mkdir C:\conan
       if %SHARED%==True (set CONAN_PROFILE=conan/profiles/vs64shared) else (set CONAN_PROFILE=conan/profiles/vs64)
       set CONAN_USER_HOME=C:\conan
-      set
+      rem set CPACK=True
       pip install conan
-      conan export conan/mqtt_cpp
-      conan export conan/mruby
-      conan install . -if build --build=missing -pr %CONAN_PROFILE% -o run_tests=False -o shared=%SHARED%
+      conan profile detect -f
+      
   - sh: |-
       export PATH=$HOME/venv3.10/bin:$PATH
       if [[ $APPVEYOR_BUILD_WORKER_IMAGE = "Ubuntu2004" ]]
       then
-        sudo apt update
-        sudo apt install -y build-essential cmake gcc-11 g++-11 python3
+        sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
         export CONAN_PROFILE=conan/profiles/gcc-appveyor
-      elif [[ $APPVEYOR_BUILD_WORKER_IMAGE = "macOS" ]]
+      elif [[ $APPVEYOR_BUILD_WORKER_IMAGE = "macOS-Monterey" ]]
       then
         export CONAN_PROFILE=conan/profiles/macos
       else
@@ -66,24 +64,15 @@ before_build:
         exit 99
       fi
       pip install conan
-      conan export conan/mqtt_cpp
-      conan export conan/mruby
-      conan install . -if build --build=missing -pr $CONAN_PROFILE -o run_tests=False -o shared=$SHARED
+      conan profile detect -f
 
 build:
   verbosity: minimal
   parallel: true
 
 build_script:
-  - conan build . -bf build
-
-test_script:
-  - cmd: |-
-      cd %APPVEYOR_BUILD_FOLDER%/build
-      ctest -C Release --output-on-failure -j 2
-  - sh: |-
-      cd ${APPVEYOR_BUILD_FOLDER}/build
-      ctest --output-on-failure -j 2
+  - cmd:  conan build . --build=missing -pr %CONAN_PROFILE% -o shared=%SHARED% -o with_docs=False
+  - sh:  conan build . --build=missing -pr $CONAN_PROFILE -o shared=$SHARED -o with_docs=False
 
 #on_finish:
 #  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

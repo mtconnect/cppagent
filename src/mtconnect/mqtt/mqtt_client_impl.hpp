@@ -38,6 +38,7 @@ namespace mtconnect {
   using namespace pipeline;
   using namespace source::adapter;
 
+  /// @brief MQTT Cient namespace
   namespace mqtt_client {
     template <typename... Ts>
     using mqtt_client_ptr = decltype(mqtt::make_async_client(std::declval<Ts>()...));
@@ -56,13 +57,20 @@ namespace mtconnect {
         mqtt_tls_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t, std::string,
                                mqtt::protocol_version>;
 
+    /// @brief The Mqtt Client Source
     template <typename Derived>
     class MqttClientImpl : public MqttClient
     {
     public:
+      /// @brief Create an Mqtt Client with an asio context and options
+      /// @param context a boost asio context
+      /// @param options configuration options
+      /// - Port, defaults to 1883
+      /// - MqttTls, defaults to false
+      /// - MqttHost, defaults to LocalHost
       MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options,
                      std::unique_ptr<ClientHandler> &&handler)
-        : MqttClient(ioContext, move(handler)),
+        : MqttClient(ioContext, std::move(handler)),
           m_options(options),
           m_host(GetOption<std::string>(options, configuration::MqttHost).value_or("localhost")),
           m_port(GetOption<int>(options, configuration::MqttPort).value_or(1883)),
@@ -108,6 +116,7 @@ namespace mtconnect {
 
       Derived &derived() { return static_cast<Derived &>(*this); }
 
+      /// @brief Start the Mqtt Client
       bool start() override
       {
         NAMED_SCOPE("MqttClient::start");
@@ -193,6 +202,7 @@ namespace mtconnect {
         return true;
       }
 
+      /// @brief Stop the Mqtt Client
       void stop() override
       {
         if (m_running)
@@ -214,6 +224,9 @@ namespace mtconnect {
         }
       }
 
+      /// @brief Subscribe Topic to the Mqtt Client
+      /// @param topic Subscribing to the topic
+      /// @return boolean either topic sucessfully connected and subscribed
       bool subscribe(const std::string &topic) override
       {
         NAMED_SCOPE("MqttClientImpl::subscribe");
@@ -242,6 +255,10 @@ namespace mtconnect {
         return true;
       }
 
+      /// @brief Publish Topic to the Mqtt Client
+      /// @param topic Publishing to the topic
+      /// @param payload Publishing to the payload
+      /// @return boolean either topic sucessfully connected and published
       bool publish(const std::string &topic, const std::string &payload) override
       {
         NAMED_SCOPE("MqttClientImpl::publish");
@@ -341,12 +358,14 @@ namespace mtconnect {
       boost::asio::steady_timer m_reconnectTimer;
     };
 
+    /// @brief Create an Mqtt TCP Client
     class AGENT_LIB_API MqttTcpClient : public MqttClientImpl<MqttTcpClient>
     {
     public:
       using base = MqttClientImpl<MqttTcpClient>;
       using base::base;
-
+      /// @brief Get the Mqtt TCP Client
+      /// @return pointer to the Mqtt TCP Client
       auto &getClient()
       {
         if (!m_client)
@@ -365,12 +384,15 @@ namespace mtconnect {
       mqtt_client m_client;
     };
 
+    /// @brief Create an Mqtt TLS Client
     class MqttTlsClient : public MqttClientImpl<MqttTlsClient>
     {
     public:
       using base = MqttClientImpl<MqttTlsClient>;
       using base::base;
 
+      /// @brief Get the Mqtt TLS Client
+      /// @return pointer to the Mqtt TLS Client
       auto &getClient()
       {
         if (!m_client)
@@ -405,12 +427,14 @@ namespace mtconnect {
       mqtt_tls_client m_client;
     };
 
+    /// @brief Create an Mqtt TLS WebSocket Client
     class MqttTlsWSClient : public MqttClientImpl<MqttTlsWSClient>
     {
     public:
       using base = MqttClientImpl<MqttTlsWSClient>;
       using base::base;
-
+      /// @brief Get the Mqtt TLS WebSocket Client
+      /// @return pointer to the Mqtt TLS WebSocket Client
       auto &getClient()
       {
         if (!m_client)

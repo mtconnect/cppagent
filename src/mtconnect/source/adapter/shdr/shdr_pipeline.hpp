@@ -21,9 +21,13 @@
 #include "mtconnect/source/adapter/adapter_pipeline.hpp"
 
 namespace mtconnect::source::adapter::shdr {
+  /// @brief Pipeline for the SHDR adapter
   class AGENT_LIB_API ShdrPipeline : public AdapterPipeline
   {
   public:
+    /// @brief Create a pipeline for the SHDR Adapter
+    /// @param context the pipeline context
+    /// @param st boost asio strand for this source
     ShdrPipeline(pipeline::PipelineContextPtr context, boost::asio::io_context::strand &st)
       : AdapterPipeline(context, st)
     {}

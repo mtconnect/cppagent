@@ -336,7 +336,7 @@ TEST_F(RestServiceTest, simple_request_response)
           string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
     else
       resp->m_body = "All Devices";
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
 
@@ -374,7 +374,7 @@ TEST_F(RestServiceTest, request_response_with_query_parameters)
 
     ResponsePtr resp = make_unique<Response>(status::ok);
     resp->m_body = "Done";
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
 
@@ -423,7 +423,7 @@ TEST_F(RestServiceTest, request_put_when_put_allowed)
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
     ResponsePtr resp = make_unique<Response>(status::ok, "Put ok");
-    session->writeResponse(move(resp), []() {
+    session->writeResponse(std::move(resp), []() {
       cout << "Written" << endl;
       return true;
     });
@@ -468,7 +468,7 @@ TEST_F(RestServiceTest, request_put_when_put_allowed_from_ip_address)
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     EXPECT_EQ(http::verb::put, request->m_verb);
     ResponsePtr resp = make_unique<Response>(status::ok, "Put ok");
-    session->writeResponse(move(resp), []() {
+    session->writeResponse(std::move(resp), []() {
       cout << "Written" << endl;
       return true;
     });
@@ -494,7 +494,7 @@ TEST_F(RestServiceTest, request_with_connect_close)
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
     savedSession = session;
     ResponsePtr resp = make_unique<Response>(status::ok, "Probe");
-    session->writeResponse(move(resp), []() {
+    session->writeResponse(std::move(resp), []() {
       cout << "Written" << endl;
       return true;
     });
@@ -524,7 +524,7 @@ TEST_F(RestServiceTest, put_content_to_server)
     body = request->m_body;
 
     ResponsePtr resp = make_unique<Response>(status::ok);
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
 
@@ -549,7 +549,7 @@ TEST_F(RestServiceTest, put_content_with_put_values)
     ct = request->m_contentType;
 
     ResponsePtr resp = make_unique<Response>(status::ok);
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
 
@@ -654,7 +654,7 @@ TEST_F(RestServiceTest, additional_header_fields)
 
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     ResponsePtr resp = make_unique<Response>(status::ok, "Done");
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
 
     return true;
   };
@@ -695,7 +695,7 @@ TEST_F(RestServiceTest, failure_when_tls_only)
 
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     ResponsePtr resp = make_unique<Response>(status::ok, "Done");
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
 
     return true;
   };

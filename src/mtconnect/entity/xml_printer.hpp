@@ -30,13 +30,21 @@ extern "C"
 
 namespace mtconnect {
   namespace entity {
+    /// @brief Convert an entity to an XML document
     class AGENT_LIB_API XmlPrinter
     {
     public:
-      XmlPrinter() = default;
+      XmlPrinter(bool includeHidden = false) : m_includeHidden(includeHidden) {}
 
+      /// @brief convert an entity to a XML document using `libxml2`
+      /// @param writer libxml2 `xmlTextWriterPtr`
+      /// @param entity the entity
+      /// @param namespaces a set of namespaces to use in the document
       void print(xmlTextWriterPtr writer, const EntityPtr entity,
                  const std::unordered_set<std::string> &namespaces);
+
+    protected:
+      bool m_includeHidden {false};
     };
   }  // namespace entity
 }  // namespace mtconnect
