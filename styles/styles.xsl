@@ -202,6 +202,7 @@
           <th>Category</th>
           <th>Type</th>
           <th>SubType</th>
+          <th>Value</th>
           <th>Units</th>
         </thead>
         <tbody>
@@ -214,6 +215,16 @@
                 <xsl:when test="$element='Header' or $element='Agent' or $element='Device'">
                   font-weight:bold;
                 </xsl:when>
+              </xsl:choose>
+            </xsl:variable>
+
+            <!-- get value -->
+            <xsl:variable name="value">
+              <xsl:choose>
+                <xsl:when test="local-name()='Unavailable'">UNAVAILABLE</xsl:when>
+                <xsl:otherwise>
+                  <xsl:value-of select="text()" />
+                </xsl:otherwise>
               </xsl:choose>
             </xsl:variable>
 
@@ -232,12 +243,12 @@
                       <img style="width:12px;" src="/styles/icon-minus.webp" />
                     </xsl:when>
                     <xsl:otherwise>
-                      &#8198;
+                      &#8196;
                     </xsl:otherwise>
                   </xsl:choose>
-                  <!-- &#8198; -->
+                  <!-- &#8196; -->
                   <!-- narrow space - see https://stackoverflow.com/questions/8515365/are-there-other-whitespace-codes-like-nbsp-for-half-spaces-em-spaces-en-space -->
-                  &#8198;
+                  &#8196;
                   <xsl:value-of select="$element" />
                 </div>
               </td>
@@ -256,6 +267,9 @@
               </td>
               <td>
                 <xsl:value-of select="@subType" />
+              </td>
+              <td>
+                <xsl:value-of select="$value" />
               </td>
               <td>
                 <xsl:value-of select="@units" />
@@ -483,12 +497,12 @@
                     <img style="width:12px;" src="/styles/icon-minus.webp" />
                   </xsl:when>
                   <xsl:otherwise>
-                    &#8198;
+                    &#8196;
                   </xsl:otherwise>
                 </xsl:choose>
-                <!-- &#8198; -->
+                <!-- &#8196; -->
                 <!-- narrow space - see https://stackoverflow.com/questions/8515365/are-there-other-whitespace-codes-like-nbsp-for-half-spaces-em-spaces-en-space -->
-                &#8198;
+                &#8196;
                 <xsl:value-of select="$element" />
               </td>
 
