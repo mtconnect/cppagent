@@ -229,32 +229,33 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Sample)
   entity::JsonParser parser;
 
   auto handler = make_unique<ClientHandler>();
-  bool gotRotaryMode = false;
-  handler->m_receive = [&gotRotaryMode](std::shared_ptr<MqttClient>, const std::string &topic,
-                                        const std::string &payload) {
-    EXPECT_EQ("MTConnect/Observation/000/Axes[Axes]/Rotary[C]/Events/RotaryMode[Smode]", topic);
-    auto jdoc = json::parse(payload);
+  bool gotSample = false;
+  handler->m_receive = [&gotSample, &parser](std::shared_ptr<MqttClient> client,
+                                             const std::string &topic, const std::string &payload) {
+    EXPECT_EQ("MTConnect/000/Sample", topic);
 
-    string id = jdoc.at("/value"_json_pointer).get<string>();
-    if (id == string("SPINDLE"))
-    {
-      EXPECT_TRUE(true);
-      gotRotaryMode = true;
-    }
+    ErrorList list;
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    EXPECT_EQ(0, list.size());
+    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
+    EXPECT_TRUE(dev);
+    EXPECT_EQ("LinuxCNC", dev->getComponentName());
+    EXPECT_EQ("000", *dev->getUuid());
+
+    gotSample = true;
   };
 
-  createClient(options, std::move(handler));
+  createClient(options, move(handler));
   ASSERT_TRUE(startClient());
-  m_client->subscribe("MTConnect/Observation/000/Axes[Axes]/Rotary[C]/Events/RotaryMode[Smode]");
+  m_client->subscribe("MTConnect/000/Sample");
 
-  createAgent("/samples/discrete_example.xml");
+  createAgent();
+
   auto service = m_agentTestHelper->getMqtt2Service();
+
   ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
 
-  m_agentTestHelper->m_adapter->processData(
-      "2021-02-01T12:00:00Z|block|G01X00|Smode|INDEX|line|204");
-
-  waitFor(500ms, [&gotRotaryMode]() { return gotRotaryMode; });
+  waitFor(1s, [&gotSample]() { return gotSample; });
 }
 
 TEST_F(MqttSinkTest, mqtt_sink_should_publish_Current)
@@ -267,28 +268,31 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Current)
   entity::JsonParser parser;
 
   auto handler = make_unique<ClientHandler>();
-  bool isDeviceAvailable= false;
-  handler->m_receive = [&isDeviceAvailable](std::shared_ptr<MqttClient>, const std::string &topic,
-                                        const std::string &payload) {
-    EXPECT_EQ("MTConnect/Observation/e481314c-07c4-525f-966f-71dd53b8d717/Events/Availability", topic);
-    auto jdoc = json::parse(payload);
+  bool gotCurrent = false;
+  handler->m_receive = [&gotCurrent, &parser](std::shared_ptr<MqttClient> client,
+                                             const std::string &topic, const std::string &payload) {
+    EXPECT_EQ("MTConnect/e481314c-07c4-525f-966f-71dd53b8d717/Current", topic);
 
-    string id = jdoc.at("/value"_json_pointer).get<string>();
-    if (id == string("AVAILABLE"))
-    {
-      EXPECT_TRUE(true);
-      isDeviceAvailable = true;
-    }
+    ErrorList list;
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    EXPECT_EQ(0, list.size());
+    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
+    EXPECT_TRUE(dev);
+    EXPECT_EQ("LinuxCNC", dev->getComponentName());
+    EXPECT_EQ("e481314c-07c4-525f-966f-71dd53b8d717", *dev->getUuid());
+
+    gotCurrent = true;
   };
 
-  createClient(options, std::move(handler));
+  createClient(options, move(handler));
   ASSERT_TRUE(startClient());
-  m_client->subscribe(
-      "MTConnect/Observation/e481314c-07c4-525f-966f-71dd53b8d717/Events/Availability");
+  m_client->subscribe("MTConnect/e481314c-07c4-525f-966f-71dd53b8d717/Current");
 
   createAgent();
+
   auto service = m_agentTestHelper->getMqtt2Service();
+
   ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
-    
-  waitFor(60s, [&isDeviceAvailable]() { return isDeviceAvailable; });
+
+  waitFor(1s, [&gotCurrent]() { return gotCurrent; });
 }
