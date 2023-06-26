@@ -19,8 +19,7 @@
 #include "shdr_adapter.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/phoenix/core.hpp>
-#include <boost/phoenix/operator.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
 
