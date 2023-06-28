@@ -107,7 +107,7 @@
           ConfigOptions m_options;
           std::unique_ptr<JsonEntityPrinter> m_jsonPrinter;
           std::shared_ptr<MqttClient> m_client;
-          boost::asio::steady_timer m_timer;
+          //boost::asio::steady_timer m_timer;
         };
       }  // namespace mqtt_sink
     }    // namespace sink
