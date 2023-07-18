@@ -17,7 +17,6 @@ endif()
 option(AGENT_ENABLE_UNITTESTS "Enables the agent's unit tests" ON)
 option(SHARED_AGENT_LIB "Generate shared agent library. Conan options: shared" OFF)
 set(AGENT_PREFIX "" CACHE STRING "Prefix for the name of the agent and the agent library: suggested 'mtc'")
-set(INSTALL_GTEST OFF FORCE)
 
 message(INFO " Shared build: ${SHARED_AGENT_LIB}")
 
@@ -75,7 +74,6 @@ add_subdirectory(agent_lib)
 add_subdirectory(agent)
 if(AGENT_ENABLE_UNITTESTS)
   enable_testing()
-  add_subdirectory(test)
 endif()
 
 include(cmake/ide_integration.cmake)
