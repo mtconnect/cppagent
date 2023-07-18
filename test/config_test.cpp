@@ -90,7 +90,7 @@ namespace {
 
     fs::path copyFile(const std::string &src, fs::path target, chrono::seconds delta)
     {
-      fs::path file {fs::path(PROJECT_ROOT_DIR) / "samples" / src};
+      fs::path file {fs::path(PROJECT_ROOT_DIR) / "test" / "resources" / "samples" / src};
 
       fs::copy_file(file, target, fs::copy_options::overwrite_existing);
       auto t = fs::last_write_time(target);
@@ -1228,8 +1228,9 @@ Port = 0
       }
       else
       {
-        fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config2.xml", devices,
-                      fs::copy_options::overwrite_existing);
+        fs::copy_file(
+            fs::path(PROJECT_ROOT_DIR) / "test" / "resources" / "samples" / "min_config2.xml",
+            devices, fs::copy_options::overwrite_existing);
       }
     });
 
@@ -2091,7 +2092,8 @@ Adapters {
       using namespace boost::algorithm;
 
       if (!ec)
-      {}
+      {
+      }
       m_config->stop();
     };
 

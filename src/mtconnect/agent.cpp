@@ -388,7 +388,7 @@ namespace mtconnect {
       throw f;
     }
   }
-  
+
   void Agent::loadDeviceXml(const string &deviceXml, const optional<string> source)
   {
     try
@@ -440,7 +440,8 @@ namespace mtconnect {
         }
         else
         {
-          LOG(error) << "Cannot parse device xml: " << deviceXml;
+          LOG(error) << "Cannot parse device xml: " << *device->getComponentName() << " with uuid "
+                     << *device->getUuid();
         }
       }
       catch (runtime_error &e)

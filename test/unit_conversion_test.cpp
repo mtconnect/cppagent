@@ -99,7 +99,6 @@ TEST(UnitConversionTest, check_revolution_per_second)
   EXPECT_NEAR(420.0, conv->convert(7.0), 0.0001);
 }
 
-
 TEST(UnitConversionTest, check_cubic_feet_per_minute)
 {
   auto conv = UnitConversion::make("CUBIC_FOOT/MINUTE", "CUBIC_MILLIMETER/SECOND");

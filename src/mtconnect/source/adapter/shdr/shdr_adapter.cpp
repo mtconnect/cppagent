@@ -64,7 +64,7 @@ namespace mtconnect::source::adapter::shdr {
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
                          {configuration::RelativeTime, false},
-                         {configuration::UpdateDeviceXml, false}});
+                         {configuration::EnableSourceDeviceModels, false}});
 
     m_server = get<string>(m_options[configuration::Host]);
     m_port = get<int>(m_options[configuration::Port]);

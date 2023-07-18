@@ -45,11 +45,13 @@ namespace mtconnect::pipeline {
     /// @return `true` if successful
     static bool parse(const std::string_view &content, ResponseDocument &doc,
                       pipeline::PipelineContextPtr context,
-                      const std::optional<std::string> &device = std::nullopt);
+                      const std::optional<std::string> &device = std::nullopt,
+                      const std::optional<std::string> &uuid = std::nullopt);
 
     // Parsed data
     SequenceNumber_t m_next;           ///< Next sequence number
     uint64_t m_instanceId;             ///< Agent instance id
+    int32_t m_agentVersion = 0;        ///< Agent version
     entity::EntityList m_entities;     ///< List of entities
     entity::EntityList m_assetEvents;  ///< List of asset events
     Errors m_errors;                   ///< List of Errors

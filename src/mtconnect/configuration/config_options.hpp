@@ -119,10 +119,10 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(SuppressIPAddress);
     DECLARE_CONFIGURATION(Topics);
     DECLARE_CONFIGURATION(UUID);
+    DECLARE_CONFIGURATION(Uuid);
     DECLARE_CONFIGURATION(UpcaseDataItemValue);
     DECLARE_CONFIGURATION(Url);
     DECLARE_CONFIGURATION(UsePolling);
-    DECLARE_CONFIGURATION(UpdateDeviceXml);
     ///@}
 
   }  // namespace configuration

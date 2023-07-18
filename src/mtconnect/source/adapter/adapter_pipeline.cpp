@@ -107,7 +107,7 @@ namespace mtconnect {
     {
       if (next == nullptr)
         next = m_start;
-      
+
       next->bind(make_shared<DeliverConnectionStatus>(
           m_context, m_devices, IsOptionSet(m_options, configuration::AutoAvailable)));
       next->bind(make_shared<DeliverCommand>(m_context, m_device));

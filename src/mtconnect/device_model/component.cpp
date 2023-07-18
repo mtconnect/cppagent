@@ -40,7 +40,7 @@ namespace mtconnect {
       : Entity(name, props)
     {
       m_id = get<string>("id");
-      m_name = maybeGet<string>("name");
+      m_componentName = maybeGet<string>("name");
       m_uuid = maybeGet<string>("uuid");
     }
 

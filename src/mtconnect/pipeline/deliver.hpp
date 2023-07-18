@@ -21,9 +21,9 @@
 
 #include <chrono>
 
-#include "mtconnect/device_model/device.hpp"
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/device_model/device.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
@@ -165,7 +165,7 @@ namespace mtconnect::pipeline {
       m_guard = TypeGuard<device_model::Device>(RUN);
     }
     entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
-    
+
   protected:
     PipelineContract *m_contract;
   };
