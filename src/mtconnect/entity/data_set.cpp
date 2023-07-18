@@ -19,7 +19,7 @@
 
 #include "mtconnect/utilities.hpp"
 
-//#define BOOST_SPIRIT_DEBUG 1
+// #define BOOST_SPIRIT_DEBUG 1
 
 #include <ostream>
 

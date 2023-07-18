@@ -55,7 +55,7 @@ protected:
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
     auto version = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
-    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, version, 25);
+    m_agentTestHelper->createAgent("/test/resources/samples/test_config.xml", 8, 4, version, 25);
     m_agentId = to_string(getCurrentTimeInSec());
     m_agentDevice = m_agentTestHelper->m_agent->getAgentDevice();
   }

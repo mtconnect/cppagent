@@ -44,15 +44,20 @@ namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapterPipeline::build(const ConfigOptions &options)
   {
     m_options = options;
+    m_uuid = GetOption<string>(options, configuration::UUID);
+
     buildDeviceList();
     buildCommandAndStatusDelivery();
 
-    TransformPtr next = bind(make_shared<MTConnectXmlTransform>(m_context, m_feedback, m_device));
+    TransformPtr next =
+        bind(make_shared<MTConnectXmlTransform>(m_context, m_feedback, m_device, m_uuid));
     std::optional<string> obsMetrics;
     obsMetrics = m_identity + "_observation_update_rate";
     next->bind(make_shared<DeliverObservation>(m_context, obsMetrics));
-
+    buildDeviceDelivery(next);
     buildAssetDelivery(next);
+
+    applySplices();
   }
 
   AgentAdapter::AgentAdapter(boost::asio::io_context &io, pipeline::PipelineContextPtr context,
@@ -82,6 +87,7 @@ namespace mtconnect::source::adapter::agent_adapter {
                          {configuration::ReconnectInterval, 10000ms},
                          {configuration::RelativeTime, false},
                          {configuration::UsePolling, false},
+                         {configuration::EnableSourceDeviceModels, false},
                          {"!CloseConnectionAfterResponse!", false}});
 
     m_handler = m_pipeline.makeHandler();
@@ -107,6 +113,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_usePolling = *GetOption<bool>(m_options, configuration::UsePolling);
     m_reconnectInterval = *GetOption<Milliseconds>(m_options, configuration::ReconnectInterval);
     m_pollingInterval = *GetOption<Milliseconds>(m_options, configuration::PollingInterval);
+    m_probeAgent = *GetOption<bool>(m_options, configuration::EnableSourceDeviceModels);
 
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
 
@@ -344,8 +351,15 @@ namespace mtconnect::source::adapter::agent_adapter {
     clear();
 
     m_reconnecting = false;
-    assets();
-    current();
+    if (m_probeAgent)
+    {
+      probe();
+    }
+    else
+    {
+      assets();
+      current();
+    }
   }
 
   void AgentAdapter::recover()
@@ -357,14 +371,27 @@ namespace mtconnect::source::adapter::agent_adapter {
     sample();
   }
 
-  void AgentAdapter::current()
+  bool AgentAdapter::probe()
   {
     if (m_stopped)
-      return;
+      return false;
+
+    m_streamRequest.emplace(m_sourceDevice, "probe", UrlQuery(), false, [this]() {
+      m_agentVersion = m_feedback.m_agentVersion;
+      assets();
+      return current();
+    });
+    return m_session->makeRequest(*m_streamRequest);
+  }
+
+  bool AgentAdapter::current()
+  {
+    if (m_stopped)
+      return false;
 
     m_streamRequest.emplace(m_sourceDevice, "current", UrlQuery(), false,
                             [this]() { return sample(); });
-    m_session->makeRequest(*m_streamRequest);
+    return m_session->makeRequest(*m_streamRequest);
   }
 
   bool AgentAdapter::sample()
@@ -420,7 +447,11 @@ namespace mtconnect::source::adapter::agent_adapter {
   void AgentAdapter::assets()
   {
     UrlQuery query({{"count", "1048576"}});
-    m_assetRequest.emplace(m_sourceDevice, "assets", query, false, [this]() {
+
+    std::optional<std::string> source;
+    if (m_agentVersion >= 200)
+      source.emplace(m_sourceDevice);
+    m_assetRequest.emplace(source, "assets", query, false, [this]() {
       m_assetRequest.reset();
       return true;
     });

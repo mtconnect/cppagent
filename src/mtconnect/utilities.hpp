@@ -33,7 +33,7 @@
 
 #include "mtconnect/config.hpp"
 
-//####### CONSTANTS #######
+// ####### CONSTANTS #######
 
 // Port number to put server on
 const unsigned int SERVER_PORT = 8080;

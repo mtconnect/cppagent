@@ -60,8 +60,8 @@ protected:
     m_xmlPrinter = std::make_unique<printer::XmlPrinter>("1.5");
     m_printer = std::make_unique<printer::JsonPrinter>(1, true);
     m_config = std::make_unique<parser::XmlParser>();
-    m_devices =
-        m_config->parseFile(PROJECT_ROOT_DIR "/samples/SimpleDevlce.xml", m_xmlPrinter.get());
+    m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/SimpleDevlce.xml",
+                                    m_xmlPrinter.get());
   }
 
   void TearDown() override
@@ -193,7 +193,8 @@ TEST_F(JsonPrinterStreamTest, DeviceStream_version_2_one_device)
 TEST_F(JsonPrinterStreamTest, DeviceStream_version_2_two_devices)
 {
   m_printer = std::make_unique<printer::JsonPrinter>(2, true);
-  m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/samples/min_config2.xml", m_xmlPrinter.get());
+  m_devices = m_config->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/min_config2.xml",
+                                  m_xmlPrinter.get());
 
   Checkpoint checkpoint;
   addObservationToCheckpoint(checkpoint, "Sspeed", 10254804, 100_value);

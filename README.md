@@ -689,6 +689,10 @@ Configuration Parameters
 
     *Default*: 1
 	
+* `EnableSourceDeviceModels` - 
+
+    *Default*: false
+	
 #### Configuration Pameters for TLS (https) Support ####
 
 The following parameters must be present to enable https requests. If there is no password on the certificate, `TlsCertificatePassword` may be omitted.

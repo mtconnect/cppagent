@@ -81,7 +81,7 @@ namespace mtconnect {
       const auto &getId() const { return m_id; }
       /// @brief get the name property of the component
       /// @return name if it exists
-      const auto &getComponentName() const { return m_name; }
+      const auto &getComponentName() const { return m_componentName; }
       /// @brief get the component uuid
       /// @return uuid if it exists
       const auto &getUuid() const { return m_uuid; }
@@ -94,9 +94,9 @@ namespace mtconnect {
         {
           auto *self = const_cast<Component *>(this);
           self->m_topicName.emplace(getName());
-          if (m_name)
+          if (m_componentName)
           {
-            self->m_topicName->append("[").append(*m_name).append("]");
+            self->m_topicName->append("[").append(*m_componentName).append("]");
           }
         }
         return *m_topicName;
@@ -161,8 +161,18 @@ namespace mtconnect {
       /// @param name name property
       void setComponentName(const std::string &name)
       {
-        m_name = name;
+        m_componentName = name;
         setProperty("name", name);
+      }
+      /// @brief set the compoent name property, not the compoent type
+      /// @param name name property
+      void setComponentName(const std::optional<std::string> &name)
+      {
+        m_componentName = name;
+        if (name)
+          setProperty("name", *name);
+        else
+          m_properties.erase("name");
       }
 
       /// @brief get the device (top level component)
@@ -272,22 +282,15 @@ namespace mtconnect {
       void setDevice(DevicePtr device) { m_device = device; }
 
     protected:
-      // Unique ID for each component
-      std::string m_id;
-
-      // Name for itself
-      std::optional<std::string> m_name;
-
-      // Universal unique identifier
-      std::optional<std::string> m_uuid;
+      std::string m_id;                            //< Unique ID for each component
+      std::optional<std::string> m_componentName;  //< Name property for the component
+      std::optional<std::string> m_uuid;           //< Universal unique identifier
 
       // Component relationships
-      // Pointer to the parent component
-      std::weak_ptr<Component> m_parent;
-      std::weak_ptr<Device> m_device;
 
-      // Topic
-      std::optional<std::string> m_topicName;
+      std::weak_ptr<Component> m_parent;       //< Pointer to the parent component
+      std::weak_ptr<Device> m_device;          //< Pointer to the device related to the component
+      std::optional<std::string> m_topicName;  //< The cached topic name
     };
 
     /// @brief Comparison lambda to sort components

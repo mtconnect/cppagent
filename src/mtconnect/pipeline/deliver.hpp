@@ -23,6 +23,7 @@
 
 #include "mtconnect/asset/asset.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/device_model/device.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
@@ -151,6 +152,22 @@ namespace mtconnect::pipeline {
       m_guard = TypeGuard<asset::Asset>(RUN);
     }
     entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+  };
+
+  /// @brief A transform to deliver a device
+  class AGENT_LIB_API DeliverDevice : public Transform
+  {
+  public:
+    using Deliver = std::function<void(asset::AssetPtr)>;
+    DeliverDevice(PipelineContextPtr context)
+      : Transform("DeliverDevice"), m_contract(context->m_contract.get())
+    {
+      m_guard = TypeGuard<device_model::Device>(RUN);
+    }
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+
+  protected:
+    PipelineContract *m_contract;
   };
 
   /// @brief deliver the connection status of an adapter
