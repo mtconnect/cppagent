@@ -2,8 +2,8 @@ version: '{build}'
 
 branches:
   only:
-    - master
-    - /.*master.*/
+    - main
+    - main-dev
 
 image:
   - Ubuntu2004
