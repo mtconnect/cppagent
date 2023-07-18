@@ -28,7 +28,8 @@ find_package(mtconnect_agent REQUIRED GLOBAL)
 
 #### Sink Plugin Test
 
-message(STATUS "CMake include: ${CMAKE_INCLUDE_PATH}")
+set(COMMON_DEFINITIONS 
+  "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\";TEST_RESOURCE_DIR=\"${CMAKE_SOURCE_DIR}/resources\";BOOST_FILESYSTEM_VERSION=3;$<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>;$<$<PLATFORM_ID:Windows>:NOMINMAX>;$<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>;$<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>")
 
 add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
 target_include_directories(
@@ -36,18 +37,16 @@ target_include_directories(
   PUBLIC
   "${CMAKE_INCLUDE_PATH}"
   )
+
 target_compile_definitions(sink_plugin_test
-  PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-  "TEST_RESOURCE_DIR=\"${CMAKE_SOURCE_DIR}/test_package/resources\""
-  "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
-  "BOOST_FILESYSTEM_VERSION=3"
+  PRIVATE
+  ${COMMON_DEFINITIONS}
+  "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\"")
 
-  $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
-  $<$<PLATFORM_ID:Windows>:NOMINMAX>
-  $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
-  $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
-
-target_compile_features(sink_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
+target_compile_features(sink_plugin_test
+  PRIVATE
+  ${CXX_COMPILE_FEATURES}
+  )
 
 target_link_libraries(
   sink_plugin_test
@@ -76,16 +75,12 @@ target_include_directories(
   adapter_plugin_test
   PUBLIC
     "${CMAKE_INCLUDE_PATH}"
-  )
-target_compile_definitions(adapter_plugin_test
-  PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-  "TEST_RESOURCE_DIR=\"${CMAKE_SOURCE_DIR}/test_package/resources\""
-  "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:sink_plugin_test>/../Resources\""
+    )
   
-  $<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>
-  $<$<PLATFORM_ID:Windows>:NOMINMAX>
-  $<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>
-  $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>)
+target_compile_definitions(adapter_plugin_test
+  PRIVATE
+  "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:adapter_plugin_test>/../Resources\""  
+  ${COMMON_DEFINITIONS})
 
 if (APPLE)
   set_target_properties(adapter_plugin_test PROPERTIES
@@ -126,11 +121,7 @@ target_link_libraries(
   GTest::GTest
   )
 
-target_compile_definitions(agent_test_lib
-  PUBLIC
-  "TEST_RESOURCE_DIR=\"${CMAKE_SOURCE_DIR}/test_package/resources\""
-  "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-  )
+target_compile_definitions(agent_test_lib PUBLIC ${COMMON_DEFINITIONS})
 target_clangtidy_setup(agent_test_lib)
 target_clangformat_setup(agent_test_lib)
 set_target_properties(agent_test_lib PROPERTIES FOLDER "test")
@@ -148,8 +139,8 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
     GTest::GTest)
 
   target_compile_definitions(${AGENT_TEST_NAME}_test
-    PRIVATE "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\""
-    "TEST_RESOURCE_DIR=\"${CMAKE_SOURCE_DIR}/test_package/resources\""
+    PRIVATE 
+    ${COMMON_DEFINITIONS}
     "TEST_BIN_ROOT_DIR=\"$<TARGET_FILE_DIR:${AGENT_TEST_NAME}_test>/../Resources\"")
   target_compile_features(${AGENT_TEST_NAME}_test PUBLIC ${CXX_COMPILE_FEATURES})
 

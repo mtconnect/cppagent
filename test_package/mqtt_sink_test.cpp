@@ -84,7 +84,7 @@ protected:
   void createAgent(std::string testFile = {}, ConfigOptions options = {})
   {
     if (testFile == "")
-      testFile = "/test/resources/samples/test_config.xml";
+      testFile = "/samples/test_config.xml";
 
     ConfigOptions opts(options);
     MergeOptions(opts, {{"MqttSink", true},
@@ -396,7 +396,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Dataset)
   };
   createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
-  createAgent("/test/resources/samples/data_set.xml");
+  createAgent("/samples/data_set.xml");
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(5s, [&service]() { return service->isConnected(); }));
   m_client->subscribe(
@@ -461,7 +461,7 @@ TEST_F(MqttSinkTest, mqtt_sink_should_publish_Table)
   };
   createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
-  createAgent("/test/resources/samples/data_set.xml");
+  createAgent("/samples/data_set.xml");
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(5s, [&service]() { return service->isConnected(); }));
   m_client->subscribe(

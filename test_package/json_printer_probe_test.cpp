@@ -60,7 +60,7 @@ protected:
     m_printer = std::make_unique<printer::JsonPrinter>(1, true);
 
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/test/resources/samples/SimpleDevlce.xml", 8, 4, "1.5", 25);
+    m_agentTestHelper->createAgent("/samples/SimpleDevlce.xml", 8, 4, "1.5", 25);
 
     // Asset types are registered in the agent.
     m_devices = m_agentTestHelper->m_agent->getDevices();
@@ -333,7 +333,7 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   auto server = std::make_unique<sink::rest_sink::Server>(m_agentTestHelper->m_ioContext);
   auto cache = std::make_unique<sink::rest_sink::FileCache>();
 
-  m_agentTestHelper->createAgent("/test/resources/samples/relationship_test.xml", 8, 4, "1.7", 25);
+  m_agentTestHelper->createAgent("/samples/relationship_test.xml", 8, 4, "1.7", 25);
   auto printer = m_agentTestHelper->m_agent->getPrinter("json");
   m_devices = m_agentTestHelper->m_agent->getDevices();
   auto doc = printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -376,7 +376,7 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
 TEST_F(JsonPrinterProbeTest, version_2_with_multiple_devices)
 {
   m_printer = std::make_unique<printer::JsonPrinter>(2, true);
-  m_agentTestHelper->createAgent("/test/resources/samples/two_devices.xml", 8, 4, "1.5", 25);
+  m_agentTestHelper->createAgent("/samples/two_devices.xml", 8, 4, "1.5", 25);
   m_devices = m_agentTestHelper->m_agent->getDevices();
 
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);

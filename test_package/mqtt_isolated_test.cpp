@@ -41,14 +41,14 @@ using namespace mtconnect::sink::rest_sink;
 
 using json = nlohmann::json;
 
-const string MqttClientCACert(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
-const string MqttClientCert(PROJECT_ROOT_DIR "/test/resources/client.crt");
-const string MqttClientKey {PROJECT_ROOT_DIR "/test/resources/client.key"};
+const string MqttClientCACert(TEST_RESOURCE_DIR "/rootca.crt");
+const string MqttClientCert(TEST_RESOURCE_DIR "/client.crt");
+const string MqttClientKey {TEST_RESOURCE_DIR "/client.key"};
 
-const string ServerCertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
-const string ServerKeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
-const string ServerDhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
-const string ClientCA(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+const string ServerCertFile(TEST_RESOURCE_DIR "/user.crt");
+const string ServerKeyFile {TEST_RESOURCE_DIR "/user.key"};
+const string ServerDhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
+const string ClientCA(TEST_RESOURCE_DIR "/clientca.crt");
 
 // main
 int main(int argc, char *argv[])

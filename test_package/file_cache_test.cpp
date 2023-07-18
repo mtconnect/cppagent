@@ -47,8 +47,6 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-#define RESOURCE_ROOT PROJECT_ROOT_DIR "/test/resources"
-
 class FileCacheTest : public testing::Test
 {
 protected:
@@ -64,7 +62,7 @@ TEST_F(FileCacheTest, FindFiles)
   string uri("/schemas");
 
   // Register a file with the agent.
-  auto list = m_cache->registerDirectory(uri, RESOURCE_ROOT "/schemas", "1.7");
+  auto list = m_cache->registerDirectory(uri, TEST_RESOURCE_DIR "/schemas", "1.7");
 
   ASSERT_TRUE(m_cache->hasFile("/schemas/MTConnectDevices_1.7.xsd"));
   auto file = m_cache->getFile("/schemas/MTConnectDevices_1.7.xsd");
@@ -75,7 +73,7 @@ TEST_F(FileCacheTest, FindFiles)
 TEST_F(FileCacheTest, IconMimeType)
 {
   // Register a file with the agent.
-  auto list = m_cache->registerDirectory("/styles", RESOURCE_ROOT "/styles", "1.7");
+  auto list = m_cache->registerDirectory("/styles", TEST_RESOURCE_DIR "/styles", "1.7");
 
   auto file = m_cache->getFile("/styles/favicon.ico");
   ASSERT_TRUE(file);
@@ -87,8 +85,8 @@ TEST_F(FileCacheTest, verify_large_files_are_not_cached)
   // Make a cache that can only hold 1024 byte files
   m_cache = make_unique<FileCache>(1024);
 
-  m_cache->addDirectory("/schemas", RESOURCE_ROOT "/schemas", "none.xsd");
-  m_cache->addDirectory("/styles", RESOURCE_ROOT "/styles", "none.css");
+  m_cache->addDirectory("/schemas", TEST_RESOURCE_DIR "/schemas", "none.xsd");
+  m_cache->addDirectory("/styles", TEST_RESOURCE_DIR "/styles", "none.css");
 
   ASSERT_FALSE(m_cache->hasFile("/schemas/MTConnectDevices_1.7.xsd"));
   auto file = m_cache->getFile("/schemas/MTConnectDevices_1.7.xsd");
@@ -104,7 +102,7 @@ TEST_F(FileCacheTest, verify_large_files_are_not_cached)
 
 TEST_F(FileCacheTest, base_directory_should_redirect)
 {
-  m_cache->addDirectory("/schemas", RESOURCE_ROOT "/schemas", "none.xsd");
+  m_cache->addDirectory("/schemas", TEST_RESOURCE_DIR "/schemas", "none.xsd");
   auto file = m_cache->getFile("/schemas");
   ASSERT_TRUE(file);
   ASSERT_EQ("/schemas/none.xsd", file->m_redirect);
@@ -123,14 +121,14 @@ TEST_F(FileCacheTest, file_cache_should_compress_file)
   namespace fs = std::filesystem;
 
   // Cleanup
-  fs::path zipped(RESOURCE_ROOT);
+  fs::path zipped(TEST_RESOURCE_DIR);
   zipped /= "zipped_file.txt.gz";
   if (fs::exists(zipped))
   {
     fs::remove(zipped);
   }
 
-  m_cache->addDirectory("/resources", PROJECT_ROOT_DIR "/test/resources", "none.txt");
+  m_cache->addDirectory("/resources", TEST_RESOURCE_DIR, "none.txt");
   m_cache->setMinCompressedFileSize(1024);
   auto file = m_cache->getFile("/resources/zipped_file.txt");
 
@@ -158,14 +156,14 @@ TEST_F(FileCacheTest, file_cache_should_compress_file_async)
   namespace fs = std::filesystem;
 
   // Cleanup
-  fs::path zipped(PROJECT_ROOT_DIR "/test/resources");
+  fs::path zipped(TEST_RESOURCE_DIR);
   zipped /= "zipped_file.txt.gz";
   if (fs::exists(zipped))
   {
     fs::remove(zipped);
   }
 
-  m_cache->addDirectory("/resources", PROJECT_ROOT_DIR "/test/resources", "none.txt");
+  m_cache->addDirectory("/resources", TEST_RESOURCE_DIR, "none.txt");
   m_cache->setMinCompressedFileSize(1024);
 
   boost::asio::io_context context;
@@ -209,14 +207,14 @@ TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
   namespace ch = std::chrono;
 
   // Cleanup
-  fs::path zipped(PROJECT_ROOT_DIR "/test/resources");
+  fs::path zipped(TEST_RESOURCE_DIR);
   zipped /= "zipped_file.txt.gz";
   if (fs::exists(zipped))
   {
     fs::remove(zipped);
   }
 
-  m_cache->addDirectory("/resources", PROJECT_ROOT_DIR "/test/resources", "none.txt");
+  m_cache->addDirectory("/resources", TEST_RESOURCE_DIR, "none.txt");
   m_cache->setMinCompressedFileSize(1024);
   auto gzFile = m_cache->getFile("/resources/zipped_file.txt", "gzip, deflate"s);
 

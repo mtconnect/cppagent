@@ -72,7 +72,7 @@ protected:
     auto parser = make_unique<parser::XmlParser>();
 
     m_device =
-        parser->parseFile(PROJECT_ROOT_DIR "/test/resources/samples/test_config.xml", printer.get())
+        parser->parseFile(TEST_RESOURCE_DIR "/samples/test_config.xml", printer.get())
             .front();
 
     m_context = make_shared<PipelineContext>();

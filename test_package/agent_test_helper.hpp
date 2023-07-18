@@ -200,7 +200,7 @@ public:
     options.emplace(configuration::ServerIp, std::string("127.0.0.1"));
     options.emplace(configuration::JsonVersion, 1);
 
-    m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, PROJECT_ROOT_DIR + file, options);
+    m_agent = std::make_unique<mtconnect::Agent>(m_ioContext, TEST_RESOURCE_DIR + file, options);
     if (m_agentCreateHook)
       m_agentCreateHook(*this);
 

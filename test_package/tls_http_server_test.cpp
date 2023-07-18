@@ -299,15 +299,15 @@ public:
       m_headerHandler;
 };
 
-const string CertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
-const string KeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
-const string DhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
-const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
+const string CertFile(TEST_RESOURCE_DIR "/user.crt");
+const string KeyFile {TEST_RESOURCE_DIR "/user.key"};
+const string DhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
+const string RootCertFile(TEST_RESOURCE_DIR "/rootca.crt");
 
-const string ClientCertFile(PROJECT_ROOT_DIR "/test/resources/client.crt");
-const string ClientKeyFile {PROJECT_ROOT_DIR "/test/resources/client.key"};
-const string ClientDhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
-const string ClientCAFile(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+const string ClientCertFile(TEST_RESOURCE_DIR "/client.crt");
+const string ClientKeyFile {TEST_RESOURCE_DIR "/client.key"};
+const string ClientDhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
+const string ClientCAFile(TEST_RESOURCE_DIR "/clientca.crt");
 
 class TlsRestServiceTest : public testing::Test
 {
@@ -531,7 +531,7 @@ TEST_F(TlsRestServiceTest, check_failed_client_certificate)
   ASSERT_TRUE(m_client->m_failed);
 }
 
-const string ClientCA(PROJECT_ROOT_DIR "/test/resources/clientca.crt");
+const string ClientCA(TEST_RESOURCE_DIR "/clientca.crt");
 
 TEST_F(TlsRestServiceTest, check_valid_client_certificate)
 {
