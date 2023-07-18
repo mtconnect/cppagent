@@ -32,4 +32,5 @@ jobs:
     - name: Build C++ Agent
       shell: bash
       run: |
+        conan profile detect -f
         conan build . --build=missing -pr conan/profiles/gcc  -o shared=False -o with_docs=False
