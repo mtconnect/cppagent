@@ -1,0 +1,35 @@
+name: Build MTConnect C++ Agent
+
+on:
+  # Enable automated build once verified
+  #pull_request:
+  #  paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
+  #  branches: [ "main", "main-dev" ]
+
+  #push:
+  #  paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
+  #  branches: [ "main", "main-dev" ]
+
+  # Allow manually run workflows
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Agent
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
+      
+    - name: Install Conan
+      uses: turtlebrowser/get-conan@v1.2
+      
+    - name: Build C++ Agent
+      shell: bash
+      run: |
+        conan build . --build=missing -pr conan/profiles/gcc  -o shared=False -o with_docs=False
