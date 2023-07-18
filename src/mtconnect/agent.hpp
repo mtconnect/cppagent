@@ -40,6 +40,7 @@
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/buffer/circular_buffer.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/configuration/async_context.hpp"
 #include "mtconnect/configuration/hook_manager.hpp"
 #include "mtconnect/configuration/service.hpp"
 #include "mtconnect/device_model/agent_device.hpp"
@@ -87,10 +88,10 @@ namespace mtconnect {
     ///     - SchemaVersion
     ///     - CheckpointFrequency
     ///     - Pretty
-    ///     - VersionDeviceXmlUpdates
+    ///     - VersionDeviceXml
     ///     - JsonVersion
     ///     - DisableAgentDevice
-    Agent(boost::asio::io_context &context, const std::string &deviceXmlPath,
+    Agent(configuration::AsyncContext &context, const std::string &deviceXmlPath,
           const ConfigOptions &options);
 
     /// Destructor for the Agent.
@@ -115,6 +116,14 @@ namespace mtconnect {
     /// @brief Hooks before the agent stops all the sources and sinks
     /// @return configuration::HookManager<Agent>&
     auto &beforeStopHooks() { return m_beforeStopHooks; }
+
+    /// @brief Hooks before the agent versions and write the device xml file
+    /// @return configuration::HookManager<Agent>&
+    auto &beforeDeviceXmlUpdateHooks() { return m_beforeDeviceXmlUpdateHooks; }
+
+    /// @brief Hooks after the agent versions and write the device xml file
+    /// @return configuration::HookManager<Agent>&
+    auto &afterDeviceXmlUpdateHooks() { return m_afterDeviceXmlUpdateHooks; }
 
     /// @brief the agent given a pipeline context
     /// @param context: the pipeline context shared between all pipelines
@@ -167,14 +176,15 @@ namespace mtconnect {
 
     // Source and Sink
     /// @brief Find a source by name
-    /// @param[in] name the name to find
+    /// @param[in] name the identity to find
     /// @return A shared pointer to the source if found, otherwise nullptr
     source::SourcePtr findSource(const std::string &name) const
     {
       for (auto &s : m_sources)
-        if (s->getIdentity() == name)
+      {
+        if (s->getIdentity() == name || s->getName() == name)
           return s;
-
+      }
       return nullptr;
     }
     /// @brief Find a sink by name
@@ -257,9 +267,15 @@ namespace mtconnect {
     /// @param[in] oldName The old name
     void deviceChanged(DevicePtr device, const std::string &oldUuid, const std::string &oldName);
     /// @brief Reload the devices from a device file after updates
-    /// @param deviceFile The device file to load
+    /// @param[in] deviceFile The device file to load
     /// @return true if successful
     bool reloadDevices(const std::string &deviceFile);
+
+    /// @brief receive and parse a single device from a source
+    /// @param[in] deviceXml the device xml as a string
+    /// @param[in] source the source loading the device
+    void loadDevice(const std::string &deviceXml,
+                    const std::optional<std::string> source = std::nullopt);
 
     /// @name Message when source has connected and disconnected
     ///@{
@@ -403,6 +419,14 @@ namespace mtconnect {
     std::string devicesAndPath(const std::optional<std::string> &path,
                                const DevicePtr device) const;
 
+    /// @brief Creates unique ids for the device model and maps to the originals
+    ///
+    /// Also updates the agents data item map by adding the new ids. Duplicate original
+    /// ids will be last in wins.
+    ///
+    /// @param[in] device device to modify
+    void createUniqueIds(DevicePtr device);
+
   protected:
     friend class AgentPipelineContract;
 
@@ -427,7 +451,7 @@ namespace mtconnect {
 
   protected:
     ConfigOptions m_options;
-    boost::asio::io_context &m_context;
+    configuration::AsyncContext &m_context;
     boost::asio::io_context::strand m_strand;
 
     std::shared_ptr<source::LoopbackSource> m_loopback;
@@ -493,7 +517,9 @@ namespace mtconnect {
     // Xml Config
     std::optional<std::string> m_schemaVersion;
     std::string m_deviceXmlPath;
-    bool m_versionDeviceXml = false;
+    bool m_versionDeviceXml {false};
+    bool m_createUniqueIds {false};
+    int32_t m_intSchemaVersion = IntDefaultSchemaVersion();
 
     // Circular Buffer
     buffer::CircularBuffer m_circularBuffer;
@@ -506,6 +532,8 @@ namespace mtconnect {
     configuration::HookManager<Agent> m_afterInitializeHooks;
     configuration::HookManager<Agent> m_beforeStartHooks;
     configuration::HookManager<Agent> m_beforeStopHooks;
+    configuration::HookManager<Agent> m_beforeDeviceXmlUpdateHooks;
+    configuration::HookManager<Agent> m_afterDeviceXmlUpdateHooks;
   };
 
   /// @brief Association of the pipeline's interface to the `Agent`
@@ -549,6 +577,11 @@ namespace mtconnect {
     void deliverDevice(DevicePtr device) override { m_agent->receiveDevice(device); }
 
     void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
+
+    const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override
+    {
+      return m_agent->getCircularBuffer().checkDuplicate(obs);
+    }
 
   protected:
     Agent *m_agent;

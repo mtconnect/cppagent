@@ -40,7 +40,7 @@ FROM os AS build
 RUN apt-get clean \
   && apt-get update \
   && apt-get install -y \
-  build-essential python3.9 python3-pip git cmake make ruby rake automake \
+  build-essential python3.9 python3-pip git cmake make ruby rake autoconf automake \
   && pip install conan -v "conan==1.59.0"
 
 # make an agent directory and cd into it
@@ -70,7 +70,7 @@ RUN conan export conan/mqtt_cpp \
   -o with_ruby=$WITH_RUBY
 
 # compile source (~20mins - 4hrs for qemu)
-RUN conan build . -bf build
+ RUN conan build . -bf build
 
 # ---------------------------------------------------------------------
 # release
@@ -109,7 +109,7 @@ WORKDIR /home/agent
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
 CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
   /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
-  cd /etc/mtconnect/simulator && agent run agent.cfg
+  cd /etc/mtconnect/simulator && mtcagent run agent.cfg
 
 
 # ---------------------------------------------------------------------

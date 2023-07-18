@@ -102,7 +102,7 @@ namespace mtconnect::configuration {
   boost::log::trivial::logger_type *gAgentLogger = nullptr;
 
   AgentConfiguration::AgentConfiguration()
-    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->getContext())
+    : m_context {make_unique<AsyncContext>()}, m_monitorTimer(m_context->get())
   {
     NAMED_SCOPE("AgentConfiguration::AgentConfiguration");
     using namespace source;
@@ -382,6 +382,11 @@ namespace mtconnect::configuration {
       // Start the file monitor to check for changes to cfg or devices.
       LOG(debug) << "Waiting for monitor thread to exit to restart agent";
 
+      m_agent->beforeDeviceXmlUpdateHooks().add([this](Agent &agent) {
+        LOG(info) << "Reseting device file time because agent updated the device XML file";
+        m_deviceTime.reset();
+      });
+
       boost::system::error_code ec;
       AgentConfiguration::monitorFiles(ec);
     }
@@ -645,6 +650,7 @@ namespace mtconnect::configuration {
                 {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
                 {configuration::CheckpointFrequency, 1000},
                 {configuration::LegacyTimeout, 600s},
+                {configuration::CreateUniqueIds, false},
                 {configuration::ReconnectInterval, 10000ms},
                 {configuration::IgnoreTimestamps, false},
                 {configuration::ConversionRequired, true},
@@ -653,7 +659,8 @@ namespace mtconnect::configuration {
                 {configuration::FilterDuplicates, false},
                 {configuration::MonitorConfigFiles, false},
                 {configuration::MonitorInterval, 10s},
-                {configuration::VersionDeviceXmlUpdates, false},
+                {configuration::VersionDeviceXml, false},
+                {configuration::EnableSourceDeviceModels, false},
                 {configuration::MinimumConfigReloadAge, 15s},
                 {configuration::Pretty, false},
                 {configuration::PidFile, "agent.pid"s},
@@ -896,9 +903,13 @@ namespace mtconnect::configuration {
                                          adapterOptions, ptree {});
       m_agent->addSource(source, false);
     }
-    else
+    else if (m_agent->getDevices().size() > 1)
     {
       throw runtime_error("Adapters must be defined if more than one device is present");
+    }
+    else
+    {
+      LOG(warning) << "Starting with no devices or adapters";
     }
   }
 

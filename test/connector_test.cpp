@@ -67,8 +67,13 @@ public:
 
   void processData(const std::string &data) override
   {
-    m_data = data;
-    m_list.emplace_back(m_data);
+    if (data[0] == '*')
+      protocolCommand(data);
+    else
+    {
+      m_data = data;
+      m_list.emplace_back(m_data);
+    }
   }
 
   void protocolCommand(const std::string &data) override { m_command = data; }

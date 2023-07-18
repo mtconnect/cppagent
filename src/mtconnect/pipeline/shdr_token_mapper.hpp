@@ -49,7 +49,7 @@ namespace mtconnect::pipeline {
     {
       m_guard = TypeGuard<Timestamped>(RUN);
     }
-    const EntityPtr operator()(const EntityPtr entity) override;
+    EntityPtr operator()(entity::EntityPtr &&entity) override;
 
     /// @brief Takes a tokenized set of fields and maps them data items
     /// @param[in] timestamp the timestamp from prior extraction
@@ -78,6 +78,7 @@ namespace mtconnect::pipeline {
     std::set<std::string> m_logOnce;
     PipelineContract *m_contract;
     std::optional<std::string> m_defaultDevice;
+    std::unordered_map<std::string, WeakDataItemPtr> m_dataItemMap;
     int m_shdrVersion {1};
   };
 }  // namespace mtconnect::pipeline

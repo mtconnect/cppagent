@@ -58,6 +58,7 @@ public:
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
   void sourceFailed(const std::string &id) override {}
+  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
 
   DevicePtr m_device;
 };
@@ -98,7 +99,7 @@ TEST_F(MTConnectXmlTransformTest, should_add_next_to_the_context)
 
   auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", "adapter"s}});
 
-  auto res1 = (*m_xform)(entity);
+  auto res1 = (*m_xform)(std::move(entity));
 
   ASSERT_EQ(1649989201, m_feedback.m_instanceId);
   ASSERT_EQ(4992049, m_feedback.m_next);
@@ -116,7 +117,7 @@ TEST_F(MTConnectXmlTransformTest, should_return_errors)
 
   auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", "adapter"s}});
 
-  EXPECT_THROW((*m_xform)(entity), std::system_error);
+  EXPECT_THROW((*m_xform)(std::move(entity)), std::system_error);
 
   ASSERT_EQ(1, m_feedback.m_errors.size());
   auto &error = m_feedback.m_errors.front();
@@ -135,7 +136,7 @@ TEST_F(MTConnectXmlTransformTest, should_throw_when_instances_change)
 
   auto entity = make_shared<Entity>("Data", Properties {{"VALUE", data}, {"source", "adapter"s}});
 
-  auto res1 = (*m_xform)(entity);
+  auto res1 = (*m_xform)(std::move(entity));
 
   ASSERT_EQ(1649989201, m_feedback.m_instanceId);
   ASSERT_EQ(4992049, m_feedback.m_next);
@@ -149,7 +150,7 @@ TEST_F(MTConnectXmlTransformTest, should_throw_when_instances_change)
 
   entity = make_shared<Entity>("Data", Properties {{"VALUE", recover}, {"source", "adapter"s}});
 
-  EXPECT_THROW((*m_xform)(entity), std::system_error);
+  EXPECT_THROW((*m_xform)(std::move(entity)), std::system_error);
   ASSERT_EQ(1649989201, m_feedback.m_instanceId);
   ASSERT_EQ(4992049, m_feedback.m_next);
 }

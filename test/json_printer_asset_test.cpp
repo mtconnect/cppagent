@@ -76,7 +76,7 @@ protected:
 
   AssetPtr parseAsset(const std::string &xml, entity::ErrorList &errors)
   {
-    auto entity = m_parser->parse(Asset::getRoot(), xml, "1.7", errors);
+    auto entity = m_parser->parse(Asset::getRoot(), xml, errors);
     AssetPtr asset;
     for (auto &error : errors)
     {
@@ -299,7 +299,7 @@ TEST_F(JsonPrinterAssetTest, json_printer_version_2_with_multiple_assets)
   ASSERT_EQ("FIRST", tools.at("/0/assetId"_json_pointer));
   ASSERT_EQ("THIRD", tools.at("/1/assetId"_json_pointer));
 
-  auto arch = assets.at("/CuttingToolArchetype"_json_pointer);
+  auto arch = assets.at("/CuttingToolArchetype/0"_json_pointer);
   ASSERT_TRUE(arch.is_object());
 
   ASSERT_EQ("SECOND", arch.at("/assetId"_json_pointer));

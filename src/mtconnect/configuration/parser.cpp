@@ -59,9 +59,7 @@ namespace std {
 
 #include <boost/config/warning_disable.hpp>
 #include <boost/lambda/lambda.hpp>
-#include <boost/spirit/include/phoenix.hpp>
-#include <boost/spirit/include/phoenix_function.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_action.hpp>
 #include <boost/spirit/include/support_line_pos_iterator.hpp>

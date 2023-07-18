@@ -40,6 +40,7 @@ namespace mtconnect {
   }
   namespace device_model {
     class Composition;
+    struct UpdateDataItemId;
 
     /// @brief DataItem related entities
     namespace data_item {
@@ -102,8 +103,12 @@ namespace mtconnect {
 
         /// @name Cached transformed and derived property access methods
         ///@{
+
+        /// @brief get the data item id
         const auto &getId() const { return m_id; }
+        /// @brief get the data item name
         const auto &getName() const { return m_name; }
+        /// @brief get the data item source
         const auto &getSource() const { return get<entity::EntityPtr>("Source"); }
 
         /// @brief get the name or the id of the data item
@@ -114,7 +119,11 @@ namespace mtconnect {
         /// @brief get a key related to the data item for creating observations
         /// @return a key
         const auto &getKey() const { return m_key; }
+        /// @brief Return the type property
+        /// @return the type property
         const auto &getType() { return get<std::string>("type"); }
+        /// @brief Return the sub-type property
+        /// @return The sub-type
         const auto &getSubType() { return get<std::string>("subType"); }
 
         /// @brief get the pascalized name for the data item when represented as a observation
@@ -213,15 +222,57 @@ namespace mtconnect {
         bool operator<(const DataItem &another) const;
         bool operator==(const DataItem &another) const { return m_id == another.m_id; }
 
+        /// @brief Return the category as a char *
         const char *getCategoryText() const { return m_categoryText; }
+
+        /// @brief create unique ids recursively
+        ///
+        /// Replaces the cached `m_id` instance variable and also updates the preferred name if it
+        /// is the `id` of the data item. Also updates the cached observation properties.
+        ///
+        /// @param[in,out] idMap  old entity id to new entity id map
+        /// @param[in] sha the root sha1
+        /// @returns optional string value of the new id
+        std::optional<std::string> createUniqueId(
+            std::unordered_map<std::string, std::string> &idMap,
+            const boost::uuids::detail::sha1 &sha1) override
+        {
+          m_originalId.emplace(m_id);
+          auto pref = m_id == m_preferredName;
+          m_id = *Entity::createUniqueId(idMap, sha1);
+          if (pref)
+            m_preferredName = m_id;
+          m_observatonProperties.insert_or_assign("dataItemId", m_id);
+          return m_id;
+        }
+
+        /// @brief Get a reference to the optional original id
+        /// @returns optional original id
+        const auto &getOriginalId() const { return m_originalId; }
+
+        /// @brief Update all id references associated with this data item
+        ///
+        /// Recurses through the sub-entities of the data item.
+        ///
+        /// @param idMap a map of the old to new idenfifiers.
+        void updateReferences(const std::unordered_map<std::string, std::string> idMap) override
+        {
+          Entity::updateReferences(idMap);
+          if (hasProperty("compositionId"))
+            m_observatonProperties.insert_or_assign("compositionId",
+                                                    get<std::string>("compositionId"));
+        }
 
       protected:
         double simpleFactor(const std::string &units);
         std::map<std::string, std::string> buildAttributes() const;
 
+        friend struct device_model::UpdateDataItemId;
+
       protected:
         // Unique ID for each component
         std::string m_id;
+        std::optional<std::string> m_originalId;
 
         // Name for itself
         std::optional<std::string> m_name;

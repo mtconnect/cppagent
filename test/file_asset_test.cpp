@@ -83,7 +83,7 @@ TEST_F(FileAssetTest, TestMinmalArchetype)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -141,7 +141,7 @@ TEST_F(FileAssetTest, TestMinmalFile)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());

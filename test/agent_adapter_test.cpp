@@ -82,6 +82,7 @@ struct MockPipelineContract : public PipelineContract
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &dev, bool flag) override {}
   void sourceFailed(const std::string &id) override { m_failed = true; }
+  const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
 
   bool m_failed = false;
   std::string m_result;
@@ -120,7 +121,8 @@ protected:
     }
 
     m_agentTestHelper->getAgent()->stop();
-    m_agentTestHelper->m_ioContext.run_for(100s);
+    m_agentTestHelper->m_ioContext.removeGuard();
+    m_agentTestHelper->m_ioContext.run_for(10s);
     m_agentTestHelper.reset();
 
     m_adapter.reset();

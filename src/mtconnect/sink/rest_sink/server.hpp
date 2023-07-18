@@ -77,11 +77,13 @@ namespace mtconnect::sink::rest_sink {
 
       m_errorFunction = [](SessionPtr session, status st, const std::string &msg) {
         ResponsePtr response = std::make_unique<Response>(st, msg, "text/plain");
-        session->writeFailureResponse(move(response));
+        session->writeFailureResponse(std::move(response));
         return true;
       };
 
       loadTlsCertificate();
+
+      addSwaggerRoutings();
     }
 
     /// @brief Start the http server
@@ -172,7 +174,7 @@ namespace mtconnect::sink::rest_sink {
       {
         LOG(error) << session->getRemote().address() << ": Error processing request: " << re.what();
         ResponsePtr resp = std::make_unique<Response>(re);
-        session->writeResponse(move(resp));
+        session->writeResponse(std::move(resp));
       }
       catch (ParameterError &pe)
       {
@@ -207,9 +209,24 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] ec an error code
     /// @param[in] what the description why the request failed
     void fail(boost::system::error_code ec, char const *what);
+
     /// @brief Add a routing to the server
     /// @param[in] routing the routing
-    void addRouting(const Routing &routing) { m_routings.emplace_back(routing); }
+    Routing &addRouting(const Routing &routing)
+    {
+      auto &route = m_routings.emplace_back(routing);
+      if (m_parameterDocumentation)
+        route.documentParameters(*m_parameterDocumentation);
+      return route;
+    }
+
+    /// @brief Add common set of documentation for all rest routings
+    /// @param[in] docs Parameter documentation
+    void addParameterDocumentation(const ParameterDocList &docs)
+    {
+      m_parameterDocumentation.emplace(docs);
+    }
+
     /// @brief Set the error function to format the error during failure
     /// @param func the error function
     void setErrorFunction(const ErrorFunction &func) { m_errorFunction = func; }
@@ -225,6 +242,20 @@ namespace mtconnect::sink::rest_sink {
 
   protected:
     void loadTlsCertificate();
+
+    /// @name Swagger Support
+    /// @{
+    ///
+    /// @brief Add swagger routings to the Agent
+    void addSwaggerRoutings();
+    /// @brief generate swagger API from routings
+    /// @param[in] format The mime format of the response ("json" or "yaml")
+    ///
+    /// Caches the API document based on the response type requested. Cache cleared whenever a new
+    /// routing is added.
+    template <typename T>
+    const void renderSwaggerResponse(T &format);
+    /// @}
 
   protected:
     boost::asio::io_context &m_context;
@@ -244,6 +275,8 @@ namespace mtconnect::sink::rest_sink {
     std::unique_ptr<FileCache> m_fileCache;
     ErrorFunction m_errorFunction;
     FieldList m_fields;
+
+    std::optional<ParameterDocList> m_parameterDocumentation;
 
     boost::asio::ip::tcp::acceptor m_acceptor;
     boost::asio::ssl::context m_sslContext;

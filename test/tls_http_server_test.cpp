@@ -396,7 +396,7 @@ TEST_F(TlsRestServiceTest, create_server_and_load_certificates)
           string("Device given as: ") + get<string>(request->m_parameters.find("device")->second);
     else
       resp->m_body = "All Devices";
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
     return true;
   };
 
@@ -519,7 +519,7 @@ TEST_F(TlsRestServiceTest, check_failed_client_certificate)
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     ResponsePtr resp = make_unique<Response>(status::ok);
     resp->m_body = "Done";
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
 
     return true;
   };
@@ -548,7 +548,7 @@ TEST_F(TlsRestServiceTest, check_valid_client_certificate)
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     ResponsePtr resp = make_unique<Response>(status::ok);
     resp->m_body = "Done";
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
 
     return true;
   };
@@ -578,7 +578,7 @@ TEST_F(TlsRestServiceTest, check_valid_client_certificate_without_server_ca)
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
     ResponsePtr resp = make_unique<Response>(status::ok);
     resp->m_body = "Done";
-    session->writeResponse(move(resp), []() { cout << "Written" << endl; });
+    session->writeResponse(std::move(resp), []() { cout << "Written" << endl; });
 
     return true;
   };

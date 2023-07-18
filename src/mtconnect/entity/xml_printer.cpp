@@ -207,10 +207,13 @@ namespace mtconnect {
       for (const auto &prop : properties)
       {
         auto &key = prop.first;
-        if (islower(key.getName()[0]) || attrs.count(key) > 0)
-          attributes.emplace_back(prop);
-        else
-          elements.emplace_back(prop);
+        if (m_includeHidden || !entity->isHidden(key))
+        {
+          if (islower(key.getName()[0]) || attrs.count(key) > 0)
+            attributes.emplace_back(prop);
+          else
+            elements.emplace_back(prop);
+        }
       }
 
       // Reorder elements if they need to be specially ordered.

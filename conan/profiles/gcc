@@ -3,4 +3,5 @@ include(default)
 [settings]
 compiler.libcxx=libstdc++11
 
-[env]
+[system_tools]
+cmake/>3.20.0

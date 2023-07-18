@@ -18,6 +18,7 @@
 #include "server.hpp"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/coroutine.hpp>
 #include <boost/beast.hpp>
@@ -30,6 +31,7 @@
 #include <thread>
 
 #include "mtconnect/logging.hpp"
+#include "mtconnect/printer/json_printer_helper.hpp"
 #include "session_impl.hpp"
 
 namespace mtconnect::sink::rest_sink {
@@ -43,6 +45,7 @@ namespace mtconnect::sink::rest_sink {
   namespace ssl = boost::asio::ssl;
 
   using namespace std;
+  using namespace rapidjson;
   using boost::placeholders::_1;
   using boost::placeholders::_2;
 
@@ -194,7 +197,7 @@ namespace mtconnect::sink::rest_sink {
       if (m_tlsEnabled)
       {
         auto dectector =
-            make_shared<TlsDector>(move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
+            make_shared<TlsDector>(std::move(socket), m_sslContext, m_tlsOnly, m_allowPuts,
                                    m_allowPutsFrom, m_fields, dispatcher, m_errorFunction);
 
         dectector->run();
@@ -202,9 +205,9 @@ namespace mtconnect::sink::rest_sink {
       else
       {
         boost::beast::flat_buffer buffer;
-        boost::beast::tcp_stream stream(move(socket));
-        auto session = make_shared<HttpSession>(move(stream), move(buffer), m_fields, dispatcher,
-                                                m_errorFunction);
+        boost::beast::tcp_stream stream(std::move(socket));
+        auto session = make_shared<HttpSession>(std::move(stream), std::move(buffer), m_fields,
+                                                dispatcher, m_errorFunction);
 
         if (!m_allowPutsFrom.empty())
           session->allowPutsFrom(m_allowPutsFrom);
@@ -224,6 +227,180 @@ namespace mtconnect::sink::rest_sink {
   void Server::fail(beast::error_code ec, char const *what)
   {
     LOG(error) << " error: " << ec.message();
+  }
+
+  using namespace mtconnect::printer;
+
+  template <typename T>
+  void AddParameter(T &writer, const Parameter &param)
+  {
+    AutoJsonObject<T> obj(writer);
+
+    obj.AddPairs("name", param.m_name, "in", param.m_part == PATH ? "path" : "query", "required",
+                 param.m_part == PATH);
+    {
+      AutoJsonObject<T> obj(writer, "schema");
+      switch (param.m_type)
+      {
+        case ParameterType::STRING:
+          obj.AddPairs("type", "string", "format", "string");
+          break;
+
+        case ParameterType::INTEGER:
+          obj.AddPairs("type", "integer", "format", "int64");
+          break;
+
+        case ParameterType::UNSIGNED_INTEGER:
+          obj.AddPairs("type", "integer", "format", "uint64");
+          break;
+
+        case ParameterType::DOUBLE:
+          obj.AddPairs("type", "double", "format", "double");
+          break;
+
+        case ParameterType::BOOL:
+          obj.AddPairs("type", "boolean", "format", "bool");
+          break;
+
+        case ParameterType::NONE:
+          obj.AddPairs("type", "unknown", "format", "unknown");
+          break;
+      }
+      if (param.m_default.index() != NONE)
+      {
+        obj.Key("default");
+        visit(
+            overloaded {[](const std::monostate &) {}, [&obj](const std::string &s) { obj.Add(s); },
+                        [&obj](int32_t i) { obj.Add(i); }, [&obj](uint64_t i) { obj.Add(i); },
+                        [&obj](double d) { obj.Add(d); }, [&obj](bool b) { obj.Add(b); }},
+            param.m_default);
+      }
+    }
+    if (param.m_description)
+      obj.AddPairs("description", *param.m_description);
+  }
+
+  template <typename T>
+  void AddRouting(T &writer, const Routing &routing)
+  {
+    string verb {to_string(routing.getVerb())};
+    boost::to_lower(verb);
+
+    {
+      AutoJsonObject<T> obj(writer, verb.data());
+
+      if (routing.getSummary())
+        obj.AddPairs("summary", *routing.getSummary());
+      if (routing.getDescription())
+        obj.AddPairs("description", *routing.getDescription());
+
+      if (!routing.getPathParameters().empty() || !routing.getQueryParameters().empty())
+      {
+        AutoJsonArray<T> ary(writer, "parameters");
+        for (const auto &param : routing.getPathParameters())
+        {
+          AddParameter(writer, param);
+        }
+        for (const auto &param : routing.getQueryParameters())
+        {
+          AddParameter(writer, param);
+        }
+      }
+
+      {
+        AutoJsonObject<T> obj(writer, "responses");
+        {
+          AutoJsonObject<T> obj(writer, "200");
+          obj.AddPairs("description", "OK");
+        }
+      }
+    }
+  }
+
+  // Swagger stuff
+  template <typename T>
+  const void Server::renderSwaggerResponse(T &writer)
+  {
+    {
+      AutoJsonObject<T> obj(writer);
+
+      obj.AddPairs("openapi", "3.0.0");
+
+      {
+        AutoJsonObject<T> obj(writer, "info");
+        obj.AddPairs("title", "MTConnect – REST API", "description", "MTConnect REST API ");
+
+        {
+          AutoJsonObject<T> obj(writer, "contact");
+          obj.AddPairs("email", "will@metalogi.io");
+        }
+        {
+          AutoJsonObject<T> obj(writer, "license");
+
+          obj.AddPairs("name", "Apache 2.0", "url",
+                       "http://www.apache.org/licenses/LICENSE-2.0.html");
+        }
+
+        obj.AddPairs("version", GetAgentVersion());
+      }
+      {
+        AutoJsonObject<T> obj(writer, "externalDocs");
+
+        obj.AddPairs("description", "For information related to MTConnect", "url",
+                     "http://mtconnect.org");
+      }
+      {
+        AutoJsonArray<T> ary(writer, "servers");
+        {
+          AutoJsonObject<T> obj(writer);
+
+          stringstream str;
+          if (m_tlsEnabled)
+            str << "https://";
+          else
+            str << "http://";
+
+          str << GetBestHostAddress(m_context, true) << ':' << m_port << '/';
+          obj.AddPairs("url", str.str());
+        }
+      }
+      {
+        AutoJsonObject<T> obj(writer, "paths");
+
+        multimap<string, const Routing *> routings;
+        for (const auto &routing : m_routings)
+        {
+          if (!routing.isSwagger() && routing.getPath())
+            routings.emplace(make_pair(*routing.getPath(), &routing));
+        }
+
+        AutoJsonObject<T> robj(writer, false);
+        for (const auto &[path, routing] : routings)
+        {
+          robj.reset(path);
+          AddRouting<T>(writer, *routing);
+        }
+        robj.end();
+      }
+    }
+  }
+
+  void Server::addSwaggerRoutings()
+  {
+    auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
+      auto pretty = *request->parameter<bool>("pretty");
+
+      StringBuffer output;
+      RenderJson(output, pretty, [this](auto &writer) { renderSwaggerResponse(writer); });
+
+      session->writeResponse(
+          make_unique<Response>(status::ok, string(output.GetString()), "application/json"));
+
+      return true;
+    };
+
+    addRouting({boost::beast::http::verb::get, "/swagger?pretty={bool:false}", handler, true});
+    // addRouting({boost::beast::http::verb::get, "/swagger.yaml", handler, true});
   }
 
 }  // namespace mtconnect::sink::rest_sink

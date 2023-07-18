@@ -83,7 +83,7 @@ TEST_F(ShdrTokenizerTest, SimpleTokens)
   for (const auto &test : data)
   {
     auto data = std::make_shared<entity::Entity>("Data", Properties {{"VALUE", test.first}});
-    auto entity = (*m_tokenizer)(data);
+    auto entity = (*m_tokenizer)(std::move(data));
     ASSERT_TRUE(entity);
     auto tokens = dynamic_pointer_cast<Tokens>(entity);
     ASSERT_TRUE(tokens);
@@ -146,7 +146,7 @@ TEST_F(ShdrTokenizerTest, escaped_line)
   for (const auto &test : data)
   {
     auto data = std::make_shared<entity::Entity>("Data", Properties {{"VALUE", test.first}});
-    auto entity = (*m_tokenizer)(data);
+    auto entity = (*m_tokenizer)(std::move(data));
     ASSERT_TRUE(entity);
     auto tokens = dynamic_pointer_cast<Tokens>(entity);
     ASSERT_TRUE(tokens);

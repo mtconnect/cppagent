@@ -29,6 +29,7 @@ namespace mtconnect::asset {
       static auto ext = make_shared<Factory>();
       ext->registerFactory(regex(".+"), ext);
       ext->setAny(true);
+      ext->setList(true);
 
       static auto doc = make_shared<Factory>();
       doc->registerFactory(regex(".+"), ext);

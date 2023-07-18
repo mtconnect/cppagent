@@ -138,7 +138,7 @@ namespace mtconnect::pipeline {
       return std::make_tuple(device, dataItem);
     }
 
-    const EntityPtr operator()(const EntityPtr entity) override
+    EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       auto &body = entity->getValue<std::string>();
       DataItemPtr dataItem;

@@ -34,7 +34,7 @@ namespace mtconnect {
 
           auto coordinateSystem = make_shared<Factory>(Requirements {
               Requirement("id", true), Requirement("name", false), Requirement("nativeName", false),
-              Requirement("parentIdRef", false),
+              Requirement("uuid", false), Requirement("parentIdRef", false),
               Requirement(
                   "type",
                   ControlledVocab {"WORLD", "BASE", "OBJECT", "TASK", "MECHANICAL_INTERFACE",

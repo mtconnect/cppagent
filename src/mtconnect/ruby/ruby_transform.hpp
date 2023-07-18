@@ -51,7 +51,7 @@ namespace mtconnect::ruby {
 
             EntityPtr *ent;
             mrb_get_args(mrb, "d", &ent, MRubySharedPtr<Entity>::type());
-            auto r = (*trans)(*ent);
+            auto r = (*trans)(std::move(*ent));
             return MRubySharedPtr<Entity>::wrap(mrb, "Entity", r);
           },
           MRB_ARGS_REQ(1));
@@ -91,7 +91,7 @@ namespace mtconnect::ruby {
 
             EntityPtr *ent;
             mrb_get_args(mrb, "d", &ent, MRubySharedPtr<Entity>::type());
-            auto nxt = trans->next(*ent);
+            auto nxt = trans->next(std::move(*ent));
             return MRubySharedPtr<Entity>::wrap(mrb, "Entity", nxt);
           },
           MRB_ARGS_REQ(1));
@@ -112,18 +112,38 @@ namespace mtconnect::ruby {
           mrb, rubyTrans, "guard=",
           [](mrb_state *mrb, mrb_value self) {
             auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
-            mrb_value block;
             const char *guard;
-            if (mrb_get_args(mrb, "z&", &guard, &block) > 0)
+            if (mrb_get_args(mrb, "z", &guard) > 0)
             {
               trans->m_guardString = guard;
             }
 
+            trans->setGuard();
+
+            return self;
+          },
+          MRB_ARGS_OPT(1));
+
+      mrb_define_method(
+          mrb, rubyTrans, "guard",
+          [](mrb_state *mrb, mrb_value self) {
+            auto trans = MRubySharedPtr<Transform>::unwrap<RubyTransform>(mrb, self);
+            const char *guard;
+            mrb_value block = mrb_nil_value();
             if (mrb_block_given_p(mrb))
             {
-              trans->m_guardBlock = block;
-              mrb_gc_register(mrb, block);
+              mrb_get_args(mrb, "&", &block);
+              if (!mrb_nil_p(block))
+              {
+                trans->m_guardBlock = block;
+                mrb_gc_register(mrb, block);
+              }
             }
+            else if (mrb_get_args(mrb, "z", &guard) > 0)
+            {
+              trans->m_guardString = guard;
+            }
+
             trans->setGuard();
 
             return self;
@@ -164,22 +184,9 @@ namespace mtconnect::ruby {
 
     void setGuard()
     {
-      if (m_guardString == "Observation")
-        m_guard = TypeGuard<Observation>(RUN) || TypeGuard<Entity>(SKIP);
-      else if (m_guardString == "Sample")
-        m_guard = TypeGuard<Sample>(RUN) || TypeGuard<Entity>(SKIP);
-      else if (m_guardString == "Event")
-        m_guard = TypeGuard<Event>(RUN) || TypeGuard<Entity>(SKIP);
-      else if (m_guardString == "Tokens")
-        m_guard = TypeGuard<pipeline::Tokens>(RUN) || TypeGuard<Entity>(SKIP);
-      else if (m_guardString == "Message")
-        m_guard = TypeGuard<PipelineMessage>(RUN) || TypeGuard<Entity>(SKIP);
-      else
-        m_guard = TypeGuard<Entity>(RUN);
-
       if (!mrb_nil_p(m_guardBlock))
       {
-        m_guard = [this, old = m_guard](const entity::EntityPtr entity) -> GuardAction {
+        m_guard = [this, old = m_guard](const entity::Entity *entity) -> GuardAction {
           using namespace entity;
           using namespace observation;
           std::lock_guard guard(RubyVM::rubyVM());
@@ -187,7 +194,8 @@ namespace mtconnect::ruby {
           auto mrb = RubyVM::rubyVM().state();
           int save = mrb_gc_arena_save(mrb);
 
-          mrb_value ev = MRubySharedPtr<Entity>::wrap(mrb, "Entity", entity);
+          entity::EntityPtr ptr = entity->getptr();
+          mrb_value ev = MRubySharedPtr<Entity>::wrap(mrb, "Entity", ptr);
 
           mrb_bool state = false;
           mrb_value values[] = {m_guardBlock, ev};
@@ -211,7 +219,13 @@ namespace mtconnect::ruby {
           mrb_gc_arena_restore(mrb, save);
           if (!mrb_nil_p(rv))
           {
-            return GuardAction(mrb_fixnum(rv));
+            auto s = stringFromRuby(mrb, rv);
+            if (s == "RUN")
+              return GuardAction::RUN;
+            else if (s == "SKIP")
+              return GuardAction::SKIP;
+            else
+              return GuardAction::CONTINUE;
           }
           else
           {
@@ -219,11 +233,25 @@ namespace mtconnect::ruby {
           }
         };
       }
+      else if (m_guardString == "Observation")
+        m_guard = TypeGuard<Observation>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Sample")
+        m_guard = TypeGuard<Sample>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Event")
+        m_guard = TypeGuard<Event>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Condition")
+        m_guard = TypeGuard<Condition>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Tokens")
+        m_guard = TypeGuard<pipeline::Tokens>(RUN) || GuardCls(SKIP);
+      else if (m_guardString == "Message")
+        m_guard = TypeGuard<PipelineMessage>(RUN) || GuardCls(SKIP);
+      else
+        m_guard = GuardCls(RUN);
     }
 
     using calldata = pair<RubyTransform *, EntityPtr>;
 
-    const entity::EntityPtr operator()(const entity::EntityPtr entity) override
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       NAMED_SCOPE("RubyTransform::operator()");
 
@@ -241,8 +269,22 @@ namespace mtconnect::ruby {
         mrb_value ev;
         const char *klass = "Entity";
         Entity *ptr = entity.get();
-        if (dynamic_cast<Observation *>(ptr) != nullptr)
-          klass = "Observation";
+        Observation *obs;
+        if (obs = dynamic_cast<Observation *>(ptr); obs != nullptr)
+        {
+          switch (obs->getDataItem()->getCategory())
+          {
+            case device_model::data_item::DataItem::SAMPLE:
+              klass = "Sample";
+              break;
+            case device_model::data_item::DataItem::EVENT:
+              klass = "Event";
+              break;
+            case device_model::data_item::DataItem::CONDITION:
+              klass = "Condition";
+              break;
+          }
+        }
         else if (dynamic_cast<pipeline::Timestamped *>(ptr) != nullptr)
           klass = "Timestamped";
         else if (dynamic_cast<pipeline::Tokens *>(ptr) != nullptr)
@@ -282,6 +324,7 @@ namespace mtconnect::ruby {
         }
         if (state)
         {
+          // auto str = mrb_any_to_s(mrb, rv);
           LOG(error) << "Error in transform: " << mrb_str_to_cstr(mrb, mrb_inspect(mrb, rv));
           rv = mrb_nil_value();
         }

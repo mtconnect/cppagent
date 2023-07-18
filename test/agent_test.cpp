@@ -1483,7 +1483,8 @@ TEST_F(AgentTest, ConditionSequence)
   }
 
   m_agentTestHelper->m_adapter->processData(
-      "2021-02-01T12:00:00Z|lp|FAULT|4200|ALARM_D||4200 ALARM_D Power on effective parameter set");
+      "2021-02-01T12:00:00Z|lp|FAULT|4200|ALARM_D|LOW|4200 ALARM_D Power on effective parameter "
+      "set");
 
   {
     PARSE_XML_RESPONSE("/current");
@@ -2938,4 +2939,30 @@ TEST_F(AgentTest, pre_stop_hook_should_be_called)
   ASSERT_FALSE(called);
   agent->stop();
   ASSERT_TRUE(called);
+}
+
+TEST_F(AgentTest, device_should_have_hash_for_2_2)
+{
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.2", 4, true);
+
+  auto device = m_agentTestHelper->getAgent()->getDeviceByName("LinuxCNC");
+  ASSERT_TRUE(device);
+
+  auto hash = device->get<string>("hash");
+  ASSERT_EQ(28, hash.length());
+
+  {
+    PARSE_XML_RESPONSE("/LinuxCNC/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Device@hash", hash.c_str());
+  }
+
+  auto devices = m_agentTestHelper->getAgent()->getDevices();
+  auto di = devices.begin();
+
+  {
+    PARSE_XML_RESPONSE("/Agent/sample");
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceAdded[2]@hash", (*di++)->get<string>("hash").c_str());
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceAdded[3]@hash", (*di)->get<string>("hash").c_str());
+  }
 }

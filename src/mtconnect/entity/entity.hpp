@@ -17,7 +17,10 @@
 
 #pragma once
 
+#include <boost/beast/core/detail/base64.hpp>
 #include <boost/range/algorithm.hpp>
+#include <boost/unordered_set.hpp>
+#include <boost/uuid/detail/sha1.hpp>
 
 #include <unordered_map>
 
@@ -103,12 +106,43 @@ namespace mtconnect {
       /// @return the identity
       virtual const entity::Value &getIdentity() const { return getProperty("id"); }
 
-      /// @brief checks if there is entity is a list
-      /// @return `true` if there is a LIST attribute
+      /// @brief create unique ids recursively
+      /// @param[in,out] idMap  old entity id to new entity id map
+      /// @param[in] sha the root sha1
+      /// @returns optional string value of the new id
+      virtual std::optional<std::string> createUniqueId(
+          std::unordered_map<std::string, std::string> &idMap,
+          const boost::uuids::detail::sha1 &sha1);
+
+      /// @brief update all id references to the new ids recursively
+      /// @param[in] idMap map of old ids to new ids
+      virtual void updateReferences(const std::unordered_map<std::string, std::string> idMap);
+
+      /// @brief checks if there is entity is a list that has additional properties
+      /// @return `true` if this a a list with additional attributes
       bool hasListWithAttribute() const
       {
         return (m_properties.count("LIST") > 0 && m_properties.size() > 1);
       }
+      /// @brief checkis if this is an entity only containing a list of entities with no other
+      /// properties
+      /// @returns `true` if this entity only contains a list
+      bool isSimpleList() const
+      {
+        return (m_properties.count("LIST") > 0 && m_properties.size() == 1);
+      }
+      /// @brief checkis if this is an entity only containing a list
+      /// @returns `true` if this entity contains a list
+      bool isList() const { return m_properties.count("LIST") > 0; }
+      /// @brief check if the property is hidden for normal serialization
+      /// @param[in] name the name of the property
+      ///
+      /// Used for serializing properties for configuration purposes where additional attibutes
+      /// may be included in the document. The only property is `originalId` for now.
+      ///
+      /// This may be extended to include a property set in the future.
+      /// @returns `true` if the property is hidden
+      bool isHidden(const std::string &name) const { return name == "originalId"; }
       /// @brief get the name of the entity
       /// @return name
       const auto &getName() const { return m_name; }
@@ -201,6 +235,38 @@ namespace mtconnect {
         return std::nullopt;
       }
 
+      /// @brief Get the LIST property if it exists from an entity
+      /// @returns a reference to the entity list. Returns an empty list if it does not exist.
+      const EntityList &getListProperty() const
+      {
+        static EntityList null;
+
+        auto p = m_properties.find("LIST");
+        if (p != m_properties.end())
+        {
+          auto *l = std::get_if<EntityList>(&p->second);
+          if (l)
+            return *l;
+        }
+        return null;
+      }
+
+      /// @brief Get the LIST property if it exists from an entity
+      /// @returns a reference to the entity list. Returns an empty list if it does not exist.
+      EntityList &getListProperty()
+      {
+        static EntityList null;
+
+        auto p = m_properties.find("LIST");
+        if (p != m_properties.end())
+        {
+          auto *l = std::get_if<EntityList>(&p->second);
+          if (l)
+            return *l;
+        }
+        return null;
+      }
+
       /// @brief Add an entity to an entity list
       /// @param name the property key
       /// @param factory the factory for the entity
@@ -291,6 +357,7 @@ namespace mtconnect {
       /// @param other the other entity
       /// @return `true` if they have equal name and properties
       bool operator==(const Entity &other) const;
+
       /// @brief compare two entities for inequality
       /// @param other the other entity
       /// @return `true` if they have unequal name and properties
@@ -302,7 +369,59 @@ namespace mtconnect {
       /// @return `true` if successful
       bool reviseTo(const EntityPtr other, const std::set<std::string> protect = {});
 
+      /// @brief Create a consistent entity digest that is independent of representation
+      ///
+      /// The algo uses sha1 to create the digest and then base64 encodes the result. This calls
+      /// the protected virtual method`hash(boost::uuids::detail::sha1 &sha1)`
+      /// which iterates all the properties and skips properties that should not be taken into
+      /// consideration.
+      ///
+      /// @return A base64 string digest of the entity's content
+      std::string hash() const
+      {
+        boost::uuids::detail::sha1 sha1;
+        hash(sha1);
+
+        unsigned int digest[5];
+        sha1.get_digest(digest);
+
+        char encoded[32];
+        auto len = boost::beast::detail::base64::encode(encoded, digest, sizeof(digest));
+
+        return std::string(encoded, len);
+      }
+
+      /// @brief Compute the hash of the entity and add a `hash` property.
+      void addHash()
+      {
+        auto hv = hash();
+        setProperty("hash", hv);
+      }
+
     protected:
+      friend struct HashVisitor;
+
+      /// @brief Computes the sha1 hash of the entity skipping properties in `skip`
+      /// @param[in,out] sha1 The boost sha1 accumulator
+      /// @param[in] skip A set of parameters to skip–not recursive
+      void hash(boost::uuids::detail::sha1 &sha1,
+                const boost::unordered_set<std::string> &skip) const;
+
+      /// @brief The virtual method that covers `hash(boost::uuids::detail::sha1&,
+      /// boost::unordered_set<std::string> skip)`
+      ///
+      /// Overload this methid in sub-classes to provide the set of properties to skip. Such as
+      /// {"hash", "timestamp"} that should not be included in the unique hash of the entity.
+      ///
+      /// @param[in,out] sha1 The boost sha1 accumulator
+      virtual void hash(boost::uuids::detail::sha1 &sha1) const
+      {
+        // Default do not skip anything, subclasses add skipped
+        // parameters.
+        static const boost::unordered_set<std::string> skip;
+        hash(sha1, skip);
+      }
+
       Value &getProperty_(const std::string &name)
       {
         static Value noValue {std::monostate()};
@@ -320,7 +439,7 @@ namespace mtconnect {
       AttributeSet m_attributes;
     };
 
-    /// @brief variant visitor to compare two entities for equality
+    /// @brief variant visitor to compare two entity parameter values for equality
     struct ValueEqualVisitor
     {
       ValueEqualVisitor(const Value &t) : m_this(t) {}

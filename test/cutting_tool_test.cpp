@@ -26,6 +26,8 @@
 #include <sstream>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 #include "agent_test_helper.hpp"
 #include "json_helper.hpp"
 #include "mtconnect/agent.hpp"
@@ -99,7 +101,7 @@ TEST_F(CuttingToolTest, TestMinmalArchetype)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -158,7 +160,7 @@ TEST_F(CuttingToolTest, TestMeasurements)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -233,7 +235,7 @@ TEST_F(CuttingToolTest, TestItems)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -352,7 +354,7 @@ TEST_F(CuttingToolTest, TestMinmalTool)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -408,7 +410,7 @@ TEST_F(CuttingToolTest, TestMinmalToolError)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(2, errors.size());
   ASSERT_EQ(
       "CuttingToolLifeCycle(CutterStatus): Property CutterStatus is required and not provided",
@@ -435,7 +437,7 @@ TEST_F(CuttingToolTest, TestMeasurementsError)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(6, errors.size());
   auto it = errors.begin();
   EXPECT_EQ("FunctionalLength(VALUE): Property VALUE is required and not provided",
@@ -520,7 +522,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -562,12 +564,9 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
   string content = m_writer->getContent();
   ASSERT_EQ(content, doc);
 
-  entity::JsonPrinter jsonPrinter(1);
-  auto json = jsonPrinter.print(entity);
+  entity::JsonEntityPrinter jprinter(1, true);
 
-  stringstream buffer;
-  buffer << std::setw(2);
-  buffer << json;
+  auto sdoc = jprinter.print(entity);
 
   EXPECT_EQ(R"({
   "CuttingTool": {
@@ -580,31 +579,30 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
         }
       ],
       "CuttingItems": {
-        "count": 12,
         "list": [
           {
             "CuttingItem": {
               "ItemLife": [
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "PART_COUNT",
-                  "value": 0.0
+                  "type": "PART_COUNT"
                 },
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "MINUTES",
-                  "value": 0.0
+                  "type": "MINUTES"
                 },
                 {
+                  "value": 0.0,
                   "countDirection": "UP",
                   "initial": 0.0,
                   "limit": 0.0,
-                  "type": "WEAR",
-                  "value": 0.0
+                  "type": "WEAR"
                 }
               ],
               "indices": "1",
@@ -618,13 +616,14 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
               }
             }
           }
-        ]
+        ],
+        "count": 12
       },
       "Location": {
+        "value": "13",
         "negativeOverlap": 0,
         "positiveOverlap": 0,
-        "type": "POT",
-        "value": "13"
+        "type": "POT"
       },
       "ProgramToolNumber": "10"
     },
@@ -633,7 +632,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
     "toolId": "123456"
   }
 })",
-            buffer.str());
+            sdoc);
 }
 
 TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
@@ -664,7 +663,7 @@ TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "1.7", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   // Round trip test
@@ -729,7 +728,7 @@ TEST_F(CuttingToolTest, element_order_should_place_cutter_status_before_locus)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   // Round trip test

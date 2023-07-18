@@ -101,7 +101,7 @@ TEST_F(RawMaterialTest, minimal_raw_material_definition)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -143,7 +143,7 @@ TEST_F(RawMaterialTest, should_parse_raw_material_and_material)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   auto asset = dynamic_cast<Asset *>(entity.get());
@@ -194,7 +194,7 @@ TEST_F(RawMaterialTest, should_round_trip_xml)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
   entity::XmlPrinter printer;
@@ -233,15 +233,11 @@ TEST_F(RawMaterialTest, should_generate_json)
   ErrorList errors;
   entity::XmlParser parser;
 
-  auto entity = parser.parse(Asset::getRoot(), doc, "2.0", errors);
+  auto entity = parser.parse(Asset::getRoot(), doc, errors);
   ASSERT_EQ(0, errors.size());
 
-  entity::JsonPrinter jsonPrinter(1);
+  entity::JsonEntityPrinter jsonPrinter(1, true);
   auto json = jsonPrinter.print(entity);
-
-  stringstream buffer;
-  buffer << std::setw(2);
-  buffer << json;
 
   ASSERT_EQ(R"({
   "RawMaterial": {
@@ -273,5 +269,5 @@ TEST_F(RawMaterialTest, should_generate_json)
     "serialNumber": "21345"
   }
 })",
-            buffer.str());
+            json);
 }

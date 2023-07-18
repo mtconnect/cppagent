@@ -376,9 +376,10 @@ namespace mtconnect::sink::rest_sink {
     using namespace std;
     using namespace http;
     namespace fs = std::filesystem;
+    using std::move;
 
     m_complete = complete;
-    m_outgoing = move(responsePtr);
+    m_outgoing = std::move(responsePtr);
 
     if (m_outgoing->m_file && !m_outgoing->m_file->m_cached)
     {
@@ -452,12 +453,12 @@ namespace mtconnect::sink::rest_sink {
   {
     if (m_streaming)
     {
-      m_outgoing = move(response);
+      m_outgoing = std::move(response);
       writeChunk(m_outgoing->m_body, [this] { closeStream(); });
     }
     else
     {
-      writeResponse(move(response));
+      writeResponse(std::move(response));
     }
   }
 
@@ -475,7 +476,7 @@ namespace mtconnect::sink::rest_sink {
     HttpsSession(boost::beast::tcp_stream &&socket, boost::asio::ssl::context &context,
                  boost::beast::flat_buffer &&buffer, const FieldList &list, Dispatch dispatch,
                  ErrorFunction error)
-      : SessionImpl<HttpsSession>(move(buffer), list, dispatch, error),
+      : SessionImpl<HttpsSession>(std::move(buffer), list, dispatch, error),
         m_stream(std::move(socket), context)
     {
       m_remote = beast::get_lowest_layer(m_stream).socket().remote_endpoint();
@@ -571,14 +572,15 @@ namespace mtconnect::sink::rest_sink {
       {
         LOG(debug) << "Received HTTPS request";
         // Create https session
-        session = std::make_shared<HttpsSession>(move(m_stream), m_tlsContext, move(m_buffer),
-                                                 m_fields, m_dispatch, m_errorFunction);
+        session =
+            std::make_shared<HttpsSession>(std::move(m_stream), m_tlsContext, std::move(m_buffer),
+                                           m_fields, m_dispatch, m_errorFunction);
       }
       else
       {
         LOG(debug) << "Received HTTP request";
         // Create http session
-        session = std::make_shared<HttpSession>(move(m_stream), move(m_buffer), m_fields,
+        session = std::make_shared<HttpSession>(std::move(m_stream), std::move(m_buffer), m_fields,
                                                 m_dispatch, m_errorFunction);
 
         // Start the session, but set

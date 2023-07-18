@@ -45,14 +45,16 @@ namespace mtconnect::sink::rest_sink {
     using Function = std::function<bool(SessionPtr, RequestPtr)>;
 
     Routing(const Routing &r) = default;
-    /// @brief Create a routing
+    /// @brief Create a routing with a string
     ///
-    /// Creates a REGEXP to match against the path
-    /// @param verb The `GET`, `PUT`, `POST`, and `DELETE` version of the HTTP request
-    /// @param pattern the URI pattern to parse and match
-    /// @param function the function to call if matches
-    Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function)
-      : m_verb(verb), m_function(function)
+    /// Creates a routing with a regular expression from the string to match against the path
+    /// @param[in] verb The `GET`, `PUT`, `POST`, and `DELETE` version of the HTTP request
+    /// @param[in] pattern the URI pattern to parse and match
+    /// @param[in] function the function to call if matches
+    /// @param[in] swagger `true` if swagger related
+    Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function,
+            bool swagger = false)
+      : m_verb(verb), m_function(function), m_swagger(swagger)
     {
       std::string s(pattern);
 
@@ -65,15 +67,86 @@ namespace mtconnect::sink::rest_sink {
         queryParameters(query);
       }
 
+      m_path.emplace(s);
       pathParameters(s);
     }
-    /// @brief
-    /// @param verb
-    /// @param pattern
-    /// @param function
-    Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function)
-      : m_verb(verb), m_pattern(pattern), m_function(function)
+
+    /// @brief Create a routing with a regular expression
+    ///
+    /// Creates a routing from the regular expression to match against the path
+    /// @param[in] verb The `GET`, `PUT`, `POST`, and `DELETE` version of the HTTP request
+    /// @param[in] pattern the URI pattern to parse and match
+    /// @param[in] function the function to call if matches
+    /// @param[in] swagger `true` if swagger related
+    Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function,
+            bool swagger = false)
+      : m_verb(verb), m_pattern(pattern), m_function(function), m_swagger(swagger)
     {}
+
+    /// @brief Added summary and description to the routing
+    /// @param[in] summary optional summary
+    /// @param[in] description optional description of the routing
+    Routing &document(std::optional<std::string> summary,
+                      std::optional<std::string> description = std::nullopt)
+    {
+      m_summary = summary;
+      m_description = description;
+      return *this;
+    }
+
+    /// @brief Added summary and description to the routing
+    /// @param[in] summary optional summary
+    /// @param[in] description optional description of the routing
+    Routing &documentParameter(const std::string &name, UrlPart part,
+                               std::optional<std::string> description)
+    {
+      Parameter *param {nullptr};
+      if (part == PATH)
+      {
+        for (auto &p : m_pathParameters)
+        {
+          if (p.m_name == name)
+          {
+            param = &p;
+            break;
+          }
+        }
+      }
+      else
+      {
+        for (auto &p : m_queryParameters)
+        {
+          if (p.m_name == name)
+          {
+            param = const_cast<Parameter *>(&p);
+            break;
+          }
+        }
+      }
+
+      if (param != nullptr)
+        param->m_description = description;
+
+      return *this;
+    }
+
+    /// @brief Document using common parameter documentation
+    /// @param[in] docs common documentation for parameters
+    Routing &documentParameters(const ParameterDocList &docs)
+    {
+      for (const auto &doc : docs)
+      {
+        documentParameter(doc.m_name, doc.m_part, doc.m_description);
+      }
+      return *this;
+    }
+
+    /// @brief Get the description of the REST call for Swagger
+    /// @returns optional string if description is givem
+    const auto &getDescription() const { return m_description; }
+    /// @brief Get the brief summary fo the REST call for Swagger
+    /// @returns optional string if summary is givem
+    const auto &getSummary() const { return m_summary; }
 
     /// @brief Get the list of path position in order
     /// @return the parameter list
@@ -143,6 +216,15 @@ namespace mtconnect::sink::rest_sink {
       return false;
     }
 
+    /// @brief check if this is related to a swagger API
+    /// @returns `true` if related to swagger
+    auto isSwagger() const { return m_swagger; }
+
+    /// @brief Get the path component of the routing pattern
+    const auto &getPath() const { return m_path; }
+    /// @brief Get the routing `verb`
+    const auto &getVerb() const { return m_verb; }
+
   protected:
     void pathParameters(std::string s)
     {
@@ -207,6 +289,10 @@ namespace mtconnect::sink::rest_sink {
       {
         par.m_type = DOUBLE;
       }
+      else if (t == "bool")
+      {
+        par.m_type = BOOL;
+      }
 
       if (!def.empty())
       {
@@ -255,6 +341,11 @@ namespace mtconnect::sink::rest_sink {
 
           return r;
         }
+
+        case BOOL:
+        {
+          return bool(s == "true" || s == "yes");
+        }
       }
 
       throw ParameterError("Unknown type for conversion: " + std::to_string(int(t)));
@@ -266,8 +357,14 @@ namespace mtconnect::sink::rest_sink {
     boost::beast::http::verb m_verb;
     std::regex m_pattern;
     std::string m_patternText;
+    std::optional<std::string> m_path;
     ParameterList m_pathParameters;
     QuerySet m_queryParameters;
     Function m_function;
+
+    std::optional<std::string> m_summary;
+    std::optional<std::string> m_description;
+
+    bool m_swagger = false;
   };
 }  // namespace mtconnect::sink::rest_sink

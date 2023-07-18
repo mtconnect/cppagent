@@ -36,6 +36,7 @@ namespace mtconnect::observation {
 
   class Observation;
   using ObservationPtr = std::shared_ptr<Observation>;
+  using ConstObservationPtr = std::shared_ptr<const Observation>;
   using ObservationList = std::list<ObservationPtr>;
 
   /// @brief Abstract observation
@@ -351,6 +352,20 @@ namespace mtconnect::observation {
       return nullptr;
     }
 
+    /// @brief const find a condition by code in the condition list
+    /// @param[in] code te code
+    /// @return shared pointer to the condition if found
+    const ConditionPtr find(const std::string &code) const
+    {
+      if (m_code == code)
+        return std::dynamic_pointer_cast<Condition>(Entity::getptr());
+
+      if (m_prev)
+        return m_prev->find(code);
+
+      return nullptr;
+    }
+
     /// @brief replace a condition with another in the condition list
     /// @param[in] old the condition to be placed
     /// @param[in] _new the replacement condition
@@ -471,6 +486,18 @@ namespace mtconnect::observation {
     static entity::FactoryPtr getFactory();
     ~AssetEvent() override = default;
     ObservationPtr copy() const override { return std::make_shared<AssetEvent>(*this); }
+
+  protected:
+  };
+
+  /// @brief Agent Device events for added, changed, and removed
+  class AGENT_LIB_API DeviceEvent : public Event
+  {
+  public:
+    using Event::Event;
+    static entity::FactoryPtr getFactory();
+    ~DeviceEvent() override = default;
+    ObservationPtr copy() const override { return std::make_shared<DeviceEvent>(*this); }
 
   protected:
   };

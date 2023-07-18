@@ -46,6 +46,7 @@
 namespace mtconnect::entity {
   class Entity;
   using EntityPtr = std::shared_ptr<Entity>;
+  using ConstEntityPtr = std::shared_ptr<const Entity>;
   /// @brief List of shared entities
   using EntityList = std::list<std::shared_ptr<Entity>>;
   /// @brief Vector of doubles

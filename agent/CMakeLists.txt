@@ -9,6 +9,9 @@ if(WIN32)
 endif()
 
 add_executable(agent ${AGENT_SOURCES})
+if(AGENT_PREFIX)
+  set_target_properties(agent PROPERTIES OUTPUT_NAME "${AGENT_PREFIX}agent")
+endif()
 
 if(WITH_PYTHON)
   target_compile_definitions(
@@ -38,15 +41,25 @@ target_link_libraries(
   $<$<PLATFORM_ID:Windows>:shlwapi>
   )
 
-target_clangtidy_setup(agent_lib)
+target_clangtidy_setup(agent)
 
-install(TARGETS agent RUNTIME DESTINATION bin)
-
+install(TARGETS agent RUNTIME DESTINATION "bin")
 
 if(SHARED_AGENT_LIB AND MSVC)
-  set(CMAKE_INSTALL_DEBUG_LIBRARIES ON)  
+  set(CMAKE_INSTALL_DEBUG_LIBRARIES OFF)
   include(InstallRequiredSystemLibraries)
   install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
-  install(DIRECTORY "${PROJECT_BINARY_DIR}/bin/" DESTINATION bin COMPONENT Libraries
-           FILES_MATCHING PATTERN "*.dll")
+  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dll")
+  install(FILES ${dlls} DESTINATION bin COMPONENT Libraries)
+
+  add_custom_command(TARGET agent POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${dlls} $<TARGET_FILE_DIR:agent>
+    COMMAND_EXPAND_LISTS)		     
+  add_custom_command(TARGET agent POST_BUILD 
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:agent> $<TARGET_FILE_DIR:agent> 
+    COMMAND_EXPAND_LISTS)
+elseif(SHARED_AGENT_LIB)
+  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dylib" "${cppagent_BINARY_DIR}/dlls/*.so")
+  message(STATUS "!!!!! Copying ${dlls} to lib directory")
+  install(FILES ${dlls} DESTINATION lib COMPONENT Libraries)
 endif()

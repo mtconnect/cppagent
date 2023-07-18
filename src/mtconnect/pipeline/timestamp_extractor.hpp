@@ -63,7 +63,7 @@ namespace mtconnect::pipeline {
     ~ExtractTimestamp() override = default;
 
     using Now = std::function<Timestamp()>;
-    const EntityPtr operator()(const EntityPtr ptr) override
+    EntityPtr operator()(entity::EntityPtr &&ptr) override
     {
       TimestampedPtr res;
       std::optional<std::string> token;
@@ -109,7 +109,7 @@ namespace mtconnect::pipeline {
     IgnoreTimestamp(const IgnoreTimestamp &) = default;
     ~IgnoreTimestamp() override = default;
 
-    const EntityPtr operator()(const EntityPtr ptr) override
+    EntityPtr operator()(entity::EntityPtr &&ptr) override
     {
       TimestampedPtr res;
       std::optional<std::string> token;
