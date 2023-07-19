@@ -31,6 +31,7 @@ namespace mtconnect::pipeline {
   struct XmlTransformFeedback
   {
     uint64_t m_instanceId = 0;
+    int32_t m_agentVersion = 0;
     SequenceNumber_t m_next = 0;
     entity::EntityList m_assetEvents;
     ResponseDocument::Errors m_errors;
@@ -49,10 +50,12 @@ namespace mtconnect::pipeline {
     /// @param feedback a feedback object to pass back protocol info
     /// @param device an associated device
     MTConnectXmlTransform(PipelineContextPtr context, XmlTransformFeedback &feedback,
-                          const std::optional<std::string> &device = std::nullopt)
+                          const std::optional<std::string> &device = std::nullopt,
+                          const std::optional<std::string> &uuid = std::nullopt)
       : Transform("MTConnectXmlTransform"),
         m_context(context),
         m_defaultDevice(device),
+        m_uuid(uuid),
         m_feedback(feedback)
     {
       m_guard = EntityNameGuard("Data", RUN);
@@ -66,7 +69,7 @@ namespace mtconnect::pipeline {
 
       const auto &data = entity->getValue<std::string>();
       ResponseDocument rd;
-      ResponseDocument::parse(data, rd, m_context, m_defaultDevice);
+      ResponseDocument::parse(data, rd, m_context, m_defaultDevice, m_uuid);
 
       if (m_feedback.m_instanceId != 0 && m_feedback.m_instanceId != rd.m_instanceId)
       {
@@ -79,6 +82,7 @@ namespace mtconnect::pipeline {
       }
 
       m_feedback.m_instanceId = rd.m_instanceId;
+      m_feedback.m_agentVersion = rd.m_agentVersion;
       m_feedback.m_next = rd.m_next;
       m_feedback.m_assetEvents = rd.m_assetEvents;
       m_feedback.m_errors = rd.m_errors;
@@ -99,6 +103,7 @@ namespace mtconnect::pipeline {
   protected:
     PipelineContextPtr m_context;
     std::optional<std::string> m_defaultDevice;
+    std::optional<std::string> m_uuid;
     XmlTransformFeedback &m_feedback;
   };
 }  // namespace mtconnect::pipeline

@@ -148,6 +148,73 @@ namespace mtconnect::pipeline {
     return "";
   }
 
+  inline static bool parseDevices(ResponseDocument &out, xmlNodePtr node,
+                                  pipeline::PipelineContextPtr context,
+                                  const std::optional<std::string> &device,
+                                  const std::optional<std::string> &uuid)
+  {
+    using namespace entity;
+    using namespace device_model;
+
+    auto header = findChild(node, "Header");
+    if (header)
+    {
+      out.m_instanceId =
+          boost::lexical_cast<SequenceNumber_t>(attributeValue(header, "instanceId"));
+      out.m_agentVersion = IntSchemaVersion(attributeValue(header, "version"));
+    }
+
+    auto devices = findChild(node, "Devices");
+    if (devices == nullptr)
+    {
+      LOG(warning) << "Cannot find Devices node in MTConnectDevices Document";
+      return false;
+    }
+
+    entity::XmlParser parser;
+    eachElement(devices, [&out, &parser, &device, &uuid](xmlNodePtr n) {
+      ErrorList errors;
+      auto dev = parser.parseXmlNode(Device::getRoot(), n, errors);
+      if (!errors.empty())
+      {
+        LOG(warning) << "Could not parse asset: " << (const char *)n->name;
+        for (auto &e : errors)
+        {
+          LOG(warning) << "    Message: " << e->what();
+        }
+      }
+
+      auto devicePtr = dynamic_pointer_cast<device_model::Device>(dev);
+      if (!devicePtr)
+      {
+        LOG(error) << "Device could not be parsed from XML";
+        return false;
+      }
+
+      if (device && *device != *(devicePtr->getComponentName()))
+      {
+        LOG(warning) << "Source and Target Device Name mismatch: " << *device << " and "
+                     << *(devicePtr->getComponentName());
+        LOG(warning) << "Setting device name to " << *device;
+
+        devicePtr->setComponentName(*device);
+      }
+      if (uuid && *uuid != *(devicePtr->getUuid()))
+      {
+        LOG(warning) << "Source and Target Device uuid mismatch: " << *uuid << " and "
+                     << *(devicePtr->getUuid());
+        LOG(warning) << "Setting device uuid to " << *uuid;
+        devicePtr->setUuid(*uuid);
+      }
+
+      out.m_entities.emplace_back(dev);
+
+      return true;
+    });
+
+    return true;
+  }
+
   inline DataSetValue type(const string &s)
   {
     using namespace boost;
@@ -434,7 +501,8 @@ namespace mtconnect::pipeline {
 
   bool ResponseDocument::parse(const std::string_view &content, ResponseDocument &out,
                                pipeline::PipelineContextPtr context,
-                               const std::optional<std::string> &device)
+                               const std::optional<std::string> &device,
+                               const std::optional<std::string> &uuid)
   {
     // xmlInitParser();
     // xmlXPathInit();
@@ -453,6 +521,10 @@ namespace mtconnect::pipeline {
       if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) == 0)
       {
         return parseObservations(out, root, context, device);
+      }
+      else if (xmlStrcmp(BAD_CAST "MTConnectDevices", root->name) == 0)
+      {
+        return parseDevices(out, root, context, device, uuid);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectAssets", root->name) == 0)
       {

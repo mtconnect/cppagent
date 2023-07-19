@@ -40,11 +40,11 @@ namespace mtconnect {
     {
     public:
       /// @brief Construct a GuardCls
-      /// @param match the match to return if matched
-      GuardCls(GuardAction match) : m_match(match) {}
+      /// @param match the action if matched
+      GuardCls(GuardAction action) : m_action(action) {}
       GuardCls(const GuardCls &) = default;
 
-      GuardAction operator()(const entity::Entity *entity) { return m_match; }
+      GuardAction operator()(const entity::Entity *entity) { return m_action; }
 
       /// @brief set the alternative guard
       /// @param alt alternative
@@ -57,7 +57,7 @@ namespace mtconnect {
       GuardAction check(bool matched, const entity::Entity *entity)
       {
         if (matched)
-          return m_match;
+          return m_action;
         else if (m_alternative)
           return m_alternative(entity);
         else
@@ -83,7 +83,7 @@ namespace mtconnect {
 
     protected:
       Guard m_alternative;
-      GuardAction m_match;
+      GuardAction m_action;
     };
 
     /// @brief A guard that checks if the entity is one of the types or sub-types

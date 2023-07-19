@@ -897,9 +897,28 @@
 										<Maximum>7000</Maximum>
 										<Minimum>1</Minimum>
 									</Specification>
+								  <ProcessSpecification id="proc" type="TEMPERATURE" units="CELSIUS"/>								  
 								</Specifications>
 							</Configuration>
 							<DataItems>
+							  <DataItem id="tempspec" type="SPECIFICATION_LIMIT" category="EVENT" name="templimit" representation="DATA_SET">
+							    <Definition>
+							      <EntryDefinitions>
+							        <EntryDefinition key="UPPER_LIMIT" type="TEMPERATURE" units="CELSIUS"/>
+							        <EntryDefinition key="NOMINAL" type="TEMPERATURE" units="CELSIUS"/>
+							        <EntryDefinition key="LOWER_LIMIT" type="TEMPERATURE" units="CELSIUS"/>
+							      </EntryDefinitions>
+							    </Definition>
+							    <Relationships>
+							      <SpecificationRelationship type="LIMIT" idRef="proc"/>
+							      <DataItemRelationship type="OBSERVATION" idRef="temp"/>
+							    </Relationships>
+							  </DataItem>
+							  <DataItem id="temp" type="TEMPERATURE" category="SAMPLE">
+							    <Relationships>
+							      <DataItemRelationship type="LIMIT" idRef="tempspec"/>
+							    </Relationships>
+							  </DataItem>
 								<DataItem type="POSITION" subType="ACTUAL" id="Zabs" category="SAMPLE" units="MILLIMETER" coordinateSystemIdRef="machcoord"/>
 								<DataItem type="POSITION" subType="ACTUAL" id="Zpos" category="SAMPLE" units="MILLIMETER" coordinateSystemIdRef="workcoord"/>
 								<DataItem type="POSITION" id="Ztravel" category="CONDITION"/>
