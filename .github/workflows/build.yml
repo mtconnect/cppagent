@@ -57,6 +57,6 @@ jobs:
       run: |
         conan profile detect -f
         #conan create . --build=missing -pr conan/profiles/gcc  -o shared=False -o with_docs=False -o cpack=True -o shared=${{ matrix.shared }}
-        conan create . --build=missing -pr conan/profiles/gcc  -o shared=False -o with_docs=False -o cpack=True
+        conan create . --build=missing -pr conan/profiles/macos  -o shared=False -o with_docs=False -o cpack=True
         
     
