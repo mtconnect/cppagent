@@ -188,6 +188,6 @@ class MTConnectAgentConan(ConanFile):
 
         if self.options.cpack and self.settings.build_type == 'Release':
             print("Packaging agent with cpack")
-            self.run("cpack -G ZIP", cwd=self.build_folder)
+            self.run("cpack -G ZIP -B {}".format(self.package_folder), cwd=self.build_folder)
 
     
