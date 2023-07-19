@@ -64,10 +64,11 @@ namespace mtconnect::source::adapter::agent_adapter {
       Request(const Request &request) = default;
 
       std::optional<std::string> m_sourceDevice;  ///< optional source device
-      std::string m_operation;  ///< The REST operation (probe, current, sample, asset)
-      UrlQuery m_query;         ///< URL Query parameters
-      bool m_stream;            ///< `true` if using HTTP long pull
-      Next m_next;              ///< function to call on successful read
+      std::string m_operation;     ///< The REST operation (probe, current, sample, asset)
+      UrlQuery m_query;            ///< URL Query parameters
+      bool m_stream;               ///< `true` if using HTTP long pull
+      Next m_next;                 ///< function to call on successful read
+      int32_t m_agentVersion = 0;  ///< agent version if required > 0 for asset requests
 
       /// @brief Given a url, get a formatted target for a given operation
       /// @param url The base url
@@ -89,6 +90,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @param ec the error code
     /// @param what descriptive message
     virtual void failed(std::error_code ec, const char *what) = 0;
+    /// @brief close the connection
+    virtual void close() = 0;
 
     /// @brief Make a request of the remote agent
     /// @param request the request
@@ -102,6 +105,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     UpdateAssets m_updateAssets;
     bool m_closeConnectionAfterResponse = false;
     std::chrono::milliseconds m_timeout = std::chrono::milliseconds(30000);
+    bool m_closeOnRead = false;
   };
 
 }  // namespace mtconnect::source::adapter::agent_adapter

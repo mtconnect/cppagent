@@ -808,7 +808,14 @@ namespace mtconnect::configuration {
 
         GetOptions(block.second, adapterOptions, options);
         AddOptions(block.second, adapterOptions,
-                   {{configuration::Url, string()}, {configuration::Device, string()}});
+                   {{configuration::Url, string()},
+                    {configuration::Device, string()},
+                    {configuration::UUID, string()},
+                    {configuration::Uuid, string()}});
+
+        if (HasOption(adapterOptions, configuration::Uuid) &&
+            !HasOption(adapterOptions, configuration::UUID))
+          adapterOptions[configuration::UUID] = adapterOptions[configuration::Uuid];
 
         auto qname = entity::QName(block.first);
         auto [factory, name] = qname.getPair();

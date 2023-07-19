@@ -141,8 +141,8 @@ TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json)
 
 TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json_v2)
 {
-  m_agentTestHelper->createAgent("/samples/solid_model.xml", 8, 4, "2.2", 25, false, false,
-                                 {{configuration::JsonVersion, 2}});
+  m_agentTestHelper->createAgent("/samples/solid_model.xml", 8, 4, "2.2", 25, false,
+                                 false, {{configuration::JsonVersion, 2}});
 
   {
     PARSE_JSON_RESPONSE("/LinuxCNC/probe");

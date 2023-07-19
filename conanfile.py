@@ -12,8 +12,7 @@ class MTConnectAgentConan(ConanFile):
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
-    options = { "run_tests": [True, False], "build_tests": [True, False], 
-                "without_ipv6": [True, False], "with_ruby": [True, False],
+    options = { "without_ipv6": [True, False], "with_ruby": [True, False],
                  "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
                  "with_docs" : [True, False], "cpack": [True, False], "agent_prefix": [None, "ANY"] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
@@ -25,16 +24,11 @@ class MTConnectAgentConan(ConanFile):
                 "openssl/3.0.8",
                 "rapidjson/cci.20220822",
                 "mqtt_cpp/13.1.0",
-                "bzip2/1.0.8",
-                "gtest/1.10.0"
+                "bzip2/1.0.8"                
                 ]
 
-    build_requires = ["cmake/[>3.23.0]"]
-    
     build_policy = "missing"
     default_options = {
-        "run_tests": True,
-        "build_tests": True,
         "without_ipv6": False,
         "with_ruby": True,
         "development": False,
@@ -71,9 +65,6 @@ class MTConnectAgentConan(ConanFile):
         "date*:use_system_tz_db": True
         }
 
-    run_tests = True
-    build_tests = True
-
     exports_sources = "*"
     exports = "conan/mqtt_cpp/*", "conan/mruby/*"
 
@@ -92,12 +83,7 @@ class MTConnectAgentConan(ConanFile):
         cmake_layout(self)
 
     def configure(self):
-        self.run_tests = self.options.run_tests
-        self.build_tests = self.options.build_tests
         self.settings.compiler.cppstd = 17
-
-        if not self.build_tests:
-            self.run_tests = False
 
         if not self.options.shared and self.settings.os == "Macos":
             self.options["boost"].visibility = "hidden"
@@ -132,7 +118,6 @@ class MTConnectAgentConan(ConanFile):
         tc.cache_variables['SHARED_AGENT_LIB'] = self.options.shared.__bool__()
         tc.cache_variables['WITH_RUBY'] = self.options.with_ruby.__bool__()
         tc.cache_variables['AGENT_WITH_DOCS'] = self.options.with_docs.__bool__()
-        tc.cache_variables['AGENT_ENABLE_UNITTESTS'] = self.options.build_tests.__bool__()
         tc.cache_variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6.__bool__()
         if self.options.agent_prefix:
             tc.cache_variables['AGENT_PREFIX'] = self.options.agent_prefix
@@ -144,6 +129,8 @@ class MTConnectAgentConan(ConanFile):
         deps.generate()
         
     def build_requirements(self):
+        self.tool_requires("cmake/[>3.23.0]")
+        
         if self.options.with_docs:
             buf = io.StringIO()            
             res = self.run(["doxygen --version"], shell=True, stdout=buf)
@@ -153,6 +140,7 @@ class MTConnectAgentConan(ConanFile):
     def requirements(self):
         if self.options.with_ruby:
             self.requires("mruby/3.2.0")
+        self.test_requires("gtest/1.10.0")
         
     def build(self):
         cmake = CMake(self)
@@ -161,12 +149,8 @@ class MTConnectAgentConan(ConanFile):
         cmake.build()
         if self.options.with_docs:
             cmake.build(build_type=None, target='docs')
-        if self.run_tests:
-            cmake.test()
 
-        if self.options.cpack and self.settings.build_type == 'Release':
-            print("Packaging agent with cpack")
-            self.run("cpack -G ZIP", cwd=self.build_folder)
+        # if not self.conf.get("tools.build:skip_test", default=False):
 
     def package_info(self):
         self.cpp_info.includedirs = ['include']
@@ -177,7 +161,14 @@ class MTConnectAgentConan(ConanFile):
             output_name = self.options.agent_prefix + output_name
         self.cpp_info.libs = [output_name]
 
-        self.cpp_info.defines = []
+        self.cpp_info.defines = ['MQTT_USE_TLS=ON',
+                                 'MQTT_USE_WS=ON',
+                                 'MQTT_USE_STR_CHECK=ON',
+                                 'MQTT_STD_VARIANT',
+                                 'MQTT_STD_OPTIONAL',
+                                 'MQTT_STD_STRING_VIEW',
+                                 'MQTT_USE_LOG',
+                                 'BOOST_FILESYSTEM_VERSION=3']
         if self.options.with_ruby:
             self.cpp_info.defines.append("WITH_RUBY=1")
         if self.options.without_ipv6:
@@ -194,5 +185,9 @@ class MTConnectAgentConan(ConanFile):
     def package(self):
         cmake = CMake(self)
         cmake.install()
+
+        if self.options.cpack and self.settings.build_type == 'Release':
+            print("Packaging agent with cpack")
+            self.run("cpack -G ZIP -B {}".format(self.package_folder), cwd=self.build_folder)
 
     

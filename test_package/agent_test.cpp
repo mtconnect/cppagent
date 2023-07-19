@@ -65,7 +65,8 @@ protected:
   void SetUp() override
   {
     m_agentTestHelper = make_unique<AgentTestHelper>();
-    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 25, true);
+    m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 25,
+                                   true);
     m_agentId = to_string(getCurrentTimeInSec());
   }
 
@@ -89,8 +90,9 @@ TEST_F(AgentTest, Constructor)
   using namespace configuration;
   ConfigOptions options {{BufferSize, 17}, {MaxAssets, 8}, {SchemaVersion, "1.7"s}};
 
-  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
-                                               PROJECT_ROOT_DIR "/samples/badPath.xml", options);
+  unique_ptr<Agent> agent =
+      make_unique<Agent>(m_agentTestHelper->m_ioContext,
+                         TEST_RESOURCE_DIR "/samples/badPath.xml", options);
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
@@ -98,7 +100,7 @@ TEST_F(AgentTest, Constructor)
   agent.reset();
 
   agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
-                             PROJECT_ROOT_DIR "/samples/test_config.xml", options);
+                             TEST_RESOURCE_DIR "/samples/test_config.xml", options);
 
   context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
@@ -133,8 +135,9 @@ TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
   using namespace configuration;
   ConfigOptions options {{BufferSize, 17}, {MaxAssets, 8}, {SchemaVersion, "1.5"s}};
 
-  unique_ptr<Agent> agent = make_unique<Agent>(m_agentTestHelper->m_ioContext,
-                                               PROJECT_ROOT_DIR "/samples/dup_uuid.xml", options);
+  unique_ptr<Agent> agent =
+      make_unique<Agent>(m_agentTestHelper->m_ioContext,
+                         TEST_RESOURCE_DIR "/samples/dup_uuid.xml", options);
   auto context = std::make_shared<pipeline::PipelineContext>();
   context->m_contract = agent->makePipelineContract();
 
@@ -1795,7 +1798,8 @@ TEST_F(AgentTest, UUIDChange)
 
 TEST_F(AgentTest, AssetStorage)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "1.3", 4, true);
 
   auto rest = m_agentTestHelper->getRestService();
   ASSERT_TRUE(rest->getServer()->arePutsAllowed());
@@ -1830,7 +1834,8 @@ TEST_F(AgentTest, AssetStorage)
 
 TEST_F(AgentTest, AssetBuffer)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
 
@@ -2320,7 +2325,8 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
 
 TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "1.3", 4, true);
   addAdapter();
   const auto &storage = agent->getAssetStorage();
 
@@ -2417,7 +2423,8 @@ TEST_F(AgentTest, RemoveAllAssets)
 
 TEST_F(AgentTest, AssetProbe)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "1.3", 4, true);
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
   const auto &storage = agent->getAssetStorage();
@@ -2782,7 +2789,8 @@ TEST_F(AgentTest, shound_add_asset_count_when_20)
 
 TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "2.0", 4, true);
 
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
@@ -2808,7 +2816,8 @@ TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
 
 TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "2.0", 4, true);
 
   string body1 = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
@@ -2866,7 +2875,8 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
 
 TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "2.0", 4, true);
 
   string body = "<Part assetId='P1'>TEST 1</Part>";
   QueryMap queries;
@@ -2890,7 +2900,8 @@ TEST_F(AgentTest, pre_start_hook_should_be_called)
     helper.getAgent()->beforeStartHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "2.0", 4, true);
 
   ASSERT_FALSE(called);
   agent->start();
@@ -2932,7 +2943,8 @@ TEST_F(AgentTest, pre_stop_hook_should_be_called)
     helper.getAgent()->beforeStopHooks().add(lambda);
   };
   m_agentTestHelper->setAgentCreateHook(helperHook);
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4,
+                                              "2.0", 4, true);
 
   ASSERT_FALSE(called);
   agent->start();

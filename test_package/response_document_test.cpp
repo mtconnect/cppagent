@@ -75,7 +75,9 @@ protected:
 
     m_doc.emplace();
 
-    m_device = parser->parseFile(PROJECT_ROOT_DIR "/samples/data_set.xml", printer.get()).front();
+    m_device =
+        parser->parseFile(TEST_RESOURCE_DIR "/samples/data_set.xml", printer.get())
+            .front();
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_device);
@@ -345,7 +347,7 @@ TEST_F(ResponseDocumentTest, should_parse_assets)
   CuttingToolArchetype::registerAsset();
   CuttingTool::registerAsset();
 
-  ifstream str(PROJECT_ROOT_DIR "/test/resources/ext_asset.xml");
+  ifstream str(TEST_RESOURCE_DIR "/ext_asset.xml");
   ASSERT_TRUE(str.is_open());
   str.seekg(0, std::ios_base::end);
   size_t size = str.tellg();

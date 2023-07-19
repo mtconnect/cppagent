@@ -52,6 +52,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     Handler *m_handler = nullptr;
     pipeline::XmlTransformFeedback &m_feedback;
+    std::optional<std::string> m_uuid;
   };
 
   /// @brief An adapter to connnect to another Agent and replicate data
@@ -106,7 +107,8 @@ namespace mtconnect::source::adapter::agent_adapter {
   protected:
     void run();
     void recover();
-    void current();
+    bool probe();
+    bool current();
     bool sample();
     void assets();
     void updateAssets();
@@ -132,6 +134,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     bool m_failed = false;
     bool m_stopped = false;
     bool m_usePolling = false;
+    bool m_probeAgent = false;
 
     std::chrono::milliseconds m_reconnectInterval;
     std::chrono::milliseconds m_pollingInterval;
@@ -150,6 +153,8 @@ namespace mtconnect::source::adapter::agent_adapter {
     // Current and Asset Request
     std::optional<Session::Request> m_streamRequest;
     std::optional<Session::Request> m_assetRequest;
+
+    int32_t m_agentVersion = 0;
 
     // For testing
     bool m_closeConnectionAfterResponse;

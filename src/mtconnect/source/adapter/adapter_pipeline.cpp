@@ -103,11 +103,14 @@ namespace mtconnect {
       }
     }
 
-    void AdapterPipeline::buildCommandAndStatusDelivery()
+    void AdapterPipeline::buildCommandAndStatusDelivery(pipeline::TransformPtr next)
     {
-      bind(make_shared<DeliverConnectionStatus>(
+      if (next == nullptr)
+        next = m_start;
+
+      next->bind(make_shared<DeliverConnectionStatus>(
           m_context, m_devices, IsOptionSet(m_options, configuration::AutoAvailable)));
-      bind(make_shared<DeliverCommand>(m_context, m_device));
+      next->bind(make_shared<DeliverCommand>(m_context, m_device));
     }
 
     void AdapterPipeline::buildAssetDelivery(pipeline::TransformPtr next)
@@ -118,6 +121,11 @@ namespace mtconnect {
 
       next->bind(make_shared<DeliverAsset>(m_context, assetMetrics));
       next->bind(make_shared<DeliverAssetCommand>(m_context));
+    }
+
+    void AdapterPipeline::buildDeviceDelivery(pipeline::TransformPtr next)
+    {
+      next->bind(make_shared<DeliverDevice>(m_context));
     }
 
     void AdapterPipeline::buildObservationDelivery(pipeline::TransformPtr next)

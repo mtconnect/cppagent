@@ -677,10 +677,10 @@ TEST_F(RestServiceTest, additional_header_fields)
   ASSERT_EQ("https://foo.example", f2->second);
 }
 
-const string CertFile(PROJECT_ROOT_DIR "/test/resources/user.crt");
-const string KeyFile {PROJECT_ROOT_DIR "/test/resources/user.key"};
-const string DhFile {PROJECT_ROOT_DIR "/test/resources/dh2048.pem"};
-const string RootCertFile(PROJECT_ROOT_DIR "/test/resources/rootca.crt");
+const string CertFile(TEST_RESOURCE_DIR "/user.crt");
+const string KeyFile {TEST_RESOURCE_DIR "/user.key"};
+const string DhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
+const string RootCertFile(TEST_RESOURCE_DIR "/rootca.crt");
 
 TEST_F(RestServiceTest, failure_when_tls_only)
 {

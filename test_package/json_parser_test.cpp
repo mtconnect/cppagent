@@ -29,7 +29,6 @@
 #include <nlohmann/json.hpp>
 
 #include "mtconnect/entity/entity.hpp"
-#include "mtconnect/entity/json_parser.cpp"
 #include "mtconnect/entity/json_parser.hpp"
 
 using json = nlohmann::json;

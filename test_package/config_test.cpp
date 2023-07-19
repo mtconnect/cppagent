@@ -90,7 +90,7 @@ namespace {
 
     fs::path copyFile(const std::string &src, fs::path target, chrono::seconds delta)
     {
-      fs::path file {fs::path(PROJECT_ROOT_DIR) / "samples" / src};
+      fs::path file {fs::path(TEST_RESOURCE_DIR) / "samples" / src};
 
       fs::copy_file(file, target, fs::copy_options::overwrite_existing);
       auto t = fs::last_write_time(target);
@@ -143,7 +143,7 @@ namespace {
 
   TEST_F(ConfigTest, Device)
   {
-    string str("Devices = " PROJECT_ROOT_DIR "/samples/test_config.xml\n");
+    string str("Devices = " TEST_RESOURCE_DIR "/samples/test_config.xml\n");
     m_config->loadConfig(str);
 
     const auto agent = m_config->getAgent();
@@ -167,7 +167,7 @@ namespace {
   {
     using namespace std::chrono_literals;
 
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "Adapters { LinuxCNC { \n"
                "Port = 23\n"
@@ -199,7 +199,7 @@ namespace {
 
   TEST_F(ConfigTest, DefaultPreserveUUID)
   {
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "PreserveUUID = true\n");
     m_config->loadConfig(str);
@@ -213,7 +213,7 @@ namespace {
 
   TEST_F(ConfigTest, DefaultPreserveOverride)
   {
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "PreserveUUID = true\n"
                "Adapters { LinuxCNC { \n"
@@ -230,7 +230,7 @@ namespace {
 
   TEST_F(ConfigTest, DisablePut)
   {
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "AllowPut = true\n");
     m_config->loadConfig(str);
@@ -246,7 +246,7 @@ namespace {
 
   TEST_F(ConfigTest, LimitPut)
   {
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "AllowPutFrom = localhost\n");
     m_config->loadConfig(str);
@@ -264,7 +264,7 @@ namespace {
 
   TEST_F(ConfigTest, LimitPutFromHosts)
   {
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "AllowPutFrom = localhost, 192.168.0.1\n");
     m_config->loadConfig(str);
@@ -357,7 +357,7 @@ namespace {
   {
     using namespace std::chrono_literals;
 
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "LegacyTimeout = 2000\n");
     m_config->loadConfig(str);
@@ -371,7 +371,7 @@ namespace {
 
   TEST_F(ConfigTest, IgnoreTimestamps)
   {
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "IgnoreTimestamps = true\n");
     m_config->loadConfig(str);
@@ -385,7 +385,7 @@ namespace {
 
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
   {
-    string str("Devices = " PROJECT_ROOT_DIR
+    string str("Devices = " TEST_RESOURCE_DIR
                "/samples/test_config.xml\n"
                "IgnoreTimestamps = true\n"
                "Adapters { LinuxCNC { \n"
@@ -443,7 +443,7 @@ namespace {
 
   TEST_F(ConfigTest, SchemaDirectory)
   {
-    chdir(PROJECT_ROOT_DIR "/test");
+    chdir(PROJECT_ROOT_DIR);
     m_config->updateWorkingDirectory();
     string schemas(
         "SchemaVersion = 1.3\n"
@@ -1228,8 +1228,9 @@ Port = 0
       }
       else
       {
-        fs::copy_file(fs::path(PROJECT_ROOT_DIR) / "samples" / "min_config2.xml", devices,
-                      fs::copy_options::overwrite_existing);
+        fs::copy_file(
+            fs::path(TEST_RESOURCE_DIR) / "samples" / "min_config2.xml",
+            devices, fs::copy_options::overwrite_existing);
       }
     });
 
@@ -2091,7 +2092,8 @@ Adapters {
       using namespace boost::algorithm;
 
       if (!ec)
-      {}
+      {
+      }
       m_config->stop();
     };
 

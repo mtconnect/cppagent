@@ -66,6 +66,9 @@ namespace mtconnect::source::adapter::agent_adapter {
     /// @return `true` if the socket is open
     bool isOpen() const override { return derived().lowestLayer().socket().is_open(); }
 
+    /// @brief close the connection
+    void close() override { derived().lowestLayer().socket().close(); }
+
     /// @brief Method called when a request fails
     ///
     /// Closes the socket and resets the request
@@ -74,9 +77,12 @@ namespace mtconnect::source::adapter::agent_adapter {
     void failed(std::error_code ec, const char *what) override
     {
       derived().lowestLayer().socket().close();
-      m_request.reset();
 
-      LOG(error) << what << ": " << ec.message() << "\n";
+      LOG(error) << "Agent Adapter Connection Failed: " << m_url.getUrlText(nullopt);
+      if (m_request)
+        LOG(error) << "Agent Adapter Target: " << m_request->getTarget(m_url);
+      LOG(error) << "Agent Adapter " << what << ": " << ec.message() << "\n";
+      m_request.reset();
       if (m_failed)
         m_failed(ec);
     }
@@ -98,7 +104,6 @@ namespace mtconnect::source::adapter::agent_adapter {
         m_textParser.reset();
         m_req.reset();
         m_hasHeader = false;
-        m_closeOnRead = false;
         if (m_chunk.size() > 0)
           m_chunk.consume(m_chunk.size());
 
@@ -241,6 +246,9 @@ namespace mtconnect::source::adapter::agent_adapter {
 
       derived().lowestLayer().expires_after(m_timeout);
 
+      LOG(debug) << "Agent adapter making request: " << m_url.getUrlText(nullopt) << " target "
+                 << m_request->getTarget(m_url);
+
       http::async_write(derived().stream(), *m_req,
                         beast::bind_front_handler(&SessionImpl::onWrite, derived().getptr()));
     }
@@ -281,7 +289,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     {
       if (ec)
       {
-        LOG(error) << "Error getting request header: " << ec.category().name() << " "
+        LOG(error) << "Agent Adapter Error getting request header: " << ec.category().name() << " "
                    << ec.message();
         derived().lowestLayer().close();
         if (m_request->m_stream && ec == beast::error::timeout)
@@ -304,7 +312,12 @@ namespace mtconnect::source::adapter::agent_adapter {
       }
 
       auto &msg = m_headerParser->get();
-      if (auto a = msg.find(beast::http::field::connection); a != msg.end())
+      if (msg.version() < 11)
+      {
+        LOG(trace) << "Agent adapter: HTTP 10 requires close on read";
+        m_closeOnRead = true;
+      }
+      else if (auto a = msg.find(beast::http::field::connection); a != msg.end())
       {
         m_closeOnRead = a->value() == "close";
       }
@@ -357,7 +370,7 @@ namespace mtconnect::source::adapter::agent_adapter {
       m_request.reset();
 
       if (m_closeOnRead)
-        derived().disconnect();
+        close();
 
       if (next)
       {
@@ -599,8 +612,6 @@ namespace mtconnect::source::adapter::agent_adapter {
     // For request queuing
     std::optional<Request> m_request;
     RequestQueue m_queue;
-
-    bool m_closeOnRead = false;
   };
 
 }  // namespace mtconnect::source::adapter::agent_adapter

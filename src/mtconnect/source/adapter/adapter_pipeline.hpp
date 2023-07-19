@@ -72,7 +72,8 @@ namespace mtconnect::source::adapter {
 
   protected:
     void buildDeviceList();
-    void buildCommandAndStatusDelivery();
+    void buildCommandAndStatusDelivery(pipeline::TransformPtr next = nullptr);
+    void buildDeviceDelivery(pipeline::TransformPtr next);
     void buildAssetDelivery(pipeline::TransformPtr next);
     void buildObservationDelivery(pipeline::TransformPtr next);
 
