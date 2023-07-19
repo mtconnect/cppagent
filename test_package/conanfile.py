@@ -8,7 +8,7 @@ from conan.tools.build import can_run
 
 class MTConnectAgentTest(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    generators = "CMakeDeps", "CMakeToolchain"
+    # generators = "CMakeDeps", "CMakeToolchain"
 
     def requirements(self):
         self.requires("gtest/1.10.0")
