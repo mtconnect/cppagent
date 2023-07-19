@@ -16,9 +16,9 @@ on:
 jobs:
   build_linux:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        shared: ["True", "False"]
+#    strategy:
+#      matrix:
+#        shared: ["True", "False"]
 
     steps:
     - name: Checkout Agent
@@ -40,9 +40,9 @@ jobs:
         
   build_macos:
     runs-on: macos-latest
-    strategy:
-      matrix:
-        shared: ["True", "False"]
+#    strategy:
+#      matrix:
+#        shared: ["True", "False"]
 
     steps:
     - name: Checkout Agent
