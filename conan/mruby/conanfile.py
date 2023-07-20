@@ -50,6 +50,7 @@ class MRubyConan(ConanFile):
         with open(self.build_config, "w") as f:
             f.write('''
 # Work around possible onigmo regex package already installed somewhere
+p ENV['PATH']
 
 module MRuby
   module Gem
