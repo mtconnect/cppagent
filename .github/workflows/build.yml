@@ -58,6 +58,9 @@ jobs:
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
       
+    - name: Initialize MSDEV
+      uses: microsoft/setup-msbuild@v1.1
+      
     - name: Build and Test C++ Agent
       shell: bash
       run: |
