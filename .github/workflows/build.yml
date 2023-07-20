@@ -25,6 +25,11 @@ jobs:
       
     - name: Initialize MSDEV
       uses: microsoft/setup-msbuild@v1.1
+
+    - name: Install ruby
+      uses: ruby/setup-ruby@v1.32.4
+      with:
+        ruby-version: '3.1'
       
     - name: Build and Test C++ Agent
       run: |
