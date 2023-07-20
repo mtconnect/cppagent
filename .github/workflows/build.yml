@@ -27,7 +27,7 @@ jobs:
       uses: microsoft/setup-msbuild@v1.1
 
     - name: Install ruby
-      uses: ruby/setup-ruby@v1.32.4
+      uses: ruby/setup-ruby@v1.3
       with:
         ruby-version: '3.1'
       
