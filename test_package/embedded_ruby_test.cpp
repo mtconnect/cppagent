@@ -116,10 +116,10 @@ namespace {
 
     void load(const char *file)
     {
-      string str("Devices = " PROJECT_ROOT_DIR
-                 "/test/resources/samples/test_config.xml\n"
+      string str("Devices = " TEST_RESOURCE_DIR
+                 "/samples/test_config.xml\n"
                  "Ruby {\n"
-                 "  module = " PROJECT_ROOT_DIR "/test/resources/ruby/" +
+                 "  module = " TEST_RESOURCE_DIR "/ruby/" +
                  string(file) +
                  "\n"
                  "}\n");
