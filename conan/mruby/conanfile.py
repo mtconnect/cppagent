@@ -50,6 +50,8 @@ class MRubyConan(ConanFile):
         with open(self.build_config, "w") as f:
             f.write('''
 # Work around possible onigmo regex package already installed somewhere
+puts "*************"
+p ENV['PATH']
 ENV['PATH'].split(';').each do |pth|
   puts "Path: #{pth}"
   file = File.join(pth, 'cl.exe')
