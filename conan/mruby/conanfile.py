@@ -51,6 +51,7 @@ class MRubyConan(ConanFile):
             f.write('''
 # Work around possible onigmo regex package already installed somewhere
 puts "*************"
+p Dir.pwd
 p ENV['PATH']
 ENV['PATH'].split(';').each do |pth|
   puts "Path: #{pth}"
