@@ -51,14 +51,7 @@ class MRubyConan(ConanFile):
             f.write('''
 # Work around possible onigmo regex package already installed somewhere
 puts "*************"
-p Dir.pwd
-p ENV['PATH']
-ENV['PATH'].split(';').each do |pth|
-  puts "Path: #{pth}"
-  p Dir.glob("#{pth}/**/*")
-  file = File.join(pth, 'cl.exe')
-  puts "Found cl: #{file}" if File.exists?(file)
-end
+p `vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`
 
 module MRuby
   module Gem
