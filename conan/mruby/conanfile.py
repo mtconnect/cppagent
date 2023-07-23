@@ -55,7 +55,7 @@ p Dir.pwd
 p ENV['PATH']
 ENV['PATH'].split(';').each do |pth|
   puts "Path: #{pth}"
-  p Dir[File.join(pth, '*')]
+  p Dir[File.join(pth, '**', '*')]
   file = File.join(pth, 'cl.exe')
   puts "Found cl: #{file}" if File.exists?(file)
 end
