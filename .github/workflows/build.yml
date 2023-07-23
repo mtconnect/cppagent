@@ -31,40 +31,40 @@ jobs:
         conan profile detect -f
         conan create . --build=missing -pr conan/profiles/vs64  -o shared=False -o with_docs=False -o cpack=True
 
-  # build_linux:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Checkout Agent
-  #     uses: actions/checkout@v3
+   build_linux:
+     runs-on: ubuntu-latest
+     steps:
+     - name: Checkout Agent
+       uses: actions/checkout@v3
 
-  #   - name: Install dependencies
-  #     shell: bash
-  #     run: |
-  #       sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
+     - name: Install dependencies
+       shell: bash
+       run: |
+         sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
       
-  #   - name: Install Conan
-  #     uses: turtlebrowser/get-conan@v1.2
+     - name: Install Conan
+       uses: turtlebrowser/get-conan@v1.2
       
-  #   - name: Build and Test C++ Agent
-  #     shell: bash
-  #     run: |
-  #       conan profile detect -f
-  #       conan create . --build=missing -pr conan/profiles/gcc  -o shared=False -o with_docs=False -o cpack=True
+     - name: Build and Test C++ Agent
+       shell: bash
+       run: |
+         conan profile detect -f
+         conan create . --build=missing -pr conan/profiles/gcc  -o shared=False -o with_docs=False -o cpack=True
         
-  # build_macos:
-  #   runs-on: macos-latest
-  #   steps:
-  #   - name: Checkout Agent
-  #     uses: actions/checkout@v3
+   build_macos:
+     runs-on: macos-latest
+     steps:
+     - name: Checkout Agent
+       uses: actions/checkout@v3
 
-  #   - name: Install Conan
-  #     uses: turtlebrowser/get-conan@v1.2
+     - name: Install Conan
+       uses: turtlebrowser/get-conan@v1.2
       
-  #   - name: Build and Test C++ Agent
-  #     shell: bash
-  #     run: |
-  #       conan profile detect -f
-  #       conan create . --build=missing -pr conan/profiles/macos  -o shared=False -o with_docs=False -o cpack=True
+     - name: Build and Test C++ Agent
+       shell: bash
+       run: |
+         conan profile detect -f
+         conan create . --build=missing -pr conan/profiles/macos  -o shared=False -o with_docs=False -o cpack=True
         
         
     
