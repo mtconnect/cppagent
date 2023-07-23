@@ -23,8 +23,8 @@ jobs:
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
       
-    - name: Initialize MSDEV
-      uses: microsoft/setup-msbuild@v1.1
+    - name: Initialize VS Dev Env
+      uses: seanmiddleditch/gha-setup-vsdevenv@master
 
   #  - name: Install ruby
   #    uses: ruby/setup-ruby@v1
