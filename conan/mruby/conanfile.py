@@ -50,9 +50,6 @@ class MRubyConan(ConanFile):
         with open(self.build_config, "w") as f:
             f.write('''
 # Work around possible onigmo regex package already installed somewhere
-puts "*************"
-p `vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`
-p ENV['PATH']
 
 module MRuby
   module Gem
