@@ -18,12 +18,12 @@ jobs:
     runs-on: windows-2019
     strategy:
       matrix:
-        shared: ["False"] # , "True"]
+        shared: ["False"]
         include:
-          - shared: "True"
-            profile: "vs64shared"
           - shared: "False"
             profile: "vs64"
+#          - shared: "True"
+#            profile: "vs64shared"
 
     steps:
     - name: Checkout Agent
