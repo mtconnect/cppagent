@@ -11,7 +11,6 @@ class MTConnectAgentTest(ConanFile):
     test_type = "explicit"
     
     def requirements(self):
-        self.test_requires("gtest/1.10.0")
         self.requires(self.tested_reference_str)
 
     def generate(self):

@@ -14,7 +14,8 @@ class MTConnectAgentConan(ConanFile):
     settings = "os", "compiler", "arch", "build_type"
     options = { "without_ipv6": [True, False], "with_ruby": [True, False],
                  "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
-                 "with_docs" : [True, False], "cpack": [True, False], "agent_prefix": [None, "ANY"] }
+                 "with_docs" : [True, False], "cpack": [True, False], "agent_prefix": [None, "ANY"],
+                 "fPIC": [True, False] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     build_policy = "missing"
@@ -27,6 +28,7 @@ class MTConnectAgentConan(ConanFile):
         "with_docs": False,
         "cpack": False,
         "agent_prefix": None,
+        "fPIC": True,
 
         "boost*:shared": False,
         "boost*:without_python": True,
@@ -72,13 +74,32 @@ class MTConnectAgentConan(ConanFile):
         self.folders.build_folder_vars = ["options.shared", "settings.arch"]
         cmake_layout(self)
 
+    def config_options(self):
+        if is_msvc(self):
+            self.options.rm_safe("fPIC")                
+        
+    def requirements(self):
+        self.requires("boost/1.79.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+        self.requires("libxml2/2.10.3", headers=True, libs=True, visible=True, transitive_headers=True, transitive_libs=True)
+        self.requires("date/2.4.1", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+        self.requires("nlohmann_json/3.9.1", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
+        self.requires("openssl/3.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+        self.requires("rapidjson/cci.20220822", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
+        self.requires("mqtt_cpp/13.1.0", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
+        self.requires("bzip2/1.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+        
+        if self.options.with_ruby:
+            self.requires("mruby/3.2.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+
+        self.requires("gtest/1.10.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True, test=True)
+        
     def configure(self):
-        self.settings.compiler.cppstd = 17
+        if self.options.shared:
+            self.options.rm_safe("fPIC")
 
         if self.settings.os == "Macos" and not self.options.shared:
             self.options["boost/*"].visibility = "hidden"
 
-                
         if self.options.shared:
             self.options["boost/*"].shared = True
             self.package_type = "shared-library"
@@ -87,11 +108,10 @@ class MTConnectAgentConan(ConanFile):
         if is_msvc(self) and self.options.shared:
             print("**** Making boost, libxml2, gtest, and openssl shared")
             self.options["bzip2/*"].shared = True
-            self.options["boost/*"].shared = True
             self.options["libxml2/*"].shared = True
             self.options["gtest/*"].shared = True
             self.options["openssl/*"].shared = True
-            
+        
         self.run("conan export conan/mqtt_cpp", cwd=os.path.dirname(__file__))
         if self.options.with_ruby:
             self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))
@@ -133,20 +153,6 @@ class MTConnectAgentConan(ConanFile):
             if (res != 0 or not buf.getvalue().startswith('1.9')):
                 self.tool_requires("doxygen/1.9.4")
 
-    def requirements(self):
-        self.requires("boost/1.79.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
-        self.requires("libxml2/2.10.3", headers=True, libs=True, visible=True, transitive_headers=True, transitive_libs=True)
-        self.requires("date/2.4.1", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
-        self.requires("nlohmann_json/3.9.1", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
-        self.requires("openssl/3.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
-        self.requires("rapidjson/cci.20220822", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
-        self.requires("mqtt_cpp/13.1.0", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
-        self.requires("bzip2/1.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
-        
-        if self.options.with_ruby:
-            self.requires("mruby/3.2.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
-        self.test_requires("gtest/1.10.0")
-        
     def build(self):
         cmake = CMake(self)
         cmake.verbose = True
