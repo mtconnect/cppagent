@@ -8,11 +8,25 @@ from conan.tools.build import can_run
 
 class MTConnectAgentTest(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    generators = "CMakeDeps", "CMakeToolchain"
-
+    test_type = "explicit"
+    
     def requirements(self):
-        self.requires("gtest/1.10.0")
         self.requires(self.tested_reference_str)
+
+    def generate(self):
+        agent_options = self.dependencies[self.tested_reference_str].options
+        
+        tc = CMakeToolchain(self)
+
+        if agent_options.shared:
+            tc.cache_variables['SHARED_AGENT_LIB'] = True
+        if agent_options.with_ruby:
+            tc.cache_variables['WITH_RUBY'] = True
+        
+        tc.generate()
+        
+        deps = CMakeDeps(self)
+        deps.generate()
 
     def layout(self):
         cmake_layout(self)
