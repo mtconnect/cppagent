@@ -31,8 +31,6 @@ find_package(mtconnect_agent REQUIRED GLOBAL)
 set(COMMON_DEFINITIONS 
   "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\";TEST_RESOURCE_DIR=\"${CMAKE_SOURCE_DIR}/resources\";BOOST_FILESYSTEM_VERSION=3;$<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>;$<$<PLATFORM_ID:Windows>:NOMINMAX>;$<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>;$<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>")
 
-message(STATUS "CMake Include Path: ${CMAKE_INCLUDE_PATH}")
-
 list(REMOVE_ITEM CMAKE_INCLUDE_PATH "include")
 
 add_library(sink_plugin_test SHARED testsink_service.cpp testsink_service.hpp)
@@ -287,13 +285,8 @@ elseif(UNIX)
 endif()
 
 if(SHARED_AGENT_LIB AND MSVC)
-  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dll")
-
-  add_custom_command(TARGET config_test POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${dlls} $<TARGET_FILE_DIR:config_test> 
-    COMMAND_EXPAND_LISTS)
   add_custom_command(TARGET config_test POST_BUILD 
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:config_test> $<TARGET_FILE_DIR:config_test> 
-    COMMAND_EXPAND_LISTS)
+     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:config_test> "$<TARGET_FILE_DIR:config_test>"
+     COMMAND_EXPAND_LISTS)
 endif()
 		     
