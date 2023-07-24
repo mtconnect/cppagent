@@ -1,7 +1,7 @@
 
 MTConnect C++ Agent Version 2.1
 --------
-[![Build status](https://ci.appveyor.com/api/projects/status/g4xdyitw7h41rl48/branch/master?svg=true)](https://ci.appveyor.com/project/WilliamSobel/cppagent/branch/master)
+[![Build MTConnect C++ Agent](https://github.com/mtconnect/cppagent/actions/workflows/build.yml/badge.svg)](https://github.com/mtconnect/cppagent/actions/workflows/build.yml)
 
 The C++ Agent provides the a complete implementation of the HTTP
 server required by the MTConnect standard. The agent provides the
