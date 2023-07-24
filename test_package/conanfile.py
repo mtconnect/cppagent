@@ -33,7 +33,8 @@ class MTConnectAgentTest(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure()
+        cmake.verbose = True
+        cmake.configure(cli_args=['--log-level=DEBUG'])
         cmake.build()
 
         
