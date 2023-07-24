@@ -19,6 +19,12 @@ jobs:
     strategy:
       matrix:
         shared: ["True", "False"]
+        include:
+          - shared: "True"
+            profile: "vs64shared"
+          - shared: "False"
+            profile: "vs64"
+
     steps:
     - name: Checkout Agent
       uses: actions/checkout@v3
@@ -32,13 +38,14 @@ jobs:
     - name: Build and Test C++ Agent
       run: |
         conan profile detect -f
-        conan create . --build=missing -pr conan/profiles/vs64  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True
+        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }}  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True
 
   build_linux:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         shared: ["True", "False"]
+            
     steps:
     - name: Checkout Agent
       uses: actions/checkout@v3
@@ -62,6 +69,7 @@ jobs:
     strategy:
       matrix:
         shared: ["True", "False"]
+            
     steps:
     - name: Checkout Agent
       uses: actions/checkout@v3

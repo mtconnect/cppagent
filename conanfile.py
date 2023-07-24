@@ -75,12 +75,14 @@ class MTConnectAgentConan(ConanFile):
     def configure(self):
         self.settings.compiler.cppstd = 17
 
-        if self.settings.os == "Macos":
-            if not self.options.shared:
-                self.options["boost/*"].visibility = "hidden"
-            else:
-                self.options["boost/*"].shared = True
+        if self.settings.os == "Macos" and not self.options.shared:
+            self.options["boost/*"].visibility = "hidden"
+
                 
+        if self.options.shared:
+            self.options["boost/*"].shared = True
+            self.package_type = "shared-library"
+            
         # Make sure shared builds use shared boost
         if is_msvc(self) and self.options.shared:
             print("**** Making boost, libxml2, gtest, and openssl shared")
@@ -92,11 +94,7 @@ class MTConnectAgentConan(ConanFile):
             
         self.run("conan export conan/mqtt_cpp", cwd=os.path.dirname(__file__))
         if self.options.with_ruby:
-          self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))
-
-        if self.options.shared:
-            self.package_type = "shared-library"
-
+            self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))
 
     def generate(self):
         if self.options.shared:
