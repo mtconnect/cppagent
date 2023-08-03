@@ -443,14 +443,12 @@ namespace {
 
   TEST_F(ConfigTest, SchemaDirectory)
   {
-    chdir(PROJECT_ROOT_DIR);
-    m_config->updateWorkingDirectory();
     string schemas(
         "SchemaVersion = 1.3\n"
         "Files {\n"
         "schemas {\n"
         "Location = /schemas\n"
-        "Path = ../schemas\n"
+        "Path = " PROJECT_ROOT_DIR "/schemas\n"
         "}\n"
         "}\n"
         "logger_config {\n"

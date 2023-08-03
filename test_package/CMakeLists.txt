@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
-project(mtconnect_agent_tests LANGUAGES CXX)
+if(NOT INCLUDE_TESTS)
+  project(mtconnect_agent_tests LANGUAGES CXX)
+endif()
 
 set(USE_FOLDERS ON)
 
@@ -8,28 +10,35 @@ if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
 
-include(../cmake/remove_link_directories.cmake)
-include(../cmake/osx_no_app_or_frameworks.cmake)
-include(../cmake/ClangFormat.cmake)
-include(../cmake/ClangTidy.cmake)
+message(STATUS "Include tests: ${INCLUDE_TESTS}")
 
-include(GoogleTest)
-enable_testing()
+if(NOT INCLUDE_TESTS)
+  include(../cmake/remove_link_directories.cmake)
+  include(../cmake/osx_no_app_or_frameworks.cmake)
+  include(../cmake/ClangFormat.cmake)
+  include(../cmake/ClangTidy.cmake)
+
+  find_package(Boost REQUIRED  GLOBAL)
+  find_package(LibXml2 REQUIRED  GLOBAL)
+  find_package(date REQUIRED  GLOBAL)
+  find_package(OpenSSL REQUIRED  GLOBAL)
+  find_package(nlohmann_json REQUIRED GLOBAL)
+  find_package(mqtt_cpp REQUIRED GLOBAL)
+  find_package(RapidJSON REQUIRED GLOBAL)
+  find_package(mtconnect_agent REQUIRED GLOBAL)
+
+  enable_testing()
+endif()
 
 find_package(GTest REQUIRED GLOBAL)
-find_package(Boost REQUIRED  GLOBAL)
-find_package(LibXml2 REQUIRED  GLOBAL)
-find_package(date REQUIRED  GLOBAL)
-find_package(OpenSSL REQUIRED  GLOBAL)
-find_package(nlohmann_json REQUIRED GLOBAL)
-find_package(mqtt_cpp REQUIRED GLOBAL)
-find_package(RapidJSON REQUIRED GLOBAL)
-find_package(mtconnect_agent REQUIRED GLOBAL)
+include(GoogleTest)
 
 #### Sink Plugin Test
 
 set(COMMON_DEFINITIONS 
-  "PROJECT_ROOT_DIR=\"${CMAKE_SOURCE_DIR}\";TEST_RESOURCE_DIR=\"${CMAKE_SOURCE_DIR}/resources\";BOOST_FILESYSTEM_VERSION=3;$<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>;$<$<PLATFORM_ID:Windows>:NOMINMAX>;$<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>;$<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>")
+  "PROJECT_ROOT_DIR=$<IF:$<BOOL:INCLUDE_TESTS>,\"${CMAKE_SOURCE_DIR}\",\"${CMAKE_SOURCE_DIR}/..\">;BOOST_FILESYSTEM_VERSION=3;$<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>;$<$<PLATFORM_ID:Windows>:NOMINMAX>;$<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>;$<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>;TEST_RESOURCE_DIR=$<IF:$<BOOL:INCLUDE_TESTS>,\"${CMAKE_SOURCE_DIR}/test_package/resources\",\"${CMAKE_SOURCE_DIR}/resources\">")
+
+message(STATUS "Common definitions: ${COMMON_DEFINITIONS}")
 
 list(REMOVE_ITEM CMAKE_INCLUDE_PATH "include")
 
@@ -50,12 +59,21 @@ target_compile_features(sink_plugin_test
   ${CXX_COMPILE_FEATURES}
   )
 
-target_link_libraries(
-  sink_plugin_test
-  PRIVATE
-  mtconnect_agent::mtconnect_agent
-  $<$<PLATFORM_ID:Windows>:shlwapi>
-  )
+if(INCLUDE_TESTS)
+  target_link_libraries(
+    sink_plugin_test
+    PRIVATE
+    agent_lib
+    $<$<PLATFORM_ID:Windows>:shlwapi>
+    )
+else()
+  target_link_libraries(
+    sink_plugin_test
+    PRIVATE
+    mtconnect_agent::mtconnect_agent
+    $<$<PLATFORM_ID:Windows>:shlwapi>
+    )
+endif()
 target_clangformat_setup(sink_plugin_test)
 
 set_target_properties(sink_plugin_test PROPERTIES FOLDER "test/sink")
@@ -95,14 +113,23 @@ endif()
 
 target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
 
-target_link_libraries(
-  adapter_plugin_test
-  PRIVATE
-  mtconnect_agent::mtconnect_agent
-  $<$<PLATFORM_ID:Windows>:shlwapi>
-  )
+if(INCLUDE_TESTS)
+  target_link_libraries(
+    adapter_plugin_test
+    PRIVATE
+    agent_lib
+    $<$<PLATFORM_ID:Windows>:shlwapi>
+    )
+else()
+  target_link_libraries(
+    adapter_plugin_test
+    PRIVATE
+    mtconnect_agent::mtconnect_agent
+    $<$<PLATFORM_ID:Windows>:shlwapi>
+    )
+endif()
 
-set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test_package/adapter")
+set_target_properties(adapter_plugin_test PROPERTIES FOLDER "test/adapter")
 
 target_clangformat_setup(adapter_plugin_test)
 
@@ -116,12 +143,21 @@ target_include_directories(
     "${CMAKE_INCLUDE_PATH}"
     )
 
-target_link_libraries(
-  agent_test_lib
-  PUBLIC
-  mtconnect_agent::mtconnect_agent
-  GTest::GTest
-  )
+if(INCLUDE_TESTS)
+  target_link_libraries(
+    agent_test_lib
+    PUBLIC
+    agent_lib
+    GTest::GTest
+    )
+else()
+  target_link_libraries(
+    agent_test_lib
+    PUBLIC
+    mtconnect_agent::mtconnect_agent
+    GTest::GTest
+    )
+endif()
 
 target_compile_definitions(agent_test_lib PUBLIC ${COMMON_DEFINITIONS})
 target_clangtidy_setup(agent_test_lib)
@@ -134,8 +170,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   set(_sources ${AGENT_TEST_NAME}_test.cpp)
   add_executable(${AGENT_TEST_NAME}_test ${_sources})
   # set_property(TARGET ${AGENT_TEST_NAME}_test PROPERTY LINK_FLAGS_DEBUG "${COVERAGE_FLAGS}")
-  target_link_libraries(${AGENT_TEST_NAME}_test agent_test_lib
-  
+  target_link_libraries(${AGENT_TEST_NAME}_test agent_test_lib  
     $<$<PLATFORM_ID:Linux>:pthread>
     $<$<PLATFORM_ID:Windows>:bcrypt>
     GTest::GTest)
@@ -147,7 +182,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
   target_compile_features(${AGENT_TEST_NAME}_test PUBLIC ${CXX_COMPILE_FEATURES})
 
   # Organize into folders
-  set_target_properties(${AGENT_TEST_NAME}_test PROPERTIES FOLDER "test_package/${SUB_FOLDER}")
+  set_target_properties(${AGENT_TEST_NAME}_test PROPERTIES FOLDER "test/${SUB_FOLDER}")
 
   gtest_discover_tests(${AGENT_TEST_NAME}_test DISCOVERY_MODE PRE_TEST)
 

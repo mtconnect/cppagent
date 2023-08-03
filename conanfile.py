@@ -12,7 +12,7 @@ class MTConnectAgentConan(ConanFile):
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
-    options = { "without_ipv6": [True, False], "with_ruby": [True, False],
+    options = { "without_ipv6": [True, False], "with_ruby": [True, False], "include_tests": [True, False],
                  "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
                  "with_docs" : [True, False], "cpack": [True, False], "agent_prefix": [None, "ANY"],
                  "fPIC": [True, False] }
@@ -29,6 +29,7 @@ class MTConnectAgentConan(ConanFile):
         "cpack": False,
         "agent_prefix": None,
         "fPIC": True,
+        "include_tests": False,
 
         "boost*:shared": False,
         "boost*:without_python": True,
@@ -134,6 +135,7 @@ class MTConnectAgentConan(ConanFile):
         tc.cache_variables['WITH_RUBY'] = self.options.with_ruby.__bool__()
         tc.cache_variables['AGENT_WITH_DOCS'] = self.options.with_docs.__bool__()
         tc.cache_variables['AGENT_WITHOUT_IPV6'] = self.options.without_ipv6.__bool__()
+        tc.cache_variables['INCLUDE_TESTS'] = self.options.include_tests.__bool__()
         if self.options.agent_prefix:
             tc.cache_variables['AGENT_PREFIX'] = self.options.agent_prefix
         if is_msvc(self):
