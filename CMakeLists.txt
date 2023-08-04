@@ -15,7 +15,7 @@ if(POLICY CMP0077)
 endif()
 
 option(SHARED_AGENT_LIB "Generate shared agent library. Conan options: shared" OFF)
-option(INCLUDE_TESTS "Used for development, includes tests as a subdirectory instead of a package" OFF)
+option(DEVELOPMENT "Used for development, includes tests as a subdirectory instead of a package" OFF)
 set(AGENT_PREFIX "" CACHE STRING "Prefix for the name of the agent and the agent library: suggested 'mtc'")
 
 message(INFO " Shared build: ${SHARED_AGENT_LIB}")
@@ -75,8 +75,8 @@ add_subdirectory(agent)
 
 include(cmake/ide_integration.cmake)
 
-if(INCLUDE_TESTS)
-  message(STATUS "Including test package as part of the build")
+if(DEVELOPMENT)
+  message(STATUS "Including test package as part of the build for development")
   enable_testing()
   add_subdirectory(test_package test)
 endif()

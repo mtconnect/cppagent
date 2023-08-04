@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
-option(INCLUDE_TESTS "Used for development, includes tests as a subdirectory instead of a package" OFF)
-message(STATUS "Include tests: ${INCLUDE_TESTS}")
+option(DEVELOPMENT "Used for development, includes tests as a subdirectory instead of a package" OFF)
+message(STATUS "Development: ${DEVELOPMENT}")
 
-if(NOT INCLUDE_TESTS)
+if(NOT DEVELOPMENT)
   project(mtconnect_agent_tests LANGUAGES CXX)
 endif()
 
@@ -13,7 +13,7 @@ if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
 
-if (INCLUDE_TESTS)
+if (DEVELOPMENT)
   file(REAL_PATH ${CMAKE_SOURCE_DIR} project_root_dir)
   file(REAL_PATH "${CMAKE_SOURCE_DIR}/test_package/resources" test_resource_dir)
 else()
@@ -69,7 +69,7 @@ target_compile_features(sink_plugin_test
   ${CXX_COMPILE_FEATURES}
   )
 
-if(INCLUDE_TESTS)
+if(DEVELOPMENT)
   target_link_libraries(
     sink_plugin_test
     PRIVATE
@@ -123,7 +123,7 @@ endif()
 
 target_compile_features(adapter_plugin_test PUBLIC ${CXX_COMPILE_FEATURES})
 
-if(INCLUDE_TESTS)
+if(DEVELOPMENT)
   target_link_libraries(
     adapter_plugin_test
     PRIVATE
@@ -153,7 +153,7 @@ target_include_directories(
     "${CMAKE_INCLUDE_PATH}"
     )
 
-if(INCLUDE_TESTS)
+if(DEVELOPMENT)
   target_link_libraries(
     agent_test_lib
     PUBLIC
