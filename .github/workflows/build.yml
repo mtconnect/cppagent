@@ -43,9 +43,9 @@ jobs:
         conan profile detect -f
         conan create . --build=missing -pr conan/profiles/${{ matrix.profile }}  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True
 
-    - name: Release verion if tagged
-      run: |
-        ghr -t 
+#    - name: Release verion if tagged
+#      run: |
+#        ghr -t 
 
   build_linux:
     runs-on: ubuntu-latest
