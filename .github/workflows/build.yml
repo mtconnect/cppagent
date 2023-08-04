@@ -32,8 +32,8 @@ jobs:
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
 
-    - name: Install GitHub Release
-      uses: tcnksm/ghr@v0.16.0
+#    - name: Install GitHub Release
+#      uses: tcnksm/ghr@v0.16.0
       
     - name: Initialize VS Dev Env
       uses: seanmiddleditch/gha-setup-vsdevenv@master
