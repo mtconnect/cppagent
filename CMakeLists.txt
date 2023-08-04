@@ -2,7 +2,7 @@
 set(AGENT_VERSION_MAJOR 2)
 set(AGENT_VERSION_MINOR 2)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 3)
+set(AGENT_VERSION_BUILD 4)
 set(AGENT_VERSION_RC "")
 
 # This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
@@ -14,8 +14,8 @@ if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
 
-option(AGENT_ENABLE_UNITTESTS "Enables the agent's unit tests" ON)
 option(SHARED_AGENT_LIB "Generate shared agent library. Conan options: shared" OFF)
+option(DEVELOPMENT "Used for development, includes tests as a subdirectory instead of a package" OFF)
 set(AGENT_PREFIX "" CACHE STRING "Prefix for the name of the agent and the agent library: suggested 'mtc'")
 
 message(INFO " Shared build: ${SHARED_AGENT_LIB}")
@@ -72,11 +72,14 @@ include(cmake/ClangTidy.cmake)
 # Add our projects
 add_subdirectory(agent_lib)
 add_subdirectory(agent)
-if(AGENT_ENABLE_UNITTESTS)
-  enable_testing()
-endif()
 
 include(cmake/ide_integration.cmake)
+
+if(DEVELOPMENT)
+  message(STATUS "Including test package as part of the build for development")
+  enable_testing()
+  add_subdirectory(test_package test)
+endif()
 
 create_clangformat_target()
 
