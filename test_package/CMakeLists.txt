@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
+option(INCLUDE_TESTS "Used for development, includes tests as a subdirectory instead of a package" OFF)
+message(STATUS "Include tests: ${INCLUDE_TESTS}")
+
 if(NOT INCLUDE_TESTS)
   project(mtconnect_agent_tests LANGUAGES CXX)
 endif()
@@ -10,10 +13,10 @@ if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
 
-option(INCLUDE_TESTS "Used for development, includes tests as a subdirectory instead of a package" OFF)
-message(STATUS "Include tests: ${INCLUDE_TESTS}")
-
-if(NOT INCLUDE_TESTS)
+if (INCLUDE_TESTS)
+  file(REAL_PATH ${CMAKE_SOURCE_DIR} project_root_dir)
+  file(REAL_PATH "${CMAKE_SOURCE_DIR}/test_package/resources" test_resource_dir)
+else()
   include(../cmake/remove_link_directories.cmake)
   include(../cmake/osx_no_app_or_frameworks.cmake)
   include(../cmake/ClangFormat.cmake)
@@ -29,23 +32,23 @@ if(NOT INCLUDE_TESTS)
   find_package(mtconnect_agent REQUIRED GLOBAL)
 
   enable_testing()
+
+  file(REAL_PATH "${CMAKE_SOURCE_DIR}/.." project_root_dir)
+  file(REAL_PATH "${CMAKE_SOURCE_DIR}/resources" test_resource_dir)
 endif()
 
 find_package(GTest REQUIRED GLOBAL)
 include(GoogleTest)
 
-#### Sink Plugin Test
-
-file(REAL_PATH "$<IF:$<BOOL:INCLUDE_TESTS>,\"${CMAKE_SOURCE_DIR}\",\"${CMAKE_SOURCE_DIR}/..\">" project_root_dir)
-file(REAL_PATH "$<IF:$<BOOL:INCLUDE_TESTS>,\"${CMAKE_SOURCE_DIR}/test_package/resources\",\"${CMAKE_SOURCE_DIR}/resources\">" test_resource_dir)
-
 message(STATUS "Project Root: ${project_root_dir}")
 message(STATUS "Test Resources: ${test_resource_dir}")
 
 set(COMMON_DEFINITIONS 
-  "PROJECT_ROOT_DIR=$<IF:$<BOOL:INCLUDE_TESTS>,\"${CMAKE_SOURCE_DIR}\",\"${CMAKE_SOURCE_DIR}/..\">;BOOST_FILESYSTEM_VERSION=3;$<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>;$<$<PLATFORM_ID:Windows>:NOMINMAX>;$<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>;$<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>;TEST_RESOURCE_DIR=$<IF:$<BOOL:INCLUDE_TESTS>,\"${CMAKE_SOURCE_DIR}/test_package/resources\",\"${CMAKE_SOURCE_DIR}/resources\">")
+  "PROJECT_ROOT_DIR=\"${project_root_dir}\";BOOST_FILESYSTEM_VERSION=3;$<$<BOOL:$ENV{APPVEYOR}>:APPVEYOR>;$<$<PLATFORM_ID:Windows>:NOMINMAX>;$<$<PLATFORM_ID:Windows>:WINVER=${WINVER}>;$<$<PLATFORM_ID:Windows>:_WIN32_WINNT=${WINVER}>;TEST_RESOURCE_DIR=\"${test_resource_dir}\"")
 
 message(STATUS "Common definitions: ${COMMON_DEFINITIONS}")
+
+#### Sink Plugin Test
 
 list(REMOVE_ITEM CMAKE_INCLUDE_PATH "include")
 
