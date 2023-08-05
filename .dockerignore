@@ -20,8 +20,6 @@ ChangeLog
 # conanfile.py # need this
 Dockerfile
 Glossary*.pdf
-LICENSE.TXT
-README.md
 terms.tex
 
 *.log

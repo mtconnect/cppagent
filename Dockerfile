@@ -41,7 +41,7 @@ RUN apt-get clean \
   && apt-get update \
   && apt-get install -y \
   build-essential python3.9 python3-pip git cmake make ruby rake autoconf automake \
-  && pip install conan -v "conan==1.59.0"
+  && pip install conan -v "conan==2.0.9"
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
@@ -58,19 +58,15 @@ ENV WITH_TESTS=False
 # limit cpus so don't run out of memory on local machine
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
 # can turn off if building in cloud
-ENV CONAN_CPU_COUNT=1
+ENV CONAN_CPU_COUNT=2
 
 # make installer
-RUN conan export conan/mqtt_cpp \
-  && conan export conan/mruby \
-  && conan install . -if build --build=missing \
-  -pr $CONAN_PROFILE \
-  -o build_tests=$WITH_TESTS \
-  -o run_tests=$WITH_TESTS \
-  -o with_ruby=$WITH_RUBY
-
-# compile source (~20mins - 4hrs for qemu)
- RUN conan build . -bf build
+RUN conan profile detect
+RUN conan install . --build=missing -pr $CONAN_PROFILE -o with_ruby=$WITH_RUBY -c tools.build:skip_test=True \
+     -c tools.build:jobs=$CONAN_CPU_COUNT
+RUN conan create . --build=missing -pr $CONAN_PROFILE -o with_ruby=$WITH_RUBY -o cpack=True \
+      -o destination=/root/agent -o agent_prefix=mtc \
+      -c tools.build:skip_test=True -tf "" -c tools.build:jobs=$CONAN_CPU_COUNT
 
 # ---------------------------------------------------------------------
 # release
@@ -90,26 +86,36 @@ RUN useradd --create-home agent
 USER agent
 
 # install agent executable
-COPY --chown=agent:agent --from=build /root/agent/build/bin/agent /usr/local/bin/
+COPY --chown=agent:agent --from=build /root/agent/*.zip .
 
 # copy data to /etc/mtconnect
-COPY --chown=agent:agent --from=build /root/agent/schemas /etc/mtconnect/schemas
-COPY --chown=agent:agent --from=build /root/agent/simulator /etc/mtconnect/simulator
-COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
+RUN unzip *.zip
+
+ENV ZIP_DIR=agent-*-Linux
+ENV BIN_DIR=/usr/bin
+ENV MTCONNECT_DIR=/etc/mtconnect
+
+COPY --chown=agent:agent $ZIP_DIR/bin/* $BIN_DIR/
+COPY --chown=agent:agent $ZIP_DIR/schemas/* $MTCONNECT_DIR/schemas/
+COPY --chown=agent:agent $ZIP_DIR/simulator/* $MTCONNECT_DIR/simulator/
+COPY --chown=agent:agent $ZIP_DIR/styles/* $MTCONNECT_DIR/styles/
+COPY --chown=agent:agent $ZIP_DIR/demo/* $MTCONNECT_DIR/demo/
 
 # expose port
 EXPOSE 5000
 
 WORKDIR /home/agent
 
+ENV DEMO_DIR=$MTCONNECT_DIR/demo/agent
+
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
 # note: must use shell form here instead of exec form, since we're running 
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
-CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
-  /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
-  cd /etc/mtconnect/simulator && mtcagent run agent.cfg
+CMD /usr/bin/ruby $MTCONNECT_DIR/simulator/run_scenario.rb -l $DEMO_DIR/mazak.txt 7879 & \
+    /usr/bin/ruby $MTCONNECT_DIR/simulator/run_scenario.rb -l $DEMO_DIR/okuma.txt 7878 & \
+    cd $DEMO_DIR/agent && mtcagent run agent.cfg
 
 
 # ---------------------------------------------------------------------

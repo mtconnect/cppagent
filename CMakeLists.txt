@@ -18,6 +18,8 @@ option(SHARED_AGENT_LIB "Generate shared agent library. Conan options: shared" O
 option(DEVELOPMENT "Used for development, includes tests as a subdirectory instead of a package" OFF)
 set(AGENT_PREFIX "" CACHE STRING "Prefix for the name of the agent and the agent library: suggested 'mtc'")
 
+set(CMAKE_INSTALL_DATADIR "${CMAKE_INSTALL_DATADIR}/mtconnect")
+
 message(INFO " Shared build: ${SHARED_AGENT_LIB}")
 
 project(cppagent LANGUAGES C CXX)
@@ -87,13 +89,12 @@ create_clangformat_target()
 # We will set this to the agent_test project.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT agent)
 
-install(FILES README.md LICENSE.TXT DESTINATION ".")
-install(DIRECTORY schemas/ DESTINATION "schemas")
-install(DIRECTORY simulator/ DESTINATION "simulator")
-install(DIRECTORY styles/ DESTINATION "styles")
-install(DIRECTORY tools/ DESTINATION "tools")
-install(DIRECTORY demo/ DESTINATION "demo")
-install(FILES simulator/agent.cfg DESTINATION "bin")
+install(FILES README.md LICENSE.TXT DESTINATION . )
+install(DIRECTORY schemas DESTINATION . )
+install(DIRECTORY simulator DESTINATION . )
+install(DIRECTORY styles DESTINATION . )
+install(DIRECTORY tools DESTINATION . )
+install(DIRECTORY demo DESTINATION . )
 
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
 set(CPACK_PACKAGE_VERSION "${AGENT_VERSION_MAJOR}.${AGENT_VERSION_MINOR}.${AGENT_VERSION_PATCH}.${AGENT_VERSION_BUILD}${AGENT_VERSION_RC}")
