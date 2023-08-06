@@ -41,7 +41,7 @@ jobs:
     - name: Build and Test C++ Agent
       run: |
         conan profile detect -f
-        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }}  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True
+        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }}  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True  -c tools.build:jobs=2
 
 #    - name: Release verion if tagged
 #      run: |
