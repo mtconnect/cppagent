@@ -57,7 +57,6 @@ ARG WITH_TESTS=False
 # can turn off if building in cloud
 ARG CONAN_CPU_COUNT=2
 
-
 # set some variables
 ENV PATH=$HOME/venv3.9/bin:$PATH
 ENV CONAN_PROFILE=conan/profiles/docker
@@ -83,7 +82,7 @@ ARG MTCONNECT_DIR=/etc/mtconnect
 ENV MTCONNECT_DIR=$MTCONNECT_DIR
 
 # install ruby for simulator
-RUN apt-get update && apt-get install -y ruby
+RUN apt-get update && apt-get install -y ruby zip
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
