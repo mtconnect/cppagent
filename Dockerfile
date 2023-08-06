@@ -49,23 +49,25 @@ WORKDIR /root/agent
 # bring in the repo contents, minus .dockerignore files
 COPY . .
 
-# set some variables
-ENV PATH=$HOME/venv3.9/bin:$PATH
-ENV CONAN_PROFILE=conan/profiles/docker
-ENV WITH_RUBY=True
-ENV WITH_TESTS=False
+ARG WITH_RUBY=True
+ARG WITH_TESTS=False
 
 # limit cpus so don't run out of memory on local machine
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
 # can turn off if building in cloud
-ENV CONAN_CPU_COUNT=2
+ARG CONAN_CPU_COUNT=2
+
+
+# set some variables
+ENV PATH=$HOME/venv3.9/bin:$PATH
+ENV CONAN_PROFILE=conan/profiles/docker
 
 # make installer
 RUN conan profile detect
 RUN conan install . --build=missing -pr $CONAN_PROFILE -o with_ruby=$WITH_RUBY -c tools.build:skip_test=True \
      -c tools.build:jobs=$CONAN_CPU_COUNT
 RUN conan create . --build=missing -pr $CONAN_PROFILE -o with_ruby=$WITH_RUBY -o cpack=True \
-      -o destination=/root/agent -o agent_prefix=mtc \
+      -o zip_destination=/root/agent -o agent_prefix=mtc \
       -c tools.build:skip_test=True -tf "" -c tools.build:jobs=$CONAN_CPU_COUNT
 
 # ---------------------------------------------------------------------
@@ -75,6 +77,10 @@ RUN conan create . --build=missing -pr $CONAN_PROFILE -o with_ruby=$WITH_RUBY -o
 FROM os AS release
 
 LABEL author="mtconnect" description="Docker image for the latest Production MTConnect C++ Agent"
+ARG BIN_DIR=/usr/bin
+ARG MTCONNECT_DIR=/etc/mtconnect
+
+ENV MTCONNECT_DIR=$MTCONNECT_DIR
 
 # install ruby for simulator
 RUN apt-get update && apt-get install -y ruby
@@ -84,6 +90,7 @@ RUN apt-get update && apt-get install -y ruby
 # --create-home creates a home folder, ie /home/<username>
 RUN useradd --create-home agent
 USER agent
+WORKDIR /home/agent
 
 # install agent executable
 COPY --chown=agent:agent --from=build /root/agent/*.zip .
@@ -91,31 +98,28 @@ COPY --chown=agent:agent --from=build /root/agent/*.zip .
 # copy data to /etc/mtconnect
 RUN unzip *.zip
 
-ENV ZIP_DIR=agent-*-Linux
-ENV BIN_DIR=/usr/bin
-ENV MTCONNECT_DIR=/etc/mtconnect
+ENV ZIP_DIR=/home/agent/agent-*-Linux
 
-COPY --chown=agent:agent $ZIP_DIR/bin/* $BIN_DIR/
-COPY --chown=agent:agent $ZIP_DIR/schemas/* $MTCONNECT_DIR/schemas/
-COPY --chown=agent:agent $ZIP_DIR/simulator/* $MTCONNECT_DIR/simulator/
-COPY --chown=agent:agent $ZIP_DIR/styles/* $MTCONNECT_DIR/styles/
-COPY --chown=agent:agent $ZIP_DIR/demo/* $MTCONNECT_DIR/demo/
+USER root
+RUN cp $ZIP_DIR/bin/* $BIN_DIR
+RUN mkdir -p $MTCONNECT_DIR && chown -R agent:agent $MTCONNECT_DIR
+
+USER agent
+RUN cp -r $ZIP_DIR/schemas $ZIP_DIR/simulator $ZIP_DIR/styles $ZIP_DIR/demo $MTCONNECT_DIR/
 
 # expose port
 EXPOSE 5000
-
-WORKDIR /home/agent
 
 ENV DEMO_DIR=$MTCONNECT_DIR/demo/agent
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
-# note: must use shell form here instead of exec form, since we're running 
+# note: must use shell form here instead of exec form, since we're running
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
-CMD /usr/bin/ruby $MTCONNECT_DIR/simulator/run_scenario.rb -l $DEMO_DIR/mazak.txt 7879 & \
-    /usr/bin/ruby $MTCONNECT_DIR/simulator/run_scenario.rb -l $DEMO_DIR/okuma.txt 7878 & \
-    cd $DEMO_DIR/agent && mtcagent run agent.cfg
+CMD /usr/bin/ruby $MTCONNECT_DIR/simulator/run_scenario.rb -p 7879 -l $DEMO_DIR/mazak.txt & \
+    /usr/bin/ruby $MTCONNECT_DIR/simulator/run_scenario.rb -p 7878 -l $DEMO_DIR/okuma.txt & \
+    cd $DEMO_DIR && mtcagent run agent.cfg
 
 
 # ---------------------------------------------------------------------
