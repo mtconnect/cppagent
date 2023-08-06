@@ -163,7 +163,8 @@ class MTConnectAgentConan(ConanFile):
         if self.options.with_docs:
             cmake.build(build_type=None, target='docs')
 
-        # if not self.conf.get("tools.build:skip_test", default=False):
+        if self.options.development and not self.conf.get("tools.build:skip_test", default=False):
+            cmake.test()
 
     def package_info(self):
         self.cpp_info.includedirs = ['include']
