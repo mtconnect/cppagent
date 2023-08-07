@@ -43,7 +43,6 @@ FROM os AS build
 ARG CONAN_CPU_COUNT=10
 
 ARG WITH_RUBY='True'
-ARG WITH_TESTS='False'
 
 # set some variables
 ENV PATH="$HOME/venv3.9/bin:$PATH"
