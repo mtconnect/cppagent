@@ -29,11 +29,11 @@ jobs:
     - name: Checkout Agent
       uses: actions/checkout@v3
 
-    - name: Cache node modules
+    - name: Cache conan packages
       id: cache-npm
       uses: actions/cache@v3
       env:
-       cache-name: cache-node-modules
+       cache-name: cache-conan-packages
       with:
         path: ~/.conan2
         key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}

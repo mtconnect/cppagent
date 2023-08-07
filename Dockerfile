@@ -37,11 +37,21 @@ FROM os AS build
 
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
-RUN apt-get clean \
+RUN  apt-get clean \
   && apt-get update \
   && apt-get install -y \
-  build-essential python3.9 python3-pip git cmake make ruby rake autoconf automake \
-  && pip install conan -v "conan==2.0.9"
+       autoconf \
+       automake \
+       build-essential \
+       cmake \
+       git \
+       python3 \
+       python3-pip \
+       rake \
+       ruby
+
+# Install conan version 2.0.9
+RUN pip install conan -v "conan==2.0.9"
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
@@ -58,13 +68,10 @@ ARG WITH_TESTS=False
 ARG CONAN_CPU_COUNT=2
 
 # set some variables
-ENV PATH=$HOME/venv3.9/bin:$PATH
 ENV CONAN_PROFILE=conan/profiles/docker
 
 # make installer
 RUN conan profile detect
-RUN conan install . --build=missing -pr $CONAN_PROFILE -o with_ruby=$WITH_RUBY -c tools.build:skip_test=True \
-     -c tools.build:jobs=$CONAN_CPU_COUNT
 RUN conan create . --build=missing -pr $CONAN_PROFILE -o with_ruby=$WITH_RUBY -o cpack=True \
       -o zip_destination=/root/agent -o agent_prefix=mtc \
       -c tools.build:skip_test=True -tf "" -c tools.build:jobs=$CONAN_CPU_COUNT
@@ -82,7 +89,7 @@ ARG MTCONNECT_DIR=/etc/mtconnect
 ENV MTCONNECT_DIR=$MTCONNECT_DIR
 
 # install ruby for simulator
-RUN apt-get update && apt-get install -y ruby zip
+RUN apt-get clean && apt-get update && apt-get install -y ruby zip
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
