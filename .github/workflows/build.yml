@@ -29,23 +29,25 @@ jobs:
     - name: Checkout Agent
       uses: actions/checkout@v3
 
+    - name: Cache node modules
+      id: cache-npm
+      uses: actions/cache@v3
+      env:
+       cache-name: cache-node-modules
+      with:
+        path: ~/.conan2
+        key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
+
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
 
-#    - name: Install GitHub Release
-#      uses: tcnksm/ghr@v0.16.0
-      
     - name: Initialize VS Dev Env
       uses: seanmiddleditch/gha-setup-vsdevenv@master
 
     - name: Build and Test C++ Agent
       run: |
         conan profile detect -f
-        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }}  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True
-
-#    - name: Release verion if tagged
-#      run: |
-#        ghr -t 
+        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }}  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True -o zip_destination=C:\Users\runneradmin\
 
   build_linux:
     runs-on: ubuntu-latest

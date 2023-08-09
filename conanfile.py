@@ -15,7 +15,7 @@ class MTConnectAgentConan(ConanFile):
     options = { "without_ipv6": [True, False], "with_ruby": [True, False], 
                  "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
                  "with_docs" : [True, False], "cpack": [True, False], "agent_prefix": [None, "ANY"],
-                 "fPIC": [True, False] }
+                 "fPIC": [True, False], "zip_destination": [None, "ANY"] }
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     build_policy = "missing"
@@ -29,6 +29,7 @@ class MTConnectAgentConan(ConanFile):
         "cpack": False,
         "agent_prefix": None,
         "fPIC": True,
+        "zip_destination": None,
 
         "boost*:shared": False,
         "boost*:without_python": True,
@@ -146,7 +147,7 @@ class MTConnectAgentConan(ConanFile):
         deps.generate()
         
     def build_requirements(self):
-        self.tool_requires("cmake/[>3.23.0]")
+        self.tool_requires("cmake/3.26.4")
         
         if self.options.with_docs:
             buf = io.StringIO()            
@@ -162,7 +163,8 @@ class MTConnectAgentConan(ConanFile):
         if self.options.with_docs:
             cmake.build(build_type=None, target='docs')
 
-        # if not self.conf.get("tools.build:skip_test", default=False):
+        if self.options.development and not self.conf.get("tools.build:skip_test", default=False):
+            cmake.test()
 
     def package_info(self):
         self.cpp_info.includedirs = ['include']
@@ -170,7 +172,7 @@ class MTConnectAgentConan(ConanFile):
         self.cpp_info.bindirs = ['bin']
         output_name = 'agent_lib'
         if self.options.agent_prefix:
-            output_name = self.options.agent_prefix + output_name
+            output_name = str(self.options.agent_prefix) + output_name
         self.cpp_info.libs = [output_name]
 
         self.cpp_info.defines = ['MQTT_USE_TLS=ON',
@@ -199,7 +201,14 @@ class MTConnectAgentConan(ConanFile):
         cmake.install()
 
         if self.options.cpack and self.settings.build_type == 'Release':
-            print("Packaging agent with cpack")
-            self.run("cpack -G ZIP -B {}".format(self.package_folder), cwd=self.build_folder)
+            dest = None
+            if self.options.zip_destination:
+                dest = str(self.options.zip_destination)
+            else:
+                dest = self.package_folder    
+            print(f"Packaging agent with cpack to {dest}")
+            self.run(f"cpack -G ZIP -B {dest}", cwd=self.build_folder)
+
+
 
     
