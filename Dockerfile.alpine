@@ -1,20 +1,22 @@
 # MTConnect Public C++ Agent Docker image build instructions
 
+# TODO: Do we need notes like this to be in `Dockerfile`? I think the docs might be a better place for this. IMHO most notes in this file should be moved to the docs.
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
-
+#
 # to build locally and push to docker hub, run this with something like -
 #
 #   docker buildx build \
 #     --platform linux/amd64,linux/arm64 \
 #     --tag ladder99/agent2 \
-#     --secret id=access_token,src=ACCESS_TOKEN	 \
+#     --secret id=access_token,src=ACCESS_TOKEN  \
 #     --push \
 #     .
 #
 # then should be able to run with something like
 #
+#   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
 #   docker run -it -p5001:5000 --name agent2 --rm ladder99/agent2:latest
 #
 # and visit http://localhost:5001 to see demo output
@@ -24,10 +26,13 @@
 # ---------------------------------------------------------------------
 
 # base image - ubuntu has linux/amd64, linux/arm64 etc
-FROM alpine:latest AS os
+# TODO: How about using a specific Alpine version instead of `latest`?
+# FROM alpine:latest AS os
+FROM alpine:3.18 AS os
 
 # tzinfo hangs without this
-ARG DEBIAN_FRONTEND=noninteractive
+# FIXME: Is this really required on Alpine?
+# ARG DEBIAN_FRONTEND='noninteractive'
 
 # ---------------------------------------------------------------------
 # build
@@ -35,49 +40,58 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 FROM os AS build
 
-# update os and add dependencies
-# this follows recommended Docker practices -
-# see https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
-# note: Dockerfiles run as root by default, so don't need sudo
-RUN  apk update \
-  && apk add g++ python3 cmake git linux-headers make perl ruby \
-  && gem install rake
-
-RUN  python3 -m ensurepip \
-  && python3 -m pip install --upgrade pip \
-  && python3 -m pip install conan
-
-# get latest source code
-# NOTE: make sure you are checking out the right repo - github.com/bburns OR github.com/mtconnect
-# could use `git checkout foo` to get a specific version here
-RUN --mount=type=secret,id=access_token \
-  cd ~ \
-  && git clone --recurse-submodules --progress --depth 1 \
-  https://github.com/mtconnect/cppagent.git agent
-
-# set some variables
-ENV PATH=$HOME/venv3.9/bin:$PATH
-ENV CONAN_PROFILE=conan/profiles/docker
-ENV WITH_RUBY=True
-ENV WITH_TESTS=False
-
 # limit cpus so don't run out of memory on local machine
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
 # can turn off if building in cloud
-ENV CONAN_CPU_COUNT=1
+ARG CONAN_CPU_COUNT=10
+
+ARG WITH_RUBY='True'
+
+# set some variables
+ENV PATH="$HOME/venv3.9/bin:$PATH"
+ENV CONAN_PROFILE='conan/profiles/docker'
+
+# update os and add dependencies
+# note: Dockerfiles run as root by default, so don't need sudo
+# Note: `PIP_ROOT_USER_ACTION='ignore'` is required to remove `WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv`. The proper way to fix this warning is to create a non-root user before running `pip install`.
+RUN apk update \
+  && apk add \
+    autoconf \
+    automake \
+    cmake \
+    g++ \
+    git \
+    make \
+    py3-pip \
+    python3 \
+    ruby \
+    ruby-rake \
+  && PIP_ROOT_USER_ACTION='ignore' pip install conan -v 'conan==2.0.9'
+
+# make an agent directory and cd into it
+WORKDIR /root/agent
+
+# bring in the repo contents, minus .dockerignore files
+COPY . .
 
 # make installer
-RUN  cd ~/agent \
-  && conan export conan/mqtt_cpp \
-  && conan export conan/mruby \
-  && conan install . -if build --build=missing \
-       -pr $CONAN_PROFILE \
-       -o build_tests=$WITH_TESTS \
-       -o run_tests=$WITH_TESTS \
-       -o with_ruby=$WITH_RUBY
-
-# compile source (~20mins - 4hrs for qemu)
-RUN cd ~/agent && conan build . -bf build
+RUN conan profile detect \
+  && conan install . \
+    --build=missing \
+    -c "tools.build:jobs=$CONAN_CPU_COUNT" \
+    -c tools.build:skip_test=True \
+    -o "with_ruby=$WITH_RUBY" \
+    -pr "$CONAN_PROFILE" \
+  && conan create . \
+    --build=missing \
+    -c "tools.build:jobs=$CONAN_CPU_COUNT" \
+    -c tools.build:skip_test=True \
+    -o agent_prefix=mtc \
+    -o cpack=True \
+    -o "with_ruby=$WITH_RUBY" \
+    -o zip_destination=/root/agent \
+    -pr "$CONAN_PROFILE" \
+    -tf ''
 
 # ---------------------------------------------------------------------
 # release
@@ -85,39 +99,62 @@ RUN cd ~/agent && conan build . -bf build
 
 FROM os AS release
 
-LABEL author="mtconnect" description="Docker image for the latest Production MTConnect C++ Agent"
+# TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
+LABEL author='mtconnect' description='Docker image for the latest Production MTConnect C++ Agent'
+
+ARG BIN_DIR='/usr/bin'
+# FIXME: `/etc` is not the best place for the app data.
+ARG MTCONNECT_DIR='/etc/mtconnect'
+
+ENV MTCONNECT_DIR="$MTCONNECT_DIR"
+ENV DEMO_DIR="$MTCONNECT_DIR/demo/agent"
 
 # install ruby for simulator
-RUN apk update && apk upgrade && apk add ruby
+# FIXME: test this without installing `unzip`
+# FIXME: Do we need to run `apk upgrade` after `apk update`?
+RUN apk update \
+  && apk add ruby unzip
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
 # --create-home creates a home folder, ie /home/<username>
-RUN useradd --create-home agent
+# TODO: We might also want to merge these two RUN commands (the previous and the following one) into one, although it would be a bit less readable.
+RUN adduser -D agent
 USER agent
+WORKDIR /home/agent
 
 # install agent executable
 COPY --chown=agent:agent --from=build /root/agent/build/bin/agent /usr/local/bin/
 
-# copy data to /etc/mtconnect
-COPY --chown=agent:agent --from=build /root/agent/schemas /etc/mtconnect/schemas
-COPY --chown=agent:agent --from=build /root/agent/simulator /etc/mtconnect/simulator
-COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
+# Extract the data
+RUN unzip *.zip
+
+# Copy data to `MTCONNECT_DIR`
+USER root
+RUN cp /home/agent/agent-*-Linux/bin/* "$BIN_DIR" \
+  && mkdir -p "$MTCONNECT_DIR" \
+  && chown -R agent:agent "$MTCONNECT_DIR"
+
+USER agent
+
+RUN cp -r /home/agent/agent-*-Linux/schemas \
+  /home/agent/agent-*-Linux/simulator \
+  /home/agent/agent-*-Linux/styles \
+  /home/agent/agent-*-Linux/demo \
+  "$MTCONNECT_DIR"
 
 # expose port
 EXPOSE 5000
 
-WORKDIR /home/agent
-# WORKDIR /etc/mtconnect
-
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
-# note: must use shell form here instead of exec form, since we're running 
+# note: must use shell form here instead of exec form, since we're running
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
-CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
-  /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
-  cd /etc/mtconnect/simulator && mtcagent run agent.cfg
+# FIXME: Test if this works using `mtcagent run "$DEMO_DIR/agent.cfg"` instead of running `cd $DEMO_DIR && mtcagent run agent.cfg`.
+CMD /usr/bin/ruby "$MTCONNECT_DIR/simulator/run_scenario.rb" -p 7879 -l "$DEMO_DIR/mazak.txt" \
+  & /usr/bin/ruby "$MTCONNECT_DIR/simulator/run_scenario.rb" -p 7878 -l "$DEMO_DIR/okuma.txt" \
+  & mtcagent run "$DEMO_DIR/agent.cfg"
 
 # ---------------------------------------------------------------------
 # note
