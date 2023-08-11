@@ -1,0 +1,55 @@
+Devices = Devices.xml
+SchemaVersion = 2.0
+WorkerThreads = 3
+MonitorConfigFiles = yes
+Port = 5001
+JsonVersion = 2
+
+MinCompressFileSize = 10k
+
+Files {
+  schemas {
+    Path = ../../schemas
+    Location = /schemas/
+  }
+  styles {
+    Path = ../../styles
+    Location = /styles/
+  }
+  Favicon {
+      Path = ../../styles/favicon.ico
+      Location = /favicon.ico
+  }
+}
+
+Directories {
+  twin {
+    Path = ../twin/
+    Location = /twin/
+    Default = index.html
+  }
+}
+
+Sinks {
+#  MqttService {
+#  }
+}
+
+DevicesStyle { Location = /styles/styles.xsl }
+StreamsStyle { Location = /styles/styles.xsl }
+
+Adapters {
+  OKUMA {
+    Port = 7878
+    Host = 127.0.0.1
+  }
+  Mazak {
+    Port = 7879
+    Host = 127.0.0.1
+  }
+}
+
+logger_config {
+  output = file agent.log
+  level = warning
+}

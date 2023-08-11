@@ -16,16 +16,15 @@
 name: Build Docker image
 
 env:
-  VERSION: 2.0.0.8
   PLATFORMS: linux/amd64,linux/arm64
 
 # when to run workflow
 on:
   # # run on push or pull request events for the master branch
   # push:
-  #   branches: [ master ]
+  #   branches: [ main ]
   # pull_request:
-  #   branches: [ master ]
+  #   branches: [ main ]
 
   # allows you to run this workflow manually from the actions tab
   workflow_dispatch:
@@ -41,10 +40,8 @@ jobs:
     steps:
       # checks-out your repository under $GITHUB_WORKSPACE
       # see https://github.com/actions/checkout
-      - uses: actions/checkout@v3
-        with:
-          ref: v${{ env.VERSION }}
-          # ref: master
+      - name: Checkout Agent
+        uses: actions/checkout@v3
 
       # the QEMU emulator lets us build for arm processors also
       # see https://github.com/docker/setup-qemu-action
@@ -72,7 +69,7 @@ jobs:
           # docker hub user/repo:tag
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/agent:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/agent:${{ env.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/agent:${{ github.ref_name }}
 
           # push to docker hub
           push: true

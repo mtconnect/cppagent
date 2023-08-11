@@ -44,6 +44,7 @@ target_link_libraries(
 target_clangtidy_setup(agent)
 
 install(TARGETS agent RUNTIME)
+install(TARGETS agent ARCHIVE)
 
 if(SHARED_AGENT_LIB AND MSVC)
   set(CMAKE_INSTALL_DEBUG_LIBRARIES OFF)
@@ -61,5 +62,5 @@ if(SHARED_AGENT_LIB AND MSVC)
 elseif(SHARED_AGENT_LIB)
   file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dylib" "${cppagent_BINARY_DIR}/dlls/*.so")
   message(STATUS "!!!!! Copying ${dlls} to lib directory")
-  install(FILES ${dlls} DESTINATION lib COMPONENT Libraries)
+  install(FILES ${dlls} TYPE LIB COMPONENT Libraries)
 endif()

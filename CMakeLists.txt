@@ -85,16 +85,22 @@ endif()
 
 create_clangformat_target()
 
+include(GNUInstallDirs)
+
+if(NOT MSVC)
+  set(CMAKE_INSTALL_DATADIR "share/mtconnect")
+endif()
+
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
 # We will set this to the agent_test project.
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT agent)
 
-install(FILES README.md LICENSE.TXT DESTINATION . )
-install(DIRECTORY schemas DESTINATION . )
-install(DIRECTORY simulator DESTINATION . )
-install(DIRECTORY styles DESTINATION . )
-install(DIRECTORY tools DESTINATION . )
-install(DIRECTORY demo DESTINATION . )
+install(FILES README.md LICENSE.TXT TYPE DATA)
+install(DIRECTORY schemas TYPE DATA)
+install(DIRECTORY simulator TYPE DATA)
+install(DIRECTORY styles TYPE DATA)
+install(DIRECTORY tools TYPE DATA)
+install(DIRECTORY demo TYPE DATA)
 
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
 set(CPACK_PACKAGE_VERSION "${AGENT_VERSION_MAJOR}.${AGENT_VERSION_MINOR}.${AGENT_VERSION_PATCH}.${AGENT_VERSION_BUILD}${AGENT_VERSION_RC}")
