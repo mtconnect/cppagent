@@ -1,3 +1,14 @@
+# Build, Test, and Draft Releae for static and dynamic versions of the
+# MTConnect Agent on Windows, Mac OS, and Linux. 
+#
+# The Windows x86 and x86_64 builds create ZIP packages and attach them to
+# a draft release when the commit is tagged.
+#
+# Secret required for Release:
+#   RELEASE_GITHUB_TOKEN - Release token created by admin in Settings / Developer Settings / Personal access tokens /
+#                            Find-grained tokens
+#                          The token must be renewed every 90 days.
+
 name: Build MTConnect C++ Agent
 
 on:
