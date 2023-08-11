@@ -89,6 +89,8 @@ include(GNUInstallDirs)
 
 if(NOT MSVC)
   set(CMAKE_INSTALL_DATADIR "share/mtconnect")
+else()
+  set(CMAKE_INSTALL_DATADIR ".")
 endif()
 
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
