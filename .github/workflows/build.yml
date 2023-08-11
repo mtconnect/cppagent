@@ -9,6 +9,8 @@ on:
   push:
     paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
     branches: [ "main", "main-dev" ]
+    tags:
+      - "v*.*.*"
 
   # Allow manually run workflows
   workflow_dispatch:
@@ -19,32 +21,43 @@ jobs:
     strategy:
       matrix:
         arch: ["x86", "amd64"]
+        shared: ["True", "False"]
         include:
           - arch: "x86"
             profile: "vs32"
           - arch: "amd64"
             profile: "vs64"
-
-# Shared build will be reenabled once I figure why one of the tests is failing
-#        shared: ["False", "True"]
-#        include:
-#          - shared: "False"
-#            profile: "vs64"
-#          - shared: "True"
-#            profile: "vs64shared"
+          - shared: "True"
+            profile: "vs64shared"
+        exclude:
+          - arch: "x86"
+            shared: "True"
 
     steps:
+    - name: Setup conan and zip directories
+      run: |
+        ruby -e @"
+          base = ENV['GITHUB_WORKSPACE'].gsub('\\', '/').
+            gsub(/\/[a-zA-Z]+$/, '')
+          
+          puts %{ZIP_DIR=#{base}}
+          puts %{CONAN_HOME=#{base}/conan2}
+        "@ >> $env:GITHUB_ENV
+              
+    - name: Print Directories
+      run: |
+        echo $CONAN_HOME
+        echo $ZIP_DIR
+              
     - name: Checkout Agent
       uses: actions/checkout@v3
 
     - name: Cache conan packages
-      id: cache-npm
+      id: cache
       uses: actions/cache@v3
-      env:
-       cache-name: cache-conan-packages
       with:
-        path: ~/.conan2
-        key: ${{ runner.os }}-build-${{ matrix.arch }}-${{ hashFiles('**/conanfile.py') }}
+        path: ${{ env.CONAN_HOME }}
+        key: ${{ runner.os }}-build-${{ matrix.profile }}-${{ hashFiles('**/conanfile.py') }}
 
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
@@ -54,12 +67,32 @@ jobs:
       with:
         arch: ${{ matrix.arch }}
         host_arch: ${{ matrix.arch }}
-          
-    - name: Build and Test C++ Agent
+
+    - name: Setup Conan
+      if: steps.cache.outputs.cache-hit != 'true'
       run: |
         conan profile detect -f
-        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o with_docs=False -o cpack=True -o zip_destination=C:\Users\runneradmin\
+      
+    - name: Cleanup Prior Build
+      if: steps.cache.outputs.cache-hit == 'true'
+      continue-on-error: true
+      run: |
+        conan remove mtconnect_agent -c
 
+    - name: Build and Test C++ Agent
+      run: |
+        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o with_docs=False -o cpack=True -o zip_destination=$ZIP_DIR -o shared=${{ matrix.shared }}
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: ${{ startsWith(github.ref, 'refs/tags/') && matrix.shared == 'False' }}
+      with:
+        name: Version ${{ github.ref_name }}
+        draft: true
+        files: |
+          ${{ env.ZIP_DIR }}/agent*.zip
+        token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
+        
   build_linux:
     runs-on: ubuntu-latest
     strategy:
@@ -67,22 +100,39 @@ jobs:
         shared: ["True", "False"]
             
     steps:
-    - name: Checkout Agent
-      uses: actions/checkout@v3
-
     - name: Install dependencies
       shell: bash
       run: |
         sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
       
+    - name: Checkout Agent
+      uses: actions/checkout@v3
+
+    - name: Cache conan packages
+      id: cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.conan2
+        key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
+                      
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
       
+    - name: Setup Conan
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        conan profile detect -f
+      
+    - name: Cleanup Prior Build
+      if: steps.cache.outputs.cache-hit == 'true'
+      continue-on-error: true
+      run: |
+        conan remove mtconnect_agent -c
+
     - name: Build and Test C++ Agent
       shell: bash
       run: |
-        conan profile detect -f
-        conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True
+        conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o with_docs=False
         
   build_macos:
     runs-on: macos-latest
@@ -94,14 +144,29 @@ jobs:
     - name: Checkout Agent
       uses: actions/checkout@v3
 
+    - name: Cache conan packages
+      id: cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.conan2
+        key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
+                      
     - name: Install Conan
       uses: turtlebrowser/get-conan@v1.2
       
+    - name: Setup Conan
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        conan profile detect -f
+      
+    - name: Cleanup Prior Build
+      if: steps.cache.outputs.cache-hit == 'true'
+      continue-on-error: true
+      run: |
+        conan remove mtconnect_agent -c
+
     - name: Build and Test C++ Agent
       shell: bash
       run: |
-        conan profile detect -f
-        conan create . --build=missing -pr conan/profiles/macos  -o shared=${{ matrix.shared }} -o with_docs=False -o cpack=True
+        conan create . --build=missing -pr conan/profiles/macos  -o shared=${{ matrix.shared }} -o with_docs=False
         
-        
-    
