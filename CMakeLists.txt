@@ -89,8 +89,11 @@ include(GNUInstallDirs)
 
 if(NOT MSVC)
   set(CMAKE_INSTALL_DATADIR "share/mtconnect")
+  set(CMAKE_INSTALL_SYSCONFDIR "etc/mtconnect")
+  install(CODE "configure_file(\"${CMAKE_CURRENT_SOURCE_DIR}/demo/agent/agent.cfg.in\" \"\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_SYSCONFDIR}/agent.cfg\")")
 else()
   set(CMAKE_INSTALL_DATADIR ".")
+  set(CMAKE_INSTALL_SYSCONFDIR "bin")
 endif()
 
 # For Visual Studio generators it is now possible (since V3.6) to set a default startup project.
@@ -103,6 +106,7 @@ install(DIRECTORY simulator TYPE DATA)
 install(DIRECTORY styles TYPE DATA)
 install(DIRECTORY tools TYPE DATA)
 install(DIRECTORY demo TYPE DATA)
+install(FILES demo/agent/Devices.xml TYPE SYSCONF)
 
 set(CPACK_COMPONENTS_ALL_IN_ONE_PACKAGE 1)
 set(CPACK_PACKAGE_VERSION "${AGENT_VERSION_MAJOR}.${AGENT_VERSION_MINOR}.${AGENT_VERSION_PATCH}.${AGENT_VERSION_BUILD}${AGENT_VERSION_RC}")

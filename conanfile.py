@@ -207,7 +207,12 @@ class MTConnectAgentConan(ConanFile):
             else:
                 dest = self.package_folder    
             print(f"Packaging agent with cpack to {dest}")
-            self.run(f"cpack -G ZIP -B {dest}", cwd=self.build_folder)
+            # -D CPACK_PACKAGE_FILE_NAME
+            if (is_msvc(self)):
+                self.run(f"cpack -G ZIP -B {dest}", cwd=self.build_folder)
+            else:
+                # -D CPACK_PACKAGE_FILE_NAME
+                self.run(f"cpack -G TGZ -B {dest}", cwd=self.build_folder)
 
 
 
