@@ -40,7 +40,7 @@ FROM os AS build
 # limit cpus so don't run out of memory on local machine
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
 # can turn off if building in cloud
-ARG CONAN_CPU_COUNT=10
+ARG CONAN_CPU_COUNT=2
 
 ARG WITH_RUBY='True'
 
@@ -72,7 +72,7 @@ COPY . .
 
 # make installer
 RUN conan profile detect \
-    conan create . \
+  && conan create . \
     --build=missing \
     -c "tools.build:jobs=$CONAN_CPU_COUNT" \
     -c tools.build:skip_test=True \
@@ -113,7 +113,7 @@ USER agent
 WORKDIR /home/agent
 
 # install agent executable
-COPY --chown=agent:agent --from=build /root/agent/build/bin/agent /usr/local/bin/
+COPY --chown=agent:agent --from=build /root/agent/*.zip .
 
 # Extract the data
 RUN unzip *.zip
@@ -122,14 +122,14 @@ RUN unzip *.zip
 USER root
 RUN cp /home/agent/agent-*-Linux/bin/* "$BIN_DIR" \
   && mkdir -p "$MTCONNECT_DIR" \
-  && chown -R agent:agent "$MTCONNECT_DIR"
+  && chown agent:agent "$MTCONNECT_DIR"
 
 USER agent
 
-RUN cp -r /home/agent/agent-*-Linux/schemas \
-  /home/agent/agent-*-Linux/simulator \
-  /home/agent/agent-*-Linux/styles \
-  /home/agent/agent-*-Linux/demo \
+RUN cp -r /home/agent/agent-*-Linux/share/mtconnect/schemas \
+  /home/agent/agent-*-Linux/share/mtconnect/simulator \
+  /home/agent/agent-*-Linux/share/mtconnect/styles \
+  /home/agent/agent-*-Linux/share/mtconnect/demo \
   "$MTCONNECT_DIR"
 
 # expose port
