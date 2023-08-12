@@ -92,7 +92,7 @@ jobs:
 
     - name: Build and Test C++ Agent
       run: |
-        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o with_docs=False -o cpack=True -o zip_destination=${{ env.ZIP_DIR }} -o shared=${{ matrix.shared }}
+        conan create . --build=missing -pr conan/profiles/${{ matrix.profile }} -o with_docs=False -o cpack=True -o cpack_destination=${{ env.ZIP_DIR }} -o shared=${{ matrix.shared }}
 
     - name: Release
       uses: softprops/action-gh-release@v1

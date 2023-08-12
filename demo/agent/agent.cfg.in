@@ -1,0 +1,55 @@
+Devices = $AGENT_CONFIG_DIR/Devices.xml
+SchemaVersion = 2.0
+WorkerThreads = 3
+MonitorConfigFiles = yes
+Port = 5000
+JsonVersion = 1
+
+MinCompressFileSize = 10k
+
+Files {
+  schemas {
+    Path = $AGENT_DATA_DIR/schemas
+    Location = /schemas/
+  }
+  styles {
+    Path = $AGENT_DATA_DIR/share/mtconnect/styles
+    Location = /styles/
+  }
+  Favicon {
+      Path = $AGENT_DATA_DIR/share/mtconnect/styles/favicon.ico
+      Location = /favicon.ico
+  }
+}
+
+Directories {
+  twin {
+    Path = $AGENT_DATA_DIR/share/mtconnect/demo/twin/
+    Location = /twin/
+    Default = index.html
+  }
+}
+
+Sinks {
+#  MqttService {
+#  }
+}
+
+DevicesStyle { Location = /styles/styles.xsl }
+StreamsStyle { Location = /styles/styles.xsl }
+
+Adapters {
+  OKUMA {
+    Port = 7878
+    Host = 127.0.0.1
+  }
+  Mazak {
+    Port = 7879
+    Host = 127.0.0.1
+  }
+}
+
+logger_config {
+  output = file agent.log
+  level = warning
+}
