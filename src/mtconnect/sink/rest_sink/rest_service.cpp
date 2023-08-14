@@ -242,7 +242,7 @@ namespace mtconnect {
             else
             {
               string ind {index ? *index : "index.html"};
-              m_fileCache.addDirectory(*location, *resolved, ind);
+              m_fileCache.addDirectory(*location, resolved->string(), ind);
             }
           }
         }
