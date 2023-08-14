@@ -1,4 +1,4 @@
-Devices = $AGENT_CONFIG_DIR/Devices.xml
+Devices = Devices.xml
 SchemaVersion = 2.0
 WorkerThreads = 3
 MonitorConfigFiles = yes
@@ -7,24 +7,27 @@ JsonVersion = 1
 
 MinCompressFileSize = 10k
 
+DataPath = $MTCONNECT_DATA_DIR
+ConfigPath = $MTCONNECT_CONF_DIR
+
 Files {
   schemas {
-    Path = $AGENT_DATA_DIR/schemas
+    Path = schemas
     Location = /schemas/
   }
   styles {
-    Path = $AGENT_DATA_DIR/share/mtconnect/styles
+    Path = styles
     Location = /styles/
   }
   Favicon {
-      Path = $AGENT_DATA_DIR/share/mtconnect/styles/favicon.ico
+      Path = styles/favicon.ico
       Location = /favicon.ico
   }
 }
 
 Directories {
   twin {
-    Path = $AGENT_DATA_DIR/share/mtconnect/demo/twin/
+    Path = demo/twin/
     Location = /twin/
     Default = index.html
   }
@@ -50,6 +53,6 @@ Adapters {
 }
 
 logger_config {
-  output = file agent.log
+  output = file $MTCONNECT_LOG_DIR/agent.log
   level = warning
 }

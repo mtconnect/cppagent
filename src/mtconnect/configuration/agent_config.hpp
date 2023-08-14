@@ -239,8 +239,13 @@ namespace mtconnect {
           std::error_code ec;
           if (std::filesystem::exists(tst, ec) && !ec)
           {
+            LOG(trace) << "Found file '" << file << "' " << " in path " <<path;
             auto con {std::filesystem::canonical(tst)};
             return con;
+          }
+          else
+          {
+            LOG(trace) << "Cannot find file '" << file << "' " << " in path " <<path;
           }
         }
 
@@ -256,6 +261,8 @@ namespace mtconnect {
 
         if (!ec)
           paths.emplace_back(con);
+        else
+          LOG(debug) << "Cannot file path: " << path << ", " << ec.message();
       }
 
       void addPathFront(std::list<std::filesystem::path> &paths, std::filesystem::path path)
@@ -265,6 +272,8 @@ namespace mtconnect {
         paths.remove(con);
         if (!ec)
           paths.emplace_front(con);
+        else
+          LOG(debug) << "Cannot file path: " << path << ", " << ec.message();
       }
 
       template <typename T>

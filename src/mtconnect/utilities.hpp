@@ -28,6 +28,7 @@
 #include <boost/regex.hpp>
 #include <boost/uuid/detail/sha1.hpp>
 
+#include <filesystem>
 #include <chrono>
 #include <date/date.h>
 #include <mtconnect/version.h>
