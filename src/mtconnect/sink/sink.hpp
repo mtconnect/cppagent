@@ -107,7 +107,7 @@ namespace mtconnect {
       std::shared_ptr<pipeline::PipelineContext> m_pipelineContext;
 
       using FindFile =
-          std::function<std::optional<std::filesystem::path>(const std::filesystem::path &)>;
+          std::function<std::optional<std::filesystem::path>(const std::string &)>;
       /// @brief function to find a configuration file
       FindFile m_findConfigFile;
 
