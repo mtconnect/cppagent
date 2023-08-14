@@ -25,6 +25,7 @@
 #include <string>
 
 #include "mtconnect/agent.hpp"
+#include "mtconnect/configuration/agent_config.hpp"
 #include "mtconnect/entity/data_set.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/logging.hpp"
@@ -112,8 +113,9 @@ namespace mtconnect::ruby {
     }
   }
 
-  Embedded::Embedded(Agent *agent, const ConfigOptions &options)
-    : m_agent(agent), m_options(options)
+  Embedded::Embedded(mtconnect::configuration::AgentConfiguration *config,
+                     const ConfigOptions &options)
+    : m_agent(config->getAgent()), m_options(options)
   {
     using namespace std::filesystem;
 
@@ -128,6 +130,10 @@ namespace mtconnect::ruby {
     if (!initialization)
       initialization = GetOption<string>(m_options, "initialization");
 
+    std::optional<std::filesystem::path> modulePath;
+    if (module)
+      modulePath = config->findDataFile(*module);
+
     if (!m_rubyVM)
     {
       m_rubyVM = make_unique<RubyVM>();
@@ -136,19 +142,18 @@ namespace mtconnect::ruby {
 
       auto mrb = m_rubyVM->state();
 
-      RubyAgent::initialize(mrb, m_rubyVM->mtconnect(), agent);
+      RubyAgent::initialize(mrb, m_rubyVM->mtconnect(), m_agent);
       RubyPipeline::initialize(mrb, m_rubyVM->mtconnect());
       RubyEntity::initialize(mrb, m_rubyVM->mtconnect());
       RubyObservation::initialize(mrb, m_rubyVM->mtconnect());
       RubyTransform::initialize(mrb, m_rubyVM->mtconnect());
 
-      if (module)
+      if (modulePath)
       {
         LOG(info) << "Finding module: " << *module;
 
-        path mod(*module);
         std::error_code ec;
-        path file = canonical(mod, ec);
+        path file = canonical(*modulePath, ec);
         if (ec)
         {
           LOG(error) << "Cannot open file: " << ec.message();
@@ -160,7 +165,7 @@ namespace mtconnect::ruby {
           try
           {
             int save = mrb_gc_arena_save(mrb);
-            mrb_value file = mrb_str_new_cstr(mrb, mod.string().c_str());
+            mrb_value file = mrb_str_new_cstr(mrb, modulePath->string().c_str());
             mrb_bool state = false;
             mrb_value res = mrb_protect(
                 mrb, [](mrb_state *mrb, mrb_value filename) { return LoadModule(mrb, filename); },
@@ -168,19 +173,19 @@ namespace mtconnect::ruby {
             mrb_gc_arena_restore(mrb, save);
             if (state)
             {
-              LOG(fatal) << "Error loading file " << mod << ": "
+              LOG(fatal) << "Error loading file " << *modulePath << ": "
                          << mrb_str_to_cstr(mrb, mrb_inspect(mrb, res));
               exit(1);
             }
           }
           catch (std::exception ex)
           {
-            LOG(fatal) << "Failed to load module: " << mod << ": " << ex.what();
+            LOG(fatal) << "Failed to load module: " << *modulePath << ": " << ex.what();
             exit(1);
           }
           catch (...)
           {
-            LOG(fatal) << "Failed to load module: " << mod;
+            LOG(fatal) << "Failed to load module: " << *modulePath;
             exit(1);
           }
           if (fp != nullptr)

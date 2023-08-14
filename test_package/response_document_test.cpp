@@ -75,9 +75,7 @@ protected:
 
     m_doc.emplace();
 
-    m_device =
-        parser->parseFile(TEST_RESOURCE_DIR "/samples/data_set.xml", printer.get())
-            .front();
+    m_device = parser->parseFile(TEST_RESOURCE_DIR "/samples/data_set.xml", printer.get()).front();
 
     m_context = make_shared<PipelineContext>();
     m_context->m_contract = make_unique<MockPipelineContract>(m_device);

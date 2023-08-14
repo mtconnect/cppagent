@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/beast/core/detail/base64.hpp>
 #include <boost/lexical_cast.hpp>
@@ -395,6 +396,9 @@ namespace mtconnect {
   using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
   using StringList = std::list<std::string>;
 
+  /// @name Configuration related methods
+  ///@{
+
   /// @brief Variant for configuration options
   using ConfigOption = std::variant<std::monostate, bool, int, std::string, double, Seconds,
                                     Milliseconds, StringList>;
@@ -415,6 +419,11 @@ namespace mtconnect {
     else
       return std::nullopt;
   }
+
+  /// @brief Expand environment or option references in values
+  /// @param value string to expand
+  /// @return expanded string
+  ConfigOption ExpandOption(const ConfigOptions &options, const std::string &value);
 
   /// @brief checks if a boolean option is set
   /// @param options the set of options
@@ -443,22 +452,39 @@ namespace mtconnect {
   /// @param[in] s the
   /// @param[in] def template for the option
   /// @return a typed option matching `def`
-  inline auto ConvertOption(const std::string &s, const ConfigOption &def)
+  inline auto ConvertOption(const std::string &s, const ConfigOption &def,
+                            const ConfigOptions &options)
   {
-    ConfigOption option;
-    visit(overloaded {[&option, &s](const std::string &) {
-                        if (s.empty())
-                          option = std::monostate();
-                        else
-                          option = s;
-                      },
-                      [&option, &s](const int &) { option = stoi(s); },
-                      [&option, &s](const Milliseconds &) { option = Milliseconds {stoi(s)}; },
-                      [&option, &s](const Seconds &) { option = Seconds {stoi(s)}; },
-                      [&option, &s](const double &) { option = stod(s); },
-                      [&option, &s](const bool &) { option = s == "yes" || s == "true"; },
-                      [](const auto &) {}},
-          def);
+    ConfigOption option {s};
+    if (s.find('$') != std::string::npos)
+    {
+      option = ExpandOption(options, s);
+    }
+
+    if (std::holds_alternative<std::string>(option))
+    {
+      std::string sv = std::get<std::string>(option);
+      visit(overloaded {[&option, &sv](const std::string &) {
+                          if (sv.empty())
+                            option = std::monostate();
+                          else
+                            option = sv;
+                        },
+                        [&option, &sv](const int &) { option = stoi(sv); },
+                        [&option, &sv](const Milliseconds &) { option = Milliseconds {stoi(sv)}; },
+                        [&option, &sv](const Seconds &) { option = Seconds {stoi(sv)}; },
+                        [&option, &sv](const double &) { option = stod(sv); },
+                        [&option, &sv](const bool &) { option = sv == "yes" || sv == "true"; },
+                        [&option, &sv](const StringList &) {
+                          StringList list;
+                          boost::split(list, sv, boost::is_any_of(","));
+                          for (auto &s : list)
+                            boost::trim(s);
+                          option = list;
+                        },
+                        [](const auto &) {}},
+            def);
+    }
     return option;
   }
 
@@ -530,7 +556,7 @@ namespace mtconnect {
       auto val = tree.get_optional<std::string>(e.first);
       if (val)
       {
-        auto v = ConvertOption(*val, e.second);
+        auto v = ConvertOption(*val, e.second, options);
         if (v.index() != 0)
           options.insert_or_assign(e.first, v);
       }
@@ -549,7 +575,7 @@ namespace mtconnect {
       auto val = tree.get_optional<std::string>(e.first);
       if (val)
       {
-        auto v = ConvertOption(*val, e.second);
+        auto v = ConvertOption(*val, e.second, options);
         if (v.index() != 0)
           options.insert_or_assign(e.first, v);
       }
@@ -586,6 +612,8 @@ namespace mtconnect {
     }
     AddOptions(tree, options, entries);
   }
+
+  /// @}
 
   /// @brief Format a timestamp as a string in microseconds
   /// @param[in] ts the timestamp

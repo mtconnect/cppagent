@@ -41,7 +41,7 @@ inline std::string getFile(std::string file)
   using namespace std;
 
   string path = string(TEST_RESOURCE_DIR "/") + file;
-  
+
   ifstream ifs(path.c_str());
   stringstream stream;
   stream << ifs.rdbuf();

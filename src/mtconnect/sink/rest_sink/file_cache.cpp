@@ -59,7 +59,7 @@ namespace mtconnect::sink::rest_sink {
   namespace fs = std::filesystem;
 
   // Register a file
-  XmlNamespaceList FileCache::registerDirectory(const string &uri, const string &pathName,
+  XmlNamespaceList FileCache::registerDirectory(const string &uri, const fs::path &pathName,
                                                 const string &version)
   {
     XmlNamespaceList namespaces;
