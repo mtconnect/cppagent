@@ -195,8 +195,10 @@ namespace mtconnect {
       sink::SinkContractPtr makeSinkContract()
       {
         auto contract = m_agent->makeSinkContract();
-        contract->m_findConfigFile = [this](const std::string &n) { return findConfigFile(n); };
-        contract->m_findDataFile = [this](const std::string &n) { return findDataFile(n); };
+        contract->m_findConfigFile = [this](const std::string &n) ->
+                std::optional<std::filesystem::path> { return findConfigFile(n); };
+        contract->m_findDataFile = [this](const std::string &n) ->
+                std::optional<std::filesystem::path> { return findDataFile(n); };
         return contract;
       }
 
