@@ -12,11 +12,20 @@ class MTConnectAgentConan(ConanFile):
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
-    options = { "without_ipv6": [True, False], "with_ruby": [True, False], 
-                 "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
-                 "with_docs" : [True, False], "cpack": [True, False], "agent_prefix": [None, "ANY"],
-                 "fPIC": [True, False], "cpack_destination": [None, "ANY"], "cpack_name": [None, "ANY"],
-                 "cpack_generator": [None, "ANY"] }
+    options = { "without_ipv6": [True, False],
+                "with_ruby": [True, False], 
+                 "development" : [True, False],
+                 "shared": [True, False],
+                 "winver": [None, "ANY"],
+                 "with_docs" : [True, False],
+                 "cpack": [True, False],
+                 "agent_prefix": [None, "ANY"],
+                 "fPIC": [True, False],
+                 "cpack_destination": [None, "ANY"],
+                 "cpack_name": [None, "ANY"],
+                 "cpack_generator": [None, "ANY"]
+                 }
+    
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     build_policy = "missing"

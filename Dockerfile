@@ -153,7 +153,6 @@ EXPOSE 5000
 # note: must use shell form here instead of exec form, since we're running
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
-# FIXME: Test if this works using `mtcagent run "$DEMO_DIR/agent.cfg"` instead of running `cd $DEMO_DIR && mtcagent run agent.cfg`.
 CMD /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7879 -l "$DEMO_DIR/agent/mazak.txt" \
   & /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7878 -l "$DEMO_DIR/agent/okuma.txt" \
   & mtcagent run

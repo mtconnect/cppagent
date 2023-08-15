@@ -5,21 +5,20 @@
 # notes
 # ---------------------------------------------------------------------
 #
-# to build locally and push to docker hub, run this with something like -
+# to build a cross-platform image, push to docker hub, and run it -
+# (see CMakeLists.txt for current version number) -
 #
 #   docker buildx build \
 #     --platform linux/amd64,linux/arm64 \
-#     --tag ladder99/agent2 \
-#     --secret id=access_token,src=ACCESS_TOKEN  \
+#     --tag mtconnect/agent:2.0.0.12_RC18 \
 #     --push \
 #     .
 #
-# then should be able to run with something like
-#
 #   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
-#   docker run -it -p5001:5000 --name agent2 --rm ladder99/agent2:latest
+#   docker run -it --rm --init --name agent -p5001:5000 \
+#     mtconnect/agent:2.0.0.12_RC18
 #
-# and visit http://localhost:5001 to see demo output
+# then visit http://localhost:5001 to see the demo output.
 
 # ---------------------------------------------------------------------
 # os
@@ -122,9 +121,9 @@ WORKDIR /home/agent
 COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
 
 # Extract the data
-RUN tar xzvf dist.tar.gz
+RUN tar xf dist.tar.gz
 
-# Copy binary and set up config, data, and log directories
+# Copy the agent binary and create folders used by the agent
 USER root
 RUN cp /home/agent/dist/bin/* "$BIN_DIR" \
     && mkdir -p "$MTCONNECT_CONF_DIR" \
@@ -136,14 +135,17 @@ RUN cp /home/agent/dist/bin/* "$BIN_DIR" \
 
 USER agent
 
+# Copy the agent data
 RUN cp -r /home/agent/dist/share/mtconnect/schemas \
-  /home/agent/dist/share/mtconnect/simulator \
-  /home/agent/dist/share/mtconnect/styles \
-  /home/agent/dist/share/mtconnect/demo \
-  "$MTCONNECT_DATA_DIR"
-
-RUN cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
+    /home/agent/dist/share/mtconnect/simulator \
+    /home/agent/dist/share/mtconnect/styles \
+    /home/agent/dist/share/mtconnect/demo \
+    "$MTCONNECT_DATA_DIR" \
+    && cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
     && cp /home/agent/dist/share/mtconnect/demo/agent/Devices.xml "$MTCONNECT_CONF_DIR"
+
+# expose port
+EXPOSE 5000
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
@@ -164,7 +166,7 @@ CMD /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7879 -l "$D
 # /usr/local/bin
 #  |-- agent - the cppagent application
 #
-# /etc/mtconnect - configuration files agent.cfg and Devices.xml
+# /etc/mtconnect - Configuration files agent.cfg and Devices.xml
 #
 # /usr/local/share/mtconnect
 #  |-- schemas - xsd files
