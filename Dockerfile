@@ -92,7 +92,7 @@ RUN conan profile detect \
 FROM os AS release
 
 # TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
-LABEL author='mtconnect' description='Docker image for the latest Production MTConnect C++ Agent'
+LABEL author='mtconnect' description='MTConnect C++ Agent'
 
 ARG BIN_DIR='/usr/local/bin'
 
