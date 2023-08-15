@@ -106,7 +106,9 @@ ENV DEMO_DIR="$MTCONNECT_DATA_DIR/demo"
 
 # install ruby for simulator
 RUN apk update \
-  && apk add ruby
+    && apk add ruby \
+       libstdc++ \
+       libgcc
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
