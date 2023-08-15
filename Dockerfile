@@ -106,14 +106,12 @@ ENV MTCONNECT_LOG_DIR="$MTCONNECT_LOG_DIR"
 ENV DEMO_DIR="$MTCONNECT_DATA_DIR/demo"
 
 # install ruby for simulator
-# FIXME: test this without installing `unzip`
 RUN apt-get update \
   && apt-get install -y ruby
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
 # -m creates a home folder, ie /home/<username>
-# TODO: We might also want to merge these two RUN commands (the previous and the following one) into one, although it would be a bit less readable.
 RUN useradd -m agent
 USER agent
 WORKDIR /home/agent

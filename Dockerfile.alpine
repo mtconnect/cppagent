@@ -105,14 +105,12 @@ ENV MTCONNECT_LOG_DIR="$MTCONNECT_LOG_DIR"
 ENV DEMO_DIR="$MTCONNECT_DATA_DIR/demo"
 
 # install ruby for simulator
-# FIXME: Do we need to run `apk upgrade` after `apk update`?
 RUN apk update \
   && apk add ruby
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
 # --create-home creates a home folder, ie /home/<username>
-# TODO: We might also want to merge these two RUN commands (the previous and the following one) into one, although it would be a bit less readable.
 RUN adduser -D agent
 USER agent
 WORKDIR /home/agent
