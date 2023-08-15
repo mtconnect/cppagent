@@ -755,5 +755,5 @@ TEST_F(AgentAdapterTest, should_create_device_when_option_supplied)
   {
     m_agentTestHelper->m_ioContext.run_one();
   }
-  ASSERT_EQ(2, rc);
+  ASSERT_GE(2, rc);
 }

@@ -793,7 +793,7 @@ namespace mtconnect {
     auto len = boost::beast::detail::base64::encode(s.data(), digest, sizeof(digest));
 
     s.erase(len - 1);
-    std::remove_if(++(s.begin()), s.end(), not_fn(isIDChar));
+    s.erase(std::remove_if(++(s.begin()), s.end(), not_fn(isIDChar)), s.end());
 
     // Check if the character is legal.
     if (!isIDStartChar(s[0]))
