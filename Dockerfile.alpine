@@ -54,6 +54,7 @@ RUN apk update \
     automake \
     cmake \
     g++ \
+    gcompat \
     git \
     linux-headers \
     make \
@@ -83,7 +84,6 @@ RUN conan profile detect \
     -o cpack_generator=TGZ \
     -pr "$CONAN_PROFILE" \
     -tf ''
-
 
 # ---------------------------------------------------------------------
 # release
