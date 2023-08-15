@@ -2122,7 +2122,7 @@ Adapters {
   // Environment variable tests
   TEST_F(ConfigTest, should_expand_environment_variables)
   {
-    setenv("CONFIG_TEST", "TestValue", 1);
+    putenv(strdup("CONFIG_TEST=TestValue"));
 
     string config(R"DOC(
 ServiceName=$CONFIG_TEST
@@ -2137,7 +2137,7 @@ ServiceName=$CONFIG_TEST
 
   TEST_F(ConfigTest, should_expand_options)
   {
-    setenv("CONFIG_TEST", "ShouldNotMatch", 1);
+    putenv(strdup("CONFIG_TEST=ShouldNotMatch"));
 
     string config(R"DOC(
 AllowPutFrom=TestValue
@@ -2154,7 +2154,7 @@ ServiceName=$AllowPutFrom
   // Environment variable tests
   TEST_F(ConfigTest, should_expand_with_prefix_and_suffix)
   {
-    setenv("CONFIG_TEST", "TestValue", 1);
+    putenv(strdup("CONFIG_TEST=TestValue"));
 
     string config(R"DOC(
 ServiceName=/some/prefix/$CONFIG_TEST:suffix
@@ -2170,7 +2170,7 @@ ServiceName=/some/prefix/$CONFIG_TEST:suffix
 
   TEST_F(ConfigTest, should_expand_with_prefix_and_suffix_with_curly)
   {
-    setenv("CONFIG_TEST", "TestValue", 1);
+    putenv(strdup("CONFIG_TEST=TestValue"));
 
     string config(R"DOC(
 ServiceName="some_prefix_${CONFIG_TEST}_suffix"

@@ -632,7 +632,7 @@ namespace mtconnect::configuration {
                 {configuration::PluginPath, StringList()},
                 {configuration::ConfigPath, StringList()},
                 {configuration::ServerIp, "0.0.0.0"s},
-                {configuration::Devices, "Devices.xml"},
+                {configuration::Devices, "Devices.xml"s},
                 {configuration::BufferSize, int(DEFAULT_SLIDING_BUFFER_EXP)},
                 {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
                 {configuration::CheckpointFrequency, 1000},
