@@ -124,7 +124,7 @@ COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
 # Extract the data
 RUN tar xzvf dist.tar.gz
 
-# Copy binary and set up config, data, and log directories
+# Copy the agent binary and create folders used by the agent
 USER root
 RUN cp /home/agent/dist/bin/* "$BIN_DIR" \
     && mkdir -p "$MTCONNECT_CONF_DIR" \
