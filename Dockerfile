@@ -100,7 +100,7 @@ ARG MTCONNECT_CONF_DIR='/etc/mtconnect'
 ARG MTCONNECT_DATA_DIR='/usr/local/share/mtconnect'
 ARG MTCONNECT_LOG_DIR='/var/log/mtconnect'
 
-ENV MTCONNECT_COND_DIR="$MTCONNECT_DIR"
+ENV MTCONNECT_CONF_DIR="$MTCONNECT_CONF_DIR"
 ENV MTCONNECT_DATA_DIR="$MTCONNECT_DATA_DIR"
 ENV MTCONNECT_LOG_DIR="$MTCONNECT_LOG_DIR"
 ENV DEMO_DIR="$MTCONNECT_DATA_DIR/demo"
@@ -167,9 +167,13 @@ CMD /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7879 -l "$D
 # /usr/local/bin
 #  |-- agent - the cppagent application
 #
-# /etc/mtconnect
+# /etc/mtconnect - Configuration files agent.cfg and Devices.xml
+#
+# /usr/local/share/mtconnect
 #  |-- schemas - xsd files
 #  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
 #  |-- styles - styles.xsl, styles.css, favicon.ico, etc
 #
 # /home/agent - the user's directory
+#
+# /var/log/mtconnect - logging directory

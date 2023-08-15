@@ -173,7 +173,8 @@ namespace mtconnect::configuration {
         LOG(info) << "Loading configuration from: " << *path;
         cerr << "Loading configuration from:" << *path << endl;
 
-        m_configFile = fs::absolute(*path);
+        m_configFile = fs::canonical(*path);
+        addPathFront(m_configPaths, m_configFile.parent_path());
         addPathBack(m_dataPaths, m_configFile.parent_path());
 
         ifstream file(m_configFile.c_str());
