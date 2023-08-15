@@ -136,13 +136,13 @@ RUN cp /home/agent/dist/bin/* "$BIN_DIR" \
 
 USER agent
 
+# Copy the agent data
 RUN cp -r /home/agent/dist/share/mtconnect/schemas \
   /home/agent/dist/share/mtconnect/simulator \
   /home/agent/dist/share/mtconnect/styles \
   /home/agent/dist/share/mtconnect/demo \
-  "$MTCONNECT_DATA_DIR"
-
-RUN cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
+  "$MTCONNECT_DATA_DIR" \
+  && cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
   && cp /home/agent/dist/share/mtconnect/demo/agent/Devices.xml "$MTCONNECT_CONF_DIR"
 
 # expose port
