@@ -22,6 +22,7 @@
 
 // TODO: Remove when BOOST fixes its multiple defined symbol issue with phoenix placeholders
 #define BOOST_PHOENIX_STL_TUPLE_H_
+#define BOOST_BIND_NO_PLACEHOLDERS
 
 #include <boost/config.hpp>
 
