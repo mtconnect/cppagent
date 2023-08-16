@@ -12,10 +12,20 @@ class MTConnectAgentConan(ConanFile):
     url = "https://github.com/mtconnect/cppagent.git"
     license = "Apache License 2.0"
     settings = "os", "compiler", "arch", "build_type"
-    options = { "without_ipv6": [True, False], "with_ruby": [True, False], 
-                 "development" : [True, False], "shared": [True, False], "winver": [None, "ANY"],
-                 "with_docs" : [True, False], "cpack": [True, False], "agent_prefix": [None, "ANY"],
-                 "fPIC": [True, False], "zip_destination": [None, "ANY"] }
+    options = { "without_ipv6": [True, False],
+                "with_ruby": [True, False], 
+                 "development" : [True, False],
+                 "shared": [True, False],
+                 "winver": [None, "ANY"],
+                 "with_docs" : [True, False],
+                 "cpack": [True, False],
+                 "agent_prefix": [None, "ANY"],
+                 "fPIC": [True, False],
+                 "cpack_destination": [None, "ANY"],
+                 "cpack_name": [None, "ANY"],
+                 "cpack_generator": [None, "ANY"]
+                 }
+    
     description = "MTConnect reference C++ agent copyright Association for Manufacturing Technology"
     
     build_policy = "missing"
@@ -29,7 +39,9 @@ class MTConnectAgentConan(ConanFile):
         "cpack": False,
         "agent_prefix": None,
         "fPIC": True,
-        "zip_destination": None,
+        "cpack_destination": None,
+        "cpack_name": None,
+        "cpack_generator": None,
 
         "boost*:shared": False,
         "boost*:without_python": True,
@@ -117,6 +129,12 @@ class MTConnectAgentConan(ConanFile):
         if self.options.with_ruby:
             self.run("conan export conan/mruby", cwd=os.path.dirname(__file__))
 
+        if not self.options.cpack_generator:
+            if is_msvc(self):
+                self.options.cpack_generator = "ZIP"
+            else:
+                self.options.cpack_generator = "TGZ"                
+
     def generate(self):
         if self.options.shared:
             for dep in self.dependencies.values():
@@ -202,13 +220,18 @@ class MTConnectAgentConan(ConanFile):
 
         if self.options.cpack and self.settings.build_type == 'Release':
             dest = None
-            if self.options.zip_destination:
-                dest = str(self.options.zip_destination)
+            if self.options.cpack_destination:
+                dest = str(self.options.cpack_destination)
             else:
-                dest = self.package_folder    
-            print(f"Packaging agent with cpack to {dest}")
-            self.run(f"cpack -G ZIP -B {dest}", cwd=self.build_folder)
+                dest = self.package_folder
+                
+            cpack = f"cpack -G {self.options.cpack_generator} -B {dest} . "
+            if (self.options.cpack_name):                
+                cpack = cpack + f"-D CPACK_PACKAGE_FILE_NAME={self.options.cpack_name}"
 
+            print(f"Calling cpack: {cpack}")
+            self.run(cpack, cwd=self.build_folder)
+            
 
 
     

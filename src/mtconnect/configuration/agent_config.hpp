@@ -180,6 +180,40 @@ namespace mtconnect {
       boost::log::trivial::logger_type *getLogger() { return m_logger; }
       ///@}
 
+      std::optional<std::filesystem::path> findConfigFile(const std::string &file)
+      {
+        return findFile(m_configPaths, file);
+      }
+
+      std::optional<std::filesystem::path> findDataFile(const std::string &file)
+      {
+        return findFile(m_dataPaths, file);
+      }
+
+      /// @brief Create a sink contract with functions to find config and data files.
+      /// @return shared pointer to a sink contract
+      sink::SinkContractPtr makeSinkContract()
+      {
+        auto contract = m_agent->makeSinkContract();
+        contract->m_findConfigFile = [this](const std::string &n) ->
+                std::optional<std::filesystem::path> { return findConfigFile(n); };
+        contract->m_findDataFile = [this](const std::string &n) ->
+                std::optional<std::filesystem::path> { return findDataFile(n); };
+        return contract;
+      }
+
+      /// @brief add a path to the config paths
+      /// @param path the path to add
+      void addConfigPath(const std::filesystem::path &path) { addPathBack(m_configPaths, path); }
+
+      /// @brief add a path to the data paths
+      /// @param path the path to add
+      void addDataPath(const std::filesystem::path &path) { addPathBack(m_dataPaths, path); }
+
+      /// @brief add a path to the plugin paths
+      /// @param path the path to add
+      void addPluginPath(const std::filesystem::path &path) { addPathBack(m_pluginPaths, path); }
+
     protected:
       DevicePtr getDefaultDevice();
       void loadAdapters(const ptree &tree, const ConfigOptions &options);
@@ -194,11 +228,66 @@ namespace mtconnect {
 
       void loadPlugins(const ptree &tree);
       bool loadPlugin(const std::string &name, const ptree &tree);
-
-      std::optional<std::filesystem::path> checkPath(const std::string &name);
-
       void monitorFiles(boost::system::error_code ec);
       void scheduleMonitorTimer();
+
+    protected:
+      std::optional<std::filesystem::path> findFile(const std::list<std::filesystem::path> &paths,
+                                                    const std::string file)
+      {
+        for (const auto &path : paths)
+        {
+          auto tst = path / file;
+          std::error_code ec;
+          if (std::filesystem::exists(tst, ec) && !ec)
+          {
+            LOG(trace) << "Found file '" << file << "' " << " in path " <<path;
+            auto con {std::filesystem::canonical(tst)};
+            return con;
+          }
+          else
+          {
+            LOG(trace) << "Cannot find file '" << file << "' " << " in path " <<path;
+          }
+        }
+
+        return std::nullopt;
+      }
+
+      void addPathBack(std::list<std::filesystem::path> &paths, std::filesystem::path path)
+      {
+        std::error_code ec;
+        auto con {std::filesystem::canonical(path, ec)};
+        if (std::find(paths.begin(), paths.end(), con) != paths.end())
+          return;
+
+        if (!ec)
+          paths.emplace_back(con);
+        else
+          LOG(debug) << "Cannot file path: " << path << ", " << ec.message();
+      }
+
+      void addPathFront(std::list<std::filesystem::path> &paths, std::filesystem::path path)
+      {
+        std::error_code ec;
+        auto con {std::filesystem::canonical(path, ec)};
+        paths.remove(con);
+        if (!ec)
+          paths.emplace_front(con);
+        else
+          LOG(debug) << "Cannot file path: " << path << ", " << ec.message();
+      }
+
+      template <typename T>
+      void logPaths(T lvl, const std::list<std::filesystem::path> &paths)
+      {
+        for (const auto &p : paths)
+        {
+          BOOST_LOG_STREAM_WITH_PARAMS(::boost::log::trivial::logger::get(),
+                                       (::boost::log::keywords::severity = lvl))
+              << "  " << p;
+        }
+      }
 
     protected:
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;
@@ -215,6 +304,10 @@ namespace mtconnect {
       std::string m_devicesFile;
       std::filesystem::path m_exePath;
       std::filesystem::path m_working;
+
+      std::list<std::filesystem::path> m_configPaths;
+      std::list<std::filesystem::path> m_dataPaths;
+      std::list<std::filesystem::path> m_pluginPaths;
 
       // File monitoring
       boost::asio::steady_timer m_monitorTimer;

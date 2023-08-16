@@ -57,8 +57,7 @@ protected:
     m_config = new XmlParser();
     m_printer = new printer::XmlPrinter(true);
     m_printer->setSchemaVersion("1.2");
-    m_devices =
-        m_config->parseFile(TEST_RESOURCE_DIR "/samples/test_config.xml", m_printer);
+    m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/test_config.xml", m_printer);
   }
 
   void TearDown() override
@@ -714,8 +713,7 @@ TEST_F(XmlPrinterTest, ProbeWithFilter13)
   delete m_config;
 
   m_config = new XmlParser();
-  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/filter_example_1.3.xml",
-                                  m_printer);
+  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/filter_example_1.3.xml", m_printer);
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
@@ -731,8 +729,7 @@ TEST_F(XmlPrinterTest, ProbeWithFilter)
   m_config = nullptr;
 
   m_config = new XmlParser();
-  m_devices =
-      m_config->parseFile(TEST_RESOURCE_DIR "/samples/filter_example.xml", m_printer);
+  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/filter_example.xml", m_printer);
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
@@ -749,8 +746,7 @@ TEST_F(XmlPrinterTest, References)
   m_config = nullptr;
 
   m_config = new XmlParser();
-  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/reference_example.xml",
-                                  m_printer);
+  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/reference_example.xml", m_printer);
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
@@ -766,8 +762,7 @@ TEST_F(XmlPrinterTest, LegacyReferences)
   m_config = nullptr;
 
   m_config = new XmlParser();
-  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/reference_example.xml",
-                                  m_printer);
+  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/reference_example.xml", m_printer);
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
@@ -780,8 +775,7 @@ TEST_F(XmlPrinterTest, CheckDeviceChangeTime)
 {
   m_printer = new XmlPrinter(true);
   m_printer->setSchemaVersion("1.7");
-  m_devices =
-      m_config->parseFile(TEST_RESOURCE_DIR "/samples/test_config.xml", m_printer);
+  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/test_config.xml", m_printer);
   m_printer->setModelChangeTime(getCurrentTime(GMT_UV_SEC));
   ASSERT_FALSE(m_printer->getModelChangeTime().empty());
 
@@ -802,8 +796,7 @@ TEST_F(XmlPrinterTest, SourceReferences)
   m_config = nullptr;
 
   m_config = new XmlParser();
-  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/reference_example.xml",
-                                  m_printer);
+  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/reference_example.xml", m_printer);
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 
@@ -874,8 +867,7 @@ TEST_F(XmlPrinterTest, PrintDataItemRelationships)
   m_config = nullptr;
 
   m_config = new XmlParser();
-  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/relationship_test.xml",
-                                  m_printer);
+  m_devices = m_config->parseFile(TEST_RESOURCE_DIR "/samples/relationship_test.xml", m_printer);
 
   PARSE_XML(m_printer->printProbe(123, 9999, 1024, 10, 1, m_devices));
 

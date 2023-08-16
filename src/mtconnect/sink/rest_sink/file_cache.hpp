@@ -51,7 +51,7 @@ namespace mtconnect::sink::rest_sink {
     /// @param path the path on the file system
     /// @param version schema version when registering MTConnect files
     /// @return A namespace list associated with the files
-    XmlNamespaceList registerFiles(const std::string &uri, const std::string &path,
+    XmlNamespaceList registerFiles(const std::string &uri, const std::filesystem::path &path,
                                    const std::string &version)
     {
       return registerDirectory(uri, path, version);
@@ -61,20 +61,8 @@ namespace mtconnect::sink::rest_sink {
     /// @param path the path on the file system
     /// @param version schema version when registering MTConnect files
     /// @return A namespace list associated with the files
-    XmlNamespaceList registerDirectory(const std::string &uri, const std::string &path,
+    XmlNamespaceList registerDirectory(const std::string &uri, const std::filesystem::path &path,
                                        const std::string &version);
-    /// @brief Register a single file
-    /// @note Cover method for `registerFile()` with a filesystem path
-    /// @param uri the uri for the file
-    /// @param pathName the path of file on the files system as a string
-    /// @param version the schema version when registering MTConnect files
-    /// @return an optional XmlNamespace if successful
-    std::optional<XmlNamespace> registerFile(const std::string &uri, const std::string &pathName,
-                                             const std::string &version)
-    {
-      std::filesystem::path path(pathName);
-      return registerFile(uri, path, version);
-    }
     /// @brief Register a single file
     /// @param uri the uri for the file
     /// @param pathName the std filesystem path of file

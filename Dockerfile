@@ -79,7 +79,9 @@ RUN conan profile detect \
     -o agent_prefix=mtc \
     -o cpack=True \
     -o "with_ruby=$WITH_RUBY" \
-    -o zip_destination=/root/agent \
+    -o cpack_destination=/root/agent \
+    -o cpack_name=dist \
+    -o cpack_generator=TGZ \
     -pr "$CONAN_PROFILE" \
     -tf ''
 
@@ -90,47 +92,56 @@ RUN conan profile detect \
 FROM os AS release
 
 # TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
-LABEL author='mtconnect' description='Docker image for the latest Production MTConnect C++ Agent'
+LABEL author='mtconnect' description='MTConnect C++ Agent'
 
-ARG BIN_DIR='/usr/bin'
-# FIXME: `/etc` is not the best place for the app data.
-ARG MTCONNECT_DIR='/etc/mtconnect'
+ARG BIN_DIR='/usr/local/bin'
 
-ENV MTCONNECT_DIR="$MTCONNECT_DIR"
-ENV DEMO_DIR="$MTCONNECT_DIR/demo/agent"
+ARG MTCONNECT_CONF_DIR='/etc/mtconnect'
+ARG MTCONNECT_DATA_DIR='/usr/local/share/mtconnect'
+ARG MTCONNECT_LOG_DIR='/var/log/mtconnect'
+
+ENV MTCONNECT_CONF_DIR="$MTCONNECT_CONF_DIR"
+ENV MTCONNECT_DATA_DIR="$MTCONNECT_DATA_DIR"
+ENV MTCONNECT_LOG_DIR="$MTCONNECT_LOG_DIR"
+ENV DEMO_DIR="$MTCONNECT_DATA_DIR/demo"
 
 # install ruby for simulator
-# FIXME: test this without installing `unzip`
 RUN apt-get update \
-  && apt-get install -y ruby unzip
+  && apt-get install -y ruby
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
 # -m creates a home folder, ie /home/<username>
-# TODO: We might also want to merge these two RUN commands (the previous and the following one) into one, although it would be a bit less readable.
 RUN useradd -m agent
 USER agent
 WORKDIR /home/agent
 
 # install agent executable
-COPY --chown=agent:agent --from=build /root/agent/*.zip .
+COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
 
 # Extract the data
-RUN unzip *.zip
+RUN tar xf dist.tar.gz
 
-# Copy data to `MTCONNECT_DIR`
+# Copy the agent binary and create folders used by the agent
 USER root
-RUN cp /home/agent/agent-*-Linux/bin/* "$BIN_DIR" \
-  && mkdir -p "$MTCONNECT_DIR" \
-  && chown agent:agent "$MTCONNECT_DIR"
+RUN cp /home/agent/dist/bin/* "$BIN_DIR" \
+    && mkdir -p "$MTCONNECT_CONF_DIR" \
+                "$MTCONNECT_DATA_DIR" \
+                "$MTCONNECT_LOG_DIR" \
+    && chown agent:agent "$MTCONNECT_CONF_DIR" \
+                "$MTCONNECT_DATA_DIR" \
+                "$MTCONNECT_LOG_DIR"
 
 USER agent
 
-RUN cp -r /home/agent/agent-*-Linux/share/mtconnect/schemas \
-  /home/agent/agent-*-Linux/share/mtconnect/simulator \
-  /home/agent/agent-*-Linux/share/mtconnect/styles \
-  /home/agent/agent-*-Linux/share/mtconnect/demo \
-  "$MTCONNECT_DIR"
+# Copy the agent data
+RUN cp -r /home/agent/dist/share/mtconnect/schemas \
+  /home/agent/dist/share/mtconnect/simulator \
+  /home/agent/dist/share/mtconnect/styles \
+  /home/agent/dist/share/mtconnect/demo \
+  "$MTCONNECT_DATA_DIR" \
+  && cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
+  && cp /home/agent/dist/share/mtconnect/demo/agent/Devices.xml "$MTCONNECT_CONF_DIR"
 
 # expose port
 EXPOSE 5000
@@ -140,10 +151,9 @@ EXPOSE 5000
 # note: must use shell form here instead of exec form, since we're running
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
-# FIXME: Test if this works using `mtcagent run "$DEMO_DIR/agent.cfg"` instead of running `cd $DEMO_DIR && mtcagent run agent.cfg`.
-CMD /usr/bin/ruby "$MTCONNECT_DIR/simulator/run_scenario.rb" -p 7879 -l "$DEMO_DIR/mazak.txt" \
-  & /usr/bin/ruby "$MTCONNECT_DIR/simulator/run_scenario.rb" -p 7878 -l "$DEMO_DIR/okuma.txt" \
-  & mtcagent run "$DEMO_DIR/agent.cfg"
+CMD /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7879 -l "$DEMO_DIR/agent/mazak.txt" \
+  & /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7878 -l "$DEMO_DIR/agent/okuma.txt" \
+  & mtcagent run
 
 # ---------------------------------------------------------------------
 # note
@@ -154,9 +164,13 @@ CMD /usr/bin/ruby "$MTCONNECT_DIR/simulator/run_scenario.rb" -p 7879 -l "$DEMO_D
 # /usr/local/bin
 #  |-- agent - the cppagent application
 #
-# /etc/mtconnect
+# /etc/mtconnect - Configuration files agent.cfg and Devices.xml
+#
+# /usr/local/share/mtconnect
 #  |-- schemas - xsd files
 #  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
 #  |-- styles - styles.xsl, styles.css, favicon.ico, etc
 #
 # /home/agent - the user's directory
+#
+# /var/log/mtconnect - logging directory

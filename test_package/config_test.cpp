@@ -448,7 +448,8 @@ namespace {
         "Files {\n"
         "schemas {\n"
         "Location = /schemas\n"
-        "Path = " PROJECT_ROOT_DIR "/schemas\n"
+        "Path = " PROJECT_ROOT_DIR
+        "/schemas\n"
         "}\n"
         "}\n"
         "logger_config {\n"
@@ -1226,9 +1227,8 @@ Port = 0
       }
       else
       {
-        fs::copy_file(
-            fs::path(TEST_RESOURCE_DIR) / "samples" / "min_config2.xml",
-            devices, fs::copy_options::overwrite_existing);
+        fs::copy_file(fs::path(TEST_RESOURCE_DIR) / "samples" / "min_config2.xml", devices,
+                      fs::copy_options::overwrite_existing);
       }
     });
 
@@ -2117,6 +2117,88 @@ Adapters {
     timer1.async_wait(send);
 
     m_config->start();
+  }
+
+  // Environment variable tests
+  TEST_F(ConfigTest, should_expand_environment_variables)
+  {
+    putenv(strdup("CONFIG_TEST=TestValue"));
+
+    string config(R"DOC(
+ServiceName=$CONFIG_TEST
+)DOC");
+
+    m_config->setDebug(true);
+    m_config->loadConfig(config);
+
+    const auto &options = m_config->getAgent()->getOptions();
+    ASSERT_EQ("TestValue", *GetOption<string>(options, configuration::ServiceName));
+  }
+
+  TEST_F(ConfigTest, should_expand_options)
+  {
+    putenv(strdup("CONFIG_TEST=ShouldNotMatch"));
+
+    string config(R"DOC(
+AllowPutFrom=TestValue
+ServiceName=$AllowPutFrom
+)DOC");
+
+    m_config->setDebug(true);
+    m_config->loadConfig(config);
+
+    const auto &options = m_config->getAgent()->getOptions();
+    ASSERT_EQ("TestValue", *GetOption<string>(options, configuration::ServiceName));
+  }
+
+  // Environment variable tests
+  TEST_F(ConfigTest, should_expand_with_prefix_and_suffix)
+  {
+    putenv(strdup("CONFIG_TEST=TestValue"));
+
+    string config(R"DOC(
+ServiceName=/some/prefix/$CONFIG_TEST:suffix
+)DOC");
+
+    m_config->setDebug(true);
+    m_config->loadConfig(config);
+
+    const auto &options = m_config->getAgent()->getOptions();
+    ASSERT_EQ("/some/prefix/TestValue:suffix",
+              *GetOption<string>(options, configuration::ServiceName));
+  }
+
+  TEST_F(ConfigTest, should_expand_with_prefix_and_suffix_with_curly)
+  {
+    putenv(strdup("CONFIG_TEST=TestValue"));
+
+    string config(R"DOC(
+ServiceName="some_prefix_${CONFIG_TEST}_suffix"
+)DOC");
+
+    m_config->setDebug(true);
+    m_config->loadConfig(config);
+
+    const auto &options = m_config->getAgent()->getOptions();
+    ASSERT_EQ("some_prefix_TestValue_suffix",
+              *GetOption<string>(options, configuration::ServiceName));
+  }
+
+  TEST_F(ConfigTest, should_find_device_file_in_config_path)
+  {
+    fs::path root {createTempDirectory("13")};
+    copyFile("empty.xml", root / "test.xml", 0min);
+    chdir(m_cwd.string().c_str());
+    m_config->updateWorkingDirectory();
+
+    string config("ConfigPath=\"/junk/folder," + root.string() +
+                  "\"\n"
+                  "Devices=test.xml\n");
+
+    m_config->setDebug(true);
+    m_config->loadConfig(config);
+
+    ASSERT_TRUE(m_config->getAgent());
   }
 
 }  // namespace

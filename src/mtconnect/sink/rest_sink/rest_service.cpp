@@ -185,24 +185,33 @@ namespace mtconnect {
           }
           else
           {
-            auto namespaces = m_fileCache.registerFiles(*location, *path, m_schemaVersion);
-            for (auto &ns : namespaces)
+            auto resolved = m_sinkContract->m_findDataFile(*path);
+            if (!resolved)
             {
-              if (ns.first.find(::config::Devices) != string::npos)
+              LOG(error) << "RestService loading Files: Cannot resolve path: " << *path
+                         << " in data path";
+            }
+            else
+            {
+              auto namespaces = m_fileCache.registerFiles(*location, *resolved, m_schemaVersion);
+              for (auto &ns : namespaces)
               {
-                xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Streams") != string::npos)
-              {
-                xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Assets") != string::npos)
-              {
-                xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Error") != string::npos)
-              {
-                xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
+                if (ns.first.find("Devices") != string::npos)
+                {
+                  xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
+                }
+                else if (ns.first.find("Streams") != string::npos)
+                {
+                  xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
+                }
+                else if (ns.first.find("Assets") != string::npos)
+                {
+                  xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
+                }
+                else if (ns.first.find("Error") != string::npos)
+                {
+                  xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
+                }
               }
             }
           }
@@ -224,8 +233,17 @@ namespace mtconnect {
           }
           else
           {
-            string ind {index ? *index : "index.html"};
-            m_fileCache.addDirectory(*location, *path, ind);
+            auto resolved = m_sinkContract->m_findDataFile(*path);
+            if (!resolved)
+            {
+              LOG(error) << "RestService loading Directories: Cannot resolve path: " << *path
+                         << " in data path";
+            }
+            else
+            {
+              string ind {index ? *index : "index.html"};
+              m_fileCache.addDirectory(*location, resolved->string(), ind);
+            }
           }
         }
       }

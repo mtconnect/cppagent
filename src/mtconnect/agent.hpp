@@ -432,6 +432,10 @@ namespace mtconnect {
     /// @param[in] device device to modify
     void createUniqueIds(DevicePtr device);
 
+    /// @brief get agent options
+    /// @returns constant reference to option map
+    const auto &getOptions() const { return m_options; }
+
   protected:
     friend class AgentPipelineContract;
 

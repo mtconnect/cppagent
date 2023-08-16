@@ -34,8 +34,10 @@ namespace mtconnect {
 
     /// @name Global Configuration Options
     ///@{
-    DECLARE_CONFIGURATION(ExecDirectory);
     DECLARE_CONFIGURATION(WorkingDirectory);
+    DECLARE_CONFIGURATION(DataPath);
+    DECLARE_CONFIGURATION(ConfigPath);
+    DECLARE_CONFIGURATION(PluginPath);
     ///@}
 
     /// @name Agent Configuration
