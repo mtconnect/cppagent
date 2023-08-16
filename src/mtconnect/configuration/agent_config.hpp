@@ -288,6 +288,8 @@ namespace mtconnect {
               << "  " << p;
         }
       }
+      
+      void expandConfigVariables(boost::property_tree::ptree &);
 
     protected:
       using text_sink = boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend>;

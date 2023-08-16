@@ -2140,8 +2140,8 @@ ServiceName=$CONFIG_TEST
     putenv(strdup("CONFIG_TEST=ShouldNotMatch"));
 
     string config(R"DOC(
-AllowPutFrom=TestValue
-ServiceName=$AllowPutFrom
+TestVariable=TestValue
+ServiceName=$TestVariable
 )DOC");
 
     m_config->setDebug(true);

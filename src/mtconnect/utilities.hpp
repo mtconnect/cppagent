@@ -421,11 +421,6 @@ namespace mtconnect {
       return std::nullopt;
   }
 
-  /// @brief Expand environment or option references in values
-  /// @param value string to expand
-  /// @return expanded string
-  ConfigOption ExpandOption(const ConfigOptions &options, const std::string &value);
-
   /// @brief checks if a boolean option is set
   /// @param options the set of options
   /// @param name the name of the option
@@ -457,11 +452,6 @@ namespace mtconnect {
                             const ConfigOptions &options)
   {
     ConfigOption option {s};
-    if (s.find('$') != std::string::npos)
-    {
-      option = ExpandOption(options, s);
-    }
-
     if (std::holds_alternative<std::string>(option))
     {
       std::string sv = std::get<std::string>(option);
