@@ -28,12 +28,13 @@
 #include <boost/regex.hpp>
 #include <boost/uuid/detail/sha1.hpp>
 
-#include <filesystem>
 #include <chrono>
 #include <date/date.h>
+#include <filesystem>
 #include <mtconnect/version.h>
 
 #include "mtconnect/config.hpp"
+#include "mtconnect/logging.hpp"
 
 // ####### CONSTANTS #######
 
@@ -264,7 +265,28 @@ namespace mtconnect {
   /// @brief Parse the given time
   /// @param aTime the time in text
   /// @return uns64 in microseconds since epoch
-  AGENT_LIB_API uint64_t parseTimeMicro(const std::string &aTime);
+  inline uint64_t parseTimeMicro(const std::string &aTime)
+  {
+    std::stringstream str(aTime);
+    if (isdigit(aTime.back()))
+    {
+      str.seekp(0, std::ios_base::end);
+      str << 'Z';
+      str.seekg(0);
+    }
+    using micros = std::chrono::time_point<std::chrono::system_clock, std::chrono::microseconds>;
+    date::fields<std::chrono::microseconds> fields;
+    std::chrono::minutes offset;
+    std::string abbrev;
+    date::from_stream(str, "%FT%T%Z", fields, &abbrev, &offset);
+    if (!fields.ymd.ok() || !fields.tod.in_conventional_range())
+      return 0;
+
+    micros microdays {date::sys_days(fields.ymd)};
+    auto us = fields.tod.to_duration().count() +
+      microdays.time_since_epoch().count();
+    return us;
+  }
 
   /// @brief escaped reserved XML characters from text
   /// @param data text with reserved characters escaped

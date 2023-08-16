@@ -104,9 +104,9 @@ namespace mtconnect {
       /// @brief  Configure the logger with the config node from the config file
       /// @param config the configuration node
       void configureLogger(const ptree &config);
-      /// @brief load a configuration file
-      /// @param[in] file name of the file
-      void loadConfig(const std::string &file);
+      /// @brief load a configuration text
+      /// @param[in] text the configuration text loaded from a file
+      void loadConfig(const std::string &text);
 
       /// @brief assign the agent associated with this configuration
       /// @param[in] agent the agent the configuration will take ownership of
@@ -195,10 +195,14 @@ namespace mtconnect {
       sink::SinkContractPtr makeSinkContract()
       {
         auto contract = m_agent->makeSinkContract();
-        contract->m_findConfigFile = [this](const std::string &n) ->
-                std::optional<std::filesystem::path> { return findConfigFile(n); };
-        contract->m_findDataFile = [this](const std::string &n) ->
-                std::optional<std::filesystem::path> { return findDataFile(n); };
+        contract->m_findConfigFile =
+            [this](const std::string &n) -> std::optional<std::filesystem::path> {
+          return findConfigFile(n);
+        };
+        contract->m_findDataFile =
+            [this](const std::string &n) -> std::optional<std::filesystem::path> {
+          return findDataFile(n);
+        };
         return contract;
       }
 
@@ -241,13 +245,15 @@ namespace mtconnect {
           std::error_code ec;
           if (std::filesystem::exists(tst, ec) && !ec)
           {
-            LOG(trace) << "Found file '" << file << "' " << " in path " <<path;
+            LOG(trace) << "Found file '" << file << "' "
+                       << " in path " << path;
             auto con {std::filesystem::canonical(tst)};
             return con;
           }
           else
           {
-            LOG(trace) << "Cannot find file '" << file << "' " << " in path " <<path;
+            LOG(trace) << "Cannot find file '" << file << "' "
+                       << " in path " << path;
           }
         }
 

@@ -19,10 +19,12 @@
 
 #include <fstream>
 #include <ostream>
+#include <regex>
+#include <iterator>
 
 #include "mtconnect/utilities.hpp"
 
-// #define BOOST_SPIRIT_DEBUG 1
+#define BOOST_SPIRIT_DEBUG 1
 #ifdef BOOST_SPIRIT_DEBUG
 namespace std {
   static ostream &operator<<(ostream &s, const boost::property_tree::ptree &t);
@@ -171,6 +173,77 @@ namespace mtconnect {
       qi::rule<It, pt::ptree(), Skipper> m_start;
     };
 
+    static std::string ExpandValue(const std::map<std::string, std::string> &values,
+                                   const std::string &s)
+    {
+      static std::regex pat("\\$(([A-Za-z0-9_]+)|\\{([^}]+)\\})");
+      stringstream out;
+      std::sregex_iterator iter(s.begin(), s.end(), pat);
+      std::sregex_iterator end;
+      std::sregex_iterator::value_type::value_type suf;
+
+      if (iter == end)
+      {
+        return s;
+      }
+
+      while (iter != end)
+      {
+        out << iter->prefix().str();
+        string sym;
+        if ((*iter)[3].matched)
+          sym = (*iter)[3].str();
+        else if ((*iter)[2].matched)
+          sym = (*iter)[2].str();
+
+        // Resolve match text
+        auto opt = values.find(sym);
+        if (opt != values.end())
+        {
+          out << opt->second;
+        }
+        else if (auto env = getenv(sym.c_str()))
+        {
+          out << env;
+        }
+        else
+        {
+          out << iter->str();
+        }
+
+        suf = iter->suffix();
+        iter++;
+      }
+
+      out << suf.str();
+
+      return out.str();
+    }
+
+    static void ExpandValues(std::map<std::string, std::string> values,
+                             boost::property_tree::ptree &node)
+    {
+      if (auto value = node.get_value_optional<std::string>(); value->find('$') != std::string::npos)
+      {
+        auto expanded = ExpandValue(values, *value);
+        node.put_value(expanded);
+      }
+
+      for (auto &block : node)
+      {
+        ExpandValues(values, block.second);
+        const auto &value = block.second.get_value_optional<std::string>();
+        if (value && !value->empty())
+          values[block.first] = *value;
+      }
+    }
+
+    static void ExpandVariables(boost::property_tree::ptree &config)
+    {
+      std::map<std::string, std::string> values;
+      ExpandValues(values, config);
+    }
+    
     pt::ptree Parser::parse(const std::string &text)
     {
       pt::ptree tree;
@@ -202,10 +275,12 @@ namespace mtconnect {
         cout << "Stopped at line: " << s.position() << endl;
         throw ParseError("Failed to parse configuration");
       }
+      
+      ExpandVariables(tree);
 
       return tree;
     }
-
+    
     pt::ptree Parser::parse(const std::filesystem::path &path)
     {
       std::ifstream t(path);

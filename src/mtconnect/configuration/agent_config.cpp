@@ -683,13 +683,12 @@ namespace mtconnect::configuration {
   }
 
 
-  void AgentConfiguration::loadConfig(const std::string &file)
+  void AgentConfiguration::loadConfig(const std::string &text)
   {
     NAMED_SCOPE("AgentConfiguration::loadConfig");
 
     // Now get our configuration
-    auto config = Parser::parse(file);
-    expandConfigVariables(config);
+    auto config = Parser::parse(text);
 
     // if (!m_loggerFile)
     if (!m_sink)
