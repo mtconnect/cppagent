@@ -46,8 +46,8 @@ namespace mtconnect::sink::rest_sink {
 
   using namespace std;
   using namespace rapidjson;
-  using boost::placeholders::_1;
-  using boost::placeholders::_2;
+  using std::placeholders::_1;
+  using std::placeholders::_2;
 
   void Server::loadTlsCertificate()
   {

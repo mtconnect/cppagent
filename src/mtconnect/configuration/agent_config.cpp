@@ -351,7 +351,7 @@ namespace mtconnect::configuration {
             using namespace chrono;
             using namespace chrono_literals;
 
-            using boost::placeholders::_1;
+            using std::placeholders::_1;
 
             m_monitorTimer.expires_from_now(100ms);
             m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
@@ -373,7 +373,7 @@ namespace mtconnect::configuration {
     using namespace chrono;
     using namespace chrono_literals;
 
-    using boost::placeholders::_1;
+    using std::placeholders::_1;
 
     m_monitorTimer.expires_from_now(m_monitorInterval);
     m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));

@@ -46,8 +46,8 @@ namespace mtconnect::sink::rest_sink {
   namespace ssl = boost::asio::ssl;
 
   using namespace std;
-  using boost::placeholders::_1;
-  using boost::placeholders::_2;
+  using std::placeholders::_1;
+  using std::placeholders::_2;
 
   inline unsigned char hex(unsigned char x) { return x + (x > 9 ? ('A' - 10) : '0'); }
 

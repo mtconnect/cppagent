@@ -4,13 +4,13 @@ import os
 
 class MqttcppConan(ConanFile):
     name = "mqtt_cpp"
-    version = "13.1.0"
+    version = "13.2.1"
     license = "Boost Software License, Version 1.0"
     author = "Takatoshi Kondo redboltz@gmail.com"
     url = "https://github.com/redboltz/mqtt_cpp"
     description = "MQTT client/server for C++14 based on Boost.Asio"
     topics = ("mqtt")
-    requires = ["boost/1.79.0"]
+    requires = ["boost/1.82.0"]
     no_copy_source = True
     exports_sources = "include/*"
 

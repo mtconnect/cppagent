@@ -20,6 +20,9 @@
 /// @file config.hpp
 /// @brief common includes and cross platform requirements
 
+// TODO: Remove when BOOST fixes its multiple defined symbol issue with phoenix placeholders
+#define BOOST_PHOENIX_STL_TUPLE_H_
+
 #include <boost/config.hpp>
 
 #ifndef __STDC_LIMIT_MACROS

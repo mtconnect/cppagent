@@ -34,7 +34,7 @@
 using namespace std;
 using namespace std::chrono;
 using namespace std::chrono_literals;
-using namespace boost::placeholders;
+using namespace std::placeholders;
 
 namespace asio = boost::asio;
 namespace ip = asio::ip;
@@ -80,8 +80,8 @@ namespace mtconnect::source::adapter::shdr {
   {
     NAMED_SCOPE("Connector::resolve");
 
-    using boost::placeholders::_1;
-    using boost::placeholders::_2;
+    using std::placeholders::_1;
+    using std::placeholders::_2;
 
     m_resolver.async_resolve(m_server, to_string(m_port),
                              boost::bind(&Connector::resolved, this, _1, _2));
@@ -123,8 +123,8 @@ namespace mtconnect::source::adapter::shdr {
 
     m_connected = false;
     connecting();
-    using boost::placeholders::_1;
-    using boost::placeholders::_2;
+    using std::placeholders::_1;
+    using std::placeholders::_2;
 
     // Using a smart pointer to ensure connection is deleted if exception thrown
     LOG(debug) << "Connecting to data source: " << m_server << " on port: " << m_port;
