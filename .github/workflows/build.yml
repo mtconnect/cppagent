@@ -29,6 +29,7 @@ on:
 jobs:
   build_windows:
     runs-on: windows-2019
+    name: "Windows 2019 Arch: ${{ matrix.arch }}, Shared: ${{ matrix.shared }}"
     strategy:
       matrix:
         arch: ["x86", "amd64"]
@@ -106,6 +107,7 @@ jobs:
         
   build_linux:
     runs-on: ubuntu-latest
+    name: "Ubuntu Latest, Shared: ${{ matrix.shared }}"
     strategy:
       matrix:
         shared: ["True", "False"]
@@ -147,6 +149,7 @@ jobs:
         
   build_macos:
     runs-on: macos-latest
+    name: "MacOS Latest, Shared: ${{ matrix.shared }}"
     strategy:
       matrix:
         shared: ["True", "False"]
