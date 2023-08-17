@@ -24,7 +24,7 @@
 
 #include "mtconnect/utilities.hpp"
 
-#define BOOST_SPIRIT_DEBUG 1
+// #define BOOST_SPIRIT_DEBUG 1
 #ifdef BOOST_SPIRIT_DEBUG
 namespace std {
   static ostream &operator<<(ostream &s, const boost::property_tree::ptree &t);

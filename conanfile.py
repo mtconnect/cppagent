@@ -91,6 +91,15 @@ class MTConnectAgentConan(ConanFile):
         if is_msvc(self):
             self.options.rm_safe("fPIC")                
         
+    def build_requirements(self):
+        self.tool_requires("cmake/3.26.4")
+        
+        if self.options.with_docs:
+            buf = io.StringIO()            
+            res = self.run(["doxygen --version"], shell=True, stdout=buf)
+            if (res != 0 or not buf.getvalue().startswith('1.9')):
+                self.tool_requires("doxygen/1.9.4")
+
     def requirements(self):
         self.requires("boost/1.82.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("libxml2/2.10.3", headers=True, libs=True, visible=True, transitive_headers=True, transitive_libs=True)
@@ -164,15 +173,6 @@ class MTConnectAgentConan(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         
-    def build_requirements(self):
-        self.tool_requires("cmake/3.26.4")
-        
-        if self.options.with_docs:
-            buf = io.StringIO()            
-            res = self.run(["doxygen --version"], shell=True, stdout=buf)
-            if (res != 0 or not buf.getvalue().startswith('1.9')):
-                self.tool_requires("doxygen/1.9.4")
-
     def build(self):
         cmake = CMake(self)
         cmake.verbose = True
