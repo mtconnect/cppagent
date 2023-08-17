@@ -78,7 +78,6 @@ ARG WITH_TESTS_ARG=argument
 RUN if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; \
       then WITH_TESTS_ARG="--test-folder="; \
       else WITH_TESTS_ARG=""; fi \
-   && echo Testing flag: ${WITH_TESTS_ARG} \
    && conan profile detect \
    && conan create . \
      --build=missing \
