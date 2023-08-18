@@ -70,7 +70,7 @@ class MTConnectAgentConan(ConanFile):
         "date*:use_system_tz_db": True
         }
 
-    exports_sources = "*"
+    exports_sources = "*", "!build", "!test_package/build"
     exports = "conan/mqtt_cpp/*", "conan/mruby/*"
 
     def validate(self):
@@ -91,14 +91,23 @@ class MTConnectAgentConan(ConanFile):
         if is_msvc(self):
             self.options.rm_safe("fPIC")                
         
+    def build_requirements(self):
+        self.tool_requires("cmake/3.26.4")
+        
+        if self.options.with_docs:
+            buf = io.StringIO()            
+            res = self.run(["doxygen --version"], shell=True, stdout=buf)
+            if (res != 0 or not buf.getvalue().startswith('1.9')):
+                self.tool_requires("doxygen/1.9.4")
+
     def requirements(self):
-        self.requires("boost/1.79.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+        self.requires("boost/1.82.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("libxml2/2.10.3", headers=True, libs=True, visible=True, transitive_headers=True, transitive_libs=True)
         self.requires("date/2.4.1", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("nlohmann_json/3.9.1", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("openssl/3.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("rapidjson/cci.20220822", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
-        self.requires("mqtt_cpp/13.1.0", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
+        self.requires("mqtt_cpp/13.2.1", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
         self.requires("bzip2/1.0.8", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         
         if self.options.with_ruby:
@@ -164,15 +173,6 @@ class MTConnectAgentConan(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         
-    def build_requirements(self):
-        self.tool_requires("cmake/3.26.4")
-        
-        if self.options.with_docs:
-            buf = io.StringIO()            
-            res = self.run(["doxygen --version"], shell=True, stdout=buf)
-            if (res != 0 or not buf.getvalue().startswith('1.9')):
-                self.tool_requires("doxygen/1.9.4")
-
     def build(self):
         cmake = CMake(self)
         cmake.verbose = True

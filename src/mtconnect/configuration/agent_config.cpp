@@ -351,7 +351,7 @@ namespace mtconnect::configuration {
             using namespace chrono;
             using namespace chrono_literals;
 
-            using boost::placeholders::_1;
+            using std::placeholders::_1;
 
             m_monitorTimer.expires_from_now(100ms);
             m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
@@ -373,7 +373,7 @@ namespace mtconnect::configuration {
     using namespace chrono;
     using namespace chrono_literals;
 
-    using boost::placeholders::_1;
+    using std::placeholders::_1;
 
     m_monitorTimer.expires_from_now(m_monitorInterval);
     m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
@@ -610,13 +610,85 @@ namespace mtconnect::configuration {
     // Formatter for the logger
     core->add_sink(m_sink);
   }
+  
+  static std::string ExpandValue(const std::map<std::string, std::string> &values, const std::string &s)
+  {
+    static std::regex pat("\\$(([A-Za-z0-9_]+)|\\{([^}]+)\\})");
+    stringstream out;
+    std::sregex_iterator iter(s.begin(), s.end(), pat);
+    std::sregex_iterator end;
+    std::sregex_iterator::value_type::value_type suf;
 
-  void AgentConfiguration::loadConfig(const std::string &file)
+    if (iter == end)
+    {
+      return s;
+    }
+
+    while (iter != end)
+    {
+      out << iter->prefix().str();
+      string sym;
+      if ((*iter)[3].matched)
+        sym = (*iter)[3].str();
+      else if ((*iter)[2].matched)
+        sym = (*iter)[2].str();
+
+      // Resolve match text
+      auto opt = values.find(sym);
+      if (opt != values.end())
+      {
+        out << opt->second;
+      }
+      else if (auto env = getenv(sym.c_str()))
+      {
+        out << env;
+      }
+      else
+      {
+        out << iter->str();
+      }
+
+      suf = iter->suffix();
+      iter++;
+    }
+
+    out << suf.str();
+
+    return out.str();
+  }
+
+  static void ExpandValues(std::map<std::string,std::string> values,
+                              boost::property_tree::ptree &node)
+  {
+    if (auto value = node.get_value_optional<std::string>();
+        value->find('$') != std::string::npos)
+    {
+      auto expanded = ExpandValue(values, *value);
+      node.put_value(expanded);
+    }
+    
+    for (auto &block : node)
+    {
+      ExpandValues(values, block.second);
+      const auto &value = block.second.get_value_optional<std::string>();
+      if (value && !value->empty())
+        values[block.first] = *value;
+    }
+  }
+  
+  void AgentConfiguration::expandConfigVariables(boost::property_tree::ptree &config)
+  {
+    std::map<std::string,std::string> values;
+    ExpandValues(values, config);
+  }
+
+
+  void AgentConfiguration::loadConfig(const std::string &text)
   {
     NAMED_SCOPE("AgentConfiguration::loadConfig");
 
     // Now get our configuration
-    auto config = Parser::parse(file);
+    auto config = Parser::parse(text);
 
     // if (!m_loggerFile)
     if (!m_sink)

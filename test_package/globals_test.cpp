@@ -176,7 +176,8 @@ TEST(GlobalsTest, GetCurrentTime2)
 TEST(GlobalsTest, ParseTimeMicro)
 {
   // This time is 123456 microseconds after the epoch
-  ASSERT_EQ(uint64_t {123456}, parseTimeMicro("1970-01-01T00:00:00.123456Z"));
+  auto v = parseTimeMicro("1970-01-01T00:00:00.123456Z");
+  ASSERT_EQ(uint64_t {123456}, v);
 }
 
 TEST(GlobalsTest, AddNamespace)

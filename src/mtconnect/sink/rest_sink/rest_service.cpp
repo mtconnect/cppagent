@@ -833,8 +833,8 @@ namespace mtconnect {
       NAMED_SCOPE("RestService::streamSampleRequest");
 
       using namespace rest_sink;
-      using boost::placeholders::_1;
-      using boost::placeholders::_2;
+      using std::placeholders::_1;
+      using std::placeholders::_2;
 
       checkRange(printer, interval, -1, numeric_limits<int>().max(), "interval");
       checkRange(printer, heartbeatIn, 1, numeric_limits<int>().max(), "heartbeat");
@@ -896,8 +896,8 @@ namespace mtconnect {
       asyncResponse->m_last = chrono::system_clock::now();
       if (asyncResponse->m_endOfBuffer)
       {
-        using boost::placeholders::_1;
-        using boost::placeholders::_2;
+        using std::placeholders::_1;
+        using std::placeholders::_2;
 
         asyncResponse->m_observer.wait(
             asyncResponse->m_heartbeat,
@@ -914,8 +914,8 @@ namespace mtconnect {
                                             boost::system::error_code ec)
     {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
-      using boost::placeholders::_1;
-      using boost::placeholders::_2;
+      using std::placeholders::_1;
+      using std::placeholders::_2;
 
       auto service = asyncResponse->m_service.lock();
 
@@ -1075,7 +1075,7 @@ namespace mtconnect {
     void RestService::streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
                                         boost::system::error_code ec)
     {
-      using boost::placeholders::_1;
+      using std::placeholders::_1;
 
       auto service = asyncResponse->m_service.lock();
 

@@ -194,7 +194,7 @@ namespace mtconnect::pipeline {
 
     void delayDelivery(LastObservation &last, const std::string &id)
     {
-      using boost::placeholders::_1;
+      using std::placeholders::_1;
 
       // Set the timer to expire in the remaining time left in the period given
       // in last.m_delta

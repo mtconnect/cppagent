@@ -14,6 +14,8 @@
 #     --push \
 #     .
 #
+#   To run tests, use `--build-arg WITH_TESTS=true`
+#
 #   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
 #   docker run -it --rm --init --name agent -p5001:5000 \
 #     mtconnect/agent:2.0.0.12_RC18
@@ -70,20 +72,25 @@ WORKDIR /root/agent
 # bring in the repo contents, minus .dockerignore files
 COPY . .
 
-# make installer
-RUN conan profile detect \
-  && conan create . \
-    --build=missing \
-    -c "tools.build:jobs=$CONAN_CPU_COUNT" \
-    -c tools.build:skip_test=True \
-    -o agent_prefix=mtc \
-    -o cpack=True \
-    -o "with_ruby=$WITH_RUBY" \
-    -o cpack_destination=/root/agent \
-    -o cpack_name=dist \
-    -o cpack_generator=TGZ \
-    -pr "$CONAN_PROFILE" \
-    -tf ''
+ARG WITH_TESTS=false
+ARG WITH_TESTS_ARG=argument
+
+# Build and optionally test
+RUN if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; \
+      then WITH_TESTS_ARG="--test-folder="; \
+      else WITH_TESTS_ARG=""; fi \
+   && conan profile detect \
+   && conan create . \
+     --build=missing \
+     -c "tools.build:jobs=$CONAN_CPU_COUNT" \
+     -o agent_prefix=mtc \
+     -o cpack=True \
+     -o "with_ruby=$WITH_RUBY" \
+     -o cpack_destination=/root/agent \
+     -o cpack_name=dist \
+     -o cpack_generator=TGZ \
+     -pr "$CONAN_PROFILE" \
+     ${WITH_TESTS_ARG}
 
 # ---------------------------------------------------------------------
 # release

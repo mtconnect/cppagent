@@ -20,6 +20,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include <filesystem>
+#include <istream>
 
 #include "mtconnect/config.hpp"
 
@@ -36,7 +37,7 @@ namespace mtconnect {
     /// @brief Configuration file parser
     struct AGENT_LIB_API Parser
     {
-      /// @brief Parse text string to a property tree
+      /// @brief Parse text string to a property tree (testing)
       /// @param[in] text text to be parsed
       static boost::property_tree::ptree parse(const std::string &text);
       /// @brief Parse file to a property tree

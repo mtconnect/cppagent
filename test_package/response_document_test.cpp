@@ -351,6 +351,7 @@ TEST_F(ResponseDocumentTest, should_parse_assets)
   size_t size = str.tellg();
   str.seekg(0);
   char *buffer = new char[size + 1];
+  memset(buffer, 0, size);
   str.read(buffer, size);
   buffer[size] = '\0';
 
