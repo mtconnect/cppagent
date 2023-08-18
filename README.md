@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 2.1
+MTConnect C++ Agent Version 2.2
 --------
 [![Build MTConnect C++ Agent](https://github.com/mtconnect/cppagent/actions/workflows/build.yml/badge.svg)](https://github.com/mtconnect/cppagent/actions/workflows/build.yml)
 
@@ -12,6 +12,8 @@ the devices and the location of the adapter.
 **NOTE: This version cannot currently be built on Windows XP since there is currently no support for the XP toolchain and C++ 17.**
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 2.2.0 Support for all Version 2.2 standard changes and dynamic configuration from adapters. Upgrade to conan 2.
 
 Version 2.1.0 Added MQTT Sink, Agent Restart and new JSON format (version 2)
 
@@ -1529,3 +1531,48 @@ For client.cnf
 
     openssl verify -CAfile clientca.crt clientca.crt
     openssl verify -CAfile clientca.crt client.crt
+
+# Docker
+
+## Build arguments and options
+
+* ARG `CONAN_CPU_COUNT`: number of cpus to use in the build
+
+    *default*: `2`
+
+* ARG `WITH_RUBY`: include embedded ruby in the agent
+
+    *default*: `True`
+
+* ARG `WITH_TESTS`: `true` to build and run tests
+
+    *default*: `false`
+
+* Exposes port `5000` for the agent.
+
+## Ubuntu image
+
+### For buildx multi-arch builds
+
+    docker buildx build --platform="linux/arm64,linux/amd64" -t 'multi-arch/agent:v2.2' .
+
+### For single architecture build
+
+    docker build -t 'mtcagent:v2.2' . 
+
+## Alpine image
+
+    docker buildx build --platform="linux/arm64,linux/amd64" -t 'multi-arch/mtcagent:v2.2' -f Docerfile.alpine .
+
+### For single architecture build
+
+    docker build -t 'mtcagent:v2.2' -f Docerfile.alpine .
+
+## Running the agent
+
+### Run the agent with host port `5001` mapped to container port `5000`
+  
+     docker run --rm --name mtcagent -it -p 5001:5000/tcp mtcagent:v2.2
+
+Runs the agent running the Mazak and Okuma demo in the demo directory with the twin demo.
+
