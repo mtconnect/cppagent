@@ -74,9 +74,11 @@ COPY . .
 
 ARG WITH_TESTS=false
 ARG WITH_TESTS_ARG=argument
+ARG SHARED=False
 
 # Build and optionally test
-RUN if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; \
+RUN set -x \
+   && if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; \
       then WITH_TESTS_ARG="--test-folder="; \
       else WITH_TESTS_ARG=""; fi \
    && conan profile detect \
@@ -89,6 +91,7 @@ RUN if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; \
      -o cpack_destination=/root/agent \
      -o cpack_name=dist \
      -o cpack_generator=TGZ \
+     -o shared=${SHARED} \
      -pr "$CONAN_PROFILE" \
      ${WITH_TESTS_ARG}
 
@@ -102,6 +105,7 @@ FROM os AS release
 LABEL author='mtconnect' description='MTConnect C++ Agent'
 
 ARG BIN_DIR='/usr/local/bin'
+ARG LIB_DIR='/usr/local/lib'
 
 ARG MTCONNECT_CONF_DIR='/etc/mtconnect'
 ARG MTCONNECT_DATA_DIR='/usr/local/share/mtconnect'
@@ -131,7 +135,11 @@ RUN tar xf dist.tar.gz
 
 # Copy the agent binary and create folders used by the agent
 USER root
-RUN cp /home/agent/dist/bin/* "$BIN_DIR" \
+RUN set +x \
+    && ls -lR /home/agent/dist/ \
+    && mkdir -p "$BIN_DIR" "$LIB_DIR" \
+    && cp /home/agent/dist/bin/* "$BIN_DIR" \
+    && cp /home/agent/dist/lib/* "$LIB_DIR" \
     && mkdir -p "$MTCONNECT_CONF_DIR" \
                 "$MTCONNECT_DATA_DIR" \
                 "$MTCONNECT_LOG_DIR" \
