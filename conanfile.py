@@ -70,7 +70,7 @@ class MTConnectAgentConan(ConanFile):
         "date*:use_system_tz_db": True
         }
 
-    exports_sources = "*", "!build", "!test_package/build"
+    exports_sources = "*", "!build", "!test_package/build", "!*~"
     exports = "conan/mqtt_cpp/*", "conan/mruby/*"
 
     def validate(self):

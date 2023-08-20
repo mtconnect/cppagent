@@ -17,10 +17,10 @@
 #   To run tests, use `--build-arg WITH_TESTS=true`
 #
 #   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
-#   docker run -it --rm --init --name agent -p5001:5000 \
+#   docker run -it --rm --init --name agent -p5000:5000 \
 #     mtconnect/agent:2.0.0.12_RC18
 #
-# then visit http://localhost:5001 to see the demo output.
+# then visit http://localhost:5000 to see the demo output.
 
 # ---------------------------------------------------------------------
 # os
@@ -52,17 +52,17 @@ ENV CONAN_PROFILE='conan/profiles/docker'
 
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
-RUN apt-get update \
+RUN  apt-get update \
   && apt-get install -y \
-    autoconf \
-    automake \
-    build-essential \
-    cmake \
-    git \
-    python3 \
-    python3-pip \
-    rake \
-    ruby \
+       autoconf \
+       automake \
+       build-essential \
+       cmake \
+       git \
+       python3 \
+       python3-pip \
+       rake \
+       ruby \
   && rm -rf /var/lib/apt/lists/* \
   && pip install conan -v 'conan==2.0.9'
 
@@ -77,23 +77,23 @@ ARG WITH_TESTS_ARG=argument
 ARG SHARED=False
 
 # Build and optionally test
-RUN set -x \
-   && if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; \
-      then WITH_TESTS_ARG="--test-folder="; \
-      else WITH_TESTS_ARG=""; fi \
-   && conan profile detect \
-   && conan create . \
-     --build=missing \
-     -c "tools.build:jobs=$CONAN_CPU_COUNT" \
-     -o agent_prefix=mtc \
-     -o cpack=True \
-     -o "with_ruby=$WITH_RUBY" \
-     -o cpack_destination=/root/agent \
-     -o cpack_name=dist \
-     -o cpack_generator=TGZ \
-     -o shared=${SHARED} \
-     -pr "$CONAN_PROFILE" \
-     ${WITH_TESTS_ARG}
+RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
+       WITH_TESTS_ARG="--test-folder="; \
+     else \
+       WITH_TESTS_ARG=""; \
+     fi \
+  && conan profile detect \
+  && conan create . \
+       --build=missing \
+       -c "tools.build:jobs=$CONAN_CPU_COUNT" \
+       -o agent_prefix=mtc \
+       -o cpack=True \
+       -o "with_ruby=$WITH_RUBY" \
+       -o cpack_destination=/root/agent \
+       -o cpack_name=dist \
+       -o cpack_generator=TGZ \
+       -pr "$CONAN_PROFILE" \
+       ${WITH_TESTS_ARG}
 
 # ---------------------------------------------------------------------
 # release
@@ -117,7 +117,7 @@ ENV MTCONNECT_LOG_DIR="$MTCONNECT_LOG_DIR"
 ENV DEMO_DIR="$MTCONNECT_DATA_DIR/demo"
 
 # install ruby for simulator
-RUN apt-get update \
+RUN  apt-get update \
   && apt-get install -y ruby
 
 # change to a new non-root user for better security.
@@ -135,26 +135,24 @@ RUN tar xf dist.tar.gz
 
 # Copy the agent binary and create folders used by the agent
 USER root
-RUN set +x \
-    && ls -lR /home/agent/dist/ \
-    && mkdir -p "$BIN_DIR" "$LIB_DIR" \
-    && cp /home/agent/dist/bin/* "$BIN_DIR" \
-    && cp /home/agent/dist/lib/* "$LIB_DIR" \
-    && mkdir -p "$MTCONNECT_CONF_DIR" \
-                "$MTCONNECT_DATA_DIR" \
-                "$MTCONNECT_LOG_DIR" \
-    && chown agent:agent "$MTCONNECT_CONF_DIR" \
-                "$MTCONNECT_DATA_DIR" \
-                "$MTCONNECT_LOG_DIR"
+RUN  mkdir -p "$BIN_DIR" "$LIB_DIR" \
+  && cp /home/agent/dist/bin/* "$BIN_DIR" \
+  && cp /home/agent/dist/lib/* "$LIB_DIR" \
+  && mkdir -p "$MTCONNECT_CONF_DIR" \
+              "$MTCONNECT_DATA_DIR" \
+              "$MTCONNECT_LOG_DIR" \
+  && chown agent:agent "$MTCONNECT_CONF_DIR" \
+              "$MTCONNECT_DATA_DIR" \
+              "$MTCONNECT_LOG_DIR"
 
 USER agent
 
 # Copy the agent data
 RUN cp -r /home/agent/dist/share/mtconnect/schemas \
-  /home/agent/dist/share/mtconnect/simulator \
-  /home/agent/dist/share/mtconnect/styles \
-  /home/agent/dist/share/mtconnect/demo \
-  "$MTCONNECT_DATA_DIR" \
+          /home/agent/dist/share/mtconnect/simulator \
+          /home/agent/dist/share/mtconnect/styles \
+          /home/agent/dist/share/mtconnect/demo \
+          "$MTCONNECT_DATA_DIR" \
   && cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
   && cp /home/agent/dist/share/mtconnect/demo/agent/Devices.xml "$MTCONNECT_CONF_DIR"
 
