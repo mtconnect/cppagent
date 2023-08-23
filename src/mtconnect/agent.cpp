@@ -725,7 +725,8 @@ namespace mtconnect {
     address.append(":").append(service);
 
     uuids::name_generator_latest gen(uuids::ns::dns());
-    auto uuid = uuids::to_string(gen(address));
+    auto uuid = GetOption<string>(m_options, mtconnect::configuration::AgentDeviceUUID)
+      .value_or(uuids::to_string(gen(address)));
     auto id = "agent_"s + uuid.substr(0, uuid.find_first_of('-'));
 
     // Create the Agent Device

@@ -572,6 +572,10 @@ Configuration Parameters
 
 ### Top level configuration items ####
 
+* `AgentDeviceUUID` - Set the UUID of the agent device
+
+    *Default*: UUID derived from the IP address and port of the agent
+
 * `BufferSize` - The 2^X number of slots available in the circular
   buffer for samples, events, and conditions.
 
