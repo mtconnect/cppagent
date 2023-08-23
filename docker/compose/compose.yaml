@@ -5,34 +5,20 @@ services:
       dockerfile: docker/compose/agent/Dockerfile
     ports:
       - "5001:5000"
-    volumes:
-      - "config:/mtconnect/config"
-      - "log:/mtconnect/log"
-      - "data:/mtconnect/data"
     depends_on:
       - mazak
-    networks:
-      - outside
-      - adapter
+      - okuma
   mazak:
     build:
       context: ../..
       dockerfile: docker/compose/adapter/Dockerfile
       args:
         - LOG_FILE=mazak.txt
-    networks:
-      - adapter
-    
-networks:
-  outside:
-    external: true
-  adapter:
-    external: false
+  okuma:
+    build:
+      context: ../..
+      dockerfile: docker/compose/adapter/Dockerfile
+      args:
+        - LOG_FILE=okuma.txt
 
-volumes:
-  config:
-    external: true
-  log:
-    external: true
-  data:
-    external: true
+    

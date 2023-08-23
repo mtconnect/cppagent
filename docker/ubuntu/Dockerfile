@@ -26,8 +26,12 @@
 # os
 # ---------------------------------------------------------------------
 
-# base image - alpine 3.18
-FROM alpine:3.18 AS os
+# base image - ubuntu has amd64, arm64 etc.
+# 22.04 is the current long term support release, maintained until 2025-04.
+FROM ubuntu:22.04 AS os
+
+# tzinfo hangs without this
+ARG DEBIAN_FRONTEND='noninteractive'
 
 # ---------------------------------------------------------------------
 # build
@@ -48,22 +52,19 @@ ENV CONAN_PROFILE='conan/profiles/docker'
 
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
-# Note: `PIP_ROOT_USER_ACTION='ignore'` is required to remove `WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv`. The proper way to fix this warning is to create a non-root user before running `pip install`.
-RUN  apk update \
-  && apk add \
+RUN  apt-get update \
+  && apt-get install -y \
        autoconf \
        automake \
+       build-essential \
        cmake \
-       g++ \
-       gcompat \
        git \
-       linux-headers \
-       make \
-       py3-pip \
        python3 \
+       python3-pip \
+       rake \
        ruby \
-       ruby-rake \
-  && PIP_ROOT_USER_ACTION='ignore' pip install conan -v 'conan==2.0.9'
+  && rm -rf /var/lib/apt/lists/* \
+  && pip install conan -v 'conan==2.0.9'
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
@@ -99,18 +100,12 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
 
 FROM os AS release
 
-ARG MTCONNECT_DATA_DIR=/usr/local/share/mtconnect
-ARG MTCONNECT_LOG_DIR=/var/log/mtconnect
-ARG MTCONNECT_CONF_DIR=/etc/mtconnect
-ARG DIST_DATA=/home/agent/dist/share/mtconnect
-
+# TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
 LABEL author='mtconnect' description='MTConnect C++ Agent'
 
 # install ruby for simulator
-RUN  apk update \
-  && apk add \
-       libstdc++ \
-       libgcc
+RUN  apt-get update \
+  && apt-get install -y ruby
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
@@ -123,38 +118,31 @@ WORKDIR /home/agent
 COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
 
 # Extract the data
-RUN tar xf dist.tar.gz
+RUN tar xvf dist.tar.gz
 
 # Copy the agent binary and create folders used by the agent
 USER root
 
 RUN  set -x && cp /home/agent/dist/bin/* /usr/bin \
   && cp /home/agent/dist/lib/* /usr/lib \
-  && mkdir -p "${MTCONNECT_CONF_DIR}" \
-              "${MTCONNECT_DATA_DIR}" \
-              "${MTCONNECT_LOG_DIR}" \
-  && chown agent:agent \
-           "${MTCONNECT_CONF_DIR}" \
-           "${MTCONNECT_DATA_DIR}" \
-           "${MTCONNECT_LOG_DIR}"
+  && mkdir -p /mtconnect/config \
+              /mtconnect/data \
+              /mtconnect/log \
+  && chown -R agent:agent /mtconnect
 
 USER agent
 
 # Copy the agent data
-RUN    set -x \
-    && cp -r "${DIST_DATA}/schemas" \
-            "${DIST_DATA}/simulator" \
-            "${DIST_DATA}/styles" \
-            "${DIST_DATA}/demo" \
-            "${MTCONNECT_DATA_DIR}"
-
-RUN    set -x \
-    && cp  "${DIST_DATA}/docker/compose/agent/agent.cfg" \
-           "${DIST_DATA}/demo/agent/Devices.xml" \
-           "${MTCONNECT_CONF_DIR}"
+RUN  cp -r /home/agent/dist/share/mtconnect/schemas \
+           /home/agent/dist/share/mtconnect/simulator \
+           /home/agent/dist/share/mtconnect/styles \
+           /mtconnect/data
 
 # expose port
 EXPOSE 5000
+
+
+VOLUME ["/mtconnect/config", "/mtconnect/log", "/mtconnect/data"]
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
@@ -162,7 +150,7 @@ EXPOSE 5000
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
 
-CMD ["/usr/bin/mtcagent", "run"]
+CMD ["/usr/bin/mtcagent", "run", "/mtconnect/config/agent.cfg"]
 
 # ---------------------------------------------------------------------
 # note

@@ -105,7 +105,7 @@ install(DIRECTORY simulator TYPE DATA  COMPONENT Tools)
 install(DIRECTORY styles TYPE DATA  COMPONENT Data)
 install(DIRECTORY tools TYPE DATA COMPONENT Tools)
 install(DIRECTORY demo TYPE DATA COMPONENT Demo)
-install(FILES demo/agent/Devices.xml TYPE SYSCONF COMPONENT Demo)
+install(DIRECTORY docker TYPE DATA COMPONENT Demo)
 
 set(CPACK_COMPONENT_Demo_DESCRIPTION "Demo files for the Mazak and Okuma digital twin")
 set(CPACK_COMPONENT_Data_DESCRIPTION "Data files for schemas and styles to be served by the agent")
