@@ -120,7 +120,7 @@ WORKDIR /home/agent
 COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
 
 # Extract the data
-RUN tar xvf dist.tar.gz
+RUN tar xf dist.tar.gz
 
 # Copy the agent binary and create folders used by the agent
 USER root
