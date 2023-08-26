@@ -395,7 +395,7 @@ namespace mtconnect {
     {
       auto printer = dynamic_cast<printer::XmlPrinter *>(m_printers["xml"].get());
       auto device = m_xmlParser->parseDevice(deviceXml, printer);
-      loadDevice(device, source);
+      loadDevices({device}, source);
     }
     catch (runtime_error &e)
     {
@@ -411,7 +411,7 @@ namespace mtconnect {
     }
   }
 
-  void Agent::loadDevice(DevicePtr device, const optional<string> source)
+  void Agent::loadDevices(list<DevicePtr> devices, const optional<string> source)
   {
     if (!IsOptionSet(m_options, config::EnableSourceDeviceModels))
     {
@@ -422,12 +422,10 @@ namespace mtconnect {
     m_context.pause([=](config::AsyncContext &context) {
       try
       {
-        if (device)
+        bool changed = false;
+        for (auto device : devices)
         {
-          bool changed = receiveDevice(device, true);
-          if (changed)
-            loadCachedProbe();
-
+          changed = receiveDevice(device, true) || changed;
           if (source)
           {
             auto s = findSource(*source);
@@ -438,21 +436,25 @@ namespace mtconnect {
             }
           }
         }
-        else
-        {
-          LOG(error) << "Cannot parse device xml: " << *device->getComponentName() << " with uuid "
-                     << *device->getUuid();
-        }
+
+        if (changed)
+          loadCachedProbe();
       }
       catch (runtime_error &e)
       {
-        LOG(error) << "Error loading device: " << *device->getComponentName();
+        for (auto device : devices)
+        {
+          LOG(error) << "Error loading devices: " << *device->getComponentName();
+        }
         LOG(error) << "Error detail: " << e.what();
         cerr << e.what() << endl;
       }
       catch (exception &f)
       {
-        LOG(error) << "Error loading device: " << *device->getComponentName();
+        for (auto device : devices)
+        {
+          LOG(error) << "Error loading device: " << *device->getComponentName();
+        }
         LOG(error) << "Error detail: " << f.what();
         cerr << f.what() << endl;
       }
@@ -726,7 +728,7 @@ namespace mtconnect {
 
     uuids::name_generator_latest gen(uuids::ns::dns());
     auto uuid = GetOption<string>(m_options, mtconnect::configuration::AgentDeviceUUID)
-      .value_or(uuids::to_string(gen(address)));
+                    .value_or(uuids::to_string(gen(address)));
     auto id = "agent_"s + uuid.substr(0, uuid.find_first_of('-'));
 
     // Create the Agent Device

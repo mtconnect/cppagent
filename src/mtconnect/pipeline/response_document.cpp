@@ -173,42 +173,48 @@ namespace mtconnect::pipeline {
 
     entity::XmlParser parser;
     eachElement(devices, [&out, &parser, &device, &uuid](xmlNodePtr n) {
-      ErrorList errors;
-      auto dev = parser.parseXmlNode(Device::getRoot(), n, errors);
-      if (!errors.empty())
+      if (xmlStrcmp(BAD_CAST "Agent", n->name) == 0)
       {
-        LOG(warning) << "Could not parse asset: " << (const char *)n->name;
-        for (auto &e : errors)
+        LOG(debug) << "Skipping Agent device when loading MTConnectDevices Document";
+      }
+      else
+      {
+        ErrorList errors;
+        auto dev = parser.parseXmlNode(Device::getRoot(), n, errors);
+        if (!errors.empty())
         {
-          LOG(warning) << "    Message: " << e->what();
+          LOG(warning) << "Could not parse asset: " << (const char *)n->name;
+          for (auto &e : errors)
+          {
+            LOG(warning) << "    Message: " << e->what();
+          }
         }
+
+        auto devicePtr = dynamic_pointer_cast<device_model::Device>(dev);
+        if (!devicePtr)
+        {
+          LOG(error) << "Device could not be parsed from XML";
+          return false;
+        }
+
+        if (device && *device != *(devicePtr->getComponentName()))
+        {
+          LOG(warning) << "Source and Target Device Name mismatch: " << *device << " and "
+                       << *(devicePtr->getComponentName());
+          LOG(warning) << "Setting device name to " << *device;
+
+          devicePtr->setComponentName(*device);
+        }
+        if (uuid && *uuid != *(devicePtr->getUuid()))
+        {
+          LOG(warning) << "Source and Target Device uuid mismatch: " << *uuid << " and "
+                       << *(devicePtr->getUuid());
+          LOG(warning) << "Setting device uuid to " << *uuid;
+          devicePtr->setUuid(*uuid);
+        }
+
+        out.m_entities.emplace_back(dev);
       }
-
-      auto devicePtr = dynamic_pointer_cast<device_model::Device>(dev);
-      if (!devicePtr)
-      {
-        LOG(error) << "Device could not be parsed from XML";
-        return false;
-      }
-
-      if (device && *device != *(devicePtr->getComponentName()))
-      {
-        LOG(warning) << "Source and Target Device Name mismatch: " << *device << " and "
-                     << *(devicePtr->getComponentName());
-        LOG(warning) << "Setting device name to " << *device;
-
-        devicePtr->setComponentName(*device);
-      }
-      if (uuid && *uuid != *(devicePtr->getUuid()))
-      {
-        LOG(warning) << "Source and Target Device uuid mismatch: " << *uuid << " and "
-                     << *(devicePtr->getUuid());
-        LOG(warning) << "Setting device uuid to " << *uuid;
-        devicePtr->setUuid(*uuid);
-      }
-
-      out.m_entities.emplace_back(dev);
-
       return true;
     });
 
@@ -520,18 +526,22 @@ namespace mtconnect::pipeline {
       }
       if (xmlStrcmp(BAD_CAST "MTConnectStreams", root->name) == 0)
       {
+        out.m_enityType = OBSERVATION;
         return parseObservations(out, root, context, device);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectDevices", root->name) == 0)
       {
+        out.m_enityType = DEVICE;
         return parseDevices(out, root, context, device, uuid);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectAssets", root->name) == 0)
       {
+        out.m_enityType = ASSET;
         return parseAssets(out, root, device);
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectError", root->name) == 0)
       {
+        out.m_enityType = ERROR;
         parseErrors(out, root);
         return false;
       }

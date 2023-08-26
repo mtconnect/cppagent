@@ -29,6 +29,15 @@ namespace mtconnect::pipeline {
   /// @brief Utility class for parsing XML response document
   struct AGENT_LIB_API ResponseDocument
   {
+    enum EntityType
+    {
+      UNKNOWN,
+      DEVICE,
+      OBSERVATION,
+      ASSET,
+      ERROR
+    };
+
     /// @brief An error document response from the agent
     struct Error
     {
@@ -55,5 +64,6 @@ namespace mtconnect::pipeline {
     entity::EntityList m_entities;     ///< List of entities
     entity::EntityList m_assetEvents;  ///< List of asset events
     Errors m_errors;                   ///< List of Errors
+    EntityType m_enityType {UNKNOWN};  ///< Entity Type in Collection
   };
 }  // namespace mtconnect::pipeline
