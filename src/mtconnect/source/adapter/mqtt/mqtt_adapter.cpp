@@ -66,6 +66,8 @@ namespace mtconnect {
                   {configuration::MqttCaCert, string()},
                   {configuration::MqttPrivateKey, string()},
                   {configuration::MqttCert, string()},
+                  {configuration::MqttUserName, string()},
+                  {configuration::MqttPassword, string()},
                   {configuration::MqttClientId, string()},
                   {configuration::MqttHost, string()}});
 
