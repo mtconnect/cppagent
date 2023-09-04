@@ -113,8 +113,14 @@ RUN  apt-get update \
 ARG UID=1000
 ARG GID=1000
 
-RUN groupadd --gid $GID agent
-RUN useradd --create-home --uid $UID --gid $GID agent
+RUN groupadd \
+    --gid $GID \
+    agent
+RUN useradd \
+    --create-home \
+    --uid $UID \
+    --gid $GID \
+    agent
 
 USER agent
 WORKDIR /home/agent
