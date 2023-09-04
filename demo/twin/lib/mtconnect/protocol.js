@@ -1,5 +1,7 @@
 import { Device } from './twin.js';
 import * as JP from "../jsonpath/jsonpath.js";
+import { JsonParserV1 } from "./json_parser_v1.js";
+import { JsonParserV2 } from "./json_parser_v2.js";
 
 class ProtocolError extends Error {  
 }
@@ -14,6 +16,8 @@ class RestProtocol {
 
     this.onload = onload;
     this.onupdate = onupdate;
+    this.version = 1;
+    this.parser = null;
   }
 
   async probe() {
@@ -25,14 +29,17 @@ class RestProtocol {
       });
       const text = await result.text();
       const probe = JSON.parse(text);
-    
-      const device = JSONPath.JSONPath({
-        path: "$..Devices[0].Device",
-        json: probe
-      });
-    
-      this.device = new Device(device[0]);
-      //console.debug(this.device);
+      this.version = probe["MTConnectDevices"]["jsonVersion"];
+      if (this.version == 2) {
+        this.parser = new JsonParserV2();
+      }
+      else {
+        this.parser = new JsonParserV1();
+      }
+
+      const devices = this.parser.devices(probe, device => { return new Device(device, this.parser); });
+      this.device = devices[0];
+      console.debug(this.device);
     } catch (error) {
       console.log(error);
       throw new ProtocolError("Cannot probe");
@@ -82,7 +89,7 @@ class RestProtocol {
         const controller = new AbortController();
         let id = setTimeout(() => controller.abort(), this.streamingTimeout);
         const uri = `${this.url}/sample?${this.path}&interval=${this.interval}&from=${this.nextSequence}&count=1000`;
-        //console.debug(uri);
+        console.debug(uri);
         const response = await fetch(uri, {
           headers: {
             'Accept': 'application/json'
@@ -99,7 +106,7 @@ class RestProtocol {
         }
 
         this.boundary = `--${content.substr(pos + 9)}`;
-        //console.debug(this.boundary);
+        console.debug(this.boundary);
 
         const reader = response.body.getReader();
 
@@ -109,7 +116,7 @@ class RestProtocol {
           if (done) break;
 
           const text = new TextDecoder().decode(value);
-          //console.log("Read " + text.length + " bytes");
+          console.log("Read " + text.length + " bytes");
 
           if (!this.buffer) {
             this.buffer = text;
@@ -190,19 +197,15 @@ class RestProtocol {
   }
 
   transform(data) {
-    const values = JSONPath.JSONPath({ path: '$..ComponentStream.[Events,Samples,Condition].*', json: data });
-    //console.log(JSON.stringify(values, null, 2));
-
     const updates = [];
-    for (const obs of values) {
-      let [key, data] = Object.entries(obs)[0]; 
-      const di = this.dataItems[data.dataItemId];
+    this.parser.observations(data, (key, obs) => {
+      const di = this.dataItems[obs.dataItemId];
       if (di) {
-        di.apply(obs);
+        di.apply(key, obs);
         updates.push([di, obs]);
-      }
-    }
-
+      }      
+    });
+    
     this.onupdate(updates);
   }
 

@@ -87,9 +87,8 @@ function init() {
 async function loadAndStreamData() {
   const protocol = new RestProtocol('/' + deviceName, values => {
     for (let [dataItem, obs] of values) {
-      const [k, data] = Object.entries(obs)[0];
       const did = dataItem.id;
-      let v = data.value;
+      let v = obs.value;
       let ele = document.getElementById(did);
       if (typeof v == 'number')
         v = v.toFixed(3);
@@ -112,8 +111,7 @@ async function loadAndStreamData() {
           }
         } else if (Array.isArray(dataItem.value)) {
           const text = dataItem.value.map ( alarm => {
-            const [level, info] = Object.entries(alarm)[0];
-            return level + (info.value ? ': "' + info.value + '"' : '');
+            return alarm.level + (alarm.value ? ': "' + alarm.value + '"' : '');
           }).join(', ');
           span.textContent = obj.label + ': ' + text;
           span.setAttribute('style', 'padding-left:25px; color: yellow');
