@@ -3,6 +3,8 @@ import * as JP from "../jsonpath/jsonpath.js";
 import * as THREE from '../threejs/three.module.js';
 import { OBJLoader } from '../threejs/jsm/loaders/OBJLoader.js';
 import { STLLoader } from '../threejs/jsm/loaders/STLLoader.js';
+import { JsonParserV1 } from "./json_parser_v1.js";
+import { JsonParserV2 } from "./json_parser_v2.js";
 
 const _radians = new THREE.Vector3(1.0 / 180.0 * Math.PI, 1.0 / 180.0 * Math.PI, 1.0 / 180.0 * Math.PI);
 const _meters = new THREE.Vector3(0.001, 0.001, 0.001);
@@ -214,14 +216,14 @@ class Geometry {
 
   position(pos) {
     const p = pos.multiply(_meters);
-    //console.log("position", p);
+    console.log("position", p);
     this.model.position.copy(p);
   }
 
   rotate(rot) {
     const v = _radians.clone().multiply(rot);
 
-    //console.log("rotate", v);
+    console.log("rotate", v);
     this.model.rotation.set(v.x, v.y, v.z);
   }
 
@@ -296,9 +298,7 @@ class DataItem {
     }
   }
 
-  apply(obs) {
-    const [key, data] = Object.entries(obs)[0]; 
-
+  apply(key, data) {
     if (this.category == 'CONDITION') {
       if (key == 'Unavailable') {
         this.value = null;
@@ -314,8 +314,7 @@ class DataItem {
           if (data.nativeCode && this.value && this.value.length > 0) {
             // see if an alarm with the same native code exists
             const ind = this.value.findIndex(o => {
-              let [k, v] = Object.entries(o)[0]; 
-              return v.nativeCode == data.nativeCode;
+              return o.nativeCode == data.nativeCode;
             });
             // if found, remove the found alarm from the list
             if (ind >= 0) {
@@ -330,17 +329,18 @@ class DataItem {
           if (key != 'Normal') {
             // If this.value was null, set it to an array
             if (!this.value) this.value = [];
-            this.value.push(obs);
+            data.level = key;
+            this.value.push(data);
           }
         }
       }
     } else {
       if (data.value == 'UNAVAILABLE') {
-        obs[key].value = null;
+        data.value = null;
       }
 
-      this.value = obs;
-      const value = obs[key].value;
+      this.value = data;
+      const value = data.value;
 
       if (this.machine && ((this.type == 'POSITION' || this.type == 'ANGLE') && this.subType == 'ACTUAL') &&
           typeof value == 'number') {
@@ -369,13 +369,13 @@ class DataItem {
 }
 
 class Component {
-  constructor(type, doc, parent = null) {
+  constructor(type, doc, parser, parent = null) {
     Object.assign(this, doc);
     this.link = false;
     this.joint = false;
     this.type = type;
     this.parent = parent;
-    this.parse(doc);
+    this.parse(doc, parser);
 
     this.entities[this.id] = this;
   }
@@ -396,13 +396,9 @@ class Component {
     return this.root._entities;
   }
 
-  parse(doc) {
-    this.children = JSONPath.JSONPath({
-      path: '$.Components.*',
-      json: doc
-    }).map(c => {
-      const t = Object.keys(c)[0];
-      return new Component(t, c[t], this);
+  parse(doc, parser) {
+    this.children = parser.components(doc, (t, c) => {
+      return new Component(t, c, parser, this);
     });
 
     if (this.Configuration) {
@@ -412,16 +408,14 @@ class Component {
       }
 
       if (config.Relationships) {
-        for (const rel of config.Relationships) {
-          if (rel.ComponentRelationship) {
-            const type = rel.ComponentRelationship.type;
-            if (type == 'PARENT') {
-              this.attachParentId = rel.ComponentRelationship.idRef;
-            } else if (type == 'CHILD') {
-              this.attachChildId = rel.ComponentRelationship.idRef;
-            }
+        parser.componentRelationships(config.Relationships, rel => {
+          const type = rel.type;
+          if (type == 'PARENT') {
+            this.attachParentId = rel.idRef;
+          } else if (type == 'CHILD') {
+            this.attachChildId = rel.idRef;
           }
-        }
+        });
       }
       
       if (config.Motion) { 
@@ -429,13 +423,13 @@ class Component {
       }
        
       if (config.CoordinateSystems) {
-        this.coordinateSystems = config.CoordinateSystems.map(c => 
-          new CoordinateSystem(c.CoordinateSystem, this));
+        this.coordinateSystems = parser.coordinateSystems(config.CoordinateSystems, c => new CoordinateSystem(c, this) );
+        console.log(this.coordinateSystems);
       }
     }
     if (this.DataItems) {
-      this.dataItems = this.DataItems.map(c => 
-        new DataItem(c.DataItem, this));
+      this.dataItems = parser.dataItems(this, d => 
+        new DataItem(d, this));
     }
   }
 
@@ -580,8 +574,8 @@ class Component {
 }
 
 class Device extends Component {
-  constructor(doc) {
-    super('Device', doc);
+  constructor(doc, parser) {
+    super('Device', doc, parser);
     this.resolve();    
   }
 }

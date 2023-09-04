@@ -155,6 +155,22 @@ namespace mtconnect::pipeline {
   };
 
   /// @brief A transform to deliver a device
+  class AGENT_LIB_API DeliverDevices : public Transform
+  {
+  public:
+    using Deliver = std::function<void(asset::AssetPtr)>;
+    DeliverDevices(PipelineContextPtr context)
+      : Transform("DeliverDevices"), m_contract(context->m_contract.get())
+    {
+      m_guard = EntityNameGuard("Devices", RUN);
+    }
+    entity::EntityPtr operator()(entity::EntityPtr &&entity) override;
+
+  protected:
+    PipelineContract *m_contract;
+  };
+
+  /// @brief A transform to deliver a device
   class AGENT_LIB_API DeliverDevice : public Transform
   {
   public:

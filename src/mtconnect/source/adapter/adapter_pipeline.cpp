@@ -126,6 +126,7 @@ namespace mtconnect {
     void AdapterPipeline::buildDeviceDelivery(pipeline::TransformPtr next)
     {
       next->bind(make_shared<DeliverDevice>(m_context));
+      next->bind(make_shared<DeliverDevices>(m_context));
     }
 
     void AdapterPipeline::buildObservationDelivery(pipeline::TransformPtr next)

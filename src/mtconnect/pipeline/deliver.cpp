@@ -143,7 +143,24 @@ namespace mtconnect {
         throw EntityError("Unexpected entity type, cannot convert to asset in DeliverAsset");
       }
 
-      m_contract->deliverDevice(d);
+      m_contract->deliverDevices({d});
+
+      return entity;
+    }
+
+    EntityPtr DeliverDevices::operator()(entity::EntityPtr &&entity)
+    {
+      auto entities = entity->getValue<EntityList>();
+      std::list<DevicePtr> devices;
+      for (auto &entity : entities)
+      {
+        auto device = std::dynamic_pointer_cast<device_model::Device>(entity);
+        if (device)
+          devices.emplace_back(device);
+        else
+          LOG(warning) << "DeliverDevices: entity is not a device";
+      }
+      m_contract->deliverDevices(devices);
 
       return entity;
     }
