@@ -937,13 +937,13 @@ If the value itself contains a pipe character `|` the pipe must be escaped using
 
         2009-06-15T00:00:00.000000|description|"Text with \| (pipe) character."
 
-Conditions require six (6) fields as follows:
+Conditions require seven (7) fields as follows:
 
-	<timestamp>|<data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
+	<timestamp>|<data_item_name>|<level>|<condition_id>|<native_code>|<native_severity>|<qualifier>|<message>
 	
 For a complete description of these fields, see the standard. An example line will look like this:
 
-	2014-09-29T23:59:33.460470Z|htemp|WARNING|HTEMP|1|HIGH|Oil Temperature High
+	2014-09-29T23:59:33.460470Z|htemp|WARNING|HTEMP-1-HIGH|HTEMP|1|HIGH|Oil Temperature High
 	
 The next special format is the Message. There is one additional field, native_code, which needs to be included:
 
