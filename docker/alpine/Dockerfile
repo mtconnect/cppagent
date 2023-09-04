@@ -115,15 +115,15 @@ RUN  apk update \
 ARG UID=1000
 ARG GID=1000
 
-RUN addgroup \
-    --gid $GID \
-    agent
-RUN adduser \
-    --home /home/agent \
-    --disabled-password \
-    --uid $UID \
-    --ingroup agent \
-    agent
+RUN  addgroup \
+       --gid $GID \
+       agent \
+  && adduser \
+       --home /home/agent \
+       --disabled-password \
+       --uid $UID \
+       --ingroup agent \
+       agent
 
 USER agent
 WORKDIR /home/agent
