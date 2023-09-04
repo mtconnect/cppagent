@@ -43,15 +43,17 @@ target_link_libraries(
 
 target_clangtidy_setup(agent)
 
-install(TARGETS agent RUNTIME)
-install(TARGETS agent ARCHIVE)
 
 if(SHARED_AGENT_LIB AND MSVC)
   set(CMAKE_INSTALL_DEBUG_LIBRARIES OFF)
   include(InstallRequiredSystemLibraries)
   install(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION bin COMPONENT Libraries)
-  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dll")
+  
+  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/libs/*.dll")
+  file(GLOB libs CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/libs/*.lib")
+  
   install(FILES ${dlls} DESTINATION bin COMPONENT Libraries)
+  install(FILES ${libs} DESTINATION lib COMPONENT Development)
 
   add_custom_command(TARGET agent POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${dlls} $<TARGET_FILE_DIR:agent>
@@ -60,7 +62,17 @@ if(SHARED_AGENT_LIB AND MSVC)
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:agent> $<TARGET_FILE_DIR:agent> 
     COMMAND_EXPAND_LISTS)
 elseif(SHARED_AGENT_LIB)
-  file(GLOB dlls CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/dlls/*.dylib" "${cppagent_BINARY_DIR}/dlls/*.so")
-  message(STATUS "!!!!! Copying ${dlls} to lib directory")
-  install(FILES ${dlls} TYPE LIB COMPONENT Libraries)
+  file(GLOB SharedLibs CONFIGURE_DEPENDS
+    "${cppagent_BINARY_DIR}/libs/*.dylib"
+    "${cppagent_BINARY_DIR}/libs/*.so.*"
+    "${cppagent_BINARY_DIR}/libs/*.so")
+
+  message(STATUS "Will install shared libs ${SharedLibs} in lib directory")
+  install(FILES ${SharedLibs} TYPE LIB COMPONENT Runtime)
 endif()
+
+# Uncomment the next two lines to distribute *NIX archives
+# file(GLOB Archives CONFIGURE_DEPENDS "${cppagent_BINARY_DIR}/libs/*.a")
+# install(FILES ${Archives} TYPE LIB COMPONENT Developement)
+
+Install(TARGETS agent RUNTIME COMPONENT Runtime)

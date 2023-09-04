@@ -84,7 +84,7 @@ namespace mtconnect {
       virtual void deliverAsset(asset::AssetPtr asset) = 0;
       /// @brief Deliver a device to the agent.
       /// @param[in] device the new or changed device
-      virtual void deliverDevice(DevicePtr device) = 0;
+      virtual void deliverDevices(std::list<DevicePtr> device) = 0;
       /// @brief Deliver a command, remove or remova all
       /// @param[in]  command the command
       virtual void deliverAssetCommand(entity::EntityPtr command) = 0;

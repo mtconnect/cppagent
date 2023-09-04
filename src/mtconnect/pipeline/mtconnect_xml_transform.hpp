@@ -92,11 +92,20 @@ namespace mtconnect::pipeline {
         throw std::system_error(make_error_code(ErrorCode::RESTART_STREAM));
       }
 
-      for (auto &entity : rd.m_entities)
+      if (rd.m_enityType == ResponseDocument::DEVICE)
       {
-        next(std::move(entity));
+        auto e = std::make_shared<Entity>(*entity);
+        e->setName("Devices");
+        e->setValue(rd.m_entities);
+        next(std::move(e));
       }
-
+      else
+      {
+        for (auto &entity : rd.m_entities)
+        {
+          next(std::move(entity));
+        }
+      }
       return std::make_shared<Entity>("Entities", Properties {{"VALUE", rd.m_entities}});
     }
 

@@ -18,9 +18,9 @@
 #include "parser.hpp"
 
 #include <fstream>
+#include <iterator>
 #include <ostream>
 #include <regex>
-#include <iterator>
 
 #include "mtconnect/utilities.hpp"
 
@@ -223,7 +223,8 @@ namespace mtconnect {
     static void ExpandValues(std::map<std::string, std::string> values,
                              boost::property_tree::ptree &node)
     {
-      if (auto value = node.get_value_optional<std::string>(); value->find('$') != std::string::npos)
+      if (auto value = node.get_value_optional<std::string>();
+          value->find('$') != std::string::npos)
       {
         auto expanded = ExpandValue(values, *value);
         node.put_value(expanded);
@@ -243,7 +244,7 @@ namespace mtconnect {
       std::map<std::string, std::string> values;
       ExpandValues(values, config);
     }
-    
+
     pt::ptree Parser::parse(const std::string &text)
     {
       pt::ptree tree;
@@ -275,12 +276,12 @@ namespace mtconnect {
         cout << "Stopped at line: " << s.position() << endl;
         throw ParseError("Failed to parse configuration");
       }
-      
+
       ExpandVariables(tree);
 
       return tree;
     }
-    
+
     pt::ptree Parser::parse(const std::filesystem::path &path)
     {
       std::ifstream t(path);

@@ -302,3 +302,16 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
                           "LISTENING");
   }
 }
+
+TEST_F(AgentDeviceTest, verify_uuid_can_be_set_in_configuration)
+{
+  m_agentTestHelper = make_unique<AgentTestHelper>();
+  auto version = to_string(AGENT_VERSION_MAJOR) + "." + to_string(AGENT_VERSION_MINOR);
+  m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, version, 25,
+                                 false, true,
+                                 {{ mtconnect::configuration::AgentDeviceUUID, "HELLO_KITTY"s }});
+  m_agentId = to_string(getCurrentTimeInSec());
+  m_agentDevice = m_agentTestHelper->m_agent->getAgentDevice();
+
+  ASSERT_EQ("HELLO_KITTY", *m_agentDevice->getUuid());
+}

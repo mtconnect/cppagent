@@ -610,8 +610,9 @@ namespace mtconnect::configuration {
     // Formatter for the logger
     core->add_sink(m_sink);
   }
-  
-  static std::string ExpandValue(const std::map<std::string, std::string> &values, const std::string &s)
+
+  static std::string ExpandValue(const std::map<std::string, std::string> &values,
+                                 const std::string &s)
   {
     static std::regex pat("\\$(([A-Za-z0-9_]+)|\\{([^}]+)\\})");
     stringstream out;
@@ -657,16 +658,15 @@ namespace mtconnect::configuration {
     return out.str();
   }
 
-  static void ExpandValues(std::map<std::string,std::string> values,
-                              boost::property_tree::ptree &node)
+  static void ExpandValues(std::map<std::string, std::string> values,
+                           boost::property_tree::ptree &node)
   {
-    if (auto value = node.get_value_optional<std::string>();
-        value->find('$') != std::string::npos)
+    if (auto value = node.get_value_optional<std::string>(); value->find('$') != std::string::npos)
     {
       auto expanded = ExpandValue(values, *value);
       node.put_value(expanded);
     }
-    
+
     for (auto &block : node)
     {
       ExpandValues(values, block.second);
@@ -675,13 +675,12 @@ namespace mtconnect::configuration {
         values[block.first] = *value;
     }
   }
-  
+
   void AgentConfiguration::expandConfigVariables(boost::property_tree::ptree &config)
   {
-    std::map<std::string,std::string> values;
+    std::map<std::string, std::string> values;
     ExpandValues(values, config);
   }
-
 
   void AgentConfiguration::loadConfig(const std::string &text)
   {

@@ -42,6 +42,7 @@ namespace mtconnect {
 
     /// @name Agent Configuration
     ///@{
+    DECLARE_CONFIGURATION(AgentDeviceUUID);
     DECLARE_CONFIGURATION(DisableAgentDevice);
     DECLARE_CONFIGURATION(AllowPut);
     DECLARE_CONFIGURATION(AllowPutFrom);

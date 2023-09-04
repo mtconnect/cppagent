@@ -274,7 +274,8 @@ namespace mtconnect {
     /// @brief receive a single device from a source
     /// @param[in] deviceXml the device xml as a string
     /// @param[in] source the source loading the device
-    void loadDevice(DevicePtr device, const std::optional<std::string> source = std::nullopt);
+    void loadDevices(std::list<DevicePtr> device,
+                     const std::optional<std::string> source = std::nullopt);
 
     /// @brief receive and parse a single device from a source
     /// @param[in] deviceXml the device xml as a string
@@ -583,7 +584,7 @@ namespace mtconnect {
     void deliverConnectStatus(entity::EntityPtr, const StringList &devices,
                               bool autoAvailable) override;
     void deliverCommand(entity::EntityPtr) override;
-    void deliverDevice(DevicePtr device) override { m_agent->loadDevice(device); }
+    void deliverDevices(std::list<DevicePtr> devices) override { m_agent->loadDevices(devices); }
 
     void sourceFailed(const std::string &identity) override { m_agent->sourceFailed(identity); }
 

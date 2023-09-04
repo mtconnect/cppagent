@@ -118,14 +118,19 @@ namespace mtconnect::source::adapter::agent_adapter {
     m_closeConnectionAfterResponse = *GetOption<bool>(m_options, "!CloseConnectionAfterResponse!");
 
     auto device = GetOption<string>(m_options, configuration::Device);
-    if (!device)
+    if (!m_probeAgent && !device)
     {
       LOG(fatal) << "Agent Adapter must target a device";
       m_failed = true;
     }
-    else
+    else if (device || HasOption(m_options, configuration::SourceDevice))
     {
       m_sourceDevice = GetOption<string>(m_options, configuration::SourceDevice).value_or(*device);
+    }
+    else
+    {
+      LOG(warning)
+          << "No source device specified. Dynamic device streams will be used for all devices";
     }
 
     m_name = m_url.getUrlText(m_sourceDevice);
@@ -450,7 +455,7 @@ namespace mtconnect::source::adapter::agent_adapter {
 
     std::optional<std::string> source;
     if (m_agentVersion >= 200)
-      source.emplace(m_sourceDevice);
+      source = m_sourceDevice;
     m_assetRequest.emplace(source, "assets", query, false, [this]() {
       m_assetRequest.reset();
       return true;
