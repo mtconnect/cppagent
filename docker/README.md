@@ -30,7 +30,7 @@ The MTConnect C++ Agent can be easily built and run on most platforms using dock
 
 ### For buildx multi-arch builds
 
-     docker buildx build --platform="linux/arm64,linux/amd64" -t 'multi-arch/agent:latest' ../..
+     docker buildx build --platform="linux/arm64,linux/amd64" -t 'multi-arch/agent:latest' -f Dockerfile ../..
 
 ### For single architecture build
 
@@ -42,7 +42,7 @@ The MTConnect C++ Agent can be easily built and run on most platforms using dock
 
 ### For buildx multi-arch builds
 
-     docker buildx build --platform="linux/arm64,linux/amd64" -t 'multi-arch/mtcagent:latest' ../..
+     docker buildx build --platform="linux/arm64,linux/amd64" -t 'multi-arch/mtcagent:latest' -f Dockerfile ../..
 
 ### For single architecture build
 
@@ -66,7 +66,7 @@ A special version of the agent is supplied as an example. The replicator duplica
 ## Build Replicator
 
      cd docker/replicator
-     docker build -t replicator:latest' ../.. 
+     docker build -t replicator:latest' -f Dockerfile ../.. 
 
 ## Run the replicator
 

@@ -118,8 +118,15 @@ RUN  apk update \
 ARG UID=1000
 ARG GID=1000
 
-RUN groupadd --gid $GID agent
-RUN useradd --create-home --uid $UID --gid $GID agent
+RUN addgroup \
+    --gid $GID \
+    agent
+RUN adduser \
+    --home /home/agent \
+    --disabled-password \
+    --uid $UID \
+    --ingroup agent \
+    agent
 
 USER agent
 WORKDIR /home/agent
@@ -128,7 +135,9 @@ WORKDIR /home/agent
 COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
 
 # Extract the data
-RUN tar xf dist.tar.gz
+RUN   tar xf dist.tar.gz \
+   && rm dist.tar.gz
+
 
 # Copy the agent binary and create folders used by the agent
 USER root
@@ -151,12 +160,11 @@ RUN    set -x \
             "${DIST_DATA}/simulator" \
             "${DIST_DATA}/styles" \
             "${DIST_DATA}/demo" \
-            "${MTCONNECT_DATA_DIR}"
-
-RUN    set -x \
+            "${MTCONNECT_DATA_DIR}" \
     && cp  "${DIST_DATA}/docker/compose/agent/agent.cfg" \
            "${DIST_DATA}/demo/agent/Devices.xml" \
-           "${MTCONNECT_CONF_DIR}"
+           "${MTCONNECT_CONF_DIR}" \
+    && rm -r /home/agent/dist
 
 # expose port
 EXPOSE 5000

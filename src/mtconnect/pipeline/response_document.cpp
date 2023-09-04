@@ -541,7 +541,7 @@ namespace mtconnect::pipeline {
       }
       else if (xmlStrcmp(BAD_CAST "MTConnectError", root->name) == 0)
       {
-        out.m_enityType = ERROR;
+        out.m_enityType = ERRORS;
         parseErrors(out, root);
         return false;
       }

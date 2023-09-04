@@ -126,8 +126,14 @@ RUN  apt-get update \
 ARG UID=1000
 ARG GID=1000
 
-RUN groupadd --gid $GID agent
-RUN useradd --create-home --uid $UID --gid $GID agent
+RUN groupadd \
+    --gid $GID \
+    agent
+RUN useradd \
+    --create-home \
+    --uid $UID \
+    --gid $GID \
+    agent
 
 USER agent
 WORKDIR /home/agent
@@ -136,7 +142,8 @@ WORKDIR /home/agent
 COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
 
 # Extract the data
-RUN tar xf dist.tar.gz
+RUN   tar xf dist.tar.gz \
+   && rm dist.tar.gz
 
 # Copy the agent binary and create folders used by the agent
 USER root
@@ -159,7 +166,8 @@ RUN cp -r /home/agent/dist/share/mtconnect/schemas \
           /home/agent/dist/share/mtconnect/demo \
           "$MTCONNECT_DATA_DIR" \
   && cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
-  && cp /home/agent/dist/share/mtconnect/demo/agent/Devices.xml "$MTCONNECT_CONF_DIR"
+  && cp /home/agent/dist/share/mtconnect/demo/agent/Devices.xml "$MTCONNECT_CONF_DIR" \
+  && rm -r /home/agent/dist
 
 # expose port
 EXPOSE 5000

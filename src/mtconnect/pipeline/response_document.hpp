@@ -35,7 +35,7 @@ namespace mtconnect::pipeline {
       DEVICE,
       OBSERVATION,
       ASSET,
-      ERROR
+      ERRORS
     };
 
     /// @brief An error document response from the agent
