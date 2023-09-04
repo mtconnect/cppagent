@@ -1538,45 +1538,5 @@ For client.cnf
 
 # Docker
 
-## Build arguments and options
-
-* ARG `CONAN_CPU_COUNT`: number of cpus to use in the build
-
-    *default*: `2`
-
-* ARG `WITH_RUBY`: include embedded ruby in the agent
-
-    *default*: `True`
-
-* ARG `WITH_TESTS`: `true` to build and run tests
-
-    *default*: `false`
-
-* Exposes port `5000` for the agent.
-
-## Ubuntu image
-
-### For buildx multi-arch builds
-
-    docker buildx build --platform="linux/arm64,linux/amd64" -t 'multi-arch/agent:v2.2' .
-
-### For single architecture build
-
-    docker build -t 'mtcagent:v2.2' . 
-
-## Alpine image
-
-    docker buildx build --platform="linux/arm64,linux/amd64" -t 'multi-arch/mtcagent:v2.2' -f Docerfile.alpine .
-
-### For single architecture build
-
-    docker build -t 'mtcagent:v2.2' -f Docerfile.alpine .
-
-## Running the agent
-
-### Run the agent with host port `5001` mapped to container port `5000`
-  
-     docker run --rm --name mtcagent -it -p 5001:5000/tcp mtcagent:v2.2
-
-Runs the agent running the Mazak and Okuma demo in the demo directory with the twin demo.
+See [demo ](demo) or [docker](docker)
 
