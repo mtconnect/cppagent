@@ -185,24 +185,33 @@ namespace mtconnect {
           }
           else
           {
-            auto namespaces = m_fileCache.registerFiles(*location, *path, m_schemaVersion);
-            for (auto &ns : namespaces)
+            auto resolved = m_sinkContract->m_findDataFile(*path);
+            if (!resolved)
             {
-              if (ns.first.find(::config::Devices) != string::npos)
+              LOG(error) << "RestService loading Files: Cannot resolve path: " << *path
+                         << " in data path";
+            }
+            else
+            {
+              auto namespaces = m_fileCache.registerFiles(*location, *resolved, m_schemaVersion);
+              for (auto &ns : namespaces)
               {
-                xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Streams") != string::npos)
-              {
-                xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Assets") != string::npos)
-              {
-                xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
-              }
-              else if (ns.first.find("Error") != string::npos)
-              {
-                xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
+                if (ns.first.find("Devices") != string::npos)
+                {
+                  xmlPrinter->addDevicesNamespace(ns.first, ns.second, "m");
+                }
+                else if (ns.first.find("Streams") != string::npos)
+                {
+                  xmlPrinter->addStreamsNamespace(ns.first, ns.second, "m");
+                }
+                else if (ns.first.find("Assets") != string::npos)
+                {
+                  xmlPrinter->addAssetsNamespace(ns.first, ns.second, "m");
+                }
+                else if (ns.first.find("Error") != string::npos)
+                {
+                  xmlPrinter->addErrorNamespace(ns.first, ns.second, "m");
+                }
               }
             }
           }
@@ -224,8 +233,17 @@ namespace mtconnect {
           }
           else
           {
-            string ind {index ? *index : "index.html"};
-            m_fileCache.addDirectory(*location, *path, ind);
+            auto resolved = m_sinkContract->m_findDataFile(*path);
+            if (!resolved)
+            {
+              LOG(error) << "RestService loading Directories: Cannot resolve path: " << *path
+                         << " in data path";
+            }
+            else
+            {
+              string ind {index ? *index : "index.html"};
+              m_fileCache.addDirectory(*location, resolved->string(), ind);
+            }
           }
         }
       }
@@ -815,8 +833,8 @@ namespace mtconnect {
       NAMED_SCOPE("RestService::streamSampleRequest");
 
       using namespace rest_sink;
-      using boost::placeholders::_1;
-      using boost::placeholders::_2;
+      using std::placeholders::_1;
+      using std::placeholders::_2;
 
       checkRange(printer, interval, -1, numeric_limits<int>().max(), "interval");
       checkRange(printer, heartbeatIn, 1, numeric_limits<int>().max(), "heartbeat");
@@ -878,8 +896,8 @@ namespace mtconnect {
       asyncResponse->m_last = chrono::system_clock::now();
       if (asyncResponse->m_endOfBuffer)
       {
-        using boost::placeholders::_1;
-        using boost::placeholders::_2;
+        using std::placeholders::_1;
+        using std::placeholders::_2;
 
         asyncResponse->m_observer.wait(
             asyncResponse->m_heartbeat,
@@ -896,8 +914,8 @@ namespace mtconnect {
                                             boost::system::error_code ec)
     {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
-      using boost::placeholders::_1;
-      using boost::placeholders::_2;
+      using std::placeholders::_1;
+      using std::placeholders::_2;
 
       auto service = asyncResponse->m_service.lock();
 
@@ -1057,7 +1075,7 @@ namespace mtconnect {
     void RestService::streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
                                         boost::system::error_code ec)
     {
-      using boost::placeholders::_1;
+      using std::placeholders::_1;
 
       auto service = asyncResponse->m_service.lock();
 

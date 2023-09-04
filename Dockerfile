@@ -1,5 +1,6 @@
 # MTConnect Public C++ Agent Docker image build instructions
 
+# TODO: Do we need notes like this to be in `Dockerfile`? I think the docs might be a better place for this. IMHO most notes in this file should be moved to the docs.
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
@@ -13,6 +14,9 @@
 #     --push \
 #     .
 #
+#   To run tests, use `--build-arg WITH_TESTS=true`
+#
+#   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
 #   docker run -it --rm --init --name agent -p5001:5000 \
 #     mtconnect/agent:2.0.0.12_RC18
 #
@@ -27,7 +31,7 @@
 FROM ubuntu:22.04 AS os
 
 # tzinfo hangs without this
-ARG DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND='noninteractive'
 
 # ---------------------------------------------------------------------
 # build
@@ -35,13 +39,32 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 FROM os AS build
 
+# limit cpus so don't run out of memory on local machine
+# symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
+# can turn off if building in cloud
+ARG CONAN_CPU_COUNT=2
+
+ARG WITH_RUBY='True'
+
+# set some variables
+ENV PATH="$HOME/venv3.9/bin:$PATH"
+ENV CONAN_PROFILE='conan/profiles/docker'
+
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
-RUN apt-get clean \
-  && apt-get update \
+RUN apt-get update \
   && apt-get install -y \
-  build-essential python3.9 python3-pip git cmake make ruby rake autoconf automake \
-  && pip install conan -v "conan==1.59.0"
+    autoconf \
+    automake \
+    build-essential \
+    cmake \
+    git \
+    python3 \
+    python3-pip \
+    rake \
+    ruby \
+  && rm -rf /var/lib/apt/lists/* \
+  && pip install conan -v 'conan==2.0.9'
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
@@ -49,28 +72,25 @@ WORKDIR /root/agent
 # bring in the repo contents, minus .dockerignore files
 COPY . .
 
-# set some variables
-ENV PATH=$HOME/venv3.9/bin:$PATH
-ENV CONAN_PROFILE=conan/profiles/docker
-ENV WITH_RUBY=True
-ENV WITH_TESTS=False
+ARG WITH_TESTS=false
+ARG WITH_TESTS_ARG=argument
 
-# limit cpus so don't run out of memory on local machine
-# symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
-# can turn off if building in cloud
-ENV CONAN_CPU_COUNT=1
-
-# make installer
-RUN conan export conan/mqtt_cpp \
-  && conan export conan/mruby \
-  && conan install . -if build --build=missing \
-  -pr $CONAN_PROFILE \
-  -o build_tests=$WITH_TESTS \
-  -o run_tests=$WITH_TESTS \
-  -o with_ruby=$WITH_RUBY
-
-# compile source (~20mins - 4hrs for qemu)
- RUN conan build . -bf build
+# Build and optionally test
+RUN if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; \
+      then WITH_TESTS_ARG="--test-folder="; \
+      else WITH_TESTS_ARG=""; fi \
+   && conan profile detect \
+   && conan create . \
+     --build=missing \
+     -c "tools.build:jobs=$CONAN_CPU_COUNT" \
+     -o agent_prefix=mtc \
+     -o cpack=True \
+     -o "with_ruby=$WITH_RUBY" \
+     -o cpack_destination=/root/agent \
+     -o cpack_name=dist \
+     -o cpack_generator=TGZ \
+     -pr "$CONAN_PROFILE" \
+     ${WITH_TESTS_ARG}
 
 # ---------------------------------------------------------------------
 # release
@@ -78,39 +98,69 @@ RUN conan export conan/mqtt_cpp \
 
 FROM os AS release
 
-LABEL author="mtconnect" description="Docker image for the latest Production MTConnect C++ Agent"
+# TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
+LABEL author='mtconnect' description='MTConnect C++ Agent'
+
+ARG BIN_DIR='/usr/local/bin'
+
+ARG MTCONNECT_CONF_DIR='/etc/mtconnect'
+ARG MTCONNECT_DATA_DIR='/usr/local/share/mtconnect'
+ARG MTCONNECT_LOG_DIR='/var/log/mtconnect'
+
+ENV MTCONNECT_CONF_DIR="$MTCONNECT_CONF_DIR"
+ENV MTCONNECT_DATA_DIR="$MTCONNECT_DATA_DIR"
+ENV MTCONNECT_LOG_DIR="$MTCONNECT_LOG_DIR"
+ENV DEMO_DIR="$MTCONNECT_DATA_DIR/demo"
 
 # install ruby for simulator
-RUN apt-get update && apt-get install -y ruby
+RUN apt-get update \
+  && apt-get install -y ruby
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
-# --create-home creates a home folder, ie /home/<username>
-RUN useradd --create-home agent
+# -m creates a home folder, ie /home/<username>
+RUN useradd -m agent
 USER agent
+WORKDIR /home/agent
 
 # install agent executable
-COPY --chown=agent:agent --from=build /root/agent/build/bin/agent /usr/local/bin/
+COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
 
-# copy data to /etc/mtconnect
-COPY --chown=agent:agent --from=build /root/agent/schemas /etc/mtconnect/schemas
-COPY --chown=agent:agent --from=build /root/agent/simulator /etc/mtconnect/simulator
-COPY --chown=agent:agent --from=build /root/agent/styles /etc/mtconnect/styles
+# Extract the data
+RUN tar xf dist.tar.gz
+
+# Copy the agent binary and create folders used by the agent
+USER root
+RUN cp /home/agent/dist/bin/* "$BIN_DIR" \
+    && mkdir -p "$MTCONNECT_CONF_DIR" \
+                "$MTCONNECT_DATA_DIR" \
+                "$MTCONNECT_LOG_DIR" \
+    && chown agent:agent "$MTCONNECT_CONF_DIR" \
+                "$MTCONNECT_DATA_DIR" \
+                "$MTCONNECT_LOG_DIR"
+
+USER agent
+
+# Copy the agent data
+RUN cp -r /home/agent/dist/share/mtconnect/schemas \
+  /home/agent/dist/share/mtconnect/simulator \
+  /home/agent/dist/share/mtconnect/styles \
+  /home/agent/dist/share/mtconnect/demo \
+  "$MTCONNECT_DATA_DIR" \
+  && cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
+  && cp /home/agent/dist/share/mtconnect/demo/agent/Devices.xml "$MTCONNECT_CONF_DIR"
 
 # expose port
 EXPOSE 5000
 
-WORKDIR /home/agent
-
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
-# note: must use shell form here instead of exec form, since we're running 
+# note: must use shell form here instead of exec form, since we're running
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
-CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
-  /etc/mtconnect/simulator/VMC-3Axis-Log.txt & \
-  cd /etc/mtconnect/simulator && mtcagent run agent.cfg
-
+CMD /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7879 -l "$DEMO_DIR/agent/mazak.txt" \
+  & /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7878 -l "$DEMO_DIR/agent/okuma.txt" \
+  & mtcagent run
 
 # ---------------------------------------------------------------------
 # note
@@ -121,9 +171,13 @@ CMD /usr/bin/ruby /etc/mtconnect/simulator/run_scenario.rb -l \
 # /usr/local/bin
 #  |-- agent - the cppagent application
 #
-# /etc/mtconnect
+# /etc/mtconnect - Configuration files agent.cfg and Devices.xml
+#
+# /usr/local/share/mtconnect
 #  |-- schemas - xsd files
 #  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
 #  |-- styles - styles.xsl, styles.css, favicon.ico, etc
 #
 # /home/agent - the user's directory
+#
+# /var/log/mtconnect - logging directory

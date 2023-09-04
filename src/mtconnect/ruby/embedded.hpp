@@ -26,6 +26,9 @@
 
 namespace mtconnect {
   class Agent;
+  namespace configuration {
+    class AgentConfiguration;
+  }
   /// @brief Embedded MRuby namespace
   namespace ruby {
     class RubyVM;
@@ -34,7 +37,7 @@ namespace mtconnect {
     {
     public:
       /// @brief Create an embedded mruby instance
-      Embedded(Agent *agent, const ConfigOptions &options);
+      Embedded(configuration::AgentConfiguration *config, const ConfigOptions &options);
       ~Embedded();
 
     protected:

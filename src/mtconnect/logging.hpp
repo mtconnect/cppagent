@@ -41,6 +41,8 @@ namespace mtconnect {
   }  // namespace configuration
 }  // namespace mtconnect
 
+#define LOG_LEVEL(lvl) ::boost::log::trivial::lvl
+
 /// @brief Used when static using static agent_lib in a plugin shared object
 #define PLUGIN_LOG(lvl)                                                 \
   BOOST_LOG_STREAM_WITH_PARAMS(*mtconnect::configuration::gAgentLogger, \

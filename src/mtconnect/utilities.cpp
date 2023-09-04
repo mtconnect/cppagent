@@ -24,9 +24,11 @@
 #include <cstring>
 #include <ctime>
 #include <date/tz.h>
+#include <date/date.h>
 #include <list>
 #include <map>
 #include <mutex>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <string>
@@ -50,51 +52,6 @@ using namespace std::chrono;
 
 namespace mtconnect {
   AGENT_LIB_API void mt_localtime(const time_t *time, struct tm *buf) { localtime_r(time, buf); }
-
-  AGENT_LIB_API uint64_t parseTimeMicro(const std::string &aTime)
-  {
-    struct tm timeinfo;
-    memset(&timeinfo, 0, sizeof(timeinfo));
-    char ms[16] = {0};
-
-    int c = sscanf(aTime.c_str(), "%d-%d-%dT%d:%d:%d%15s", &timeinfo.tm_year, &timeinfo.tm_mon,
-                   &timeinfo.tm_mday, &timeinfo.tm_hour, &timeinfo.tm_min, &timeinfo.tm_sec,
-                   (char *)&ms);
-
-    if (c < 7)
-      return 0;
-
-    ms[15] = '\0';
-
-    timeinfo.tm_mon -= 1;
-    timeinfo.tm_year -= 1900;
-
-#ifndef _WINDOWS
-    auto existingTz = getenv("TZ");
-    setenv("TZ", "UTC", 1);
-#endif
-
-    uint64_t time = (mktime(&timeinfo) - timezone) * 1000000ull;
-
-#ifndef _WINDOWS
-    if (existingTz)
-      setenv("TZ", existingTz, 1);
-#endif
-
-    uint64_t ms_v = 0;
-    uint64_t len = strlen(ms);
-
-    if (len > 0u)
-    {
-      ms_v = strtol(ms + 1, nullptr, 10);
-
-      if (len < 8u)
-        for (auto pf = 7 - len; pf > 0; pf--)
-          ms_v *= 10;
-    }
-
-    return time + ms_v;
-  }
 
   inline string::size_type insertPrefix(string &aPath, string::size_type &aPos,
                                         const string aPrefix)

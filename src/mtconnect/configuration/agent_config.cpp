@@ -136,14 +136,20 @@ namespace mtconnect::configuration {
 #endif
 
     m_working = fs::current_path();
-    cout << "Configuration search path: " << m_working;
+    addPathBack(m_configPaths, m_working);
+
     if (success)
     {
       fs::path ep(execPath);
       m_exePath = ep.parent_path();
-      cout << " and " << m_exePath;
+      addPathBack(m_configPaths, m_exePath);
     }
-    cout << endl;
+
+#ifndef _WINDOWS
+    addPathBack(m_configPaths, "/etc/mtconnect");
+    addPathBack(m_configPaths, "/usr/local/etc/mtconnect");
+    addPathBack(m_dataPaths, "/usr/local/share/mtconnect");
+#endif
   }
 
   void AgentConfiguration::initialize(const boost::program_options::variables_map &options)
@@ -160,33 +166,31 @@ namespace mtconnect::configuration {
 
     try
     {
-      list<fs::path> paths {m_working / configFile, m_exePath / configFile};
-      for (auto path : paths)
+      auto path = findConfigFile(configFile);
+      if (path)
       {
         // Check first if the file is in the current working directory...
-        if (fs::exists(path))
-        {
-          LOG(info) << "Loading configuration from: " << path;
-          cerr << "Loading configuration from:" << path << endl;
+        LOG(info) << "Loading configuration from: " << *path;
+        cerr << "Loading configuration from:" << *path << endl;
 
-          m_configFile = fs::absolute(path);
-          ifstream file(m_configFile.c_str());
-          std::stringstream buffer;
-          buffer << file.rdbuf();
+        m_configFile = fs::canonical(*path);
+        addPathFront(m_configPaths, m_configFile.parent_path());
+        addPathBack(m_dataPaths, m_configFile.parent_path());
 
-          loadConfig(buffer.str());
+        ifstream file(m_configFile.c_str());
+        std::stringstream buffer;
+        buffer << file.rdbuf();
 
-          return;
-        }
-        else
-        {
-          LOG(info) << "Cannot find config file:" << path << ", keep searching";
-          cerr << "Cannot find config file:" << path << ", keep searching";
-        }
+        loadConfig(buffer.str());
+
+        return;
       }
-
       LOG(fatal) << "Agent failed to load: Cannot find configuration file: '" << configFile;
-      cerr << "Agent failed to load: Cannot find configuration file: '" << configFile << std::endl;
+      logPaths(LOG_LEVEL(fatal), m_configPaths);
+      cerr << "Agent failed to load: Cannot find configuration file: '" << configFile
+           << ", evaluated paths: " << std::endl;
+      for (auto &p : m_configPaths)
+        cerr << "  " << p << endl;
       usage(1);
     }
     catch (std::exception &e)
@@ -347,7 +351,7 @@ namespace mtconnect::configuration {
             using namespace chrono;
             using namespace chrono_literals;
 
-            using boost::placeholders::_1;
+            using std::placeholders::_1;
 
             m_monitorTimer.expires_from_now(100ms);
             m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
@@ -369,7 +373,7 @@ namespace mtconnect::configuration {
     using namespace chrono;
     using namespace chrono_literals;
 
-    using boost::placeholders::_1;
+    using std::placeholders::_1;
 
     m_monitorTimer.expires_from_now(m_monitorInterval);
     m_monitorTimer.async_wait(boost::bind(&AgentConfiguration::monitorFiles, this, _1));
@@ -606,32 +610,85 @@ namespace mtconnect::configuration {
     // Formatter for the logger
     core->add_sink(m_sink);
   }
-
-  std::optional<fs::path> AgentConfiguration::checkPath(const std::string &name)
+  
+  static std::string ExpandValue(const std::map<std::string, std::string> &values, const std::string &s)
   {
-    auto work = m_working / name;
-    if (fs::exists(work))
+    static std::regex pat("\\$(([A-Za-z0-9_]+)|\\{([^}]+)\\})");
+    stringstream out;
+    std::sregex_iterator iter(s.begin(), s.end(), pat);
+    std::sregex_iterator end;
+    std::sregex_iterator::value_type::value_type suf;
+
+    if (iter == end)
     {
-      return work;
-    }
-    if (!m_exePath.empty())
-    {
-      auto exec = m_exePath / name;
-      if (fs::exists(exec))
-      {
-        return exec;
-      }
+      return s;
     }
 
-    return nullopt;
+    while (iter != end)
+    {
+      out << iter->prefix().str();
+      string sym;
+      if ((*iter)[3].matched)
+        sym = (*iter)[3].str();
+      else if ((*iter)[2].matched)
+        sym = (*iter)[2].str();
+
+      // Resolve match text
+      auto opt = values.find(sym);
+      if (opt != values.end())
+      {
+        out << opt->second;
+      }
+      else if (auto env = getenv(sym.c_str()))
+      {
+        out << env;
+      }
+      else
+      {
+        out << iter->str();
+      }
+
+      suf = iter->suffix();
+      iter++;
+    }
+
+    out << suf.str();
+
+    return out.str();
   }
 
-  void AgentConfiguration::loadConfig(const std::string &file)
+  static void ExpandValues(std::map<std::string,std::string> values,
+                              boost::property_tree::ptree &node)
+  {
+    if (auto value = node.get_value_optional<std::string>();
+        value->find('$') != std::string::npos)
+    {
+      auto expanded = ExpandValue(values, *value);
+      node.put_value(expanded);
+    }
+    
+    for (auto &block : node)
+    {
+      ExpandValues(values, block.second);
+      const auto &value = block.second.get_value_optional<std::string>();
+      if (value && !value->empty())
+        values[block.first] = *value;
+    }
+  }
+  
+  void AgentConfiguration::expandConfigVariables(boost::property_tree::ptree &config)
+  {
+    std::map<std::string,std::string> values;
+    ExpandValues(values, config);
+  }
+
+
+  void AgentConfiguration::loadConfig(const std::string &text)
   {
     NAMED_SCOPE("AgentConfiguration::loadConfig");
 
     // Now get our configuration
-    auto config = Parser::parse(file);
+    auto config = Parser::parse(text);
 
     // if (!m_loggerFile)
     if (!m_sink)
@@ -644,8 +701,11 @@ namespace mtconnect::configuration {
                {{configuration::PreserveUUID, true},
                 {configuration::DisableAgentDevice, false},
                 {configuration::WorkingDirectory, m_working.string()},
-                {configuration::ExecDirectory, m_exePath.string()},
+                {configuration::DataPath, StringList()},
+                {configuration::PluginPath, StringList()},
+                {configuration::ConfigPath, StringList()},
                 {configuration::ServerIp, "0.0.0.0"s},
+                {configuration::Devices, "Devices.xml"s},
                 {configuration::BufferSize, int(DEFAULT_SLIDING_BUFFER_EXP)},
                 {configuration::MaxAssets, int(DEFAULT_MAX_ASSETS)},
                 {configuration::CheckpointFrequency, 1000},
@@ -688,29 +748,47 @@ namespace mtconnect::configuration {
     m_monitorInterval = *GetOption<Seconds>(options, configuration::MonitorInterval);
     m_monitorDelay = *GetOption<Seconds>(options, configuration::MinimumConfigReloadAge);
 
-    auto devices = config.get_optional<string>(configuration::Devices);
-    if (devices)
+    addPathFront(m_configPaths, m_working);
+
+    auto configPaths {*GetOption<StringList>(options, configuration::ConfigPath)};
+    for (auto path = configPaths.rbegin(); path != configPaths.rend(); path++)
     {
-      auto name = *devices;
-      auto path = checkPath(name);
-      if (path)
-        m_devicesFile = (*path).string();
+      addPathFront(m_configPaths, *path);
     }
+
+    auto dataPaths {*GetOption<StringList>(options, configuration::DataPath)};
+    for (auto path = dataPaths.rbegin(); path != dataPaths.rend(); path++)
+    {
+      addPathFront(m_dataPaths, *path);
+    }
+    addPathBack(m_dataPaths, m_working);
+
+    auto pluginPaths {*GetOption<StringList>(options, configuration::PluginPath)};
+    for (auto path = pluginPaths.rbegin(); path != pluginPaths.rend(); path++)
+    {
+      addPathFront(m_pluginPaths, *path);
+    }
+    addPathBack(m_pluginPaths, m_exePath);
+    addPathBack(m_pluginPaths, m_working);
+
+    auto devices = GetOption<string>(options, configuration::Devices);
+    LOG(debug) << "Searching config paths for " << *devices;
+    logPaths(LOG_LEVEL(debug), m_configPaths);
+    auto path = findConfigFile(*devices);
+    if (path)
+      m_devicesFile = (*path).string();
     else
     {
-      auto path = checkPath("Devices.xml");
-      if (path)
-        m_devicesFile = (*path).string();
-      else
-      {
-        auto probe = checkPath("probe.xml");
-        if (probe)
-          m_devicesFile = (*probe).string();
-      }
+      auto probe = findConfigFile("probe.xml");
+      if (probe)
+        m_devicesFile = (*probe).string();
     }
 
     if (m_devicesFile.empty())
     {
+      LOG(fatal) << "Cannot find device configuration file";
+      logPaths(LOG_LEVEL(fatal), m_configPaths);
+
       throw runtime_error(((string) "Please make sure the configuration "
                                     "file probe.xml or Devices.xml is in the current "
                                     "directory or specify the correct file "
@@ -745,10 +823,10 @@ namespace mtconnect::configuration {
     m_version = *m_agent->getSchemaVersion();
 
     DevicePtr device;
-    if (get<bool>(options[configuration::PreserveUUID]))
+    if (IsOptionSet(options, configuration::PreserveUUID))
     {
       for (auto device : m_agent->getDevices())
-        device->setPreserveUuid(get<bool>(options[configuration::PreserveUUID]));
+        device->setPreserveUuid(IsOptionSet(options, configuration::PreserveUUID));
     }
 
     loadAdapters(config, options);
@@ -846,22 +924,9 @@ namespace mtconnect::configuration {
         auto additional = block.second.get_optional<string>(configuration::AdditionalDevices);
         if (additional)
         {
-          StringList deviceList;
-          istringstream devices(*additional);
-          string name;
-          while (getline(devices, name, ','))
-          {
-            auto index = name.find_first_not_of(" \r\t");
-            if (index != string::npos && index > 0)
-              name.erase(0, index);
-            index = name.find_last_not_of(" \r\t");
-            if (index != string::npos)
-              name.erase(index + 1);
-
-            deviceList.push_back(name);
-          }
-
-          adapterOptions[configuration::AdditionalDevices] = deviceList;
+          ConfigOption def {StringList()};
+          adapterOptions[configuration::AdditionalDevices] =
+              ConvertOption(*additional, def, options);
         }
 
         // Get protocol, hosts, and topics from URL
@@ -942,7 +1007,7 @@ namespace mtconnect::configuration {
                   {"module", string()},
                   {"initialization", string()}});
     }
-    m_ruby = make_unique<ruby::Embedded>(m_agent.get(), rubyOptions);
+    m_ruby = make_unique<ruby::Embedded>(this, rubyOptions);
   }
 #endif
 
@@ -981,7 +1046,7 @@ namespace mtconnect::configuration {
         }
 
         auto sinkName = GetOption<string>(sinkOptions, "Name").value_or(name);
-        auto sinkContract = m_agent->makeSinkContract();
+        auto sinkContract = makeSinkContract();
         sinkContract->m_pipelineContext = m_pipelineContext;
 
         auto sink = m_sinkFactory.make(factory, sinkName, getAsyncContext(),
@@ -998,7 +1063,7 @@ namespace mtconnect::configuration {
     auto rest = m_agent->findSink("RestService");
     if (!rest)
     {
-      auto sinkContract = m_agent->makeSinkContract();
+      auto sinkContract = makeSinkContract();
       sinkContract->m_pipelineContext = m_pipelineContext;
 
       auto sink = m_sinkFactory.make("RestService", "RestService", getAsyncContext(),
@@ -1035,6 +1100,8 @@ namespace mtconnect::configuration {
     // Try to find the plugin in the path or the application or
     // current working directory.
     list<fs::path> paths {sharedLibPath / name, fs::current_path() / name};
+    for (auto path = m_pluginPaths.rbegin(); path != m_pluginPaths.rend(); path++)
+      paths.emplace_front(*path);
 
     for (auto path : paths)
     {
