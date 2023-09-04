@@ -7,7 +7,12 @@ ARG LOG_FILE=""
 RUN  apk update \
   && apk add ruby
 
-RUN adduser -D adapter
+ARG UID=1000
+ARG GID=1000
+
+RUN groupadd --gid $GID adapter
+RUN useradd --create-home --uid $UID --gid $GID adapter
+
 USER adapter
 WORKDIR /home/adapter
 

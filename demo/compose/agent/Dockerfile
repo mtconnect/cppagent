@@ -115,7 +115,12 @@ RUN  apk update \
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
 # --create-home creates a home folder, ie /home/<username>
-RUN adduser -D agent
+ARG UID=1000
+ARG GID=1000
+
+RUN groupadd --gid $GID agent
+RUN useradd --create-home --uid $UID --gid $GID agent
+
 USER agent
 WORKDIR /home/agent
 
