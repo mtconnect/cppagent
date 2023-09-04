@@ -41,7 +41,7 @@ class JsonParserV1 {
   }
 
   componentRelationships(doc, fun) {
-    return doc.map(cr => {
+    return doc.filter(r => r.ComponentRelationship).map(cr => {
       return fun(cr.ComponentRelationship);
     });
   }
