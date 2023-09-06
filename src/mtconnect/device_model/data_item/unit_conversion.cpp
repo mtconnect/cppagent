@@ -80,6 +80,7 @@ namespace mtconnect::device_model::data_item {
                                                                     "MILLIGRAM",
                                                                     "MILLIGRAM/CUBIC_MILLIMETER",
                                                                     "MILLILITER",
+                                                                    "SQUARE_MILLILITER",
                                                                     "COUNT/SECOND",
                                                                     "PASCAL/SECOND",
                                                                     "UNIT_VECTOR_3D"});
@@ -100,6 +101,11 @@ namespace mtconnect::device_model::data_item {
     {
       unit.remove_prefix(6);
       power = 3.0;
+    }
+    else if (unit.compare(0, 7, "SQUARE_") == 0)
+    {
+      unit.remove_prefix(7);
+      power = 2.0;
     }
     else if (auto p = unit.find('^'); p != string_view::npos)
     {
