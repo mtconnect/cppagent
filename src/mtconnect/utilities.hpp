@@ -283,8 +283,7 @@ namespace mtconnect {
       return 0;
 
     micros microdays {date::sys_days(fields.ymd)};
-    auto us = fields.tod.to_duration().count() +
-      microdays.time_since_epoch().count();
+    auto us = fields.tod.to_duration().count() + microdays.time_since_epoch().count();
     return us;
   }
 

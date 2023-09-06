@@ -139,7 +139,7 @@ namespace mtconnect::source::adapter::agent_adapter {
     std::chrono::milliseconds m_reconnectInterval;
     std::chrono::milliseconds m_pollingInterval;
     std::string m_host;
-    std::string m_sourceDevice;
+    std::optional<std::string> m_sourceDevice;
     std::string m_feedbackId;
     std::shared_ptr<Session> m_session;
     std::shared_ptr<Session> m_assetSession;

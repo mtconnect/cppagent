@@ -63,7 +63,7 @@ public:
     m_checkpoint.addObservation(obs);
   }
   void deliverAsset(AssetPtr) override {}
-  void deliverDevice(DevicePtr) override {}
+  void deliverDevices(std::list<DevicePtr>) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}

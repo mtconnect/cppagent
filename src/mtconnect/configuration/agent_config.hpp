@@ -294,7 +294,7 @@ namespace mtconnect {
               << "  " << p;
         }
       }
-      
+
       void expandConfigVariables(boost::property_tree::ptree &);
 
     protected:
