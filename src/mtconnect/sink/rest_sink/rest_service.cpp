@@ -798,29 +798,23 @@ namespace mtconnect {
           printer->mimeType());
     }
 
-    struct AsyncSampleResponse
+    struct AsyncSampleResponse : public observation::AsyncObserver
     {
-      AsyncSampleResponse(rest_sink::SessionPtr &session, boost::asio::io_context::strand &strand)
-        : m_session(session),
-          m_observer(strand),
-          m_last(chrono::system_clock::now()),
-          m_timer(strand.context())
+      AsyncSampleResponse(sink::SinkContract *contract,
+                          boost::asio::io_context::strand &strand,
+                          std::chrono::milliseconds interval,
+                          std::chrono::milliseconds heartbeat,
+                          rest_sink::SessionPtr &session)
+        : observation::AsyncObserver(contract, strand, interval, heartbeat),
+          m_session(session)
       {}
 
+      int m_count {0};
+      const Printer *m_printer {nullptr};
+      bool m_logStreamData {false};
       std::weak_ptr<Sink> m_service;
       rest_sink::SessionPtr m_session;
       ofstream m_log;
-      SequenceNumber_t m_sequence {0};
-      chrono::milliseconds m_interval;
-      chrono::milliseconds m_heartbeat;
-      int m_count {0};
-      bool m_logStreamData {false};
-      bool m_endOfBuffer {false};
-      const Printer *m_printer {nullptr};
-      FilterSet m_filter;
-      ChangeObserver m_observer;
-      chrono::system_clock::time_point m_last;
-      boost::asio::steady_timer m_timer;
       bool m_pretty {false};
     };
 
@@ -844,10 +838,12 @@ namespace mtconnect {
         dev = checkDevice(printer, *device);
       }
 
-      auto asyncResponse = make_shared<AsyncSampleResponse>(session, m_strand);
+      auto asyncResponse = make_shared<AsyncSampleResponse>(m_sinkContract.get(), m_strand,
+                                                            std::chrono::milliseconds(interval),
+                                                            std::chrono::milliseconds(heartbeatIn),
+                                                            session);
       asyncResponse->m_count = count;
       asyncResponse->m_printer = printer;
-      asyncResponse->m_heartbeat = std::chrono::milliseconds(heartbeatIn);
       asyncResponse->m_service = getptr();
       asyncResponse->m_pretty = pretty;
 
@@ -860,63 +856,24 @@ namespace mtconnect {
         asyncResponse->m_log.open(filename.str().c_str());
       }
 
-      // This object will automatically clean up all the observer from the
-      // signalers in an exception proof manor.
-      // Add observers
-      for (const auto &item : asyncResponse->m_filter)
-      {
-        auto di = m_sinkContract->getDataItemById(item);
-        if (di)
-          di->addObserver(&asyncResponse->m_observer);
-      }
-
-      chrono::milliseconds interMilli {interval};
-      SequenceNumber_t firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
-
-      if (!from || *from < firstSeq)
-        asyncResponse->m_sequence = firstSeq;
-      else
-        asyncResponse->m_sequence = *from;
-
-      asyncResponse->m_endOfBuffer = from >= m_sinkContract->getCircularBuffer().getSequence();
-
-      asyncResponse->m_interval = chrono::milliseconds(interval);
       asyncResponse->m_logStreamData = m_logStreamData;
-
+      asyncResponse->observe(from);
+      asyncResponse->m_handler = boost::bind(&RestService::streamNextSampleChunk, this, _1, _2);
+      
       session->beginStreaming(
           printer->mimeType(),
           asio::bind_executor(
-              m_strand, boost::bind(&RestService::streamSampleWriteComplete, this, asyncResponse)));
+              m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
     }
 
-    void RestService::streamSampleWriteComplete(shared_ptr<AsyncSampleResponse> asyncResponse)
-    {
-      NAMED_SCOPE("RestService::streamSampleWriteComplete");
-
-      asyncResponse->m_last = chrono::system_clock::now();
-      if (asyncResponse->m_endOfBuffer)
-      {
-        using std::placeholders::_1;
-        using std::placeholders::_2;
-
-        asyncResponse->m_observer.wait(
-            asyncResponse->m_heartbeat,
-            asio::bind_executor(m_strand, boost::bind(&RestService::streamNextSampleChunk, this,
-                                                      asyncResponse, _1)));
-      }
-      else
-      {
-        streamNextSampleChunk(asyncResponse, boost::system::error_code {});
-      }
-    }
-
-    void RestService::streamNextSampleChunk(shared_ptr<AsyncSampleResponse> asyncResponse,
+    void RestService::streamNextSampleChunk(shared_ptr<observation::AsyncObserver> asyncObserver,
                                             boost::system::error_code ec)
     {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
       using std::placeholders::_1;
       using std::placeholders::_2;
 
+      auto asyncResponse = std::dynamic_pointer_cast<AsyncSampleResponse>(asyncObserver);
       auto service = asyncResponse->m_service.lock();
 
       if (!service || !m_server || !m_server->isRunning())
@@ -1023,8 +980,7 @@ namespace mtconnect {
 
         asyncResponse->m_session->writeChunk(
             content,
-            asio::bind_executor(m_strand, boost::bind(&RestService::streamSampleWriteComplete, this,
-                                                      asyncResponse)));
+            asio::bind_executor(m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
       }
     }
 

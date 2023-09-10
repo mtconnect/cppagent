@@ -27,6 +27,10 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
+namespace mtconnect::sink {
+  class SinkContract;
+}
+
 namespace mtconnect::observation {
   class ChangeSignaler;
 
@@ -129,5 +133,34 @@ namespace mtconnect::observation {
     // Observer Lists
     mutable std::recursive_mutex m_observerMutex;
     std::list<ChangeObserver *> m_observers;
+  };
+
+  /// @brief Asyncronous change context for waiting for changes
+  class AGENT_LIB_API AsyncObserver : public std::enable_shared_from_this<AsyncObserver>
+  {
+  public:
+    AsyncObserver(sink::SinkContract *contract, boost::asio::io_context::strand &strand,
+                  std::chrono::milliseconds interval, std::chrono::milliseconds heartbeat);
+    virtual ~AsyncObserver() = default;
+    
+    auto getptr() const { return const_cast<AsyncObserver*>(this)->shared_from_this(); }
+
+    void observe(const std::optional<SequenceNumber_t> &from);
+    void handlerCompleted();
+
+    std::function<void(std::shared_ptr<AsyncObserver> asyncResponse,
+                       boost::system::error_code)> m_handler;
+    
+    SequenceNumber_t m_sequence {0};
+    std::chrono::milliseconds m_interval {0};
+    std::chrono::milliseconds m_heartbeat {0};
+    std::chrono::system_clock::time_point m_last;
+
+    FilterSet m_filter;
+    boost::asio::steady_timer m_timer;
+
+    bool m_endOfBuffer {false};
+    ChangeObserver m_observer;
+    sink::SinkContract *m_contract {nullptr};
   };
 }  // namespace mtconnect::observation
