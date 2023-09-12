@@ -803,29 +803,28 @@ namespace mtconnect {
 
     struct AsyncSampleResponse : public observation::AsyncObserver
     {
-      AsyncSampleResponse(sink::SinkContract *contract,
-                          boost::asio::io_context::strand &strand,
-                          std::chrono::milliseconds interval,
-                          std::chrono::milliseconds heartbeat,
+      AsyncSampleResponse(boost::asio::io_context::strand &strand,
+                          mtconnect::buffer::CircularBuffer &buffer, FilterSet &&filter,
+                          std::chrono::milliseconds interval, std::chrono::milliseconds heartbeat,
                           rest_sink::SessionPtr &session)
-        : observation::AsyncObserver(contract, strand, interval, heartbeat),
+        : observation::AsyncObserver(strand, buffer, std::move(filter), interval, heartbeat),
           m_session(session)
       {}
-      
+
       void fail(boost::beast::http::status status, const std::string &message) override
       {
         m_session->fail(status, message);
       }
-      
+
       bool isRunning() override
       {
         auto sink = m_sink.lock();
-        Server *server { nullptr };
+        Server *server {nullptr};
         if (sink)
         {
           server = dynamic_pointer_cast<RestService>(sink)->getServer();
         }
-        
+
         if (!sink || !server || !server->isRunning())
         {
           return false;
@@ -836,6 +835,8 @@ namespace mtconnect {
         }
       }
 
+      std::weak_ptr<sink::Sink>
+          m_sink;  //!  weak shared pointer to the sink. handles shutdown timer race
       int m_count {0};
       const Printer *m_printer {nullptr};
       bool m_logStreamData {false};
@@ -864,16 +865,16 @@ namespace mtconnect {
         dev = checkDevice(printer, *device);
       }
 
-      auto asyncResponse = make_shared<AsyncSampleResponse>(m_sinkContract.get(), m_strand,
-                                                            std::chrono::milliseconds(interval),
-                                                            std::chrono::milliseconds(heartbeatIn),
-                                                            session);
+      FilterSet filter;
+      checkPath(printer, path, dev, filter);
+
+      auto asyncResponse = make_shared<AsyncSampleResponse>(
+          m_strand, m_sinkContract->getCircularBuffer(), std::move(filter),
+          std::chrono::milliseconds(interval), std::chrono::milliseconds(heartbeatIn), session);
       asyncResponse->m_count = count;
       asyncResponse->m_printer = printer;
       asyncResponse->m_sink = getptr();
       asyncResponse->m_pretty = pretty;
-
-      checkPath(asyncResponse->m_printer, path, dev, asyncResponse->m_filter);
 
       if (m_logStreamData)
       {
@@ -883,39 +884,41 @@ namespace mtconnect {
       }
 
       asyncResponse->m_logStreamData = m_logStreamData;
-      asyncResponse->observe(from);
+      asyncResponse->observe(
+          from, [this](const std::string &id) { return m_sinkContract->getDataItemById(id); });
       asyncResponse->m_handler = boost::bind(&RestService::streamNextSampleChunk, this, _1);
-      
+
       session->beginStreaming(
           printer->mimeType(),
-          asio::bind_executor(
-              m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+          asio::bind_executor(m_strand,
+                              boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
     }
 
-    SequenceNumber_t RestService::streamNextSampleChunk(shared_ptr<observation::AsyncObserver> asyncObserver)
+    std::pair<SequenceNumber_t, bool> RestService::streamNextSampleChunk(
+        shared_ptr<observation::AsyncObserver> asyncObserver)
     {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
 
       auto asyncResponse = std::dynamic_pointer_cast<AsyncSampleResponse>(asyncObserver);
-      uint64_t end(0ull);
+      SequenceNumber_t end {0ull};
+      bool endOfBuffer {true};
 
       // end and endOfBuffer are set during the fetch sample data while the
       // mutex is held. This removed the race to check if we are at the end of
       // the bufffer and setting the next start to the last sequence number
       // sent.
-      string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->m_filter,
-                                       asyncResponse->m_count, asyncResponse->m_sequence,
-                                       nullopt, end, asyncResponse->m_endOfBuffer,
-                                       asyncResponse->m_pretty);
+      string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
+                                       asyncResponse->m_count, asyncResponse->getSequence(),
+                                       nullopt, end, endOfBuffer, asyncResponse->m_pretty);
 
       if (m_logStreamData)
         asyncResponse->m_log << content << endl;
 
       asyncResponse->m_session->writeChunk(
-          content,
-          asio::bind_executor(m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+          content, asio::bind_executor(
+                       m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
 
-      return end;
+      return make_pair(end, endOfBuffer);
     }
 
     struct AsyncCurrentResponse

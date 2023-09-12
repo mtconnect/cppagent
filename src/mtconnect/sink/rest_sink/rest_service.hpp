@@ -175,8 +175,9 @@ namespace mtconnect {
 
       /// @brief After the write complete, send the next chunk of data
       /// @param asyncResponse shared pointer to async response referencing the session
-      /// @returns next sequence number
-      SequenceNumber_t streamNextSampleChunk(std::shared_ptr<observation::AsyncObserver> asyncResponse);
+      /// @returns next sequence number and flag if we are at the end of the buffer
+      std::pair<SequenceNumber_t, bool> streamNextSampleChunk(
+          std::shared_ptr<observation::AsyncObserver> asyncResponse);
 
       /// @brief Callback to stream another current chunk
       /// @param asyncResponse shared pointer to async response referencing the session
@@ -255,7 +256,7 @@ namespace mtconnect {
       /// @return MTConnect Error document
       std::string printError(const printer::Printer *printer, const std::string &errorCode,
                              const std::string &text, bool pretty = false) const;
-      
+
       /// @name For testing only
       ///@{
       auto instanceId() const { return m_instanceId; }
@@ -299,8 +300,7 @@ namespace mtconnect {
       std::string fetchSampleData(const printer::Printer *printer, const FilterSetOpt &filterSet,
                                   int count, const std::optional<SequenceNumber_t> &from,
                                   const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                  bool &endOfBuffer,
-                                  bool pretty = false);
+                                  bool &endOfBuffer, bool pretty = false);
 
       // Verification methods
       template <typename T>

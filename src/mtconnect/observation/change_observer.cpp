@@ -17,10 +17,10 @@
 
 #include "change_observer.hpp"
 
+#include <boost/asio/io_context.hpp>
+
 #include <algorithm>
 #include <thread>
-
-#include <boost/asio/io_context.hpp>
 
 #include "mtconnect/sink/sink.hpp"
 
@@ -90,60 +90,59 @@ namespace mtconnect::observation {
       observer->signal(sequence);
   }
 
-  AsyncObserver::AsyncObserver(sink::SinkContract *contract,
-                               boost::asio::io_context::strand &strand,
+  AsyncObserver::AsyncObserver(boost::asio::io_context::strand &strand,
+                               buffer::CircularBuffer &buffer, FilterSet &&filter,
                                std::chrono::milliseconds interval,
                                std::chrono::milliseconds heartbeat)
     : m_interval(interval),
       m_heartbeat(heartbeat),
       m_last(std::chrono::system_clock::now()),
+      m_filter(std::move(filter)),
       m_timer(strand.context()),
       m_strand(strand),
       m_observer(strand),
-      m_contract(contract)
-  {
-  }
-  
-  void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from)
+      m_buffer(buffer)
+  {}
+
+  void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from,
+                              std::function<DataItemPtr(const std::string &id)> resolver)
   {
     // This object will automatically clean up all the observer from the
     // signalers in an exception proof manor.
     // Add observers
     for (const auto &item : m_filter)
     {
-      auto di = m_contract->getDataItemById(item);
+      auto di = resolver(item);
       if (di)
         di->addObserver(&m_observer);
     }
-    
-    auto &buffer { m_contract->getCircularBuffer() };
-    std::lock_guard<buffer::CircularBuffer> lock(buffer);
 
-    SequenceNumber_t firstSeq = buffer.getFirstSequence();
+    std::lock_guard<buffer::CircularBuffer> lock(m_buffer);
+
+    SequenceNumber_t firstSeq = m_buffer.getFirstSequence();
 
     if (!from || *from < firstSeq)
       m_sequence = firstSeq;
     else
       m_sequence = *from;
 
-    m_endOfBuffer = from >= buffer.getSequence();
+    m_endOfBuffer = from >= m_buffer.getSequence();
   }
-  
+
   void AsyncObserver::handlerCompleted()
   {
     m_last = std::chrono::system_clock::now();
     if (m_endOfBuffer)
     {
       using std::placeholders::_1;
-      m_observer.wait(m_heartbeat, boost::bind(&AsyncObserver::handleObservations,
-                                               getptr(), _1));
+      m_observer.wait(m_heartbeat, boost::bind(&AsyncObserver::handleObservations, getptr(), _1));
     }
     else
     {
       handleObservations(boost::system::error_code {});
     }
   }
-  
+
   void AsyncObserver::handleObservations(boost::system::error_code ec)
   {
     using namespace buffer;
@@ -153,7 +152,8 @@ namespace mtconnect::observation {
 
     if (!isRunning())
     {
-      LOG(warning) << "AsyncObserver::handleObservations: Trying to send chunk when service has stopped";
+      LOG(warning)
+          << "AsyncObserver::handleObservations: Trying to send chunk when service has stopped";
       fail(boost::beast::http::status::internal_server_error,
            "Agent shutting down, aborting stream");
       return;
@@ -167,12 +167,10 @@ namespace mtconnect::observation {
            "Unexpected error in async observer, aborting");
       return;
     }
-    
-    {
-      auto &buffer { m_contract->getCircularBuffer() };
 
-      std::lock_guard<CircularBuffer> lock(buffer);
-      
+    {
+      std::lock_guard<CircularBuffer> lock(m_buffer);
+
       // Check if we are streaming chunks rapidly to catch up to the end of
       // buffer. We will not delay between chunks in this case and write as
       // rapidly as possible
@@ -186,21 +184,22 @@ namespace mtconnect::observation {
           // was signaled between the time the wait timed out and the mutex was locked.
           // Otherwise, nothing has arrived and we set to the next sequence number to
           // the next sequence number to be allocated and continue.
-          m_sequence = buffer.getSequence();
+          m_sequence = m_buffer.getSequence();
         }
         else
         {
           // The observer can be signaled before the interval has expired. If this occurs, then
           // Wait the remaining duration of the interval.
-          auto delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - m_last);
+          auto delta =
+              chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - m_last);
           if (delta < m_interval)
           {
             m_timer.expires_from_now(m_interval - delta);
-            m_timer.async_wait(boost::asio::bind_executor(m_strand,
-                                                          boost::bind(&AsyncObserver::handleObservations, getptr(), _1)));
+            m_timer.async_wait(boost::asio::bind_executor(
+                m_strand, boost::bind(&AsyncObserver::handleObservations, getptr(), _1)));
             return;
           }
-          
+
           // Get the sequence # signaled in the observer when the earliest event arrived.
           // This will allow the next set of data to be pulled. Any later events will have
           // greater sequence numbers, so this should not cause a problem. Also, signaled
@@ -209,27 +208,28 @@ namespace mtconnect::observation {
           m_observer.reset();
         }
       }
-      
+
       // Fetch sample data now resets the observer while holding the sequence
       // mutex to make sure that a new event will be recorded in the observer
       // when it returns.
       m_endOfBuffer = true;
-            
+
       // Check if we're falling too far behind. If we are, generate an
       // MTConnectError and return.
-      if (m_sequence < buffer.getFirstSequence())
+      if (m_sequence < m_buffer.getFirstSequence())
       {
         LOG(warning) << "Client fell too far behind, disconnecting";
-        fail(boost::beast::http::status::not_found,
-                                       "Client fell too far behind, disconnecting");
+        fail(boost::beast::http::status::not_found, "Client fell too far behind, disconnecting");
         return;
       }
-      
-      auto end = m_handler(getptr());
-      
+
+      // End of buffer is set in the handler
+      auto [end, endOfBuffer] = m_handler(getptr());
+      m_endOfBuffer = endOfBuffer;
+
       // Even if we are at the end of the buffer, or within range. If we are filtering,
       // we will need to make sure we are not spinning when there are no valid events
-      // to be reported. we will waste cycles spinning on the end of the buffer when
+      // to be reported. We will waste cycles spinning on the end of the buffer when
       // we should be in a heartbeat wait as well.
       if (!m_endOfBuffer)
       {
@@ -239,6 +239,5 @@ namespace mtconnect::observation {
       }
     }
   }
-
 
 }  // namespace mtconnect::observation

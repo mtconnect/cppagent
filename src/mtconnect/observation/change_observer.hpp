@@ -18,8 +18,8 @@
 #pragma once
 
 #include <boost/asio.hpp>
-#include <boost/bind/bind.hpp>
 #include <boost/beast/http/status.hpp>
+#include <boost/bind/bind.hpp>
 
 #include <condition_variable>
 #include <mutex>
@@ -28,10 +28,17 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
-
 namespace mtconnect::sink {
   class SinkContract;
   class Sink;
+}  // namespace mtconnect::sink
+
+namespace mtconnect::buffer {
+  class CircularBuffer;
+}
+
+namespace mtconnect::device_model::data_item {
+  class DataItem;
 }
 
 namespace mtconnect::observation {
@@ -147,31 +154,42 @@ namespace mtconnect::observation {
     /// @param strand the strand to handle the async actions
     /// @param interval minimum amount of time to wait for observations
     /// @param heartbeat maximum amount of time to wait before sending a heartbeat
-    AsyncObserver(sink::SinkContract *contract, boost::asio::io_context::strand &strand,
+    AsyncObserver(boost::asio::io_context::strand &strand,
+                  mtconnect::buffer::CircularBuffer &buffer, FilterSet &&filter,
                   std::chrono::milliseconds interval, std::chrono::milliseconds heartbeat);
     /// @brief default destructor
     virtual ~AsyncObserver() = default;
-    
-    /// @brief Get a shared pointed
-    auto getptr() const { return const_cast<AsyncObserver*>(this)->shared_from_this(); }
 
-    /// @brief sets up the `ChangeObserver` using the filter and initializes the references to the buffer
-    /// @param from optional starting point. If not specified, defaults to the beginning of the buffer
-    void observe(const std::optional<SequenceNumber_t> &from);
-    
+    /// @brief Get a shared pointed
+    auto getptr() const { return const_cast<AsyncObserver *>(this)->shared_from_this(); }
+
+    /// @brief sets up the `ChangeObserver` using the filter and initializes the references to the
+    /// buffer
+    /// @param from optional starting point. If not specified, defaults to the beginning of the
+    /// buffer
+    void observe(const std::optional<SequenceNumber_t> &from,
+                 std::function<std::shared_ptr<mtconnect::device_model::data_item::DataItem>(
+                     const std::string &id)>
+                     resolver);
+
     /// @brief handle the operation completion after the handler is called
+    ///
+    /// Bound as the completion routine for async writes and actions. Proceeds to the next handleObservations.
     void handlerCompleted();
-    
+
     /// @brief asyncronous callback when observations arrive or heartbeat times out.
+    ///
+    /// Callback when observations are ready to be written or heartbeat timer has expired.
+    ///
     /// @params ec boost error code to detect when the timer is aborted
     void handleObservations(boost::system::error_code ec);
 
     /// @brief abstract call to failure handler
     virtual void fail(boost::beast::http::status status, const std::string &message) = 0;
-    
+
     /// @brief method to determine if the sink is running
     virtual bool isRunning() = 0;
-    
+
     /// @brief handler callback when an action needs to be taken
     ///
     /// This method may modify the `m_endOfBuffer` flag.
@@ -179,20 +197,29 @@ namespace mtconnect::observation {
     /// @tparam AsyncObserver shared point to this
     /// @tparam error_code a boost error code
     /// @returns the ending sequence number
-    std::function<SequenceNumber_t(std::shared_ptr<AsyncObserver>)> m_handler;
-    
-    SequenceNumber_t m_sequence {0}; //! the current sequence number
-    std::chrono::milliseconds m_interval {0}; //! the minimum amout of time to wait before calling the handler
-    std::chrono::milliseconds m_heartbeat {0}; //! the maximum amount of time to wait before sending a heartbeat
-    std::chrono::system_clock::time_point m_last; //! the last time the handler completed
-                                                  //!
-    FilterSet m_filter; //! The data items to be observed
-    boost::asio::steady_timer m_timer; //! async timer to call back
-    boost::asio::io_context::strand m_strand;
-    
-    bool m_endOfBuffer {false}; //! Indicator that we are at the end of the buffer
-    ChangeObserver m_observer; //! the change observer
-    sink::SinkContract *m_contract {nullptr}; //! contract get circular buffer
-    std::weak_ptr<sink::Sink> m_sink; //!  weak shared pointer to the sink. handles shutdown timer race
+    std::function<std::pair<SequenceNumber_t,bool>(std::shared_ptr<AsyncObserver>)> m_handler;
+
+    ///@{
+    ///@name getters
+
+    auto getSequence() const { return m_sequence; }
+    const auto &getFilter() const { return m_filter; }
+
+    ///@}
+
+  protected:
+    SequenceNumber_t m_sequence {0};  //! the current sequence number
+    std::chrono::milliseconds m_interval {
+        0};  //! the minimum amout of time to wait before calling the handler
+    std::chrono::milliseconds m_heartbeat {
+        0};  //! the maximum amount of time to wait before sending a heartbeat
+    std::chrono::system_clock::time_point m_last;  //! the last time the handler completed
+    FilterSet m_filter;                            //! The data items to be observed
+    boost::asio::steady_timer m_timer;             //! async timer to call back
+    boost::asio::io_context::strand m_strand;      //! Strand to use for aync dispatch
+
+    bool m_endOfBuffer {false};  //! Indicator that we are at the end of the buffer
+    ChangeObserver m_observer;   //! the change observer
+    mtconnect::buffer::CircularBuffer &m_buffer; //! reference to the circular buffer
   };
 }  // namespace mtconnect::observation
