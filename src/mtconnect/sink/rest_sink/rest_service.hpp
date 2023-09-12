@@ -176,7 +176,7 @@ namespace mtconnect {
       /// @brief After the write complete, send the next chunk of data
       /// @param asyncResponse shared pointer to async response referencing the session
       /// @returns next sequence number and flag if we are at the end of the buffer
-      std::pair<SequenceNumber_t, bool> streamNextSampleChunk(
+      SequenceNumber_t streamNextSampleChunk(
           std::shared_ptr<observation::AsyncObserver> asyncResponse);
 
       /// @brief Callback to stream another current chunk

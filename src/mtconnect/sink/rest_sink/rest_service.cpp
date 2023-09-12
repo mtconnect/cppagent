@@ -894,7 +894,7 @@ namespace mtconnect {
                               boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
     }
 
-    std::pair<SequenceNumber_t, bool> RestService::streamNextSampleChunk(
+    SequenceNumber_t RestService::streamNextSampleChunk(
         shared_ptr<observation::AsyncObserver> asyncObserver)
     {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
@@ -918,7 +918,7 @@ namespace mtconnect {
           content, asio::bind_executor(
                        m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
 
-      return make_pair(end, endOfBuffer);
+      return end;
     }
 
     struct AsyncCurrentResponse

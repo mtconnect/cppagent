@@ -224,8 +224,8 @@ namespace mtconnect::observation {
       }
 
       // End of buffer is set in the handler
-      auto [end, endOfBuffer] = m_handler(getptr());
-      m_endOfBuffer = endOfBuffer;
+      auto end = m_handler(getptr());
+      m_endOfBuffer = end >= m_buffer.getSequence();
 
       // Even if we are at the end of the buffer, or within range. If we are filtering,
       // we will need to make sure we are not spinning when there are no valid events

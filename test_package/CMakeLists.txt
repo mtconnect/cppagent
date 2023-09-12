@@ -272,12 +272,12 @@ add_agent_test(mtconnect_xml_transform FALSE pipeline)
 add_agent_test(response_document FALSE pipeline)
 
 add_agent_test(agent TRUE core)
-add_agent_test(change_observer FALSE core)
 add_agent_test(globals FALSE core)
 
 add_agent_test(config_parser FALSE configuration)
 add_agent_test(config FALSE configuration)
 
+add_agent_test(change_observer FALSE observation)
 add_agent_test(observation TRUE observation)
 add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)

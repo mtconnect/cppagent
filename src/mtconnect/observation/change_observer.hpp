@@ -149,6 +149,9 @@ namespace mtconnect::observation {
   class AGENT_LIB_API AsyncObserver : public std::enable_shared_from_this<AsyncObserver>
   {
   public:
+    /// @Brief callback when observations are ready
+    using Handler = std::function<SequenceNumber_t(std::shared_ptr<AsyncObserver>)>;
+
     /// @brief create async observer to manage data item callbacks
     /// @param contract the sink contract to use to get the buffer information
     /// @param strand the strand to handle the async actions
@@ -174,7 +177,8 @@ namespace mtconnect::observation {
 
     /// @brief handle the operation completion after the handler is called
     ///
-    /// Bound as the completion routine for async writes and actions. Proceeds to the next handleObservations.
+    /// Bound as the completion routine for async writes and actions. Proceeds to the next
+    /// handleObservations.
     void handlerCompleted();
 
     /// @brief asyncronous callback when observations arrive or heartbeat times out.
@@ -192,12 +196,9 @@ namespace mtconnect::observation {
 
     /// @brief handler callback when an action needs to be taken
     ///
-    /// This method may modify the `m_endOfBuffer` flag.
-    ///
     /// @tparam AsyncObserver shared point to this
-    /// @tparam error_code a boost error code
     /// @returns the ending sequence number
-    std::function<std::pair<SequenceNumber_t,bool>(std::shared_ptr<AsyncObserver>)> m_handler;
+    Handler m_handler;
 
     ///@{
     ///@name getters
@@ -218,8 +219,8 @@ namespace mtconnect::observation {
     boost::asio::steady_timer m_timer;             //! async timer to call back
     boost::asio::io_context::strand m_strand;      //! Strand to use for aync dispatch
 
-    bool m_endOfBuffer {false};  //! Indicator that we are at the end of the buffer
-    ChangeObserver m_observer;   //! the change observer
-    mtconnect::buffer::CircularBuffer &m_buffer; //! reference to the circular buffer
+    bool m_endOfBuffer {false};                   //! Indicator that we are at the end of the buffer
+    ChangeObserver m_observer;                    //! the change observer
+    mtconnect::buffer::CircularBuffer &m_buffer;  //! reference to the circular buffer
   };
 }  // namespace mtconnect::observation
