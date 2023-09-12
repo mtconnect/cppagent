@@ -175,9 +175,8 @@ namespace mtconnect {
 
       /// @brief After the write complete, send the next chunk of data
       /// @param asyncResponse shared pointer to async response referencing the session
-      /// @param ec an async error code
-      void streamNextSampleChunk(std::shared_ptr<observation::AsyncObserver> asyncResponse,
-                                 boost::system::error_code ec);
+      /// @returns next sequence number
+      SequenceNumber_t streamNextSampleChunk(std::shared_ptr<observation::AsyncObserver> asyncResponse);
 
       /// @brief Callback to stream another current chunk
       /// @param asyncResponse shared pointer to async response referencing the session
@@ -256,7 +255,7 @@ namespace mtconnect {
       /// @return MTConnect Error document
       std::string printError(const printer::Printer *printer, const std::string &errorCode,
                              const std::string &text, bool pretty = false) const;
-
+      
       /// @name For testing only
       ///@{
       auto instanceId() const { return m_instanceId; }
@@ -301,7 +300,6 @@ namespace mtconnect {
                                   int count, const std::optional<SequenceNumber_t> &from,
                                   const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
                                   bool &endOfBuffer,
-                                  observation::ChangeObserver *observer = nullptr,
                                   bool pretty = false);
 
       // Verification methods

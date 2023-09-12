@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <thread>
 
+#include <boost/asio/io_context.hpp>
+
 #include "mtconnect/sink/sink.hpp"
 
 using namespace std;
@@ -96,6 +98,7 @@ namespace mtconnect::observation {
       m_heartbeat(heartbeat),
       m_last(std::chrono::system_clock::now()),
       m_timer(strand.context()),
+      m_strand(strand),
       m_observer(strand),
       m_contract(contract)
   {
@@ -113,16 +116,17 @@ namespace mtconnect::observation {
         di->addObserver(&m_observer);
     }
     
-    std::lock_guard<buffer::CircularBuffer> lock(m_contract->getCircularBuffer());
+    auto &buffer { m_contract->getCircularBuffer() };
+    std::lock_guard<buffer::CircularBuffer> lock(buffer);
 
-    SequenceNumber_t firstSeq = m_contract->getCircularBuffer().getFirstSequence();
+    SequenceNumber_t firstSeq = buffer.getFirstSequence();
 
     if (!from || *from < firstSeq)
       m_sequence = firstSeq;
     else
       m_sequence = *from;
 
-    m_endOfBuffer = from >= m_contract->getCircularBuffer().getSequence();
+    m_endOfBuffer = from >= buffer.getSequence();
   }
   
   void AsyncObserver::handlerCompleted()
@@ -131,12 +135,110 @@ namespace mtconnect::observation {
     if (m_endOfBuffer)
     {
       using std::placeholders::_1;
-      m_observer.wait(m_heartbeat, boost::bind(m_handler, getptr(), _1));
+      m_observer.wait(m_heartbeat, boost::bind(&AsyncObserver::handleObservations,
+                                               getptr(), _1));
     }
     else
     {
-      m_handler(getptr(), boost::system::error_code {});
+      handleObservations(boost::system::error_code {});
     }
   }
+  
+  void AsyncObserver::handleObservations(boost::system::error_code ec)
+  {
+    using namespace buffer;
+
+    using std::placeholders::_1;
+    using std::placeholders::_2;
+
+    if (!isRunning())
+    {
+      LOG(warning) << "AsyncObserver::handleObservations: Trying to send chunk when service has stopped";
+      fail(boost::beast::http::status::internal_server_error,
+           "Agent shutting down, aborting stream");
+      return;
+    }
+
+    if (ec && ec != boost::asio::error::operation_aborted)
+    {
+      LOG(warning) << "Unexpected error AsyncObserver::handleObservations, aborting";
+      LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
+      fail(boost::beast::http::status::internal_server_error,
+           "Unexpected error in async observer, aborting");
+      return;
+    }
+    
+    {
+      auto &buffer { m_contract->getCircularBuffer() };
+
+      std::lock_guard<CircularBuffer> lock(buffer);
+      
+      // Check if we are streaming chunks rapidly to catch up to the end of
+      // buffer. We will not delay between chunks in this case and write as
+      // rapidly as possible
+      if (m_endOfBuffer)
+      {
+        if (!m_observer.wasSignaled())
+        {
+          // If nothing came out during the last wait, we may have still have advanced
+          // the sequence number. We should reset the start to something closer to the
+          // current sequence. If we lock the sequence lock, we can check if the observer
+          // was signaled between the time the wait timed out and the mutex was locked.
+          // Otherwise, nothing has arrived and we set to the next sequence number to
+          // the next sequence number to be allocated and continue.
+          m_sequence = buffer.getSequence();
+        }
+        else
+        {
+          // The observer can be signaled before the interval has expired. If this occurs, then
+          // Wait the remaining duration of the interval.
+          auto delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - m_last);
+          if (delta < m_interval)
+          {
+            m_timer.expires_from_now(m_interval - delta);
+            m_timer.async_wait(boost::asio::bind_executor(m_strand,
+                                                          boost::bind(&AsyncObserver::handleObservations, getptr(), _1)));
+            return;
+          }
+          
+          // Get the sequence # signaled in the observer when the earliest event arrived.
+          // This will allow the next set of data to be pulled. Any later events will have
+          // greater sequence numbers, so this should not cause a problem. Also, signaled
+          // sequence numbers can only decrease, never increase.
+          m_sequence = m_observer.getSequence();
+          m_observer.reset();
+        }
+      }
+      
+      // Fetch sample data now resets the observer while holding the sequence
+      // mutex to make sure that a new event will be recorded in the observer
+      // when it returns.
+      m_endOfBuffer = true;
+            
+      // Check if we're falling too far behind. If we are, generate an
+      // MTConnectError and return.
+      if (m_sequence < buffer.getFirstSequence())
+      {
+        LOG(warning) << "Client fell too far behind, disconnecting";
+        fail(boost::beast::http::status::not_found,
+                                       "Client fell too far behind, disconnecting");
+        return;
+      }
+      
+      auto end = m_handler(getptr());
+      
+      // Even if we are at the end of the buffer, or within range. If we are filtering,
+      // we will need to make sure we are not spinning when there are no valid events
+      // to be reported. we will waste cycles spinning on the end of the buffer when
+      // we should be in a heartbeat wait as well.
+      if (!m_endOfBuffer)
+      {
+        // If we're not at the end of the buffer, move to the end of the previous set and
+        // begin filtering from where we left off.
+        m_sequence = end;
+      }
+    }
+  }
+
 
 }  // namespace mtconnect::observation

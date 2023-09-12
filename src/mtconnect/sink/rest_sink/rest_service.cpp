@@ -65,10 +65,13 @@ namespace mtconnect {
       m_server = make_unique<Server>(context, m_options);
       m_server->setErrorFunction(
           [this](SessionPtr session, rest_sink::status st, const string &msg) {
-            auto printer = m_sinkContract->getPrinter("xml");
-            auto doc = printError(printer, "INVALID_REQUEST", msg);
-            ResponsePtr resp = std::make_unique<Response>(st, doc, printer->mimeType());
-            session->writeFailureResponse(std::move(resp));
+            if (m_sinkContract)
+            {
+              auto printer = m_sinkContract->getPrinter("xml");
+              auto doc = printError(printer, "INVALID_REQUEST", msg);
+              ResponsePtr resp = std::make_unique<Response>(st, doc, printer->mimeType());
+              session->writeFailureResponse(std::move(resp));
+            }
           });
 
       auto xmlPrinter = dynamic_cast<XmlPrinter *>(m_sinkContract->getPrinter("xml"));
@@ -794,7 +797,7 @@ namespace mtconnect {
 
       return make_unique<Response>(
           rest_sink::status::ok,
-          fetchSampleData(printer, filter, count, from, to, end, endOfBuffer, nullptr, pretty),
+          fetchSampleData(printer, filter, count, from, to, end, endOfBuffer, pretty),
           printer->mimeType());
     }
 
@@ -808,11 +811,34 @@ namespace mtconnect {
         : observation::AsyncObserver(contract, strand, interval, heartbeat),
           m_session(session)
       {}
+      
+      void fail(boost::beast::http::status status, const std::string &message) override
+      {
+        m_session->fail(status, message);
+      }
+      
+      bool isRunning() override
+      {
+        auto sink = m_sink.lock();
+        Server *server { nullptr };
+        if (sink)
+        {
+          server = dynamic_pointer_cast<RestService>(sink)->getServer();
+        }
+        
+        if (!sink || !server || !server->isRunning())
+        {
+          return false;
+        }
+        else
+        {
+          return server->isRunning();
+        }
+      }
 
       int m_count {0};
       const Printer *m_printer {nullptr};
       bool m_logStreamData {false};
-      std::weak_ptr<Sink> m_service;
       rest_sink::SessionPtr m_session;
       ofstream m_log;
       bool m_pretty {false};
@@ -844,7 +870,7 @@ namespace mtconnect {
                                                             session);
       asyncResponse->m_count = count;
       asyncResponse->m_printer = printer;
-      asyncResponse->m_service = getptr();
+      asyncResponse->m_sink = getptr();
       asyncResponse->m_pretty = pretty;
 
       checkPath(asyncResponse->m_printer, path, dev, asyncResponse->m_filter);
@@ -858,7 +884,7 @@ namespace mtconnect {
 
       asyncResponse->m_logStreamData = m_logStreamData;
       asyncResponse->observe(from);
-      asyncResponse->m_handler = boost::bind(&RestService::streamNextSampleChunk, this, _1, _2);
+      asyncResponse->m_handler = boost::bind(&RestService::streamNextSampleChunk, this, _1);
       
       session->beginStreaming(
           printer->mimeType(),
@@ -866,122 +892,30 @@ namespace mtconnect {
               m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
     }
 
-    void RestService::streamNextSampleChunk(shared_ptr<observation::AsyncObserver> asyncObserver,
-                                            boost::system::error_code ec)
+    SequenceNumber_t RestService::streamNextSampleChunk(shared_ptr<observation::AsyncObserver> asyncObserver)
     {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
-      using std::placeholders::_1;
-      using std::placeholders::_2;
 
       auto asyncResponse = std::dynamic_pointer_cast<AsyncSampleResponse>(asyncObserver);
-      auto service = asyncResponse->m_service.lock();
+      uint64_t end(0ull);
 
-      if (!service || !m_server || !m_server->isRunning())
-      {
-        LOG(warning) << "Trying to send chunk when service has stopped";
-        if (service)
-        {
-          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                         "Agent shutting down, aborting stream");
-        }
-        return;
-      }
+      // end and endOfBuffer are set during the fetch sample data while the
+      // mutex is held. This removed the race to check if we are at the end of
+      // the bufffer and setting the next start to the last sequence number
+      // sent.
+      string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->m_filter,
+                                       asyncResponse->m_count, asyncResponse->m_sequence,
+                                       nullopt, end, asyncResponse->m_endOfBuffer,
+                                       asyncResponse->m_pretty);
 
-      if (ec && ec != boost::asio::error::operation_aborted)
-      {
-        LOG(warning) << "Unexpected error streamNextSampleChunk, aborting";
-        LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
-        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                       "Unexpected error streamNextSampleChunk, aborting");
-        return;
-      }
+      if (m_logStreamData)
+        asyncResponse->m_log << content << endl;
 
-      {
-        std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
+      asyncResponse->m_session->writeChunk(
+          content,
+          asio::bind_executor(m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
 
-        if (!asyncResponse->m_endOfBuffer)
-        {
-          // Check if we are streaming chunks rapidly to catch up to the end of
-          // buffer. We will not delay between chunks in this case and write as
-          // rapidly as possible
-        }
-        else if (!asyncResponse->m_observer.wasSignaled())
-        {
-          // If nothing came out during the last wait, we may have still have advanced
-          // the sequence number. We should reset the start to something closer to the
-          // current sequence. If we lock the sequence lock, we can check if the observer
-          // was signaled between the time the wait timed out and the mutex was locked.
-          // Otherwise, nothing has arrived and we set to the next sequence number to
-          // the next sequence number to be allocated and continue.
-          asyncResponse->m_sequence = m_sinkContract->getCircularBuffer().getSequence();
-        }
-        else
-        {
-          // The observer can be signaled before the interval has expired. If this occurs, then
-          // Wait the remaining duration of the interval.
-          auto delta = chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() -
-                                                                   asyncResponse->m_last);
-          if (delta < asyncResponse->m_interval)
-          {
-            asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval - delta);
-            asyncResponse->m_timer.async_wait(asio::bind_executor(
-                m_strand,
-                boost::bind(&RestService::streamNextSampleChunk, this, asyncResponse, _1)));
-            return;
-          }
-
-          // Get the sequence # signaled in the observer when the earliest event arrived.
-          // This will allow the next set of data to be pulled. Any later events will have
-          // greater sequence numbers, so this should not cause a problem. Also, signaled
-          // sequence numbers can only decrease, never increase.
-          asyncResponse->m_sequence = asyncResponse->m_observer.getSequence();
-          asyncResponse->m_observer.reset();
-        }
-
-        // Fetch sample data now resets the observer while holding the sequence
-        // mutex to make sure that a new event will be recorded in the observer
-        // when it returns.
-        uint64_t end(0ull);
-        string content;
-        asyncResponse->m_endOfBuffer = true;
-
-        // Check if we're falling too far behind. If we are, generate an
-        // MTConnectError and return.
-        if (asyncResponse->m_sequence < m_sinkContract->getCircularBuffer().getFirstSequence())
-        {
-          LOG(warning) << "Client fell too far behind, disconnecting";
-          asyncResponse->m_session->fail(boost::beast::http::status::not_found,
-                                         "Client fell too far behind, disconnecting");
-          return;
-        }
-
-        // end and endOfBuffer are set during the fetch sample data while the
-        // mutex is held. This removed the race to check if we are at the end of
-        // the bufffer and setting the next start to the last sequence number
-        // sent.
-        content = fetchSampleData(asyncResponse->m_printer, asyncResponse->m_filter,
-                                  asyncResponse->m_count, asyncResponse->m_sequence, nullopt, end,
-                                  asyncResponse->m_endOfBuffer, &asyncResponse->m_observer,
-                                  asyncResponse->m_pretty);
-
-        // Even if we are at the end of the buffer, or within range. If we are filtering,
-        // we will need to make sure we are not spinning when there are no valid events
-        // to be reported. we will waste cycles spinning on the end of the buffer when
-        // we should be in a heartbeat wait as well.
-        if (!asyncResponse->m_endOfBuffer)
-        {
-          // If we're not at the end of the buffer, move to the end of the previous set and
-          // begin filtering from where we left off.
-          asyncResponse->m_sequence = end;
-        }
-
-        if (m_logStreamData)
-          asyncResponse->m_log << content << endl;
-
-        asyncResponse->m_session->writeChunk(
-            content,
-            asio::bind_executor(m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
-      }
+      return end;
     }
 
     struct AsyncCurrentResponse
@@ -1411,8 +1345,7 @@ namespace mtconnect {
     string RestService::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet,
                                         int count, const std::optional<SequenceNumber_t> &from,
                                         const std::optional<SequenceNumber_t> &to,
-                                        SequenceNumber_t &end, bool &endOfBuffer,
-                                        ChangeObserver *observer, bool pretty)
+                                        SequenceNumber_t &end, bool &endOfBuffer, bool pretty)
     {
       std::unique_ptr<ObservationList> observations;
       SequenceNumber_t firstSeq, lastSeq;
@@ -1439,9 +1372,6 @@ namespace mtconnect {
 
         observations = m_sinkContract->getCircularBuffer().getObservations(
             count, filterSet, from, to, end, firstSeq, endOfBuffer);
-
-        if (observer)
-          observer->reset();
       }
 
       return printer->printSample(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
