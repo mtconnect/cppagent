@@ -104,3 +104,9 @@ TEST(UnitConversionTest, check_cubic_feet_per_minute)
   auto conv = UnitConversion::make("CUBIC_FOOT/MINUTE", "CUBIC_MILLIMETER/SECOND");
   EXPECT_NEAR(3303632.15, conv->convert(7.0), 0.1);
 }
+
+TEST(UnitConversionTest, check_square_feet_to_square_millimeter)
+{
+  auto conv = UnitConversion::make("SQUARE_FOOT", "SQUARE_MILLIMETER");
+  EXPECT_NEAR(650321.3, conv->convert(7.0), 0.1);
+}
