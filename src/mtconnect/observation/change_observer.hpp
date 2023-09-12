@@ -28,17 +28,8 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/utilities.hpp"
 
-namespace mtconnect::sink {
-  class SinkContract;
-  class Sink;
-}  // namespace mtconnect::sink
-
 namespace mtconnect::buffer {
   class CircularBuffer;
-}
-
-namespace mtconnect::device_model::data_item {
-  class DataItem;
 }
 
 namespace mtconnect::observation {
@@ -146,11 +137,23 @@ namespace mtconnect::observation {
   };
 
   /// @brief Asyncronous change context for waiting for changes
+  ///
+  /// This class must be subclassed and provide a fail and isRunning method.
+  /// The caller first calls observe to resolve the filter ids to the signalers. This must be done before the first
+  /// handlerComplete is called asyncronously. The observer handles calling the handler whenever a new
+  /// observation is available or the heartbeat has timed out keeping track of the sequence number of the last
+  /// signaled observation or if the observer is still at the end of the buffer and nothing is signaled.
+  ///
+  /// The handler and sequence numbers are handled inside the circular buffer lock to prevent race conditions
+  /// with incoming data.
   class AGENT_LIB_API AsyncObserver : public std::enable_shared_from_this<AsyncObserver>
   {
   public:
     /// @Brief callback when observations are ready
     using Handler = std::function<SequenceNumber_t(std::shared_ptr<AsyncObserver>)>;
+
+    /// @brief Resolve a string to a change signaler
+    using Resolver = std::function<ChangeSignaler *(const std::string &id)>;
 
     /// @brief create async observer to manage data item callbacks
     /// @param contract the sink contract to use to get the buffer information
@@ -168,25 +171,15 @@ namespace mtconnect::observation {
 
     /// @brief sets up the `ChangeObserver` using the filter and initializes the references to the
     /// buffer
-    /// @param from optional starting point. If not specified, defaults to the beginning of the
-    /// buffer
-    void observe(const std::optional<SequenceNumber_t> &from,
-                 std::function<std::shared_ptr<mtconnect::device_model::data_item::DataItem>(
-                     const std::string &id)>
-                     resolver);
+    /// @param from optional starting point. If not specified, defaults to the beginning of the buffer
+    /// @param resolver resolve an id to a signaler
+    void observe(const std::optional<SequenceNumber_t> &from, Resolver resolver);
 
     /// @brief handle the operation completion after the handler is called
     ///
     /// Bound as the completion routine for async writes and actions. Proceeds to the next
     /// handleObservations.
     void handlerCompleted();
-
-    /// @brief asyncronous callback when observations arrive or heartbeat times out.
-    ///
-    /// Callback when observations are ready to be written or heartbeat timer has expired.
-    ///
-    /// @params ec boost error code to detect when the timer is aborted
-    void handleObservations(boost::system::error_code ec);
 
     /// @brief abstract call to failure handler
     virtual void fail(boost::beast::http::status status, const std::string &message) = 0;
@@ -208,6 +201,14 @@ namespace mtconnect::observation {
 
     ///@}
 
+  protected:
+    /// @brief asyncronous callback when observations arrive or heartbeat times out.
+    ///
+    /// Callback when observations are ready to be written or heartbeat timer has expired.
+    ///
+    /// @params ec boost error code to detect when the timer is aborted
+    void handleObservations(boost::system::error_code ec);
+    
   protected:
     SequenceNumber_t m_sequence {0};  //! the current sequence number
     std::chrono::milliseconds m_interval {

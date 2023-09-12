@@ -884,8 +884,9 @@ namespace mtconnect {
       }
 
       asyncResponse->m_logStreamData = m_logStreamData;
-      asyncResponse->observe(
-          from, [this](const std::string &id) { return m_sinkContract->getDataItemById(id); });
+      asyncResponse->observe(from, [this](const std::string &id) {
+        return m_sinkContract->getDataItemById(id).get();
+      });
       asyncResponse->m_handler = boost::bind(&RestService::streamNextSampleChunk, this, _1);
 
       session->beginStreaming(

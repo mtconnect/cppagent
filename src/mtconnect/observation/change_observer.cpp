@@ -104,29 +104,34 @@ namespace mtconnect::observation {
       m_buffer(buffer)
   {}
 
-  void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from,
-                              std::function<DataItemPtr(const std::string &id)> resolver)
+  void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from, Resolver resolver)
   {
     // This object will automatically clean up all the observer from the
     // signalers in an exception proof manor.
     // Add observers
     for (const auto &item : m_filter)
     {
-      auto di = resolver(item);
-      if (di)
-        di->addObserver(&m_observer);
+      auto cs = resolver(item);
+      if (cs)
+        cs->addObserver(&m_observer);
     }
 
-    std::lock_guard<buffer::CircularBuffer> lock(m_buffer);
-
-    SequenceNumber_t firstSeq = m_buffer.getFirstSequence();
-
+    SequenceNumber_t firstSeq, next;
+    {
+      std::lock_guard<buffer::CircularBuffer> lock(m_buffer);
+      firstSeq = m_buffer.getFirstSequence();
+      next = m_buffer.getSequence();
+    }
+    
+    // If we are starting from the beginning of the buffer, signal the handler
+    // to set the sequence to the fisrt sequence in the buffer to avoid a race
+    // condition.
     if (!from || *from < firstSeq)
-      m_sequence = firstSeq;
+      m_sequence = 0;
     else
       m_sequence = *from;
 
-    m_endOfBuffer = from >= m_buffer.getSequence();
+    m_endOfBuffer = from >= next;
   }
 
   void AsyncObserver::handlerCompleted()
@@ -207,6 +212,13 @@ namespace mtconnect::observation {
           m_sequence = m_observer.getSequence();
           m_observer.reset();
         }
+      }
+      else if (m_sequence == 0)
+      {
+        // The first time we are starting from the beginning of the buffer, make
+        // sure we don't have a race condition where the first sequence had already
+        // rolled off the buffer before we have a chance to send anything.
+        m_sequence = m_buffer.getFirstSequence();
       }
 
       // Fetch sample data now resets the observer while holding the sequence

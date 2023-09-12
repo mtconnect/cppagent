@@ -182,4 +182,6 @@ namespace mtconnect {
     ASSERT_TRUE(changeObserver.wasSignaled());
     ASSERT_EQ(uint64_t {30}, changeObserver.getSequence());
   }
+
+  TEST_F(ChangeObserverTest, async_observer_should_call_handler) {}
 }  // namespace mtconnect
