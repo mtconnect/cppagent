@@ -704,16 +704,7 @@ namespace mtconnect {
     // Observation Add Method
     // ----------------------------------------------------
 
-    bool RestService::publish(ObservationPtr &observation)
-    {
-      if (observation->isOrphan())
-        return false;
-
-      auto dataItem = observation->getDataItem();
-      auto seqNum = observation->getSequence();
-      dataItem->signalObservers(seqNum);
-      return true;
-    }
+    bool RestService::publish(ObservationPtr &observation) { return true; }
 
     // -------------------------------------------
     // ReST API Requests

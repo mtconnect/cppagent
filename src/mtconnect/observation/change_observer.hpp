@@ -139,13 +139,14 @@ namespace mtconnect::observation {
   /// @brief Asyncronous change context for waiting for changes
   ///
   /// This class must be subclassed and provide a fail and isRunning method.
-  /// The caller first calls observe to resolve the filter ids to the signalers. This must be done before the first
-  /// handlerComplete is called asyncronously. The observer handles calling the handler whenever a new
-  /// observation is available or the heartbeat has timed out keeping track of the sequence number of the last
-  /// signaled observation or if the observer is still at the end of the buffer and nothing is signaled.
+  /// The caller first calls observe to resolve the filter ids to the signalers. This must be done
+  /// before the first handlerComplete is called asyncronously. The observer handles calling the
+  /// handler whenever a new observation is available or the heartbeat has timed out keeping track
+  /// of the sequence number of the last signaled observation or if the observer is still at the end
+  /// of the buffer and nothing is signaled.
   ///
-  /// The handler and sequence numbers are handled inside the circular buffer lock to prevent race conditions
-  /// with incoming data.
+  /// The handler and sequence numbers are handled inside the circular buffer lock to prevent race
+  /// conditions with incoming data.
   class AGENT_LIB_API AsyncObserver : public std::enable_shared_from_this<AsyncObserver>
   {
   public:
@@ -171,7 +172,8 @@ namespace mtconnect::observation {
 
     /// @brief sets up the `ChangeObserver` using the filter and initializes the references to the
     /// buffer
-    /// @param from optional starting point. If not specified, defaults to the beginning of the buffer
+    /// @param from optional starting point. If not specified, defaults to the beginning of the
+    /// buffer
     /// @param resolver resolve an id to a signaler
     void observe(const std::optional<SequenceNumber_t> &from, Resolver resolver);
 
@@ -197,6 +199,7 @@ namespace mtconnect::observation {
     ///@name getters
 
     auto getSequence() const { return m_sequence; }
+    auto isEndOfBuffer() const { return m_endOfBuffer; }
     const auto &getFilter() const { return m_filter; }
 
     ///@}
@@ -208,7 +211,7 @@ namespace mtconnect::observation {
     ///
     /// @params ec boost error code to detect when the timer is aborted
     void handleObservations(boost::system::error_code ec);
-    
+
   protected:
     SequenceNumber_t m_sequence {0};  //! the current sequence number
     std::chrono::milliseconds m_interval {

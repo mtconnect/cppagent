@@ -122,7 +122,7 @@ namespace mtconnect::observation {
       firstSeq = m_buffer.getFirstSequence();
       next = m_buffer.getSequence();
     }
-    
+
     // If we are starting from the beginning of the buffer, signal the handler
     // to set the sequence to the fisrt sequence in the buffer to avoid a race
     // condition.
@@ -221,11 +221,6 @@ namespace mtconnect::observation {
         m_sequence = m_buffer.getFirstSequence();
       }
 
-      // Fetch sample data now resets the observer while holding the sequence
-      // mutex to make sure that a new event will be recorded in the observer
-      // when it returns.
-      m_endOfBuffer = true;
-
       // Check if we're falling too far behind. If we are, generate an
       // MTConnectError and return.
       if (m_sequence < m_buffer.getFirstSequence())
@@ -236,19 +231,8 @@ namespace mtconnect::observation {
       }
 
       // End of buffer is set in the handler
-      auto end = m_handler(getptr());
-      m_endOfBuffer = end >= m_buffer.getSequence();
-
-      // Even if we are at the end of the buffer, or within range. If we are filtering,
-      // we will need to make sure we are not spinning when there are no valid events
-      // to be reported. We will waste cycles spinning on the end of the buffer when
-      // we should be in a heartbeat wait as well.
-      if (!m_endOfBuffer)
-      {
-        // If we're not at the end of the buffer, move to the end of the previous set and
-        // begin filtering from where we left off.
-        m_sequence = end;
-      }
+      m_sequence = m_handler(getptr());
+      m_endOfBuffer = m_sequence >= m_buffer.getSequence();
     }
   }
 

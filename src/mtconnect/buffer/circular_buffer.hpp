@@ -146,6 +146,8 @@ namespace mtconnect::buffer {
         m_checkpoints.push_back(std::make_unique<Checkpoint>(m_latest));
       }
 
+      dataItem->signalObservers(m_sequence);
+
       m_sequence++;
 
       return seq;

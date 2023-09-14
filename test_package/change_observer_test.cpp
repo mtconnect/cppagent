@@ -16,15 +16,22 @@
 //
 
 // Ensure that gtest is the first header otherwise Windows raises an error
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
 
 #include <chrono>
 #include <thread>
 
+#include "mtconnect/buffer/circular_buffer.hpp"
+#include "mtconnect/device_model/component.hpp"
+#include "mtconnect/device_model/device.hpp"
 #include "mtconnect/observation/change_observer.hpp"
 
 using namespace std::chrono_literals;
+using namespace std;
+using namespace std::literals;
+using namespace date::literals;
 
 // main
 int main(int argc, char *argv[])
@@ -183,5 +190,250 @@ namespace mtconnect {
     ASSERT_EQ(uint64_t {30}, changeObserver.getSequence());
   }
 
-  TEST_F(ChangeObserverTest, async_observer_should_call_handler) {}
+  class MockObserver : public AsyncObserver
+  {
+  public:
+    using AsyncObserver::AsyncObserver;
+    void fail(boost::beast::http::status status, const std::string &message) override
+    {
+      LOG(error) << message;
+    };
+    bool isRunning() override { return true; };
+  };
+
+  using namespace entity;
+  using namespace device_model;
+  using namespace device_model::data_item;
+  namespace asio = boost::asio;
+
+  class AsyncObserverTest : public ChangeObserverTest
+  {
+  public:
+    void SetUp() override
+    {
+      ChangeObserverTest::SetUp();
+
+      ErrorList errors;
+      Properties d1 {
+          {"id", "1"s}, {"name", "DeviceTest1"s}, {"uuid", "UnivUniqId1"s}, {"iso841Class", "4"s}};
+      m_device = dynamic_pointer_cast<Device>(Device::getFactory()->make("Device", d1, errors));
+
+      Properties c1 {{"id", "2"s}, {"name", "Comp1"s}};
+      m_comp = Component::make("Comp1", {{"id", "2"s}, {"name", "Comp1"s}}, errors);
+      m_device->addChild(m_comp, errors);
+      m_dataItem1 = DataItem::make(
+          {{"id", "a"s}, {"type", "LOAD"s}, {"category", "SAMPLE"s}, {"name", "DI1"s}}, errors);
+      m_comp->addDataItem(m_dataItem1, errors);
+      m_dataItem2 = DataItem::make(
+          {{"id", "b"s}, {"type", "LOAD"s}, {"category", "SAMPLE"s}, {"name", "DI2"s}}, errors);
+      m_comp->addDataItem(m_dataItem2, errors);
+
+      m_signalers.emplace("a", m_dataItem1);
+      m_signalers.emplace("b", m_dataItem2);
+    }
+
+    void TearDown() override { ChangeObserverTest::TearDown(); }
+    
+    SequenceNumber_t addObservations(int count)
+    {
+      SequenceNumber_t start = m_buffer.getSequence(), last;
+      ErrorList errors;
+      for (int i = 0; i < count; i++)
+      {
+        auto o = observation::Observation::make(m_dataItem1, m_value, m_time, errors);
+        last = m_buffer.addToBuffer(o);
+        EXPECT_EQ(start + i, last);
+        EXPECT_EQ(0, errors.size());
+      }
+      
+      return last;
+    }
+    
+    bool waitFor(function<bool()> pred, int count = 10)
+    {
+      for (int i = 0; !pred() && i < count; i++)
+        m_context.run_one_for(50ms);
+      
+      return pred();
+    }
+
+
+    buffer::CircularBuffer m_buffer {8, 4};
+    map<string, DataItemPtr> m_signalers;
+
+    entity::Properties m_value {{"VALUE", "123"s}};
+    Timestamp m_time {std::chrono::system_clock::now()};
+
+    DataItemPtr m_dataItem1;
+    DataItemPtr m_dataItem2;
+    DevicePtr m_device;
+    ComponentPtr m_comp;
+  };
+
+  TEST_F(AsyncObserverTest, async_observer_should_call_handler)
+  {
+    FilterSet filter {"a", "b"};
+    shared_ptr<MockObserver> observer {
+        make_shared<MockObserver>(m_strand, m_buffer, std::move(filter), 100ms, 200ms)};
+
+    auto expected = addObservations(3);
+    observer->observe(4, [this](const string &id) { return m_signalers[id].get(); });
+
+    bool called {false};
+    observer->m_handler = [&](std::shared_ptr<AsyncObserver> obs) {
+      called = true;
+      EXPECT_EQ(expected, obs->getSequence());
+      return obs->getSequence();
+    };
+
+    observer->handlerCompleted();
+    ASSERT_FALSE(called);
+
+    m_context.run_for(50ms);
+    ASSERT_FALSE(called);
+
+    expected = addObservations(1);
+    ASSERT_EQ(4ull, expected);
+
+    m_context.run_for(10ms);
+    ASSERT_FALSE(called);
+
+    m_context.run_for(100ms);
+    ASSERT_TRUE(called);
+  }
+
+  TEST_F(AsyncObserverTest, if_not_at_end_should_call_immediately)
+  {
+    FilterSet filter {"a", "b"};
+    shared_ptr<MockObserver> observer {
+        make_shared<MockObserver>(m_strand, m_buffer, std::move(filter), 100ms, 200ms)};
+
+    addObservations(3);
+    observer->observe(2, [this](const string &id) { return m_signalers[id].get(); });
+
+    ASSERT_FALSE(observer->isEndOfBuffer());
+
+    bool called {false};
+    SequenceNumber_t expected = 2;
+    bool end = false;
+    observer->m_handler = [&](std::shared_ptr<AsyncObserver> obs) {
+      called = true;
+      EXPECT_EQ(expected, obs->getSequence());
+      EXPECT_EQ(end, obs->isEndOfBuffer());
+      asio::post(asio::bind_executor(m_strand, boost::bind(&AsyncObserver::handlerCompleted, obs)));
+      return m_buffer.getSequence();
+    };
+
+    observer->handlerCompleted();
+    ASSERT_TRUE(called);
+    ASSERT_TRUE(observer->isEndOfBuffer());
+
+    end = true;
+    called = false;
+    m_context.run_for(50ms);
+    ASSERT_FALSE(called);
+
+    expected = addObservations(1);
+    ASSERT_EQ(4ull, expected);
+
+    m_context.run_for(10ms);
+    ASSERT_FALSE(called);
+
+    m_context.run_for(100ms);
+    ASSERT_TRUE(called);
+  }
+
+  TEST_F(AsyncObserverTest, process_observations_in_small_chunks)
+  {
+    FilterSet filter {"a", "b"};
+    shared_ptr<MockObserver> observer {
+        make_shared<MockObserver>(m_strand, m_buffer, std::move(filter), 100ms, 200ms)};
+
+    addObservations(3);
+    observer->observe(1, [this](const string &id) { return m_signalers[id].get(); });
+
+    ASSERT_FALSE(observer->isEndOfBuffer());
+
+    bool called {false};
+    SequenceNumber_t expected = 1;
+    bool end = false;
+    observer->m_handler = [&](std::shared_ptr<AsyncObserver> obs) {
+      called = true;
+      EXPECT_EQ(expected, obs->getSequence());
+      EXPECT_EQ(end, obs->isEndOfBuffer());
+      asio::post(asio::bind_executor(m_strand, boost::bind(&AsyncObserver::handlerCompleted, obs)));
+      return expected + 1;
+    };
+
+    observer->handlerCompleted();
+    ASSERT_TRUE(called);
+    ASSERT_FALSE(observer->isEndOfBuffer());
+
+    called = false;
+    expected = 2;
+    m_context.run_one();
+    ASSERT_TRUE(called);
+    ASSERT_EQ(3, observer->getSequence());
+    ASSERT_FALSE(observer->isEndOfBuffer());
+
+    called = false;
+    expected = 3;
+    m_context.run_one();
+    ASSERT_TRUE(called);
+    ASSERT_EQ(4, observer->getSequence());
+    ASSERT_TRUE(observer->isEndOfBuffer());
+
+    end = true;
+    called = false;
+    expected = 4;
+    m_context.run_for(50ms);
+    ASSERT_FALSE(called);
+    ASSERT_EQ(4, observer->getSequence());
+    ASSERT_TRUE(observer->isEndOfBuffer());
+
+    auto s  = addObservations(3);
+    ASSERT_EQ(6ull, s);
+
+    called = false;
+    expected = 4;
+    waitFor([&]{ return called; });
+    ASSERT_TRUE(called);
+    ASSERT_EQ(5, observer->getSequence());
+    ASSERT_FALSE(observer->isEndOfBuffer());
+  }
+
+  TEST_F(AsyncObserverTest, should_call_handler_with_heartbeat)
+  {
+    FilterSet filter {"a", "b"};
+    shared_ptr<MockObserver> observer {
+        make_shared<MockObserver>(m_strand, m_buffer, std::move(filter), 100ms, 200ms)};
+
+    addObservations(3);
+
+    observer->observe(4, [this](const string &id) { return m_signalers[id].get(); });
+
+    ASSERT_TRUE(observer->isEndOfBuffer());
+
+    bool called {false};
+    SequenceNumber_t expected = 1;
+    bool end = false;
+    observer->m_handler = [&](std::shared_ptr<AsyncObserver> obs) {
+      called = true;
+      EXPECT_EQ(expected, obs->getSequence());
+      EXPECT_EQ(end, obs->isEndOfBuffer());
+      asio::post(asio::bind_executor(m_strand, boost::bind(&AsyncObserver::handlerCompleted, obs)));
+      return expected;
+    };
+
+    observer->handlerCompleted();
+    ASSERT_FALSE(called);
+
+    called = false;
+    expected = 4;
+    end = true;
+    waitFor([&]{ return called; });
+    ASSERT_TRUE(called);
+    ASSERT_EQ(4, observer->getSequence());
+    ASSERT_TRUE(observer->isEndOfBuffer());
+  }
 }  // namespace mtconnect
