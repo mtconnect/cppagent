@@ -198,7 +198,8 @@ namespace mtconnect {
     {
       LOG(error) << message;
     };
-    bool isRunning() override { return true; };
+    bool isRunning() override { return m_running; };
+    bool m_running { true };
   };
 
   using namespace entity;
@@ -435,5 +436,47 @@ namespace mtconnect {
     ASSERT_TRUE(called);
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
+  }
+  
+  TEST_F(AsyncObserverTest, should_stop_if_not_running)
+  {
+    FilterSet filter {"a", "b"};
+    shared_ptr<MockObserver> observer {
+        make_shared<MockObserver>(m_strand, m_buffer, std::move(filter), 100ms, 200ms)};
+
+    addObservations(3);
+
+    observer->observe(4, [this](const string &id) { return m_signalers[id].get(); });
+
+    ASSERT_TRUE(observer->isEndOfBuffer());
+
+    bool called {false};
+    SequenceNumber_t expected = 1;
+    bool end = false;
+    observer->m_handler = [&](std::shared_ptr<AsyncObserver> obs) {
+      called = true;
+      EXPECT_EQ(expected, obs->getSequence());
+      EXPECT_EQ(end, obs->isEndOfBuffer());
+      asio::post(asio::bind_executor(m_strand, boost::bind(&AsyncObserver::handlerCompleted, obs)));
+      return expected;
+    };
+
+    observer->handlerCompleted();
+    ASSERT_FALSE(called);
+
+    called = false;
+    expected = 4;
+    end = true;
+    waitFor([&]{ return called; });
+    ASSERT_TRUE(called);
+    ASSERT_EQ(4, observer->getSequence());
+    ASSERT_TRUE(observer->isEndOfBuffer());
+
+    observer->m_running = false;
+    called = false;
+    expected = 4;
+    end = true;
+    waitFor([&]{ return called; });
+    ASSERT_FALSE(called);
   }
 }  // namespace mtconnect
