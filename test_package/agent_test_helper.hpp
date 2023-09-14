@@ -30,6 +30,7 @@
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/pipeline/pipeline.hpp"
 #include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt2_service.hpp"
 #include "mtconnect/sink/rest_sink/response.hpp"
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
 #include "mtconnect/sink/rest_sink/routing.hpp"
@@ -122,6 +123,7 @@ public:
   ~AgentTestHelper()
   {
     m_mqttService.reset();
+    m_mqtt2Service.reset();
     m_restService.reset();
     m_adapter.reset();
     if (m_agent)
@@ -176,6 +178,15 @@ public:
     return mqtt;
   }
 
+  std::shared_ptr<mtconnect::sink::mqtt_sink::Mqtt2Service> getMqtt2Service()
+  {
+    using namespace mtconnect;
+    sink::SinkPtr mqttSink = m_agent->findSink("Mqtt2Service");
+    std::shared_ptr<mtconnect::sink::mqtt_sink::Mqtt2Service> mqtt2 =
+        std::dynamic_pointer_cast<mtconnect::sink::mqtt_sink::Mqtt2Service>(mqttSink);
+    return mqtt2;
+  }
+
   auto createAgent(const std::string &file, int bufferSize = 8, int maxAssets = 4,
                    const std::string &version = "1.7", int checkpoint = 25, bool put = false,
                    bool observe = true, const mtconnect::ConfigOptions ops = {})
@@ -187,6 +198,7 @@ public:
 
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);
     sink::mqtt_sink::MqttService::registerFactory(m_sinkFactory);
+    sink::mqtt_sink::Mqtt2Service::registerFactory(m_sinkFactory);
     source::adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
 
     ConfigOptions options = ops;
@@ -226,6 +238,16 @@ public:
                                          std::move(mqttContract), options, ptree {});
       m_mqttService = std::dynamic_pointer_cast<sink::mqtt_sink::MqttService>(mqttsink);
       m_agent->addSink(m_mqttService);
+    }
+
+   if (HasOption(options, "Mqtt2Sink"))
+    {
+      auto mqttContract = m_agent->makeSinkContract();
+      mqttContract->m_pipelineContext = m_context;
+      auto mqtt2sink = m_sinkFactory.make("Mqtt2Service", "Mqtt2Service", m_ioContext,
+                                          std::move(mqttContract), options, ptree {});
+      m_mqtt2Service = std::dynamic_pointer_cast<sink::mqtt_sink::Mqtt2Service>(mqtt2sink);
+      m_agent->addSink(m_mqtt2Service);
     }
 
     m_agent->initialize(m_context);
@@ -301,6 +323,7 @@ public:
   std::shared_ptr<mtconnect::pipeline::PipelineContext> m_context;
   std::shared_ptr<adpt::shdr::ShdrAdapter> m_adapter;
   std::shared_ptr<mtconnect::sink::mqtt_sink::MqttService> m_mqttService;
+  std::shared_ptr<mtconnect::sink::mqtt_sink::Mqtt2Service> m_mqtt2Service;
   std::shared_ptr<mtconnect::sink::rest_sink::RestService> m_restService;
   std::shared_ptr<mtconnect::source::LoopbackSource> m_loopback;
 
