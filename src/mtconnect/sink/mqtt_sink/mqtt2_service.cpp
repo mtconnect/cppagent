@@ -75,7 +75,8 @@
                               {{configuration::MqttHost, "127.0.0.1"s},
                                {configuration::DeviceTopic, "MTConnect/Device/"s},
                                {configuration::AssetTopic, "MTConnect/Asset/"s},
-                               {configuration::ObservationTopic, "MTConnect/Observation/"s},
+                               {configuration::CurrentTopic, "MTConnect/Current/"s},
+                               {configuration::SampleTopic, "MTConnect/Sample/"s},
                                {configuration::MqttPort, 1883},
                                {configuration::MqttTls, false}});
 

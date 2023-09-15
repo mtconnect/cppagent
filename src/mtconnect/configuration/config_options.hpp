@@ -81,7 +81,8 @@ namespace mtconnect {
     ///@{
     DECLARE_CONFIGURATION(DeviceTopic);
     DECLARE_CONFIGURATION(AssetTopic);
-    DECLARE_CONFIGURATION(ObservationTopic);
+    DECLARE_CONFIGURATION(CurrentTopic);
+    DECLARE_CONFIGURATION(SampleTopic);
     DECLARE_CONFIGURATION(MqttCaCert);
     DECLARE_CONFIGURATION(MqttCert);
     DECLARE_CONFIGURATION(MqttPrivateKey);
