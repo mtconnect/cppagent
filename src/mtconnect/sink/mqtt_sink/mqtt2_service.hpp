@@ -49,6 +49,9 @@
       /// @brief MTConnect Mqtt implemention namespace
 
       namespace mqtt_sink {
+
+        struct AsyncCurrentServiceResponse;
+
         class AGENT_LIB_API Mqtt2Service : public sink::Sink
         {
           // dynamic loading of sink
@@ -88,18 +91,17 @@
 
           void createProbeRoutings();
 
-          void probeCurrentRequest(const int interval, const std::optional<std::string> &device);
+          void createCurrentRoutings();
 
-          bool probeRequest(const Printer *printer, const std::optional<std::string> &device);
+          void streamNextCurrentService(std::shared_ptr<AsyncCurrentServiceResponse> asyncResponse,
+              boost::system::error_code ec);
+          
+          void streamNextCurrentService(const int interval,
+                                        const std::optional<std::string> &device);
 
-          DevicePtr checkDevice(const Printer *printer,
-                                              const std::string &uuid) const;
-     
-          bool publish_Probe(device_model::DevicePtr device);
+          bool probeRequest(const std::optional<std::string> &device);
 
-          bool publish_Current(device_model::DevicePtr device);
-
-          bool publish_Samples(device_model::DevicePtr device);
+          DevicePtr checkDevice(const std::string &uuid) const;           
 
           /// @brief Register the Sink factory to create this sink
           /// @param factory
