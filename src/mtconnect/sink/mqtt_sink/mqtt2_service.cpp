@@ -26,6 +26,7 @@
   #include "mtconnect/mqtt/mqtt_client_impl.hpp"
   #include "mtconnect/printer/json_printer.hpp"
 
+
   using ptree = boost::property_tree::ptree;
   using json = nlohmann::json;
 
@@ -79,9 +80,6 @@
                                {configuration::MqttPort, 1883},
                                {configuration::MqttTls, false}});
 
-          createProbeRoutings();
-          //createCurrentRoutings();
-          //createSampleRoutings();
 
           auto clientHandler = make_unique<ClientHandler>();
           clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
@@ -90,7 +88,12 @@
             std::lock_guard<buffer::CircularBuffer> lock(circ);
             client->connectComplete();
 
-            for (auto &dev : m_sinkContract->getDevices())
+          createProbeRoutings();
+          // createCurrentRoutings();
+          // createSampleRoutings();
+
+
+           /* for (auto &dev : m_sinkContract->getDevices())
             {
               publish(dev);
             }
@@ -107,7 +110,7 @@
             for (auto &asset : list)
             {
               publish(asset);
-            }
+            }*/
           };
 
           m_devicePrefix = get<string>(m_options[configuration::DeviceTopic]);
@@ -154,41 +157,19 @@
         }
 
         std::shared_ptr<MqttClient> Mqtt2Service::getClient() { return m_client; }
-
-
-        struct AsyncCurrentServiceResponse
-        {
-          AsyncCurrentServiceResponse(asio::io_context &context)
-            : m_timer(context)
-          {}
-
-          std::weak_ptr<Sink> m_service;
-          chrono::milliseconds m_interval;
-          unique_ptr<JsonEntityPrinter> m_printer {nullptr};
-          boost::asio::steady_timer m_timer;
-          bool m_pretty {false};
-        };
-
+        
         void Mqtt2Service::createProbeRoutings()
         {
-            // Probe
-         //   auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
-           // auto device = request->parameter<string>("device");
-           // auto pretty = *request->parameter<bool>("pretty");
+          // Probe
+          probeRequest("");
 
-            /* auto printer = printerForAccepts(request->m_accepts);
-
-             if (device && !ends_with(request->m_path, string("probe")) &&
-                 m_sinkContract->findDeviceByUUIDorName(*device) == nullptr)
-               return false;
-
-             respond(session, probeRequest(printer, device, pretty));*/
-            //return true;
-          //};
+          /* for (auto &dev : m_sinkContract->getDevices())
+          {
+            publish(dev);
+          }*/
         }
 
-        bool Mqtt2Service::probeRequest(const Printer *printer,
-                                        const std::optional<std::string> &device)
+        bool Mqtt2Service::probeRequest(const std::optional<std::string> &device)
         {
           NAMED_SCOPE("Mqtt2Service::probeRequest");
 
@@ -196,9 +177,9 @@
 
           list<DevicePtr> deviceList;
 
-          if (device)
+          if (device != "")
           {
-            auto dev = checkDevice(printer, *device);
+            auto dev = checkDevice(*device);
             deviceList.emplace_back(dev);
           }
           else
@@ -209,7 +190,7 @@
           auto counts = m_sinkContract->getAssetStorage()->getCountsByType();
 
           auto doc =
-              printer->printProbe(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
+              m_printer->printProbe(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
                                   m_sinkContract->getCircularBuffer().getSequence(),
                                   uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
                                   uint32_t(m_sinkContract->getAssetStorage()->getCount()),
@@ -224,7 +205,7 @@
           return true;
         }
 
-        DevicePtr Mqtt2Service::checkDevice(const Printer *printer, const std::string &uuid) const
+        DevicePtr Mqtt2Service::checkDevice(const std::string &uuid) const
         {
           auto dev = m_sinkContract->findDeviceByUUIDorName(uuid);
           if (!dev)
@@ -235,16 +216,76 @@
           return dev;
         }
 
-        void Mqtt2Service::probeCurrentRequest(const int interval,
+        struct AsyncCurrentServiceResponse
+        {
+          AsyncCurrentServiceResponse(asio::io_context &context) : m_timer(context) {}
+
+          std::weak_ptr<Sink> m_service;
+          chrono::milliseconds m_interval;
+          unique_ptr<JsonEntityPrinter> m_printer {nullptr};
+          boost::asio::steady_timer m_timer;
+          bool m_pretty {false};
+        };
+
+        void Mqtt2Service::createCurrentRoutings()
+        {
+          using namespace rest_sink;
+          auto interval = 30;
+          if (interval)
+          {
+            streamNextCurrentService(interval, "");
+          }
+          else
+          {
+            probeRequest("");
+
+            /* for (auto &dev : m_sinkContract->getDevices())
+            {
+              publish(dev);
+            }*/
+          }
+        }        
+
+        void Mqtt2Service::streamNextCurrentService(const int interval,                                               
                                                const std::optional<std::string> &device)
         {
           auto asyncResponse = make_shared<AsyncCurrentServiceResponse>(m_context);
 
-         /* boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
-            streamNextCurrent(asyncResponse, boost::system::error_code {});
-          });*/
-        }
+          asyncResponse->m_interval = chrono::milliseconds {interval};
+          asyncResponse->m_service = getptr();
 
+           boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
+             streamNextCurrentService(asyncResponse, boost::system::error_code {});
+           });
+        }                
+
+        void Mqtt2Service::streamNextCurrentService(
+            std::shared_ptr<AsyncCurrentServiceResponse> asyncResponse,
+            boost::system::error_code ec)
+        {
+           using std::placeholders::_1;
+
+           if (!m_client || !m_client->isRunning())
+           {
+            LOG(warning) << "Trying to send chunk when client has stopped";
+            return;
+           }
+
+           if (ec && ec != boost::asio::error::operation_aborted)
+           {
+            LOG(warning) << "Unexpected error streamNextCurrentService, aborting";
+            LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
+
+            return;
+           }
+
+           /*boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
+             asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
+             asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
+                 m_strand,
+                 boost::bind(&Mqtt2Service::streamNextCurrentService, this, asyncResponse, _1)));
+           });*/
+        }
 
         bool Mqtt2Service::publish(observation::ObservationPtr &observation)
         {
@@ -278,53 +319,6 @@
 
           return true;
         }
-
-
-        bool Mqtt2Service::publish_Probe(device_model::DevicePtr device)
-        {
-          /*auto topic = m_devicePrefix + *device->getUuid();
-          auto doc = m_jsonPrinter->print(device);
-
-          stringstream buffer;
-          buffer << doc;
-
-          if (m_client)
-
-            m_client->publish(topic, buffer.str());
-*/
-          return true;
-        }
-
-        bool Mqtt2Service::publish_Current(device_model::DevicePtr device)
-        {
-          auto topic = m_devicePrefix + *device->getUuid();
-          auto doc = m_jsonPrinter->print(device);
-
-          stringstream buffer;
-          buffer << doc;
-
-          if (m_client)
-
-            m_client->publish(topic, buffer.str());
-
-          return true;
-        }
-
-        bool Mqtt2Service::publish_Samples(device_model::DevicePtr device)
-        {
-          auto topic = m_devicePrefix + *device->getUuid();
-          auto doc = m_jsonPrinter->print(device);
-
-          stringstream buffer;
-          buffer << doc;
-
-          if (m_client)
-
-            m_client->publish(topic, buffer.str());
-
-          return true;
-        }
-
 
         bool Mqtt2Service::publish(asset::AssetPtr asset)
         {
