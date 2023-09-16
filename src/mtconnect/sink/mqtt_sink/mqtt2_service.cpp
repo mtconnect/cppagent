@@ -74,8 +74,9 @@ namespace mtconnect {
                              {configuration::AssetTopic, "MTConnect/Asset/"s},
                              {configuration::CurrentTopic, "MTConnect/Current/"s},
                              {configuration::SampleTopic, "MTConnect/Sample/"s},
-                             {configuration::CurrentInterval, 5000ms},
-                             {configuration::SampleInterval, 500ms},
+                             {configuration::MqttCurrentInterval, 5000ms},
+                             {configuration::MqttSampleInterval, 500ms},
+                             {configuration::MqttSampleCount, 1000},
                              {configuration::MqttPort, 1883},
                              {configuration::MqttTls, false}});
 
@@ -94,8 +95,10 @@ namespace mtconnect {
         m_currentPrefix = get<string>(m_options[configuration::CurrentTopic]);
         m_samplePrefix = get<string>(m_options[configuration::SampleTopic]);
 
-        m_currentInterval = *GetOption<Milliseconds>(m_options, configuration::CurrentInterval);
-        m_sampleInterval = *GetOption<Milliseconds>(m_options, configuration::SampleInterval);
+        m_currentInterval = *GetOption<Milliseconds>(m_options, configuration::MqttCurrentInterval);
+        m_sampleInterval = *GetOption<Milliseconds>(m_options, configuration::MqttSampleInterval);
+
+        m_sampleCount = *GetOption<int>(m_options, configuration::MqttSampleCount);
 
         int mqttFormatFlatto(GetOption<int>(options, configuration::MqttFormatFlat).value_or(7));
 
@@ -209,7 +212,7 @@ namespace mtconnect {
           bool endOfBuffer {true};
 
           auto observations = m_sinkContract->getCircularBuffer().getObservations(
-              1000, sampler->getFilter(), sampler->getSequence(), nullopt, end, firstSeq,
+              m_sampleCount, sampler->getFilter(), sampler->getSequence(), nullopt, end, firstSeq,
               endOfBuffer);
           doc = m_printer->printSample(m_instanceId,
                                        m_sinkContract->getCircularBuffer().getBufferSize(), end,

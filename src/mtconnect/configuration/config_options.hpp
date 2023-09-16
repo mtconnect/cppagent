@@ -84,8 +84,9 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(ObservationTopic);
     DECLARE_CONFIGURATION(CurrentTopic);
     DECLARE_CONFIGURATION(SampleTopic);
-    DECLARE_CONFIGURATION(CurrentInterval);
-    DECLARE_CONFIGURATION(SampleInterval);
+    DECLARE_CONFIGURATION(MqttCurrentInterval);
+    DECLARE_CONFIGURATION(MqttSampleInterval);
+    DECLARE_CONFIGURATION(MqttSampleCount);
     DECLARE_CONFIGURATION(MqttCaCert);
     DECLARE_CONFIGURATION(MqttCert);
     DECLARE_CONFIGURATION(MqttPrivateKey);

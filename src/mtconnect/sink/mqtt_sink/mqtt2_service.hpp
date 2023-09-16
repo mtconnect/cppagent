@@ -146,7 +146,8 @@ namespace mtconnect {
         std::unique_ptr<printer::JsonPrinter> m_printer;
 
         std::shared_ptr<MqttClient> m_client;
-        boost::asio::steady_timer m_currentTimer;  //! Timer for current requests
+        boost::asio::steady_timer m_currentTimer;
+        int m_sampleCount;  //! Timer for current requests
 
         std::map<std::string, FilterSet> m_filters;
         std::map<std::string, std::shared_ptr<AsyncSample>> m_samplers;
