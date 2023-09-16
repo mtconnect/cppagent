@@ -116,12 +116,18 @@ namespace mtconnect {
       protected:
         FilterSet &filterForDevice(const DevicePtr &device)
         {
-          auto filter = m_filters.find(*device->getUuid());
+          auto filter = m_filters.find(*(device->getUuid()));
           if (filter == m_filters.end())
           {
-            auto pos = m_filters.emplace();
+            auto pos = m_filters.emplace(*(device->getUuid()), FilterSet());
             filter = pos.first;
-            m_sinkContract->getDataItemsForPath(device, nullopt, filter->second);
+            auto &set = filter->second;
+            for (const auto &wdi : device->getDeviceDataItems())
+            {
+              const auto di = wdi.lock();
+              if (di)
+                set.insert(di->getId());
+            }
           }
           return filter->second;
         }
