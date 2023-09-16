@@ -29,8 +29,8 @@
 #include "mtconnect/configuration/agent_config.hpp"
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/pipeline/pipeline.hpp"
-#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 #include "mtconnect/sink/mqtt_sink/mqtt2_service.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 #include "mtconnect/sink/rest_sink/response.hpp"
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
 #include "mtconnect/sink/rest_sink/routing.hpp"
@@ -240,7 +240,7 @@ public:
       m_agent->addSink(m_mqttService);
     }
 
-   if (HasOption(options, "Mqtt2Sink"))
+    if (HasOption(options, "Mqtt2Sink"))
     {
       auto mqttContract = m_agent->makeSinkContract();
       mqttContract->m_pipelineContext = m_context;

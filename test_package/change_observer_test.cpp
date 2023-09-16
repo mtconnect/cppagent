@@ -199,7 +199,7 @@ namespace mtconnect {
       LOG(error) << message;
     };
     bool isRunning() override { return m_running; };
-    bool m_running { true };
+    bool m_running {true};
   };
 
   using namespace entity;
@@ -234,7 +234,7 @@ namespace mtconnect {
     }
 
     void TearDown() override { ChangeObserverTest::TearDown(); }
-    
+
     SequenceNumber_t addObservations(int count)
     {
       SequenceNumber_t start = m_buffer.getSequence(), last;
@@ -246,18 +246,17 @@ namespace mtconnect {
         EXPECT_EQ(start + i, last);
         EXPECT_EQ(0, errors.size());
       }
-      
+
       return last;
     }
-    
+
     bool waitFor(function<bool()> pred, int count = 10)
     {
       for (int i = 0; !pred() && i < count; i++)
         m_context.run_one_for(50ms);
-      
+
       return pred();
     }
-
 
     buffer::CircularBuffer m_buffer {8, 4};
     map<string, DataItemPtr> m_signalers;
@@ -392,12 +391,12 @@ namespace mtconnect {
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
 
-    auto s  = addObservations(3);
+    auto s = addObservations(3);
     ASSERT_EQ(6ull, s);
 
     called = false;
     expected = 4;
-    waitFor([&]{ return called; });
+    waitFor([&] { return called; });
     ASSERT_TRUE(called);
     ASSERT_EQ(5, observer->getSequence());
     ASSERT_FALSE(observer->isEndOfBuffer());
@@ -432,12 +431,12 @@ namespace mtconnect {
     called = false;
     expected = 4;
     end = true;
-    waitFor([&]{ return called; });
+    waitFor([&] { return called; });
     ASSERT_TRUE(called);
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
   }
-  
+
   TEST_F(AsyncObserverTest, should_stop_if_not_running)
   {
     FilterSet filter {"a", "b"};
@@ -467,7 +466,7 @@ namespace mtconnect {
     called = false;
     expected = 4;
     end = true;
-    waitFor([&]{ return called; });
+    waitFor([&] { return called; });
     ASSERT_TRUE(called);
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
@@ -476,7 +475,7 @@ namespace mtconnect {
     called = false;
     expected = 4;
     end = true;
-    waitFor([&]{ return called; });
+    waitFor([&] { return called; });
     ASSERT_FALSE(called);
   }
 }  // namespace mtconnect

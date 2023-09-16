@@ -77,6 +77,13 @@ namespace mtconnect {
       /// @return boolean either topic sucessfully connected and published
       virtual bool publish(const std::string &topic, const std::string &payload) = 0;
 
+      /// @brief Publish Topic to the Mqtt Client and call the async handler
+      /// @param topic Publishing to the topic
+      /// @param payload Publishing to the payload
+      /// @return boolean either topic sucessfully connected and published
+      virtual bool asyncPublish(const std::string &topic, const std::string &payload,
+                                std::function<void(std::error_code)> callback) = 0;
+
       /// @brief Mqtt Client is connected
       /// @return bool Either Client is sucessfully connected or not
       auto isConnected() { return m_connected; }

@@ -194,7 +194,6 @@ TEST_F(MqttSink2Test, mqtt_sink_flat_formatt_check)
   ASSERT_TRUE(waitFor(10s, [&service]() { return service->isConnected(); }));
 }
 
-
 TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe)
 {
   ConfigOptions options;
@@ -285,7 +284,8 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
   auto handler = make_unique<ClientHandler>();
   bool gotCurrent = false;
   handler->m_receive = [&gotCurrent, &parser](std::shared_ptr<MqttClient> client,
-                                             const std::string &topic, const std::string &payload) {
+                                              const std::string &topic,
+                                              const std::string &payload) {
     EXPECT_EQ("MTConnect/e481314c-07c4-525f-966f-71dd53b8d717/Current", topic);
 
     ErrorList list;
