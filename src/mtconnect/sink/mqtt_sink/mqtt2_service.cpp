@@ -70,7 +70,7 @@ namespace mtconnect {
                     {configuration::MqttPassword, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
-                             {configuration::DeviceTopic, "MTConnect/Device/"s},
+                             {configuration::DeviceTopic, "MTConnect/Probe/"s},
                              {configuration::AssetTopic, "MTConnect/Asset/"s},
                              {configuration::CurrentTopic, "MTConnect/Current/"s},
                              {configuration::SampleTopic, "MTConnect/Sample/"s},
@@ -231,7 +231,7 @@ namespace mtconnect {
 
       void Mqtt2Service::publishCurrent(boost::system::error_code ec)
       {
-        if (ec && ec != boost::asio::error::operation_aborted)
+        if (ec)
         {
           LOG(warning) << "Mqtt2Service::publishCurrent: " << ec.message();
           return;
