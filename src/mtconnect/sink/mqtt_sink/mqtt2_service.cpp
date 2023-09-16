@@ -74,7 +74,7 @@ namespace mtconnect {
                              {configuration::AssetTopic, "MTConnect/Asset/"s},
                              {configuration::CurrentTopic, "MTConnect/Current/"s},
                              {configuration::SampleTopic, "MTConnect/Sample/"s},
-                             {configuration::MqttCurrentInterval, 5000ms},
+                             {configuration::MqttCurrentInterval, 10000ms},
                              {configuration::MqttSampleInterval, 500ms},
                              {configuration::MqttSampleCount, 1000},
                              {configuration::MqttPort, 1883},
