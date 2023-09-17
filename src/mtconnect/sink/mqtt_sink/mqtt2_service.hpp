@@ -147,7 +147,7 @@ namespace mtconnect {
             }
           }
           
-          if (formatted.find("{device}") == std::string::npos)
+          if (formatted.find("[device]") == std::string::npos)
           {
             if (formatted.back() != '/')
               formatted.append("/");
@@ -155,7 +155,7 @@ namespace mtconnect {
           }
           else
           {
-            boost::replace_all(formatted, "{device}", uuid);
+            boost::replace_all(formatted, "[device]", uuid);
           }
           return formatted;
         }

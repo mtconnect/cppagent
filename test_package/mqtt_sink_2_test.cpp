@@ -343,7 +343,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_with_uuid_first)
   ASSERT_TRUE(startClient());
   m_client->subscribe("MTConnect/000/Probe");
 
-  createAgent("", {{configuration::ProbeTopic, "MTConnect/{device}/Probe"s}});
+  createAgent("", {{configuration::ProbeTopic, "MTConnect/[device]/Probe"s}});
 
   auto service = m_agentTestHelper->getMqtt2Service();
 
