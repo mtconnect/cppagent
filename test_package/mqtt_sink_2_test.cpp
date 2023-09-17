@@ -22,8 +22,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "json_helper.hpp"
 #include "agent_test_helper.hpp"
+#include "json_helper.hpp"
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/entity/entity.hpp"
@@ -248,8 +248,8 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
 
   auto handler = make_unique<ClientHandler>();
   bool gotSample = false;
-  handler->m_receive = [&gotSample](std::shared_ptr<MqttClient> client,
-                                             const std::string &topic, const std::string &payload) {
+  handler->m_receive = [&gotSample](std::shared_ptr<MqttClient> client, const std::string &topic,
+                                    const std::string &payload) {
     EXPECT_EQ("MTConnect/Sample/000", topic);
 
     auto jdoc = json::parse(payload);
@@ -269,7 +269,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
 
   ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
   ASSERT_FALSE(gotSample);
-  
+
   m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
   ASSERT_TRUE(waitFor(10s, [&gotSample]() { return gotSample; }));
 }
@@ -285,9 +285,8 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
 
   auto handler = make_unique<ClientHandler>();
   bool gotCurrent = false;
-  handler->m_receive = [&gotCurrent](std::shared_ptr<MqttClient> client,
-                                              const std::string &topic,
-                                              const std::string &payload) {
+  handler->m_receive = [&gotCurrent](std::shared_ptr<MqttClient> client, const std::string &topic,
+                                     const std::string &payload) {
     EXPECT_EQ("MTConnect/Current/000", topic);
 
     auto jdoc = json::parse(payload);
@@ -311,7 +310,6 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
   gotCurrent = false;
   ASSERT_TRUE(waitFor(1s, [&gotCurrent]() { return gotCurrent; }));
 }
-
 
 TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_with_uuid_first)
 {

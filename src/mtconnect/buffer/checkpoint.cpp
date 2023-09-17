@@ -173,7 +173,7 @@ namespace mtconnect {
           m_observations[event.first] = dynamic_pointer_cast<Observation>(event.second->getptr());
       }
     }
-    
+
     static inline void addToList(ObservationList &list, ObservationPtr obs)
     {
       if (obs->getDataItem()->isCondition())

@@ -42,7 +42,7 @@ namespace mtconnect {
       // get obeservation in
       // create a json printer
       // call print
-      
+
       Mqtt2Service::Mqtt2Service(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
                                  const ConfigOptions &options, const ptree &config)
         : Sink("Mqtt2Service", std::move(contract)),
@@ -89,19 +89,18 @@ namespace mtconnect {
 
           pubishInitialContent();
         };
-        
-        int maxTopicDepth { GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7) };
+
+        int maxTopicDepth {GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7)};
 
         m_deviceTopic = getTopic(configuration::ProbeTopic, maxTopicDepth);
         m_assetTopic = getTopic(configuration::AssetTopic, maxTopicDepth);
-        m_currentTopic =getTopic(configuration::CurrentTopic, maxTopicDepth);
+        m_currentTopic = getTopic(configuration::CurrentTopic, maxTopicDepth);
         m_sampleTopic = getTopic(configuration::SampleTopic, maxTopicDepth);
 
         m_currentInterval = *GetOption<Milliseconds>(m_options, configuration::MqttCurrentInterval);
         m_sampleInterval = *GetOption<Milliseconds>(m_options, configuration::MqttSampleInterval);
 
         m_sampleCount = *GetOption<int>(m_options, configuration::MqttSampleCount);
-        
 
         if (IsOptionSet(m_options, configuration::MqttTls))
         {
@@ -149,9 +148,9 @@ namespace mtconnect {
 
         bool isRunning() override
         {
-          if (!m_sink.lock())
+          if (m_sink.expired())
             return false;
-          
+
           auto client = m_client.lock();
           return client && client->isRunning() && client->isConnected();
         }
@@ -168,10 +167,9 @@ namespace mtconnect {
         for (auto &dev : m_sinkContract->getDevices())
         {
           publish(dev);
-          
+
           AssetList list;
-          m_sinkContract->getAssetStorage()->getAssets(list, 100000,
-                                                       true, *(dev->getUuid()));
+          m_sinkContract->getAssetStorage()->getAssets(list, 100000, true, *(dev->getUuid()));
           for (auto &asset : list)
           {
             publish(asset);
@@ -311,9 +309,9 @@ namespace mtconnect {
         if (topic.back() != '/')
           topic.append("/");
         topic.append(asset->getAssetId());
-        
+
         LOG(debug) << "Publishing Asset to topic: " << topic;
-        
+
         auto doc = m_jsonPrinter->print(asset);
 
         stringstream buffer;

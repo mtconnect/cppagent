@@ -324,7 +324,7 @@ namespace mtconnect {
           {
             LOG(warning) << "MqttClientImpl::connect: cannot connect: " << ec.message()
                          << ", will retry";
-            
+
             reconnect();
           }
           else

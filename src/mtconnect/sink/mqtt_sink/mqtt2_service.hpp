@@ -131,11 +131,11 @@ namespace mtconnect {
           }
           return filter->second;
         }
-        
+
         std::string formatTopic(const std::string &topic, const DevicePtr device)
         {
           string uuid;
-          string formatted { topic };
+          string formatted {topic};
           if (!device)
             uuid = "Unknown";
           else
@@ -146,7 +146,7 @@ namespace mtconnect {
               uuid.insert(0, "Agent.");
             }
           }
-          
+
           if (formatted.find("[device]") == std::string::npos)
           {
             if (formatted.back() != '/')
@@ -159,15 +159,16 @@ namespace mtconnect {
           }
           return formatted;
         }
-        
+
         std::string getTopic(const std::string &option, int maxTopicDepth)
         {
-          auto topic { get<string>(m_options[option]) };
+          auto topic {get<string>(m_options[option])};
           auto depth = std::count(topic.begin(), topic.end(), '/');
-          
+
           if (depth > maxTopicDepth)
-            LOG(warning) << "Mqtt Option " << option << " exceeds maximum number of levels: " << maxTopicDepth;
-          
+            LOG(warning) << "Mqtt Option " << option
+                         << " exceeds maximum number of levels: " << maxTopicDepth;
+
           return topic;
         }
 
