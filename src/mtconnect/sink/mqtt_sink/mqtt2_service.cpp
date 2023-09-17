@@ -303,17 +303,17 @@ namespace mtconnect {
 
       bool Mqtt2Service::publish(asset::AssetPtr asset)
       {
-        auto topic = m_assetTopic;
         auto uuid = asset->getDeviceUuid();
+        DevicePtr dev;
         if (uuid)
-        {
-          topic.append(*uuid);
+          dev = m_sinkContract->findDeviceByUUIDorName(*uuid);
+        auto topic = formatTopic(m_assetTopic, dev);
+        if (topic.back() != '/')
           topic.append("/");
-        }
-        else
-          topic.append("Unknown/");
+        topic.append(asset->getAssetId());
         
-        topic.append(get<string>(asset->getIdentity()));
+        LOG(debug) << "Publishing Asset to topic: " << topic;
+        
         auto doc = m_jsonPrinter->print(asset);
 
         stringstream buffer;
