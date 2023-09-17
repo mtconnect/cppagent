@@ -70,7 +70,7 @@ namespace mtconnect {
                     {configuration::MqttPassword, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
-                             {configuration::DeviceTopic, "MTConnect/Probe/"s},
+                             {configuration::ProbeTopic, "MTConnect/Probe/"s},
                              {configuration::AssetTopic, "MTConnect/Asset/"s},
                              {configuration::CurrentTopic, "MTConnect/Current/"s},
                              {configuration::SampleTopic, "MTConnect/Sample/"s},
@@ -90,7 +90,7 @@ namespace mtconnect {
           pubishInitialContent();
         };
 
-        m_devicePrefix = get<string>(m_options[configuration::DeviceTopic]);
+        m_devicePrefix = get<string>(m_options[configuration::ProbeTopic]);
         m_assetPrefix = get<string>(m_options[configuration::AssetTopic]);
         m_currentPrefix = get<string>(m_options[configuration::CurrentTopic]);
         m_samplePrefix = get<string>(m_options[configuration::SampleTopic]);
@@ -167,6 +167,14 @@ namespace mtconnect {
         for (auto &dev : m_sinkContract->getDevices())
         {
           publish(dev);
+          
+          AssetList list;
+          m_sinkContract->getAssetStorage()->getAssets(list, 100000,
+                                                       true, *(dev->getUuid()));
+          for (auto &asset : list)
+          {
+            publish(asset);
+          }
         }
 
         auto seq = m_sinkContract->getCircularBuffer().getSequence();
@@ -183,13 +191,6 @@ namespace mtconnect {
           sampler->handlerCompleted();
         }
 
-        AssetList list;
-        m_sinkContract->getAssetStorage()->getAssets(list, 100000);
-        for (auto &asset : list)
-        {
-          publish(asset);
-        }
-
         publishCurrent(boost::system::error_code {});
       }
 
@@ -198,7 +199,7 @@ namespace mtconnect {
           std::shared_ptr<observation::AsyncObserver> observer)
       {
         auto sampler = std::dynamic_pointer_cast<AsyncSample>(observer);
-        auto topic = m_samplePrefix + *(sampler->m_device->getUuid());
+        auto topic = m_samplePrefix + getDeviceUuid(sampler->m_device);
 
         SequenceNumber_t end {0};
         std::string doc;
@@ -245,7 +246,7 @@ namespace mtconnect {
 
         for (auto &device : m_sinkContract->getDevices())
         {
-          auto topic = m_currentPrefix + *(device->getUuid());
+          auto topic = m_currentPrefix + getDeviceUuid(device);
           LOG(debug) << "Publishing current for: " << topic;
 
           ObservationList observations;
@@ -285,7 +286,7 @@ namespace mtconnect {
       {
         m_filters.clear();
 
-        auto topic = m_devicePrefix + *device->getUuid();
+        auto topic = m_devicePrefix + getDeviceUuid(device);
         auto doc = m_jsonPrinter->print(device);
 
         stringstream buffer;
@@ -299,7 +300,17 @@ namespace mtconnect {
 
       bool Mqtt2Service::publish(asset::AssetPtr asset)
       {
-        auto topic = m_assetPrefix + get<string>(asset->getIdentity());
+        auto topic = m_assetPrefix;
+        auto uuid = asset->getDeviceUuid();
+        if (uuid)
+        {
+          topic.append(*uuid);
+          topic.append("/");
+        }
+        else
+          topic.append("Unknown/");
+        
+        topic.append(get<string>(asset->getIdentity()));
         auto doc = m_jsonPrinter->print(asset);
 
         stringstream buffer;

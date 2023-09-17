@@ -114,7 +114,7 @@ namespace mtconnect {
         bool isConnected() { return m_client && m_client->isConnected(); }
 
       protected:
-        FilterSet &filterForDevice(const DevicePtr &device)
+        const FilterSet &filterForDevice(const DevicePtr &device)
         {
           auto filter = m_filters.find(*(device->getUuid()));
           if (filter == m_filters.end())
@@ -130,6 +130,21 @@ namespace mtconnect {
             }
           }
           return filter->second;
+        }
+        
+        std::string getDeviceUuid(const DevicePtr device)
+        {
+          if (!device)
+            return "Unknown";
+          else
+          {
+            string uuid = *(device->getUuid());
+            if (std::dynamic_pointer_cast<device_model::AgentDevice>(device))
+            {
+              uuid.insert(0, "Agent.");
+            }
+            return uuid;
+          }
         }
 
       protected:

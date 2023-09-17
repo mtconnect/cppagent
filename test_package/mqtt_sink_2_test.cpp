@@ -182,7 +182,7 @@ protected:
 
 TEST_F(MqttSink2Test, mqtt_sink_flat_formatt_check)
 {
-  ConfigOptions options {{MqttFormatFlat, 9}, {DeviceTopic, "Device/F/l/a/t/F/o/r/m/a/t"s}};
+  ConfigOptions options {{MqttFormatFlat, 9}, {ProbeTopic, "Device/F/l/a/t/F/o/r/m/a/t"s}};
   createServer(options);
   startServer();
 
