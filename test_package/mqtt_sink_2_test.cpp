@@ -22,6 +22,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "json_helper.hpp"
 #include "agent_test_helper.hpp"
 #include "mtconnect/buffer/checkpoint.hpp"
 #include "mtconnect/device_model/data_item/data_item.hpp"
@@ -31,6 +32,7 @@
 #include "mtconnect/mqtt/mqtt_server_impl.hpp"
 #include "mtconnect/printer//json_printer.hpp"
 #include "mtconnect/sink/mqtt_sink/mqtt2_service.hpp"
+#include "test_utilities.hpp"
 
 using namespace std;
 using namespace mtconnect;
@@ -114,7 +116,7 @@ protected:
   bool waitFor(const chrono::duration<Rep, Period> &time, function<bool()> pred)
   {
     boost::asio::steady_timer timer(m_agentTestHelper->m_ioContext);
-    timer.expires_from_now(time);
+    timer.expires_after(time);
     bool timeout = false;
     timer.async_wait([&timeout](boost::system::error_code ec) {
       if (!ec)
@@ -152,9 +154,11 @@ protected:
                         {MqttPort, m_port},
                         {MqttTls, false},
                         {AutoAvailable, false},
+                        {MqttCurrentInterval, 200ms},
+                        {MqttSampleInterval, 100ms},
                         {RealTime, false}});
     m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext,
-                                                                  opts, move(handler));
+                                                                  opts, std::move(handler));
   }
 
   bool startClient()
@@ -207,7 +211,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe)
   bool gotDevice = false;
   handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
                                              const std::string &topic, const std::string &payload) {
-    EXPECT_EQ("MTConnect/Device/000", topic);
+    EXPECT_EQ("MTConnect/Probe/000", topic);
 
     ErrorList list;
     auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
@@ -220,9 +224,9 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe)
     gotDevice = true;
   };
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
-  m_client->subscribe("MTConnect/Device/000");
+  m_client->subscribe("MTConnect/Probe/000");
 
   createAgent();
 
@@ -230,7 +234,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe)
 
   ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
 
-  waitFor(1s, [&gotDevice]() { return gotDevice; });
+  ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
 }
 
 TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
@@ -244,32 +248,30 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Sample)
 
   auto handler = make_unique<ClientHandler>();
   bool gotSample = false;
-  handler->m_receive = [&gotSample, &parser](std::shared_ptr<MqttClient> client,
+  handler->m_receive = [&gotSample](std::shared_ptr<MqttClient> client,
                                              const std::string &topic, const std::string &payload) {
-    EXPECT_EQ("MTConnect/000/Sample", topic);
+    EXPECT_EQ("MTConnect/Sample/000", topic);
 
-    ErrorList list;
-    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
-    EXPECT_EQ(0, list.size());
-    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
-    EXPECT_TRUE(dev);
-    EXPECT_EQ("LinuxCNC", dev->getComponentName());
-    EXPECT_EQ("000", *dev->getUuid());
+    auto jdoc = json::parse(payload);
+    auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream"_json_pointer);
+    EXPECT_EQ(string("LinuxCNC"), streams.at("/name"_json_pointer).get<string>());
 
     gotSample = true;
   };
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
-  m_client->subscribe("MTConnect/000/Sample");
+  m_client->subscribe("MTConnect/Sample/000");
 
   createAgent();
 
   auto service = m_agentTestHelper->getMqtt2Service();
 
   ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
-
-  waitFor(1s, [&gotSample]() { return gotSample; });
+  ASSERT_FALSE(gotSample);
+  
+  m_agentTestHelper->m_adapter->processData("2021-02-01T12:00:00Z|line|204");
+  ASSERT_TRUE(waitFor(10s, [&gotSample]() { return gotSample; }));
 }
 
 TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
@@ -283,31 +285,29 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
 
   auto handler = make_unique<ClientHandler>();
   bool gotCurrent = false;
-  handler->m_receive = [&gotCurrent, &parser](std::shared_ptr<MqttClient> client,
+  handler->m_receive = [&gotCurrent](std::shared_ptr<MqttClient> client,
                                               const std::string &topic,
                                               const std::string &payload) {
-    EXPECT_EQ("MTConnect/e481314c-07c4-525f-966f-71dd53b8d717/Current", topic);
+    EXPECT_EQ("MTConnect/Current/000", topic);
 
-    ErrorList list;
-    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
-    EXPECT_EQ(0, list.size());
-    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
-    EXPECT_TRUE(dev);
-    EXPECT_EQ("LinuxCNC", dev->getComponentName());
-    EXPECT_EQ("e481314c-07c4-525f-966f-71dd53b8d717", *dev->getUuid());
+    auto jdoc = json::parse(payload);
+    auto streams = jdoc.at("/MTConnectStreams/Streams/0/DeviceStream"_json_pointer);
+    EXPECT_EQ(string("LinuxCNC"), streams.at("/name"_json_pointer).get<string>());
 
     gotCurrent = true;
   };
 
-  createClient(options, move(handler));
+  createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
-  m_client->subscribe("MTConnect/e481314c-07c4-525f-966f-71dd53b8d717/Current");
+  m_client->subscribe("MTConnect/Current/000");
 
   createAgent();
 
   auto service = m_agentTestHelper->getMqtt2Service();
 
   ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
+  ASSERT_TRUE(gotCurrent);
 
-  waitFor(1s, [&gotCurrent]() { return gotCurrent; });
+  gotCurrent = false;
+  ASSERT_TRUE(waitFor(10s, [&gotCurrent]() { return gotCurrent; }));
 }
