@@ -147,7 +147,16 @@ namespace mtconnect {
             }
           }
           
-          boost::replace_all(formatted, "{device}", uuid);
+          if (formatted.find("{device}") == std::string::npos)
+          {
+            if (formatted.back() != '/')
+              formatted.append("/");
+            formatted.append(uuid);
+          }
+          else
+          {
+            boost::replace_all(formatted, "{device}", uuid);
+          }
           return formatted;
         }
         
