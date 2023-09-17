@@ -97,7 +97,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttConnectInterval);
     DECLARE_CONFIGURATION(MqttUserName);
     DECLARE_CONFIGURATION(MqttPassword);
-    DECLARE_CONFIGURATION(MqttFormatFlat);
+    DECLARE_CONFIGURATION(MqttMaxTopicDepth);
     ///@}
 
     /// @name Adapter Configuration

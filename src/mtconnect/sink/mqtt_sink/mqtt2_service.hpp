@@ -132,26 +132,41 @@ namespace mtconnect {
           return filter->second;
         }
         
-        std::string getDeviceUuid(const DevicePtr device)
+        std::string formatTopic(const std::string &topic, const DevicePtr device)
         {
+          string uuid;
+          string formatted { topic };
           if (!device)
-            return "Unknown";
+            uuid = "Unknown";
           else
           {
-            string uuid = *(device->getUuid());
+            uuid = *(device->getUuid());
             if (std::dynamic_pointer_cast<device_model::AgentDevice>(device))
             {
               uuid.insert(0, "Agent.");
             }
-            return uuid;
           }
+          
+          boost::replace_all(formatted, "{device}", uuid);
+          return formatted;
+        }
+        
+        std::string getTopic(const std::string &option, int maxTopicDepth)
+        {
+          auto topic { get<string>(m_options[option]) };
+          auto depth = std::count(topic.begin(), topic.end(), '/');
+          
+          if (depth > maxTopicDepth)
+            LOG(warning) << "Mqtt Option " << option << " exceeds maximum number of levels: " << maxTopicDepth;
+          
+          return topic;
         }
 
       protected:
-        std::string m_devicePrefix;   //! Device topic prefix
-        std::string m_assetPrefix;    //! Asset topic prefix
-        std::string m_currentPrefix;  //! Current topic prefix
-        std::string m_samplePrefix;   //! Sample topic prefix
+        std::string m_deviceTopic;   //! Device topic prefix
+        std::string m_assetTopic;    //! Asset topic prefix
+        std::string m_currentTopic;  //! Current topic prefix
+        std::string m_sampleTopic;   //! Sample topic prefix
 
         std::chrono::milliseconds m_currentInterval;  //! Interval in ms to update current
         std::chrono::milliseconds m_sampleInterval;   //! min interval in ms to update sample

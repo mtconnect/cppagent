@@ -186,7 +186,7 @@ protected:
 
 TEST_F(MqttSink2Test, mqtt_sink_flat_formatt_check)
 {
-  ConfigOptions options {{MqttFormatFlat, 9}, {ProbeTopic, "Device/F/l/a/t/F/o/r/m/a/t"s}};
+  ConfigOptions options {{MqttMaxTopicDepth, 9}, {ProbeTopic, "Device/F/l/a/t/F/o/r/m/a/t"s}};
   createServer(options);
   startServer();
 
@@ -310,4 +310,44 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
 
   gotCurrent = false;
   ASSERT_TRUE(waitFor(10s, [&gotCurrent]() { return gotCurrent; }));
+}
+
+
+TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_with_uuid_first)
+{
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+
+  entity::JsonParser parser;
+
+  auto handler = make_unique<ClientHandler>();
+  bool gotDevice = false;
+  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
+                                             const std::string &topic, const std::string &payload) {
+    EXPECT_EQ("MTConnect/000/Probe", topic);
+
+    ErrorList list;
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    EXPECT_EQ(0, list.size());
+    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
+    EXPECT_TRUE(dev);
+    EXPECT_EQ("LinuxCNC", dev->getComponentName());
+    EXPECT_EQ("000", *dev->getUuid());
+
+    gotDevice = true;
+  };
+
+  createClient(options, std::move(handler));
+  ASSERT_TRUE(startClient());
+  m_client->subscribe("MTConnect/000/Probe");
+
+  createAgent("", {{configuration::ProbeTopic, "MTConnect/{device}/Probe"s}});
+
+  auto service = m_agentTestHelper->getMqtt2Service();
+
+  ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
+
+  ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
 }

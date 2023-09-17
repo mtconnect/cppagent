@@ -42,7 +42,7 @@ namespace mtconnect {
       // get obeservation in
       // create a json printer
       // call print
-
+      
       Mqtt2Service::Mqtt2Service(boost::asio::io_context &context, sink::SinkContractPtr &&contract,
                                  const ConfigOptions &options, const ptree &config)
         : Sink("Mqtt2Service", std::move(contract)),
@@ -70,10 +70,10 @@ namespace mtconnect {
                     {configuration::MqttPassword, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
-                             {configuration::ProbeTopic, "MTConnect/Probe/"s},
-                             {configuration::AssetTopic, "MTConnect/Asset/"s},
-                             {configuration::CurrentTopic, "MTConnect/Current/"s},
-                             {configuration::SampleTopic, "MTConnect/Sample/"s},
+                             {configuration::ProbeTopic, "MTConnect/Probe/{device}"s},
+                             {configuration::AssetTopic, "MTConnect/Asset/{device}"s},
+                             {configuration::CurrentTopic, "MTConnect/Current/{device}"s},
+                             {configuration::SampleTopic, "MTConnect/Sample/{device}"s},
                              {configuration::MqttCurrentInterval, 10000ms},
                              {configuration::MqttSampleInterval, 500ms},
                              {configuration::MqttSampleCount, 1000},
@@ -89,27 +89,19 @@ namespace mtconnect {
 
           pubishInitialContent();
         };
+        
+        int maxTopicDepth { GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7) };
 
-        m_devicePrefix = get<string>(m_options[configuration::ProbeTopic]);
-        m_assetPrefix = get<string>(m_options[configuration::AssetTopic]);
-        m_currentPrefix = get<string>(m_options[configuration::CurrentTopic]);
-        m_samplePrefix = get<string>(m_options[configuration::SampleTopic]);
+        m_deviceTopic = getTopic(configuration::ProbeTopic, maxTopicDepth);
+        m_assetTopic = getTopic(configuration::AssetTopic, maxTopicDepth);
+        m_currentTopic =getTopic(configuration::CurrentTopic, maxTopicDepth);
+        m_sampleTopic = getTopic(configuration::SampleTopic, maxTopicDepth);
 
         m_currentInterval = *GetOption<Milliseconds>(m_options, configuration::MqttCurrentInterval);
         m_sampleInterval = *GetOption<Milliseconds>(m_options, configuration::MqttSampleInterval);
 
         m_sampleCount = *GetOption<int>(m_options, configuration::MqttSampleCount);
-
-        int mqttFormatFlatto(GetOption<int>(options, configuration::MqttFormatFlat).value_or(7));
-
-        auto nDeviceFormatFlat = std::count(m_devicePrefix.begin(), m_devicePrefix.end(), '/');
-        auto nAssertFormatFlat = std::count(m_assetPrefix.begin(), m_assetPrefix.end(), '/');
-        auto currentTopicDepth = std::count(m_currentPrefix.begin(), m_currentPrefix.end(), '/');
-        auto sampleTopicDepth = std::count(m_samplePrefix.begin(), m_samplePrefix.end(), '/');
-
-        if (nDeviceFormatFlat > mqttFormatFlatto || nAssertFormatFlat > mqttFormatFlatto ||
-            currentTopicDepth > mqttFormatFlatto || sampleTopicDepth > mqttFormatFlatto)
-          LOG(warning) << "Mqtt Flat Format is Exceeds the limit allowed";
+        
 
         if (IsOptionSet(m_options, configuration::MqttTls))
         {
@@ -209,7 +201,7 @@ namespace mtconnect {
           std::shared_ptr<observation::AsyncObserver> observer)
       {
         auto sampler = std::dynamic_pointer_cast<AsyncSample>(observer);
-        auto topic = m_samplePrefix + getDeviceUuid(sampler->m_device);
+        auto topic = formatTopic(m_sampleTopic, sampler->m_device);
         LOG(debug) << "Publishing sample for: " << topic;
 
         SequenceNumber_t end {0};
@@ -257,7 +249,7 @@ namespace mtconnect {
 
         for (auto &device : m_sinkContract->getDevices())
         {
-          auto topic = m_currentPrefix + getDeviceUuid(device);
+          auto topic = formatTopic(m_currentTopic, device);
           LOG(debug) << "Publishing current for: " << topic;
 
           ObservationList observations;
@@ -297,7 +289,7 @@ namespace mtconnect {
       {
         m_filters.clear();
 
-        auto topic = m_devicePrefix + getDeviceUuid(device);
+        auto topic = formatTopic(m_deviceTopic, device);
         auto doc = m_jsonPrinter->print(device);
 
         stringstream buffer;
@@ -311,7 +303,7 @@ namespace mtconnect {
 
       bool Mqtt2Service::publish(asset::AssetPtr asset)
       {
-        auto topic = m_assetPrefix;
+        auto topic = m_assetTopic;
         auto uuid = asset->getDeviceUuid();
         if (uuid)
         {
