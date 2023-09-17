@@ -155,10 +155,19 @@ namespace mtconnect {
           LOG(error) << "MQTT Sample Failed: " << message;
         }
 
-        bool isRunning() override { return m_client->isRunning(); }
+        bool isRunning() override
+        {
+          if (!m_sink.lock())
+            return false;
+          
+          auto client = m_client.lock();
+          return client && client->isRunning() && client->isConnected();
+        }
 
         DevicePtr m_device;
-        std::shared_ptr<MqttClient> m_client;
+        std::weak_ptr<MqttClient> m_client;
+        std::weak_ptr<sink::Sink>
+            m_sink;  //!  weak shared pointer to the sink. handles shutdown timer race
       };
 
       void Mqtt2Service::pubishInitialContent()
@@ -184,6 +193,7 @@ namespace mtconnect {
           auto sampler =
               make_shared<AsyncSample>(m_strand, m_sinkContract->getCircularBuffer(),
                                        std::move(filterSet), m_sampleInterval, 600s, m_client, dev);
+          sampler->m_sink = getptr();
           sampler->m_handler = boost::bind(&Mqtt2Service::publishSample, this, _1);
           sampler->observe(seq, [this](const std::string &id) {
             return m_sinkContract->getDataItemById(id).get();
@@ -200,6 +210,7 @@ namespace mtconnect {
       {
         auto sampler = std::dynamic_pointer_cast<AsyncSample>(observer);
         auto topic = m_samplePrefix + getDeviceUuid(sampler->m_device);
+        LOG(debug) << "Publishing sample for: " << topic;
 
         SequenceNumber_t end {0};
         std::string doc;

@@ -173,6 +173,7 @@ namespace mtconnect {
 
         client->set_error_handler([this](mqtt::error_code ec) {
           LOG(error) << "error: " << ec.message();
+          m_connected = false;
           if (m_running)
             reconnect();
         });
@@ -323,6 +324,7 @@ namespace mtconnect {
           {
             LOG(warning) << "MqttClientImpl::connect: cannot connect: " << ec.message()
                          << ", will retry";
+            
             reconnect();
           }
           else
