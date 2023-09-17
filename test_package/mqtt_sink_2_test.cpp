@@ -91,6 +91,8 @@ protected:
     ConfigOptions opts(options);
     MergeOptions(opts, {{"Mqtt2Sink", true},
                         {configuration::MqttPort, m_port},
+                        {MqttCurrentInterval, 200ms},
+                        {MqttSampleInterval, 100ms},
                         {configuration::MqttHost, "127.0.0.1"s}});
     m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 25, false, true, opts);
     addAdapter();
@@ -154,8 +156,6 @@ protected:
                         {MqttPort, m_port},
                         {MqttTls, false},
                         {AutoAvailable, false},
-                        {MqttCurrentInterval, 200ms},
-                        {MqttSampleInterval, 100ms},
                         {RealTime, false}});
     m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext,
                                                                   opts, std::move(handler));
@@ -309,7 +309,7 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Current)
   ASSERT_TRUE(gotCurrent);
 
   gotCurrent = false;
-  ASSERT_TRUE(waitFor(10s, [&gotCurrent]() { return gotCurrent; }));
+  ASSERT_TRUE(waitFor(1s, [&gotCurrent]() { return gotCurrent; }));
 }
 
 
@@ -344,6 +344,45 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_with_uuid_first)
   m_client->subscribe("MTConnect/000/Probe");
 
   createAgent("", {{configuration::ProbeTopic, "MTConnect/{device}/Probe"s}});
+
+  auto service = m_agentTestHelper->getMqtt2Service();
+
+  ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
+
+  ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
+}
+
+TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_no_device_in_format)
+{
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+
+  entity::JsonParser parser;
+
+  auto handler = make_unique<ClientHandler>();
+  bool gotDevice = false;
+  handler->m_receive = [&gotDevice, &parser](std::shared_ptr<MqttClient> client,
+                                             const std::string &topic, const std::string &payload) {
+    EXPECT_EQ("MTConnect/Probe/000", topic);
+
+    ErrorList list;
+    auto ptr = parser.parse(device_model::Device::getRoot(), payload, "2.0", list);
+    EXPECT_EQ(0, list.size());
+    auto dev = dynamic_pointer_cast<device_model::Device>(ptr);
+    EXPECT_TRUE(dev);
+    EXPECT_EQ("LinuxCNC", dev->getComponentName());
+    EXPECT_EQ("000", *dev->getUuid());
+
+    gotDevice = true;
+  };
+
+  createClient(options, std::move(handler));
+  ASSERT_TRUE(startClient());
+  m_client->subscribe("MTConnect/Probe/000");
+
+  createAgent("", {{configuration::ProbeTopic, "MTConnect/Probe"s}});
 
   auto service = m_agentTestHelper->getMqtt2Service();
 
