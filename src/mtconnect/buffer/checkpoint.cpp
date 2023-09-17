@@ -173,27 +173,42 @@ namespace mtconnect {
           m_observations[event.first] = dynamic_pointer_cast<Observation>(event.second->getptr());
       }
     }
+    
+    static inline void addToList(ObservationList &list, ObservationPtr obs)
+    {
+      if (obs->getDataItem()->isCondition())
+      {
+        for (auto ev = dynamic_pointer_cast<Condition>(obs); ev; ev = ev->getPrev())
+        {
+          list.push_back(ev);
+        }
+      }
+      else
+      {
+        list.push_back(obs);
+      }
+    }
 
     void Checkpoint::getObservations(ObservationList &list, const FilterSetOpt &filterSet) const
     {
-      for (const auto &obs : m_observations)
+      if (filterSet)
       {
-        auto e = obs.second;
-        if (!e->isOrphan())
+        for (const auto &id : *filterSet)
         {
-          if (!filterSet || (e && filterSet->count(e->getDataItem()->getId()) > 0))
+          auto obs = m_observations.find(id);
+          if (obs != m_observations.end() && !obs->second->isOrphan())
           {
-            if (e->getDataItem()->isCondition())
-            {
-              for (auto ev = dynamic_pointer_cast<Condition>(e); ev; ev = ev->getPrev())
-              {
-                list.push_back(ev);
-              }
-            }
-            else
-            {
-              list.push_back(e);
-            }
+            addToList(list, obs->second);
+          }
+        }
+      }
+      else
+      {
+        for (const auto &obs : m_observations)
+        {
+          if (!obs.second->isOrphan())
+          {
+            addToList(list, obs.second);
           }
         }
       }
