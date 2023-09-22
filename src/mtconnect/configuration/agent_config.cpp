@@ -703,22 +703,37 @@ namespace mtconnect::configuration {
     // Now get our configuration
     boost::property_tree::ptree config;
     
-    switch (fmt)
+    try
     {
-      case JSON:
-        boost::property_tree::json_parser::read_json(text, config);
-        break;
-
-      case XML:
-        boost::property_tree::xml_parser::read_xml(text, config);
-        break;
-
-      default:
-      case MTCONNECT:
-        config = Parser::parse(text);
-        break;        
+      switch (fmt)
+      {
+        case JSON:
+        {
+          std::stringstream str(text);
+          boost::property_tree::json_parser::read_json(str, config);
+          break;
+        }
+        case XML:
+        {
+          std::stringstream str(text);
+          boost::property_tree::xml_parser::read_xml(str, config);
+          break;
+        }
+        default:
+        case MTCONNECT:
+          config = Parser::parse(text);
+          break;
+      }
     }
-
+    catch (boost::property_tree::json_parser::json_parser_error &e)
+    {
+      cerr << "json file error: " << e.what() << " on line " << e.line() << endl;
+      throw e;
+    }
+    catch (std::exception e) {
+      cerr << "could not load config file: " << e.what() << endl;
+      throw e;
+    }
     // if (!m_loggerFile)
     if (!m_sink)
     {
