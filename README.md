@@ -753,15 +753,48 @@ The following parameters must be present to enable https requests. If there is n
 
 * `DeviceTopic` - Prefix for the Device Model topic
 
-    *Default*: MTConnect/Device/
+    *Default*: `MTConnect/Device/`
 
 * `ObservationTopic` - Prefix for the Streams events, samples, and conditions
 
-    *Default*: MTConnect/Observation/
+    *Default*: `MTConnect/Observation/`
 
 * `AssetTopic` - Prefix for the Assets
 
-    *Default*: MTConnect/Asset/
+    *Default*: `MTConnect/Asset/`
+
+#### MQTT Sink 2
+
+* `ProbeTopic` - Prefix for the Device Model topic
+
+    > Note: The `[device]` will be replace with the uuid of each device. Other patterns can be created, 
+    > for example: `MTConnect/[device]/Probe` will group by device instead of operation.
+
+    *Default*: `MTConnect/Probe/[device]`
+
+* `CurrentTopic` - Prefix for the Current 
+
+    *Default*: `MTConnect/Current/[device]`
+
+* `SampleTopic` - Prefix for the Sample 
+
+    *Default*: `MTConnect/Current/[device]`
+
+* `AssetTopic` - Prefix for the Assets
+
+    *Default*: `MTConnect/Asset/[device]`
+    
+* `MqttCurrentInterval` - The frequency to publish currents. Acts like a keyframe in a video stream.
+
+    *Default*: 1000ms
+    
+* `MqttSampleInterval` - The frequency to publish samples. Works the same way as the `interval` in the rest call. Groups observations up and publishes with the minimum interval given. If nothing is availble, will wait until an observation arrives to publish.
+
+    *Default*: 500ms
+
+* `MqttSampleCount` - The maxmimum number of observations to publish at one time.
+
+    *Default*: 1000
 
 ### Adapter Configuration Items ###
 
