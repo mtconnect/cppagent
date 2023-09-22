@@ -23,7 +23,7 @@
 #include "mtconnect/observation/observation.hpp"
 #include "transform.hpp"
 
-// #define DEBUG_FILTER 1
+// #define DEBUG_PERIOD_FILTER 1
 
 namespace mtconnect::pipeline {
   /// @brief Period Filter implementing MTConnect DataItem period-filter behavior
@@ -45,7 +45,7 @@ namespace mtconnect::pipeline {
 
       /// @brief The timestamp o the last observation or timestamp of the adjusted timestamp to
       /// the end of the last scheduled send time.
-      Timestamp m_timestamp;
+      Timestamp m_next;
 
       /// @brief The delayed observation.
       observation::ObservationPtr m_observation;
@@ -55,9 +55,6 @@ namespace mtconnect::pipeline {
 
       /// @brief Store the data item period here.
       std::chrono::milliseconds m_period;
-
-      /// @brief Time from the current obervation to the end of the period.
-      std::chrono::milliseconds m_delta;
     };
 
     using LastObservationMap = std::unordered_map<std::string, LastObservation>;
@@ -109,8 +106,6 @@ namespace mtconnect::pipeline {
         }
         else
         {
-          auto ts = obs->getTimestamp();
-
           auto last = m_state->m_lastObservation.find(id);
           if (last == m_state->m_lastObservation.end())
           {
@@ -127,7 +122,7 @@ namespace mtconnect::pipeline {
           }
 
           // If filtered, return an empty entity.
-          if (filtered(last->second, id, obs, ts))
+          if (filtered(last->second, id, obs))
             return EntityPtr();
         }
       }
@@ -137,31 +132,32 @@ namespace mtconnect::pipeline {
 
   protected:
     // Returns true if the observation is filtered.
-    bool filtered(LastObservation &last, const std::string &id, observation::ObservationPtr &obs,
-                  const Timestamp &ts)
+    bool filtered(LastObservation &last, const std::string &id, observation::ObservationPtr &obs)
     {
       using namespace std;
       using namespace chrono;
       using namespace observation;
 
-      auto delta = duration_cast<milliseconds>(ts - last.m_timestamp);
-#ifdef DEBUG_FILTER
-      std::cout << "<<<< Delta for obs at " << format(ts) << " is " << delta.count() << std::endl;
+      const auto &ts = obs->getTimestamp();
+#ifdef DEBUG_PERIOD_FILTER
+      std::cout << "<<<< Delta for obs at " << format(ts) << " is " << duration_cast<milliseconds>(last.m_next - ts).count() << std::endl;
 #endif
+      
+      const auto start = last.m_next - last.m_period;
+      const auto &end = last.m_next;
 
-      if (delta.count() < 0)
+      if (ts < start)
       {
         LOG(warning) << "Obseravtion occurred in the past, filtering";
-#ifdef DEBUG_FILTER
-        std::cout << "Filtering " << format(obs->getTimestamp()) << std::endl;
+#ifdef DEBUG_PERIOD_FILTER
+        std::cout << "Filtering Old Observation " << format(ts) << std::endl;
 #endif
         return true;
       }
-      else if (delta.count() >= 0 && delta < last.m_period)
+      else if (ts >= start && ts < end)
       {
         bool observed = bool(last.m_observation);
         last.m_observation = obs;
-        last.m_delta = last.m_period - delta;
 
         // If we have not already observed something for this period,
         // set a timer, otherwise the current observation will replace the last
@@ -170,45 +166,41 @@ namespace mtconnect::pipeline {
         if (!observed)
           delayDelivery(last, id);
 
-#ifdef DEBUG_FILTER
-        std::cout << "Filtering " << format(obs->getTimestamp()) << std::endl;
+#ifdef DEBUG_PERIOD_FILTER
+        std::cout << "Filtering Delayed " << format(ts) << std::endl;
 #endif
         // Filter this observation.
         return true;
       }
-      else if (delta == last.m_period)
+      else if (ts == end)
       {
         last.m_observation.reset();
-        last.m_timestamp = ts;
-        last.m_delta = last.m_period;
+        last.m_next += last.m_period;
         last.m_timer.cancel();
 
-#ifdef DEBUG_FILTER
-        std::cout << ">>>> On time, Sending " << format(obs->getTimestamp()) << std::endl;
+#ifdef DEBUG_PERIOD_FILTER
+        std::cout << ">>>> On time, Sending " << format(ts) << std::endl;
 #endif
         return false;
       }
-      else if (last.m_observation && delta >= last.m_period && delta < last.m_period * 2)
+      else if (last.m_observation && ts > end && ts < end + last.m_period)
       {
         last.m_observation.swap(obs);
-#ifdef DEBUG_FILTER
-        std::cout << "delivering " << format(obs->getTimestamp()) << std::endl;
+#ifdef DEBUG_PERIOD_FILTER
+        std::cout << "delivering " << format(ts) << std::endl;
         std::cout << "  and delaying " << format(last.m_observation->getTimestamp()) << std::endl;
 #endif
         // Similar to the delayed send, the last timestamp is computed as the end
         // of the previous period.
-        last.m_timestamp = last.m_timestamp + last.m_period;
-
-        // Compute the distance to the next period and delay delivery of this observation.
-        last.m_delta = last.m_period * 2 - delta;
-#ifdef DEBUG_FILTER
-        std::cout << "  last timestamp set to " << format(last.m_timestamp) << std::endl;
-        std::cout << "  delta set to " << last.m_delta.count() << std::endl;
+        last.m_next += last.m_period;
+        
+#ifdef DEBUG_PERIOD_FILTER
+        std::cout << "  last timestamp set to " << format(last.m_next) << std::endl;
 #endif
         delayDelivery(last, id);
 
-#ifdef DEBUG_FILTER
-        std::cout << ">>>> Sending " << format(obs->getTimestamp()) << std::endl;
+#ifdef DEBUG_PERIOD_FILTER
+        std::cout << ">>>> Sending " << format(ts) << std::endl;
 #endif
         // The observations will be swapped, so send the last onward.
         return false;
@@ -220,7 +212,7 @@ namespace mtconnect::pipeline {
         if (last.m_observation)
         {
           last.m_timer.cancel();
-#ifdef DEBUG_FILTER
+#ifdef DEBUG_PERIOD_FILTER
           std::cout << "sending last: at " << format(last.m_observation->getTimestamp())
                     << std::endl;
 #endif
@@ -229,11 +221,11 @@ namespace mtconnect::pipeline {
         }
 
         // Set the timestamp of the last observation.
-        last.m_timestamp = ts;
+        last.m_next = ts + last.m_period;
 
-#ifdef DEBUG_FILTER
-        std::cout << "not filtering: at " << format(obs->getTimestamp()) << std::endl;
-        std::cout << ">>>> Sending " << format(obs->getTimestamp()) << std::endl;
+#ifdef DEBUG_PERIOD_FILTER
+        std::cout << "not filtering: at " << format(ts) << std::endl;
+        std::cout << ">>>> Sending " << format(ts) << std::endl;
 #endif
         // Send this observation. This may send two observations.
         return false;
@@ -243,15 +235,19 @@ namespace mtconnect::pipeline {
     void delayDelivery(LastObservation &last, const std::string &id)
     {
       using std::placeholders::_1;
+      using namespace std;
+      using namespace chrono;
 
       // Set the timer to expire in the remaining time left in the period given
       // in last.m_delta
       last.m_timer.cancel();
-      last.m_timer.expires_after(last.m_delta);
+      const auto now { system_clock::now() };
+      const auto delta = last.m_next - now;
+      last.m_timer.expires_after(delta);
 
-#ifdef DEBUG_FILTER
+#ifdef DEBUG_PERIOD_FILTER
       std::cout << "Delaying " << format(last.m_observation->getTimestamp()) << " for "
-                << last.m_delta.count() << std::endl;
+                << duration_cast<milliseconds>(delta).count() << std::endl;
 #endif
       // Bind the strand so we do not have races. Use the data item id so there are
       // no race conditions due to LastObservation lifecycle.
@@ -265,7 +261,7 @@ namespace mtconnect::pipeline {
       if (ec)
       {
         // Do nothing if the delayed send was canceled.
-#ifdef DEBUG_FILTER
+#ifdef DEBUG_PERIOD_FILTER
         std::cout << "sendObservation: " << ec.message() << std::endl;
 #endif
         return;
@@ -285,25 +281,24 @@ namespace mtconnect::pipeline {
         {
           auto &last = lastIt->second;
 
-#ifdef DEBUG_FILTER
-          std::cout << "sendObservation: last timestamp is " << format(last.m_timestamp)
-                    << " delta " << last.m_delta.count() << std::endl;
+#ifdef DEBUG_PERIOD_FILTER
+          std::cout << "sendObservation: last timestamp is " << format(last.m_observation->getTimestamp())
+                    << " next " << format(last.m_next) << std::endl;
 #endif
           last.m_observation.swap(obs);
-          auto now {system_clock::now()};
-          auto next = last.m_timestamp + last.m_period;
-          if (now >= next)
+          auto now { system_clock::now() };
+          if (now >= last.m_next)
           {
-            last.m_timestamp = next;
-#ifdef DEBUG_FILTER
-            std::cout << "sendObservation: setting timestamp to " << format(last.m_timestamp)
+            last.m_next += last.m_period;
+#ifdef DEBUG_PERIOD_FILTER
+            std::cout << "sendObservation: setting timestamp to " << format(last.m_next)
                       << " now " << format(now) << std::endl;
 #endif
           }
           else
           {
-#ifdef DEBUG_FILTER
-            std::cout << "sendObservation: Filtering " << format(obs->getTimestamp()) << " now  "
+#ifdef DEBUG_PERIOD_FILTER
+            std::cout << "sendObservation: Filtering " << format(obs->getTimestamp()) << " now "
                       << format(now) << std::endl;
 #endif
             // Filter out this observation
@@ -315,7 +310,7 @@ namespace mtconnect::pipeline {
       // Send the observation onward
       if (obs)
       {
-#ifdef DEBUG_FILTER
+#ifdef DEBUG_PERIOD_FILTER
         std::cout << "sendObservation: at " << format(obs->getTimestamp()) << std::endl;
 #endif
         next(obs);
