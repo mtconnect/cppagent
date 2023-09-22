@@ -70,6 +70,13 @@ namespace mtconnect {
     class AGENT_LIB_API AgentConfiguration : public MTConnectService
     {
     public:
+      enum FileFormat {
+        MTCONNECT,
+        JSON,
+        XML,
+        UNKNOWN
+      };
+      
       using InitializationFn = void(const boost::property_tree::ptree &, AgentConfiguration &);
       using InitializationFunction = boost::function<InitializationFn>;
 
@@ -106,7 +113,9 @@ namespace mtconnect {
       void configureLogger(const ptree &config);
       /// @brief load a configuration text
       /// @param[in] text the configuration text loaded from a file
-      void loadConfig(const std::string &text);
+      /// @param[in] fmt the file format, can be MTCONNECT, JSON, or XML
+      void loadConfig(const std::string &text,
+                      FileFormat fmt = MTCONNECT);
 
       /// @brief assign the agent associated with this configuration
       /// @param[in] agent the agent the configuration will take ownership of

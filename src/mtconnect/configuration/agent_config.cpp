@@ -17,6 +17,8 @@
 
 #include "agent_config.hpp"
 
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
 #include <boost/dll/import.hpp>
@@ -176,12 +178,23 @@ namespace mtconnect::configuration {
         m_configFile = fs::canonical(*path);
         addPathFront(m_configPaths, m_configFile.parent_path());
         addPathBack(m_dataPaths, m_configFile.parent_path());
-
+        
         ifstream file(m_configFile.c_str());
         std::stringstream buffer;
         buffer << file.rdbuf();
 
-        loadConfig(buffer.str());
+        FileFormat fmt = MTCONNECT;
+        if (ends_with(m_configFile, "json"))
+        {
+          LOG(info) << "Parsing json configuration";
+          fmt = JSON;
+        }
+        else if (ends_with(m_configFile, "xml"))
+        {
+          LOG(info) << "Parsing xml configuration";
+          fmt = XML;
+        }
+        loadConfig(buffer.str(), fmt);
 
         return;
       }
@@ -682,12 +695,29 @@ namespace mtconnect::configuration {
     ExpandValues(values, config);
   }
 
-  void AgentConfiguration::loadConfig(const std::string &text)
+  void AgentConfiguration::loadConfig(const std::string &text,
+                                      FileFormat fmt)
   {
     NAMED_SCOPE("AgentConfiguration::loadConfig");
 
     // Now get our configuration
-    auto config = Parser::parse(text);
+    boost::property_tree::ptree config;
+    
+    switch (fmt)
+    {
+      case JSON:
+        boost::property_tree::json_parser::read_json(text, config);
+        break;
+
+      case XML:
+        boost::property_tree::xml_parser::read_xml(text, config);
+        break;
+
+      default:
+      case MTCONNECT:
+        config = Parser::parse(text);
+        break;        
+    }
 
     // if (!m_loggerFile)
     if (!m_sink)
