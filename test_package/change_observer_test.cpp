@@ -33,6 +33,8 @@ using namespace std;
 using namespace std::literals;
 using namespace date::literals;
 
+using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
+
 // main
 int main(int argc, char *argv[])
 {
@@ -48,13 +50,22 @@ namespace mtconnect {
     ChangeObserverTest() : m_strand(m_context) {}
 
   protected:
-    void SetUp() override { m_signaler = std::make_unique<mtconnect::ChangeSignaler>(); }
+    void SetUp() override 
+    {
+      m_signaler = std::make_unique<mtconnect::ChangeSignaler>();
+      m_guard.emplace(m_context.get_executor());
+    }
 
-    void TearDown() override { m_signaler.reset(); }
+    void TearDown() override 
+    {
+      m_signaler.reset();
+      m_guard.reset();
+    }
 
     boost::asio::io_context m_context;
     boost::asio::io_context::strand m_strand;
     std::unique_ptr<mtconnect::ChangeSignaler> m_signaler;
+    std::optional<WorkGuard> m_guard;
   };
 
   TEST_F(ChangeObserverTest, AddObserver)
@@ -250,7 +261,7 @@ namespace mtconnect {
       return last;
     }
 
-    bool waitFor(function<bool()> pred, int count = 10)
+    bool waitFor(function<bool()> pred, int count = 50)
     {
       for (int i = 0; !pred() && i < count; i++)
         m_context.run_one_for(50ms);
@@ -295,7 +306,7 @@ namespace mtconnect {
     expected = addObservations(1);
     ASSERT_EQ(4ull, expected);
 
-    m_context.run_for(10ms);
+    m_context.run_for(20ms);
     ASSERT_FALSE(called);
 
     m_context.run_for(100ms);
