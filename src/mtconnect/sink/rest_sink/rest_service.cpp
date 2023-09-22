@@ -804,7 +804,15 @@ namespace mtconnect {
 
       void fail(boost::beast::http::status status, const std::string &message) override
       {
-        m_session->fail(status, message);
+        auto sink = m_sink.lock();
+        if (sink && isRunning())
+        {
+          m_session->fail(status, message);
+        }
+        else
+        {
+          LOG(debug) << "Sink close when failing sample respone: " << message;
+        }
       }
 
       bool isRunning() override
