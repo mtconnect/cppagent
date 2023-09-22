@@ -751,6 +751,16 @@ The following parameters must be present to enable https requests. If there is n
 
 #### MQTT Sink
 
+Enabled in `agent.cfg` by specifying:
+
+```
+Sinks {
+  MqttService {
+    # Configuration Options...
+  }
+}
+```
+
 * `DeviceTopic` - Prefix for the Device Model topic
 
     *Default*: `MTConnect/Device/`
@@ -764,6 +774,16 @@ The following parameters must be present to enable https requests. If there is n
     *Default*: `MTConnect/Asset/`
 
 #### MQTT Sink 2
+
+Enabled in `agent.cfg` by specifying:
+
+```
+Sinks {
+  Mqtt2Service {
+    # Configuration Options...
+  }
+}
+```
 
 * `ProbeTopic` - Prefix for the Device Model topic
 
