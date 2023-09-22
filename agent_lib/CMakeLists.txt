@@ -325,7 +325,8 @@ if(MSVC)
 
   # The modules including Beast required the /bigobj option in Windows
   set_property(SOURCE    
-	"${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
+    "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
+    "${SOURCE_DIR}/sink/mqtt_sink/mqtt2_service.cpp"
     "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
     "${SOURCE_DIR}/source/adapter/mqtt/mqtt_adapter.cpp"
     "${SOURCE_DIR}/source/adapter/agent_adapter/agent_adapter.cpp"
