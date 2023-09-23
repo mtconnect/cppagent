@@ -285,7 +285,7 @@ namespace mtconnect {
   {
     FilterSet filter {"a", "b"};
     shared_ptr<MockObserver> observer {
-        make_shared<MockObserver>(m_strand, m_buffer, std::move(filter), 100ms, 200ms)};
+        make_shared<MockObserver>(m_strand, m_buffer, std::move(filter), 500ms, 1000ms)};
 
     auto expected = addObservations(3);
     observer->observe(4, [this](const string &id) { return m_signalers[id].get(); });
@@ -300,16 +300,16 @@ namespace mtconnect {
     observer->handlerCompleted();
     ASSERT_FALSE(called);
 
-    m_context.run_for(50ms);
+    m_context.run_for(100ms);
     ASSERT_FALSE(called);
 
     expected = addObservations(1);
     ASSERT_EQ(4ull, expected);
 
-    m_context.run_for(20ms);
+    m_context.run_for(100ms);
     ASSERT_FALSE(called);
 
-    m_context.run_for(100ms);
+    m_context.run_for(400ms);
     ASSERT_TRUE(called);
   }
 

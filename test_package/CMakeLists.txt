@@ -9,6 +9,11 @@ endif()
 
 set(USE_FOLDERS ON)
 
+if(SHARED_AGENT_LIB AND UNIX)
+  set(CMAKE_EXE_LINKER_FLAGS "-Wl,--disable-new-dtags")
+endif()
+
+
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
