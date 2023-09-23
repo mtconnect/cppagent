@@ -9,7 +9,7 @@ endif()
 
 set(USE_FOLDERS ON)
 
-if(SHARED_AGENT_LIB AND UNIX)
+if(SHARED_AGENT_LIB AND UNIX AND NOT APPLE)
   set(CMAKE_EXE_LINKER_FLAGS "-Wl,--disable-new-dtags")
 endif()
 
