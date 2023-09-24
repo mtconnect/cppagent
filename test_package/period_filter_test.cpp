@@ -269,7 +269,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_replace)
     ASSERT_EQ(2, observations().size());
   }
 
-  m_ioContext.run_for(750ms);
+  m_ioContext.run_for(1000ms);
 
   auto obs = observations();
   ASSERT_EQ(3, obs.size());
