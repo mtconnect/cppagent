@@ -309,7 +309,7 @@ namespace mtconnect {
     m_context.run_for(100ms);
     ASSERT_FALSE(called);
 
-    m_context.run_for(400ms);
+    waitFor([&called]() { return called; });
     ASSERT_TRUE(called);
   }
 
@@ -347,10 +347,10 @@ namespace mtconnect {
     expected = addObservations(1);
     ASSERT_EQ(4ull, expected);
 
-    m_context.run_for(10ms);
+    m_context.run_for(100ms);
     ASSERT_FALSE(called);
 
-    m_context.run_for(100ms);
+    waitFor([&called]() { return called; });
     ASSERT_TRUE(called);
   }
 

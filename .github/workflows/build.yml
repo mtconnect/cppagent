@@ -55,11 +55,13 @@ jobs:
           puts %{ZIP_DIR=#{base}}
           puts %{CONAN_HOME=#{base}/conan2}
         "@ >> $env:GITHUB_ENV
+        echo "CTEST_OUTPUT_ON_FAILURE=TRUE" >> $env:GITHUB_ENV
               
     - name: Print Directories
       run: |
         echo $CONAN_HOME
         echo $ZIP_DIR
+        echo $CTEST_OUTPUT_ON_FAILURE
               
     - name: Checkout Agent
       uses: actions/checkout@v3
