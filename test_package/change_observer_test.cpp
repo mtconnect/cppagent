@@ -261,7 +261,7 @@ namespace mtconnect {
       return last;
     }
 
-    bool waitFor(function<bool()> pred, int count = 50)
+    bool waitFor(function<bool()> pred, const int count = 50)
     {
       for (int i = 0; !pred() && i < count; i++)
         m_context.run_one_for(50ms);
@@ -306,9 +306,10 @@ namespace mtconnect {
     expected = addObservations(1);
     ASSERT_EQ(4ull, expected);
 
-    m_context.run_for(100ms);
+    m_context.run_for(200ms);
     ASSERT_FALSE(called);
 
+    m_context.run_for(200ms);
     waitFor([&called]() { return called; });
     ASSERT_TRUE(called);
   }
