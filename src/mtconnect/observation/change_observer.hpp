@@ -47,13 +47,16 @@ namespace mtconnect::observation {
 
     virtual ~ChangeObserver();
 
-    /// @brief wait for a change to occur asynchronously
+    /// @brief wait for a change to occur asynchronously. If it is already signaled, call the callback immediately.
     /// @param duration the duration to wait
     /// @param handler the handler to call back
     /// @return `true` if successful
     bool wait(std::chrono::milliseconds duration,
               std::function<void(boost::system::error_code)> handler)
     {
+      if (m_waitDuration)
+        return true;
+      
       std::unique_lock<std::recursive_mutex> lock(m_mutex);
 
       if (m_sequence != UINT64_MAX)
@@ -64,10 +67,25 @@ namespace mtconnect::observation {
       else
       {
         m_timer.expires_from_now(duration);
-        m_timer.async_wait(handler);
+        m_timer.async_wait(boost::asio::bind_executor(m_strand, handler));
       }
       return true;
     }
+    
+    /// @brief wait for a change to occur asynchronously
+    /// @param duration the duration to wait
+    /// @param handler the handler to call back
+    /// @return `true` if successful
+    bool waitFor(std::chrono::milliseconds duration,
+              std::function<void(boost::system::error_code)> handler)
+    {
+      m_waitDuration = true;
+      m_timer.expires_from_now(duration);
+      m_timer.async_wait(boost::asio::bind_executor(m_strand, handler));
+
+      return true;
+    }
+
 
     /// @brief single all waiting observers if this sequence number is greater than the last
     ///
@@ -93,6 +111,7 @@ namespace mtconnect::observation {
     {
       std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
       m_sequence = UINT64_MAX;
+      m_waitDuration = false;
     }
 
   private:
@@ -102,6 +121,7 @@ namespace mtconnect::observation {
 
     std::list<ChangeSignaler *> m_signalers;
     volatile uint64_t m_sequence = UINT64_MAX;
+    bool m_waitDuration { false };
 
   protected:
     friend class ChangeSignaler;
@@ -220,7 +240,6 @@ namespace mtconnect::observation {
         0};  //! the maximum amount of time to wait before sending a heartbeat
     std::chrono::system_clock::time_point m_last;  //! the last time the handler completed
     FilterSet m_filter;                            //! The data items to be observed
-    boost::asio::steady_timer m_timer;             //! async timer to call back
     boost::asio::io_context::strand m_strand;      //! Strand to use for aync dispatch
 
     bool m_endOfBuffer {false};                   //! Indicator that we are at the end of the buffer

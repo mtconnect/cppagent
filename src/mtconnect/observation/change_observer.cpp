@@ -98,7 +98,6 @@ namespace mtconnect::observation {
       m_heartbeat(heartbeat),
       m_last(std::chrono::system_clock::now()),
       m_filter(std::move(filter)),
-      m_timer(strand.context()),
       m_strand(strand),
       m_observer(strand),
       m_buffer(buffer)
@@ -199,9 +198,8 @@ namespace mtconnect::observation {
               chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - m_last);
           if (delta < m_interval)
           {
-            m_timer.expires_from_now(m_interval - delta);
-            m_timer.async_wait(boost::asio::bind_executor(
-                m_strand, boost::bind(&AsyncObserver::handleObservations, getptr(), _1)));
+            m_observer.waitFor(m_interval - delta, boost::bind(&AsyncObserver::handleObservations,
+                                                               getptr(), _1));
             return;
           }
 
