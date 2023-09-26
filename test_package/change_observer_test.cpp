@@ -306,8 +306,8 @@ namespace mtconnect {
     expected = addObservations(1);
     ASSERT_EQ(4ull, expected);  
 
-    m_context.run_for(100ms);
-    ASSERT_TRUE(called);//expected to be true because the handler seq is as expected value
+    m_context.run_for(200ms);
+    ASSERT_FALSE(called);
 
     m_context.run_for(200ms);
     waitFor([&called]() { return called; });
@@ -349,7 +349,7 @@ namespace mtconnect {
     ASSERT_EQ(4ull, expected);
 
     m_context.run_for(100ms);
-    ASSERT_TRUE(called);//expected to be true because the handler seq is as expected value
+    ASSERT_FALSE(called);
     
     waitFor([&called]() { return called; });
     ASSERT_TRUE(called);
