@@ -44,6 +44,11 @@ namespace mtconnect::observation {
     m_signalers.erase(newEndPos);
     return true;
   }
+  
+  void ChangeObserver::handler(boost::system::error_code ec)
+  {
+    boost::asio::dispatch(m_strand, boost::bind(m_handler, ec));
+  }
 
   // Signaler Management
   ChangeSignaler::~ChangeSignaler()
@@ -101,10 +106,14 @@ namespace mtconnect::observation {
       m_strand(strand),
       m_observer(strand),
       m_buffer(buffer)
-  {}
+  {
+  }
 
   void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from, Resolver resolver)
   {
+    using std::placeholders::_1;
+    m_observer.m_handler = boost::bind(&AsyncObserver::handleSignal, getptr(), _1);
+
     // This object will automatically clean up all the observer from the
     // signalers in an exception proof manor.
     // Add observers
@@ -139,15 +148,15 @@ namespace mtconnect::observation {
     if (m_endOfBuffer)
     {
       using std::placeholders::_1;
-      m_observer.wait(m_heartbeat, boost::bind(&AsyncObserver::handleObservations, getptr(), _1));
+      m_observer.waitForSignal(m_heartbeat);
     }
     else
     {
-      handleObservations(boost::system::error_code {});
+      handleSignal(boost::system::error_code {});
     }
   }
 
-  void AsyncObserver::handleObservations(boost::system::error_code ec)
+  void AsyncObserver::handleSignal(boost::system::error_code ec)
   {
     using namespace buffer;
 
@@ -198,8 +207,7 @@ namespace mtconnect::observation {
               chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - m_last);
           if (delta < m_interval)
           {
-            m_observer.waitFor(m_interval - delta, boost::bind(&AsyncObserver::handleObservations,
-                                                               getptr(), _1));
+            m_observer.waitFor(m_interval - delta);
             return;
           }
 

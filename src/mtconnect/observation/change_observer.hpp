@@ -46,28 +46,36 @@ namespace mtconnect::observation {
     {}
 
     virtual ~ChangeObserver();
+    
+    /// @brief dispatch handler
+    ///
+    /// this is only necessary becase of issue with windows DLLs
+    ///
+    /// @param ec the error code from the callback
+    void handler(boost::system::error_code ec);
 
-    /// @brief wait for a change to occur asynchronously. If it is already signaled, call the callback immediately.
+    /// @brief wait for a signal to occur asynchronously. If it is already signaled, call the callback immediately.
     /// @param duration the duration to wait
     /// @param handler the handler to call back
     /// @return `true` if successful
-    bool wait(std::chrono::milliseconds duration,
-              std::function<void(boost::system::error_code)> handler)
+    bool waitForSignal(std::chrono::milliseconds duration)
     {
-      if (m_waitDuration)
-        return true;
-      
       std::unique_lock<std::recursive_mutex> lock(m_mutex);
 
+      m_noCancelOnSignal = false;
       if (m_sequence != UINT64_MAX)
       {
-        boost::asio::post(boost::asio::bind_executor(
-            m_strand, boost::bind(handler, boost::system::error_code {})));
+        if (m_timer.cancel() == 0)
+        {
+          handler(boost::system::error_code {});
+        }
       }
       else
       {
-        m_timer.expires_from_now(duration);
-        m_timer.async_wait(boost::asio::bind_executor(m_strand, handler));
+        m_timer.expires_after(duration);
+        using std::placeholders::_1;
+        auto bound = boost::bind(&ChangeObserver::handler, this, _1);
+        m_timer.async_wait(bound);
       }
       return true;
     }
@@ -76,12 +84,13 @@ namespace mtconnect::observation {
     /// @param duration the duration to wait
     /// @param handler the handler to call back
     /// @return `true` if successful
-    bool waitFor(std::chrono::milliseconds duration,
-              std::function<void(boost::system::error_code)> handler)
+    bool waitFor(std::chrono::milliseconds duration)
     {
-      m_waitDuration = true;
-      m_timer.expires_from_now(duration);
-      m_timer.async_wait(boost::asio::bind_executor(m_strand, handler));
+      m_noCancelOnSignal = true;
+      m_timer.expires_after(duration);
+      using std::placeholders::_1;
+      auto bound = boost::bind(&ChangeObserver::handler, this, _1);
+      m_timer.async_wait(bound);
 
       return true;
     }
@@ -98,7 +107,13 @@ namespace mtconnect::observation {
       if (m_sequence > sequence && sequence)
         m_sequence = sequence;
 
-      m_timer.cancel();
+      if (!m_noCancelOnSignal)
+      {
+        if (m_timer.cancel() == 0)
+        {
+          //LOG(trace) << "Cannot cancel timer";
+        }
+      }
     }
     /// @brief get the last sequence number signaled
     /// @return the sequence number
@@ -111,8 +126,11 @@ namespace mtconnect::observation {
     {
       std::lock_guard<std::recursive_mutex> scopedLock(m_mutex);
       m_sequence = UINT64_MAX;
-      m_waitDuration = false;
+      m_noCancelOnSignal = false;
     }
+    
+    /// @brief handler for the callback
+    boost::function<void(boost::system::error_code)> m_handler;
 
   private:
     boost::asio::io_context::strand &m_strand;
@@ -121,7 +139,7 @@ namespace mtconnect::observation {
 
     std::list<ChangeSignaler *> m_signalers;
     volatile uint64_t m_sequence = UINT64_MAX;
-    bool m_waitDuration { false };
+    bool m_noCancelOnSignal { false };
 
   protected:
     friend class ChangeSignaler;
@@ -230,7 +248,7 @@ namespace mtconnect::observation {
     /// Callback when observations are ready to be written or heartbeat timer has expired.
     ///
     /// @params ec boost error code to detect when the timer is aborted
-    void handleObservations(boost::system::error_code ec);
+    void handleSignal(boost::system::error_code ec);
 
   protected:
     SequenceNumber_t m_sequence {0};  //! the current sequence number

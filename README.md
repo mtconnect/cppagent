@@ -806,7 +806,7 @@ Sinks {
     
 * `MqttCurrentInterval` - The frequency to publish currents. Acts like a keyframe in a video stream.
 
-    *Default*: 1000ms
+    *Default*: 10000ms
     
 * `MqttSampleInterval` - The frequency to publish samples. Works the same way as the `interval` in the rest call. Groups observations up and publishes with the minimum interval given. If nothing is availble, will wait until an observation arrives to publish.
 
