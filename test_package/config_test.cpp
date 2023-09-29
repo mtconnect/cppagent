@@ -2200,5 +2200,45 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
 
     ASSERT_TRUE(m_config->getAgent());
   }
+  
+  TEST_F(ConfigTest, should_support_json_format)
+  {
+    using namespace std::chrono_literals;
+
+    string str("{ \"Devices\": \"" TEST_RESOURCE_DIR
+               "/samples/test_config.xml\","
+R"DOC(
+  "Adapters": {
+        "LinuxCNC": {
+          "Port": 23,
+          "Host": "10.211.55.1",
+          "FilterDuplicates": true,
+          "AutoAvailable": true,
+          "IgnoreTimestamps": true,
+          "PreserveUUID": true,
+          "LegacyTimeout": 2000
+        }
+    }
+}
+)DOC");
+
+    m_config->loadConfig(str, AgentConfiguration::JSON);
+
+    const auto agent = m_config->getAgent();
+    ASSERT_TRUE(agent);
+    const auto source = agent->getSources().back();
+    const auto adapter = dynamic_pointer_cast<source::adapter::shdr::ShdrAdapter>(source);
+
+    ASSERT_EQ(23, (int)adapter->getPort());
+    ASSERT_EQ(std::string("10.211.55.1"), adapter->getServer());
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::FilterDuplicates));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::AutoAvailable));
+    ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
+
+    ASSERT_EQ(2000s, adapter->getLegacyTimeout());
+
+    // TODO: Need to link to device to the adapter.
+    // ASSERT_TRUE(device->m_preserveUuid);
+  }
 
 }  // namespace
