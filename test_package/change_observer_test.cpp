@@ -368,44 +368,44 @@ namespace mtconnect {
   {
     FilterSet filter {"a", "b"};
     shared_ptr<MockObserver> observer {
-        make_shared<MockObserver>(*m_strand, m_buffer, std::move(filter), 200ms, 500ms)};
-
+      make_shared<MockObserver>(*m_strand, m_buffer, std::move(filter), 200ms, 500ms)};
+    
     addObservations(3);
     observer->observe(1, [this](const string &id) { return m_signalers[id].get(); });
-
+    
     ASSERT_FALSE(observer->isEndOfBuffer());
-
+    
     bool called {false};
     SequenceNumber_t expected = 1;
     bool end = false;
     observer->m_handler = [&](std::shared_ptr<AsyncObserver> obs) {
+      EXPECT_FALSE(called);
       called = true;
       EXPECT_EQ(expected, obs->getSequence());
       EXPECT_EQ(end, obs->isEndOfBuffer());
+      asio::post(*m_strand, boost::bind(&AsyncObserver::handlerCompleted, observer));
       return expected + 1;
     };
-
+    
     observer->handlerCompleted();
     ASSERT_TRUE(called);
     ASSERT_FALSE(observer->isEndOfBuffer());
-    asio::post(*m_strand, boost::bind(&AsyncObserver::handlerCompleted, observer));
-
+    waitFor([&] { return called; });
+    
     called = false;
     expected = 2;
-    m_context->run_for(50ms);
+    waitFor([&] { return called; });
     ASSERT_TRUE(called);
     ASSERT_EQ(3, observer->getSequence());
     ASSERT_FALSE(observer->isEndOfBuffer());
-    asio::post(*m_strand, boost::bind(&AsyncObserver::handlerCompleted, observer));
-
+    
     called = false;
     expected = 3;
-    m_context->run_for(50ms);
+    waitFor([&] { return called; });
     ASSERT_TRUE(called);
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
-    asio::post(*m_strand, boost::bind(&AsyncObserver::handlerCompleted, observer));
-
+    
     end = true;
     called = false;
     expected = 4;
@@ -413,16 +413,17 @@ namespace mtconnect {
     ASSERT_FALSE(called);
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
-
+    
     auto s = addObservations(3);
     ASSERT_EQ(6ull, s);
-
+    
     called = false;
     expected = 4;
     waitFor([&] { return called; });
     ASSERT_TRUE(called);
     ASSERT_EQ(5, observer->getSequence());
-    ASSERT_FALSE(observer->isEndOfBuffer());  }
+    ASSERT_FALSE(observer->isEndOfBuffer());
+  }
 
   TEST_F(AsyncObserverTest, should_call_handler_with_heartbeat)
   {
