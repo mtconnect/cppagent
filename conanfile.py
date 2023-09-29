@@ -158,7 +158,7 @@ class MTConnectAgentConan(ConanFile):
                         copy(self, "*.dylib", dep.cpp_info.libdirs[0], os.path.join(self.build_folder, "libs"), keep_path=False)            
         
         tc = CMakeToolchain(self)
-
+        tc.cache_variables['CTEST_OUTPUT_ON_FAILURE'] = True
         tc.cache_variables['SHARED_AGENT_LIB'] = self.options.shared.__bool__()
         tc.cache_variables['WITH_RUBY'] = self.options.with_ruby.__bool__()
         tc.cache_variables['AGENT_WITH_DOCS'] = self.options.with_docs.__bool__()
@@ -183,7 +183,7 @@ class MTConnectAgentConan(ConanFile):
             cmake.build(build_type=None, target='docs')
 
         if self.options.development and not self.conf.get("tools.build:skip_test", default=False):
-            cmake.test()
+            cmake.test(env='CTEST_OUTPUT_ON_FAILURE=YES')
 
     def package_info(self):
         self.cpp_info.includedirs = ['include']
