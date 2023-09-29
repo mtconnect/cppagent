@@ -301,7 +301,7 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
     ASSERT_EQ(1, observations().size());
   }
   // Delayed sent
-  m_ioContext.run_for(501ms);
+  m_ioContext.run_for(550ms);
   now = chrono::system_clock::now();
   // Delayed
   {

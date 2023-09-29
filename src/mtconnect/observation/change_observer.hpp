@@ -80,7 +80,7 @@ namespace mtconnect::observation {
       return true;
     }
     
-    /// @brief wait for a change to occur asynchronously
+    /// @brief wait a period of time where signals will not cancle the timer
     /// @param duration the duration to wait
     /// @param handler the handler to call back
     /// @return `true` if successful
