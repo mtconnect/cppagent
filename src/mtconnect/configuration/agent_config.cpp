@@ -186,12 +186,12 @@ namespace mtconnect::configuration {
         buffer << file.rdbuf();
 
         FileFormat fmt = MTCONNECT;
-        if (ends_with(m_configFile, "json"))
+        if (ends_with(m_configFile, "json"s))
         {
           LOG(info) << "Parsing json configuration";
           fmt = JSON;
         }
-        else if (ends_with(m_configFile, "xml"))
+        else if (ends_with(m_configFile, "xml"s))
         {
           LOG(info) << "Parsing xml configuration";
           fmt = XML;
