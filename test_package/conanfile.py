@@ -20,7 +20,8 @@ class MTConnectAgentTest(ConanFile):
         agent_options = self.dependencies[self.tested_reference_str].options
         
         tc = CMakeToolchain(self)
-
+        tc.cache_variables['CTEST_OUTPUT_ON_FAILURE'] = True
+        
         if agent_options.shared:
             tc.cache_variables['SHARED_AGENT_LIB'] = True
         if agent_options.with_ruby:
@@ -44,5 +45,6 @@ class MTConnectAgentTest(ConanFile):
     def test(self):
         if can_run(self):
             cmake = CMake(self)
-            cmake.test()
-        
+            cmake.verbose = True
+            cmake.test(env='CTEST_OUTPUT_ON_FAILURE=YES')
+

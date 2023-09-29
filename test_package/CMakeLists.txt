@@ -9,6 +9,11 @@ endif()
 
 set(USE_FOLDERS ON)
 
+if(SHARED_AGENT_LIB AND UNIX AND NOT APPLE)
+  set(CMAKE_EXE_LINKER_FLAGS "-Wl,--disable-new-dtags")
+endif()
+
+
 if(POLICY CMP0077)
   cmake_policy(SET CMP0077 NEW)
 endif()
@@ -245,6 +250,7 @@ add_agent_test(routing FALSE sink/rest_sink)
 
 add_agent_test(mqtt_isolated FALSE mqtt_isolated TRUE)
 add_agent_test(mqtt_sink FALSE sink/mqtt_sink TRUE)
+add_agent_test(mqtt_sink_2 FALSE sink/mqtt_sink_2 TRUE)
 
 add_agent_test(json_printer_asset TRUE json)
 add_agent_test(json_printer_error TRUE json)
@@ -272,12 +278,12 @@ add_agent_test(mtconnect_xml_transform FALSE pipeline)
 add_agent_test(response_document FALSE pipeline)
 
 add_agent_test(agent TRUE core)
-add_agent_test(change_observer FALSE core)
 add_agent_test(globals FALSE core)
 
 add_agent_test(config_parser FALSE configuration)
 add_agent_test(config FALSE configuration)
 
+add_agent_test(change_observer FALSE observation)
 add_agent_test(observation TRUE observation)
 add_agent_test(data_set TRUE observation)
 add_agent_test(table TRUE observation)
