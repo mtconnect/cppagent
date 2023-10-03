@@ -341,6 +341,7 @@ namespace mtconnect {
         });
         factory->addRequirements(Requirements {{"type", USTRING, true},
                                                {"nativeCode", false},
+                                               {"conditionId", false},
                                                {"nativeSeverity", false},
                                                {"qualifier", USTRING, false},
                                                {"statistic", USTRING, false},

@@ -209,6 +209,10 @@ namespace mtconnect {
     /// @brief Get the MTConnect schema version the agent is supporting
     /// @return The MTConnect schema version as a string
     const auto &getSchemaVersion() const { return m_schemaVersion; }
+    
+    /// @brief Get the integer schema version based on configuration.
+    /// @returns the schema version as an integer [major * 100 + minor] as a 32bit integer.
+    const auto getIntSchemaVersion() const { return m_intSchemaVersion; }
 
     /// @brief Find a device by name
     /// @param[in] name The name of the device to find
@@ -575,6 +579,7 @@ namespace mtconnect {
           fun(ldi);
       }
     }
+    int32_t getSchemaVersion() const override { return m_agent->getIntSchemaVersion(); }
     void deliverObservation(observation::ObservationPtr obs) override
     {
       m_agent->receiveObservation(obs);

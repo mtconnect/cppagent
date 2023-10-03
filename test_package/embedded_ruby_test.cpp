@@ -90,6 +90,7 @@ namespace {
     void deliverAsset(AssetPtr a) override { m_asset = a; }
     void deliverDevices(std::list<DevicePtr>) override {}
     void deliverAssetCommand(entity::EntityPtr c) override { m_command = c; }
+    int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
     void deliverCommand(entity::EntityPtr c) override { m_command = c; }
     void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
     void sourceFailed(const std::string &id) override {}
