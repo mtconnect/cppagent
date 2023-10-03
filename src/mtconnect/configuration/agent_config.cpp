@@ -17,6 +17,8 @@
 
 #include "agent_config.hpp"
 
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
 #include <boost/dll/import.hpp>
@@ -56,6 +58,7 @@
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/printer/xml_printer.hpp"
+#include "mtconnect/sink/mqtt_sink/mqtt2_service.hpp"
 #include "mtconnect/sink/mqtt_sink/mqtt_service.hpp"
 #include "mtconnect/sink/rest_sink/rest_service.hpp"
 #include "mtconnect/source/adapter/agent_adapter/agent_adapter.hpp"
@@ -110,6 +113,7 @@ namespace mtconnect::configuration {
     bool success = false;
 
     sink::mqtt_sink::MqttService::registerFactory(m_sinkFactory);
+    sink::mqtt_sink::Mqtt2Service::registerFactory(m_sinkFactory);
     sink::rest_sink::RestService::registerFactory(m_sinkFactory);
     adapter::shdr::ShdrAdapter::registerFactory(m_sourceFactory);
     adapter::mqtt_adapter::MqttAdapter::registerFactory(m_sourceFactory);
@@ -176,12 +180,23 @@ namespace mtconnect::configuration {
         m_configFile = fs::canonical(*path);
         addPathFront(m_configPaths, m_configFile.parent_path());
         addPathBack(m_dataPaths, m_configFile.parent_path());
-
+        
         ifstream file(m_configFile.c_str());
         std::stringstream buffer;
         buffer << file.rdbuf();
 
-        loadConfig(buffer.str());
+        FileFormat fmt = MTCONNECT;
+        if (ends_with(m_configFile.string(), "json"))
+        {
+          LOG(info) << "Parsing json configuration";
+          fmt = JSON;
+        }
+        else if (ends_with(m_configFile.string(), "xml"))
+        {
+          LOG(info) << "Parsing xml configuration";
+          fmt = XML;
+        }
+        loadConfig(buffer.str(), fmt);
 
         return;
       }
@@ -682,13 +697,45 @@ namespace mtconnect::configuration {
     ExpandValues(values, config);
   }
 
-  void AgentConfiguration::loadConfig(const std::string &text)
+  void AgentConfiguration::loadConfig(const std::string &text,
+                                      FileFormat fmt)
   {
     NAMED_SCOPE("AgentConfiguration::loadConfig");
 
     // Now get our configuration
-    auto config = Parser::parse(text);
-
+    boost::property_tree::ptree config;
+    
+    try
+    {
+      switch (fmt)
+      {
+        case JSON:
+        {
+          std::stringstream str(text);
+          boost::property_tree::json_parser::read_json(str, config);
+          break;
+        }
+        case XML:
+        {
+          std::stringstream str(text);
+          boost::property_tree::xml_parser::read_xml(str, config);
+          break;
+        }
+        default:
+        case MTCONNECT:
+          config = Parser::parse(text);
+          break;
+      }
+    }
+    catch (boost::property_tree::json_parser::json_parser_error &e)
+    {
+      cerr << "json file error: " << e.what() << " on line " << e.line() << endl;
+      throw e;
+    }
+    catch (std::exception e) {
+      cerr << "could not load config file: " << e.what() << endl;
+      throw e;
+    }
     // if (!m_loggerFile)
     if (!m_sink)
     {

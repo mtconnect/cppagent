@@ -47,6 +47,8 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
+using WorkGuard = boost::asio::executor_work_guard<boost::asio::io_context::executor_type>;
+
 struct MockPipelineContract : public PipelineContract
 {
   MockPipelineContract(std::map<string, DataItemPtr> &items) : m_dataItems(items) {}
@@ -88,6 +90,9 @@ protected:
     m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems);
     m_mapper = make_shared<ShdrTokenMapper>(m_context);
     m_mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
+
+    m_guard.emplace(m_ioContext.get_executor());
+    m_ioContext.restart();
   }
 
   void TearDown() override
@@ -95,6 +100,7 @@ protected:
     m_dataItems.clear();
     m_context.reset();
     m_mapper.reset();
+    m_guard.reset();
   }
 
   DataItemPtr makeDataItem(Properties attributes)
@@ -153,6 +159,7 @@ protected:
   shared_ptr<PipelineContext> m_context;
   boost::asio::io_context m_ioContext;
   boost::asio::io_context::strand m_strand;
+  std::optional<WorkGuard> m_guard;
 };
 
 TEST_F(PeriodFilterTest, test_simple_time_series)
@@ -168,22 +175,28 @@ TEST_F(PeriodFilterTest, test_simple_time_series)
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(1, observations().size());
   }
+  m_ioContext.run_for(200ms);
+  now = chrono::system_clock::now();
   {
-    auto os = observe({"a", "2"}, now + 200ms);
+    auto os = observe({"a", "2"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
   }
+  m_ioContext.run_for(500ms);
+  now = chrono::system_clock::now();
   {
-    auto os = observe({"a", "3"}, now + 500ms);
+    auto os = observe({"a", "3"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
   }
+  m_ioContext.run_for(1100ms);
+  now = chrono::system_clock::now();
   {
-    auto os = observe({"a", "4"}, now + 1100ms);
+    auto os = observe({"a", "4"}, now);
     auto list = os->getValue<EntityList>();
-    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(0, list.size());
     ASSERT_EQ(2, observations().size());
   }
 
@@ -209,8 +222,10 @@ TEST_F(PeriodFilterTest, delayed_delivery)
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(1, observations().size());
   }
+  m_ioContext.run_for(500ms);
+  now = chrono::system_clock::now();
   {
-    auto os = observe({"a", "2"}, now + 500ms);
+    auto os = observe({"a", "2"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
@@ -237,23 +252,27 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_replace)
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(1, observations().size());
   }
+  m_ioContext.run_for(500ms);
+  now = chrono::system_clock::now();
   {
-    auto os = observe({"a", "2"}, now + 500ms);
+    auto os = observe({"a", "2"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
   }
+  m_ioContext.run_for(750ms);
+  now = chrono::system_clock::now();
   {
-    auto os = observe({"a", "3"}, now + 750ms);
+    auto os = observe({"a", "3"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
-    ASSERT_EQ(1, observations().size());
+    ASSERT_EQ(2, observations().size());
   }
 
-  m_ioContext.run_for(750ms);
+  m_ioContext.run_for(1000ms);
 
   auto obs = observations();
-  ASSERT_EQ(2, obs.size());
+  ASSERT_EQ(3, obs.size());
   auto end = obs.back();
   ASSERT_EQ(3.0, end->getValue<double>());
 }
@@ -265,38 +284,50 @@ TEST_F(PeriodFilterTest, delayed_delivery_with_cancel)
 
   Timestamp now = chrono::system_clock::now();
 
+  // Sent
   {
     auto os = observe({"a", "1"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(1, observations().size());
   }
+  m_ioContext.run_for(500ms);
+  now = chrono::system_clock::now();
+  // Filtered
   {
-    auto os = observe({"a", "2"}, now + 500ms);
+    auto os = observe({"a", "2"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
   }
+  // Delayed sent
+  m_ioContext.run_for(550ms);
+  now = chrono::system_clock::now();
+  // Delayed
   {
-    auto os = observe({"a", "3"}, now + 750ms);
+    auto os = observe({"a", "3"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
-    ASSERT_EQ(1, observations().size());
-  }
-  {
-    auto os = observe({"a", "4"}, now + 1250ms);
-    auto list = os->getValue<EntityList>();
-    ASSERT_EQ(1, list.size());
     ASSERT_EQ(2, observations().size());
+  }
+  m_ioContext.run_for(1250ms);
+  now = chrono::system_clock::now();
+  // Send delayed and send.
+  {
+    auto os = observe({"a", "4"}, now);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(3, observations().size());
   }
 
   m_ioContext.run_for(1s);
 
   auto &obs = observations();
-  ASSERT_EQ(3, obs.size());
+  ASSERT_EQ(4, obs.size());
   ASSERT_EQ(1.0, obs[0]->getValue<double>());
-  ASSERT_EQ(3.0, obs[1]->getValue<double>());
-  ASSERT_EQ(4.0, obs[2]->getValue<double>());
+  ASSERT_EQ(2.0, obs[1]->getValue<double>());
+  ASSERT_EQ(3.0, obs[2]->getValue<double>());
+  ASSERT_EQ(4.0, obs[3]->getValue<double>());
 }
 
 TEST_F(PeriodFilterTest, deliver_after_delayed_delivery)
@@ -306,21 +337,28 @@ TEST_F(PeriodFilterTest, deliver_after_delayed_delivery)
 
   Timestamp now = chrono::system_clock::now();
 
+  // Initial
   {
     auto os = observe({"a", "1"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(1, observations().size());
   }
+
+  m_ioContext.run_for(500ms);
+  now = chrono::system_clock::now();
+
+  // Delayed
   {
-    auto os = observe({"a", "2"}, now + 500ms);
+    auto os = observe({"a", "2"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
     ASSERT_EQ(1, observations().size());
   }
 
+  // Deliver previous
   m_ioContext.run_for(750ms);
-  m_ioContext.restart();
+
   auto &obs = observations();
   {
     ASSERT_EQ(2, obs.size());
@@ -328,60 +366,85 @@ TEST_F(PeriodFilterTest, deliver_after_delayed_delivery)
     ASSERT_EQ(2.0, obs[1]->getValue<double>());
   }
 
+  // Nothing to do
+  m_ioContext.run_for(1100ms);
+  now = chrono::system_clock::now();
+
+  // Sent
   {
-    auto os = observe({"a", "3"}, now + 1600ms);
+    auto os = observe({"a", "3"}, now);
     auto list = os->getValue<EntityList>();
-    ASSERT_EQ(0, list.size());
-    ASSERT_EQ(2, observations().size());
+    ASSERT_EQ(1, list.size());
+    ASSERT_EQ(3, observations().size());
   }
 
+  // Nothing to do
   m_ioContext.run_for(750ms);
-  m_ioContext.restart();
+  now = chrono::system_clock::now();
 
   {
     ASSERT_EQ(3, obs.size());
     ASSERT_EQ(3.0, obs[2]->getValue<double>());
   }
 
+  m_ioContext.run_for(1000ms);
+  now = chrono::system_clock::now();
+
+  // Deliver immediately
   {
-    auto os = observe({"a", "4"}, now + 2600ms);
-    auto list = os->getValue<EntityList>();
-    ASSERT_EQ(0, list.size());
-    ASSERT_EQ(3, observations().size());
-  }
-  {
-    auto os = observe({"a", "5"}, now + 3200ms);
+    auto os = observe({"a", "4"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(4, observations().size());
   }
 
-  m_ioContext.run_for(1s);
-  m_ioContext.restart();
+  // Nothing
+  m_ioContext.run_for(600ms);
+  now = chrono::system_clock::now();
 
+  // Delayed
+  {
+    auto os = observe({"a", "5"}, now);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(4, observations().size());
+  }
+
+  // Wait for 10000ms with nothing
+  m_ioContext.run_for(1000ms);
+
+  // Should have been sent in the background
   {
     ASSERT_EQ(5, obs.size());
     ASSERT_EQ(4.0, obs[3]->getValue<double>());
     ASSERT_EQ(5.0, obs[4]->getValue<double>());
   }
 
+  // Nothing to send
+  m_ioContext.run_for(400ms);
+  now = chrono::system_clock::now();
+
+  // Delayed
   {
-    auto os = observe({"a", "6"}, now + 3600ms);
+    auto os = observe({"a", "6"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(6, observations().size());
     ASSERT_EQ(6.0, obs[5]->getValue<double>());
   }
+
+  m_ioContext.run_for(1400ms);
+  now = chrono::system_clock::now();
+
   {
-    auto os = observe({"a", "7"}, now + 5000ms);
+    auto os = observe({"a", "7"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
-    ASSERT_EQ(7, observations().size());
+    ASSERT_EQ(7, obs.size());
     ASSERT_EQ(7.0, obs[6]->getValue<double>());
   }
 
   m_ioContext.run_for(750ms);
-  m_ioContext.restart();
 
   ASSERT_EQ(7, obs.size());
 }
@@ -458,37 +521,38 @@ TEST_F(PeriodFilterTest, time_moving_backward)
   Timestamp now = chrono::system_clock::now();
 
   {
-    auto os = observe({"a", "1"}, now + 1000ms);
+    auto os = observe({"a", "1"}, now);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(1, list.size());
     ASSERT_EQ(1, observations().size());
   }
   {
-    auto os = observe({"a", "2"}, now + 400ms);
-    auto list = os->getValue<EntityList>();
-    ASSERT_EQ(1, list.size());
-    ASSERT_EQ(2, observations().size());
-  }
-  {
-    auto os = observe({"a", "3"}, now + 600ms);
+    auto os = observe({"a", "2"}, now - 600ms);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
-    ASSERT_EQ(2, observations().size());
+    ASSERT_EQ(1, observations().size());
   }
   {
-    auto os = observe({"a", "4"}, now + 1200ms);
+    auto os = observe({"a", "3"}, now - 400ms);
     auto list = os->getValue<EntityList>();
     ASSERT_EQ(0, list.size());
-    ASSERT_EQ(2, observations().size());
+    ASSERT_EQ(1, observations().size());
+  }
+  m_ioContext.run_for(200ms);
+  now = chrono::system_clock::now();
+  {
+    auto os = observe({"a", "4"}, now);
+    auto list = os->getValue<EntityList>();
+    ASSERT_EQ(0, list.size());
+    ASSERT_EQ(1, observations().size());
   }
 
   m_ioContext.run_for(1s);
 
   auto &obs = observations();
-  ASSERT_EQ(3, obs.size());
+  ASSERT_EQ(2, obs.size());
   ASSERT_EQ(1.0, obs[0]->getValue<double>());
-  ASSERT_EQ(2.0, obs[1]->getValue<double>());
-  ASSERT_EQ(4.0, obs[2]->getValue<double>());
+  ASSERT_EQ(4.0, obs[1]->getValue<double>());
 }
 
 TEST_F(PeriodFilterTest, exact_period_spacing)

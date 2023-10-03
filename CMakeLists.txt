@@ -2,10 +2,10 @@
 set(AGENT_VERSION_MAJOR 2)
 set(AGENT_VERSION_MINOR 2)
 set(AGENT_VERSION_PATCH 0)
-set(AGENT_VERSION_BUILD 6)
+set(AGENT_VERSION_BUILD 7)
 set(AGENT_VERSION_RC "")
 
-# This minimum version is to support Visual Studio 2017 and C++ feature checking and FetchContent
+# This minimum version is to support Visual Studio 2019 and C++ feature checking and FetchContent
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 
 set(USE_FOLDERS ON)

@@ -32,6 +32,9 @@ namespace mtconnect {
   namespace printer {
     class XmlPrinter;
   }
+  namespace observation {
+    class AsyncObserver;
+  }
 
   /// @brief MTConnect REST normative implemention namespace
   namespace sink::rest_sink {
@@ -170,15 +173,11 @@ namespace mtconnect {
       /// @name Async stream method
       ///@{
 
-      /// @brief Callback when the async write completes
-      /// @param asyncResponse shared pointer to response referencing the session
-      void streamSampleWriteComplete(std::shared_ptr<AsyncSampleResponse> asyncResponse);
-
       /// @brief After the write complete, send the next chunk of data
       /// @param asyncResponse shared pointer to async response referencing the session
-      /// @param ec an async error code
-      void streamNextSampleChunk(std::shared_ptr<AsyncSampleResponse> asyncResponse,
-                                 boost::system::error_code ec);
+      /// @returns next sequence number and flag if we are at the end of the buffer
+      SequenceNumber_t streamNextSampleChunk(
+          std::shared_ptr<observation::AsyncObserver> asyncResponse);
 
       /// @brief Callback to stream another current chunk
       /// @param asyncResponse shared pointer to async response referencing the session
@@ -301,9 +300,7 @@ namespace mtconnect {
       std::string fetchSampleData(const printer::Printer *printer, const FilterSetOpt &filterSet,
                                   int count, const std::optional<SequenceNumber_t> &from,
                                   const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                  bool &endOfBuffer,
-                                  observation::ChangeObserver *observer = nullptr,
-                                  bool pretty = false);
+                                  bool &endOfBuffer, bool pretty = false);
 
       // Verification methods
       template <typename T>
