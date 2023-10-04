@@ -1,0 +1,33 @@
+name: Build MTConnect C++ Agent on Ubuntu
+
+on:
+  # Allow manually run workflows
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ["ubuntu-latest", "ubuntu-20.04"]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
+      
+    - name: Checkout Agent
+      uses: actions/checkout@v3
+
+    - name: Install Conan
+      uses: turtlebrowser/get-conan@v1.2
+      
+    - name: Setup Conan
+      run: |
+        conan profile detect -f
+      
+    - name: Build and Test C++ Agent
+      shell: bash
+      run: |
+        conan create . -pr conan/profiles/gcc --build=missing
