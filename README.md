@@ -1471,7 +1471,7 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 	
 ### Build the agent
 	
-	conan create cppagent -pr cppagent/conan/profile/gcc --build=missing
+	conan create cppagent -pr cppagent/conan/profiles/gcc --build=missing
 	
 ## Building on Mac OS
 
