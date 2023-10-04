@@ -37,18 +37,18 @@ namespace mtconnect {
                    [](const char a, const char b) { return toupper(a) == b; });
     }
 
-    inline static std::pair<std::optional<std::string_view>, std::optional<std::string_view>> splitPair(
-        const std::string &key)
+    inline static std::pair<std::optional<std::string_view>, std::optional<std::string_view>>
+    splitPair(const std::string &key)
     {
       string_view sv(key.c_str());
       auto c = sv.find(':');
-      
+
       if (c == 0)
-        return { nullopt, sv.substr(c + 1, string::npos) };
+        return {nullopt, sv.substr(c + 1, string::npos)};
       else if (c != string_view::npos)
-        return { sv.substr(0, c), sv.substr(c + 1, string::npos) };
+        return {sv.substr(0, c), sv.substr(c + 1, string::npos)};
       else
-        return { sv, nullopt };
+        return {sv, nullopt};
     }
 
     inline static std::pair<std::string, std::optional<std::string>> splitKey(
@@ -188,7 +188,7 @@ namespace mtconnect {
                        << "': " << *token << " - " << e.what();
         }
       }
-      
+
       if (dataItem->isCondition() && schemaVersion >= SCHEMA_VERSION(2, 3))
       {
         auto nc = props.find("nativeCode");
@@ -230,7 +230,7 @@ namespace mtconnect {
       if (dataItemIt == m_dataItemMap.end() || !(dataItem = dataItemIt->second.lock()))
       {
         auto dataItemKey = splitKey(key);
-        string device { dataItemKey.second.value_or(m_defaultDevice.value_or("")) };
+        string device {dataItemKey.second.value_or(m_defaultDevice.value_or(""))};
         dataItem = m_contract->findDataItem(device, dataItemKey.first);
 
         if (dataItem == nullptr)
@@ -290,7 +290,8 @@ namespace mtconnect {
 
       if (reqs != nullptr)
       {
-        auto obs = zipProperties(dataItem, timestamp, *reqs, token, end, errors, m_contract->getSchemaVersion());
+        auto obs = zipProperties(dataItem, timestamp, *reqs, token, end, errors,
+                                 m_contract->getSchemaVersion());
         if (dataItem->getConstantValue())
           return nullptr;
         if (obs && source)

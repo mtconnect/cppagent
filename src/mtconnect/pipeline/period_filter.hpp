@@ -140,9 +140,10 @@ namespace mtconnect::pipeline {
 
       const auto &ts = obs->getTimestamp();
 #ifdef DEBUG_PERIOD_FILTER
-      std::cout << "<<<< Delta for obs at " << format(ts) << " is " << duration_cast<milliseconds>(last.m_next - ts).count() << std::endl;
+      std::cout << "<<<< Delta for obs at " << format(ts) << " is "
+                << duration_cast<milliseconds>(last.m_next - ts).count() << std::endl;
 #endif
-      
+
       const auto start = last.m_next - last.m_period;
       const auto &end = last.m_next;
 
@@ -193,7 +194,7 @@ namespace mtconnect::pipeline {
         // Similar to the delayed send, the last timestamp is computed as the end
         // of the previous period.
         last.m_next += last.m_period;
-        
+
 #ifdef DEBUG_PERIOD_FILTER
         std::cout << "  last timestamp set to " << format(last.m_next) << std::endl;
 #endif
@@ -241,7 +242,7 @@ namespace mtconnect::pipeline {
       // Set the timer to expire in the remaining time left in the period given
       // in last.m_delta
       last.m_timer.cancel();
-      const auto now { system_clock::now() };
+      const auto now {system_clock::now()};
       const auto delta = last.m_next - now;
       last.m_timer.expires_after(delta);
 
@@ -282,17 +283,18 @@ namespace mtconnect::pipeline {
           auto &last = lastIt->second;
 
 #ifdef DEBUG_PERIOD_FILTER
-          std::cout << "sendObservation: last timestamp is " << format(last.m_observation->getTimestamp())
-                    << " next " << format(last.m_next) << std::endl;
+          std::cout << "sendObservation: last timestamp is "
+                    << format(last.m_observation->getTimestamp()) << " next " << format(last.m_next)
+                    << std::endl;
 #endif
           last.m_observation.swap(obs);
-          auto now { system_clock::now() };
+          auto now {system_clock::now()};
           if (now >= last.m_next)
           {
             last.m_next += last.m_period;
 #ifdef DEBUG_PERIOD_FILTER
-            std::cout << "sendObservation: setting timestamp to " << format(last.m_next)
-                      << " now " << format(now) << std::endl;
+            std::cout << "sendObservation: setting timestamp to " << format(last.m_next) << " now "
+                      << format(now) << std::endl;
 #endif
           }
           else

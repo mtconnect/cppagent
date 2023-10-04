@@ -44,7 +44,9 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string, DataItemPtr> &items, int32_t schemaVersion) : m_dataItems(items), m_schemaVersion(schemaVersion) {}
+  MockPipelineContract(std::map<string, DataItemPtr> &items, int32_t schemaVersion)
+    : m_dataItems(items), m_schemaVersion(schemaVersion)
+  {}
   DevicePtr findDevice(const std::string &) override { return nullptr; }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
@@ -71,8 +73,7 @@ protected:
   void SetUp() override
   {
     m_context = make_shared<PipelineContext>();
-    m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems,
-                                                              SCHEMA_VERSION(2, 0));
+    m_context->m_contract = make_unique<MockPipelineContract>(m_dataItems, SCHEMA_VERSION(2, 0));
     m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
     m_mapper->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
   }
@@ -540,7 +541,7 @@ TEST_F(DataItemMappingTest, continue_after_conversion_error)
 TEST_F(DataItemMappingTest, version_23_condition_behavior_with_native_code)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
-  auto *context = dynamic_cast<MockPipelineContract*>(m_context->m_contract.get());
+  auto *context = dynamic_cast<MockPipelineContract *>(m_context->m_contract.get());
   context->m_schemaVersion = SCHEMA_VERSION(2, 3);
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
@@ -559,13 +560,12 @@ TEST_F(DataItemMappingTest, version_23_condition_behavior_with_native_code)
   ASSERT_EQ("A123", cond->get<string>("conditionId"));
   ASSERT_EQ("HIGH", cond->get<string>("qualifier"));
   ASSERT_EQ("Fault", cond->getName());
-
 }
 
 TEST_F(DataItemMappingTest, version_23_condition_behavior_with_condition_id)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
-  auto *context = dynamic_cast<MockPipelineContract*>(m_context->m_contract.get());
+  auto *context = dynamic_cast<MockPipelineContract *>(m_context->m_contract.get());
   context->m_schemaVersion = SCHEMA_VERSION(2, 3);
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
@@ -584,13 +584,12 @@ TEST_F(DataItemMappingTest, version_23_condition_behavior_with_condition_id)
   ASSERT_EQ("B456", cond->get<string>("conditionId"));
   ASSERT_EQ("HIGH", cond->get<string>("qualifier"));
   ASSERT_EQ("Fault", cond->getName());
-
 }
 
 TEST_F(DataItemMappingTest, version_23_condition_behavior_with_only_condition_id)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
-  auto *context = dynamic_cast<MockPipelineContract*>(m_context->m_contract.get());
+  auto *context = dynamic_cast<MockPipelineContract *>(m_context->m_contract.get());
   context->m_schemaVersion = SCHEMA_VERSION(2, 3);
   //  <data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 
@@ -609,6 +608,4 @@ TEST_F(DataItemMappingTest, version_23_condition_behavior_with_only_condition_id
   ASSERT_EQ("B456", cond->get<string>("conditionId"));
   ASSERT_EQ("HIGH", cond->get<string>("qualifier"));
   ASSERT_EQ("Fault", cond->getName());
-
 }
-
