@@ -73,6 +73,9 @@ namespace mtconnect {
       /// @param[in] name name or id of the data item
       /// @return shared pointer to the data item if found
       virtual DataItemPtr findDataItem(const std::string &device, const std::string &name) = 0;
+      /// @brief get the current schema version as an integer
+      /// @returns the schema version as an integer [major * 100 + minor] as a 32bit integer.
+      virtual int32_t getSchemaVersion() const = 0;
       /// @brief iterate through all the data items calling `fun` for each
       /// @param[in] fun The function or lambda to call
       virtual void eachDataItem(EachDataItem fun) = 0;

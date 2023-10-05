@@ -44,7 +44,7 @@ namespace mtconnect::observation {
     m_signalers.erase(newEndPos);
     return true;
   }
-  
+
   void ChangeObserver::handler(boost::system::error_code ec)
   {
     boost::asio::dispatch(m_strand, boost::bind(m_handler, ec));
@@ -106,8 +106,7 @@ namespace mtconnect::observation {
       m_strand(strand),
       m_observer(strand),
       m_buffer(buffer)
-  {
-  }
+  {}
 
   void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from, Resolver resolver)
   {
