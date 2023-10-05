@@ -101,7 +101,8 @@ namespace mtconnect {
            {"removed", QUERY, "Boolean indicating if removed assets are included in results"},
            {"type", QUERY, "Only include assets of type `type` in the results"},
            {"count", QUERY, "Maximum number of entities to include in results"},
-           {"assetId", QUERY, "An assetId to select"},
+            {"assetId", QUERY, "An assetId to select"},
+            {"deviceType", QUERY, "Values are 'Device' or 'Agent'. Selects only devices of that type."},
            {"assetId", PATH, "An assetId to select"},
            {"path", QUERY, "XPath to filter DataItems matched against the probe document"},
            {"at", QUERY, "Sequence number at which the observation snapshot is taken"},
@@ -423,35 +424,41 @@ namespace mtconnect {
       auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
         auto device = request->parameter<string>("device");
         auto pretty = *request->parameter<bool>("pretty");
+        auto deviceType = request->parameter<string>("deviceType");
 
         auto printer = printerForAccepts(request->m_accepts);
 
         if (device && !ends_with(request->m_path, string("probe")) &&
             m_sinkContract->findDeviceByUUIDorName(*device) == nullptr)
           return false;
+        
+        if (deviceType && *deviceType != "Device" && *deviceType != "Agent")
+        {
+          return false;
+        }
 
-        respond(session, probeRequest(printer, device, pretty));
+        respond(session, probeRequest(printer, device, pretty, deviceType));
         return true;
       };
 
-      m_server->addRouting({boost::beast::http::verb::get, "/probe?pretty={bool:false}", handler})
+      m_server->addRouting({boost::beast::http::verb::get, "/probe?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
           ->addRouting(
-              {boost::beast::http::verb::get, "/{device}/probe?pretty={bool:false}", handler})
+              {boost::beast::http::verb::get, "/{device}/probe?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");
 
       // Must be last
-      m_server->addRouting({boost::beast::http::verb::get, "/?pretty={bool:false}", handler})
+      m_server->addRouting({boost::beast::http::verb::get, "/?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
-          ->addRouting({boost::beast::http::verb::get, "/{device}?pretty={bool:false}", handler})
+          ->addRouting({boost::beast::http::verb::get, "/{device}?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");
@@ -598,7 +605,8 @@ namespace mtconnect {
           streamCurrentRequest(session, printerForAccepts(request->m_accepts), *interval,
                                request->parameter<string>("device"),
                                request->parameter<string>("path"),
-                               *request->parameter<bool>("pretty"));
+                               *request->parameter<bool>("pretty"),
+                               request->parameter<string>("deviceType"));
         }
         else
         {
@@ -606,14 +614,16 @@ namespace mtconnect {
                                           request->parameter<string>("device"),
                                           request->parameter<uint64_t>("at"),
                                           request->parameter<string>("path"),
-                                          *request->parameter<bool>("pretty")));
+                                          *request->parameter<bool>("pretty"),
+                                          request->parameter<string>("deviceType")));
         }
         return true;
       };
 
       string qp(
           "path={string}&at={unsigned_integer}&"
-          "interval={integer}&pretty={bool:false}");
+          "interval={integer}&pretty={bool:false}&"
+          "deviceType={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/current?" + qp, handler})
           .document("MTConnect current request",
                     "Gets a stapshot of the state of all the observations for all devices "
@@ -635,7 +645,8 @@ namespace mtconnect {
               session, printerForAccepts(request->m_accepts), *interval,
               *request->parameter<int32_t>("heartbeat"), *request->parameter<int32_t>("count"),
               request->parameter<string>("device"), request->parameter<uint64_t>("from"),
-              request->parameter<string>("path"), *request->parameter<bool>("pretty"));
+              request->parameter<string>("path"), *request->parameter<bool>("pretty"),
+              request->parameter<string>("deviceType"));
         }
         else
         {
@@ -644,7 +655,8 @@ namespace mtconnect {
                       printerForAccepts(request->m_accepts), *request->parameter<int32_t>("count"),
                       request->parameter<string>("device"), request->parameter<uint64_t>("from"),
                       request->parameter<uint64_t>("to"), request->parameter<string>("path"),
-                      *request->parameter<bool>("pretty")));
+                      *request->parameter<bool>("pretty"),
+                      request->parameter<string>("deviceType")));
         }
         return true;
       };
@@ -653,7 +665,8 @@ namespace mtconnect {
           "path={string}&from={unsigned_integer}&"
           "interval={integer}&count={integer:100}&"
           "heartbeat={integer:10000}&to={unsigned_integer}&"
-          "pretty={bool:false}");
+          "pretty={bool:false}&"
+          "deviceType={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/sample?" + qp, handler})
           .document("MTConnect sample request",
                     "Gets a time series of at maximum `count` observations for all devices "
@@ -711,7 +724,8 @@ namespace mtconnect {
     // -------------------------------------------
 
     ResponsePtr RestService::probeRequest(const Printer *printer,
-                                          const std::optional<std::string> &device, bool pretty)
+                                          const std::optional<std::string> &device, bool pretty,
+                                          const std::optional<std::string> &deviceType)
     {
       NAMED_SCOPE("RestService::probeRequest");
 
@@ -725,6 +739,12 @@ namespace mtconnect {
       else
       {
         deviceList = m_sinkContract->getDevices();
+        if (deviceType)
+        {
+          deviceList.remove_if([&deviceType](const DevicePtr &dev) {
+            return dev->getName() == *deviceType;
+          });
+        }
       }
 
       auto counts = m_sinkContract->getAssetStorage()->getCountsByType();
@@ -742,7 +762,8 @@ namespace mtconnect {
     ResponsePtr RestService::currentRequest(const Printer *printer,
                                             const std::optional<std::string> &device,
                                             const std::optional<SequenceNumber_t> &at,
-                                            const std::optional<std::string> &path, bool pretty)
+                                            const std::optional<std::string> &path, bool pretty,
+                                            const std::optional<std::string> &deviceType)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -754,7 +775,7 @@ namespace mtconnect {
       if (path || device)
       {
         filter = make_optional<FilterSet>();
-        checkPath(printer, path, dev, *filter);
+        checkPath(printer, path, dev, *filter, deviceType);
       }
 
       // Check if there is a frequency to stream data or not
@@ -767,7 +788,8 @@ namespace mtconnect {
                                            const std::optional<std::string> &device,
                                            const std::optional<SequenceNumber_t> &from,
                                            const std::optional<SequenceNumber_t> &to,
-                                           const std::optional<std::string> &path, bool pretty)
+                                           const std::optional<std::string> &path, bool pretty,
+                                           const std::optional<std::string> &deviceType)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -779,7 +801,7 @@ namespace mtconnect {
       if (path || device)
       {
         filter = make_optional<FilterSet>();
-        checkPath(printer, path, dev, *filter);
+        checkPath(printer, path, dev, *filter, deviceType);
       }
 
       // Check if there is a frequency to stream data or not
@@ -848,7 +870,8 @@ namespace mtconnect {
                                           const int interval, const int heartbeatIn,
                                           const int count, const std::optional<std::string> &device,
                                           const std::optional<SequenceNumber_t> &from,
-                                          const std::optional<std::string> &path, bool pretty)
+                                          const std::optional<std::string> &path, bool pretty,
+                                          const std::optional<std::string> &deviceType)
     {
       NAMED_SCOPE("RestService::streamSampleRequest");
 
@@ -865,7 +888,7 @@ namespace mtconnect {
       }
 
       FilterSet filter;
-      checkPath(printer, path, dev, filter);
+      checkPath(printer, path, dev, filter, deviceType);
 
       auto asyncResponse = make_shared<AsyncSampleResponse>(
           m_strand, m_sinkContract->getCircularBuffer(), std::move(filter),
@@ -939,7 +962,8 @@ namespace mtconnect {
     void RestService::streamCurrentRequest(SessionPtr session, const Printer *printer,
                                            const int interval,
                                            const std::optional<std::string> &device,
-                                           const std::optional<std::string> &path, bool pretty)
+                                           const std::optional<std::string> &path, bool pretty,
+                                           const std::optional<std::string> &deviceType)
     {
       checkRange(printer, interval, 0, numeric_limits<int>().max(), "interval");
       DevicePtr dev {nullptr};
@@ -952,7 +976,7 @@ namespace mtconnect {
       if (path || device)
       {
         asyncResponse->m_filter = make_optional<FilterSet>();
-        checkPath(printer, path, dev, *asyncResponse->m_filter);
+        checkPath(printer, path, dev, *asyncResponse->m_filter, deviceType);
       }
       asyncResponse->m_interval = chrono::milliseconds {interval};
       asyncResponse->m_printer = printer;
@@ -1280,11 +1304,12 @@ namespace mtconnect {
     }
 
     void RestService::checkPath(const Printer *printer, const std::optional<std::string> &path,
-                                const DevicePtr device, FilterSet &filter) const
+                                const DevicePtr device, FilterSet &filter,
+                                const std::optional<std::string> &deviceType) const
     {
       try
       {
-        m_sinkContract->getDataItemsForPath(device, path, filter);
+        m_sinkContract->getDataItemsForPath(device, path, filter, deviceType);
       }
       catch (exception &e)
       {
