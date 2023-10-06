@@ -215,7 +215,8 @@ namespace mtconnect::observation {
           // This will allow the next set of data to be pulled. Any later events will have
           // greater sequence numbers, so this should not cause a problem. Also, signaled
           // sequence numbers can only decrease, never increase.
-          m_sequence = m_observer.getSequence();
+          if (m_observer.getSequence() > m_sequence)
+            m_sequence = m_observer.getSequence();
           m_observer.reset();
         }
       }
