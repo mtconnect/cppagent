@@ -2200,14 +2200,14 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
 
     ASSERT_TRUE(m_config->getAgent());
   }
-  
+
   TEST_F(ConfigTest, should_support_json_format)
   {
     using namespace std::chrono_literals;
 
     string str("{ \"Devices\": \"" TEST_RESOURCE_DIR
                "/samples/test_config.xml\","
-R"DOC(
+               R"DOC(
   "Adapters": {
         "LinuxCNC": {
           "Port": 23,

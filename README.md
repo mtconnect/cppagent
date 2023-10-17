@@ -785,10 +785,11 @@ Sinks {
 }
 ```
 
-* `ProbeTopic` - Prefix for the Device Model topic
+* `ProbeTopic` or `DeviceTopic` - Prefix for the Device Model topic
 
     > Note: The `[device]` will be replace with the uuid of each device. Other patterns can be created, 
     > for example: `MTConnect/[device]/Probe` will group by device instead of operation.
+    > `DeviceTopic` will also work.
 
     *Default*: `MTConnect/Probe/[device]`
 

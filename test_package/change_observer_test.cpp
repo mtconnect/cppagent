@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 
 namespace mtconnect {
   using namespace observation;
-  
+
   class ChangeObserverTest : public testing::Test
   {
   public:
@@ -54,7 +54,7 @@ namespace mtconnect {
     void SetUp() override
     {
       m_context = make_unique<boost::asio::io_context>();
-      m_strand = make_unique < boost::asio::io_context::strand>(*m_context);
+      m_strand = make_unique<boost::asio::io_context::strand>(*m_context);
       m_signaler = std::make_unique<mtconnect::ChangeSignaler>();
       m_guard.emplace(m_context->get_executor());
     }
@@ -94,7 +94,7 @@ namespace mtconnect {
 
     auto startTime = std::chrono::system_clock::now();
     std::chrono::milliseconds duration;
-    
+
     changeObserver.m_handler = [&](boost::system::error_code ec) {
       EXPECT_EQ(boost::asio::error::operation_aborted, ec);
       duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -126,7 +126,8 @@ namespace mtconnect {
           std::chrono::system_clock::now() - startTime);
       ASSERT_FALSE(changeObserver.wasSignaled());
     };
-    auto waitResult = changeObserver.waitForSignal((expectedExeTime / 2));  // Wait to be signalled within twice expected time
+    auto waitResult = changeObserver.waitForSignal(
+        (expectedExeTime / 2));  // Wait to be signalled within twice expected time
     // Only wait a maximum of 1 / 2 the expected time
 
     m_context->run_until(startTime + expectedExeTime);
@@ -168,7 +169,8 @@ namespace mtconnect {
       ASSERT_TRUE(changeObserver.wasSignaled());
       called = true;
     };
-    ASSERT_TRUE(changeObserver.waitForSignal(waitTime));  // Wait to be signalled within twice expected time
+    ASSERT_TRUE(
+        changeObserver.waitForSignal(waitTime));  // Wait to be signalled within twice expected time
 
     m_context->run_for(50ms);
     m_signaler->signalObservers(uint64_t {100});
@@ -192,11 +194,12 @@ namespace mtconnect {
     auto const waitTime = 2000ms;
     bool called {false};
     changeObserver.m_handler = [&](boost::system::error_code ec) {
-     EXPECT_EQ(boost::asio::error::operation_aborted, ec);
-     ASSERT_TRUE(changeObserver.wasSignaled());
-     called = true;
+      EXPECT_EQ(boost::asio::error::operation_aborted, ec);
+      ASSERT_TRUE(changeObserver.wasSignaled());
+      called = true;
     };
-    ASSERT_TRUE(changeObserver.waitForSignal(waitTime));  // Wait to be signalled within twice expected time
+    ASSERT_TRUE(
+        changeObserver.waitForSignal(waitTime));  // Wait to be signalled within twice expected time
 
     m_context->run_for(50ms);
     m_signaler->signalObservers(uint64_t {100});
@@ -313,7 +316,7 @@ namespace mtconnect {
     ASSERT_FALSE(called);
 
     expected = addObservations(1);
-    ASSERT_EQ(4ull, expected);  
+    ASSERT_EQ(4ull, expected);
 
     m_context->run_for(200ms);
     ASSERT_FALSE(called);
@@ -359,7 +362,7 @@ namespace mtconnect {
 
     m_context->run_for(100ms);
     ASSERT_FALSE(called);
-    
+
     waitFor([&called]() { return called; });
     ASSERT_TRUE(called);
   }
@@ -368,13 +371,13 @@ namespace mtconnect {
   {
     FilterSet filter {"a", "b"};
     shared_ptr<MockObserver> observer {
-      make_shared<MockObserver>(*m_strand, m_buffer, std::move(filter), 200ms, 500ms)};
-    
+        make_shared<MockObserver>(*m_strand, m_buffer, std::move(filter), 200ms, 500ms)};
+
     addObservations(3);
     observer->observe(1, [this](const string &id) { return m_signalers[id].get(); });
-    
+
     ASSERT_FALSE(observer->isEndOfBuffer());
-    
+
     bool called {false};
     SequenceNumber_t expected = 1;
     bool end = false;
@@ -386,26 +389,26 @@ namespace mtconnect {
       asio::post(*m_strand, boost::bind(&AsyncObserver::handlerCompleted, observer));
       return expected + 1;
     };
-    
+
     observer->handlerCompleted();
     ASSERT_TRUE(called);
     ASSERT_FALSE(observer->isEndOfBuffer());
     waitFor([&] { return called; });
-    
+
     called = false;
     expected = 2;
     waitFor([&] { return called; });
     ASSERT_TRUE(called);
     ASSERT_EQ(3, observer->getSequence());
     ASSERT_FALSE(observer->isEndOfBuffer());
-    
+
     called = false;
     expected = 3;
     waitFor([&] { return called; });
     ASSERT_TRUE(called);
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
-    
+
     end = true;
     called = false;
     expected = 4;
@@ -413,10 +416,10 @@ namespace mtconnect {
     ASSERT_FALSE(called);
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
-    
+
     auto s = addObservations(3);
     ASSERT_EQ(6ull, s);
-    
+
     called = false;
     expected = 4;
     waitFor([&] { return called; });
