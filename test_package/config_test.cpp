@@ -2241,4 +2241,17 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
     // ASSERT_TRUE(device->m_preserveUuid);
   }
 
+  TEST_F(ConfigTest, should_set_agent_device_uuid)
+  {
+    string config(R"DOC(
+SchemaVersion=2.3
+AgentDeviceUUID = SOME_UUID
+)DOC");
+    
+    m_config->setDebug(true);
+    m_config->loadConfig(config);
+    
+    const auto &ad = m_config->getAgent()->getAgentDevice();
+    ASSERT_EQ("SOME_UUID", *(ad->getUuid()));
+  }
 }  // namespace
