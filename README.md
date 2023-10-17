@@ -999,8 +999,17 @@ If the value itself contains a pipe character `|` the pipe must be escaped using
 Conditions require six (6) fields as follows:
 
 	<timestamp>|<data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
-	for adapters providing conditionIds - the conditionId is added to the native_code field with a ':' delimiter.
-		<timestamp>|<data_item_name>|<level>|<native_code>|<condition_id:native_severity>|<qualifier>|<message>>
+	
+	* Condition id and native code are set to the same value given as <native_code>
+
+	<timestamp>|<data_item_name>|<level>|<native_code>:<condition_id>|<native_severity>|<qualifier>|<message>
+	
+	* Condition id is set to condition_id and native code is set to native_code
+	
+	<timestamp>|<data_item_name>|<level>|<condition_id>|<native_severity>|<qualifier>|<message>
+	
+	* Condition id is set to condition_id and native code is not set
+	
 	
 For a complete description of these fields, see the standard. An example line will look like this:
 
