@@ -46,7 +46,7 @@ namespace mtconnect::observation {
     {}
 
     virtual ~ChangeObserver();
-    
+
     /// @brief dispatch handler
     ///
     /// this is only necessary becase of issue with windows DLLs
@@ -54,7 +54,8 @@ namespace mtconnect::observation {
     /// @param ec the error code from the callback
     void handler(boost::system::error_code ec);
 
-    /// @brief wait for a signal to occur asynchronously. If it is already signaled, call the callback immediately.
+    /// @brief wait for a signal to occur asynchronously. If it is already signaled, call the
+    /// callback immediately.
     /// @param duration the duration to wait
     /// @param handler the handler to call back
     /// @return `true` if successful
@@ -79,7 +80,7 @@ namespace mtconnect::observation {
       }
       return true;
     }
-    
+
     /// @brief wait a period of time where signals will not cancle the timer
     /// @param duration the duration to wait
     /// @param handler the handler to call back
@@ -94,7 +95,6 @@ namespace mtconnect::observation {
 
       return true;
     }
-
 
     /// @brief single all waiting observers if this sequence number is greater than the last
     ///
@@ -111,7 +111,7 @@ namespace mtconnect::observation {
       {
         if (m_timer.cancel() == 0)
         {
-          //LOG(trace) << "Cannot cancel timer";
+          // LOG(trace) << "Cannot cancel timer";
         }
       }
     }
@@ -128,7 +128,7 @@ namespace mtconnect::observation {
       m_sequence = UINT64_MAX;
       m_noCancelOnSignal = false;
     }
-    
+
     /// @brief handler for the callback
     boost::function<void(boost::system::error_code)> m_handler;
 
@@ -139,7 +139,7 @@ namespace mtconnect::observation {
 
     std::list<ChangeSignaler *> m_signalers;
     volatile uint64_t m_sequence = UINT64_MAX;
-    bool m_noCancelOnSignal { false };
+    bool m_noCancelOnSignal {false};
 
   protected:
     friend class ChangeSignaler;

@@ -62,7 +62,8 @@ namespace mtconnect {
 
         GetOptions(config, m_options, options);
         AddOptions(config, m_options,
-                   {{configuration::MqttCaCert, string()},
+                   {{configuration::ProbeTopic, string()},
+                    {configuration::MqttCaCert, string()},
                     {configuration::MqttPrivateKey, string()},
                     {configuration::MqttCert, string()},
                     {configuration::MqttClientId, string()},
@@ -70,7 +71,7 @@ namespace mtconnect {
                     {configuration::MqttPassword, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
-                             {configuration::ProbeTopic, "MTConnect/Probe/[device]"s},
+                             {configuration::DeviceTopic, "MTConnect/Probe/[device]"s},
                              {configuration::AssetTopic, "MTConnect/Asset/[device]"s},
                              {configuration::CurrentTopic, "MTConnect/Current/[device]"s},
                              {configuration::SampleTopic, "MTConnect/Sample/[device]"s},
@@ -92,7 +93,8 @@ namespace mtconnect {
 
         int maxTopicDepth {GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7)};
 
-        m_deviceTopic = getTopic(configuration::ProbeTopic, maxTopicDepth);
+        m_deviceTopic = GetOption<string>(m_options, configuration::ProbeTopic)
+                            .value_or(get<string>(m_options[configuration::DeviceTopic]));
         m_assetTopic = getTopic(configuration::AssetTopic, maxTopicDepth);
         m_currentTopic = getTopic(configuration::CurrentTopic, maxTopicDepth);
         m_sampleTopic = getTopic(configuration::SampleTopic, maxTopicDepth);
