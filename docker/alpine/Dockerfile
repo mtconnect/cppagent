@@ -82,7 +82,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
      fi \
   && conan profile detect \
   && conan create . \
-       --build=missing \
+       --build="*" \
        -c "tools.build:jobs=$CONAN_CPU_COUNT" \
        -o agent_prefix=mtc \
        -o cpack=True \
