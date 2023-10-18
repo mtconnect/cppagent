@@ -63,7 +63,7 @@ RUN  apk update \
        python3 \
        ruby \
        ruby-rake \
-  && PIP_ROOT_USER_ACTION='ignore' pip install conan -v 'conan==2.0.9'
+  && PIP_ROOT_USER_ACTION='ignore' pip install conan
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
@@ -82,7 +82,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
      fi \
   && conan profile detect \
   && conan create . \
-       --build="*" \
+       --build=missing \
        -c "tools.build:jobs=$CONAN_CPU_COUNT" \
        -o agent_prefix=mtc \
        -o cpack=True \
