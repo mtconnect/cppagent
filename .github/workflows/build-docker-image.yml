@@ -41,10 +41,10 @@ jobs:
         include:
           - dockerfile: docker/alpine/Dockerfile
             name: agent
-          - dockerfile: demo/Dockerfile.alpine
-            name: demo
-          - dockerfile: docker/replicator/Dockerfile
-            name: replicator
+          # - dockerfile: demo/Dockerfile.alpine
+          #  name: demo
+          #- dockerfile: docker/replicator/Dockerfile
+          #  name: replicator
         
 
     # steps represent a sequence of tasks that will be executed as part of the job
