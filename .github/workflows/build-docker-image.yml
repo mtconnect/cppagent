@@ -21,10 +21,11 @@ env:
 # when to run workflow
 on:
   # # run on push or pull request events for the master branch
-  # push:
-  #   branches: [ main ]
-  # pull_request:
-  #   branches: [ main ]
+  push:
+    paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
+    branches: [ "main", "main-dev" ]
+    tags:
+      - "v*.*.*"
 
   # allows you to run this workflow manually from the actions tab
   workflow_dispatch:
@@ -35,6 +36,16 @@ jobs:
   build:
     # the type of runner that the job will run on
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - dockerfile: docker/alpine/Dockerfile
+            name: agent
+          - dockerfile: demo/Dockerfile.alpine
+            name: demo
+          - dockerfile: docker/replicator/Dockerfile
+            name: replicator
+        
 
     # steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -63,13 +74,13 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: docker/alpine/Dockerfile
+          file: ${{ matrix.dockerfile }}
           platforms: ${{ env.PLATFORMS }}
 
           # docker hub user/repo:tag
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/agent:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/agent:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.name }}:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.name }}:${{ github.ref_name }}
 
           # push to docker hub
           push: true
