@@ -96,7 +96,7 @@ class MTConnectAgentConan(ConanFile):
         self.output.info(f"Checking version of {package} > {version}")
         buf = io.StringIO()
         command = f"{package} --version"
-        res = self.run([command], shell=True, stdout=buf)
+        res = self.run(command, shell=True, stdout=buf)
         ver = [0, 0, 0]
         if res == 0:
             text = buf.getvalue()
