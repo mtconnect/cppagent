@@ -43,7 +43,8 @@ namespace sys = boost::system;
 namespace mtconnect::source::adapter::shdr {
   // Connector public methods
   Connector::Connector(asio::io_context::strand &strand, string server, unsigned int port,
-                       seconds legacyTimeout, seconds reconnectInterval)
+                       seconds legacyTimeout, seconds reconnectInterval,
+                       std::optional<std::chrono::milliseconds> heartbeat)
     : m_server(std::move(server)),
       m_strand(strand),
       m_socket(strand.context()),
@@ -57,6 +58,7 @@ namespace mtconnect::source::adapter::shdr {
       m_connected(false),
       m_disconnecting(false),
       m_realTime(false),
+      m_heartbeatOverride(heartbeat),
       m_legacyTimeout(duration_cast<milliseconds>(legacyTimeout)),
       m_reconnectInterval(duration_cast<milliseconds>(reconnectInterval)),
       m_receiveTimeLimit(m_legacyTimeout)
@@ -399,10 +401,14 @@ namespace mtconnect::source::adapter::shdr {
     NAMED_SCOPE("Connector::startHeartbeats");
 
     size_t pos;
-    if (arg.length() > 7 && arg[6] == ' ' &&
-        (pos = arg.find_first_of("0123456789", 7)) != string::npos)
+    if (m_heartbeatOverride || (arg.length() > 7 && arg[6] == ' ' &&
+                                (pos = arg.find_first_of("0123456789", 7)) != string::npos))
     {
-      auto freq = milliseconds {atoi(arg.substr(pos).c_str())};
+      std::chrono::milliseconds freq;
+      if (m_heartbeatOverride)
+        freq = *m_heartbeatOverride;
+      else
+        freq = milliseconds {atoi(arg.substr(pos).c_str())};
       constexpr minutes maxTimeOut = minutes {30};  // Make the maximum timeout 30 minutes.
 
       if (freq > 0ms && freq < maxTimeOut)

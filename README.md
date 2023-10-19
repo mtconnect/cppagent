@@ -656,6 +656,11 @@ These can be overridden on a per-adapter basis
 
     *Default*: false
     
+* `Heartbeat` – Overrides the heartbeat interval sent back from the adapter in the 
+   `* PONG <hb>`. The heartbeat will always be this value in milliseconds.
+
+    *Default*: _None_
+    
 * `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
   clock drift but will not give as accurate relative time since it will not take into
   consideration network latencies. This can be overridden on a per adapter basis.
