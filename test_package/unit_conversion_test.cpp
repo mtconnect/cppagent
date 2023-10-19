@@ -110,3 +110,14 @@ TEST(UnitConversionTest, check_square_feet_to_square_millimeter)
   auto conv = UnitConversion::make("SQUARE_FOOT", "SQUARE_MILLIMETER");
   EXPECT_NEAR(650321.3, conv->convert(7.0), 0.1);
 }
+
+TEST(UnitConversionTest, test_volume_and_volume_per_time)
+{
+  auto conv = UnitConversion::make("GALLON", "LITER");
+  EXPECT_NEAR(64.35, conv->convert(17.0), 0.1);
+  conv = UnitConversion::make("PINT", "LITER");
+  EXPECT_NEAR(8.04, conv->convert(17.0), 0.1);
+
+  conv = UnitConversion::make("GALLON/MINUTE", "LITER/SECOND");
+  EXPECT_NEAR(1.0725, conv->convert(17.0), 0.001);
+}
