@@ -599,72 +599,13 @@ Configuration Parameters
   
     *Default*: false
 
-* `PidFile` - UNIX only. The full path of the file that contains the
-  process id of the daemon. This is not supported in Windows.
-
-    *Default*: agent.pid
-
-* `ServiceName` - Changes the service name when installing or removing 
-  the service. This allows multiple agents to run as services on the same machine.
-
-    *Default*: MTConnect Agent
-
-* `Port`	- The port number the agent binds to for requests.
-
-    *Default*: 5000
-    
-* `ServerIp` - The server IP Address to bind to. Can be used to select the interface in IPV4 or IPV6.
-
-    *Default*: 0.0.0.0
-
-* `AllowPut`	- Allow HTTP PUT or POST of data item values or assets.
-
-    *Default*: false
-
-* `AllowPutFrom`	- Allow HTTP PUT or POST from a specific host or 
-  list of hosts. Lists are comma (,) separated and the host names will
-  be validated by translating them into IP addresses.
-
-    *Default*: none
-
 * `JsonVersion`     - JSON Printer format. Old format: 1, new format: 2
 
     *Default*: 2
 
-* `LegacyTimeout`	- The default length of time an adapter can be silent before it
-  is disconnected. This is only for legacy adapters that do not support heartbeats.
-
-    *Default*: 600
-
-* `ReconnectInterval` - The amount of time between adapter reconnection attempts. 
-  This is useful for implementation of high performance adapters where availability
-  needs to be tracked in near-real-time. Time is specified in milliseconds (ms).
-      
-    *Default*: 10000
-      
-* `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
-  clock drift but will not give as accurate relative time since it will not take into
-  consideration network latencies. This can be overridden on a per adapter basis.
-  
-    *Default*: false
-
-* `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
-  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
-
-    *Default*: true
-    
 * `SchemaVersion` - Change the schema version to a different version number.
 
     *Default*: 2.0
-
-* `ConversionRequired` - Global default for data item units conversion in the agent. 
-  Assumes the adapter has already done unit conversion.
-
-    *Default*: true
-    
-* `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
-
-    *Default*: true
 
 * `MaxAssets` - The maximum number of assets the agent can hold in its buffer. The
   number is the actual count, not an exponent.
@@ -683,10 +624,16 @@ Configuration Parameters
 
     *Default*: false
 
-* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), then any observation requiring more than a key/value pair need to be on separate lines. This is the default for all adapters.
+* `PidFile` - UNIX only. The full path of the file that contains the
+  process id of the daemon. This is not supported in Windows.
 
-    *Default*: 1
-	
+    *Default*: agent.pid
+
+* `ServiceName` - Changes the service name when installing or removing 
+  the service. This allows multiple agents to run as services on the same machine.
+
+    *Default*: MTConnect Agent
+
 * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names. This applies to all adapters.
 
     *Default*: false
@@ -694,11 +641,83 @@ Configuration Parameters
 * `WorkerThreads` - The number of operating system threads dedicated to the Agent
 
     *Default*: 1
-	
-* `EnableSourceDeviceModels` - 
+    
+#### Adapter General Configuration
+
+These can be overridden on a per-adapter basis
+
+* `ConversionRequired` - Global default for data item units conversion in the agent. 
+  Assumes the adapter has already done unit conversion.
+
+    *Default*: true
+    
+* `EnableSourceDeviceModels` - Allow adapters and data sources to supply Device 
+  configuration
 
     *Default*: false
+    
+* `IgnoreTimestamps` - Overwrite timestamps with the agent time. This will correct
+  clock drift but will not give as accurate relative time since it will not take into
+  consideration network latencies. This can be overridden on a per adapter basis.
+  
+    *Default*: false
+
+* `LegacyTimeout`	- The default length of time an adapter can be silent before it
+  is disconnected. This is only for legacy adapters that do not support heartbeats.
+
+    *Default*: 600
+
+* `PreserveUUID` - Do not overwrite the UUID with the UUID from the adapter, preserve
+  the UUID in the Devices.xml file. This can be overridden on a per adapter basis.
+
+    *Default*: true
+    
+* `ReconnectInterval` - The amount of time between adapter reconnection attempts. 
+  This is useful for implementation of high performance adapters where availability
+  needs to be tracked in near-real-time. Time is specified in milliseconds (ms).
+      
+    *Default*: 10000
+      
+* `ShdrVersion` - Specifies the SHDR protocol version used by the adapter. When greater than one (1), 
+  allows multiple complex observations, like `Condition` and `Message` on the same line. If it equials one (1), 
+  then any observation requiring more than a key/value pair need to be on separate lines. This is the default for all adapters.
+
+    *Default*: 1	
 	
+* `UpcaseDataItemValue` - Always converts the value of the data items to upper case.
+
+    *Default*: true
+
+#### REST Service Configuration
+
+* `AllowPut`	- Allow HTTP PUT or POST of data item values or assets.
+
+    *Default*: false
+
+* `AllowPutFrom`	- Allow HTTP PUT or POST from a specific host or 
+  list of hosts. Lists are comma (,) separated and the host names will
+  be validated by translating them into IP addresses.
+
+    *Default*: none
+    
+* `HttpHeaders`     - Additional headers to add to the HTTP Response for CORS Security
+
+    > Example: ```
+    > HttpHeaders {
+    >   Access-Control-Allow-Origin = *
+    >   Access-Control-Allow-Methods = GET
+    >   Access-Control-Allow-Headers = Content-Type
+    > }```
+
+* `Port`	- The port number the agent binds to for requests.
+
+    *Default*: 5000
+    
+* `ServerIp` - The server IP Address to bind to. Can be used to select the interface in IPV4 or IPV6.
+
+    *Default*: 0.0.0.0
+
+
 #### Configuration Pameters for TLS (https) Support ####
 
 The following parameters must be present to enable https requests. If there is no password on the certificate, `TlsCertificatePassword` may be omitted.
@@ -707,15 +726,15 @@ The following parameters must be present to enable https requests. If there is n
 
     *Default*: *NULL*
 
-* `TlsPrivateKey` -  The name of the file containing the private key for the certificate
-
-    *Default*: *NULL*
-
-* `TlsDHKey` -  The name of the file containing the Diffie–Hellman key
-
-    *Default*: *NULL*
-
 * `TlsCertificatePassword` -  The password used when creating the certificate. If none was supplied, do not use.
+
+    *Default*: *NULL*
+
+* `TlsClientCAs` - For `TlsVerifyClientCertificate`, specifies a file that contains additional certificate authorities for verification
+
+    *Default*: *NULL*
+    
+* `TlsDHKey` -  The name of the file containing the Diffie–Hellman key
 
     *Default*: *NULL*
 
@@ -723,15 +742,19 @@ The following parameters must be present to enable https requests. If there is n
 
     *Default*: false
 
+* `TlsPrivateKey` -  The name of the file containing the private key for the certificate
+
+    *Default*: *NULL*
+
 * `TlsVerifyClientCertificate` - Request and verify the client certificate against root authorities
 
     *Default*: false
 
-* `TlsClientCAs` - For `TlsVerifyClientCertificate`, specifies a file that contains additional certificate authorities for verification
+### MQTT Configuration
+
+* `MqttCaCert` - CA Certificate for MQTT TLS connection to the MTT Broker
 
     *Default*: *NULL*
-    
-### MQTT Configuration
 
 * `MqttHost` - IP Address or name of the MQTT Broker
 
@@ -741,10 +764,6 @@ The following parameters must be present to enable https requests. If there is n
 
     *Default*: 1883
   
-* `MqttCaCert` - CA Certificate for MQTT TLS connection to the MTT Broker
-
-    *Default*: *NULL*
-
 * `MqttTls` - TLS Certificate for secure connection to the MQTT Broker
 
     *Default*: *NULL*
@@ -785,6 +804,14 @@ Sinks {
 }
 ```
 
+* `AssetTopic` - Prefix for the Assets
+
+    *Default*: `MTConnect/Asset/[device]`
+    
+* `CurrentTopic` - Prefix for the Current 
+
+    *Default*: `MTConnect/Current/[device]`
+
 * `ProbeTopic` or `DeviceTopic` - Prefix for the Device Model topic
 
     > Note: The `[device]` will be replace with the uuid of each device. Other patterns can be created, 
@@ -793,18 +820,10 @@ Sinks {
 
     *Default*: `MTConnect/Probe/[device]`
 
-* `CurrentTopic` - Prefix for the Current 
-
-    *Default*: `MTConnect/Current/[device]`
-
 * `SampleTopic` - Prefix for the Sample 
 
     *Default*: `MTConnect/Current/[device]`
 
-* `AssetTopic` - Prefix for the Assets
-
-    *Default*: `MTConnect/Asset/[device]`
-    
 * `MqttCurrentInterval` - The frequency to publish currents. Acts like a keyframe in a video stream.
 
     *Default*: 10000ms

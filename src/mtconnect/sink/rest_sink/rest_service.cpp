@@ -858,6 +858,14 @@ namespace mtconnect {
 
       checkRange(printer, interval, -1, numeric_limits<int>().max(), "interval");
       checkRange(printer, heartbeatIn, 1, numeric_limits<int>().max(), "heartbeat");
+      if (from)
+      {
+        std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
+        auto firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
+        auto seq = m_sinkContract->getCircularBuffer().getSequence();
+        checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
+      }
+
       DevicePtr dev {nullptr};
       if (device)
       {
@@ -900,25 +908,48 @@ namespace mtconnect {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
 
       auto asyncResponse = std::dynamic_pointer_cast<AsyncSampleResponse>(asyncObserver);
-      SequenceNumber_t end {0ull};
-      bool endOfBuffer {true};
 
-      // end and endOfBuffer are set during the fetch sample data while the
-      // mutex is held. This removed the race to check if we are at the end of
-      // the bufffer and setting the next start to the last sequence number
-      // sent.
-      string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
-                                       asyncResponse->m_count, asyncResponse->getSequence(),
-                                       nullopt, end, endOfBuffer, asyncResponse->m_pretty);
+      try
+      {
+        SequenceNumber_t end {0ull};
+        bool endOfBuffer {true};
 
-      if (m_logStreamData)
-        asyncResponse->m_log << content << endl;
+        // end and endOfBuffer are set during the fetch sample data while the
+        // mutex is held. This removed the race to check if we are at the end of
+        // the bufffer and setting the next start to the last sequence number
+        // sent.
+        string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
+                                         asyncResponse->m_count, asyncResponse->getSequence(),
+                                         nullopt, end, endOfBuffer, asyncResponse->m_pretty);
 
-      asyncResponse->m_session->writeChunk(
-          content, asio::bind_executor(
-                       m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+        if (m_logStreamData)
+          asyncResponse->m_log << content << endl;
 
-      return end;
+        asyncResponse->m_session->writeChunk(
+            content, asio::bind_executor(
+                         m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+
+        return end;
+      }
+
+      catch (RequestError &re)
+      {
+        LOG(error) << asyncResponse->m_session->getRemote().address()
+                   << ": Error processing request: " << re.what();
+        ResponsePtr resp = std::make_unique<Response>(re);
+        asyncResponse->m_session->writeResponse(std::move(resp));
+        asyncResponse->m_session->close();
+      }
+
+      catch (...)
+      {
+        std::stringstream txt;
+        txt << asyncResponse->m_session->getRemote().address() << ": Unknown Error thrown";
+        LOG(error) << txt.str();
+        asyncResponse->fail(boost::beast::http::status::not_found, txt.str());
+      }
+
+      return 0;
     }
 
     struct AsyncCurrentResponse
@@ -970,36 +1001,55 @@ namespace mtconnect {
     {
       using std::placeholders::_1;
 
-      auto service = asyncResponse->m_service.lock();
-
-      if (!service || !m_server || !m_server->isRunning())
+      try
       {
-        LOG(warning) << "Trying to send chunk when service has stopped";
-        if (service)
+        auto service = asyncResponse->m_service.lock();
+
+        if (!service || !m_server || !m_server->isRunning())
         {
-          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                         "Agent shutting down, aborting stream");
+          LOG(warning) << "Trying to send chunk when service has stopped";
+          if (service)
+          {
+            asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                           "Agent shutting down, aborting stream");
+          }
+          return;
         }
-        return;
-      }
 
-      if (ec && ec != boost::asio::error::operation_aborted)
+        if (ec && ec != boost::asio::error::operation_aborted)
+        {
+          LOG(warning) << "Unexpected error streamNextCurrent, aborting";
+          LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
+          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                         "Unexpected error streamNextCurrent, aborting");
+          return;
+        }
+
+        asyncResponse->m_session->writeChunk(
+            fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
+                             asyncResponse->m_pretty),
+            boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
+              asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
+              asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
+                  m_strand, boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
+            }));
+      }
+      catch (RequestError &re)
       {
-        LOG(warning) << "Unexpected error streamNextCurrent, aborting";
-        LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
-        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                       "Unexpected error streamNextCurrent, aborting");
-        return;
+        LOG(error) << asyncResponse->m_session->getRemote().address()
+                   << ": Error processing request: " << re.what();
+        ResponsePtr resp = std::make_unique<Response>(re);
+        asyncResponse->m_session->writeResponse(std::move(resp));
+        asyncResponse->m_session->close();
       }
 
-      asyncResponse->m_session->writeChunk(
-          fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
-                           asyncResponse->m_pretty),
-          boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
-            asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
-            asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
-                m_strand, boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
-          }));
+      catch (...)
+      {
+        std::stringstream txt;
+        txt << asyncResponse->m_session->getRemote().address() << ": Unknown Error thrown";
+        LOG(error) << txt.str();
+        asyncResponse->m_session->fail(boost::beast::http::status::not_found, txt.str());
+      }
     }
 
     ResponsePtr RestService::assetRequest(const Printer *printer, const int32_t count,

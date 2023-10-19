@@ -236,7 +236,6 @@ namespace mtconnect::observation {
         return;
       }
 
-      // End of buffer is set in the handler
       m_sequence = m_handler(getptr());
       m_endOfBuffer = m_sequence >= m_buffer.getSequence();
     }
