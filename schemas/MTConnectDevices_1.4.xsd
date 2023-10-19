@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2019 rel. 3 (x64) (http://www.altova.com) by Tim Shinbara (AMT) -->
 <!--
 Copyright (c) 2008-2010, AMT – The Association For Manufacturing Technology (“AMT”)
 All rights reserved.
@@ -2027,6 +2028,115 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
 			<xs:documentation>
         A component representing an interface in a device.
       </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="BarFeederType">
+		<xs:annotation>
+			<xs:documentation>
+		barfeeder is an XML container that represents the information for a unit
+		involved in delivering bar stock to a piece of equipment.
+	  </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="AuxiliariesType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="BarFeeder" type="BarFeederType" substitutionGroup="Auxiliaries">
+		<xs:annotation>
+			<xs:documentation>
+		barfeeder is an XML container that represents the information for a unit
+		involved in delivering bar stock to a piece of equipment.
+	  </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="ResourcesType">
+		<xs:annotation>
+			<xs:documentation>
+			An XML container used to organize information for lower level elements
+			representing types of items, materials, and personnel that support the
+			operation of a piece of equipment or work to be performed at a location.
+			resources also represents materials or other items consumed or
+			transformed by a piece of equipment for production of parts or other
+			types of goods.
+		  </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="CommonComponentType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="Resources" type="ResourcesType" substitutionGroup="CommonComponent">
+		<xs:annotation>
+			<xs:documentation>
+			An XML container used to organize information for lower level elements
+			representing types of items, materials, and personnel that support the
+			operation of a piece of equipment or work to be performed at a location.
+			resources also represents materials or other items consumed or
+			transformed by a piece of equipment for production of parts or other
+			types of goods.
+		  </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="MaterialsType">
+		<xs:annotation>
+			<xs:documentation>
+			materials is an XML container that provides information about materials
+			or other items consumed or used by the piece of equipment for production
+			of parts, materials, or other types of goods.
+		  </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="ResourcesType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="Materials" type="MaterialsType" substitutionGroup="Resources">
+		<xs:annotation>
+			<xs:documentation>
+			materials is an XML container that provides information about materials
+			or other items consumed or used by the piece of equipment for production
+			of parts, materials, or other types of goods.
+		  </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="StockType">
+		<xs:annotation>
+			<xs:documentation>
+			stock is an XML container that represents the information for the
+			material that is used in a manufacturing process and to which work is
+			applied in a machine or piece of equipment to produce parts.
+		  </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="MaterialsType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="Stock" type="StockType" substitutionGroup="Materials">
+		<xs:annotation>
+			<xs:documentation>
+			stock is an XML container that represents the information for the
+			material that is used in a manufacturing process and to which work is
+			applied in a machine or piece of equipment to produce parts.
+		  </xs:documentation>
+		</xs:annotation>
+	</xs:element>
+	<xs:complexType name="PersonnelType">
+		<xs:annotation>
+			<xs:documentation>
+			personnel is an XML container that provides information about an
+			individual or individuals who either control, support, or otherwise
+			interface with a piece of equipment. 
+		  </xs:documentation>
+		</xs:annotation>
+		<xs:complexContent>
+			<xs:extension base="ResourcesType"/>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:element name="Personnel" type="PersonnelType" substitutionGroup="Resources">
+		<xs:annotation>
+			<xs:documentation>
+			personnel is an XML container that provides information about an
+			individual or individuals who either control, support, or otherwise
+			interface with a piece of equipment. 
+		  </xs:documentation>
 		</xs:annotation>
 	</xs:element>
 	<xs:complexType name="BarFeederInterfaceType">

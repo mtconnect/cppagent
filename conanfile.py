@@ -5,6 +5,7 @@ from conan.tools.files import copy
 
 import os
 import io
+import re
 
 class MTConnectAgentConan(ConanFile):
     name = "mtconnect_agent"
@@ -89,16 +90,32 @@ class MTConnectAgentConan(ConanFile):
 
     def config_options(self):
         if is_msvc(self):
-            self.options.rm_safe("fPIC")                
+            self.options.rm_safe("fPIC")
+
+    def tool_requires_version(self, package, version):
+        self.output.info(f"Checking version of {package} > {version}")
+        buf = io.StringIO()
+        command = f"{package} --version"
+        res = self.run(command, shell=True, stdout=buf)
+        ver = [0, 0, 0]
+        if res == 0:
+            text = buf.getvalue()
+            self.output.debug(f"{command} returned:\n{text}")
+            ver = [int(d) for d in re.search(r"\d+\.\d+\.\d+", text).group(0).split('.')]
+            self.output.info(f"Version of {package} is {ver}")
+        else:
+            self.output.info(f"Command: '{command}' returned {res}")
+        if ver < version:
+            ver_text = '.'.join([str(x) for x in version])
+            self.output.info(f"Old version of {package}, requesting tool {package}/{ver_text}")
+            self.tool_requires(f"{package}/{ver_text}")
+        else:
+            self.output.info(f"Using system version {package}: {ver}")
         
     def build_requirements(self):
-        self.tool_requires("cmake/3.26.4")
-        
+        self.tool_requires_version("cmake", [3, 26, 4])
         if self.options.with_docs:
-            buf = io.StringIO()            
-            res = self.run(["doxygen --version"], shell=True, stdout=buf)
-            if (res != 0 or not buf.getvalue().startswith('1.9')):
-                self.tool_requires("doxygen/1.9.4")
+            self.tool_requires_version("doxygen", [1, 9, 4])
 
     def requirements(self):
         self.requires("boost/1.82.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)

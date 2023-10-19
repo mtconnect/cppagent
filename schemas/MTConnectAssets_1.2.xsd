@@ -1824,6 +1824,13 @@ SUCH PARTY HAD ADVANCE NOTICE OF THE POSSIBILITY OF SUCH DAMAGES.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element name='CutterStatus' type='CutterStatusType' minOccurs='0' maxOccurs='1'>
+        <xs:annotation>
+          <xs:documentation>
+            The status of an individual cutting item
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
       <xs:element name='Locus' type='LocusType' minOccurs='0' maxOccurs='1'>
         <xs:annotation>
           <xs:documentation>
