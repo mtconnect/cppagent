@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file
+/// Tests for unit conversions module
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -32,6 +35,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
+/// @test check 3D conversion with inch to millimeter
 TEST(UnitConversionTest, check_inch_3d)
 {
   auto conv = UnitConversion::make("INCH_3D", "MILLIMETER_3D");
@@ -43,6 +47,7 @@ TEST(UnitConversionTest, check_inch_3d)
   EXPECT_NEAR(76.2, vec[2], 0.0001);
 }
 
+/// @test check 3D unit conversions with radians to degrees
 TEST(UnitConversionTest, check_radian_3d)
 {
   auto conv = UnitConversion::make("RADIAN_3D", "DEGREE_3D");
@@ -54,70 +59,80 @@ TEST(UnitConversionTest, check_radian_3d)
   EXPECT_NEAR(171.8873, vec[2], 0.0001);
 }
 
+/// @test test kilo prefix with kilo amps to amps
 TEST(UnitConversionTest, check_kilo_prefix)
 {
   auto conv = UnitConversion::make("KILOAMPERE", "AMPERE");
   EXPECT_NEAR(130.0, conv->convert(0.13), 0.0001);
 }
 
-// Test cubic inch to millimeter
+/// @test Test cubic inch to millimeter
 TEST(UnitConversionTest, check_cubic_conversion)
 {
   auto conv = UnitConversion::make("CUBIC_INCH", "CUBIC_MILLIMETER");
   EXPECT_NEAR(114709.44799, conv->convert(7.0), 0.0001);
 }
 
-// Test temperature
+/// @test Test temperature conversions of F to C
 TEST(UnitConversionTest, check_temperature_conversions_with_offset)
 {
   auto conv = UnitConversion::make("FAHRENHEIT", "CELSIUS");
   EXPECT_NEAR(-12.22222, conv->convert(10.0), 0.0001);
 }
 
-// Check ratios
+/// @test Check ratios conversion of ft/min to mm/s
 TEST(UnitConversionTest, check_simple_ratio_conversion)
 {
   auto conv = UnitConversion::make("FOOT/MINUTE", "MILLIMETER/SECOND");
   EXPECT_NEAR(35.56, conv->convert(7.0), 0.0001);
 }
 
+/// @test check foot/minute^2 to mm/s^s
 TEST(UnitConversionTest, check_acceleration)
 {
   auto conv = UnitConversion::make("FOOT/MINUTE^2", "MILLIMETER/SECOND^2");
   EXPECT_NEAR(0.592666667, conv->convert(7.0), 0.0001);
 }
 
+/// @test check lbs/in^2 to pascals
 TEST(UnitConversionTest, check_special_pound_inch_squared)
 {
   auto conv = UnitConversion::make("POUND/INCH^2", "PASCAL");
   EXPECT_NEAR(48263.32, conv->convert(7.0), 0.0001);
 }
 
+/// @test check conversion of rev/second to RPM
 TEST(UnitConversionTest, check_revolution_per_second)
 {
   auto conv = UnitConversion::make("REVOLUTION/SECOND", "REVOLUTION/MINUTE");
   EXPECT_NEAR(420.0, conv->convert(7.0), 0.0001);
 }
 
+/// @test check cubit feet/minute to cubic millimeter/second
 TEST(UnitConversionTest, check_cubic_feet_per_minute)
 {
   auto conv = UnitConversion::make("CUBIC_FOOT/MINUTE", "CUBIC_MILLIMETER/SECOND");
   EXPECT_NEAR(3303632.15, conv->convert(7.0), 0.1);
 }
 
+/// @test Check square feet to square millimeters conversion
 TEST(UnitConversionTest, check_square_feet_to_square_millimeter)
 {
   auto conv = UnitConversion::make("SQUARE_FOOT", "SQUARE_MILLIMETER");
   EXPECT_NEAR(650321.3, conv->convert(7.0), 0.1);
 }
 
+/// @test Tests volume conversion to liters and liters pre second
 TEST(UnitConversionTest, test_volume_and_volume_per_time)
 {
+  ///      - Check gallon to liter conversion
   auto conv = UnitConversion::make("GALLON", "LITER");
   EXPECT_NEAR(64.35, conv->convert(17.0), 0.1);
+  ///      - Check pint to liters
   conv = UnitConversion::make("PINT", "LITER");
   EXPECT_NEAR(8.04, conv->convert(17.0), 0.1);
 
+  ///       - Check gallon/minute to liter/second
   conv = UnitConversion::make("GALLON/MINUTE", "LITER/SECOND");
   EXPECT_NEAR(1.0725, conv->convert(17.0), 0.001);
 }

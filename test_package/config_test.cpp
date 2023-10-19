@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file
+/// Configuration integration tests
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
