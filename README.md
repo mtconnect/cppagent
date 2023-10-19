@@ -996,9 +996,20 @@ If the value itself contains a pipe character `|` the pipe must be escaped using
 
         2009-06-15T00:00:00.000000|description|"Text with \| (pipe) character."
 
-Conditions require seven (7) fields as follows:
+Conditions require six (6) fields as follows:
 
-	<timestamp>|<data_item_name>|<level>|<condition_id>|<native_code>|<native_severity>|<qualifier>|<message>
+	<timestamp>|<data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
+	
+	Condition id and native code are set to the same value given as <native_code>
+
+	<timestamp>|<data_item_name>|<level>|<native_code>:<condition_id>|<native_severity>|<qualifier>|<message>
+	
+	Condition id is set to condition_id and native code is set to native_code
+	
+	<timestamp>|<data_item_name>|<level>|<condition_id>|<native_severity>|<qualifier>|<message>
+	
+	Condition id is set to condition_id and native code is not set
+	
 	
 For a complete description of these fields, see the standard. An example line will look like this:
 
@@ -1471,7 +1482,7 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 	
 ### Build the agent
 	
-	conan create cppagent -pr cppagent/conan/profile/gcc --build=missing
+	conan create cppagent -pr cppagent/conan/profiles/gcc --build=missing
 	
 ## Building on Mac OS
 
@@ -1492,11 +1503,11 @@ Install brew and xcode command line tools
 	
 ### Build the agent
 	
-	conan create cppagent -pr cppagent/conan/profile/macos --build=missing
+	conan create cppagent -pr cppagent/conan/profiles/macos --build=missing
     
 ### Generate an xcode project for debugging
 	
-	conan build . -pr conan/profile/xcode -s build_type=Debug --build=missing -o development=True
+	conan build . -pr conan/profiles/xcode -s build_type=Debug --build=missing -o development=True
 
 ## Building on Fedora Alpine
 
@@ -1516,7 +1527,7 @@ Install brew and xcode command line tools
 
 ### Build the agent
 
-	conan create cppagent -pr cppagent/conan/profile/gcc --build=missing
+	conan create cppagent -pr cppagent/conan/profiles/gcc --build=missing
 
 ## For some examples, see the CI/CD workflows in `.github/workflows/build.yml`
 
