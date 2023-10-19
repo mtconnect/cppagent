@@ -22,8 +22,6 @@ env:
 on:
   # # run on push or pull request events for the master branch
   push:
-    paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
-    branches: [ "main", "main-dev" ]
     tags:
       - "v*.*.*"
 
