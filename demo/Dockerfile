@@ -10,15 +10,15 @@
 #
 #   docker buildx build \
 #     --platform linux/amd64,linux/arm64 \
-#     --tag mtconnect/agent:2.0.0.12_RC18 \
+#     --tag mtconnect/demo:latest \
 #     --push \
+#     -f demo/Dockerfile
 #     .
 #
 #   To run tests, use `--build-arg WITH_TESTS=true`
 #
 #   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
-#   docker run -it --rm --init --name agent -p5000:5000 \
-#     mtconnect/agent:2.0.0.12_RC18
+#   docker run -it --rm --init --name agent -p5000:5000 mtconnect/demo
 #
 # then visit http://localhost:5000 to see the demo output.
 
@@ -28,127 +28,19 @@
 
 # base image - ubuntu has amd64, arm64 etc.
 # 22.04 is the current long term support release, maintained until 2025-04.
-FROM ubuntu:22.04 AS os
-
-RUN apt-get update
-
-# tzinfo hangs without this
-ARG DEBIAN_FRONTEND='noninteractive'
-
-# ---------------------------------------------------------------------
-# build
-# ---------------------------------------------------------------------
-
-FROM os AS build
-
-# limit cpus so don't run out of memory on local machine
-# symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
-# can turn off if building in cloud
-ARG CONAN_CPU_COUNT=2
-
-ARG WITH_RUBY='True'
-
-# set some variables
-ENV PATH="$HOME/venv3.9/bin:$PATH"
-ENV CONAN_PROFILE='conan/profiles/docker'
-
-# update os and add dependencies
-# note: Dockerfiles run as root by default, so don't need sudo
-RUN apt-get install -y \
-       autoconf \
-       automake \
-       build-essential \
-       cmake \
-       git \
-       python3 \
-       python3-pip \
-       rake \
-       ruby \
-  && rm -rf /var/lib/apt/lists/* \
-  && pip install conan -v 'conan==2.0.9'
-
-# make an agent directory and cd into it
-WORKDIR /root/agent
-
-# bring in the repo contents, minus .dockerignore files
-COPY . cppagent
-
-ARG WITH_TESTS=false
-ARG WITH_TESTS_ARG=argument
-
-# Build and optionally test. Unpack the dist to reduce overhead in the following release step.
-RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
-       WITH_TESTS_ARG="--test-folder="; \
-     else \
-       WITH_TESTS_ARG=""; \
-     fi \
-  && conan profile detect \
-  && cd cppagent \
-  && conan create . \
-       --build=missing \
-       -c "tools.build:jobs=$CONAN_CPU_COUNT" \
-       -o agent_prefix=mtc \
-       -o cpack=True \
-       -o "with_ruby=$WITH_RUBY" \
-       -o cpack_destination=/root/agent \
-       -o cpack_name=dist \
-       -o cpack_generator=TGZ \
-       -pr "$CONAN_PROFILE" \
-       ${WITH_TESTS_ARG} \
-  && cd .. && tar xf dist.tar.gz \
-  && rm dist.tar.gz
-
-
-# ---------------------------------------------------------------------
-# release
-# ---------------------------------------------------------------------
-
-FROM os AS release
+FROM mtconnect/agent as mtconnect
 
 # TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
-LABEL author='mtconnect' description='MTConnect C++ Agent'
+LABEL author='mtconnect' description='MTConnect C++ Agent Demo'
 
-# change to a new non-root user for better security.
-# this also adds the user to a group with the same name.
-# --create-home creates a home folder, ie /home/<username>
-ARG UID=1000
-ARG GID=1000
+USER root
 
-RUN apt-get install -y \
-     ruby \
-  && groupadd \
-     --gid $GID \
-     agent \
-  && useradd \
-     --create-home \
-     --uid $UID \
-     --gid $GID \
-     agent \
-  && mkdir -p /mtconnect/config \
-              /mtconnect/data \
-              /mtconnect/log \
-  && chown -R agent:agent /mtconnect
+RUN apk add ruby
 
-# install agent executable
-COPY --from=build /root/agent/dist/bin/* /usr/bin/
-COPY --from=build /root/agent/dist/lib/* /usr/lib/
-
-# Install data
-COPY --chown=agent:agent --from=build \
-    /root/agent/dist/share/mtconnect/schemas/ \
-    /mtconnect/data/schemas/
-COPY --chown=agent:agent --from=build \
-    /root/agent/dist/share/mtconnect/styles/ \
-    /mtconnect/data/styles/
-COPY --chown=agent:agent --from=build \
-    /root/agent/dist/share/mtconnect/simulator/ \
-    /mtconnect/data/simulator/
-COPY --chown=agent:agent --from=build \
-    /root/agent/dist/share/mtconnect/demo/ \
-    /mtconnect/data/demo/
-COPY --chown=agent:agent --from=build \
-    /root/agent/dist/share/mtconnect/demo/agent/* \
-    /mtconnect/config/
+COPY --chown=agent:agent ./simulator/*  /mtconnect/data/simulator/
+COPY --chown=agent:agent ./demo/        /mtconnect/data/demo/
+COPY --chown=agent:agent ./demo/agent/agent.dock /mtconnect/config/
+COPY --chown=agent:agent ./demo/agent/Devices.xml /mtconnect/config/
 
 USER agent
 WORKDIR /home/agent
@@ -165,8 +57,8 @@ VOLUME ["/mtconnect/config", "/mtconnect/log", "/mtconnect/data"]
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
 
-CMD /usr/bin/ruby /mtconnect/data/simulator/run_scenario.rb -p 7879 -l /mtconnect/config/mazak.txt \
-  & /usr/bin/ruby /mtconnect/data/simulator/run_scenario.rb -p 7878 -l /mtconnect/config/okuma.txt \
+CMD /usr/bin/ruby /mtconnect/data/simulator/run_scenario.rb -p 7879 -l /mtconnect/data/demo/agent/mazak.txt \
+  & /usr/bin/ruby /mtconnect/data/simulator/run_scenario.rb -p 7878 -l /mtconnect/data/demo/agent/okuma.txt \
   & mtcagent run /mtconnect/config/agent.dock
 
 # ---------------------------------------------------------------------

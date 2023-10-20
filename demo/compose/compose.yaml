@@ -1,4 +1,16 @@
 services:
+  mazak:
+    build:
+      context: ../..
+      dockerfile: demo/compose/adapter/Dockerfile
+      args:
+        - LOG_FILE=mazak.txt
+  okuma:
+    build:
+      context: ../..
+      dockerfile: demo/compose/adapter/Dockerfile
+      args:
+        - LOG_FILE=okuma.txt
   agent:
     build:
       context: ../..
@@ -13,17 +25,3 @@ services:
     depends_on:
       - mazak
       - okuma
-  mazak:
-    build:
-      context: ../..
-      dockerfile: demo/compose/adapter/Dockerfile
-      args:
-        - LOG_FILE=mazak.txt
-  okuma:
-    build:
-      context: ../..
-      dockerfile: demo/compose/adapter/Dockerfile
-      args:
-        - LOG_FILE=okuma.txt
-
-    
