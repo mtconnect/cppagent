@@ -157,7 +157,7 @@ namespace mtconnect::entity {
         throw std::runtime_error("Invalid json printer version");
     }
 
-    /// @brief Helper method to serialize a list entity list using json version 1 format
+    /// @brief Helper method to serialize an entity list using json version 1 format
     ///
     /// A simple array is created holding entities with the key being the object name and properties
     /// as an object. The keys are repeated for each entity.

@@ -135,7 +135,15 @@ namespace mtconnect {
         auto content = dataItem->getTopicName();                  // client asyn content
 
         // We may want to use the observation from the checkpoint.
-        auto doc = m_jsonPrinter->printEntity(observation);
+        string doc;
+        if (observation->getDataItem()->isCondition())
+        {
+          doc = m_jsonPrinter->print(observation);
+        }
+        else
+        {
+          doc = m_jsonPrinter->printEntity(observation);
+        }
 
         if (m_client)
           m_client->publish(topic, doc);
