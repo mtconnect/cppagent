@@ -15,6 +15,10 @@
 //    limitations under the License.
 //
 
+/// @file
+/// Test the SHDR connector behavior. The connector handles the lower level communications for the
+/// adapter.
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -44,6 +48,8 @@ using tcp = boost::asio::ip::tcp;
 namespace ip = boost::asio::ip;
 namespace sys = boost::system;
 
+using namespace chrono_literals;
+
 // main
 int main(int argc, char *argv[])
 {
@@ -51,12 +57,17 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
+/// @brief Mock adapter for this connector.
 class TestConnector : public Connector
 {
 public:
   TestConnector(boost::asio::io_context::strand &strand, const std::string &server,
-                unsigned int port, std::chrono::seconds legacyTimeout = std::chrono::seconds {5})
-    : Connector(strand, server, port, legacyTimeout), m_disconnected(false), m_strand(strand)
+                unsigned int port, std::chrono::seconds legacyTimeout = std::chrono::seconds {5},
+                std::chrono::seconds reconnectInterval = std::chrono::seconds {10},
+                std::optional<std::chrono::milliseconds> heartbeat = std::nullopt)
+    : Connector(strand, server, port, legacyTimeout, reconnectInterval, heartbeat),
+      m_disconnected(false),
+      m_strand(strand)
   {}
 
   bool start(unsigned short port)
@@ -97,6 +108,7 @@ public:
   boost::asio::io_context::strand &m_strand;
 };
 
+/// @brief Connector test runner
 class ConnectorTest : public testing::Test
 {
 protected:
@@ -198,22 +210,27 @@ protected:
   string m_line;
 };
 
-TEST_F(ConnectorTest, Connection)
+/// @test check if the connector is able to connect to a socket. Make sure it sends a ping.
+TEST_F(ConnectorTest, should_be_able_to_connect)
 {
   ASSERT_TRUE(m_connector->m_disconnected);
 
   startServer();
 
+  ///    - Start the connector
   m_connector->start(m_port);
 
+  ///    - Wait for 5 seconds for a connection
   runUntil(5s, [this]() -> bool { return m_connected && m_connector->isConnected(); });
 
+  ///    - Check for a ping
   EXPECT_FALSE(m_connector->m_disconnected);
   auto line = read(1s);
   ASSERT_EQ("* PING", line);
 }
 
-TEST_F(ConnectorTest, DataCapture)
+/// @test check if the connector can receive data from the connector
+TEST_F(ConnectorTest, should_be_able_to_read_data_from_a_socket)
 {
   // Start the accept thread
   ASSERT_TRUE(m_connector->m_disconnected);
@@ -230,7 +247,8 @@ TEST_F(ConnectorTest, DataCapture)
   ASSERT_EQ("Hello Connector", m_connector->m_data);
 }
 
-TEST_F(ConnectorTest, Disconnect)
+/// @test check if the connector disconnects
+TEST_F(ConnectorTest, should_disconnect_when_server_closes_the_connection)
 {
   // Start the accept thread
   startServer();
@@ -247,7 +265,8 @@ TEST_F(ConnectorTest, Disconnect)
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
-TEST_F(ConnectorTest, ProtocolCommand)
+/// @test check if the connector correctly handles a protocol command starting with a `*`
+TEST_F(ConnectorTest, should_process_a_protocol_command)
 {
   // Start the accept thread
   startServer();
@@ -479,7 +498,7 @@ TEST_F(ConnectorTest, IPV6Connection)
 #endif
 }
 
-TEST_F(ConnectorTest, StartHeartbeats)
+TEST_F(ConnectorTest, should_start_heartbeats_when_a_valid_pong_is_received)
 {
   ASSERT_TRUE(!m_connector->heartbeats());
 
@@ -542,4 +561,35 @@ TEST_F(ConnectorTest, test_trimming_trailing_white_space)
   ASSERT_EQ((string) "  third", m_connector->m_list[2]);
   ASSERT_EQ((string) "fourth", m_connector->m_list[3]);
   ASSERT_EQ((string) "r", m_connector->m_list[4]);
+}
+
+/// @test validate the heartbeat override works for the connector.
+TEST_F(ConnectorTest, should_override_adapter_heartbeat_in_pong)
+{
+  boost::asio::io_context::strand strand(m_context);
+  m_connector = std::make_unique<TestConnector>(strand, "127.0.0.1", m_port, 600s, 10s, 123ms);
+  m_connector->m_disconnected = true;
+  m_connected = false;
+
+  ASSERT_TRUE(!m_connector->heartbeats());
+
+  string line = "* PONG 888";
+  m_connector->startHeartbeats(line);
+
+  ASSERT_TRUE(m_connector->heartbeats());
+  ASSERT_EQ(std::chrono::milliseconds {123}, m_connector->heartbeatFrequency());
+
+  m_connector->resetHeartbeats();
+
+  line = "* PONG 456 ";
+  m_connector->startHeartbeats(line);
+
+  ASSERT_TRUE(m_connector->heartbeats());
+  ASSERT_EQ(std::chrono::milliseconds {123}, m_connector->heartbeatFrequency());
+
+  line = "* PONG 323";
+  m_connector->startHeartbeats(line);
+
+  ASSERT_TRUE(m_connector->heartbeats());
+  ASSERT_EQ(std::chrono::milliseconds {123}, m_connector->heartbeatFrequency());
 }

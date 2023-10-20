@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file
+/// SHDR Adapter tests
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -45,7 +48,8 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
-TEST(AdapterTest, MultilineData)
+/// @test check if multiline data is getting treated as a single chunk
+TEST(AdapterTest, should_handle_multiline_data)
 {
   asio::io_context ioc;
   asio::io_context::strand strand(ioc);
@@ -76,6 +80,7 @@ Another Line...
   EXPECT_EQ(exp, data);
 }
 
+/// @test verify that commands can also be multiline
 TEST(AdapterTest, should_forward_multiline_command)
 {
   asio::io_context ioc;
@@ -108,6 +113,7 @@ TEST(AdapterTest, should_forward_multiline_command)
   EXPECT_EQ(exp, value);
 }
 
+/// @test Check that the options are reset when given as a command
 TEST(AdapterTest, should_set_options_from_commands)
 {
   asio::io_context ioc;
@@ -122,3 +128,23 @@ TEST(AdapterTest, should_set_options_from_commands)
   auto v = GetOption<int>(adapter->getOptions(), "ShdrVersion");
   ASSERT_EQ(int64_t(3), *v);
 }
+
+/// @test validate heartbeat override is set properly
+TEST(AdapterTest, should_set_heartbeat_override_from_configuration)
+{
+  namespace pt = boost::property_tree;
+  asio::io_context ioc;
+  asio::io_context::strand strand(ioc);
+  ConfigOptions options;
+  pt::ptree tree;
+  tree.push_back(make_pair<string, pt::ptree>(configuration::Host, pt::ptree("locahost"s)));
+  tree.push_back(make_pair<string, pt::ptree>(configuration::Port, pt::ptree("7878"s)));
+  tree.push_back(make_pair<string, pt::ptree>(configuration::Heartbeat, pt::ptree("123"s)));
+  pipeline::PipelineContextPtr context = make_shared<pipeline::PipelineContext>();
+  auto adapter = make_unique<ShdrAdapter>(ioc, context, options, tree);
+
+  const auto &over = adapter->getHeartbeatOverride();
+  ASSERT_TRUE(over);
+  ASSERT_EQ(123ms, *over);
+}
+

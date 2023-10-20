@@ -936,6 +936,7 @@ namespace mtconnect::configuration {
                    {{configuration::Url, string()},
                     {configuration::Device, string()},
                     {configuration::UUID, string()},
+                    {configuration::Heartbeat, std::chrono::milliseconds()},
                     {configuration::Uuid, string()}});
 
         if (HasOption(adapterOptions, configuration::Uuid) &&
