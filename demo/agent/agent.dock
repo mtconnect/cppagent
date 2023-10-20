@@ -7,8 +7,8 @@ JsonVersion = 2
 
 MinCompressFileSize = 10k
 
-DataPath = $MTCONNECT_DATA_DIR
-ConfigPath = $MTCONNECT_CONF_DIR
+DataPath = /mtconnect/data
+ConfigPath = /mtconnect/config
 
 Files {
   schemas {
@@ -33,11 +33,6 @@ Directories {
   }
 }
 
-Sinks {
-#  MqttService {
-#  }
-}
-
 DevicesStyle { Location = /styles/styles.xsl }
 StreamsStyle { Location = /styles/styles.xsl }
 
@@ -53,6 +48,6 @@ Adapters {
 }
 
 logger_config {
-  output = file $MTCONNECT_LOG_DIR/agent.log
+  output = file /mtconnect/log/agent.log
   level = warning
 }

@@ -1,6 +1,5 @@
 # MTConnect Public C++ Agent Docker image build instructions
 
-# TODO: Do we need notes like this to be in `Dockerfile`? I think the docs might be a better place for this. IMHO most notes in this file should be moved to the docs.
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
@@ -17,7 +16,7 @@
 #   To run tests, use `--build-arg WITH_TESTS=true`
 #
 #   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
-#   docker run -it --rm --init --name agent -p5000:5000 \
+#   docker run -it --rm --init --name agent -p5000:5000 -v ... \
 #     mtconnect/agent:2.0.0.12_RC18
 #
 # then visit http://localhost:5000 to see the demo output.
@@ -28,6 +27,8 @@
 
 # base image - alpine 3.18
 FROM alpine:3.18 AS os
+
+RUN apk update
 
 # ---------------------------------------------------------------------
 # build
@@ -49,8 +50,7 @@ ENV CONAN_PROFILE='conan/profiles/docker'
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
 # Note: `PIP_ROOT_USER_ACTION='ignore'` is required to remove `WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv`. The proper way to fix this warning is to create a non-root user before running `pip install`.
-RUN  apk update \
-  && apk add \
+RUN apk add \
        autoconf \
        automake \
        cmake \
@@ -63,24 +63,25 @@ RUN  apk update \
        python3 \
        ruby \
        ruby-rake \
-  && PIP_ROOT_USER_ACTION='ignore' pip install conan -v 'conan==2.0.9'
+  && PIP_ROOT_USER_ACTION='ignore' pip install conan
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
 
 # bring in the repo contents, minus .dockerignore files
-COPY . .
+COPY . cppagent
 
 ARG WITH_TESTS=false
 ARG WITH_TESTS_ARG=argument
 
-# Build and optionally test
+# Build and optionally test. Unpack the dist to reduce overhead in the following release step.
 RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        WITH_TESTS_ARG="--test-folder="; \
      else \
        WITH_TESTS_ARG=""; \
      fi \
   && conan profile detect \
+  && cd cppagent \
   && conan create . \
        --build=missing \
        -c "tools.build:jobs=$CONAN_CPU_COUNT" \
@@ -91,7 +92,9 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        -o cpack_name=dist \
        -o cpack_generator=TGZ \
        -pr "$CONAN_PROFILE" \
-       ${WITH_TESTS_ARG}
+       ${WITH_TESTS_ARG} \
+  && cd .. && tar xf dist.tar.gz \
+  && rm dist.tar.gz
 
 # ---------------------------------------------------------------------
 # release
@@ -99,25 +102,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
 
 FROM os AS release
 
-# TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
 LABEL author='mtconnect' description='MTConnect C++ Agent'
-
-ARG BIN_DIR='/usr/local/bin'
-
-ARG MTCONNECT_CONF_DIR='/etc/mtconnect'
-ARG MTCONNECT_DATA_DIR='/usr/local/share/mtconnect'
-ARG MTCONNECT_LOG_DIR='/var/log/mtconnect'
-
-ENV MTCONNECT_CONF_DIR="$MTCONNECT_CONF_DIR"
-ENV MTCONNECT_DATA_DIR="$MTCONNECT_DATA_DIR"
-ENV MTCONNECT_LOG_DIR="$MTCONNECT_LOG_DIR"
-ENV DEMO_DIR="$MTCONNECT_DATA_DIR/demo"
-
-# install ruby for simulator
-RUN  apk update \
-  && apk add ruby \
-       libstdc++ \
-       libgcc
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
@@ -125,7 +110,12 @@ RUN  apk update \
 ARG UID=1000
 ARG GID=1000
 
-RUN  addgroup \
+# install dependencies
+RUN  apk add \
+       libstdc++ \
+       libgcc \
+       ruby \
+  && addgroup \
        --gid $GID \
        agent \
   && adduser \
@@ -133,43 +123,42 @@ RUN  addgroup \
        --disabled-password \
        --uid $UID \
        --ingroup agent \
-       agent
-
-USER agent
-WORKDIR /home/agent
+       agent \
+  && mkdir -p /mtconnect/config \
+              /mtconnect/data \
+              /mtconnect/log \
+  && chown -R agent:agent /mtconnect
 
 # install agent executable
-COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
+COPY --from=build /root/agent/dist/bin/* /usr/bin/
+COPY --from=build /root/agent/dist/lib/* /usr/lib/
 
-# Extract the data
-RUN   tar xf dist.tar.gz \
-   && rm dist.tar.gz
-
-# Copy the agent binary and create folders used by the agent
-USER root
-RUN  cp /home/agent/dist/bin/* "$BIN_DIR" \
-  && mkdir -p "$MTCONNECT_CONF_DIR" \
-              "$MTCONNECT_DATA_DIR" \
-              "$MTCONNECT_LOG_DIR" \
-  && chown agent:agent "$MTCONNECT_CONF_DIR" \
-              "$MTCONNECT_DATA_DIR" \
-              "$MTCONNECT_LOG_DIR"
-
-USER agent
-
-# Copy the agent data
-RUN  cp -r /home/agent/dist/share/mtconnect/schemas \
-           /home/agent/dist/share/mtconnect/simulator \
-           /home/agent/dist/share/mtconnect/styles \
-           /home/agent/dist/share/mtconnect/demo \
-           "$MTCONNECT_DATA_DIR" \
-  && cp /home/agent/dist/share/mtconnect/demo/agent/agent.dock "$MTCONNECT_CONF_DIR/agent.cfg" \
-  && cp /home/agent/dist/share/mtconnect/demo/agent/Devices.xml "$MTCONNECT_CONF_DIR" \
-  && rm -r /home/agent/dist
+# Install data
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/schemas/ \
+    /mtconnect/data/schemas/
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/styles/ \
+    /mtconnect/data/styles/
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/simulator/ \
+    /mtconnect/data/simulator/
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/demo/ \
+    /mtconnect/data/demo/
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/demo/agent/* \
+    /mtconnect/config/
 
 
 # expose port
+USER agent
+WORKDIR /home/agent
+
 EXPOSE 5000
+
+# Allow the directories to be mounted
+VOLUME ["/mtconnect/config", "/mtconnect/log", "/mtconnect/data"]
 
 # default command - can override with docker run or docker-compose command.
 # this runs the adapter simulator and the agent using the sample config file.
@@ -177,9 +166,9 @@ EXPOSE 5000
 # multiple statements using shell commands (& and &&).
 # see https://stackoverflow.com/questions/46797348/docker-cmd-exec-form-for-multiple-command-execution
 
-CMD /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7879 -l "$DEMO_DIR/agent/mazak.txt" \
-  & /usr/bin/ruby "$MTCONNECT_DATA_DIR/simulator/run_scenario.rb" -p 7878 -l "$DEMO_DIR/agent/okuma.txt" \
-  & mtcagent run
+CMD /usr/bin/ruby /mtconnect/data/simulator/run_scenario.rb -p 7879 -l /mtconnect/config/mazak.txt \
+  & /usr/bin/ruby /mtconnect/data/simulator/run_scenario.rb -p 7878 -l /mtconnect/config/okuma.txt \
+  & mtcagent run /mtconnect/config/agent.dock
 
 # ---------------------------------------------------------------------
 # note

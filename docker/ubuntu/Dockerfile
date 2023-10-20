@@ -30,6 +30,8 @@
 # 22.04 is the current long term support release, maintained until 2025-04.
 FROM ubuntu:22.04 AS os
 
+RUN apt-get update
+
 # tzinfo hangs without this
 ARG DEBIAN_FRONTEND='noninteractive'
 
@@ -52,8 +54,7 @@ ENV CONAN_PROFILE='conan/profiles/docker'
 
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
-RUN  apt-get update \
-  && apt-get install -y \
+RUN apt-get install -y \
        autoconf \
        automake \
        build-essential \
@@ -70,7 +71,7 @@ RUN  apt-get update \
 WORKDIR /root/agent
 
 # bring in the repo contents, minus .dockerignore files
-COPY . .
+COPY . cppagent
 
 ARG WITH_TESTS=false
 ARG WITH_TESTS_ARG=argument
@@ -82,6 +83,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        WITH_TESTS_ARG=""; \
      fi \
   && conan profile detect \
+  && cd cppagent \
   && conan create . \
        --build=missing \
        -c "tools.build:jobs=$CONAN_CPU_COUNT" \
@@ -92,7 +94,10 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        -o cpack_name=dist \
        -o cpack_generator=TGZ \
        -pr "$CONAN_PROFILE" \
-       ${WITH_TESTS_ARG}
+       ${WITH_TESTS_ARG} \
+  && cd .. && tar xf dist.tar.gz \
+  && rm dist.tar.gz
+
 
 # ---------------------------------------------------------------------
 # release
@@ -102,10 +107,6 @@ FROM os AS release
 
 # TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
 LABEL author='mtconnect' description='MTConnect C++ Agent'
-
-# install ruby for simulator
-RUN  apt-get update \
-  && apt-get install -y ruby
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
@@ -120,41 +121,38 @@ RUN  groupadd \
      --create-home \
      --uid $UID \
      --gid $GID \
-     agent
-
-USER agent
-WORKDIR /home/agent
-
-# install agent executable
-COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
-
-# Extract the data
-RUN  tar xf dist.tar.gz \
-  && rm dist.tar.gz
-
-# Copy the agent binary and create folders used by the agent
-USER root
-
-RUN  set -x && cp /home/agent/dist/bin/* /usr/bin \
-  && cp /home/agent/dist/lib/* /usr/lib \
+     agent \
   && mkdir -p /mtconnect/config \
               /mtconnect/data \
               /mtconnect/log \
   && chown -R agent:agent /mtconnect
 
-USER agent
+# install agent executable
+COPY --from=build /root/agent/dist/bin/* /usr/bin/
+COPY --from=build /root/agent/dist/lib/* /usr/lib/
 
-# Copy the agent data
-RUN  cp -r /home/agent/dist/share/mtconnect/schemas \
-           /home/agent/dist/share/mtconnect/simulator \
-           /home/agent/dist/share/mtconnect/styles \
-           /mtconnect/data \
-  && rm -r /home/agent/dist
+# Install data
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/schemas/ \
+    /mtconnect/data/schemas/
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/styles/ \
+    /mtconnect/data/styles/
+
+USER agent
+WORKDIR /home/agent
 
 # expose port
 EXPOSE 5000
 
-
+# The /mtconnect/config volume must be mounted with a valid agent.cfg
+# and Devices.xml
+# 
+# For example:
+#   if there is a ./agent directory with the config files, do the following:
+# 
+#   docker run -v ./agent/agent.cfg:/mtconnect/config/agent.cfg \
+#              -v ./agent/Devices.xml:/mtconnect/config/Devices.xml
 VOLUME ["/mtconnect/config", "/mtconnect/log", "/mtconnect/data"]
 
 # default command - can override with docker run or docker-compose command.
@@ -178,7 +176,6 @@ CMD ["/usr/bin/mtcagent", "run", "/mtconnect/config/agent.cfg"]
 #
 # /mtconnect/data
 #  |-- schemas - xsd files
-#  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
 #  |-- styles - styles.xsl, styles.css, favicon.ico, etc
 #
 # /home/agent - the user's directory
