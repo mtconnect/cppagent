@@ -12,9 +12,7 @@ services:
       args:
         - LOG_FILE=okuma.txt
   agent:
-    build:
-      context: ../..
-      dockerfile: demo/compose/agent/Dockerfile
+    image: "mtconnect/agent:latest"
     volumes:
       - ./agent/agent.cfg:/mtconnect/config/agent.cfg
       - ../agent/Devices.xml:/mtconnect/config/Devices.xml
