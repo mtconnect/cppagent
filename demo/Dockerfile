@@ -23,11 +23,8 @@
 # then visit http://localhost:5000 to see the demo output.
 
 # ---------------------------------------------------------------------
-# os
+# Use the mtconnect/agent base image
 # ---------------------------------------------------------------------
-
-# base image - ubuntu has amd64, arm64 etc.
-# 22.04 is the current long term support release, maintained until 2025-04.
 FROM mtconnect/agent as mtconnect
 
 # TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
@@ -37,10 +34,16 @@ USER root
 
 RUN apk add ruby
 
-COPY --chown=agent:agent ./simulator/*  /mtconnect/data/simulator/
-COPY --chown=agent:agent ./demo/        /mtconnect/data/demo/
-COPY --chown=agent:agent ./demo/agent/agent.dock /mtconnect/config/
-COPY --chown=agent:agent ./demo/agent/Devices.xml /mtconnect/config/
+COPY --chown=agent:agent \
+    ./simulator/*  \
+    /mtconnect/data/simulator/
+COPY --chown=agent:agent \
+    ./demo/ \
+    /mtconnect/data/demo/
+COPY --chown=agent:agent \
+    ./demo/agent/agent.dock \
+    ./demo/agent/Devices.xml \
+    /mtconnect/config/
 
 USER agent
 WORKDIR /home/agent
