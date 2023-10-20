@@ -48,15 +48,15 @@ namespace mtconnect::source::adapter::shdr {
   {
     GetOptions(block, m_options, options);
     AddOptions(block, m_options,
-               {
-                   {configuration::UUID, string()},
-                   {configuration::Manufacturer, string()},
-                   {configuration::Station, string()},
-                   {configuration::Url, string()},
-               });
+               {{configuration::Heartbeat, Milliseconds {0}},
+                {configuration::UUID, string()},
+                {configuration::Manufacturer, string()},
+                {configuration::Station, string()},
+                {configuration::Url, string()}});
 
     m_options.erase(configuration::Host);
     m_options.erase(configuration::Port);
+    m_heartbeatOverride = GetOption<Milliseconds>(m_options, configuration::Heartbeat);
 
     AddDefaultedOptions(block, m_options,
                         {{configuration::Host, "localhost"s},
