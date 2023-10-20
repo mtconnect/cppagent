@@ -76,7 +76,7 @@ COPY . cppagent
 ARG WITH_TESTS=false
 ARG WITH_TESTS_ARG=argument
 
-# Build and optionally test
+# Build and optionally test. Unpack the dist to reduce overhead in the following release step.
 RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        WITH_TESTS_ARG="--test-folder="; \
      else \
