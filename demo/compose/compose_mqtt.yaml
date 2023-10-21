@@ -20,11 +20,7 @@ services:
       - "1883:1883"
       - "9001:9001"
   agent:
-    build:
-      context: ../..
-      dockerfile: docker/alpine/Dockerfile
-      args:
-        CONAN_CPU_COUNT: 2
+    image: "mtconnect/agent:latest"
     volumes:
       - ./agent/agentmqtt.cfg:/mtconnect/config/agent.cfg
       - ../agent/Devices.xml:/mtconnect/config/Devices.xml
