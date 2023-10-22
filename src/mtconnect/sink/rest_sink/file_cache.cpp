@@ -313,7 +313,7 @@ namespace mtconnect::sink::rest_sink {
 
       {
         std::lock_guard<std::recursive_mutex> lock(m_cacheLock);
-        
+
         auto cached = m_fileCache.find(name);
         if (cached != m_fileCache.end())
         {
@@ -333,7 +333,7 @@ namespace mtconnect::sink::rest_sink {
               fs::remove(*fp->m_pathGz);
           }
         }
-        
+
         if (!file)
         {
           auto path = m_fileMap.find(name);
@@ -351,7 +351,7 @@ namespace mtconnect::sink::rest_sink {
           }
         }
       }
-      
+
       if (file)
       {
         if (acceptEncoding && acceptEncoding->find("gzip") != string::npos &&

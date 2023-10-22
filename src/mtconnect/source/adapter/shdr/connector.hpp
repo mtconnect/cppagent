@@ -95,7 +95,7 @@ namespace mtconnect::source::adapter::shdr {
     }
 
     void setRealTime(bool realTime = true) { m_realTime = realTime; }
-    
+
     const auto &getHeartbeatOverride() const { return m_heartbeatOverride; }
 
   protected:
