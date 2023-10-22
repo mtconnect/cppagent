@@ -37,7 +37,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        include:        
+        include:
           - dockerfile: docker/alpine/Dockerfile
             name: agent
           - dockerfile: demo/Dockerfile
@@ -68,6 +68,7 @@ jobs:
       - name: Remove leading v from the version
         run: |
           echo "VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')" >> $GITHUB_ENV
+          echo "MAJOR_VERSION=$(echo ${{ github.ref_name }} | sed -E 's/^v([0-9]+)\.([0-9]+)\..+/\1.\2/')" >> $GITHUB_ENV
           
       # see https://github.com/docker/build-push-action
       - name: Build image and push to DockerHub
@@ -81,6 +82,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.name }}:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.name }}:${{ env.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.name }}:${{ env.MAJOR_VERSION }}
 
           # push to docker hub
           push: true

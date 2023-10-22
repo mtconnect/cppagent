@@ -10,16 +10,17 @@
 #   docker buildx build \
 #     -f docker/ubuntu/Dockerfile \
 #     --platform linux/amd64,linux/arm64 \
-#     --tag mtconnect/agent:2.0.0.12_RC18 \
+#     --tag mtconnect/agent \
 #     --push \
 #     .
 #
 #   To run tests, use `--build-arg WITH_TESTS=true`
 #
 #   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
-#   docker run -it --rm --init --name agent -p5000:5000 -v ./agent/agent.cfg:/mtconnect/config/agent.cfg \
+#   docker run -it --rm --init --name agent -p5000:5000 \
+#        -v ./agent/agent.cfg:/mtconnect/config/agent.cfg \
 #        -v ./agent/Devices.xml:/mtconnect/config/Devices.xml \
-#        mtconnect/agent:2.0.0.12_RC18
+#        mtconnect/agent
 #
 # then visit http://localhost:5000 to see the demo output.
 
@@ -49,8 +50,7 @@ ENV CONAN_PROFILE='/root/agent/cppagent/conan/profiles/docker'
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
 # Note: `PIP_ROOT_USER_ACTION='ignore'` is required to remove `WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv`. The proper way to fix this warning is to create a non-root user before running `pip install`.
-RUN  apk update \
-  && apk add \
+RUN  apk --update add \
        autoconf \
        automake \
        cmake \

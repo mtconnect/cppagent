@@ -1,6 +1,5 @@
 # MTConnect Public C++ Agent Docker image build instructions
 
-# TODO: Do we need notes like this to be in `Dockerfile`? I think the docs might be a better place for this. IMHO most notes in this file should be moved to the docs.
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
@@ -17,10 +16,9 @@
 #
 #   To run tests, use `--build-arg WITH_TESTS=true`
 #
-#   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
 #   docker run -it --rm --init --name agent -p5000:5000 -v ./agent/agent.cfg:/mtconnect/config/agent.cfg \
 #        -v ./agent/Devices.xml:/mtconnect/config/Devices.xml \
-#        mtconnect/agent:2.0.0.12_RC18
+#        mtconnect/agent
 #
 # then visit http://localhost:5000 to see the demo output.
 
