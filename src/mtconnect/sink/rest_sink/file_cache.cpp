@@ -311,43 +311,47 @@ namespace mtconnect::sink::rest_sink {
     {
       CachedFilePtr file;
 
-      auto cached = m_fileCache.find(name);
-      if (cached != m_fileCache.end())
       {
-        auto fp = cached->second;
-        if (!fp->m_cached || fp->m_redirect)
+        std::lock_guard<std::recursive_mutex> lock(m_cacheLock);
+        
+        auto cached = m_fileCache.find(name);
+        if (cached != m_fileCache.end())
         {
-          file = fp;
-        }
-        else
-        {
-          // Cleanup files if they have changed since last cached
-          // Also remove any gzipped content as well
-          auto lastWrite = std::filesystem::last_write_time(fp->m_path);
-          if (lastWrite == fp->m_lastWrite)
+          auto fp = cached->second;
+          if (!fp->m_cached || fp->m_redirect)
+          {
             file = fp;
-          else if (fp->m_pathGz && fs::exists(*fp->m_pathGz))
-            fs::remove(*fp->m_pathGz);
+          }
+          else
+          {
+            // Cleanup files if they have changed since last cached
+            // Also remove any gzipped content as well
+            auto lastWrite = std::filesystem::last_write_time(fp->m_path);
+            if (lastWrite == fp->m_lastWrite)
+              file = fp;
+            else if (fp->m_pathGz && fs::exists(*fp->m_pathGz))
+              fs::remove(*fp->m_pathGz);
+          }
+        }
+        
+        if (!file)
+        {
+          auto path = m_fileMap.find(name);
+          if (path != m_fileMap.end())
+          {
+            auto ext = path->second.extension().string();
+            auto size = fs::file_size(path->second);
+            file = make_shared<CachedFile>(path->second, getMimeType(ext),
+                                           size <= m_maxCachedFileSize, size);
+            m_fileCache.insert_or_assign(name, file);
+          }
+          else
+          {
+            file = findFileInDirectories(name);
+          }
         }
       }
-
-      if (!file)
-      {
-        auto path = m_fileMap.find(name);
-        if (path != m_fileMap.end())
-        {
-          auto ext = path->second.extension().string();
-          auto size = fs::file_size(path->second);
-          file = make_shared<CachedFile>(path->second, getMimeType(ext),
-                                         size <= m_maxCachedFileSize, size);
-          m_fileCache.insert_or_assign(name, file);
-        }
-        else
-        {
-          file = findFileInDirectories(name);
-        }
-      }
-
+      
       if (file)
       {
         if (acceptEncoding && acceptEncoding->find("gzip") != string::npos &&

@@ -1,0 +1,36 @@
+services:
+  mazak:
+    build:
+      context: ../..
+      dockerfile: demo/compose/adapter/Dockerfile
+      args:
+        - LOG_FILE=mazak.txt
+  okuma:
+    build:
+      context: ../..
+      dockerfile: demo/compose/adapter/Dockerfile
+      args:
+        - LOG_FILE=okuma.txt
+  mosquitto:
+    image: "eclipse-mosquitto:latest"
+    volumes:
+      - ./log:/mosquitto/log
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+  agent:
+    image: "mtconnect/agent:latest"
+    volumes:
+      - ./agent/agentmqtt.cfg:/mtconnect/config/agent.cfg
+      - ../agent/Devices.xml:/mtconnect/config/Devices.xml
+      - ./log:/mtconnect/log
+      - ../twin:/mtconnect/data/demo/twin
+    ports:
+      - "5001:5000"
+    depends_on:
+      - mazak
+      - okuma
+      - mosquitto
+
+    

@@ -17,8 +17,6 @@
 
 #include "agent_config.hpp"
 
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/dll.hpp>
 #include <boost/dll/import.hpp>
@@ -33,6 +31,8 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/file.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 #include "mtconnect/config.hpp"
 
@@ -180,7 +180,7 @@ namespace mtconnect::configuration {
         m_configFile = fs::canonical(*path);
         addPathFront(m_configPaths, m_configFile.parent_path());
         addPathBack(m_dataPaths, m_configFile.parent_path());
-        
+
         ifstream file(m_configFile.c_str());
         std::stringstream buffer;
         buffer << file.rdbuf();
@@ -697,14 +697,13 @@ namespace mtconnect::configuration {
     ExpandValues(values, config);
   }
 
-  void AgentConfiguration::loadConfig(const std::string &text,
-                                      FileFormat fmt)
+  void AgentConfiguration::loadConfig(const std::string &text, FileFormat fmt)
   {
     NAMED_SCOPE("AgentConfiguration::loadConfig");
 
     // Now get our configuration
     boost::property_tree::ptree config;
-    
+
     try
     {
       switch (fmt)
@@ -732,7 +731,8 @@ namespace mtconnect::configuration {
       cerr << "json file error: " << e.what() << " on line " << e.line() << endl;
       throw e;
     }
-    catch (std::exception e) {
+    catch (std::exception e)
+    {
       cerr << "could not load config file: " << e.what() << endl;
       throw e;
     }
@@ -748,6 +748,7 @@ namespace mtconnect::configuration {
                 {configuration::DisableAgentDevice, false},
                 {configuration::WorkingDirectory, m_working.string()},
                 {configuration::DataPath, StringList()},
+                {configuration::AgentDeviceUUID, ""s},
                 {configuration::PluginPath, StringList()},
                 {configuration::ConfigPath, StringList()},
                 {configuration::ServerIp, "0.0.0.0"s},
@@ -935,6 +936,7 @@ namespace mtconnect::configuration {
                    {{configuration::Url, string()},
                     {configuration::Device, string()},
                     {configuration::UUID, string()},
+                    {configuration::Heartbeat, std::chrono::milliseconds()},
                     {configuration::Uuid, string()}});
 
         if (HasOption(adapterOptions, configuration::Uuid) &&

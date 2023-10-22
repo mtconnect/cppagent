@@ -80,6 +80,7 @@ namespace mtconnect {
     /// @name MQTT Configuration
     ///@{
     DECLARE_CONFIGURATION(ProbeTopic);
+    DECLARE_CONFIGURATION(DeviceTopic);
     DECLARE_CONFIGURATION(AssetTopic);
     DECLARE_CONFIGURATION(ObservationTopic);
     DECLARE_CONFIGURATION(CurrentTopic);

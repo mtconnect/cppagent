@@ -48,7 +48,8 @@ namespace mtconnect {
 
         GetOptions(config, m_options, options);
         AddOptions(config, m_options,
-                   {{configuration::MqttCaCert, string()},
+                   {{configuration::ProbeTopic, string()},
+                    {configuration::MqttCaCert, string()},
                     {configuration::MqttPrivateKey, string()},
                     {configuration::MqttCert, string()},
                     {configuration::MqttUserName, string()},
@@ -56,7 +57,7 @@ namespace mtconnect {
                     {configuration::MqttClientId, string()}});
         AddDefaultedOptions(config, m_options,
                             {{configuration::MqttHost, "127.0.0.1"s},
-                             {configuration::ProbeTopic, "MTConnect/Device/"s},
+                             {configuration::DeviceTopic, "MTConnect/Device/"s},
                              {configuration::AssetTopic, "MTConnect/Asset/"s},
                              {configuration::ObservationTopic, "MTConnect/Observation/"s},
                              {configuration::MqttPort, 1883},
@@ -89,7 +90,8 @@ namespace mtconnect {
           }
         };
 
-        m_devicePrefix = get<string>(m_options[configuration::ProbeTopic]);
+        m_devicePrefix = GetOption<string>(m_options, configuration::ProbeTopic)
+                             .value_or(get<string>(m_options[configuration::DeviceTopic]));
         m_assetPrefix = get<string>(m_options[configuration::AssetTopic]);
         m_observationPrefix = get<string>(m_options[configuration::ObservationTopic]);
 
@@ -133,7 +135,15 @@ namespace mtconnect {
         auto content = dataItem->getTopicName();                  // client asyn content
 
         // We may want to use the observation from the checkpoint.
-        auto doc = m_jsonPrinter->printEntity(observation);
+        string doc;
+        if (observation->getDataItem()->isCondition())
+        {
+          doc = m_jsonPrinter->print(observation);
+        }
+        else
+        {
+          doc = m_jsonPrinter->printEntity(observation);
+        }
 
         if (m_client)
           m_client->publish(topic, doc);

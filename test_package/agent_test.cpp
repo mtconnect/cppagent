@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file
+/// Integration tests for the agent. Covers many behaviours of the agent across many modules.
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -2578,12 +2581,15 @@ TEST_F(AgentTest, update_asset_count_data_item_v2_0)
   }
 }
 
-//  ---------------- Srreaming Tests ---------------------
+/// @name Streaming Tests
+/// Tests that validate HTTP long poll behavior of the agent
 
-TEST_F(AgentTest, BadInterval)
+/// @test ensure an error is returned when the interval has an invalid value
+TEST_F(AgentTest, interval_should_be_a_valid_integer_value)
 {
   QueryMap query;
 
+  ///    - Cannot be test or a non-integer value
   {
     query["interval"] = "NON_INTEGER";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -2593,6 +2599,7 @@ TEST_F(AgentTest, BadInterval)
                           "convert string 'NON_INTEGER' to integer");
   }
 
+  ///     - Cannot be nagative
   {
     query["interval"] = "-123";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -2600,6 +2607,7 @@ TEST_F(AgentTest, BadInterval)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be greater than -1");
   }
 
+  ///    - Cannot be >= 2147483647
   {
     query["interval"] = "2147483647";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -2607,6 +2615,7 @@ TEST_F(AgentTest, BadInterval)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be less than 2147483647");
   }
 
+  ///     - Cannot wrap around and create a negative number was set as a int32
   {
     query["interval"] = "999999999999999999";
     PARSE_XML_RESPONSE_QUERY("/sample", query);
@@ -2615,9 +2624,8 @@ TEST_F(AgentTest, BadInterval)
   }
 }
 
-#ifndef APPVEYOR
-
-TEST_F(AgentTest, StreamData)
+/// @test check streaming of data every 50ms
+TEST_F(AgentTest, should_stream_data_with_interval)
 {
   addAdapter();
   auto heartbeatFreq {200ms};
@@ -2634,11 +2642,7 @@ TEST_F(AgentTest, StreamData)
   // Heartbeat test. Heartbeat should be sent in 200ms. Give
   // 25ms range.
   {
-#ifdef APPVEYOR
-    auto slop {160ms};
-#else
     auto slop {35ms};
-#endif
 
     auto startTime = system_clock::now();
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
@@ -2662,11 +2666,7 @@ TEST_F(AgentTest, StreamData)
   // Again, allow for some slop.
   {
     auto delay {40ms};
-#ifdef APPVEYOR
-    auto slop {160ms};
-#else
     auto slop {35ms};
-#endif
 
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
     m_agentTestHelper->m_ioContext.run_for(delay);
@@ -2683,9 +2683,9 @@ TEST_F(AgentTest, StreamData)
     EXPECT_GT(slop, delta) << "delta " << delta.count() << " < delay " << slop.count();
   }
 }
-#endif
 
-TEST_F(AgentTest, StreamDataObserver)
+/// @test Should stream data when observations arrive within the interval
+TEST_F(AgentTest, should_signal_observer_when_observations_arrive)
 {
   addAdapter();
   auto rest = m_agentTestHelper->getRestService();
@@ -2693,7 +2693,7 @@ TEST_F(AgentTest, StreamDataObserver)
 
   auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
 
-  // Start a thread...
+  ///     - Set up streaming every 100ms with a 1000ms heartbeat
   std::map<string, string> query;
   query["interval"] = "100";
   query["heartbeat"] = "1000";
@@ -2701,8 +2701,8 @@ TEST_F(AgentTest, StreamDataObserver)
   query["from"] = to_string(circ.getSequence());
   query["path"] = "//DataItem[@name='line']";
 
-  // Test to make sure the signal will push the sequence number forward and capture
-  // the new data.
+  ///    - Test to make sure the signal will push the sequence number forward and capture
+  ///      the new data.
   {
     PARSE_XML_STREAM_QUERY("/LinuxCNC/sample", query);
     auto seq = to_string(circ.getSequence() + 20ull);
@@ -2718,9 +2718,42 @@ TEST_F(AgentTest, StreamDataObserver)
   }
 }
 
+/// @test check request with from out of range
+TEST_F(AgentTest, should_fail_if_from_is_out_of_range)
+{
+  addAdapter();
+  auto rest = m_agentTestHelper->getRestService();
+  rest->start();
+
+  auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
+
+  // Start a thread...
+  std::map<string, string> query;
+  query["interval"] = "100";
+  query["heartbeat"] = "1000";
+  query["count"] = "10";
+  query["from"] = to_string(circ.getSequence() + 5);
+  query["path"] = "//DataItem[@name='line']";
+
+  // Test to make sure the signal will push the sequence number forward and capture
+  // the new data.
+  {
+    PARSE_XML_RESPONSE_QUERY("/LinuxCNC/sample", query);
+    auto seq = to_string(circ.getSequence() + 20ull);
+    m_agentTestHelper->m_ioContext.run_for(200ms);
+
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "OUT_OF_RANGE");
+  }
+}
+
 // ------------- Put tests
 
-TEST_F(AgentTest, Put)
+/// @name Put Tests
+/// Tests that validate the HTTP PUT and POST behavior of the Agent when `AllowPuts` is
+/// enabled in the configuration file.
+
+/// @test check if the agent allows making observations when put is allowed
+TEST_F(AgentTest, should_allow_making_observations_via_http_put)
 {
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
 
@@ -2743,6 +2776,7 @@ TEST_F(AgentTest, Put)
   }
 }
 
+/// @test putting a condition requires the SHDR formatted data
 TEST_F(AgentTest, put_condition_should_parse_condition_data)
 {
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);

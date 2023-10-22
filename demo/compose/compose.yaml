@@ -1,24 +1,25 @@
 services:
-  agent:
-    build:
-      context: ../..
-      dockerfile: docker/compose/agent/Dockerfile
-    ports:
-      - "5001:5000"
-    depends_on:
-      - mazak
-      - okuma
   mazak:
     build:
       context: ../..
-      dockerfile: docker/compose/adapter/Dockerfile
+      dockerfile: demo/compose/adapter/Dockerfile
       args:
         - LOG_FILE=mazak.txt
   okuma:
     build:
       context: ../..
-      dockerfile: docker/compose/adapter/Dockerfile
+      dockerfile: demo/compose/adapter/Dockerfile
       args:
         - LOG_FILE=okuma.txt
-
-    
+  agent:
+    image: "mtconnect/agent:latest"
+    volumes:
+      - ./agent/agent.cfg:/mtconnect/config/agent.cfg
+      - ../agent/Devices.xml:/mtconnect/config/Devices.xml
+      - ./log:/mtconnect/log
+      - ../twin:/mtconnect/data/demo/twin
+    ports:
+      - "5001:5000"
+    depends_on:
+      - mazak
+      - okuma
