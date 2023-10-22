@@ -742,7 +742,7 @@ namespace mtconnect {
         if (deviceType)
         {
           deviceList.remove_if([&deviceType](const DevicePtr &dev) {
-            return dev->getName() == *deviceType;
+            return dev->getName() != *deviceType;
           });
         }
       }
@@ -772,7 +772,7 @@ namespace mtconnect {
         dev = checkDevice(printer, *device);
       }
       FilterSetOpt filter;
-      if (path || device)
+      if (path || device || deviceType)
       {
         filter = make_optional<FilterSet>();
         checkPath(printer, path, dev, *filter, deviceType);
@@ -798,7 +798,7 @@ namespace mtconnect {
         dev = checkDevice(printer, *device);
       }
       FilterSetOpt filter;
-      if (path || device)
+      if (path || device || deviceType)
       {
         filter = make_optional<FilterSet>();
         checkPath(printer, path, dev, *filter, deviceType);
@@ -1004,7 +1004,7 @@ namespace mtconnect {
       }
 
       auto asyncResponse = make_shared<AsyncCurrentResponse>(session, m_context);
-      if (path || device)
+      if (path || device || deviceType)
       {
         asyncResponse->m_filter = make_optional<FilterSet>();
         checkPath(printer, path, dev, *asyncResponse->m_filter, deviceType);

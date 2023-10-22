@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file
+/// Tests related to agent device
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -121,14 +124,16 @@ public:
   string m_line;
 };
 
-TEST_F(AgentDeviceTest, AgentDeviceCreation)
+/// @test check if the agent device was added to the agent
+TEST_F(AgentDeviceTest, should_create_the_agent_device)
 {
   ASSERT_NE(nullptr, m_agentDevice);
   ASSERT_EQ(2, m_agentTestHelper->m_agent->getDevices().size());
   ASSERT_EQ("Agent", m_agentDevice->getName().str());
 }
 
-TEST_F(AgentDeviceTest, VerifyRequiredDataItems)
+/// @test check that the data items for agent and device added, removed, and changed were added
+TEST_F(AgentDeviceTest, should_add_data_items_to_the_agent_devcie)
 {
   ASSERT_NE(nullptr, m_agentDevice);
   auto avail = m_agentDevice->getDeviceDataItem("agent_avail");
@@ -148,7 +153,8 @@ TEST_F(AgentDeviceTest, VerifyRequiredDataItems)
   ASSERT_EQ("DEVICE_CHANGED", changed->getType());
 }
 
-TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
+/// @test verify device added was updated
+TEST_F(AgentDeviceTest, should_have_device_added_in_buffer)
 {
   auto agent = m_agentTestHelper->getAgent();
   auto device = agent->findDeviceByUUIDorName("000");
@@ -180,7 +186,8 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 
 #define ID_PREFIX "_d0c33d4315"
 
-TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
+/// @test verify adapter component is added
+TEST_F(AgentDeviceTest, should_add_component_and_data_items_for_adapter)
 {
   m_port = 21788;
   addAdapter();
@@ -203,7 +210,8 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
   }
 }
 
-TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
+/// @test check that the ip address was suppressed when requested
+TEST_F(AgentDeviceTest, should_suppress_address_ip_address_when_configured)
 {
   m_port = 21788;
   addAdapter(true);
@@ -222,7 +230,8 @@ TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 #define AGENT_DEVICE_DEVICE_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Agent']"
 #define AGENT_DEVICE_ADAPTER_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Adapter']"
 
-TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
+/// @test verify the data items for the adapter were added and populated
+TEST_F(AgentDeviceTest, should_observe_the_adapter_data_items)
 {
   {
     PARSE_XML_RESPONSE("/Agent/current");
@@ -245,7 +254,8 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
   }
 }
 
-TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
+/// @test checks the adapter connection status updates when the adapter connects and disconnects
+TEST_F(AgentDeviceTest, should_track_adapter_connection_status)
 {
   srand(int32_t(chrono::system_clock::now().time_since_epoch().count()));
   m_port = rand() % 10000 + 5000;
@@ -303,6 +313,7 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
   }
 }
 
+/// @test verify the Agent Device uuid can be set in the configuration file
 TEST_F(AgentDeviceTest, verify_uuid_can_be_set_in_configuration)
 {
   m_agentTestHelper = make_unique<AgentTestHelper>();
@@ -313,4 +324,76 @@ TEST_F(AgentDeviceTest, verify_uuid_can_be_set_in_configuration)
   m_agentDevice = m_agentTestHelper->m_agent->getAgentDevice();
 
   ASSERT_EQ("HELLO_KITTY", *m_agentDevice->getUuid());
+}
+
+/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for probe
+TEST_F(AgentDeviceTest, should_only_return_only_devices_of_device_type_for_probe)
+{
+  using namespace mtconnect::sink::rest_sink;
+  
+  m_port = 21788;
+  addAdapter();
+  {
+    QueryMap query {{"deviceType", "Agent"}};
+    PARSE_XML_RESPONSE_QUERY("/probe", query);
+    
+    ASSERT_XML_PATH_COUNT(doc, "//m:Device", 0);
+    ASSERT_XML_PATH_COUNT(doc, "//m:Agent", 1);
+  }
+  
+  {
+    QueryMap query {{"deviceType", "Device"}};
+    PARSE_XML_RESPONSE_QUERY("/probe", query);
+    
+    ASSERT_XML_PATH_COUNT(doc, "//m:Device", 1);
+    ASSERT_XML_PATH_COUNT(doc, "//m:Agent", 0);
+  }
+}
+
+/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for current
+TEST_F(AgentDeviceTest, should_only_return_only_devices_of_device_type_for_current)
+{
+  using namespace mtconnect::sink::rest_sink;
+  
+  m_port = 21788;
+  addAdapter();
+  {
+    QueryMap query {{"deviceType", "Agent"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='Agent']", 1);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='LinuxCNC']", 0);
+  }
+  
+  {
+    QueryMap query {{"deviceType", "Device"}};
+    PARSE_XML_RESPONSE_QUERY("/current", query);
+    
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='Agent']", 0);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='LinuxCNC']", 1);
+  }
+}
+
+/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for sample
+TEST_F(AgentDeviceTest, should_only_return_only_devices_of_device_type_for_sample)
+{
+  using namespace mtconnect::sink::rest_sink;
+  
+  m_port = 21788;
+  addAdapter();
+  {
+    QueryMap query {{"deviceType", "Agent"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='Agent']", 1);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='LinuxCNC']", 0);
+  }
+  
+  {
+    QueryMap query {{"deviceType", "Device"}};
+    PARSE_XML_RESPONSE_QUERY("/sample", query);
+    
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='Agent']", 0);
+    ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='LinuxCNC']", 1);
+  }
 }
