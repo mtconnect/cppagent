@@ -345,6 +345,7 @@ namespace mtconnect {
       EXPECT_EQ(expected, obs->getSequence());
       EXPECT_EQ(end, obs->isEndOfBuffer());
       asio::post(*m_strand, boost::bind(&AsyncObserver::handlerCompleted, obs));
+      obs->m_endOfBuffer = true;
       return m_buffer.getSequence();
     };
 
@@ -387,7 +388,9 @@ namespace mtconnect {
       EXPECT_EQ(expected, obs->getSequence());
       EXPECT_EQ(end, obs->isEndOfBuffer());
       asio::post(*m_strand, boost::bind(&AsyncObserver::handlerCompleted, observer));
-      return expected + 1;
+      auto nxt = expected + 1;
+      obs->m_endOfBuffer  = nxt >= m_buffer.getSequence();
+      return nxt;
     };
 
     observer->handlerCompleted();
