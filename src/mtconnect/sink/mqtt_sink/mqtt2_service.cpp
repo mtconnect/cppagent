@@ -217,10 +217,11 @@ namespace mtconnect {
           auto observations = m_sinkContract->getCircularBuffer().getObservations(
               m_sampleCount, sampler->getFilter(), sampler->getSequence(), nullopt, end, firstSeq,
               observer->m_endOfBuffer);
-          doc = m_printer->printSample(m_instanceId,
-                                       m_sinkContract->getCircularBuffer().getBufferSize(), end,
-                                       firstSeq, lastSeq, *observations, false);
         }
+        
+        doc = m_printer->printSample(m_instanceId,
+                                     m_sinkContract->getCircularBuffer().getBufferSize(), end,
+                                     firstSeq, lastSeq, *observations, false);
 
         m_client->asyncPublish(topic, doc, [sampler](std::error_code ec) {
           if (!ec)
