@@ -204,17 +204,19 @@ namespace mtconnect {
         auto topic = formatTopic(m_sampleTopic, sampler->m_device);
         LOG(debug) << "Publishing sample for: " << topic;
 
+        std::unique_ptr<observation::ObservationList> observations;
         SequenceNumber_t end {0};
         std::string doc;
+        SequenceNumber_t firstSeq, lastSeq;
 
         {
           auto &buffer = m_sinkContract->getCircularBuffer();
           std::lock_guard<buffer::CircularBuffer> lock(buffer);
 
-          auto firstSeq = buffer.getFirstSequence();
-          auto lastSeq = buffer.getSequence() - 1;
+          firstSeq = buffer.getFirstSequence();
+          lastSeq = buffer.getSequence() - 1;
 
-          auto observations = m_sinkContract->getCircularBuffer().getObservations(
+          observations = m_sinkContract->getCircularBuffer().getObservations(
               m_sampleCount, sampler->getFilter(), sampler->getSequence(), nullopt, end, firstSeq,
               observer->m_endOfBuffer);
         }
