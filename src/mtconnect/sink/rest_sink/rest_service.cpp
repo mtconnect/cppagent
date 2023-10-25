@@ -912,15 +912,18 @@ namespace mtconnect {
       try
       {
         SequenceNumber_t end {0ull};
-        bool endOfBuffer {true};
 
         // end and endOfBuffer are set during the fetch sample data while the
         // mutex is held. This removed the race to check if we are at the end of
         // the bufffer and setting the next start to the last sequence number
         // sent.
+        std::optional<SequenceNumber_t> from;
+        if (asyncResponse->getSequence() > 0)
+          from.emplace(asyncResponse->getSequence());
+        
         string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
-                                         asyncResponse->m_count, asyncResponse->getSequence(),
-                                         nullopt, end, endOfBuffer, asyncResponse->m_pretty);
+                                         asyncResponse->m_count, from,
+                                         nullopt, end, asyncObserver->m_endOfBuffer, asyncResponse->m_pretty);
 
         if (m_logStreamData)
           asyncResponse->m_log << content << endl;

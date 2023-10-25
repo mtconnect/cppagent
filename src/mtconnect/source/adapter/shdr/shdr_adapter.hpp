@@ -120,12 +120,24 @@ namespace mtconnect {
       /// @param[in] options the set of options
       void setOptions(const ConfigOptions &options) override
       {
+        bool changed = false;
+        
         for (auto &o : options)
-          m_options.insert_or_assign(o.first, o.second);
-        bool started = m_pipeline.started();
-        m_pipeline.build(m_options);
-        if (!m_pipeline.started() && started)
-          m_pipeline.start();
+        {
+          auto it = m_options.find(o.first);
+          if (it == m_options.end() || it->second != o.second)
+          {
+            m_options.insert_or_assign(o.first, o.second);
+            changed = true;
+          }
+        }
+        if (changed)
+        {
+          bool started = m_pipeline.started();
+          m_pipeline.build(m_options);
+          if (!m_pipeline.started() && started)
+            m_pipeline.start();
+        }
       }
 
     protected:

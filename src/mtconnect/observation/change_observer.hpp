@@ -131,6 +131,17 @@ namespace mtconnect::observation {
 
     /// @brief handler for the callback
     boost::function<void(boost::system::error_code)> m_handler;
+    
+    /// @name Mutex lock  management
+    ///@{
+
+    /// @brief lock the mutex
+    auto lock() { return m_mutex.lock(); }
+    /// @brief unlock the mutex
+    auto unlock() { return m_mutex.unlock(); }
+    /// @brief try to lock the mutex
+    auto try_lock() { return m_mutex.try_lock(); }
+    ///@}
 
   private:
     boost::asio::io_context::strand &m_strand;
@@ -241,6 +252,9 @@ namespace mtconnect::observation {
     const auto &getFilter() const { return m_filter; }
 
     ///@}
+    ///
+
+    mutable bool m_endOfBuffer {false};                   //! Public indicator that we are at the end of the buffer
 
   protected:
     /// @brief asyncronous callback when observations arrive or heartbeat times out.
@@ -260,7 +274,6 @@ namespace mtconnect::observation {
     FilterSet m_filter;                            //! The data items to be observed
     boost::asio::io_context::strand m_strand;      //! Strand to use for aync dispatch
 
-    bool m_endOfBuffer {false};                   //! Indicator that we are at the end of the buffer
     ChangeObserver m_observer;                    //! the change observer
     mtconnect::buffer::CircularBuffer &m_buffer;  //! reference to the circular buffer
   };

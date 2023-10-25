@@ -94,12 +94,12 @@ namespace mtconnect {
           std::chrono::duration<double> dt = now - m_lastTime;
           m_lastTime = now;
 
-          auto count = *m_count;
+          size_t count { *m_count };
           auto delta = count - m_last;
 
           double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
-          LOG(debug) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
-          LOG(debug) << *m_dataItem
+          LOG(info) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
+          LOG(info) << *m_dataItem
                      << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
 
           m_last = count;
@@ -118,6 +118,10 @@ namespace mtconnect {
         m_timer.expires_from_now(10s);
         m_timer.async_wait(
             boost::asio::bind_executor(m_strand, boost::bind(&ComputeMetrics::compute, ptr(), _1)));
+      }
+      else if (ec)
+      {
+        LOG(warning) << "ComputeMetrics::compute error: " << ec.message();
       }
     }
 

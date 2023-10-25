@@ -254,14 +254,14 @@ namespace mtconnect {
           std::error_code ec;
           if (std::filesystem::exists(tst, ec) && !ec)
           {
-            LOG(trace) << "Found file '" << file << "' "
+            LOG(info) << "Found file '" << file << "' "
                        << " in path " << path;
             auto con {std::filesystem::canonical(tst)};
             return con;
           }
           else
           {
-            LOG(trace) << "Cannot find file '" << file << "' "
+            LOG(info) << "Cannot find file '" << file << "' "
                        << " in path " << path;
           }
         }
