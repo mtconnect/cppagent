@@ -920,10 +920,10 @@ namespace mtconnect {
         std::optional<SequenceNumber_t> from;
         if (asyncResponse->getSequence() > 0)
           from.emplace(asyncResponse->getSequence());
-        
+
         string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
-                                         asyncResponse->m_count, from,
-                                         nullopt, end, asyncObserver->m_endOfBuffer, asyncResponse->m_pretty);
+                                         asyncResponse->m_count, from, nullopt, end,
+                                         asyncObserver->m_endOfBuffer, asyncResponse->m_pretty);
 
         if (m_logStreamData)
           asyncResponse->m_log << content << endl;

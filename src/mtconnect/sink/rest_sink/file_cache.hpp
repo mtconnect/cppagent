@@ -148,9 +148,8 @@ namespace mtconnect::sink::rest_sink {
     std::map<std::string, std::string> m_mimeTypes;
     size_t m_maxCachedFileSize;
     size_t m_minCompressedFileSize;
-    
+
     // Access control to the buffer
     mutable std::recursive_mutex m_cacheLock;
-
   };
 }  // namespace mtconnect::sink::rest_sink

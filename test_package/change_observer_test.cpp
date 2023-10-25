@@ -389,7 +389,7 @@ namespace mtconnect {
       EXPECT_EQ(end, obs->isEndOfBuffer());
       asio::post(*m_strand, boost::bind(&AsyncObserver::handlerCompleted, observer));
       auto nxt = expected + 1;
-      obs->m_endOfBuffer  = nxt >= m_buffer.getSequence();
+      obs->m_endOfBuffer = nxt >= m_buffer.getSequence();
       return nxt;
     };
 

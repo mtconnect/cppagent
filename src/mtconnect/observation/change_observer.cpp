@@ -111,7 +111,7 @@ namespace mtconnect::observation {
   void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from, Resolver resolver)
   {
     using std::placeholders::_1;
-    
+
     SequenceNumber_t firstSeq, next;
     {
       std::lock_guard<buffer::CircularBuffer> lock(m_buffer);
@@ -184,13 +184,15 @@ namespace mtconnect::observation {
 
     {
       std::lock_guard<ChangeObserver> lock(m_observer);
-      
-      /// - Check if we are starting from the beginning of the buffer or are rapidly streaming, then sequence is zero.
-      ///   We need to pass it through so the handler knows we are starting from the first sequence after we drop the
-      ///   lock. Otherwise,  we can fall too far behind.
+
+      /// - Check if we are starting from the beginning of the buffer or are rapidly streaming, then
+      /// sequence is zero.
+      ///   We need to pass it through so the handler knows we are starting from the first sequence
+      ///   after we drop the lock. Otherwise,  we can fall too far behind.
       if (m_endOfBuffer && m_sequence != 0)
       {
-        ///   - check if the obserer was signaled, this means the data is ready. If we are signaled before
+        ///   - check if the obserer was signaled, this means the data is ready. If we are signaled
+        ///   before
         if (m_observer.wasSignaled())
         {
           /// The observer can be signaled before the interval has expired. If this occurs, then
@@ -223,7 +225,7 @@ namespace mtconnect::observation {
         }
       }
     }
-    
+
     /// Check if we're falling too far behind. If we are, generate an
     /// MTConnectError and return.
     if (m_sequence != 0 && m_sequence < m_buffer.getFirstSequence())

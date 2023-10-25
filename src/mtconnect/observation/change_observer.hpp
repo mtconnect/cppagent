@@ -131,7 +131,7 @@ namespace mtconnect::observation {
 
     /// @brief handler for the callback
     boost::function<void(boost::system::error_code)> m_handler;
-    
+
     /// @name Mutex lock  management
     ///@{
 
@@ -254,7 +254,7 @@ namespace mtconnect::observation {
     ///@}
     ///
 
-    mutable bool m_endOfBuffer {false};                   //! Public indicator that we are at the end of the buffer
+    mutable bool m_endOfBuffer {false};  //! Public indicator that we are at the end of the buffer
 
   protected:
     /// @brief asyncronous callback when observations arrive or heartbeat times out.

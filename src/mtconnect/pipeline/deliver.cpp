@@ -94,13 +94,13 @@ namespace mtconnect {
           std::chrono::duration<double> dt = now - m_lastTime;
           m_lastTime = now;
 
-          size_t count { *m_count };
+          size_t count {*m_count};
           auto delta = count - m_last;
 
           double avg = delta + exp(-(dt.count() / 60.0)) * (m_lastAvg - delta);
           LOG(info) << *m_dataItem << " - Average for last 1 minutes: " << (avg / dt.count());
           LOG(info) << *m_dataItem
-                     << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
+                    << " - Delta for last 10 seconds: " << (double(delta) / dt.count());
 
           m_last = count;
           if (avg != m_lastAvg)

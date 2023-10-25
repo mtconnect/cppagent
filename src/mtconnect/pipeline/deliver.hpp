@@ -17,10 +17,9 @@
 
 #pragma once
 
-#include <atomic>
-
 #include <boost/asio/steady_timer.hpp>
 
+#include <atomic>
 #include <chrono>
 
 #include "mtconnect/asset/asset.hpp"
@@ -39,7 +38,8 @@ namespace mtconnect::pipeline {
     /// @param dataItem the data item to post the metrics
     /// @param count a shared count
     ComputeMetrics(boost::asio::io_context::strand &st, PipelineContract *contract,
-                   const std::optional<std::string> &dataItem, std::shared_ptr<std::atomic_size_t> &count)
+                   const std::optional<std::string> &dataItem,
+                   std::shared_ptr<std::atomic_size_t> &count)
       : m_count(count),
         m_contract(contract),
         m_dataItem(dataItem),

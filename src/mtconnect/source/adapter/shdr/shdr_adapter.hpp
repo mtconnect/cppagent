@@ -121,7 +121,7 @@ namespace mtconnect {
       void setOptions(const ConfigOptions &options) override
       {
         bool changed = false;
-        
+
         for (auto &o : options)
         {
           auto it = m_options.find(o.first);

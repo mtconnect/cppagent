@@ -147,4 +147,3 @@ TEST(AdapterTest, should_set_heartbeat_override_from_configuration)
   ASSERT_TRUE(over);
   ASSERT_EQ(123ms, *over);
 }
-

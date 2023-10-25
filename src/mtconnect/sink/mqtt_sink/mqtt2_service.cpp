@@ -213,11 +213,10 @@ namespace mtconnect {
 
           auto firstSeq = buffer.getFirstSequence();
           auto lastSeq = buffer.getSequence() - 1;
-          bool endOfBuffer {true};
 
           auto observations = m_sinkContract->getCircularBuffer().getObservations(
               m_sampleCount, sampler->getFilter(), sampler->getSequence(), nullopt, end, firstSeq,
-              endOfBuffer);
+              observer->m_endOfBuffer);
           doc = m_printer->printSample(m_instanceId,
                                        m_sinkContract->getCircularBuffer().getBufferSize(), end,
                                        firstSeq, lastSeq, *observations, false);
