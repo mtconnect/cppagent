@@ -111,6 +111,15 @@ namespace mtconnect::observation {
   void AsyncObserver::observe(const std::optional<SequenceNumber_t> &from, Resolver resolver)
   {
     using std::placeholders::_1;
+
+    SequenceNumber_t firstSeq, next;
+    {
+      std::lock_guard<buffer::CircularBuffer> lock(m_buffer);
+      firstSeq = m_buffer.getFirstSequence();
+      next = m_buffer.getSequence();
+    }
+
+    std::lock_guard<ChangeObserver> lock(m_observer);
     m_observer.m_handler = boost::bind(&AsyncObserver::handleSignal, getptr(), _1);
 
     // This object will automatically clean up all the observer from the
@@ -121,13 +130,6 @@ namespace mtconnect::observation {
       auto cs = resolver(item);
       if (cs)
         cs->addObserver(&m_observer);
-    }
-
-    SequenceNumber_t firstSeq, next;
-    {
-      std::lock_guard<buffer::CircularBuffer> lock(m_buffer);
-      firstSeq = m_buffer.getFirstSequence();
-      next = m_buffer.getSequence();
     }
 
     // If we are starting from the beginning of the buffer, signal the handler
@@ -151,7 +153,7 @@ namespace mtconnect::observation {
     }
     else
     {
-      handleSignal(boost::system::error_code {});
+      AsyncObserver::handleSignal(boost::system::error_code {});
     }
   }
 
@@ -181,27 +183,20 @@ namespace mtconnect::observation {
     }
 
     {
-      std::lock_guard<CircularBuffer> lock(m_buffer);
+      std::lock_guard<ChangeObserver> lock(m_observer);
 
-      // Check if we are streaming chunks rapidly to catch up to the end of
-      // buffer. We will not delay between chunks in this case and write as
-      // rapidly as possible
-      if (m_endOfBuffer)
+      /// - Check if we are starting from the beginning of the buffer or are rapidly streaming, then
+      /// sequence is zero.
+      ///   We need to pass it through so the handler knows we are starting from the first sequence
+      ///   after we drop the lock. Otherwise,  we can fall too far behind.
+      if (m_endOfBuffer && m_sequence != 0)
       {
-        if (!m_observer.wasSignaled())
+        ///   - check if the obserer was signaled, this means the data is ready. If we are signaled
+        ///   before
+        if (m_observer.wasSignaled())
         {
-          // If nothing came out during the last wait, we may have still have advanced
-          // the sequence number. We should reset the start to something closer to the
-          // current sequence. If we lock the sequence lock, we can check if the observer
-          // was signaled between the time the wait timed out and the mutex was locked.
-          // Otherwise, nothing has arrived and we set to the next sequence number to
-          // the next sequence number to be allocated and continue.
-          m_sequence = m_buffer.getSequence();
-        }
-        else
-        {
-          // The observer can be signaled before the interval has expired. If this occurs, then
-          // Wait the remaining duration of the interval.
+          /// The observer can be signaled before the interval has expired. If this occurs, then
+          /// Wait the remaining duration of the interval.
           auto delta =
               chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now() - m_last);
           if (delta < m_interval)
@@ -210,35 +205,38 @@ namespace mtconnect::observation {
             return;
           }
 
-          // Get the sequence # signaled in the observer when the earliest event arrived.
-          // This will allow the next set of data to be pulled. Any later events will have
-          // greater sequence numbers, so this should not cause a problem. Also, signaled
-          // sequence numbers can only decrease, never increase.
+          /// Get the sequence # signaled in the observer when the earliest event arrived.
+          /// This will allow the next set of data to be pulled. Any later events will have
+          /// greater sequence numbers, so this should not cause a problem. Also, signaled
+          /// sequence numbers can only decrease, never increase.
           if (m_observer.getSequence() > m_sequence)
             m_sequence = m_observer.getSequence();
           m_observer.reset();
         }
+        else
+        {
+          /// If nothing came out during the last wait, we may have still have advanced
+          /// the sequence number. We should reset the start to something closer to the
+          /// current sequence. If we lock the sequence lock, we can check if the observer
+          /// was signaled between the time the wait timed out and the mutex was locked.
+          /// Otherwise, nothing has arrived and we set to the next sequence number to
+          /// the next sequence number to be allocated and continue.
+          m_sequence = m_buffer.getSequence();
+        }
       }
-      else if (m_sequence == 0)
-      {
-        // The first time we are starting from the beginning of the buffer, make
-        // sure we don't have a race condition where the first sequence had already
-        // rolled off the buffer before we have a chance to send anything.
-        m_sequence = m_buffer.getFirstSequence();
-      }
-
-      // Check if we're falling too far behind. If we are, generate an
-      // MTConnectError and return.
-      if (m_sequence < m_buffer.getFirstSequence())
-      {
-        LOG(warning) << "Client fell too far behind, disconnecting";
-        fail(boost::beast::http::status::not_found, "Client fell too far behind, disconnecting");
-        return;
-      }
-
-      m_sequence = m_handler(getptr());
-      m_endOfBuffer = m_sequence >= m_buffer.getSequence();
     }
+
+    /// Check if we're falling too far behind. If we are, generate an
+    /// MTConnectError and return.
+    if (m_sequence != 0 && m_sequence < m_buffer.getFirstSequence())
+    {
+      LOG(warning) << "Client fell too far behind, disconnecting";
+      fail(boost::beast::http::status::not_found, "Client fell too far behind, disconnecting");
+      return;
+    }
+
+    /// Returns the sequence where we left off.
+    m_sequence = m_handler(getptr());
   }
 
 }  // namespace mtconnect::observation

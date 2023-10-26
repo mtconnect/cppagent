@@ -19,6 +19,7 @@
 
 #include <boost/asio/steady_timer.hpp>
 
+#include <atomic>
 #include <chrono>
 
 #include "mtconnect/asset/asset.hpp"
@@ -37,7 +38,8 @@ namespace mtconnect::pipeline {
     /// @param dataItem the data item to post the metrics
     /// @param count a shared count
     ComputeMetrics(boost::asio::io_context::strand &st, PipelineContract *contract,
-                   const std::optional<std::string> &dataItem, std::shared_ptr<size_t> &count)
+                   const std::optional<std::string> &dataItem,
+                   std::shared_ptr<std::atomic_size_t> &count)
       : m_count(count),
         m_contract(contract),
         m_dataItem(dataItem),
@@ -61,7 +63,7 @@ namespace mtconnect::pipeline {
     /// @brief start computation
     void start();
 
-    std::shared_ptr<size_t> m_count;
+    std::shared_ptr<std::atomic_size_t> m_count;
     PipelineContract *m_contract {nullptr};
     std::optional<std::string> m_dataItem;
     std::chrono::time_point<std::chrono::steady_clock> m_lastTime;
@@ -86,7 +88,7 @@ namespace mtconnect::pipeline {
                      const std::optional<std::string> &metricsDataItem = std::nullopt)
       : Transform(name),
         m_contract(context->m_contract.get()),
-        m_count(std::make_shared<size_t>(0)),
+        m_count(std::make_shared<std::atomic_size_t>(0)),
         m_dataItem(metricsDataItem)
     {}
 
@@ -121,7 +123,7 @@ namespace mtconnect::pipeline {
     friend struct ComputeMetrics;
 
     PipelineContract *m_contract;
-    std::shared_ptr<size_t> m_count;
+    std::shared_ptr<std::atomic_size_t> m_count;
     std::shared_ptr<ComputeMetrics> m_metrics;
     std::optional<std::string> m_dataItem;
   };

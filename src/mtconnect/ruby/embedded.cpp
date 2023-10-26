@@ -132,7 +132,13 @@ namespace mtconnect::ruby {
 
     std::optional<std::filesystem::path> modulePath;
     if (module)
+    {
       modulePath = config->findDataFile(*module);
+      if (!modulePath)
+      {
+        LOG(warning) << "Cannot find ruby module: " << *module;
+      }
+    }
 
     if (!m_rubyVM)
     {

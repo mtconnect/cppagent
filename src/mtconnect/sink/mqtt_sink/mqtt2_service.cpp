@@ -204,29 +204,33 @@ namespace mtconnect {
         auto topic = formatTopic(m_sampleTopic, sampler->m_device);
         LOG(debug) << "Publishing sample for: " << topic;
 
+        std::unique_ptr<observation::ObservationList> observations;
         SequenceNumber_t end {0};
         std::string doc;
+        SequenceNumber_t firstSeq, lastSeq;
 
         {
           auto &buffer = m_sinkContract->getCircularBuffer();
           std::lock_guard<buffer::CircularBuffer> lock(buffer);
 
-          auto firstSeq = buffer.getFirstSequence();
-          auto lastSeq = buffer.getSequence() - 1;
-          bool endOfBuffer {true};
-
-          auto observations = m_sinkContract->getCircularBuffer().getObservations(
-              m_sampleCount, sampler->getFilter(), sampler->getSequence(), nullopt, end, firstSeq,
-              endOfBuffer);
-          doc = m_printer->printSample(m_instanceId,
-                                       m_sinkContract->getCircularBuffer().getBufferSize(), end,
-                                       firstSeq, lastSeq, *observations, false);
+          lastSeq = buffer.getSequence() - 1;
+          observations =
+              buffer.getObservations(m_sampleCount, sampler->getFilter(), sampler->getSequence(),
+                                     nullopt, end, firstSeq, observer->m_endOfBuffer);
         }
 
-        m_client->asyncPublish(topic, doc, [sampler](std::error_code ec) {
+        doc = m_printer->printSample(m_instanceId,
+                                     m_sinkContract->getCircularBuffer().getBufferSize(), end,
+                                     firstSeq, lastSeq, *observations, false);
+
+        m_client->asyncPublish(topic, doc, [sampler, topic](std::error_code ec) {
           if (!ec)
           {
             sampler->handlerCompleted();
+          }
+          else
+          {
+            LOG(warning) << "Async publish failed for " << topic << ": " << ec.message();
           }
         });
 
