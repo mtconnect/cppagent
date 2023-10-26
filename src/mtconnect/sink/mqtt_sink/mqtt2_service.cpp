@@ -214,11 +214,11 @@ namespace mtconnect {
           std::lock_guard<buffer::CircularBuffer> lock(buffer);
 
           lastSeq = buffer.getSequence() - 1;
-          observations = buffer.getObservations(
-              m_sampleCount, sampler->getFilter(), sampler->getSequence(), nullopt, end, firstSeq,
-              observer->m_endOfBuffer);
+          observations =
+              buffer.getObservations(m_sampleCount, sampler->getFilter(), sampler->getSequence(),
+                                     nullopt, end, firstSeq, observer->m_endOfBuffer);
         }
-        
+
         doc = m_printer->printSample(m_instanceId,
                                      m_sinkContract->getCircularBuffer().getBufferSize(), end,
                                      firstSeq, lastSeq, *observations, false);
