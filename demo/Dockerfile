@@ -1,6 +1,5 @@
 # MTConnect Public C++ Agent Docker image build instructions
 
-# TODO: Do we need notes like this to be in `Dockerfile`? I think the docs might be a better place for this. IMHO most notes in this file should be moved to the docs.
 # ---------------------------------------------------------------------
 # notes
 # ---------------------------------------------------------------------
@@ -17,7 +16,6 @@
 #
 #   To run tests, use `--build-arg WITH_TESTS=true`
 #
-#   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
 #   docker run -it --rm --init --name agent -p5000:5000 mtconnect/demo
 #
 # then visit http://localhost:5000 to see the demo output.
@@ -27,12 +25,11 @@
 # ---------------------------------------------------------------------
 FROM mtconnect/agent as mtconnect
 
-# TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
 LABEL author='mtconnect' description='MTConnect C++ Agent Demo'
 
 USER root
 
-RUN apk add ruby
+RUN apk --update add ruby
 
 COPY --chown=agent:agent \
     ./simulator/*  \
