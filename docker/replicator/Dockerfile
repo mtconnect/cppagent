@@ -13,7 +13,9 @@
 #     --push \
 #     .
 #
-#   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
+#   For example, If the source agent is running on 192.168.5.100 port 5000 -- the following will replicate
+#   the agent at that address
+#
 #   docker run -it --rm --init --name replicator -p5000:5000 -e SOURCE_URL=http://192.168.5.100:5000/ \
 #     mtconnect/replicator
 #
@@ -21,12 +23,6 @@
 
 # base image - mtconnect/agent
 FROM mtconnect/agent as mtconnect
-
-# ---------------------------------------------------------------------
-# release
-# ---------------------------------------------------------------------
-
-FROM mtconnect AS release
 
 LABEL author='mtconnect' description='MTConnect C++ Agent Replicator'
 
