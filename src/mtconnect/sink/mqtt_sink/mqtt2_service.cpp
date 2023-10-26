@@ -213,10 +213,8 @@ namespace mtconnect {
           auto &buffer = m_sinkContract->getCircularBuffer();
           std::lock_guard<buffer::CircularBuffer> lock(buffer);
 
-          firstSeq = buffer.getFirstSequence();
           lastSeq = buffer.getSequence() - 1;
-
-          observations = m_sinkContract->getCircularBuffer().getObservations(
+          observations = buffer.getObservations(
               m_sampleCount, sampler->getFilter(), sampler->getSequence(), nullopt, end, firstSeq,
               observer->m_endOfBuffer);
         }
@@ -225,10 +223,14 @@ namespace mtconnect {
                                      m_sinkContract->getCircularBuffer().getBufferSize(), end,
                                      firstSeq, lastSeq, *observations, false);
 
-        m_client->asyncPublish(topic, doc, [sampler](std::error_code ec) {
+        m_client->asyncPublish(topic, doc, [sampler, topic](std::error_code ec) {
           if (!ec)
           {
             sampler->handlerCompleted();
+          }
+          else
+          {
+            LOG(warning) << "Async publish failed for " << topic << ": " << ec.message();
           }
         });
 
