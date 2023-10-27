@@ -18,9 +18,11 @@ class MTConnectAgentTest(ConanFile):
 
     def generate(self):
         agent_options = self.dependencies[self.tested_reference_str].options
-        
+
         tc = CMakeToolchain(self)
-        tc.cache_variables['CTEST_OUTPUT_ON_FAILURE'] = True
+        mtc = self.dependencies["mtconnect_agent"]
+        print("Setting AGENT_BIN_DIR=" + mtc.cpp_info.bindir)
+        tc.cache_variables['AGENT_BIN_DIR'] = mtc.cpp_info.bindir
         
         if agent_options.shared:
             tc.cache_variables['SHARED_AGENT_LIB'] = True

@@ -155,7 +155,7 @@ end
                 f.write("  conf.compilers.each { |c| c.flags << '/%s' }\n" % msvc_runtime_flag(self))
             else:
                 if self.settings.build_type == 'Debug':
-                    f.write("  conf.compilers.each { |c| c.flags << '-O0' }\n")
+                    f.write("  conf.compilers.each { |c| c.flags << '-O0 -g' }\n")
                 if self.settings.compiler == 'gcc':
                     f.write("  conf.compilers.each { |c| c.flags << '-fPIC' }\n")                    
             

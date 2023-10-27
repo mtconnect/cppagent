@@ -335,8 +335,13 @@ elseif(UNIX)
 endif()
 
 if(SHARED_AGENT_LIB AND MSVC)
-  add_custom_command(TARGET config_test POST_BUILD 
-     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:config_test> "$<TARGET_FILE_DIR:config_test>"
-     COMMAND_EXPAND_LISTS)
+  file(COPY "${AGENT_BIN_DIR}/" DESTINATION "${PROJECT_BINARY_DIR}/libs"
+    FILES_MATCHING PATTERN "*.dll")
+  file(GLOB agent_dlls "${PROJECT_BINARY_DIR}/libs/*.dll")
+  add_custom_command(TARGET agent_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${agent_dlls}
+    "$<TARGET_FILE_DIR:agent_test>/"
+    COMMAND_EXPAND_LISTS)
 endif()
 		     
