@@ -57,6 +57,7 @@ public:
   void deliverAsset(AssetPtr) override {}
   void deliverDevices(std::list<DevicePtr>) override {}
   void deliverAssetCommand(entity::EntityPtr) override {}
+  int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverCommand(entity::EntityPtr) override {}
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
   void sourceFailed(const std::string &id) override {}
