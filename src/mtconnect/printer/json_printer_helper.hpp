@@ -79,12 +79,12 @@ namespace mtconnect::printer {
     /// @param[in] v double value
     void Add(double v) 
     {
-      if (std::isnan(v))
-        m_writer.String("nan");
-      else if (std::isinf(v))
-        m_writer.String("inf");
-      else
+      if (std::isfinite(v))
         m_writer.Double(v);
+      else if (std::isnan(v))
+        m_writer.String("NaN");
+      else if (std::isinf(v))
+        m_writer.String("Infinity");
     }
     /// @brief Add a bool
     /// @param[in] v bool value

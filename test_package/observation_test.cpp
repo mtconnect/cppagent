@@ -437,13 +437,13 @@ TEST_F(ObservationTest, should_represent_inf_values_in_json_correctly)
   auto sdoc = jprinter.print(sample);
   json jdoc = json::parse(sdoc);
   
-  ASSERT_EQ("inf", jdoc.at("/Temperature/value"_json_pointer).get<string>());
+  ASSERT_EQ("Infinity", jdoc.at("/Temperature/value"_json_pointer).get<string>());
   
   stringstream buffer;
   buffer << jdoc;
   
   ASSERT_EQ(
-            R"DOC({"Temperature":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":"inf"}})DOC",
+            R"DOC({"Temperature":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":"Infinity"}})DOC",
             buffer.str());
 }
 
@@ -479,12 +479,12 @@ TEST_F(ObservationTest, should_represent_nan_values_in_json_correctly)
   auto sdoc = jprinter.print(sample);
   json jdoc = json::parse(sdoc);
   
-  ASSERT_EQ("nan", jdoc.at("/Temperature/value"_json_pointer).get<string>());
+  ASSERT_EQ("NaN", jdoc.at("/Temperature/value"_json_pointer).get<string>());
   
   stringstream buffer;
   buffer << jdoc;
   
   ASSERT_EQ(
-            R"DOC({"Temperature":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":"nan"}})DOC",
+            R"DOC({"Temperature":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":"NaN"}})DOC",
             buffer.str());
 }
