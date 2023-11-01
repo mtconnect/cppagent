@@ -420,7 +420,8 @@ TEST_F(ObservationTest, should_represent_inf_values_in_json_correctly)
   auto &value = sample->getValue();
   ASSERT_TRUE(holds_alternative<double>(value));
   ASSERT_TRUE(std::isinf(get<double>(value)));
-  
+  ASSERT_FALSE(std::signbit(get<double>(value)));
+
   printer::XmlWriter writer(true);
   entity::XmlPrinter printer;
   
@@ -486,5 +487,48 @@ TEST_F(ObservationTest, should_represent_nan_values_in_json_correctly)
   
   ASSERT_EQ(
             R"DOC({"Temperature":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":"NaN"}})DOC",
+            buffer.str());
+}
+
+/// @test Test handling of inf
+TEST_F(ObservationTest, should_represent_negative_inf_values_in_json_correctly)
+{
+  ErrorList errors;
+  auto dataItem = DataItem::make(
+                                 {{"id", "x"s}, {"category", "SAMPLE"s}, {"type", "TEMPERATURE"s}, {"units", "CELSIUS"s}}, errors);
+  
+  auto sample = Observation::make(dataItem, {{"VALUE", "-Inf"s}}, m_time, errors);
+  
+  ASSERT_TRUE(dynamic_pointer_cast<Sample>(sample));
+  ASSERT_EQ(0, errors.size());
+  
+  auto &value = sample->getValue();
+  ASSERT_TRUE(holds_alternative<double>(value));
+  ASSERT_TRUE(std::isinf(get<double>(value)));
+  ASSERT_TRUE(std::signbit(get<double>(value)));
+
+  printer::XmlWriter writer(true);
+  entity::XmlPrinter printer;
+  
+  printer.print((xmlTextWriterPtr)writer, sample, {});
+  
+  auto expected = string {
+      R"DOC(<Temperature dataItemId="x" timestamp="2021-01-19T10:01:00Z">-inf</Temperature>
+)DOC"};
+  
+  ASSERT_EQ(expected, writer.getContent());
+  
+  entity::JsonEntityPrinter jprinter(1, true);
+  
+  auto sdoc = jprinter.print(sample);
+  json jdoc = json::parse(sdoc);
+  
+  ASSERT_EQ("-Infinity", jdoc.at("/Temperature/value"_json_pointer).get<string>());
+  
+  stringstream buffer;
+  buffer << jdoc;
+  
+  ASSERT_EQ(
+            R"DOC({"Temperature":{"dataItemId":"x","timestamp":"2021-01-19T10:01:00Z","value":"-Infinity"}})DOC",
             buffer.str());
 }

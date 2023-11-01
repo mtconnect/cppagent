@@ -84,7 +84,12 @@ namespace mtconnect::printer {
       else if (std::isnan(v))
         m_writer.String("NaN");
       else if (std::isinf(v))
-        m_writer.String("Infinity");
+      {
+        if (std::signbit(v))
+          m_writer.String("-Infinity");
+        else
+          m_writer.String("Infinity");
+      }
     }
     /// @brief Add a bool
     /// @param[in] v bool value
