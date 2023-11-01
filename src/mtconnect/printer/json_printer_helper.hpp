@@ -17,6 +17,8 @@
 
 #pragma once
 
+#include <cmath>
+
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
@@ -75,7 +77,15 @@ namespace mtconnect::printer {
 
     /// @brief Add a double
     /// @param[in] v double value
-    void Add(double v) { m_writer.Double(v); }
+    void Add(double v) 
+    {
+      if (std::isnan(v))
+        m_writer.String("nan");
+      else if (std::isinf(v))
+        m_writer.String("inf");
+      else
+        m_writer.Double(v);
+    }
     /// @brief Add a bool
     /// @param[in] v bool value
     void Add(bool v) { m_writer.Bool(v); }
