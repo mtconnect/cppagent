@@ -1168,7 +1168,7 @@ namespace mtconnect {
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
       if (di)
-        m_loopback->receive(di, "LISTENING");
+        m_loopback->receive(di, "LISTEN");
     }
   }
 
