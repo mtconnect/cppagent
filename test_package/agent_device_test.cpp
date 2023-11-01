@@ -267,7 +267,7 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                          "LISTENING");
+                          "LISTEN");
   }
 
   startServer();
@@ -299,7 +299,7 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                          "LISTENING");
+                          "LISTEN");
   }
 }
 
