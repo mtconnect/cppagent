@@ -101,7 +101,8 @@ namespace mtconnect {
            {"removed", QUERY, "Boolean indicating if removed assets are included in results"},
            {"type", QUERY, "Only include assets of type `type` in the results"},
            {"count", QUERY, "Maximum number of entities to include in results"},
-           {"assetId", QUERY, "An assetId to select"},
+            {"assetId", QUERY, "An assetId to select"},
+            {"deviceType", QUERY, "Values are 'Device' or 'Agent'. Selects only devices of that type."},
            {"assetId", PATH, "An assetId to select"},
            {"path", QUERY, "XPath to filter DataItems matched against the probe document"},
            {"at", QUERY, "Sequence number at which the observation snapshot is taken"},
@@ -423,35 +424,41 @@ namespace mtconnect {
       auto handler = [&](SessionPtr session, const RequestPtr request) -> bool {
         auto device = request->parameter<string>("device");
         auto pretty = *request->parameter<bool>("pretty");
+        auto deviceType = request->parameter<string>("deviceType");
 
         auto printer = printerForAccepts(request->m_accepts);
 
         if (device && !ends_with(request->m_path, string("probe")) &&
             m_sinkContract->findDeviceByUUIDorName(*device) == nullptr)
           return false;
+        
+        if (deviceType && *deviceType != "Device" && *deviceType != "Agent")
+        {
+          return false;
+        }
 
-        respond(session, probeRequest(printer, device, pretty));
+        respond(session, probeRequest(printer, device, pretty, deviceType));
         return true;
       };
 
-      m_server->addRouting({boost::beast::http::verb::get, "/probe?pretty={bool:false}", handler})
+      m_server->addRouting({boost::beast::http::verb::get, "/probe?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
           ->addRouting(
-              {boost::beast::http::verb::get, "/{device}/probe?pretty={bool:false}", handler})
+              {boost::beast::http::verb::get, "/{device}/probe?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");
 
       // Must be last
-      m_server->addRouting({boost::beast::http::verb::get, "/?pretty={bool:false}", handler})
+      m_server->addRouting({boost::beast::http::verb::get, "/?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
-          ->addRouting({boost::beast::http::verb::get, "/{device}?pretty={bool:false}", handler})
+          ->addRouting({boost::beast::http::verb::get, "/{device}?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");
@@ -598,7 +605,8 @@ namespace mtconnect {
           streamCurrentRequest(session, printerForAccepts(request->m_accepts), *interval,
                                request->parameter<string>("device"),
                                request->parameter<string>("path"),
-                               *request->parameter<bool>("pretty"));
+                               *request->parameter<bool>("pretty"),
+                               request->parameter<string>("deviceType"));
         }
         else
         {
@@ -606,14 +614,16 @@ namespace mtconnect {
                                           request->parameter<string>("device"),
                                           request->parameter<uint64_t>("at"),
                                           request->parameter<string>("path"),
-                                          *request->parameter<bool>("pretty")));
+                                          *request->parameter<bool>("pretty"),
+                                          request->parameter<string>("deviceType")));
         }
         return true;
       };
 
       string qp(
           "path={string}&at={unsigned_integer}&"
-          "interval={integer}&pretty={bool:false}");
+          "interval={integer}&pretty={bool:false}&"
+          "deviceType={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/current?" + qp, handler})
           .document("MTConnect current request",
                     "Gets a stapshot of the state of all the observations for all devices "
@@ -635,7 +645,8 @@ namespace mtconnect {
               session, printerForAccepts(request->m_accepts), *interval,
               *request->parameter<int32_t>("heartbeat"), *request->parameter<int32_t>("count"),
               request->parameter<string>("device"), request->parameter<uint64_t>("from"),
-              request->parameter<string>("path"), *request->parameter<bool>("pretty"));
+              request->parameter<string>("path"), *request->parameter<bool>("pretty"),
+              request->parameter<string>("deviceType"));
         }
         else
         {
@@ -644,7 +655,8 @@ namespace mtconnect {
                       printerForAccepts(request->m_accepts), *request->parameter<int32_t>("count"),
                       request->parameter<string>("device"), request->parameter<uint64_t>("from"),
                       request->parameter<uint64_t>("to"), request->parameter<string>("path"),
-                      *request->parameter<bool>("pretty")));
+                      *request->parameter<bool>("pretty"),
+                      request->parameter<string>("deviceType")));
         }
         return true;
       };
@@ -653,7 +665,8 @@ namespace mtconnect {
           "path={string}&from={unsigned_integer}&"
           "interval={integer}&count={integer:100}&"
           "heartbeat={integer:10000}&to={unsigned_integer}&"
-          "pretty={bool:false}");
+          "pretty={bool:false}&"
+          "deviceType={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/sample?" + qp, handler})
           .document("MTConnect sample request",
                     "Gets a time series of at maximum `count` observations for all devices "
@@ -711,7 +724,8 @@ namespace mtconnect {
     // -------------------------------------------
 
     ResponsePtr RestService::probeRequest(const Printer *printer,
-                                          const std::optional<std::string> &device, bool pretty)
+                                          const std::optional<std::string> &device, bool pretty,
+                                          const std::optional<std::string> &deviceType)
     {
       NAMED_SCOPE("RestService::probeRequest");
 
@@ -725,6 +739,12 @@ namespace mtconnect {
       else
       {
         deviceList = m_sinkContract->getDevices();
+        if (deviceType)
+        {
+          deviceList.remove_if([&deviceType](const DevicePtr &dev) {
+            return dev->getName() != *deviceType;
+          });
+        }
       }
 
       auto counts = m_sinkContract->getAssetStorage()->getCountsByType();
@@ -742,7 +762,8 @@ namespace mtconnect {
     ResponsePtr RestService::currentRequest(const Printer *printer,
                                             const std::optional<std::string> &device,
                                             const std::optional<SequenceNumber_t> &at,
-                                            const std::optional<std::string> &path, bool pretty)
+                                            const std::optional<std::string> &path, bool pretty,
+                                            const std::optional<std::string> &deviceType)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -751,10 +772,10 @@ namespace mtconnect {
         dev = checkDevice(printer, *device);
       }
       FilterSetOpt filter;
-      if (path || device)
+      if (path || device || deviceType)
       {
         filter = make_optional<FilterSet>();
-        checkPath(printer, path, dev, *filter);
+        checkPath(printer, path, dev, *filter, deviceType);
       }
 
       // Check if there is a frequency to stream data or not
@@ -767,7 +788,8 @@ namespace mtconnect {
                                            const std::optional<std::string> &device,
                                            const std::optional<SequenceNumber_t> &from,
                                            const std::optional<SequenceNumber_t> &to,
-                                           const std::optional<std::string> &path, bool pretty)
+                                           const std::optional<std::string> &path, bool pretty,
+                                           const std::optional<std::string> &deviceType)
     {
       using namespace rest_sink;
       DevicePtr dev {nullptr};
@@ -776,10 +798,10 @@ namespace mtconnect {
         dev = checkDevice(printer, *device);
       }
       FilterSetOpt filter;
-      if (path || device)
+      if (path || device || deviceType)
       {
         filter = make_optional<FilterSet>();
-        checkPath(printer, path, dev, *filter);
+        checkPath(printer, path, dev, *filter, deviceType);
       }
 
       // Check if there is a frequency to stream data or not
@@ -848,7 +870,8 @@ namespace mtconnect {
                                           const int interval, const int heartbeatIn,
                                           const int count, const std::optional<std::string> &device,
                                           const std::optional<SequenceNumber_t> &from,
-                                          const std::optional<std::string> &path, bool pretty)
+                                          const std::optional<std::string> &path, bool pretty,
+                                          const std::optional<std::string> &deviceType)
     {
       NAMED_SCOPE("RestService::streamSampleRequest");
 
@@ -858,6 +881,14 @@ namespace mtconnect {
 
       checkRange(printer, interval, -1, numeric_limits<int>().max(), "interval");
       checkRange(printer, heartbeatIn, 1, numeric_limits<int>().max(), "heartbeat");
+      if (from)
+      {
+        std::lock_guard<CircularBuffer> lock(m_sinkContract->getCircularBuffer());
+        auto firstSeq = m_sinkContract->getCircularBuffer().getFirstSequence();
+        auto seq = m_sinkContract->getCircularBuffer().getSequence();
+        checkRange(printer, *from, firstSeq - 1, seq + 1, "from");
+      }
+
       DevicePtr dev {nullptr};
       if (device)
       {
@@ -865,7 +896,7 @@ namespace mtconnect {
       }
 
       FilterSet filter;
-      checkPath(printer, path, dev, filter);
+      checkPath(printer, path, dev, filter, deviceType);
 
       auto asyncResponse = make_shared<AsyncSampleResponse>(
           m_strand, m_sinkContract->getCircularBuffer(), std::move(filter),
@@ -900,25 +931,48 @@ namespace mtconnect {
       NAMED_SCOPE("RestService::streamNextSampleChunk");
 
       auto asyncResponse = std::dynamic_pointer_cast<AsyncSampleResponse>(asyncObserver);
-      SequenceNumber_t end {0ull};
-      bool endOfBuffer {true};
 
-      // end and endOfBuffer are set during the fetch sample data while the
-      // mutex is held. This removed the race to check if we are at the end of
-      // the bufffer and setting the next start to the last sequence number
-      // sent.
-      string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
-                                       asyncResponse->m_count, asyncResponse->getSequence(),
-                                       nullopt, end, endOfBuffer, asyncResponse->m_pretty);
+      try
+      {
+        SequenceNumber_t end {0ull};
+        bool endOfBuffer {true};
 
-      if (m_logStreamData)
-        asyncResponse->m_log << content << endl;
+        // end and endOfBuffer are set during the fetch sample data while the
+        // mutex is held. This removed the race to check if we are at the end of
+        // the bufffer and setting the next start to the last sequence number
+        // sent.
+        string content = fetchSampleData(asyncResponse->m_printer, asyncResponse->getFilter(),
+                                         asyncResponse->m_count, asyncResponse->getSequence(),
+                                         nullopt, end, endOfBuffer, asyncResponse->m_pretty);
 
-      asyncResponse->m_session->writeChunk(
-          content, asio::bind_executor(
-                       m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+        if (m_logStreamData)
+          asyncResponse->m_log << content << endl;
 
-      return end;
+        asyncResponse->m_session->writeChunk(
+            content, asio::bind_executor(
+                         m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+
+        return end;
+      }
+
+      catch (RequestError &re)
+      {
+        LOG(error) << asyncResponse->m_session->getRemote().address()
+                   << ": Error processing request: " << re.what();
+        ResponsePtr resp = std::make_unique<Response>(re);
+        asyncResponse->m_session->writeResponse(std::move(resp));
+        asyncResponse->m_session->close();
+      }
+
+      catch (...)
+      {
+        std::stringstream txt;
+        txt << asyncResponse->m_session->getRemote().address() << ": Unknown Error thrown";
+        LOG(error) << txt.str();
+        asyncResponse->fail(boost::beast::http::status::not_found, txt.str());
+      }
+
+      return 0;
     }
 
     struct AsyncCurrentResponse
@@ -939,7 +993,8 @@ namespace mtconnect {
     void RestService::streamCurrentRequest(SessionPtr session, const Printer *printer,
                                            const int interval,
                                            const std::optional<std::string> &device,
-                                           const std::optional<std::string> &path, bool pretty)
+                                           const std::optional<std::string> &path, bool pretty,
+                                           const std::optional<std::string> &deviceType)
     {
       checkRange(printer, interval, 0, numeric_limits<int>().max(), "interval");
       DevicePtr dev {nullptr};
@@ -949,10 +1004,10 @@ namespace mtconnect {
       }
 
       auto asyncResponse = make_shared<AsyncCurrentResponse>(session, m_context);
-      if (path || device)
+      if (path || device || deviceType)
       {
         asyncResponse->m_filter = make_optional<FilterSet>();
-        checkPath(printer, path, dev, *asyncResponse->m_filter);
+        checkPath(printer, path, dev, *asyncResponse->m_filter, deviceType);
       }
       asyncResponse->m_interval = chrono::milliseconds {interval};
       asyncResponse->m_printer = printer;
@@ -970,36 +1025,55 @@ namespace mtconnect {
     {
       using std::placeholders::_1;
 
-      auto service = asyncResponse->m_service.lock();
-
-      if (!service || !m_server || !m_server->isRunning())
+      try
       {
-        LOG(warning) << "Trying to send chunk when service has stopped";
-        if (service)
+        auto service = asyncResponse->m_service.lock();
+
+        if (!service || !m_server || !m_server->isRunning())
         {
-          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                         "Agent shutting down, aborting stream");
+          LOG(warning) << "Trying to send chunk when service has stopped";
+          if (service)
+          {
+            asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                           "Agent shutting down, aborting stream");
+          }
+          return;
         }
-        return;
-      }
 
-      if (ec && ec != boost::asio::error::operation_aborted)
+        if (ec && ec != boost::asio::error::operation_aborted)
+        {
+          LOG(warning) << "Unexpected error streamNextCurrent, aborting";
+          LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
+          asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
+                                         "Unexpected error streamNextCurrent, aborting");
+          return;
+        }
+
+        asyncResponse->m_session->writeChunk(
+            fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
+                             asyncResponse->m_pretty),
+            boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
+              asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
+              asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
+                  m_strand, boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
+            }));
+      }
+      catch (RequestError &re)
       {
-        LOG(warning) << "Unexpected error streamNextCurrent, aborting";
-        LOG(warning) << ec.category().message(ec.value()) << ": " << ec.message();
-        asyncResponse->m_session->fail(boost::beast::http::status::internal_server_error,
-                                       "Unexpected error streamNextCurrent, aborting");
-        return;
+        LOG(error) << asyncResponse->m_session->getRemote().address()
+                   << ": Error processing request: " << re.what();
+        ResponsePtr resp = std::make_unique<Response>(re);
+        asyncResponse->m_session->writeResponse(std::move(resp));
+        asyncResponse->m_session->close();
       }
 
-      asyncResponse->m_session->writeChunk(
-          fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
-                           asyncResponse->m_pretty),
-          boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
-            asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
-            asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
-                m_strand, boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
-          }));
+      catch (...)
+      {
+        std::stringstream txt;
+        txt << asyncResponse->m_session->getRemote().address() << ": Unknown Error thrown";
+        LOG(error) << txt.str();
+        asyncResponse->m_session->fail(boost::beast::http::status::not_found, txt.str());
+      }
     }
 
     ResponsePtr RestService::assetRequest(const Printer *printer, const int32_t count,
@@ -1280,11 +1354,12 @@ namespace mtconnect {
     }
 
     void RestService::checkPath(const Printer *printer, const std::optional<std::string> &path,
-                                const DevicePtr device, FilterSet &filter) const
+                                const DevicePtr device, FilterSet &filter,
+                                const std::optional<std::string> &deviceType) const
     {
       try
       {
-        m_sinkContract->getDataItemsForPath(device, path, filter);
+        m_sinkContract->getDataItemsForPath(device, path, filter, deviceType);
       }
       catch (exception &e)
       {

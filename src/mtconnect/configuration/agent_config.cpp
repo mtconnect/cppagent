@@ -748,6 +748,7 @@ namespace mtconnect::configuration {
                 {configuration::DisableAgentDevice, false},
                 {configuration::WorkingDirectory, m_working.string()},
                 {configuration::DataPath, StringList()},
+                {configuration::AgentDeviceUUID, ""s},
                 {configuration::PluginPath, StringList()},
                 {configuration::ConfigPath, StringList()},
                 {configuration::ServerIp, "0.0.0.0"s},
@@ -935,6 +936,7 @@ namespace mtconnect::configuration {
                    {{configuration::Url, string()},
                     {configuration::Device, string()},
                     {configuration::UUID, string()},
+                    {configuration::Heartbeat, std::chrono::milliseconds()},
                     {configuration::Uuid, string()}});
 
         if (HasOption(adapterOptions, configuration::Uuid) &&

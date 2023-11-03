@@ -30,7 +30,7 @@ OptionParser.new do |opts|
   end
 
   opts.on('--heartbeat [interval]', OptionParser::DecimalInteger, "Heartbeat Frequency") do |v|
-    $heartbeat = v.to_f / 1000.0
+    $heartbeat = v.to_i
   end
 
   opts.on('-t', '--[no-]scenario', 'Run scenario or log') do |v|
@@ -79,7 +79,7 @@ def heartbeat(socket)
 
           puts "Received #{r.strip}, responding with pong" if $verbose
           $mutex.synchronize {
-            socket.puts "* PONG #{($heartbeat * 1000).to_i}"
+            socket.puts "* PONG #{$heartbeat}"
             socket.flush
           }
         else

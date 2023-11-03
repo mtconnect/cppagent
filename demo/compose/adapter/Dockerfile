@@ -9,13 +9,14 @@ ARG GID=1000
 # install ruby for simulator
 RUN  apk update \
   && apk add ruby \
-  && groupadd \
+  && addgroup \
        --gid $GID \
        adapter \
-  && useradd \
-       --create-home \
+  && adduser \
+       --home /home/adapter \
+       --disabled-password \
        --uid $UID \
-       --gid $GID \
+       --ingroup adapter \
        adapter
 
 USER adapter

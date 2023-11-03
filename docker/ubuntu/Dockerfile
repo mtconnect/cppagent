@@ -9,16 +9,18 @@
 # (see CMakeLists.txt for current version number) -
 #
 #   docker buildx build \
+#     -f docker/ubuntu/Dockerfile \
 #     --platform linux/amd64,linux/arm64 \
-#     --tag mtconnect/agent:2.0.0.12_RC18 \
+#     --tag mtconnect/agent:latest \
 #     --push \
 #     .
 #
 #   To run tests, use `--build-arg WITH_TESTS=true`
 #
 #   # Note: In this case, I would suggest to map port `5000` to `5000`. The user can always change the port according to their needs.
-#   docker run -it --rm --init --name agent -p5000:5000 \
-#     mtconnect/agent:2.0.0.12_RC18
+#   docker run -it --rm --init --name agent -p5000:5000 -v ./agent/agent.cfg:/mtconnect/config/agent.cfg \
+#        -v ./agent/Devices.xml:/mtconnect/config/Devices.xml \
+#        mtconnect/agent:2.0.0.12_RC18
 #
 # then visit http://localhost:5000 to see the demo output.
 
@@ -43,12 +45,11 @@ FROM os AS build
 # symptom: get error - "c++: fatal error: Killed signal terminated program cc1plus"
 # can turn off if building in cloud
 ARG CONAN_CPU_COUNT=2
-
 ARG WITH_RUBY='True'
 
 # set some variables
 ENV PATH="$HOME/venv3.9/bin:$PATH"
-ENV CONAN_PROFILE='conan/profiles/docker'
+ENV CONAN_PROFILE='/root/agent/cppagent/conan/profiles/docker'
 
 # update os and add dependencies
 # note: Dockerfiles run as root by default, so don't need sudo
@@ -70,7 +71,7 @@ RUN  apt-get update \
 WORKDIR /root/agent
 
 # bring in the repo contents, minus .dockerignore files
-COPY . .
+COPY . cppagent
 
 ARG WITH_TESTS=false
 ARG WITH_TESTS_ARG=argument
@@ -82,7 +83,7 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        WITH_TESTS_ARG=""; \
      fi \
   && conan profile detect \
-  && conan create . \
+  && conan create cppagent \
        --build=missing \
        -c "tools.build:jobs=$CONAN_CPU_COUNT" \
        -o agent_prefix=mtc \
@@ -92,7 +93,9 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
        -o cpack_name=dist \
        -o cpack_generator=TGZ \
        -pr "$CONAN_PROFILE" \
-       ${WITH_TESTS_ARG}
+       "${WITH_TESTS_ARG}" \
+  && tar xf dist.tar.gz \
+  && rm dist.tar.gz
 
 # ---------------------------------------------------------------------
 # release
@@ -100,12 +103,10 @@ RUN  if [ -z "$WITH_TESTS" ] || [ "$WITH_TESTS" = "false" ]; then \
 
 FROM os AS release
 
+RUN  apt-get update
+
 # TODO: How about shortening the description to MTConnect Agent or at least MTConnect C++ Agent?
 LABEL author='mtconnect' description='MTConnect C++ Agent'
-
-# install ruby for simulator
-RUN  apt-get update \
-  && apt-get install -y ruby
 
 # change to a new non-root user for better security.
 # this also adds the user to a group with the same name.
@@ -120,41 +121,38 @@ RUN  groupadd \
      --create-home \
      --uid $UID \
      --gid $GID \
-     agent
-
-USER agent
-WORKDIR /home/agent
-
-# install agent executable
-COPY --chown=agent:agent --from=build /root/agent/dist.tar.gz /home/agent/
-
-# Extract the data
-RUN  tar xf dist.tar.gz \
-  && rm dist.tar.gz
-
-# Copy the agent binary and create folders used by the agent
-USER root
-
-RUN  set -x && cp /home/agent/dist/bin/* /usr/bin \
-  && cp /home/agent/dist/lib/* /usr/lib \
+     agent \
   && mkdir -p /mtconnect/config \
               /mtconnect/data \
               /mtconnect/log \
   && chown -R agent:agent /mtconnect
 
-USER agent
+# install agent executable
+COPY --from=build /root/agent/dist/bin/* /usr/bin/
+COPY --from=build /root/agent/dist/lib/* /usr/lib/
 
-# Copy the agent data
-RUN  cp -r /home/agent/dist/share/mtconnect/schemas \
-           /home/agent/dist/share/mtconnect/simulator \
-           /home/agent/dist/share/mtconnect/styles \
-           /mtconnect/data \
-  && rm -r /home/agent/dist
+# Install data
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/schemas/ \
+    /mtconnect/data/schemas/
+COPY --chown=agent:agent --from=build \
+    /root/agent/dist/share/mtconnect/styles/ \
+    /mtconnect/data/styles/
+
+USER agent
+WORKDIR /home/agent
 
 # expose port
 EXPOSE 5000
 
-
+# The /mtconnect/config volume must be mounted with a valid agent.cfg
+# and Devices.xml
+# 
+# For example:
+#   if there is a ./agent directory with the config files, do the following:
+# 
+#   docker run -v ./agent/agent.cfg:/mtconnect/config/agent.cfg \
+#              -v ./agent/Devices.xml:/mtconnect/config/Devices.xml
 VOLUME ["/mtconnect/config", "/mtconnect/log", "/mtconnect/data"]
 
 # default command - can override with docker run or docker-compose command.
@@ -178,7 +176,6 @@ CMD ["/usr/bin/mtcagent", "run", "/mtconnect/config/agent.cfg"]
 #
 # /mtconnect/data
 #  |-- schemas - xsd files
-#  |-- simulator - agent.cfg, simulator.rb, vmc-3axis.xml, log.txt
 #  |-- styles - styles.xsl, styles.css, favicon.ico, etc
 #
 # /home/agent - the user's directory

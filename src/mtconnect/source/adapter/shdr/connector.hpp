@@ -42,7 +42,8 @@ namespace mtconnect::source::adapter::shdr {
     /// @param reconnectInterval time between reconnection attempts (defaults to 10 seconds)
     Connector(boost::asio::io_context::strand &strand, std::string server, unsigned int port,
               std::chrono::seconds legacyTimout = std::chrono::seconds {600},
-              std::chrono::seconds reconnectInterval = std::chrono::seconds {10});
+              std::chrono::seconds reconnectInterval = std::chrono::seconds {10},
+              std::optional<std::chrono::milliseconds> heartbeat = std::nullopt);
 
     virtual ~Connector();
 
@@ -94,6 +95,8 @@ namespace mtconnect::source::adapter::shdr {
     }
 
     void setRealTime(bool realTime = true) { m_realTime = realTime; }
+    
+    const auto &getHeartbeatOverride() const { return m_heartbeatOverride; }
 
   protected:
     void close();
@@ -146,7 +149,8 @@ namespace mtconnect::source::adapter::shdr {
 
     // Heartbeats
     bool m_heartbeats = false;
-    std::chrono::milliseconds m_heartbeatFrequency = std::chrono::milliseconds {HEARTBEAT_FREQ};
+    std::chrono::milliseconds m_heartbeatFrequency {HEARTBEAT_FREQ};
+    std::optional<std::chrono::milliseconds> m_heartbeatOverride;
     std::chrono::milliseconds m_legacyTimeout;
     std::chrono::milliseconds m_reconnectInterval;
     std::chrono::milliseconds m_receiveTimeLimit;

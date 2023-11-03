@@ -207,7 +207,7 @@ macro(add_agent_test AGENT_TEST_NAME ADD_TEST_HELPER SUB_FOLDER)
       PROPERTY COMPILE_FLAGS "/bigobj")   
   endif()
 
-  target_clangformat_setup(${AGENT_TEST_NAME}_test)  
+  target_clangformat_setup(${AGENT_TEST_NAME}_test)
 endmacro()
 
 add_agent_test(asset TRUE asset)
