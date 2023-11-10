@@ -15,6 +15,10 @@
 //    limitations under the License.
 //
 
+
+/// @file
+///  Tests for Agent-Adapter interactions
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -173,6 +177,7 @@ public:
   DevicePtr m_device;
 };
 
+/// @test test if an adapter can connect to an agent
 TEST_F(AgentAdapterTest, should_connect_to_agent)
 {
   createAgent();
@@ -216,6 +221,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   timeout.cancel();
 }
 
+/// @test test if an adapter can get current data from agent
 TEST_F(AgentAdapterTest, should_get_current_from_agent)
 {
   createAgent();
@@ -253,6 +259,7 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
   timeout.cancel();
 }
 
+/// @test test if an adapter can get asset data from agent
 TEST_F(AgentAdapterTest, should_get_assets_from_agent)
 {
   createAgent();
@@ -290,6 +297,7 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
   timeout.cancel();
 }
 
+/// @test test if an adapter can get sample data from agent
 TEST_F(AgentAdapterTest, should_receive_sample)
 {
   createAgent();
@@ -347,6 +355,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
   timeout.cancel();
 }
 
+/// @test test if an agent will recconect to an adapter
 TEST_F(AgentAdapterTest, should_reconnect)
 {
   createAgent();
@@ -415,6 +424,7 @@ TEST_F(AgentAdapterTest, should_reconnect)
   timeout.cancel();
 }
 
+/// @test test if an adapter can connect to an HTTP 1.0 agent
 TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
 {
   createAgent();
@@ -472,6 +482,7 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
   timeout.cancel();
 }
 
+/// @test test if the instance ID remains the same after connection recovery
 TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
 {
   createAgent();
