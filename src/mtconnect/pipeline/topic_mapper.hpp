@@ -63,9 +63,11 @@ namespace mtconnect::pipeline {
   public:
     TopicMapper(const TopicMapper &) = default;
     TopicMapper(PipelineContextPtr context, const std::optional<std::string> &device = std::nullopt)
-      : Transform("TopicMapper"), m_context(context), m_defaultDevice(device)
+      : Transform("TopicMapper"), m_context(context), m_defaultDeviceName(device)
     {
       m_guard = EntityNameGuard("Message", RUN);
+      if (m_defaultDeviceName)
+        m_defaultDevice = m_context->m_contract->findDevice(*m_defaultDeviceName);
     }
 
     /// @brief Try to find a matching data item for the given topic
@@ -100,7 +102,7 @@ namespace mtconnect::pipeline {
 
       if (!dataItem)
       {
-        deviceName = m_defaultDevice.value_or("");
+        deviceName = m_defaultDeviceName.value_or("");
         name = topic;
         dataItem = m_context->m_contract->findDataItem(deviceName, name);
       }
@@ -140,34 +142,38 @@ namespace mtconnect::pipeline {
 
     EntityPtr operator()(entity::EntityPtr &&entity) override
     {
+      PipelineMessagePtr result;
       auto &body = entity->getValue<std::string>();
+      auto c = body[0];
+
       DataItemPtr dataItem;
       DevicePtr device;
-      entity::Properties props {entity->getProperties()};
-      if (auto topic = entity->maybeGet<std::string>("topic"))
-      {
-        if (auto it = m_devices.find(*topic); it != m_devices.end())
-        {
-          device = it->second.lock();
-        }
-        if (auto it = m_resolved.find(*topic); it != m_resolved.end())
-        {
-          dataItem = it->second.lock();
-        }
-        if (!dataItem && !device)
-        {
-          std::tie(device, dataItem) = resolve(*topic);
-        }
-      }
 
-      PipelineMessagePtr result;
-      // Check for JSON Message
-      if (body[0] == '{')
+      if (c == '{' || c == '[')
       {
+        entity::Properties props {entity->getProperties()};
+        device = m_defaultDevice;
         result = std::make_shared<JsonMessage>("JsonMessage", props);
       }
       else
       {
+        entity::Properties props {entity->getProperties()};
+        if (auto topic = entity->maybeGet<std::string>("topic"))
+        {
+          if (auto it = m_devices.find(*topic); it != m_devices.end())
+          {
+            device = it->second.lock();
+          }
+          if (auto it = m_resolved.find(*topic); it != m_resolved.end())
+          {
+            dataItem = it->second.lock();
+          }
+          if (!dataItem && !device)
+          {
+            std::tie(device, dataItem) = resolve(*topic);
+          }
+        }
+
         result = std::make_shared<DataMessage>("DataMessage", props);
       }
       result->m_dataItem = dataItem;
@@ -178,7 +184,8 @@ namespace mtconnect::pipeline {
 
   protected:
     PipelineContextPtr m_context;
-    std::optional<std::string> m_defaultDevice;
+    std::optional<std::string> m_defaultDeviceName;
+    DevicePtr m_defaultDevice;
     std::unordered_map<std::string, std::weak_ptr<device_model::data_item::DataItem>> m_resolved;
     std::unordered_map<std::string, std::weak_ptr<device_model::Device>> m_devices;
   };

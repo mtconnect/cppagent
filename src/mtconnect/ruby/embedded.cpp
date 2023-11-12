@@ -98,7 +98,7 @@ namespace mtconnect::ruby {
     mrbc_filename(mrb, mrbc_ctx, fname);
     auto status = mrb_load_file_cxt(mrb, fp, mrbc_ctx);
     fclose(fp);
-    
+
     if (mrb->exc)
     {
       auto exc = mrb_funcall(mrb, mrb_obj_value(mrb->exc), "to_s", 0);
@@ -186,7 +186,7 @@ namespace mtconnect::ruby {
             mrb_gc_arena_restore(mrb, save);
             if (mrb_false_p(res))
             {
-              LOG(fatal) << "Error loading file " << *modulePath <<": exiting agent";
+              LOG(fatal) << "Error loading file " << *modulePath << ": exiting agent";
               exit(1);
             }
           }

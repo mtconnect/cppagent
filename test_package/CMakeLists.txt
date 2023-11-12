@@ -276,6 +276,7 @@ add_agent_test(period_filter TRUE pipeline)
 add_agent_test(pipeline_edit FALSE pipeline)
 add_agent_test(mtconnect_xml_transform FALSE pipeline)
 add_agent_test(response_document FALSE pipeline)
+add_agent_test(json_mapping FALSE pipeline)
 
 add_agent_test(agent TRUE core)
 add_agent_test(globals FALSE core)

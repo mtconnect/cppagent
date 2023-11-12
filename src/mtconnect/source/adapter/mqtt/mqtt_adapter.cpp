@@ -30,6 +30,7 @@
 #include "mtconnect/pipeline/deliver.hpp"
 #include "mtconnect/pipeline/delta_filter.hpp"
 #include "mtconnect/pipeline/duplicate_filter.hpp"
+#include "mtconnect/pipeline/json_mapper.hpp"
 #include "mtconnect/pipeline/message_mapper.hpp"
 #include "mtconnect/pipeline/period_filter.hpp"
 #include "mtconnect/pipeline/shdr_token_mapper.hpp"

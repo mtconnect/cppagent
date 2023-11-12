@@ -121,10 +121,12 @@ public:
   string m_line;
 };
 
-TEST_F(AgentDeviceTest, AgentDeviceCreation)
+/// @test Check to make sure the agent created the agent device with the correct name
+TEST_F(AgentDeviceTest, should_create_agent_device_with_name_agent)
 {
   ASSERT_NE(nullptr, m_agentDevice);
   ASSERT_EQ(2, m_agentTestHelper->m_agent->getDevices().size());
+  ///  - Veriify the name of the agent device is Agent
   ASSERT_EQ("Agent", m_agentDevice->getName().str());
 }
 
