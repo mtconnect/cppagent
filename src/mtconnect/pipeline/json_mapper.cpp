@@ -159,46 +159,91 @@ namespace mtconnect::pipeline {
     Forward m_forward;
   };
   
-  const static map<std::string_view,KeyToken> ConditionMap {
-    { "nativeCode", KeyToken::NATIVE_CODE },
-    { "conditionId", KeyToken::CONDITION_ID },
-    { "qualifier", KeyToken::QUALIFIER },
-    { "nativeSeverity", KeyToken::NATIVE_SEVERITY },
-    { "level", KeyToken::LEVEL },
-    { "value", KeyToken::VALUE },
-    { "message", KeyToken::VALUE },
-  };
-
-  /// @brief SAX Parser handler for JSON Parsing
-  struct FieldHandler : rj::BaseReaderHandler<rj::UTF8<>, FieldHandler>
+  struct VectorHandler : rj::BaseReaderHandler<rj::UTF8<>, VectorHandler>
   {
-    FieldHandler(ParserContext &context)
-    : m_context(context)
+    VectorHandler(entity::Vector &vector)
+    : m_value(vector)
     {
     }
     
     bool Null()
     {
-      m_context.m_value = "UNAVAILABLE";
+      return true;
+    }
+    
+    bool Int(int i) { return Double(i); }
+    bool Uint(unsigned i) { return Double(i); }
+    bool Int64(int64_t i) { return Double(i); }
+    bool Uint64(uint64_t i) { return Double(i); }
+
+    bool Double(double d)
+    {
+      m_value.push_back(d);
+      return true;
+    }
+    
+    bool Default()
+    {
+      LOG(warning) << "Invalid vector value, expected only doubles";
+      return false;
+    }
+    
+    bool EndArray(rj::SizeType count)
+    {
+      m_done = true;
+      if (m_value.size() != count)
+      {
+        LOG(warning) << "Invalid array of values, size: " << m_value.size()
+          << ", expected: " << count;
+        return false;
+      }
+      return true;
+    }
+    
+    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    {
+      while (!reader.IterativeParseComplete() && !m_done)
+      {
+        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+        {
+          LOG(warning) << "Cannot parse double vector";
+          m_value.clear();
+          return false;
+        }
+      }
+      
+      return true;
+    }
+    
+    entity::Vector &m_value;
+    bool m_done { false };
+  };
+  
+  /// @brief SAX Parser handler for JSON Parsing
+  struct ValueHandler : rj::BaseReaderHandler<rj::UTF8<>, ValueHandler>
+  {
+    bool Null()
+    {
+      m_value.emplace<nullptr_t>();
       return true;
     }
 
     bool Bool(bool b)
     {
-      m_context.m_value = b;
+      m_value.emplace<bool>(b);
       return true;
     }
     bool Int(int i) { return Int64(i); }
     bool Uint(unsigned i) { return Int64(i); }
+    bool Uint64(uint64_t i) { return Int64(i); }
     bool Int64(int64_t i)
     {
-      m_context.m_value = i;
+      m_value.emplace<int64_t>(i);
       return true;
     }
-    bool Uint64(uint64_t i) { return Int64(i); }
-    bool Double(double d) 
+    bool Double(double d)
     {
-      m_context.m_value = d;
+      m_value.emplace<double>(d);
       return true;
     }
     bool RawNumber(const Ch *str, rj::SizeType length, bool copy)
@@ -207,11 +252,15 @@ namespace mtconnect::pipeline {
     }
     bool String(const Ch *str, rj::SizeType length, bool copy)
     {
-      m_context.m_value = std::string(str, length);
+      m_value.emplace<std::string>(str, length);
       return true;
     }
     bool StartObject()
     {
+      // We use an entity pointer to signal we have a property set.
+      // The PropertiesHandler will map each of the properties in the object
+      // to the properties.
+      m_value.emplace<EntityPtr>();
       return true;
     }
     bool Key(const Ch *str, rj::SizeType length, bool copy)
@@ -219,17 +268,111 @@ namespace mtconnect::pipeline {
       return false;
     }
     bool EndObject(rj::SizeType memberCount) { return true; }
-    bool StartArray() { return true; }
-    bool EndArray(rj::SizeType elementCount) { return true; }
+    bool StartArray() 
+    {
+      m_value.emplace<Vector>();
+      return true;
+    }
+    bool EndArray(rj::SizeType elementCount) 
+    {
+      return false;
+    }
     
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    entity::Value operator()(rj::Reader &reader, rj::StringStream &buff)
     {
       auto success = (!reader.IterativeParseComplete() &&
              reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this));
-      return success;
+      if (!success)
+      {
+        LOG(warning) << "Cannot get value for json mapper";
+        m_value = monostate();
+      }
+      else if (holds_alternative<Vector>(m_value))
+      {
+        VectorHandler handler(get<Vector>(m_value));
+        handler(reader, buff);
+      }
+      return m_value;
     }
 
-    ParserContext &m_context;
+    entity::Value m_value { std::monostate() };
+    bool m_done { true };
+  };
+  
+  const static map<std::string_view, std::string_view> PropertyMap {
+    { "value", "VALUE" },
+    { "message", "VALUE" }
+  };
+
+  struct PropertiesHandler : rj::BaseReaderHandler<rj::UTF8<>, PropertiesHandler>
+  {
+    PropertiesHandler(entity::Properties &props)
+    : m_props(props)
+    {
+    }
+    
+    bool Default()
+    {
+      LOG(warning) << "Expecting an object with keys and values";
+      return false;
+    }
+    
+    
+    bool Key(const Ch *str, rj::SizeType length, bool copy)
+    {
+      std::string_view sv(str, length);
+      auto f = PropertyMap.find(sv);
+      if (f != PropertyMap.end())
+      {
+        m_key = f->second;
+      }
+      else
+      {
+        m_key = sv;
+      }
+      
+      return true;
+    }
+    
+    bool StartObject()
+    {
+      LOG(warning) << "Expecting not expecting sub-objects";
+      return false;
+    }
+    
+    bool EndObject(rj::SizeType memberCount)
+    {
+      m_done = true;
+      return true;
+    }
+    
+    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    {
+      while (!reader.IterativeParseComplete() && !m_done)
+      {
+        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+          return false;
+        else if (m_done)
+          break;
+        
+        ValueHandler handler;
+        auto value = handler(reader, buff);
+        if (!std::holds_alternative<std::monostate>(value) && !m_key.empty())
+        {
+          m_props.insert_or_assign(m_key, value);
+        }
+        else
+        {
+          LOG(warning) << "Could not map " << m_key;
+        }
+      }
+      
+      return true;
+    }
+
+    entity::Properties &m_props;
+    bool m_done { false };
+    std::string m_key;
   };
   
   struct DataItemHandler : rj::BaseReaderHandler<rj::UTF8<>, DataItemHandler>
@@ -319,6 +462,7 @@ namespace mtconnect::pipeline {
     : m_context(context)
     {
     }
+    
 
     bool Default()
     {
@@ -427,9 +571,28 @@ namespace mtconnect::pipeline {
             
           default:
           {
-            FieldHandler handler(m_context);
-            if (!handler(reader, buff))
+            ValueHandler handler;
+            auto value = handler(reader, buff);
+            if (std::holds_alternative<std::monostate>(value))
               return false;
+            else if (std::holds_alternative<EntityPtr>(value))
+            {
+              PropertiesHandler props(m_context.m_props);
+              if (!props(reader, buff))
+                return false;
+              auto value = m_context.m_props.find("VALUE");
+              if (value == m_context.m_props.end() && holds_alternative<monostate>(value->second))
+              {
+                LOG(warning) << "value was not given for data item " << m_context.m_dataItem->getId();
+                return false;
+              }
+              m_context.m_value = value->second;
+              m_context.m_props.erase(value);
+            }
+            else
+            {
+              m_context.m_value = value;
+            }
             m_context.send();
             break;
           }
@@ -461,13 +624,17 @@ namespace mtconnect::pipeline {
     }
     bool EndObject(rj::SizeType memberCount) 
     {
-      m_context.m_state = ParserState::NONE;
+      return true;
+    }
+    bool EndArray(rj::SizeType memberCount)
+    {
+      m_complete = true;
       return true;
     }
     
     bool operator()(rj::Reader &reader, rj::StringStream &buff)
     {
-      while (!reader.IterativeParseComplete())
+      while (!reader.IterativeParseComplete() && !m_complete)
       {
         if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
           return false;
@@ -480,6 +647,7 @@ namespace mtconnect::pipeline {
         else
         {
           LOG(warning) << "Only objects allowed as members of top level array";
+          return false;
         }
       }
       
@@ -508,7 +676,11 @@ namespace mtconnect::pipeline {
       return true;
     }
     bool EndObject(rj::SizeType memberCount) { return true; }
-    bool StartArray() { return true; }
+    bool StartArray() 
+    {
+      m_state = ParserState::ARRAY;
+      return true;
+    }
     bool EndArray(rj::SizeType elementCount) { return true; }
     
     bool operator()(rj::Reader &reader, rj::StringStream &buff)
