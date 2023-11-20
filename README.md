@@ -980,11 +980,11 @@ Sinks {
 
 * `MqttClientId` - Port number of MQTT Broker
 
-    *Default*: 1883
+    *Default*: Auto-generated
 
-	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers. Because of this, best practice is to explicitly specify their respective `MqttClientId` when using a common broker*
-	>>
-	``
+	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers. Because of this, when using a single broker for source and sink, best practice is to explicitly specify their respective `MqttClientId`
+	>
+
 	> **⚠️Note:** Currently, there is no JSON parser functionality. Agent is expecting a raw SHDR-formatted string
 
 	Example mqtt adapter block:
