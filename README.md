@@ -955,7 +955,7 @@ Sinks {
 
 	* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
 
-        *Default*:\
+        *Default*:
 		* If `SuppressIPAddress` == false:\
 		`AdapterIdentity` = ```_ {IP}_{PORT}```\
 		example:`_localhost_7878`
