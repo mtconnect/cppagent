@@ -953,6 +953,17 @@ Sinks {
       
         *Default*: false
 
+	* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
+
+        *Default*:\
+		* If `SuppressIPAddress` == false:\
+		`AdapterIdentity` = ```_ {IP}_{PORT}```\
+		example:`_localhost_7878`
+
+		* If `SuppressIPAddress` == true:\
+		`AdapterIdentity` = ```_ sha1digest({IP}_{PORT})```\
+		example: `__71020ed1ed`
+
 #### MQTT Adapter/Source
 
 * `MqttHost` - IP Address or name of the MQTT Broker
