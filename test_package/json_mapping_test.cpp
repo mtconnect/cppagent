@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file
+/// JSON Sink tests
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -380,3 +383,8 @@ TEST_F(JsonMappingTest, should_parse_time_series_arrays) { GTEST_SKIP(); }
 /// @test verify the json mapper can handle reset triggered for statistics
 TEST_F(JsonMappingTest, should_parse_reset_triggered) { GTEST_SKIP(); }
 
+/// @test verify the json mapper can an asset in XML
+TEST_F(JsonMappingTest, should_parse_xml_asset) { GTEST_SKIP(); }
+
+/// @test verify the json mapper can an asset in json
+TEST_F(JsonMappingTest, should_parse_json_asset) { GTEST_SKIP(); }
