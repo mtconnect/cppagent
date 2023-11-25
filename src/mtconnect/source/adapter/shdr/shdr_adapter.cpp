@@ -49,40 +49,40 @@ namespace mtconnect::source::adapter::shdr {
     GetOptions(block, m_options, options);
     AddOptions(block, m_options,
                {{configuration::Heartbeat, Milliseconds {0}},
-      {configuration::UUID, string()},
-      {configuration::Manufacturer, string()},
-      {configuration::AdapterIdentity, string()},
-      {configuration::Station, string()},
-      {configuration::Url, string()}});
-    
+                {configuration::UUID, string()},
+                {configuration::Manufacturer, string()},
+                {configuration::AdapterIdentity, string()},
+                {configuration::Station, string()},
+                {configuration::Url, string()}});
+
     m_options.erase(configuration::Host);
     m_options.erase(configuration::Port);
     m_heartbeatOverride = GetOption<Milliseconds>(m_options, configuration::Heartbeat);
-    
+
     AddDefaultedOptions(block, m_options,
                         {{configuration::Host, "localhost"s},
-      {configuration::Port, 7878},
-      {configuration::AutoAvailable, false},
-      {configuration::RealTime, false},
-      {configuration::RelativeTime, false},
-      {configuration::SuppressIPAddress, false},
-      {configuration::EnableSourceDeviceModels, false}});
-    
+                         {configuration::Port, 7878},
+                         {configuration::AutoAvailable, false},
+                         {configuration::RealTime, false},
+                         {configuration::RelativeTime, false},
+                         {configuration::SuppressIPAddress, false},
+                         {configuration::EnableSourceDeviceModels, false}});
+
     m_server = get<string>(m_options[configuration::Host]);
     m_port = get<int>(m_options[configuration::Port]);
-    
+
     auto timeout = m_options.find(configuration::LegacyTimeout);
     if (timeout != m_options.end())
       m_legacyTimeout = get<Seconds>(timeout->second);
-    
+
     stringstream url;
     url << "shdr://" << m_server << ':' << m_port;
     m_name = url.str();
-    
+
     stringstream identity;
     identity << '_' << m_server << '_' << m_port;
-    
-    if (auto ident = GetOption<string>(m_options , configuration::AdapterIdentity))
+
+    if (auto ident = GetOption<string>(m_options, configuration::AdapterIdentity))
     {
       m_identity = *ident;
     }
@@ -94,7 +94,7 @@ namespace mtconnect::source::adapter::shdr {
         sha1.process_bytes(identity.str().c_str(), identity.str().length());
         boost::uuids::detail::sha1::digest_type digest;
         sha1.get_digest(digest);
-        
+
         identity.str("");
         identity << std::hex << digest[0] << digest[1] << digest[2];
         m_identity = string("_") + (identity.str()).substr(0, 10);
@@ -105,7 +105,7 @@ namespace mtconnect::source::adapter::shdr {
       }
       m_options[configuration::AdapterIdentity] = m_identity;
     }
-    
+
     m_handler = m_pipeline.makeHandler();
     if (m_pipeline.hasContract())
       m_pipeline.build(m_options);

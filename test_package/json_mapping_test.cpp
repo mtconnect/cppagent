@@ -150,19 +150,18 @@ TEST_F(JsonMappingTest, should_parse_simple_observations)
   ASSERT_TRUE(std::holds_alternative<EntityList>(value));
   auto list = get<EntityList>(value);
   ASSERT_EQ(2, list.size());
-  
+
   auto time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 20min;
   auto it = list.begin();
-  
+
   auto obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Execution", obs->getName());
 
-
   ASSERT_EQ(time, obs->getTimestamp());
   ASSERT_EQ("ACTIVE", obs->getValue<string>());
   it++;
-  
+
   obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Position", obs->getName());
@@ -172,12 +171,12 @@ TEST_F(JsonMappingTest, should_parse_simple_observations)
 }
 
 /// @test verify the json mapper can map an object with a timestamp to a condition and message
-TEST_F(JsonMappingTest, should_parse_conditions_and_messages) 
+TEST_F(JsonMappingTest, should_parse_conditions_and_messages)
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   makeDataItem("device", {{"id", "a"s}, {"type", "TEMPERATURE"s}, {"category", "CONDITION"s}});
   makeDataItem("device", {{"id", "b"s}, {"type", "MESSAGE"s}, {"category", "EVENT"s}});
-  
+
   Properties props {{"VALUE", R"(
 {
   "timestamp": "2023-11-09T11:20:00Z",
@@ -194,18 +193,18 @@ TEST_F(JsonMappingTest, should_parse_conditions_and_messages)
   }
 }
 )"s}};
-  
+
   auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
   jmsg->m_device = dev;
-  
+
   auto res = (*m_mapper)(std::move(jmsg));
   ASSERT_TRUE(res);
-  
+
   auto value = res->getValue();
   ASSERT_TRUE(std::holds_alternative<EntityList>(value));
   auto list = get<EntityList>(value);
   ASSERT_EQ(2, list.size());
-  
+
   auto time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 20min;
   auto it = list.begin();
 
@@ -216,7 +215,7 @@ TEST_F(JsonMappingTest, should_parse_conditions_and_messages)
   ASSERT_EQ("HIGH", cond->get<std::string>("qualifier"));
   ASSERT_EQ("high temperature fault", cond->getValue<std::string>());
   ASSERT_EQ(time, cond->getTimestamp());
-  
+
   it++;
   auto msg = dynamic_pointer_cast<Message>(*it);
   ASSERT_TRUE(msg);
@@ -229,34 +228,35 @@ TEST_F(JsonMappingTest, should_parse_conditions_and_messages)
 TEST_F(JsonMappingTest, should_parse_path_positions)
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
-  makeDataItem("device", {{"id", "a"s}, {"type", "PATH_POSITION"s}, {"category", "SAMPLE"s},
-    {"units", "MILLIMETER_3D"s}});
-  
+  makeDataItem("device", {{"id", "a"s},
+                          {"type", "PATH_POSITION"s},
+                          {"category", "SAMPLE"s},
+                          {"units", "MILLIMETER_3D"s}});
+
   Properties props {{"VALUE", R"(
 {
   "timestamp": "2023-11-09T11:20:00Z",
   "a": [1.1, 2.2, 3.3]
 }
 )"s}};
-  
+
   auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
   jmsg->m_device = dev;
-  
+
   auto res = (*m_mapper)(std::move(jmsg));
   ASSERT_TRUE(res);
-  
+
   auto value = res->getValue();
   ASSERT_TRUE(std::holds_alternative<EntityList>(value));
   auto list = get<EntityList>(value);
   ASSERT_EQ(1, list.size());
-  
+
   auto time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 20min;
   auto it = list.begin();
-  
+
   auto obs = dynamic_pointer_cast<ThreeSpaceSample>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("PathPosition", obs->getName());
-
 
   ASSERT_EQ(time, obs->getTimestamp());
   auto pos = obs->getValue<Vector>();
@@ -266,15 +266,14 @@ TEST_F(JsonMappingTest, should_parse_path_positions)
   ASSERT_EQ(3.3, pos[2]);
 }
 
-
 /// @test verify the json mapper can map an array of objects with a timestamps and a series of
 /// observations
-TEST_F(JsonMappingTest, should_parse_an_array_of_objects) 
+TEST_F(JsonMappingTest, should_parse_an_array_of_objects)
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
   makeDataItem("device", {{"id", "b"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
-  
+
   Properties props {{"VALUE", R"(
 [{
   "timestamp": "2023-11-09T11:20:00Z",
@@ -292,59 +291,58 @@ TEST_F(JsonMappingTest, should_parse_an_array_of_objects)
   "b": 102.0
 }]
 )"s}};
-  
+
   auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
   jmsg->m_device = dev;
-  
+
   auto res = (*m_mapper)(std::move(jmsg));
   ASSERT_TRUE(res);
-  
+
   auto value = res->getValue();
   ASSERT_TRUE(std::holds_alternative<EntityList>(value));
   auto list = get<EntityList>(value);
   ASSERT_EQ(6, list.size());
-  
+
   auto time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 20min;
   auto it = list.begin();
-  
+
   auto obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Execution", obs->getName());
-  
-  
+
   ASSERT_EQ(time, obs->getTimestamp());
   ASSERT_EQ("ACTIVE", obs->getValue<string>());
-  
+
   it++;
   obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Position", obs->getName());
-  
+
   ASSERT_EQ(time, obs->getTimestamp());
   ASSERT_EQ(100.0, obs->getValue<double>());
-  
+
   // Next set
   time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 21min;
-  
+
   it++;
   obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Execution", obs->getName());
-  
+
   ASSERT_EQ(time, obs->getTimestamp());
   ASSERT_EQ("READY", obs->getValue<string>());
-  
+
   it++;
   obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Position", obs->getName());
-  
+
   ASSERT_EQ(time, obs->getTimestamp());
   ASSERT_EQ(101.0, obs->getValue<double>());
-  
+
   // Next set
   time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 22min;
-  
+
   it++;
   obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
@@ -352,7 +350,7 @@ TEST_F(JsonMappingTest, should_parse_an_array_of_objects)
 
   ASSERT_EQ(time, obs->getTimestamp());
   ASSERT_EQ("STOPPED", obs->getValue<string>());
-  
+
   it++;
   obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
@@ -363,22 +361,166 @@ TEST_F(JsonMappingTest, should_parse_an_array_of_objects)
 }
 
 /// @test verify the json mapper recognizes the device key
-TEST_F(JsonMappingTest, should_parse_to_multiple_devices_with_device_key) { GTEST_SKIP(); }
-
-/// @test verify the json mapper recognizes the device key and data item key
-TEST_F(JsonMappingTest, should_parse_device_and_data_item_when_keys_are_supplied)
+TEST_F(JsonMappingTest, should_parse_to_multiple_devices_with_device_key)
 {
-  GTEST_SKIP();
+  auto dev1 =
+      makeDevice("Device", {{"id", "device1"s}, {"name", "device1"s}, {"uuid", "device1"s}});
+  auto dev2 =
+      makeDevice("Device", {{"id", "device2"s}, {"name", "device2"s}, {"uuid", "device2"s}});
+  makeDataItem("device1",
+               {{"id", "a"s}, {"name", "e"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device1",
+               {{"id", "b"s}, {"name", "p"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
+
+  makeDataItem("device2",
+               {{"id", "c"s}, {"name", "e"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device2",
+               {{"id", "d"s}, {"name", "p"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
+  
+  Properties props {{"VALUE", R"(
+[{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "device": "device1",
+  "e": "ACTIVE",
+  "p": 100.0
+},
+{
+  "timestamp": "2023-11-09T11:21:00Z",
+  "device": "device2",
+  "e": "READY",
+  "p": 101.0
+}
+])"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(4, list.size());
+
+  auto it = list.begin();
+
+  auto obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Execution", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+  ASSERT_EQ("ACTIVE", obs->getValue<string>());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Position", obs->getName());
+  ASSERT_EQ("b", obs->getDataItem()->getId());
+  ASSERT_EQ(100.0, obs->getValue<double>());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Execution", obs->getName());
+  ASSERT_EQ("c", obs->getDataItem()->getId());
+  ASSERT_EQ("READY", obs->getValue<string>());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Position", obs->getName());
+  ASSERT_EQ("d", obs->getDataItem()->getId());
+  ASSERT_EQ(101.0, obs->getValue<double>());
+}
+
+/// @test verify the json mapper can handle time series arrays
+TEST_F(JsonMappingTest, should_parse_time_series_arrays)
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s},
+                          {"type", "POSITION"s},
+                          {"category", "SAMPLE"s},
+                          {"representation", "TIME_SERIES"s},
+                          {"units", "MILLIMETER"s}});
+
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "a": {
+    "sampleRate": 8000,
+    "value": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  }
+}
+)"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+  
+  auto obs = dynamic_pointer_cast<Observation>(list.front());
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("PositionTimeSeries", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+  
+  auto ts = obs->getValue<Vector>();
+  ASSERT_EQ(10, ts.size());
+
+  for (double v = 1.0, i = 0; i < 10; v++, i++)
+  {
+    ASSERT_EQ(v, ts[i]);
+  }
 }
 
 /// @test verify the json mapper defaults the timestamp when it is not given in the object
-TEST_F(JsonMappingTest, should_default_the_time_to_now_when_not_given) { GTEST_SKIP(); }
+TEST_F(JsonMappingTest, should_default_the_time_to_now_when_not_given) 
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+
+  Properties props {{"VALUE", R"(
+{
+  "a": "ACTIVE"
+}
+)"s}};
+
+  auto msg = std::make_shared<JsonMessage>("JsonMessage", props);
+  msg->m_device = dev;
+
+  auto res = (*m_mapper)(std::move(msg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+
+  auto time = std::chrono::system_clock::now();
+
+  auto obs = dynamic_pointer_cast<Observation>(list.front());
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Execution", obs->getName());
+
+  ASSERT_NEAR(std::chrono::system_clock::to_time_t(time),
+              std::chrono::system_clock::to_time_t(obs->getTimestamp()), 1);
+  
+  ASSERT_EQ("ACTIVE", obs->getValue<string>());
+
+}
 
 /// @test verify the json mapper  can handle data sets and tables
-TEST_F(JsonMappingTest, should_parse_data_sets_and_tables) { GTEST_SKIP(); }
+TEST_F(JsonMappingTest, should_parse_data_sets) { GTEST_SKIP(); }
 
-/// @test verify the json mapper can handle time series arrays
-TEST_F(JsonMappingTest, should_parse_time_series_arrays) { GTEST_SKIP(); }
+/// @test verify the json mapper  can handle data sets and tables
+TEST_F(JsonMappingTest, should_parse_tables) { GTEST_SKIP(); }
+
+/// @test verify the json mapper recognizes the device key and data item key
+TEST_F(JsonMappingTest, should_parse_device_and_data_item_when_keys_are_supplied) { GTEST_SKIP(); }
 
 /// @test verify the json mapper can handle reset triggered for statistics
 TEST_F(JsonMappingTest, should_parse_reset_triggered) { GTEST_SKIP(); }
