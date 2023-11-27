@@ -57,7 +57,7 @@ namespace mtconnect::device_model::data_item {
                                                        {"units", false}});
 
         auto cells = make_shared<Factory>(
-            Requirements {{"CellDefinition", ENTITY, cell, 1, Requirement::Infinite}});
+            Requirements {{"CellDefinition", ValueType::ENTITY, cell, 1, Requirement::Infinite}});
         cells->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           auto ptr = make_shared<Entry>(name, props);
           return dynamic_pointer_cast<entity::Entity>(ptr);
@@ -70,7 +70,7 @@ namespace mtconnect::device_model::data_item {
                                                {"type", false},
                                                {"subType", false},
                                                {"units", false},
-                                               {"CellDefinitions", ENTITY_LIST, cells, false}});
+                                               {"CellDefinitions", ValueType::ENTITY_LIST, cells, false}});
         entry->setOrder({"Description", "CellDefinitions"});
         entry->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           auto ptr = make_shared<Entry>(name, props);
@@ -78,11 +78,11 @@ namespace mtconnect::device_model::data_item {
         });
 
         auto entries = make_shared<Factory>(
-            Requirements {{"EntryDefinition", ENTITY, entry, 1, Requirement::Infinite}});
+            Requirements {{"EntryDefinition", ValueType::ENTITY, entry, 1, Requirement::Infinite}});
         definition =
             make_shared<Factory>(Requirements {{"Description", false},
-                                               {"EntryDefinitions", ENTITY_LIST, entries, false},
-                                               {"CellDefinitions", ENTITY_LIST, cells, false}});
+                                               {"EntryDefinitions", ValueType::ENTITY_LIST, entries, false},
+                                               {"CellDefinitions", ValueType::ENTITY_LIST, cells, false}});
         definition->setOrder({"Description", "EntryDefinitions", "CellDefinitions"});
       }
 

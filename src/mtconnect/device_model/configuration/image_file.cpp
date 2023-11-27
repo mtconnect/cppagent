@@ -31,7 +31,7 @@ namespace mtconnect {
             Requirements {{"id", true}, {"name", false}, {"href", true}, {"mediaType", true}});
 
         imageFiles = make_shared<Factory>(
-            Requirements {Requirement("ImageFile", ENTITY, imageFile, 1, Requirement::Infinite)});
+            Requirements {Requirement("ImageFile", ValueType::ENTITY, imageFile, 1, Requirement::Infinite)});
       }
       return imageFiles;
     }

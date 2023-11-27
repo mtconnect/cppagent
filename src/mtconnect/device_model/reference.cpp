@@ -51,8 +51,8 @@ namespace mtconnect {
                                  });
 
         references = make_shared<Factory>(
-            Requirements {Requirement("ComponentRef", ENTITY, reference, 0, Requirement::Infinite),
-                          Requirement("DataItemRef", ENTITY, reference, 0, Requirement::Infinite)});
+            Requirements {Requirement("ComponentRef", ValueType::ENTITY, reference, 0, Requirement::Infinite),
+                          Requirement("DataItemRef", ValueType::ENTITY, reference, 0, Requirement::Infinite)});
 
         references->registerMatchers();
         references->setMinListSize(1);
@@ -63,7 +63,7 @@ namespace mtconnect {
     FactoryPtr Reference::getRoot()
     {
       static auto root = make_shared<Factory>(
-          Requirements {Requirement("References", ENTITY_LIST, Reference::getFactory(), false)});
+          Requirements {Requirement("References", ValueType::ENTITY_LIST, Reference::getFactory(), false)});
 
       return root;
     }

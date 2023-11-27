@@ -29,8 +29,8 @@ namespace mtconnect {
         if (!coordinateSystems)
         {
           auto transformation =
-              make_shared<Factory>(Requirements {Requirement("Translation", VECTOR, 3, false),
-                                                 Requirement("Rotation", VECTOR, 3, false)});
+              make_shared<Factory>(Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
+                                                 Requirement("Rotation", ValueType::VECTOR, 3, false)});
 
           auto coordinateSystem = make_shared<Factory>(Requirements {
               Requirement("id", true), Requirement("name", false), Requirement("nativeName", false),
@@ -40,11 +40,11 @@ namespace mtconnect {
                   ControlledVocab {"WORLD", "BASE", "OBJECT", "TASK", "MECHANICAL_INTERFACE",
                                    "TOOL", "MOBILE_PLATFORM", "MACHINE", "CAMERA"},
                   true),
-              Requirement("Origin", VECTOR, 3, false),
-              Requirement("Transformation", ENTITY, transformation, false)});
+              Requirement("Origin", ValueType::VECTOR, 3, false),
+              Requirement("Transformation", ValueType::ENTITY, transformation, false)});
 
           coordinateSystems = make_shared<Factory>(Requirements {
-              Requirement("CoordinateSystem", ENTITY, coordinateSystem, 1, Requirement::Infinite)});
+              Requirement("CoordinateSystem", ValueType::ENTITY, coordinateSystem, 1, Requirement::Infinite)});
         }
 
         return coordinateSystems;

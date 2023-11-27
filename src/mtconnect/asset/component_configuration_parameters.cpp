@@ -26,16 +26,16 @@ namespace mtconnect::asset {
     static auto parameter = make_shared<Factory>(Requirements {
         Requirement("identifier", true),
         Requirement("name", true),
-        Requirement("minimum", DOUBLE, false),
-        Requirement("maximum", DOUBLE, false),
-        Requirement("nominal", DOUBLE, false),
+        Requirement("minimum", ValueType::DOUBLE, false),
+        Requirement("maximum", ValueType::DOUBLE, false),
+        Requirement("nominal", ValueType::DOUBLE, false),
         Requirement("units", false),
         Requirement("VALUE", true),
     });
 
     static auto parameterSet = make_shared<Factory>(
         Requirements {Requirement("name", false),
-                      Requirement("Parameter", ENTITY, parameter, 1, Requirement::Infinite)});
+                      Requirement("Parameter", ValueType::ENTITY, parameter, 1, Requirement::Infinite)});
 
     static auto factory = make_shared<Factory>(*Asset::getFactory());
 
@@ -43,7 +43,7 @@ namespace mtconnect::asset {
     if (first)
     {
       factory->addRequirements(Requirements {
-          Requirement("ParameterSet", ENTITY_LIST, parameterSet, 1, Requirement::Infinite)});
+          Requirement("ParameterSet", ValueType::ENTITY_LIST, parameterSet, 1, Requirement::Infinite)});
 
       auto root = Asset::getRoot();
       root->registerFactory("ComponentConfigurationParameters", factory);

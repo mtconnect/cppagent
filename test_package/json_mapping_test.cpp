@@ -514,7 +514,81 @@ TEST_F(JsonMappingTest, should_default_the_time_to_now_when_not_given)
 }
 
 /// @test verify the json mapper  can handle data sets and tables
-TEST_F(JsonMappingTest, should_parse_data_sets) { GTEST_SKIP(); }
+TEST_F(JsonMappingTest, should_parse_data_sets) 
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s}, {"type", "VARIABLE"s}, {"category", "EVENT"s},
+                          {"representation", "DATA_SET"s}});
+
+  Properties props {{"VALUE", R"(
+[{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "a": { 
+    "k1": 123.45,
+    "k2": "ABCDEF",
+    "k3": 6789
+  }
+},
+{
+  "timestamp": "2023-11-09T11:20:01Z",
+  "a": {
+    "resetTriggered": "NEW",
+    "value": {
+      "k1": 123.45,
+      "k2": "ABCDEF",
+      "k3": 6789
+    }
+  }
+},
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "a": {
+    "k1": 123.45,
+    "k2": "ABCDEF",
+    "k3": null
+  }
+}]
+)"s}};
+  
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(3, list.size());
+
+  auto it = list.begin();
+
+  auto obs = dynamic_pointer_cast<DataSetEvent>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("VariableDataSet", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+  
+  auto &set = obs->getDataSet();
+  ASSERT_EQ(3, set.size());
+  
+  auto dsi = set.begin();
+  ASSERT_EQ("k1", dsi->m_key);
+  ASSERT_EQ(123.45, get<double>(dsi->m_value));
+
+  dsi++;
+  ASSERT_EQ("k2", dsi->m_key);
+  ASSERT_EQ("ABCDEF", get<string>(dsi->m_value));
+
+  dsi++;
+  ASSERT_EQ("k3", dsi->m_key);
+  ASSERT_EQ(6789, get<int64_t>(dsi->m_value));
+
+  it++;
+  
+  
+  
+
+}
 
 /// @test verify the json mapper  can handle data sets and tables
 TEST_F(JsonMappingTest, should_parse_tables) { GTEST_SKIP(); }

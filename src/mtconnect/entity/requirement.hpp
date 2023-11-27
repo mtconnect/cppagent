@@ -57,7 +57,7 @@ namespace mtconnect::entity {
                              bool, Vector, DataSet, Timestamp, std::nullptr_t>;
 
   /// @brief Value type enumeration
-  enum ValueType : std::uint16_t
+  enum class ValueType : std::uint16_t
   {
     EMPTY = 0x0,              ///< monostate for no value
     ENTITY = 0x1,             ///< shared entity pointer
@@ -77,7 +77,7 @@ namespace mtconnect::entity {
 
   /// @brief Mask for value types
   const int16_t VALUE_TYPE_BASE = 0x0F;
-
+  
   class Factory;
   using FactoryPtr = std::shared_ptr<Factory>;
   using ControlledVocab = std::list<std::string>;
@@ -199,7 +199,7 @@ namespace mtconnect::entity {
     /// @param name the property key
     /// @param required `true` if the property is required
     /// @param type the data type defaulted to `STRING`
-    Requirement(const std::string &name, bool required, ValueType type = STRING)
+    Requirement(const std::string &name, bool required, ValueType type = ValueType::STRING)
       : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(type)
     {}
     /// @brief property that can occur mode than once
@@ -240,7 +240,7 @@ namespace mtconnect::entity {
     /// @param vocab the set of possible values
     /// @param required `true` if the property is required
     Requirement(const std::string &name, const ControlledVocab &vocab, bool required = true)
-      : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(STRING)
+      : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(ValueType::STRING)
     {
       m_vocabulary.emplace();
       for (auto &s : vocab)
@@ -254,7 +254,7 @@ namespace mtconnect::entity {
       : m_name(name),
         m_upperMultiplicity(1),
         m_lowerMultiplicity(required ? 1 : 0),
-        m_type(STRING),
+        m_type(ValueType::STRING),
         m_pattern(pattern)
     {}
 

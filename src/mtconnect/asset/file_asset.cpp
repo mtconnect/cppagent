@@ -29,20 +29,20 @@ namespace mtconnect::asset {
         make_shared<Factory>(Requirements({Requirement("name", true), Requirement("VALUE", true)}));
 
     static auto fileProperties = make_shared<Factory>(Requirements(
-        {Requirement("FileProperty", ENTITY, fileProperty, 1, Requirement::Infinite)}));
+        {Requirement("FileProperty", ValueType::ENTITY, fileProperty, 1, Requirement::Infinite)}));
 
     static auto fileComment = make_shared<Factory>(
         Requirements({Requirement("timestamp", true), Requirement("VALUE", true)}));
 
     static auto fileComments = make_shared<Factory>(
-        Requirements({Requirement("FileComment", ENTITY, fileComment, 1, Requirement::Infinite)}));
+        Requirements({Requirement("FileComment", ValueType::ENTITY, fileComment, 1, Requirement::Infinite)}));
 
     static auto fileArchetype = make_shared<Factory>(*Asset::getFactory());
     fileArchetype->addRequirements(Requirements {
         Requirement("name", true), Requirement("mediaType", true),
         Requirement("applicationCategory", true), Requirement("applicationType", true),
-        Requirement("FileComments", ENTITY_LIST, fileComments, false),
-        Requirement("FileProperties", ENTITY_LIST, fileProperties, false)});
+        Requirement("FileComments", ValueType::ENTITY_LIST, fileComments, false),
+        Requirement("FileProperties", ValueType::ENTITY_LIST, fileProperties, false)});
     fileArchetype->setOrder({"FileProperties", "FileComments"});
 
     static bool first {true};
@@ -73,17 +73,17 @@ namespace mtconnect::asset {
     static auto destination = make_shared<Factory>(Requirements({Requirement("VALUE", true)}));
 
     static auto destinations = make_shared<Factory>(
-        Requirements({Requirement("Destination", ENTITY, destination, 1, Requirement::Infinite)}));
+        Requirements({Requirement("Destination", ValueType::ENTITY, destination, 1, Requirement::Infinite)}));
 
     static auto fileLocation = make_shared<Factory>(Requirements({Requirement("href", true)}));
 
     file->addRequirements(
-        Requirements({Requirement("size", INTEGER), Requirement("versionId", STRING),
+        Requirements({Requirement("size", ValueType::INTEGER), Requirement("versionId", ValueType::STRING),
                       Requirement("state", {"EXPERIMENTAL", "PRODUCTION", "REVISION"}),
-                      Requirement("FileLocation", ENTITY, fileLocation),
+                      Requirement("FileLocation", ValueType::ENTITY, fileLocation),
                       Requirement("Signature", false), Requirement("PublicKey", false),
                       Requirement("CreationTime", false), Requirement("ModificationTime", false),
-                      Requirement("Destinations", ENTITY_LIST, destinations)}));
+                      Requirement("Destinations", ValueType::ENTITY_LIST, destinations)}));
     file->setOrder({"FileProperties", "FileComments", "FileLocation", "Signature", "PublicKey",
                     "Destinations", "CreationTime", "ModificationTime"});
 

@@ -38,15 +38,15 @@ namespace mtconnect {
         auto composition = make_shared<Factory>(
             Requirements {Requirement("id", true), Requirement("uuid", false),
                           Requirement("name", false), Requirement("type", true),
-                          Requirement("Description", ENTITY, Description::getFactory(), false),
-                          Requirement("Configuration", ENTITY, config, false)},
+                          Requirement("Description", ValueType::ENTITY, Description::getFactory(), false),
+                          Requirement("Configuration", ValueType::ENTITY, config, false)},
             [](const std::string &name, Properties &props) -> EntityPtr {
               auto ptr = make_shared<Composition>(name, props);
               return dynamic_pointer_cast<Entity>(ptr);
             });
 
         compositions = make_shared<Factory>(Requirements {
-            Requirement("Composition", ENTITY, composition, 1, Requirement::Infinite)});
+            Requirement("Composition", ValueType::ENTITY, composition, 1, Requirement::Infinite)});
       }
       return compositions;
     }
@@ -54,7 +54,7 @@ namespace mtconnect {
     FactoryPtr Composition::getRoot()
     {
       static auto root = make_shared<Factory>(Requirements {
-          Requirement("Compositions", ENTITY_LIST, Composition::getFactory(), false)});
+          Requirement("Compositions", ValueType::ENTITY_LIST, Composition::getFactory(), false)});
 
       return root;
     }

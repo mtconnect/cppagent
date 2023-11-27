@@ -50,27 +50,27 @@ namespace mtconnect {
             {"id", true},
             {"name", false},
             {"type", true},
-            {"subType", QSTRING, false},
+            {"subType", ValueType::QSTRING, false},
             {"category", ControlledVocab {"EVENT", "SAMPLE", "CONDITION"}, true},
-            {"discrete", BOOL, false},
+            {"discrete", ValueType::BOOL, false},
             {"representation",
              ControlledVocab {"VALUE", "TIME_SERIES", "DATA_SET", "TABLE", "DISCRETE"}, false},
             {"units", false},
             {"nativeUnits", false},
-            {"sampleRate", DOUBLE, false},
+            {"sampleRate", ValueType::DOUBLE, false},
             {"statistic", false},
-            {"nativeScale", DOUBLE, false},
+            {"nativeScale", ValueType::DOUBLE, false},
             {"coordinateSystem", ControlledVocab {"MACHINE", "WORK"}, false},
             {"compositionId", false},
             {"coordinateSystemIdRef", false},
-            {"significantDigits", INTEGER, false},
+            {"significantDigits", ValueType::INTEGER, false},
             // Elements
-            {"Source", ENTITY, source, false},
-            {"Filters", ENTITY_LIST, filter, false},
-            {"Definition", ENTITY, definition, false},
-            {"Constraints", ENTITY_LIST, constraints, false},
-            {"Relationships", ENTITY_LIST, relationships, false},
-            {"InitialValue", DOUBLE, false},
+            {"Source", ValueType::ENTITY, source, false},
+            {"Filters", ValueType::ENTITY_LIST, filter, false},
+            {"Definition", ValueType::ENTITY, definition, false},
+            {"Constraints", ValueType::ENTITY_LIST, constraints, false},
+            {"Relationships", ValueType::ENTITY_LIST, relationships, false},
+            {"InitialValue", ValueType::DOUBLE, false},
             {"ResetTrigger", false}});
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           auto ptr = make_shared<DataItem>(name, props);
@@ -80,7 +80,7 @@ namespace mtconnect {
         factory->setOrder({"Source", "Constraints", "Filters", "InitialValue", "ResetTriger",
                            "Definition", "Relationships"});
         dataItem = make_shared<Factory>(
-            Requirements {{"DataItem", ENTITY, factory, 1, Requirement::Infinite}});
+            Requirements {{"DataItem", ValueType::ENTITY, factory, 1, Requirement::Infinite}});
       }
 
       return dataItem;
@@ -92,7 +92,7 @@ namespace mtconnect {
       if (!root)
       {
         auto factory = DataItem::getFactory();
-        root = make_shared<Factory>(Requirements {{"DataItems", ENTITY_LIST, factory, false}});
+        root = make_shared<Factory>(Requirements {{"DataItems", ValueType::ENTITY_LIST, factory, false}});
       }
       return root;
     }

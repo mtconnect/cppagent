@@ -51,13 +51,7 @@ namespace mtconnect::pipeline {
     VALUE,
     DATA_ITEM_VALUE,
     SAMPLE_RATE,
-    ASSET,
-
-    NATIVE_CODE,
-    NATIVE_SEVERITY,
-    CONDITION_ID,
-    QUALIFIER,
-    LEVEL
+    ASSET
   };
 
   enum class ParserState
@@ -65,9 +59,9 @@ namespace mtconnect::pipeline {
     NONE,
     ARRAY,
     OBJECT,
-    DATA_SET,
-    TABLE_CELL
   };
+  
+  using Expectation = bitset<16>;
 
   /// @brief The current context for the parser. Keeps all the interpediary state.
   struct ParserContext
@@ -210,6 +204,130 @@ namespace mtconnect::pipeline {
 
     entity::Vector &m_value;
     bool m_done {false};
+  };
+  
+  /// @brief SAX Parser handler for JSON Parsing
+  struct DataSetHandler : rj::BaseReaderHandler<rj::UTF8<>, DataSetHandler>
+  {
+    DataSetHandler(entity::DataSet &set, bool table = false)
+    : m_set(set), m_table(table)
+    {
+    }
+    
+    /// handled removed flag
+    bool Null()
+    {
+      if (m_token != KeyToken::NONE)
+        return false;
+      
+      m_entry.m_value.emplace<monostate>();
+      m_entry.m_removed = true;
+      return true;
+    }
+
+    bool Bool(bool b) { return Int64(int(b)); }
+    bool Int(int i) { return Int64(i); }
+    bool Uint(unsigned i) { return Int64(i); }
+    bool Uint64(uint64_t i) { return Int64(i); }
+    bool Int64(int64_t i)
+    {
+      if (m_token != KeyToken::NONE)
+        return false;
+
+      m_entry.m_value.emplace<int64_t>(i);
+      return true;
+    }
+    bool Double(double d)
+    {
+      if (m_token != KeyToken::NONE)
+        return false;
+
+      m_entry.m_value.emplace<double>(d);
+      return true;
+    }
+    bool RawNumber(const Ch *str, rj::SizeType length, bool copy)
+    {
+      return String(str, length, copy);
+    }
+    bool String(const Ch *str, rj::SizeType length, bool copy)
+    {
+      if (m_token == KeyToken::VALUE)
+        return false;
+      
+      m_entry.m_value.emplace<std::string>(str, length);
+      return true;
+    }
+    bool StartObject()
+    {
+      if (m_token == KeyToken::RESET_TRIGGER)
+        return false;
+
+      // Table handler
+      return true;
+    }
+    bool Key(const Ch *str, rj::SizeType length, bool copy) 
+    {
+      // Check for resetTriggered
+      string_view key(str, length);
+      if (key == "resetTriggered" )
+        m_token = KeyToken::RESET_TRIGGER;
+      else if (key == "value")
+        m_token = KeyToken::VALUE;
+      else
+        m_entry.m_key = string(str, length);
+      return true;
+    }
+    bool EndObject(rj::SizeType memberCount) 
+    {
+      m_done = true;
+      return true;
+    }
+    bool StartArray() { return false; }
+    bool EndArray(rj::SizeType elementCount) { return false; }
+
+    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    {
+      while (!reader.IterativeParseComplete() && !m_done)
+      {
+        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+          return false;
+        else if (m_done)
+          break;
+        
+        if (m_token == KeyToken::RESET_TRIGGER && !holds_alternative<monostate>(m_entry.m_value))
+        {
+          m_resetTriggered.emplace(get<string>(m_entry.m_value));
+        }
+        else if (m_token == KeyToken::VALUE)
+        {
+          DataSetHandler handler(m_set, m_table);
+          auto success = handler(reader, buff);
+          if (!success)
+            return success;
+        }
+        else if (m_token == KeyToken::NONE && !holds_alternative<monostate>(m_entry.m_value))
+        {
+          auto res = m_set.insert(m_entry);
+          if (!res.second)
+          {
+            m_set.erase(res.first);
+            
+            // Try again
+            m_set.insert(m_entry);
+          }
+          m_entry.m_value.emplace<monostate>();
+        }
+      }
+      return true;
+    }
+
+    entity::DataSet &m_set;
+    entity::DataSetEntry m_entry;
+    optional<string> m_resetTriggered;
+    bool m_table { false };
+    bool m_done { false };
+    bool m_hasValue { false };
+    KeyToken m_token { KeyToken::NONE };
   };
 
   /// @brief SAX Parser handler for JSON Parsing
@@ -536,32 +654,43 @@ namespace mtconnect::pipeline {
 
           default: // Data Item key with value
           {
-            ValueHandler handler;
-            auto value = handler(reader, buff);
-            if (std::holds_alternative<std::monostate>(value))
-              return false;
-            else if (std::holds_alternative<EntityPtr>(value))
+            if (m_context.m_dataItem->isDataSet())
             {
-              PropertiesHandler props(m_context.m_props);
-              if (!props(reader, buff))
+              auto &res = m_context.m_value.emplace<DataSet>();
+              
+              DataSetHandler handler(res, m_context.m_dataItem->isTable());
+              if (!handler(reader, buff))
                 return false;
-              auto value = m_context.m_props.find("VALUE");
-              if (value == m_context.m_props.end() && holds_alternative<monostate>(value->second))
-              {
-                LOG(warning) << "value was not given for data item "
-                             << m_context.m_dataItem->getId();
-                return false;
-              }
-              m_context.m_value = value->second;
-              m_context.m_props.erase(value);
             }
             else
             {
-              m_context.m_value = value;
+              ValueHandler handler;
+              auto value = handler(reader, buff);
+              if (std::holds_alternative<std::monostate>(value))
+                return false;
+              else if (std::holds_alternative<EntityPtr>(value))
+              {
+                PropertiesHandler props(m_context.m_props);
+                if (!props(reader, buff))
+                  return false;
+                auto value = m_context.m_props.find("VALUE");
+                if (value == m_context.m_props.end() && holds_alternative<monostate>(value->second))
+                {
+                  LOG(warning) << "value was not given for data item "
+                  << m_context.m_dataItem->getId();
+                  return false;
+                }
+                m_context.m_value = value->second;
+                m_context.m_props.erase(value);
+              }
+              else
+              {
+                m_context.m_value = value;
+              }
+              m_context.send();
             }
-            m_context.send();
             break;
-          }
+         }
         }
       }
 

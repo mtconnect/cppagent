@@ -77,15 +77,15 @@ namespace mtconnect {
                                          {"severity", false},
                                          {"state", true},
                                          {"VALUE", false}};
-    static entity::Requirements s_timeseries {{"sampleCount", entity::INTEGER, true},
-                                              {"sampleRate", entity::DOUBLE, true},
-                                              {"VALUE", entity::VECTOR, true}};
+    static entity::Requirements s_timeseries {{"sampleCount", entity::ValueType::INTEGER, true},
+                                              {"sampleRate", entity::ValueType::DOUBLE, true},
+                                              {"VALUE", entity::ValueType::VECTOR, true}};
     static entity::Requirements s_message {{"nativeCode", false}, {"VALUE", false}};
-    static entity::Requirements s_threeSpaceSample {{"VALUE", entity::VECTOR, false}};
-    static entity::Requirements s_sample {{"VALUE", entity::DOUBLE, false}};
+    static entity::Requirements s_threeSpaceSample {{"VALUE", entity::ValueType::VECTOR, false}};
+    static entity::Requirements s_sample {{"VALUE", entity::ValueType::DOUBLE, false}};
     static entity::Requirements s_assetEvent {{"assetType", false}, {"VALUE", false}};
     static entity::Requirements s_event {{"VALUE", false}};
-    static entity::Requirements s_dataSet {{"VALUE", entity::DATA_SET, false}};
+    static entity::Requirements s_dataSet {{"VALUE", entity::ValueType::DATA_SET, false}};
 
     static inline size_t firtNonWsColon(const string &token)
     {

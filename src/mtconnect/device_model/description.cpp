@@ -36,7 +36,7 @@ namespace mtconnect {
     FactoryPtr Description::getRoot()
     {
       static auto root = make_shared<Factory>(
-          Requirements {Requirement("Description", ENTITY, Description::getFactory(), false)});
+          Requirements {Requirement("Description", ValueType::ENTITY, Description::getFactory(), false)});
 
       return root;
     }

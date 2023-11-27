@@ -51,11 +51,11 @@ namespace mtconnect {
                             Requirement("href", false), Requirement("xlink:type", false)});
 
           relationships = make_shared<Factory>(
-              Requirements {Requirement("ComponentRelationship", ENTITY, componentRelationship, 0,
+              Requirements {Requirement("ComponentRelationship", ValueType::ENTITY, componentRelationship, 0,
                                         Requirement::Infinite),
-                            Requirement("DeviceRelationship", ENTITY, deviceRelationship, 0,
+                            Requirement("DeviceRelationship", ValueType::ENTITY, deviceRelationship, 0,
                                         Requirement::Infinite),
-                            Requirement("AssetRelationship", ENTITY, assetRelationship, 0,
+                            Requirement("AssetRelationship", ValueType::ENTITY, assetRelationship, 0,
                                         Requirement::Infinite)});
 
           relationships->registerMatchers();
