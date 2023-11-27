@@ -568,10 +568,10 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   ASSERT_EQ("VariableDataSet", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
   
-  auto &set = obs->getDataSet();
-  ASSERT_EQ(3, set.size());
+  auto &set1 = obs->getDataSet();
+  ASSERT_EQ(3, set1.size());
   
-  auto dsi = set.begin();
+  auto dsi = set1.begin();
   ASSERT_EQ("k1", dsi->m_key);
   ASSERT_EQ(123.45, get<double>(dsi->m_value));
 
@@ -584,10 +584,49 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   ASSERT_EQ(6789, get<int64_t>(dsi->m_value));
 
   it++;
+  obs = dynamic_pointer_cast<DataSetEvent>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("VariableDataSet", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
   
-  
-  
+  auto &set2 = obs->getDataSet();
+  ASSERT_EQ(3, set2.size());
 
+  ASSERT_EQ("NEW", obs->get<string>("resetTriggered"));
+  
+  dsi = set2.begin();
+  ASSERT_EQ("k1", dsi->m_key);
+  ASSERT_EQ(123.45, get<double>(dsi->m_value));
+
+  dsi++;
+  ASSERT_EQ("k2", dsi->m_key);
+  ASSERT_EQ("ABCDEF", get<string>(dsi->m_value));
+
+  dsi++;
+  ASSERT_EQ("k3", dsi->m_key);
+  ASSERT_EQ(6789, get<int64_t>(dsi->m_value));
+
+  it++;
+  obs = dynamic_pointer_cast<DataSetEvent>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("VariableDataSet", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+  
+  auto &set3 = obs->getDataSet();
+  ASSERT_EQ(3, set3.size());
+  
+  dsi = set3.begin();
+  ASSERT_EQ("k1", dsi->m_key);
+  ASSERT_EQ(123.45, get<double>(dsi->m_value));
+
+  dsi++;
+  ASSERT_EQ("k2", dsi->m_key);
+  ASSERT_EQ("ABCDEF", get<string>(dsi->m_value));
+
+  dsi++;
+  ASSERT_EQ("k3", dsi->m_key);
+  ASSERT_TRUE(dsi->m_removed);
+  
 }
 
 /// @test verify the json mapper  can handle data sets and tables

@@ -47,11 +47,14 @@ namespace mtconnect::pipeline {
     TIMESTAMP,
     DEVICE,
     DURATION,
-    RESET_TRIGGER,
-    VALUE,
+    RESET_TRIGGERED,
     DATA_ITEM_VALUE,
     SAMPLE_RATE,
-    ASSET
+    ASSET,
+    
+    VALUE,
+    KEY,
+    OBJECT
   };
 
   enum class ParserState
@@ -61,8 +64,6 @@ namespace mtconnect::pipeline {
     OBJECT,
   };
   
-  using Expectation = bitset<16>;
-
   /// @brief The current context for the parser. Keeps all the interpediary state.
   struct ParserContext
   {
@@ -209,15 +210,15 @@ namespace mtconnect::pipeline {
   /// @brief SAX Parser handler for JSON Parsing
   struct DataSetHandler : rj::BaseReaderHandler<rj::UTF8<>, DataSetHandler>
   {
-    DataSetHandler(entity::DataSet &set, bool table = false)
-    : m_set(set), m_table(table)
+    DataSetHandler(entity::DataSet &set, bool table = false, KeyToken expectation = KeyToken::OBJECT)
+    : m_set(set), m_table(table), m_expectation(expectation)
     {
     }
     
     /// handled removed flag
     bool Null()
     {
-      if (m_token != KeyToken::NONE)
+      if (m_expectation != KeyToken::VALUE)
         return false;
       
       m_entry.m_value.emplace<monostate>();
@@ -231,7 +232,7 @@ namespace mtconnect::pipeline {
     bool Uint64(uint64_t i) { return Int64(i); }
     bool Int64(int64_t i)
     {
-      if (m_token != KeyToken::NONE)
+      if (m_expectation != KeyToken::VALUE)
         return false;
 
       m_entry.m_value.emplace<int64_t>(i);
@@ -239,7 +240,7 @@ namespace mtconnect::pipeline {
     }
     bool Double(double d)
     {
-      if (m_token != KeyToken::NONE)
+      if (m_expectation != KeyToken::VALUE)
         return false;
 
       m_entry.m_value.emplace<double>(d);
@@ -251,7 +252,7 @@ namespace mtconnect::pipeline {
     }
     bool String(const Ch *str, rj::SizeType length, bool copy)
     {
-      if (m_token == KeyToken::VALUE)
+      if (m_expectation != KeyToken::VALUE && m_expectation != KeyToken::RESET_TRIGGERED)
         return false;
       
       m_entry.m_value.emplace<std::string>(str, length);
@@ -259,9 +260,11 @@ namespace mtconnect::pipeline {
     }
     bool StartObject()
     {
-      if (m_token == KeyToken::RESET_TRIGGER)
+      if (m_expectation != KeyToken::OBJECT)
         return false;
 
+      m_expectation = KeyToken::KEY;
+      
       // Table handler
       return true;
     }
@@ -270,11 +273,14 @@ namespace mtconnect::pipeline {
       // Check for resetTriggered
       string_view key(str, length);
       if (key == "resetTriggered" )
-        m_token = KeyToken::RESET_TRIGGER;
+        m_expectation = KeyToken::RESET_TRIGGERED;
       else if (key == "value")
-        m_token = KeyToken::VALUE;
+        m_expectation = KeyToken::OBJECT;
       else
+      {
+        m_expectation = KeyToken::VALUE;
         m_entry.m_key = string(str, length);
+      }
       return true;
     }
     bool EndObject(rj::SizeType memberCount) 
@@ -287,36 +293,53 @@ namespace mtconnect::pipeline {
 
     bool operator()(rj::Reader &reader, rj::StringStream &buff)
     {
+      // Parse initial object
+      if (m_expectation == KeyToken::OBJECT && !reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+        return false;
+      
+      if (m_expectation != KeyToken::KEY)
+        return false;
+      
       while (!reader.IterativeParseComplete() && !m_done)
       {
+        // Read the key
         if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
           return false;
         else if (m_done)
           break;
         
-        if (m_token == KeyToken::RESET_TRIGGER && !holds_alternative<monostate>(m_entry.m_value))
-        {
-          m_resetTriggered.emplace(get<string>(m_entry.m_value));
-        }
-        else if (m_token == KeyToken::VALUE)
+        // Read the value
+        if (m_expectation == KeyToken::OBJECT)
         {
           DataSetHandler handler(m_set, m_table);
           auto success = handler(reader, buff);
           if (!success)
             return success;
         }
-        else if (m_token == KeyToken::NONE && !holds_alternative<monostate>(m_entry.m_value))
+        else
         {
-          auto res = m_set.insert(m_entry);
-          if (!res.second)
+          if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+            return false;
+          
+          if (m_expectation == KeyToken::RESET_TRIGGERED)
           {
-            m_set.erase(res.first);
-            
-            // Try again
-            m_set.insert(m_entry);
+            m_resetTriggered.emplace(get<string>(m_entry.m_value));
           }
-          m_entry.m_value.emplace<monostate>();
+          else if (m_expectation == KeyToken::VALUE)
+          {
+            auto res = m_set.insert(m_entry);
+            if (!res.second)
+            {
+              m_set.erase(res.first);
+              
+              // Try again
+              m_set.insert(m_entry);
+            }
+            m_entry.m_value.emplace<monostate>();
+          }
         }
+        
+        m_expectation = KeyToken::KEY;
       }
       return true;
     }
@@ -327,7 +350,7 @@ namespace mtconnect::pipeline {
     bool m_table { false };
     bool m_done { false };
     bool m_hasValue { false };
-    KeyToken m_token { KeyToken::NONE };
+    KeyToken m_expectation;
   };
 
   /// @brief SAX Parser handler for JSON Parsing
@@ -582,7 +605,7 @@ namespace mtconnect::pipeline {
                                                          {"dataItem", KeyToken::DATA_ITEM},
                                                          {"device", KeyToken::DEVICE},
                                                          {"duration", KeyToken::DURATION},
-                                                         {"resetTrigger", KeyToken::RESET_TRIGGER},
+                                                         {"resetTrigger", KeyToken::RESET_TRIGGERED},
                                                          {"sampleRate", KeyToken::SAMPLE_RATE},
                                                          {"value", KeyToken::VALUE},
                                                          {"asset", KeyToken::ASSET}};
@@ -661,6 +684,9 @@ namespace mtconnect::pipeline {
               DataSetHandler handler(res, m_context.m_dataItem->isTable());
               if (!handler(reader, buff))
                 return false;
+              
+              if (handler.m_resetTriggered)
+                m_context.m_props["resetTriggered"] = *handler.m_resetTriggered;
             }
             else
             {
@@ -687,8 +713,8 @@ namespace mtconnect::pipeline {
               {
                 m_context.m_value = value;
               }
-              m_context.send();
             }
+            m_context.send();
             break;
          }
         }
