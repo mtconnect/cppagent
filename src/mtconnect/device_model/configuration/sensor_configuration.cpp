@@ -37,8 +37,8 @@ namespace mtconnect {
               Requirement("CalibrationInitials", false),
           });
 
-          auto channels = make_shared<Factory>(
-              Requirements {Requirement("Channel", ValueType::ENTITY, channel, 1, Requirement::Infinite)});
+          auto channels = make_shared<Factory>(Requirements {
+              Requirement("Channel", ValueType::ENTITY, channel, 1, Requirement::Infinite)});
 
           sensorConfiguration = make_shared<Factory>(Requirements {
               Requirement("FirmwareVersion", true), Requirement("CalibrationDate", false),

@@ -28,9 +28,9 @@ namespace mtconnect {
         static FactoryPtr coordinateSystems;
         if (!coordinateSystems)
         {
-          auto transformation =
-              make_shared<Factory>(Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
-                                                 Requirement("Rotation", ValueType::VECTOR, 3, false)});
+          auto transformation = make_shared<Factory>(
+              Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
+                            Requirement("Rotation", ValueType::VECTOR, 3, false)});
 
           auto coordinateSystem = make_shared<Factory>(Requirements {
               Requirement("id", true), Requirement("name", false), Requirement("nativeName", false),
@@ -43,8 +43,8 @@ namespace mtconnect {
               Requirement("Origin", ValueType::VECTOR, 3, false),
               Requirement("Transformation", ValueType::ENTITY, transformation, false)});
 
-          coordinateSystems = make_shared<Factory>(Requirements {
-              Requirement("CoordinateSystem", ValueType::ENTITY, coordinateSystem, 1, Requirement::Infinite)});
+          coordinateSystems = make_shared<Factory>(Requirements {Requirement(
+              "CoordinateSystem", ValueType::ENTITY, coordinateSystem, 1, Requirement::Infinite)});
         }
 
         return coordinateSystems;

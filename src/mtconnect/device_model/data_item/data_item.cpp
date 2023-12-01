@@ -92,7 +92,8 @@ namespace mtconnect {
       if (!root)
       {
         auto factory = DataItem::getFactory();
-        root = make_shared<Factory>(Requirements {{"DataItems", ValueType::ENTITY_LIST, factory, false}});
+        root = make_shared<Factory>(
+            Requirements {{"DataItems", ValueType::ENTITY_LIST, factory, false}});
       }
       return root;
     }

@@ -28,9 +28,9 @@ namespace mtconnect {
         static FactoryPtr solidModel;
         if (!solidModel)
         {
-          auto transformation =
-              make_shared<Factory>(Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
-                                                 Requirement("Rotation", ValueType::VECTOR, 3, false)});
+          auto transformation = make_shared<Factory>(
+              Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
+                            Requirement("Rotation", ValueType::VECTOR, 3, false)});
 
           solidModel = make_shared<Factory>(
               Requirements {{"id", true},

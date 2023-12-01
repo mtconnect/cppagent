@@ -48,8 +48,8 @@ namespace mtconnect {
 
       FactoryPtr Configuration::getRoot()
       {
-        static auto root = make_shared<Factory>(
-            Requirements {{"Configuration", ValueType::ENTITY, Configuration::getFactory(), false}});
+        static auto root = make_shared<Factory>(Requirements {
+            {"Configuration", ValueType::ENTITY, Configuration::getFactory(), false}});
 
         return root;
       }

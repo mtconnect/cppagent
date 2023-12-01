@@ -367,7 +367,8 @@ namespace mtconnect {
         {
           m_properties.emplace(r.getName());
           auto factory = r.getFactory();
-          if (factory && (r.getType() == ValueType::ENTITY || r.getType() == ValueType::ENTITY_LIST))
+          if (factory &&
+              (r.getType() == ValueType::ENTITY || r.getType() == ValueType::ENTITY_LIST))
           {
             registerFactory(r.getName(), factory);
             if (r.getUpperMultiplicity() > 1)

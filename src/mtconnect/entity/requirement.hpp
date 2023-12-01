@@ -77,7 +77,7 @@ namespace mtconnect::entity {
 
   /// @brief Mask for value types
   const int16_t VALUE_TYPE_BASE = 0x0F;
-  
+
   class Factory;
   using FactoryPtr = std::shared_ptr<Factory>;
   using ControlledVocab = std::list<std::string>;
@@ -240,7 +240,10 @@ namespace mtconnect::entity {
     /// @param vocab the set of possible values
     /// @param required `true` if the property is required
     Requirement(const std::string &name, const ControlledVocab &vocab, bool required = true)
-      : m_name(name), m_upperMultiplicity(1), m_lowerMultiplicity(required ? 1 : 0), m_type(ValueType::STRING)
+      : m_name(name),
+        m_upperMultiplicity(1),
+        m_lowerMultiplicity(required ? 1 : 0),
+        m_type(ValueType::STRING)
     {
       m_vocabulary.emplace();
       for (auto &s : vocab)

@@ -40,30 +40,25 @@ using namespace std;
 namespace rj = ::rapidjson;
 
 namespace mtconnect::pipeline {
-  enum class KeyToken
+  enum class Expectation
   {
     NONE,
-    DATA_ITEM,
+    DATA_SET,
     TIMESTAMP,
-    DEVICE,
     DURATION,
     RESET_TRIGGERED,
-    DATA_ITEM_VALUE,
     SAMPLE_RATE,
     ASSET,
     
     VALUE,
     KEY,
-    OBJECT
+    OBJECT,
+    ARRAY,
+    NUMBER,
+    STRING,
+    VECTOR
   };
 
-  enum class ParserState
-  {
-    NONE,
-    ARRAY,
-    OBJECT,
-  };
-  
   /// @brief The current context for the parser. Keeps all the interpediary state.
   struct ParserContext
   {
@@ -75,152 +70,93 @@ namespace mtconnect::pipeline {
     /// @brief clear the current state
     void clear()
     {
-      m_props.clear();
-      m_dataItem.reset();
       m_device.reset();
       m_defaultDevice.reset();
       m_asset.reset();
       m_entities.clear();
-      m_token = KeyToken::NONE;
-      m_state = ParserState::NONE;
-
+      m_timestamp.reset();
+      
       m_device = m_defaultDevice;
     }
 
     /// @brief Get the data item for a device
-    void getDataItemForDevice(const std::string_view &sv)
+    DataItemPtr getDataItemForDevice(const std::string_view &sv)
     {
+      DataItemPtr di;
       if (!m_device)
       {
         LOG(warning) << "JsonMapper: Cannot find data item without Device";
       }
       else
       {
-        m_dataItem = m_device->getDeviceDataItem({sv.data(), sv.length()});
+        di = m_device->getDeviceDataItem({sv.data(), sv.length()});
       }
+      
+      return di;
+    }
+    
+    /// @brief set the timestamp
+    void setTimestamp(Timestamp &ts)
+    {
+      m_timestamp.emplace(ts);
     }
 
     /// @brief send a complete observation when the data item and props have values.
-    void send()
+    void send(DataItemPtr dataItem, entity::Properties &props)
     {
-      if (m_dataItem && !holds_alternative<monostate>(m_value))
+      if (!m_timestamp)
+        m_timestamp = DefaultNow();
+      entity::ErrorList errors;
+      auto obs = observation::Observation::make(dataItem, props, *m_timestamp, errors);
+      if (!errors.empty())
       {
-        if (!m_timestamp)
-          m_timestamp = DefaultNow();
-        if (m_duration)
-          m_props["duration"] = *m_duration;
-
-        m_props["VALUE"] = m_value;
-
-        entity::ErrorList errors;
-        auto obs = observation::Observation::make(m_dataItem, m_props, *m_timestamp, errors);
-        if (!errors.empty())
+        for (auto &e : errors)
         {
-          for (auto &e : errors)
-          {
-            LOG(warning) << "Error while parsing json: " << e->what();
-          }
-        }
-        else
-        {
-          m_entities.push_back(obs);
-          m_forward(std::move(obs));
+          LOG(warning) << "Error while parsing json: " << e->what();
         }
       }
       else
       {
-        LOG(warning) << "Incomplete observation";
+        m_entities.push_back(obs);
+        m_forward(std::move(obs));
       }
-
-      m_props.clear();
-      m_dataItem.reset();
     }
 
-    entity::Properties m_props;
-    ParserState m_state {ParserState::NONE};
-    KeyToken m_token {KeyToken::NONE};
-    std::optional<Timestamp> m_timestamp;
-    std::optional<double> m_duration;
-    DataItemPtr m_dataItem;
     DevicePtr m_device;
     DevicePtr m_defaultDevice;
     asset::AssetPtr m_asset;
-
-    entity::Value m_value;
+    std::optional<Timestamp> m_timestamp;
 
     EntityList m_entities;
     PipelineContextPtr m_pipelineContext;
     Forward m_forward;
+    std::list<ObservationPtr> m_queue;
   };
 
-  struct VectorHandler : rj::BaseReaderHandler<rj::UTF8<>, VectorHandler>
-  {
-    VectorHandler(entity::Vector &vector) : m_value(vector) {}
-
-    bool Null() { return true; }
-
-    bool Int(int i) { return Double(i); }
-    bool Uint(unsigned i) { return Double(i); }
-    bool Int64(int64_t i) { return Double(i); }
-    bool Uint64(uint64_t i) { return Double(i); }
-
-    bool Double(double d)
-    {
-      m_value.push_back(d);
-      return true;
-    }
-
-    bool Default()
-    {
-      LOG(warning) << "Invalid vector value, expected only doubles";
-      return false;
-    }
-
-    bool EndArray(rj::SizeType count)
-    {
-      m_done = true;
-      if (m_value.size() != count)
-      {
-        LOG(warning) << "Invalid array of values, size: " << m_value.size()
-                     << ", expected: " << count;
-        return false;
-      }
-      return true;
-    }
-
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
-    {
-      while (!reader.IterativeParseComplete() && !m_done)
-      {
-        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
-        {
-          LOG(warning) << "Cannot parse double vector";
-          m_value.clear();
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    entity::Vector &m_value;
-    bool m_done {false};
-  };
-  
   /// @brief SAX Parser handler for JSON Parsing
   struct DataSetHandler : rj::BaseReaderHandler<rj::UTF8<>, DataSetHandler>
   {
-    DataSetHandler(entity::DataSet &set, bool table = false, KeyToken expectation = KeyToken::OBJECT)
-    : m_set(set), m_table(table), m_expectation(expectation)
+    DataSetHandler(entity::DataSet &set, optional<string> key,
+                   bool table = false)
+      : m_set(set), m_table(table)
     {
+      if (key)
+      {
+        m_expectation = Expectation::VALUE;
+        m_entry.m_key = *key;
+      }
+      else
+      {
+        m_expectation = Expectation::OBJECT;
+      }
     }
-    
+
     /// handled removed flag
     bool Null()
     {
-      if (m_expectation != KeyToken::VALUE)
+      if (m_expectation != Expectation::VALUE)
         return false;
-      
+
       m_entry.m_value.emplace<monostate>();
       m_entry.m_removed = true;
       return true;
@@ -232,7 +168,7 @@ namespace mtconnect::pipeline {
     bool Uint64(uint64_t i) { return Int64(i); }
     bool Int64(int64_t i)
     {
-      if (m_expectation != KeyToken::VALUE)
+      if (m_expectation != Expectation::VALUE)
         return false;
 
       m_entry.m_value.emplace<int64_t>(i);
@@ -240,7 +176,7 @@ namespace mtconnect::pipeline {
     }
     bool Double(double d)
     {
-      if (m_expectation != KeyToken::VALUE)
+      if (m_expectation != Expectation::VALUE)
         return false;
 
       m_entry.m_value.emplace<double>(d);
@@ -252,38 +188,38 @@ namespace mtconnect::pipeline {
     }
     bool String(const Ch *str, rj::SizeType length, bool copy)
     {
-      if (m_expectation != KeyToken::VALUE && m_expectation != KeyToken::RESET_TRIGGERED)
+      if (m_expectation != Expectation::VALUE && m_expectation != Expectation::RESET_TRIGGERED)
         return false;
-      
+
       m_entry.m_value.emplace<std::string>(str, length);
       return true;
     }
     bool StartObject()
     {
-      if (m_expectation != KeyToken::OBJECT)
+      if (m_expectation != Expectation::OBJECT)
         return false;
 
-      m_expectation = KeyToken::KEY;
-      
+      m_expectation = Expectation::KEY;
+
       // Table handler
       return true;
     }
-    bool Key(const Ch *str, rj::SizeType length, bool copy) 
+    bool Key(const Ch *str, rj::SizeType length, bool copy)
     {
       // Check for resetTriggered
       string_view key(str, length);
-      if (key == "resetTriggered" )
-        m_expectation = KeyToken::RESET_TRIGGERED;
+      if (key == "resetTriggered")
+        m_expectation = Expectation::RESET_TRIGGERED;
       else if (key == "value")
-        m_expectation = KeyToken::OBJECT;
+        m_expectation = Expectation::OBJECT;
       else
       {
-        m_expectation = KeyToken::VALUE;
+        m_expectation = Expectation::VALUE;
         m_entry.m_key = string(str, length);
       }
       return true;
     }
-    bool EndObject(rj::SizeType memberCount) 
+    bool EndObject(rj::SizeType memberCount)
     {
       m_done = true;
       return true;
@@ -294,12 +230,13 @@ namespace mtconnect::pipeline {
     bool operator()(rj::Reader &reader, rj::StringStream &buff)
     {
       // Parse initial object
-      if (m_expectation == KeyToken::OBJECT && !reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+      if (m_expectation == Expectation::OBJECT &&
+          !reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
         return false;
-      
-      if (m_expectation != KeyToken::KEY)
+
+      if (m_expectation != Expectation::KEY)
         return false;
-      
+
       while (!reader.IterativeParseComplete() && !m_done)
       {
         // Read the key
@@ -307,11 +244,11 @@ namespace mtconnect::pipeline {
           return false;
         else if (m_done)
           break;
-        
+
         // Read the value
-        if (m_expectation == KeyToken::OBJECT)
+        if (m_expectation == Expectation::OBJECT)
         {
-          DataSetHandler handler(m_set, m_table);
+          DataSetHandler handler(m_set, nullopt, m_table);
           auto success = handler(reader, buff);
           if (!success)
             return success;
@@ -320,26 +257,26 @@ namespace mtconnect::pipeline {
         {
           if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
             return false;
-          
-          if (m_expectation == KeyToken::RESET_TRIGGERED)
+
+          if (m_expectation == Expectation::RESET_TRIGGERED)
           {
             m_resetTriggered.emplace(get<string>(m_entry.m_value));
           }
-          else if (m_expectation == KeyToken::VALUE)
+          else if (m_expectation == Expectation::VALUE)
           {
             auto res = m_set.insert(m_entry);
             if (!res.second)
             {
               m_set.erase(res.first);
-              
+
               // Try again
               m_set.insert(m_entry);
             }
             m_entry.m_value.emplace<monostate>();
           }
         }
-        
-        m_expectation = KeyToken::KEY;
+
+        m_expectation = Expectation::KEY;
       }
       return true;
     }
@@ -347,24 +284,53 @@ namespace mtconnect::pipeline {
     entity::DataSet &m_set;
     entity::DataSetEntry m_entry;
     optional<string> m_resetTriggered;
-    bool m_table { false };
-    bool m_done { false };
-    bool m_hasValue { false };
-    KeyToken m_expectation;
+    bool m_table {false};
+    bool m_done {false};
+    Expectation m_expectation;
   };
+  
+  const static map<std::string_view, std::string_view> PropertyMap {
+    {"duration", "duration"},
+    {"resetTriggered", "resetTriggered"},
+    {"sampleRate", "sampleRate"},
+    {"sampleCount", "sampleCount"},
+    {"value", "VALUE"},
+    {"message", "VALUE"}};
 
-  /// @brief SAX Parser handler for JSON Parsing
-  struct ValueHandler : rj::BaseReaderHandler<rj::UTF8<>, ValueHandler>
+  const static map<std::string_view, std::string_view> ConditionMap {
+    {"type", "type"},
+    {"nativeCode", "nativeCode"},
+    {"nativeSeverity", "nativeSeverity"},
+    {"qualifier", "qualifier"},
+    {"level", "level"},
+    {"value", "VALUE"},
+    {"message", "VALUE"}};
+
+  struct PropertiesHandler : rj::BaseReaderHandler<rj::UTF8<>, PropertiesHandler>
   {
+    PropertiesHandler(DataItemPtr dataItem, entity::Properties &props)
+    : m_props(props), m_dataItem(dataItem),
+      m_key("VALUE"), m_expectation(Expectation::VALUE)
+    {}
+    
+    template<typename T>
+    void setValue(T value)
+    {
+      m_props.insert_or_assign(m_key, value);
+    }
+
     bool Null()
     {
-      m_value.emplace<nullptr_t>();
+      if (m_key == "VALUE")
+        setValue("UNAVAILABLE");
+      else
+        setValue(nullptr);
       return true;
     }
 
     bool Bool(bool b)
     {
-      m_value.emplace<bool>(b);
+      setValue(b);
       return true;
     }
     bool Int(int i) { return Int64(i); }
@@ -372,12 +338,18 @@ namespace mtconnect::pipeline {
     bool Uint64(uint64_t i) { return Int64(i); }
     bool Int64(int64_t i)
     {
-      m_value.emplace<int64_t>(i);
+      if (m_expectation == Expectation::VECTOR && m_vector != nullptr)
+        m_vector->push_back(i);
+      else
+        setValue(i);
       return true;
     }
     bool Double(double d)
     {
-      m_value.emplace<double>(d);
+      if (m_expectation == Expectation::VECTOR && m_vector != nullptr)
+        m_vector->push_back(d);
+      else
+        setValue(d);
       return true;
     }
     bool RawNumber(const Ch *str, rj::SizeType length, bool copy)
@@ -386,70 +358,74 @@ namespace mtconnect::pipeline {
     }
     bool String(const Ch *str, rj::SizeType length, bool copy)
     {
-      m_value.emplace<std::string>(str, length);
+      setValue(string(str, length));
       return true;
     }
-    bool StartObject()
-    {
-      // We use an entity pointer to signal we have a property set.
-      // The PropertiesHandler will map each of the properties in the object
-      // to the properties.
-      m_value.emplace<EntityPtr>();
-      return true;
-    }
-    bool Key(const Ch *str, rj::SizeType length, bool copy) { return false; }
-    bool EndObject(rj::SizeType memberCount) { return true; }
+
     bool StartArray()
     {
-      m_value.emplace<Vector>();
-      return true;
-    }
-    bool EndArray(rj::SizeType elementCount) { return false; }
-
-    entity::Value operator()(rj::Reader &reader, rj::StringStream &buff)
-    {
-      auto success = (!reader.IterativeParseComplete() &&
-                      reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this));
-      if (!success)
+      if (m_dataItem->isTimeSeries() || m_dataItem->isThreeSpace())
       {
-        LOG(warning) << "Cannot get value for json mapper";
-        m_value = monostate();
+        auto &value = m_props["VALUE"];
+        m_vector = &value.emplace<Vector>();
+        m_expectation = Expectation::VECTOR;
+        return true;
       }
-      else if (holds_alternative<Vector>(m_value))
+      else
       {
-        VectorHandler handler(get<Vector>(m_value));
-        handler(reader, buff);
+        LOG(warning) << "Unexpected vector type for data item " << m_dataItem->getId();
+        return false;
       }
-      return m_value;
     }
-
-    entity::Value m_value {std::monostate()};
-    bool m_done {true};
-  };
-
-  const static map<std::string_view, std::string_view> PropertyMap {{"value", "VALUE"},
-                                                                    {"message", "VALUE"}};
-
-  struct PropertiesHandler : rj::BaseReaderHandler<rj::UTF8<>, PropertiesHandler>
-  {
-    PropertiesHandler(entity::Properties &props) : m_props(props) {}
-
-    bool Default()
+    bool EndArray(rj::SizeType elementCount) 
     {
-      LOG(warning) << "Expecting an object with keys and values";
-      return false;
+      if (m_expectation == Expectation::VECTOR)
+      {
+        m_vector = nullptr;
+        m_expectation = Expectation::KEY;
+        return true;
+      }
+      else
+      {
+        LOG(warning) << "Unexpected vector type for data item " << m_dataItem->getId();
+        return false;
+      }
     }
 
     bool Key(const Ch *str, rj::SizeType length, bool copy)
     {
       std::string_view sv(str, length);
-      auto f = PropertyMap.find(sv);
-      if (f != PropertyMap.end())
+      map<std::string_view, std::string_view>::const_iterator f, e;
+      if (m_dataItem->isCondition() || m_dataItem->isMessage())
       {
-        m_key = f->second;
+        f = ConditionMap.find(sv);
+        e = ConditionMap.end();
+        if (f == e)
+        {
+          LOG(warning) << "Unexpected key: " << sv << " for condition " << m_dataItem->getId();
+          return false;
+        }
       }
       else
       {
+        f = PropertyMap.find(sv);
+        e = PropertyMap.end();
+      }
+      
+      if (f != e)
+      {
+        m_key = f->second;
+        m_expectation = Expectation::VALUE;
+      }
+      else
+      {
+        if (m_dataItem->isDataSet())
+          m_expectation = Expectation::DATA_SET;
+        else
+        {
+          LOG(warning) << "Unexpected key " << sv << " for data item " << m_dataItem->getId();
+          return false;
+        }
         m_key = sv;
       }
 
@@ -458,8 +434,9 @@ namespace mtconnect::pipeline {
 
     bool StartObject()
     {
-      LOG(warning) << "Expecting not expecting sub-objects";
-      return false;
+      m_object = true;
+      m_expectation = Expectation::KEY;
+      return true;
     }
 
     bool EndObject(rj::SizeType memberCount)
@@ -467,79 +444,65 @@ namespace mtconnect::pipeline {
       m_done = true;
       return true;
     }
+    
+    bool Default()
+    {
+      LOG(warning) << "Expecting an object with keys and values";
+      return false;
+    }
 
     bool operator()(rj::Reader &reader, rj::StringStream &buff)
     {
       while (!reader.IterativeParseComplete() && !m_done)
       {
-        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
-          return false;
-        else if (m_done)
-          break;
-
-        ValueHandler handler;
-        auto value = handler(reader, buff);
-        if (!std::holds_alternative<std::monostate>(value) && !m_key.empty())
+        if (m_expectation == Expectation::KEY)
         {
-          m_props.insert_or_assign(m_key, value);
+          if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+            return false;
         }
-        else
+        
+        if (!m_done)
         {
-          LOG(warning) << "Could not map " << m_key;
+          if (m_expectation == Expectation::DATA_SET)
+          {
+            auto &value = m_props["VALUE"];
+            DataSet &set = value.emplace<DataSet>();
+            DataSetHandler handler(set, m_key, m_dataItem->isTable());
+          }
+          else
+          {
+            if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+              return false;
+            else if (m_expectation != Expectation::VECTOR)
+            {
+              if (!m_object)
+                break;
+              m_expectation = Expectation::KEY;
+            }
+          }
         }
+      }
+      
+      if (m_dataItem->isCondition() && m_props.count("level") == 0)
+      {
+        m_props.insert_or_assign("level", "normal"s);
       }
 
       return true;
     }
 
     entity::Properties &m_props;
+    DataItemPtr m_dataItem;
+    Vector *m_vector { nullptr };
     bool m_done {false};
+    bool m_object {false};
     std::string m_key;
-  };
-
-  struct DataItemHandler : rj::BaseReaderHandler<rj::UTF8<>, DataItemHandler>
-  {
-    DataItemHandler(ParserContext &context) : m_context(context) {}
-
-    bool Default()
-    {
-      LOG(warning) << "Expecting a data item string value";
-      return false;
-    }
-
-    bool String(const Ch *str, rj::SizeType length, bool copy)
-    {
-      if (m_context.m_device)
-      {
-        auto di = m_context.m_device->getDeviceDataItem({str, length});
-        if (!di)
-        {
-          LOG(warning) << "JsonMapper: cannot find data item for " << str;
-          return false;
-        }
-        return true;
-      }
-      else
-      {
-        LOG(warning) << "JsonMapper: value without data item";
-        return false;
-      }
-    }
-
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
-    {
-      auto success = (!reader.IterativeParseComplete() &&
-                      reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this));
-      return success;
-    }
-
-    ParserContext &m_context;
+    Expectation m_expectation { Expectation::NONE };
   };
 
   struct DeviceHandler : rj::BaseReaderHandler<rj::UTF8<>, DeviceHandler>
   {
-    DeviceHandler(ParserContext &context) : m_context(context) {}
-
+    DeviceHandler(PipelineContextPtr context) : m_pipelineContext(context) {}
     bool Default()
     {
       LOG(warning) << "Expecting a device string value";
@@ -548,8 +511,8 @@ namespace mtconnect::pipeline {
 
     bool String(const Ch *str, rj::SizeType length, bool copy)
     {
-      m_context.m_device = m_context.m_pipelineContext->m_contract->findDevice({str, length});
-      if (!m_context.m_device)
+      m_device = m_pipelineContext->m_contract->findDevice({str, length});
+      if (!m_device)
       {
         LOG(warning) << "JsonMapper: Cannot find device '" << str;
         return false;
@@ -560,20 +523,22 @@ namespace mtconnect::pipeline {
       }
     }
 
-    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    DevicePtr operator()(rj::Reader &reader, rj::StringStream &buff)
     {
       auto success = (!reader.IterativeParseComplete() &&
                       reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this));
-      return success;
+      if (success)
+        return m_device;
+      else
+        return nullptr;
     }
 
-    ParserContext &m_context;
+    DevicePtr m_device;
+    PipelineContextPtr m_pipelineContext;
   };
 
   struct TimestampHandler : rj::BaseReaderHandler<rj::UTF8<>, TimestampHandler>
   {
-    TimestampHandler(ParserContext &context) : m_context(context) {}
-
     bool Default()
     {
       LOG(warning) << "Expecting a timestamp";
@@ -586,8 +551,8 @@ namespace mtconnect::pipeline {
       std::optional<Timestamp> base;
       Microseconds off;
       auto [timestamp, duration] = ParseTimestamp(sv, false, base, off);
-      m_context.m_timestamp = timestamp;
-      m_context.m_duration = duration;
+      m_timestamp = timestamp;
+      m_duration = duration;
       return true;
     }
 
@@ -598,17 +563,9 @@ namespace mtconnect::pipeline {
       return success;
     }
 
-    ParserContext &m_context;
+    std::optional<Timestamp> m_timestamp;
+    std::optional<double> m_duration;
   };
-
-  const static map<std::string_view, KeyToken> FieldMap {{"timestamp", KeyToken::TIMESTAMP},
-                                                         {"dataItem", KeyToken::DATA_ITEM},
-                                                         {"device", KeyToken::DEVICE},
-                                                         {"duration", KeyToken::DURATION},
-                                                         {"resetTrigger", KeyToken::RESET_TRIGGERED},
-                                                         {"sampleRate", KeyToken::SAMPLE_RATE},
-                                                         {"value", KeyToken::VALUE},
-                                                         {"asset", KeyToken::ASSET}};
 
   struct ObjectHandler : rj::BaseReaderHandler<rj::UTF8<>, ObjectHandler>
   {
@@ -622,15 +579,15 @@ namespace mtconnect::pipeline {
     bool Key(const Ch *str, rj::SizeType length, bool copy)
     {
       std::string_view sv(str, length);
-      auto f = FieldMap.find(sv);
-      if (f != FieldMap.end())
-      {
-        m_context.m_token = f->second;
-      }
+      if (sv == "timestamp")
+        m_expectation = Expectation::TIMESTAMP;
       else
       {
-        m_context.m_token = KeyToken::DATA_ITEM_VALUE;
-        m_context.getDataItemForDevice(sv);
+        m_dataItem = m_context.getDataItemForDevice(sv);
+        if (!m_dataItem)
+        {
+          LOG(warning) << "Cannot find data item for " << sv;
+        }
       }
       return true;
     }
@@ -638,7 +595,6 @@ namespace mtconnect::pipeline {
     bool EndObject(rj::SizeType memberCount)
     {
       m_complete = true;
-      m_context.m_token = KeyToken::NONE;
       return true;
     }
 
@@ -646,77 +602,46 @@ namespace mtconnect::pipeline {
     {
       while (!m_complete && !reader.IterativeParseComplete())
       {
-        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
-          return false;
-
-        switch (m_context.m_token)
+        // Consume the key
+        if (m_expectation == Expectation::KEY)
         {
-          case KeyToken::TIMESTAMP:
+          if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+            return false;
+        }
+        
+        if (!m_complete)
+        {
+          // Based on the key type, consume the value
+          switch (m_expectation)
           {
-            TimestampHandler handler(m_context);
-            if (!handler(reader, buff))
-              return false;
-            break;
-          }
-          case KeyToken::DEVICE:
-          {
-            DeviceHandler handler(m_context);
-            if (!handler(reader, buff))
-              return false;
-            break;
-          }
-          case KeyToken::DATA_ITEM:
-          {
-            DataItemHandler handler(m_context);
-            if (!handler(reader, buff))
-              return false;
-            break;
-          }
-          case KeyToken::NONE:
-            break;
-
-          default: // Data Item key with value
-          {
-            if (m_context.m_dataItem->isDataSet())
+            case Expectation::TIMESTAMP:
             {
-              auto &res = m_context.m_value.emplace<DataSet>();
-              
-              DataSetHandler handler(res, m_context.m_dataItem->isTable());
+              TimestampHandler handler;
               if (!handler(reader, buff))
                 return false;
+              m_timestamp = handler.m_timestamp;
+              if (m_timestamp)
+                m_context.setTimestamp(*m_timestamp);
+              if (handler.m_duration)
+                m_props.insert_or_assign("duration", *handler.m_duration);
               
-              if (handler.m_resetTriggered)
-                m_context.m_props["resetTriggered"] = *handler.m_resetTriggered;
+              m_expectation = Expectation::KEY;
+              break;
             }
-            else
+            case Expectation::NONE:
+              break;
+              
+            default:  // Data Item key with value
             {
-              ValueHandler handler;
-              auto value = handler(reader, buff);
-              if (std::holds_alternative<std::monostate>(value))
+              PropertiesHandler props(m_dataItem, m_props);
+              if (!props(reader, buff))
                 return false;
-              else if (std::holds_alternative<EntityPtr>(value))
-              {
-                PropertiesHandler props(m_context.m_props);
-                if (!props(reader, buff))
-                  return false;
-                auto value = m_context.m_props.find("VALUE");
-                if (value == m_context.m_props.end() && holds_alternative<monostate>(value->second))
-                {
-                  LOG(warning) << "value was not given for data item "
-                  << m_context.m_dataItem->getId();
-                  return false;
-                }
-                m_context.m_value = value->second;
-                m_context.m_props.erase(value);
-              }
-              else
-              {
-                m_context.m_value = value;
-              }
+              m_context.send(m_dataItem, m_props);
+              m_props.clear();
+              m_dataItem.reset();
+              break;
             }
-            m_context.send();
-            break;
-         }
+          }
         }
       }
 
@@ -725,6 +650,10 @@ namespace mtconnect::pipeline {
 
     ParserContext &m_context;
     bool m_complete {false};
+    Expectation m_expectation {Expectation::KEY};
+    DataItemPtr m_dataItem;
+    entity::Properties m_props;
+    std::optional<Timestamp> m_timestamp;
   };
 
   struct ArrayHandler : rj::BaseReaderHandler<rj::UTF8<>, ArrayHandler>
@@ -735,11 +664,7 @@ namespace mtconnect::pipeline {
       LOG(warning) << "Expecting an array of objects";
       return false;
     }
-    bool StartObject()
-    {
-      m_context.m_state = ParserState::OBJECT;
-      return true;
-    }
+    bool StartObject() { return true; }
     bool EndObject(rj::SizeType memberCount) { return true; }
     bool EndArray(rj::SizeType memberCount)
     {
@@ -754,7 +679,7 @@ namespace mtconnect::pipeline {
         if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
           return false;
 
-        if (m_context.m_state == ParserState::OBJECT)
+        if (m_expectation == Expectation::OBJECT)
         {
           ObjectHandler handler(m_context);
           handler(reader, buff);
@@ -769,6 +694,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
+    Expectation m_expectation {Expectation::OBJECT};
     ParserContext &m_context;
     bool m_complete {false};
   };
@@ -784,13 +710,13 @@ namespace mtconnect::pipeline {
 
     bool StartObject()
     {
-      m_state = ParserState::OBJECT;
+      m_expectation = Expectation::OBJECT;
       return true;
     }
     bool EndObject(rj::SizeType memberCount) { return true; }
     bool StartArray()
     {
-      m_state = ParserState::ARRAY;
+      m_expectation = Expectation::ARRAY;
       return true;
     }
     bool EndArray(rj::SizeType elementCount) { return true; }
@@ -801,12 +727,12 @@ namespace mtconnect::pipeline {
       {
         if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
           return false;
-        if (m_state == ParserState::OBJECT)
+        if (m_expectation == Expectation::OBJECT)
         {
           ObjectHandler handler(m_context);
           handler(reader, buff);
         }
-        else if (m_state == ParserState::ARRAY)
+        else if (m_expectation == Expectation::ARRAY)
         {
           ArrayHandler handler(m_context);
           handler(reader, buff);
@@ -820,7 +746,7 @@ namespace mtconnect::pipeline {
       return true;
     }
 
-    ParserState m_state {ParserState::NONE};
+    Expectation m_expectation {Expectation::NONE};
     ParserContext &m_context;
   };
 

@@ -66,8 +66,8 @@ protected:
     auto fileComment = make_shared<Factory>(
         Requirements({Requirement("timestamp", true), Requirement("VALUE", true)}));
 
-    auto fileComments = make_shared<Factory>(
-        Requirements({Requirement("FileComment", ValueType::ENTITY, fileComment, 1, Requirement::Infinite)}));
+    auto fileComments = make_shared<Factory>(Requirements(
+        {Requirement("FileComment", ValueType::ENTITY, fileComment, 1, Requirement::Infinite)}));
     fileComments->registerMatchers();
 
     auto fileArchetype = make_shared<Factory>(Requirements {
@@ -78,8 +78,8 @@ protected:
         Requirement("FileComments", ValueType::ENTITY_LIST, fileComments, false),
         Requirement("FileProperties", ValueType::ENTITY_LIST, fileProperties, false)});
 
-    auto root =
-        make_shared<Factory>(Requirements {Requirement("FileArchetype", ValueType::ENTITY, fileArchetype)});
+    auto root = make_shared<Factory>(
+        Requirements {Requirement("FileArchetype", ValueType::ENTITY, fileArchetype)});
 
     return root;
   }
@@ -146,12 +146,13 @@ TEST_F(EntityPrinterTest, TestRecursiveEntityLists)
       Requirement("uuid", false),
   });
 
-  auto components = make_shared<Factory>(
-      Requirements({Requirement("Component", ValueType::ENTITY, component, 1, Requirement::Infinite)}));
+  auto components = make_shared<Factory>(Requirements(
+      {Requirement("Component", ValueType::ENTITY, component, 1, Requirement::Infinite)}));
   components->registerMatchers();
   components->registerFactory(regex(".+"), component);
 
-  component->addRequirements({Requirement("Components", ValueType::ENTITY_LIST, components, false)});
+  component->addRequirements(
+      {Requirement("Components", ValueType::ENTITY_LIST, components, false)});
 
   auto device = make_shared<Factory>(*component);
   device->addRequirements(Requirements {
@@ -196,8 +197,8 @@ TEST_F(EntityPrinterTest, TestEntityOrder)
       Requirements({Requirement("ZFirstValue", ValueType::ENTITY, component),
                     Requirement("HSecondValue", ValueType::ENTITY, component),
                     Requirement("AThirdValue", ValueType::ENTITY, component),
-                    Requirement("GFourthValue", ValueType::ENTITY, component), Requirement("Simple", false),
-                    Requirement("Unordered", false)}));
+                    Requirement("GFourthValue", ValueType::ENTITY, component),
+                    Requirement("Simple", false), Requirement("Unordered", false)}));
   components->setOrder({"ZFirstValue", "Simple", "HSecondValue", "AThirdValue", "GFourthValue"});
 
   auto device = make_shared<Factory>(Requirements({
@@ -248,8 +249,8 @@ TEST_F(EntityPrinterTest, TestRawContent)
   auto definition =
       make_shared<Factory>(Requirements({Requirement("format", false), Requirement("RAW", true)}));
 
-  auto root =
-      make_shared<Factory>(Requirements({Requirement("Definition", ValueType::ENTITY, definition, true)}));
+  auto root = make_shared<Factory>(
+      Requirements({Requirement("Definition", ValueType::ENTITY, definition, true)}));
 
   auto doc = R"DOC(
 <Definition format="XML">
@@ -288,12 +289,13 @@ TEST_F(EntityPrinterTest, should_honor_include_hidden_parameter)
       Requirement("uuid", false),
   });
 
-  auto components = make_shared<Factory>(
-      Requirements({Requirement("Component", ValueType::ENTITY, component, 1, Requirement::Infinite)}));
+  auto components = make_shared<Factory>(Requirements(
+      {Requirement("Component", ValueType::ENTITY, component, 1, Requirement::Infinite)}));
   components->registerMatchers();
   components->registerFactory(regex(".+"), component);
 
-  component->addRequirements({Requirement("Components", ValueType::ENTITY_LIST, components, false)});
+  component->addRequirements(
+      {Requirement("Components", ValueType::ENTITY_LIST, components, false)});
 
   auto device = make_shared<Factory>(*component);
   device->addRequirements(Requirements {
@@ -371,12 +373,13 @@ protected:
         Requirement("uuid", false),
     });
 
-    auto components = make_shared<Factory>(
-        Requirements({Requirement("Component", ValueType::ENTITY, component, 1, Requirement::Infinite)}));
+    auto components = make_shared<Factory>(Requirements(
+        {Requirement("Component", ValueType::ENTITY, component, 1, Requirement::Infinite)}));
     components->registerMatchers();
     components->registerFactory(regex(".+"), component);
 
-    component->addRequirements({Requirement("Components", ValueType::ENTITY_LIST, components, false)});
+    component->addRequirements(
+        {Requirement("Components", ValueType::ENTITY_LIST, components, false)});
 
     auto device = make_shared<Factory>(*component);
     device->addRequirements(Requirements {
@@ -384,7 +387,8 @@ protected:
         Requirement("uuid", true),
     });
 
-    auto root = make_shared<Factory>(Requirements {Requirement("Device", ValueType::ENTITY, device)});
+    auto root =
+        make_shared<Factory>(Requirements {Requirement("Device", ValueType::ENTITY, device)});
 
     ErrorList errors;
     auto s1 = components->create("System", Properties {{"id", "s1"s}}, errors);

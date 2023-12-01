@@ -125,7 +125,8 @@ namespace mtconnect {
             Requirements {{"Component", ValueType::ENTITY, factory, 1, Requirement::Infinite}});
         component->registerFactory(regex(".+"), factory);
         component->registerMatchers();
-        factory->addRequirements(Requirements {{"Components", ValueType::ENTITY_LIST, component, false}});
+        factory->addRequirements(
+            Requirements {{"Components", ValueType::ENTITY_LIST, component, false}});
       }
       return factory;
     }

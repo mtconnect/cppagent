@@ -34,8 +34,8 @@ namespace mtconnect::asset {
     static auto fileComment = make_shared<Factory>(
         Requirements({Requirement("timestamp", true), Requirement("VALUE", true)}));
 
-    static auto fileComments = make_shared<Factory>(
-        Requirements({Requirement("FileComment", ValueType::ENTITY, fileComment, 1, Requirement::Infinite)}));
+    static auto fileComments = make_shared<Factory>(Requirements(
+        {Requirement("FileComment", ValueType::ENTITY, fileComment, 1, Requirement::Infinite)}));
 
     static auto fileArchetype = make_shared<Factory>(*Asset::getFactory());
     fileArchetype->addRequirements(Requirements {
@@ -72,18 +72,18 @@ namespace mtconnect::asset {
 
     static auto destination = make_shared<Factory>(Requirements({Requirement("VALUE", true)}));
 
-    static auto destinations = make_shared<Factory>(
-        Requirements({Requirement("Destination", ValueType::ENTITY, destination, 1, Requirement::Infinite)}));
+    static auto destinations = make_shared<Factory>(Requirements(
+        {Requirement("Destination", ValueType::ENTITY, destination, 1, Requirement::Infinite)}));
 
     static auto fileLocation = make_shared<Factory>(Requirements({Requirement("href", true)}));
 
-    file->addRequirements(
-        Requirements({Requirement("size", ValueType::INTEGER), Requirement("versionId", ValueType::STRING),
-                      Requirement("state", {"EXPERIMENTAL", "PRODUCTION", "REVISION"}),
-                      Requirement("FileLocation", ValueType::ENTITY, fileLocation),
-                      Requirement("Signature", false), Requirement("PublicKey", false),
-                      Requirement("CreationTime", false), Requirement("ModificationTime", false),
-                      Requirement("Destinations", ValueType::ENTITY_LIST, destinations)}));
+    file->addRequirements(Requirements(
+        {Requirement("size", ValueType::INTEGER), Requirement("versionId", ValueType::STRING),
+         Requirement("state", {"EXPERIMENTAL", "PRODUCTION", "REVISION"}),
+         Requirement("FileLocation", ValueType::ENTITY, fileLocation),
+         Requirement("Signature", false), Requirement("PublicKey", false),
+         Requirement("CreationTime", false), Requirement("ModificationTime", false),
+         Requirement("Destinations", ValueType::ENTITY_LIST, destinations)}));
     file->setOrder({"FileProperties", "FileComments", "FileLocation", "Signature", "PublicKey",
                     "Destinations", "CreationTime", "ModificationTime"});
 

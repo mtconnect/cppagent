@@ -376,7 +376,7 @@ TEST_F(JsonMappingTest, should_parse_to_multiple_devices_with_device_key)
                {{"id", "c"s}, {"name", "e"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
   makeDataItem("device2",
                {{"id", "d"s}, {"name", "p"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
-  
+
   Properties props {{"VALUE", R"(
 [{
   "timestamp": "2023-11-09T11:20:00Z",
@@ -462,12 +462,12 @@ TEST_F(JsonMappingTest, should_parse_time_series_arrays)
   ASSERT_TRUE(std::holds_alternative<EntityList>(value));
   auto list = get<EntityList>(value);
   ASSERT_EQ(1, list.size());
-  
+
   auto obs = dynamic_pointer_cast<Observation>(list.front());
   ASSERT_TRUE(obs);
   ASSERT_EQ("PositionTimeSeries", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
-  
+
   auto ts = obs->getValue<Vector>();
   ASSERT_EQ(10, ts.size());
 
@@ -478,7 +478,7 @@ TEST_F(JsonMappingTest, should_parse_time_series_arrays)
 }
 
 /// @test verify the json mapper defaults the timestamp when it is not given in the object
-TEST_F(JsonMappingTest, should_default_the_time_to_now_when_not_given) 
+TEST_F(JsonMappingTest, should_default_the_time_to_now_when_not_given)
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
@@ -508,16 +508,65 @@ TEST_F(JsonMappingTest, should_default_the_time_to_now_when_not_given)
 
   ASSERT_NEAR(std::chrono::system_clock::to_time_t(time),
               std::chrono::system_clock::to_time_t(obs->getTimestamp()), 1);
-  
-  ASSERT_EQ("ACTIVE", obs->getValue<string>());
 
+  ASSERT_EQ("ACTIVE", obs->getValue<string>());
 }
 
-/// @test verify the json mapper  can handle data sets and tables
-TEST_F(JsonMappingTest, should_parse_data_sets) 
+/// @test verify the json mapper can handle reset triggered for statistics
+TEST_F(JsonMappingTest, should_parse_reset_triggered) 
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
-  makeDataItem("device", {{"id", "a"s}, {"type", "VARIABLE"s}, {"category", "EVENT"s},
+  makeDataItem("device", {{"id", "a"s},
+                          {"type", "PATH_POSITION"s},
+                          {"category", "SAMPLE"s},
+                          {"units", "MILLIMETER_3D"s}});
+
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "a": {
+         "value": [1.1, 2.2, 3.3],
+         "resetTriggered": "DAILY"
+  }
+}
+)"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+  
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+  
+  auto time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 20min;
+  auto it = list.begin();
+
+  auto obs = dynamic_pointer_cast<ThreeSpaceSample>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("PathPosition", obs->getName());
+  
+  ASSERT_EQ("DAILY", obs->get<string>("resetTriggered"));
+
+  ASSERT_EQ(time, obs->getTimestamp());
+  auto pos = obs->getValue<Vector>();
+  ASSERT_EQ(3, pos.size());
+  ASSERT_EQ(1.1, pos[0]);
+  ASSERT_EQ(2.2, pos[1]);
+  ASSERT_EQ(3.3, pos[2]);
+}
+
+
+/// @test verify the json mapper  can handle data sets and tables
+TEST_F(JsonMappingTest, should_parse_data_sets)
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s},
+                          {"type", "VARIABLE"s},
+                          {"category", "EVENT"s},
                           {"representation", "DATA_SET"s}});
 
   Properties props {{"VALUE", R"(
@@ -549,7 +598,7 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   }
 }]
 )"s}};
-  
+
   auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
   jmsg->m_device = dev;
 
@@ -567,10 +616,10 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   ASSERT_TRUE(obs);
   ASSERT_EQ("VariableDataSet", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
-  
+
   auto &set1 = obs->getDataSet();
   ASSERT_EQ(3, set1.size());
-  
+
   auto dsi = set1.begin();
   ASSERT_EQ("k1", dsi->m_key);
   ASSERT_EQ(123.45, get<double>(dsi->m_value));
@@ -588,12 +637,12 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   ASSERT_TRUE(obs);
   ASSERT_EQ("VariableDataSet", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
-  
+
   auto &set2 = obs->getDataSet();
   ASSERT_EQ(3, set2.size());
 
   ASSERT_EQ("NEW", obs->get<string>("resetTriggered"));
-  
+
   dsi = set2.begin();
   ASSERT_EQ("k1", dsi->m_key);
   ASSERT_EQ(123.45, get<double>(dsi->m_value));
@@ -611,10 +660,10 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   ASSERT_TRUE(obs);
   ASSERT_EQ("VariableDataSet", obs->getName());
   ASSERT_EQ("a", obs->getDataItem()->getId());
-  
+
   auto &set3 = obs->getDataSet();
   ASSERT_EQ(3, set3.size());
-  
+
   dsi = set3.begin();
   ASSERT_EQ("k1", dsi->m_key);
   ASSERT_EQ(123.45, get<double>(dsi->m_value));
@@ -626,7 +675,6 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
   dsi++;
   ASSERT_EQ("k3", dsi->m_key);
   ASSERT_TRUE(dsi->m_removed);
-  
 }
 
 /// @test verify the json mapper  can handle data sets and tables
@@ -634,9 +682,6 @@ TEST_F(JsonMappingTest, should_parse_tables) { GTEST_SKIP(); }
 
 /// @test verify the json mapper recognizes the device key and data item key
 TEST_F(JsonMappingTest, should_parse_device_and_data_item_when_keys_are_supplied) { GTEST_SKIP(); }
-
-/// @test verify the json mapper can handle reset triggered for statistics
-TEST_F(JsonMappingTest, should_parse_reset_triggered) { GTEST_SKIP(); }
 
 /// @test verify the json mapper can an asset in XML
 TEST_F(JsonMappingTest, should_parse_xml_asset) { GTEST_SKIP(); }

@@ -40,28 +40,34 @@ namespace mtconnect {
               Requirement("units", false),
           });
 
-          auto controlLimits = make_shared<Factory>(Requirements {
-              Requirement("UpperLimit", ValueType::DOUBLE, false), Requirement("UpperWarning", ValueType::DOUBLE, false),
-              Requirement("Nominal", ValueType::DOUBLE, false), Requirement("LowerWarning", ValueType::DOUBLE, false),
-              Requirement("LowerLimit", ValueType::DOUBLE, false)});
+          auto controlLimits = make_shared<Factory>(
+              Requirements {Requirement("UpperLimit", ValueType::DOUBLE, false),
+                            Requirement("UpperWarning", ValueType::DOUBLE, false),
+                            Requirement("Nominal", ValueType::DOUBLE, false),
+                            Requirement("LowerWarning", ValueType::DOUBLE, false),
+                            Requirement("LowerLimit", ValueType::DOUBLE, false)});
 
-          auto alarmLimits = make_shared<Factory>(Requirements {
-              Requirement("UpperLimit", ValueType::DOUBLE, false), Requirement("UpperWarning", ValueType::DOUBLE, false),
-              Requirement("LowerWarning", ValueType::DOUBLE, false),
-              Requirement("LowerLimit", ValueType::DOUBLE, false)});
+          auto alarmLimits = make_shared<Factory>(
+              Requirements {Requirement("UpperLimit", ValueType::DOUBLE, false),
+                            Requirement("UpperWarning", ValueType::DOUBLE, false),
+                            Requirement("LowerWarning", ValueType::DOUBLE, false),
+                            Requirement("LowerLimit", ValueType::DOUBLE, false)});
 
-          auto specificationLimits = make_shared<Factory>(Requirements {
-              Requirement("UpperLimit", ValueType::DOUBLE, false), Requirement("Nominal", ValueType::DOUBLE, false),
-              Requirement("LowerLimit", ValueType::DOUBLE, false)});
+          auto specificationLimits = make_shared<Factory>(
+              Requirements {Requirement("UpperLimit", ValueType::DOUBLE, false),
+                            Requirement("Nominal", ValueType::DOUBLE, false),
+                            Requirement("LowerLimit", ValueType::DOUBLE, false)});
 
           auto specification = make_shared<Factory>(*abstractSpecification);
 
-          specification->addRequirements(
-              {Requirement("Maximum", ValueType::DOUBLE, false), Requirement("Minimum", ValueType::DOUBLE, false),
-               Requirement("Nominal", ValueType::DOUBLE, false), Requirement("UpperLimit", ValueType::DOUBLE, false),
-               Requirement("UpperWarning", ValueType::DOUBLE, false), Requirement("Nominal", ValueType::DOUBLE, false),
-               Requirement("LowerWarning", ValueType::DOUBLE, false),
-               Requirement("LowerLimit", ValueType::DOUBLE, false)});
+          specification->addRequirements({Requirement("Maximum", ValueType::DOUBLE, false),
+                                          Requirement("Minimum", ValueType::DOUBLE, false),
+                                          Requirement("Nominal", ValueType::DOUBLE, false),
+                                          Requirement("UpperLimit", ValueType::DOUBLE, false),
+                                          Requirement("UpperWarning", ValueType::DOUBLE, false),
+                                          Requirement("Nominal", ValueType::DOUBLE, false),
+                                          Requirement("LowerWarning", ValueType::DOUBLE, false),
+                                          Requirement("LowerLimit", ValueType::DOUBLE, false)});
 
           auto processSpecification = make_shared<Factory>(*abstractSpecification);
 
@@ -70,10 +76,11 @@ namespace mtconnect {
                Requirement("AlarmLimits", ValueType::ENTITY, alarmLimits, false),
                Requirement("SpecificationLimits", ValueType::ENTITY, specificationLimits, false)});
 
-          specifications = make_shared<Factory>(Requirements {
-              Requirement("ProcessSpecification", ValueType::ENTITY, processSpecification, 0,
-                          Requirement::Infinite),
-              Requirement("Specification", ValueType::ENTITY, specification, 0, Requirement::Infinite)});
+          specifications = make_shared<Factory>(
+              Requirements {Requirement("ProcessSpecification", ValueType::ENTITY,
+                                        processSpecification, 0, Requirement::Infinite),
+                            Requirement("Specification", ValueType::ENTITY, specification, 0,
+                                        Requirement::Infinite)});
 
           specifications->registerMatchers();
 

@@ -57,15 +57,15 @@ namespace mtconnect::entity {
     /// use of single and double quotes as well as curly braces
     bool parse(const std::string &s, bool table);
   };
-  
+
   /// @brief Data Set Value type enumeration
   enum class DataSetValueType : std::uint16_t
   {
-    EMPTY = 0x0,              ///< monostate for no value
-    DATA_SET = 0x01,          ///< data set member for tables
-    STRING = 0x02,            ///< string value
-    INTEGER = 0x3,            ///< 64 bit integer
-    DOUBLE = 0x4              ///< double
+    EMPTY = 0x0,      ///< monostate for no value
+    DATA_SET = 0x01,  ///< data set member for tables
+    STRING = 0x02,    ///< string value
+    INTEGER = 0x3,    ///< 64 bit integer
+    DOUBLE = 0x4      ///< double
   };
 
   /// @brief Data set value variant
