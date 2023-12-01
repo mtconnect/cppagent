@@ -217,7 +217,7 @@ namespace mtconnect::source::adapter::shdr {
       {
         LOG(info) << '[' << getIdentity() << "] Adapter message: " << value;
         return;
-      }      
+      }
 
       if (options.size() > 0)
         setOptions(options);
