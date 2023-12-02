@@ -679,12 +679,12 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
 TEST_F(JsonMappingTest, should_parse_tables) { GTEST_SKIP(); }
 
 /// @test support timestamp at the end of the object instead of the beginning
-TEST_F(JsonMappingTest, should_not_require_ordered_object_keys) 
+TEST_F(JsonMappingTest, should_not_require_ordered_object_keys)
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   makeDataItem("device", {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
   makeDataItem("device", {{"id", "b"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
-  
+
   Properties props {{"VALUE", R"(
 {
   "a": "ACTIVE",
@@ -692,35 +692,107 @@ TEST_F(JsonMappingTest, should_not_require_ordered_object_keys)
   "timestamp": "2023-11-09T11:20:00Z"
 }
 )"s}};
-  
+
   auto msg = std::make_shared<JsonMessage>("JsonMessage", props);
   msg->m_device = dev;
-  
+
   auto res = (*m_mapper)(std::move(msg));
   ASSERT_TRUE(res);
-  
+
   auto value = res->getValue();
   ASSERT_TRUE(std::holds_alternative<EntityList>(value));
   auto list = get<EntityList>(value);
   ASSERT_EQ(2, list.size());
-  
+
   auto time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 20min;
   auto it = list.begin();
-  
+
   auto obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Execution", obs->getName());
-  
+
   ASSERT_EQ(time, obs->getTimestamp());
   ASSERT_EQ("ACTIVE", obs->getValue<string>());
   it++;
-  
+
   obs = dynamic_pointer_cast<Observation>(*it);
   ASSERT_TRUE(obs);
   ASSERT_EQ("Position", obs->getName());
-  
+
   ASSERT_EQ(time, obs->getTimestamp());
   ASSERT_EQ(123.456, obs->getValue<double>());
+}
+
+/// @test verify the json mapper recognizes the device key with a top level timestamp
+TEST_F(JsonMappingTest, should_parse_to_multiple_devices_with_device_key_and_common_timestamp)
+{
+  GTEST_SKIP();
+}
+
+/// @test verify the the data item can contain a device name as well separated by a :
+TEST_F(JsonMappingTest, should_parse_device_and_data_item_key)
+{
+  auto dev1 =
+      makeDevice("Device", {{"id", "device1"s}, {"name", "device1"s}, {"uuid", "device1"s}});
+  auto dev2 =
+      makeDevice("Device", {{"id", "device2"s}, {"name", "device2"s}, {"uuid", "device2"s}});
+  makeDataItem("device1",
+               {{"id", "a"s}, {"name", "e"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device1",
+               {{"id", "b"s}, {"name", "p"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
+
+  makeDataItem("device2",
+               {{"id", "c"s}, {"name", "e"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device2",
+               {{"id", "d"s}, {"name", "p"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
+
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "device1:e": "ACTIVE",
+  "device1:p": 100.0,
+  "device2:e": "READY",
+  "device2:p": 101.0
+})"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(4, list.size());
+
+  auto it = list.begin();
+
+  auto obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Execution", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+  ASSERT_EQ("ACTIVE", obs->getValue<string>());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Position", obs->getName());
+  ASSERT_EQ("b", obs->getDataItem()->getId());
+  ASSERT_EQ(100.0, obs->getValue<double>());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Execution", obs->getName());
+  ASSERT_EQ("c", obs->getDataItem()->getId());
+  ASSERT_EQ("READY", obs->getValue<string>());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Position", obs->getName());
+  ASSERT_EQ("d", obs->getDataItem()->getId());
+  ASSERT_EQ(101.0, obs->getValue<double>());
 }
 
 /// @test verify the json mapper can an asset in XML

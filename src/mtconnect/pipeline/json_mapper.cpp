@@ -78,18 +78,22 @@ namespace mtconnect::pipeline {
     DataItemPtr getDataItemForDevice(const std::string_view &sv)
     {
       DataItemPtr di;
-      if (!m_device)
-      {
-        LOG(warning) << "JsonMapper: Cannot find data item without Device";
-      }
+      DevicePtr device;
+      auto keys = splitKey({sv.data(), sv.length()});
+      if (keys.second)
+        device = m_pipelineContext->m_contract->findDevice(*keys.second);
+      if (!device)
+        device = m_device;
+      if (!device)
+        device = m_defaultDevice;
+      if (!device)
+        LOG(warning) << "Cannot find device for data item: " << sv;
       else
-      {
-        di = m_device->getDeviceDataItem({sv.data(), sv.length()});
-      }
+        di = device->getDeviceDataItem(keys.first);
 
       return di;
     }
-    
+
     /// @brief get a device from the agent
     DevicePtr getDevice(const std::string_view &name)
     {
@@ -114,7 +118,7 @@ namespace mtconnect::pipeline {
       {
         if (m_duration && props.count("duration") == 0)
           props["duration"] = *m_duration;
-        
+
         entity::ErrorList errors;
         auto obs = observation::Observation::make(dataItem, props, *m_timestamp, errors);
         if (!errors.empty())
@@ -131,12 +135,12 @@ namespace mtconnect::pipeline {
         }
       }
     }
-    
+
     void flush()
     {
       if (m_queue.empty())
         return;
-      
+
       if (!m_timestamp)
         m_timestamp = DefaultNow();
 
@@ -155,7 +159,7 @@ namespace mtconnect::pipeline {
     EntityList m_entities;
     PipelineContextPtr m_pipelineContext;
     Forward m_forward;
-    std::list<pair<DataItemPtr,entity::Properties>> m_queue;
+    std::list<pair<DataItemPtr, entity::Properties>> m_queue;
   };
 
   /// @brief SAX Parser handler for JSON Parsing
@@ -316,8 +320,8 @@ namespace mtconnect::pipeline {
       {"message", "VALUE"}};
 
   /// @brief SAX JSON handler for a simple value or a property object
-  /// Differentiates between an object with observation fields and data set based on data item type and
-  /// field name.
+  /// Differentiates between an object with observation fields and data set based on data item type
+  /// and field name.
   struct PropertiesHandler : rj::BaseReaderHandler<rj::UTF8<>, PropertiesHandler>
   {
     PropertiesHandler(DataItemPtr dataItem, entity::Properties &props)
@@ -578,7 +582,7 @@ namespace mtconnect::pipeline {
       }
       return true;
     }
-    
+
     bool StartObject()
     {
       m_expectation = Expectation::KEY;
@@ -590,7 +594,7 @@ namespace mtconnect::pipeline {
       m_complete = true;
       return true;
     }
-    
+
     bool EndArray(rj::SizeType memberCount)
     {
       m_complete = true;
@@ -624,7 +628,7 @@ namespace mtconnect::pipeline {
               m_expectation = Expectation::KEY;
               break;
             }
-              
+
             case Expectation::OBJECT:
             {
               ObjectHandler handler(m_context);
@@ -634,7 +638,7 @@ namespace mtconnect::pipeline {
               m_expectation = Expectation::KEY;
               break;
             }
-                            
+
             case Expectation::KEY:
             case Expectation::NONE:
               break;
@@ -653,7 +657,7 @@ namespace mtconnect::pipeline {
           }
         }
       }
-      
+
       m_context.flush();
 
       return true;
@@ -752,7 +756,7 @@ namespace mtconnect::pipeline {
           LOG(warning) << "Invalid state not object or array";
         }
       }
-      
+
       return true;
     }
 

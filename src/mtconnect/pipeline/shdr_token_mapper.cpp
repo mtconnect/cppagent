@@ -37,16 +37,6 @@ namespace mtconnect {
                    [](const char a, const char b) { return toupper(a) == b; });
     }
 
-    inline static std::pair<std::string, std::optional<std::string>> splitKey(
-        const std::string &key)
-    {
-      auto c = key.find(':');
-      if (c != string::npos)
-        return {key.substr(c + 1, string::npos), key.substr(0, c)};
-      else
-        return {key, nullopt};
-    }
-
     inline optional<double> getDuration(std::string &timestamp)
     {
       optional<double> duration;
