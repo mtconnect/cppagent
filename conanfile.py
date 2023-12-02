@@ -136,9 +136,6 @@ class MTConnectAgentConan(ConanFile):
         if self.options.shared:
             self.options.rm_safe("fPIC")
 
-        if self.settings.os == "Macos" and not self.options.shared:
-            self.options["boost/*"].visibility = "hidden"
-
         if self.options.shared:
             self.options["boost/*"].shared = True
             self.package_type = "shared-library"
