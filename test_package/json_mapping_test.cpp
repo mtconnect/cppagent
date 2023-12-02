@@ -676,7 +676,117 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
 }
 
 /// @test verify the json mapper  can handle data sets and tables
-TEST_F(JsonMappingTest, should_parse_tables) { GTEST_SKIP(); }
+TEST_F(JsonMappingTest, should_parse_tables) 
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s},
+                          {"type", "WORK_OFFSETS"s},
+                          {"category", "EVENT"s},
+                          {"representation", "TABLE"s}});
+
+  Properties props {{"VALUE", R"(
+[{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "a": {
+    "r1": {
+      "k1": 123.45
+    },
+    "r2": {
+      "k2": "ABCDEF",
+      "k3": 6789
+    }
+  }
+},
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "a": {
+    "resetTriggered": "NEW",
+    "value": {
+      "r1": {
+        "k1": 123.45,
+        "k3": 6789
+      },
+      "r2": null
+    }
+  }
+}]
+)"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(2, list.size());
+
+  auto it = list.begin();
+
+  auto obs = dynamic_pointer_cast<TableEvent>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("WorkOffsetsTable", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+
+  auto &set1 = obs->getDataSet();
+  ASSERT_EQ(2, set1.size());
+  auto dsi = set1.begin();
+  
+  ASSERT_EQ("r1", dsi->m_key);
+  ASSERT_TRUE(holds_alternative<DataSet>(dsi->m_value));
+
+  auto &row1 = get<DataSet>(dsi->m_value);
+  ASSERT_EQ(1, row1.size());
+  
+  auto ri = row1.begin();
+  ASSERT_EQ("k1", ri->m_key);
+  ASSERT_EQ(123.45, get<double>(ri->m_value));
+
+  dsi++;
+  auto &row2 = get<DataSet>(dsi->m_value);
+  ASSERT_EQ(2, row2.size());
+
+  ri = row2.begin();
+  ASSERT_EQ("k2", ri->m_key);
+  ASSERT_EQ("ABCDEF", get<string>(ri->m_value));
+
+  ri++;
+  ASSERT_EQ("k3", ri->m_key);
+  ASSERT_EQ(6789, get<int64_t>(ri->m_value));
+
+  it++;
+  obs = dynamic_pointer_cast<TableEvent>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("WorkOffsetsTable", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+
+  auto &set2 = obs->getDataSet();
+  ASSERT_EQ(2, set2.size());
+
+  ASSERT_EQ("NEW", obs->get<string>("resetTriggered"));
+
+  dsi = set2.begin();
+  
+  ASSERT_EQ("r1", dsi->m_key);
+  ASSERT_TRUE(holds_alternative<DataSet>(dsi->m_value));
+
+  auto &row3 = get<DataSet>(dsi->m_value);
+  ASSERT_EQ(2, row3.size());
+
+  ri = row3.begin();
+  ASSERT_EQ("k1", ri->m_key);
+  ASSERT_EQ(123.45, get<double>(ri->m_value));
+
+  ri++;
+  ASSERT_EQ("k3", ri->m_key);
+  ASSERT_EQ(6789, get<int64_t>(ri->m_value));
+
+  dsi++;
+  ASSERT_EQ("r2", dsi->m_key);
+  ASSERT_TRUE(dsi->m_removed);
+}
 
 /// @test support timestamp at the end of the object instead of the beginning
 TEST_F(JsonMappingTest, should_not_require_ordered_object_keys)
@@ -724,9 +834,79 @@ TEST_F(JsonMappingTest, should_not_require_ordered_object_keys)
 }
 
 /// @test verify the json mapper recognizes the device key with a top level timestamp
-TEST_F(JsonMappingTest, should_parse_to_multiple_devices_with_device_key_and_common_timestamp)
+TEST_F(JsonMappingTest, should_parse_devices_with_common_timestamp)
 {
-  GTEST_SKIP();
+  auto dev1 =
+      makeDevice("Device", {{"id", "device1"s}, {"name", "device1"s}, {"uuid", "device1"s}});
+  auto dev2 =
+      makeDevice("Device", {{"id", "device2"s}, {"name", "device2"s}, {"uuid", "device2"s}});
+  makeDataItem("device1",
+               {{"id", "a"s}, {"name", "e"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device1",
+               {{"id", "b"s}, {"name", "p"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
+
+  makeDataItem("device2",
+               {{"id", "c"s}, {"name", "e"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
+  makeDataItem("device2",
+               {{"id", "d"s}, {"name", "p"s}, {"type", "POSITION"s}, {"category", "SAMPLE"s}});
+
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "device1": {
+    "e": "ACTIVE",
+    "p": 100.0
+  },
+  "device2": {
+    "e": "READY",
+    "p": 101.0
+  }
+})"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+  
+  auto time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 20min;
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(4, list.size());
+
+  auto it = list.begin();
+
+  auto obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Execution", obs->getName());
+  ASSERT_EQ("a", obs->getDataItem()->getId());
+  ASSERT_EQ("ACTIVE", obs->getValue<string>());
+  ASSERT_EQ(time, obs->getTimestamp());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Position", obs->getName());
+  ASSERT_EQ("b", obs->getDataItem()->getId());
+  ASSERT_EQ(100.0, obs->getValue<double>());
+  ASSERT_EQ(time, obs->getTimestamp());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Execution", obs->getName());
+  ASSERT_EQ("c", obs->getDataItem()->getId());
+  ASSERT_EQ("READY", obs->getValue<string>());
+  ASSERT_EQ(time, obs->getTimestamp());
+
+  it++;
+  obs = dynamic_pointer_cast<Observation>(*it);
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("Position", obs->getName());
+  ASSERT_EQ("d", obs->getDataItem()->getId());
+  ASSERT_EQ(101.0, obs->getValue<double>());
+  ASSERT_EQ(time, obs->getTimestamp());
 }
 
 /// @test verify the the data item can contain a device name as well separated by a :

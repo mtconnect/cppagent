@@ -50,6 +50,7 @@ namespace mtconnect::pipeline {
     VALUE,
     KEY,
     OBJECT,
+    ROW,
     ARRAY,
     VECTOR
   };
@@ -66,12 +67,8 @@ namespace mtconnect::pipeline {
     void clear()
     {
       m_device.reset();
-      m_defaultDevice.reset();
-      m_asset.reset();
-      m_entities.clear();
       m_timestamp.reset();
-
-      m_device = m_defaultDevice;
+      m_duration.reset();
     }
 
     /// @brief Get the data item for a device
@@ -148,11 +145,11 @@ namespace mtconnect::pipeline {
       {
         send(e.first, e.second);
       }
+      m_queue.clear();
     }
 
     DevicePtr m_device;
     DevicePtr m_defaultDevice;
-    asset::AssetPtr m_asset;
     optional<Timestamp> m_timestamp;
     optional<double> m_duration;
 
@@ -224,11 +221,18 @@ namespace mtconnect::pipeline {
     }
     bool StartObject()
     {
-      if (m_expectation != Expectation::OBJECT)
-        return false;
-
-      m_expectation = Expectation::KEY;
-
+      if (m_table)
+      {
+        if (m_expectation == Expectation::VALUE)
+          m_expectation = Expectation::ROW;
+      }
+      else
+      {
+        if (m_expectation != Expectation::OBJECT)
+          return false;
+        
+        m_expectation = Expectation::KEY;
+      }
       // Table handler
       return true;
     }
@@ -265,7 +269,6 @@ namespace mtconnect::pipeline {
             break;
         }
 
-        // Read the value
         if (m_expectation == Expectation::OBJECT)
         {
           DataSetHandler handler(m_set, nullopt, m_table);
@@ -275,8 +278,20 @@ namespace mtconnect::pipeline {
         }
         else
         {
+          // Read the value
           if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
             return false;
+
+          if (m_expectation == Expectation::ROW)
+          {
+            // For tables, recurse down to read the entry data set
+            auto &row = m_entry.m_value.emplace<DataSet>();
+            DataSetHandler handler(row, nullopt, false);
+            auto success = handler(reader, buff);
+            if (!success)
+              return success;
+            m_expectation = Expectation::VALUE;
+          }
 
           if (m_expectation == Expectation::VALUE)
           {
@@ -290,6 +305,7 @@ namespace mtconnect::pipeline {
             }
             m_entry.m_value.emplace<monostate>();
           }
+
         }
 
         m_expectation = Expectation::KEY;
@@ -501,7 +517,7 @@ namespace mtconnect::pipeline {
         }
       }
 
-      if (m_dataItem->isCondition() && m_props.count("level") == 0)
+      if (m_dataItem && m_dataItem->isCondition() && m_props.count("level") == 0)
       {
         m_props.insert_or_assign("level", "normal"s);
       }
@@ -622,8 +638,10 @@ namespace mtconnect::pipeline {
               TimestampHandler handler;
               if (!handler(reader, buff))
                 return false;
-              if (handler.m_timestamp)
-                m_context.setTimestamp(*handler.m_timestamp, handler.m_duration);
+              m_timestamp = handler.m_timestamp;
+              m_duration = handler.m_duration;
+              if (m_timestamp)
+                m_context.setTimestamp(*m_timestamp, m_duration);
 
               m_expectation = Expectation::KEY;
               break;
@@ -632,6 +650,8 @@ namespace mtconnect::pipeline {
             case Expectation::OBJECT:
             {
               ObjectHandler handler(m_context);
+              if (m_timestamp)
+                m_context.setTimestamp(*m_timestamp, m_duration);
               if (!handler(reader, buff))
                 return false;
               m_context.m_device.reset();
@@ -657,12 +677,15 @@ namespace mtconnect::pipeline {
           }
         }
       }
-
+      
       m_context.flush();
+      m_context.clear();
 
       return true;
     }
 
+    optional<Timestamp> m_timestamp;
+    optional<double> m_duration;
     ParserContext &m_context;
     bool m_complete {false};
     Expectation m_expectation {Expectation::KEY};
@@ -782,7 +805,7 @@ namespace mtconnect::pipeline {
 
     TopLevelHandler handler(context);
     if (device)
-      handler.m_context.m_device = device;
+      handler.m_context.m_defaultDevice = device;
     handler(reader, buff);
 
     EntityPtr res;
