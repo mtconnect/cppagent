@@ -646,6 +646,10 @@ Configuration Parameters
 
 These can be overridden on a per-adapter basis
 
+* `Protocol` –Specify protocol. Options: [`shdr`,`mqtt`]
+
+    *Default*: `shdr
+
 * `ConversionRequired` - Global default for data item units conversion in the agent. 
   Assumes the adapter has already done unit conversion.
 
@@ -948,6 +952,51 @@ Sinks {
     * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names.
       
         *Default*: false
+
+	* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
+
+        *Default*:
+		* If `SuppressIPAddress` == false:\
+		`AdapterIdentity` = ```_ {IP}_{PORT}```\
+		example:`_localhost_7878`
+
+		* If `SuppressIPAddress` == true:\
+		`AdapterIdentity` = ```_ sha1digest({IP}_{PORT})```\
+		example: `__71020ed1ed`
+
+#### MQTT Adapter/Source
+
+* `MqttHost` - IP Address or name of the MQTT Broker
+
+    *Default*: 127.0.0.1
+  
+* `MqttPort` - Port number of MQTT Broker
+
+    *Default*: 1883
+
+* `topics` - list of topics to subscribe to. Note : Only raw SHDR strings supported at this time
+
+    *Required*
+
+* `MqttClientId` - Port number of MQTT Broker
+
+    *Default*: Auto-generated
+
+	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify their respective `MqttClientId`
+	>
+
+	> **⚠️Note:** Currently, there is no JSON parser functionality. Agent is expecting a raw SHDR-formatted string
+
+	Example mqtt adapter block:
+	```json
+	mydevice {
+			Protocol = mqtt
+			MqttHost = localhost
+			MqttPort = 1883
+			MqttClientId = myUniqueID
+			Topics = /ingest
+		}
+	```
 
 
 ### Agent Adapter Configuration
