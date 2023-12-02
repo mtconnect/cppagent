@@ -205,8 +205,15 @@ namespace mtconnect {
       buildDeviceList();
       buildCommandAndStatusDelivery();
 
+      // Build topic mapper pipeline
+      auto next = bind(make_shared<TopicMapper>(
+          m_context, GetOption<string>(m_options, configuration::Device).value_or("")));
+
+      auto map1 = next->bind(make_shared<JsonMapper>(m_context));
+      auto map2 = next->bind(make_shared<DataMapper>(m_context, m_handler));
+
       // SHDR Parsing Branch, if Data is sent down...
-      auto tokenizer = bind(make_shared<ShdrTokenizer>());
+      auto tokenizer = map2->bind(make_shared<ShdrTokenizer>());
       auto shdr = tokenizer;
 
       auto extract =
@@ -217,28 +224,19 @@ namespace mtconnect {
       auto mapper = make_shared<ShdrTokenMapper>(
           m_context, m_device.value_or(""),
           GetOption<int>(m_options, configuration::ShdrVersion).value_or(1));
-
-      buildAssetDelivery(mapper);
       mapper->bind(make_shared<NullTransform>(TypeGuard<Observations>(RUN)));
-      shdr = shdr->bind(mapper);
-
-      // Build topic mapper pipeline
-      auto next = bind(make_shared<TopicMapper>(
-          m_context, GetOption<string>(m_options, configuration::Device).value_or("")));
-
-      auto map1 = next->bind(make_shared<JsonMapper>(m_context));
-      auto map2 = next->bind(make_shared<DataMapper>(m_context, m_handler));
-      map2->bind(tokenizer);
-
-      next = make_shared<NullTransform>(TypeGuard<Observation, asset::Asset>(SKIP));
-
-      map1->bind(next);
-      map2->bind(next);
+      shdr->bind(mapper);
 
       // Merge the pipelines
-      shdr->bind(next);
+      auto merge =
+          make_shared<MergeTransform>(TypeGuard<Observation>(RUN) || TypeGuard<asset::Asset>(RUN));
 
-      buildObservationDelivery(next);
+      mapper->bind(merge);
+      map1->bind(merge);
+      map2->bind(merge);
+
+      buildAssetDelivery(merge);
+      buildObservationDelivery(merge);
       applySplices();
     }
 

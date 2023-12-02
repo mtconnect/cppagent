@@ -56,9 +56,9 @@ protected:
 TEST_F(EntityTest, TestSimpleFactory)
 {
   FactoryPtr root = make_shared<Factory>();
-  FactoryPtr simpleFact = make_shared<Factory>(
-      Requirements({Requirement("name", true), Requirement("id", true),
-                    Requirement("size", false, ValueType::ValueType::INTEGER)}));
+  FactoryPtr simpleFact =
+      make_shared<Factory>(Requirements({Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER)}));
   root->registerFactory("simple", simpleFact);
 
   Properties simple({{"id", "abc"s}, {"name", "xxx"s}, {"size", 10_i64}});
@@ -339,7 +339,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 
   ASSERT_FALSE(r1.convertType(v));
 
-  Requirement r2("string", STRING);
+  Requirement r2("string", ValueType::STRING);
   ASSERT_TRUE(r2.convertType(v));
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("123", get<string>(v));
@@ -349,7 +349,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("aaa", get<string>(v));
 
-  Requirement r3("vector", VECTOR);
+  Requirement r3("vector", ValueType::VECTOR);
   v = 123_i64;
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_TRUE(r3.convertType(v));
@@ -377,7 +377,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 TEST_F(EntityTest, TestRequirementStringConversion)
 {
   Value v(1234567890_i64);
-  Requirement r1("string", STRING);
+  Requirement r1("string", ValueType::STRING);
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<string>(v));
@@ -402,7 +402,7 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
 {
   Value v("123.24"s);
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("double", entity::DOUBLE);
+  Requirement r1("double", ValueType::DOUBLE);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<double>(v));
   ASSERT_EQ(123.24, get<double>(v));
@@ -427,7 +427,7 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
   ASSERT_EQ("aaa", get<string>(v));
 
   v = 123.24;
-  Requirement r3("vector", VECTOR);
+  Requirement r3("vector", ValueType::VECTOR);
   ASSERT_TRUE(holds_alternative<double>(v));
   ASSERT_TRUE(r3.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
@@ -439,7 +439,7 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
 {
   Value v("1.234 3.456 6.7889"s);
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("vector", VECTOR);
+  Requirement r1("vector", ValueType::VECTOR);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
   EXPECT_EQ(3, get<Vector>(v).size());
@@ -464,7 +464,7 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   Requirement r3("entity_list", ValueType::ENTITY_LIST);
   EXPECT_THROW(r3.convertType(v), PropertyError);
 
-  Requirement r4("entity_list", entity::DOUBLE);
+  Requirement r4("entity_list", ValueType::DOUBLE);
   EXPECT_THROW(r4.convertType(v), PropertyError);
 
   Requirement r6("entity_list", ValueType::INTEGER);
@@ -475,7 +475,7 @@ TEST_F(EntityTest, TestRequirementUpperCaseStringConversion)
 {
   Value v("hello kitty"s);
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("string", USTRING);
+  Requirement r1("string", ValueType::USTRING);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_EQ("HELLO KITTY", get<string>(v));
 }

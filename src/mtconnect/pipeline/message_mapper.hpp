@@ -56,7 +56,7 @@ namespace mtconnect::pipeline {
           auto obs = observation::Observation::make(data->m_dataItem, props,
                                                     std::chrono::system_clock::now(), errors);
           if (errors.empty())
-            return next(obs);
+            return next(std::move(obs));
         }
         catch (entity::EntityError &e)
         {
