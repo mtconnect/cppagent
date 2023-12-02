@@ -355,12 +355,11 @@ namespace mtconnect {
     boost::algorithm::trim(s);
     return s;
   }
-  
+
   /// @brief split a string into two parts using a ':' separator
   /// @param key the key to split
   /// @return a pair of the key and an optional prefix.
-  static inline std::pair<std::string, std::optional<std::string>> splitKey(
-      const std::string &key)
+  static inline std::pair<std::string, std::optional<std::string>> splitKey(const std::string &key)
   {
     auto c = key.find(':');
     if (c != std::string::npos)

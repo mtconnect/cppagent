@@ -29,6 +29,7 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/entity.hpp"
+#include "mtconnect/entity/xml_parser.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "shdr_tokenizer.hpp"
@@ -80,15 +81,23 @@ namespace mtconnect::pipeline {
       if (keys.second)
         device = m_pipelineContext->m_contract->findDevice(*keys.second);
       if (!device)
-        device = m_device;
-      if (!device)
-        device = m_defaultDevice;
+        device = getDevice();
       if (!device)
         LOG(warning) << "Cannot find device for data item: " << sv;
       else
         di = device->getDeviceDataItem(keys.first);
 
       return di;
+    }
+
+    DevicePtr getDevice()
+    {
+      if (m_device)
+        return m_device;
+      else if (m_defaultDevice)
+        return m_defaultDevice;
+      else
+        return nullptr;
     }
 
     /// @brief get a device from the agent
@@ -131,6 +140,13 @@ namespace mtconnect::pipeline {
           m_forward(std::move(obs));
         }
       }
+    }
+
+    /// @brief send an asset.
+    void send(asset::AssetPtr asset)
+    {
+      m_entities.push_back(asset);
+      m_forward(std::move(asset));
     }
 
     void flush()
@@ -230,7 +246,7 @@ namespace mtconnect::pipeline {
       {
         if (m_expectation != Expectation::OBJECT)
           return false;
-        
+
         m_expectation = Expectation::KEY;
       }
       // Table handler
@@ -305,7 +321,6 @@ namespace mtconnect::pipeline {
             }
             m_entry.m_value.emplace<monostate>();
           }
-
         }
 
         m_expectation = Expectation::KEY;
@@ -564,6 +579,111 @@ namespace mtconnect::pipeline {
     std::optional<double> m_duration;
   };
 
+  struct AssetHandler : rj::BaseReaderHandler<rj::UTF8<>, TimestampHandler>
+  {
+    AssetHandler(ParserContext &context) : m_context(context) {}
+    bool Default()
+    {
+      LOG(warning) << "Expecting an asset";
+      return false;
+    }
+
+    bool Key(const Ch *str, rj::SizeType length, bool copy)
+    {
+      m_assetId = string(str, length);
+      m_expectation = Expectation::ASSET;
+      return true;
+    }
+
+    bool String(const Ch *str, rj::SizeType length, bool copy)
+    {
+      using namespace mtconnect::asset;
+      ErrorList errors;
+
+      std::string_view sv(str, length);
+      XmlParser parser;
+      auto res = parser.parse(Asset::getRoot(), string(sv), errors);
+      if (!errors.empty())
+      {
+        LOG(warning) << "Errors while parsing json asset: ";
+        for (const auto &e : errors)
+        {
+          LOG(warning) << "  " << e->what();
+        }
+        return false;
+      }
+
+      if (auto asset = dynamic_pointer_cast<Asset>(res))
+      {
+        asset->setAssetId(m_assetId);
+        Timestamp timestamp;
+        if (m_context.m_timestamp)
+          timestamp = *m_context.m_timestamp;
+        else
+          timestamp = DefaultNow();
+        asset->setProperty("timestamp", timestamp);
+        auto device = m_context.getDevice();
+        if (device)
+        {
+          asset->setProperty("deviceUuid", *device->getUuid());
+        }
+
+        m_context.send(asset);
+      }
+
+      return true;
+    }
+
+    bool StartObject() { return true; }
+
+    bool EndObject(rj::SizeType memberCount)
+    {
+      m_done = true;
+      return true;
+    }
+
+    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    {
+      // Consume start object
+      if (m_expectation == Expectation::OBJECT)
+      {
+        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+          return false;
+      }
+
+      m_expectation = Expectation::KEY;
+
+      while (!m_done && !reader.IterativeParseComplete())
+      {
+        // Consume the key
+        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+          return false;
+
+        if (!m_done)
+        {
+          if (m_expectation == Expectation::ASSET)
+          {
+            // Consume the value
+            if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+              return false;
+          }
+          else
+          {
+            LOG(warning) << "Asset handler in wrong state, expecting asset";
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+
+    ParserContext &m_context;
+    Expectation m_expectation {Expectation::OBJECT};
+    string m_assetId;
+    bool m_done {false};
+  };
+
   struct ObjectHandler : rj::BaseReaderHandler<rj::UTF8<>, ObjectHandler>
   {
     ObjectHandler(ParserContext &context) : m_context(context) {}
@@ -578,6 +698,8 @@ namespace mtconnect::pipeline {
       std::string_view sv(str, length);
       if (sv == "timestamp")
         m_expectation = Expectation::TIMESTAMP;
+      else if (sv == "asset" || sv == "assets")
+        m_expectation = Expectation::ASSET;
       else
       {
         auto device = m_context.getDevice(sv);
@@ -647,6 +769,15 @@ namespace mtconnect::pipeline {
               break;
             }
 
+            case Expectation::ASSET:
+            {
+              AssetHandler handler(m_context);
+              if (!handler(reader, buff))
+                return false;
+              m_expectation = Expectation::KEY;
+              break;
+            }
+
             case Expectation::OBJECT:
             {
               ObjectHandler handler(m_context);
@@ -665,10 +796,22 @@ namespace mtconnect::pipeline {
 
             default:  // Data Item key with value
             {
-              PropertiesHandler props(m_dataItem, m_props);
-              if (!props(reader, buff))
+              // If we have a data item, map the properties
+              if (m_dataItem)
+              {
+                PropertiesHandler props(m_dataItem, m_props);
+                if (!props(reader, buff))
+                  return false;
+                m_context.send(m_dataItem, m_props);
+              }
+              else
+              {
+                // Otherwise we have a problem, we cannot consume content
+                // if we don't know the data item since we cannot handle tables
+                // and data sets.
+                LOG(warning) << "Cannot map properties without data item";
                 return false;
-              m_context.send(m_dataItem, m_props);
+              }
               m_props.clear();
               m_dataItem.reset();
               m_expectation = Expectation::KEY;
@@ -677,7 +820,7 @@ namespace mtconnect::pipeline {
           }
         }
       }
-      
+
       m_context.flush();
       m_context.clear();
 

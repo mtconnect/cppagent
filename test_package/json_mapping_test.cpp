@@ -24,6 +24,7 @@
 
 #include <chrono>
 
+#include "mtconnect/asset/cutting_tool.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/pipeline/json_mapper.hpp"
@@ -676,7 +677,7 @@ TEST_F(JsonMappingTest, should_parse_data_sets)
 }
 
 /// @test verify the json mapper  can handle data sets and tables
-TEST_F(JsonMappingTest, should_parse_tables) 
+TEST_F(JsonMappingTest, should_parse_tables)
 {
   auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
   makeDataItem("device", {{"id", "a"s},
@@ -733,13 +734,13 @@ TEST_F(JsonMappingTest, should_parse_tables)
   auto &set1 = obs->getDataSet();
   ASSERT_EQ(2, set1.size());
   auto dsi = set1.begin();
-  
+
   ASSERT_EQ("r1", dsi->m_key);
   ASSERT_TRUE(holds_alternative<DataSet>(dsi->m_value));
 
   auto &row1 = get<DataSet>(dsi->m_value);
   ASSERT_EQ(1, row1.size());
-  
+
   auto ri = row1.begin();
   ASSERT_EQ("k1", ri->m_key);
   ASSERT_EQ(123.45, get<double>(ri->m_value));
@@ -768,7 +769,7 @@ TEST_F(JsonMappingTest, should_parse_tables)
   ASSERT_EQ("NEW", obs->get<string>("resetTriggered"));
 
   dsi = set2.begin();
-  
+
   ASSERT_EQ("r1", dsi->m_key);
   ASSERT_TRUE(holds_alternative<DataSet>(dsi->m_value));
 
@@ -867,7 +868,7 @@ TEST_F(JsonMappingTest, should_parse_devices_with_common_timestamp)
 
   auto res = (*m_mapper)(std::move(jmsg));
   ASSERT_TRUE(res);
-  
+
   auto time = Timestamp(date::sys_days(2023_y / nov / 9_d)) + 11h + 20min;
 
   auto value = res->getValue();
@@ -976,7 +977,33 @@ TEST_F(JsonMappingTest, should_parse_device_and_data_item_key)
 }
 
 /// @test verify the json mapper can an asset in XML
-TEST_F(JsonMappingTest, should_parse_xml_asset) { GTEST_SKIP(); }
+TEST_F(JsonMappingTest, should_parse_xml_asset)
+{
+  using namespace mtconnect::asset;
+
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  Properties props {{"VALUE", R"(
+{
+  "assets": {
+    "M8010N9172N:1.0": "<CuttingToolArchetype assetId='M8010N9172N:1.0'>  <CuttingToolLifeCycle><ToolLife countDirection='UP' initial='0' limit='100' type='MINUTES'/><ToolLife countDirection='DOWN' initial='25' limit='1' type='PART_COUNT'/><ProgramToolGroup>A</ProgramToolGroup><ProgramToolNumber>10</ProgramToolNumber></CuttingToolLifeCycle></CuttingToolArchetype>"
+  }
+})"s}};
+
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+
+  auto asset = dynamic_pointer_cast<Asset>(list.front());
+  ASSERT_EQ("M8010N9172N:1.0", asset->getAssetId());
+  ASSERT_EQ("CuttingToolArchetype", asset->getName());
+}
 
 /// @test verify the json mapper can an asset in json
 TEST_F(JsonMappingTest, should_parse_json_asset) { GTEST_SKIP(); }
