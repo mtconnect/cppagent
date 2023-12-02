@@ -22,8 +22,6 @@
 #include <regex>
 #include <unordered_map>
 
-#include <nlohmann/json.hpp>
-
 #include "mtconnect/config.hpp"
 #include "mtconnect/device_model/device.hpp"
 #include "mtconnect/entity/entity.hpp"
@@ -34,27 +32,6 @@
 #include "transform.hpp"
 
 namespace mtconnect::pipeline {
-  /// @brief JsonMapper does nothing, it is a placeholder for a json interpreter
-  class AGENT_LIB_API JsonMapper : public Transform
-  {
-  public:
-    JsonMapper(const JsonMapper &) = default;
-    JsonMapper(PipelineContextPtr context) : Transform("JsonMapper"), m_context(context)
-    {
-      m_guard = TypeGuard<JsonMessage>(RUN);
-    }
-
-    EntityPtr operator()(entity::EntityPtr &&entity) override
-    {
-      auto json = std::dynamic_pointer_cast<JsonMessage>(entity);
-
-      return nullptr;
-    }
-
-  protected:
-    PipelineContextPtr m_context;
-  };
-
   /// @brief Attempt to find a data item associated with a topic from a pub/sub message
   ///        system
   class AGENT_LIB_API DataMapper : public Transform
@@ -79,7 +56,7 @@ namespace mtconnect::pipeline {
           auto obs = observation::Observation::make(data->m_dataItem, props,
                                                     std::chrono::system_clock::now(), errors);
           if (errors.empty())
-            return next(obs);
+            return next(std::move(obs));
         }
         catch (entity::EntityError &e)
         {

@@ -175,7 +175,7 @@ namespace mtconnect {
           if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
             const auto &hash = device->getProperty("hash");
-            if (hash.index() != EMPTY)
+            if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
 
@@ -334,7 +334,7 @@ namespace mtconnect {
         if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
         {
           const auto &hash = asset->getProperty("hash");
-          if (hash.index() != EMPTY)
+          if (ValueType(hash.index()) != ValueType::EMPTY)
           {
             props.insert_or_assign("hash", hash);
           }
@@ -570,7 +570,7 @@ namespace mtconnect {
           if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
             const auto &hash = device->getProperty("hash");
-            if (hash.index() != EMPTY)
+            if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
 
@@ -927,7 +927,7 @@ namespace mtconnect {
           if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
             const auto &hash = device->getProperty("hash");
-            if (hash.index() != EMPTY)
+            if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
 
@@ -985,7 +985,7 @@ namespace mtconnect {
         if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
         {
           const auto &hash = device->getProperty("hash");
-          if (hash.index() != EMPTY)
+          if (ValueType(hash.index()) != ValueType::EMPTY)
             props.insert_or_assign("hash", hash);
         }
 

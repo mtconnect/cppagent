@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file
+/// Agent File tests
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -121,10 +124,12 @@ public:
   string m_line;
 };
 
-TEST_F(AgentDeviceTest, AgentDeviceCreation)
+/// @test Check to make sure the agent created the agent device with the correct name
+TEST_F(AgentDeviceTest, should_create_agent_device_with_name_agent)
 {
   ASSERT_NE(nullptr, m_agentDevice);
   ASSERT_EQ(2, m_agentTestHelper->m_agent->getDevices().size());
+  ///  - Veriify the name of the agent device is Agent
   ASSERT_EQ("Agent", m_agentDevice->getName().str());
 }
 
@@ -178,9 +183,11 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 #define ADAPTER_PATH ADAPTERS_PATH "/m:Components/m:Adapter"
 #define ADAPTER_DATA_ITEMS_PATH ADAPTER_PATH "/m:DataItems"
 
-#define ID_PREFIX "_d0c33d4315"
+#define ID_PREFIX "_127.0.0.1_21788"
+#define ID_PREFIX_SUPP "_d0c33d4315"
 
-TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
+/// @test verify agent device adds adapter in probe
+TEST_F(AgentDeviceTest, should_add_adapter_with_server_ip_and_port)
 {
   m_port = 21788;
   addAdapter();
@@ -203,6 +210,7 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
   }
 }
 
+/// @test verify agent device adds adapter in probe with ip address and port suppressed
 TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 {
   m_port = 21788;
@@ -210,11 +218,11 @@ TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
   {
     PARSE_XML_RESPONSE("/Agent/probe");
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
-    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX_SUPP);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "LinuxCNC");
 
     ASSERT_XML_PATH_COUNT(
-        doc, ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']", 0);
+        doc, ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX_SUPP "_adapter_uri']", 0);
   }
 }
 
@@ -222,7 +230,7 @@ TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 #define AGENT_DEVICE_DEVICE_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Agent']"
 #define AGENT_DEVICE_ADAPTER_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Adapter']"
 
-TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
+TEST_F(AgentDeviceTest, should_have_device_added_in_current)
 {
   {
     PARSE_XML_RESPONSE("/Agent/current");

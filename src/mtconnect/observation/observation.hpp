@@ -33,7 +33,6 @@
 
 /// @brief Observation namespace
 namespace mtconnect::observation {
-
   class Observation;
   using ObservationPtr = std::shared_ptr<Observation>;
   using ConstObservationPtr = std::shared_ptr<const Observation>;

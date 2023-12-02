@@ -135,7 +135,7 @@ namespace mtconnect {
       if (!holds_alternative<string>(value))
       {
         Value conv = value;
-        ConvertValueToType(conv, STRING);
+        ConvertValueToType(conv, ValueType::STRING);
         temp = get<string>(conv);
         s = &temp;
       }

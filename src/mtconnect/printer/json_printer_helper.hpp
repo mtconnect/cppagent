@@ -18,7 +18,6 @@
 #pragma once
 
 #include <cmath>
-
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/stringbuffer.h>
@@ -77,7 +76,7 @@ namespace mtconnect::printer {
 
     /// @brief Add a double
     /// @param[in] v double value
-    void Add(double v) 
+    void Add(double v)
     {
       if (std::isfinite(v))
         m_writer.Double(v);

@@ -25,9 +25,9 @@ namespace mtconnect {
     namespace configuration {
       FactoryPtr Motion::getFactory()
       {
-        static auto transformation =
-            make_shared<Factory>(Requirements {Requirement("Translation", VECTOR, 3, false),
-                                               Requirement("Rotation", VECTOR, 3, false)});
+        static auto transformation = make_shared<Factory>(
+            Requirements {Requirement("Translation", ValueType::VECTOR, 3, false),
+                          Requirement("Rotation", ValueType::VECTOR, 3, false)});
 
         static auto motion = make_shared<Factory>(Requirements {
             Requirement("id", true), Requirement("parentIdRef", false),
@@ -35,9 +35,9 @@ namespace mtconnect {
             Requirement("type", ControlledVocab {"REVOLUTE", "CONTINUOUS", "PRISMATIC", "FIXED"},
                         true),
             Requirement("actuation", ControlledVocab {"DIRECT", "VIRTUAL", "NONE"}, true),
-            Requirement("Description", false), Requirement("Axis", VECTOR, 3, true),
-            Requirement("Origin", VECTOR, 3, false),
-            Requirement("Transformation", ENTITY, transformation, false)});
+            Requirement("Description", false), Requirement("Axis", ValueType::VECTOR, 3, true),
+            Requirement("Origin", ValueType::VECTOR, 3, false),
+            Requirement("Transformation", ValueType::ENTITY, transformation, false)});
 
         return motion;
       }

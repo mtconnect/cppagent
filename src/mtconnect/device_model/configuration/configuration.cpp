@@ -35,21 +35,21 @@ namespace mtconnect {
       FactoryPtr Configuration::getFactory()
       {
         static auto configuration = make_shared<Factory>(Requirements {
-            {"SensorConfiguration", ENTITY, SensorConfiguration::getFactory(), false},
-            {"Relationships", ENTITY_LIST, Relationships::getFactory(), false},
-            {"SolidModel", ENTITY, SolidModel::getFactory(), false},
-            {"ImageFiles", ENTITY_LIST, ImageFile::getFactory(), false},
-            {"Motion", ENTITY, Motion::getFactory(), false},
-            {"CoordinateSystems", ENTITY_LIST, CoordinateSystems::getFactory(), false},
-            {"Specifications", ENTITY_LIST, Specifications::getFactory(), false}});
+            {"SensorConfiguration", ValueType::ENTITY, SensorConfiguration::getFactory(), false},
+            {"Relationships", ValueType::ENTITY_LIST, Relationships::getFactory(), false},
+            {"SolidModel", ValueType::ENTITY, SolidModel::getFactory(), false},
+            {"ImageFiles", ValueType::ENTITY_LIST, ImageFile::getFactory(), false},
+            {"Motion", ValueType::ENTITY, Motion::getFactory(), false},
+            {"CoordinateSystems", ValueType::ENTITY_LIST, CoordinateSystems::getFactory(), false},
+            {"Specifications", ValueType::ENTITY_LIST, Specifications::getFactory(), false}});
 
         return configuration;
       }
 
       FactoryPtr Configuration::getRoot()
       {
-        static auto root = make_shared<Factory>(
-            Requirements {{"Configuration", ENTITY, Configuration::getFactory(), false}});
+        static auto root = make_shared<Factory>(Requirements {
+            {"Configuration", ValueType::ENTITY, Configuration::getFactory(), false}});
 
         return root;
       }

@@ -118,7 +118,7 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
   entity->addHash();
 
   auto &hv = entity->getProperty("hash");
-  ASSERT_NE(EMPTY, hv.index());
+  ASSERT_NE(size_t(ValueType::EMPTY), hv.index());
 
   auto hash2 = entity->hash();
   ASSERT_EQ(hash1, hash2);

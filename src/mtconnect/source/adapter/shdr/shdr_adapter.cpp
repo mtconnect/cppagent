@@ -51,6 +51,7 @@ namespace mtconnect::source::adapter::shdr {
                {{configuration::Heartbeat, Milliseconds {0}},
                 {configuration::UUID, string()},
                 {configuration::Manufacturer, string()},
+                {configuration::AdapterIdentity, string()},
                 {configuration::Station, string()},
                 {configuration::Url, string()}});
 
@@ -64,6 +65,7 @@ namespace mtconnect::source::adapter::shdr {
                          {configuration::AutoAvailable, false},
                          {configuration::RealTime, false},
                          {configuration::RelativeTime, false},
+                         {configuration::SuppressIPAddress, false},
                          {configuration::EnableSourceDeviceModels, false}});
 
     m_server = get<string>(m_options[configuration::Host]);
@@ -79,17 +81,31 @@ namespace mtconnect::source::adapter::shdr {
 
     stringstream identity;
     identity << '_' << m_server << '_' << m_port;
-    m_name = identity.str();
-    boost::uuids::detail::sha1 sha1;
-    sha1.process_bytes(identity.str().c_str(), identity.str().length());
-    boost::uuids::detail::sha1::digest_type digest;
-    sha1.get_digest(digest);
 
-    identity.str("");
-    identity << std::hex << digest[0] << digest[1] << digest[2];
-    m_identity = string("_") + (identity.str()).substr(0, 10);
+    if (auto ident = GetOption<string>(m_options, configuration::AdapterIdentity))
+    {
+      m_identity = *ident;
+    }
+    else
+    {
+      if (IsOptionSet(m_options, configuration::SuppressIPAddress))
+      {
+        boost::uuids::detail::sha1 sha1;
+        sha1.process_bytes(identity.str().c_str(), identity.str().length());
+        boost::uuids::detail::sha1::digest_type digest;
+        sha1.get_digest(digest);
 
-    m_options[configuration::AdapterIdentity] = m_identity;
+        identity.str("");
+        identity << std::hex << digest[0] << digest[1] << digest[2];
+        m_identity = string("_") + (identity.str()).substr(0, 10);
+      }
+      else
+      {
+        m_identity = identity.str();
+      }
+      m_options[configuration::AdapterIdentity] = m_identity;
+    }
+
     m_handler = m_pipeline.makeHandler();
     if (m_pipeline.hasContract())
       m_pipeline.build(m_options);
@@ -197,6 +213,11 @@ namespace mtconnect::source::adapter::shdr {
         options[configuration::Device] = value;
       else if (command == "shdrversion")
         options[configuration::ShdrVersion] = stringToInt(value, 1);
+      else if (command == "messsage")
+      {
+        LOG(info) << '[' << getIdentity() << "] Adapter message: " << value;
+        return;
+      }
 
       if (options.size() > 0)
         setOptions(options);

@@ -274,5 +274,16 @@ namespace mtconnect {
       entity::EntityPtr operator()(entity::EntityPtr &&entity) override { return entity; }
     };
 
+    /// @brief A transform that forwards an enetity baed on a guard. Used to merge streams..
+    class AGENT_LIB_API MergeTransform : public Transform
+    {
+    public:
+      MergeTransform(Guard guard) : Transform("MergeTransform") { m_guard = guard; }
+      entity::EntityPtr operator()(entity::EntityPtr &&entity) override
+      {
+        return next(std::move(entity));
+      }
+    };
+
   }  // namespace pipeline
 }  // namespace mtconnect
