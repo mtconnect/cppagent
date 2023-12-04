@@ -47,6 +47,7 @@ namespace mtconnect::pipeline {
     DATA_SET,
     TIMESTAMP,
     ASSET,
+    ERROR,
 
     VALUE,
     KEY,
@@ -173,6 +174,60 @@ namespace mtconnect::pipeline {
     PipelineContextPtr m_pipelineContext;
     Forward m_forward;
     std::list<pair<DataItemPtr, entity::Properties>> m_queue;
+  };
+  
+  /// @brief consume value in case of error
+  struct ErrorHandler : rj::BaseReaderHandler<rj::UTF8<>, ErrorHandler>
+  {
+    ErrorHandler(int depth = 0) : m_depth(depth) {}
+    
+    bool Default()
+    {
+      return true;
+    }
+    bool Key(const Ch *str, rj::SizeType length, bool copy)
+    {
+      return true;
+    }
+    bool StartObject()
+    {
+      m_depth++;
+      return true;
+    }
+    bool EndObject(rj::SizeType memberCount)
+    {
+      m_depth--;
+      return true;
+    }
+    bool StartArray() 
+    {
+      m_depth++;
+      return true;
+    }
+    bool EndArray(rj::SizeType elementCount) 
+    {
+      m_depth--;
+      return true;
+    }
+    
+    bool operator()(rj::Reader &reader, rj::StringStream &buff)
+    {
+      LOG(warning) << "Consuming value due to error";
+      
+      if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+        return false;
+
+      while (m_depth > 0 && !reader.IterativeParseComplete())
+      {
+        // Read the key
+        if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
+          return false;
+      }
+      
+      return true;
+    }
+
+    int m_depth {0};
   };
 
   /// @brief SAX Parser handler for JSON Parsing
@@ -410,6 +465,7 @@ namespace mtconnect::pipeline {
 
     bool StartArray()
     {
+      m_depth++;
       if (m_dataItem->isTimeSeries() || m_dataItem->isThreeSpace())
       {
         auto &value = m_props["VALUE"];
@@ -420,11 +476,13 @@ namespace mtconnect::pipeline {
       else
       {
         LOG(warning) << "Unexpected vector type for data item " << m_dataItem->getId();
-        return false;
+        m_expectation = Expectation::ERROR;
+        return true;
       }
     }
     bool EndArray(rj::SizeType elementCount)
     {
+      m_depth--;
       if (m_expectation == Expectation::VECTOR)
       {
         m_vector = nullptr;
@@ -434,7 +492,8 @@ namespace mtconnect::pipeline {
       else
       {
         LOG(warning) << "Unexpected vector type for data item " << m_dataItem->getId();
-        return false;
+        m_expectation = Expectation::ERROR;
+        return true;
       }
     }
 
@@ -449,7 +508,8 @@ namespace mtconnect::pipeline {
         if (f == e)
         {
           LOG(warning) << "Unexpected key: " << sv << " for condition " << m_dataItem->getId();
-          return false;
+          m_expectation = Expectation::ERROR;
+          return true;
         }
       }
       else
@@ -470,7 +530,8 @@ namespace mtconnect::pipeline {
         else
         {
           LOG(warning) << "Unexpected key " << sv << " for data item " << m_dataItem->getId();
-          return false;
+          m_expectation = Expectation::ERROR;
+          return true;
         }
         m_key = sv;
       }
@@ -480,6 +541,7 @@ namespace mtconnect::pipeline {
 
     bool StartObject()
     {
+      m_depth++;
       m_object = true;
       m_expectation = Expectation::KEY;
       return true;
@@ -487,6 +549,7 @@ namespace mtconnect::pipeline {
 
     bool EndObject(rj::SizeType memberCount)
     {
+      m_depth--;
       m_done = true;
       return true;
     }
@@ -509,7 +572,15 @@ namespace mtconnect::pipeline {
 
         if (!m_done)
         {
-          if (m_expectation == Expectation::DATA_SET)
+          if (m_expectation == Expectation::ERROR)
+          {
+            ErrorHandler handler(m_depth);
+            if (!handler(reader, buff))
+              return false;
+            m_props.clear();
+            return true;
+          }
+          else if (m_expectation == Expectation::DATA_SET)
           {
             auto &value = m_props["VALUE"];
             DataSet &set = value.emplace<DataSet>();
@@ -547,6 +618,7 @@ namespace mtconnect::pipeline {
     bool m_object {false};
     std::string m_key;
     Expectation m_expectation {Expectation::NONE};
+    int m_depth{0};
   };
 
   struct TimestampHandler : rj::BaseReaderHandler<rj::UTF8<>, TimestampHandler>
@@ -690,7 +762,8 @@ namespace mtconnect::pipeline {
     bool Default()
     {
       LOG(warning) << "Expecting a key";
-      return false;
+      m_expectation = Expectation::ERROR;
+      return true;
     }
 
     bool Key(const Ch *str, rj::SizeType length, bool copy)
@@ -789,6 +862,16 @@ namespace mtconnect::pipeline {
               m_expectation = Expectation::KEY;
               break;
             }
+              
+            case Expectation::ERROR:
+            {
+              ErrorHandler handler;
+              if (!handler(reader, buff))
+                return false;
+
+              m_expectation = Expectation::KEY;
+              break;
+            }
 
             case Expectation::KEY:
             case Expectation::NONE:
@@ -802,7 +885,8 @@ namespace mtconnect::pipeline {
                 PropertiesHandler props(m_dataItem, m_props);
                 if (!props(reader, buff))
                   return false;
-                m_context.send(m_dataItem, m_props);
+                if (m_props.size() > 0)
+                  m_context.send(m_dataItem, m_props);
               }
               else
               {
