@@ -47,7 +47,7 @@ namespace mtconnect::pipeline {
     DATA_SET,
     TIMESTAMP,
     ASSET,
-    ERROR,
+    VALUE_ERROR,
 
     VALUE,
     KEY,
@@ -476,7 +476,7 @@ namespace mtconnect::pipeline {
       else
       {
         LOG(warning) << "Unexpected vector type for data item " << m_dataItem->getId();
-        m_expectation = Expectation::ERROR;
+        m_expectation = Expectation::VALUE_ERROR;
         return true;
       }
     }
@@ -492,7 +492,7 @@ namespace mtconnect::pipeline {
       else
       {
         LOG(warning) << "Unexpected vector type for data item " << m_dataItem->getId();
-        m_expectation = Expectation::ERROR;
+        m_expectation = Expectation::VALUE_ERROR;
         return true;
       }
     }
@@ -508,7 +508,7 @@ namespace mtconnect::pipeline {
         if (f == e)
         {
           LOG(warning) << "Unexpected key: " << sv << " for condition " << m_dataItem->getId();
-          m_expectation = Expectation::ERROR;
+          m_expectation = Expectation::VALUE_ERROR;
           return true;
         }
       }
@@ -530,7 +530,7 @@ namespace mtconnect::pipeline {
         else
         {
           LOG(warning) << "Unexpected key " << sv << " for data item " << m_dataItem->getId();
-          m_expectation = Expectation::ERROR;
+          m_expectation = Expectation::VALUE_ERROR;
           return true;
         }
         m_key = sv;
@@ -572,7 +572,7 @@ namespace mtconnect::pipeline {
 
         if (!m_done)
         {
-          if (m_expectation == Expectation::ERROR)
+          if (m_expectation == Expectation::VALUE_ERROR)
           {
             ErrorHandler handler(m_depth);
             if (!handler(reader, buff))
@@ -762,7 +762,7 @@ namespace mtconnect::pipeline {
     bool Default()
     {
       LOG(warning) << "Expecting a key";
-      m_expectation = Expectation::ERROR;
+      m_expectation = Expectation::VALUE_ERROR;
       return true;
     }
 
@@ -863,7 +863,7 @@ namespace mtconnect::pipeline {
               break;
             }
               
-            case Expectation::ERROR:
+            case Expectation::VALUE_ERROR:
             {
               ErrorHandler handler;
               if (!handler(reader, buff))
