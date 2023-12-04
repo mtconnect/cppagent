@@ -1030,7 +1030,7 @@ TEST_F(JsonMappingTest, should_skip_erroneous_values)
       }
     },
    "b": "MANUAL"
-})"}};
+})"s}};
   
   auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
   jmsg->m_device = dev;
