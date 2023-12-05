@@ -21,6 +21,9 @@
 #include <boost/uuid/name_generator_sha1.hpp>
 
 #include <inttypes.h>
+#include <random>
+#include <chrono>
+
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 
@@ -92,17 +95,14 @@ namespace mtconnect {
         }
         else
         {
+          using namespace boost::uuids;
           std::stringstream identity;
-          identity << '_' << m_host << '_' << m_port;
+          const auto now = std::chrono::high_resolution_clock::now();
 
-          boost::uuids::detail::sha1 sha1;
-          sha1.process_bytes(identity.str().c_str(), identity.str().length());
-          boost::uuids::detail::sha1::digest_type digest;
-          sha1.get_digest(digest);
-
-          identity.str("");
-          identity << std::hex << digest[0] << digest[1] << digest[2];
-          m_identity = std::string("_") + (identity.str()).substr(0, 10);
+          auto seed = now.time_since_epoch().count();
+          std::mt19937_64 gen(seed);
+          identity << "mtc_" << std::hex << gen();
+          m_identity = identity.str();
         }
 
         LOG(debug) << "Using ClientID " << m_identity;

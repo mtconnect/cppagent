@@ -1005,5 +1005,50 @@ TEST_F(JsonMappingTest, should_parse_xml_asset)
   ASSERT_EQ("CuttingToolArchetype", asset->getName());
 }
 
+/// @test if  observation is incorrect, skip levels
+TEST_F(JsonMappingTest, should_skip_erroneous_values)
+{
+  auto dev = makeDevice("Device", {{"id", "device"s}, {"name", "device"s}, {"uuid", "device"s}});
+  makeDataItem("device", {{"id", "a"s},
+    {"type", "EXECUTION"s},
+    {"category", "EVENT"s}});
+  makeDataItem("device", {{"id", "b"s},
+    {"type", "CONTROLLER_MODE"s},
+    {"category", "EVENT"s}});
+  
+
+  Properties props {{"VALUE", R"(
+{
+  "timestamp": "2023-11-09T11:20:00Z",
+  "a": {
+      "r1": {
+        "k1": 123.45
+      },
+      "r2": {
+        "k2": "ABCDEF",
+        "k3": 6789
+      }
+    },
+   "b": "MANUAL"
+})"s}};
+  
+  auto jmsg = std::make_shared<JsonMessage>("JsonMessage", props);
+  jmsg->m_device = dev;
+
+  auto res = (*m_mapper)(std::move(jmsg));
+  ASSERT_TRUE(res);
+
+  auto value = res->getValue();
+  ASSERT_TRUE(std::holds_alternative<EntityList>(value));
+  auto list = get<EntityList>(value);
+  ASSERT_EQ(1, list.size());
+
+  auto obs = dynamic_pointer_cast<Observation>(list.front());
+  ASSERT_TRUE(obs);
+  ASSERT_EQ("ControllerMode", obs->getName());
+  ASSERT_EQ("b", obs->getDataItem()->getId());
+  ASSERT_EQ("MANUAL", obs->getValue<string>());
+}
+    
 /// @test verify the json mapper can an asset in json
 TEST_F(JsonMappingTest, should_parse_json_asset) { GTEST_SKIP(); }
