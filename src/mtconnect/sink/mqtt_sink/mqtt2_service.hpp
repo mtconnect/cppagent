@@ -132,12 +132,13 @@ namespace mtconnect {
           return filter->second;
         }
 
-        std::string formatTopic(const std::string &topic, const DevicePtr device)
+        std::string formatTopic(const std::string &topic, const DevicePtr device,
+                                const std::string defaultUuid = "Unknown")
         {
           string uuid;
           string formatted {topic};
           if (!device)
-            uuid = "Unknown";
+            uuid = defaultUuid;
           else
           {
             uuid = *(device->getUuid());
@@ -177,6 +178,7 @@ namespace mtconnect {
         std::string m_assetTopic;    //! Asset topic prefix
         std::string m_currentTopic;  //! Current topic prefix
         std::string m_sampleTopic;   //! Sample topic prefix
+        std::string m_lastWillTopic; //! Topic to publish the last will when disconnected
 
         std::chrono::milliseconds m_currentInterval;  //! Interval in ms to update current
         std::chrono::milliseconds m_sampleInterval;   //! min interval in ms to update sample

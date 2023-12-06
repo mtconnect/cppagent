@@ -81,16 +81,6 @@ namespace mtconnect {
                              {configuration::MqttPort, 1883},
                              {configuration::MqttTls, false}});
 
-        auto clientHandler = make_unique<ClientHandler>();
-        clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
-          // Publish latest devices, assets, and observations
-          auto &circ = m_sinkContract->getCircularBuffer();
-          std::lock_guard<buffer::CircularBuffer> lock(circ);
-          client->connectComplete();
-
-          pubishInitialContent();
-        };
-
         int maxTopicDepth {GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7)};
 
         m_deviceTopic = GetOption<string>(m_options, configuration::ProbeTopic)
@@ -103,23 +93,36 @@ namespace mtconnect {
         m_sampleInterval = *GetOption<Milliseconds>(m_options, configuration::MqttSampleInterval);
 
         m_sampleCount = *GetOption<int>(m_options, configuration::MqttSampleCount);
-
-        if (IsOptionSet(m_options, configuration::MqttTls))
-        {
-          m_client = make_shared<MqttTlsClient>(m_context, m_options, std::move(clientHandler));
-        }
-        else
-        {
-          m_client = make_shared<MqttTcpClient>(m_context, m_options, std::move(clientHandler));
-        }
       }
 
       void Mqtt2Service::start()
       {
-        // mqtt client side not a server side...
         if (!m_client)
-          return;
+        {
+          auto clientHandler = make_unique<ClientHandler>();
+          clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
+            // Publish latest devices, assets, and observations
+            auto &circ = m_sinkContract->getCircularBuffer();
+            std::lock_guard<buffer::CircularBuffer> lock(circ);
+            client->connectComplete();
 
+            client->publish(m_lastWillTopic, "AVAILABLE");
+            pubishInitialContent();
+          };
+
+          auto agentDevice = m_sinkContract->getDeviceByName("Agent");
+          auto base = formatTopic(m_deviceTopic, agentDevice, "Agent");
+          m_lastWillTopic = base + "/Availability";
+
+          if (IsOptionSet(m_options, configuration::MqttTls))
+          {
+            m_client = make_shared<MqttTlsClient>(m_context, m_options, std::move(clientHandler), m_lastWillTopic, "UNAVAILABLE"s);
+          }
+          else
+          {
+            m_client = make_shared<MqttTcpClient>(m_context, m_options, std::move(clientHandler), m_lastWillTopic, "UNAVAILABLE"s);
+          }
+        }
         m_client->start();
       }
 
@@ -159,8 +162,7 @@ namespace mtconnect {
 
         DevicePtr m_device;
         std::weak_ptr<MqttClient> m_client;
-        std::weak_ptr<sink::Sink>
-            m_sink;  //!  weak shared pointer to the sink. handles shutdown timer race
+        std::weak_ptr<sink::Sink> m_sink;  //!  weak shared pointer to the sink. handles shutdown timer race
       };
 
       void Mqtt2Service::pubishInitialContent()
