@@ -116,11 +116,13 @@ namespace mtconnect {
 
           if (IsOptionSet(m_options, configuration::MqttTls))
           {
-            m_client = make_shared<MqttTlsClient>(m_context, m_options, std::move(clientHandler), m_lastWillTopic, "UNAVAILABLE"s);
+            m_client = make_shared<MqttTlsClient>(m_context, m_options, std::move(clientHandler),
+                                                  m_lastWillTopic, "UNAVAILABLE"s);
           }
           else
           {
-            m_client = make_shared<MqttTcpClient>(m_context, m_options, std::move(clientHandler), m_lastWillTopic, "UNAVAILABLE"s);
+            m_client = make_shared<MqttTcpClient>(m_context, m_options, std::move(clientHandler),
+                                                  m_lastWillTopic, "UNAVAILABLE"s);
           }
         }
         m_client->start();
@@ -162,7 +164,8 @@ namespace mtconnect {
 
         DevicePtr m_device;
         std::weak_ptr<MqttClient> m_client;
-        std::weak_ptr<sink::Sink> m_sink;  //!  weak shared pointer to the sink. handles shutdown timer race
+        std::weak_ptr<sink::Sink>
+            m_sink;  //!  weak shared pointer to the sink. handles shutdown timer race
       };
 
       void Mqtt2Service::pubishInitialContent()

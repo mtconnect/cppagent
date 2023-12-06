@@ -20,13 +20,12 @@
 #include <boost/log/trivial.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
 
-#include <inttypes.h>
-#include <random>
 #include <chrono>
-
+#include <inttypes.h>
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
 #include <mqtt/will.hpp>
+#include <random>
 
 #include "mqtt_client.hpp"
 #include "mtconnect/configuration/config_options.hpp"
@@ -199,20 +198,18 @@ namespace mtconnect {
             return false;
           }
         });
-        
+
         if (m_willTopic && m_willPayload)
         {
           uint32_t will_expiry_interval = 1;
           MQTT_NS::v5::properties ps {
               MQTT_NS::v5::property::message_expiry_interval(will_expiry_interval),
           };
-          
+
           mqtt::buffer topic(std::string_view(m_willTopic->c_str()));
           mqtt::buffer payload(std::string_view(m_willPayload->c_str()));
 
-          client->set_will(mqtt::will(topic, payload,
-                                      mqtt::retain::yes,
-                                      mqtt::force_move(ps)));
+          client->set_will(mqtt::will(topic, payload, mqtt::retain::yes, mqtt::force_move(ps)));
         }
 
         m_running = true;

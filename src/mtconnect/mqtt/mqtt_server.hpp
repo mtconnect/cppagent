@@ -43,7 +43,7 @@ namespace mtconnect {
 
       /// @brief Shutdown the Mqtt server
       virtual void stop() = 0;
-      
+
       auto &getWill() { return m_will; }
 
     protected:
