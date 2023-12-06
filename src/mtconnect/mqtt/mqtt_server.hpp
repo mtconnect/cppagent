@@ -43,11 +43,14 @@ namespace mtconnect {
 
       /// @brief Shutdown the Mqtt server
       virtual void stop() = 0;
+      
+      auto &getWill() { return m_will; }
 
     protected:
       boost::asio::io_context &m_ioContext;
       std::string m_url;
       uint16_t m_port;
+      std::optional<mqtt::will> m_will;
     };
   }  // namespace mqtt_server
 }  // namespace mtconnect

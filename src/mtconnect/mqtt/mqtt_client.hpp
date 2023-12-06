@@ -47,8 +47,11 @@ namespace mtconnect {
       /// @param ClientHandler configuration options
       /// - ConnectInterval, defaults to 5000
 
-      MqttClient(boost::asio::io_context &ioc, std::unique_ptr<ClientHandler> &&handler)
-        : m_ioContext(ioc), m_handler(std::move(handler)), m_connectInterval(5000)
+      MqttClient(boost::asio::io_context &ioc, std::unique_ptr<ClientHandler> &&handler,
+                 const std::optional<std::string> willTopic = std::nullopt,
+                 const std::optional<std::string> willPayload = std::nullopt)
+        : m_ioContext(ioc), m_handler(std::move(handler)), m_connectInterval(5000),
+          m_willTopic(willTopic), m_willPayload(willPayload)
       {}
       virtual ~MqttClient() = default;
 
@@ -101,6 +104,8 @@ namespace mtconnect {
       std::string m_identity;
       std::unique_ptr<ClientHandler> m_handler;
       std::chrono::milliseconds m_connectInterval;
+      std::optional<std::string> m_willTopic;
+      std::optional<std::string> m_willPayload;
 
       bool m_running {false};
       bool m_connected {false};
