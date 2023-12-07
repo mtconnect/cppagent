@@ -20,12 +20,12 @@
 #include <boost/log/trivial.hpp>
 #include <boost/uuid/name_generator_sha1.hpp>
 
-#include <inttypes.h>
-#include <random>
 #include <chrono>
-
+#include <inttypes.h>
 #include <mqtt/async_client.hpp>
 #include <mqtt/setup_log.hpp>
+#include <mqtt/will.hpp>
+#include <random>
 
 #include "mqtt_client.hpp"
 #include "mtconnect/configuration/config_options.hpp"
@@ -72,8 +72,10 @@ namespace mtconnect {
       /// - MqttTls, defaults to false
       /// - MqttHost, defaults to LocalHost
       MqttClientImpl(boost::asio::io_context &ioContext, const ConfigOptions &options,
-                     std::unique_ptr<ClientHandler> &&handler)
-        : MqttClient(ioContext, std::move(handler)),
+                     std::unique_ptr<ClientHandler> &&handler,
+                     const std::optional<std::string> willTopic = std::nullopt,
+                     const std::optional<std::string> willPayload = std::nullopt)
+        : MqttClient(ioContext, std::move(handler), willTopic, willPayload),
           m_options(options),
           m_host(GetOption<std::string>(options, configuration::MqttHost).value_or("localhost")),
           m_port(GetOption<int>(options, configuration::MqttPort).value_or(1883)),
@@ -196,6 +198,19 @@ namespace mtconnect {
             return false;
           }
         });
+
+        if (m_willTopic && m_willPayload)
+        {
+          uint32_t will_expiry_interval = 1;
+          MQTT_NS::v5::properties ps {
+              MQTT_NS::v5::property::message_expiry_interval(will_expiry_interval),
+          };
+
+          mqtt::buffer topic(std::string_view(m_willTopic->c_str()));
+          mqtt::buffer payload(std::string_view(m_willPayload->c_str()));
+
+          client->set_will(mqtt::will(topic, payload, mqtt::retain::yes, mqtt::force_move(ps)));
+        }
 
         m_running = true;
         connect();
@@ -383,7 +398,6 @@ namespace mtconnect {
       std::uint16_t m_packetId {0};
 
       std::optional<std::string> m_username;
-
       std::optional<std::string> m_password;
 
       boost::asio::steady_timer m_reconnectTimer;

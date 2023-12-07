@@ -175,20 +175,14 @@ namespace mtconnect::pipeline {
     Forward m_forward;
     std::list<pair<DataItemPtr, entity::Properties>> m_queue;
   };
-  
+
   /// @brief consume value in case of error
   struct ErrorHandler : rj::BaseReaderHandler<rj::UTF8<>, ErrorHandler>
   {
     ErrorHandler(int depth = 0) : m_depth(depth) {}
-    
-    bool Default()
-    {
-      return true;
-    }
-    bool Key(const Ch *str, rj::SizeType length, bool copy)
-    {
-      return true;
-    }
+
+    bool Default() { return true; }
+    bool Key(const Ch *str, rj::SizeType length, bool copy) { return true; }
     bool StartObject()
     {
       m_depth++;
@@ -199,21 +193,21 @@ namespace mtconnect::pipeline {
       m_depth--;
       return true;
     }
-    bool StartArray() 
+    bool StartArray()
     {
       m_depth++;
       return true;
     }
-    bool EndArray(rj::SizeType elementCount) 
+    bool EndArray(rj::SizeType elementCount)
     {
       m_depth--;
       return true;
     }
-    
+
     bool operator()(rj::Reader &reader, rj::StringStream &buff)
     {
       LOG(warning) << "Consuming value due to error";
-      
+
       if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
         return false;
 
@@ -223,7 +217,7 @@ namespace mtconnect::pipeline {
         if (!reader.IterativeParseNext<rj::kParseNanAndInfFlag>(buff, *this))
           return false;
       }
-      
+
       return true;
     }
 
@@ -618,7 +612,7 @@ namespace mtconnect::pipeline {
     bool m_object {false};
     std::string m_key;
     Expectation m_expectation {Expectation::NONE};
-    int m_depth{0};
+    int m_depth {0};
   };
 
   struct TimestampHandler : rj::BaseReaderHandler<rj::UTF8<>, TimestampHandler>
@@ -862,7 +856,7 @@ namespace mtconnect::pipeline {
               m_expectation = Expectation::KEY;
               break;
             }
-              
+
             case Expectation::VALUE_ERROR:
             {
               ErrorHandler handler;

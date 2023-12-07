@@ -125,8 +125,8 @@ namespace mtconnect {
           ep.set_connect_handler([this, wp](MQTT_NS::buffer client_id,
                                             MQTT_NS::optional<MQTT_NS::buffer> username,
                                             MQTT_NS::optional<MQTT_NS::buffer> password,
-                                            MQTT_NS::optional<MQTT_NS::will>, bool clean_session,
-                                            std::uint16_t keep_alive) {
+                                            MQTT_NS::optional<MQTT_NS::will> will,
+                                            bool clean_session, std::uint16_t keep_alive) {
             using namespace MQTT_NS::literals;
             LOG(info) << "Server: Client_id    : " << client_id << std::endl;
             LOG(info) << "Server: User Name     : " << (username ? username.value() : "none"_mb)
@@ -141,6 +141,8 @@ namespace mtconnect {
               LOG(error) << "Server: Endpoint has been deleted";
               return false;
             }
+            if (will)
+              m_will = will;
             m_connections.insert(sp);
             sp->connack(false, MQTT_NS::connect_return_code::accepted);
             return true;

@@ -69,27 +69,19 @@ namespace mtconnect {
                     {configuration::MqttClientId, string()},
                     {configuration::MqttUserName, string()},
                     {configuration::MqttPassword, string()}});
-        AddDefaultedOptions(config, m_options,
-                            {{configuration::MqttHost, "127.0.0.1"s},
-                             {configuration::DeviceTopic, "MTConnect/Probe/[device]"s},
-                             {configuration::AssetTopic, "MTConnect/Asset/[device]"s},
-                             {configuration::CurrentTopic, "MTConnect/Current/[device]"s},
-                             {configuration::SampleTopic, "MTConnect/Sample/[device]"s},
-                             {configuration::MqttCurrentInterval, 10000ms},
-                             {configuration::MqttSampleInterval, 500ms},
-                             {configuration::MqttSampleCount, 1000},
-                             {configuration::MqttPort, 1883},
-                             {configuration::MqttTls, false}});
-
-        auto clientHandler = make_unique<ClientHandler>();
-        clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
-          // Publish latest devices, assets, and observations
-          auto &circ = m_sinkContract->getCircularBuffer();
-          std::lock_guard<buffer::CircularBuffer> lock(circ);
-          client->connectComplete();
-
-          pubishInitialContent();
-        };
+        AddDefaultedOptions(
+            config, m_options,
+            {{configuration::MqttHost, "127.0.0.1"s},
+             {configuration::DeviceTopic, "MTConnect/Probe/[device]"s},
+             {configuration::AssetTopic, "MTConnect/Asset/[device]"s},
+             {configuration::MqttLastWillTopic, "MTConnect/Probe/[device]/Availability"s},
+             {configuration::CurrentTopic, "MTConnect/Current/[device]"s},
+             {configuration::SampleTopic, "MTConnect/Sample/[device]"s},
+             {configuration::MqttCurrentInterval, 10000ms},
+             {configuration::MqttSampleInterval, 500ms},
+             {configuration::MqttSampleCount, 1000},
+             {configuration::MqttPort, 1883},
+             {configuration::MqttTls, false}});
 
         int maxTopicDepth {GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7)};
 
@@ -103,23 +95,38 @@ namespace mtconnect {
         m_sampleInterval = *GetOption<Milliseconds>(m_options, configuration::MqttSampleInterval);
 
         m_sampleCount = *GetOption<int>(m_options, configuration::MqttSampleCount);
-
-        if (IsOptionSet(m_options, configuration::MqttTls))
-        {
-          m_client = make_shared<MqttTlsClient>(m_context, m_options, std::move(clientHandler));
-        }
-        else
-        {
-          m_client = make_shared<MqttTcpClient>(m_context, m_options, std::move(clientHandler));
-        }
       }
 
       void Mqtt2Service::start()
       {
-        // mqtt client side not a server side...
         if (!m_client)
-          return;
+        {
+          auto clientHandler = make_unique<ClientHandler>();
+          clientHandler->m_connected = [this](shared_ptr<MqttClient> client) {
+            // Publish latest devices, assets, and observations
+            auto &circ = m_sinkContract->getCircularBuffer();
+            std::lock_guard<buffer::CircularBuffer> lock(circ);
+            client->connectComplete();
 
+            client->publish(m_lastWillTopic, "AVAILABLE");
+            pubishInitialContent();
+          };
+
+          auto agentDevice = m_sinkContract->getDeviceByName("Agent");
+          auto lwtTopic = get<string>(m_options[configuration::MqttLastWillTopic]);
+          m_lastWillTopic = formatTopic(lwtTopic, agentDevice, "Agent");
+
+          if (IsOptionSet(m_options, configuration::MqttTls))
+          {
+            m_client = make_shared<MqttTlsClient>(m_context, m_options, std::move(clientHandler),
+                                                  m_lastWillTopic, "UNAVAILABLE"s);
+          }
+          else
+          {
+            m_client = make_shared<MqttTcpClient>(m_context, m_options, std::move(clientHandler),
+                                                  m_lastWillTopic, "UNAVAILABLE"s);
+          }
+        }
         m_client->start();
       }
 

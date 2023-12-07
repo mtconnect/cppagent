@@ -833,6 +833,13 @@ Sinks {
 
     *Default*: `MTConnect/Current/[device]`
 
+* `MqttLastWillTopic` - The topic used for the last will and testement for an agent
+
+    > Note: The value will be `AVAILABLE` when the Agent is publishing and connected and will
+    > publish `UNAVAILABLE` when the agent disconnects from the broker.
+
+    *Default*: `MTConnect/Probe/[device]/Availability"`
+
 * `MqttCurrentInterval` - The frequency to publish currents. Acts like a keyframe in a video stream.
 
     *Default*: 10000ms
@@ -844,7 +851,7 @@ Sinks {
 * `MqttSampleCount` - The maxmimum number of observations to publish at one time.
 
     *Default*: 1000
-
+    
 ### Adapter Configuration Items ###
 
 * `Adapters` - Adapters begins a list of device blocks. If the Adapters
