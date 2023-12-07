@@ -69,17 +69,19 @@ namespace mtconnect {
                     {configuration::MqttClientId, string()},
                     {configuration::MqttUserName, string()},
                     {configuration::MqttPassword, string()}});
-        AddDefaultedOptions(config, m_options,
-                            {{configuration::MqttHost, "127.0.0.1"s},
-                             {configuration::DeviceTopic, "MTConnect/Probe/[device]"s},
-                             {configuration::AssetTopic, "MTConnect/Asset/[device]"s},
-                             {configuration::CurrentTopic, "MTConnect/Current/[device]"s},
-                             {configuration::SampleTopic, "MTConnect/Sample/[device]"s},
-                             {configuration::MqttCurrentInterval, 10000ms},
-                             {configuration::MqttSampleInterval, 500ms},
-                             {configuration::MqttSampleCount, 1000},
-                             {configuration::MqttPort, 1883},
-                             {configuration::MqttTls, false}});
+        AddDefaultedOptions(
+            config, m_options,
+            {{configuration::MqttHost, "127.0.0.1"s},
+             {configuration::DeviceTopic, "MTConnect/Probe/[device]"s},
+             {configuration::AssetTopic, "MTConnect/Asset/[device]"s},
+             {configuration::MqttLastWillTopic, "MTConnect/Probe/[device]/Availability"s},
+             {configuration::CurrentTopic, "MTConnect/Current/[device]"s},
+             {configuration::SampleTopic, "MTConnect/Sample/[device]"s},
+             {configuration::MqttCurrentInterval, 10000ms},
+             {configuration::MqttSampleInterval, 500ms},
+             {configuration::MqttSampleCount, 1000},
+             {configuration::MqttPort, 1883},
+             {configuration::MqttTls, false}});
 
         int maxTopicDepth {GetOption<int>(options, configuration::MqttMaxTopicDepth).value_or(7)};
 
@@ -111,8 +113,8 @@ namespace mtconnect {
           };
 
           auto agentDevice = m_sinkContract->getDeviceByName("Agent");
-          auto base = formatTopic(m_deviceTopic, agentDevice, "Agent");
-          m_lastWillTopic = base + "/Availability";
+          auto lwtTopic = get<string>(m_options[configuration::MqttLastWillTopic]);
+          m_lastWillTopic = formatTopic(lwtTopic, agentDevice, "Agent");
 
           if (IsOptionSet(m_options, configuration::MqttTls))
           {
