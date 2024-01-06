@@ -425,6 +425,7 @@ TEST_F(AgentTest, FailedFileDownload)
   }
 }
 
+/// @test Tests if composition data items are represented correctly in /current.
 TEST_F(AgentTest, Composition)
 {
   auto agent = m_agentTestHelper->m_agent.get();
@@ -450,6 +451,7 @@ TEST_F(AgentTest, Composition)
   }
 }
 
+/// @test Tests if the agent returns the correct errors when invalid counts are used as parameters.
 TEST_F(AgentTest, BadCount)
 {
   auto &circ = m_agentTestHelper->getAgent()->getCircularBuffer();
@@ -507,6 +509,7 @@ TEST_F(AgentTest, BadCount)
   }
 }
 
+/// @test Tests if the agent correctly communicates with the adapter.
 TEST_F(AgentTest, Adapter)
 {
   addAdapter();
@@ -537,6 +540,7 @@ TEST_F(AgentTest, Adapter)
   }
 }
 
+/// @test Tests if the sequence number correctly points to the next data item.
 TEST_F(AgentTest, SampleAtNextSeq)
 {
   QueryMap query;
@@ -561,6 +565,7 @@ TEST_F(AgentTest, SampleAtNextSeq)
   }
 }
 
+/// @test Tests if the agent returns the correct amount of data items specified by the count parameter.
 TEST_F(AgentTest, SampleCount)
 {
   QueryMap query;
@@ -597,6 +602,7 @@ TEST_F(AgentTest, SampleCount)
   }
 }
 
+/// @test Tests if the agent returns the correct amount of data items starting from the back specified by the count parameter when using a negative number.
 TEST_F(AgentTest, SampleLastCount)
 {
   QueryMap query;
@@ -633,6 +639,7 @@ TEST_F(AgentTest, SampleLastCount)
   }
 }
 
+/// @test Tests if the correct parameters are retruned for each sample.
 TEST_F(AgentTest, SampleToParameter)
 {
   QueryMap query;
@@ -696,6 +703,7 @@ TEST_F(AgentTest, SampleToParameter)
   // to > from
 }
 
+/// @test Tests the empty stream response.
 TEST_F(AgentTest, EmptyStream)
 {
   {
@@ -718,6 +726,7 @@ TEST_F(AgentTest, EmptyStream)
   }
 }
 
+/// @test Tests if data items are added to the buffer correctly.
 TEST_F(AgentTest, AddToBuffer)
 {
   auto agent = m_agentTestHelper->m_agent.get();
@@ -754,6 +763,7 @@ TEST_F(AgentTest, AddToBuffer)
   }
 }
 
+/// @test Tests if sequence numbers restart after overflow.
 TEST_F(AgentTest, SequenceNumberRollover)
 {
 #ifndef WIN32
@@ -810,6 +820,7 @@ TEST_F(AgentTest, SequenceNumberRollover)
 #endif
 }
 
+/// @test Tests if sequence numbers do no duplicate.
 TEST_F(AgentTest, DuplicateCheck)
 {
   addAdapter();
@@ -837,6 +848,7 @@ TEST_F(AgentTest, DuplicateCheck)
   }
 }
 
+/// @test Tests if the agent allows duplicate sequence numbers after disconnect.
 TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
 {
   addAdapter({{configuration::FilterDuplicates, true}});
@@ -876,6 +888,7 @@ TEST_F(AgentTest, DuplicateCheckAfterDisconnect)
   }
 }
 
+/// @test Tests if the agent automatically updates the availability data item.
 TEST_F(AgentTest, AutoAvailable)
 {
   addAdapter({{configuration::AutoAvailable, true}});
@@ -919,6 +932,7 @@ TEST_F(AgentTest, AutoAvailable)
   }
 }
 
+/// @test Tests if the agent handles multiple disconnects properly.
 TEST_F(AgentTest, MultipleDisconnect)
 {
   addAdapter();
@@ -989,6 +1003,7 @@ TEST_F(AgentTest, MultipleDisconnect)
   }
 }
 
+/// @test Tests if the agent ignores timestamps when set in the configuration.
 TEST_F(AgentTest, IgnoreTimestamps)
 {
   addAdapter();
@@ -1012,6 +1027,7 @@ TEST_F(AgentTest, IgnoreTimestamps)
   }
 }
 
+/// @test Tests if the data items are initially set to unavailable.
 TEST_F(AgentTest, InitialTimeSeriesValues)
 {
   addAdapter();
@@ -1023,6 +1039,7 @@ TEST_F(AgentTest, InitialTimeSeriesValues)
   }
 }
 
+/// @test Tests the calibration on data items on the agent.
 TEST_F(AgentTest, DynamicCalibration)
 {
   addAdapter({{configuration::ConversionRequired, true}});
@@ -1065,6 +1082,7 @@ TEST_F(AgentTest, DynamicCalibration)
   }
 }
 
+/// @test Tests value filtering on the agent.
 TEST_F(AgentTest, FilterValues13)
 {
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
@@ -1104,6 +1122,7 @@ TEST_F(AgentTest, FilterValues13)
   }
 }
 
+/// @test Tests value filtering on the agent.
 TEST_F(AgentTest, FilterValues)
 {
   m_agentTestHelper->createAgent("/samples/filter_example_1.3.xml", 8, 4, "1.5", 25);
@@ -1168,6 +1187,7 @@ TEST_F(AgentTest, FilterValues)
   }
 }
 
+/// @test Tests the period filter with the ignore timestamps configuration set.
 TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
 {
   // Test period filter with ignore timestamps
@@ -1199,6 +1219,7 @@ TEST_F(AgentTest, TestPeriodFilterWithIgnoreTimestamps)
   }
 }
 
+/// @test Tests the period filter with the relative timestamps configuration set.
 TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
 {
   // Test period filter with relative time
@@ -1229,6 +1250,7 @@ TEST_F(AgentTest, TestPeriodFilterWithRelativeTime)
   }
 }
 
+/// @test Tests the "resetTriggered" flag.
 TEST_F(AgentTest, ResetTriggered)
 {
   addAdapter();
@@ -1252,6 +1274,7 @@ TEST_F(AgentTest, ResetTriggered)
   }
 }
 
+/// @test Tests references in the device.xml file.
 TEST_F(AgentTest, References)
 {
   using namespace device_model;
@@ -1314,6 +1337,7 @@ TEST_F(AgentTest, References)
   }
 }
 
+/// @test Tests discrete items in the device.xml file.
 TEST_F(AgentTest, Discrete)
 {
   m_agentTestHelper->createAgent("/samples/discrete_example.xml");
@@ -1358,6 +1382,7 @@ TEST_F(AgentTest, Discrete)
 
 // ------------------------------
 
+/// @test Tests if the agent reports all string values in uppercase when set in the configuration.
 TEST_F(AgentTest, UpcaseValues)
 {
   addAdapter({{configuration::FilterDuplicates, true}, {configuration::UpcaseDataItemValue, true}});
@@ -1378,6 +1403,7 @@ TEST_F(AgentTest, UpcaseValues)
   }
 }
 
+/// @test Tests whether conditions can be sequenced.
 TEST_F(AgentTest, ConditionSequence)
 {
   addAdapter({{configuration::FilterDuplicates, true}});
@@ -1557,6 +1583,7 @@ TEST_F(AgentTest, ConditionSequence)
   }
 }
 
+/// @test Tests if data is still extracted when the last data item's value is empty.
 TEST_F(AgentTest, EmptyLastItemFromAdapter)
 {
   addAdapter({{configuration::FilterDuplicates, true}});
@@ -1618,6 +1645,7 @@ TEST_F(AgentTest, EmptyLastItemFromAdapter)
   }
 }
 
+/// @test Tests if constant values are displayed in the agent.
 TEST_F(AgentTest, ConstantValue)
 {
   addAdapter();
@@ -1645,6 +1673,7 @@ TEST_F(AgentTest, ConstantValue)
   }
 }
 
+/// @test Tests if data items are still recorded when preceded by bad data items.
 TEST_F(AgentTest, BadDataItem)
 {
   addAdapter();
@@ -1665,6 +1694,7 @@ TEST_F(AgentTest, BadDataItem)
 
 // --------------------- Adapter Commands ----------------------
 
+/// @test Tests if the adapter can recieve commands.
 TEST_F(AgentTest, AdapterCommands)
 {
   addAdapter();
@@ -1696,6 +1726,7 @@ TEST_F(AgentTest, AdapterCommands)
   }
 }
 
+/// @test Tests commands to get device UUIDs.
 TEST_F(AgentTest, AdapterDeviceCommand)
 {
   m_agentTestHelper->createAgent("/samples/two_devices.xml");
@@ -1727,6 +1758,7 @@ TEST_F(AgentTest, AdapterDeviceCommand)
   ASSERT_EQ("another-uuid", string(*device1->getUuid()));
 }
 
+/// @test Tests if the the adapter and MTConnect version can be set VIA command.
 TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
 {
   m_agentTestHelper->createAgent("/samples/kinematics.xml", 8, 4, "1.7", 25);
@@ -1777,6 +1809,7 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
   }
 }
 
+/// @test Tests whether the UUID can be changed VIA command.
 TEST_F(AgentTest, UUIDChange)
 {
   auto agent = m_agentTestHelper->getAgent();
@@ -1809,6 +1842,7 @@ TEST_F(AgentTest, UUIDChange)
 
 // ------------------------- Asset Tests ---------------------------------
 
+/// @test Tests whether assets can be stored in the agent.
 TEST_F(AgentTest, AssetStorage)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
@@ -1844,6 +1878,7 @@ TEST_F(AgentTest, AssetStorage)
   }
 }
 
+/// @test Tests whether assets can be stored in the agent buffer.
 TEST_F(AgentTest, AssetBuffer)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
@@ -2021,6 +2056,7 @@ TEST_F(AgentTest, AssetBuffer)
   }
 }
 
+/// @test Tests whether the agent returns the correct error when an asset can not be found.
 TEST_F(AgentTest, AssetError)
 {
   {
@@ -2031,6 +2067,7 @@ TEST_F(AgentTest, AssetError)
   }
 }
 
+/// @test Tests the addition of new assets in the agent.
 TEST_F(AgentTest, AdapterAddAsset)
 {
   addAdapter();
@@ -2049,6 +2086,7 @@ TEST_F(AgentTest, AdapterAddAsset)
   }
 }
 
+/// @test Tests the addition of multiline assets in the agent.
 TEST_F(AgentTest, MultiLineAsset)
 {
   addAdapter();
@@ -2087,6 +2125,7 @@ TEST_F(AgentTest, MultiLineAsset)
   }
 }
 
+/// @test Tests whether bad assets get added to the agent.
 TEST_F(AgentTest, BadAsset)
 {
   addAdapter();
@@ -2099,6 +2138,7 @@ TEST_F(AgentTest, BadAsset)
   ASSERT_EQ((unsigned int)0, storage->getCount());
 }
 
+/// @test Tests the removal of assets from the agent.
 TEST_F(AgentTest, AssetRemoval)
 {
   string body = "<Part assetId='P1'>TEST 1</Part>";
@@ -2193,6 +2233,7 @@ TEST_F(AgentTest, AssetRemoval)
   }
 }
 
+/// @test Tests the removal of assets from the agent by the adapter.
 TEST_F(AgentTest, AssetRemovalByAdapter)
 {
   addAdapter();
@@ -2250,6 +2291,7 @@ TEST_F(AgentTest, AssetRemovalByAdapter)
   }
 }
 
+/// @test Tests whether the agent reports the changing of assets.
 TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
 {
   m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.2", 25);
@@ -2262,6 +2304,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetChanged12)
   }
 }
 
+/// @test Tests whether the agent reports the removal of assets.
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
 {
   m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.3", 25);
@@ -2274,6 +2317,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved13)
   }
 }
 
+/// @test Tests whether the agent reports the removal of assets.
 TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
 {
   m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "1.5", 25);
@@ -2285,6 +2329,7 @@ TEST_F(AgentTest, AssetAdditionOfAssetRemoved15)
   }
 }
 
+/// @test Tests if the agent prepends text to the assetIds.
 TEST_F(AgentTest, AssetPrependId)
 {
   addAdapter();
@@ -2304,6 +2349,7 @@ TEST_F(AgentTest, AssetPrependId)
   }
 }
 
+/// @test Tests if the removal of assets triggers and assetChange.
 TEST_F(AgentTest, RemoveLastAssetChanged)
 {
   addAdapter();
@@ -2334,6 +2380,7 @@ TEST_F(AgentTest, RemoveLastAssetChanged)
   }
 }
 
+/// @test Tests the removal of assets using the HTTP delete command.
 TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
@@ -2363,6 +2410,7 @@ TEST_F(AgentTest, RemoveAssetUsingHttpDelete)
   }
 }
 
+/// @test Tests if the toggle to unavialable triggers an assetChange.
 TEST_F(AgentTest, AssetChangedWhenUnavailable)
 {
   addAdapter();
@@ -2374,6 +2422,7 @@ TEST_F(AgentTest, AssetChangedWhenUnavailable)
   }
 }
 
+/// @test Tests the removal of all assets in the agent.
 TEST_F(AgentTest, RemoveAllAssets)
 {
   addAdapter();
@@ -2431,6 +2480,7 @@ TEST_F(AgentTest, RemoveAllAssets)
   }
 }
 
+/// @test Tests asset probing.
 TEST_F(AgentTest, AssetProbe)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
@@ -2457,6 +2507,7 @@ TEST_F(AgentTest, AssetProbe)
   }
 }
 
+/// @test Tests the the HTTP error responses to a PUT request to assets.
 TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
 {
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "1.3", 4, true);
@@ -2520,6 +2571,7 @@ TEST_F(AgentTest, ResponseToHTTPAssetPutErrors)
   }
 }
 
+/// @test Tests the automatic update to the asset count data item.
 TEST_F(AgentTest, update_asset_count_data_item_v2_0)
 {
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 10, "2.0", 4, true);
@@ -2597,6 +2649,7 @@ TEST_F(AgentTest, update_asset_count_data_item_v2_0)
 /// @name Streaming Tests
 /// Tests that validate HTTP long poll behavior of the agent
 
+
 /// @test ensure an error is returned when the interval has an invalid value
 TEST_F(AgentTest, interval_should_be_a_valid_integer_value)
 {
@@ -2636,6 +2689,7 @@ TEST_F(AgentTest, interval_should_be_a_valid_integer_value)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "'interval' must be greater than -1");
   }
 }
+
 
 /// @test check streaming of data every 50ms
 TEST_F(AgentTest, should_stream_data_with_interval)
@@ -2697,6 +2751,7 @@ TEST_F(AgentTest, should_stream_data_with_interval)
   }
 }
 
+
 /// @test Should stream data when observations arrive within the interval
 TEST_F(AgentTest, should_signal_observer_when_observations_arrive)
 {
@@ -2730,6 +2785,7 @@ TEST_F(AgentTest, should_signal_observer_when_observations_arrive)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Line@sequence", seq.c_str());
   }
 }
+
 
 /// @test check request with from out of range
 TEST_F(AgentTest, should_fail_if_from_is_out_of_range)
@@ -2765,6 +2821,7 @@ TEST_F(AgentTest, should_fail_if_from_is_out_of_range)
 /// Tests that validate the HTTP PUT and POST behavior of the Agent when `AllowPuts` is
 /// enabled in the configuration file.
 
+
 /// @test check if the agent allows making observations when put is allowed
 TEST_F(AgentTest, should_allow_making_observations_via_http_put)
 {
@@ -2788,6 +2845,7 @@ TEST_F(AgentTest, should_allow_making_observations_via_http_put)
     ASSERT_XML_PATH_EQUAL(doc, "//m:PowerState", "ON");
   }
 }
+
 
 /// @test putting a condition requires the SHDR formatted data
 TEST_F(AgentTest, put_condition_should_parse_condition_data)
@@ -2813,6 +2871,7 @@ TEST_F(AgentTest, put_condition_should_parse_condition_data)
   }
 }
 
+/// @test Tests if the 2.0 agent adds an asset_count data item.
 TEST_F(AgentTest, shound_add_asset_count_when_20)
 {
   m_agentTestHelper->createAgent("/samples/min_config.xml", 8, 4, "2.0", 25);
@@ -2827,6 +2886,7 @@ TEST_F(AgentTest, shound_add_asset_count_when_20)
   }
 }
 
+/// @test Tests if the asset count is returned in the header post in the 2.0 agent.
 TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
@@ -2853,6 +2913,7 @@ TEST_F(AgentTest, asset_count_should_not_occur_in_header_post_20)
   }
 }
 
+/// @test Tests if the agent tracks asset types.
 TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
@@ -2911,6 +2972,7 @@ TEST_F(AgentTest, asset_count_should_track_asset_additions_by_type)
   }
 }
 
+/// @test Tests if the agent allows the addition of assets VIA HTTP POST.
 TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
 {
   auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, true);
@@ -2929,6 +2991,7 @@ TEST_F(AgentTest, asset_should_also_work_using_post_with_assets)
   }
 }
 
+/// @test Tests if pre_start hooks are called.
 TEST_F(AgentTest, pre_start_hook_should_be_called)
 {
   bool called = false;
@@ -2945,6 +3008,7 @@ TEST_F(AgentTest, pre_start_hook_should_be_called)
   agent->stop();
 }
 
+/// @test Tests if pre_initialize hooks are called.
 TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
 {
   bool called = false;
@@ -2958,6 +3022,7 @@ TEST_F(AgentTest, pre_initialize_hooks_should_be_called)
   ASSERT_TRUE(called);
 }
 
+/// @test Tests if post_initialize hooks are called.
 TEST_F(AgentTest, post_initialize_hooks_should_be_called)
 {
   bool called = false;
@@ -2971,6 +3036,7 @@ TEST_F(AgentTest, post_initialize_hooks_should_be_called)
   ASSERT_TRUE(called);
 }
 
+/// @test Tests if pre_stop hooks are called.
 TEST_F(AgentTest, pre_stop_hook_should_be_called)
 {
   static bool called = false;
@@ -2988,6 +3054,7 @@ TEST_F(AgentTest, pre_stop_hook_should_be_called)
   ASSERT_TRUE(called);
 }
 
+/// @test Tests if devices in the 2.2 agent have hashes.
 TEST_F(AgentTest, device_should_have_hash_for_2_2)
 {
   m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.2", 4, true);
