@@ -87,6 +87,7 @@ public:
   std::chrono::milliseconds m_delay {};
 };
 
+/// @test Tests if the agent can be constructed with parameters.
 TEST_F(AgentTest, Constructor)
 {
   using namespace configuration;
@@ -108,6 +109,7 @@ TEST_F(AgentTest, Constructor)
   ASSERT_NO_THROW(agent->initialize(context));
 }
 
+/// @test Tests if a agent returns a probe request.
 TEST_F(AgentTest, Probe)
 {
   {
@@ -131,6 +133,7 @@ TEST_F(AgentTest, Probe)
   }
 }
 
+/// @test Tests if the agent properly fails when two devices have the same UUID.
 TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
 {
   using namespace configuration;
@@ -144,6 +147,7 @@ TEST_F(AgentTest, FailWithDuplicateDeviceUUID)
   ASSERT_THROW(agent->initialize(context), std::runtime_error);
 }
 
+/// @test Tests if the agent returns the correct message when it is probed for a device that doesnt exist.
 TEST_F(AgentTest, BadDevices)
 {
   {
@@ -155,6 +159,7 @@ TEST_F(AgentTest, BadDevices)
   }
 }
 
+/// @test Tests if the agent returns the correct message when an invalid Xpath is recieved.
 TEST_F(AgentTest, BadXPath)
 {
   {
@@ -183,6 +188,7 @@ TEST_F(AgentTest, BadXPath)
   }
 }
 
+/// @test Tests if the agent can parse URL paths.
 TEST_F(AgentTest, GoodPath)
 {
   {
@@ -205,6 +211,7 @@ TEST_F(AgentTest, GoodPath)
   }
 }
 
+/// @test Tests if the agent returns the correct message when an invalid URL path is recieved.
 TEST_F(AgentTest, BadPath)
 {
   using namespace rest_sink;
@@ -234,6 +241,7 @@ TEST_F(AgentTest, BadPath)
   }
 }
 
+/// @test Tests if the agent returns the correct data within the buffer at any index.
 TEST_F(AgentTest, CurrentAt)
 {
   QueryMap query;
@@ -303,6 +311,7 @@ TEST_F(AgentTest, CurrentAt)
   }
 }
 
+/// @test Tests if the agent returns the correct data within the buffer at any index.
 TEST_F(AgentTest, CurrentAt64)
 {
   QueryMap query;
@@ -335,6 +344,7 @@ TEST_F(AgentTest, CurrentAt64)
   }
 }
 
+/// @test Tests if the agent fails correctly when trying to access data out of range of the buffer.
 TEST_F(AgentTest, CurrentAtOutOfRange)
 {
   QueryMap query;
@@ -373,8 +383,10 @@ TEST_F(AgentTest, CurrentAtOutOfRange)
   }
 }
 
+/// @test Tests adding an adapter to the agent.
 TEST_F(AgentTest, AddAdapter) { addAdapter(); }
 
+/// @test Tests downloading a file from the agent
 TEST_F(AgentTest, FileDownload)
 {
   QueryMap query;
@@ -394,6 +406,7 @@ TEST_F(AgentTest, FileDownload)
               string::npos);
 }
 
+/// @test Tests if the agent returns the correct response when an invalid download request is recieved
 TEST_F(AgentTest, FailedFileDownload)
 {
   QueryMap query;
