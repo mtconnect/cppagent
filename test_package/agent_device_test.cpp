@@ -121,6 +121,7 @@ public:
   string m_line;
 };
 
+/// @test Tests if the agent device gets created.
 TEST_F(AgentDeviceTest, AgentDeviceCreation)
 {
   ASSERT_NE(nullptr, m_agentDevice);
@@ -128,6 +129,7 @@ TEST_F(AgentDeviceTest, AgentDeviceCreation)
   ASSERT_EQ("Agent", m_agentDevice->getName().str());
 }
 
+/// @test Tests if the agent implementes the minimal required data items.
 TEST_F(AgentDeviceTest, VerifyRequiredDataItems)
 {
   ASSERT_NE(nullptr, m_agentDevice);
@@ -148,6 +150,7 @@ TEST_F(AgentDeviceTest, VerifyRequiredDataItems)
   ASSERT_EQ("DEVICE_CHANGED", changed->getType());
 }
 
+/// @test Tests whether daat points get added to the buffer
 TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 {
   auto agent = m_agentTestHelper->getAgent();
@@ -180,6 +183,7 @@ TEST_F(AgentDeviceTest, DeviceAddedItemsInBuffer)
 
 #define ID_PREFIX "_d0c33d4315"
 
+/// @test Tests if adapter data items can be found on a probe.
 TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
 {
   m_port = 21788;
@@ -203,6 +207,7 @@ TEST_F(AgentDeviceTest, AdapterAddedProbeTest)
   }
 }
 
+/// @test Tests if the adapter can be accessed without the IP address.
 TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 {
   m_port = 21788;
@@ -222,6 +227,7 @@ TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 #define AGENT_DEVICE_DEVICE_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Agent']"
 #define AGENT_DEVICE_ADAPTER_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Adapter']"
 
+/// @test Tests if the current data can get updated through an adapter.
 TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 {
   {
@@ -245,6 +251,7 @@ TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
   }
 }
 
+/// @test Tests if the adapter reports its connection to the agent.
 TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
 {
   srand(int32_t(chrono::system_clock::now().time_since_epoch().count()));
@@ -303,6 +310,7 @@ TEST_F(AgentDeviceTest, TestAdapterConnectionStatus)
   }
 }
 
+/// @test Tests if the UUID set in configuration is reported in the agent XML.
 TEST_F(AgentDeviceTest, verify_uuid_can_be_set_in_configuration)
 {
   m_agentTestHelper = make_unique<AgentTestHelper>();
