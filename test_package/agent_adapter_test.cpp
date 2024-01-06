@@ -177,7 +177,7 @@ public:
   DevicePtr m_device;
 };
 
-/// @test test if an adapter can connect to an agent
+/// @test Tests if the adapter can connect to the agent.
 TEST_F(AgentAdapterTest, should_connect_to_agent)
 {
   createAgent();
@@ -221,7 +221,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   timeout.cancel();
 }
 
-/// @test test if an adapter can get current data from agent
+/// @test Tests if the the agent can return current data.
 TEST_F(AgentAdapterTest, should_get_current_from_agent)
 {
   createAgent();
@@ -259,7 +259,7 @@ TEST_F(AgentAdapterTest, should_get_current_from_agent)
   timeout.cancel();
 }
 
-/// @test test if an adapter can get asset data from agent
+/// @test Tests if the agent can return assets.
 TEST_F(AgentAdapterTest, should_get_assets_from_agent)
 {
   createAgent();
@@ -297,7 +297,7 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
   timeout.cancel();
 }
 
-/// @test test if an adapter can get sample data from agent
+/// @test Tests if the agent return a sample of points.
 TEST_F(AgentAdapterTest, should_receive_sample)
 {
   createAgent();
@@ -355,7 +355,7 @@ TEST_F(AgentAdapterTest, should_receive_sample)
   timeout.cancel();
 }
 
-/// @test test if an agent will recconect to an adapter
+/// @test Tests if the agent reconnects to the adapter.
 TEST_F(AgentAdapterTest, should_reconnect)
 {
   createAgent();
@@ -424,7 +424,7 @@ TEST_F(AgentAdapterTest, should_reconnect)
   timeout.cancel();
 }
 
-/// @test test if an adapter can connect to an HTTP 1.0 agent
+/// @test Tests if the adapter can connect to an HTTP 1.0 agent.
 TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
 {
   createAgent();
@@ -482,7 +482,7 @@ TEST_F(AgentAdapterTest, should_connect_with_http_10_agent)
   timeout.cancel();
 }
 
-/// @test test if the instance ID remains the same after connection recovery
+/// @test Tests if the instance ID gets checked after recovering from disconnect.
 TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
 {
   createAgent();
@@ -576,6 +576,7 @@ TEST_F(AgentAdapterTest, should_check_instance_id_on_recovery)
   timeout.cancel();
 }
 
+/// @test Tests if the agent can map device names and device UUIDs
 TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
 {
   createAgent();
@@ -606,6 +607,7 @@ TEST_F(AgentAdapterTest, should_map_device_name_and_uuid)
   ASSERT_EQ("NewMachine", contract->m_deviceName);
 }
 
+/// @test Tests if the polling is used when configured.
 TEST_F(AgentAdapterTest, should_use_polling_when_option_is_set)
 {
   createAgent();
@@ -684,6 +686,7 @@ const string KeyFile {TEST_RESOURCE_DIR "/user.key"};
 const string DhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
 const string RootCertFile(TEST_RESOURCE_DIR "/rootca.crt");
 
+/// @test Tests if the adapter connects to an agent using TLS.
 TEST_F(AgentAdapterTest, should_connect_to_tls_agent)
 {
   using namespace mtconnect::configuration;
@@ -729,6 +732,7 @@ TEST_F(AgentAdapterTest, should_connect_to_tls_agent)
   timeout.cancel();
 }
 
+/// @test Tests if the agent creates devices when specified.
 TEST_F(AgentAdapterTest, should_create_device_when_option_supplied)
 {
   createAgent({}, "/samples/solid_model.xml");
