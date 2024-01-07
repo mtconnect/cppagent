@@ -67,6 +67,7 @@ protected:
   ComponentPtr m_compB;
 };
 
+/// @test Tests getters for components.
 TEST_F(ComponentTest, Getters)
 {
   ASSERT_EQ((string) "Axes", string(m_compA->getName()));
@@ -82,7 +83,9 @@ TEST_F(ComponentTest, Getters)
   ASSERT_FALSE(m_compB->hasProperty("nativeName"));
 }
 
+
 // Workning our way through
+/// @test Tests component attributes.
 TEST_F(ComponentTest, Description)
 {
   map<string, string> attributes;
@@ -111,6 +114,7 @@ TEST_F(ComponentTest, Description)
   ASSERT_FALSE(d2->hasValue());
 }
 
+/// @test tests component relationships.
 TEST_F(ComponentTest, Relationships)
 {
   // Test get/set parents
@@ -142,6 +146,7 @@ TEST_F(ComponentTest, Relationships)
   ASSERT_EQ(2, m_compA.use_count());
 }
 
+/// @test Tests component data items.
 TEST_F(ComponentTest, DataItems)
 {
   ASSERT_FALSE(m_compA->getDataItems());
@@ -165,7 +170,9 @@ TEST_F(ComponentTest, DataItems)
 }
 
 // Not relevant right now. Tested as references in other places
+
 #if 0
+/// @test Tests component references.
 TEST_F(ComponentTest, References)
 {
   
