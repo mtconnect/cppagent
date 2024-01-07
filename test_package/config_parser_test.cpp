@@ -32,6 +32,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
+/// @test Tests if simple properties can be parsed.
 TEST(ConfigParserTest, parse_simple_properties)
 {
   string cfg = R"DOC(
@@ -45,6 +46,7 @@ mellon = water
   ASSERT_EQ("water", tree.get<string>("mellon"));
 }
 
+/// @test Test the parsing of configuration nested properties.
 TEST(ConfigParserTest, parse_with_subtree)
 {
   string cfg = R"DOC(
@@ -65,6 +67,7 @@ animals {
   ASSERT_EQ("bench", animals->second.get<string>("cows"));
 }
 
+/// @test Tests error raising when an invalid configuration is input.
 TEST(ConfigParserTest, skip_comments_starting_with_hash)
 {
   string cfg = R"DOC(
@@ -87,6 +90,7 @@ animals {
   ASSERT_EQ("bench", animals->second.get<string>("cows"));
 }
 
+/// @test Tests error raising when an invalid configuration is input.
 TEST(ConfigParserTest, invalid_config)
 {
   string cfg = R"DOC(
@@ -97,6 +101,7 @@ a = b
   ASSERT_THROW(Parser::parse(cfg), ParseError);
 }
 
+/// @test Tests error raising when an invalid configuration is input (no closing curly brace).
 TEST(ConfigParserTest, no_closing_curly)
 {
   string cfg = R"DOC(
@@ -107,6 +112,7 @@ a { dog=cat
   ASSERT_THROW(Parser::parse(cfg), ParseError);
 }
 
+/// @test Tests error raising when an invalid configuration is input (missing value).
 TEST(ConfigParserTest, missing_value)
 {
   string cfg = R"DOC(
@@ -117,6 +123,7 @@ cow = bull
   ASSERT_THROW(Parser::parse(cfg), ParseError);
 }
 
+/// @test Tests configuration parsing when the last value ends with a curly brace.
 TEST(ConfigParserTest, last_property_ending_with_curly)
 {
   string cfg = R"DOC(
@@ -137,6 +144,7 @@ animals {
   ASSERT_EQ("bench", animals->second.get<string>("cows"));
 }
 
+/// @test Tests configuration parsing it consists of a single line block.
 TEST(ConfigParserTest, single_line_block)
 {
   string cfg = "parents { mother = father }";
