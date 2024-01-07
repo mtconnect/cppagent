@@ -133,6 +133,7 @@ protected:
   ComponentPtr m_comp2;
 };
 
+/// @test Tests add and get observations.
 TEST_F(CircularBufferTest, should_add_observations_and_get_list)
 {
   addSomeObservations();
@@ -151,6 +152,7 @@ TEST_F(CircularBufferTest, should_add_observations_and_get_list)
   ASSERT_TRUE(eob);
 }
 
+/// @test Tests add and get observations when retrieving a limited amount of observations.
 TEST_F(CircularBufferTest, should_add_observations_and_get_limited)
 {
   addSomeObservations();
@@ -169,6 +171,7 @@ TEST_F(CircularBufferTest, should_add_observations_and_get_limited)
   ASSERT_FALSE(eob);
 }
 
+/// @test Tests add and get observations when observations are orphaned.
 TEST_F(CircularBufferTest, should_skip_orphaned_observations)
 {
   addSomeObservations();
