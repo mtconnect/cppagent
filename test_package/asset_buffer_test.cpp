@@ -116,6 +116,7 @@ public:
   std::unique_ptr<AssetBuffer> m_assetBuffer;
 };
 
+/// @test Tests if assets can be added to the asset buffer. 
 TEST_F(AssetBufferTest, AddAsset)
 {
   ErrorList errors;
@@ -128,6 +129,7 @@ TEST_F(AssetBufferTest, AddAsset)
   ASSERT_EQ(1, m_assetBuffer->getCountForDevice("D1"));
 }
 
+/// @test Tests if assets can be updated in the asset buffer.
 TEST_F(AssetBufferTest, ReplaceAsset)
 {
   ErrorList errors;
@@ -147,6 +149,7 @@ TEST_F(AssetBufferTest, ReplaceAsset)
   ASSERT_EQ(1, m_assetBuffer->getCountForDevice("D2"));
 }
 
+/// @test Test if the agent handlke asset buffer overflows.
 TEST_F(AssetBufferTest, TestOverflow)
 {
   ErrorList errors;
@@ -175,6 +178,7 @@ TEST_F(AssetBufferTest, TestOverflow)
   ASSERT_EQ(1, m_assetBuffer->getCountForDevice("D3"));
 }
 
+/// @test Tests if the agent can remove assets.
 TEST_F(AssetBufferTest, RemovedAsset)
 {
   ErrorList errors;
@@ -220,6 +224,7 @@ TEST_F(AssetBufferTest, RemovedAsset)
   ASSERT_EQ(1, m_assetBuffer->getCountForDevice("D3"));
 }
 
+/// @test Tests if the asset counts are correct for types and devices.
 TEST_F(AssetBufferTest, verify_asset_counts_by_type)
 {
   m_assetBuffer = make_unique<AssetBuffer>(12);
@@ -248,6 +253,7 @@ TEST_F(AssetBufferTest, verify_asset_counts_by_type)
   ASSERT_EQ(5, counts3["Asset2"]);
 }
 
+/// @test Tests if removing an asset correctly updates the asset counts.
 TEST_F(AssetBufferTest, verify_asset_counts_with_removal)
 {
   m_assetBuffer = make_unique<AssetBuffer>(12);
