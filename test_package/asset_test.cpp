@@ -60,6 +60,7 @@ protected:
   std::unique_ptr<printer::XmlWriter> m_writer;
 };
 
+/// @test Tests if assets can contain extended content.
 TEST_F(AssetTest, TestExtendedAsset)
 {
   auto doc =
@@ -89,6 +90,7 @@ TEST_F(AssetTest, TestExtendedAsset)
   ASSERT_EQ(expected, m_writer->getContent());
 }
 
+/// @test Tests if the asset parses and loads when it has a missing asset Id.
 TEST_F(AssetTest, asset_should_parse_and_load_if_asset_id_is_missing_from_xml)
 {
   auto doc = R"DOC(<PlexHeader>
