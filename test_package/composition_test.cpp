@@ -65,6 +65,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
+/// @test Tests the parsing of device-component relationships.
 TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
 {
   using namespace mtconnect::entity;
@@ -114,6 +115,7 @@ TEST_F(CompositionTest, ParseDeviceAndComponentRelationships)
 #define CONFIGURATION_PATH COMPOSITION_PATH "/m:Configuration"
 #define SPECIFICATIONS_PATH CONFIGURATION_PATH "/m:Specifications"
 
+/// @test Tests if XML is printed correctly.
 TEST_F(CompositionTest, XmlPrinting)
 {
   {
@@ -135,6 +137,7 @@ TEST_F(CompositionTest, XmlPrinting)
   }
 }
 
+/// @test Tests if JSON is printed correctly.
 TEST_F(CompositionTest, JsonPrinting)
 {
   {
@@ -160,6 +163,7 @@ TEST_F(CompositionTest, JsonPrinting)
   }
 }
 
+/// @test Tests if compositions create their own topics.
 TEST_F(CompositionTest, should_create_topic)
 {
   using namespace mtconnect::entity;
