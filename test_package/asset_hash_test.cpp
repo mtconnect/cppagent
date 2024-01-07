@@ -69,6 +69,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
+/// @test Tests if the assets are assigned hashes by the agent.
 TEST_F(AssetHashTest, should_assign_hash_when_receiving_asset)
 {
   addAdapter();
@@ -132,7 +133,8 @@ TEST_F(AssetHashTest, should_assign_hash_when_receiving_asset)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:AssetChanged@hash", hash.c_str());
   }
 }
-
+ 
+/// @test Tests if the hash changes when the asset changes.
 TEST_F(AssetHashTest, hash_should_change_when_doc_changes)
 {
   addAdapter();
