@@ -73,6 +73,7 @@ namespace mtconnect {
     std::optional<WorkGuard> m_guard;
   };
 
+  /// @test Tests whether change observers can be added to signals.
   TEST_F(ChangeObserverTest, AddObserver)
   {
     mtconnect::ChangeObserver changeObserver(*m_strand);
@@ -82,6 +83,7 @@ namespace mtconnect {
     ASSERT_TRUE(m_signaler->hasObserver(&changeObserver));
   }
 
+  /// @test Tests whether the observer signals at the correct rate.
   TEST_F(ChangeObserverTest, SignalObserver)
   {
     mtconnect::ChangeObserver changeObserver(*m_strand);
@@ -139,7 +141,8 @@ namespace mtconnect {
     ASSERT_FALSE(waitResult);
     ASSERT_FALSE(changeObserver.wasSignaled());
   }
-
+  
+  /// @test 
   TEST_F(ChangeObserverTest, Cleanup)
   {
     mtconnect::ChangeObserver *changeObserver = nullptr;
@@ -153,7 +156,8 @@ namespace mtconnect {
 
     ASSERT_FALSE(m_signaler->hasObserver(changeObserver));
   }
-
+  
+  /// @test Tests if the agent can handle sequences of changes.
   TEST_F(ChangeObserverTest, ChangeSequence)
   {
     mtconnect::ChangeObserver changeObserver(*m_strand);
@@ -183,7 +187,8 @@ namespace mtconnect {
 
     ASSERT_EQ(uint64_t {100}, changeObserver.getSequence());
   }
-
+  
+  /// @test Tests if the agent can handle sequences of changes.
   TEST_F(ChangeObserverTest, ChangeSequence2)
   {
     using namespace std::chrono_literals;
@@ -292,7 +297,8 @@ namespace mtconnect {
     DevicePtr m_device;
     ComponentPtr m_comp;
   };
-
+  
+  /// @test Tests if the async observer calls the handler.
   TEST_F(AsyncObserverTest, async_observer_should_call_handler)
   {
     FilterSet filter {"a", "b"};
@@ -325,7 +331,8 @@ namespace mtconnect {
     waitFor([&called]() { return called; });
     ASSERT_TRUE(called);
   }
-
+  
+  /// @test Tests if the async observer calls the handler immediately if not at the end of the buffer.
   TEST_F(AsyncObserverTest, if_not_at_end_should_call_immediately)
   {
     FilterSet filter {"a", "b"};
@@ -367,7 +374,8 @@ namespace mtconnect {
     waitFor([&called]() { return called; });
     ASSERT_TRUE(called);
   }
-
+  
+  /// @test Tests if the observations are processed in small batches.
   TEST_F(AsyncObserverTest, process_observations_in_small_chunks)
   {
     FilterSet filter {"a", "b"};
@@ -430,7 +438,8 @@ namespace mtconnect {
     ASSERT_EQ(5, observer->getSequence());
     ASSERT_FALSE(observer->isEndOfBuffer());
   }
-
+  
+  /// @test Tests if the handler is called on the heartbeat event.
   TEST_F(AsyncObserverTest, should_call_handler_with_heartbeat)
   {
     FilterSet filter {"a", "b"};
@@ -465,7 +474,8 @@ namespace mtconnect {
     ASSERT_EQ(4, observer->getSequence());
     ASSERT_TRUE(observer->isEndOfBuffer());
   }
-
+  
+  /// @test Tests if the async observer stops when it isn't running.
   TEST_F(AsyncObserverTest, should_stop_if_not_running)
   {
     FilterSet filter {"a", "b"};
