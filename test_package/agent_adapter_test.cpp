@@ -221,7 +221,7 @@ TEST_F(AgentAdapterTest, should_connect_to_agent)
   timeout.cancel();
 }
 
-/// @test Tests if the the agent can return current data.
+/// @test Tests if the the agent can return current observations.
 TEST_F(AgentAdapterTest, should_get_current_from_agent)
 {
   createAgent();
@@ -297,7 +297,7 @@ TEST_F(AgentAdapterTest, should_get_assets_from_agent)
   timeout.cancel();
 }
 
-/// @test Tests if the agent return a sample of points.
+/// @test Tests if the agent return a sample of observations.
 TEST_F(AgentAdapterTest, should_receive_sample)
 {
   createAgent();

@@ -227,7 +227,7 @@ TEST_F(AgentDeviceTest, adapter_component_with_ip_address_suppressed)
 #define AGENT_DEVICE_DEVICE_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Agent']"
 #define AGENT_DEVICE_ADAPTER_STREAM AGENT_DEVICE_STREAM "/m:ComponentStream[@component='Adapter']"
 
-/// @test Tests if the current data can get updated through an adapter.
+/// @test Tests if the current observations can get updated through an adapter.
 TEST_F(AgentDeviceTest, AdapterAddedCurrentTest)
 {
   {

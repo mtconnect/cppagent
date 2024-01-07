@@ -241,7 +241,7 @@ TEST_F(AgentTest, BadPath)
   }
 }
 
-/// @test Tests if the agent returns the correct data within the buffer at any index.
+/// @test Tests if the agent returns the correct observation within the buffer at any index.
 TEST_F(AgentTest, CurrentAt)
 {
   QueryMap query;
@@ -311,7 +311,7 @@ TEST_F(AgentTest, CurrentAt)
   }
 }
 
-/// @test Tests if the agent returns the correct data within the buffer at any index.
+/// @test Tests if the agent returns the correct observation within the buffer at any index.
 TEST_F(AgentTest, CurrentAt64)
 {
   QueryMap query;
@@ -344,7 +344,7 @@ TEST_F(AgentTest, CurrentAt64)
   }
 }
 
-/// @test Tests if the agent fails correctly when trying to access data out of range of the buffer.
+/// @test Tests if the agent fails correctly when trying to access observations out of range of the buffer.
 TEST_F(AgentTest, CurrentAtOutOfRange)
 {
   QueryMap query;
@@ -565,7 +565,7 @@ TEST_F(AgentTest, SampleAtNextSeq)
   }
 }
 
-/// @test Tests if the agent returns the correct amount of data items specified by the count parameter.
+/// @test Tests if the agent returns the correct amount of observations specified by the count parameter.
 TEST_F(AgentTest, SampleCount)
 {
   QueryMap query;
@@ -602,7 +602,7 @@ TEST_F(AgentTest, SampleCount)
   }
 }
 
-/// @test Tests if the agent returns the correct amount of data items starting from the back specified by the count parameter when using a negative number.
+/// @test Tests if the agent returns the correct amount of observations starting from the back specified by the count parameter when using a negative number.
 TEST_F(AgentTest, SampleLastCount)
 {
   QueryMap query;
@@ -726,7 +726,7 @@ TEST_F(AgentTest, EmptyStream)
   }
 }
 
-/// @test Tests if data items are added to the buffer correctly.
+/// @test Tests if observations are added to the buffer correctly.
 TEST_F(AgentTest, AddToBuffer)
 {
   auto agent = m_agentTestHelper->m_agent.get();
