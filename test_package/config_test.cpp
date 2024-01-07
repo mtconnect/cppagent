@@ -123,6 +123,7 @@ namespace {
     std::filesystem::path m_cwd;
   };
 
+  /// @test Tests the loading of a blank configuration.
   TEST_F(ConfigTest, BlankConfig)
   {
     m_config->loadConfig("");
@@ -133,6 +134,7 @@ namespace {
     ASSERT_EQ("1.1", *agent->getSchemaVersion());
   }
 
+  /// @test Tests loading of a configuration specifying buffer size.
   TEST_F(ConfigTest, BufferSize)
   {
     m_config->loadConfig("BufferSize = 4\n");
@@ -144,6 +146,7 @@ namespace {
     ASSERT_EQ(16U, circ.getBufferSize());
   }
 
+  /// @test Tests loading of a configuration specifying a device.
   TEST_F(ConfigTest, Device)
   {
     string str("Devices = " TEST_RESOURCE_DIR "/samples/test_config.xml\n");
@@ -166,6 +169,7 @@ namespace {
     ASSERT_TRUE(device->preserveUuid());
   }
 
+  /// @test Tests loading of a configuration specifying an adapter
   TEST_F(ConfigTest, Adapter)
   {
     using namespace std::chrono_literals;
@@ -200,6 +204,7 @@ namespace {
     // ASSERT_TRUE(device->m_preserveUuid);
   }
 
+  /// @test Tests the perserveUUID configuration parameter.
   TEST_F(ConfigTest, DefaultPreserveUUID)
   {
     string str("Devices = " TEST_RESOURCE_DIR
@@ -214,6 +219,7 @@ namespace {
     ASSERT_TRUE(device->preserveUuid());
   }
 
+  /// @test Tests the override of perserveUUID by the last specified value.
   TEST_F(ConfigTest, DefaultPreserveOverride)
   {
     string str("Devices = " TEST_RESOURCE_DIR
@@ -231,6 +237,7 @@ namespace {
     ASSERT_FALSE(device->preserveUuid());
   }
 
+  /// @test Tests the allowPut configuration parameter.
   TEST_F(ConfigTest, DisablePut)
   {
     string str("Devices = " TEST_RESOURCE_DIR
@@ -247,6 +254,7 @@ namespace {
     ASSERT_TRUE(rest->getServer()->arePutsAllowed());
   }
 
+  /// @test Tests the allowPut configuration parameter with a specific host.
   TEST_F(ConfigTest, LimitPut)
   {
     string str("Devices = " TEST_RESOURCE_DIR
@@ -265,6 +273,7 @@ namespace {
     ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("127.0.0.1")));
   }
 
+  /// @test Tests the allowPut configuration parameter with specific hosts.
   TEST_F(ConfigTest, LimitPutFromHosts)
   {
     string str("Devices = " TEST_RESOURCE_DIR
@@ -284,6 +293,7 @@ namespace {
     ASSERT_TRUE(rest->getServer()->allowPutFrom(std::string("192.168.0.1")));
   }
 
+  /// @test Tests the addition of namespaces using the configuration file.
   TEST_F(ConfigTest, Namespaces)
   {
     string streams(
@@ -356,6 +366,7 @@ namespace {
     ASSERT_EQ(std::string("urn:example.com:ExampleErrors:1.2"), path);
   }
 
+  /// @test Tests the legacyTimeout parameter in the configuration file.
   TEST_F(ConfigTest, LegacyTimeout)
   {
     using namespace std::chrono_literals;
@@ -372,6 +383,7 @@ namespace {
     ASSERT_EQ(2000s, adapter->getLegacyTimeout());
   }
 
+  /// @test Tests the IgnoreTimestamps parameter in the configuration file.
   TEST_F(ConfigTest, IgnoreTimestamps)
   {
     string str("Devices = " TEST_RESOURCE_DIR
@@ -386,6 +398,7 @@ namespace {
     ASSERT_TRUE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
+  /// @test Tests the override of IgnoreTimestamps by the last specified value. 
   TEST_F(ConfigTest, IgnoreTimestampsOverride)
   {
     string str("Devices = " TEST_RESOURCE_DIR
@@ -404,6 +417,7 @@ namespace {
     ASSERT_FALSE(IsOptionSet(adapter->getOptions(), configuration::IgnoreTimestamps));
   }
 
+  /// @test Tests the addition of MTConnect namespaces using the configuration file.
   TEST_F(ConfigTest, SpecifyMTCNamespace)
   {
     string streams(
@@ -428,6 +442,7 @@ namespace {
     printer->clearStreamsNamespaces();
   }
 
+  /// @test Tests the SchemaVersion parameter in the configuration file.
   TEST_F(ConfigTest, SetSchemaVersion)
   {
     string streams("SchemaVersion = 1.4\n");
@@ -444,6 +459,7 @@ namespace {
     printer->setSchemaVersion("1.3");
   }
 
+  /// @test Tests the schema.path parameter in the configuration file.
   TEST_F(ConfigTest, SchemaDirectory)
   {
     string schemas(
@@ -487,6 +503,7 @@ namespace {
     ASSERT_EQ(std::string("/schemas/MTConnectError_1.3.xsd"), location);
   }
 
+  /// @test Tests the access control limitation in the configuration file.
   TEST_F(ConfigTest, check_http_headers)
   {
     string str(
@@ -513,6 +530,7 @@ namespace {
     ASSERT_EQ(" *", first.second);
   }
 
+  /// @test Tests dynamic loading of sinks.
   TEST_F(ConfigTest, dynamic_load_sinks_bad)
   {
     string str(R"(
@@ -534,6 +552,7 @@ Sinks {
     ASSERT_TRUE(sink == nullptr);
   }
 
+  /// @test Tests dynamic loading of sinks.
   TEST_F(ConfigTest, dynamic_load_sinks_simple)
   {
     string str(R"(
@@ -552,6 +571,7 @@ Sinks {
     ASSERT_TRUE(sink != nullptr);
   }
 
+  /// @test Tests dynamic loading of sinks with plugin block.
   TEST_F(ConfigTest, dynamic_load_sinks_with_plugin_block)
   {
     string str(R"(
@@ -574,6 +594,7 @@ Sinks {
     ASSERT_TRUE(sink != nullptr);
   }
 
+  /// @test Tests dynamic loading of sinks with an assigned name.
   TEST_F(ConfigTest, dynamic_load_sinks_assigned_name)
   {
     string str(R"(
@@ -594,6 +615,7 @@ Sinks {
     ASSERT_TRUE(sink2 != nullptr);
   }
 
+  /// @test Tests dynamic loading of sinks with an assigned nametag.
   TEST_F(ConfigTest, dynamic_load_sinks_assigned_name_tag)
   {
     string str(R"(
@@ -616,6 +638,7 @@ Sinks {
   }
 
   //
+  /// @test Tests dynamic loading of adapters.
   TEST_F(ConfigTest, dynamic_load_adapter_bad)
   {
     string str(R"(
@@ -635,6 +658,7 @@ Adapters {
     ASSERT_TRUE(adapter == nullptr);
   }
 
+  /// @test Tests dynamic loading of adapters. 
   TEST_F(ConfigTest, dynamic_load_adapter_simple)
   {
     string str(R"(
@@ -654,6 +678,7 @@ Adapters {
     ASSERT_TRUE(adapter != nullptr);
   }
 
+  /// @test Tests dynamic loading of adapters with plugin block.
   TEST_F(ConfigTest, dynamic_load_adapter_with_plugin_block)
   {
     string str(R"(
@@ -678,6 +703,7 @@ Adapters {
     ASSERT_TRUE(adapter != nullptr);
   }
 
+  /// @test Tests the specifying of maximum cache size when units are omitted.
   TEST_F(ConfigTest, max_cache_size_in_no_units)
   {
     string str(R"(
@@ -696,6 +722,7 @@ MaxCachedFileSize = 2000
     ASSERT_EQ(2000, cache->getMaxCachedFileSize());
   }
 
+  /// @test Tests the specifying of maximum cache size when units are kilobytes.
   TEST_F(ConfigTest, max_cache_size_in_kb)
   {
     string str(R"(
@@ -714,6 +741,7 @@ MaxCachedFileSize = 2k
     ASSERT_EQ(2048, cache->getMaxCachedFileSize());
   }
 
+  /// @test Tests the specifying of maximum cache size when units are kilobytes uppercase.
   TEST_F(ConfigTest, max_cache_size_in_Kb_in_uppercase)
   {
     string str(R"(
@@ -732,6 +760,7 @@ MaxCachedFileSize = 2K
     ASSERT_EQ(2048, cache->getMaxCachedFileSize());
   }
 
+  /// @test Tests the specifying of maximum cache size when units are megabytes.
   TEST_F(ConfigTest, max_cache_size_in_mb)
   {
     string str(R"(
@@ -750,6 +779,7 @@ MaxCachedFileSize = 2m
     ASSERT_EQ(2 * 1024 * 1024, cache->getMaxCachedFileSize());
   }
 
+  /// @test Tests the specifying of maximum cache size when units are gigabytes.
   TEST_F(ConfigTest, max_cache_size_in_gb)
   {
     string str(R"(
@@ -771,6 +801,7 @@ MaxCachedFileSize = 2g
 #define EXPECT_PATH_EQ(p1, p2) \
   EXPECT_EQ(std::filesystem::weakly_canonical(p1), std::filesystem::weakly_canonical(p2))
 
+  /// @test Tests 
   TEST_F(ConfigTest, log_output_should_set_archive_file_pattern)
   {
     m_config->setDebug(false);
@@ -791,6 +822,7 @@ logger_config {
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, log_output_should_configure_file_name)
   {
     m_config->setDebug(false);
@@ -811,6 +843,7 @@ logger_config {
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, log_should_configure_file_name)
   {
     m_config->setDebug(false);
@@ -832,6 +865,7 @@ logger_config {
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, log_should_specify_relative_directory)
   {
     m_config->setDebug(false);
@@ -855,6 +889,7 @@ logger_config {
     EXPECT_PATH_EQ(path, m_config->getLogDirectory());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, log_should_specify_relative_directory_with_active_in_parent)
   {
     m_config->setDebug(false);
@@ -878,6 +913,7 @@ logger_config {
     EXPECT_PATH_EQ(path / "logs", m_config->getLogDirectory());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, log_should_specify_max_file_and_rotation_size)
   {
     m_config->setDebug(false);
@@ -900,6 +936,7 @@ logger_config {
     EXPECT_EQ(20ll * 1024 * 1024 * 1024, m_config->getLogRotationSize());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, log_should_configure_logging_level)
   {
     m_config->setDebug(false);
@@ -962,6 +999,7 @@ logger_config {
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_reload_device_xml_file)
   {
     auto root {createTempDirectory("1")};
@@ -1041,6 +1079,7 @@ Port = 0
     m_config->start();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_reload_device_xml_and_skip_unchanged_devices)
   {
     fs::path root {createTempDirectory("2")};
@@ -1107,6 +1146,7 @@ Port = 0
     m_config->start();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_restart_agent_when_config_file_changes)
   {
     fs::path root {createTempDirectory("3")};
@@ -1182,6 +1222,7 @@ Port = 0
     th.join();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices)
   {
     fs::path root {createTempDirectory("4")};
@@ -1269,6 +1310,7 @@ Port = 0
     m_config->start();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_disable_agent_device)
   {
     string streams("SchemaVersion = 2.0\nDisableAgentDevice = true\n");
@@ -1284,6 +1326,7 @@ Port = 0
     ASSERT_EQ("Device", device->getName());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_default_not_disable_agent_device)
   {
     string streams("SchemaVersion = 2.0\n");
@@ -1299,6 +1342,7 @@ Port = 0
     ASSERT_EQ("Agent", device->getName());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_update_schema_version_when_device_file_updates)
   {
     auto root {createTempDirectory("5")};
@@ -1392,6 +1436,7 @@ Port = 0
     th.join();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_add_a_new_device_when_deviceModel_received_from_adapter)
   {
     using namespace mtconnect::source::adapter;
@@ -1507,6 +1552,7 @@ Adapters {
     m_config->start();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_update_a_device_when_received_from_adapter)
   {
     using namespace mtconnect::source::adapter;
@@ -1640,6 +1686,7 @@ Port = 0
     m_config->start();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_update_the_ids_of_all_entities)
   {
     fs::path root {createTempDirectory("8")};
@@ -1698,6 +1745,7 @@ Port = 0
     ASSERT_EQ("exec", *exec2->getOriginalId());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_add_a_new_device_with_duplicate_ids)
   {
     using namespace mtconnect::source::adapter;
@@ -1813,6 +1861,7 @@ Port = 0
     m_config->start();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_ignore_xmlns_when_parsing_device_xml)
   {
     using namespace mtconnect::source::adapter;
@@ -1919,6 +1968,7 @@ Adapters {
     m_config->start();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_not_reload_when_monitor_files_is_on)
   {
     using namespace mtconnect::source::adapter;
@@ -2045,6 +2095,7 @@ Port = 0
     m_config->start();
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_not_crash_when_there_are_no_devices_and_receives_data)
   {
     using namespace mtconnect::source::adapter;
@@ -2123,6 +2174,7 @@ Adapters {
   }
 
   // Environment variable tests
+  /// @test Tests 
   TEST_F(ConfigTest, should_expand_environment_variables)
   {
     putenv(strdup("CONFIG_TEST=TestValue"));
@@ -2138,6 +2190,7 @@ ServiceName=$CONFIG_TEST
     ASSERT_EQ("TestValue", *GetOption<string>(options, configuration::ServiceName));
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_expand_options)
   {
     putenv(strdup("CONFIG_TEST=ShouldNotMatch"));
@@ -2155,6 +2208,7 @@ ServiceName=$TestVariable
   }
 
   // Environment variable tests
+  /// @test Tests 
   TEST_F(ConfigTest, should_expand_with_prefix_and_suffix)
   {
     putenv(strdup("CONFIG_TEST=TestValue"));
@@ -2171,6 +2225,7 @@ ServiceName=/some/prefix/$CONFIG_TEST:suffix
               *GetOption<string>(options, configuration::ServiceName));
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_expand_with_prefix_and_suffix_with_curly)
   {
     putenv(strdup("CONFIG_TEST=TestValue"));
@@ -2187,6 +2242,7 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
               *GetOption<string>(options, configuration::ServiceName));
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_find_device_file_in_config_path)
   {
     fs::path root {createTempDirectory("13")};
@@ -2204,6 +2260,7 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
     ASSERT_TRUE(m_config->getAgent());
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_support_json_format)
   {
     using namespace std::chrono_literals;
@@ -2244,6 +2301,7 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
     // ASSERT_TRUE(device->m_preserveUuid);
   }
 
+  /// @test Tests 
   TEST_F(ConfigTest, should_set_agent_device_uuid)
   {
     string config(R"DOC(
