@@ -66,6 +66,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
+/// @test Tests the parsing of simple parameters sets for components.
 TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
 {
   const auto doc =
@@ -144,6 +145,7 @@ TEST_F(ComponentParametersTest, should_parse_simple_parameter_set)
   ASSERT_NE(hash1, entity->hash());
 }
 
+/// @test Tests the parsing of two parameters sets for components.
 TEST_F(ComponentParametersTest, should_parse_two_parameter_sets)
 {
   const auto doc =
