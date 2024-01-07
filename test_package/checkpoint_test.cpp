@@ -84,6 +84,7 @@ protected:
   DevicePtr m_device;
 };
 
+/// @test Tests the creation of observations.
 TEST_F(CheckpointTest, AddObservations)
 {
   entity::ErrorList errors;
@@ -151,6 +152,7 @@ TEST_F(CheckpointTest, AddObservations)
   EXPECT_EQ(1, p5.use_count());
 }
 
+/// @test Tests copying of observations.
 TEST_F(CheckpointTest, Copy)
 {
   entity::ErrorList errors;
@@ -184,6 +186,7 @@ TEST_F(CheckpointTest, Copy)
   ASSERT_EQ(2, p2.use_count());
 }
 
+/// @test Tests the retreival of observations.
 TEST_F(CheckpointTest, GetObservations)
 {
   entity::ErrorList errors;
@@ -241,6 +244,7 @@ TEST_F(CheckpointTest, GetObservations)
   ASSERT_EQ(2, list2.size());
 }
 
+/// @test Tests the filtering of copied observations.
 TEST_F(CheckpointTest, Filter)
 {
   entity::ErrorList errors;
@@ -294,6 +298,7 @@ TEST_F(CheckpointTest, Filter)
   d1.reset();
 }
 
+/// @test Tests the copying of observations 
 TEST_F(CheckpointTest, CopyAndFilter)
 {
   entity::ErrorList errors;
@@ -364,6 +369,7 @@ TEST_F(CheckpointTest, CopyAndFilter)
   ASSERT_EQ(3, list.size());
 }
 
+/// @test Tests the chaining of condition observations.
 TEST_F(CheckpointTest, ConditionChaining)
 {
   entity::ErrorList errors;
@@ -487,6 +493,7 @@ TEST_F(CheckpointTest, ConditionChaining)
   ASSERT_EQ(1, (int)list.size());
 }
 
+/// @test Tests if filtering alters the condition observation's value.
 TEST_F(CheckpointTest, LastConditionNormal)
 {
   entity::ErrorList errors;
@@ -523,6 +530,7 @@ TEST_F(CheckpointTest, LastConditionNormal)
   ASSERT_EQ(string(""), p3->getCode());
 }
 
+/// @test Tests if observations without dataitems are skipped.
 TEST_F(CheckpointTest, orphaned_observations_should_be_skipped)
 {
   entity::ErrorList errors;
