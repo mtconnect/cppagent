@@ -63,6 +63,8 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
+
+/// @test Test device and component relationship parsing.
 TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 {
   ASSERT_NE(nullptr, m_device);
@@ -111,6 +113,7 @@ TEST_F(CoordinateSystemTest, ParseDeviceAndComponentRelationships)
 #define CONFIGURATION_PATH "//m:Device/m:Configuration"
 #define COORDINATE_SYSTEMS_PATH CONFIGURATION_PATH "/m:CoordinateSystems"
 
+/// @test Test XML printing of coordinate systems.
 TEST_F(CoordinateSystemTest, XmlPrinting)
 {
   {
@@ -149,6 +152,7 @@ TEST_F(CoordinateSystemTest, XmlPrinting)
   }
 }
 
+/// @test Test JSON printing of coordinate systems.
 TEST_F(CoordinateSystemTest, JsonPrinting)
 {
   {
