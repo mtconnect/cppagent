@@ -801,7 +801,7 @@ MaxCachedFileSize = 2g
 #define EXPECT_PATH_EQ(p1, p2) \
   EXPECT_EQ(std::filesystem::weakly_canonical(p1), std::filesystem::weakly_canonical(p2))
 
-  /// @test Tests 
+  /// @test Tests the updating ot he log file archive file name based on logger_config.output in the configuration file.
   TEST_F(ConfigTest, log_output_should_set_archive_file_pattern)
   {
     m_config->setDebug(false);
@@ -822,7 +822,7 @@ logger_config {
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
 
-  /// @test Tests 
+  /// @test Tests modification of the log file name based on logger_config.output in the configuration file.
   TEST_F(ConfigTest, log_output_should_configure_file_name)
   {
     m_config->setDebug(false);
@@ -843,7 +843,7 @@ logger_config {
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
 
-  /// @test Tests 
+  /// @test Tests modification of the log file name based on logger_config.file_name and logger_config.archive_pattern in the configuration file.
   TEST_F(ConfigTest, log_should_configure_file_name)
   {
     m_config->setDebug(false);
@@ -865,7 +865,7 @@ logger_config {
     EXPECT_PATH_EQ(TEST_BIN_ROOT_DIR, m_config->getLogDirectory());
   }
 
-  /// @test Tests 
+  /// @test Tests if logger_config.file_name and logger_config.archive_pattern use relative file paths.
   TEST_F(ConfigTest, log_should_specify_relative_directory)
   {
     m_config->setDebug(false);
@@ -889,7 +889,7 @@ logger_config {
     EXPECT_PATH_EQ(path, m_config->getLogDirectory());
   }
 
-  /// @test Tests 
+  /// @test Tests if logger_config.file_name and logger_config.archive_pattern use relative file paths using the parent.
   TEST_F(ConfigTest, log_should_specify_relative_directory_with_active_in_parent)
   {
     m_config->setDebug(false);
@@ -913,7 +913,7 @@ logger_config {
     EXPECT_PATH_EQ(path / "logs", m_config->getLogDirectory());
   }
 
-  /// @test Tests 
+  /// @test Tests the logger_config.max_size and logger_config.rotation_size parameters in the configuration file. 
   TEST_F(ConfigTest, log_should_specify_max_file_and_rotation_size)
   {
     m_config->setDebug(false);
@@ -936,7 +936,7 @@ logger_config {
     EXPECT_EQ(20ll * 1024 * 1024 * 1024, m_config->getLogRotationSize());
   }
 
-  /// @test Tests 
+  /// @test Tests the logger_config.level parameter in the configuration file.
   TEST_F(ConfigTest, log_should_configure_logging_level)
   {
     m_config->setDebug(false);
@@ -999,7 +999,7 @@ logger_config {
     EXPECT_EQ(severity_level::fatal, m_config->getLogLevel());
   }
 
-  /// @test Tests 
+  /// @test Tests the reloading of device XML files using the MonitorConfigFiles, MonitorInterval, and MinimumConfigReloadAge parameters.
   TEST_F(ConfigTest, should_reload_device_xml_file)
   {
     auto root {createTempDirectory("1")};
@@ -1079,7 +1079,7 @@ Port = 0
     m_config->start();
   }
 
-  /// @test Tests 
+  /// @test Tests if reloading the device XML files using the MonitorConfigFiles, MonitorInterval, and MinimumConfigReloadAge parameters skips unchanged devices.
   TEST_F(ConfigTest, should_reload_device_xml_and_skip_unchanged_devices)
   {
     fs::path root {createTempDirectory("2")};
@@ -1146,7 +1146,7 @@ Port = 0
     m_config->start();
   }
 
-  /// @test Tests 
+  /// @test Tests the reloading of the config file using the MonitorConfigFiles, MonitorInterval, and MinimumConfigReloadAge parameters.
   TEST_F(ConfigTest, should_restart_agent_when_config_file_changes)
   {
     fs::path root {createTempDirectory("3")};
@@ -1222,7 +1222,7 @@ Port = 0
     th.join();
   }
 
-  /// @test Tests 
+  /// @test Tests reloading the device XML files using the MonitorConfigFiles, MonitorInterval, and MinimumConfigReloadAge parameters adds new devices.
   TEST_F(ConfigTest, should_reload_device_xml_and_add_new_devices)
   {
     fs::path root {createTempDirectory("4")};
@@ -1310,7 +1310,7 @@ Port = 0
     m_config->start();
   }
 
-  /// @test Tests 
+  /// @test Tests the DisableAgentDevice configuration parameter in the 2.0 agent.
   TEST_F(ConfigTest, should_disable_agent_device)
   {
     string streams("SchemaVersion = 2.0\nDisableAgentDevice = true\n");
@@ -1326,7 +1326,7 @@ Port = 0
     ASSERT_EQ("Device", device->getName());
   }
 
-  /// @test Tests 
+  /// @test Tests if the default option for DisableAgentDevice is to enable the agent device.
   TEST_F(ConfigTest, should_default_not_disable_agent_device)
   {
     string streams("SchemaVersion = 2.0\n");
@@ -1342,7 +1342,7 @@ Port = 0
     ASSERT_EQ("Agent", device->getName());
   }
 
-  /// @test Tests 
+  /// @test Tests if the schema version updates when the device file updates.
   TEST_F(ConfigTest, should_update_schema_version_when_device_file_updates)
   {
     auto root {createTempDirectory("5")};
@@ -1436,7 +1436,7 @@ Port = 0
     th.join();
   }
 
-  /// @test Tests 
+  /// @test Tests if device models can be recieved from adapters when EnableSourceDeviceModels is set to true.
   TEST_F(ConfigTest, should_add_a_new_device_when_deviceModel_received_from_adapter)
   {
     using namespace mtconnect::source::adapter;
@@ -1552,7 +1552,7 @@ Adapters {
     m_config->start();
   }
 
-  /// @test Tests 
+  /// @test Tests the updating of the devices.xml file when a device is recieved from an adapter.
   TEST_F(ConfigTest, should_update_a_device_when_received_from_adapter)
   {
     using namespace mtconnect::source::adapter;
@@ -1686,7 +1686,7 @@ Port = 0
     m_config->start();
   }
 
-  /// @test Tests 
+  /// @test Tests the updating of entity Ids using the CreateUniqueIds configuration parameter..
   TEST_F(ConfigTest, should_update_the_ids_of_all_entities)
   {
     fs::path root {createTempDirectory("8")};
@@ -1745,7 +1745,7 @@ Port = 0
     ASSERT_EQ("exec", *exec2->getOriginalId());
   }
 
-  /// @test Tests 
+  /// @test Tests the dyanmic addition of new devices with duplicate Ids.
   TEST_F(ConfigTest, should_add_a_new_device_with_duplicate_ids)
   {
     using namespace mtconnect::source::adapter;
@@ -1861,7 +1861,7 @@ Port = 0
     m_config->start();
   }
 
-  /// @test Tests 
+  /// @test Tests if xmlns are ignored when parsing the device xml.
   TEST_F(ConfigTest, should_ignore_xmlns_when_parsing_device_xml)
   {
     using namespace mtconnect::source::adapter;
@@ -1968,7 +1968,7 @@ Adapters {
     m_config->start();
   }
 
-  /// @test Tests 
+  /// @test Tests the reloading when MonitorConfigFiles is set for true.
   TEST_F(ConfigTest, should_not_reload_when_monitor_files_is_on)
   {
     using namespace mtconnect::source::adapter;
@@ -2095,7 +2095,7 @@ Port = 0
     m_config->start();
   }
 
-  /// @test Tests 
+  /// @test Tests if the agent crashes when the agent recieves data when no devices are registered.
   TEST_F(ConfigTest, should_not_crash_when_there_are_no_devices_and_receives_data)
   {
     using namespace mtconnect::source::adapter;
@@ -2174,7 +2174,7 @@ Adapters {
   }
 
   // Environment variable tests
-  /// @test Tests 
+  /// @test Tests if the environemnt variables are expanded in the confiuration file.
   TEST_F(ConfigTest, should_expand_environment_variables)
   {
     putenv(strdup("CONFIG_TEST=TestValue"));
@@ -2190,7 +2190,7 @@ ServiceName=$CONFIG_TEST
     ASSERT_EQ("TestValue", *GetOption<string>(options, configuration::ServiceName));
   }
 
-  /// @test Tests 
+  /// @test Tests if options are expanded in the confiuration file.
   TEST_F(ConfigTest, should_expand_options)
   {
     putenv(strdup("CONFIG_TEST=ShouldNotMatch"));
@@ -2208,7 +2208,7 @@ ServiceName=$TestVariable
   }
 
   // Environment variable tests
-  /// @test Tests 
+  /// @test Tests if the prefixes and suffixes are expanded in the confiuration file.
   TEST_F(ConfigTest, should_expand_with_prefix_and_suffix)
   {
     putenv(strdup("CONFIG_TEST=TestValue"));
@@ -2225,7 +2225,7 @@ ServiceName=/some/prefix/$CONFIG_TEST:suffix
               *GetOption<string>(options, configuration::ServiceName));
   }
 
-  /// @test Tests 
+  /// @test Tests if the prefixes and suffixes are expanded in the confiuration file when curly braces are used.
   TEST_F(ConfigTest, should_expand_with_prefix_and_suffix_with_curly)
   {
     putenv(strdup("CONFIG_TEST=TestValue"));
@@ -2242,7 +2242,7 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
               *GetOption<string>(options, configuration::ServiceName));
   }
 
-  /// @test Tests 
+  /// @test Tests if the devices file can be found in the ConfigPath confiuration parameter.
   TEST_F(ConfigTest, should_find_device_file_in_config_path)
   {
     fs::path root {createTempDirectory("13")};
@@ -2260,7 +2260,7 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
     ASSERT_TRUE(m_config->getAgent());
   }
 
-  /// @test Tests 
+  /// @test Tests if the configuration file supports JSON formatting.
   TEST_F(ConfigTest, should_support_json_format)
   {
     using namespace std::chrono_literals;
@@ -2301,7 +2301,7 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
     // ASSERT_TRUE(device->m_preserveUuid);
   }
 
-  /// @test Tests 
+  /// @test Tests if the agent UUID can be set in the confiuration file with the AgentDeviceUUID parameter.
   TEST_F(ConfigTest, should_set_agent_device_uuid)
   {
     string config(R"DOC(
