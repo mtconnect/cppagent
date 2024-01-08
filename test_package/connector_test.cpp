@@ -281,6 +281,8 @@ TEST_F(ConnectorTest, should_process_a_protocol_command)
   ASSERT_EQ("* Hello Connector", m_connector->m_command);
 }
 
+
+/// @test Tests the cconnector's heartbeat.
 TEST_F(ConnectorTest, Heartbeat)
 {
   // Start the accept thread
@@ -301,6 +303,7 @@ TEST_F(ConnectorTest, Heartbeat)
   ASSERT_EQ(std::chrono::milliseconds {1000}, m_connector->heartbeatFrequency());
 }
 
+/// @test Tests the heartbeat's pong.
 TEST_F(ConnectorTest, HeartbeatPong)
 {
   // TODO Copy&Paste from Heartbeat
@@ -337,6 +340,7 @@ TEST_F(ConnectorTest, HeartbeatPong)
   }
 }
 
+/// @test Tests the heartbeat's keep alive.
 TEST_F(ConnectorTest, HeartbeatDataKeepAlive)
 {
   startServer();
@@ -371,6 +375,7 @@ TEST_F(ConnectorTest, HeartbeatDataKeepAlive)
   }
 }
 
+/// @test Tests the heartbeat's timeout.
 TEST_F(ConnectorTest, HeartbeatTimeout)
 {
   startServer();
@@ -394,6 +399,7 @@ TEST_F(ConnectorTest, HeartbeatTimeout)
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
+/// @test Test the legacy heartbeat's timeout.
 TEST_F(ConnectorTest, LegacyTimeout)
 {
   startServer();
@@ -414,6 +420,7 @@ TEST_F(ConnectorTest, LegacyTimeout)
   ASSERT_TRUE(m_connector->m_disconnected);
 }
 
+/// @test Tests the connector's ability to parse the buffer.
 TEST_F(ConnectorTest, ParseBuffer)
 {
   startServer();
@@ -445,6 +452,7 @@ TEST_F(ConnectorTest, ParseBuffer)
   ASSERT_EQ((string) "And Again", m_connector->m_data);
 }
 
+/// @test Tests the connector's ability to parse buffer frames.
 TEST_F(ConnectorTest, ParseBufferFraming)
 {
   startServer();
@@ -464,6 +472,7 @@ TEST_F(ConnectorTest, ParseBufferFraming)
   ASSERT_EQ((string) "fourth", m_connector->m_list[3]);
 }
 
+/// @test Tests sending commands through the connector.
 TEST_F(ConnectorTest, SendCommand)
 {
   startServer();
@@ -481,6 +490,7 @@ TEST_F(ConnectorTest, SendCommand)
   ASSERT_EQ("* Hello There;", line);
 }
 
+/// @test Tests IPV6 connections through the connector.
 TEST_F(ConnectorTest, IPV6Connection)
 {
 // TODO: Need to port to Windows > VISTA
@@ -498,6 +508,7 @@ TEST_F(ConnectorTest, IPV6Connection)
 #endif
 }
 
+/// @test Tests if the heartbeats begin when a valid pong is recieved.
 TEST_F(ConnectorTest, should_start_heartbeats_when_a_valid_pong_is_received)
 {
   ASSERT_TRUE(!m_connector->heartbeats());
@@ -543,6 +554,7 @@ TEST_F(ConnectorTest, should_start_heartbeats_when_a_valid_pong_is_received)
   ASSERT_EQ(std::chrono::milliseconds {323}, m_connector->heartbeatFrequency());
 }
 
+/// @test Tests filtering of trailing and leading white space in connector messages.
 TEST_F(ConnectorTest, test_trimming_trailing_white_space)
 {
   startServer();
