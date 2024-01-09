@@ -85,7 +85,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
-/// @test Tests minimal archetype for cutting tool implementation.
+/// @test Tests minimal cutting tool archetype.
 TEST_F(CuttingToolTest, TestMinmalArchetype)
 {
   const auto doc =
@@ -205,7 +205,7 @@ TEST_F(CuttingToolTest, TestMeasurements)
   ASSERT_EQ(content, doc);
 }
 
-/// @test Test cutting items.
+/// @test Tests cutting items.
 TEST_F(CuttingToolTest, TestItems)
 {
   const auto doc =
@@ -339,7 +339,7 @@ TEST_F(CuttingToolTest, TestItems)
   ASSERT_EQ(content, doc);
 }
 
-/// @test Test
+/// @test Tests minimal implementation of a cutting tool.
 TEST_F(CuttingToolTest, TestMinmalTool)
 {
   const auto doc =
@@ -399,7 +399,7 @@ TEST_F(CuttingToolTest, TestMinmalTool)
   ASSERT_EQ(content, doc);
 }
 
-/// @test Test
+/// @test Tests that an error when cutterStatus is not implemented. 
 TEST_F(CuttingToolTest, TestMinmalToolError)
 {
   const auto doc =
@@ -423,7 +423,7 @@ TEST_F(CuttingToolTest, TestMinmalToolError)
   ASSERT_EQ("CuttingTool: Invalid element 'CuttingToolLifeCycle'", string(errors.back()->what()));
 }
 
-/// @test Test
+/// @test Tests that an error occurs when measurements are not properly implemented.
 TEST_F(CuttingToolTest, TestMeasurementsError)
 {
   const auto doc =
@@ -464,7 +464,7 @@ TEST_F(CuttingToolTest, TestMeasurementsError)
   EXPECT_EQ("CuttingToolLifeCycle: Invalid element 'Measurements'", string((*it)->what()));
 }
 
-/// @test Test
+/// @test Tests the implementation of an asset with multiple simple cutting items.
 TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
 {
   auto printer = dynamic_cast<printer::XmlPrinter *>(m_agentTestHelper->m_agent->getPrinter("xml"));
@@ -501,7 +501,7 @@ TEST_F(CuttingToolTest, AssetWithSimpleCuttingItems)
   }
 }
 
-/// @test Test
+/// @test Tests the extension of a cutting item with additional descriptive data items.
 TEST_F(CuttingToolTest, test_extended_cutting_item)
 {
   const auto doc =
@@ -643,7 +643,7 @@ TEST_F(CuttingToolTest, test_extended_cutting_item)
             sdoc);
 }
 
-/// @test Test
+/// @test Tests XML name space with a top element alias.
 TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
 {
   const auto doc =
@@ -703,7 +703,7 @@ TEST_F(CuttingToolTest, test_xmlns_with_top_element_alias)
 )DOC");
 }
 
-/// @test Test
+/// @test Tests if the cutter status data component is positioned before locus.
 TEST_F(CuttingToolTest, element_order_should_place_cutter_status_before_locus)
 {
   const auto doc =
