@@ -90,8 +90,6 @@ namespace mtconnect::pipeline {
     using namespace date::literals;
     using namespace date;
 
-    NAMED_SCOPE("TimestampExtractor");
-
     // Extract duration
     string_view timestamp {token};
     Timestamp result;
