@@ -87,6 +87,7 @@ protected:
   std::unique_ptr<printer::XmlWriter> m_writer;
 };
 
+///@test Tests the entity printer on printing a simple parsed document.
 TEST_F(EntityPrinterTest, TestParseSimpleDocument)
 {
   auto root = createFileArchetypeFactory();
@@ -112,6 +113,7 @@ TEST_F(EntityPrinterTest, TestParseSimpleDocument)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
+///@test Tests the entity printer on printing a test file archetype with a description.
 TEST_F(EntityPrinterTest, TestFileArchetypeWithDescription)
 {
   auto root = createFileArchetypeFactory();
@@ -138,6 +140,7 @@ TEST_F(EntityPrinterTest, TestFileArchetypeWithDescription)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
+///@test Tests the entity printer on recursive entity lists.
 TEST_F(EntityPrinterTest, TestRecursiveEntityLists)
 {
   auto component = make_shared<Factory>(Requirements {
@@ -185,6 +188,7 @@ TEST_F(EntityPrinterTest, TestRecursiveEntityLists)
   ASSERT_EQ(doc, m_writer->getContent());
 }
 
+///@test Tests the entity printer's ability to preserve element order.
 TEST_F(EntityPrinterTest, TestEntityOrder)
 {
   auto component = make_shared<Factory>(Requirements {
@@ -243,6 +247,7 @@ TEST_F(EntityPrinterTest, TestEntityOrder)
   ASSERT_EQ(expected, m_writer->getContent());
 }
 
+///@test Tests the entity printer on raw content.
 TEST_F(EntityPrinterTest, TestRawContent)
 {
   auto definition =
@@ -280,6 +285,7 @@ TEST_F(EntityPrinterTest, TestRawContent)
   ASSERT_EQ(expected, m_writer->getContent());
 }
 
+///@test Tests if the entity parser includes hidden parameters.
 TEST_F(EntityPrinterTest, should_honor_include_hidden_parameter)
 {
   auto component = make_shared<Factory>(Requirements {
@@ -409,6 +415,7 @@ protected:
   }
 };
 
+///@test Test the entity parser's name space removal when there are no namespaces.
 TEST_F(EntityPrinterNamespaceTest, test_namespace_removal_when_no_namespaces)
 {
   auto entity = createDevice();
@@ -428,6 +435,7 @@ TEST_F(EntityPrinterNamespaceTest, test_namespace_removal_when_no_namespaces)
   ASSERT_EQ(expected, m_writer->getContent());
 }
 
+///@test Test the entity parser's name space removal when there are namespaces.
 TEST_F(EntityPrinterNamespaceTest, test_namespace_removal_with_namespaces)
 {
   auto entity = createDevice();
