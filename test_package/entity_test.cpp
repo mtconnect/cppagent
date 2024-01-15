@@ -53,6 +53,7 @@ protected:
   void TearDown() override {}
 };
 
+///@test tests simple entity factory.
 TEST_F(EntityTest, TestSimpleFactory)
 {
   FactoryPtr root = make_shared<Factory>();
@@ -71,6 +72,7 @@ TEST_F(EntityTest, TestSimpleFactory)
   ASSERT_EQ(10, get<int64_t>(entity->getProperty("size")));
 }
 
+///@test Tests simple two-level entity factory.
 TEST_F(EntityTest, TestSimpleTwoLevelFactory)
 {
   auto root = make_shared<Factory>();
@@ -113,6 +115,7 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   ASSERT_EQ("arf", get<std::string>(v->getProperty("VALUE")));
 }
 
+///@test Tests the creation of a simple entity list.
 TEST_F(EntityTest, TestSimpleEntityList)
 {
   auto root = make_shared<Factory>();
@@ -187,6 +190,7 @@ TEST_F(EntityTest, TestSimpleEntityList)
   ASSERT_EQ("meow", get<std::string>((*it)->getProperty("VALUE")));
 }
 
+///@test Tests the error from entities with missing properties.
 TEST_F(EntityTest, MissingProperty)
 {
   FactoryPtr root = make_shared<Factory>();
@@ -205,6 +209,7 @@ TEST_F(EntityTest, MissingProperty)
             string(errors.front()->what()));
 }
 
+///@test Tests entites with missing optional properties.
 TEST_F(EntityTest, MissingOptionalProperty)
 {
   FactoryPtr root = make_shared<Factory>();
@@ -225,6 +230,7 @@ TEST_F(EntityTest, MissingOptionalProperty)
   ASSERT_EQ(0, errors.size());
 }
 
+///@test Tests the error from entities with unexpected properties.
 TEST_F(EntityTest, UnexpectedProperty)
 {
   FactoryPtr root = make_shared<Factory>();
@@ -243,6 +249,7 @@ TEST_F(EntityTest, UnexpectedProperty)
             string(errors.front()->what()));
 }
 
+///@test Tests the listing of any entites.
 TEST_F(EntityTest, EntityListAnyEntities)
 {
   auto root = make_shared<Factory>();
@@ -321,6 +328,7 @@ TEST_F(EntityTest, EntityListAnyEntities)
   ASSERT_EQ("meow", get<std::string>((*it)->getProperty("VALUE")));
 }
 
+///@test Tests integer conversions for entities.
 TEST_F(EntityTest, TestRequirementIntegerConversions)
 {
   Value v("123"s);
@@ -367,6 +375,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_THROW(r1.convertType(v), PropertyError);
 }
 
+///@test Tests string conversions for entities.
 TEST_F(EntityTest, TestRequirementStringConversion)
 {
   Value v(1234567890_i64);
@@ -391,6 +400,7 @@ TEST_F(EntityTest, TestRequirementStringConversion)
   ASSERT_FALSE(r1.convertType(v));
 }
 
+///@test Tests double conversions for entities.
 TEST_F(EntityTest, TestRequirementDoubleConversions)
 {
   Value v("123.24"s);
@@ -428,6 +438,7 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
   ASSERT_EQ(123.24, get<Vector>(v)[0]);
 }
 
+///@test Tests vector conversions for entities.
 TEST_F(EntityTest, TestRequirementVectorConversions)
 {
   Value v("1.234 3.456 6.7889"s);
@@ -464,6 +475,7 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   EXPECT_THROW(r6.convertType(v), PropertyError);
 }
 
+///@test Tests upper case string conversions for entities.
 TEST_F(EntityTest, TestRequirementUpperCaseStringConversion)
 {
   Value v("hello kitty"s);
@@ -473,6 +485,7 @@ TEST_F(EntityTest, TestRequirementUpperCaseStringConversion)
   ASSERT_EQ("HELLO KITTY", get<string>(v));
 }
 
+///@test Tests controlled vocabulary for entities.
 TEST_F(EntityTest, TestControlledVocabulary)
 {
   FactoryPtr root = make_shared<Factory>();
@@ -501,6 +514,7 @@ TEST_F(EntityTest, TestControlledVocabulary)
             string(errors.front()->what()));
 }
 
+///@test Tests error from entity requirements.
 TEST_F(EntityTest, entity_list_requirements_need_with_at_least_one_requiremenet)
 {
   auto ref1 = make_shared<Factory>(Requirements {{"id", true}, {"name", false}, {"type", true}});
@@ -544,6 +558,7 @@ TEST_F(EntityTest, entity_list_requirements_need_with_at_least_one_requiremenet)
   ASSERT_TRUE(bad2);
 }
 
+///@test Tests equality comparison between entities.
 TEST_F(EntityTest, entities_should_compare_for_equality)
 {
   auto root = make_shared<Factory>();
@@ -578,6 +593,7 @@ TEST_F(EntityTest, entities_should_compare_for_equality)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests inequality comparison between entities.
 TEST_F(EntityTest, entities_should_compare_for_inequality)
 {
   auto root = make_shared<Factory>();
@@ -612,6 +628,7 @@ TEST_F(EntityTest, entities_should_compare_for_inequality)
   ASSERT_NE(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests equality comparison with an entities list.
 TEST_F(EntityTest, entities_should_compare_for_equality_with_entity_list)
 {
   auto root = make_shared<Factory>();
@@ -658,6 +675,7 @@ TEST_F(EntityTest, entities_should_compare_for_equality_with_entity_list)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests inequality comparison with an entities list.
 TEST_F(EntityTest, entities_should_compare_for_inequality_with_entity_list)
 {
   auto root = make_shared<Factory>();
@@ -704,6 +722,7 @@ TEST_F(EntityTest, entities_should_compare_for_inequality_with_entity_list)
   ASSERT_NE(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests the merging of entites.
 TEST_F(EntityTest, entities_should_merge)
 {
   auto root = make_shared<Factory>();
@@ -747,6 +766,7 @@ TEST_F(EntityTest, entities_should_merge)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests the merging of entites with entity lists.
 TEST_F(EntityTest, entities_should_merge_entity_list)
 {
   auto root = make_shared<Factory>();
@@ -803,6 +823,7 @@ TEST_F(EntityTest, entities_should_merge_entity_list)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
+///@test Test the merging of entities and entity lists as new data items.
 TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
 {
   auto root = make_shared<Factory>();
@@ -872,6 +893,7 @@ TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
   EXPECT_EQ(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests the removal of missing entities from entity lists.
 TEST_F(EntityTest, should_remove_missing_entities)
 {
   auto root = make_shared<Factory>();
@@ -935,6 +957,7 @@ TEST_F(EntityTest, should_remove_missing_entities)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests ignoring certain entities with specific ids.
 TEST_F(EntityTest, should_ignore_certain_entities_with_specific_ids)
 {
   auto root = make_shared<Factory>();
@@ -998,6 +1021,7 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_specific_ids)
   ASSERT_NE(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests ignoring certain entities with changes and removals.
 TEST_F(EntityTest, should_ignore_certain_entities_with_changes_and_removals)
 {
   auto root = make_shared<Factory>();
@@ -1062,4 +1086,5 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_changes_and_removals)
   ASSERT_EQ(*(v1.get()), *(v2.get()));
 }
 
+///@test Tests the merging of entities and entity lists without identity (skipped).
 TEST_F(EntityTest, entities_should_merge_entity_lists_without_identity) { GTEST_SKIP(); }
