@@ -54,6 +54,7 @@ protected:
   std::unique_ptr<printer::JsonPrinter> m_printer;
 };
 
+/// @test Tests JSON printer error.
 TEST_F(JsonPrinterErrorTest, PrintError)
 {
   auto doc = m_printer->printError(12345u, 1024u, 56u, "BAD_BAD", "Never do that again");
