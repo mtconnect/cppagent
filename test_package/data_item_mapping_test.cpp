@@ -102,6 +102,7 @@ protected:
 
 inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
 
+///@test Test the creation of a simple event data item getters and setters.
 TEST_F(DataItemMappingTest, SimpleEvent)
 {
   Properties props {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
@@ -123,6 +124,7 @@ TEST_F(DataItemMappingTest, SimpleEvent)
   ASSERT_EQ("READY", event->getValue<string>());
 }
 
+///@test Tests unavailable data item getters and setters.
 TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
 {
   Properties props {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
@@ -143,6 +145,7 @@ TEST_F(DataItemMappingTest, SimpleUnavailableEvent)
   ASSERT_TRUE(event->isUnavailable());
 }
 
+///@test Tests two simple event data items.
 TEST_F(DataItemMappingTest, TwoSimpleEvents)
 {
   Properties props {{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}};
@@ -173,6 +176,7 @@ TEST_F(DataItemMappingTest, TwoSimpleEvents)
   }
 }
 
+///@test Tests message data item getters and setters.
 TEST_F(DataItemMappingTest, Message)
 {
   Properties props {{"id", "a"s}, {"type", "MESSAGE"s}, {"category", "EVENT"s}};
@@ -196,6 +200,7 @@ TEST_F(DataItemMappingTest, Message)
   }
 }
 
+///@test Tests sample data item getters and setters.
 TEST_F(DataItemMappingTest, SampleTest)
 {
   auto di = makeDataItem(
@@ -215,6 +220,7 @@ TEST_F(DataItemMappingTest, SampleTest)
   ASSERT_EQ(1.23456, sample->getValue<double>());
 }
 
+///@test Tests the formatting of sample data items.
 TEST_F(DataItemMappingTest, SampleTestFormatIssue)
 {
   makeDataItem(
@@ -229,6 +235,7 @@ TEST_F(DataItemMappingTest, SampleTestFormatIssue)
   ASSERT_TRUE(sample->isUnavailable());
 }
 
+///@test Tests data items represented as time series.
 TEST_F(DataItemMappingTest, SampleTimeseries)
 {
   auto di = makeDataItem({{"id", "a"s},
@@ -250,6 +257,7 @@ TEST_F(DataItemMappingTest, SampleTimeseries)
   ASSERT_EQ(100.0, sample->get<double>("sampleRate"));
 }
 
+///@test Tests sample data items with reset trigger attributes.
 TEST_F(DataItemMappingTest, SampleResetTrigger)
 {
   auto di = makeDataItem({{"id", "a"s},
@@ -271,6 +279,7 @@ TEST_F(DataItemMappingTest, SampleResetTrigger)
   ASSERT_EQ("MANUAL", sample->get<string>("resetTriggered"));
 }
 
+///@test Tests condition data items getters and setters.
 TEST_F(DataItemMappingTest, Condition)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
@@ -292,6 +301,7 @@ TEST_F(DataItemMappingTest, Condition)
   ASSERT_EQ("Fault", cond->getName());
 }
 
+///@test Tests normal condition data items.
 TEST_F(DataItemMappingTest, ConditionNormal)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
@@ -313,6 +323,7 @@ TEST_F(DataItemMappingTest, ConditionNormal)
   ASSERT_EQ("Normal", cond->getName());
 }
 
+///@test Tests normal condition data items with observations that are partially defined.
 TEST_F(DataItemMappingTest, ConditionNormalPartial)
 {
   auto di = makeDataItem({{"id", "a"s}, {"type", "POSITION"s}, {"category", "CONDITION"s}});
@@ -334,6 +345,7 @@ TEST_F(DataItemMappingTest, ConditionNormalPartial)
   ASSERT_EQ("Normal", cond->getName());
 }
 
+///@test Tests data set getters and setters.
 TEST_F(DataItemMappingTest, DataSet)
 {
   auto di = makeDataItem({{"id", "a"s},
@@ -359,6 +371,7 @@ TEST_F(DataItemMappingTest, DataSet)
   ASSERT_EQ("abc", get<string>(ds.find("c"_E)->m_value));
 }
 
+///@test Tests table getters and setters.
 TEST_F(DataItemMappingTest, Table)
 {
   auto di = makeDataItem(
@@ -393,6 +406,7 @@ TEST_F(DataItemMappingTest, Table)
   ASSERT_EQ("def", get<string>(c.find("y"_E)->m_value));
 }
 
+///@test Tests data sets' reset triggered attribute. 
 TEST_F(DataItemMappingTest, DataSetResetTriggered)
 {
   makeDataItem({{"id", "a"s},
@@ -414,6 +428,7 @@ TEST_F(DataItemMappingTest, DataSetResetTriggered)
   ASSERT_EQ(3, ds.size());
 }
 
+///@test Tests tables' reset triggered attribute. 
 TEST_F(DataItemMappingTest, TableResetTriggered)
 {
   makeDataItem(
@@ -432,6 +447,7 @@ TEST_F(DataItemMappingTest, TableResetTriggered)
   ASSERT_EQ(3, ds.size());
 }
 
+///@test Tests the new mapping of new tokens to data item observations.
 TEST_F(DataItemMappingTest, new_token_mapping_behavior)
 {
   m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 2);
@@ -462,6 +478,7 @@ TEST_F(DataItemMappingTest, new_token_mapping_behavior)
   ASSERT_EQ("code", message->get<string>("nativeCode"));
 }
 
+///@test Tests the legacy mapping of new tokens to data item observations.
 TEST_F(DataItemMappingTest, legacy_token_mapping_behavior)
 {
   m_mapper = make_shared<ShdrTokenMapper>(m_context, "", 1);
@@ -494,6 +511,7 @@ TEST_F(DataItemMappingTest, legacy_token_mapping_behavior)
   ASSERT_EQ("value1", event->getValue<string>());
 }
 
+///@test Tests that data items continue to map even after conversion error.
 TEST_F(DataItemMappingTest, continue_after_conversion_error)
 {
   auto ppos = makeDataItem({{"id", "a"s},
