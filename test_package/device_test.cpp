@@ -57,6 +57,7 @@ protected:
   DevicePtr m_devA, m_devB;
 };
 
+///@test Tests getters for devices.
 TEST_F(DeviceTest, Getters)
 {
   ASSERT_EQ((string) "Device", string(m_devA->getName()));
@@ -70,6 +71,7 @@ TEST_F(DeviceTest, Getters)
   ASSERT_EQ((string) "UnivUniqId2", m_devB->getUuid());
 }
 
+///@test Tests the description attribute for devices.
 TEST_F(DeviceTest, Description)
 {
   ErrorList errors;
@@ -103,6 +105,7 @@ TEST_F(DeviceTest, Description)
   ASSERT_EQ((string) "Machine 2", descB->getValue<string>());
 }
 
+///@test Test data items for devices.
 TEST_F(DeviceTest, DataItems)
 {
   ASSERT_FALSE(m_devA->getDataItems());
@@ -123,6 +126,7 @@ TEST_F(DeviceTest, DataItems)
   ASSERT_TRUE(data2 == items->back());
 }
 
+///@test Tests the device data item.
 TEST_F(DeviceTest, DeviceDataItem)
 {
   ASSERT_FALSE(m_devA->getDataItems());
@@ -145,6 +149,7 @@ TEST_F(DeviceTest, DeviceDataItem)
   ASSERT_TRUE(data2 == m_devA->getDeviceDataItem("DataItemTest2"));
 }
 
+///@test Tests the ability to get a data item for a device.
 TEST_F(DeviceTest, GetDataItem)
 {
   ErrorList errors;
@@ -195,6 +200,7 @@ TEST_F(DeviceTest, GetDataItem)
   ASSERT_TRUE(data3 == m_devA->getDeviceDataItem("by_source3"));
 }
 
+///@test Tests if a topics are created for data items.
 TEST_F(DeviceTest, should_create_data_item_topic)
 {
   ErrorList errors;
@@ -210,6 +216,7 @@ TEST_F(DeviceTest, should_create_data_item_topic)
   ASSERT_EQ("Availability", di->getTopicName());
 }
 
+///@test Tests if topics are created for components and data items.
 TEST_F(DeviceTest, should_create_component_and_data_item_topic)
 {
   ErrorList errors;
@@ -239,6 +246,7 @@ TEST_F(DeviceTest, should_create_component_and_data_item_topic)
   ASSERT_EQ("Position.Actual[Xact]", di->getTopicName());
 }
 
+///@test tests if topics are created with composition.
 TEST_F(DeviceTest, should_create_topic_with_composition)
 {
   ErrorList errors;
