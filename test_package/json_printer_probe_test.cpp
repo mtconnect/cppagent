@@ -82,6 +82,7 @@ protected:
   std::unique_ptr<printer::XmlPrinter> m_xmlPrinter;
 };
 
+///@test Tests the JSON printer on a device root probe.
 TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -115,6 +116,7 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
             device2.at("/Description/value"_json_pointer).get<string>());
 }
 
+///@test Tests the JSON printer on probing top level data items.
 TEST_F(JsonPrinterProbeTest, TopLevelDataItems)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -148,6 +150,7 @@ TEST_F(JsonPrinterProbeTest, TopLevelDataItems)
   ASSERT_EQ(string("f2df7550"), remove.at("/DataItem/id"_json_pointer).get<string>());
 }
 
+///@test Tests the JSON printer on probing sub components.
 TEST_F(JsonPrinterProbeTest, SubComponents)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -187,6 +190,7 @@ TEST_F(JsonPrinterProbeTest, SubComponents)
   ASSERT_EQ(string("ACTUAL"), ss.at("/subType"_json_pointer).get<string>());
 }
 
+///@test Tests the JSON printer on probing data items constraints.
 TEST_F(JsonPrinterProbeTest, DataItemConstraints)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -217,6 +221,7 @@ TEST_F(JsonPrinterProbeTest, DataItemConstraints)
   ASSERT_EQ(7000.0, max.get<double>());
 }
 
+///@test Tests the JSON printer on probing data item sources.
 TEST_F(JsonPrinterProbeTest, DataItemSource)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -233,6 +238,7 @@ TEST_F(JsonPrinterProbeTest, DataItemSource)
   ASSERT_EQ(string("taa7a0f0"), amp.at("/Source/dataItemId"_json_pointer).get<string>());
 }
 
+///@test Tests the JSON printer on probing initial values.
 TEST_F(JsonPrinterProbeTest, InitialValue)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -247,6 +253,7 @@ TEST_F(JsonPrinterProbeTest, InitialValue)
   ASSERT_EQ(1.0, count.at("/DataItem/InitialValue"_json_pointer).get<double>());
 }
 
+///@test Tests the JSON printer on probing data item filters.
 TEST_F(JsonPrinterProbeTest, DataItemFilters)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -276,6 +283,7 @@ TEST_F(JsonPrinterProbeTest, DataItemFilters)
   ASSERT_EQ(10.0, filter2.at("/Filter/value"_json_pointer).get<double>());
 }
 
+///@test Tests the JSON printer on probing compositions.
 TEST_F(JsonPrinterProbeTest, Composition)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -296,6 +304,7 @@ TEST_F(JsonPrinterProbeTest, Composition)
   ASSERT_EQ(string("a7973930"), comp2.at("/id"_json_pointer).get<string>());
 }
 
+///@test Tests the JSON printer on probing configurations.
 TEST_F(JsonPrinterProbeTest, Configuration)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -318,6 +327,7 @@ TEST_F(JsonPrinterProbeTest, Configuration)
             config.at("/Channels/0/Channel/CalibrationDate"_json_pointer).get<string>());
 }
 
+///@test Tests the JSON printer on probing the MTConnect versions.
 TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
 {
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
@@ -328,6 +338,7 @@ TEST_F(JsonPrinterProbeTest, PrintDeviceMTConnectVersion)
   ASSERT_EQ(string("1.7"), device.at("/mtconnectVersion"_json_pointer).get<string>());
 }
 
+///@test Tests the JSON printer on probing data items relationships.
 TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
 {
   auto server = std::make_unique<sink::rest_sink::Server>(m_agentTestHelper->m_ioContext);
@@ -373,6 +384,7 @@ TEST_F(JsonPrinterProbeTest, PrintDataItemRelationships)
   ASSERT_EQ(string("xlc"), dir3.at("/DataItemRelationship/idRef"_json_pointer));
 }
 
+///@test Tests the JSON printer on probing MTConnect version 2 with multiple devices.
 TEST_F(JsonPrinterProbeTest, version_2_with_multiple_devices)
 {
   m_printer = std::make_unique<printer::JsonPrinter>(2, true);
