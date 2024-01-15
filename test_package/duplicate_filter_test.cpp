@@ -119,6 +119,7 @@ protected:
   ComponentPtr m_component;
 };
 
+///@test Tests duplicate filtering of simple events.
 TEST_F(DuplicateFilterTest, test_simple_event)
 {
   makeDataItem({{"id", "a"s}, {"type", "EXECUTION"s}, {"category", "EVENT"s}});
@@ -140,6 +141,7 @@ TEST_F(DuplicateFilterTest, test_simple_event)
   ASSERT_EQ(1, list3.size());
 }
 
+///@test Tests duplicate filtering of simple samples.
 TEST_F(DuplicateFilterTest, test_simple_sample)
 {
   makeDataItem(
@@ -162,6 +164,7 @@ TEST_F(DuplicateFilterTest, test_simple_sample)
   ASSERT_EQ(1, list3.size());
 }
 
+///@test Tests duplicate filtering minimum epsilon.
 TEST_F(DuplicateFilterTest, test_minimum_delta)
 {
   ErrorList errors;
@@ -215,6 +218,7 @@ TEST_F(DuplicateFilterTest, test_minimum_delta)
   }
 }
 
+///@test Tests duplicate filtering of simple conditions.
 TEST_F(DuplicateFilterTest, test_condition_duplicates)
 {
   auto filter = make_shared<DuplicateFilter>(m_context);
