@@ -80,6 +80,7 @@ protected:
   }
 };
 
+///@test Tests the entity parser on a simple document.
 TEST_F(EntityParserTest, TestParseSimpleDocument)
 {
   auto fileProperty =
@@ -144,6 +145,7 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
 }
 
+///@test Tests the entity parser on recursive entity lists.
 TEST_F(EntityParserTest, TestRecursiveEntityLists)
 {
   auto root = components();
@@ -193,6 +195,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityLists)
   ASSERT_EQ("h1", get<string>((*sli)->getProperty("id")));
 }
 
+///@test Tests the failure of an entity parser on recursive entity lists.
 TEST_F(EntityParserTest, TestRecursiveEntityListFailure)
 {
   auto root = components();
@@ -219,6 +222,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityListFailure)
             errors.front()->what());
 }
 
+///@test Tests the entity parser on entity lists with missing components.
 TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
 {
   auto root = components();
@@ -259,6 +263,7 @@ TEST_F(EntityParserTest, TestRecursiveEntityListMissingComponents)
   ASSERT_FALSE(sl);
 }
 
+///@test Tests the entity parse on raw content.
 TEST_F(EntityParserTest, TestRawContent)
 {
   auto definition =
@@ -292,6 +297,7 @@ TEST_F(EntityParserTest, TestRawContent)
   ASSERT_EQ(expected, get<string>(entity->getProperty("RAW")));
 }
 
+///@test Test the entity parser on documents with proper line truncation.
 TEST_F(EntityParserTest, check_proper_line_truncation)
 {
   auto description = make_shared<Factory>(
