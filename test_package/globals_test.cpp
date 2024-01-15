@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
   return RUN_ALL_TESTS();
 }
 
+///@test Test the conversion of integers to strings.
 TEST(GlobalsTest, IntToString)
 {
   ASSERT_EQ((string) "1234", to_string(1234));
@@ -42,6 +43,7 @@ TEST(GlobalsTest, IntToString)
   ASSERT_EQ((string) "1", to_string(1));
 }
 
+///@test Test the conversion of floats to strings.
 TEST(GlobalsTest, FloatToString)
 {
   ASSERT_EQ((string) "1.234", format(1.234));
@@ -50,6 +52,7 @@ TEST(GlobalsTest, FloatToString)
   ASSERT_EQ((string) "1", format(1.0));
 }
 
+///@test Test the conversion of string to upper case strings.
 TEST(GlobalsTest, ToUpperCase)
 {
   string lower = "abcDef";
@@ -62,6 +65,7 @@ TEST(GlobalsTest, ToUpperCase)
   ASSERT_EQ((string) "QWERTY.ASDF|", toUpperCase(lower));
 }
 
+///@test Tests the determination of whether a string is a non-negative integer.
 TEST(GlobalsTest, IsNonNegativeInteger)
 {
   ASSERT_TRUE(isNonNegativeInteger("12345"));
@@ -72,6 +76,7 @@ TEST(GlobalsTest, IsNonNegativeInteger)
   ASSERT_TRUE(!isNonNegativeInteger("123.45"));
 }
 
+///@test Tests time representation.
 TEST(GlobalsTest, Time)
 {
   auto time1 = getCurrentTime(GMT);
@@ -99,6 +104,7 @@ TEST(GlobalsTest, Time)
   ASSERT_TRUE(time7 < time9);
 }
 
+///@test Tests illegal character identification and replacement.
 TEST(GlobalsTest, IllegalCharacters)
 {
   string before1("Don't Change Me"), after1("Don't Change Me");
@@ -114,6 +120,7 @@ TEST(GlobalsTest, IllegalCharacters)
   ASSERT_EQ(before3, after3);
 }
 
+///@test Tests getting the current time.
 TEST(GlobalsTest, GetCurrentTime)
 {
   auto gmt = getCurrentTime(GMT);
@@ -140,6 +147,7 @@ TEST(GlobalsTest, GetCurrentTime)
   ASSERT_EQ(8, n);
 }
 
+///@test Tests getting the current time from string timestamps.
 TEST(GlobalsTest, GetCurrentTime2)
 {
   // Build a known system time point
@@ -173,6 +181,7 @@ TEST(GlobalsTest, GetCurrentTime2)
   ASSERT_EQ(string("Thu, 01 Jan 1970 00:00:10 GMT"), humRead);
 }
 
+///@test Tests the parsing of microsecond resolution timestamps.
 TEST(GlobalsTest, ParseTimeMicro)
 {
   // This time is 123456 microseconds after the epoch
@@ -180,6 +189,7 @@ TEST(GlobalsTest, ParseTimeMicro)
   ASSERT_EQ(uint64_t {123456}, v);
 }
 
+///@test Tests adding namespaces to data items.
 TEST(GlobalsTest, AddNamespace)
 {
   auto result = addNamespace("//Device//Foo", "m");
@@ -201,6 +211,7 @@ TEST(GlobalsTest, AddNamespace)
   ASSERT_EQ(string("//m:Device/m:DataItems/"), result);
 }
 
+///@test Tests parsing of millisecond resolution time stamps.
 TEST(GlobalsTest, ParseTimeMilli)
 {
   string v = "2012-11-20T12:33:22.123456";
@@ -213,4 +224,5 @@ TEST(GlobalsTest, ParseTimeMilli)
   ASSERT_TRUE(1353414802123000LL == time);
 }
 
+///@test Test the conversion of 64-bit integers to strings.
 TEST(GlobalsTest, Int64ToString) { ASSERT_EQ((string) "8805345009", to_string(8805345009ULL)); }
