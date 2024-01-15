@@ -285,7 +285,7 @@ TEST_F(EntityPrinterTest, TestRawContent)
   ASSERT_EQ(expected, m_writer->getContent());
 }
 
-///@test Tests if the entity parser includes hidden parameters.
+///@test Tests if the entity printer includes hidden parameters.
 TEST_F(EntityPrinterTest, should_honor_include_hidden_parameter)
 {
   auto component = make_shared<Factory>(Requirements {
@@ -415,7 +415,7 @@ protected:
   }
 };
 
-///@test Test the entity parser's name space removal when there are no namespaces.
+///@test Test the entity printer's name space removal when there are no namespaces.
 TEST_F(EntityPrinterNamespaceTest, test_namespace_removal_when_no_namespaces)
 {
   auto entity = createDevice();
@@ -435,7 +435,7 @@ TEST_F(EntityPrinterNamespaceTest, test_namespace_removal_when_no_namespaces)
   ASSERT_EQ(expected, m_writer->getContent());
 }
 
-///@test Test the entity parser's name space removal when there are namespaces.
+///@test Test the entity printer's name space removal when there are namespaces.
 TEST_F(EntityPrinterNamespaceTest, test_namespace_removal_with_namespaces)
 {
   auto entity = createDevice();
