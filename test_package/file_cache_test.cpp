@@ -57,6 +57,7 @@ protected:
   unique_ptr<FileCache> m_cache;
 };
 
+///@test Tests finding files within the file cache.
 TEST_F(FileCacheTest, FindFiles)
 {
   string uri("/schemas");
@@ -70,6 +71,7 @@ TEST_F(FileCacheTest, FindFiles)
   EXPECT_EQ("text/xml", file->m_mimeType);
 }
 
+///@test Tests accessign the fav icon.
 TEST_F(FileCacheTest, IconMimeType)
 {
   // Register a file with the agent.
@@ -80,6 +82,7 @@ TEST_F(FileCacheTest, IconMimeType)
   EXPECT_EQ("image/x-icon", file->m_mimeType);
 }
 
+///@test Tests that large files are not cached.
 TEST_F(FileCacheTest, verify_large_files_are_not_cached)
 {
   // Make a cache that can only hold 1024 byte files
@@ -100,6 +103,7 @@ TEST_F(FileCacheTest, verify_large_files_are_not_cached)
   ASSERT_TRUE(css->m_cached);
 }
 
+///@test Tests that the base directory redirects.
 TEST_F(FileCacheTest, base_directory_should_redirect)
 {
   m_cache->addDirectory("/schemas", TEST_RESOURCE_DIR "/schemas", "none.xsd");
@@ -116,6 +120,7 @@ TEST_F(FileCacheTest, base_directory_should_redirect)
   ASSERT_TRUE(boost::starts_with(std::string(file->m_buffer), "<html>"));
 }
 
+///@test Tests that the file cache compresses files.
 TEST_F(FileCacheTest, file_cache_should_compress_file)
 {
   namespace fs = std::filesystem;
@@ -151,6 +156,7 @@ TEST_F(FileCacheTest, file_cache_should_compress_file)
   }
 }
 
+///@test Tests that file compression by the file cache is asynchronous.
 TEST_F(FileCacheTest, file_cache_should_compress_file_async)
 {
   namespace fs = std::filesystem;
@@ -201,6 +207,7 @@ static inline void touch(const std::filesystem::path &file)
   fs::last_write_time(file, now);
 }
 
+///@test Tests that the file cache recompresses if gzip is older than the file.
 TEST_F(FileCacheTest, file_cache_should_recompress_if_gzip_older_than_file)
 {
   namespace fs = std::filesystem;
