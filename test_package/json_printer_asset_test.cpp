@@ -91,6 +91,7 @@ protected:
   std::unique_ptr<entity::XmlParser> m_parser;
 };
 
+///@test Tests printing the asset header using the json printer.
 TEST_F(JsonPrinterAssetTest, AssetHeader)
 {
   AssetList asset;
@@ -104,6 +105,7 @@ TEST_F(JsonPrinterAssetTest, AssetHeader)
   ASSERT_EQ(10, jdoc.at("/MTConnectAssets/Header/assetCount"_json_pointer).get<int32_t>());
 }
 
+///@test Tests printing cutting tools using the json printer.
 TEST_F(JsonPrinterAssetTest, CuttingTool)
 {
   auto xml = getFile("asset1.xml");
@@ -133,6 +135,7 @@ TEST_F(JsonPrinterAssetTest, CuttingTool)
             cuttingTool.at("/CuttingTool/Description"_json_pointer).get<string>());
 }
 
+///@test Tests printing the cutting tool life cycle using the json printer.
 TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
 {
   auto xml = getFile("asset1.xml");
@@ -172,6 +175,7 @@ TEST_F(JsonPrinterAssetTest, CuttingToolLifeCycle)
   ASSERT_EQ(222.0, feed.at("/value"_json_pointer).get<double>());
 }
 
+///@test Tests printing cutting measurements using the json printer.
 TEST_F(JsonPrinterAssetTest, CuttingMeasurements)
 {
   auto xml = getFile("asset1.xml");
@@ -204,6 +208,7 @@ TEST_F(JsonPrinterAssetTest, CuttingMeasurements)
   ASSERT_EQ(120.65, length.at("/BodyLengthMax/value"_json_pointer).get<double>());
 }
 
+///@test Tests printing cutting items using the json printer.
 TEST_F(JsonPrinterAssetTest, CuttingItem)
 {
   auto xml = getFile("asset1.xml");
@@ -242,6 +247,7 @@ TEST_F(JsonPrinterAssetTest, CuttingItem)
   ASSERT_EQ(0.8, measurements.at("/3/CornerRadius/value"_json_pointer).get<double>());
 }
 
+///@test Tests printing the cutting tool archetype using the json printer.
 TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
 {
   auto xml = getFile("cutting_tool_archetype.xml");
@@ -262,6 +268,7 @@ TEST_F(JsonPrinterAssetTest, CuttingToolArchitype)
   ASSERT_EQ(string("Some Express..."), def.at("/value"_json_pointer).get<string>());
 }
 
+///@test Tests the json_printer_v2 on multiple assets.
 TEST_F(JsonPrinterAssetTest, json_printer_version_2_with_multiple_assets)
 {
   m_printer = std::make_unique<printer::JsonPrinter>(2, true);
