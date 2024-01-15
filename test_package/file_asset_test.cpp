@@ -67,6 +67,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
+///@test Tests minimal archetype for file assets.
 TEST_F(FileAssetTest, TestMinmalArchetype)
 {
   const auto doc =
@@ -116,6 +117,7 @@ TEST_F(FileAssetTest, TestMinmalArchetype)
   ASSERT_EQ(content, doc);
 }
 
+///@test Tests minimal file assets.
 TEST_F(FileAssetTest, TestMinmalFile)
 {
   const auto doc =
