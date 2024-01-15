@@ -79,6 +79,7 @@ using namespace date::literals;
 
 inline DataSetEntry operator"" _E(const char *c, std::size_t) { return DataSetEntry(c); }
 
+///@test Test the creation of a data item for a data set.
 TEST_F(DataSetTest, DataItem)
 {
   ASSERT_TRUE(m_dataItem1->isDataSet());
@@ -87,6 +88,7 @@ TEST_F(DataSetTest, DataItem)
   ASSERT_EQ("VariableDataSet", m_dataItem1->getObservationName());
 }
 
+///@test Tests the initialization of a dataset with observations.
 TEST_F(DataSetTest, InitialSet)
 {
   ErrorList errors;
@@ -117,6 +119,7 @@ TEST_F(DataSetTest, InitialSet)
   ASSERT_EQ(4, get<int64_t>(ds2.find("d"_E)->m_value));
 }
 
+///@test Test the ability for data sets to parse simple formats.
 TEST_F(DataSetTest, parser_simple_formats)
 {
   DataSet s1;
@@ -130,6 +133,7 @@ TEST_F(DataSetTest, parser_simple_formats)
   ASSERT_TRUE(s1.find("e"_E)->m_removed);
 }
 
+///@test Test the ability for data sets to parse with braces.
 TEST_F(DataSetTest, parser_test_with_braces)
 {
   DataSet s2;
@@ -138,6 +142,7 @@ TEST_F(DataSetTest, parser_test_with_braces)
   ASSERT_EQ(" abc 123 ", get<string>(s2.find("abc"_E)->m_value));
 }
 
+///@test Test the ability for data sets to parse with an escaped brace.
 TEST_F(DataSetTest, parser_test_with_escaped_brace)
 {
   DataSet s3;
@@ -146,6 +151,7 @@ TEST_F(DataSetTest, parser_test_with_escaped_brace)
   ASSERT_EQ(" abc } 123 ", get<string>(s3.find("abc"_E)->m_value));
 }
 
+///@test Test the ability for data sets to parse with an escaped quote.
 TEST_F(DataSetTest, parser_test_with_escaped_quote)
 {
   DataSet s4;
@@ -154,6 +160,7 @@ TEST_F(DataSetTest, parser_test_with_escaped_quote)
   ASSERT_EQ(" abc ' 123 ", get<string>(s4.find("abc"_E)->m_value));
 }
 
+///@test Tests the interaction between the data set parser and bad data.
 TEST_F(DataSetTest, parser_with_bad_data)
 {
   DataSet set;
@@ -163,6 +170,7 @@ TEST_F(DataSetTest, parser_with_bad_data)
   ASSERT_EQ(2.0, get<double>(set.find("b"_E)->m_value));
 }
 
+///@test Tests the performance of the data set parse with a large dataset.
 TEST_F(DataSetTest, parser_with_big_data_set)
 {
   using namespace std::chrono;
@@ -190,6 +198,7 @@ TEST_F(DataSetTest, parser_with_big_data_set)
   free(buffer);
 }
 
+///@test Tests the interaction between the data set parser and partial number.
 TEST_F(DataSetTest, parser_with_partial_number)
 {
   DataSet set;
@@ -201,6 +210,7 @@ TEST_F(DataSetTest, parser_with_partial_number)
   ASSERT_EQ(4.56, get<double>(set.find("d"_E)->m_value));
 }
 
+///@test Tests the ability for a data set to update a single element.
 TEST_F(DataSetTest, UpdateOneElement)
 {
   ErrorList errors;
@@ -243,6 +253,7 @@ TEST_F(DataSetTest, UpdateOneElement)
   ASSERT_EQ(6, get<int64_t>(map2.find("e"_E)->m_value));
 }
 
+///@test Tests the ability for a data set to update multiple elements.
 TEST_F(DataSetTest, UpdateMany)
 {
   ErrorList errors;
@@ -288,6 +299,7 @@ TEST_F(DataSetTest, UpdateMany)
   ASSERT_EQ(9, get<int64_t>(map2.find("f"_E)->m_value));
 }
 
+///@test Tests the reset for a data set.
 TEST_F(DataSetTest, Reset)
 {
   ErrorList errors;
@@ -325,6 +337,7 @@ TEST_F(DataSetTest, Reset)
   ASSERT_EQ((string) "hop", get<string>(map2.find("y"_E)->m_value));
 }
 
+///@test Tests the interaction between a data set and bad data.
 TEST_F(DataSetTest, BadData)
 {
   ErrorList errors;
@@ -351,6 +364,7 @@ TEST_F(DataSetTest, BadData)
 #define ASSERT_DATA_SET_ENTRY(doc, var, key, expected) \
   ASSERT_XML_PATH_EQUAL(doc, "//m:" var "/m:Entry[@key='" key "']", expected)
 
+///@test Test the data set's ability to present current data.
 TEST_F(DataSetTest, Current)
 {
   m_agentTestHelper->addAdapter();
@@ -416,6 +430,7 @@ TEST_F(DataSetTest, Current)
   }
 }
 
+///@test Tests the sampling of data sets.
 TEST_F(DataSetTest, Sample)
 {
   m_agentTestHelper->addAdapter();
@@ -475,6 +490,7 @@ TEST_F(DataSetTest, Sample)
   }
 }
 
+///@test Tests the retrieval of current values at a specified sequence number.
 TEST_F(DataSetTest, CurrentAt)
 {
   using namespace mtconnect::sink::rest_sink;
@@ -558,6 +574,7 @@ TEST_F(DataSetTest, CurrentAt)
   }
 }
 
+///@test Test the deletion of data from a data set by key.
 TEST_F(DataSetTest, DeleteKey)
 {
   ErrorList errors;
@@ -590,6 +607,7 @@ TEST_F(DataSetTest, DeleteKey)
   ASSERT_TRUE(map1.find("a"_E) == map1.end());
 }
 
+///@test Tests the reset of data sets without data items.
 TEST_F(DataSetTest, ResetWithNoItems)
 {
   m_agentTestHelper->addAdapter();
@@ -624,6 +642,7 @@ TEST_F(DataSetTest, ResetWithNoItems)
   }
 }
 
+///@test Tests the compression of datasets containing duplicate data items.
 TEST_F(DataSetTest, DuplicateCompression)
 {
   m_agentTestHelper->addAdapter();
@@ -684,6 +703,7 @@ TEST_F(DataSetTest, DuplicateCompression)
   }
 }
 
+///@test Tests the delimiting of data set data via quotation marks.
 TEST_F(DataSetTest, QuoteDelimeter)
 {
   m_agentTestHelper->addAdapter();
@@ -720,6 +740,7 @@ TEST_F(DataSetTest, QuoteDelimeter)
   }
 }
 
+///@test Tests the representation of discrete data sets.
 TEST_F(DataSetTest, Discrete)
 {
   m_agentTestHelper->addAdapter();
@@ -755,6 +776,7 @@ TEST_F(DataSetTest, Discrete)
   }
 }
 
+///@test Tests the probing of data set data items.
 TEST_F(DataSetTest, Probe)
 {
   m_agentTestHelper->addAdapter();
@@ -767,6 +789,7 @@ TEST_F(DataSetTest, Probe)
   }
 }
 
+///@test Tests the translation of data set information to JSON format.
 TEST_F(DataSetTest, JsonCurrent)
 {
   using namespace rest_sink;
