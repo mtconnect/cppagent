@@ -324,6 +324,7 @@ protected:
   unique_ptr<Client> m_client;
 };
 
+///@test Tests simple request and response from the http server.
 TEST_F(RestServiceTest, simple_request_response)
 {
   weak_ptr<Session> savedSession;
@@ -362,6 +363,7 @@ TEST_F(RestServiceTest, simple_request_response)
   ASSERT_TRUE(savedSession.expired());
 }
 
+///@test Tests request and response from the http server with query parameters.
 TEST_F(RestServiceTest, request_response_with_query_parameters)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
@@ -397,6 +399,7 @@ TEST_F(RestServiceTest, request_response_with_query_parameters)
   EXPECT_EQ(200, m_client->m_status);
 }
 
+///@test Tests sending a put requests when it is not allowed.
 TEST_F(RestServiceTest, request_put_when_put_not_allowed)
 {
   auto probe = [&](SessionPtr session, RequestPtr request) -> bool {
@@ -418,6 +421,7 @@ TEST_F(RestServiceTest, request_put_when_put_not_allowed)
       m_client->m_result);
 }
 
+///@test Tests sending a put requests when it is allowed.
 TEST_F(RestServiceTest, request_put_when_put_allowed)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
@@ -442,6 +446,7 @@ TEST_F(RestServiceTest, request_put_when_put_allowed)
   EXPECT_EQ("Put ok", m_client->m_result);
 }
 
+///@test Tests sending a put requests when it is not allowed from sender's IP address.
 TEST_F(RestServiceTest, request_put_when_put_not_allowed_from_ip_address)
 {
   weak_ptr<Session> session;
@@ -463,6 +468,7 @@ TEST_F(RestServiceTest, request_put_when_put_not_allowed_from_ip_address)
   EXPECT_EQ("PUT, POST, and DELETE are not allowed from 127.0.0.1", m_client->m_result);
 }
 
+///@test Tests sending a put requests when it is allowed from sender's IP address.
 TEST_F(RestServiceTest, request_put_when_put_allowed_from_ip_address)
 {
   auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
@@ -487,6 +493,7 @@ TEST_F(RestServiceTest, request_put_when_put_allowed_from_ip_address)
   EXPECT_EQ("Put ok", m_client->m_result);
 }
 
+///@test Tests sending a response with a closed connection.
 TEST_F(RestServiceTest, request_with_connect_close)
 {
   weak_ptr<Session> savedSession;
@@ -516,6 +523,7 @@ TEST_F(RestServiceTest, request_with_connect_close)
   EXPECT_FALSE(savedSession.lock());
 }
 
+///@test Tests putting content to the server.
 TEST_F(RestServiceTest, put_content_to_server)
 {
   string body;
@@ -538,6 +546,7 @@ TEST_F(RestServiceTest, put_content_to_server)
   ASSERT_EQ("Body Content", body);
 }
 
+///@test Tests putting content to the server with put values.
 TEST_F(RestServiceTest, put_content_with_put_values)
 {
   string body, ct;
@@ -565,6 +574,7 @@ TEST_F(RestServiceTest, put_content_with_put_values)
   ASSERT_EQ("application/x-www-form-urlencoded", ct);
 }
 
+///@test Tests streaming HTTP responses.
 TEST_F(RestServiceTest, streaming_response)
 {
   struct context
@@ -648,6 +658,7 @@ TEST_F(RestServiceTest, streaming_response)
     ;
 }
 
+///@test Tests additional header fields in HTTP requests.
 TEST_F(RestServiceTest, additional_header_fields)
 {
   m_server->setHttpHeaders({"Access-Control-Allow-Origin:*", "Origin:https://foo.example"});
@@ -682,6 +693,7 @@ const string KeyFile {TEST_RESOURCE_DIR "/user.key"};
 const string DhFile {TEST_RESOURCE_DIR "/dh2048.pem"};
 const string RootCertFile(TEST_RESOURCE_DIR "/rootca.crt");
 
+///@test Tests failure when only TLS is allowed.
 TEST_F(RestServiceTest, failure_when_tls_only)
 {
   using namespace mtconnect::configuration;
