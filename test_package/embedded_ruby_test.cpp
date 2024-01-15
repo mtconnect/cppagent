@@ -137,6 +137,7 @@ namespace {
     std::filesystem::path m_cwd;
   };
 
+  ///@test Test if embedded ruby plugins initialize.
   TEST_F(EmbeddedRubyTest, should_initialize)
   {
     load("should_initialize.rb");
@@ -161,6 +162,7 @@ namespace {
     }
   }
 
+  ///@test Tests if embedded ruby plugins support entities.
   TEST_F(EmbeddedRubyTest, should_support_entities)
   {
     using namespace std::chrono;
@@ -195,6 +197,7 @@ namespace {
     ASSERT_EQ(1577836800s, ts.time_since_epoch());
   }
 
+  ///@test Tests if data sets are supported in embedded ruby plugins.
   TEST_F(EmbeddedRubyTest, entity_should_support_data_sets)
   {
     using namespace std::chrono;
@@ -219,6 +222,7 @@ namespace {
     ASSERT_NEAR(123.4, ds.get<double>("float"), 0.000001);
   }
 
+  ///@test Tests if tables are supported in embedded ruby plugins.
   TEST_F(EmbeddedRubyTest, entity_should_support_tables)
   {
     using namespace std::chrono;
@@ -251,6 +255,7 @@ namespace {
     ASSERT_NEAR(2.0, row2.get<double>("float"), 0.000001);
   }
 
+  ///@test Tests transformations within ruby plugins.
   TEST_F(EmbeddedRubyTest, should_transform)
   {
     using namespace std::chrono;
@@ -285,6 +290,7 @@ $source.pipeline.splice_after('Start', $trans)
     ASSERT_EQ("READY", contract->m_observation->getValue<string>());
   }
 
+  ///@test Tests transformations within ruby plugins with sub classes.
   TEST_F(EmbeddedRubyTest, should_transform_with_subclass)
   {
     using namespace std::chrono;
@@ -316,6 +322,7 @@ $source.pipeline.splice_after('Start', FixExecution.new('FixExec', :Event))
     ASSERT_EQ("READY", contract->m_observation->getValue<string>());
   }
 
+  ///@test Tests the creation of samples in ruby plugins.
   TEST_F(EmbeddedRubyTest, should_create_sample)
   {
     using namespace std::chrono;
@@ -349,6 +356,7 @@ $source.pipeline.splice_after('Start', $trans)
     ASSERT_EQ("Xact", contract->m_observation->getDataItem()->getName());
   }
 
+  ///@test Tests the creation of events in ruby plugins.
   TEST_F(EmbeddedRubyTest, should_create_event)
   {
     using namespace std::chrono;
@@ -387,6 +395,7 @@ $source.pipeline.splice_after('Start', $trans)
     ASSERT_EQ("block", contract->m_observation->getDataItem()->getName());
   }
 
+  ///@test Tests the creation of conditions in ruby plugins.
   TEST_F(EmbeddedRubyTest, should_create_condition)
   {
     using namespace std::chrono;
@@ -438,6 +447,7 @@ $source.pipeline.splice_after('Start', $trans)
     ASSERT_EQ(Condition::FAULT, cond->getLevel());
   }
 
+  ///@test Tests the changing of data item topics in ruby plugins.
   TEST_F(EmbeddedRubyTest, should_change_data_item_topic)
   {
     load("should_rename_data_item_topic.rb");
