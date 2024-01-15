@@ -79,6 +79,7 @@ protected:
   }
 };
 
+///@test Test the parsing of simple documents by the JSON parser.
 TEST_F(JsonParserTest, TestParseSimpleDocument)
 {
   auto fileProperty =
@@ -146,6 +147,7 @@ TEST_F(JsonParserTest, TestParseSimpleDocument)
   ASSERT_EQ("Flat", get<string>((*it)->getProperty("VALUE")));
 }
 
+///@test Tests the parsing of recursive entity lists by the JSON parser.
 TEST_F(JsonParserTest, TestRecursiveEntityLists)
 {
   auto root = components();
@@ -197,6 +199,7 @@ TEST_F(JsonParserTest, TestRecursiveEntityLists)
   ASSERT_EQ("h1", get<string>((*sli)->getProperty("id")));
 }
 
+///@test Tests the error returned by failing to parse recursive entity lists with the JSON parser.
 TEST_F(JsonParserTest, TestRecursiveEntityListFailure)
 {
   auto root = components();
@@ -225,6 +228,7 @@ TEST_F(JsonParserTest, TestRecursiveEntityListFailure)
             errors.front()->what());
 }
 
+///@test Tests the error returned by failing to parse entity lists with missing components with the JSON parser.
 TEST_F(JsonParserTest, TestRecursiveEntityListMissingComponents)
 {
   auto root = components();
@@ -266,6 +270,7 @@ TEST_F(JsonParserTest, TestRecursiveEntityListMissingComponents)
   ASSERT_FALSE(sl);
 }
 
+///@test Tests the parsing of raw content with the JSON parser.
 TEST_F(JsonParserTest, TestRawContent)
 {
   auto definition =
