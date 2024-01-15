@@ -63,6 +63,7 @@ protected:
   std::unique_ptr<AgentTestHelper> m_agentTestHelper;
 };
 
+///@test Tests parsing configuration with an image file.
 TEST_F(ImageFileTest, should_parse_configuration_with_image_file)
 {
   ASSERT_NE(nullptr, m_device);
@@ -91,6 +92,7 @@ TEST_F(ImageFileTest, should_parse_configuration_with_image_file)
 #define DEVICE_IMAGE_FILE_PATH_1 DEVICE_CONFIGURATION_PATH "/m:ImageFile[@id='fif']"
 #define DEVICE_IMAGE_FILE_PATH_2 DEVICE_CONFIGURATION_PATH "/m:ImageFile[@id='bif']"
 
+///@test Tests printing configuration with an image file.
 TEST_F(ImageFileTest, should_print_configuration_with_image_file)
 {
   {
@@ -110,6 +112,7 @@ TEST_F(ImageFileTest, should_print_configuration_with_image_file)
   }
 }
 
+///@test Tests printing configuration with an image file in JSON.
 TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json)
 {
   {
@@ -139,6 +142,7 @@ TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json)
   }
 }
 
+///@test Tests printing configuration with an image file in JSON v2.
 TEST_F(ImageFileTest, should_print_configuration_with_image_file_in_json_v2)
 {
   m_agentTestHelper->createAgent("/samples/solid_model.xml", 8, 4, "2.2", 25, false, false,
