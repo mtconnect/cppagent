@@ -88,6 +88,7 @@ protected:
   DataItemPtr m_dataItemC;
 };
 
+///@test Tests getters for data items.
 TEST_F(DataItemTest, Getters)
 {
   ASSERT_EQ("1", m_dataItemA->getId());
@@ -107,6 +108,7 @@ TEST_F(DataItemTest, Getters)
   ASSERT_EQ(1.0, m_dataItemB->get<double>("nativeScale"));
 }
 
+///@test Tests that data items have a name and source.
 TEST_F(DataItemTest, HasNameAndSource)
 {
   namespace di = mtconnect::device_model::data_item;
@@ -140,12 +142,14 @@ TEST_F(DataItemTest, HasNameAndSource)
   ASSERT_EQ("DataItemTest2Source", dataItem->getPreferredName());
 }
 
+///@test Tests that data items can be recognized as samples.
 TEST_F(DataItemTest, IsSample)
 {
   ASSERT_TRUE(m_dataItemA->isSample());
   ASSERT_FALSE(m_dataItemC->isSample());
 }
 
+///@test Test the conversion of strings to camel case.
 TEST_F(DataItemTest, GetCamel)
 {
   std::optional<string> prefix;
@@ -168,8 +172,10 @@ TEST_F(DataItemTest, GetCamel)
   ASSERT_EQ((string) "x", *prefix);
 }
 
+///@test Tests conditions data items.
 TEST_F(DataItemTest, Condition) { ASSERT_EQ(DataItem::CONDITION, m_dataItemC->getCategory()); }
 
+///@test Tests time series data items can be created.
 TEST_F(DataItemTest, TimeSeries)
 {
   {
@@ -203,6 +209,7 @@ TEST_F(DataItemTest, TimeSeries)
   }
 }
 
+///@test Test that statistic attributes for data items can be created.
 TEST_F(DataItemTest, Statistic)
 {
   Properties props {{"id", "1"s},
@@ -219,6 +226,7 @@ TEST_F(DataItemTest, Statistic)
   ASSERT_EQ("AVERAGE", d->get<string>("statistic"));
 }
 
+///@test Test that sample rate attributes for data items can be created.
 TEST_F(DataItemTest, SampleRate)
 {
   Properties props {{"id", "1"s},
