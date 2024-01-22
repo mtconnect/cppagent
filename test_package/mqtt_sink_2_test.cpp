@@ -388,3 +388,38 @@ TEST_F(MqttSink2Test, mqtt_sink_should_publish_Probe_no_device_in_format)
 
   ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
 }
+
+TEST_F(MqttSink2Test, mqtt_sink_should_publish_agent_device)
+{
+  ConfigOptions options;
+  createServer(options);
+  startServer();
+  ASSERT_NE(0, m_port);
+  
+  entity::JsonParser parser;
+  
+  DevicePtr ad;
+  string agent_topic;
+  
+  auto handler = make_unique<ClientHandler>();
+  bool gotDevice = false;
+  handler->m_receive = [&gotDevice, &parser, &agent_topic, &ad ](std::shared_ptr<MqttClient> client,
+                                             const std::string &topic, const std::string &payload) {
+    EXPECT_EQ(agent_topic, topic);
+    gotDevice = true;
+  };
+  
+  createClient(options, std::move(handler));
+  ASSERT_TRUE(startClient());
+  createAgent();
+
+  ad = m_agentTestHelper->m_agent->getAgentDevice();
+  agent_topic = "MTConnect/Probe/Agent_"s + *ad->getUuid();
+  m_client->subscribe(agent_topic);
+    
+  auto service = m_agentTestHelper->getMqtt2Service();
+  
+  ASSERT_TRUE(waitFor(60s, [&service]() { return service->isConnected(); }));
+  
+  ASSERT_TRUE(waitFor(1s, [&gotDevice]() { return gotDevice; }));
+}

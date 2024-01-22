@@ -144,7 +144,7 @@ namespace mtconnect {
             uuid = *(device->getUuid());
             if (std::dynamic_pointer_cast<device_model::AgentDevice>(device))
             {
-              uuid.insert(0, "Agent.");
+              uuid.insert(0, "Agent_");
             }
           }
 
