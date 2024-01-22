@@ -155,18 +155,21 @@ namespace mtconnect {
       if (p.first == "VALUE")
       {
         // The value is the content for a simple element
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
+        if (*s != '\0')
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
       }
       else if (p.first == "RAW")
       {
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST s));
+        if (*s != '\0')
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteRaw(writer, BAD_CAST s));
       }
       else
       {
         QName name(p.first);
         string qname = stripUndeclaredNamespace(name, namespaces);
         AutoElement element(writer, qname);
-        THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
+        if (*s != '\0')
+          THROW_IF_XML2_ERROR(xmlTextWriterWriteString(writer, BAD_CAST s));
       }
     }
 
