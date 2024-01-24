@@ -964,9 +964,17 @@ namespace mtconnect::configuration {
         {
           adapterOptions[configuration::Device] = *device->getUuid();
         }
+        
         if (!device)
         {
           LOG(warning) << "Cannot locate device name '" << deviceName << "', assuming dynamic";
+        }
+        else if (auto uuid = GetOption<string>(adapterOptions, configuration::UUID))
+        {
+          // Set the UUID of the device
+          auto oldUuid = *device->getUuid();
+          device->setUuid(*uuid);
+          m_agent->deviceChanged(device, oldUuid, *device->getComponentName());
         }
 
         auto additional = block.second.get_optional<string>(configuration::AdditionalDevices);
