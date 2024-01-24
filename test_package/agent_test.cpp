@@ -3000,3 +3000,25 @@ TEST_F(AgentTest, device_should_have_hash_for_2_2)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceAdded[3]@hash", (*di)->get<string>("hash").c_str());
   }
 }
+
+TEST_F(AgentTest, should_not_add_spaces_to_output)
+{
+  addAdapter();
+
+  m_agentTestHelper->m_adapter->processData("2024-01-22T20:00:00Z|program|");
+  m_agentTestHelper->m_adapter->processData("2024-01-22T20:00:00Z|block|");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
+  }
+  
+  m_agentTestHelper->m_adapter->processData("2024-01-22T20:00:00Z|program|              |block|       ");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Program", "");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
+  }
+}
