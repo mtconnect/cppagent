@@ -2257,4 +2257,45 @@ AgentDeviceUUID = SOME_UUID
     const auto &ad = m_config->getAgent()->getAgentDevice();
     ASSERT_EQ("SOME_UUID", *(ad->getUuid()));
   }
+  
+  TEST_F(ConfigTest, should_set_device_uuid_when_specified_in_adapter_config)
+  {
+    string config(R"DOC(
+SchemaVersion=2.3
+Adapters {
+      Simplest {
+       UUID = NEW-UUID
+       Port = 7878
+    }
+}
+)DOC");
+
+    m_config->setDebug(true);
+    m_config->loadConfig(config);
+
+    auto dev = m_config->getAgent()->getDeviceByName("Simplest");
+    ASSERT_TRUE(dev);
+    ASSERT_EQ("NEW-UUID", *(dev->getUuid()));
+  }
+  
+  TEST_F(ConfigTest, should_set_default_device_uuid_when_specified_in_adapter_config)
+  {
+    string config(R"DOC(
+SchemaVersion=2.3
+Adapters {
+      Adapter {
+       UUID = NEW-UUID
+       Port = 7878
+    }
+}
+)DOC");
+
+    m_config->setDebug(true);
+    m_config->loadConfig(config);
+
+    auto dev = m_config->getAgent()->getDeviceByName("Simplest");
+    ASSERT_TRUE(dev);
+    ASSERT_EQ("NEW-UUID", *(dev->getUuid()));
+  }
+
 }  // namespace
