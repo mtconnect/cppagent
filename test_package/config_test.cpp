@@ -2374,7 +2374,7 @@ DevicesStyle { Location = /styles/styles.xsl }
   
   TEST_F(ConfigTest, should_update_stylesheet_versions_with_path)
   {
-    fs::path root {createTempDirectory("14")};
+    fs::path root {createTempDirectory("15")};
 
     fs::path styleDir { root / "styles" };
     fs::create_directory(styleDir);
