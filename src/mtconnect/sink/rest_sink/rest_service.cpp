@@ -298,36 +298,42 @@ namespace mtconnect {
             {
               buffer = new char[fc->m_size];
               file = std::fopen(fc->m_path.c_str(), "rb");
+              if (file == nullptr)
+                throw std::runtime_error("Cannot open file for reading");
+
               auto len = std::fread(buffer, 1, fc->m_size, file);
               std::fclose(file);
               file = nullptr;
-              if (len > 0)
-              {
-                string_view sv(buffer, len);
+              if (len <= 0)
+                throw std::runtime_error("Cannot read from file");
 
-                std::ofstream out(fc->m_path);
-                std::ostream_iterator<char, char> oi(out);
+              string_view sv(buffer, len);
 
-                std::regex reg(
-                    "(xmlns:[A-Za-z]+=\"urn:mtconnect.org:MTConnect[^:]+:)"
-                    "[[:digit:]]+\\.[[:digit:]]+(\")");
-                std::regex_replace(
-                    oi, sv.begin(), sv.end(), reg, "$01" + m_schemaVersion + "$2",
-                    std::regex_constants::match_default | std::regex_constants::match_any);
-              }
-              else
-              {
-                LOG(warning) << "Cannot read style file: " << fc->m_path;
-              }
+              std::ofstream out(fc->m_path);
+              if (!out.is_open())
+                throw std::runtime_error("Cannot open file for writing");
+
+              std::ostream_iterator<char, char> oi(out);
+
+              std::regex reg(
+                  "(xmlns:[A-Za-z]+=\"urn:mtconnect.org:MTConnect[^:]+:)"
+                  "[[:digit:]]+\\.[[:digit:]]+(\")");
+              std::regex_replace(
+                  oi, sv.begin(), sv.end(), reg, "$01" + m_schemaVersion + "$2",
+                  std::regex_constants::match_default | std::regex_constants::match_any);
+            }
+            catch (std::runtime_error ec)
+            {
+              LOG(error) << "Cannot update sylesheet: " << ec.what() << " (" << fc->m_path << ')';
             }
             catch (...)
             {
-              LOG(error) << "Cannot update sylesheet";
-              if (file != nullptr)
-                std::fclose(file);
-              if (buffer != nullptr)
-                delete buffer;
+              LOG(error) << "Cannot update sylesheet: (" << fc->m_path << ')';
             }
+            if (file != nullptr)
+              std::fclose(file);
+            if (buffer != nullptr)
+              delete buffer;
           }
           else
           {
