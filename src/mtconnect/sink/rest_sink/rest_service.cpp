@@ -17,6 +17,8 @@
 
 #include "rest_service.hpp"
 
+#include <regex>
+
 #include "mtconnect/configuration/config_options.hpp"
 #include "mtconnect/entity/xml_parser.hpp"
 #include "mtconnect/pipeline/shdr_token_mapper.hpp"
@@ -270,6 +272,7 @@ namespace mtconnect {
     void RestService::loadStyle(const ptree &tree, const char *styleName, XmlPrinter *xmlPrinter,
                                 StyleFunction styleFunction)
     {
+      namespace fs = std::filesystem;
       auto style = tree.get_child_optional(styleName);
       if (style)
       {
@@ -281,10 +284,50 @@ namespace mtconnect {
         else
         {
           (xmlPrinter->*styleFunction)(*location);
-          auto path = style->get_optional<string>("Path");
-          if (path)
+          auto configPath = style->get_optional<string>("Path");
+          if (configPath)
           {
-            m_fileCache.registerFile(*location, *path, m_schemaVersion);
+            m_fileCache.registerFile(*location, *configPath, m_schemaVersion);
+          }
+
+          if (auto fc = m_fileCache.getFile(*location))
+          {
+            FILE *file = nullptr;
+            char *buffer;
+            try {
+              buffer = new char[fc->m_size];
+              file = std::fopen(fc->m_path.c_str(), "rb");
+              auto len = std::fread(buffer, 1, fc->m_size, file);
+              std::fclose(file);
+              file = nullptr;
+              if (len > 0)
+              {
+                string_view sv(buffer, len);
+                
+                std::ofstream out(fc->m_path);
+                std::ostream_iterator<char, char> oi(out);
+                
+                std::regex reg("(xmlns:[A-Za-z]+=\"urn:mtconnect.org:MTConnect[^:]+:)[[:digit:]]+\\.[[:digit:]]+(\")");
+                std::regex_replace(oi, sv.begin(), sv.end(), reg, "$01" + m_schemaVersion + "$2",
+                                     std::regex_constants::match_default | std::regex_constants::match_any);
+              }
+              else
+              {
+                LOG(warning) << "Cannot read style file: " << fc->m_path;
+              }
+            }
+            catch (...)
+            {
+              LOG(error) << "Cannot update sylesheet";
+              if (file != nullptr)
+                std::fclose(file);
+              if (buffer != nullptr)
+                delete buffer;
+            }
+          }
+          else
+          {
+            LOG(warning) << "Cannot find path for style file: " << *location;
           }
         }
       }
