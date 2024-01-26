@@ -294,7 +294,8 @@ namespace mtconnect {
           {
             FILE *file = nullptr;
             char *buffer;
-            try {
+            try
+            {
               buffer = new char[fc->m_size];
               file = std::fopen(fc->m_path.c_str(), "rb");
               auto len = std::fread(buffer, 1, fc->m_size, file);
@@ -303,13 +304,16 @@ namespace mtconnect {
               if (len > 0)
               {
                 string_view sv(buffer, len);
-                
+
                 std::ofstream out(fc->m_path);
                 std::ostream_iterator<char, char> oi(out);
-                
-                std::regex reg("(xmlns:[A-Za-z]+=\"urn:mtconnect.org:MTConnect[^:]+:)[[:digit:]]+\\.[[:digit:]]+(\")");
-                std::regex_replace(oi, sv.begin(), sv.end(), reg, "$01" + m_schemaVersion + "$2",
-                                     std::regex_constants::match_default | std::regex_constants::match_any);
+
+                std::regex reg(
+                    "(xmlns:[A-Za-z]+=\"urn:mtconnect.org:MTConnect[^:]+:)"
+                    "[[:digit:]]+\\.[[:digit:]]+(\")");
+                std::regex_replace(
+                    oi, sv.begin(), sv.end(), reg, "$01" + m_schemaVersion + "$2",
+                    std::regex_constants::match_default | std::regex_constants::match_any);
               }
               else
               {

@@ -2257,7 +2257,7 @@ AgentDeviceUUID = SOME_UUID
     const auto &ad = m_config->getAgent()->getAgentDevice();
     ASSERT_EQ("SOME_UUID", *(ad->getUuid()));
   }
-  
+
   TEST_F(ConfigTest, should_set_device_uuid_when_specified_in_adapter_config)
   {
     string config(R"DOC(
@@ -2277,7 +2277,7 @@ Adapters {
     ASSERT_TRUE(dev);
     ASSERT_EQ("NEW-UUID", *(dev->getUuid()));
   }
-  
+
   TEST_F(ConfigTest, should_set_default_device_uuid_when_specified_in_adapter_config)
   {
     string config(R"DOC(
