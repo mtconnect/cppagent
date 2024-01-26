@@ -91,9 +91,15 @@ namespace {
       return root;
     }
 
-    fs::path copyFile(const std::string &src, fs::path target, chrono::seconds delta)
+    fs::path copySampleFile(const std::string &src, fs::path target, chrono::seconds delta)
     {
-      fs::path file {fs::path(TEST_RESOURCE_DIR) / "samples" / src};
+      fs::path file { fs::path("samples") / src };
+      return copyFile(file, target, delta);
+    }
+    
+    fs::path copyFile(const fs::path src, fs::path target, chrono::seconds delta)
+    {
+      fs::path file {fs::path(TEST_RESOURCE_DIR) / src};
 
       fs::copy_file(file, target, fs::copy_options::overwrite_existing);
       auto t = fs::last_write_time(target);
@@ -102,6 +108,7 @@ namespace {
 
       return target;
     }
+
 
     void replaceTextInFile(fs::path file, const std::string &from, const std::string &to)
     {
@@ -979,7 +986,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("min_config.xml", devices, 60min);
+    copySampleFile("min_config.xml", devices, 60min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1058,7 +1065,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("min_config.xml", devices, 1min);
+    copySampleFile("min_config.xml", devices, 1min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1125,7 +1132,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("min_config.xml", devices, 0s);
+    copySampleFile("min_config.xml", devices, 0s);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1199,7 +1206,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("min_config.xml", devices, 1min);
+    copySampleFile("min_config.xml", devices, 1min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1316,7 +1323,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("min_config.xml", devices, 10min);
+    copySampleFile("min_config.xml", devices, 10min);
     replaceTextInFile(devices, "2.0", "1.2");
 
     boost::program_options::variables_map options;
@@ -1415,7 +1422,7 @@ Adapters {
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("empty.xml", devices, 0min);
+    copySampleFile("empty.xml", devices, 0min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1527,7 +1534,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("dyn_load.xml", devices, 0min);
+    copySampleFile("dyn_load.xml", devices, 0min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1656,7 +1663,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("dyn_load.xml", devices, 0min);
+    copySampleFile("dyn_load.xml", devices, 0min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1718,7 +1725,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("dyn_load.xml", devices, 0min);
+    copySampleFile("dyn_load.xml", devices, 0min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1836,7 +1843,7 @@ Adapters {
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("empty.xml", devices, 0min);
+    copySampleFile("empty.xml", devices, 0min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -1941,7 +1948,7 @@ Port = 0
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("dyn_load.xml", devices, 0min);
+    copySampleFile("dyn_load.xml", devices, 0min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -2068,7 +2075,7 @@ Adapters {
       cfg << "Devices = " << devices << endl;
     }
 
-    copyFile("empty.xml", devices, 0min);
+    copySampleFile("empty.xml", devices, 0min);
 
     boost::program_options::variables_map options;
     boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
@@ -2190,7 +2197,7 @@ ServiceName="some_prefix_${CONFIG_TEST}_suffix"
   TEST_F(ConfigTest, should_find_device_file_in_config_path)
   {
     fs::path root {createTempDirectory("13")};
-    copyFile("empty.xml", root / "test.xml", 0min);
+    copySampleFile("empty.xml", root / "test.xml", 0min);
     chdir(m_cwd.string().c_str());
     m_config->updateWorkingDirectory();
 
@@ -2297,5 +2304,71 @@ Adapters {
     ASSERT_TRUE(dev);
     ASSERT_EQ("NEW-UUID", *(dev->getUuid()));
   }
+  
+  TEST_F(ConfigTest, should_update_stylesheet_versions)
+  {
+    fs::path root {createTempDirectory("14")};
 
+    fs::path styleDir { root / "styles" };
+    fs::create_directory(styleDir);
+    
+    fs::path styles { styleDir / "styles.xsl" };
+    copyFile("styles/styles.xsl", styles, 0min);
+    
+    fs::path devices(root / "Devices.xml");
+    copySampleFile("empty.xml", devices, 0min);
+
+    fs::path config {root / "agent.cfg"};
+    {
+      ofstream cfg(config.string());
+      cfg << R"DOC(
+SchemaVersion = 2.2
+)DOC";
+      cfg << "Devices = " << devices << endl;
+      cfg << R"DOC(
+Files {
+  styles {
+    Path = ./styles
+    Location = /styles/
+  }
+}
+DevicesStyle { Location = /styles/styles.xsl }
+)DOC";
+      
+    }
+
+    boost::program_options::variables_map options;
+    boost::program_options::variable_value value(boost::optional<string>(config.string()), false);
+    options.insert(make_pair("config-file"s, value));
+
+    m_config->initialize(options);
+
+    ifstream file(styles);
+    ASSERT_TRUE(file.is_open());
+    
+    stringstream sf;
+    sf << file.rdbuf();
+    
+    ASSERT_EQ(R"DOC(<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns:fn="http://www.w3.org/2005/xpath-functions"
+  xmlns:m="urn:mtconnect.org:MTConnectDevices:2.2"
+  xmlns:s="urn:mtconnect.org:MTConnectStreams:2.2"
+  xmlns:e="urn:mtconnect.org:MTConnectError:2.2"
+  xmlns:js="urn:custom-javascript"
+  exclude-result-prefixes="msxsl js"
+  xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+
+  <xsl:output method="html" version="1.0" encoding="UTF-8" indent="yes" />
+
+  <!-- Root template -->
+  <xsl:template match="/">
+  </xsl:template>
+</xsl:stylesheet>
+)DOC", sf.str());
+    
+    m_config->stop();
+  }
 }  // namespace
