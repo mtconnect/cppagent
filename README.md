@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 2.2
+MTConnect C++ Agent Version 2.3
 --------
 [![Build MTConnect C++ Agent](https://github.com/mtconnect/cppagent/actions/workflows/build.yml/badge.svg)](https://github.com/mtconnect/cppagent/actions/workflows/build.yml)
 
@@ -980,8 +980,6 @@ Sinks {
 
 	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify their respective `MqttClientId`
 	>
-
-	> **⚠️Note:** Currently, there is no JSON parser functionality. Agent is expecting a raw SHDR-formatted string
 
 	Example mqtt adapter block:
 	```json
