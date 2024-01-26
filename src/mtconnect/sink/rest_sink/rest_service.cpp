@@ -292,22 +292,20 @@ namespace mtconnect {
 
           if (auto fc = m_fileCache.getFile(*location))
           {
-            FILE *file = nullptr;
-            char *buffer;
             try
             {
-              buffer = new char[fc->m_size];
-              file = std::fopen(fc->m_path.c_str(), "rb");
-              if (file == nullptr)
+              using unique_file = std::unique_ptr<std::FILE, decltype(&std::fclose)>;
+              unique_ptr<char[]> buffer(new char[fc->m_size]);
+              unique_file file(std::fopen(fc->m_path.c_str(), "rb"), &std::fclose);
+              if (!file)
                 throw std::runtime_error("Cannot open file for reading");
 
-              auto len = std::fread(buffer, 1, fc->m_size, file);
-              std::fclose(file);
-              file = nullptr;
+              auto len = std::fread(buffer.get(), 1, fc->m_size, file.get());
+              file.reset();
               if (len <= 0)
                 throw std::runtime_error("Cannot read from file");
 
-              string_view sv(buffer, len);
+              string_view sv(buffer.get(), len);
 
               std::ofstream out(fc->m_path);
               if (!out.is_open())
@@ -330,10 +328,6 @@ namespace mtconnect {
             {
               LOG(error) << "Cannot update sylesheet: (" << fc->m_path << ')';
             }
-            if (file != nullptr)
-              std::fclose(file);
-            if (buffer != nullptr)
-              delete buffer;
           }
           else
           {
