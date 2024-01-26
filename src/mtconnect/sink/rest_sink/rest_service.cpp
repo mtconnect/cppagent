@@ -296,7 +296,7 @@ namespace mtconnect {
             {
               using unique_file = std::unique_ptr<std::FILE, decltype(&std::fclose)>;
               unique_ptr<char[]> buffer(new char[fc->m_size]);
-              unique_file file(std::fopen(fc->m_path.c_str(), "rb"), &std::fclose);
+              unique_file file(std::fopen(reinterpret_cast<const char *>(fc->m_path.c_str()), "rb"), &std::fclose);
               if (!file)
                 throw std::runtime_error("Cannot open file for reading");
 
