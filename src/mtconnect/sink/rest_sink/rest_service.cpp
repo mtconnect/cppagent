@@ -294,23 +294,22 @@ namespace mtconnect {
           {
             try
             {
-              using unique_file = std::unique_ptr<std::FILE, decltype(&std::fclose)>;
               unique_ptr<char[]> buffer(new char[fc->m_size]);
-              unique_file file(std::fopen(reinterpret_cast<const char *>(fc->m_path.c_str()), "rb"), &std::fclose);
-              if (!file)
+              std::filebuf file;
+              if (file.open(fc->m_path, std::ios::binary | std::ios::in) == nullptr)
                 throw std::runtime_error("Cannot open file for reading");
 
-              auto len = std::fread(buffer.get(), 1, fc->m_size, file.get());
-              file.reset();
+              auto len = file.sgetn(buffer.get(), fc->m_size);
+              file.close();
               if (len <= 0)
                 throw std::runtime_error("Cannot read from file");
 
               string_view sv(buffer.get(), len);
 
-              std::ofstream out(fc->m_path);
+              std::ofstream out(fc->m_path, std::ios::binary | std::ios_base::out);
               if (!out.is_open())
                 throw std::runtime_error("Cannot open file for writing");
-
+              
               std::ostream_iterator<char, char> oi(out);
 
               std::regex reg(
