@@ -964,7 +964,7 @@ namespace mtconnect::configuration {
         {
           adapterOptions[configuration::Device] = *device->getUuid();
         }
-        
+
         if (!device)
         {
           LOG(warning) << "Cannot locate device name '" << deviceName << "', assuming dynamic";
