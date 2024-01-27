@@ -309,7 +309,7 @@ namespace mtconnect {
               std::ofstream out(fc->m_path, std::ios::binary | std::ios_base::out);
               if (!out.is_open())
                 throw std::runtime_error("Cannot open file for writing");
-              
+
               std::ostream_iterator<char, char> oi(out);
 
               std::regex reg(

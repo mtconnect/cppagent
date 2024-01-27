@@ -93,10 +93,10 @@ namespace {
 
     fs::path copySampleFile(const std::string &src, fs::path target, chrono::seconds delta)
     {
-      fs::path file { fs::path("samples") / src };
+      fs::path file {fs::path("samples") / src};
       return copyFile(file, target, delta);
     }
-    
+
     fs::path copyFile(const fs::path src, fs::path target, chrono::seconds delta)
     {
       fs::path file {fs::path(TEST_RESOURCE_DIR) / src};
@@ -108,7 +108,6 @@ namespace {
 
       return target;
     }
-
 
     void replaceTextInFile(fs::path file, const std::string &from, const std::string &to)
     {
@@ -2304,17 +2303,17 @@ Adapters {
     ASSERT_TRUE(dev);
     ASSERT_EQ("NEW-UUID", *(dev->getUuid()));
   }
-  
+
   TEST_F(ConfigTest, should_update_stylesheet_versions)
   {
     fs::path root {createTempDirectory("14")};
 
-    fs::path styleDir { root / "styles" };
+    fs::path styleDir {root / "styles"};
     fs::create_directory(styleDir);
-    
-    fs::path styles { styleDir / "styles.xsl" };
+
+    fs::path styles {styleDir / "styles.xsl"};
     copyFile("styles/styles.xsl", styles, 0min);
-    
+
     fs::path devices(root / "Devices.xml");
     copySampleFile("empty.xml", devices, 0min);
 
@@ -2334,7 +2333,6 @@ Files {
 }
 DevicesStyle { Location = /styles/styles.xsl }
 )DOC";
-      
     }
 
     boost::program_options::variables_map options;
@@ -2345,10 +2343,10 @@ DevicesStyle { Location = /styles/styles.xsl }
 
     ifstream file(styles);
     ASSERT_TRUE(file.is_open());
-    
+
     stringstream sf;
     sf << file.rdbuf();
-    
+
     ASSERT_EQ(R"DOC(<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -2367,21 +2365,22 @@ DevicesStyle { Location = /styles/styles.xsl }
   <xsl:template match="/">
   </xsl:template>
 </xsl:stylesheet>
-)DOC", sf.str());
-    
+)DOC",
+              sf.str());
+
     m_config->stop();
   }
-  
+
   TEST_F(ConfigTest, should_update_stylesheet_versions_with_path)
   {
     fs::path root {createTempDirectory("15")};
 
-    fs::path styleDir { root / "styles" };
+    fs::path styleDir {root / "styles"};
     fs::create_directory(styleDir);
-    
-    fs::path styles { styleDir / "styles.xsl" };
+
+    fs::path styles {styleDir / "styles.xsl"};
     copyFile("styles/styles.xsl", styles, 0min);
-    
+
     fs::path devices(root / "Devices.xml");
     copySampleFile("empty.xml", devices, 0min);
 
@@ -2398,7 +2397,6 @@ DevicesStyle {
   Path = ./styles/styles.xsl
 }
 )DOC";
-      
     }
 
     boost::program_options::variables_map options;
@@ -2409,10 +2407,10 @@ DevicesStyle {
 
     ifstream file(styles);
     ASSERT_TRUE(file.is_open());
-    
+
     stringstream sf;
     sf << file.rdbuf();
-    
+
     ASSERT_EQ(R"DOC(<?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -2431,8 +2429,9 @@ DevicesStyle {
   <xsl:template match="/">
   </xsl:template>
 </xsl:stylesheet>
-)DOC", sf.str());
-    
+)DOC",
+              sf.str());
+
     m_config->stop();
   }
 

@@ -94,8 +94,14 @@ namespace mtconnect::sink::rest_sink {
       if (cached)
       {
         allocate(m_size);
-        auto file = std::fopen(path.string().c_str(), "rb");
-        m_size = std::fread(m_buffer, 1, m_size, file);
+        std::filebuf file;
+        if (file.open(m_path, std::ios::binary | std::ios::in) != nullptr)
+          m_size = file.sgetn(m_buffer, m_size);
+        else
+        {
+          LOG(warning) << "Cannot open cached file: " << path;
+          m_cached = false;
+        }
       }
       m_lastWrite = std::filesystem::last_write_time(m_path);
     }
