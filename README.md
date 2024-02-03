@@ -646,9 +646,9 @@ Configuration Parameters
 
 These can be overridden on a per-adapter basis
 
-* `Protocol` –Specify protocol. Options: [`shdr`,`mqtt`]
+* `Protocol` –Specify protocol. Options: [`shdr`|`mqtt`]
 
-    *Default*: `shdr
+    *Default*: shdr
 
 * `ConversionRequired` - Global default for data item units conversion in the agent. 
   Assumes the adapter has already done unit conversion.
@@ -831,7 +831,7 @@ Sinks {
 
 * `SampleTopic` - Prefix for the Sample 
 
-    *Default*: `MTConnect/Current/[device]`
+    *Default*: `MTConnect/Sample/[device]`
 
 * `MqttLastWillTopic` - The topic used for the last will and testement for an agent
 
@@ -854,13 +854,12 @@ Sinks {
     
 ### Adapter Configuration Items ###
 
-* `Adapters` - Adapters begins a list of device blocks. If the Adapters
-  are not specified and the Devices file only contains one device, a
-  default device entry will be created with an adapter located on the
-  localhost and port 7878 associated with the device in the devices
-  file.
+* `Adapters` - Contains a list of device blocks. If there are no Adapters
+  specified and the Devices file contains one device, the Agent defaults
+  to an adapter located on the localhost at port 7878.  Data passed from
+  the Adapter is associated with the default device.
 
-    *Default*: localhost 5000 associated with the default device
+    *Default*: localhost 7878, associated with the default device
 
     * `Device` - The name of the device that corresponds to the name of
       the device in the Devices file. Each adapter can map to one
@@ -985,11 +984,11 @@ Sinks {
 
     *Required*
 
-* `MqttClientId` - Port number of MQTT Broker
+* `MqttClientId` - Client ID used when connecting to the MQTT Broker
 
     *Default*: Auto-generated
 
-	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify their respective `MqttClientId`
+	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify a distinct `MqttClientId` for each.
 	>
 
 	> **⚠️Note:** Currently, there is no JSON parser functionality. Agent is expecting a raw SHDR-formatted string
