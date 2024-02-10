@@ -57,22 +57,6 @@ namespace mtconnect::printer {
     m_version = appVersion;
   }
 
-  const string &JsonPrinter::hostname() const
-  {
-    if (m_hostname.empty())
-    {
-      string name;
-      boost::system::error_code ec;
-      name = boost::asio::ip::host_name(ec);
-      if (ec)
-        name = "localhost";
-      // Breaking the rules, this is a one off
-      const_cast<JsonPrinter *>(this)->m_hostname = name;
-    }
-
-    return m_hostname;
-  }
-
   template <typename T>
   inline void header(AutoJsonObject<T> &obj, const string &version, const string &hostname,
                      const uint64_t instanceId, const unsigned int bufferSize,
@@ -138,7 +122,7 @@ namespace mtconnect::printer {
 
         {
           AutoJsonObject obj(writer, "Header");
-          header(obj, m_version, hostname(), instanceId, bufferSize, *m_schemaVersion,
+          header(obj, m_version, m_senderName, instanceId, bufferSize, *m_schemaVersion,
                  m_modelChangeTime);
         }
         {
@@ -195,7 +179,7 @@ namespace mtconnect::printer {
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {
         AutoJsonObject obj(writer, "Header");
-        probeAssetHeader(obj, m_version, hostname(), instanceId, bufferSize, assetBufferSize,
+        probeAssetHeader(obj, m_version, m_senderName, instanceId, bufferSize, assetBufferSize,
                          assetCount, *m_schemaVersion, m_modelChangeTime);
       }
       {
@@ -222,7 +206,7 @@ namespace mtconnect::printer {
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {
         AutoJsonObject obj(writer, "Header");
-        probeAssetHeader(obj, m_version, hostname(), instanceId, 0, bufferSize, assetCount,
+        probeAssetHeader(obj, m_version, m_senderName, instanceId, 0, bufferSize, assetCount,
                          *m_schemaVersion, m_modelChangeTime);
       }
       {
@@ -420,7 +404,7 @@ namespace mtconnect::printer {
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {
         AutoJsonObject obj(writer, "Header");
-        streamHeader(obj, m_version, hostname(), instanceId, bufferSize, nextSeq, firstSeq, lastSeq,
+        streamHeader(obj, m_version, m_senderName, instanceId, bufferSize, nextSeq, firstSeq, lastSeq,
                      *m_schemaVersion, m_modelChangeTime);
       }
 

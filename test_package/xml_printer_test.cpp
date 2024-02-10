@@ -105,16 +105,19 @@ ObservationPtr XmlPrinterTest::addEventToCheckpoint(Checkpoint &checkpoint, cons
 
 TEST_F(XmlPrinterTest, PrintError)
 {
+  m_printer->setSenderName("MachineXXX");
   PARSE_XML(m_printer->printError(123, 9999, 1, "ERROR_CODE", "ERROR TEXT!"));
 
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@bufferSize", "9999");
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Error@errorCode", "ERROR_CODE");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Error", "ERROR TEXT!");
 }
 
 TEST_F(XmlPrinterTest, PrintProbe)
 {
+  m_printer->setSenderName("MachineXXX");
   PARSE_XML(m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices));
 
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@instanceId", "123");
@@ -122,6 +125,7 @@ TEST_F(XmlPrinterTest, PrintProbe)
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetBufferSize", "1024");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@assetCount", "10");
   ASSERT_XML_PATH_EQUAL(doc, "//m:Header@deviceModelChangeTime", 0);
+  ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
 
   // Check Description
   ASSERT_XML_PATH_EQUAL(doc, "//m:Description@manufacturer", "NIST");

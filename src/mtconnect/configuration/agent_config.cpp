@@ -779,6 +779,7 @@ namespace mtconnect::configuration {
                 {configuration::LogStreams, false},
                 {configuration::ShdrVersion, 1},
                 {configuration::WorkerThreads, 1},
+                {configuration::Sender, ""s},
                 {configuration::TlsCertificateChain, ""s},
                 {configuration::TlsPrivateKey, ""s},
                 {configuration::TlsDHKey, ""s},
@@ -855,6 +856,22 @@ namespace mtconnect::configuration {
     // Check for schema version
     auto port = get<int>(options[configuration::Port]);
     LOG(info) << "Starting agent on port " << int(port);
+    
+    // Get the name of the sender
+    auto sender = GetOption<string>(options, configuration::Sender);
+    if (sender)
+    {
+      options[configuration::Sender] = *sender;
+    }
+    else
+    {
+      boost::system::error_code ec;
+      auto name = boost::asio::ip::host_name(ec);
+      if (ec)
+        options[configuration::Sender] = "localhost";
+      else
+        options[configuration::Sender] =  name;
+    }
 
     // Make the Agent
     m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
@@ -868,7 +885,7 @@ namespace mtconnect::configuration {
 
     m_agent->initialize(m_pipelineContext);
     m_version = *m_agent->getSchemaVersion();
-
+    
     DevicePtr device;
     if (IsOptionSet(options, configuration::PreserveUUID))
     {
