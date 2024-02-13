@@ -52,7 +52,6 @@ namespace mtconnect::printer {
     uint32_t getJsonVersion() const { return m_jsonVersion; }
 
   protected:
-    const std::string &hostname() const;
     std::string m_version;
     std::string m_hostname;
     uint32_t m_jsonVersion;

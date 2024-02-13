@@ -3023,3 +3023,22 @@ TEST_F(AgentTest, should_not_add_spaces_to_output)
     ASSERT_XML_PATH_EQUAL(doc, "//m:DeviceStream//m:Block", "");
   }
 }
+
+TEST_F(AgentTest, should_set_sender_from_config_in_XML_header)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, false, true, {{configuration::Sender, "MachineXXX"s}});
+  ASSERT_TRUE(agent);
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
+  }
+  
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
+  }
+
+  
+}
+
+

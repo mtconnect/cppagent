@@ -113,6 +113,13 @@ namespace mtconnect {
       for (auto &[k, pr] : m_printers)
         pr->setSchemaVersion(*m_schemaVersion);
     }
+    
+    auto sender = GetOption<string>(options, config::Sender);
+    if (sender)
+    {
+      for (auto &[k, pr] : m_printers)
+        pr->setSenderName(*sender);
+    }
   }
 
   void Agent::initialize(pipeline::PipelineContextPtr context)
