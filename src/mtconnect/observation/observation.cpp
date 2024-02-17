@@ -333,14 +333,22 @@ namespace mtconnect {
           auto cond = make_shared<Condition>(name, props);
           if (cond)
           {
-            auto code = cond->m_properties.find("nativeCode");
-            if (code != cond->m_properties.end())
+            if (auto code = cond->m_properties.find("conditionId");
+                code != cond->m_properties.end())
+            {
               cond->m_code = std::get<string>(code->second);
+            }
+            else if (auto code = cond->m_properties.find("nativeCode");
+                     code != cond->m_properties.end())
+            {
+              cond->m_code = std::get<string>(code->second);
+            }
           }
           return cond;
         });
         factory->addRequirements(Requirements {{"type", ValueType::USTRING, true},
                                                {"nativeCode", false},
+                                               {"conditionId", false},
                                                {"nativeSeverity", false},
                                                {"qualifier", ValueType::USTRING, false},
                                                {"statistic", ValueType::USTRING, false},

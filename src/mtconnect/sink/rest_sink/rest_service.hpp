@@ -100,7 +100,8 @@ namespace mtconnect {
       /// @return MTConnect Devices response
       ResponsePtr probeRequest(const printer::Printer *p,
                                const std::optional<std::string> &device = std::nullopt,
-                               bool pretty = false);
+                               bool pretty = false,
+                               const std::optional<std::string> &deviceType = std::nullopt);
 
       /// @brief Handler for a current request
       /// @param[in] p printer for doc generation
@@ -113,7 +114,8 @@ namespace mtconnect {
                                  const std::optional<std::string> &device = std::nullopt,
                                  const std::optional<SequenceNumber_t> &at = std::nullopt,
                                  const std::optional<std::string> &path = std::nullopt,
-                                 bool pretty = false);
+                                 bool pretty = false,
+                                 const std::optional<std::string> &deviceType = std::nullopt);
 
       /// @brief Handler for a sample request
       /// @param[in] p printer for doc generation
@@ -129,7 +131,8 @@ namespace mtconnect {
                                 const std::optional<SequenceNumber_t> &from = std::nullopt,
                                 const std::optional<SequenceNumber_t> &to = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt,
-                                bool pretty = false);
+                                bool pretty = false,
+                                const std::optional<std::string> &deviceType = std::nullopt);
       /// @brief Handler for a streaming sample
       /// @param[in] session session to stream data to
       /// @param[in] p printer for doc generation
@@ -145,7 +148,8 @@ namespace mtconnect {
                                const std::optional<std::string> &device = std::nullopt,
                                const std::optional<SequenceNumber_t> &from = std::nullopt,
                                const std::optional<std::string> &path = std::nullopt,
-                               bool pretty = false);
+                               bool pretty = false,
+                               const std::optional<std::string> &deviceType = std::nullopt);
 
       /// @brief Handler for a streaming current
       /// @param[in] session session to stream data to
@@ -157,7 +161,8 @@ namespace mtconnect {
       void streamCurrentRequest(SessionPtr session, const printer::Printer *p, const int interval,
                                 const std::optional<std::string> &device = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt,
-                                bool pretty = false);
+                                bool pretty = false,
+                                const std::optional<std::string> &deviceType = std::nullopt);
       /// @brief Handler for put/post observation
       /// @param[in] p printer for response generation
       /// @param[in] device device
@@ -308,7 +313,8 @@ namespace mtconnect {
                       const std::string &param, bool notZero = false) const;
 
       void checkPath(const printer::Printer *printer, const std::optional<std::string> &path,
-                     const DevicePtr device, FilterSet &filter) const;
+                     const DevicePtr device, FilterSet &filter,
+                     const std::optional<std::string> &deviceType = std::nullopt) const;
 
       DevicePtr checkDevice(const printer::Printer *printer, const std::string &uuid) const;
 

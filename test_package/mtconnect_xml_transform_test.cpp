@@ -51,6 +51,7 @@ public:
     return m_device->getDeviceDataItem(name);
   }
   void eachDataItem(EachDataItem fun) override {}
+  int32_t getSchemaVersion() const override { return IntDefaultSchemaVersion(); }
   void deliverObservation(observation::ObservationPtr obs) override {}
   void deliverAsset(AssetPtr) override {}
   void deliverDevices(std::list<DevicePtr>) override {}

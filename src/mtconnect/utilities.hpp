@@ -428,6 +428,7 @@ namespace mtconnect {
   using Microseconds = std::chrono::microseconds;
   using Seconds = std::chrono::seconds;
   using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
+  using Timestamp = std::chrono::time_point<std::chrono::system_clock>;
   using StringList = std::list<std::string>;
 
   /// @name Configuration related methods

@@ -65,6 +65,7 @@ public:
   void deliverConnectStatus(entity::EntityPtr, const StringList &, bool) override {}
   void sourceFailed(const std::string &id) override {}
   const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
+  int32_t getSchemaVersion() const override { return SCHEMA_VERSION(2, 3); };
 
   std::map<string, DataItemPtr> &m_dataItems;
   std::map<string, DevicePtr> &m_devices;

@@ -210,6 +210,10 @@ namespace mtconnect {
     /// @return The MTConnect schema version as a string
     const auto &getSchemaVersion() const { return m_schemaVersion; }
 
+    /// @brief Get the integer schema version based on configuration.
+    /// @returns the schema version as an integer [major * 100 + minor] as a 32bit integer.
+    const auto getIntSchemaVersion() const { return m_intSchemaVersion; }
+
     /// @brief Find a device by name
     /// @param[in] name The name of the device to find
     /// @return A shared pointer to the device
@@ -421,9 +425,11 @@ namespace mtconnect {
     ///
     /// @param[in] path Optional path to prefix
     /// @param[in] device Optional device if one device is specified
+    /// @param[in] deviceType optional Agent or Device selector
     /// @return The rewritten path properly prefixed
     std::string devicesAndPath(const std::optional<std::string> &path,
-                               const DevicePtr device) const;
+                               const DevicePtr device,
+                               const std::optional<std::string> &deviceType = std::nullopt) const;
 
     /// @brief Creates unique ids for the device model and maps to the originals
     ///
@@ -575,6 +581,7 @@ namespace mtconnect {
           fun(ldi);
       }
     }
+    int32_t getSchemaVersion() const override { return m_agent->getIntSchemaVersion(); }
     void deliverObservation(observation::ObservationPtr obs) override
     {
       m_agent->receiveObservation(obs);
@@ -636,9 +643,10 @@ namespace mtconnect {
     const PrinterMap &getPrinters() const override { return m_agent->getPrinters(); }
 
     void getDataItemsForPath(const DevicePtr device, const std::optional<std::string> &path,
-                             FilterSet &filter) const override
+                             FilterSet &filter,
+       const std::optional<std::string> &deviceType) const override
     {
-      std::string dataPath = m_agent->devicesAndPath(path, device);
+      std::string dataPath = m_agent->devicesAndPath(path, device, deviceType);
       const auto &parser = m_agent->getXmlParser();
       parser->getDataItems(filter, dataPath);
     }
