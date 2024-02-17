@@ -169,6 +169,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/pipeline/delta_filter.hpp"
         "${SOURCE_DIR}/pipeline/duplicate_filter.hpp"
         "${SOURCE_DIR}/pipeline/guard.hpp"
+        "${SOURCE_DIR}/pipeline/json_mapper.hpp"
         "${SOURCE_DIR}/pipeline/message_mapper.hpp"
         "${SOURCE_DIR}/pipeline/mtconnect_xml_transform.hpp"
         "${SOURCE_DIR}/pipeline/period_filter.hpp"
@@ -186,8 +187,8 @@ set(AGENT_SOURCES
 # src/pipeline SOURCE_FILES_ONLY
    
         "${SOURCE_DIR}/pipeline/deliver.cpp"
+        "${SOURCE_DIR}/pipeline/json_mapper.cpp"
         "${SOURCE_DIR}/pipeline/shdr_token_mapper.cpp"
-        "${SOURCE_DIR}/pipeline/timestamp_extractor.cpp"
         "${SOURCE_DIR}/pipeline/response_document.cpp"
 
 # src/printer HEADER_FILE_ONLY

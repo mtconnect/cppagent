@@ -126,6 +126,14 @@ namespace mtconnect {
       /// @brief Get the schema version
       /// @return the schema version
       const auto &getSchemaVersion() const { return m_schemaVersion; }
+            
+      /// @brief sets the sener name for the header
+      /// @param name the name of the sender
+      void setSenderName(const std::string &s) { m_senderName = s; }
+      
+      /// @brief gets the sender name
+      /// @returns the name of the sender in the header
+      const auto &getSenderName() const { return m_senderName; }
 
       /// @brief Use the agent version to default the schema version
       void defaultSchemaVersion() const
@@ -142,6 +150,7 @@ namespace mtconnect {
       bool m_pretty;
       std::string m_modelChangeTime;
       std::optional<std::string> m_schemaVersion;
+      std::string m_senderName { "localhost" };
     };
   }  // namespace printer
 }  // namespace mtconnect

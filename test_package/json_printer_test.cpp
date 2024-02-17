@@ -61,9 +61,10 @@ protected:
   {
     auto header = make_shared<Factory>(Requirements {
         Requirement("creationTime", true), Requirement("version", true),
-        Requirement("testIndicator", false), Requirement("instanceId", INTEGER, true),
-        Requirement("sender", true), Requirement("bufferSize", INTEGER, true),
-        Requirement("assetBufferSize", INTEGER, true), Requirement("assetCount", INTEGER, true),
+        Requirement("testIndicator", false), Requirement("instanceId", ValueType::INTEGER, true),
+        Requirement("sender", true), Requirement("bufferSize", ValueType::INTEGER, true),
+        Requirement("assetBufferSize", ValueType::INTEGER, true),
+        Requirement("assetCount", ValueType::INTEGER, true),
         Requirement("deviceModelChangeTime", true)});
 
     auto description = make_shared<Factory>(
@@ -89,8 +90,8 @@ protected:
         Requirement("discrete", false),
     });
 
-    auto dataitems = make_shared<Factory>(
-        Requirements {Requirement("DataItem", ENTITY, dataitem, 1, Requirement::Infinite)});
+    auto dataitems = make_shared<Factory>(Requirements {
+        Requirement("DataItem", ValueType::ENTITY, dataitem, 1, Requirement::Infinite)});
 
     auto component = make_shared<Factory>(Requirements {
         Requirement("id", true),
@@ -98,14 +99,16 @@ protected:
         Requirement("uuid", false),
     });
 
-    auto components = make_shared<Factory>(
-        Requirements({Requirement("Component", ENTITY, component, 1, Requirement::Infinite)}));
+    auto components = make_shared<Factory>(Requirements(
+        {Requirement("Component", ValueType::ENTITY, component, 1, Requirement::Infinite)}));
     components->registerMatchers();
     components->registerFactory(regex(".+"), component);
 
-    component->addRequirements({Requirement("Components", ENTITY_LIST, components, false)});
-    component->addRequirements({Requirement("Description", ENTITY, description, false)});
-    component->addRequirements({Requirement("DataItems", ENTITY_LIST, dataitems, false)});
+    component->addRequirements(
+        {Requirement("Components", ValueType::ENTITY_LIST, components, false)});
+    component->addRequirements({Requirement("Description", ValueType::ENTITY, description, false)});
+    component->addRequirements(
+        {Requirement("DataItems", ValueType::ENTITY_LIST, dataitems, false)});
 
     auto device = make_shared<Factory>(*component);
     device->addRequirements(Requirements {
@@ -114,16 +117,16 @@ protected:
     });
 
     auto devices = make_shared<Factory>(
-        Requirements {Requirement("Device", ENTITY, device, 1, Requirement::Infinite)});
+        Requirements {Requirement("Device", ValueType::ENTITY, device, 1, Requirement::Infinite)});
     devices->registerMatchers();
 
     auto mtconnectDevices = make_shared<Factory>(Requirements {
-        Requirement("Header", ENTITY, header, true),
-        Requirement("Devices", ENTITY_LIST, devices, true),
+        Requirement("Header", ValueType::ENTITY, header, true),
+        Requirement("Devices", ValueType::ENTITY_LIST, devices, true),
     });
 
     auto root = make_shared<Factory>(
-        Requirements {Requirement("MTConnectDevices", ENTITY, mtconnectDevices)});
+        Requirements {Requirement("MTConnectDevices", ValueType::ENTITY, mtconnectDevices)});
 
     return root;
   }
@@ -283,12 +286,14 @@ TEST_F(JsonPrinterTest, ElementListWithProperty)
 {
   auto item = make_shared<Factory>(Requirements {{"itemId", true}});
 
-  auto items = make_shared<Factory>(Requirements {
-      {"count", INTEGER, true}, {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
+  auto items = make_shared<Factory>(
+      Requirements {{"count", ValueType::INTEGER, true},
+                    {"CuttingItem", ValueType::ENTITY, item, 1, Requirement::Infinite}});
 
-  auto lifeCycle = make_shared<Factory>(Requirements {{"CuttingItems", ENTITY_LIST, items, true}});
+  auto lifeCycle =
+      make_shared<Factory>(Requirements {{"CuttingItems", ValueType::ENTITY_LIST, items, true}});
 
-  auto root = make_shared<Factory>(Requirements {{"Root", ENTITY, lifeCycle, true}});
+  auto root = make_shared<Factory>(Requirements {{"Root", ValueType::ENTITY, lifeCycle, true}});
 
   string doc = R"DOC(
 <Root>
@@ -321,12 +326,14 @@ TEST_F(JsonPrinterTest, elements_with_property_list_version_2)
 {
   auto item = make_shared<Factory>(Requirements {{"itemId", true}});
 
-  auto items = make_shared<Factory>(Requirements {
-      {"count", INTEGER, true}, {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
+  auto items = make_shared<Factory>(
+      Requirements {{"count", ValueType::INTEGER, true},
+                    {"CuttingItem", ValueType::ENTITY, item, 1, Requirement::Infinite}});
 
-  auto lifeCycle = make_shared<Factory>(Requirements {{"CuttingItems", ENTITY_LIST, items, true}});
+  auto lifeCycle =
+      make_shared<Factory>(Requirements {{"CuttingItems", ValueType::ENTITY_LIST, items, true}});
 
-  auto root = make_shared<Factory>(Requirements {{"Root", ENTITY, lifeCycle, true}});
+  auto root = make_shared<Factory>(Requirements {{"Root", ValueType::ENTITY, lifeCycle, true}});
 
   string doc = R"DOC(
 <Root>

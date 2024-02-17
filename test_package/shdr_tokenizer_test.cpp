@@ -69,7 +69,8 @@ inline bool isOfType(const EntityPtr &p)
   return typeid(T) == typeid(o);
 }
 
-TEST_F(ShdrTokenizerTest, SimpleTokens)
+/// @test
+TEST_F(ShdrTokenizerTest, should_handle_simple_tokens)
 {
   std::map<std::string, std::list<std::string>> data {
       {"   |hello   |   kitty| cat | ", {"", "hello", "kitty", "cat", ""}},
@@ -91,52 +92,53 @@ TEST_F(ShdrTokenizerTest, SimpleTokens)
   }
 }
 
-TEST_F(ShdrTokenizerTest, escaped_line)
+/// @test validate that line escaping works correctly
+TEST_F(ShdrTokenizerTest, should_handle_escaped_characters_in_SHDR_line)
 {
   std::map<std::string, std::list<std::string>> data;
-  // correctly escaped
+  ///  - correctly escaped
   data[R"("a\|b")"] = {"a|b"};
   data[R"("a\|b"|z)"] = {"a|b", "z"};
   data[R"(y|"a\|b")"] = {"y", "a|b"};
   data[R"(y|"a\|b"|z)"] = {"y", "a|b", "z"};
 
-  // correctly escaped with multiple pipes
+  /// - correctly escaped with multiple pipes
   data[R"("a\|b\|c")"] = {"a|b|c"};
   data[R"("a\|b\|c"|z)"] = {"a|b|c", "z"};
   data[R"(y|"a\|b\|c")"] = {"y", "a|b|c"};
   data[R"(y|"a\|b\|c"|z)"] = {"y", "a|b|c", "z"};
 
-  // correctly escaped with pipe at front
+  /// - correctly escaped with pipe at front
   data[R"("\|b\|c")"] = {"|b|c"};
   data[R"("\|b\|c"|z)"] = {"|b|c", "z"};
   data[R"(y|"\|b\|c")"] = {"y", "|b|c"};
   data[R"(y|"\|b\|c"|z)"] = {"y", "|b|c", "z"};
 
-  // correctly escaped with pipes at end
+  /// - correctly escaped with pipes at end
   data[R"("a\|b\|")"] = {"a|b|"};
   data[R"("a\|b\|"|z)"] = {"a|b|", "z"};
   data[R"(y|"a\|b\|")"] = {"y", "a|b|"};
   data[R"(y|"a\|b\|"|z)"] = {"y", "a|b|", "z"};
 
-  // missing first quote
+  /// - missing first quote
   data["a\\|b\""] = {"a\\", "b\""};
   data["a\\|b\"|z"] = {"a\\", "b\"", "z"};
   data["y|a\\|b\""] = {"y", "a\\", "b\""};
   data["y|a\\|b\"|z"] = {"y", "a\\", "b\"", "z"};
 
-  // missing first quote and multiple pipes
+  /// - missing first quote and multiple pipes
   data[R"(a\|b\|c")"] = {"a\\", "b\\", "c\""};
   data[R"(a\|b\|c"|z)"] = {"a\\", "b\\", "c\"", "z"};
   data[R"(y|a\|b\|c")"] = {"y", "a\\", "b\\", "c\""};
   data[R"(y|a\|b\|c"|z)"] = {"y", "a\\", "b\\", "c\"", "z"};
 
-  // missing last quote
+  /// - missing last quote
   data["\"a\\|b"] = {"\"a\\", "b"};
   data["\"a\\|b|z"] = {"\"a\\", "b", "z"};
   data["y|\"a\\|b"] = {"y", "\"a\\", "b"};
   data["y|\"a\\|b|z"] = {"y", "\"a\\", "b", "z"};
 
-  // missing last quote and pipe at end et al.
+  /// - missing last quote and pipe at end et al.
   data["\"a\\|"] = {"\"a\\", ""};
   data["y|\"a\\|"] = {"y", "\"a\\", ""};
   data["y|\"a\\|z"] = {"y", "\"a\\", "z"};

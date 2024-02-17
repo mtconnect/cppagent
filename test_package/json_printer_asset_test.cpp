@@ -94,6 +94,7 @@ protected:
 TEST_F(JsonPrinterAssetTest, AssetHeader)
 {
   AssetList asset;
+  m_printer->setSenderName("MachineXXX");
   auto doc = m_printer->printAssets(123, 1024, 10, asset);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
@@ -102,6 +103,7 @@ TEST_F(JsonPrinterAssetTest, AssetHeader)
   ASSERT_EQ(123, jdoc.at("/MTConnectAssets/Header/instanceId"_json_pointer).get<int32_t>());
   ASSERT_EQ(1024, jdoc.at("/MTConnectAssets/Header/assetBufferSize"_json_pointer).get<int32_t>());
   ASSERT_EQ(10, jdoc.at("/MTConnectAssets/Header/assetCount"_json_pointer).get<int32_t>());
+  ASSERT_EQ("MachineXXX", jdoc.at("/MTConnectAssets/Header/sender"_json_pointer).get<string>());
 }
 
 TEST_F(JsonPrinterAssetTest, CuttingTool)

@@ -61,12 +61,13 @@ protected:
         Requirement("uuid", false),
     });
 
-    auto components = make_shared<Factory>(
-        Requirements({Requirement("Component", ENTITY, component, 1, Requirement::Infinite)}));
+    auto components = make_shared<Factory>(Requirements(
+        {Requirement("Component", ValueType::ENTITY, component, 1, Requirement::Infinite)}));
     components->registerMatchers();
     components->registerFactory(regex(".+"), component);
 
-    component->addRequirements({Requirement("Components", ENTITY_LIST, components, false)});
+    component->addRequirements(
+        {Requirement("Components", ValueType::ENTITY_LIST, components, false)});
 
     auto device = make_shared<Factory>(*component);
     device->addRequirements(Requirements {
@@ -74,7 +75,8 @@ protected:
         Requirement("uuid", true),
     });
 
-    auto root = make_shared<Factory>(Requirements {Requirement("Device", ENTITY, device)});
+    auto root =
+        make_shared<Factory>(Requirements {Requirement("Device", ValueType::ENTITY, device)});
 
     return root;
   }
@@ -85,26 +87,26 @@ TEST_F(EntityParserTest, TestParseSimpleDocument)
   auto fileProperty =
       make_shared<Factory>(Requirements({Requirement("name", true), Requirement("VALUE", true)}));
 
-  auto fileProperties = make_shared<Factory>(
-      Requirements({Requirement("FileProperty", ENTITY, fileProperty, 1, Requirement::Infinite)}));
+  auto fileProperties = make_shared<Factory>(Requirements(
+      {Requirement("FileProperty", ValueType::ENTITY, fileProperty, 1, Requirement::Infinite)}));
   fileProperties->registerMatchers();
 
   auto fileComment = make_shared<Factory>(
       Requirements({Requirement("timestamp", true), Requirement("VALUE", true)}));
 
-  auto fileComments = make_shared<Factory>(
-      Requirements({Requirement("FileComment", ENTITY, fileComment, 1, Requirement::Infinite)}));
+  auto fileComments = make_shared<Factory>(Requirements(
+      {Requirement("FileComment", ValueType::ENTITY, fileComment, 1, Requirement::Infinite)}));
   fileComments->registerMatchers();
 
   auto fileArchetype = make_shared<Factory>(Requirements {
       Requirement("assetId", true), Requirement("deviceUuid", true), Requirement("timestamp", true),
       Requirement("removed", false), Requirement("name", true), Requirement("mediaType", true),
       Requirement("applicationCategory", true), Requirement("applicationType", true),
-      Requirement("FileComments", ENTITY_LIST, fileComments, false),
-      Requirement("FileProperties", ENTITY_LIST, fileProperties, false)});
+      Requirement("FileComments", ValueType::ENTITY_LIST, fileComments, false),
+      Requirement("FileProperties", ValueType::ENTITY_LIST, fileProperties, false)});
 
-  auto root =
-      make_shared<Factory>(Requirements {Requirement("FileArchetype", ENTITY, fileArchetype)});
+  auto root = make_shared<Factory>(
+      Requirements {Requirement("FileArchetype", ValueType::ENTITY, fileArchetype)});
 
   auto doc = string {
       "<FileArchetype name='xxxx' assetId='uuid' deviceUuid='duid' timestamp='2020-12-01T10:00Z' \n"
@@ -264,8 +266,8 @@ TEST_F(EntityParserTest, TestRawContent)
   auto definition =
       make_shared<Factory>(Requirements({Requirement("format", false), Requirement("RAW", true)}));
 
-  auto root =
-      make_shared<Factory>(Requirements({Requirement("Definition", ENTITY, definition, true)}));
+  auto root = make_shared<Factory>(
+      Requirements({Requirement("Definition", ValueType::ENTITY, definition, true)}));
 
   auto doc = R"DOC(
 <Definition format="XML">
@@ -299,7 +301,8 @@ TEST_F(EntityParserTest, check_proper_line_truncation)
                     Requirement("serialNumber", false), Requirement("station", false),
                     Requirement("VALUE", false)});
 
-  auto root = make_shared<Factory>(Requirements {{{"Description", ENTITY, description, false}}});
+  auto root =
+      make_shared<Factory>(Requirements {{{"Description", ValueType::ENTITY, description, false}}});
 
   auto doc = R"DOC(
   <Description>

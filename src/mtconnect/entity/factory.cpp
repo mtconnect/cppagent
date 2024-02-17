@@ -81,10 +81,10 @@ namespace mtconnect {
     {
       for (const auto &r : m_requirements)
       {
-        if (r.getType() != ENTITY && r.getType() != ENTITY_LIST)
+        if (r.getType() != ValueType::ENTITY && r.getType() != ValueType::ENTITY_LIST)
         {
           const auto p = properties.find(r.getName());
-          if (p != properties.end() && p->second.index() != r.getType())
+          if (p != properties.end() && ValueType(p->second.index()) != r.getType())
           {
             try
             {
@@ -134,7 +134,7 @@ namespace mtconnect {
       for (const auto &r : m_requirements)
       {
         Properties::const_iterator p;
-        if (m_isList && r.getType() == ENTITY)
+        if (m_isList && r.getType() == ValueType::ENTITY)
           p = properties.find("LIST");
         else
           p = properties.find(r.getName());

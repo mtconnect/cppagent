@@ -84,6 +84,7 @@ protected:
 
 TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
 {
+  m_printer->setSenderName("MachineXXX");
   auto doc = m_printer->printProbe(123, 9999, 1, 1024, 10, m_devices);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
@@ -93,6 +94,8 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
   ASSERT_EQ(9999, jdoc.at("/MTConnectDevices/Header/bufferSize"_json_pointer).get<int32_t>());
   ASSERT_EQ(1024, jdoc.at("/MTConnectDevices/Header/assetBufferSize"_json_pointer).get<int32_t>());
   ASSERT_EQ(10, jdoc.at("/MTConnectDevices/Header/assetCount"_json_pointer).get<int32_t>());
+  ASSERT_EQ("MachineXXX", jdoc.at("/MTConnectDevices/Header/sender"_json_pointer).get<string>());
+
 
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
   ASSERT_EQ(2_S, devices.size());

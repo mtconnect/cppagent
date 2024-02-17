@@ -779,6 +779,7 @@ namespace mtconnect::configuration {
                 {configuration::LogStreams, false},
                 {configuration::ShdrVersion, 1},
                 {configuration::WorkerThreads, 1},
+                {configuration::Sender, ""s},
                 {configuration::TlsCertificateChain, ""s},
                 {configuration::TlsPrivateKey, ""s},
                 {configuration::TlsDHKey, ""s},
@@ -855,6 +856,22 @@ namespace mtconnect::configuration {
     // Check for schema version
     auto port = get<int>(options[configuration::Port]);
     LOG(info) << "Starting agent on port " << int(port);
+    
+    // Get the name of the sender
+    auto sender = GetOption<string>(options, configuration::Sender);
+    if (sender)
+    {
+      options[configuration::Sender] = *sender;
+    }
+    else
+    {
+      boost::system::error_code ec;
+      auto name = boost::asio::ip::host_name(ec);
+      if (ec)
+        options[configuration::Sender] = "localhost";
+      else
+        options[configuration::Sender] =  name;
+    }
 
     // Make the Agent
     m_agent = make_unique<Agent>(getAsyncContext(), m_devicesFile, options);
@@ -868,7 +885,7 @@ namespace mtconnect::configuration {
 
     m_agent->initialize(m_pipelineContext);
     m_version = *m_agent->getSchemaVersion();
-
+    
     DevicePtr device;
     if (IsOptionSet(options, configuration::PreserveUUID))
     {
@@ -964,9 +981,17 @@ namespace mtconnect::configuration {
         {
           adapterOptions[configuration::Device] = *device->getUuid();
         }
+
         if (!device)
         {
           LOG(warning) << "Cannot locate device name '" << deviceName << "', assuming dynamic";
+        }
+        else if (auto uuid = GetOption<string>(adapterOptions, configuration::UUID))
+        {
+          // Set the UUID of the device
+          auto oldUuid = *device->getUuid();
+          device->setUuid(*uuid);
+          m_agent->deviceChanged(device, oldUuid, *device->getComponentName());
         }
 
         auto additional = block.second.get_optional<string>(configuration::AdditionalDevices);

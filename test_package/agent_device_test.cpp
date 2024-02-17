@@ -129,6 +129,7 @@ TEST_F(AgentDeviceTest, should_create_the_agent_device)
 {
   ASSERT_NE(nullptr, m_agentDevice);
   ASSERT_EQ(2, m_agentTestHelper->m_agent->getDevices().size());
+  ///  - Veriify the name of the agent device is Agent
   ASSERT_EQ("Agent", m_agentDevice->getName().str());
 }
 
@@ -184,7 +185,8 @@ TEST_F(AgentDeviceTest, should_have_device_added_in_buffer)
 #define ADAPTER_PATH ADAPTERS_PATH "/m:Components/m:Adapter"
 #define ADAPTER_DATA_ITEMS_PATH ADAPTER_PATH "/m:DataItems"
 
-#define ID_PREFIX "_d0c33d4315"
+#define ID_PREFIX "_127.0.0.1_21788"
+#define ID_PREFIX_SUPP "_d0c33d4315"
 
 /// @test verify adapter component is added
 TEST_F(AgentDeviceTest, should_add_component_and_data_items_for_adapter)
@@ -218,11 +220,11 @@ TEST_F(AgentDeviceTest, should_suppress_address_ip_address_when_configured)
   {
     PARSE_XML_RESPONSE("/Agent/probe");
     ASSERT_XML_PATH_COUNT(doc, ADAPTERS_PATH "/*", 1);
-    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX);
+    ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@id", ID_PREFIX_SUPP);
     ASSERT_XML_PATH_EQUAL(doc, ADAPTER_PATH "@name", "LinuxCNC");
 
     ASSERT_XML_PATH_COUNT(
-        doc, ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX "_adapter_uri']", 0);
+        doc, ADAPTER_DATA_ITEMS_PATH "/m:DataItem[@id='" ID_PREFIX_SUPP "_adapter_uri']", 0);
   }
 }
 
@@ -277,7 +279,7 @@ TEST_F(AgentDeviceTest, should_track_adapter_connection_status)
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                          "LISTENING");
+                          "LISTEN");
   }
 
   startServer();
@@ -309,7 +311,7 @@ TEST_F(AgentDeviceTest, should_track_adapter_connection_status)
     PARSE_XML_RESPONSE("/Agent/current");
 
     ASSERT_XML_PATH_EQUAL(doc, AGENT_DEVICE_ADAPTER_STREAM "/m:Events/m:ConnectionStatus",
-                          "LISTENING");
+                          "LISTEN");
   }
 }
 

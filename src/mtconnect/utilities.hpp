@@ -356,6 +356,18 @@ namespace mtconnect {
     return s;
   }
 
+  /// @brief split a string into two parts using a ':' separator
+  /// @param key the key to split
+  /// @return a pair of the key and an optional prefix.
+  static inline std::pair<std::string, std::optional<std::string>> splitKey(const std::string &key)
+  {
+    auto c = key.find(':');
+    if (c != std::string::npos)
+      return {key.substr(c + 1, std::string::npos), key.substr(0, c)};
+    else
+      return {key, std::nullopt};
+  }
+
   /// @brief determines of a string starts with a beginning
   /// @param[in] value the string to check
   /// @param[in] beginning the beginning to verify

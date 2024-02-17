@@ -599,9 +599,9 @@ TEST_F(MqttSinkTest, mqtt_should_publish_conditions_with_the_state_as_the_key)
   entity::JsonParser parser;
   auto handler = make_unique<ClientHandler>();
   bool gotCondition = false;
-  
+
   handler->m_receive = [&gotCondition](std::shared_ptr<MqttClient>, const std::string &topic,
-                                        const std::string &payload) {
+                                       const std::string &payload) {
     EXPECT_EQ("MTConnect/Observation/000/Axes[Axes]/Rotary[C]/Condition/Temperature", topic);
     auto jdoc = json::parse(payload);
     EXPECT_EQ("Temperature is too high", jdoc.at("/Fault/value"_json_pointer).get<string>());
@@ -615,15 +615,16 @@ TEST_F(MqttSinkTest, mqtt_should_publish_conditions_with_the_state_as_the_key)
   createClient(options, std::move(handler));
   ASSERT_TRUE(startClient());
   createAgent();
-  
+
   auto di = m_agentTestHelper->m_agent->getDataItemById("ctmp");
   ASSERT_TRUE(di);
   ASSERT_EQ("000/Axes[Axes]/Rotary[C]/Condition/Temperature", di->getTopic());
-  
+
   auto service = m_agentTestHelper->getMqttService();
   ASSERT_TRUE(waitFor(5s, [&service]() { return service->isConnected(); }));
   m_client->subscribe("MTConnect/Observation/000/Axes[Axes]/Rotary[C]/Condition/Temperature");
 
-  m_agentTestHelper->m_adapter->processData("2018-04-27T05:00:26.555666|ctmp|fault|X111|BAD|HIGH|Temperature is too high");
+  m_agentTestHelper->m_adapter->processData(
+      "2018-04-27T05:00:26.555666|ctmp|fault|X111|BAD|HIGH|Temperature is too high");
   ASSERT_TRUE(waitFor(5s, [&gotCondition]() { return gotCondition; }));
 }

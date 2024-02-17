@@ -37,13 +37,13 @@ namespace mtconnect {
               Requirement("CalibrationInitials", false),
           });
 
-          auto channels = make_shared<Factory>(
-              Requirements {Requirement("Channel", ENTITY, channel, 1, Requirement::Infinite)});
+          auto channels = make_shared<Factory>(Requirements {
+              Requirement("Channel", ValueType::ENTITY, channel, 1, Requirement::Infinite)});
 
           sensorConfiguration = make_shared<Factory>(Requirements {
               Requirement("FirmwareVersion", true), Requirement("CalibrationDate", false),
               Requirement("NextCalibrationDate", false), Requirement("CalibrationInitials", false),
-              Requirement("Channels", ENTITY_LIST, channels, false)});
+              Requirement("Channels", ValueType::ENTITY_LIST, channels, false)});
         }
 
         return sensorConfiguration;

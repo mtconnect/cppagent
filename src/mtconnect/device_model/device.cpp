@@ -51,7 +51,7 @@ namespace mtconnect {
     entity::FactoryPtr Device::getRoot()
     {
       static auto factory = make_shared<Factory>(
-          Requirements {{"Device", ENTITY, getFactory(), 1, Requirement::Infinite}});
+          Requirements {{"Device", ValueType::ENTITY, getFactory(), 1, Requirement::Infinite}});
 
       return factory;
     }

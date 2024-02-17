@@ -39,7 +39,7 @@ namespace mtconnect {
     {
       NAMED_SCOPE("EntityRequirement");
 
-      if (type == ENTITY_LIST)
+      if (type == ValueType::ENTITY_LIST)
       {
         f->setList(true);
       }
@@ -50,7 +50,7 @@ namespace mtconnect {
                              int upper)
       : m_name(name), m_upperMultiplicity(upper), m_lowerMultiplicity(lower), m_type(type)
     {
-      if (type == ENTITY_LIST)
+      if (type == ValueType::ENTITY_LIST)
       {
         f->setList(true);
       }
@@ -60,7 +60,7 @@ namespace mtconnect {
     bool Requirement::isMetBy(const Value &value) const
     {
       // Is this a multiple entry
-      if ((m_type == ENTITY || m_type == ENTITY_LIST))
+      if ((m_type == ValueType::ENTITY || m_type == ValueType::ENTITY_LIST))
       {
         if (!m_factory)
         {
@@ -104,7 +104,7 @@ namespace mtconnect {
       }
       else
       {
-        if (value.index() != (m_type & 0xF))
+        if (value.index() != (uint16_t(m_type) & 0xF))
         {
           throw PropertyError("Incorrect type for property " + m_name);
         }
@@ -227,9 +227,9 @@ namespace mtconnect {
       void operator()(const string &arg, string &r)
       {
         r = arg;
-        if (m_type == USTRING)
+        if (m_type == ValueType::USTRING)
           toUpperCase(r);
-        else if (m_type == QSTRING)
+        else if (m_type == ValueType::QSTRING)
         {
           auto pos = r.find_first_of(':');
           if (pos != string::npos)
@@ -335,48 +335,48 @@ namespace mtconnect {
 
     bool ConvertValueToType(Value &value, ValueType type, bool table)
     {
-      if (value.index() == type)
+      if (ValueType(value.index()) == type)
         return false;
 
       Value out;
       switch (type)
       {
-        case QSTRING:
-        case USTRING:
-        case STRING:
-          out.emplace<STRING>();
+        case ValueType::QSTRING:
+        case ValueType::USTRING:
+        case ValueType::STRING:
+          out.emplace<size_t(ValueType::STRING)>();
           break;
 
-        case INTEGER:
-          out.emplace<INTEGER>(0);
+        case ValueType::INTEGER:
+          out.emplace<size_t(ValueType::INTEGER)>(0);
           break;
 
-        case DOUBLE:
-          out.emplace<DOUBLE>(0.0);
+        case ValueType::DOUBLE:
+          out.emplace<size_t(ValueType::DOUBLE)>(0.0);
           break;
 
-        case BOOL:
-          out.emplace<BOOL>(false);
+        case ValueType::BOOL:
+          out.emplace<size_t(ValueType::BOOL)>(false);
           break;
 
-        case VECTOR:
-          out.emplace<VECTOR>();
+        case ValueType::VECTOR:
+          out.emplace<size_t(ValueType::VECTOR)>();
           break;
 
-        case DATA_SET:
-          out.emplace<DATA_SET>();
+        case ValueType::DATA_SET:
+          out.emplace<size_t(ValueType::DATA_SET)>();
           break;
 
-        case TABLE:
-          if (value.index() == DATA_SET)
+        case ValueType::TABLE:
+          if (ValueType(value.index()) == ValueType::DATA_SET)
             return false;
 
           table = true;
-          out.emplace<DATA_SET>();
+          out.emplace<size_t(ValueType::DATA_SET)>();
           break;
 
-        case TIMESTAMP:
-          out.emplace<TIMESTAMP>();
+        case ValueType::TIMESTAMP:
+          out.emplace<size_t(ValueType::TIMESTAMP)>();
           break;
 
         default:

@@ -140,6 +140,7 @@ TEST_F(JsonPrinterStreamTest, StreamHeader)
   Checkpoint checkpoint;
   ObservationList list;
   checkpoint.getObservations(list);
+  m_printer->setSenderName("MachineXXX");
   auto doc = m_printer->printSample(123, 131072, 10254805, 10123733, 10123800, list);
   auto jdoc = json::parse(doc);
   auto it = jdoc.begin();
@@ -152,6 +153,7 @@ TEST_F(JsonPrinterStreamTest, StreamHeader)
             jdoc.at("/MTConnectStreams/Header/firstSequence"_json_pointer).get<uint64_t>());
   ASSERT_EQ(uint64_t(10123800),
             jdoc.at("/MTConnectStreams/Header/lastSequence"_json_pointer).get<uint64_t>());
+  ASSERT_EQ("MachineXXX", jdoc.at("/MTConnectStreams/Header/sender"_json_pointer).get<string>());
 }
 
 TEST_F(JsonPrinterStreamTest, DeviceStream)

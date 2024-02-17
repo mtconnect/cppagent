@@ -40,7 +40,7 @@ namespace mtconnect::asset {
           {"qifDocumentType",
            {"MEASUREMENT_RESOURCE", "PLAN", "PRODUCT", "RESULTS", "RULES", "STATISTICS"},
            true},
-          {"QIFDocument", ENTITY, doc, true}});
+          {"QIFDocument", ValueType::ENTITY, doc, true}});
     }
 
     return factory;

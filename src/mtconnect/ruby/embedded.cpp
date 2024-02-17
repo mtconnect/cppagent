@@ -93,15 +93,22 @@ namespace mtconnect::ruby {
     }
 
     auto mrbc_ctx = mrbc_context_new(mrb);
+    mrbc_ctx->capture_errors = true;
 
     mrbc_filename(mrb, mrbc_ctx, fname);
     auto status = mrb_load_file_cxt(mrb, fp, mrbc_ctx);
     fclose(fp);
 
+    if (mrb->exc)
+    {
+      auto exc = mrb_funcall(mrb, mrb_obj_value(mrb->exc), "to_s", 0);
+      LOG(error) << "Exception while loading " << fname << ": " << RSTRING_CSTR(mrb, exc);
+    }
+
     mrb_gc_arena_restore(mrb, ai);
     mrbc_context_free(mrb, mrbc_ctx);
 
-    if (mrb_nil_p(status))
+    if (mrb_undef_p(status))
     {
       LOG(error) << "Failed to load module: " << fname;
       return mrb_false_value();
@@ -132,7 +139,13 @@ namespace mtconnect::ruby {
 
     std::optional<std::filesystem::path> modulePath;
     if (module)
+    {
       modulePath = config->findDataFile(*module);
+      if (!modulePath)
+      {
+        LOG(warning) << "Cannot find ruby module: " << *module;
+      }
+    }
 
     if (!m_rubyVM)
     {
@@ -150,7 +163,7 @@ namespace mtconnect::ruby {
 
       if (modulePath)
       {
-        LOG(info) << "Finding module: " << *module;
+        LOG(info) << "Loading module: " << *modulePath;
 
         std::error_code ec;
         path file = canonical(*modulePath, ec);
@@ -160,7 +173,7 @@ namespace mtconnect::ruby {
         }
         else
         {
-          LOG(info) << "Found module: " << file;
+          LOG(info) << "Resolved module path: " << file;
           FILE *fp = nullptr;
           try
           {
@@ -171,10 +184,9 @@ namespace mtconnect::ruby {
                 mrb, [](mrb_state *mrb, mrb_value filename) { return LoadModule(mrb, filename); },
                 file, &state);
             mrb_gc_arena_restore(mrb, save);
-            if (state)
+            if (mrb_false_p(res))
             {
-              LOG(fatal) << "Error loading file " << *modulePath << ": "
-                         << mrb_str_to_cstr(mrb, mrb_inspect(mrb, res));
+              LOG(fatal) << "Error loading file " << *modulePath << ": exiting agent";
               exit(1);
             }
           }

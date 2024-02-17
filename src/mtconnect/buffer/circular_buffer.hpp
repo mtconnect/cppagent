@@ -319,8 +319,8 @@ namespace mtconnect::buffer {
     mutable std::recursive_mutex m_sequenceLock;
 
     // Sequence number
-    SequenceNumber_t m_sequence;
-    SequenceNumber_t m_firstSequence;
+    volatile SequenceNumber_t m_sequence;
+    volatile SequenceNumber_t m_firstSequence;
 
     // The sliding/circular buffer to hold all of the events/sample data
     unsigned int m_slidingBufferSize;

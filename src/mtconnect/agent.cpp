@@ -113,6 +113,13 @@ namespace mtconnect {
       for (auto &[k, pr] : m_printers)
         pr->setSchemaVersion(*m_schemaVersion);
     }
+    
+    auto sender = GetOption<string>(options, config::Sender);
+    if (sender)
+    {
+      for (auto &[k, pr] : m_printers)
+        pr->setSenderName(*sender);
+    }
   }
 
   void Agent::initialize(pipeline::PipelineContextPtr context)
@@ -175,7 +182,7 @@ namespace mtconnect {
           if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
             const auto &hash = device->getProperty("hash");
-            if (hash.index() != EMPTY)
+            if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
 
@@ -334,7 +341,7 @@ namespace mtconnect {
         if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
         {
           const auto &hash = asset->getProperty("hash");
-          if (hash.index() != EMPTY)
+          if (ValueType(hash.index()) != ValueType::EMPTY)
           {
             props.insert_or_assign("hash", hash);
           }
@@ -570,7 +577,7 @@ namespace mtconnect {
           if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
             const auto &hash = device->getProperty("hash");
-            if (hash.index() != EMPTY)
+            if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
 
@@ -927,7 +934,7 @@ namespace mtconnect {
           if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
           {
             const auto &hash = device->getProperty("hash");
-            if (hash.index() != EMPTY)
+            if (ValueType(hash.index()) != ValueType::EMPTY)
               props.insert_or_assign("hash", hash);
           }
 
@@ -985,7 +992,7 @@ namespace mtconnect {
         if (m_intSchemaVersion >= SCHEMA_VERSION(2, 2))
         {
           const auto &hash = device->getProperty("hash");
-          if (hash.index() != EMPTY)
+          if (ValueType(hash.index()) != ValueType::EMPTY)
             props.insert_or_assign("hash", hash);
         }
 
@@ -1168,7 +1175,7 @@ namespace mtconnect {
     {
       auto di = m_agentDevice->getConnectionStatus(adapter);
       if (di)
-        m_loopback->receive(di, "LISTENING");
+        m_loopback->receive(di, "LISTEN");
     }
   }
 

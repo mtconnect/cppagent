@@ -146,7 +146,9 @@ protected:
     }
   }
 
-  void createClient(const ConfigOptions &options, unique_ptr<ClientHandler> &&handler)
+  void createClient(const ConfigOptions &options, unique_ptr<ClientHandler> &&handler,
+                    const std::optional<std::string> willTopic = std::nullopt,
+                    const std::optional<std::string> willPayload = std::nullopt)
   {
     bool withTlsOption = IsOptionSet(options, configuration::MqttTls);
 
@@ -156,13 +158,13 @@ protected:
 
     if (withTlsOption)
     {
-      m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_agentTestHelper->m_ioContext,
-                                                                    opts, std::move(handler));
+      m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(
+          m_agentTestHelper->m_ioContext, opts, std::move(handler), willTopic, willPayload);
     }
     else
     {
-      m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_agentTestHelper->m_ioContext,
-                                                                    opts, std::move(handler));
+      m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(
+          m_agentTestHelper->m_ioContext, opts, std::move(handler), willTopic, willPayload);
     }
   }
 
@@ -515,4 +517,81 @@ TEST_F(MqttIsolatedUnitTest, mqtt_tcp_client_authentication)
 
   client->async_connect([](mqtt::error_code ec) { ASSERT_FALSE(ec) << "CAnnot connect"; });
   ASSERT_TRUE(waitFor(5s, [&received]() { return received; }));
+}
+
+TEST_F(MqttIsolatedUnitTest, mqtt_client_should_publish_last_will)
+{
+  ConfigOptions options {
+      {ServerIp, "127.0.0.1"s},       {MqttPort, 0},    {MqttTls, false}, {AutoAvailable, false},
+      {MqttCaCert, MqttClientCACert}, {RealTime, false}};
+
+  createServer(options);
+
+  startServer();
+
+  ASSERT_NE(0, m_port);
+
+  auto handler = make_unique<ClientHandler>();
+
+  createClient(options, std::move(handler), "LastWill", "unavailable");
+
+  ASSERT_TRUE(startClient());
+
+  ASSERT_TRUE(m_client->isConnected());
+
+  auto client = mqtt::make_async_client(m_agentTestHelper->m_ioContext.get(), "localhost", m_port);
+
+  client->set_client_id("cliendId1");
+  client->set_clean_session(true);
+  client->set_keep_alive_sec(30);
+
+  bool connected = false;
+  client->set_connack_handler(
+      [&client, &connected](bool sp, mqtt::connect_return_code connack_return_code) {
+        if (connack_return_code == mqtt::connect_return_code::accepted)
+        {
+          auto packid = client->acquire_unique_packet_id();
+
+          client->async_subscribe(packid, "LastWill", MQTT_NS::qos::at_most_once,
+                                  [](MQTT_NS::error_code ec) { EXPECT_FALSE(ec); });
+          connected = true;
+        }
+        else
+        {
+          EXPECT_TRUE(false) << "unexpected return code";
+        }
+        return true;
+      });
+
+  bool received = false;
+  string expected;
+  client->set_publish_handler(
+      [&expected, &received](mqtt::optional<std::uint16_t> packet_id, mqtt::publish_options pubopts,
+                             mqtt::buffer topic_name, mqtt::buffer contents) {
+        received = true;
+        expected = contents;
+        return true;
+      });
+
+  bool closed {false};
+  client->set_close_handler([&closed] {
+    closed = true;
+    return true;
+  });
+
+  client->async_connect([](mqtt::error_code ec) { ASSERT_FALSE(ec) << "CAnnot connect"; });
+  ASSERT_TRUE(waitFor(5s, [&connected]() { return connected; }));
+
+  m_client->publish("LastWill", "available");
+  ASSERT_TRUE(waitFor(5s, [&received]() { return received; }));
+  ASSERT_EQ("available", expected);
+
+  auto will = m_server->getWill();
+  ASSERT_TRUE(will);
+  ASSERT_EQ("LastWill", will->topic());
+  ASSERT_EQ("unavailable", will->message());
+
+  client->async_disconnect();
+  waitFor(5s, [&closed]() { return closed; });
+  client.reset();
 }

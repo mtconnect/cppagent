@@ -87,9 +87,12 @@ def dump(last, xml)
     $count += events.size
     $total_bytes += xml.length if events.size > 0
     
-    if (ts - $last_log_time).to_i > 30
+    if (ts - $last_log_time).to_i > 10
       $out.puts "#{ts}: Received #{$count} at #{$count / (ts - $last_log_time)} events/second"
       $out.puts "       Average event size is #{$total_bytes / $count} bytes" if $count > 0
+
+      puts "#{ts}: Received #{$count} at #{$count / (ts - $last_log_time)} events/second"
+      puts "       Average event size is #{$total_bytes / $count} bytes" if $count > 0
       
       $last_log_time = ts
       $count = 0
@@ -140,7 +143,7 @@ begin
     sleep 5
   end while client.nil?
   if client
-    path = rootPath + "sample?interval=500&count=10000&from=#{$nxt}"
+    path = rootPath + "sample?interval=100&count=10000&from=#{$nxt}"
     puller = LongPull.new(client)
     puller.long_pull(path) do |xml|
       $nxt = dump($nxt, xml)

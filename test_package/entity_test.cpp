@@ -56,8 +56,9 @@ protected:
 TEST_F(EntityTest, TestSimpleFactory)
 {
   FactoryPtr root = make_shared<Factory>();
-  FactoryPtr simpleFact = make_shared<Factory>(Requirements(
-      {Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER)}));
+  FactoryPtr simpleFact =
+      make_shared<Factory>(Requirements({Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER)}));
   root->registerFactory("simple", simpleFact);
 
   Properties simple({{"id", "abc"s}, {"name", "xxx"s}, {"size", 10_i64}});
@@ -78,9 +79,10 @@ TEST_F(EntityTest, TestSimpleTwoLevelFactory)
   auto second =
       make_shared<Factory>(Requirements({Requirement("key", true), Requirement("VALUE", true)}));
 
-  auto simple = make_shared<Factory>(
-      Requirements {Requirement("name", true), Requirement("id", true),
-                    Requirement("size", false, INTEGER), Requirement("second", ENTITY, second)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("second", ValueType::ENTITY, second)});
   root->registerFactory("simple", simple);
 
   auto fact = root->factoryFor("simple");
@@ -121,12 +123,13 @@ TEST_F(EntityTest, TestSimpleEntityList)
       make_shared<Factory>(Requirements({Requirement("key", true), Requirement("VALUE", true)}));
 
   auto seconds = make_shared<Factory>(
-      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+      Requirements({Requirement("second", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto fact = root->factoryFor("simple");
@@ -190,8 +193,9 @@ TEST_F(EntityTest, TestSimpleEntityList)
 TEST_F(EntityTest, MissingProperty)
 {
   FactoryPtr root = make_shared<Factory>();
-  FactoryPtr simpleFact = make_shared<Factory>(Requirements(
-      {Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER)}));
+  FactoryPtr simpleFact =
+      make_shared<Factory>(Requirements({Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER)}));
   root->registerFactory("simple", simpleFact);
 
   Properties simple {{"name", "xxx"s}, {"size", 10_i64}};
@@ -208,8 +212,9 @@ TEST_F(EntityTest, MissingProperty)
 TEST_F(EntityTest, MissingOptionalProperty)
 {
   FactoryPtr root = make_shared<Factory>();
-  FactoryPtr simpleFact = make_shared<Factory>(Requirements(
-      {Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER)}));
+  FactoryPtr simpleFact =
+      make_shared<Factory>(Requirements({Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER)}));
   root->registerFactory("simple", simpleFact);
 
   Properties simple {{"id", "abc"s}, {"name", "xxx"s}};
@@ -228,8 +233,9 @@ TEST_F(EntityTest, MissingOptionalProperty)
 TEST_F(EntityTest, UnexpectedProperty)
 {
   FactoryPtr root = make_shared<Factory>();
-  FactoryPtr simpleFact = make_shared<Factory>(Requirements(
-      {Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER)}));
+  FactoryPtr simpleFact =
+      make_shared<Factory>(Requirements({Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER)}));
   root->registerFactory("simple", simpleFact);
 
   Properties simple {{"id", "abc"s}, {"name", "xxx"s}, {"junk", "junk"s}};
@@ -250,14 +256,15 @@ TEST_F(EntityTest, EntityListAnyEntities)
   auto second =
       make_shared<Factory>(Requirements({Requirement("key", true), Requirement("VALUE", true)}));
 
-  auto seconds = make_shared<Factory>(
-      Requirements({Requirement("something", ENTITY, second, 1, Requirement::Infinite)}));
+  auto seconds = make_shared<Factory>(Requirements(
+      {Requirement("something", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerFactory(regex(".+"), second);
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto fact = root->factoryFor("simple");
@@ -325,14 +332,14 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 {
   Value v("123"s);
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("integer", INTEGER);
+  Requirement r1("integer", ValueType::INTEGER);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_EQ(123, get<int64_t>(v));
 
   ASSERT_FALSE(r1.convertType(v));
 
-  Requirement r2("string", STRING);
+  Requirement r2("string", ValueType::STRING);
   ASSERT_TRUE(r2.convertType(v));
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("123", get<string>(v));
@@ -342,7 +349,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_TRUE(holds_alternative<string>(v));
   ASSERT_EQ("aaa", get<string>(v));
 
-  Requirement r3("vector", VECTOR);
+  Requirement r3("vector", ValueType::VECTOR);
   v = 123_i64;
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_TRUE(r3.convertType(v));
@@ -351,10 +358,10 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
   ASSERT_EQ(123.0, get<Vector>(v)[0]);
 
   v = 123_i64;
-  Requirement r4("entity", ENTITY);
+  Requirement r4("entity", ValueType::ENTITY);
   ASSERT_THROW(r4.convertType(v), PropertyError);
 
-  Requirement r5("entity_list", ENTITY_LIST);
+  Requirement r5("entity_list", ValueType::ENTITY_LIST);
   ASSERT_THROW(r5.convertType(v), PropertyError);
 
   v = 1234.0;
@@ -370,7 +377,7 @@ TEST_F(EntityTest, TestRequirementIntegerConversions)
 TEST_F(EntityTest, TestRequirementStringConversion)
 {
   Value v(1234567890_i64);
-  Requirement r1("string", STRING);
+  Requirement r1("string", ValueType::STRING);
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<string>(v));
@@ -395,23 +402,23 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
 {
   Value v("123.24"s);
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("double", entity::DOUBLE);
+  Requirement r1("double", ValueType::DOUBLE);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<double>(v));
   ASSERT_EQ(123.24, get<double>(v));
 
   ASSERT_FALSE(r1.convertType(v));
 
-  Requirement r6("integer", INTEGER);
+  Requirement r6("integer", ValueType::INTEGER);
   ASSERT_TRUE(r6.convertType(v));
   ASSERT_TRUE(holds_alternative<int64_t>(v));
   ASSERT_EQ(123, get<int64_t>(v));
 
   v = 123.24;
-  Requirement r4("entity", ENTITY);
+  Requirement r4("entity", ValueType::ENTITY);
   ASSERT_THROW(r4.convertType(v), PropertyError);
 
-  Requirement r5("entity_list", ENTITY_LIST);
+  Requirement r5("entity_list", ValueType::ENTITY_LIST);
   ASSERT_THROW(r5.convertType(v), PropertyError);
 
   v = "aaa"s;
@@ -420,7 +427,7 @@ TEST_F(EntityTest, TestRequirementDoubleConversions)
   ASSERT_EQ("aaa", get<string>(v));
 
   v = 123.24;
-  Requirement r3("vector", VECTOR);
+  Requirement r3("vector", ValueType::VECTOR);
   ASSERT_TRUE(holds_alternative<double>(v));
   ASSERT_TRUE(r3.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
@@ -432,7 +439,7 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
 {
   Value v("1.234 3.456 6.7889"s);
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("vector", VECTOR);
+  Requirement r1("vector", ValueType::VECTOR);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_TRUE(holds_alternative<Vector>(v));
   EXPECT_EQ(3, get<Vector>(v).size());
@@ -451,16 +458,16 @@ TEST_F(EntityTest, TestRequirementVectorConversions)
   EXPECT_EQ(3.456, get<Vector>(v)[1]);
   EXPECT_EQ(6.7889, get<Vector>(v)[2]);
 
-  Requirement r2("entity", ENTITY);
+  Requirement r2("entity", ValueType::ENTITY);
   EXPECT_THROW(r2.convertType(v), PropertyError);
 
-  Requirement r3("entity_list", ENTITY_LIST);
+  Requirement r3("entity_list", ValueType::ENTITY_LIST);
   EXPECT_THROW(r3.convertType(v), PropertyError);
 
-  Requirement r4("entity_list", entity::DOUBLE);
+  Requirement r4("entity_list", ValueType::DOUBLE);
   EXPECT_THROW(r4.convertType(v), PropertyError);
 
-  Requirement r6("entity_list", INTEGER);
+  Requirement r6("entity_list", ValueType::INTEGER);
   EXPECT_THROW(r6.convertType(v), PropertyError);
 }
 
@@ -468,7 +475,7 @@ TEST_F(EntityTest, TestRequirementUpperCaseStringConversion)
 {
   Value v("hello kitty"s);
   ASSERT_TRUE(holds_alternative<string>(v));
-  Requirement r1("string", USTRING);
+  Requirement r1("string", ValueType::USTRING);
   ASSERT_TRUE(r1.convertType(v));
   ASSERT_EQ("HELLO KITTY", get<string>(v));
 }
@@ -504,14 +511,16 @@ TEST_F(EntityTest, TestControlledVocabulary)
 TEST_F(EntityTest, entity_list_requirements_need_with_at_least_one_requiremenet)
 {
   auto ref1 = make_shared<Factory>(Requirements {{"id", true}, {"name", false}, {"type", true}});
-  auto ref2 = make_shared<Factory>(
-      Requirements {{"id", true}, {"name", false}, {"type", true}, {"size", INTEGER, true}});
+  auto ref2 = make_shared<Factory>(Requirements {
+      {"id", true}, {"name", false}, {"type", true}, {"size", ValueType::INTEGER, true}});
 
-  auto refs = make_shared<Factory>(Requirements {
-      {"Reference1", ENTITY, ref1, 0, 1}, {"Reference2", ENTITY, ref2, 0, Requirement::Infinite}});
+  auto refs = make_shared<Factory>(
+      Requirements {{"Reference1", ValueType::ENTITY, ref1, 0, 1},
+                    {"Reference2", ValueType::ENTITY, ref2, 0, Requirement::Infinite}});
   refs->setMinListSize(1);
 
-  auto agg = make_shared<Factory>(Requirements {{"References", ENTITY_LIST, refs, true}});
+  auto agg =
+      make_shared<Factory>(Requirements {{"References", ValueType::ENTITY_LIST, refs, true}});
 
   ErrorList errors;
   auto r1 = refs->create("Reference1", {{"id", "a"s}, {"type", "REF1"s}}, errors);
@@ -551,9 +560,10 @@ TEST_F(EntityTest, entities_should_compare_for_equality)
   auto second =
       make_shared<Factory>(Requirements({Requirement("key", true), Requirement("VALUE", true)}));
 
-  auto simple = make_shared<Factory>(
-      Requirements {Requirement("name", true), Requirement("id", true),
-                    Requirement("size", false, INTEGER), Requirement("second", ENTITY, second)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("second", ValueType::ENTITY, second)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&]() -> EntityPtr {
@@ -585,9 +595,10 @@ TEST_F(EntityTest, entities_should_compare_for_inequality)
   auto second =
       make_shared<Factory>(Requirements({Requirement("key", true), Requirement("VALUE", true)}));
 
-  auto simple = make_shared<Factory>(
-      Requirements {Requirement("name", true), Requirement("id", true),
-                    Requirement("size", false, INTEGER), Requirement("second", ENTITY, second)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("second", ValueType::ENTITY, second)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&](auto v) -> EntityPtr {
@@ -620,12 +631,13 @@ TEST_F(EntityTest, entities_should_compare_for_equality_with_entity_list)
       make_shared<Factory>(Requirements({Requirement("key", true), Requirement("VALUE", true)}));
 
   auto seconds = make_shared<Factory>(
-      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+      Requirements({Requirement("second", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&]() -> EntityPtr {
@@ -666,12 +678,13 @@ TEST_F(EntityTest, entities_should_compare_for_inequality_with_entity_list)
       make_shared<Factory>(Requirements({Requirement("key", true), Requirement("VALUE", true)}));
 
   auto seconds = make_shared<Factory>(
-      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+      Requirements({Requirement("second", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&](auto t) -> EntityPtr {
@@ -711,9 +724,10 @@ TEST_F(EntityTest, entities_should_merge)
   auto second =
       make_shared<Factory>(Requirements({Requirement("key", true), Requirement("VALUE", true)}));
 
-  auto simple = make_shared<Factory>(
-      Requirements {Requirement("name", true), Requirement("id", true),
-                    Requirement("size", false, INTEGER), Requirement("second", ENTITY, second)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("second", ValueType::ENTITY, second)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&](auto v, auto k) -> EntityPtr {
@@ -752,15 +766,16 @@ TEST_F(EntityTest, entities_should_merge_entity_list)
   auto root = make_shared<Factory>();
 
   auto second = make_shared<Factory>(
-      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+      Requirements({Requirement("id", true), Requirement("VALUE", true, ValueType::INTEGER)}));
 
   auto seconds = make_shared<Factory>(
-      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+      Requirements({Requirement("second", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&](auto v, auto s) -> EntityPtr {
@@ -808,15 +823,16 @@ TEST_F(EntityTest, entities_should_merge_entity_list_with_new_item)
   auto root = make_shared<Factory>();
 
   auto second = make_shared<Factory>(
-      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+      Requirements({Requirement("id", true), Requirement("VALUE", true, ValueType::INTEGER)}));
 
   auto seconds = make_shared<Factory>(
-      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+      Requirements({Requirement("second", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&](auto v, auto s) -> EntityPtr {
@@ -877,15 +893,16 @@ TEST_F(EntityTest, should_remove_missing_entities)
   auto root = make_shared<Factory>();
 
   auto second = make_shared<Factory>(
-      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+      Requirements({Requirement("id", true), Requirement("VALUE", true, ValueType::INTEGER)}));
 
   auto seconds = make_shared<Factory>(
-      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+      Requirements({Requirement("second", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&](auto v, auto s) -> EntityPtr {
@@ -940,15 +957,16 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_specific_ids)
   auto root = make_shared<Factory>();
 
   auto second = make_shared<Factory>(
-      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+      Requirements({Requirement("id", true), Requirement("VALUE", true, ValueType::INTEGER)}));
 
   auto seconds = make_shared<Factory>(
-      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+      Requirements({Requirement("second", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&](auto v, auto s) -> EntityPtr {
@@ -1003,15 +1021,16 @@ TEST_F(EntityTest, should_ignore_certain_entities_with_changes_and_removals)
   auto root = make_shared<Factory>();
 
   auto second = make_shared<Factory>(
-      Requirements({Requirement("id", true), Requirement("VALUE", true, INTEGER)}));
+      Requirements({Requirement("id", true), Requirement("VALUE", true, ValueType::INTEGER)}));
 
   auto seconds = make_shared<Factory>(
-      Requirements({Requirement("second", ENTITY, second, 1, Requirement::Infinite)}));
+      Requirements({Requirement("second", ValueType::ENTITY, second, 1, Requirement::Infinite)}));
   seconds->registerMatchers();
 
-  auto simple = make_shared<Factory>(Requirements {
-      Requirement("name", true), Requirement("id", true), Requirement("size", false, INTEGER),
-      Requirement("seconds", ENTITY_LIST, seconds)});
+  auto simple =
+      make_shared<Factory>(Requirements {Requirement("name", true), Requirement("id", true),
+                                         Requirement("size", false, ValueType::INTEGER),
+                                         Requirement("seconds", ValueType::ENTITY_LIST, seconds)});
   root->registerFactory("simple", simple);
 
   auto createEnt = [&](auto v, auto s, int i) -> EntityPtr {

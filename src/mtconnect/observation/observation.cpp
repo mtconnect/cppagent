@@ -42,7 +42,7 @@ namespace mtconnect {
       if (!factory)
       {
         factory = make_shared<Factory>(Requirements({{"dataItemId", true},
-                                                     {"timestamp", TIMESTAMP, true},
+                                                     {"timestamp", ValueType::TIMESTAMP, true},
                                                      {"sequence", false},
                                                      {"subType", false},
                                                      {"name", false},
@@ -181,7 +181,7 @@ namespace mtconnect {
           return make_shared<Event>(name, props);
         });
         factory->addRequirements(
-            Requirements {{"VALUE", false}, {"resetTriggered", USTRING, false}});
+            Requirements {{"VALUE", false}, {"resetTriggered", ValueType::USTRING, false}});
       }
 
       return factory;
@@ -203,9 +203,9 @@ namespace mtconnect {
           }
           return ent;
         });
-        factory->addRequirements(Requirements {{"count", INTEGER, false},
-                                               {"VALUE", DATA_SET, false},
-                                               {"resetTriggered", USTRING, false}});
+        factory->addRequirements(Requirements {{"count", ValueType::INTEGER, false},
+                                               {"VALUE", ValueType::DATA_SET, false},
+                                               {"resetTriggered", ValueType::USTRING, false}});
       }
 
       return factory;
@@ -228,7 +228,7 @@ namespace mtconnect {
           return ent;
         });
 
-        factory->addRequirements(Requirements {{"VALUE", TABLE, false}});
+        factory->addRequirements(Requirements {{"VALUE", ValueType::TABLE, false}});
       }
 
       return factory;
@@ -243,10 +243,10 @@ namespace mtconnect {
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<DoubleEvent>(name, props);
         });
-        factory->addRequirements(Requirements({{"resetTriggered", USTRING, false},
-                                               {"statistic", USTRING, false},
-                                               {"duration", DOUBLE, false},
-                                               {"VALUE", DOUBLE, false}}));
+        factory->addRequirements(Requirements({{"resetTriggered", ValueType::USTRING, false},
+                                               {"statistic", ValueType::USTRING, false},
+                                               {"duration", ValueType::DOUBLE, false},
+                                               {"VALUE", ValueType::DOUBLE, false}}));
       }
       return factory;
     }
@@ -260,10 +260,10 @@ namespace mtconnect {
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<IntEvent>(name, props);
         });
-        factory->addRequirements(Requirements({{"resetTriggered", USTRING, false},
-                                               {"statistic", USTRING, false},
-                                               {"duration", DOUBLE, false},
-                                               {"VALUE", INTEGER, false}}));
+        factory->addRequirements(Requirements({{"resetTriggered", ValueType::USTRING, false},
+                                               {"statistic", ValueType::USTRING, false},
+                                               {"duration", ValueType::DOUBLE, false},
+                                               {"VALUE", ValueType::INTEGER, false}}));
       }
       return factory;
     }
@@ -277,11 +277,11 @@ namespace mtconnect {
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<Sample>(name, props);
         });
-        factory->addRequirements(Requirements({{"sampleRate", DOUBLE, false},
-                                               {"resetTriggered", USTRING, false},
-                                               {"statistic", USTRING, false},
-                                               {"duration", DOUBLE, false},
-                                               {"VALUE", DOUBLE, false}}));
+        factory->addRequirements(Requirements({{"sampleRate", ValueType::DOUBLE, false},
+                                               {"resetTriggered", ValueType::USTRING, false},
+                                               {"statistic", ValueType::USTRING, false},
+                                               {"duration", ValueType::DOUBLE, false},
+                                               {"VALUE", ValueType::DOUBLE, false}}));
       }
       return factory;
     }
@@ -295,7 +295,7 @@ namespace mtconnect {
         factory->setFunction([](const std::string &name, Properties &props) -> EntityPtr {
           return make_shared<ThreeSpaceSample>(name, props);
         });
-        factory->addRequirements(Requirements({{"VALUE", VECTOR, 3, false}}));
+        factory->addRequirements(Requirements({{"VALUE", ValueType::VECTOR, 3, false}}));
       }
       return factory;
     }
@@ -317,8 +317,8 @@ namespace mtconnect {
           return ent;
         });
         factory->addRequirements(
-            Requirements({{"sampleCount", INTEGER, false},
-                          {"VALUE", VECTOR, 0, entity::Requirement::Infinite}}));
+            Requirements({{"sampleCount", ValueType::INTEGER, false},
+                          {"VALUE", ValueType::VECTOR, 0, entity::Requirement::Infinite}}));
       }
       return factory;
     }
@@ -346,12 +346,12 @@ namespace mtconnect {
           }
           return cond;
         });
-        factory->addRequirements(Requirements {{"type", USTRING, true},
+        factory->addRequirements(Requirements {{"type", ValueType::USTRING, true},
                                                {"nativeCode", false},
                                                {"conditionId", false},
                                                {"nativeSeverity", false},
-                                               {"qualifier", USTRING, false},
-                                               {"statistic", USTRING, false},
+                                               {"qualifier", ValueType::USTRING, false},
+                                               {"statistic", ValueType::USTRING, false},
                                                {"VALUE", false}});
       }
 
@@ -416,7 +416,7 @@ namespace mtconnect {
         });
         factory->addRequirements(Requirements({{"code", false},
                                                {"nativeCode", false},
-                                               {"state", USTRING, false},
+                                               {"state", ValueType::USTRING, false},
                                                {"severity", false}}));
       }
       return factory;

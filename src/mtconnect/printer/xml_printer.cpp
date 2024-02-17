@@ -634,15 +634,7 @@ namespace mtconnect::printer {
 
     addAttribute(writer, "creationTime", getCurrentTime(GMT));
 
-    static std::string sHostname;
-    if (sHostname.empty())
-    {
-      boost::system::error_code ec;
-      sHostname = boost::asio::ip::host_name(ec);
-      if (ec)
-        sHostname = "localhost";
-    }
-    addAttribute(writer, "sender", sHostname);
+    addAttribute(writer, "sender", m_senderName);
     addAttribute(writer, "instanceId", to_string(instanceId));
 
     char version[32] = {0};

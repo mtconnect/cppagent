@@ -35,27 +35,34 @@ namespace mtconnect {
             Requirements({Requirement("format", {"EXPRESS", "XML", "TEXT", "UNDEFINED"}),
                           Requirement("RAW", true)}));
 
-        static auto reconditionCount = make_shared<Factory>(Requirements(
-            {Requirement("maximumCount", INTEGER, false), Requirement("VALUE", INTEGER, false)}));
+        static auto reconditionCount = make_shared<Factory>(
+            Requirements({Requirement("maximumCount", ValueType::INTEGER, false),
+                          Requirement("VALUE", ValueType::INTEGER, false)}));
 
-        static auto toolLife = make_shared<Factory>(Requirements(
-            {Requirement("type", {"MINUTES", "PART_COUNT", "WEAR"}),
-             Requirement("countDirection", ControlledVocab {"UP", "DOWN"}),
-             Requirement("warning", DOUBLE, false), Requirement("limit", DOUBLE, false),
-             Requirement("initial", DOUBLE, false), Requirement("VALUE", DOUBLE, false)}));
+        static auto toolLife = make_shared<Factory>(
+            Requirements({Requirement("type", {"MINUTES", "PART_COUNT", "WEAR"}),
+                          Requirement("countDirection", ControlledVocab {"UP", "DOWN"}),
+                          Requirement("warning", ValueType::DOUBLE, false),
+                          Requirement("limit", ValueType::DOUBLE, false),
+                          Requirement("initial", ValueType::DOUBLE, false),
+                          Requirement("VALUE", ValueType::DOUBLE, false)}));
 
-        static auto constraint = make_shared<Factory>(Requirements(
-            {Requirement("maximum", DOUBLE, false), Requirement("minimum", DOUBLE, false),
-             Requirement("nominal", DOUBLE, false), Requirement("VALUE", DOUBLE, false)}));
+        static auto constraint =
+            make_shared<Factory>(Requirements({Requirement("maximum", ValueType::DOUBLE, false),
+                                               Requirement("minimum", ValueType::DOUBLE, false),
+                                               Requirement("nominal", ValueType::DOUBLE, false),
+                                               Requirement("VALUE", ValueType::DOUBLE, false)}));
 
         static auto measurement = make_shared<Factory>(Requirements(
-            {Requirement("significantDigits", INTEGER, false), Requirement("units", false),
-             Requirement("nativeUnits", false), Requirement("code", false),
-             Requirement("maximum", DOUBLE, false), Requirement("minimum", DOUBLE, false),
-             Requirement("nominal", DOUBLE, false), Requirement("VALUE", DOUBLE, false)}));
+            {Requirement("significantDigits", ValueType::INTEGER, false),
+             Requirement("units", false), Requirement("nativeUnits", false),
+             Requirement("code", false), Requirement("maximum", ValueType::DOUBLE, false),
+             Requirement("minimum", ValueType::DOUBLE, false),
+             Requirement("nominal", ValueType::DOUBLE, false),
+             Requirement("VALUE", ValueType::DOUBLE, false)}));
 
-        static auto measurements = make_shared<Factory>(Requirements(
-            {Requirement("Measurement", ENTITY, measurement, 1, Requirement::Infinite)}));
+        static auto measurements = make_shared<Factory>(Requirements({Requirement(
+            "Measurement", ValueType::ENTITY, measurement, 1, Requirement::Infinite)}));
         measurements->registerMatchers();
         measurements->registerFactory(regex(".+"), measurement);
 
@@ -63,16 +70,16 @@ namespace mtconnect {
         ext->registerFactory(regex(".+"), ext);
         ext->setAny(true);
 
-        static auto item =
-            make_shared<Factory>(Requirements {{"indices", true},
-                                               {"itemId", false},
-                                               {"grade", false},
-                                               {"manufacturers", false},
-                                               {"Description", false},
-                                               {"Locus", false},
-                                               {"ItemLife", ENTITY, toolLife, 0, 3},
-                                               {"ProgramToolGroup", false},
-                                               {"Measurements", ENTITY_LIST, measurements, false}});
+        static auto item = make_shared<Factory>(
+            Requirements {{"indices", true},
+                          {"itemId", false},
+                          {"grade", false},
+                          {"manufacturers", false},
+                          {"Description", false},
+                          {"Locus", false},
+                          {"ItemLife", ValueType::ENTITY, toolLife, 0, 3},
+                          {"ProgramToolGroup", false},
+                          {"Measurements", ValueType::ENTITY_LIST, measurements, false}});
         item->registerFactory(regex(".+"), ext);
         item->setAny(true);
 
@@ -80,18 +87,19 @@ namespace mtconnect {
         item->setOrder({"Description", "CutterStatus", "Locus", "ItemLife", "ProgramToolGroup",
                         "Measurements"});
 
-        static auto items = make_shared<Factory>(Requirements {
-            {"count", INTEGER, true}, {"CuttingItem", ENTITY, item, 1, Requirement::Infinite}});
+        static auto items = make_shared<Factory>(
+            Requirements {{"count", ValueType::INTEGER, true},
+                          {"CuttingItem", ValueType::ENTITY, item, 1, Requirement::Infinite}});
 
         static auto lifeCycle = make_shared<Factory>(Requirements(
-            {Requirement("ReconditionCount", ENTITY, reconditionCount, false),
-             Requirement("ToolLife", ENTITY, toolLife, 0, 3),
+            {Requirement("ReconditionCount", ValueType::ENTITY, reconditionCount, false),
+             Requirement("ToolLife", ValueType::ENTITY, toolLife, 0, 3),
              Requirement("ProgramToolGroup", false), Requirement("ProgramToolNumber", false),
-             Requirement("ProcessSpindleSpeed", ENTITY, constraint, false),
-             Requirement("ProcessFeedRate", ENTITY, constraint, false),
+             Requirement("ProcessSpindleSpeed", ValueType::ENTITY, constraint, false),
+             Requirement("ProcessFeedRate", ValueType::ENTITY, constraint, false),
              Requirement("ConnectionCodeMachineSide", false),
-             Requirement("Measurements", ENTITY_LIST, measurements, false),
-             Requirement("CuttingItems", ENTITY_LIST, items, false)}));
+             Requirement("Measurements", ValueType::ENTITY_LIST, measurements, false),
+             Requirement("CuttingItems", ValueType::ENTITY_LIST, items, false)}));
         lifeCycle->registerFactory(regex(".+"), ext);
         lifeCycle->setAny(true);
 
@@ -101,12 +109,13 @@ namespace mtconnect {
                              "ConnectionCodeMachineSide", "Measurements", "CuttingItems"});
 
         tool = make_shared<Factory>(*Asset::getFactory());
-        tool->addRequirements(Requirements {{"toolId", true},
-                                            {"serialNumber", false},
-                                            {"manufacturers", false},
-                                            {"Description", false},
-                                            {"CuttingToolDefinition", ENTITY, definition, false},
-                                            {"CuttingToolLifeCycle", ENTITY, lifeCycle, false}});
+        tool->addRequirements(
+            Requirements {{"toolId", true},
+                          {"serialNumber", false},
+                          {"manufacturers", false},
+                          {"Description", false},
+                          {"CuttingToolDefinition", ValueType::ENTITY, definition, false},
+                          {"CuttingToolLifeCycle", ValueType::ENTITY, lifeCycle, false}});
       }
       return tool;
     }
@@ -133,14 +142,14 @@ namespace mtconnect {
                             "BROKEN", "UNKNOWN"}}});
 
         static auto status = make_shared<Factory>(
-            Requirements {{"Status", ENTITY, state, 1, Requirement::Infinite}});
+            Requirements {{"Status", ValueType::ENTITY, state, 1, Requirement::Infinite}});
 
         static auto location = make_shared<Factory>(
             Requirements {{"type",
                            {"POT", "STATION", "CRIB", "SPINDLE", "TRANSFER_POT", "RETURN_POT",
                             "STAGING_POT", "REMOVAL_POT", "EXPIRED_POT", "END_EFFECTOR"}},
-                          {"negativeOverlap", INTEGER, false},
-                          {"positiveOverlap", INTEGER, false},
+                          {"negativeOverlap", ValueType::INTEGER, false},
+                          {"positiveOverlap", ValueType::INTEGER, false},
                           {"turret", false},
                           {"toolMagazine", false},
                           {"toolRack", false},
@@ -153,8 +162,9 @@ namespace mtconnect {
         tool->getRequirement("toolId")->makeRequired();
 
         auto lifeCycle = tool->factoryFor("CuttingToolLifeCycle");
-        lifeCycle->addRequirements(Requirements {{"CutterStatus", ENTITY_LIST, status, true},
-                                                 {"Location", ENTITY, location, false}});
+        lifeCycle->addRequirements(
+            Requirements {{"CutterStatus", ValueType::ENTITY_LIST, status, true},
+                          {"Location", ValueType::ENTITY, location, false}});
         lifeCycle->setOrder({"CutterStatus", "ReconditionCount", "ToolLife", "ProgramToolGroup",
                              "ProgramToolNumber", "Location", "ProcessSpindleSpeed",
                              "ProcessFeedRate", "ConnectionCodeMachineSide", "Measurements",
@@ -167,7 +177,8 @@ namespace mtconnect {
         auto items = lifeCycle->factoryFor("CuttingItems");
         auto item = items->factoryFor("CuttingItem");
 
-        item->addRequirements(Requirements {{"CutterStatus", ENTITY_LIST, status, false}});
+        item->addRequirements(
+            Requirements {{"CutterStatus", ValueType::ENTITY_LIST, status, false}});
 
         auto life = lifeCycle->factoryFor("ToolLife");
         life->getRequirement("VALUE")->makeRequired();

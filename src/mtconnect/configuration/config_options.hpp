@@ -64,6 +64,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(SchemaVersion);
     DECLARE_CONFIGURATION(ServerIp);
     DECLARE_CONFIGURATION(ServiceName);
+    DECLARE_CONFIGURATION(Sender);
     DECLARE_CONFIGURATION(TlsCertificateChain);
     DECLARE_CONFIGURATION(TlsCertificatePassword);
     DECLARE_CONFIGURATION(TlsClientCAs);
@@ -99,6 +100,7 @@ namespace mtconnect {
     DECLARE_CONFIGURATION(MqttUserName);
     DECLARE_CONFIGURATION(MqttPassword);
     DECLARE_CONFIGURATION(MqttMaxTopicDepth);
+    DECLARE_CONFIGURATION(MqttLastWillTopic);
     ///@}
 
     /// @name Adapter Configuration

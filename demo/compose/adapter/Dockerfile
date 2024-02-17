@@ -27,7 +27,7 @@ COPY --chown=adapter:adapter "./demo/agent/${LOG_FILE}" machine.log
 
 EXPOSE 7878
 
-CMD ["ruby", "run_scenario.rb", "-l", "machine.log"]
+CMD ["ruby", "run_scenario.rb", "-l", "-m", "30", "machine.log"]
 
 
 
