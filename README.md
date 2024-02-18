@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 2.2
+MTConnect C++ Agent Version 2.3
 --------
 [![Build MTConnect C++ Agent](https://github.com/mtconnect/cppagent/actions/workflows/build.yml/badge.svg)](https://github.com/mtconnect/cppagent/actions/workflows/build.yml)
 
@@ -646,9 +646,9 @@ Configuration Parameters
 
 These can be overridden on a per-adapter basis
 
-* `Protocol` –Specify protocol. Options: [`shdr`,`mqtt`]
+* `Protocol` –Specify protocol. Options: [`shdr`|`mqtt`]
 
-    *Default*: `shdr
+    *Default*: shdr
 
 * `ConversionRequired` - Global default for data item units conversion in the agent. 
   Assumes the adapter has already done unit conversion.
@@ -831,7 +831,7 @@ Sinks {
 
 * `SampleTopic` - Prefix for the Sample 
 
-    *Default*: `MTConnect/Current/[device]`
+    *Default*: `MTConnect/Sample/[device]`
 
 * `MqttLastWillTopic` - The topic used for the last will and testement for an agent
 
@@ -854,13 +854,12 @@ Sinks {
     
 ### Adapter Configuration Items ###
 
-* `Adapters` - Adapters begins a list of device blocks. If the Adapters
-  are not specified and the Devices file only contains one device, a
-  default device entry will be created with an adapter located on the
-  localhost and port 7878 associated with the device in the devices
-  file.
+* `Adapters` - Contains a list of device blocks. If there are no Adapters
+  specified and the Devices file contains one device, the Agent defaults
+  to an adapter located on the localhost at port 7878.  Data passed from
+  the Adapter is associated with the default device.
 
-    *Default*: localhost 5000 associated with the default device
+    *Default*: localhost 7878, associated with the default device
 
     * `Device` - The name of the device that corresponds to the name of
       the device in the Devices file. Each adapter can map to one
@@ -959,7 +958,7 @@ Sinks {
     * `SuppressIPAddress` - Suppress the Adapter IP Address and port when creating the Agent Device ids and names.
       
         *Default*: false
-
+		
 	* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
 
         *Default*:
@@ -990,6 +989,171 @@ Sinks {
     *Default*: Auto-generated
 
 	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify their respective `MqttClientId`
+	>
+
+	Example mqtt adapter block:
+	```json
+	mydevice {
+			Protocol = mqtt
+			MqttHost = localhost
+			MqttPort = 1883
+			MqttClientId = myUniqueID
+			Topics = /ingest
+		}
+	```
+
+### MQTT JSON Ingress Protocol Version 2.0
+
+In general the data format will be {"timestamp": "YYYY-MM-DDThh:mm:ssZ","dataItemId":"value", "dataItemId":{"key1":"value1", ..., "keyn":"valuen}} 
+
+**NOTE**: See the standard for the complete description of the fields for the data item representations below.
+
+A simple set of events and samples will look something like this:
+
+	```json
+	{
+       "timestamp": "2023-11-06T12:12:44Z",			//Time Stamp
+        "tempId": 22.6,								//Temperature
+        "positionId": 1002.345,						//X axis position
+        "executionId": "ACTIVE"						//Execution state
+	}
+	```
+	
+A `CONDITION` requires the key to be the dataItemId and requires the 6 fields as shown in the example below
+
+	```json
+	{
+       "timestamp": "2023-11-06T12:12:44Z",
+		"dataItemId": {
+		  "level": "fault",
+		  "conditionId":"ac324",
+		  "nativeSeverity": "1000",
+		  "qualifier": "HIGH",
+		  "nativeCode": "ABC",
+		  "message": "something went wrong"
+		}
+	}
+	```
+A `MESSAGE` requires the key to be the dataItemId and requires the nativeCode field as shown in the example below
+
+	```json
+	{
+       "timestamp": "2023-11-06T12:12:44Z",
+		"messsageId": {
+		  "nativeCode": "ABC",
+		  "message": "something went wrong"
+		}
+	}
+	```
+	
+The `TimeSeries` `REPRESENTATION` requires the key to be the dataItemId and requires 2 fields "count" and "values" and 1 to n comma delimited values.  
+**NOTE**: The "frequency" field is optional.
+
+	```json
+	{
+		"timestamp": "2023-11-06T12:12:44Z",
+		"timeSeries1": {
+			"count": 10,
+			"frequency": 100,
+			"values": [1,2,3,4,5,6,7,8,9,10]
+		}
+	}
+	```
+The `DataSet` `REPRESENTATION` requires the the dataItemId as the key and the "values" field.   It may also have the optional "resetTriggered" field.
+
+	```json
+	{
+	{
+		"timestamp": "2023-11-09T11:20:00Z",
+		"dataSetId": {
+			"key1": 123,
+			"key2": 456,
+			"key3": 789
+		}
+	}
+	```
+
+	Example with the optional "resetTriggered" filed:	
+	
+	```json
+	{
+		"timestamp": "2023-11-09T11:20:00Z",
+		"cncregisterset1": {
+			"resetTriggered": "NEW",
+			"value": {"r1":"v1", "r2":"v2", "r3":"v3" }
+		}
+	}
+	```
+
+The `Table` `REPRESENTATION` requires the the dataItemId as the key and the "values" field.   It may also have the optional "resetTriggered" field.
+
+	```json
+	
+	{
+		"timestamp":"2023-11-06T12:12:44Z",
+		"tableId":{
+		  "row1":{
+			"cell1":"Some Text",
+			"cell2":3243
+		  },
+		  "row2": {
+			"cell1":"Some Other Text",
+			"cell2":243        
+		  }      
+		}
+	}
+	```
+
+	Example with the optional resetTriggered field:
+
+	```json
+	{
+		"timestamp": "2023-11-09T11:20:00Z",
+		"a1": {
+			"resetTriggered": "NEW",
+			"value": {
+				"r1": {
+					"k1": 123.45,
+					"k3": 6789
+				},
+				"r2": null
+			}
+		}
+	}
+	```
+
+
+
+	* `AdapterIdentity` - Adapter Identity name used to prefix dataitems within the Agent device ids and names.
+
+        *Default*:
+		* If `SuppressIPAddress` == false:\
+		`AdapterIdentity` = ```_ {IP}_{PORT}```\
+		example:`_localhost_7878`
+
+		* If `SuppressIPAddress` == true:\
+		`AdapterIdentity` = ```_ sha1digest({IP}_{PORT})```\
+		example: `__71020ed1ed`
+
+#### MQTT Adapter/Source
+
+* `MqttHost` - IP Address or name of the MQTT Broker
+
+    *Default*: 127.0.0.1
+  
+* `MqttPort` - Port number of MQTT Broker
+
+    *Default*: 1883
+
+* `topics` - list of topics to subscribe to. Note : Only raw SHDR strings supported at this time
+
+    *Required*
+
+* `MqttClientId` - Client ID used when connecting to the MQTT Broker
+
+    *Default*: Auto-generated
+
+	> **⚠️Note:** Mqtt Sinks and Mqtt Adapters create separate connections to their respective brokers, but currently use the same client ID by default. Because of this, when using a single broker for source and sink, best practice is to explicitly specify a distinct `MqttClientId` for each.
 	>
 
 	> **⚠️Note:** Currently, there is no JSON parser functionality. Agent is expecting a raw SHDR-formatted string
@@ -1081,9 +1245,20 @@ Conditions require six (6) fields as follows:
 
 	<timestamp>|<data_item_name>|<level>|<native_code>|<native_severity>|<qualifier>|<message>
 	
+	Condition id and native code are set to the same value given as <native_code>
+
+	<timestamp>|<data_item_name>|<level>|<native_code>:<condition_id>|<native_severity>|<qualifier>|<message>
+	
+	Condition id is set to condition_id and native code is set to native_code
+	
+	<timestamp>|<data_item_name>|<level>|<condition_id>|<native_severity>|<qualifier>|<message>
+	
+	Condition id is set to condition_id and native code is not set
+	
+	
 For a complete description of these fields, see the standard. An example line will look like this:
 
-	2014-09-29T23:59:33.460470Z|htemp|WARNING|HTEMP|1|HIGH|Oil Temperature High
+	2014-09-29T23:59:33.460470Z|htemp|WARNING|HTEMP-1-HIGH|HTEMP|1|HIGH|Oil Temperature High
 	
 The next special format is the Message. There is one additional field, native_code, which needs to be included:
 
@@ -1552,7 +1727,7 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 	
 ### Build the agent
 	
-	conan create cppagent -pr cppagent/conan/profile/gcc --build=missing
+	conan create cppagent -pr cppagent/conan/profiles/gcc --build=missing
 	
 ## Building on Mac OS
 
@@ -1573,11 +1748,11 @@ Install brew and xcode command line tools
 	
 ### Build the agent
 	
-	conan create cppagent -pr cppagent/conan/profile/macos --build=missing
+	conan create cppagent -pr cppagent/conan/profiles/macos --build=missing
     
 ### Generate an xcode project for debugging
 	
-	conan build . -pr conan/profile/xcode -s build_type=Debug --build=missing -o development=True
+	conan build . -pr conan/profiles/xcode -s build_type=Debug --build=missing -o development=True
 
 ## Building on Fedora Alpine
 
@@ -1597,7 +1772,7 @@ Install brew and xcode command line tools
 
 ### Build the agent
 
-	conan create cppagent -pr cppagent/conan/profile/gcc --build=missing
+	conan create cppagent -pr cppagent/conan/profiles/gcc --build=missing
 
 ## For some examples, see the CI/CD workflows in `.github/workflows/build.yml`
 

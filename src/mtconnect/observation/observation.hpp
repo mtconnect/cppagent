@@ -279,6 +279,7 @@ namespace mtconnect::observation {
       m_level = NORMAL;
       m_code.clear();
       m_properties.erase("nativeCode");
+      m_properties.erase("conditionId");
       m_properties.erase("nativeSeverity");
       m_properties.erase("qualifier");
       m_properties.erase("statistic");

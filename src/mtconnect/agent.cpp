@@ -113,6 +113,13 @@ namespace mtconnect {
       for (auto &[k, pr] : m_printers)
         pr->setSchemaVersion(*m_schemaVersion);
     }
+    
+    auto sender = GetOption<string>(options, config::Sender);
+    if (sender)
+    {
+      for (auto &[k, pr] : m_printers)
+        pr->setSenderName(*sender);
+    }
   }
 
   void Agent::initialize(pipeline::PipelineContextPtr context)
@@ -1294,17 +1301,20 @@ namespace mtconnect {
   // Validation methods
   // -----------------------------------------------
 
-  string Agent::devicesAndPath(const std::optional<string> &path, const DevicePtr device) const
+  string Agent::devicesAndPath(const std::optional<string> &path, const DevicePtr device, const std::optional<std::string> &deviceType) const
   {
     string dataPath;
 
-    if (device)
+    if (device || deviceType)
     {
       string prefix;
-      if (device->getName() == "Agent")
+      if ((device && device->getName() == "Agent") ||
+          (deviceType && *deviceType == "Agent"))
         prefix = "//Devices/Agent";
-      else
+      else if (device)
         prefix = "//Devices/Device[@uuid=\"" + *device->getUuid() + "\"]";
+      else if (deviceType)
+        prefix = "//Devices/Device";
 
       if (path)
       {
@@ -1324,7 +1334,10 @@ namespace mtconnect {
     }
     else
     {
-      dataPath = path ? *path : "//Devices/Device|//Devices/Agent";
+      if (path)
+        dataPath = *path;
+      else
+        dataPath = "//Devices/Device|//Devices/Agent";
     }
 
     return dataPath;
