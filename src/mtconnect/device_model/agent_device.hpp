@@ -42,6 +42,7 @@ namespace mtconnect {
       AgentDevice(const std::string &name, entity::Properties &props);
       ~AgentDevice() override = default;
       static entity::FactoryPtr getFactory();
+      static entity::FactoryPtr getRoot();
 
       /// @brief initialize the agent device and add the device changed and removed data items
       void initialize() override
