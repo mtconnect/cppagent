@@ -427,8 +427,7 @@ namespace mtconnect {
     /// @param[in] device Optional device if one device is specified
     /// @param[in] deviceType optional Agent or Device selector
     /// @return The rewritten path properly prefixed
-    std::string devicesAndPath(const std::optional<std::string> &path,
-                               const DevicePtr device,
+    std::string devicesAndPath(const std::optional<std::string> &path, const DevicePtr device,
                                const std::optional<std::string> &deviceType = std::nullopt) const;
 
     /// @brief Creates unique ids for the device model and maps to the originals
@@ -644,7 +643,7 @@ namespace mtconnect {
 
     void getDataItemsForPath(const DevicePtr device, const std::optional<std::string> &path,
                              FilterSet &filter,
-       const std::optional<std::string> &deviceType) const override
+                             const std::optional<std::string> &deviceType) const override
     {
       std::string dataPath = m_agent->devicesAndPath(path, device, deviceType);
       const auto &parser = m_agent->getXmlParser();

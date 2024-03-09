@@ -113,7 +113,7 @@ namespace mtconnect {
       for (auto &[k, pr] : m_printers)
         pr->setSchemaVersion(*m_schemaVersion);
     }
-    
+
     auto sender = GetOption<string>(options, config::Sender);
     if (sender)
     {
@@ -1301,15 +1301,15 @@ namespace mtconnect {
   // Validation methods
   // -----------------------------------------------
 
-  string Agent::devicesAndPath(const std::optional<string> &path, const DevicePtr device, const std::optional<std::string> &deviceType) const
+  string Agent::devicesAndPath(const std::optional<string> &path, const DevicePtr device,
+                               const std::optional<std::string> &deviceType) const
   {
     string dataPath;
 
     if (device || deviceType)
     {
       string prefix;
-      if ((device && device->getName() == "Agent") ||
-          (deviceType && *deviceType == "Agent"))
+      if ((device && device->getName() == "Agent") || (deviceType && *deviceType == "Agent"))
         prefix = "//Devices/Agent";
       else if (device)
         prefix = "//Devices/Device[@uuid=\"" + *device->getUuid() + "\"]";

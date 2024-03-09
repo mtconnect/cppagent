@@ -86,10 +86,9 @@ namespace mtconnect {
       /// @param[in] device optional device to search
       /// @param[in] path the xpath to search
       /// @param[out] filter the set of all data items matching path to use for filtering
-      virtual void getDataItemsForPath(const DevicePtr device,
-                                       const std::optional<std::string> &path,
-                                       FilterSet &filter,
-                                       const std::optional<std::string> &deviceType = std::nullopt) const = 0;
+      virtual void getDataItemsForPath(
+          const DevicePtr device, const std::optional<std::string> &path, FilterSet &filter,
+          const std::optional<std::string> &deviceType = std::nullopt) const = 0;
       /// @brief Add a source for this sink.
       ///
       /// This is used to create loopback sources for a sink

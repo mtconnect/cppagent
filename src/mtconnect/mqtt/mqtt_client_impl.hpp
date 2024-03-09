@@ -51,6 +51,8 @@ namespace mtconnect {
     using mqtt_client_ws_ptr = decltype(mqtt::make_async_client_ws(std::declval<Ts>()...));
     template <typename... Ts>
     using mqtt_tls_client_ws_ptr = decltype(mqtt::make_tls_async_client_ws(std::declval<Ts>()...));
+    template <typename... Ts>
+    using mqtt_client_ws_ptr = decltype(mqtt::make_async_client_ws(std::declval<Ts>()...));
 
     using mqtt_client = mqtt_client_ptr<boost::asio::io_context &, std::string, std::uint16_t,
                                         mqtt::protocol_version>;
@@ -59,6 +61,8 @@ namespace mtconnect {
     using mqtt_tls_client_ws =
         mqtt_tls_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t, std::string,
                                mqtt::protocol_version>;
+    using mqtt_client_ws = mqtt_client_ws_ptr<boost::asio::io_context &, std::string, std::uint16_t,
+                                              std::string, mqtt::protocol_version>;
 
     /// @brief The Mqtt Client Source
     template <typename Derived>
@@ -502,6 +506,32 @@ namespace mtconnect {
 
     protected:
       mqtt_tls_client_ws m_client;
+    };
+
+    /// @brief Create an Mqtt TLS WebSocket Client
+    class MqttWSClient : public MqttClientImpl<MqttWSClient>
+    {
+    public:
+      using base = MqttClientImpl<MqttWSClient>;
+      using base::base;
+      /// @brief Get the Mqtt TLS WebSocket Client
+      /// @return pointer to the Mqtt TLS WebSocket Client
+      auto &getClient()
+      {
+        if (!m_client)
+        {
+          m_client = mqtt::make_async_client_ws(m_ioContext, m_host, m_port);
+          if (m_username)
+            m_client->set_user_name(*m_username);
+          if (m_password)
+            m_client->set_password(*m_password);
+        }
+
+        return m_client;
+      }
+
+    protected:
+      mqtt_client_ws m_client;
     };
 
   }  // namespace mqtt_client

@@ -103,8 +103,9 @@ namespace mtconnect {
            {"removed", QUERY, "Boolean indicating if removed assets are included in results"},
            {"type", QUERY, "Only include assets of type `type` in the results"},
            {"count", QUERY, "Maximum number of entities to include in results"},
-            {"assetId", QUERY, "An assetId to select"},
-            {"deviceType", QUERY, "Values are 'Device' or 'Agent'. Selects only devices of that type."},
+           {"assetId", QUERY, "An assetId to select"},
+           {"deviceType", QUERY,
+            "Values are 'Device' or 'Agent'. Selects only devices of that type."},
            {"assetId", PATH, "An assetId to select"},
            {"path", QUERY, "XPath to filter DataItems matched against the probe document"},
            {"at", QUERY, "Sequence number at which the observation snapshot is taken"},
@@ -477,7 +478,7 @@ namespace mtconnect {
         if (device && !ends_with(request->m_path, string("probe")) &&
             m_sinkContract->findDeviceByUUIDorName(*device) == nullptr)
           return false;
-        
+
         if (deviceType && *deviceType != "Device" && *deviceType != "Agent")
         {
           return false;
@@ -487,24 +488,29 @@ namespace mtconnect {
         return true;
       };
 
-      m_server->addRouting({boost::beast::http::verb::get, "/probe?pretty={bool:false}&deviceType={string}", handler})
+      m_server
+          ->addRouting({boost::beast::http::verb::get,
+                        "/probe?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
-          ->addRouting(
-              {boost::beast::http::verb::get, "/{device}/probe?pretty={bool:false}&deviceType={string}", handler})
+          ->addRouting({boost::beast::http::verb::get,
+                        "/{device}/probe?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");
 
       // Must be last
-      m_server->addRouting({boost::beast::http::verb::get, "/?pretty={bool:false}&deviceType={string}", handler})
+      m_server
+          ->addRouting(
+              {boost::beast::http::verb::get, "/?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
-          ->addRouting({boost::beast::http::verb::get, "/{device}?pretty={bool:false}&deviceType={string}", handler})
+          ->addRouting({boost::beast::http::verb::get,
+                        "/{device}?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");
@@ -648,11 +654,10 @@ namespace mtconnect {
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
-          streamCurrentRequest(session, printerForAccepts(request->m_accepts), *interval,
-                               request->parameter<string>("device"),
-                               request->parameter<string>("path"),
-                               *request->parameter<bool>("pretty"),
-                               request->parameter<string>("deviceType"));
+          streamCurrentRequest(
+              session, printerForAccepts(request->m_accepts), *interval,
+              request->parameter<string>("device"), request->parameter<string>("path"),
+              *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"));
         }
         else
         {
@@ -696,13 +701,13 @@ namespace mtconnect {
         }
         else
         {
-          respond(session,
-                  sampleRequest(
-                      printerForAccepts(request->m_accepts), *request->parameter<int32_t>("count"),
-                      request->parameter<string>("device"), request->parameter<uint64_t>("from"),
-                      request->parameter<uint64_t>("to"), request->parameter<string>("path"),
-                      *request->parameter<bool>("pretty"),
-                      request->parameter<string>("deviceType")));
+          respond(
+              session,
+              sampleRequest(
+                  printerForAccepts(request->m_accepts), *request->parameter<int32_t>("count"),
+                  request->parameter<string>("device"), request->parameter<uint64_t>("from"),
+                  request->parameter<uint64_t>("to"), request->parameter<string>("path"),
+                  *request->parameter<bool>("pretty"), request->parameter<string>("deviceType")));
         }
         return true;
       };
@@ -787,9 +792,8 @@ namespace mtconnect {
         deviceList = m_sinkContract->getDevices();
         if (deviceType)
         {
-          deviceList.remove_if([&deviceType](const DevicePtr &dev) {
-            return dev->getName() != *deviceType;
-          });
+          deviceList.remove_if(
+              [&deviceType](const DevicePtr &dev) { return dev->getName() != *deviceType; });
         }
       }
 

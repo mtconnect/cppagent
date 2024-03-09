@@ -404,8 +404,8 @@ namespace mtconnect::printer {
       obj.AddPairs("jsonVersion", m_jsonVersion, "schemaVersion", *m_schemaVersion);
       {
         AutoJsonObject obj(writer, "Header");
-        streamHeader(obj, m_version, m_senderName, instanceId, bufferSize, nextSeq, firstSeq, lastSeq,
-                     *m_schemaVersion, m_modelChangeTime);
+        streamHeader(obj, m_version, m_senderName, instanceId, bufferSize, nextSeq, firstSeq,
+                     lastSeq, *m_schemaVersion, m_modelChangeTime);
       }
 
       {

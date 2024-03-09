@@ -749,7 +749,7 @@ The following parameters must be present to enable https requests. If there is n
 
 * `TlsOnly` -  Only allow secure connections, http requests will be rejected
 
-    *Default*: false
+    *Default*: `false`
 
 * `TlsPrivateKey` -  The name of the file containing the private key for the certificate
 
@@ -775,7 +775,11 @@ The following parameters must be present to enable https requests. If there is n
   
 * `MqttTls` - TLS Certificate for secure connection to the MQTT Broker
 
-    *Default*: *NULL*
+    *Default*: `false`
+
+* `MqttWs` - Instructs MQTT to connect using web sockets
+
+    *Default*: `false`
 
 #### MQTT Sink
 
