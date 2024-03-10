@@ -27,6 +27,9 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/utilities.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/entity/requirement.hpp"
+
 
 namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;
@@ -82,11 +85,29 @@ namespace mtconnect::buffer {
     /// @param diMap the map of data item ids to new data item entities
     void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
     {
-      for (auto &o : m_slidingBuffer)
+      std::vector<boost::circular_buffer<observation::ObservationPtr>::iterator> orphanBufferItems;
+
+      auto iter = m_slidingBuffer.begin();
+      while( iter != m_slidingBuffer.end() )
       {
-        o->updateDataItem(diMap);
+        observation::ObservationPtr o = *iter;
+        if( o->isOrphan() ) {
+          orphanBufferItems.push_back(iter);
+        }
+        else {
+          o->updateDataItem(diMap);
+        }
+        iter++;
       }
 
+      // remove orphans from the slidingBuffer
+      while(!orphanBufferItems.empty()) {
+        auto orphanIterIter = orphanBufferItems.back();
+        m_slidingBuffer.erase(orphanIterIter);
+        orphanBufferItems.pop_back();
+      }
+
+      // checkpoints will remove orphans from its observations
       m_first.updateDataItems(diMap);
       m_latest.updateDataItems(diMap);
 
