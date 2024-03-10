@@ -2680,7 +2680,8 @@ TEST_F(AgentTest, should_stream_data_with_interval)
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     PARSE_XML_CHUNK();
 
-    EXPECT_GT(slop, delta) << "delta " << delta.count() << " < delay " << slop.count();
+    auto deltaMS = duration_cast<milliseconds>(delta);
+    EXPECT_GT(slop, deltaMS) << "delta " << deltaMS.count() << " < delay " << slop.count();
   }
 }
 

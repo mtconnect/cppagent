@@ -315,7 +315,7 @@ namespace mtconnect::configuration {
       LOG(warning) << "... File changed at: " << put_time(localtime(&t), "%F %T");
     }
 
-    auto delta = min(now - cfgTime, now - devTime);
+    auto delta = duration_cast<seconds>(min(now - cfgTime, now - devTime));
     if (delta < m_monitorDelay)
     {
       LOG(warning) << "... Waiting " << int32_t((m_monitorDelay - delta).count()) << " seconds";
