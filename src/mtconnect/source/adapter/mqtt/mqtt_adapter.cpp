@@ -73,8 +73,8 @@ namespace mtconnect {
                   {configuration::MqttHost, string()}});
 
       AddDefaultedOptions(block, m_options,
-                          {{configuration::MqttPort, 1883},
-                           {configuration::MqttTls, false},
+                          {{configuration::MqttTls, false},
+                           {configuration::MqttWs, false},
                            {configuration::AutoAvailable, false},
                            {configuration::RealTime, false},
                            {configuration::RelativeTime, false}});
@@ -84,6 +84,15 @@ namespace mtconnect {
           HasOption(m_options, configuration::Host))
       {
         m_options[configuration::MqttHost] = m_options[configuration::Host];
+      }
+      if (!HasOption(m_options, configuration::MqttPort) &&
+          HasOption(m_options, configuration::Port))
+      {
+        m_options[configuration::MqttPort] = m_options[configuration::Port];
+      }
+      else
+      {
+        m_options[configuration::MqttPort] = 1883;
       }
 
       m_handler = m_pipeline.makeHandler();
@@ -110,12 +119,28 @@ namespace mtconnect {
         m_handler->m_processMessage(topic, payload, client->getIdentity());
       };
 
-      if (IsOptionSet(m_options, configuration::MqttTls))
+      if (IsOptionSet(m_options, configuration::MqttTls) &&
+          !IsOptionSet(m_options, configuration::MqttWs))
+      {
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
-                                                                      std::move(clientHandler));
+                                                                      move(clientHandler));
+      }
+      else if (IsOptionSet(m_options, configuration::MqttWs) &&
+               IsOptionSet(m_options, configuration::MqttTls))
+      {
+        m_client = make_shared<mtconnect::mqtt_client::MqttTlsWSClient>(m_ioContext, m_options,
+                                                                        std::move(clientHandler));
+      }
+      else if (IsOptionSet(m_options, configuration::MqttWs))
+      {
+        m_client = make_shared<mtconnect::mqtt_client::MqttWSClient>(m_ioContext, m_options,
+                                                                     std::move(clientHandler));
+      }
       else
+      {
         m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_ioContext, m_options,
-                                                                      std::move(clientHandler));
+                                                                      move(clientHandler));
+      }
 
       m_identity = m_client->getIdentity();
       m_name = m_client->getUrl();

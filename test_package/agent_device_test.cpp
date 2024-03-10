@@ -328,73 +328,76 @@ TEST_F(AgentDeviceTest, verify_uuid_can_be_set_in_configuration)
   ASSERT_EQ("HELLO_KITTY", *m_agentDevice->getUuid());
 }
 
-/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for probe
+/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for
+/// probe
 TEST_F(AgentDeviceTest, should_only_return_only_devices_of_device_type_for_probe)
 {
   using namespace mtconnect::sink::rest_sink;
-  
+
   m_port = 21788;
   addAdapter();
   {
     QueryMap query {{"deviceType", "Agent"}};
     PARSE_XML_RESPONSE_QUERY("/probe", query);
-    
+
     ASSERT_XML_PATH_COUNT(doc, "//m:Device", 0);
     ASSERT_XML_PATH_COUNT(doc, "//m:Agent", 1);
   }
-  
+
   {
     QueryMap query {{"deviceType", "Device"}};
     PARSE_XML_RESPONSE_QUERY("/probe", query);
-    
+
     ASSERT_XML_PATH_COUNT(doc, "//m:Device", 1);
     ASSERT_XML_PATH_COUNT(doc, "//m:Agent", 0);
   }
 }
 
-/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for current
+/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for
+/// current
 TEST_F(AgentDeviceTest, should_only_return_only_devices_of_device_type_for_current)
 {
   using namespace mtconnect::sink::rest_sink;
-  
+
   m_port = 21788;
   addAdapter();
   {
     QueryMap query {{"deviceType", "Agent"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
-    
+
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='Agent']", 1);
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='LinuxCNC']", 0);
   }
-  
+
   {
     QueryMap query {{"deviceType", "Device"}};
     PARSE_XML_RESPONSE_QUERY("/current", query);
-    
+
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='Agent']", 0);
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='LinuxCNC']", 1);
   }
 }
 
-/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for sample
+/// @test validate the use of deviceType rest parameter to select only the Agent or Devices for
+/// sample
 TEST_F(AgentDeviceTest, should_only_return_only_devices_of_device_type_for_sample)
 {
   using namespace mtconnect::sink::rest_sink;
-  
+
   m_port = 21788;
   addAdapter();
   {
     QueryMap query {{"deviceType", "Agent"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
-    
+
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='Agent']", 1);
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='LinuxCNC']", 0);
   }
-  
+
   {
     QueryMap query {{"deviceType", "Device"}};
     PARSE_XML_RESPONSE_QUERY("/sample", query);
-    
+
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='Agent']", 0);
     ASSERT_XML_PATH_COUNT(doc, "//m:DeviceStream[@name='LinuxCNC']", 1);
   }

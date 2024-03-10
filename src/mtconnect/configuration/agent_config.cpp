@@ -856,7 +856,7 @@ namespace mtconnect::configuration {
     // Check for schema version
     auto port = get<int>(options[configuration::Port]);
     LOG(info) << "Starting agent on port " << int(port);
-    
+
     // Get the name of the sender
     auto sender = GetOption<string>(options, configuration::Sender);
     if (sender)
@@ -870,7 +870,7 @@ namespace mtconnect::configuration {
       if (ec)
         options[configuration::Sender] = "localhost";
       else
-        options[configuration::Sender] =  name;
+        options[configuration::Sender] = name;
     }
 
     // Make the Agent
@@ -885,7 +885,7 @@ namespace mtconnect::configuration {
 
     m_agent->initialize(m_pipelineContext);
     m_version = *m_agent->getSchemaVersion();
-    
+
     DevicePtr device;
     if (IsOptionSet(options, configuration::PreserveUUID))
     {

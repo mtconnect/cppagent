@@ -96,7 +96,6 @@ TEST_F(JsonPrinterProbeTest, DeviceRootAndDescription)
   ASSERT_EQ(10, jdoc.at("/MTConnectDevices/Header/assetCount"_json_pointer).get<int32_t>());
   ASSERT_EQ("MachineXXX", jdoc.at("/MTConnectDevices/Header/sender"_json_pointer).get<string>());
 
-
   auto devices = jdoc.at("/MTConnectDevices/Devices"_json_pointer);
   ASSERT_EQ(2_S, devices.size());
 
