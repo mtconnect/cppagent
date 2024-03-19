@@ -70,6 +70,10 @@ namespace mtconnect::source::adapter {
     /// @return the device
     const auto &getDevice() const { return m_device; }
 
+    /// @brief set the associated device
+    /// @param d the device
+    void setDevice(const std::string &d) { m_device = d; }
+
   protected:
     void buildDeviceList();
     void buildCommandAndStatusDelivery(pipeline::TransformPtr next = nullptr);

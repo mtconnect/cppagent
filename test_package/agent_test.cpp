@@ -1652,7 +1652,7 @@ TEST_F(AgentTest, BadDataItem)
 
 // --------------------- Adapter Commands ----------------------
 
-TEST_F(AgentTest, AdapterCommands)
+TEST_F(AgentTest, adapter_should_receive_commands)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
@@ -1683,7 +1683,7 @@ TEST_F(AgentTest, AdapterCommands)
   }
 }
 
-TEST_F(AgentTest, AdapterDeviceCommand)
+TEST_F(AgentTest, adapter_should_receive_device_commands)
 {
   m_agentTestHelper->createAgent("/samples/two_devices.xml");
   auto agent = m_agentTestHelper->getAgent();
@@ -1764,7 +1764,7 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
   }
 }
 
-TEST_F(AgentTest, UUIDChange)
+TEST_F(AgentTest, should_handle_uuid_change)
 {
   auto agent = m_agentTestHelper->getAgent();
   auto device = agent->getDeviceByName("LinuxCNC");
@@ -1785,6 +1785,10 @@ TEST_F(AgentTest, UUIDChange)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "XXXX-1234");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
+  
+  auto *pipe = static_cast<shdr::ShdrPipeline*>(m_agentTestHelper->m_adapter->getPipeline());
+  
+  ASSERT_EQ("MK-1234", pipe->getDevice());
 
   {
     // TODO: Fix and make sure dom is updated so this xpath will parse correctly.

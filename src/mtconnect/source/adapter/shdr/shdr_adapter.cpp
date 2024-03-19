@@ -222,7 +222,15 @@ namespace mtconnect::source::adapter::shdr {
       if (options.size() > 0)
         setOptions(options);
       else if (m_handler && m_handler->m_command)
+      {
         m_handler->m_command(command, value, getIdentity());
+        if (command == "uuid")
+        {
+          m_pipeline.setDevice(value);
+          options[configuration::Device] = value;
+          setOptions(options);
+        }
+      }
     }
     else
     {
