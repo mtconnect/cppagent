@@ -25,11 +25,10 @@
 
 #include "checkpoint.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/entity/requirement.hpp"
+#include "mtconnect/logging.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/utilities.hpp"
-#include "mtconnect/logging.hpp"
-#include "mtconnect/entity/requirement.hpp"
-
 
 namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;
@@ -87,10 +86,11 @@ namespace mtconnect::buffer {
     {
       for (auto &o : m_slidingBuffer)
       {
-        if( o->isOrphan() ) {
+        if (o->isOrphan())
+        {
           continue;
         }
-        o->updateDataItem(diMap);        
+        o->updateDataItem(diMap);
       }
 
       // checkpoints will remove orphans from its observations

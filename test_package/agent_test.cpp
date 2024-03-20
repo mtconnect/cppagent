@@ -1785,9 +1785,9 @@ TEST_F(AgentTest, should_handle_uuid_change)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "XXXX-1234");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
-  
-  auto *pipe = static_cast<shdr::ShdrPipeline*>(m_agentTestHelper->m_adapter->getPipeline());
-  
+
+  auto *pipe = static_cast<shdr::ShdrPipeline *>(m_agentTestHelper->m_adapter->getPipeline());
+
   ASSERT_EQ("MK-1234", pipe->getDevice());
 
   {
