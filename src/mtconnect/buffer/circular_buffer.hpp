@@ -27,6 +27,9 @@
 #include "mtconnect/config.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/utilities.hpp"
+#include "mtconnect/logging.hpp"
+#include "mtconnect/entity/requirement.hpp"
+
 
 namespace mtconnect::buffer {
   using SequenceNumber_t = uint64_t;
@@ -84,9 +87,13 @@ namespace mtconnect::buffer {
     {
       for (auto &o : m_slidingBuffer)
       {
-        o->updateDataItem(diMap);
+        if( o->isOrphan() ) {
+          continue;
+        }
+        o->updateDataItem(diMap);        
       }
 
+      // checkpoints will remove orphans from its observations
       m_first.updateDataItems(diMap);
       m_latest.updateDataItems(diMap);
 
