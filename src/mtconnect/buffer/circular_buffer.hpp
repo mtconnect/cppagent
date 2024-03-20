@@ -85,26 +85,12 @@ namespace mtconnect::buffer {
     /// @param diMap the map of data item ids to new data item entities
     void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
     {
-      std::vector<boost::circular_buffer<observation::ObservationPtr>::iterator> orphanBufferItems;
-
-      auto iter = m_slidingBuffer.begin();
-      while( iter != m_slidingBuffer.end() )
+      for (auto &o : m_slidingBuffer)
       {
-        observation::ObservationPtr o = *iter;
         if( o->isOrphan() ) {
-          orphanBufferItems.push_back(iter);
+          continue;
         }
-        else {
-          o->updateDataItem(diMap);
-        }
-        iter++;
-      }
-
-      // remove orphans from the slidingBuffer
-      while(!orphanBufferItems.empty()) {
-        auto orphanIterIter = orphanBufferItems.back();
-        m_slidingBuffer.erase(orphanIterIter);
-        orphanBufferItems.pop_back();
+        o->updateDataItem(diMap);        
       }
 
       // checkpoints will remove orphans from its observations
