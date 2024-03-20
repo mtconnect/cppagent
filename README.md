@@ -1731,7 +1731,7 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 
 ### Setup the build
 
-    sudo apt install -y build-essential cmake gcc-11 g++-11 python3 autoconf automake
+    sudo apt install -y build-essential cmake gcc-11 g++-11 python3 python3-pip autoconf automake ruby ruby rake 
     python3 -m pip install conan
     echo 'export PATH=$HOME/.local/bin:$PATH' >> .bashrc
 
