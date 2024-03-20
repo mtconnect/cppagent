@@ -174,7 +174,7 @@ namespace mtconnect::configuration {
       if (path)
       {
         // Check first if the file is in the current working directory...
-        LOG(info) << "Loading configuration from: " << *path;
+        LOG(debug) << "Loading configuration from: " << *path;
         cerr << "Loading configuration from:" << *path << endl;
 
         m_configFile = fs::canonical(*path);
@@ -188,12 +188,12 @@ namespace mtconnect::configuration {
         FileFormat fmt = MTCONNECT;
         if (ends_with(m_configFile.string(), "json"))
         {
-          LOG(info) << "Parsing json configuration";
+          LOG(debug) << "Parsing json configuration";
           fmt = JSON;
         }
         else if (ends_with(m_configFile.string(), "xml"))
         {
-          LOG(info) << "Parsing xml configuration";
+          LOG(debug) << "Parsing xml configuration";
           fmt = XML;
         }
         loadConfig(buffer.str(), fmt);
