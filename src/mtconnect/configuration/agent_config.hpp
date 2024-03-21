@@ -255,14 +255,14 @@ namespace mtconnect {
           if (std::filesystem::exists(tst, ec) && !ec)
           {
             LOG(debug) << "Found file '" << file << "' "
-                      << " in path " << path;
+                       << " in path " << path;
             auto con {std::filesystem::canonical(tst)};
             return con;
           }
           else
           {
             LOG(debug) << "Cannot find file '" << file << "' "
-                      << " in path " << path;
+                       << " in path " << path;
           }
         }
 

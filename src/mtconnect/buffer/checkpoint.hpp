@@ -175,13 +175,15 @@ namespace mtconnect::buffer {
     void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
     {
       auto iter = m_observations.begin();
-      while( iter != m_observations.end() )
+      while (iter != m_observations.end())
       {
         auto item = *iter;
-        if( item.second->isOrphan() ) {
+        if (item.second->isOrphan())
+        {
           iter = m_observations.erase(iter);
         }
-        else {
+        else
+        {
           item.second->updateDataItem(diMap);
           iter++;
         }
