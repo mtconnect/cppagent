@@ -1681,6 +1681,9 @@ TEST_F(AgentTest, adapter_should_receive_commands)
     PARSE_XML_RESPONSE("/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "MK-1234");
   }
+
+  auto &options = m_agentTestHelper->m_adapter->getOptions();
+  ASSERT_EQ("MK-1234", *GetOption<string>(options, configuration::Device));
 }
 
 TEST_F(AgentTest, adapter_should_receive_device_commands)

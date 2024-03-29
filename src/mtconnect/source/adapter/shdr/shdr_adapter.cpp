@@ -224,11 +224,20 @@ namespace mtconnect::source::adapter::shdr {
       else if (m_handler && m_handler->m_command)
       {
         m_handler->m_command(command, value, getIdentity());
+
         if (command == "uuid")
         {
-          m_pipeline.setDevice(value);
-          options[configuration::Device] = value;
-          setOptions(options);
+          DevicePtr dp;
+          if (auto dev = GetOption<string>(m_options, configuration::Device);
+              dev && (dp = m_pipeline.getContext()->m_contract->findDevice(*dev)))
+          {
+            if (!dp->preserveUuid())
+            {
+              m_pipeline.setDevice(value);
+              options[configuration::Device] = value;
+              setOptions(options);
+            }
+          }
         }
       }
     }
