@@ -63,7 +63,7 @@ RUN  apt-get update \
        rake \
        ruby \
   && rm -rf /var/lib/apt/lists/* \
-    && pip install conan
+  && pip install conan
 
 # make an agent directory and cd into it
 WORKDIR /root/agent
