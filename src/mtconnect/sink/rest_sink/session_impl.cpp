@@ -44,6 +44,7 @@ namespace mtconnect::sink::rest_sink {
   namespace algo = boost::algorithm;
   namespace sys = boost::system;
   namespace ssl = boost::asio::ssl;
+  namespace ws = boost::beast::websocket;
 
   using namespace std;
   using std::placeholders::_1;
@@ -196,7 +197,7 @@ namespace mtconnect::sink::rest_sink {
 
     auto &msg = m_parser->get();
     const auto &remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
-
+    
     // Check for put, post, or delete
     if (msg.method() != http::verb::get)
     {
@@ -242,6 +243,12 @@ namespace mtconnect::sink::rest_sink {
 
     LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port()
               << "]: " << msg.method() << " " << msg.target();
+    
+    // Check if this is a websocket upgrade request. If so, begin a websocket session.
+    if (ws::is_upgrade(msg))
+    {
+      LOG(debug) << "Upgrading to websocket request";
+    }
 
     if (!m_dispatch(shared_ptr(), m_request))
     {
