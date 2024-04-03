@@ -1686,6 +1686,34 @@ TEST_F(AgentTest, adapter_should_receive_commands)
   ASSERT_EQ("MK-1234", *GetOption<string>(options, configuration::Device));
 }
 
+TEST_F(AgentTest, adapter_should_not_process_uuid_command_with_preserve_uuid)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.3", 4, false,
+                                              true, {{configuration::PreserveUUID, true}});
+  addAdapter();
+
+  auto device = agent->getDeviceByName("LinuxCNC");
+  ASSERT_TRUE(device);
+  ASSERT_TRUE(device->preserveUuid());
+
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
+
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "000");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|block|G01X00|mode|AUTOMATIC|execution|READY");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Block", "G01X00");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ControllerMode", "AUTOMATIC");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Execution", "READY");
+  }
+}
+
 TEST_F(AgentTest, adapter_should_receive_device_commands)
 {
   m_agentTestHelper->createAgent("/samples/two_devices.xml");
