@@ -857,6 +857,11 @@ namespace mtconnect {
                                errors);
       device->addDataItem(di, errors);
     }
+
+    if (IsOptionSet(m_options, mtconnect::configuration::PreserveUUID))
+    {
+      device->setPreserveUuid(*GetOption<bool>(m_options, mtconnect::configuration::PreserveUUID));
+    }
   }
 
   void Agent::initializeDataItems(DevicePtr device, std::optional<std::set<std::string>> skip)

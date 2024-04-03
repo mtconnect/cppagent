@@ -887,10 +887,11 @@ namespace mtconnect::configuration {
     m_version = *m_agent->getSchemaVersion();
 
     DevicePtr device;
-    if (IsOptionSet(options, configuration::PreserveUUID))
+    auto preserve = GetOption<bool>(options, configuration::PreserveUUID);
+    if (preserve)
     {
       for (auto device : m_agent->getDevices())
-        device->setPreserveUuid(IsOptionSet(options, configuration::PreserveUUID));
+        device->setPreserveUuid(*preserve);
     }
 
     loadAdapters(config, options);
@@ -992,6 +993,12 @@ namespace mtconnect::configuration {
           auto oldUuid = *device->getUuid();
           device->setUuid(*uuid);
           m_agent->deviceChanged(device, oldUuid, *device->getComponentName());
+        }
+
+        auto preserve = GetOption<bool>(adapterOptions, configuration::PreserveUUID);
+        if (preserve && device)
+        {
+          device->setPreserveUuid(*preserve);
         }
 
         auto additional = block.second.get_optional<string>(configuration::AdditionalDevices);
