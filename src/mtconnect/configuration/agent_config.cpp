@@ -996,7 +996,7 @@ namespace mtconnect::configuration {
         }
 
         auto preserve = GetOption<bool>(adapterOptions, configuration::PreserveUUID);
-        if (preserve)
+        if (preserve && device)
         {
           device->setPreserveUuid(*preserve);
         }
