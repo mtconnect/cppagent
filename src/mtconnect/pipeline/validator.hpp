@@ -73,7 +73,17 @@ namespace mtconnect::pipeline {
             {
               evt->setProperty("quality", std::string("INVALID"));
               // Log once
-              LOG(warning) << "Invalid value for '" << type << "' " <<  evt->getValue<std::string>();
+              auto &id = di->getId();
+              if (m_logOnce.count(id) < 1)
+              {
+                LOG(warning) << id << ": Invalid value for '" << type << "' " <<  evt->getValue<std::string>();
+                m_logOnce.insert(id);
+              }
+              else
+              {
+                LOG(trace) << id << ": Invalid value for '" << type << "' " <<  evt->getValue<std::string>();
+
+              }
             }
           }
           else
