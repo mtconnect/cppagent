@@ -27,28 +27,26 @@
 
 namespace mtconnect::pipeline {
   using namespace entity;
-  
+
   /// @brief Map a token list to data items or asset types
   class AGENT_LIB_API Validator : public Transform
   {
   public:
     Validator(const Validator &) = default;
     Validator(PipelineContextPtr context)
-      : Transform("Validator"),
-        m_contract(context->m_contract.get())
+      : Transform("Validator"), m_contract(context->m_contract.get())
     {
       m_guard = TypeGuard<observation::Event>(RUN) || TypeGuard<observation::Observation>(SKIP);
     }
-    
+
     EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace observation;
       using namespace mtconnect::validation::observations;
       auto evt = std::dynamic_pointer_cast<Event>(entity);
-      
+
       auto di = evt->getDataItem();
       auto &value = evt->getValue<std::string>();
-      
       if (evt->isUnavailable())
       {
         evt->setProperty("quality", std::string("VALID"));
@@ -75,13 +73,14 @@ namespace mtconnect::pipeline {
               auto &id = di->getId();
               if (m_logOnce.count(id) < 1)
               {
-                LOG(warning) << "DataItem '" << id << "': Invalid value for '" << evt->getName() << "': '" <<  evt->getValue<std::string>() << '\'';
+                LOG(warning) << "DataItem '" << id << "': Invalid value for '" << evt->getName()
+                             << "': '" << evt->getValue<std::string>() << '\'';
                 m_logOnce.insert(id);
               }
               else
               {
-                LOG(trace) << "DataItem '" << id << "': Invalid value for '" << evt->getName() << "': '" <<  evt->getValue<std::string>() << '\'';
-
+                LOG(trace) << "DataItem '" << id << "': Invalid value for '" << evt->getName()
+                           << "': '" << evt->getValue<std::string>() << '\'';
               }
             }
           }
@@ -95,7 +94,7 @@ namespace mtconnect::pipeline {
           evt->setProperty("quality", std::string("UNVERIFIABLE"));
         }
       }
-      
+
       return next(std::move(evt));
     }
 

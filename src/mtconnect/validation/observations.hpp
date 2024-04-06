@@ -17,13 +17,12 @@
 
 #pragma once
 
-#include "../utilities.hpp"
-
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
+
+#include "../utilities.hpp"
 
 namespace mtconnect::validation::observations {
   using Validation = std::unordered_map<std::string, std::unordered_map<std::string, int32_t>>;
-  
   extern Validation ControlledVocabularies;
-}
+}  // namespace mtconnect::validation::observations

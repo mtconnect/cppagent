@@ -100,7 +100,10 @@ namespace mtconnect::printer {
     xmlBufferPtr m_buf;
   };
 
-  XmlPrinter::XmlPrinter(bool pretty, bool validation) : Printer(pretty, validation) { NAMED_SCOPE("xml.printer"); }
+  XmlPrinter::XmlPrinter(bool pretty, bool validation) : Printer(pretty, validation)
+  {
+    NAMED_SCOPE("xml.printer");
+  }
 
   void XmlPrinter::addDevicesNamespace(const std::string &urn, const std::string &location,
                                        const std::string &prefix)
@@ -636,7 +639,7 @@ namespace mtconnect::printer {
 
     addAttribute(writer, "sender", m_senderName);
     addAttribute(writer, "instanceId", to_string(instanceId));
-    
+
     if (m_validation)
       addAttribute(writer, "validation", "true"s);
 

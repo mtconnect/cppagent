@@ -21,11 +21,11 @@
 
 #include <chrono>
 
+#include "mtconnect/asset/asset.hpp"
+#include "mtconnect/device_model/data_item/data_item.hpp"
 #include "mtconnect/entity/entity.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/pipeline/validator.hpp"
-#include "mtconnect/asset/asset.hpp"
-#include "mtconnect/device_model/data_item/data_item.hpp"
 
 using namespace mtconnect;
 using namespace mtconnect::pipeline;
@@ -80,18 +80,17 @@ protected:
     m_time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
 
     ErrorList errors;
-    m_dataItem = DataItem::make(
-        {{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}},
-        errors);
+    m_dataItem =
+        DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
   }
 
-  void TearDown() override 
+  void TearDown() override
   {
     m_validator.reset();
     m_dataItem.reset();
     m_context.reset();
   }
-  
+
   shared_ptr<Validator> m_validator;
   shared_ptr<PipelineContext> m_context;
   DataItemPtr m_dataItem;
@@ -102,7 +101,7 @@ TEST_F(ObservationValidationTest, should_validate_value)
 {
   ErrorList errors;
   auto event = Observation::make(m_dataItem, {{"VALUE", "READY"s}}, m_time, errors);
-  
+
   auto evt = (*m_validator)(std::move(event));
   auto quality = evt->get<string>("quality");
   ASSERT_EQ("VALID", quality);
@@ -121,7 +120,7 @@ TEST_F(ObservationValidationTest, should_detect_invalid_value)
 {
   ErrorList errors;
   auto event = Observation::make(m_dataItem, {{"VALUE", "FLABOR"s}}, m_time, errors);
-  
+
   auto evt = (*m_validator)(std::move(event));
   auto quality = evt->get<string>("quality");
   ASSERT_EQ("INVALID", quality);
@@ -130,14 +129,12 @@ TEST_F(ObservationValidationTest, should_detect_invalid_value)
 TEST_F(ObservationValidationTest, should_not_validate_unknown_type)
 {
   ErrorList errors;
-  m_dataItem = DataItem::make(
-      {{"id", "exec"s}, {"category", "EVENT"s}, {"type", "x:FLABOR"s}},
-      errors);
-  
+  m_dataItem =
+      DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "x:FLABOR"s}}, errors);
+
   auto event = Observation::make(m_dataItem, {{"VALUE", "FLABOR"s}}, m_time, errors);
-  
+
   auto evt = (*m_validator)(std::move(event));
   auto quality = evt->get<string>("quality");
   ASSERT_EQ("UNVERIFIABLE", quality);
 }
-
