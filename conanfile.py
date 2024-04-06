@@ -118,7 +118,7 @@ class MTConnectAgentConan(ConanFile):
             self.tool_requires_version("doxygen", [1, 9, 4])
 
     def requirements(self):
-        self.requires("boost/1.82.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
+        self.requires("boost/1.84.0", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("libxml2/2.10.3", headers=True, libs=True, visible=True, transitive_headers=True, transitive_libs=True)
         self.requires("date/2.4.1", headers=True, libs=True, transitive_headers=True, transitive_libs=True)
         self.requires("nlohmann_json/3.9.1", headers=True, libs=False, transitive_headers=True, transitive_libs=False)
