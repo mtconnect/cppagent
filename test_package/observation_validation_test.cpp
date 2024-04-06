@@ -170,3 +170,34 @@ TEST_F(ObservationValidationTest, should_not_set_deprecated_flag_when_deprecated
 
   ASSERT_FALSE(evt->hasProperty("deprecated"));
 }
+
+
+TEST_F(ObservationValidationTest, should_not_validate_data_sets)
+{
+  ErrorList errors;
+  m_dataItem =
+  DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}, {"representation", "DATA_SET"s}}, errors);
+  ASSERT_TRUE(m_dataItem->isDataSet());
+
+  auto event = Observation::make(m_dataItem, {{"VALUE", DataSet({{"field", "value"s}})}}, m_time, errors);
+
+  auto evt = (*m_validator)(std::move(event));
+  auto quality = evt->get<string>("quality");
+  ASSERT_EQ("VALID", quality);
+
+}
+
+TEST_F(ObservationValidationTest, should_not_validate_tables)
+{
+  ErrorList errors;
+  m_dataItem =
+  DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}, {"representation", "TABLE"s}}, errors);
+  ASSERT_TRUE(m_dataItem->isDataSet());
+
+  auto event = Observation::make(m_dataItem, {{"VALUE", DataSet({{"field", "value"s}})}}, m_time, errors);
+
+  auto evt = (*m_validator)(std::move(event));
+  auto quality = evt->get<string>("quality");
+  ASSERT_EQ("VALID", quality);
+
+}

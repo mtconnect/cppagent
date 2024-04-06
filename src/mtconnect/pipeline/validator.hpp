@@ -46,13 +46,14 @@ namespace mtconnect::pipeline {
       auto evt = std::dynamic_pointer_cast<Event>(entity);
 
       auto di = evt->getDataItem();
-      auto &value = evt->getValue<std::string>();
-      if (evt->isUnavailable())
+      if (evt->isUnavailable() || di->isDataSet())
       {
         evt->setProperty("quality", std::string("VALID"));
       }
       else
       {
+        auto &value = evt->getValue<std::string>();
+
         // Optimize
         auto vocab = ControlledVocabularies.find(evt->getName());
         if (vocab != ControlledVocabularies.end())
