@@ -47,17 +47,16 @@ namespace mtconnect::pipeline {
       auto evt = std::dynamic_pointer_cast<Event>(entity);
       
       auto di = evt->getDataItem();
-      auto &type = di->getType();
       auto &value = evt->getValue<std::string>();
       
-      if (value == "UNAVAILABLE")
+      if (evt->isUnavailable())
       {
         evt->setProperty("quality", std::string("VALID"));
       }
       else
       {
         // Optimize
-        auto vocab = ControlledVocabularies.find(type);
+        auto vocab = ControlledVocabularies.find(evt->getName());
         if (vocab != ControlledVocabularies.end())
         {
           auto &lits = vocab->second;
@@ -76,12 +75,12 @@ namespace mtconnect::pipeline {
               auto &id = di->getId();
               if (m_logOnce.count(id) < 1)
               {
-                LOG(warning) << id << ": Invalid value for '" << type << "' " <<  evt->getValue<std::string>();
+                LOG(warning) << "DataItem '" << id << "': Invalid value for '" << evt->getName() << "': '" <<  evt->getValue<std::string>() << '\'';
                 m_logOnce.insert(id);
               }
               else
               {
-                LOG(trace) << id << ": Invalid value for '" << type << "' " <<  evt->getValue<std::string>();
+                LOG(trace) << "DataItem '" << id << "': Invalid value for '" << evt->getName() << "': '" <<  evt->getValue<std::string>() << '\'';
 
               }
             }
