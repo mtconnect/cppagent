@@ -46,13 +46,11 @@ int main(int argc, char *argv[])
 class MockPipelineContract : public PipelineContract
 {
 public:
-  MockPipelineContract(std::map<string, DataItemPtr> &items, int32_t schemaVersion)
-    : m_dataItems(items), m_schemaVersion(schemaVersion)
-  {}
+  MockPipelineContract(int32_t schemaVersion) : m_schemaVersion(schemaVersion) {}
   DevicePtr findDevice(const std::string &) override { return nullptr; }
   DataItemPtr findDataItem(const std::string &device, const std::string &name) override
   {
-    return m_dataItems[name];
+    return nullptr;
   }
   void eachDataItem(EachDataItem fun) override {}
   void deliverObservation(observation::ObservationPtr obs) override {}
@@ -65,7 +63,6 @@ public:
   void sourceFailed(const std::string &id) override {}
   const ObservationPtr checkDuplicate(const ObservationPtr &obs) const override { return obs; }
 
-  std::map<string, DataItemPtr> &m_dataItems;
   int32_t m_schemaVersion;
 };
 
@@ -75,6 +72,7 @@ protected:
   void SetUp() override
   {
     m_context = make_shared<PipelineContext>();
+    m_context->m_contract = make_unique<MockPipelineContract>(SCHEMA_VERSION(2, 5));
     m_validator = make_shared<Validator>(m_context);
     m_validator->bind(make_shared<NullTransform>(TypeGuard<Entity>(RUN)));
     m_time = Timestamp(date::sys_days(2021_y / jan / 19_d)) + 10h + 1min;
@@ -137,4 +135,38 @@ TEST_F(ObservationValidationTest, should_not_validate_unknown_type)
   auto evt = (*m_validator)(std::move(event));
   auto quality = evt->get<string>("quality");
   ASSERT_EQ("UNVERIFIABLE", quality);
+}
+
+TEST_F(ObservationValidationTest, should_set_deprecated_flag_when_deprecated)
+{
+  ErrorList errors;
+  m_dataItem =
+      DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
+
+  auto event = Observation::make(m_dataItem, {{"VALUE", "PROGRAM_OPTIONAL_STOP"s}}, m_time, errors);
+
+  auto evt = (*m_validator)(std::move(event));
+  auto quality = evt->get<string>("quality");
+  ASSERT_EQ("VALID", quality);
+
+  auto dep = evt->get<bool>("deprecated");
+  ASSERT_TRUE(dep);
+}
+
+TEST_F(ObservationValidationTest, should_not_set_deprecated_flag_when_deprecated_version_greater)
+{
+  ErrorList errors;
+  m_dataItem =
+      DataItem::make({{"id", "exec"s}, {"category", "EVENT"s}, {"type", "EXECUTION"s}}, errors);
+
+  auto contract = static_cast<MockPipelineContract *>(m_context->m_contract.get());
+  contract->m_schemaVersion = SCHEMA_VERSION(1, 3);
+
+  auto event = Observation::make(m_dataItem, {{"VALUE", "PROGRAM_OPTIONAL_STOP"s}}, m_time, errors);
+
+  auto evt = (*m_validator)(std::move(event));
+  auto quality = evt->get<string>("quality");
+  ASSERT_EQ("VALID", quality);
+
+  ASSERT_FALSE(evt->hasProperty("deprecated"));
 }
