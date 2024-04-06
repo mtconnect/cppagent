@@ -272,6 +272,13 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/sink/rest_sink/rest_service.cpp"
         "${SOURCE_DIR}/sink/rest_sink/server.cpp"
         "${SOURCE_DIR}/sink/rest_sink/session_impl.cpp"
+
+ # validation HEADER_FILES_ONLY
+        "${SOURCE_DIR}/validation/observations.hpp"
+        "${SOURCE_DIR}/validation/observation_validations.hpp"
+       
+ # validation SOURCE_FILES_ONLY
+        "${SOURCE_DIR}/validation/observations.cpp"
   )
 
 if(WITH_RUBY)

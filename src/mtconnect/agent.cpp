@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,6 +60,8 @@
 #include "mtconnect/utilities.hpp"
 #include "mtconnect/version.h"
 
+#include "mtconnect/validation/observations.hpp"
+
 using namespace std;
 
 namespace mtconnect {
@@ -85,7 +87,8 @@ namespace mtconnect {
       m_deviceXmlPath(deviceXmlPath),
       m_circularBuffer(GetOption<int>(options, config::BufferSize).value_or(17),
                        GetOption<int>(options, config::CheckpointFrequency).value_or(1000)),
-      m_pretty(IsOptionSet(options, mtconnect::configuration::Pretty))
+      m_pretty(IsOptionSet(options, mtconnect::configuration::Pretty)),
+      m_validation(IsOptionSet(options, mtconnect::configuration::Validation))
   {
     using namespace asset;
 
@@ -106,8 +109,8 @@ namespace mtconnect {
         uint32_t(GetOption<int>(options, mtconnect::configuration::JsonVersion).value_or(2));
 
     // Create the Printers
-    m_printers["xml"] = make_unique<printer::XmlPrinter>(m_pretty);
-    m_printers["json"] = make_unique<printer::JsonPrinter>(jsonVersion, m_pretty);
+    m_printers["xml"] = make_unique<printer::XmlPrinter>(m_pretty, m_validation);
+    m_printers["json"] = make_unique<printer::JsonPrinter>(jsonVersion, m_pretty, m_validation);
 
     if (m_schemaVersion)
     {
@@ -170,6 +173,13 @@ namespace mtconnect {
 
     if (!m_observationsInitialized)
     {
+      if (m_intSchemaVersion < SCHEMA_VERSION(2, 5) && IsOptionSet(m_options, mtconnect::configuration::Validation))
+      {
+        m_validation = false;
+        for (auto &printer : m_printers)
+          printer.second->setValidation(false);
+      }
+      
       for (auto device : m_deviceIndex)
         initializeDataItems(device);
 
@@ -193,6 +203,7 @@ namespace mtconnect {
       }
 
       m_observationsInitialized = true;
+      
     }
   }
 

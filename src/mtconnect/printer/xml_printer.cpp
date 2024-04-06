@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,7 +100,7 @@ namespace mtconnect::printer {
     xmlBufferPtr m_buf;
   };
 
-  XmlPrinter::XmlPrinter(bool pretty) : Printer(pretty) { NAMED_SCOPE("xml.printer"); }
+  XmlPrinter::XmlPrinter(bool pretty, bool validation) : Printer(pretty, validation) { NAMED_SCOPE("xml.printer"); }
 
   void XmlPrinter::addDevicesNamespace(const std::string &urn, const std::string &location,
                                        const std::string &prefix)
@@ -660,6 +660,9 @@ namespace mtconnect::printer {
 
     addAttribute(writer, "sender", m_senderName);
     addAttribute(writer, "instanceId", to_string(instanceId));
+    
+    if (m_validation)
+      addAttribute(writer, "instanceId", "true"s);
 
     char version[32] = {0};
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
