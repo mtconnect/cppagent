@@ -127,7 +127,7 @@ namespace mtconnect::pipeline {
         }
       }
 
-      return next(obs);
+      return next(std::move(obs));
     }
 
   protected:

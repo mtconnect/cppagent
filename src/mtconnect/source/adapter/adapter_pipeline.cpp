@@ -28,6 +28,7 @@
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/pipeline/topic_mapper.hpp"
 #include "mtconnect/pipeline/upcase_value.hpp"
+#include "mtconnect/pipeline/validator.hpp"
 #include "mtconnect/source/adapter/adapter.hpp"
 
 using namespace std;
@@ -138,6 +139,10 @@ namespace mtconnect {
       // Convert values
       if (IsOptionSet(m_options, configuration::ConversionRequired))
         next = next->bind(make_shared<ConvertSample>());
+            
+      // Validate Values
+      if (IsOptionSet(m_options, configuration::Validation))
+        next = next->bind(make_shared<Validator>(m_context));
 
       // Filter dups, by delta, and by period
       next = next->bind(make_shared<DuplicateFilter>(m_context));

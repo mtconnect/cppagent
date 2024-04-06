@@ -183,6 +183,7 @@ set(AGENT_SOURCES
         "${SOURCE_DIR}/pipeline/topic_mapper.hpp"
         "${SOURCE_DIR}/pipeline/transform.hpp"
         "${SOURCE_DIR}/pipeline/upcase_value.hpp"
+        "${SOURCE_DIR}/pipeline/validator.hpp"       
    
 # src/pipeline SOURCE_FILES_ONLY
    
@@ -246,12 +247,12 @@ set(AGENT_SOURCES
 # src/sink/mqtt_sink HEADER_FILE_ONLY
 
         "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.hpp"
-		"${SOURCE_DIR}/sink/mqtt_sink/mqtt2_service.hpp"
+	"${SOURCE_DIR}/sink/mqtt_sink/mqtt2_service.hpp"
 
 #src/sink/mqtt_sink SOURCE_FILES_ONLY
 
         "${SOURCE_DIR}/sink/mqtt_sink/mqtt_service.cpp"
-		"${SOURCE_DIR}/sink/mqtt_sink/mqtt2_service.cpp"
+	"${SOURCE_DIR}/sink/mqtt_sink/mqtt2_service.cpp"
         
 # src/sink/rest_sink HEADER_FILE_ONLY
         

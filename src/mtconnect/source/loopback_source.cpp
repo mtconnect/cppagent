@@ -27,6 +27,7 @@
 #include "mtconnect/pipeline/period_filter.hpp"
 #include "mtconnect/pipeline/timestamp_extractor.hpp"
 #include "mtconnect/pipeline/upcase_value.hpp"
+#include "mtconnect/pipeline/validator.hpp"
 
 using namespace std;
 
@@ -36,6 +37,8 @@ namespace mtconnect::source {
   using namespace pipeline;
   void LoopbackPipeline::build(const ConfigOptions &options)
   {
+    m_options = options;
+    
     clear();
     TransformPtr next = m_start;
 
@@ -53,6 +56,10 @@ namespace mtconnect::source {
     // Convert values
     if (IsOptionSet(m_options, configuration::ConversionRequired))
       next = next->bind(make_shared<ConvertSample>());
+
+    // Validate Values
+    if (IsOptionSet(m_options, configuration::Validation))
+      next = next->bind(make_shared<Validator>(m_context));
 
     // Deliver
     next->bind(make_shared<DeliverObservation>(m_context));
