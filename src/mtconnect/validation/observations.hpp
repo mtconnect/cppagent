@@ -17,13 +17,31 @@
 
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 #include "../utilities.hpp"
 
-#include <unordered_map>
-#include <string>
-
-namespace mtconnect::validation::observations {
-  using Validation = std::unordered_map<std::string, std::unordered_map<std::string, int32_t>>;
+namespace mtconnect {
   
-  const extern Validation ControlledVocabularies;
-}
+  /// @brief MTConnect validation containers
+  namespace validation {
+    
+    /// @brief Observation validation containers
+    namespace observations {
+      
+      /// @brief Validation type for observations
+      using Validation = std::unordered_map<std::string, std::unordered_map<std::string, int32_t>>;
+
+      /// @brief Global Validations for Event Observation's Controlled Vocabularies
+      ///
+      /// The map is as follows:
+      /// * Event name -->
+      ///   * Map of valid values. Empty map if not controlled.
+      ///     * Map has is a pair of value to
+      ///       * 0 if not deprecated
+      ///       * SCHEMA_VERSION if deprecated
+      extern Validation ControlledVocabularies;
+    }  // namespace observations
+  }    // namespace validation
+}  // namespace mtconnect

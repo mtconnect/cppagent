@@ -27,37 +27,41 @@
 
 namespace mtconnect::pipeline {
   using namespace entity;
-  
-  /// @brief Map a token list to data items or asset types
+
+  /// @brief Validate obsrvations based on Controlled Vocabularies
+  ///
+  /// - Does not validate data sets and tables
+  /// - Validates all events, not samples or conditions
   class AGENT_LIB_API Validator : public Transform
   {
   public:
     Validator(const Validator &) = default;
     Validator(PipelineContextPtr context)
-      : Transform("Validator"),
-        m_contract(context->m_contract.get())
+      : Transform("Validator"), m_contract(context->m_contract.get())
     {
       m_guard = TypeGuard<observation::Event>(RUN) || TypeGuard<observation::Observation>(SKIP);
     }
-    
+
+    /// @brief validate the Event
+    /// @param entity The Event entity
+    /// @returns modified entity with quality and deprecated properties
     EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace observation;
       using namespace mtconnect::validation::observations;
       auto evt = std::dynamic_pointer_cast<Event>(entity);
-      
+
       auto di = evt->getDataItem();
-      auto &type = di->getType();
-      auto &value = evt->getValue<std::string>();
-      
-      if (value == "UNAVAILABLE")
+      if (evt->isUnavailable() || di->isDataSet())
       {
         evt->setProperty("quality", std::string("VALID"));
       }
       else
       {
+        auto &value = evt->getValue<std::string>();
+
         // Optimize
-        auto vocab = ControlledVocabularies.find(type);
+        auto vocab = ControlledVocabularies.find(evt->getName());
         if (vocab != ControlledVocabularies.end())
         {
           auto &lits = vocab->second;
@@ -67,7 +71,12 @@ namespace mtconnect::pipeline {
             if (lit != lits.end())
             {
               evt->setProperty("quality", std::string("VALID"));
-              // Check for deprecated
+
+              // Check if deprecated
+              if (lit->second > 0 && m_contract->getSchemaVersion() > lit->second)
+              {
+                evt->setProperty("deprecated", true);
+              }
             }
             else
             {
@@ -76,13 +85,14 @@ namespace mtconnect::pipeline {
               auto &id = di->getId();
               if (m_logOnce.count(id) < 1)
               {
-                LOG(warning) << id << ": Invalid value for '" << type << "' " <<  evt->getValue<std::string>();
+                LOG(warning) << "DataItem '" << id << "': Invalid value for '" << evt->getName()
+                             << "': '" << evt->getValue<std::string>() << '\'';
                 m_logOnce.insert(id);
               }
               else
               {
-                LOG(trace) << id << ": Invalid value for '" << type << "' " <<  evt->getValue<std::string>();
-
+                LOG(trace) << "DataItem '" << id << "': Invalid value for '" << evt->getName()
+                           << "': '" << evt->getValue<std::string>() << '\'';
               }
             }
           }
@@ -96,7 +106,7 @@ namespace mtconnect::pipeline {
           evt->setProperty("quality", std::string("UNVERIFIABLE"));
         }
       }
-      
+
       return next(std::move(evt));
     }
 

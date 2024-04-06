@@ -60,8 +60,7 @@ namespace mtconnect::printer {
   template <typename T>
   inline void header(AutoJsonObject<T> &obj, const string &version, const string &hostname,
                      const uint64_t instanceId, const unsigned int bufferSize,
-                     const string &schemaVersion, const string modelChangeTime,
-                     bool validation)
+                     const string &schemaVersion, const string modelChangeTime, bool validation)
   {
     obj.AddPairs("version", version, "creationTime", getCurrentTime(GMT), "testIndicator", false,
                  "instanceId", instanceId, "sender", hostname, "schemaVersion", schemaVersion);
@@ -72,7 +71,6 @@ namespace mtconnect::printer {
       obj.AddPairs("bufferSize", bufferSize);
     if (validation)
       obj.AddPairs("validation", true);
-
   }
 
   template <typename T>
@@ -80,10 +78,10 @@ namespace mtconnect::printer {
                                const string &hostname, const uint64_t instanceId,
                                const unsigned int bufferSize, const unsigned int assetBufferSize,
                                const unsigned int assetCount, const string &schemaVersion,
-                               const string modelChangeTime,
-                               const bool validation)
+                               const string modelChangeTime, const bool validation)
   {
-    header(obj, version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime, validation);
+    header(obj, version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime,
+           validation);
     obj.AddPairs("assetBufferSize", assetBufferSize, "assetCount", assetCount);
   }
 
@@ -92,10 +90,10 @@ namespace mtconnect::printer {
                            const uint64_t instanceId, const unsigned int bufferSize,
                            const uint64_t nextSequence, const uint64_t firstSequence,
                            const uint64_t lastSequence, const string &schemaVersion,
-                           const string modelChangeTime,
-                           const bool validation)
+                           const string modelChangeTime, const bool validation)
   {
-    header(obj, version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime, validation);
+    header(obj, version, hostname, instanceId, bufferSize, schemaVersion, modelChangeTime,
+           validation);
     obj.AddPairs("nextSequence", nextSequence, "lastSequence", lastSequence, "firstSequence",
                  firstSequence);
   }
@@ -213,8 +211,7 @@ namespace mtconnect::printer {
       {
         AutoJsonObject obj(writer, "Header");
         probeAssetHeader(obj, m_version, m_senderName, instanceId, 0, bufferSize, assetCount,
-                         *m_schemaVersion, m_modelChangeTime,
-                         m_validation);
+                         *m_schemaVersion, m_modelChangeTime, m_validation);
       }
       {
         obj.Key("Assets");
@@ -412,8 +409,7 @@ namespace mtconnect::printer {
       {
         AutoJsonObject obj(writer, "Header");
         streamHeader(obj, m_version, m_senderName, instanceId, bufferSize, nextSeq, firstSeq,
-                     lastSeq, *m_schemaVersion, m_modelChangeTime,
-                     m_validation);
+                     lastSeq, *m_schemaVersion, m_modelChangeTime, m_validation);
       }
 
       {

@@ -38,7 +38,7 @@ namespace mtconnect::source {
   void LoopbackPipeline::build(const ConfigOptions &options)
   {
     m_options = options;
-    
+
     clear();
     TransformPtr next = m_start;
 
