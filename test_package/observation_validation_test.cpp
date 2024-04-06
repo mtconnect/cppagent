@@ -15,6 +15,9 @@
 //    limitations under the License.
 //
 
+/// @file
+/// Observation validation tests
+
 // Ensure that gtest is the first header otherwise Windows raises an error
 #include <gtest/gtest.h>
 // Keep this comment to keep gtest.h above. (clang-format off/on is not working here!)
@@ -66,6 +69,7 @@ public:
   int32_t m_schemaVersion;
 };
 
+/// @brief Validation tests for observations
 class ObservationValidationTest : public testing::Test
 {
 protected:
@@ -95,6 +99,7 @@ protected:
   Timestamp m_time;
 };
 
+/// @test Validate a valid value for Execution
 TEST_F(ObservationValidationTest, should_validate_value)
 {
   ErrorList errors;
@@ -105,6 +110,7 @@ TEST_F(ObservationValidationTest, should_validate_value)
   ASSERT_EQ("VALID", quality);
 }
 
+/// @test Unavailable should always be valid
 TEST_F(ObservationValidationTest, unavailable_should_be_valid)
 {
   ErrorList errors;
@@ -114,6 +120,7 @@ TEST_F(ObservationValidationTest, unavailable_should_be_valid)
   ASSERT_EQ("VALID", quality);
 }
 
+/// @test Invalid values should be marked as invalid
 TEST_F(ObservationValidationTest, should_detect_invalid_value)
 {
   ErrorList errors;
@@ -124,6 +131,7 @@ TEST_F(ObservationValidationTest, should_detect_invalid_value)
   ASSERT_EQ("INVALID", quality);
 }
 
+/// @test Unknown types should be unverifiable
 TEST_F(ObservationValidationTest, should_not_validate_unknown_type)
 {
   ErrorList errors;
@@ -137,6 +145,7 @@ TEST_F(ObservationValidationTest, should_not_validate_unknown_type)
   ASSERT_EQ("UNVERIFIABLE", quality);
 }
 
+/// @test Tag deprecated values
 TEST_F(ObservationValidationTest, should_set_deprecated_flag_when_deprecated)
 {
   ErrorList errors;
@@ -153,6 +162,7 @@ TEST_F(ObservationValidationTest, should_set_deprecated_flag_when_deprecated)
   ASSERT_TRUE(dep);
 }
 
+/// @test Only deprecate when the version is earlier than the current version
 TEST_F(ObservationValidationTest, should_not_set_deprecated_flag_when_deprecated_version_greater)
 {
   ErrorList errors;
@@ -171,6 +181,7 @@ TEST_F(ObservationValidationTest, should_not_set_deprecated_flag_when_deprecated
   ASSERT_FALSE(evt->hasProperty("deprecated"));
 }
 
+/// @test do not validate data sets
 TEST_F(ObservationValidationTest, should_not_validate_data_sets)
 {
   ErrorList errors;
@@ -189,6 +200,7 @@ TEST_F(ObservationValidationTest, should_not_validate_data_sets)
   ASSERT_EQ("VALID", quality);
 }
 
+/// @test do not validate tables
 TEST_F(ObservationValidationTest, should_not_validate_tables)
 {
   ErrorList errors;

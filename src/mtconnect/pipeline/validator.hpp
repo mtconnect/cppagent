@@ -28,7 +28,10 @@
 namespace mtconnect::pipeline {
   using namespace entity;
 
-  /// @brief Map a token list to data items or asset types
+  /// @brief Validate obsrvations based on Controlled Vocabularies
+  ///
+  /// - Does not validate data sets and tables
+  /// - Validates all events, not samples or conditions
   class AGENT_LIB_API Validator : public Transform
   {
   public:
@@ -39,6 +42,9 @@ namespace mtconnect::pipeline {
       m_guard = TypeGuard<observation::Event>(RUN) || TypeGuard<observation::Observation>(SKIP);
     }
 
+    /// @brief validate the Event
+    /// @param entity The Event entity
+    /// @returns modified entity with quality and deprecated properties
     EntityPtr operator()(entity::EntityPtr &&entity) override
     {
       using namespace observation;
