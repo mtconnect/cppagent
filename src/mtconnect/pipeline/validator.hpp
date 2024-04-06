@@ -64,7 +64,12 @@ namespace mtconnect::pipeline {
             if (lit != lits.end())
             {
               evt->setProperty("quality", std::string("VALID"));
-              // Check for deprecated
+
+              // Check if deprecated
+              if (lit->second > 0 && m_contract->getSchemaVersion() > lit->second)
+              {
+                evt->setProperty("deprecated", true);
+              }
             }
             else
             {
