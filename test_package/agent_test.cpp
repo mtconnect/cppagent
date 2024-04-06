@@ -3125,7 +3125,11 @@ TEST_F(AgentTest, should_set_validation_flag_in_header_when_version_2_5_validati
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", "true");
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> e955b2c9 (Added validation header tests)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", "true");
@@ -3146,7 +3150,11 @@ TEST_F(AgentTest, should_not_set_validation_flag_in_header_when_version_below_2_
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> e955b2c9 (Added validation header tests)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
@@ -3167,7 +3175,11 @@ TEST_F(AgentTest, should_not_set_validation_flag_in_header_when_validation_is_fa
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> e955b2c9 (Added validation header tests)
   {
     PARSE_XML_RESPONSE("/sample");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@validation", nullptr);

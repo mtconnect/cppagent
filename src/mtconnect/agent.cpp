@@ -58,9 +58,8 @@
 #include "mtconnect/sink/rest_sink/file_cache.hpp"
 #include "mtconnect/sink/rest_sink/session.hpp"
 #include "mtconnect/utilities.hpp"
-#include "mtconnect/version.h"
-
 #include "mtconnect/validation/observations.hpp"
+#include "mtconnect/version.h"
 
 using namespace std;
 
@@ -173,13 +172,14 @@ namespace mtconnect {
 
     if (!m_observationsInitialized)
     {
-      if (m_intSchemaVersion < SCHEMA_VERSION(2, 5) && IsOptionSet(m_options, mtconnect::configuration::Validation))
+      if (m_intSchemaVersion < SCHEMA_VERSION(2, 5) &&
+          IsOptionSet(m_options, mtconnect::configuration::Validation))
       {
         m_validation = false;
         for (auto &printer : m_printers)
           printer.second->setValidation(false);
       }
-      
+
       for (auto device : m_deviceIndex)
         initializeDataItems(device);
 
@@ -203,7 +203,6 @@ namespace mtconnect {
       }
 
       m_observationsInitialized = true;
-      
     }
   }
 

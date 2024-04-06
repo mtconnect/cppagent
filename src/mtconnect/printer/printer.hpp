@@ -49,7 +49,9 @@ namespace mtconnect {
     public:
       /// @brief construct a printer
       /// @param pretty `true` if content should be pretty printed
-      Printer(bool pretty = false, bool validation = false) : m_pretty(pretty), m_validation(validation) {}
+      Printer(bool pretty = false, bool validation = false)
+        : m_pretty(pretty), m_validation(validation)
+      {}
       virtual ~Printer() = default;
 
       /// @brief Generate an MTConnect Error document
@@ -145,19 +147,18 @@ namespace mtconnect {
           const_cast<Printer *>(this)->m_schemaVersion.emplace(ver);
         }
       }
-      
+
       /// @brief Get validation header flag state
       /// @returns validation state
       bool getValidation() const { return m_validation; }
-      
+
       /// @brief sets validation state
       /// @param validation the validation state
       void setValidation(bool v) { m_validation = v; }
-      
 
     protected:
-      bool m_pretty; //< Turns pretty printing on
-      bool m_validation; //< Sets validation flag in header
+      bool m_pretty;      //< Turns pretty printing on
+      bool m_validation;  //< Sets validation flag in header
       std::string m_modelChangeTime;
       std::optional<std::string> m_schemaVersion;
       std::string m_senderName {"localhost"};

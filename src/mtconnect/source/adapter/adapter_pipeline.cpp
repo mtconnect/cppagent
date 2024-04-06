@@ -139,7 +139,7 @@ namespace mtconnect {
       // Convert values
       if (IsOptionSet(m_options, configuration::ConversionRequired))
         next = next->bind(make_shared<ConvertSample>());
-            
+
       // Validate Values
       if (IsOptionSet(m_options, configuration::Validation))
         next = next->bind(make_shared<Validator>(m_context));
