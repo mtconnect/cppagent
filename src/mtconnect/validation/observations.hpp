@@ -25,5 +25,5 @@
 namespace mtconnect::validation::observations {
   using Validation = std::unordered_map<std::string, std::unordered_map<std::string, int32_t>>;
   
-  const extern Validation ControlledVocabularies;
+  extern Validation ControlledVocabularies;
 }
