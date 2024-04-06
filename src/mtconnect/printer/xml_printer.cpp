@@ -662,7 +662,7 @@ namespace mtconnect::printer {
     addAttribute(writer, "instanceId", to_string(instanceId));
     
     if (m_validation)
-      addAttribute(writer, "instanceId", "true"s);
+      addAttribute(writer, "validation", "true"s);
 
     char version[32] = {0};
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
