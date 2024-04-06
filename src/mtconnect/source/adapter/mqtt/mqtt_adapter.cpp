@@ -123,7 +123,7 @@ namespace mtconnect {
           !IsOptionSet(m_options, configuration::MqttWs))
       {
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
-                                                                      move(clientHandler));
+                                                                      std::move(clientHandler));
       }
       else if (IsOptionSet(m_options, configuration::MqttWs) &&
                IsOptionSet(m_options, configuration::MqttTls))
