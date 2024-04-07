@@ -13,6 +13,8 @@ the devices and the location of the adapter.
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
 
+Version 2.3.0 Support for all Version 2.3 standard changes and JSON ingress to MQTT adapter.
+
 Version 2.2.0 Support for all Version 2.2 standard changes and dynamic configuration from adapters. Upgrade to conan 2.
 
 Version 2.1.0 Added MQTT Sink, Agent Restart and new JSON format (version 2)
@@ -749,7 +751,7 @@ The following parameters must be present to enable https requests. If there is n
 
 * `TlsOnly` -  Only allow secure connections, http requests will be rejected
 
-    *Default*: false
+    *Default*: `false`
 
 * `TlsPrivateKey` -  The name of the file containing the private key for the certificate
 
@@ -775,7 +777,11 @@ The following parameters must be present to enable https requests. If there is n
   
 * `MqttTls` - TLS Certificate for secure connection to the MQTT Broker
 
-    *Default*: *NULL*
+    *Default*: `false`
+
+* `MqttWs` - Instructs MQTT to connect using web sockets
+
+    *Default*: `false`
 
 #### MQTT Sink
 
@@ -1376,13 +1382,17 @@ There are a number of commands that can be sent as part of the adapter stream. T
  
 	`* conversionRequired: <yes|no>`
 
+* Set the description in the device header of the associated device:
+ 
+	`* description: XXX`
+
 * Specify the default device for this adapter. The device can be specified as either the device name or UUID:
 
 	`* device: <uuid|name>`
 
-* Set the description in the device header of the associated device:
- 
-	`* description: XXX`
+* Tell the agent to load a new device XML model:
+
+	`* devicemodel: <deviceXML>`
 
 * Set the manufacturer in the device header of the associated device:
  
@@ -1415,6 +1425,10 @@ There are a number of commands that can be sent as part of the adapter stream. T
 * Set the station in the device header of the associated device:
  
 	`* station: XXX`
+
+* Set the uuid in the device header of the associated device if preserveUuid = false:
+ 
+	`* uuid: XXX`
 
 Any other command will be logged as a warning.
 
@@ -1717,8 +1731,8 @@ to instruct conan to not parallelize the builds. Some of the modules that includ
 
 ### Setup the build
 
-    sudo apt-get install build-essential python3 python3-pip git cmake ruby rake autoconf
-	python3 -m pip install conan
+    sudo apt install -y build-essential cmake gcc-11 g++-11 python3 python3-pip autoconf automake ruby ruby rake 
+    python3 -m pip install conan
     echo 'export PATH=$HOME/.local/bin:$PATH' >> .bashrc
 
 ### Download the source

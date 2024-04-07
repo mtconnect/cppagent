@@ -25,6 +25,8 @@
 
 #include "checkpoint.hpp"
 #include "mtconnect/config.hpp"
+#include "mtconnect/entity/requirement.hpp"
+#include "mtconnect/logging.hpp"
 #include "mtconnect/observation/observation.hpp"
 #include "mtconnect/utilities.hpp"
 
@@ -84,9 +86,14 @@ namespace mtconnect::buffer {
     {
       for (auto &o : m_slidingBuffer)
       {
+        if (o->isOrphan())
+        {
+          continue;
+        }
         o->updateDataItem(diMap);
       }
 
+      // checkpoints will remove orphans from its observations
       m_first.updateDataItems(diMap);
       m_latest.updateDataItems(diMap);
 

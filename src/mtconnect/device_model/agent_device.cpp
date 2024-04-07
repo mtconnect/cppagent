@@ -45,7 +45,7 @@ namespace mtconnect {
       }
       return factory;
     }
-    
+
     entity::FactoryPtr AgentDevice::getRoot()
     {
       static auto factory = make_shared<Factory>(
@@ -53,7 +53,6 @@ namespace mtconnect {
 
       return factory;
     }
-
 
     AgentDevice::AgentDevice(const std::string &name, entity::Properties &props)
       : Device(name, props)

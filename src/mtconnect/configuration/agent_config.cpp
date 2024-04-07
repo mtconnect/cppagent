@@ -174,7 +174,7 @@ namespace mtconnect::configuration {
       if (path)
       {
         // Check first if the file is in the current working directory...
-        LOG(info) << "Loading configuration from: " << *path;
+        LOG(debug) << "Loading configuration from: " << *path;
         cerr << "Loading configuration from:" << *path << endl;
 
         m_configFile = fs::canonical(*path);
@@ -188,12 +188,12 @@ namespace mtconnect::configuration {
         FileFormat fmt = MTCONNECT;
         if (ends_with(m_configFile.string(), "json"))
         {
-          LOG(info) << "Parsing json configuration";
+          LOG(debug) << "Parsing json configuration";
           fmt = JSON;
         }
         else if (ends_with(m_configFile.string(), "xml"))
         {
-          LOG(info) << "Parsing xml configuration";
+          LOG(debug) << "Parsing xml configuration";
           fmt = XML;
         }
         loadConfig(buffer.str(), fmt);
@@ -315,7 +315,7 @@ namespace mtconnect::configuration {
       LOG(warning) << "... File changed at: " << put_time(localtime(&t), "%F %T");
     }
 
-    auto delta = min(now - cfgTime, now - devTime);
+    auto delta = duration_cast<seconds>(min(now - cfgTime, now - devTime));
     if (delta < m_monitorDelay)
     {
       LOG(warning) << "... Waiting " << int32_t((m_monitorDelay - delta).count()) << " seconds";
@@ -856,7 +856,7 @@ namespace mtconnect::configuration {
     // Check for schema version
     auto port = get<int>(options[configuration::Port]);
     LOG(info) << "Starting agent on port " << int(port);
-    
+
     // Get the name of the sender
     auto sender = GetOption<string>(options, configuration::Sender);
     if (sender)
@@ -870,7 +870,7 @@ namespace mtconnect::configuration {
       if (ec)
         options[configuration::Sender] = "localhost";
       else
-        options[configuration::Sender] =  name;
+        options[configuration::Sender] = name;
     }
 
     // Make the Agent
@@ -885,12 +885,13 @@ namespace mtconnect::configuration {
 
     m_agent->initialize(m_pipelineContext);
     m_version = *m_agent->getSchemaVersion();
-    
+
     DevicePtr device;
-    if (IsOptionSet(options, configuration::PreserveUUID))
+    auto preserve = GetOption<bool>(options, configuration::PreserveUUID);
+    if (preserve)
     {
       for (auto device : m_agent->getDevices())
-        device->setPreserveUuid(IsOptionSet(options, configuration::PreserveUUID));
+        device->setPreserveUuid(*preserve);
     }
 
     loadAdapters(config, options);
@@ -992,6 +993,12 @@ namespace mtconnect::configuration {
           auto oldUuid = *device->getUuid();
           device->setUuid(*uuid);
           m_agent->deviceChanged(device, oldUuid, *device->getComponentName());
+        }
+
+        auto preserve = GetOption<bool>(adapterOptions, configuration::PreserveUUID);
+        if (preserve && device)
+        {
+          device->setPreserveUuid(*preserve);
         }
 
         auto additional = block.second.get_optional<string>(configuration::AdditionalDevices);

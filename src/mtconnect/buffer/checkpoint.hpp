@@ -174,9 +174,19 @@ namespace mtconnect::buffer {
     /// @param[in] diMap the map of data ids to data item pointers
     void updateDataItems(std::unordered_map<std::string, WeakDataItemPtr> &diMap)
     {
-      for (auto &o : m_observations)
+      auto iter = m_observations.begin();
+      while (iter != m_observations.end())
       {
-        o.second->updateDataItem(diMap);
+        auto item = *iter;
+        if (item.second->isOrphan())
+        {
+          iter = m_observations.erase(iter);
+        }
+        else
+        {
+          item.second->updateDataItem(diMap);
+          iter++;
+        }
       }
     }
 

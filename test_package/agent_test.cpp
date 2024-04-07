@@ -1652,7 +1652,7 @@ TEST_F(AgentTest, BadDataItem)
 
 // --------------------- Adapter Commands ----------------------
 
-TEST_F(AgentTest, AdapterCommands)
+TEST_F(AgentTest, adapter_should_receive_commands)
 {
   addAdapter();
   auto agent = m_agentTestHelper->getAgent();
@@ -1681,9 +1681,40 @@ TEST_F(AgentTest, AdapterCommands)
     PARSE_XML_RESPONSE("/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "MK-1234");
   }
+
+  auto &options = m_agentTestHelper->m_adapter->getOptions();
+  ASSERT_EQ("MK-1234", *GetOption<string>(options, configuration::Device));
 }
 
-TEST_F(AgentTest, AdapterDeviceCommand)
+TEST_F(AgentTest, adapter_should_not_process_uuid_command_with_preserve_uuid)
+{
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.3", 4, false,
+                                              true, {{configuration::PreserveUUID, true}});
+  addAdapter();
+
+  auto device = agent->getDeviceByName("LinuxCNC");
+  ASSERT_TRUE(device);
+  ASSERT_TRUE(device->preserveUuid());
+
+  m_agentTestHelper->m_adapter->parseBuffer("* uuid: MK-1234\n");
+
+  {
+    PARSE_XML_RESPONSE("/probe");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Device@uuid", "000");
+  }
+
+  m_agentTestHelper->m_adapter->processData(
+      "2021-02-01T12:00:00Z|block|G01X00|mode|AUTOMATIC|execution|READY");
+
+  {
+    PARSE_XML_RESPONSE("/current");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Block", "G01X00");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:ControllerMode", "AUTOMATIC");
+    ASSERT_XML_PATH_EQUAL(doc, "//m:Execution", "READY");
+  }
+}
+
+TEST_F(AgentTest, adapter_should_receive_device_commands)
 {
   m_agentTestHelper->createAgent("/samples/two_devices.xml");
   auto agent = m_agentTestHelper->getAgent();
@@ -1764,7 +1795,7 @@ TEST_F(AgentTest, adapter_command_should_set_adapter_and_mtconnect_versions)
   }
 }
 
-TEST_F(AgentTest, UUIDChange)
+TEST_F(AgentTest, should_handle_uuid_change)
 {
   auto agent = m_agentTestHelper->getAgent();
   auto device = agent->getDeviceByName("LinuxCNC");
@@ -1785,6 +1816,10 @@ TEST_F(AgentTest, UUIDChange)
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@serialNumber", "XXXX-1234");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Description@station", "YYYY");
   }
+
+  auto *pipe = static_cast<shdr::ShdrPipeline *>(m_agentTestHelper->m_adapter->getPipeline());
+
+  ASSERT_EQ("MK-1234", pipe->getDevice());
 
   {
     // TODO: Fix and make sure dom is updated so this xpath will parse correctly.
@@ -2680,7 +2715,8 @@ TEST_F(AgentTest, should_stream_data_with_interval)
     ASSERT_FALSE(m_agentTestHelper->m_session->m_chunkBody.empty());
     PARSE_XML_CHUNK();
 
-    EXPECT_GT(slop, delta) << "delta " << delta.count() << " < delay " << slop.count();
+    auto deltaMS = duration_cast<milliseconds>(delta);
+    EXPECT_GT(slop, deltaMS) << "delta " << deltaMS.count() << " < delay " << slop.count();
   }
 }
 
@@ -3026,19 +3062,16 @@ TEST_F(AgentTest, should_not_add_spaces_to_output)
 
 TEST_F(AgentTest, should_set_sender_from_config_in_XML_header)
 {
-  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, false, true, {{configuration::Sender, "MachineXXX"s}});
+  auto agent = m_agentTestHelper->createAgent("/samples/test_config.xml", 8, 4, "2.0", 4, false,
+                                              true, {{configuration::Sender, "MachineXXX"s}});
   ASSERT_TRUE(agent);
   {
     PARSE_XML_RESPONSE("/probe");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
   }
-  
+
   {
     PARSE_XML_RESPONSE("/current");
     ASSERT_XML_PATH_EQUAL(doc, "//m:Header@sender", "MachineXXX");
   }
-
-  
 }
-
-
