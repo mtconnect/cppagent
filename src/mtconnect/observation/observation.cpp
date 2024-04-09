@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,15 +41,18 @@ namespace mtconnect {
       static FactoryPtr factory;
       if (!factory)
       {
-        factory = make_shared<Factory>(Requirements({{"dataItemId", true},
-                                                     {"timestamp", ValueType::TIMESTAMP, true},
-                                                     {"sequence", false},
-                                                     {"subType", false},
-                                                     {"name", false},
-                                                     {"compositionId", false}}),
-                                       [](const std::string &name, Properties &props) -> EntityPtr {
-                                         return make_shared<Observation>(name, props);
-                                       });
+        factory = make_shared<Factory>(
+            Requirements({{"dataItemId", true},
+                          {"timestamp", ValueType::TIMESTAMP, true},
+                          {"sequence", false},
+                          {"subType", false},
+                          {"name", false},
+                          {"compositionId", false},
+                          {"quality", ControlledVocab {"VALID", "INVALID", "UNVERIFIABLE"}, false},
+                          {"deprecated", ValueType::BOOL, false}}),
+            [](const std::string &name, Properties &props) -> EntityPtr {
+              return make_shared<Observation>(name, props);
+            });
 
         factory->registerFactory("Events:Message", Message::getFactory());
         factory->registerFactory("Events:MessageDiscrete", Message::getFactory());

@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ namespace mtconnect::printer {
   class AGENT_LIB_API JsonPrinter : public Printer
   {
   public:
-    JsonPrinter(uint32_t jsonVersion, bool pretty = false);
+    JsonPrinter(uint32_t jsonVersion, bool pretty = false, bool validation = false);
     ~JsonPrinter() override = default;
 
     std::string printErrors(const uint64_t instanceId, const unsigned int bufferSize,

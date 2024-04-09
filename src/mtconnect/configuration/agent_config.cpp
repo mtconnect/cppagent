@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -789,7 +789,8 @@ namespace mtconnect::configuration {
                 {configuration::TlsVerifyClientCertificate, false},
                 {configuration::TlsClientCAs, ""s},
                 {configuration::SuppressIPAddress, false},
-                {configuration::AllowPutFrom, ""s}});
+                {configuration::AllowPutFrom, ""s},
+                {configuration::Validation, false}});
 
     m_workerThreadCount = *GetOption<int>(options, configuration::WorkerThreads);
     m_monitorFiles = *GetOption<bool>(options, configuration::MonitorConfigFiles);
@@ -887,10 +888,11 @@ namespace mtconnect::configuration {
     m_version = *m_agent->getSchemaVersion();
 
     DevicePtr device;
-    if (IsOptionSet(options, configuration::PreserveUUID))
+    auto preserve = GetOption<bool>(options, configuration::PreserveUUID);
+    if (preserve)
     {
       for (auto device : m_agent->getDevices())
-        device->setPreserveUuid(IsOptionSet(options, configuration::PreserveUUID));
+        device->setPreserveUuid(*preserve);
     }
 
     loadAdapters(config, options);
@@ -992,6 +994,12 @@ namespace mtconnect::configuration {
           auto oldUuid = *device->getUuid();
           device->setUuid(*uuid);
           m_agent->deviceChanged(device, oldUuid, *device->getComponentName());
+        }
+
+        auto preserve = GetOption<bool>(adapterOptions, configuration::PreserveUUID);
+        if (preserve && device)
+        {
+          device->setPreserveUuid(*preserve);
         }
 
         auto additional = block.second.get_optional<string>(configuration::AdditionalDevices);

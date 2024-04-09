@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -123,7 +123,7 @@ namespace mtconnect {
           !IsOptionSet(m_options, configuration::MqttWs))
       {
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
-                                                                      move(clientHandler));
+                                                                      std::move(clientHandler));
       }
       else if (IsOptionSet(m_options, configuration::MqttWs) &&
                IsOptionSet(m_options, configuration::MqttTls))

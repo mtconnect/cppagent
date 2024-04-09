@@ -1,5 +1,5 @@
 //
-// Copyright Copyright 2009-2022, AMT – The Association For Manufacturing Technology (“AMT”)
+// Copyright Copyright 2009-2024, AMT – The Association For Manufacturing Technology (“AMT”)
 // All rights reserved.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,7 +49,9 @@ namespace mtconnect {
     public:
       /// @brief construct a printer
       /// @param pretty `true` if content should be pretty printed
-      Printer(bool pretty = false) : m_pretty(pretty) {}
+      Printer(bool pretty = false, bool validation = false)
+        : m_pretty(pretty), m_validation(validation)
+      {}
       virtual ~Printer() = default;
 
       /// @brief Generate an MTConnect Error document
@@ -146,8 +148,17 @@ namespace mtconnect {
         }
       }
 
+      /// @brief Get validation header flag state
+      /// @returns validation state
+      bool getValidation() const { return m_validation; }
+
+      /// @brief sets validation state
+      /// @param validation the validation state
+      void setValidation(bool v) { m_validation = v; }
+
     protected:
-      bool m_pretty;
+      bool m_pretty;      //< Turns pretty printing on
+      bool m_validation;  //< Sets validation flag in header
       std::string m_modelChangeTime;
       std::optional<std::string> m_schemaVersion;
       std::string m_senderName {"localhost"};
