@@ -67,7 +67,10 @@ namespace mtconnect::sink::rest_sink {
     uint16_t m_foreignPort;           ///< The requestors Port
     QueryMap m_query;                 ///< The parsed query parameters
     ParameterMap m_parameters;        ///< The parsed path parameters
-    bool m_parsed { false };          ///< Flag the request as parsed
+
+    std::optional<std::string> m_requestId; ///< Request id from websocket sub
+    std::optional<std::string> m_command;   ///< Specific request from websocket
+
 
     /// @brief Find a parameter by type
     /// @tparam T the type of the parameter

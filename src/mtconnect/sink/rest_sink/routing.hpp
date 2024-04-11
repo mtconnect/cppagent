@@ -53,8 +53,8 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] function the function to call if matches
     /// @param[in] swagger `true` if swagger related
     Routing(boost::beast::http::verb verb, const std::string &pattern, const Function function,
-            bool swagger = false)
-      : m_verb(verb), m_function(function), m_swagger(swagger)
+            bool swagger = false, std::optional<std::string> request = std::nullopt)
+      : m_verb(verb), m_command(request), m_function(function), m_swagger(swagger)
     {
       std::string s(pattern);
 
@@ -79,8 +79,8 @@ namespace mtconnect::sink::rest_sink {
     /// @param[in] function the function to call if matches
     /// @param[in] swagger `true` if swagger related
     Routing(boost::beast::http::verb verb, const std::regex &pattern, const Function function,
-            bool swagger = false)
-      : m_verb(verb), m_pattern(pattern), m_function(function), m_swagger(swagger)
+            bool swagger = false, std::optional<std::string> request = std::nullopt)
+      : m_verb(verb), m_pattern(pattern), m_command(request), m_function(function), m_swagger(swagger)
     {}
 
     /// @brief Added summary and description to the routing
@@ -224,6 +224,17 @@ namespace mtconnect::sink::rest_sink {
     const auto &getPath() const { return m_path; }
     /// @brief Get the routing `verb`
     const auto &getVerb() const { return m_verb; }
+    
+    /// @brief Get the optional command associated with the routing
+    /// @returns optional routing
+    const auto &getCommand() const { return m_command; }
+    
+    /// @brief Sets the command associated with this routing for use with websockets
+    /// @param command the command
+    void command(const std::string &command)
+    {
+      m_command = command;
+    }
 
   protected:
     void pathParameters(std::string s)
@@ -360,7 +371,9 @@ namespace mtconnect::sink::rest_sink {
     std::optional<std::string> m_path;
     ParameterList m_pathParameters;
     QuerySet m_queryParameters;
+    std::optional<std::string> m_command;
     Function m_function;
+    
 
     std::optional<std::string> m_summary;
     std::optional<std::string> m_description;

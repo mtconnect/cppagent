@@ -192,7 +192,11 @@ namespace mtconnect::sink::rest_sink {
           }
         }
         
-        m_request->m_parsed = true;
+        if (object.HasMember("command"))
+          request->m_command = object["command"].GetString();
+        if (object.HasMember("id"))
+          request->m_requestId = object["id"].GetString();
+
         if (!m_dispatch(derived().shared_ptr(), m_request))
         {
           ostringstream txt;

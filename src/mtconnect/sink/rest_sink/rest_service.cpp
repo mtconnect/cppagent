@@ -122,7 +122,8 @@ namespace mtconnect {
       createAssetRoutings();
       createPutObservationRoutings();
       createFileRoutings();
-
+      m_server->addCommands();
+      
       makeLoopbackSource(m_sinkContract->m_pipelineContext);
     }
 
@@ -499,7 +500,8 @@ namespace mtconnect {
                         "/{device}/probe?pretty={bool:false}&deviceType={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
-                    "device identified by `device` matching `name` or `uuid`.");
+                    "device identified by `device` matching `name` or `uuid`.")
+          .command("probe");
 
       // Must be last
       m_server
@@ -645,7 +647,9 @@ namespace mtconnect {
                             "/{device}/" + asset + "?type={string}", deleteHandler})
               .document("Delete all assets for a device and type",
                         "Device and type are optional. If they are not given, it assumes there is "
-                        "no constraint");
+                        "no constraint")
+              .command("asset");
+;
         }
       }
     }
@@ -685,7 +689,8 @@ namespace mtconnect {
       m_server->addRouting({boost::beast::http::verb::get, "/{device}/current?" + qp, handler})
           .document("MTConnect current request",
                     "Gets a stapshot of the state of all the observations for device `device` "
-                    "optionally filtered by the `path`");
+                    "optionally filtered by the `path`")
+          .command("current");
     }
 
     void RestService::createSampleRoutings()
@@ -730,7 +735,8 @@ namespace mtconnect {
           .document("MTConnect sample request",
                     "Gets a time series of at maximum `count` observations for device `device` "
                     "optionally filtered by the `path` and starting at `from`. By default, from is "
-                    "the first available observation known to the agent");
+                    "the first available observation known to the agent")
+          .command("sample");
     }
 
     void RestService::createPutObservationRoutings()

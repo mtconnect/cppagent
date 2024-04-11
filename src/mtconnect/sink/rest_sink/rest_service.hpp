@@ -321,22 +321,15 @@ namespace mtconnect {
     protected:
       // Loopback
       boost::asio::io_context &m_context;
-
       boost::asio::io_context::strand m_strand;
-
       std::string m_schemaVersion;
-
       ConfigOptions m_options;
-
       std::shared_ptr<source::LoopbackSource> m_loopback;
-
       uint64_t m_instanceId;
-
       std::unique_ptr<Server> m_server;
 
       // Buffers
       FileCache m_fileCache;
-
       bool m_logStreamData {false};
     };
   }  // namespace sink::rest_sink
