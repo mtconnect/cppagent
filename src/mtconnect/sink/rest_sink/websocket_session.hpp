@@ -192,8 +192,8 @@ namespace mtconnect::sink::rest_sink {
           }
         }
         
-        if (object.HasMember("command"))
-          request->m_command = object["command"].GetString();
+        if (object.HasMember("request"))
+          request->m_command = object["request"].GetString();
         if (object.HasMember("id"))
           request->m_requestId = object["id"].GetString();
 
