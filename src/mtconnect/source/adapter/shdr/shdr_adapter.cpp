@@ -227,9 +227,7 @@ namespace mtconnect::source::adapter::shdr {
 
         if (command == "uuid")
         {
-          DevicePtr dp;
-          if (auto dev = GetOption<string>(m_options, configuration::Device);
-              dev && (dp = m_pipeline.getContext()->m_contract->findDevice(*dev)))
+          if (auto dp = m_pipeline.getContext()->m_contract->findDevice(value); dp)
           {
             if (!dp->preserveUuid())
             {
