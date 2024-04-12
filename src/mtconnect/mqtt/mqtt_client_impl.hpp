@@ -164,6 +164,7 @@ namespace mtconnect {
           m_connected = false;
           if (m_handler && m_handler->m_disconnected)
             m_handler->m_disconnected(shared_from_this());
+            m_handler->m_disconnected(shared_from_this());
           if (m_running)
           {
             reconnect();
@@ -235,6 +236,7 @@ namespace mtconnect {
           {
             client->async_disconnect(10s, [client, url](mqtt::error_code ec) {
               LOG(warning) << url << " disconnected: " << ec.message();
+              client->set_close_handler(nullptr);
             });
 
             client.reset();
@@ -411,6 +413,13 @@ namespace mtconnect {
     public:
       using base = MqttClientImpl<MqttTcpClient>;
       using base::base;
+      /// @brief Get a shared pointer to this
+      /// @return shared pointer to this
+      shared_ptr<MqttTcpClient> getptr()
+      {
+        return static_pointer_cast<MqttTcpClient>(shared_from_this());
+      }
+      
       /// @brief Get the Mqtt TCP Client
       /// @return pointer to the Mqtt TCP Client
       auto &getClient()
@@ -437,6 +446,12 @@ namespace mtconnect {
     public:
       using base = MqttClientImpl<MqttTlsClient>;
       using base::base;
+      /// @brief Get a shared pointer to this
+      /// @return shared pointer to this
+      shared_ptr<MqttTlsClient> getptr()
+      {
+        return static_pointer_cast<MqttTlsClient>(shared_from_this());
+      }
 
       /// @brief Get the Mqtt TLS Client
       /// @return pointer to the Mqtt TLS Client
@@ -480,6 +495,13 @@ namespace mtconnect {
     public:
       using base = MqttClientImpl<MqttTlsWSClient>;
       using base::base;
+      /// @brief Get a shared pointer to this
+      /// @return shared pointer to this
+      shared_ptr<MqttTlsWSClient> getptr()
+      {
+        return static_pointer_cast<MqttTlsWSClient>(shared_from_this());
+      }
+      
       /// @brief Get the Mqtt TLS WebSocket Client
       /// @return pointer to the Mqtt TLS WebSocket Client
       auto &getClient()
@@ -512,6 +534,13 @@ namespace mtconnect {
     public:
       using base = MqttClientImpl<MqttWSClient>;
       using base::base;
+      /// @brief Get a shared pointer to this
+      /// @return shared pointer to this
+      shared_ptr<MqttWSClient> getptr()
+      {
+        return static_pointer_cast<MqttWSClient>(shared_from_this());
+      }
+      
       /// @brief Get the Mqtt TLS WebSocket Client
       /// @return pointer to the Mqtt TLS WebSocket Client
       auto &getClient()

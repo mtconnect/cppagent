@@ -85,12 +85,7 @@ namespace mtconnect {
       {
         m_options[configuration::MqttHost] = m_options[configuration::Host];
       }
-      if (!HasOption(m_options, configuration::MqttPort) &&
-          HasOption(m_options, configuration::Port))
-      {
-        m_options[configuration::MqttPort] = m_options[configuration::Port];
-      }
-      else
+      if (!HasOption(m_options, configuration::MqttPort))
       {
         m_options[configuration::MqttPort] = 1883;
       }
@@ -123,7 +118,7 @@ namespace mtconnect {
           !IsOptionSet(m_options, configuration::MqttWs))
       {
         m_client = make_shared<mtconnect::mqtt_client::MqttTlsClient>(m_ioContext, m_options,
-                                                                      move(clientHandler));
+                                                                      std::move(clientHandler));
       }
       else if (IsOptionSet(m_options, configuration::MqttWs) &&
                IsOptionSet(m_options, configuration::MqttTls))
@@ -139,7 +134,7 @@ namespace mtconnect {
       else
       {
         m_client = make_shared<mtconnect::mqtt_client::MqttTcpClient>(m_ioContext, m_options,
-                                                                      move(clientHandler));
+                                                                      std::move(clientHandler));
       }
 
       m_identity = m_client->getIdentity();
