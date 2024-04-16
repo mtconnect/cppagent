@@ -164,12 +164,15 @@ namespace mtconnect::sink::rest_sink {
           auto route = m_commands.find(*request->m_command);
           if (route != m_commands.end())
           {
-            
+            if (route->second->matches(session, request))
+              return true;
           }
-          
-          std::stringstream txt;
-          txt << session->getRemote().address() << ": Cannot find handler for command: " << *request->m_command;
-          session->fail(boost::beast::http::status::not_found, txt.str());
+          else
+          {
+            std::stringstream txt;
+            txt << session->getRemote().address() << ": Cannot find handler for command: " << *request->m_command;
+            session->fail(boost::beast::http::status::not_found, txt.str());
+          }
         }
         else
         {

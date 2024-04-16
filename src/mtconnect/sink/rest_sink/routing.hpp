@@ -165,46 +165,49 @@ namespace mtconnect::sink::rest_sink {
     {
       try
       {
-        request->m_parameters.clear();
-        std::smatch m;
-        if (m_verb == request->m_verb && std::regex_match(request->m_path, m, m_pattern))
+        if (!request->m_command)
         {
-          auto s = m.begin();
-          s++;
-          for (auto &p : m_pathParameters)
+          request->m_parameters.clear();
+          std::smatch m;
+          if (m_verb == request->m_verb && std::regex_match(request->m_path, m, m_pattern))
           {
-            if (s != m.end())
+            auto s = m.begin();
+            s++;
+            for (auto &p : m_pathParameters)
             {
-              ParameterValue v(s->str());
-              request->m_parameters.emplace(make_pair(p.m_name, v));
-              s++;
-            }
-          }
-
-          for (auto &p : m_queryParameters)
-          {
-            auto q = request->m_query.find(p.m_name);
-            if (q != request->m_query.end())
-            {
-              try
+              if (s != m.end())
               {
-                auto v = convertValue(q->second, p.m_type);
+                ParameterValue v(s->str());
                 request->m_parameters.emplace(make_pair(p.m_name, v));
+                s++;
               }
-              catch (ParameterError &e)
-              {
-                std::string msg =
-                    std::string("for query parameter '") + p.m_name + "': " + e.what();
-                throw ParameterError(msg);
-              }
-            }
-            else if (!std::holds_alternative<std::monostate>(p.m_default))
-            {
-              request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
             }
           }
-          return m_function(session, request);
         }
+
+        for (auto &p : m_queryParameters)
+        {
+          auto q = request->m_query.find(p.m_name);
+          if (q != request->m_query.end())
+          {
+            try
+            {
+              auto v = convertValue(q->second, p.m_type);
+              request->m_parameters.emplace(make_pair(p.m_name, v));
+            }
+            catch (ParameterError &e)
+            {
+              std::string msg =
+                  std::string("for query parameter '") + p.m_name + "': " + e.what();
+              throw ParameterError(msg);
+            }
+          }
+          else if (!std::holds_alternative<std::monostate>(p.m_default))
+          {
+            request->m_parameters.emplace(make_pair(p.m_name, p.m_default));
+          }
+        }
+        return m_function(session, request);
       }
 
       catch (ParameterError &e)

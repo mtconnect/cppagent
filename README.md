@@ -1,5 +1,5 @@
 
-MTConnect C++ Agent Version 2.3
+MTConnect C++ Agent Version 2.5
 --------
 [![Build MTConnect C++ Agent](https://github.com/mtconnect/cppagent/actions/workflows/build.yml/badge.svg)](https://github.com/mtconnect/cppagent/actions/workflows/build.yml)
 
@@ -12,6 +12,10 @@ the devices and the location of the adapter.
 **NOTE: This version cannot currently be built on Windows XP since there is currently no support for the XP toolchain and C++ 17.**
 
 Pre-built binary releases for Windows are available from [Releases](https://github.com/mtconnect/cppagent/releases) for those who do not want to build the agent themselves. For *NIX users, you will need libxml2, cppunit, and cmake as well as build essentials.
+
+Version 2.5.0 Added validation of observations in the stream
+
+Version 2.4.0 Added support for version 2.4
 
 Version 2.3.0 Support for all Version 2.3 standard changes and JSON ingress to MQTT adapter.
 
@@ -667,10 +671,16 @@ Configuration Parameters
 * `VersionDeviceXml` - Create a new versioned file every time the Device.xml file changes from an external source.
 
     *Default*: `false`
+    
+* `Validation` - Turns on validation of model components and observations
+
+    *Default*: `false`
 
 * `WorkerThreads` - The number of operating system threads dedicated to the Agent
 
     *Default*: 1
+    
+    
     
 #### Adapter General Configuration
 

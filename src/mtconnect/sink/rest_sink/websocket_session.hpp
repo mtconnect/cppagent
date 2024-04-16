@@ -85,7 +85,17 @@ namespace mtconnect::sink::rest_sink {
 
     void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
     {
+      beast::flat_buffer buf;
       
+      buf.prepare(response->m_body.size());
+      buf.
+      
+      ws_.async_write(
+          buf.data(),
+          beast::bind_front_handler(
+              &WebsocketSession::sent,
+              derived().shared_ptr()));
+
     }
     
     void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override
@@ -122,6 +132,12 @@ namespace mtconnect::sink::rest_sink {
 
     }
     
+    void sent(beast::error_code ec,
+              std::size_t len)
+    {
+      
+    }
+    
     void onRead(beast::error_code ec,
                 std::size_t len)
     {
@@ -132,6 +148,7 @@ namespace mtconnect::sink::rest_sink {
       // REST API
       derived().stream().text(derived().stream().got_text());
       auto buffer = beast::buffers_to_string(m_buffer.data());
+      m_buffer.consume(m_buffer.size());
       
       Document doc;
       doc.Parse(buffer.c_str(), len);
@@ -151,8 +168,7 @@ namespace mtconnect::sink::rest_sink {
       {
         // Extract the parameters from the json doc to map them to the REST
         // protocol parameters
-        auto request = std::make_shared<Request>();
-        request->m_verb = beast::http::verb::get;
+        m_request->m_verb = beast::http::verb::get;
         const auto &object = doc.GetObject();
         
         for (auto &it : object)
@@ -163,39 +179,50 @@ namespace mtconnect::sink::rest_sink {
               // Skip nulls
               break;
             case rapidjson::kFalseType:
-              request->m_parameters.emplace(make_pair(it.name.GetString(), false));
+              m_request->m_parameters.emplace(make_pair(it.name.GetString(), false));
               break;
             case rapidjson::kTrueType:
-              request->m_parameters.emplace(make_pair(it.name.GetString(), true));
+              m_request->m_parameters.emplace(make_pair(it.name.GetString(), true));
               break;
             case rapidjson::kObjectType:
               break;              
             case rapidjson::kArrayType:
               break;
             case rapidjson::kStringType:
-              request->m_parameters.emplace(make_pair(it.name.GetString(), string(it.value.GetString())));
+              m_request->m_parameters.emplace(make_pair(it.name.GetString(), string(it.value.GetString())));
 
               break;
             case rapidjson::kNumberType:
               if (it.value.Is<int>())
-                request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<int>()));
+                m_request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<int>()));
               else if (it.value.Is<unsigned>())
-                request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<unsigned>()));
+                m_request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<unsigned>()));
               else if (it.value.Is<int64_t>())
-                request->m_parameters.emplace(make_pair(it.name.GetString(), (uint64_t) it.value.Get<int64_t>()));
+                m_request->m_parameters.emplace(make_pair(it.name.GetString(), (uint64_t) it.value.Get<int64_t>()));
               else if (it.value.Is<uint64_t>())
-                request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<uint64_t>()));
+                m_request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<uint64_t>()));
               else if (it.value.Is<double>())
-                request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<double>()));
+                m_request->m_parameters.emplace(make_pair(it.name.GetString(), it.value.Get<double>()));
 
               break;
           }
         }
         
-        if (object.HasMember("request"))
-          request->m_command = object["request"].GetString();
-        if (object.HasMember("id"))
-          request->m_requestId = object["id"].GetString();
+        if (m_request->m_parameters.count("request") > 0)
+        {
+          m_request->m_command = get<string>(m_request->m_parameters["request"]);
+          m_request->m_parameters.erase("request");
+        }
+        if (m_request->m_parameters.count("id") > 0)
+        {
+          auto &v =m_request->m_parameters["id"];
+          string id = visit(overloaded {
+            [](monostate m) { return ""s; },
+            [](auto v) { return boost::lexical_cast<string>(v); }
+          }, v);
+          m_request->m_requestId = id;
+          m_request->m_parameters.erase("id");
+        }
 
         if (!m_dispatch(derived().shared_ptr(), m_request))
         {
