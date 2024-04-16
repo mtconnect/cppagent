@@ -68,7 +68,7 @@ jobs:
       shell: bash
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
-        conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o cpack=True -o cpack_name=dist --test-folder=
+        conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o cpack=True -o cpack_name=dist -o cpack_destination=${{ github.workspace }}--test-folder=
     - name: Build Debian Package
       shell: bash
       run: |
