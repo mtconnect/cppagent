@@ -76,8 +76,8 @@ jobs:
         mkdir -p pkgroot/home/edge/
         tar -xzf dist.tar.gz -C pkgroot/home/edge/
         mv pkgroot/home/edge/dist pkgroot/home/edge/agent
-        mv pkgroot/home/edge/agent/shared/mtconnect/* pkgroot/home/edge/agent/
-        rm -rf pkgroot/home/edge/agent/shared
+        mv pkgroot/home/edge/agent/share/mtconnect/* pkgroot/home/edge/agent/
+        rm -rf pkgroot/home/edge/agent/share
         rm -rf pkgroot/home/edge/agent/docker
         rm -rf pkgroot/home/edge/agent/demo
         dpkg-deb --build mtconect-agent-${{ github.ref_name }}.deb
