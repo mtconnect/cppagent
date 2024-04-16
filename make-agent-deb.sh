@@ -4,7 +4,7 @@
 mkdir -p pkgroot/home/edge/
 tar -xzf dist.tar.gz -C pkgroot/home/edge/
 mv pkgroot/home/edge/dist pkgroot/home/edge/agent
-cd pkgroot/home/edge/agent
+
 mv shared/mtconnect/* ./
 rm -rf docker
 rm -rf shared
