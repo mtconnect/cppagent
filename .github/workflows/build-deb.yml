@@ -19,7 +19,7 @@ on:
 
   push:
     paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
-    branches: [ "main", "main-dev", "" ]
+    branches: [ "main", "main-dev", "jarsenault-debify" ]
     tags:
       - "v*.*.*"
 
