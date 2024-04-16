@@ -68,9 +68,8 @@ namespace mtconnect::sink::rest_sink {
     QueryMap m_query;                 ///< The parsed query parameters
     ParameterMap m_parameters;        ///< The parsed path parameters
 
-    std::optional<std::string> m_requestId; ///< Request id from websocket sub
-    std::optional<std::string> m_command;   ///< Specific request from websocket
-
+    std::optional<std::string> m_requestId;  ///< Request id from websocket sub
+    std::optional<std::string> m_command;    ///< Specific request from websocket
 
     /// @brief Find a parameter by type
     /// @tparam T the type of the parameter

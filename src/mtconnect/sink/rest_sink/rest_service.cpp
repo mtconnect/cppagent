@@ -123,7 +123,7 @@ namespace mtconnect {
       createPutObservationRoutings();
       createFileRoutings();
       m_server->addCommands();
-      
+
       makeLoopbackSource(m_sinkContract->m_pipelineContext);
     }
 
@@ -435,8 +435,10 @@ namespace mtconnect {
     // Request Routings
     // -----------------------------------------------------------
 
-    static inline void respond(rest_sink::SessionPtr session, rest_sink::ResponsePtr &&response)
+    static inline void respond(rest_sink::SessionPtr session, rest_sink::ResponsePtr &&response,
+                               std::optional<std::string> id = std::nullopt)
     {
+      response->m_requestId = id;
       session->writeResponse(std::move(response));
     }
 
@@ -485,7 +487,7 @@ namespace mtconnect {
           return false;
         }
 
-        respond(session, probeRequest(printer, device, pretty, deviceType));
+        respond(session, probeRequest(printer, device, pretty, deviceType), request->m_requestId);
         return true;
       };
 
@@ -527,8 +529,10 @@ namespace mtconnect {
         auto printer = printerForAccepts(request->m_accepts);
         auto pretty = request->parameter<bool>("pretty").value_or(false);
 
-        respond(session, assetRequest(printer, count, removed, request->parameter<string>("type"),
-                                      request->parameter<string>("device"), pretty));
+        respond(session,
+                assetRequest(printer, count, removed, request->parameter<string>("type"),
+                             request->parameter<string>("device"), pretty),
+                request->m_requestId);
         return true;
       };
 
@@ -544,15 +548,16 @@ namespace mtconnect {
           string id;
           while (getline(str, id, ';'))
             ids.emplace_back(id);
-          respond(session, assetIdsRequest(printer, ids, pretty));
+          respond(session, assetIdsRequest(printer, ids, pretty), request->m_requestId);
         }
         else
         {
           auto printer = printerForAccepts(request->m_accepts);
           auto pretty = *request->parameter<bool>("pretty");
           auto error = printError(printer, "INVALID_REQUEST", "No asset given", pretty);
-          respond(session, make_unique<Response>(rest_sink::status::bad_request, error,
-                                                 printer->mimeType()));
+          respond(session,
+                  make_unique<Response>(rest_sink::status::bad_request, error, printer->mimeType()),
+                  request->m_requestId);
         }
         return true;
       };
@@ -584,7 +589,8 @@ namespace mtconnect {
           respond(session,
                   putAssetRequest(printer, request->m_body, request->parameter<string>("type"),
                                   request->parameter<string>("device"),
-                                  request->parameter<string>("assetId")));
+                                  request->parameter<string>("assetId")),
+                  request->m_requestId);
           return true;
         };
 
@@ -599,13 +605,15 @@ namespace mtconnect {
 
             while (getline(str, id, ';'))
               ids.emplace_back(id);
-            respond(session, deleteAssetRequest(printer, ids));
+            respond(session, deleteAssetRequest(printer, ids), request->m_requestId);
           }
           else
           {
-            respond(session, deleteAllAssetsRequest(printerForAccepts(request->m_accepts),
-                                                    request->parameter<string>("device"),
-                                                    request->parameter<string>("type")));
+            respond(session,
+                    deleteAllAssetsRequest(printerForAccepts(request->m_accepts),
+                                           request->parameter<string>("device"),
+                                           request->parameter<string>("type")),
+                    request->m_requestId);
           }
           return true;
         };
@@ -649,7 +657,7 @@ namespace mtconnect {
                         "Device and type are optional. If they are not given, it assumes there is "
                         "no constraint")
               .command("asset");
-;
+          ;
         }
       }
     }
@@ -668,12 +676,13 @@ namespace mtconnect {
         }
         else
         {
-          respond(session, currentRequest(printerForAccepts(request->m_accepts),
-                                          request->parameter<string>("device"),
-                                          request->parameter<uint64_t>("at"),
-                                          request->parameter<string>("path"),
-                                          *request->parameter<bool>("pretty"),
-                                          request->parameter<string>("deviceType")));
+          respond(
+              session,
+              currentRequest(
+                  printerForAccepts(request->m_accepts), request->parameter<string>("device"),
+                  request->parameter<uint64_t>("at"), request->parameter<string>("path"),
+                  *request->parameter<bool>("pretty"), request->parameter<string>("deviceType")),
+              request->m_requestId);
         }
         return true;
       };
@@ -715,7 +724,8 @@ namespace mtconnect {
                   printerForAccepts(request->m_accepts), *request->parameter<int32_t>("count"),
                   request->parameter<string>("device"), request->parameter<uint64_t>("from"),
                   request->parameter<uint64_t>("to"), request->parameter<string>("path"),
-                  *request->parameter<bool>("pretty"), request->parameter<string>("deviceType")));
+                  *request->parameter<bool>("pretty"), request->parameter<string>("deviceType")),
+              request->m_requestId);
         }
         return true;
       };
@@ -754,8 +764,10 @@ namespace mtconnect {
               queries.erase("time");
             auto device = request->parameter<string>("device");
 
-            respond(session, putObservationRequest(printerForAccepts(request->m_accepts), *device,
-                                                   queries, ts));
+            respond(
+                session,
+                putObservationRequest(printerForAccepts(request->m_accepts), *device, queries, ts),
+                request->m_requestId);
             return true;
           }
           else

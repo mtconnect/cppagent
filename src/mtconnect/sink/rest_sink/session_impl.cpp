@@ -198,7 +198,7 @@ namespace mtconnect::sink::rest_sink {
 
     auto &msg = m_parser->get();
     const auto &remote = beast::get_lowest_layer(derived().stream()).socket().remote_endpoint();
-    
+
     // Check for put, post, or delete
     if (msg.method() != http::verb::get)
     {
@@ -244,7 +244,7 @@ namespace mtconnect::sink::rest_sink {
 
     LOG(info) << "ReST Request: From [" << m_request->m_foreignIp << ':' << remote.port()
               << "]: " << msg.method() << " " << msg.target();
-    
+
     // Check if this is a websocket upgrade request. If so, begin a websocket session.
     if (ws::is_upgrade(msg))
     {
@@ -469,16 +469,12 @@ namespace mtconnect::sink::rest_sink {
       writeResponse(std::move(response));
     }
   }
-  
+
   SessionPtr HttpSession::upgradeToWebsocket(RequestMessage &&msg)
   {
-    return std::make_shared<PlainWebsocketSession>(std::move(m_stream),
-                                                   std::move(m_request),
-                                                   std::move(msg),
-                                                   m_dispatch,
-                                                   m_errorFunction);
+    return std::make_shared<PlainWebsocketSession>(std::move(m_stream), std::move(m_request),
+                                                   std::move(msg), m_dispatch, m_errorFunction);
   }
-
 
   /// @brief A secure https session
   class HttpsSession : public SessionImpl<HttpsSession>
@@ -536,15 +532,12 @@ namespace mtconnect::sink::rest_sink {
         m_stream.async_shutdown(beast::bind_front_handler(&HttpsSession::shutdown, shared_ptr()));
       }
     }
-    
+
     /// @brief Upgrade the current connection to a websocket connection.
     SessionPtr upgradeToWebsocket(RequestMessage &&msg)
     {
-      return std::make_shared<TlsWebsocketSession>(std::move(m_stream),
-                                                   std::move(m_request),
-                                                   std::move(msg),
-                                                   m_dispatch,
-                                                   m_errorFunction);
+      return std::make_shared<TlsWebsocketSession>(std::move(m_stream), std::move(m_request),
+                                                   std::move(msg), m_dispatch, m_errorFunction);
     }
 
   protected:
@@ -569,8 +562,8 @@ namespace mtconnect::sink::rest_sink {
     beast::ssl_stream<beast::tcp_stream> m_stream;
     bool m_closing {false};
   };
-  
-  template<class Derived>
+
+  template <class Derived>
   void SessionImpl<Derived>::upgrade(RequestMessage &&msg)
   {
     LOG(debug) << "Upgrading session to websockets";

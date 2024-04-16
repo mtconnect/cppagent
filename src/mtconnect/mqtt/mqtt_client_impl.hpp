@@ -162,6 +162,9 @@ namespace mtconnect {
           LOG(info) << "MQTT " << m_url << ": connection closed";
           // Queue on a strand
           m_connected = false;
+          if (m_handler && m_handler->m_disconnected)
+            m_handler->m_disconnected(shared_from_this());
+          m_handler->m_disconnected(shared_from_this());
           if (m_running)
           {
             disconnected();

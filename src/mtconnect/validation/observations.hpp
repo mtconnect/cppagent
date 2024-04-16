@@ -23,13 +23,13 @@
 #include "../utilities.hpp"
 
 namespace mtconnect {
-  
+
   /// @brief MTConnect validation containers
   namespace validation {
-    
+
     /// @brief Observation validation containers
     namespace observations {
-      
+
       /// @brief Validation type for observations
       using Validation = std::unordered_map<std::string, std::unordered_map<std::string, int32_t>>;
 
