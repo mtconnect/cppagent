@@ -1,0 +1,75 @@
+# Build, Test, and Draft Releae for static and dynamic versions of the
+# MTConnect Agent on Windows, Mac OS, and Linux. 
+#
+# The Windows x86 and x86_64 builds create ZIP packages and attach them to
+# a draft release when the commit is tagged.
+#
+# Secret required for Release:
+#   RELEASE_GITHUB_TOKEN - Release token created by admin in Settings / Developer Settings / Personal access tokens /
+#                            Find-grained tokens
+#                          The token must be renewed every 90 days.
+
+name: Build MTConnect C++ Agent for Ubuntu
+
+on:
+  # Enable automated build once verified
+  pull_request:
+    paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
+    branches: [ "main", "main-dev" ]
+
+  push:
+    paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
+    branches: [ "main", "main-dev", "" ]
+    tags:
+      - "v*.*.*"
+
+  # Allow manually run workflows
+  workflow_dispatch:
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-20.04
+    name: "Ubuntu Latest, Shared: ${{ matrix.shared }}"
+    strategy:
+      matrix:
+        shared: ["True"]
+            
+    steps:
+    - name: Install dependencies
+      shell: bash
+      run: |
+        sudo apt install -y build-essential cmake gcc g++ python3 python3-pip autoconf automake rake ruby
+      
+    - name: Checkout Agent
+      uses: actions/checkout@v3
+
+    - name: Cache conan packages
+      id: cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.conan2
+        key: ${{ runner.os }}-build-${{ matrix.shared }}-${{ hashFiles('**/conanfile.py') }}
+                      
+    - name: Install Conan
+      uses: turtlebrowser/get-conan@v1.2
+      
+    - name: Setup Conan
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        conan profile detect -f
+      
+    - name: Cleanup Prior Build
+      if: steps.cache.outputs.cache-hit == 'true'
+      continue-on-error: true
+      run: |
+        conan remove mtconnect_agent -c
+
+    - name: Build and Test C++ Agent
+      shell: bash
+      run: |
+        export CTEST_OUTPUT_ON_FAILURE=TRUE
+        conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o cpack=True -o cpack_name=dist --test-folder=
+    - name: Build Debian Package
+      shell: bash
+      run: |
+        ./make-agent-deb.sh

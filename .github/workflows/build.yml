@@ -13,15 +13,15 @@ name: Build MTConnect C++ Agent
 
 on:
   # Enable automated build once verified
-  pull_request:
-    paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
-    branches: [ "main", "main-dev" ]
+  # pull_request:
+  #   paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
+  #   branches: [ "main", "main-dev" ]
 
-  push:
-    paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
-    branches: [ "main", "main-dev" ]
-    tags:
-      - "v*.*.*"
+  # push:
+  #   paths-ignore: ["**/*.md", "LICENSE.txt", ".gitignore"]
+  #   branches: [ "main", "main-dev" ]
+  #   tags:
+  #     - "v*.*.*"
 
   # Allow manually run workflows
   workflow_dispatch:

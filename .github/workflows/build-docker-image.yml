@@ -14,16 +14,15 @@
 # Note: this will tag the image with that version, as well as 'latest'.
 
 name: Build Docker image
-
 env:
   PLATFORMS: linux/amd64,linux/arm64
 
 # when to run workflow
 on:
   # # run on push or pull request events for the master branch
-  push:
-    tags:
-      - "v*.*.*"
+  # push:
+  #   tags:
+  #     - "v*.*.*"
 
   # allows you to run this workflow manually from the actions tab
   workflow_dispatch:

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+
+systemctl restart DNX-*-agent.service  # restart instead of start because there may already be an instance running
