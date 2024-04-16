@@ -35,12 +35,11 @@ namespace mtconnect {
   }
 
   namespace sink::rest_sink {
-    template<class Derived>
+    template <class Derived>
     class WebsocketSession;
-    template<class Derived>
+    template <class Derived>
     using WebsocketSessionPtr = std::shared_ptr<WebsocketSession<Derived>>;
-    
-    
+
     /// @brief A session implementation `Derived` subclass pattern
     /// @tparam subclass of this class to use the same methods with http or https protocol streams
     template <class Derived>
@@ -153,7 +152,7 @@ namespace mtconnect {
         boost::beast::error_code ec;
         m_stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
       }
-      
+
       /// @brief Upgrade the current connection to a websocket connection.
       SessionPtr upgradeToWebsocket(RequestMessage &&msg);
 

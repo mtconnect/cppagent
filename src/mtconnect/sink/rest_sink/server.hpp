@@ -170,7 +170,8 @@ namespace mtconnect::sink::rest_sink {
           else
           {
             std::stringstream txt;
-            txt << session->getRemote().address() << ": Cannot find handler for command: " << *request->m_command;
+            txt << session->getRemote().address()
+                << ": Cannot find handler for command: " << *request->m_command;
             session->fail(boost::beast::http::status::not_found, txt.str());
           }
         }
@@ -184,7 +185,7 @@ namespace mtconnect::sink::rest_sink {
 
           std::stringstream txt;
           txt << session->getRemote().address() << ": Cannot find handler for: " << request->m_verb
-          << " " << request->m_path;
+              << " " << request->m_path;
           session->fail(boost::beast::http::status::not_found, txt.str());
         }
       }
@@ -239,7 +240,7 @@ namespace mtconnect::sink::rest_sink {
         m_commands.emplace(*route.getCommand(), &route);
       return route;
     }
-    
+
     /// @brief Setup commands from routings
     void addCommands()
     {
@@ -302,7 +303,7 @@ namespace mtconnect::sink::rest_sink {
     std::set<boost::asio::ip::address> m_allowPutsFrom;
 
     std::list<Routing> m_routings;
-    std::map<std::string, Routing*> m_commands;
+    std::map<std::string, Routing *> m_commands;
     std::unique_ptr<FileCache> m_fileCache;
     ErrorFunction m_errorFunction;
     FieldList m_fields;
