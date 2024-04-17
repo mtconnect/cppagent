@@ -93,6 +93,7 @@ jobs:
         rm -rf pkgroot/home/edge/agent/docker
         rm -rf pkgroot/home/edge/agent/demo
     - name: Create Debian Package
+      id: create_debian_package
       uses: jiro4989/build-deb-action@v3
       with:
         package: mtconnect-agent
@@ -101,4 +102,33 @@ jobs:
         arch: all
         desc: "MTConnect Agent for Linux"
         maintainer: Datanomix <support@datanomix.io>
-        
+    - name: publish if release to packagecloud
+      if: ${{ env.PACKAGE_VERSION != '0.0.0.0' }}
+      uses: computology/packagecloud-github-action@v0.8
+      with:
+        package-name: ${{github.workspace}}/${{steps.create_debian_package.outputs.file_name}}
+        packagecloud-username: datanomix
+        packagecloud-reponame: dnx-edge
+        packagecloud-distro: ubuntu/focal
+        packagecloud-token: ${{ secrets.PACKAGE_CLOUD_API_WRITE_TOKEN }}
+
+    - name: Deploy packagecloud jammy deb
+      if: ${{ env.PACKAGE_VERSION != '0.0.0.0' }}
+      uses: computology/packagecloud-github-action@v0.8
+      with:
+        package-name: ${{github.workspace}}/${{steps.create_debian_package.outputs.file_name}}
+        packagecloud-username: datanomix
+        packagecloud-reponame: dnx-edge
+        packagecloud-distro: ubuntu/jammy
+        packagecloud-token: ${{ secrets.PACKAGE_CLOUD_API_WRITE_TOKEN }}
+
+    - name: Deploy packagecloud noble deb
+      if: ${{ env.PACKAGE_VERSION != '0.0.0.0' }}
+      uses: computology/packagecloud-github-action@v0.8
+      with:
+        package-name: ${{github.workspace}}/${{steps.create_debian_package.outputs.file_name}}
+        packagecloud-username: datanomix
+        packagecloud-reponame: dnx-edge
+        packagecloud-distro: ubuntu/noble
+        packagecloud-token: ${{ secrets.PACKAGE_CLOUD_API_WRITE_TOKEN }}
+
