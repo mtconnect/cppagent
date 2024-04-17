@@ -28,6 +28,8 @@ on:
 
 jobs:
   build_linux:
+    env:
+      PACKAGE_VERSION: ${{ github.ref_name }}
     runs-on: ubuntu-20.04
     name: "Ubuntu Latest, Shared: ${{ matrix.shared }}"
     strategy:
@@ -69,6 +71,15 @@ jobs:
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
         conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o cpack=True -o cpack_name=dist -o cpack_destination=${{ github.workspace }} --test-folder=
+    - name: Cleanse package version
+      run: |
+        if [[ $PACKAGE_VERSION == v*.*.*.* ]]; then
+          export PACKAGE_VERSION=${PACKAGE_VERSION:1}
+        elif [[ $PACKAGE_VERSION == [0-9].*.*.* ]]; then
+          export PACKAGE_VERSION=${PACKAGE_VERSION:0}
+        else
+          export PACKAGE_VERSION=0.0.0.0
+        fi
     - name: Prepare Debian Package
       shell: bash
       working-directory: ${{ github.workspace }}
@@ -86,7 +97,7 @@ jobs:
       with:
         package: mtconnect-agent
         package_root: ${{ github.workspace}}/pkgroot
-        version: ${{ steps.cache.outputs.cache-hit }}
+        version: ${{ env.PACKAGE_VERSION }}
         arch: all
         desc: "MTConnect Agent for Linux"
         maintainer: Datanomix <support@datanomix.io>
