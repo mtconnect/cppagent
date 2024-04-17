@@ -69,16 +69,25 @@ jobs:
       run: |
         export CTEST_OUTPUT_ON_FAILURE=TRUE
         conan create . --build=missing -pr conan/profiles/gcc  -o shared=${{ matrix.shared }} -o cpack=True -o cpack_name=dist -o cpack_destination=${{ github.workspace }} --test-folder=
-    - name: Build Debian Package
+    - name: Prepare Debian Package
       shell: bash
       working-directory: ${{ github.workspace }}
       run: |
         mkdir -p pkgroot/home/edge/
+        ls -lah pkgroot
         tar -xzf dist.tar.gz -C pkgroot/home/edge/
         mv pkgroot/home/edge/dist pkgroot/home/edge/agent
         mv pkgroot/home/edge/agent/share/mtconnect/* pkgroot/home/edge/agent/
         rm -rf pkgroot/home/edge/agent/share
         rm -rf pkgroot/home/edge/agent/docker
         rm -rf pkgroot/home/edge/agent/demo
-        dpkg-deb --build mtconect-agent-${{ github.ref_name }}.deb
+    - name: Create Debian Package
+      uses: jiro4989/build-deb-action@v3
+      with:
+        package: mtconnect-agent
+        package_root: ${{ github.workspace}}/pkgroot
+        version: ${{ steps.cache.outputs.cache-hit }}
+        arch: all
+        desc: "MTConnect Agent for Linux"
+        maintainer: Datanomix <support@datanomix.io>
         
