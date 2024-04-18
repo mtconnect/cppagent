@@ -154,9 +154,9 @@ jobs:
     - name: Cleanse package version
       run: |
         if [[ $PACKAGE_VERSION == v*.*.*.* ]]; then
-          echo "PACKAGE_VERSION=${PACKAGE_VERSION:1}"" >> $GITHUB_ENV
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION:1}" >> $GITHUB_ENV
         elif [[ $PACKAGE_VERSION == [0-9].*.*.* ]]; then
-          echo "PACKAGE_VERSION=${PACKAGE_VERSION:0}"" >> $GITHUB_ENV
+          echo "PACKAGE_VERSION=${PACKAGE_VERSION:0}" >> $GITHUB_ENV
         else
           echo "PACKAGE_VERSION=0.0.0.0" >> $GITHUB_ENV
         fi
