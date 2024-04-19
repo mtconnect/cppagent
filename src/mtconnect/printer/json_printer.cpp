@@ -113,7 +113,8 @@ namespace mtconnect::printer {
 
   std::string JsonPrinter::printErrors(const uint64_t instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const ProtoErrorList &list,
-                                       bool pretty) const
+                                       bool pretty,
+                                       const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
 
@@ -170,7 +171,8 @@ namespace mtconnect::printer {
                                       const unsigned int assetCount,
                                       const std::list<DevicePtr> &devices,
                                       const std::map<std::string, size_t> *count,
-                                      bool includeHidden, bool pretty) const
+                                      bool includeHidden, bool pretty,
+                                      const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
 
@@ -197,7 +199,8 @@ namespace mtconnect::printer {
 
   std::string JsonPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
                                        const unsigned int assetCount, const asset::AssetList &asset,
-                                       bool pretty) const
+                                       bool pretty,
+                                       const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
 
@@ -397,7 +400,8 @@ namespace mtconnect::printer {
   std::string JsonPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                        const uint64_t nextSeq, const uint64_t firstSeq,
                                        const uint64_t lastSeq, ObservationList &observations,
-                                       bool pretty) const
+                                       bool pretty,
+                                       const std::optional<std::string> requestId) const
   {
     defaultSchemaVersion();
 

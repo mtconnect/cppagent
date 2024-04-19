@@ -45,21 +45,23 @@ namespace mtconnect {
 
       std::string printErrors(const uint64_t instanceId, const unsigned int bufferSize,
                               const uint64_t nextSeq, const ProtoErrorList &list,
-                              bool pretty = false) const override;
+                              bool pretty = false,
+                              const std::optional<std::string> requestId = std::nullopt) const override;
 
       std::string printProbe(const uint64_t instanceId, const unsigned int bufferSize,
                              const uint64_t nextSeq, const unsigned int assetBufferSize,
                              const unsigned int assetCount, const std::list<DevicePtr> &devices,
                              const std::map<std::string, size_t> *count = nullptr,
-                             bool includeHidden = false, bool pretty = false) const override;
+                             bool includeHidden = false, bool pretty = false,
+                             const std::optional<std::string> requestId = std::nullopt) const override;
 
       std::string printSample(const uint64_t instanceId, const unsigned int bufferSize,
                               const uint64_t nextSeq, const uint64_t firstSeq,
                               const uint64_t lastSeq, observation::ObservationList &results,
-                              bool pretty = false) const override;
+                              bool pretty = false, const std::optional<std::string> requestId = std::nullopt) const override;
       std::string printAssets(const uint64_t anInstanceId, const unsigned int bufferSize,
                               const unsigned int assetCount, const asset::AssetList &asset,
-                              bool pretty = false) const override;
+                              bool pretty = false, const std::optional<std::string> requestId = std::nullopt) const override;
       std::string mimeType() const override { return "text/xml"; }
 
       /// @brief Add a Devices XML device namespace
@@ -167,7 +169,8 @@ namespace mtconnect {
                       const unsigned int bufferSize, const unsigned int assetBufferSize,
                       const unsigned int assetCount, const uint64_t nextSeq,
                       const uint64_t firstSeq = 0, const uint64_t lastSeq = 0,
-                      const std::map<std::string, size_t> *counts = nullptr) const;
+                      const std::map<std::string, size_t> *counts = nullptr,
+                      const std::optional<std::string> requestId = std::nullopt) const;
 
       // Helper to print individual components and details
       void printProbeHelper(xmlTextWriterPtr writer, device_model::ComponentPtr component,

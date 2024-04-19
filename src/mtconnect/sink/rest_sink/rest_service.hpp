@@ -101,7 +101,8 @@ namespace mtconnect {
       ResponsePtr probeRequest(const printer::Printer *p,
                                const std::optional<std::string> &device = std::nullopt,
                                bool pretty = false,
-                               const std::optional<std::string> &deviceType = std::nullopt);
+                               const std::optional<std::string> &deviceType = std::nullopt,
+                               const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Handler for a current request
       /// @param[in] p printer for doc generation
@@ -115,7 +116,8 @@ namespace mtconnect {
                                  const std::optional<SequenceNumber_t> &at = std::nullopt,
                                  const std::optional<std::string> &path = std::nullopt,
                                  bool pretty = false,
-                                 const std::optional<std::string> &deviceType = std::nullopt);
+                                 const std::optional<std::string> &deviceType = std::nullopt,
+                                 const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Handler for a sample request
       /// @param[in] p printer for doc generation
@@ -132,7 +134,8 @@ namespace mtconnect {
                                 const std::optional<SequenceNumber_t> &to = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt,
                                 bool pretty = false,
-                                const std::optional<std::string> &deviceType = std::nullopt);
+                                const std::optional<std::string> &deviceType = std::nullopt,
+                                const std::optional<std::string> &requestId = std::nullopt);
       /// @brief Handler for a streaming sample
       /// @param[in] session session to stream data to
       /// @param[in] p printer for doc generation
@@ -150,7 +153,7 @@ namespace mtconnect {
                                const std::optional<std::string> &path = std::nullopt,
                                bool pretty = false,
                                const std::optional<std::string> &deviceType = std::nullopt,
-                               const std::optional<std::string> &responseId = std::nullopt);
+                               const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Handler for a streaming current
       /// @param[in] session session to stream data to
@@ -164,7 +167,7 @@ namespace mtconnect {
                                 const std::optional<std::string> &path = std::nullopt,
                                 bool pretty = false,
                                 const std::optional<std::string> &deviceType = std::nullopt,
-                                const std::optional<std::string> &responseId = std::nullopt);
+                                const std::optional<std::string> &requestId = std::nullopt);
       /// @brief Handler for put/post observation
       /// @param[in] p printer for response generation
       /// @param[in] device device
@@ -207,7 +210,8 @@ namespace mtconnect {
       ResponsePtr assetRequest(const printer::Printer *p, const int32_t count, const bool removed,
                                const std::optional<std::string> &type = std::nullopt,
                                const std::optional<std::string> &device = std::nullopt,
-                               bool pretty = false);
+                               bool pretty = false,
+                               const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Asset request handler using a list of asset ids
       /// @param[in] p printer for the response document
@@ -215,7 +219,8 @@ namespace mtconnect {
       /// @param[in] pretty `true` to ensure response is formatted
       /// @return MTConnect Assets response document
       ResponsePtr assetIdsRequest(const printer::Printer *p, const std::list<std::string> &ids,
-                                  bool pretty = false);
+                                  bool pretty = false,
+                                  const std::optional<std::string> &requestId = std::nullopt);
 
       /// @brief Asset request handler to update an asset
       /// @param p printer for the response document
@@ -262,7 +267,8 @@ namespace mtconnect {
       /// @param text descriptive error text
       /// @return MTConnect Error document
       std::string printError(const printer::Printer *printer, const std::string &errorCode,
-                             const std::string &text, bool pretty = false) const;
+                             const std::string &text, bool pretty = false,
+                             const std::optional<std::string> &requestId = std::nullopt) const;
 
       /// @name For testing only
       ///@{
@@ -301,13 +307,15 @@ namespace mtconnect {
 
       // Current Data Collection
       std::string fetchCurrentData(const printer::Printer *printer, const FilterSetOpt &filterSet,
-                                   const std::optional<SequenceNumber_t> &at, bool pretty = false);
+                                   const std::optional<SequenceNumber_t> &at, bool pretty = false,
+                                   const std::optional<std::string> &requestId = std::nullopt);
 
       // Sample data collection
       std::string fetchSampleData(const printer::Printer *printer, const FilterSetOpt &filterSet,
                                   int count, const std::optional<SequenceNumber_t> &from,
                                   const std::optional<SequenceNumber_t> &to, SequenceNumber_t &end,
-                                  bool &endOfBuffer, bool pretty = false);
+                                  bool &endOfBuffer, bool pretty = false,
+                                  const std::optional<std::string> &requestId = std::nullopt);
 
       // Verification methods
       template <typename T>
