@@ -150,7 +150,7 @@ namespace mtconnect::sink::rest_sink {
         LOG(trace) << "Waiting for mutex";
         std::lock_guard<std::mutex> lock(m_mutex);
 
-        if (m_busy)
+        if (m_busy || m_messageQueue.size() > 0)
         {
           m_messageQueue.emplace_back(chunk, complete, *requestId);
         }
@@ -164,8 +164,6 @@ namespace mtconnect::sink::rest_sink {
         LOG(error) << "No request id for websocket";
       }
     }
-
-    void closeStream() override {}
 
   protected:
     void onAccept(boost::beast::error_code ec)
@@ -372,7 +370,7 @@ namespace mtconnect::sink::rest_sink {
         {
           LOG(error) << "Duplicate request id: " << id;
           boost::system::error_code ec;
-          return fail(status::bad_request, "Duplicate request Id", ec);
+          fail(status::bad_request, "Duplicate request Id", ec);
         }
 
         if (!m_dispatch(derived().shared_ptr(), m_request))
@@ -380,6 +378,8 @@ namespace mtconnect::sink::rest_sink {
           ostringstream txt;
           txt << "Failed to find handler for " << buffer;
           LOG(error) << txt.str();
+          boost::system::error_code ec;
+          fail(status::bad_request, "Duplicate request Id", ec);
         }
       }
 
@@ -419,9 +419,15 @@ namespace mtconnect::sink::rest_sink {
       NAMED_SCOPE("PlainWebsocketSession::close");
 
       m_request.reset();
+      closeStream();
+    }
+    
+    void closeStream() override
+    {
       if (m_stream.is_open())
         m_stream.close(beast::websocket::close_code::none);
     }
+
 
     auto getExecutor() { return m_stream.get_executor(); }
 
@@ -461,6 +467,11 @@ namespace mtconnect::sink::rest_sink {
       NAMED_SCOPE("TlsWebsocketSession::close");
 
       m_request.reset();
+      closeStream();
+    }
+
+    void closeStream() override
+    {
       if (m_stream.is_open())
         m_stream.close(beast::websocket::close_code::none);
     }
