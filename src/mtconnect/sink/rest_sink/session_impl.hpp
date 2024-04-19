@@ -74,7 +74,8 @@ namespace mtconnect {
       void run() override;
       void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override;
       void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override;
-      void beginStreaming(const std::string &mimeType, Complete complete, std::optional<std::string> requestId = std::nullopt) override;
+      void beginStreaming(const std::string &mimeType, Complete complete,
+                          std::optional<std::string> requestId = std::nullopt) override;
       void writeChunk(const std::string &chunk, Complete complete,
                       std::optional<std::string> requestId = std::nullopt) override;
       void closeStream() override;

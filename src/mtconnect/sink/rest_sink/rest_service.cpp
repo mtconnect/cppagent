@@ -669,11 +669,11 @@ namespace mtconnect {
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
-          streamCurrentRequest(
-              session, printerForAccepts(request->m_accepts), *interval,
-              request->parameter<string>("device"), request->parameter<string>("path"),
-              *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"),
-                               request->m_requestId);
+          streamCurrentRequest(session, printerForAccepts(request->m_accepts), *interval,
+                               request->parameter<string>("device"),
+                               request->parameter<string>("path"),
+                               *request->parameter<bool>("pretty"),
+                               request->parameter<string>("deviceType"), request->m_requestId);
         }
         else
         {
@@ -715,8 +715,7 @@ namespace mtconnect {
               *request->parameter<int32_t>("heartbeat"), *request->parameter<int32_t>("count"),
               request->parameter<string>("device"), request->parameter<uint64_t>("from"),
               request->parameter<string>("path"), *request->parameter<bool>("pretty"),
-              request->parameter<string>("deviceType"),
-                              request->m_requestId);
+              request->parameter<string>("deviceType"), request->m_requestId);
         }
         else
         {
@@ -999,7 +998,7 @@ namespace mtconnect {
           printer->mimeType(),
           asio::bind_executor(m_strand,
                               boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)),
-                              requestId);
+          requestId);
     }
 
     SequenceNumber_t RestService::streamNextSampleChunk(
@@ -1029,10 +1028,10 @@ namespace mtconnect {
           asyncResponse->m_log << content << endl;
 
         asyncResponse->m_session->writeChunk(
-            content, asio::bind_executor(
-                         m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)
-                                         ),
-                                             asyncResponse->m_requestId);
+            content,
+            asio::bind_executor(m_strand,
+                                boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)),
+            asyncResponse->m_requestId);
 
         return end;
       }
@@ -1100,10 +1099,13 @@ namespace mtconnect {
       asyncResponse->m_requestId = requestId;
 
       asyncResponse->m_session->beginStreaming(
-          printer->mimeType(), boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
-            streamNextCurrent(asyncResponse, boost::system::error_code {});
-          }),
-                                               requestId);
+          printer->mimeType(),
+          boost::asio::bind_executor(m_strand,
+                                     [this, asyncResponse]() {
+                                       streamNextCurrent(asyncResponse,
+                                                         boost::system::error_code {});
+                                     }),
+          requestId);
     }
 
     void RestService::streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
@@ -1138,11 +1140,15 @@ namespace mtconnect {
         asyncResponse->m_session->writeChunk(
             fetchCurrentData(asyncResponse->m_printer, asyncResponse->m_filter, nullopt,
                              asyncResponse->m_pretty),
-            boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
-              asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
-              asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
-                  m_strand, boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
-            }), asyncResponse->m_requestId);
+            boost::asio::bind_executor(
+                m_strand,
+                [this, asyncResponse]() {
+                  asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
+                  asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
+                      m_strand,
+                      boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
+                }),
+            asyncResponse->m_requestId);
       }
       catch (RequestError &re)
       {
