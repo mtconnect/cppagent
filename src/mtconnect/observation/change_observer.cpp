@@ -146,7 +146,7 @@ namespace mtconnect::observation {
   void AsyncObserver::handlerCompleted()
   {
     NAMED_SCOPE("AsyncObserver::handlerCompleted");
-    
+
     m_last = std::chrono::system_clock::now();
     if (m_endOfBuffer)
     {
