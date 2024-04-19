@@ -145,9 +145,12 @@ namespace mtconnect::observation {
 
   void AsyncObserver::handlerCompleted()
   {
+    NAMED_SCOPE("AsyncObserver::handlerCompleted");
+    
     m_last = std::chrono::system_clock::now();
     if (m_endOfBuffer)
     {
+      LOG(trace) << "End of buffer";
       using std::placeholders::_1;
       m_observer.waitForSignal(m_heartbeat);
     }
@@ -159,6 +162,7 @@ namespace mtconnect::observation {
 
   void AsyncObserver::handleSignal(boost::system::error_code ec)
   {
+    NAMED_SCOPE("AsyncObserver::handleSignal");
     using namespace buffer;
 
     using std::placeholders::_1;
