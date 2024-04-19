@@ -409,7 +409,9 @@ namespace mtconnect::sink::rest_sink {
                           Dispatch dispatch, ErrorFunction func)
       : WebsocketSession(std::move(request), std::move(msg), dispatch, func),
         m_stream(std::move(stream))
-    {}
+    {
+      beast::get_lowest_layer(m_stream).expires_never();
+    }
     ~PlainWebsocketSession() { close(); }
 
     void close() override
@@ -447,7 +449,9 @@ namespace mtconnect::sink::rest_sink {
                         RequestMessage &&msg, Dispatch dispatch, ErrorFunction func)
       : WebsocketSession(std::move(request), std::move(msg), dispatch, func),
         m_stream(std::move(stream))
-    {}
+    {
+      beast::get_lowest_layer(m_stream).expires_never();
+    }
     ~TlsWebsocketSession() { close(); }
 
     auto &stream() { return m_stream; }
