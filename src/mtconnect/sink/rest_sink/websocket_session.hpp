@@ -421,13 +421,12 @@ namespace mtconnect::sink::rest_sink {
       m_request.reset();
       closeStream();
     }
-    
+
     void closeStream() override
     {
       if (m_stream.is_open())
         m_stream.close(beast::websocket::close_code::none);
     }
-
 
     auto getExecutor() { return m_stream.get_executor(); }
 

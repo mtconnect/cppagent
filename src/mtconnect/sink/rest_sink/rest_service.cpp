@@ -113,6 +113,7 @@ namespace mtconnect {
            {"from", QUERY, "Sequence number at to start reporting observations"},
            {"interval", QUERY, "Time in ms between publishing data–starts streaming"},
            {"pretty", QUERY, "Instructs the result to be pretty printed"},
+           {"format", QUERY, "The format of the response document: 'xml' or 'json'"},
            {"heartbeat", QUERY,
             "Time in ms between publishing a empty document when no data has changed"}});
 
@@ -475,8 +476,8 @@ namespace mtconnect {
         auto device = request->parameter<string>("device");
         auto pretty = *request->parameter<bool>("pretty");
         auto deviceType = request->parameter<string>("deviceType");
-
-        auto printer = printerForAccepts(request->m_accepts);
+        auto format = request->parameter<string>("format");
+        auto printer = getPrinter(request->m_accepts, format);
 
         if (device && !ends_with(request->m_path, string("probe")) &&
             m_sinkContract->findDeviceByUUIDorName(*device) == nullptr)
@@ -487,19 +488,21 @@ namespace mtconnect {
           return false;
         }
 
-        respond(session, probeRequest(printer, device, pretty, deviceType), request->m_requestId);
+        respond(session, probeRequest(printer, device, pretty, deviceType, request->m_requestId),
+                request->m_requestId);
         return true;
       };
 
       m_server
           ->addRouting({boost::beast::http::verb::get,
-                        "/probe?pretty={bool:false}&deviceType={string}", handler})
+                        "/probe?pretty={bool:false}&deviceType={string}&format={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
           ->addRouting({boost::beast::http::verb::get,
-                        "/{device}/probe?pretty={bool:false}&deviceType={string}", handler})
+                        "/{device}/probe?pretty={bool:false}&deviceType={string}&format={string}",
+                        handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.")
@@ -507,14 +510,15 @@ namespace mtconnect {
 
       // Must be last
       m_server
-          ->addRouting(
-              {boost::beast::http::verb::get, "/?pretty={bool:false}&deviceType={string}", handler})
+          ->addRouting({boost::beast::http::verb::get,
+                        "/?pretty={bool:false}&deviceType={string}&format={string}", handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for all "
                     "devices.");
       m_server
           ->addRouting({boost::beast::http::verb::get,
-                        "/{device}?pretty={bool:false}&deviceType={string}", handler})
+                        "/{device}?pretty={bool:false}&deviceType={string}&format={string}",
+                        handler})
           .document("MTConnect probe request",
                     "Provides metadata service for the MTConnect Devices information model for "
                     "device identified by `device` matching `name` or `uuid`.");
@@ -526,11 +530,13 @@ namespace mtconnect {
       auto handler = [&](SessionPtr session, RequestPtr request) -> bool {
         auto removed = *request->parameter<bool>("removed");
         auto count = *request->parameter<int32_t>("count");
-        auto printer = printerForAccepts(request->m_accepts);
+        auto pretty = *request->parameter<bool>("pretty");
+        auto format = request->parameter<string>("format");
+        auto printer = getPrinter(request->m_accepts, format);
 
         respond(session,
                 assetRequest(printer, count, removed, request->parameter<string>("type"),
-                             request->parameter<string>("device")),
+                             request->parameter<string>("device"), pretty, request->m_requestId),
                 request->m_requestId);
         return true;
       };
@@ -539,6 +545,7 @@ namespace mtconnect {
         auto asset = request->parameter<string>("assetIds");
         if (asset)
         {
+          auto pretty = *request->parameter<bool>("pretty");
           auto printer = m_sinkContract->getPrinter(acceptFormat(request->m_accepts));
 
           list<string> ids;
@@ -546,11 +553,13 @@ namespace mtconnect {
           string id;
           while (getline(str, id, ';'))
             ids.emplace_back(id);
-          respond(session, assetIdsRequest(printer, ids), request->m_requestId);
+          respond(session, assetIdsRequest(printer, ids, pretty, request->m_requestId),
+                  request->m_requestId);
         }
         else
         {
-          auto printer = printerForAccepts(request->m_accepts);
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
           auto error = printError(printer, "INVALID_REQUEST", "No asset given");
           respond(session,
                   make_unique<Response>(rest_sink::status::bad_request, error, printer->mimeType()),
@@ -561,7 +570,7 @@ namespace mtconnect {
 
       string qp(
           "type={string}&removed={bool:false}&"
-          "count={integer:100}&device={string}&pretty={bool:false}");
+          "count={integer:100}&device={string}&pretty={bool:false}&format={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/assets?" + qp, handler})
           .document("MTConnect assets request", "Returns up to `count` assets");
       m_server->addRouting({boost::beast::http::verb::get, "/asset?" + qp, handler})
@@ -582,7 +591,8 @@ namespace mtconnect {
       if (m_server->arePutsAllowed())
       {
         auto putHandler = [&](SessionPtr session, RequestPtr request) -> bool {
-          auto printer = printerForAccepts(request->m_accepts);
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
           respond(session,
                   putAssetRequest(printer, request->m_body, request->parameter<string>("type"),
                                   request->parameter<string>("device"),
@@ -598,7 +608,8 @@ namespace mtconnect {
             list<string> ids;
             stringstream str(*asset);
             string id;
-            auto printer = printerForAccepts(request->m_accepts);
+            auto format = request->parameter<string>("format");
+            auto printer = getPrinter(request->m_accepts, format);
 
             while (getline(str, id, ';'))
               ids.emplace_back(id);
@@ -606,9 +617,11 @@ namespace mtconnect {
           }
           else
           {
+            auto format = request->parameter<string>("format");
+            auto printer = getPrinter(request->m_accepts, format);
+
             respond(session,
-                    deleteAllAssetsRequest(printerForAccepts(request->m_accepts),
-                                           request->parameter<string>("device"),
+                    deleteAllAssetsRequest(printer, request->parameter<string>("device"),
                                            request->parameter<string>("type")),
                     request->m_requestId);
           }
@@ -622,34 +635,42 @@ namespace mtconnect {
           {
             m_server
                 ->addRouting(
-                    {t, "/" + asset + "/{assetId}?device={string}&type={string}", putHandler})
+                    {t, "/" + asset + "/{assetId}?device={string}&type={string}&format={string}",
+                     putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
-            m_server->addRouting({t, "/" + asset + "?device={string}&type={string}", putHandler})
+            m_server
+                ->addRouting(
+                    {t, "/" + asset + "?device={string}&type={string}&format={string}", putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
-            m_server->addRouting({t, "/{device}/" + asset + "/{assetId}?type={string}", putHandler})
+            m_server
+                ->addRouting({t, "/{device}/" + asset + "/{assetId}?type={string}&format={string}",
+                              putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
-            m_server->addRouting({t, "/{device}/" + asset + "?type={string}", putHandler})
+            m_server
+                ->addRouting(
+                    {t, "/{device}/" + asset + "?type={string}&format={string}", putHandler})
                 .document("Upload an asset by identified by `assetId`",
                           "Updates or adds an asset with the asset XML in the body");
           }
 
           m_server
               ->addRouting({boost::beast::http::verb::delete_,
-                            "/" + asset + "?device={string}&type={string}", deleteHandler})
+                            "/" + asset + "?device={string}&type={string}&format={string}",
+                            deleteHandler})
               .document("Delete all assets for a device and type",
                         "Device and type are optional. If they are not given, it assumes there is "
                         "no constraint");
           m_server
-              ->addRouting(
-                  {boost::beast::http::verb::delete_, "/" + asset + "/{assetId}", deleteHandler})
+              ->addRouting({boost::beast::http::verb::delete_,
+                            "/" + asset + "/{assetId}?format={string}", deleteHandler})
               .document("Delete asset identified by `assetId`",
                         "Marks the asset as removed and creates an AssetRemoved event");
           m_server
               ->addRouting({boost::beast::http::verb::delete_,
-                            "/{device}/" + asset + "?type={string}", deleteHandler})
+                            "/{device}/" + asset + "?type={string}&format={string}", deleteHandler})
               .document("Delete all assets for a device and type",
                         "Device and type are optional. If they are not given, it assumes there is "
                         "no constraint")
@@ -666,20 +687,25 @@ namespace mtconnect {
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
-          streamCurrentRequest(session, printerForAccepts(request->m_accepts), *interval,
-                               request->parameter<string>("device"),
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
+
+          streamCurrentRequest(session, printer, *interval, request->parameter<string>("device"),
                                request->parameter<string>("path"),
                                *request->parameter<bool>("pretty"),
                                request->parameter<string>("deviceType"), request->m_requestId);
         }
         else
         {
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
+
           respond(
               session,
-              currentRequest(
-                  printerForAccepts(request->m_accepts), request->parameter<string>("device"),
-                  request->parameter<uint64_t>("at"), request->parameter<string>("path"),
-                  *request->parameter<bool>("pretty"), request->parameter<string>("deviceType")),
+              currentRequest(printer, request->parameter<string>("device"),
+                             request->parameter<uint64_t>("at"), request->parameter<string>("path"),
+                             *request->parameter<bool>("pretty"),
+                             request->parameter<string>("deviceType"), request->m_requestId),
               request->m_requestId);
         }
         return true;
@@ -688,7 +714,7 @@ namespace mtconnect {
       string qp(
           "path={string}&at={unsigned_integer}&"
           "interval={integer}&pretty={bool:false}&"
-          "deviceType={string}");
+          "deviceType={string}&format={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/current?" + qp, handler})
           .document("MTConnect current request",
                     "Gets a stapshot of the state of all the observations for all devices "
@@ -707,23 +733,29 @@ namespace mtconnect {
         auto interval = request->parameter<int32_t>("interval");
         if (interval)
         {
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
+
           streamSampleRequest(
-              session, printerForAccepts(request->m_accepts), *interval,
-              *request->parameter<int32_t>("heartbeat"), *request->parameter<int32_t>("count"),
-              request->parameter<string>("device"), request->parameter<uint64_t>("from"),
-              request->parameter<string>("path"), *request->parameter<bool>("pretty"),
-              request->parameter<string>("deviceType"), request->m_requestId);
+              session, printer, *interval, *request->parameter<int32_t>("heartbeat"),
+              *request->parameter<int32_t>("count"), request->parameter<string>("device"),
+              request->parameter<uint64_t>("from"), request->parameter<string>("path"),
+              *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"),
+              request->m_requestId);
         }
         else
         {
-          respond(
-              session,
-              sampleRequest(
-                  printerForAccepts(request->m_accepts), *request->parameter<int32_t>("count"),
-                  request->parameter<string>("device"), request->parameter<uint64_t>("from"),
-                  request->parameter<uint64_t>("to"), request->parameter<string>("path"),
-                  *request->parameter<bool>("pretty"), request->parameter<string>("deviceType")),
-              request->m_requestId);
+          auto format = request->parameter<string>("format");
+          auto printer = getPrinter(request->m_accepts, format);
+
+          respond(session,
+                  sampleRequest(
+                      printer, *request->parameter<int32_t>("count"),
+                      request->parameter<string>("device"), request->parameter<uint64_t>("from"),
+                      request->parameter<uint64_t>("to"), request->parameter<string>("path"),
+                      *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"),
+                      request->m_requestId),
+                  request->m_requestId);
         }
         return true;
       };
@@ -733,7 +765,7 @@ namespace mtconnect {
           "interval={integer}&count={integer:100}&"
           "heartbeat={integer:10000}&to={unsigned_integer}&"
           "pretty={bool:false}&"
-          "deviceType={string}");
+          "deviceType={string}&format={string}");
       m_server->addRouting({boost::beast::http::verb::get, "/sample?" + qp, handler})
           .document("MTConnect sample request",
                     "Gets a time series of at maximum `count` observations for all devices "
@@ -761,11 +793,11 @@ namespace mtconnect {
             if (ts)
               queries.erase("time");
             auto device = request->parameter<string>("device");
+            auto format = request->parameter<string>("format");
+            auto printer = getPrinter(request->m_accepts, format);
 
-            respond(
-                session,
-                putObservationRequest(printerForAccepts(request->m_accepts), *device, queries, ts),
-                request->m_requestId);
+            respond(session, putObservationRequest(printer, *device, queries, ts),
+                    request->m_requestId);
             return true;
           }
           else
@@ -825,7 +857,7 @@ namespace mtconnect {
                               m_sinkContract->getCircularBuffer().getSequence(),
                               uint32_t(m_sinkContract->getAssetStorage()->getMaxAssets()),
                               uint32_t(m_sinkContract->getAssetStorage()->getCount()), deviceList,
-                              &counts, false, pretty),
+                              &counts, false, pretty, requestId),
           printer->mimeType());
     }
 
@@ -851,7 +883,7 @@ namespace mtconnect {
 
       // Check if there is a frequency to stream data or not
       return make_unique<Response>(rest_sink::status::ok,
-                                   fetchCurrentData(printer, filter, at, pretty),
+                                   fetchCurrentData(printer, filter, at, pretty, requestId),
                                    printer->mimeType());
     }
 
@@ -882,7 +914,7 @@ namespace mtconnect {
 
       return make_unique<Response>(
           rest_sink::status::ok,
-          fetchSampleData(printer, filter, count, from, to, end, endOfBuffer, pretty),
+          fetchSampleData(printer, filter, count, from, to, end, endOfBuffer, pretty, requestId),
           printer->mimeType());
     }
 
@@ -1210,9 +1242,9 @@ namespace mtconnect {
           str << id << ", ";
 
         auto message = str.str().substr(0, str.str().size() - 2);
-        return make_unique<Response>(status::not_found,
-                                     printError(printer, "ASSET_NOT_FOUND", message, pretty, requestId),
-                                     printer->mimeType());
+        return make_unique<Response>(
+            status::not_found, printError(printer, "ASSET_NOT_FOUND", message, pretty, requestId),
+            printer->mimeType());
       }
       else
       {
@@ -1400,11 +1432,6 @@ namespace mtconnect {
       return "xml";
     }
 
-    const Printer *RestService::printerForAccepts(const std::string &accepts) const
-    {
-      return m_sinkContract->getPrinter(acceptFormat(accepts));
-    }
-
     string RestService::printError(const Printer *printer, const string &errorCode,
                                    const string &text, bool pretty,
                                    const std::optional<std::string> &requestId) const
@@ -1413,8 +1440,7 @@ namespace mtconnect {
       if (printer)
         return printer->printError(
             m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-            m_sinkContract->getCircularBuffer().getSequence(), errorCode, text, pretty,
-                                   requestId);
+            m_sinkContract->getCircularBuffer().getSequence(), errorCode, text, pretty, requestId);
       else
         return errorCode + ": " + text;
     }
@@ -1515,8 +1541,7 @@ namespace mtconnect {
       }
 
       return printer->printSample(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-                                  seq, firstSeq, seq - 1, observations, pretty,
-                                  requestId);
+                                  seq, firstSeq, seq - 1, observations, pretty, requestId);
     }
 
     string RestService::fetchSampleData(const Printer *printer, const FilterSetOpt &filterSet,
@@ -1553,8 +1578,7 @@ namespace mtconnect {
       }
 
       return printer->printSample(m_instanceId, m_sinkContract->getCircularBuffer().getBufferSize(),
-                                  end, firstSeq, lastSeq, *observations, pretty,
-                                  requestId);
+                                  end, firstSeq, lastSeq, *observations, pretty, requestId);
     }
 
   }  // namespace sink::rest_sink

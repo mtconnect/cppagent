@@ -259,7 +259,26 @@ namespace mtconnect {
       /// @brief get a printer given a list of formats from the Accepts header
       /// @param accepts the accepts header
       /// @return pointer to a printer
-      const printer::Printer *printerForAccepts(const std::string &accepts) const;
+      const printer::Printer *printerForAccepts(const std::string &accepts) const
+      {
+        return m_sinkContract->getPrinter(acceptFormat(accepts));
+      }
+
+      /// @brief get a printer for a format or using the accepts header. Falls back to header accept
+      /// if format incorrect.
+      /// @param accepts the accept header of the request
+      /// @param format optional format query param
+      /// @return pointer to a printer
+      const printer::Printer *getPrinter(const std::string &accepts,
+                                         std::optional<std::string> format) const
+      {
+        const printer::Printer *printer = nullptr;
+        if (format)
+          printer = m_sinkContract->getPrinter(*format);
+        if (printer == nullptr)
+          printer = printerForAccepts(accepts);
+        return printer;
+      }
 
       /// @brief Generate an MTConnect Error document
       /// @param printer printer to generate error

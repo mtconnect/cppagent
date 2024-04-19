@@ -352,8 +352,8 @@ namespace mtconnect::printer {
     {
       XmlWriter writer(m_pretty || pretty);
 
-      initXmlDoc(writer, eERROR, instanceId, bufferSize, 0, 0, nextSeq, 0, nextSeq - 1,
-                 nullptr, requestId);
+      initXmlDoc(writer, eERROR, instanceId, bufferSize, 0, 0, nextSeq, 0, nextSeq - 1, nullptr,
+                 requestId);
 
       {
         AutoElement e1(writer, "Errors");
@@ -419,8 +419,8 @@ namespace mtconnect::printer {
 
   string XmlPrinter::printSample(const uint64_t instanceId, const unsigned int bufferSize,
                                  const uint64_t nextSeq, const uint64_t firstSeq,
-                                 const uint64_t lastSeq, ObservationList &observations,
-                                 bool pretty, const std::optional<std::string> requestId) const
+                                 const uint64_t lastSeq, ObservationList &observations, bool pretty,
+                                 const std::optional<std::string> requestId) const
   {
     string ret;
 
@@ -500,16 +500,15 @@ namespace mtconnect::printer {
   }
 
   string XmlPrinter::printAssets(const uint64_t instanceId, const unsigned int bufferSize,
-                                 const unsigned int assetCount, const AssetList &asset,
-                                 bool pretty,
+                                 const unsigned int assetCount, const AssetList &asset, bool pretty,
                                  const std::optional<std::string> requestId) const
   {
     string ret;
     try
     {
       XmlWriter writer(m_pretty || pretty);
-      initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull,
-                 0, 0, nullptr, requestId);
+      initXmlDoc(writer, eASSETS, instanceId, 0u, bufferSize, assetCount, 0ull, 0, 0, nullptr,
+                 requestId);
 
       {
         AutoElement ele(writer, "Assets");
@@ -652,10 +651,9 @@ namespace mtconnect::printer {
     sprintf(version, "%d.%d.%d.%d", AGENT_VERSION_MAJOR, AGENT_VERSION_MINOR, AGENT_VERSION_PATCH,
             AGENT_VERSION_BUILD);
     addAttribute(writer, "version", version);
-    
+
     if (requestId)
       addAttribute(writer, "requestId", *requestId);
-
 
     int major, minor;
     char c;
