@@ -672,7 +672,8 @@ namespace mtconnect {
           streamCurrentRequest(
               session, printerForAccepts(request->m_accepts), *interval,
               request->parameter<string>("device"), request->parameter<string>("path"),
-              *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"));
+              *request->parameter<bool>("pretty"), request->parameter<string>("deviceType"),
+                               request->m_requestId);
         }
         else
         {
@@ -714,7 +715,8 @@ namespace mtconnect {
               *request->parameter<int32_t>("heartbeat"), *request->parameter<int32_t>("count"),
               request->parameter<string>("device"), request->parameter<uint64_t>("from"),
               request->parameter<string>("path"), *request->parameter<bool>("pretty"),
-              request->parameter<string>("deviceType"));
+              request->parameter<string>("deviceType"),
+                              request->m_requestId);
         }
         else
         {
@@ -935,6 +937,7 @@ namespace mtconnect {
       rest_sink::SessionPtr m_session;
       ofstream m_log;
       bool m_pretty {false};
+      std::optional<std::string> m_requestId;
     };
 
     void RestService::streamSampleRequest(rest_sink::SessionPtr session, const Printer *printer,
@@ -942,7 +945,8 @@ namespace mtconnect {
                                           const int count, const std::optional<std::string> &device,
                                           const std::optional<SequenceNumber_t> &from,
                                           const std::optional<std::string> &path, bool pretty,
-                                          const std::optional<std::string> &deviceType)
+                                          const std::optional<std::string> &deviceType,
+                                          const std::optional<std::string> &requestId)
     {
       NAMED_SCOPE("RestService::streamSampleRequest");
 
@@ -976,6 +980,7 @@ namespace mtconnect {
       asyncResponse->m_printer = printer;
       asyncResponse->m_sink = getptr();
       asyncResponse->m_pretty = pretty;
+      asyncResponse->m_requestId = requestId;
 
       if (m_logStreamData)
       {
@@ -993,7 +998,8 @@ namespace mtconnect {
       session->beginStreaming(
           printer->mimeType(),
           asio::bind_executor(m_strand,
-                              boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+                              boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)),
+                              requestId);
     }
 
     SequenceNumber_t RestService::streamNextSampleChunk(
@@ -1024,7 +1030,9 @@ namespace mtconnect {
 
         asyncResponse->m_session->writeChunk(
             content, asio::bind_executor(
-                         m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)));
+                         m_strand, boost::bind(&AsyncObserver::handlerCompleted, asyncResponse)
+                                         ),
+                                             asyncResponse->m_requestId);
 
         return end;
       }
@@ -1062,13 +1070,15 @@ namespace mtconnect {
       FilterSetOpt m_filter;
       boost::asio::steady_timer m_timer;
       bool m_pretty {false};
+      std::optional<std::string> m_requestId;
     };
 
     void RestService::streamCurrentRequest(SessionPtr session, const Printer *printer,
                                            const int interval,
                                            const std::optional<std::string> &device,
                                            const std::optional<std::string> &path, bool pretty,
-                                           const std::optional<std::string> &deviceType)
+                                           const std::optional<std::string> &deviceType,
+                                           const std::optional<std::string> &requestId)
     {
       checkRange(printer, interval, 0, numeric_limits<int>().max(), "interval");
       DevicePtr dev {nullptr};
@@ -1087,11 +1097,13 @@ namespace mtconnect {
       asyncResponse->m_printer = printer;
       asyncResponse->m_service = getptr();
       asyncResponse->m_pretty = pretty;
+      asyncResponse->m_requestId = requestId;
 
       asyncResponse->m_session->beginStreaming(
           printer->mimeType(), boost::asio::bind_executor(m_strand, [this, asyncResponse]() {
             streamNextCurrent(asyncResponse, boost::system::error_code {});
-          }));
+          }),
+                                               requestId);
     }
 
     void RestService::streamNextCurrent(std::shared_ptr<AsyncCurrentResponse> asyncResponse,
@@ -1130,7 +1142,7 @@ namespace mtconnect {
               asyncResponse->m_timer.expires_from_now(asyncResponse->m_interval);
               asyncResponse->m_timer.async_wait(boost::asio::bind_executor(
                   m_strand, boost::bind(&RestService::streamNextCurrent, this, asyncResponse, _1)));
-            }));
+            }), asyncResponse->m_requestId);
       }
       catch (RequestError &re)
       {

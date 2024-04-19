@@ -64,11 +64,12 @@ namespace mtconnect::sink::rest_sink {
     /// @brief begin streaming data to the client using x-multipart-replace
     /// @param mimeType the mime type of the response
     /// @param complete completion callback
-    virtual void beginStreaming(const std::string &mimeType, Complete complete) = 0;
+    virtual void beginStreaming(const std::string &mimeType, Complete complete, std::optional<std::string> requestId = std::nullopt) = 0;
     /// @brief write a chunk for a streaming session
     /// @param chunk the chunk to write
     /// @param complete a completion callback
-    virtual void writeChunk(const std::string &chunk, Complete complete) = 0;
+    virtual void writeChunk(const std::string &chunk, Complete complete,
+                            std::optional<std::string> requestId = std::nullopt) = 0;
     /// @brief close the session
     virtual void close() = 0;
     /// @brief close the stream

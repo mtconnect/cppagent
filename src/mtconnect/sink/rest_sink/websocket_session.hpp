@@ -23,6 +23,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <mutex>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 
@@ -36,6 +37,8 @@ namespace mtconnect::sink::rest_sink {
 
   struct WebsocketRequest
   {
+    WebsocketRequest(const std::string &id)
+    : m_requestId(id) { }
     std::string m_requestId;
     std::optional<boost::asio::streambuf> m_streamBuffer;
     Complete m_complete;
@@ -46,6 +49,19 @@ namespace mtconnect::sink::rest_sink {
   template <class Derived>
   class WebsocketSession : public Session
   {
+  protected:
+    struct Message {
+      Message(const std::string &body, Complete &complete,
+              const std::string &requestId)
+      : m_body(body), m_complete(complete), m_requestId(requestId)
+      {
+      }
+      
+      std::string m_body;
+      Complete m_complete;
+      std::string m_requestId;
+    };
+    
   public:
     using RequestMessage = boost::beast::http::request<boost::beast::http::string_body>;
 
@@ -69,7 +85,7 @@ namespace mtconnect::sink::rest_sink {
       // Set suggested timeout settings for the websocket
       derived().stream().set_option(
           websocket::stream_base::timeout::suggested(beast::role_type::server));
-
+      
       // Set a decorator to change the Server of the handshake
       derived().stream().set_option(
           websocket::stream_base::decorator([](websocket::response_type &res) {
@@ -78,51 +94,78 @@ namespace mtconnect::sink::rest_sink {
 
       // Accept the websocket handshake
       derived().stream().async_accept(
-          m_msg, beast::bind_front_handler(&WebsocketSession::onAccept, derived().shared_ptr()));
+          m_msg, boost::asio::bind_executor(derived().getExecutor(), beast::bind_front_handler(&WebsocketSession::onAccept, derived().shared_ptr())));
     }
 
     void writeResponse(ResponsePtr &&response, Complete complete = nullptr) override
     {
-      if (response->m_requestId)
+      NAMED_SCOPE("WebsocketSession::writeResponse");
+      if (!response->m_requestId)
       {
-        auto id = *(response->m_requestId);
+        boost::system::error_code ec;
+        return fail(status::bad_request, "Missing request Id", ec);
+      }
+
+      writeChunk(response->m_body, complete, response->m_requestId);
+    }
+
+    void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override 
+    {
+      NAMED_SCOPE("WebsocketSession::writeFailureResponse");
+      writeChunk(response->m_body, complete, response->m_requestId);
+    }
+
+    void beginStreaming(const std::string &mimeType, Complete complete, std::optional<std::string> requestId = std::nullopt) override 
+    {
+      if (requestId)
+      {
+        auto id = *(requestId);
         auto it = m_requests.find(id);
         if (it != m_requests.end())
         {
-          using namespace std::placeholders;
-
           auto &req = it->second;
-          req.m_complete = complete;
-          req.m_streamBuffer.emplace();
-          std::ostream str(&req.m_streamBuffer.value());
-
-          str << response->m_body;
-
-          derived().stream().text(derived().stream().got_text());
-          derived().stream().async_write(
-              req.m_streamBuffer->data(),
-              beast::bind_handler(
-                  [this, id](beast::error_code ec, std::size_t len) { sent(ec, len, id); }, _1,
-                  _2));
+          req.m_streaming = true;
+          
+          if (complete)
+            complete();
         }
         else
         {
-          LOG(error) << "WebsocketSession::writeResponse: Cannot find request for id: " << id;
+          LOG(error) << "Cannot find request for id: " << id;
         }
       }
       else
       {
-        LOG(error) << "WebsocketSession::writeResponse: No request id for websocket";
+        LOG(error) << "No request id for websocket";
       }
     }
 
-    void writeFailureResponse(ResponsePtr &&response, Complete complete = nullptr) override {}
+    void writeChunk(const std::string &chunk, Complete complete, std::optional<std::string> requestId = std::nullopt) override
+    {
+      NAMED_SCOPE("WebsocketSession::writeChunk");
+      if (requestId)
+      {
+        LOG(trace) << "Waiting for mutex";
+        std::lock_guard<std::mutex> lock(m_mutex);
+        
+        if (m_busy)
+        {
+          m_messageQueue.emplace_back(chunk, complete, *requestId);
+        }
+        else
+        {
+          send(chunk, complete, *requestId);
+        }
+      }
+      else
+      {
+        LOG(error) << "No request id for websocket";
+      }
+    }
 
-    void beginStreaming(const std::string &mimeType, Complete complete) override {}
-
-    void writeChunk(const std::string &chunk, Complete complete) override {}
-
-    void closeStream() override {}
+    void closeStream() override 
+    {
+    }
 
   protected:
     void onAccept(boost::beast::error_code ec)
@@ -136,31 +179,101 @@ namespace mtconnect::sink::rest_sink {
       derived().stream().async_read(
           m_buffer, beast::bind_front_handler(&WebsocketSession::onRead, derived().shared_ptr()));
     }
-
-    void sent(beast::error_code ec, std::size_t len, const std::string &id)
+    
+    void send(const std::string body, Complete complete, const std::string &requestId)
     {
-      auto it = m_requests.find(id);
+      NAMED_SCOPE("WebsocketSession::send");
+
+      using namespace std::placeholders;
+      
+      auto it = m_requests.find(requestId);
       if (it != m_requests.end())
       {
         auto &req = it->second;
-        if (req.m_complete)
-        {
-          req.m_complete();
-        }
-
-        if (!req.m_streaming)
-        {
-          m_requests.erase(id);
-        }
+        req.m_complete = complete;
+        req.m_streamBuffer.emplace();
+        std::ostream str(&req.m_streamBuffer.value());
+        
+        str << body;
+        
+        auto ref = derived().shared_ptr();
+        
+        LOG(trace) << "writing chunk for ws: " << requestId;
+        
+        m_busy = true;
+        
+        derived().stream().text(derived().stream().got_text());
+        derived().stream().async_write(
+                                       req.m_streamBuffer->data(),
+                                       beast::bind_handler(
+                                                           [ref, requestId](beast::error_code ec, std::size_t len) { ref->sent(ec, len, requestId); }, _1,
+                                                           _2));
       }
       else
       {
-        LOG(error) << "WebsocketSession::sent: Cannot find request for id: " << id;
+        LOG(error) << "Cannot find request for id: " << requestId;
+      }
+    }
+
+    void sent(beast::error_code ec, std::size_t len, const std::string &id)
+    {
+      NAMED_SCOPE("WebsocketSession::sent");
+      
+      if (ec)
+      {
+        return fail(status::bad_request, "Missing request Id", ec);
+      }
+      
+      {
+        LOG(trace) << "Waiting for mutex";
+        std::lock_guard<std::mutex> lock(m_mutex);
+
+        LOG(trace) << "sent chunk for ws: " << id;
+        
+        auto it = m_requests.find(id);
+        if (it != m_requests.end())
+        {
+          auto &req = it->second;
+          if (req.m_complete)
+          {
+            boost::asio::post(derived().stream().get_executor(),
+                              req.m_complete);
+          }
+          
+          if (!req.m_streaming)
+          {
+            m_requests.erase(id);
+          }
+          
+          if (m_messageQueue.size() == 0)
+          {
+            m_busy = false;
+          }
+        }
+        else
+        {
+          LOG(error) << "WebsocketSession::sent: Cannot find request for id: " << id;
+        }
+      }
+      
+      {
+        LOG(trace) << "Waiting for mutex to send next";
+        std::lock_guard<std::mutex> lock(m_mutex);
+        
+        // Check for queued messages
+        if (m_messageQueue.size() > 0)
+        {
+          auto &msg = m_messageQueue.front();
+          send(msg.m_body, msg.m_complete, msg.m_requestId);
+          m_messageQueue.pop_front();
+        }
       }
     }
 
     void onRead(beast::error_code ec, std::size_t len)
     {
+      NAMED_SCOPE("PlainWebsocketSession::onRead");
+      
       if (ec)
         return fail(boost::beast::http::status::internal_server_error, "shutdown", ec);
 
@@ -252,9 +365,16 @@ namespace mtconnect::sink::rest_sink {
           m_request->m_parameters.erase("id");
         }
 
-        auto &req = m_requests[*(m_request->m_requestId)];
-        req.m_requestId = *(m_request->m_requestId);
-
+        auto &id = *(m_request->m_requestId);
+        
+        auto res = m_requests.emplace(id, id);
+        if (!res.second)
+        {
+          LOG(error) << "Duplicate request id: " << id;
+          boost::system::error_code ec;
+          return fail(status::bad_request, "Duplicate request Id", ec);
+        }
+        
         if (!m_dispatch(derived().shared_ptr(), m_request))
         {
           ostringstream txt;
@@ -272,6 +392,9 @@ namespace mtconnect::sink::rest_sink {
     RequestMessage m_msg;
     beast::flat_buffer m_buffer;
     std::map<std::string, WebsocketRequest> m_requests;
+    std::mutex m_mutex;
+    std::atomic_bool m_busy;
+    std::deque<Message> m_messageQueue;
   };
 
   template <class Derived>
@@ -296,6 +419,10 @@ namespace mtconnect::sink::rest_sink {
       m_request.reset();
       if (m_stream.is_open())
         m_stream.close(beast::websocket::close_code::none);
+    }
+    
+    auto getExecutor() {
+      return m_stream.get_executor();
     }
 
     auto &stream() { return m_stream; }
@@ -324,6 +451,10 @@ namespace mtconnect::sink::rest_sink {
     ~TlsWebsocketSession() { close(); }
 
     auto &stream() { return m_stream; }
+    
+    auto getExecutor() {
+      return m_stream.get_executor();
+    }
 
     void close() override
     {

@@ -287,7 +287,7 @@ namespace mtconnect::sink::rest_sink {
   }
 
   template <class Derived>
-  void SessionImpl<Derived>::beginStreaming(const std::string &mimeType, Complete complete)
+  void SessionImpl<Derived>::beginStreaming(const std::string &mimeType, Complete complete, std::optional<std::string> requestId)
   {
     NAMED_SCOPE("SessionImpl::beginStreaming");
 
@@ -321,7 +321,7 @@ namespace mtconnect::sink::rest_sink {
   }
 
   template <class Derived>
-  void SessionImpl<Derived>::writeChunk(const std::string &body, Complete complete)
+  void SessionImpl<Derived>::writeChunk(const std::string &body, Complete complete, std::optional<std::string> requestId)
   {
     NAMED_SCOPE("SessionImpl::writeChunk");
 

@@ -149,7 +149,8 @@ namespace mtconnect {
                                const std::optional<SequenceNumber_t> &from = std::nullopt,
                                const std::optional<std::string> &path = std::nullopt,
                                bool pretty = false,
-                               const std::optional<std::string> &deviceType = std::nullopt);
+                               const std::optional<std::string> &deviceType = std::nullopt,
+                               const std::optional<std::string> &responseId = std::nullopt);
 
       /// @brief Handler for a streaming current
       /// @param[in] session session to stream data to
@@ -162,7 +163,8 @@ namespace mtconnect {
                                 const std::optional<std::string> &device = std::nullopt,
                                 const std::optional<std::string> &path = std::nullopt,
                                 bool pretty = false,
-                                const std::optional<std::string> &deviceType = std::nullopt);
+                                const std::optional<std::string> &deviceType = std::nullopt,
+                                const std::optional<std::string> &responseId = std::nullopt);
       /// @brief Handler for put/post observation
       /// @param[in] p printer for response generation
       /// @param[in] device device
