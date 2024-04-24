@@ -142,6 +142,14 @@ namespace mtconnect::observation {
     /// @brief try to lock the mutex
     auto try_lock() { return m_mutex.try_lock(); }
     ///@}
+    
+    /// @brief clear the observer information.
+    void clear()
+    {
+      std::unique_lock<std::recursive_mutex> lock(m_mutex);
+      m_signalers.clear(); 
+      m_handler.clear();
+    }
 
   private:
     boost::asio::io_context::strand &m_strand;
@@ -237,6 +245,13 @@ namespace mtconnect::observation {
 
     /// @brief method to determine if the sink is running
     virtual bool isRunning() = 0;
+    
+    /// @brief Stop all timers and release resources.
+    virtual bool cancel()
+    {
+      m_observer.clear();
+      return true;
+    }
 
     /// @brief handler callback when an action needs to be taken
     ///
