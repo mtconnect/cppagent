@@ -187,6 +187,10 @@ namespace mtconnect::sink::rest_sink {
               }
             }
           }
+          else
+          {
+            return false;
+          }
         }
 
         for (auto &p : m_queryParameters)
