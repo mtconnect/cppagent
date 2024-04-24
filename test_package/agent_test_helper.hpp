@@ -78,13 +78,15 @@ namespace mtconnect {
             writeResponse(std::move(response), complete);
           }
         }
-        void beginStreaming(const std::string &mimeType, Complete complete) override
+        void beginStreaming(const std::string &mimeType, Complete complete,
+                            std::optional<std::string> requestId = std::nullopt) override
         {
           m_mimeType = mimeType;
           m_streaming = true;
           complete();
         }
-        void writeChunk(const std::string &chunk, Complete complete) override
+        void writeChunk(const std::string &chunk, Complete complete,
+                        std::optional<std::string> requestId = std::nullopt) override
         {
           m_chunkBody = chunk;
           if (m_streaming)
